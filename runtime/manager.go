@@ -25,25 +25,34 @@ type Manager struct {
 	genesisState *genesis.GenesisState
 
 	clock clock.Clock
+	bus   modules.Bus
 }
 
-func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manager)) *Manager {
-	mgr := &Manager{
-		clock: clock.New(),
+func NewManager(config *configs.Config, genesis *genesis.GenesisState, options ...func(*Manager)) *Manager {
+	var mgr = new(Manager)
+	bus, err := CreateBus(mgr)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to initialize bus: %v", err)
 	}
 
-	cfg, genesisState, err := mgr.init(configPath, genesisPath)
-	if err != nil {
-		log.Fatalf("[ERROR] Failed to initialize runtime builder: %v", err)
-	}
-	mgr.config = cfg
-	mgr.genesisState = genesisState
+	mgr.config = config
+	mgr.genesisState = genesis
+	mgr.clock = clock.New()
+	mgr.bus = bus
 
 	for _, o := range options {
 		o(mgr)
 	}
 
 	return mgr
+}
+
+func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manager)) *Manager {
+	cfg, genesisState, err := parseFiles(configPath, genesisPath)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to initialize runtime builder: %v", err)
+	}
+	return NewManager(cfg, genesisState, options...)
 }
 
 // NewManagerFromReaders returns a *Manager given io.Readers for the config and the genesis.
@@ -51,39 +60,31 @@ func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manage
 // Useful for testing and when the user doesn't want to rely on the filesystem and instead intends plugging in different configuration management system.
 func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...func(*Manager)) *Manager {
 	var cfg = configs.NewDefaultConfig()
-	parse(configReader, cfg)
+	parseFromReader(configReader, cfg)
 
 	var genesisState = new(genesis.GenesisState)
-	parse(genesisReader, genesisState)
+	parseFromReader(genesisReader, genesisState)
 
-	mgr := &Manager{
-		config:       cfg,
-		genesisState: genesisState,
-		clock:        clock.New(),
-	}
-
-	for _, o := range options {
-		o(mgr)
-	}
-
-	return mgr
+	return NewManager(cfg, genesisState, options...)
 }
 
-func NewManager(config *configs.Config, genesisState *genesis.GenesisState, options ...func(*Manager)) *Manager {
-	mgr := &Manager{
-		config:       config,
-		genesisState: genesisState,
-		clock:        clock.New(),
-	}
-
-	for _, o := range options {
-		o(mgr)
-	}
-
-	return mgr
+func (m *Manager) GetConfig() *configs.Config {
+	return m.config
 }
 
-func (m *Manager) init(configJSONPath, genesisJSONPath string) (config *configs.Config, genesisState *genesis.GenesisState, err error) {
+func (m *Manager) GetGenesis() *genesis.GenesisState {
+	return m.genesisState
+}
+
+func (b *Manager) GetBus() modules.Bus {
+	return b.bus
+}
+
+func (m *Manager) GetClock() clock.Clock {
+	return m.clock
+}
+
+func parseFiles(configJSONPath, genesisJSONPath string) (config *configs.Config, genesisState *genesis.GenesisState, err error) {
 	config = configs.NewDefaultConfig()
 
 	dir, configFile := path.Split(configJSONPath)
@@ -119,19 +120,7 @@ func (m *Manager) init(configJSONPath, genesisJSONPath string) (config *configs.
 	return
 }
 
-func (m *Manager) GetConfig() *configs.Config {
-	return m.config
-}
-
-func (m *Manager) GetGenesis() *genesis.GenesisState {
-	return m.genesisState
-}
-
-func (m *Manager) GetClock() clock.Clock {
-	return m.clock
-}
-
-func parse[T *configs.Config | *genesis.GenesisState](reader io.Reader, target T) {
+func parseFromReader[T *configs.Config | *genesis.GenesisState](reader io.Reader, target T) {
 	bz, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to read from reader: %v", err)
@@ -170,5 +159,11 @@ func WithPK(pk string) func(*Manager) {
 func WithClock(clockMgr clock.Clock) func(*Manager) {
 	return func(b *Manager) {
 		b.clock = clockMgr
+	}
+}
+
+func WithClientDebugMode() func(*Manager) {
+	return func(b *Manager) {
+		b.config.ClientDebugMode = true
 	}
 }

@@ -58,7 +58,7 @@ func NewDebugCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			var err error
-			runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
+			runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
 
 			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
 			validators = runtimeMgr.GetGenesis().Validators
@@ -74,7 +74,8 @@ func NewDebugCommand() *cobra.Command {
 
 			debugCurrentHeightProvider := debugCHP.NewDebugCurrentHeightProvider(0)
 
-			p2pM, err := p2p.CreateWithProviders(runtimeMgr, debugAddressBookProvider, debugCurrentHeightProvider)
+			// TODO(#429): refactor injecting the dependencies into the bus so that they can be consumed in an updated `P2PModule.Create()` implementation
+			p2pM, err := p2p.CreateWithProviders(runtimeMgr.GetBus(), debugAddressBookProvider, debugCurrentHeightProvider)
 			if err != nil {
 				log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 			}

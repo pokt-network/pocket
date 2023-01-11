@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"encoding/binary"
 	"fmt"
+	"log"
 	"sort"
 	"sync"
 	"testing"
@@ -17,7 +18,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
-	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
+	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/telemetry"
 	"github.com/stretchr/testify/require"
 )
@@ -25,8 +26,8 @@ import (
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
 
 const (
-	serviceUrlFormat = "node%d.consensus:8080"
-	testChannelSize  = 10000
+	serviceUrlFormat  = "node%d.consensus:8080"
+	eventsChannelSize = 10000
 	// Since we simulate up to a 27 node network, we will pre-generate a n >= 27 number of keys to avoid generation
 	// every time. The genesis config seed start is set for deterministic key generation and 42 was chosen arbitrarily.
 	genesisConfigSeedStart = 42
@@ -97,10 +98,10 @@ func waitForNetworkSimulationCompletion(t *testing.T, p2pModules map[string]*p2p
 // ~~~~~~ RainTree Unit Test Mocks ~~~~~~
 
 // createP2PModules returns a map of configured p2pModules keyed by an incremental naming convention (eg: `val_1`, `val_2`, etc.)
-func createP2PModules(t *testing.T, runtimeConfigs []modules.RuntimeMgr) (p2pModules map[string]*p2pModule) {
-	p2pModules = make(map[string]*p2pModule, len(runtimeConfigs))
-	for i, runtimeConfig := range runtimeConfigs {
-		p2pMod, err := Create(runtimeConfig)
+func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus) (p2pModules map[string]*p2pModule) {
+	p2pModules = make(map[string]*p2pModule, len(busMocks))
+	for i := range busMocks {
+		p2pMod, err := Create(busMocks[i])
 		require.NoError(t, err)
 		p2pModules[validatorId(i+1)] = p2pMod.(*p2pModule)
 	}
@@ -127,7 +128,7 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 			},
 		}
 
-		mockRuntimeMgr := modulesMock.NewMockRuntimeMgr(ctrl)
+		mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
 		mockRuntimeMgr.EXPECT().GetConfig().Return(cfg).AnyTimes()
 		mockRuntimeMgr.EXPECT().GetGenesis().Return(mockGenesisState).AnyTimes()
 		mockRuntimeMgrs[i] = mockRuntimeMgr
@@ -135,7 +136,26 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 	return mockRuntimeMgrs
 }
 
-// TODO: we need to support all protocol actor types, not only validators
+func createMockBuses(t *testing.T, runtimeMgrs []modules.RuntimeMgr) []*mockModules.MockBus {
+	mockBuses := make([]*mockModules.MockBus, len(runtimeMgrs))
+	for i := range mockBuses {
+		mockBuses[i] = createMockBus(t, runtimeMgrs[i])
+	}
+	return mockBuses
+}
+
+func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.MockBus {
+	ctrl := gomock.NewController(t)
+	mockBus := mockModules.NewMockBus(ctrl)
+	mockBus.EXPECT().GetRuntimeMgr().Return(runtimeMgr).AnyTimes()
+	mockBus.EXPECT().RegisterModule(gomock.Any()).DoAndReturn(func(m modules.Module) error {
+		m.SetBus(mockBus)
+		return nil
+	}).AnyTimes()
+	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
+	return mockBus
+}
+
 // createMockGenesisState configures and returns a mocked GenesisState
 func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
 	var genesisState = new(genesis.GenesisState)
@@ -161,63 +181,72 @@ func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *ge
 }
 
 // Bus Mock - needed to return the appropriate modules when accessed
-func prepareBusMock(t *testing.T,
-	consensusMock *modulesMock.MockConsensusModule,
-	persistenceMock *modulesMock.MockPersistenceModule,
-	telemetryMock *modulesMock.MockTelemetryModule,
-) *modulesMock.MockBus {
-	ctrl := gomock.NewController(t)
-	busMock := modulesMock.NewMockBus(ctrl)
-
-	busMock.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
-	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+func prepareBusMock(busMock *mockModules.MockBus,
+	persistenceMock *mockModules.MockPersistenceModule,
+	consensusMock *mockModules.MockConsensusModule,
+	telemetryMock *mockModules.MockTelemetryModule,
+) {
 	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
+	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
-
-	return busMock
 }
 
 // Consensus mock - only needed for validatorMap access
-func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *modulesMock.MockConsensusModule {
+func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus, genesisState *genesis.GenesisState) *mockModules.MockConsensusModule {
 	ctrl := gomock.NewController(t)
-	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
+	consensusMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
+
+	consensusMock.EXPECT().GetBus().Return(busMock).AnyTimes()
+	consensusMock.EXPECT().SetBus(busMock).AnyTimes()
+	consensusMock.EXPECT().GetModuleName().Return(modules.ConsensusModuleName).AnyTimes()
+	busMock.RegisterModule(consensusMock)
 
 	return consensusMock
 }
 
 // Persistence mock - only needed for validatorMap access
-func preparePersistenceMock(t *testing.T, genesisState *genesis.GenesisState) *modulesMock.MockPersistenceModule {
+func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisState *genesis.GenesisState) *mockModules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 
-	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
-	readContextMock := modulesMock.NewMockPersistenceReadContext(ctrl)
+	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
+	readContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
 
-	readContextMock.EXPECT().GetAllStakedActors(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	readContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(readContextMock, nil).AnyTimes()
 	readContextMock.EXPECT().Close().Return(nil).AnyTimes()
+
+	persistenceMock.EXPECT().GetBus().Return(busMock).AnyTimes()
+	persistenceMock.EXPECT().SetBus(busMock).AnyTimes()
+	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
+	busMock.RegisterModule(persistenceMock)
 
 	return persistenceMock
 }
 
 // Telemetry mock - Needed to help with proper counts for number of expected network writes
-func prepareTelemetryMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkWrites int) *modulesMock.MockTelemetryModule {
+func prepareTelemetryMock(t *testing.T, busMock *mockModules.MockBus, valId string, wg *sync.WaitGroup, expectedNumNetworkWrites int) *mockModules.MockTelemetryModule {
 	ctrl := gomock.NewController(t)
-	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
+	telemetryMock := mockModules.NewMockTelemetryModule(ctrl)
 
 	timeSeriesAgentMock := prepareNoopTimeSeriesAgentMock(t)
-	eventMetricsAgentMock := prepareEventMetricsAgentMock(t, wg, expectedNumNetworkWrites)
+	eventMetricsAgentMock := prepareEventMetricsAgentMock(t, valId, wg, expectedNumNetworkWrites)
 
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
+
+	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
+	telemetryMock.EXPECT().GetBus().Return(busMock).AnyTimes()
+	telemetryMock.EXPECT().SetBus(busMock).AnyTimes()
+	busMock.RegisterModule(telemetryMock)
 
 	return telemetryMock
 }
 
 // Noop mock - no specific business logic to tend to in the timeseries agent mock
-func prepareNoopTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
+func prepareNoopTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAgent {
 	ctrl := gomock.NewController(t)
-	timeseriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
+	timeseriesAgentMock := mockModules.NewMockTimeSeriesAgent(ctrl)
 
 	timeseriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
 	timeseriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
@@ -226,12 +255,13 @@ func prepareNoopTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAge
 }
 
 // Events metric mock - Needed to help with proper counts for number of expected network writes
-func prepareEventMetricsAgentMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkWrites int) *modulesMock.MockEventMetricsAgent {
+func prepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup, expectedNumNetworkWrites int) *mockModules.MockEventMetricsAgent {
 	ctrl := gomock.NewController(t)
-	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
+	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)
 
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Eq(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).Do(func(n, e interface{}, l ...interface{}) {
+		log.Printf("[valId: %s] Write\n", valId)
 		wg.Done()
 	}).Times(expectedNumNetworkWrites)
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).AnyTimes()
@@ -241,19 +271,20 @@ func prepareEventMetricsAgentMock(t *testing.T, wg *sync.WaitGroup, expectedNumN
 
 // Network transport mock - used to simulate reading to/from the network via the main events channel
 // as well as counting the number of expected reads
-func prepareConnMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkReads int) typesP2P.Transport {
-	testChannel := make(chan []byte, testChannelSize)
+func prepareConnMock(t *testing.T, valId string, wg *sync.WaitGroup, expectedNumNetworkReads int) typesP2P.Transport {
+	eventsChannel := make(chan []byte, eventsChannelSize)
 	ctrl := gomock.NewController(t)
 	connMock := mocksP2P.NewMockTransport(ctrl)
 
 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
 		wg.Done()
-		data := <-testChannel
+		log.Printf("[valId: %s] Read\n", valId)
+		data := <-eventsChannel
 		return data, nil
 	}).Times(expectedNumNetworkReads + 1) // +1 is necessary because there is one extra read of empty data by every channel when it starts
 
 	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
-		testChannel <- data
+		eventsChannel <- data
 		return nil
 	}).Times(expectedNumNetworkReads)
 

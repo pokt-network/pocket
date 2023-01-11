@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.2] - 2023-01-09
+## [0.0.0.3] - 2023-01-11
+
+- Reorder private keys so addresses (retrieved by transforming private keys) to reflect the numbering in LocalNet appropriately. The address for val1, based on config1, will have the lexicographically first address. This makes debugging easier.
+
+## [0.0.0.2] - 2023-01-10
 
 - Removed `BaseConfig` from `configs`
 - Centralized `PersistenceGenesisState` and `ConsensusGenesisState` into `GenesisState`
+- Removed `is_client_only` since it's set programmatically in the CLI
 
 ## [0.0.0.1] - 2022-12-29
 

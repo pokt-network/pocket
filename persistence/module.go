@@ -35,16 +35,17 @@ type persistenceModule struct {
 	writeContext *PostgresContext // only one write context is allowed at a time
 }
 
-const (
-	persistenceModuleName = "persistence"
-)
-
-func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	return new(persistenceModule).Create(runtimeMgr)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(persistenceModule).Create(bus)
 }
 
-func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	var m *persistenceModule
+func (*persistenceModule) Create(bus modules.Bus) (modules.Module, error) {
+	m := &persistenceModule{
+		writeContext: nil,
+	}
+	bus.RegisterModule(m)
+
+	runtimeMgr := bus.GetRuntimeMgr()
 
 	persistenceCfg := runtimeMgr.GetConfig().Persistence
 	genesisState := runtimeMgr.GetGenesis()
@@ -74,17 +75,12 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 		return nil, err
 	}
 
-	m = &persistenceModule{
-		bus:          nil,
-		config:       persistenceCfg,
-		genesisState: genesisState,
+	m.config = persistenceCfg
+	m.genesisState = genesisState
 
-		blockStore: blockStore,
-		txIndexer:  txIndexer,
-		stateTrees: stateTrees,
-
-		writeContext: nil,
-	}
+	m.blockStore = blockStore
+	m.txIndexer = txIndexer
+	m.stateTrees = stateTrees
 
 	// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
 	// 		     this forces the genesis state to be reloaded on every node startup until state
@@ -114,7 +110,7 @@ func (m *persistenceModule) Stop() error {
 }
 
 func (m *persistenceModule) GetModuleName() string {
-	return persistenceModuleName
+	return modules.PersistenceModuleName
 }
 
 func (m *persistenceModule) SetBus(bus modules.Bus) {
@@ -214,7 +210,8 @@ func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 }
 
 // HACK(olshansky): Simplify and externalize the logic for whether genesis should be populated and
-//                  move the if logic out of this file.
+//
+//	move the if logic out of this file.
 func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	checkContext, err := m.NewReadContext(-1)
 	if err != nil {
