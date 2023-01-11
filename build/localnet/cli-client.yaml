@@ -34,7 +34,7 @@ spec:
         - name: config-volume
           configMap:
             # should client have it's own config?
-            name: v1-validator1
+            name: v1-validator-default-config
             defaultMode: 420
         - name: genesis-volume
           configMap:

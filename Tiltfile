@@ -4,9 +4,9 @@ load('ext://restart_process', 'docker_build_with_restart')
 
 
 # Verify k8s version due to https://github.com/zalando/postgres-operator/issues/2098
-k8s_version = decode_json(str(local('kubectl version --output=json')).strip())
-if k8s_version['serverVersion']['major'] != '1' or k8s_version['serverVersion']['minor'] >= '24':
-  fail('Please downgrade your kubernetes version to 1.23. 1.24+ versions are not supported yet (current blocker: https://github.com/zalando/postgres-operator/issues/2098).')
+# k8s_version = decode_json(str(local('kubectl version --output=json')).strip())
+# if k8s_version['serverVersion']['major'] != '1' or k8s_version['serverVersion']['minor'] >= '24':
+#   fail('Please downgrade your kubernetes version to 1.23. 1.24+ versions are not supported yet (current blocker: https://github.com/zalando/postgres-operator/issues/2098).')
 
 
 # List of directories Tilt watches to trigger a hot-reload on changes
@@ -73,10 +73,10 @@ docker_build_with_restart('client-image', '.',
     dockerfile_contents='''FROM debian:bullseye
 WORKDIR /
 COPY bin/client-linux /usr/local/bin/client
-CMD ["/usr/local/bin/client"]
+CMD ["sleep", "infinity"]
 ''',
     only=['./bin/client-linux'],
-    entrypoint=["/usr/local/bin/client"],
+    entrypoint=["sleep", "infinity"],
     live_update=[
         sync('./bin/client-linux', '/usr/local/bin/client'),
     ]

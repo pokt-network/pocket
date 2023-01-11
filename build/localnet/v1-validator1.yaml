@@ -36,17 +36,17 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: v1-localnet-private-keys
-                  key: 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a
+                  key: val1
             - name: POCKET_CONSENSUS_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
                   name: v1-localnet-private-keys
-                  key: 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a
+                  key: val1
             - name: POCKET_P2P_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
                   name: v1-localnet-private-keys
-                  key: 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a
+                  key: val1
             - name: POSTGRES_USER
               value: "postgres"
             - name: POSTGRES_PASSWORD
@@ -60,15 +60,15 @@ spec:
             - name: POCKET_PERSISTENCE_POSTGRES_URL
               value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
             - name: POCKET_PERSISTENCE_NODE_SCHEMA
-              value: v1-validator1
+              value: validator1
           volumeMounts:
             - name: config-volume
               mountPath: /configs
             - name: genesis-volume
               mountPath: /genesis.json
               subPath: genesis.json
-            - name: v1-validator1-blockstore
-              mountPath: /blockstore
+            - name: validator-storage
+              mountPath: /validator-storage
       volumes:
         - name: config-volume
           configMap:
@@ -78,7 +78,7 @@ spec:
             name: v1-localnet-genesis
   volumeClaimTemplates:
     - metadata:
-        name: v1-validator1-blockstore
+        name: validator-storage
       spec:
         accessModes: ["ReadWriteOnce"]
         resources:
