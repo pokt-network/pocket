@@ -151,9 +151,6 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		runtimeConfig.GetConfig().Consensus.PacemakerConfig.TimeoutMsec = paceMakerTimeoutMsec
 	}
 
-	// Create & start test pocket nodes
-	StartAllTestPocketNodes(t, pocketNodes)
-
 	// Prepare leader info
 	leaderId := typesCons.NodeId(3)
 	require.Equal(t, uint64(leaderId), testHeight%numValidators) // Uses our deterministic round robin leader election
