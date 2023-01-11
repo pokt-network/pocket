@@ -147,14 +147,15 @@ func protoHash(m proto.Message) string {
 
 /*** P2P Helpers ***/
 
-func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
-	// TODO(olshansky): This can happen due to a race condition with the pacemaker.
+func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
+	m.nodeLog(typesCons.SendingMessage(msg, *m.leaderId))
+
+	// TODO: This can happen due to a race condition with the pacemaker.
 	if m.leaderId == nil {
 		m.nodeLogError(typesCons.ErrNilLeaderId.Error(), nil)
 		return
 	}
 
-	m.nodeLog(typesCons.SendingMessage(msg, *m.leaderId))
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
@@ -174,22 +175,32 @@ func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 	}
 }
 
-func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
+// Star-like (O(n)) broadcast - send to all nodes directly
+// INVESTIGATE: Re-evaluate if we should be using our structured broadcast (RainTree O(log3(n))) algorithm instead
+func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(typesCons.BroadcastingMessage(msg))
+
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
 		return
 	}
-	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage); err != nil {
-		m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
-		return
+
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
+	}
+
+	for _, val := range validators {
+		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
+			m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
+		}
 	}
 }
 
 /*** Persistence Helpers ***/
 
-// TECHDEBT: Integrate this with the `persistence` module or a real mempool.
+// TECHDEBT(#388): Integrate this with the `persistence` module or a real mempool.
 func (m *consensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
 		m.messagePool[step] = make([]*typesCons.HotstuffMessage, 0)
@@ -222,7 +233,6 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 		m.clearLeader()
 		return err
 	}
-
 	m.leaderId = &leaderId
 
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
@@ -252,7 +262,7 @@ func (m *consensusModule) nodeLog(s string) {
 
 // TODO(#164): Remove this once we have a proper logging system.
 func (m *consensusModule) nodeLogError(s string, err error) {
-	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.nodeId, s, err)
+	log.Printf("🐞[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.nodeId, s, err)
 }
 
 func (m *consensusModule) setLogPrefix(logPrefix string) {

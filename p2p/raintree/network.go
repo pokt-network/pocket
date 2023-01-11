@@ -184,8 +184,12 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		}
 	}
 
+	// TODO(#388): The lock is necessary because `HandleNetworkData` can be called concurrently
+	// which has led to `fatal error: concurrent map writes` errors. Once a proper, shared, mempool
+	// implementation is available, this should no longer be necessary.
 	n.nonceSetMutex.Lock()
 	defer n.nonceSetMutex.Unlock()
+
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
