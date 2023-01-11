@@ -262,22 +262,31 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	msgToJustify := qcToHotstuffMessage(qc)
 	numValid := 0
 
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return err
+	}
+
+	actorMapper := typesCons.NewActorMapper(validators)
+	validatorMap := actorMapper.GetValidatorMap()
+	valAddrToIdMap := actorMapper.GetValAddrToIdMap()
+
 	// TODO(#109): Aggregate signatures once BLS or DKG is implemented
 	for _, partialSig := range qc.ThresholdSignature.Signatures {
-		validator, ok := m.validatorMap[partialSig.Address]
+		validator, ok := validatorMap[partialSig.Address]
 		if !ok {
-			m.nodeLogError(typesCons.ErrMissingValidator(partialSig.Address, m.valAddrToIdMap[partialSig.Address]).Error(), nil)
+			m.nodeLogError(typesCons.ErrMissingValidator(partialSig.Address, valAddrToIdMap[partialSig.Address]).Error(), nil)
 			continue
 		}
 		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
 		// just serialize `Message` once and verify each signature without re-serializing every time.
 		if !isSignatureValid(msgToJustify, validator.GetPublicKey(), partialSig.Signature) {
-			m.nodeLog(typesCons.WarnInvalidPartialSigInQC(partialSig.Address, m.valAddrToIdMap[partialSig.Address]))
+			m.nodeLog(typesCons.WarnInvalidPartialSigInQC(partialSig.Address, valAddrToIdMap[partialSig.Address]))
 			continue
 		}
 		numValid++
 	}
-	if err := m.isOptimisticThresholdMet(numValid); err != nil {
+	if err := m.isOptimisticThresholdMet(numValid, validators); err != nil {
 		return err
 	}
 

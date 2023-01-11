@@ -16,12 +16,12 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	clockMock := clock.NewMock()
 	// Test configs
 	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-
+	buses := GenerateBuses(t, runtimeMgrs)
 	go timeReminder(clockMock, 100*time.Millisecond)
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, testChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Debug message to start consensus by triggering first view change

@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.19] - 2023-01-09
+## [0.0.0.20] - 2023-01-11
 
 - Add `init()` function to `gov.go` to build a map of parameter names and their types
 - Deprecated `GetBlocksPerSession()` and `GetServiceNodesPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
 - Update unit tests replacing `GetIntParam()` and `GetStringParam()` calls with `GetParameter()`
+
+## [0.0.0.19] - 2023-01-10
+
+- Updated module constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering module with the `bus` via `RegisterModule` method
+- Updated tests and mocks accordingly
 
 ## [0.0.0.18] - 2023-01-03
 

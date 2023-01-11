@@ -198,7 +198,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 				genesisReader: strings.NewReader(string(buildGenesisBytes)),
 			},
 			want: &Manager{
-				&configs.Config{
+				config: &configs.Config{
 					RootDirectory: "/go/src/github.com/pocket-network",
 					PrivateKey:    "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
 					Consensus: &configs.ConsensusConfig{
@@ -244,10 +244,13 @@ func TestNewManagerFromReaders(t *testing.T) {
 						UseCors: false,
 					},
 				},
-				expectedGenesis,
-				clock.New(),
+				genesisState: expectedGenesis,
+				clock:        clock.New(),
 			},
-			assertion: require.Equal,
+			assertion: func(tt require.TestingT, want, got interface{}, _ ...interface{}) {
+				require.Equal(tt, want.(*Manager).config, got.(*Manager).config)
+				require.Equal(tt, want.(*Manager).genesisState, got.(*Manager).genesisState)
+			},
 		},
 		{
 			name: "unset MaxMempoolCount should fallback to default value",
@@ -263,7 +266,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 				genesisReader: strings.NewReader(string(buildGenesisBytes)),
 			},
 			want: &Manager{
-				&configs.Config{
+				config: &configs.Config{
 					P2P: &configs.P2PConfig{
 						PrivateKey:            "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
 						ConsensusPort:         8080,
@@ -272,8 +275,8 @@ func TestNewManagerFromReaders(t *testing.T) {
 						MaxMempoolCount:       defaults.DefaultP2PMaxMempoolCount,
 					},
 				},
-				expectedGenesis,
-				clock.New(),
+				genesisState: expectedGenesis,
+				clock:        clock.New(),
 			},
 			assertion: func(tt require.TestingT, want, got interface{}, _ ...interface{}) {
 				require.Equal(tt, want.(*Manager).config.P2P, got.(*Manager).config.P2P)

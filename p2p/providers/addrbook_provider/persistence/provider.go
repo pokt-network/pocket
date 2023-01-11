@@ -17,10 +17,9 @@ type persistenceAddrBookProvider struct {
 	connFactory typesP2P.ConnectionFactory
 }
 
-func NewPersistenceAddrBookProvider(bus modules.Bus, p2pCfg *configs.P2PConfig, options ...func(*persistenceAddrBookProvider)) *persistenceAddrBookProvider {
+func NewPersistenceAddrBookProvider(bus modules.Bus, options ...func(*persistenceAddrBookProvider)) *persistenceAddrBookProvider {
 	pabp := &persistenceAddrBookProvider{
 		bus:         bus,
-		p2pCfg:      p2pCfg,
 		connFactory: transport.CreateDialer, // default connection factory, overridable with WithConnectionFactory()
 	}
 
@@ -46,11 +45,11 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	}
 	defer persistenceReadContext.Close()
 
-	stakedActors, err := persistenceReadContext.GetAllStakedActors(int64(height))
+	validators, err := persistenceReadContext.GetAllValidators(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	return addrbook_provider.ActorsToAddrBook(pabp, stakedActors)
+	return addrbook_provider.ActorsToAddrBook(pabp, validators)
 }
 
 func (pabp *persistenceAddrBookProvider) GetConnFactory() typesP2P.ConnectionFactory {
@@ -58,7 +57,7 @@ func (pabp *persistenceAddrBookProvider) GetConnFactory() typesP2P.ConnectionFac
 }
 
 func (pabp *persistenceAddrBookProvider) GetP2PConfig() *configs.P2PConfig {
-	return pabp.p2pCfg
+	return pabp.GetBus().GetRuntimeMgr().GetConfig().P2P
 }
 
 func (pabp *persistenceAddrBookProvider) SetConnectionFactory(connFactory typesP2P.ConnectionFactory) {

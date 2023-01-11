@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.16] - 2023-01-09
+## [0.0.0.17] - 2023-01-11
 
 - Deprecated `GetBlocksPerSession()` in favour of the more general parameter getter function `GetParameter()`
 - Update unit test for `GetBlocksPerSession()` to use the `GetParameter()` function
+
+## [0.0.0.16] - 2023-01-10
+
+- Updated module constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering module with the `bus` via `RegisterModule` method
 
 ## [0.0.0.15] - 2023-01-03
 
