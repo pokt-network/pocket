@@ -12,7 +12,7 @@ type PacemakerDebug interface {
 type paceMakerDebug struct {
 	manualMode                bool
 	debugTimeBetweenStepsMsec uint64
-	previousRoundQC           *typesCons.QuorumCertificate
+	quorumCertificate         *typesCons.QuorumCertificate
 }
 
 func (p *paceMaker) IsManualMode() bool {
@@ -24,5 +24,5 @@ func (p *paceMaker) SetManualMode(manualMode bool) {
 }
 
 func (p *paceMaker) ForceNextView() {
-	p.startNextView(p.previousRoundQC, true)
+	p.startNextView(p.quorumCertificate, true)
 }

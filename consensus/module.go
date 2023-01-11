@@ -115,71 +115,8 @@ func (m *consensusModule) ClearLeaderMessagesPool() {
 	m.clearMessagesPool()
 }
 
-func (m *consensusModule) ResetForNewHeight() {
-	m.resetForNewHeight()
-}
-
-func (m *consensusModule) ReleaseUtilityContext() error {
-	if m.utilityContext != nil {
-		if err := m.utilityContext.Release(); err != nil {
-			log.Println("[WARN] Failed to release utility context: ", err)
-			return err
-		}
-		m.utilityContext = nil
-	}
-
-	return nil
-}
-
-func (m *consensusModule) BroadcastMessageToNodes(msg *anypb.Any) error {
-	msgCodec, err := codec.GetCodec().FromAny(msg)
-	if err != nil {
-		return err
-	}
-
-	broadcastMessage, ok := msgCodec.(*typesCons.HotstuffMessage)
-	if !ok {
-		return fmt.Errorf("failed to cast message to HotstuffMessage")
-	}
-	m.broadcastToNodes(broadcastMessage)
-
-	return nil
-}
-
-func (m *consensusModule) IsLeader() bool {
-	return m.isLeader()
-}
-
-func (m *consensusModule) IsLeaderSet() bool {
-	return m.leaderId != nil
-}
-
-func (m *consensusModule) NewLeader(msg *anypb.Any) error {
-	msgCodec, err := codec.GetCodec().FromAny(msg)
-	if err != nil {
-		return err
-	}
-
-	message, ok := msgCodec.(*typesCons.HotstuffMessage)
-	if !ok {
-		return fmt.Errorf("failed to cast message to HotstuffMessage")
-	}
-
-	return m.electNextLeader(message)
-}
-
-func (m *consensusModule) GetPrepareQC() *anypb.Any {
-	anyProto, err := anypb.New(m.prepareQC)
-	if err != nil {
-		log.Println("[WARN] NewHeight: Failed to convert paceMaker message to proto: ", err)
-		return nil
-	}
-	return anyProto
-
-}
-
-func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	return new(consensusModule).Create(runtimeMgr)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(consensusModule).Create(bus)
 }
 
 func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
@@ -188,13 +125,12 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		return nil, err
 	}
 
-	// TODO(olshansky): Can we make this a submodule?
-	paceMakerMod, err := CreatePacemaker(bus)
+	paceMakerMod, err := pacemaker.CreatePacemaker(bus)
 	if err != nil {
 		return nil, err
 	}
 
-	pacemaker := paceMakerMod.(Pacemaker)
+	pacemaker := paceMakerMod.(pacemaker.Pacemaker)
 	m := &consensusModule{
 		paceMaker:         pacemaker,
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
@@ -204,8 +140,8 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		step:   NewRound,
 		block:  nil,
 
-		highPrepareQC: nil,
-		lockedQC:      nil,
+		prepareQC: nil,
+		lockedQC:  nil,
 
 		leaderId: nil,
 
@@ -216,9 +152,6 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
 	}
 	bus.RegisterModule(m)
-
-	// TODO(#395): Decouple the pacemaker and consensus modules
-	pacemaker.SetConsensusModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 
