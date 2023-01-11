@@ -443,6 +443,7 @@ localnet_shell:
 ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + resources that might not have been cleaned up by tilt)
 localnet_down:
 	tilt down
+	kubectl delete pvc data-dependencies-postgresql-0
 
 .PHONY: check_cross_module_imports
 check_cross_module_imports: ## Lists cross-module imports

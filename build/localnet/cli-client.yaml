@@ -25,6 +25,35 @@ spec:
               value: "/var/pocket/config/config.json"
             - name: GENESIS_PATH
               value: "/var/pocket/genesis/genesis.json"
+            - name: POCKET_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: v1-localnet-private-keys
+                  key: val1
+            - name: POCKET_CONSENSUS_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: v1-localnet-private-keys
+                  key: val1
+            - name: POCKET_P2P_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: v1-localnet-private-keys
+                  key: val1
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: LocalNetPassword
+            - name: POSTGRES_HOST
+              value: dependencies-postgresql
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: "postgres"
+            - name: POCKET_PERSISTENCE_POSTGRES_URL
+              value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+            - name: POCKET_PERSISTENCE_NODE_SCHEMA
+              value: validator1
           volumeMounts:
             - mountPath: /var/pocket/config
               name: config-volume
