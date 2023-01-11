@@ -103,19 +103,22 @@ Since our Keybase is under development, we have to manually inject the private k
 
 For the following steps, you'll need to use the accounts of the first two validators in the hard-coded development genesis file. Therefore you have some options:
 
-1) You can just:
-   ```bash
-   echo '"6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4"' > /tmp/val1.json
-   echo '"5db3e9d97d04d6d70359de924bb02039c602080d6bf01a692bad31ad5ef93524c16043323c83ffd901a8bf7d73543814b8655aa4695f7bfb49d01926fc161cdb"' > /tmp/val2.json
-   ```
+1. You can just:
 
-2) You can use `jq` and run these commands:
-    ```bash
-    cat ./build/config/config1.json | jq '.private_key' > /tmp/val1.json
-    cat ./build/config/config2.json | jq '.private_key' > /tmp/val2.json
-    ```
+```bash
+echo '"6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4"' > /tmp/val1.json
 
-3) You can manually copy-paste the private keys from the config files into the `/tmp/val1.json` and `/tmp/val2.json` files. Remember to keep the double quotes around the private keys ("private_key" field in the JSON).
+echo '"5db3e9d97d04d6d70359de924bb02039c602080d6bf01a692bad31ad5ef93524c16043323c83ffd901a8bf7d73543814b8655aa4695f7bfb49d01926fc161cdb"' > /tmp/val2.json
+```
+
+2. You can use `jq` and run these commands:
+
+```bash
+cat ./build/config/config1.json | jq '.private_key' > /tmp/val1.json
+cat ./build/config/config2.json | jq '.private_key' > /tmp/val2.json
+```
+
+3. You can manually copy-paste the private keys from the config files into the `/tmp/val1.json` and `/tmp/val2.json` files. Remember to keep the double quotes around the private keys ("private_key" field in the JSON).
 
 ### First Transaction
 

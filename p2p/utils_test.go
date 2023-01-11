@@ -26,8 +26,8 @@ import (
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
 
 const (
-	serviceUrlFormat = "node%d.consensus:8080"
-	testChannelSize  = 10000
+	serviceUrlFormat  = "node%d.consensus:8080"
+	eventsChannelSize = 10000
 	// Since we simulate up to a 27 node network, we will pre-generate a n >= 27 number of keys to avoid generation
 	// every time. The genesis config seed start is set for deterministic key generation and 42 was chosen arbitrarily.
 	genesisConfigSeedStart = 42
@@ -272,19 +272,19 @@ func prepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup
 // Network transport mock - used to simulate reading to/from the network via the main events channel
 // as well as counting the number of expected reads
 func prepareConnMock(t *testing.T, valId string, wg *sync.WaitGroup, expectedNumNetworkReads int) typesP2P.Transport {
-	testChannel := make(chan []byte, testChannelSize)
+	eventsChannel := make(chan []byte, eventsChannelSize)
 	ctrl := gomock.NewController(t)
 	connMock := mocksP2P.NewMockTransport(ctrl)
 
 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
 		wg.Done()
 		log.Printf("[valId: %s] Read\n", valId)
-		data := <-testChannel
+		data := <-eventsChannel
 		return data, nil
 	}).Times(expectedNumNetworkReads + 1) // +1 is necessary because there is one extra read of empty data by every channel when it starts
 
 	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
-		testChannel <- data
+		eventsChannel <- data
 		return nil
 	}).Times(expectedNumNetworkReads)
 
