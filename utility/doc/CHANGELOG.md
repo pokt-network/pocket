@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Using defaults from `test_artifacts` for tests
 - Updated tests to reflect the above changes
 
+## [0.0.0.15] - 2022-12-24
+
+- Updated "test/module_test.go" to encorporate MaxConnsCount, MinConnsCount, MaxConnLifetime, MaxConnIdleTime, and HealthCheckPeriod in persistence config.
+
 ## [0.0.0.14] - 2022-12-21
 
 - Updated to use the new centralized config and genesis handling

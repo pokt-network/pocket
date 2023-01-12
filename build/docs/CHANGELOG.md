@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.1] - 2023-01-03
+## [0.0.0.2] - 2023-01-03
 
 - Removed `BaseConfig` from `configs`
 - Centralized `PersistenceGenesisState` and `ConsensusGenesisState` into `GenesisState`
+
+## [0.0.0.1] - 2022-12-24
+
+- Added "max_conns_count", "min_conns_count", "max_conn_lifetime", "max_conn_idle_time" and "health_check_period" to config files
 
 ## [0.0.0.0] - 2022-12-22
 

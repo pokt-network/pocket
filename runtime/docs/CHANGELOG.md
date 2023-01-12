@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.3] - 2023-01-03
+## [0.0.0.4] - 2023-01-03
 
 - Split testing/development configs into separate files
 - Centralized `NewDefaultConfig` logic with options used by the config generator
 - Refactored Params handling, not hardcoded anymore but sourced from genesis
+
+## [0.0.0.3] - 2022-12-24
+
+- Added MaxConnsCount, MinConnsCount, MaxConnLifetime, MaxConnIdleTime, and HealthCheckPeriod to persistence config.
 
 ## [0.0.0.2] - 2022-12-21
 
