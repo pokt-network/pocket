@@ -6,7 +6,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
@@ -30,7 +30,7 @@ type peersManager struct {
 	maxNumLevels uint32
 }
 
-func newPeersManagerWithAddrBookProvider(selfAddr cryptoPocket.Address, addrBookProvider typesP2P.AddrBookProvider, height uint64) (*peersManager, error) {
+func newPeersManagerWithAddrBookProvider(selfAddr cryptoPocket.Address, addrBookProvider addrbook_provider.AddrBookProvider, height uint64) (*peersManager, error) {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(height)
 	if err != nil {
 		return nil, err
@@ -172,7 +172,7 @@ const (
 
 type addressBookEvent struct {
 	eventType addressBookEventType
-	peer      *types.NetworkPeer
+	peer      *typesP2P.NetworkPeer
 }
 
 type networkView struct {

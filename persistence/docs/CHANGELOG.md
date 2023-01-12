@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.19] - 2023-01-03
+##  [0.0.0.21] - 2023-01-11
+
+- Add `init()` function to `gov.go` to build a map of parameter names and their types
+- Deprecated `GetBlocksPerSession()` and `GetServiceNodesPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
+- Update unit tests replacing `GetIntParam()` and `GetStringParam()` calls with `GetParameter()`
+
+## [0.0.0.20] - 2023-01-11
+
+- Minor logging improvements
+
+## [0.0.0.19] - 2023-01-10
+
+- Updated module constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering module with the `bus` via `RegisterModule` method
+- Updated tests and mocks accordingly
+
+## [0.0.0.18] - 2023-01-03
 
 - Renamed `InitParams` to `InitGenesisParams`
 
@@ -136,13 +152,11 @@ KVStore changes
 - Ported over storing blocks and block components to the Persistence module from Consensus and Utility modules
 - Encapsulated `TxIndexer` logic to the persistence context only
 
-
 ## [0.0.0.9] - 2022-10-19
 
 - Fixed `ToPersistenceActors()` by filling all structure fields
 - Deprecated `BaseActor` -> `Actor`
 - Changed default actor type to `ActorType_Undefined`
-
 
 ## [0.0.0.8] - 2022-10-12
 
@@ -161,8 +175,6 @@ KVStore changes
 - Don't ignore the exit code of `m.Run()` in the unit tests
 - Fixed several broken unit tests related to type casting
 
-
-
 ## [0.0.0.6] - 2022-09-30
 
 - Removed no-op `DeleteActor` code
@@ -171,7 +183,6 @@ KVStore changes
 - Deprecated `persMod.ResetContext()` for -> `persRWContext.ResetContext()` for more appropriate encapsulation
 - Added ticks to CHANGELOG.md
 - Removed reference to Utility Mod's `BigIntToString()` and used internal `BigIntToString()`
-
 
 ## [0.0.0.5] - 2022-09-14
 

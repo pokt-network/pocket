@@ -186,25 +186,43 @@ $ make client_start && make client_connect
 
 ```bash
 Pocket
-├── app              # Entrypoint to running the Pocket node and clients
-|   ├── client       # Entrypoint to running a local Pocket debug client
-|   ├── pocket       # Entrypoint to running a local Pocket node
-├── bin              # [currently-unused] Destination for compiled pocket binaries
-├── build            # Build related source files including Docker, scripts, etc
-|   ├── config       # Configuration files for to run nodes in development
-|   ├── deployments  # Docker-compose to run different cluster of services for development
-|   ├── Docker*      # Various Dockerfile(s)
-├── consensus        # Implementation of the Consensus module
-├── docs             # Links to V1 Protocol implementation documentation (excluding the protocol specification)
-├── logger           # Implementation of the Logger module
-├── p2p              # Implementation of the P2P module
-├── persistence      # Implementation of the Persistence module
-├── rpc              # Implementation of the RPC module
-├── runtime          # Implementation of the Runtime module
-├── shared           # [to-be-refactored] Shared types, modules and utils
-├── telemetry        # Implementation of the Telemetry module
-├── utility          # Implementation of the Utility module
-├── Makefile         # [to-be-deleted] The source of targets used to develop, build and test
+├── app                               # Entrypoint to running the Pocket node and clients
+│   ├── client                        # Entrypoint to running a local Pocket debug client
+│   └── pocket                        # Entrypoint to running a local Pocket node
+├── bin                               # Destination for compiled pocket binaries
+├── build                             # Build related source files including Docker, scripts, etc
+│   ├── config                        # Configuration files for to run nodes in development
+│   ├── deployments                   # Docker-compose to run different cluster of services for development
+│   ├── docs                          # Links to V1 Protocol implementation documentation (excluding the protocol specification)
+├── consensus                         # Implementation of the Consensus module
+├── docs                              # Links to V1 Protocol implementation documentation (excluding the protocol specification)
+├── logger                            # Implementation of the Logger module
+├── p2p                               # Implementation of the P2P module
+├── persistence                       # Implementation of the Persistence module
+├── rpc                               # Implementation of the RPC module
+├── runtime                           # Implementation of the Runtime module
+│   ├── configs                       # Configuration struct definitions
+│   │   └── proto                     # Protobuf representing the specific configuration of the various modules
+│   ├── defaults                      # Default values for the configuration structs
+│   ├── genesis
+│   │   └── proto                     # Protobuf representing the genesis state of the Pocket blockchain
+│   └── test_artifacts                # Componentry used for generating test artifacts such as particular genesis states used in testing
+├── shared                            # Shared types, modules and utils
+│   ├── codec
+│   │   └── proto
+│   ├── converters
+│   ├── core                          # Core types (Actor, Pools, etc.) used throughout the codebase
+│   │   └── types
+│   │       └── proto                 # Protobuf representing the core types used throughout the codebase
+│   ├── crypto
+│   ├── docs
+│   │   └── flows
+│   ├── messaging                     # Messaging structs and functions
+│   │   └── proto
+│   └── modules                       # Shared modules definitions (interfaces)
+├── telemetry                         # Implementation of the Telemetry module
+├── utility                           # Implementation of the Utility module
+└── Makefile                          # The source of targets used to develop, build and test
 ```
 
 ### Linters

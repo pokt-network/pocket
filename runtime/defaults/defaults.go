@@ -5,9 +5,10 @@ import (
 )
 
 const (
-	defaultRPCPort    = "50832"
-	defaultRPCHost    = "localhost"
-	defaultRPCTimeout = 30000
+	defaultRPCPort       = "50832"
+	defaultRPCHost       = "localhost"
+	defaultRPCTimeout    = 30000
+	DefaultBusBufferSize = 100
 )
 
 var (

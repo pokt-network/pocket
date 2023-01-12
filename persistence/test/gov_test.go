@@ -35,7 +35,7 @@ func TestGetSetIntParam(t *testing.T) {
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	maxChains, err := db.GetIntParam(AppMaxChainsParamName, height)
+	maxChains, err := db.GetParameter(AppMaxChainsParamName, height)
 	require.NoError(t, err)
 
 	require.Equal(t, newMaxChains, maxChains)
@@ -55,7 +55,7 @@ func TestGetSetStringParam(t *testing.T) {
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	serviceNodeMinimumStake, err := db.GetStringParam(ServiceNodeMinimumStakeParamName, height)
+	serviceNodeMinimumStake, err := db.GetParameter(ServiceNodeMinimumStakeParamName, height)
 	require.NoError(t, err)
 
 	require.Equal(t, newServiceNodeMinimumStake, serviceNodeMinimumStake)
