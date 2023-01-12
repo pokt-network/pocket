@@ -439,6 +439,16 @@ localnet_client_debug:
 localnet_shell:
 	kubectl exec -it deploy/pocket-v1-cli-client -- /bin/bash
 
+.PHONY: localnet_logs_validators
+## Outputs logs from all validators
+localnet_logs_validators:
+	kubectl logs -l v1-purpose=validator --all-containers=true --tail=-1
+
+.PHONY: localnet_logs_validators_follow
+## Outputs logs from all validators and follows them
+localnet_logs_validators:
+	kubectl logs -l v1-purpose=validator --all-containers=true --tail=-1 -f
+
 .PHONY: localnet_down
 ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + resources that might not have been cleaned up by tilt)
 localnet_down:

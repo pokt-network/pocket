@@ -6,10 +6,10 @@ dependencies:
   - name: "promtail"
     condition: promtail.enabled
     repository: "https://grafana.github.io/helm-charts"
-    version: "^6.6.1"
+    version: "^6.7.4"
   - name: "grafana"
     condition: grafana.enabled
-    version: "~6.43.0"
+    version: "~6.50.0"
     repository: "https://grafana.github.io/helm-charts"
   - name: "prometheus"
     condition: prometheus.enabled
