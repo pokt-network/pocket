@@ -75,11 +75,6 @@ func (m *consensusModule) NewLeader(msg *anypb.Any) error {
 }
 
 func (m *consensusModule) GetPrepareQC() (*anypb.Any, error) {
-	//TODO check why testing fails when prepareQC is nil
-	// if m.prepareQC == nil {
-	// 	return nil, fmt.Errorf("prepareQC is nil")
-	// }
-
 	anyProto, err := anypb.New(m.prepareQC)
 	if err != nil {
 		return nil, fmt.Errorf("[WARN] NewHeight: Failed to convert paceMaker message to proto: %s", err)

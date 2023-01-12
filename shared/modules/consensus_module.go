@@ -36,13 +36,11 @@ type ConsensusModule interface {
 // These functions are intended to only be called by the Pacemaker module.
 // TODO(#428): This interface will be removed when the communication between the pacemaker and consensus module become asynchronous.
 type ConsensusPacemaker interface {
-
 	//Pacemaker Consensus interaction modules
 	ResetRound()
 	ClearLeaderMessagesPool()
 	SetHeight(uint64)
 	SetRound(uint64)
-
 	// IMPROVE: Consider changing the input to type to `typesCons.HotstuffStep`. This currently causes an import cycle and requires significant refactoring.
 	SetStep(uint8)
 	ResetForNewHeight()
@@ -52,6 +50,6 @@ type ConsensusPacemaker interface {
 	IsLeaderSet() bool
 	// IMPROVE: Consider changing input to typesCons.HotstuffMessage. This requires to do refactoring.
 	NewLeader(*anypb.Any) error
-	GetPrepareQC() (*anypb.Any, error) //*anypb.Any
+	GetPrepareQC() (*anypb.Any, error)
 	GetNodeId() uint64
 }
