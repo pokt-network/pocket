@@ -16,6 +16,7 @@ func (m *consensusModule) ResetRound() {
 	m.clearMessagesPool()
 }
 
+// This function resets the current state of the consensus module, called by pacemaker submodule before node proceeds to the next view.
 func (m *consensusModule) ResetForNewHeight() {
 	m.round = 0
 	m.block = nil
@@ -23,6 +24,7 @@ func (m *consensusModule) ResetForNewHeight() {
 	m.lockedQC = nil
 }
 
+// This function releases consensus module's utility context, called by pacemaker module
 func (m *consensusModule) ReleaseUtilityContext() error {
 	if m.utilityContext != nil {
 		if err := m.utilityContext.Release(); err != nil {
@@ -73,7 +75,7 @@ func (m *consensusModule) NewLeader(msg *anypb.Any) error {
 }
 
 func (m *consensusModule) GetPrepareQC() (*anypb.Any, error) {
-	//TODO! check why testing fails when prepareQC is nil
+	//TODO check why testing fails when prepareQC is nil
 	// if m.prepareQC == nil {
 	// 	return nil, fmt.Errorf("prepareQC is nil")
 	// }

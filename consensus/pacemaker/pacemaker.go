@@ -17,9 +17,9 @@ import (
 const (
 	DefaultLogPrefix    = "NODE"
 	pacemakerModuleName = "pacemaker"
-	//NewRound            = typesCons.HotstuffStep_HOTSTUFF_STEP_NEWROUND
-	//Propose             = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_PROPOSE
-	timeoutBuffer = 30 * time.Millisecond // A buffer around the pacemaker timeout to avoid race condition; 30ms was arbitrarily chosen
+
+	// A buffer around the pacemaker timeout to avoid race condition; 30ms was arbitrarily chosen
+	timeoutBuffer = 30 * time.Millisecond
 
 	NewRound = typesCons.HotstuffStep_HOTSTUFF_STEP_NEWROUND
 	Propose  = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_PROPOSE
@@ -38,16 +38,12 @@ type Pacemaker interface {
 
 var (
 	_ modules.Module = &paceMaker{}
-	//_ modules.ConfigurableModule = &paceMaker{}
 	_ PacemakerDebug = &paceMaker{}
-	//_ modules.PacemakerConfig    = &typesCons.PacemakerConfig{}
 )
 
 type paceMaker struct {
-	bus modules.Bus
-
-	pacemakerCfg *configs.PacemakerConfig
-
+	bus            modules.Bus
+	pacemakerCfg   *configs.PacemakerConfig
 	stepCancelFunc context.CancelFunc
 
 	// Only used for development and debugging.
@@ -130,8 +126,6 @@ func (m *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	//                  handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
 	// Do not handle messages if it is a self proposal
 	if consensusMod.IsLeader() && msg.Type == Propose && msg.Step != NewRound {
-		// TODO: Noisy log - make it a DEBUG
-		// p.consensusMod.nodeLog(typesCons.ErrSelfProposal.Error())
 		return false, nil
 	}
 
@@ -152,7 +146,7 @@ func (m *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		consensusMod.SetStep(uint8(msg.Step))
 		consensusMod.SetRound(msg.Round)
 
-		// TODO(olshansky): Add tests for this. When we catch up to a later step, the leader is still the same.
+		// TODO: Add tests for this. When we catch up to a later step, the leader is still the same.
 		// However, when we catch up to a later round, the leader at the same height will be different.
 		if currentRound != msg.Round || !consensusMod.IsLeaderSet() {
 			anyProto, err := anypb.New(msg)
@@ -238,7 +232,6 @@ func (m *paceMaker) NewHeight() {
 
 func (m *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
 	// DISCUSS: Should we lock the consensus module here?
-
 	consensusMod := m.GetBus().GetConsensusModule()
 	consensusMod.SetStep(uint8(NewRound))
 	consensusMod.ResetRound()
@@ -275,7 +268,7 @@ func (m *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	consensusMod.BroadcastMessageToValidators(anyProto)
 }
 
-// TODO(olshansky): Increase timeout using exponential backoff.
+// TODO: Increase timeout using exponential backoff.
 func (m *paceMaker) getStepTimeout(round uint64) time.Duration {
 	baseTimeout := time.Duration(int64(time.Millisecond) * int64(m.pacemakerCfg.TimeoutMsec))
 	return baseTimeout
@@ -285,9 +278,3 @@ func (m *paceMaker) getStepTimeout(round uint64) time.Duration {
 func (m *paceMaker) nodeLog(s string) {
 	log.Printf("[%s][%d] %s\n", m.logPrefix, m.GetBus().GetConsensusModule().GetNodeId(), s)
 }
-
-// HasPacemakerConfig is used to determine if a ConsensusConfig includes a PacemakerConfig without having to cast to the struct
-// (which would break mocks and/or pollute the codebase with mock types casts and checks)
-// type HasPacemakerConfig interface {
-// 	GetPacemakerConfig() *typesCons.PacemakerConfig
-// }
