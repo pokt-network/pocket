@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.4] - 2023-01-13
+## [0.0.0.4] - 2023-01-14
 
 - Added "max_conns_count", "min_conns_count", "max_conn_lifetime", "max_conn_idle_time" and "health_check_period" to config files
 
