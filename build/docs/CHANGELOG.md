@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2023-01-13
+
+- Added "max_conns_count", "min_conns_count", "max_conn_lifetime", "max_conn_idle_time" and "health_check_period" to config files
+
 ## [0.0.0.3] - 2023-01-11
 
 - Reorder private keys so addresses (retrieved by transforming private keys) to reflect the numbering in LocalNet appropriately. The address for val1, based on config1, will have the lexicographically first address. This makes debugging easier.
@@ -21,10 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated all `config*.json` files with the missing `max_mempool_count` value
 - Added `is_client_only` to `config1.json` so Viper knows it can be overridden. The config override is done in the Makefile's `client_connect` target. Setting this can be avoided if we merge the changes in https://github.com/pokt-network/pocket/compare/main...issue/cli-viper-environment-vars-fix
-
-## [0.0.0.1] - 2022-12-24
-
-- Added "max_conns_count", "min_conns_count", "max_conn_lifetime", "max_conn_idle_time" and "health_check_period" to config files
 
 ## [0.0.0.0] - 2022-12-22
 

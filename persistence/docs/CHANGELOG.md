@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.22] - 2023-01-13
+
+- Add `max_conns_count`, `min_conns_count`, `max_conn_lifetime`, `max_conn_idle_time` and `health_check_period` to `PersistenceConfig`.
+- Update `connectToDatabase` function in `db.go` to connect via `pgxpool` to postgres database and accept `PersistenceConfig` interface as input.
+- Update `github.com/jackc/pgx/v4` -> `github.com/jackc/pgx/v5`.
+
 ##  [0.0.0.21] - 2023-01-11
 
 - Add `init()` function to `gov.go` to build a map of parameter names and their types
@@ -27,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Renamed `InitParams` to `InitGenesisParams`
 
-## [0.0.0.18] - 2023-01-03
+## [0.0.0.17] - 2023-01-03
 
 - Added missing `ActorType` in `GetAllXXXX()` functions
 - Updated to new `PoolNames` enums
@@ -36,12 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored default values sourcing (test_artifacts for tests)
 - Updated tests
 - Consolidated `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md` into `persistence/docs/CHANGELOG`
-
-## [0.0.0.17] - 2022-12-24
-
-- Add `max_conns_count`, `min_conns_count`, `max_conn_lifetime`, `max_conn_idle_time` and `health_check_period` to `PersistenceConfig`.
-- Update `connectToDatabase` function in `db.go` to connect via `pgxpool` to postgres database and accept `PersistenceConfig` interface as input.
-- Update `github.com/jackc/pgx/v4` -> `github.com/jackc/pgx/v5`.
 
 ## [0.0.0.16] - 2022-12-21
 
