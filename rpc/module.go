@@ -20,24 +20,23 @@ type rpcModule struct {
 	config *configs.RPCConfig
 }
 
-const (
-	rpcModuleName = "rpc"
-)
-
-func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	return new(rpcModule).Create(runtime)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(rpcModule).Create(bus)
 }
 
-func (m *rpcModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	rpcCfg := runtime.GetConfig().RPC
-
-	if !rpcCfg.Enabled {
-		return &noopRpcModule{}, nil
-	}
-
-	return &rpcModule{
+func (*rpcModule) Create(bus modules.Bus) (modules.Module, error) {
+	runtimeMgr := bus.GetRuntimeMgr()
+	cfg := runtimeMgr.GetConfig()
+	rpcCfg := cfg.RPC
+	rpcMod := modules.RPCModule(&rpcModule{
 		config: rpcCfg,
-	}, nil
+	})
+	if !rpcCfg.Enabled {
+		rpcMod = &noopRpcModule{}
+	}
+	bus.RegisterModule(rpcMod)
+
+	return rpcMod, nil
 }
 
 func (u *rpcModule) Start() error {
@@ -50,7 +49,7 @@ func (u *rpcModule) Stop() error {
 }
 
 func (u *rpcModule) GetModuleName() string {
-	return rpcModuleName
+	return modules.RPCModuleName
 }
 
 func (u *rpcModule) SetBus(bus modules.Bus) {

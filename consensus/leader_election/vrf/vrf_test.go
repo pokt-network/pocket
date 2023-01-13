@@ -17,7 +17,7 @@ func TestVRFKeygenWithoutSeed(t *testing.T) {
 }
 
 func TestVRFKeygenWithSeed(t *testing.T) {
-	seed := "Olshansky wonders if anyone is ever going to read this code"
+	seed := "👊 if you are reading this and bonus points if you have ideas for how to improve the tests"
 	require.GreaterOrEqual(t, len(seed), crypto.SeedSize/2)
 
 	privKey, err := crypto.NewPrivateKeyFromSeed([]byte(seed))
@@ -31,8 +31,8 @@ func TestVRFKeygenWithSeed(t *testing.T) {
 	sk, vk, err := GenerateVRFKeys(reader)
 	require.Nil(t, err)
 
-	require.Equal(t, "4f6c7368616e736b7920776f6e64657200000000000000000000000000000000c8491df826eccf7557467c74f7a93bb324a15efd2359dc27e3eba940127ff8a2", hex.EncodeToString(sk.Bytes()))
-	require.Equal(t, "c8491df826eccf7557467c74f7a93bb324a15efd2359dc27e3eba940127ff8a2", hex.EncodeToString(vk.Bytes()))
+	require.Equal(t, "f09f918a20696620796f75206172652000000000000000000000000000000000fe570d9ce4722e7021128023dd1251d3145c6ddf8e3a2bc7628b7f802f0d0ff8", hex.EncodeToString(sk.Bytes()))
+	require.Equal(t, "fe570d9ce4722e7021128023dd1251d3145c6ddf8e3a2bc7628b7f802f0d0ff8", hex.EncodeToString(vk.Bytes()))
 }
 
 func TestVRFKeygenProveAndVerify(t *testing.T) {

@@ -21,7 +21,7 @@ const (
 // the hood.
 func TestSortition(t *testing.T) {
 	// The number of validators in the network
-	numValidators := uint64(1000) // // NOTE: This value is somewhat arbitrary.
+	numValidators := uint64(1000) // NOTE: This value is somewhat arbitrary.
 	uPOKTNetworkStake := uPOKTMinValidatorStake * numValidators
 
 	testParameters := []struct {

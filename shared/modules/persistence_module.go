@@ -9,6 +9,8 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
+const PersistenceModuleName = "persistence"
+
 type PersistenceModule interface {
 	Module
 
@@ -125,9 +127,8 @@ type PersistenceReadContext interface {
 
 	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries
-	GetLatestBlockHeight() (uint64, error)         // Returns the height of the latest block in the persistence layer
-	GetBlockHash(height int64) (string, error)     // Returns the app hash corresponding to the height provided
-	GetBlocksPerSession(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
+	GetLatestBlockHeight() (uint64, error)     // Returns the height of the latest block in the persistence layer
+	GetBlockHash(height int64) (string, error) // Returns the app hash corresponding to the height provided
 
 	// Pool Queries
 
@@ -159,7 +160,6 @@ type PersistenceReadContext interface {
 	GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error)
 	GetServiceNodeCount(chain string, height int64) (int, error)
-	GetServiceNodesPerSessionAt(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
 
 	// Fisherman Queries
 	GetAllFishermen(height int64) ([]*coreTypes.Actor, error)
@@ -187,6 +187,7 @@ type PersistenceReadContext interface {
 	GetIntParam(paramName string, height int64) (int, error)
 	GetStringParam(paramName string, height int64) (string, error)
 	GetBytesParam(paramName string, height int64) ([]byte, error)
+	GetParameter(paramName string, height int64) (any, error)
 
 	// Flags
 	GetIntFlag(paramName string, height int64) (int, bool, error)

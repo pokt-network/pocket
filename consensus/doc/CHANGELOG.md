@@ -7,11 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.16] - 2023-01-03
+## [0.0.0.18] - 2023-01-11
+
+### Consensus - Core
+
+- Force consensus to use a "star-like" broadcast instead of "RainTree" broadcast
+- Improve logging throughout through the use of emojis and rewording certain statements
+- Slightly improve the block verification flow (renaming, minor fixes, etc…) to stabilize LocalNet
+
+### Consensus - Tests
+
+- Rename the `consensus_tests` package to `e2e_tests`
+- Internalize configuration related to `fail_on_extra_msgs` from the `Makefile` to the `consensus` module
+- Forced all tests to fail if we receive extra unexpected messages and modify tests appropriately
+- After #198, we made tests deterministic but there was a hidden bug that modified how the test utility functions because the clock would not move while we were waiting for messages. This prevented logs from streaming, tests from failing, and other issues. Tend to all related changes.
+
+### Consensus - Pacemaker
+
+- Rename `ValidateMessage` to `ShouldHandleMessage` and return a boolean
+- Pass a `reason` to `InterruptRound`
+- Improve readability of some parts of the code
+
+## [0.0.0.17] - 2023-01-10
+
+- Updated module constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering module with the `bus` via `RegisterModule` method
+- Updated tests and mocks accordingly
+
+## [0.0.0.16] - 2023-01-09
 
 - Added protobuf message definitions for requests related to sharing state sync metadata and blocks
 - Defined the interface for `StateSyncServerModule`, `StateSyncModule` (moving the old interface to `StateSyncModuleLEGACY` as a reference only)
 - Overhaul (updates, improvements, clarifications & additions) of the State Sync README
+- Removed `ValidatorMap() ValidatorMap`
 
 ## [0.0.0.15] - 2023-01-03
 
@@ -105,7 +133,7 @@ Consensus cleanup
 
 Consensus testing
 
-- Improved mock module initialization in `consensus/consensus_tests/utils_test.go`
+- Improved mock module initialization in `consensus/e2e_tests/utils_test.go`
 
 General
 
