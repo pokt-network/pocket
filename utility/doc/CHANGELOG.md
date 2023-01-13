@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.18] - 2023-01-14
+
+- Updated "test/module_test.go" to encorporate MaxConnsCount, MinConnsCount, MaxConnLifetime, MaxConnIdleTime, and HealthCheckPeriod in persistence config.
+
 ## [0.0.0.17] - 2023-01-11
 
 - Deprecated `GetBlocksPerSession()` in favour of the more general parameter getter function `GetParameter()`
