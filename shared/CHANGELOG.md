@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.12] - 2023-01-13
+
+- Add `ConsensusPacemaker` interface that is implemented by the consensus module
+
+
 ## [0.0.0.11] - 2023-01-11
 
 - Make the events channel hold pointers rather than copies of the message

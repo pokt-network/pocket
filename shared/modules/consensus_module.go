@@ -36,7 +36,6 @@ type ConsensusModule interface {
 // These functions are intended to only be called by the Pacemaker module.
 // TODO(#428): This interface will be removed when the communication between the pacemaker and consensus module become asynchronous.
 type ConsensusPacemaker interface {
-	//Pacemaker Consensus interaction modules
 	ResetRound()
 	ClearLeaderMessagesPool()
 	SetHeight(uint64)
