@@ -14,8 +14,6 @@ grafana:
       maxLines: 1000
     dashboards:
       enabled: true
-  image:
-    tag: 8.3.5
   dashboardsConfigMaps: {}
   grafana.ini:
     auth:
@@ -33,23 +31,11 @@ grafana:
       viewers_can_edit: true
     security:
       allow_embedding: true
-  # dashboardProviders:
-  #   dashboardproviders.yaml:
-  #     apiVersion: 1
-  #     providers:
-  #       - name: "default"
-  #         orgId: 1
-  #         folder: ""
-  #         type: file
-  #         disableDeletion: false
-  #         editable: true
-  #         options:
-  #           path: /var/lib/grafana/dashboards/default
 
 loki:
   enabled: true
   isDefault: true
-  url: http://observability-stack-loki:{{ .Values.loki.service.port }}
+  url: http://dependencies-loki:{{ .Values.loki.service.port }}
   readinessProbe:
     httpGet:
       path: /ready
