@@ -2,6 +2,8 @@ package pacemaker
 
 import typesCons "github.com/pokt-network/pocket/consensus/types"
 
+var _ PacemakerDebug = &pacemaker{}
+
 // This Pacemaker interface is only used for development & debugging purposes.
 type PacemakerDebug interface {
 	SetManualMode(bool)
@@ -9,20 +11,20 @@ type PacemakerDebug interface {
 	ForceNextView()
 }
 
-type paceMakerDebug struct {
+type pacemakerdebug struct {
 	manualMode                bool
 	debugTimeBetweenStepsMsec uint64
 	quorumCertificate         *typesCons.QuorumCertificate
 }
 
-func (p *paceMaker) IsManualMode() bool {
+func (p *pacemaker) IsManualMode() bool {
 	return p.manualMode
 }
 
-func (p *paceMaker) SetManualMode(manualMode bool) {
+func (p *pacemaker) SetManualMode(manualMode bool) {
 	p.manualMode = manualMode
 }
 
-func (p *paceMaker) ForceNextView() {
+func (p *pacemaker) ForceNextView() {
 	p.startNextView(p.quorumCertificate, true)
 }
