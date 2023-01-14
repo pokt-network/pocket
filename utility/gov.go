@@ -38,6 +38,10 @@ func (u *UtilityContext) GetParameter(paramName string, height int64) (any, erro
 	return u.Store().GetParameter(paramName, height)
 }
 
+func (u *UtilityContext) GetBlocksPerSession() (int, typesUtil.Error) {
+	return u.getIntParam(typesUtil.BlocksPerSessionParamName)
+}
+
 func (u *UtilityContext) GetAppMinimumStake() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.AppMinimumStakeParamName)
 }
