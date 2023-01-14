@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -50,7 +50,7 @@ func (*persistenceModule) Create(bus modules.Bus) (modules.Module, error) {
 	persistenceCfg := runtimeMgr.GetConfig().Persistence
 	genesisState := runtimeMgr.GetGenesis()
 
-	conn, err := connectToDatabase(persistenceCfg.PostgresUrl, persistenceCfg.NodeSchema)
+	conn, err := connectToDatabase(persistenceCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	if m.writeContext != nil && !m.writeContext.conn.IsClosed() {
 		return nil, fmt.Errorf("write context already exists")
 	}
-	conn, err := connectToDatabase(m.config.PostgresUrl, m.config.NodeSchema)
+	conn, err := connectToDatabase(m.config)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 }
 
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
-	conn, err := connectToDatabase(m.config.PostgresUrl, m.config.NodeSchema)
+	conn, err := connectToDatabase(m.config)
 	if err != nil {
 		return nil, err
 	}
