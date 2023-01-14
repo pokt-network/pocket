@@ -67,21 +67,6 @@ func (p PostgresContext) GetParameter(paramName string, height int64) (v any, er
 	return v, err
 }
 
-func (p PostgresContext) GetIntParam(paramName string, height int64) (int, error) {
-	v, _, err := getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
-	return v, err
-}
-
-func (p PostgresContext) GetStringParam(paramName string, height int64) (string, error) {
-	v, _, err := getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
-	return v, err
-}
-
-func (p PostgresContext) GetBytesParam(paramName string, height int64) (param []byte, err error) {
-	v, _, err := getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
-	return v, err
-}
-
 func (p PostgresContext) SetParam(paramName string, value any) error {
 	return p.setParamOrFlag(paramName, value, nil)
 }

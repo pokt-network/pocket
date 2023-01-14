@@ -184,9 +184,6 @@ type PersistenceReadContext interface {
 	GetAllStakedActors(height int64) ([]*coreTypes.Actor, error)
 
 	// Params
-	GetIntParam(paramName string, height int64) (int, error)
-	GetStringParam(paramName string, height int64) (string, error)
-	GetBytesParam(paramName string, height int64) ([]byte, error)
 	GetParameter(paramName string, height int64) (any, error)
 
 	// Flags

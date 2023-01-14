@@ -149,11 +149,11 @@ func (u *UtilityContext) GetMaxPausedBlocks(actorType coreTypes.ActorType) (maxP
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	var er error
-	maxPausedBlocks, er = store.GetIntParam(paramName, height)
+	param, er := store.GetParameter(paramName, height)
 	if er != nil {
 		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 	}
+	maxPausedBlocks = param.(int)
 
 	return
 }
@@ -178,10 +178,11 @@ func (u *UtilityContext) GetMinimumPauseBlocks(actorType coreTypes.ActorType) (m
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	minPauseBlocks, er := store.GetIntParam(paramName, height)
+	param, er := store.GetParameter(paramName, height)
 	if er != nil {
 		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 	}
+	minPauseBlocks = param.(int)
 
 	return
 }
@@ -260,12 +261,12 @@ func (u *UtilityContext) GetMinimumStake(actorType coreTypes.ActorType) (*big.In
 		return nil, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	minStake, er := store.GetStringParam(paramName, height)
+	minStake, er := store.GetParameter(paramName, height)
 	if er != nil {
 		return nil, typesUtil.ErrGetParam(paramName, er)
 	}
 
-	return typesUtil.StringToBigInt(minStake)
+	return typesUtil.StringToBigInt(minStake.(string))
 }
 
 func (u *UtilityContext) GetStakeAmount(actorType coreTypes.ActorType, address []byte) (*big.Int, typesUtil.Error) {
@@ -317,11 +318,11 @@ func (u *UtilityContext) GetUnstakingHeight(actorType coreTypes.ActorType) (unst
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	var er error
-	unstakingBlocks, er = store.GetIntParam(paramName, height)
+	param, er := store.GetParameter(paramName, height)
 	if er != nil {
 		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 	}
+	unstakingBlocks = param.(int)
 
 	return u.CalculateUnstakingHeight(int64(unstakingBlocks))
 }
@@ -344,11 +345,11 @@ func (u *UtilityContext) GetMaxChains(actorType coreTypes.ActorType) (maxChains 
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	var er error
-	maxChains, er = store.GetIntParam(paramName, height)
+	param, er := store.GetParameter(paramName, height)
 	if er != nil {
 		return 0, typesUtil.ErrGetParam(paramName, er)
 	}
+	maxChains = param.(int)
 
 	return
 }

@@ -2,6 +2,7 @@ package types
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 	"math/big"
 )
 
@@ -39,4 +40,12 @@ func BigIntLessThan(a, b *big.Int) bool {
 		return true
 	}
 	return false
+}
+
+func StringToBytes(s string) ([]byte, Error) {
+	b, err := hex.DecodeString(s)
+	if err != nil {
+		return []byte{}, ErrStringToByteArray(err)
+	}
+	return b, nil
 }

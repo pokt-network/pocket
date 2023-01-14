@@ -22,7 +22,7 @@ func DefaultTestingParams(_ *testing.T) *genesis.Params {
 func TestUtilityContext_GetAppMaxChains(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	maxChains, err := ctx.GetAppMaxChains()
+	maxChains, err := ctx.GetParameter(typesUtil.AppMaxChainsParamName, 0)
 	require.NoError(t, err)
 	require.Equal(t, int(defaultParams.GetAppMaxChains()), maxChains)
 
@@ -32,7 +32,7 @@ func TestUtilityContext_GetAppMaxChains(t *testing.T) {
 func TestUtilityContext_GetAppMaxPausedBlocks(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	gotParam, err := ctx.GetAppMaxPausedBlocks()
+	gotParam, err := ctx.GetParameter(typesUtil.AppMaxPauseBlocksParamName, 0)
 	require.NoError(t, err)
 	require.Equal(t, int(defaultParams.GetAppMaxPauseBlocks()), gotParam)
 
@@ -43,7 +43,7 @@ func TestUtilityContext_GetAppMinimumPauseBlocks(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetAppMinimumPauseBlocks())
-	gotParam, err := ctx.GetAppMinimumPauseBlocks()
+	gotParam, err := ctx.GetParameter(typesUtil.AppMinimumPauseBlocksParamName, 0)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 

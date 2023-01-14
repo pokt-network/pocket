@@ -76,10 +76,13 @@ func TestGetSetByteArrayParam(t *testing.T) {
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	owner, err := db.GetBytesParam(ServiceNodeUnstakingBlocksOwner, height)
+	owner, err := db.GetParameter(ServiceNodeUnstakingBlocksOwner, height)
 	require.NoError(t, err)
 
-	require.Equal(t, newOwner, owner)
+	ownerBytes, err := hex.DecodeString(owner.(string))
+	require.NoError(t, err)
+
+	require.Equal(t, newOwner, ownerBytes)
 }
 
 func TestGetSetToggleIntFlag(t *testing.T) {
