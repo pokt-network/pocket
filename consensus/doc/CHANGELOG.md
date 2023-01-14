@@ -59,7 +59,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Actor` is now a shared `struct` instead of an `interface`
 - Removed converters between the interfaces and the consensus structs for Validators
 
-
 ## [0.0.0.13] - 2022-12-14
 
 - Consolidated number of validators in tests in a single constant: `numValidators`
