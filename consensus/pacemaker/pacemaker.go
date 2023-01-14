@@ -101,7 +101,6 @@ func (m *paceMaker) GetBus() modules.Bus {
 }
 
 func (m *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, error) {
-
 	consensusMod := m.GetBus().GetConsensusModule()
 
 	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
