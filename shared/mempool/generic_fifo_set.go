@@ -6,11 +6,11 @@ import (
 	"sync"
 )
 
-type GenericFIFOSet[TIdx comparable, TData comparable] struct {
-	set         map[TIdx]struct{}
-	queue       *list.List
-	maxElements int
-	m           sync.Mutex
+type GenericFIFOSet[TIdx comparable, TData any] struct {
+	set      map[TIdx]struct{}
+	queue    *list.List
+	capacity int
+	m        sync.Mutex
 
 	indexerFn     func(any) TIdx
 	isOverflowing func(*GenericFIFOSet[TIdx, TData]) bool
@@ -18,6 +18,34 @@ type GenericFIFOSet[TIdx comparable, TData comparable] struct {
 	onAdd       func(TData, *GenericFIFOSet[TIdx, TData])
 	onRemove    func(TData, *GenericFIFOSet[TIdx, TData])
 	onCollision func(TData, *GenericFIFOSet[TIdx, TData]) error
+}
+
+func NewGenericFIFOSet[TIdx comparable, TData any](capacity int, options ...func(*GenericFIFOSet[TIdx, TData])) *GenericFIFOSet[TIdx, TData] {
+	gfs := &GenericFIFOSet[TIdx, TData]{
+		set:      make(map[TIdx]struct{}, capacity),
+		queue:    list.New(),
+		capacity: capacity,
+		indexerFn: func(item any) TIdx {
+			// by default we use the item itself as index (for simple cases like nonce deduping)
+			return item.(TIdx)
+		},
+		isOverflowing: defaultIsOverflowing[TIdx, TData],
+		onAdd: func(item TData, g *GenericFIFOSet[TIdx, TData]) {
+			// do nothing
+		},
+		onRemove: func(item TData, g *GenericFIFOSet[TIdx, TData]) {
+			// do nothing
+		},
+		onCollision: func(item TData, g *GenericFIFOSet[TIdx, TData]) error {
+			return fmt.Errorf("item %v already exists", item)
+		},
+	}
+
+	for _, o := range options {
+		o(gfs)
+	}
+
+	return gfs
 }
 
 func (g *GenericFIFOSet[TIdx, TData]) Push(item TData) error {
@@ -35,8 +63,9 @@ func (g *GenericFIFOSet[TIdx, TData]) Push(item TData) error {
 	g.set[index] = struct{}{}
 	g.queue.PushBack(item)
 	g.onAdd(item, g)
+
 	if g.isOverflowing != nil && g.isOverflowing(g) {
-		//if g.queue.Len() > g.maxElements {
+		//if g.queue.Len() > g.capacity {
 		front := g.queue.Front()
 		delete(g.set, g.indexerFn(front.Value.(TData)))
 		g.queue.Remove(front)
@@ -87,7 +116,7 @@ func (g *GenericFIFOSet[TIdx, TData]) Clear() {
 	g.m.Lock()
 	defer g.m.Unlock()
 
-	g.set = make(map[TIdx]struct{}, g.maxElements)
+	g.set = make(map[TIdx]struct{}, g.capacity)
 	g.queue = list.New()
 }
 
@@ -106,62 +135,54 @@ func (g *GenericFIFOSet[TIdx, TData]) Contains(item TData) bool {
 	return ok
 }
 
-func NewGenericFIFOSet[TIdx comparable, TData comparable](maxElements int, options ...func(*GenericFIFOSet[TIdx, TData])) *GenericFIFOSet[TIdx, TData] {
-	gfs := &GenericFIFOSet[TIdx, TData]{
-		set:         make(map[TIdx]struct{}, maxElements),
-		queue:       list.New(),
-		maxElements: maxElements,
-		indexerFn: func(item any) TIdx {
-			// by default we use the item itself as index (for simple cases like nonce deduping)
-			return item.(TIdx)
-		},
-		isOverflowing: func(g *GenericFIFOSet[TIdx, TData]) bool {
-			return g.queue.Len() > g.maxElements
-		},
-		onAdd: func(item TData, g *GenericFIFOSet[TIdx, TData]) {
-			// do nothing
-		},
-		onRemove: func(item TData, g *GenericFIFOSet[TIdx, TData]) {
-			// do nothing
-		},
-		onCollision: func(item TData, g *GenericFIFOSet[TIdx, TData]) error {
-			return fmt.Errorf("item %v already exists", item)
-		},
-	}
+func (g *GenericFIFOSet[TIdx, TData]) ContainsIndex(index TIdx) bool {
+	g.m.Lock()
+	defer g.m.Unlock()
 
-	for _, o := range options {
-		o(gfs)
-	}
-
-	return gfs
+	_, ok := g.set[index]
+	return ok
 }
 
-func WithIndexerFn[TIdx comparable, TData comparable](fn func(any) TIdx) func(*GenericFIFOSet[TIdx, TData]) {
+// Options
+
+func WithIndexerFn[TIdx comparable, TData any](fn func(any) TIdx) func(*GenericFIFOSet[TIdx, TData]) {
 	return func(g *GenericFIFOSet[TIdx, TData]) {
 		g.indexerFn = fn
 	}
 }
 
-func WithCustomIsOverflowingFn[TIdx comparable, TData comparable](fn func(*GenericFIFOSet[TIdx, TData]) bool) func(*GenericFIFOSet[TIdx, TData]) {
+func WithCustomIsOverflowingFn[TIdx comparable, TData any](fn func(*GenericFIFOSet[TIdx, TData]) bool) func(*GenericFIFOSet[TIdx, TData]) {
 	return func(g *GenericFIFOSet[TIdx, TData]) {
 		g.isOverflowing = fn
 	}
 }
 
-func WithOnAdd[TIdx comparable, TData comparable](fn func(TData, *GenericFIFOSet[TIdx, TData])) func(*GenericFIFOSet[TIdx, TData]) {
+func WithOnAdd[TIdx comparable, TData any](fn func(TData, *GenericFIFOSet[TIdx, TData])) func(*GenericFIFOSet[TIdx, TData]) {
 	return func(g *GenericFIFOSet[TIdx, TData]) {
 		g.onAdd = fn
 	}
 }
 
-func WithOnRemove[TIdx comparable, TData comparable](fn func(TData, *GenericFIFOSet[TIdx, TData])) func(*GenericFIFOSet[TIdx, TData]) {
+func WithOnRemove[TIdx comparable, TData any](fn func(TData, *GenericFIFOSet[TIdx, TData])) func(*GenericFIFOSet[TIdx, TData]) {
 	return func(g *GenericFIFOSet[TIdx, TData]) {
 		g.onRemove = fn
 	}
 }
 
-func WithOnCollision[TIdx comparable, TData comparable](fn func(TData, *GenericFIFOSet[TIdx, TData]) error) func(*GenericFIFOSet[TIdx, TData]) {
+func WithOnCollision[TIdx comparable, TData any](fn func(TData, *GenericFIFOSet[TIdx, TData]) error) func(*GenericFIFOSet[TIdx, TData]) {
 	return func(g *GenericFIFOSet[TIdx, TData]) {
 		g.onCollision = fn
 	}
+}
+
+func WithDebug[TIdx comparable, TData any](debug bool) func(*GenericFIFOSet[TIdx, TData]) {
+	return func(g *GenericFIFOSet[TIdx, TData]) {
+		g.debugMode = true
+	}
+}
+
+// private methods
+
+func defaultIsOverflowing[TIdx comparable, TData any](g *GenericFIFOSet[TIdx, TData]) bool {
+	return g.queue.Len() > g.capacity
 }
