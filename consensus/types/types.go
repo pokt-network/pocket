@@ -2,10 +2,7 @@ package types
 
 // TODO: Split this file into multiple types files.
 import (
-	"sort"
-
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
 type NodeId uint64
@@ -22,32 +19,6 @@ type ConsensusNodeState struct {
 
 	LeaderId NodeId
 	IsLeader bool
-}
-
-func GetValAddrToIdMap(validatorMap ValidatorMap) (ValAddrToIdMap, IdToValAddrMap) {
-	valAddresses := make([]string, 0, len(validatorMap))
-	for addr := range validatorMap {
-		valAddresses = append(valAddresses, addr)
-	}
-	sort.Strings(valAddresses)
-
-	valToIdMap := make(ValAddrToIdMap, len(valAddresses))
-	idToValMap := make(IdToValAddrMap, len(valAddresses))
-	for i, addr := range valAddresses {
-		nodeId := NodeId(i + 1)
-		valToIdMap[addr] = nodeId
-		idToValMap[nodeId] = addr
-	}
-
-	return valToIdMap, idToValMap
-}
-
-func ValidatorMapToModulesValidatorMap(validatorMap ValidatorMap) (vm modules.ValidatorMap) {
-	vm = make(modules.ValidatorMap)
-	for _, v := range validatorMap {
-		vm[v.GetAddress()] = *v
-	}
-	return
 }
 
 func ActorListToValidatorMap(actors []*coreTypes.Actor) (m ValidatorMap) {

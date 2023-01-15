@@ -4,7 +4,6 @@ import (
 	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // This module is responsible for handling requests and business logic that advertises and shares
@@ -21,43 +20,45 @@ type StateSyncServerModule interface {
 
 func (m *stateSyncModule) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) error {
 
-	peerId := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
-	minHeight, maxHeight := m.aggregateMetaResults()
+	// peerId := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
+	// minHeight, maxHeight := m.aggregateMetaResults()
 
-	metadataRes := typesCons.StateSyncMetadataResponse{
-		PeerId:    peerId,
-		MinHeight: minHeight,
-		MaxHeight: maxHeight,
-	}
+	// metadataRes := typesCons.StateSyncMetadataResponse{
+	// 	PeerId:    peerId,
+	// 	MinHeight: minHeight,
+	// 	MaxHeight: maxHeight,
+	// }
 
-	anyStateSyncMessage, err := anypb.New(&metadataRes)
-	if err != nil {
-		return err
-	}
+	// anyStateSyncMessage, err := anypb.New(&metadataRes)
+	// if err != nil {
+	// 	return err
+	// }
 
-	return m.sendToPeer(anyStateSyncMessage, metadataReq.PeerId)
+	// return m.sendToPeer(anyStateSyncMessage, metadataReq.PeerId)
+	return nil
 }
 
 func (m *stateSyncModule) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
 
-	peerId := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
+	// peerId := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
 
-	block, err := m.getBlockAtHeight(blockReq.Height)
-	if err != nil {
-		return err
-	}
+	// block, err := m.getBlockAtHeight(blockReq.Height)
+	// if err != nil {
+	// 	return err
+	// }
 
-	metadataRes := typesCons.GetBlockResponse{
-		PeerId: peerId,
-		Block:  block,
-	}
+	// metadataRes := typesCons.GetBlockResponse{
+	// 	PeerId: peerId,
+	// 	Block:  block,
+	// }
 
-	anyStateSyncMessage, err := anypb.New(&metadataRes)
-	if err != nil {
-		return err
-	}
+	// anyStateSyncMessage, err := anypb.New(&metadataRes)
+	// if err != nil {
+	// 	return err
+	// }
 
-	return m.sendToPeer(anyStateSyncMessage, blockReq.PeerId)
+	// return m.sendToPeer(anyStateSyncMessage, blockReq.PeerId)
+	return nil
 
 }
 

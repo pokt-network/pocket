@@ -54,12 +54,12 @@ type stateSyncModule struct {
 	logPrefix string
 }
 
-func CreateStateSync(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+func CreateStateSync(bus modules.Bus) (modules.Module, error) {
 	var m stateSyncModule
-	return m.Create(runtimeMgr)
+	return m.Create(bus)
 }
 
-func (*stateSyncModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+func (*stateSyncModule) Create(bus modules.Bus) (modules.Module, error) {
 	//! TODO: think about what must be the default mode
 	return &stateSyncModule{
 		bus:         nil,

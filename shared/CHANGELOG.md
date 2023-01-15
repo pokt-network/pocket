@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.12] - 2023-01-13
+
+- Add `ConsensusPacemaker` interface that is implemented by the consensus module
+
+
+## [0.0.0.11] - 2023-01-11
+
+- Make the events channel hold pointers rather than copies of the message
+
+## [0.0.0.10] - 2023-01-10
+
+- Updated modules constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering modules with the `bus` via `RegisterModule` method
+
+## [0.0.0.9] - 2023-01-04
+
+- Removed `ValidatorMap() ValidatorMap` from `ConsensusModule` interface
+- Added `GetIsClientOnly()` to `P2PConfig`
+
 ## [0.0.0.8] - 2023-01-03
 
 - Added `PoolNames.FriendlyName` method

@@ -3,13 +3,15 @@ package modules
 //go:generate mockgen -source=$GOFILE -destination=./mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 import (
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// TODO(olshansky): deprecate ValidatorMap or populate from persistence module
-type ValidatorMap map[string]coreTypes.Actor
+const (
+	ConsensusModuleName      = "consensus"
+	PacemakerModuleName      = "pacemaker"
+	LeaderElectionModuleName = "leader_election"
+)
 
 // NOTE: Consensus is the core of the replicated state machine and is driven by various asynchronous events.
 // Consider adding a mutex lock to your implementation that is acquired at the beginning of each entrypoint/function implemented in this interface.
@@ -17,7 +19,9 @@ type ValidatorMap map[string]coreTypes.Actor
 type ConsensusModule interface {
 	Module
 	KeyholderModule
+
 	ConsensusStateSync
+	ConsensusPacemaker
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
@@ -29,17 +33,40 @@ type ConsensusModule interface {
 	CurrentHeight() uint64
 	CurrentRound() uint64
 	CurrentStep() uint64
-	ValidatorMap() ValidatorMap
+
+	//ValidatorMap() ValidatorMap
 
 	EnableServerMode()
 }
 
+// This interface represents functions exposed by the Consensus module for Pacemaker specific business logic.
+// These functions are intended to only be called by the Pacemaker module.
+// TODO(#428): This interface will be removed when the communication between the pacemaker and consensus module become asynchronous.
+type ConsensusPacemaker interface {
+	ResetRound()
+	ClearLeaderMessagesPool()
+	SetHeight(uint64)
+	SetRound(uint64)
+	// IMPROVE: Consider changing the input to type to `typesCons.HotstuffStep`. This currently causes an import cycle and requires significant refactoring.
+	SetStep(uint8)
+	ResetForNewHeight()
+	ReleaseUtilityContext() error
+	BroadcastMessageToValidators(*anypb.Any) error
+	IsLeader() bool
+	IsLeaderSet() bool
+	// IMPROVE: Consider changing input to typesCons.HotstuffMessage. This requires to do refactoring.
+	NewLeader(*anypb.Any) error
+	GetPrepareQC() (*anypb.Any, error)
+	GetNodeId() uint64
+}
+
 // This interface represents functions exposed by the Consensus module for StateSync specific business logic.
 // These functions are intended to only be called by the StateSync module.
+// Redeclared functions with ConsensusPacemaker interface are kept for providing usage clarity.
 type ConsensusStateSync interface {
 	GetNodeId() uint64
-	GetNodeIdFromNodeAddress(string) uint64
-	GetCurrentNodeAddressFromNodeId() string
+	//GetNodeIdFromNodeAddress(string) uint64
+	//GetCurrentNodeAddressFromNodeId() string
 	IsLeaderSet() bool
-	//GetStaSyncModule() state_sync.StateSyncModule
+	//GetStateSyncModule() state_sync.StateSyncModule
 }
