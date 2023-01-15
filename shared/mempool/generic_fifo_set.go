@@ -175,12 +175,6 @@ func WithOnCollision[TIdx comparable, TData any](fn func(TData, *GenericFIFOSet[
 	}
 }
 
-func WithDebug[TIdx comparable, TData any](debug bool) func(*GenericFIFOSet[TIdx, TData]) {
-	return func(g *GenericFIFOSet[TIdx, TData]) {
-		g.debugMode = true
-	}
-}
-
 // private methods
 
 func defaultIsOverflowing[TIdx comparable, TData any](g *GenericFIFOSet[TIdx, TData]) bool {
