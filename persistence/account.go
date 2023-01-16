@@ -54,8 +54,7 @@ func (p PostgresContext) GetAccountsUpdated(height int64) (accounts []*coreTypes
 
 // --- Pool Functions ---
 
-// TODO(andrew): remove address param
-func (p PostgresContext) InsertPool(name string, address []byte, amount string) error {
+func (p PostgresContext) InsertPool(name string, amount string) error {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
