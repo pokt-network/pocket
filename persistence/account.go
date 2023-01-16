@@ -8,8 +8,6 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
-// TODO(https://github.com/pokt-network/pocket/issues/102): Generalize Pool and Account operations.
-
 // --- Account Functions ---
 
 func (p PostgresContext) GetAccountAmount(address []byte, height int64) (amount string, err error) {
