@@ -1,5 +1,7 @@
 package types
 
+// Interface common to protocol Accounts and Pools at the persistence schema layer.
+// This exposes SQL specific attributes and queries.
 type ProtocolAccountSchema interface {
 	/*** Account Attributes ***/
 

@@ -4,8 +4,8 @@ import (
 	"fmt"
 )
 
-var _ ProtocolAccountSchema = &BaseProtocolAccountSchema{}
-
+// Implements the ProtocolAccountSchema interface that can be shared across both Accounts and Pools
+// allowing for the generalisation and sharing of code between these two entities
 type BaseProtocolAccountSchema struct {
 	// SQL Tables
 	tableName string
