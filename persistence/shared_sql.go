@@ -217,6 +217,22 @@ func (p *PostgresContext) getAccountsUpdated(accountType types.ProtocolAccountSc
 	return
 }
 
+func (p *PostgresContext) insertAccount(accountType types.ProtocolAccountSchema, address, amount string) error {
+	ctx, tx, err := p.getCtxAndTx()
+	if err != nil {
+		return err
+	}
+	height, err := p.GetHeight()
+	if err != nil {
+		return err
+	}
+	// DISCUSS(team): Do we want to panic if `amount < 0` here?
+	if _, err = tx.Exec(ctx, accountType.InsertAccountQuery(address, amount, height)); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (p *PostgresContext) InsertActor(actorSchema types.ProtocolActorSchema, actor *coreTypes.Actor) error {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {

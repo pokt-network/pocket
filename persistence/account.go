@@ -17,14 +17,14 @@ func (p PostgresContext) GetAccountAmount(address []byte, height int64) (amount 
 }
 
 func (p PostgresContext) AddAccountAmount(address []byte, amount string) error {
-	return p.operationAccountAmount(types.Account, hex.EncodeToString(address), amount, func(orig *big.Int, delta *big.Int) error {
+	return p.operationAccountAmount(types.Account, hex.EncodeToString(address), amount, func(orig, delta *big.Int) error {
 		orig.Add(orig, delta)
 		return nil
 	})
 }
 
 func (p PostgresContext) SubtractAccountAmount(address []byte, amount string) error {
-	return p.operationAccountAmount(types.Account, hex.EncodeToString(address), amount, func(orig *big.Int, delta *big.Int) error {
+	return p.operationAccountAmount(types.Account, hex.EncodeToString(address), amount, func(orig, delta *big.Int) error {
 		orig.Sub(orig, delta)
 		return nil
 	})
@@ -33,19 +33,11 @@ func (p PostgresContext) SubtractAccountAmount(address []byte, amount string) er
 // DISCUSS(team): If we are okay with `GetAccountAmount` return 0 as a default, this function can leverage
 // `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
 func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return err
-	}
-	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	// DISCUSS(team): Do we want to panic if `amount < 0` here?
-	if _, err = tx.Exec(ctx, types.Account.InsertAccountQuery(hex.EncodeToString(address), amount, height)); err != nil {
-		return err
-	}
-	return nil
+	return p.insertAccount(types.Account, hex.EncodeToString(address), amount)
+	// return p.operationAccountAmount(types.Account, hex.EncodeToString(address), amount, func(orig, delta *big.Int) error {
+	//	orig.Set(delta)
+	//	return nil
+	// })
 }
 
 func (p PostgresContext) GetAccountsUpdated(height int64) (accounts []*coreTypes.Account, err error) {
@@ -55,18 +47,7 @@ func (p PostgresContext) GetAccountsUpdated(height int64) (accounts []*coreTypes
 // --- Pool Functions ---
 
 func (p PostgresContext) InsertPool(name string, amount string) error {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return err
-	}
-	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, types.Pool.InsertAccountQuery(name, amount, height)); err != nil {
-		return err
-	}
-	return nil
+	return p.insertAccount(types.Pool, name, amount)
 }
 
 func (p PostgresContext) GetPoolAmount(name string, height int64) (amount string, err error) {
@@ -74,14 +55,14 @@ func (p PostgresContext) GetPoolAmount(name string, height int64) (amount string
 }
 
 func (p PostgresContext) AddPoolAmount(name string, amount string) error {
-	return p.operationAccountAmount(types.Pool, name, amount, func(orig *big.Int, delta *big.Int) error {
+	return p.operationAccountAmount(types.Pool, name, amount, func(orig, delta *big.Int) error {
 		orig.Add(orig, delta)
 		return nil
 	})
 }
 
 func (p PostgresContext) SubtractPoolAmount(name string, amount string) error {
-	return p.operationAccountAmount(types.Pool, name, amount, func(orig *big.Int, delta *big.Int) error {
+	return p.operationAccountAmount(types.Pool, name, amount, func(orig, delta *big.Int) error {
 		orig.Sub(orig, delta)
 		return nil
 	})
@@ -93,18 +74,11 @@ func (p PostgresContext) SubtractPoolAmount(name string, amount string) error {
 //
 // DISCUSS(team): Do we have a use-case for this function?
 func (p PostgresContext) SetPoolAmount(name string, amount string) error {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return err
-	}
-	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, types.Pool.InsertAccountQuery(name, amount, height)); err != nil {
-		return err
-	}
-	return nil
+	return p.insertAccount(types.Pool, name, amount) // Follows same logic as InsertPool
+	// return p.operationAccountAmount(types.Pool, name, amount, func(orig, delta *big.Int) error {
+	//	orig.Set(delta)
+	//	return nil
+	// })
 }
 
 func (p PostgresContext) GetPoolsUpdated(height int64) ([]*coreTypes.Account, error) {
