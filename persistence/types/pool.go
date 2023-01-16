@@ -1,7 +1,5 @@
 package types
 
-var _ ProtocolAccountSchema = &PoolSchema{}
-
 type PoolSchema struct {
 	BaseProtocolAccountSchema
 }
