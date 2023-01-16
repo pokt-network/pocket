@@ -95,10 +95,8 @@ func (p *PostgresContext) getAccountAmount(accountSchema types.ProtocolAccountSc
 	if err = tx.QueryRow(ctx, accountSchema.GetAccountAmountQuery(address, height)).Scan(&amount); err != pgx.ErrNoRows {
 		return
 	}
-	if err != nil {
-		return
-	}
-	return
+
+	return amount, nil
 }
 
 func (p *PostgresContext) getActor(actorSchema types.ProtocolActorSchema, address []byte, height int64) (actor *coreTypes.Actor, err error) {
@@ -195,7 +193,7 @@ func (p *PostgresContext) operationAccountAmount(
 }
 
 func (p *PostgresContext) getAccountsUpdated(accountType types.ProtocolAccountSchema, height int64) (accounts []*coreTypes.Account, err error) {
-	query := accountType.GetAllQuery(height)
+	query := accountType.GetAccountsUpdatedAtHeightQuery(height)
 
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
@@ -210,7 +208,7 @@ func (p *PostgresContext) getAccountsUpdated(accountType types.ProtocolAccountSc
 
 	for rows.Next() {
 		acc := new(coreTypes.Account)
-		if err = rows.Scan(&acc.Address, &acc.Amount, &height); err != nil {
+		if err = rows.Scan(&acc.Address, &acc.Amount); err != nil {
 			return nil, err
 		}
 		accounts = append(accounts, acc)
