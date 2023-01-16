@@ -48,7 +48,7 @@ type pacemaker struct {
 	stepCancelFunc context.CancelFunc
 
 	// Only used for development and debugging.
-	pacemakerdebug
+	debug pacemakerDebug
 
 	//REFACTOR: this should be removed, when we build a shared and proper logger
 	logPrefix string
@@ -69,7 +69,7 @@ func (*pacemaker) Create(bus modules.Bus) (modules.Module, error) {
 	pacemakerCfg := cfg.Consensus.PacemakerConfig
 
 	m.pacemakerCfg = pacemakerCfg
-	m.pacemakerdebug = pacemakerdebug{
+	m.debug = pacemakerDebug{
 		manualMode:                pacemakerCfg.GetManual(),
 		debugTimeBetweenStepsMsec: pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
 		quorumCertificate:         nil,
@@ -238,8 +238,8 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	consensusMod.ReleaseUtilityContext()
 
 	// TECHDEBT: This if structure for debug purposes only; think of a way to externalize it from the main consensus flow...
-	if m.manualMode && !forceNextView {
-		m.quorumCertificate = qc
+	if m.debug.manualMode && !forceNextView {
+		m.debug.quorumCertificate = qc
 		return
 	}
 
