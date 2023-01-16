@@ -65,8 +65,9 @@ type ConsensusPacemaker interface {
 // Redeclared functions with ConsensusPacemaker interface are kept for providing usage clarity.
 type ConsensusStateSync interface {
 	GetNodeId() uint64
-	//GetNodeIdFromNodeAddress(string) uint64
-	//GetCurrentNodeAddressFromNodeId() string
+	GetNodeIdFromNodeAddress(string) (uint64, error)
+	GetCurrentNodeAddressFromNodeId() (string, error)
 	IsLeaderSet() bool
+	GetLeaderId() uint64
 	//GetStateSyncModule() state_sync.StateSyncModule
 }

@@ -151,6 +151,206 @@ func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
 	}
 }
 
+// // TODO IMPLEMET
+// func ConsensusProceedToNextBlock(
+// 	t *testing.T,
+// 	clockMock *clock.Mock,
+// 	eventsChannel modules.EventsChannel,
+// 	pocketNodes IdToNodeMapping,
+// 	targetBlockHeight int,
+// ) {
+// 	// Test preparation
+// 	//timeReminder(t, clockMock, time.Second)
+
+// 	// Test configs
+// 	//runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+// 	//buses := GenerateBuses(t, runtimeMgrs)
+
+// 	// Create & start test pocket nodes
+// 	//eventsChannel := make(modules.EventsChannel, 100)
+// 	//pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+// 	//StartAllTestPocketNodes(t, pocketNodes)
+
+// 	// Debug message to start consensus by triggering view change
+// 	for i := 0; i < targetBlockHeight; i++ {
+// 		//expectedTotalMessages := (numValidators * numValidators) + (numValidators*numValidators)*i
+// 		expectedTotalMessages := (numValidators * numValidators) //+ (numValidators*numValidators)*i
+// 		t.Logf("TARGET GOKHAN: %d", i)
+
+// 		for _, pocketNode := range pocketNodes {
+// 			TriggerNextView(t, pocketNode)
+// 		}
+// 		advanceTime(t, clockMock, 10*time.Millisecond)
+
+// 		// 1. NewRound
+// 		newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, expectedTotalMessages, 250, true)
+// 		require.NoError(t, err)
+// 		for nodeId, pocketNode := range pocketNodes {
+// 			nodeState := GetConsensusNodeState(pocketNode)
+// 			assertNodeConsensusView(t, nodeId,
+// 				typesCons.ConsensusNodeState{
+// 					Height: uint64(i) + 1,
+// 					Step:   uint8(consensus.NewRound),
+// 					Round:  uint8(i),
+// 				},
+// 				nodeState)
+// 			require.Equal(t, false, nodeState.IsLeader)
+// 			require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
+// 		}
+
+// 		for _, message := range newRoundMessages {
+// 			P2PBroadcast(t, pocketNodes, message)
+// 		}
+// 		advanceTime(t, clockMock, 10*time.Millisecond)
+
+// 		// 2. Prepare
+// 		prepareProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 250, true)
+// 		require.NoError(t, err)
+
+// 		//leaderId := typesCons.NodeId(2)
+// 		//leader := pocketNodes[leaderId]
+
+// 		var leaderId typesCons.NodeId
+// 		var leader *shared.Node
+
+// 		for nodeId, pocketNode := range pocketNodes {
+// 			nodeState := GetConsensusNodeState(pocketNode)
+// 			assertNodeConsensusView(t, nodeId,
+// 				typesCons.ConsensusNodeState{
+// 					Height: uint64(i) + 1,
+// 					Step:   uint8(consensus.Prepare),
+// 					Round:  uint8(i),
+// 				},
+// 				nodeState)
+
+// 			require.Equal(t, pocketNode.GetBus().GetConsensusModule().IsLeaderSet(), true)
+// 			leaderId = typesCons.NodeId(pocketNode.GetBus().GetConsensusModule().GetLeaderId())
+// 			leader = pocketNodes[leaderId]
+// 			//t.Logf("GOKHAN SASASA: %d", pocketNode.GetBus().GetConsensusModule().GetLeaderId())
+// 			require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
+// 		}
+
+// 		t.Logf("LEADERGOKHAN SASASA: %d", leaderId)
+
+// 		for _, message := range prepareProposal {
+// 			t.Logf("Broadcasted message: %s", message)
+// 			P2PBroadcast(t, pocketNodes, message)
+// 		}
+// 		advanceTime(t, clockMock, 10*time.Millisecond)
+
+// 		// 3. PreCommit
+// 		prepareVotes, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Vote, numValidators, 250, true)
+// 		require.NoError(t, err)
+
+// 		for _, vote := range prepareVotes {
+// 			P2PSend(t, leader, vote)
+// 		}
+// 		advanceTime(t, clockMock, 10*time.Millisecond)
+
+// 		preCommitProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.PreCommit, consensus.Propose, numValidators, 250, true)
+// 		require.NoError(t, err)
+// 		for nodeId, pocketNode := range pocketNodes {
+// 			nodeState := GetConsensusNodeState(pocketNode)
+// 			assertNodeConsensusView(t, nodeId,
+// 				typesCons.ConsensusNodeState{
+// 					Height: uint64(i) + 1,
+// 					Step:   uint8(consensus.PreCommit),
+// 					Round:  uint8(i),
+// 				},
+// 				nodeState)
+// 			require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
+// 		}
+
+// 		for _, message := range preCommitProposal {
+// 			P2PBroadcast(t, pocketNodes, message)
+// 		}
+// 		advanceTime(t, clockMock, 10*time.Millisecond)
+
+// 		// 4. Commit
+// 		preCommitVotes, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.PreCommit, consensus.Vote, numValidators, 250, true)
+// 		require.NoError(t, err)
+
+// 		for _, vote := range preCommitVotes {
+// 			P2PSend(t, leader, vote)
+// 		}
+// 		advanceTime(t, clockMock, 10*time.Millisecond)
+
+// 		commitProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Commit, consensus.Propose, numValidators, 250, true)
+// 		require.NoError(t, err)
+// 		for nodeId, pocketNode := range pocketNodes {
+// 			nodeState := GetConsensusNodeState(pocketNode)
+// 			assertNodeConsensusView(t, nodeId,
+// 				typesCons.ConsensusNodeState{
+// 					Height: uint64(i) + 1,
+// 					Step:   uint8(consensus.Commit),
+// 					Round:  uint8(i),
+// 				},
+// 				nodeState)
+// 			require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
+// 		}
+
+// 		for _, message := range commitProposal {
+// 			P2PBroadcast(t, pocketNodes, message)
+// 		}
+// 		advanceTime(t, clockMock, 10*time.Millisecond)
+
+// 		// 5. Decide
+// 		commitVotes, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Commit, consensus.Vote, numValidators, 250, true)
+// 		require.NoError(t, err)
+
+// 		for _, vote := range commitVotes {
+// 			P2PSend(t, leader, vote)
+// 		}
+// 		advanceTime(t, clockMock, 10*time.Millisecond)
+
+// 		decideProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Decide, consensus.Propose, numValidators, 250, true)
+// 		require.NoError(t, err)
+// 		for pocketId, pocketNode := range pocketNodes {
+// 			nodeState := GetConsensusNodeState(pocketNode)
+// 			// Leader has already committed the block and hence moved to the next height.
+// 			if pocketId == leaderId {
+// 				assertNodeConsensusView(t, pocketId,
+// 					typesCons.ConsensusNodeState{
+// 						Height: uint64(i) + 2,
+// 						Step:   uint8(consensus.NewRound),
+// 						Round:  uint8(i),
+// 					},
+// 					nodeState)
+// 				require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
+// 				continue
+// 			}
+// 			assertNodeConsensusView(t, pocketId,
+// 				typesCons.ConsensusNodeState{
+// 					Height: uint64(i) + 1,
+// 					Step:   uint8(consensus.Decide),
+// 					Round:  uint8(i),
+// 				},
+// 				nodeState)
+// 			require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
+// 		}
+
+// 		for _, message := range decideProposal {
+// 			P2PBroadcast(t, pocketNodes, message)
+// 		}
+// 		advanceTime(t, clockMock, 10*time.Millisecond)
+
+// 		_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 250, true)
+// 		require.NoError(t, err)
+// 		for pocketId, pocketNode := range pocketNodes {
+// 			nodeState := GetConsensusNodeState(pocketNode)
+// 			assertNodeConsensusView(t, pocketId,
+// 				typesCons.ConsensusNodeState{
+// 					Height: uint64(i) + 2,
+// 					Step:   uint8(consensus.NewRound),
+// 					Round:  uint8(i),
+// 				},
+// 				nodeState)
+// 			require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
+// 		}
+// 	}
+
+// }
+
 /*** Node Visibility/Reflection Helpers ***/
 
 // TODO(discuss): Should we use reflections inside the testing module as being done here or explicitly
@@ -240,7 +440,7 @@ func waitForEventsInternal(
 	eventsChannel modules.EventsChannel,
 	eventContentType string,
 	numExpectedMsgs int,
-	maxWaitTimeMillis time.Duration, // IMPROVE(#295): Remove time specific suffixes as outlined by go-staticcheck (ST1011)
+	maxWaitTime time.Duration,
 	msgIncludeFilter func(m *anypb.Any) bool,
 	errMsg string,
 	failOnExtraMessages bool,
@@ -249,7 +449,7 @@ func waitForEventsInternal(
 	unusedEvents := make([]*messaging.PocketEnvelope, 0) // "Recycle" events back into the events channel if we're not using them
 
 	// Limit the amount of time we're waiting for the messages to be published on the events channel
-	ctx, cancel := clock.WithTimeout(context.TODO(), time.Millisecond*maxWaitTimeMillis)
+	ctx, cancel := clock.WithTimeout(context.TODO(), time.Millisecond*maxWaitTime)
 	defer cancel()
 
 	// Since the tests use a mock clock, we need to manually advance the clock to trigger the timeout

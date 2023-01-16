@@ -123,13 +123,34 @@ func (m *consensusModule) IsLeaderSet() bool {
 	return m.leaderId != nil
 }
 
-// func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) uint64 {
-// 	return uint64(m.valAddrToIdMap[peerId])
-// }
+func (m *consensusModule) GetLeaderId() uint64 {
+	if m.leaderId == nil {
+		return 0
+	}
+	return uint64(*m.leaderId)
+}
 
-// func (m *consensusModule) GetCurrentNodeAddressFromNodeId() string {
-// 	return m.idToValAddrMap[typesCons.NodeId(m.nodeId)]
-// }
+func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error) {
+
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return 0, err
+	}
+
+	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
+	return uint64(valAddrToIdMap[peerId]), nil
+}
+
+func (m *consensusModule) GetCurrentNodeAddressFromNodeId() (string, error) {
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return "", err
+	}
+
+	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
+
+	return idToValAddrMap[typesCons.NodeId(m.nodeId)], nil
+}
 
 // Implementations of the type PaceMakerAccessModule interface
 // SetHeight, SeetRound, SetStep are implemented for ConsensusDebugModule

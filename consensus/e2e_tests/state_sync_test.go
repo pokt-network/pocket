@@ -1,68 +1,108 @@
 package e2e_tests
 
 import (
+	"reflect"
 	"testing"
+	"time"
+
+	"github.com/benbjohnson/clock"
+	"github.com/pokt-network/pocket/consensus"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStateSyncServer(t *testing.T) {
-	// clockMock := clock.NewMock()
-	// // Test configs
-	// runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	// Test preparation
+	clockMock := clock.NewMock()
+	timeReminder(t, clockMock, time.Second)
 
-	// go timeReminder(clockMock, 100*time.Millisecond)
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	buses := GenerateBuses(t, runtimeMgrs)
 
-	// // Create & start test pocket nodes
-	// testChannel := make(modules.EventsChannel, 100)
-	// pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, testChannel)
-	// StartAllTestPocketNodes(t, pocketNodes)
+	// Create & start test pocket nodes
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+	StartAllTestPocketNodes(t, pocketNodes)
 
-	// serverNode := pocketNodes[1]
-	// serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
-	// serverNodeConsensusModImpl.MethodByName("EnableServerMode").Call([]reflect.Value{})
+	//targetBlockHeight := 3
 
-	// originatorNode := pocketNodes[2]
+	// //for i := 0; i < 3; i++ {
+	// ConsensusProceedToNextBlock(
+	// 	t,
+	// 	clockMock,
+	// 	eventsChannel,
+	// 	pocketNodes,
+	// 	targetBlockHeight,
+	// )
+	//advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// stateSyncReq := typesCons.StateSyncMetadataRequest{
-	// 	PeerId: originatorNode.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId(),
-	// }
+	// Starting point
+	testHeight := uint64(4)
+	testStep := uint8(consensus.NewRound)
+	testRound := uint64(0)
 
-	// stateSyncMessage := &typesCons.StateSyncMessage{
-	// 	MsgType: typesCons.StateSyncMessageType_STATE_SYNC_METADATA_REQUEST,
-	// 	Message: &typesCons.StateSyncMessage_MetadataReq{
-	// 		MetadataReq: &stateSyncReq,
-	// 	},
-	// }
-	// anyProto, err := anypb.New(stateSyncMessage)
-	// require.NoError(t, err)
+	leaderId := typesCons.NodeId(3)
+	leader := pocketNodes[leaderId]
 
-	// P2PSend(t, serverNode, anyProto)
-	// advanceTime(clockMock, 10*time.Millisecond)
+	consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
+	require.NoError(t, err)
 
-	// _, err = WaitForNetworkStateSyncMessages(t, clockMock, testChannel, serverNode.GetP2PAddress(), typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE, numValidators, 1)
-	// //_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 1000)
-	// require.NoError(t, err)
-	/*
-			// NewRound
-		newRoundMessages, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 1000)
+	// Placeholder block
+	blockHeader := &typesCons.BlockHeader{
+		Height:            int64(testHeight),
+		Hash:              stateHash,
+		NumTxs:            0,
+		LastBlockHash:     "",
+		ProposerAddress:   consensusPK.Address(),
+		QuorumCertificate: nil,
+	}
+	block := &typesCons.Block{
+		BlockHeader:  blockHeader,
+		Transactions: make([][]byte, 0),
+	}
+
+	leaderConsensusModImpl := GetConsensusModImpl(leader)
+	leaderConsensusModImpl.MethodByName("SetBlock").Call([]reflect.Value{reflect.ValueOf(block)})
+
+	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS
+	for _, pocketNode := range pocketNodes {
+		// Update height, step, leaderId, and utility context via setters exposed with the debug interface
+		consensusModImpl := GetConsensusModImpl(pocketNode)
+		consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
+		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
+		consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(testRound)})
+		consensusModImpl.MethodByName("SetLeaderId").Call([]reflect.Value{reflect.Zero(reflect.TypeOf(&leaderId))})
+
+		// utilityContext is only set on new rounds, which is skipped in this test
+		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
 		require.NoError(t, err)
-		for nodeId, pocketNode := range pocketNodes {
-			nodeState := GetConsensusNodeState(pocketNode)
-			assertNodeConsensusView(t, nodeId,
-				typesCons.ConsensusNodeState{
-					Height: 1,
-					Step:   uint8(consensus.NewRound),
-					Round:  0,
-				},
-				nodeState)
-			require.Equal(t, false, nodeState.IsLeader)
-		}
-		for _, message := range newRoundMessages {
-			P2PBroadcast(t, pocketNodes, message)
-		}
-	*/
+		consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
+	}
 
-	//-- WAIT FOR MESSAGE AFTER SENDING WITH P2PSEND
+	//}
 
-	//require.Equal(t, false, nodeState.IsLeader)
+	// _, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 250, true)
+	// require.NoError(t, err)
+	for pocketId, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		assertNodeConsensusView(t, pocketId,
+			typesCons.ConsensusNodeState{
+				Height: 4,
+				Step:   uint8(consensus.NewRound),
+				Round:  4,
+			},
+			nodeState)
+		//require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
+	}
+
+	//_ = GetConsensusNodeState(pocketNodes[0])
+
+	// assertNodeConsensusView(t, typesCons.NodeId(pocketNodes[0].GetBus().GetConsensusModule().GetNodeId()),
+	// 	typesCons.ConsensusNodeState{
+	// 		Height: 2,
+	// 		Step:   uint8(consensus.NewRound),
+	// 		Round:  0,
+	// 	}, nodeState)
 
 }
