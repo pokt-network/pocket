@@ -17,11 +17,11 @@ import (
 // for the purpose of being explicit: https://github.com/pokt-network/pocket/pull/140#discussion_r939731342
 // TODO Cleanup with #149
 const (
-	UndefinedStakingStatus         = int32(0)
-	UnstakingStatus                = int32(1)
-	StakedStatus                   = int32(2)
-	UnstakedStatus                 = int32(3)
-	defaultAccountAmountStr string = "0"
+	UndefinedStakingStatus  = int32(0)
+	UnstakingStatus         = int32(1)
+	StakedStatus            = int32(2)
+	UnstakedStatus          = int32(3)
+	defaultAccountAmountStr = "0"
 )
 
 func UnstakingHeightToStatus(unstakingHeight int64) int32 {
