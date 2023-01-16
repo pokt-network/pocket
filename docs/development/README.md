@@ -265,22 +265,3 @@ The official documentation includes a list of different linters and their config
 We can write custom linters using [`go-ruleguard`](https://go-ruleguard.github.io/). The rules are located in the [`build/linters`](../../build/linters) directory. The rules are written in the [Ruleguard DSL](https://github.com/quasilyte/go-ruleguard/blob/master/_docs/dsl.md), if you've never worked with ruleguard in the past, it makes sense to go through [introduction article](https://quasilyte.dev/blog/post/ruleguard/) and [Ruleguard by example tour](https://go-ruleguard.github.io/by-example/).
 
 Ruleguard is run via `gocritic` linter which is a part of `golangci-lint`, so if you wish to change configuration or debug a particular rule, you can modify the `.golangci.yml` file.
-
----
-
-Things to add:
-
-- The specs should be treated as ideas - not specifications
-- Bias to diagrams over text & bullet points where appropriate
-- Pretend everything is wrong
-- Look at those comments (research, document, implement, etc fom Jess
-- Link to claim & proof lifecycle documentation
-- Link to Otto's V0 GUide
-- How we use mermaid: https://github.com/pokt-network/pocket/issues/335#issuecomment-1352064588
-  tl;dr Short article from 2019 about some kademlia extensions Storj implemented (published in 2007) to prevent Sybil and Eclipse attacks.
-
-  https://medium.com/coinmonks/a-brief-overview-of-kademlia-and-its-use-in-various-decentralized-platforms-da08a7f72b8f
-
-  I'll add it to one of our guides but just sharing here for visibility too.
-
-- Recommend this blogpost: https://decentralizedthoughts.github.io/about-ittai/
