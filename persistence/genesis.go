@@ -142,7 +142,7 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account
 	if err != nil {
 		return nil, err
 	}
-	rows, err := tx.Query(ctx, types.SelectAccounts(height, types.AccountTableName))
+	rows, err := tx.Query(ctx, types.Account.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func (p PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, e
 	if err != nil {
 		return nil, err
 	}
-	rows, err := tx.Query(ctx, types.SelectPools(height, types.PoolTableName))
+	rows, err := tx.Query(ctx, types.Pool.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
