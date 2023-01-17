@@ -8,7 +8,7 @@ import (
 	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 )
 
 // TODO(https://github.com/pokt-network/pocket/issues/102): Generalize Pool and Account operations.

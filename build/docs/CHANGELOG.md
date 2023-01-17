@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2023-01-14
+
+- Added "max_conns_count", "min_conns_count", "max_conn_lifetime", "max_conn_idle_time" and "health_check_period" to config files
+
 ## [0.0.0.3] - 2023-01-11
 
 - Reorder private keys so addresses (retrieved by transforming private keys) to reflect the numbering in LocalNet appropriately. The address for val1, based on config1, will have the lexicographically first address. This makes debugging easier.
