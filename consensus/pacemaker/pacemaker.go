@@ -201,10 +201,10 @@ func (m *pacemaker) InterruptRound(reason string) {
 	}
 
 	msg, err := codec.GetCodec().FromAny(msgAny)
-
 	if err != nil {
 		return
 	}
+
 	quorumCertificate, ok := msg.(*typesCons.QuorumCertificate)
 	if !ok {
 		return
