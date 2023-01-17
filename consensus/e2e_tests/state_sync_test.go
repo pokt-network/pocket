@@ -90,7 +90,7 @@ func TestStateSyncServer(t *testing.T) {
 			typesCons.ConsensusNodeState{
 				Height: 4,
 				Step:   uint8(consensus.NewRound),
-				Round:  4,
+				Round:  0,
 			},
 			nodeState)
 		//require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
