@@ -15,14 +15,14 @@ import (
 )
 
 const (
-	DefaultLogPrefix    = "NODE"
+	defaultLogPrefix    = "NODE"
 	pacemakerModuleName = "pacemaker"
 
 	// A buffer around the pacemaker timeout to avoid race condition; 30ms was arbitrarily chosen
 	timeoutBuffer = 30 * time.Millisecond
 
-	NewRound = typesCons.HotstuffStep_HOTSTUFF_STEP_NEWROUND
-	Propose  = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_PROPOSE
+	newRound = typesCons.HotstuffStep_HOTSTUFF_STEP_NEWROUND
+	propose  = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_PROPOSE
 )
 
 var (
@@ -125,7 +125,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	//                  handlers. Since the leader also acts as a replica but doesn't use the replica's
 	//                  handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
 	// Do not handle messages if it is a self proposal
-	if consensusMod.IsLeader() && msg.Type == Propose && msg.Step != NewRound {
+	if consensusMod.IsLeader() && msg.Type == propose && msg.Step != newRound {
 		return false, nil
 	}
 
@@ -233,7 +233,7 @@ func (m *pacemaker) NewHeight() {
 func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
 	// DISCUSS: Should we lock the consensus module here?
 	consensusMod := m.GetBus().GetConsensusModule()
-	consensusMod.SetStep(uint8(NewRound))
+	consensusMod.SetStep(uint8(newRound))
 	consensusMod.ResetRound()
 	consensusMod.ReleaseUtilityContext()
 
@@ -244,9 +244,9 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	}
 
 	hotstuffMessage := &typesCons.HotstuffMessage{
-		Type:          Propose,
+		Type:          propose,
 		Height:        consensusMod.CurrentHeight(),
-		Step:          NewRound,
+		Step:          newRound,
 		Round:         consensusMod.CurrentRound(),
 		Block:         nil,
 		Justification: nil, // Set below if qc is not nil
