@@ -63,7 +63,7 @@ This is a general set of steps we have found to help new core team members onboa
 
    - Treat these specifications as guidelines and not sources of truth. If you are reading this, you will likely modify them at some point.
    - Mastering these concepts won't be easy but will make you an expert on Pocket V1
-   - _TIP: We hope to publish it with V1 benchmarks on arxiv one day, so this is your change to contribute 🙂_
+   - _TIP: We hope to publish it with V1 benchmarks on arxiv one day, so this is your chance to contribute 🙂_
    - **Optional**: If you're a core team member or heavily involved in the project, reach out to the team about getting access to the V1 specification research documents.
     <!-- For internal use only. If you're external and are reading this, reach out to the team.
        These decks from October 2021 might also help:
