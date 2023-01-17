@@ -6,8 +6,6 @@ var (
 	_ PacemakerDebug = &pacemaker{}
 )
 
-//var _ PacemakerDebug = &pacemaker{}
-
 // This Pacemaker interface is only used for development & debugging purposes.
 type PacemakerDebug interface {
 	SetManualMode(bool)
