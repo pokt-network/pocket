@@ -221,8 +221,7 @@ func (m *pacemaker) NewHeight() {
 
 	m.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
 
-	m.
-		GetBus().
+	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
 		CounterIncrement(
