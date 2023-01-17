@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.19] - 2023-01-12
+## [0.0.0.19] - 2023-01-17
 
 ### Consensus - Core
 - Decouple consensus module and pacemaker module
