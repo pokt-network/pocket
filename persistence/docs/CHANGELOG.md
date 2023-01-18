@@ -7,13 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.23] - 2023-01-18
+
+- Consolidate the `Block` proto structures under `shared/core/types`
+
 ## [0.0.0.22] - 2023-01-14
 
 - Add `max_conns_count`, `min_conns_count`, `max_conn_lifetime`, `max_conn_idle_time` and `health_check_period` to `PersistenceConfig`.
 - Update `connectToDatabase` function in `db.go` to connect via `pgxpool` to postgres database and accept `PersistenceConfig` interface as input.
 - Update `github.com/jackc/pgx/v4` -> `github.com/jackc/pgx/v5`.
 
-##  [0.0.0.21] - 2023-01-11
+## [0.0.0.21] - 2023-01-11
 
 - Add `init()` function to `gov.go` to build a map of parameter names and their types
 - Deprecated `GetBlocksPerSession()` and `GetServiceNodesPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
