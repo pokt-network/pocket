@@ -1,7 +1,8 @@
 syntax = "proto3";
-package consensus;
 
-option go_package = "github.com/pokt-network/pocket/consensus/types";
+package core;
+
+option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
 import "google/protobuf/timestamp.proto";
 
@@ -20,6 +21,16 @@ message BlockHeader {
 
 // CONSOLIDATE: Consolidate all `Block` and `BlockHeader` structures into one in a shared location
 message Block {
-  BlockHeader blockHeader = 1;
+  core.BlockHeader blockHeader = 1;
   repeated bytes transactions = 2;
 }
+
+// message Block {
+//     uint64 height = 1;
+//     string stateHash = 2;
+//     string prevStateHash = 3; // The stateHash of the block at height-1
+//     bytes proposerAddress = 4; // The proposer of this block; TODO: Change this to an string
+//     bytes quorumCertificate = 5; // The quorum certificate containing signature from 2/3+ validators at height
+//     // INVESTIGATE(#361): Decide if we need `transactionsHash` given that it is captured in the `transactionsTree`.
+//     bytes transactionsHash = 6; // The hash of all the transactions in the block
+// }
