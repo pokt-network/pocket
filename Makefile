@@ -232,35 +232,55 @@ protogen_show: ## A simple `find` command that shows you the generated protobufs
 protogen_clean: ## Remove all the generated protobufs.
 	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs -r rm
 
-PROTO_C = protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative  -I=./shared -I=./shared/core/types/proto
+PROTOC = protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative
+PROTOC_SHARED = $(PROTOC) -I=./shared
 
 .PHONY: protogen_local
 protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
 	# Shared
-	$(PROTO_C)                              --go_out=./shared/core/types ./shared/core/types/proto/*.proto
-	$(PROTO_C) -I=./shared/messaging/proto  --go_out=./shared/messaging  ./shared/messaging/proto/*.proto
-	$(PROTO_C) -I=./shared/codec/proto      --go_out=./shared/codec      ./shared/codec/proto/*.proto
+	$(PROTOC) -I=./shared/core/types/proto --go_out=./shared/core/types ./shared/core/types/proto/*.proto
+	$(PROTOC) -I=./shared/messaging/proto  --go_out=./shared/messaging  ./shared/messaging/proto/*.proto
+	$(PROTOC) -I=./shared/codec/proto      --go_out=./shared/codec      ./shared/codec/proto/*.proto
 
 	# Runtime
-	$(PROTO_C) -I=./runtime/configs/proto  --go_out=./runtime/configs ./runtime/configs/proto/*.proto
-	$(PROTO_C) -I=./runtime/genesis/proto  --go_out=./runtime/genesis ./runtime/genesis/proto/*.proto
+	$(PROTOC_SHARED) -I=./runtime/configs/proto  --go_out=./runtime/configs ./runtime/configs/proto/*.proto
+	$(PROTOC_SHARED) -I=./runtime/genesis/proto  --go_out=./runtime/genesis ./runtime/genesis/proto/*.proto
 	protoc-go-inject-tag -input="./runtime/genesis/*.pb.go"
 
 	# Persistence
-	$(PROTO_C) -I=./persistence/indexer/proto 	--go_out=./persistence/indexer ./persistence/indexer/proto/*.proto
-	$(PROTO_C) -I=./persistence/proto         	--go_out=./persistence/types   ./persistence/proto/*.proto
+	$(PROTOC_SHARED) -I=./persistence/indexer/proto 	--go_out=./persistence/indexer ./persistence/indexer/proto/*.proto
+	$(PROTOC_SHARED) -I=./persistence/proto         	--go_out=./persistence/types   ./persistence/proto/*.proto
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 
 	# Utility
-	$(PROTO_C) -I=./utility/types/proto --go_out=./utility/types ./utility/types/proto/*.proto
+	$(PROTOC_SHARED) -I=./utility/types/proto --go_out=./utility/types ./utility/types/proto/*.proto
 
 	# Consensus
-	$(PROTO_C) -I=./consensus/types/proto --go_out=./consensus/types ./consensus/types/proto/*.proto
+	$(PROTOC_SHARED) -I=./consensus/types/proto --go_out=./consensus/types ./consensus/types/proto/*.proto
 
 	# P2P
-	$(PROTO_C) -I=./p2p/raintree/types/proto --go_out=./p2p/types ./p2p/raintree/types/proto/*.proto
+	$(PROTOC_SHARED) -I=./p2p/raintree/types/proto --go_out=./p2p/types ./p2p/raintree/types/proto/*.proto
 
-	echo "View generated proto files by running: make protogen_show"
+	# echo "View generated proto files by running: make protogen_show"
+
+# .PHONY: protogen_local
+# protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
+# # TODO: Organize this code with a basic for loop
+# 	$(eval proto_dir = ".")
+# # TODO: Use a forloop to avoid all the code duplication and improve readability
+# 	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    				--go_out=./shared/messaging     ./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
+# 	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        				--go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
+# 	protoc --go_opt=paths=source_relative  -I=./persistence/indexer/proto 				--go_out=./persistence/indexer  ./persistence/indexer/proto/*.proto --experimental_allow_proto3_optional
+# 	protoc --go_opt=paths=source_relative  -I=./shared/ -I=./persistence/proto         	--go_out=./persistence/types  	./persistence/proto/*.proto         --experimental_allow_proto3_optional
+# 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
+# 	protoc --go_opt=paths=source_relative  -I=./shared/ -I=./utility/types/proto       				--go_out=./utility/types      	./utility/types/proto/*.proto       --experimental_allow_proto3_optional
+# 	protoc --go_opt=paths=source_relative  -I=./consensus/types/proto     				--go_out=./consensus/types    	./consensus/types/proto/*.proto     --experimental_allow_proto3_optional
+# 	protoc --go_opt=paths=source_relative  -I=./p2p/raintree/types/proto  				--go_out=./p2p/types          	./p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
+# 	protoc --go_opt=paths=source_relative  -I=./runtime/configs/proto     				--go_out=./runtime/configs      ./runtime/configs/proto/*.proto     --experimental_allow_proto3_optional
+# 	protoc --go_opt=paths=source_relative  -I=./shared/core/types/proto     			--go_out=./shared/core/types    ./shared/core/types/proto/*.proto   --experimental_allow_proto3_optional
+# 	protoc --go_opt=paths=source_relative  -I=./shared/ -I=./runtime/genesis/proto     	--go_out=./runtime/genesis      ./runtime/genesis/proto/*.proto     --experimental_allow_proto3_optional
+# 	protoc-go-inject-tag -input="./runtime/genesis/*.pb.go"
+# 	echo "View generated proto files by running: make protogen_show"
 
 # CONSIDERATION: Some proto files contain unused gRPC services so we may need to add the following
 #                if/when we decide to include it: `grpc--go-grpc_opt=paths=source_relative --go-grpc_out=./output/path`

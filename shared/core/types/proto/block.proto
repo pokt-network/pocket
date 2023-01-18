@@ -8,15 +8,18 @@ import "google/protobuf/timestamp.proto";
 
 // TECHDEBT: Re-evaluate fields copied over from Tendermint's structures
 message BlockHeader {
-  int64 height = 1;
-  string hash = 2;
-  string networkId = 3; // used to differentiate what network the chain is on (Tendermint legacy)
-  google.protobuf.Timestamp time = 4;
-  uint32 numTxs = 5;
-  int64 totalTxs = 6; // Total = total in the entire chain Num = total in block (Tendermint legacy)
-  string lastBlockHash = 7;
-  bytes proposerAddress = 8; // TODO: Change this to a string
-  bytes QuorumCertificate = 9;
+  uint64 height = 1;
+  string networkId = 2; // used to differentiate what network the chain is on (Tendermint legacy)
+  string stateHash = 3;
+  string prevStateHash = 4; // The stateHash of the block at height-1
+  bytes proposerAddress = 5; // The proposer of this block; TODO: Change this to an string
+  bytes quorumCertificate = 6; // The quorum certificate containing signature from 2/3+ validators at height
+
+  // INVESTIGATE(#361): Decide if we need `transactionsHash` given that it is captured in the `transactionsTree`.
+  bytes transactionsHash = 7; // The hash of all the transactions in the block
+  google.protobuf.Timestamp time = 8;
+  uint32 numTxs = 9;
+  int64 totalTxs = 10; // Total = total in the entire chain Num = total in block (Tendermint legacy)
 }
 
 // CONSOLIDATE: Consolidate all `Block` and `BlockHeader` structures into one in a shared location
@@ -28,9 +31,9 @@ message Block {
 // message Block {
 //     uint64 height = 1;
 //     string stateHash = 2;
-//     string prevStateHash = 3; // The stateHash of the block at height-1
-//     bytes proposerAddress = 4; // The proposer of this block; TODO: Change this to an string
-//     bytes quorumCertificate = 5; // The quorum certificate containing signature from 2/3+ validators at height
+//     string prevStateHash = 3;
+//     bytes proposerAddress = 4;
+//     bytes quorumCertificate = 5;
 //     // INVESTIGATE(#361): Decide if we need `transactionsHash` given that it is captured in the `transactionsTree`.
 //     bytes transactionsHash = 6; // The hash of all the transactions in the block
 // }
