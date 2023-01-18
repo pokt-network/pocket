@@ -3,6 +3,7 @@ package state_sync
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -11,9 +12,8 @@ import (
 )
 
 func (m *stateSync) sendToPeer(msg *anypb.Any, peerId string) error {
-	//Seperation between nodeId and peerId must be clear
 
-	// TODO: Check if this is needed (added since it was added in consensus module sendToNode function)
+	//Seperation between nodeId and peerId must be clear
 	if !m.GetBus().GetConsensusModule().IsLeaderSet() {
 		m.nodeLogError(typesCons.ErrNilLeaderId.Error(), nil)
 		return errors.New(typesCons.ErrNilLeaderId.Error())
@@ -37,6 +37,8 @@ func (m *stateSync) sendToPeer(msg *anypb.Any, peerId string) error {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return err
 	}
+
+	m.nodeLog(fmt.Sprint("SENT  STATE SYNC MESSAGE"))
 
 	return nil
 }

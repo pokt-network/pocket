@@ -1,6 +1,7 @@
 package e2e_tests
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -43,7 +44,7 @@ func TestStateSyncServer(t *testing.T) {
 	testStep := uint8(consensus.NewRound)
 	testRound := uint64(0)
 
-	leaderId := typesCons.NodeId(3)
+	leaderId := typesCons.NodeId(2)
 	leader := pocketNodes[leaderId]
 
 	consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
@@ -94,8 +95,28 @@ func TestStateSyncServer(t *testing.T) {
 				Round:  0,
 			},
 			nodeState)
-		//require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
+		require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
 	}
+
+	prepareProposal := &typesCons.HotstuffMessage{
+		Type:          consensus.Propose,
+		Height:        4,
+		Step:          consensus.Prepare,
+		Round:         0,
+		Block:         block,
+		Justification: nil,
+	}
+	anyMsg, err := anypb.New(prepareProposal)
+	require.NoError(t, err)
+
+	P2PBroadcast(t, pocketNodes, anyMsg)
+
+	numExpectedMsgs := numValidators - 1 // -1 because one of the messages is a self proposal (leader to itself as a replica) that is not passed through the network
+	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Vote, numExpectedMsgs, 250, true)
+	require.NoError(t, err)
+
+	nodeState := GetConsensusNodeState(pocketNodes[1])
+	require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
 
 	// Choose node 1 as the server node.
 	// We first enable server mode of the node 1.
@@ -128,17 +149,7 @@ func TestStateSyncServer(t *testing.T) {
 	P2PSend(t, serverNode, anyProto)
 
 	// start waiting for the state sync message on server node,
-	numExpectedMsgs := 1
+	numExpectedMsgs = 1
 	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE, serverNode.GetP2PAddress(), numExpectedMsgs, 250, false)
 	require.NoError(t, err)
-
-	//_ = GetConsensusNodeState(pocketNodes[0])
-
-	// assertNodeConsensusView(t, typesCons.NodeId(pocketNodes[0].GetBus().GetConsensusModule().GetNodeId()),
-	// 	typesCons.ConsensusNodeState{
-	// 		Height: 2,
-	// 		Step:   uint8(consensus.NewRound),
-	// 		Round:  0,
-	// 	}, nodeState)
-
 }

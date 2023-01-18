@@ -1,6 +1,7 @@
 package state_sync
 
 import (
+	"fmt"
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -109,8 +110,9 @@ func (m *stateSync) HandleGetBlockResponse(*typesCons.GetBlockResponse) error {
 	return nil
 }
 
-func (m *stateSync) HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error {
-	//! TODO implement
+func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
+	m.nodeLog(fmt.Sprintf("RECEIVED STATE SYNC METADATA RESPONSE: %s", metaDataRes.String()))
+
 	return nil
 }
 
