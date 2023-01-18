@@ -17,7 +17,8 @@ message BlockHeader {
   // INVESTIGATE(#361): Decide if we need `transactionsHash` given that it is captured in the `transactionsTree`.
   bytes transactionsHash = 7; // The hash of all the transactions in the block
 
-  // TECHDEBT: Re-evaluate fields copied over from Tendermint's structures
+  // TECHDEBT: Re-evaluate whether we want/need these fields (copied over from Tendermint's structures)
+  //           at all. They were added earlier on in the implementation but might not be needed at all.
   google.protobuf.Timestamp time = 8;
   uint32 numTxs = 9; // Num txs in this block (Tendermint legacy)
   int64 totalTxs = 10; // Total in the entire chain Num (Tendermint legacy)
