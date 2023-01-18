@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (m *stateSyncModule) sendToPeer(msg *anypb.Any, peerId string) error {
+func (m *stateSync) sendToPeer(msg *anypb.Any, peerId string) error {
 	//Seperation between nodeId and peerId must be clear
 
 	// TODO: Check if this is needed (added since it was added in consensus module sendToNode function)

@@ -40,11 +40,11 @@ type StateSyncModule interface {
 }
 
 var (
-	_ modules.Module        = &stateSyncModule{}
-	_ StateSyncServerModule = &stateSyncModule{}
+	_ modules.Module        = &stateSync{}
+	_ StateSyncServerModule = &stateSync{}
 )
 
-type stateSyncModule struct {
+type stateSync struct {
 	bus modules.Bus
 
 	currentMode SyncMode
@@ -55,67 +55,71 @@ type stateSyncModule struct {
 }
 
 func CreateStateSync(bus modules.Bus) (modules.Module, error) {
-	var m stateSyncModule
+	var m stateSync
 	return m.Create(bus)
 }
 
-func (*stateSyncModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*stateSync) Create(bus modules.Bus) (modules.Module, error) {
+	m := &stateSync{}
+	bus.RegisterModule(m)
+
 	//! TODO: think about what must be the default mode
-	return &stateSyncModule{
-		bus:         nil,
-		currentMode: Synched,
-		serverMode:  false,
-	}, nil
+	m.currentMode = Synched
+
+	m.serverMode = false
+
+	return m, nil
 }
 
-func (m *stateSyncModule) Start() error {
+func (m *stateSync) Start() error {
 	return nil
 }
 
-func (m *stateSyncModule) Stop() error {
+func (m *stateSync) Stop() error {
 	return nil
 }
 
-func (m *stateSyncModule) SetBus(pocketBus modules.Bus) {
+func (m *stateSync) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 }
 
-func (m *stateSyncModule) GetBus() modules.Bus {
+func (m *stateSync) GetBus() modules.Bus {
 	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
 }
 
-func (m *stateSyncModule) GetModuleName() string {
+func (m *stateSync) GetModuleName() string {
 	return stateSyncModuleName
 }
 
-func (m *stateSyncModule) IsServerModEnabled() bool {
+func (m *stateSync) IsServerModEnabled() bool {
 	return m.serverMode
 }
 
-func (m *stateSyncModule) EnableServerMode() {
+func (m *stateSync) EnableServerMode() {
+	m.nodeLog("ENABLING SERVER MODE")
 	m.currentMode = Server
 	m.serverMode = true
 }
 
-func (m *stateSyncModule) HandleGetBlockResponse(*typesCons.GetBlockResponse) error {
+func (m *stateSync) HandleGetBlockResponse(*typesCons.GetBlockResponse) error {
 	//! TODO implement
 	return nil
 }
 
-func (m *stateSyncModule) HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error {
+func (m *stateSync) HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error {
 	//! TODO implement
 	return nil
 }
 
 // IMPROVE: Remove this once we have a proper logging system.
-func (m *stateSyncModule) nodeLog(s string) {
+func (m *stateSync) nodeLog(s string) {
 	log.Printf("[%s][%d] %s\n", m.logPrefix, m.GetBus().GetConsensusModule().GetNodeId(), s)
 }
 
 // IMPROVE: Remove this once we have a proper logging system.
-func (m *stateSyncModule) nodeLogError(s string, err error) {
+func (m *stateSync) nodeLogError(s string, err error) {
 	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.GetBus().GetConsensusModule().GetNodeId(), s, err)
 }

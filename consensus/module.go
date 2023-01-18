@@ -175,8 +175,16 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	}
 
 	pacemaker := paceMakerMod.(pacemaker.Pacemaker)
+
+	stateSyncMod, err := state_sync.CreateStateSync(bus)
+	if err != nil {
+		return nil, err
+	}
+	stateSync := stateSyncMod.(state_sync.StateSyncModule)
+
 	m := &consensusModule{
 		paceMaker:         pacemaker,
+		stateSync:         stateSync,
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
 
 		height: 0,
@@ -245,9 +253,9 @@ func (m *consensusModule) Start() error {
 		return err
 	}
 
-	// if err := m.stateSync.Start(); err != nil {
-	// 	return err
-	// }
+	if err := m.stateSync.Start(); err != nil {
+		return err
+	}
 
 	if err := m.leaderElectionMod.Start(); err != nil {
 		return err

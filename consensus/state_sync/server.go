@@ -1,7 +1,8 @@
 package state_sync
 
 import (
-	"github.com/pokt-network/pocket/consensus/types"
+	"fmt"
+
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -19,13 +20,15 @@ type StateSyncServerModule interface {
 	HandleGetBlockRequest(*typesCons.GetBlockRequest) error
 }
 
-func (m *stateSyncModule) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) error {
+func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) error {
 
 	peerId, err := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
 	if err != nil {
 		return err
 	}
 	minHeight, maxHeight := m.aggregateMetaResults()
+
+	m.nodeLog(fmt.Sprintf("%s RECEIVED STATE SYNC METADATA REQUEST FROM: %s", peerId, metadataReq.PeerId))
 
 	metadataRes := typesCons.StateSyncMetadataResponse{
 		PeerId:    peerId,
@@ -38,11 +41,13 @@ func (m *stateSyncModule) HandleStateSyncMetadataRequest(metadataReq *typesCons.
 		return err
 	}
 
+	m.nodeLog(fmt.Sprintf("REPLYING TO STATE SYNC METADATA REQUEST: %s", metadataRes.String()))
+
 	return m.sendToPeer(anyStateSyncMessage, metadataReq.PeerId)
 	//return nil
 }
 
-func (m *stateSyncModule) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
+func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
 
 	peerId, err := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
 	if err != nil {
@@ -65,18 +70,16 @@ func (m *stateSyncModule) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequ
 	}
 
 	return m.sendToPeer(anyStateSyncMessage, blockReq.PeerId)
-	return nil
-
 }
 
 // TODO! Placeholder function for metadata aggregation of data received from different peers
-func (m *stateSyncModule) aggregateMetaResults() (uint64, uint64) {
+func (m *stateSync) aggregateMetaResults() (uint64, uint64) {
 	minHeight := m.GetBus().GetConsensusModule().CurrentHeight()
 	maxHeight := m.GetBus().GetConsensusModule().CurrentHeight()
 	return minHeight, maxHeight
 }
 
-func (m *stateSyncModule) getBlockAtHeight(blockHeight uint64) (*typesCons.Block, error) {
+func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*typesCons.Block, error) {
 
 	blockStore := m.GetBus().GetPersistenceModule().GetBlockStore()
 	heightBytes := heightToBytes(int64(blockHeight))
@@ -86,7 +89,7 @@ func (m *stateSyncModule) getBlockAtHeight(blockHeight uint64) (*typesCons.Block
 		return &typesCons.Block{}, err
 	}
 
-	var block types.Block
+	var block typesCons.Block
 	err = codec.GetCodec().Unmarshal(blockBytes, &block)
 	if err != nil {
 		return &typesCons.Block{}, err

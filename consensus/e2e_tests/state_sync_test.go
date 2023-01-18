@@ -10,6 +10,7 @@ import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestStateSyncServer(t *testing.T) {
@@ -95,6 +96,41 @@ func TestStateSyncServer(t *testing.T) {
 			nodeState)
 		//require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
 	}
+
+	// Choose node 1 as the server node.
+	// We first enable server mode of the node 1.
+	serverNode := pocketNodes[1]
+	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
+	serverNodeConsensusModImpl.MethodByName("EnableServerMode").Call([]reflect.Value{})
+
+	// We choose node 2 as the requester node.
+	requesterNode := pocketNodes[2]
+	requesterNodePeerId, err := requesterNode.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
+	if err != nil {
+		//TODO check if this must be failed, rather than logged.
+		t.Logf("Can't get the peerId%s", err)
+	}
+
+	stateSyncReq := typesCons.StateSyncMetadataRequest{
+		PeerId: requesterNodePeerId,
+	}
+
+	stateSyncMessage := &typesCons.StateSyncMessage{
+		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_METADATA_REQUEST,
+		Message: &typesCons.StateSyncMessage_MetadataReq{
+			MetadataReq: &stateSyncReq,
+		},
+	}
+	anyProto, err := anypb.New(stateSyncMessage)
+	require.NoError(t, err)
+
+	// send metadata request to the server node
+	P2PSend(t, serverNode, anyProto)
+
+	// start waiting for the state sync message on server node,
+	numExpectedMsgs := 1
+	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE, serverNode.GetP2PAddress(), numExpectedMsgs, 250, false)
+	require.NoError(t, err)
 
 	//_ = GetConsensusNodeState(pocketNodes[0])
 
