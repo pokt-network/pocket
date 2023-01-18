@@ -187,6 +187,7 @@ func (handler *HotstuffReplicaMessageHandler) emitTelemetryEvent(m *consensusMod
 		)
 }
 
+// Only used in prepare message. s/validateProposal/validatePrepareProposal
 func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error {
 	// Check if node should be accepting proposals
 	if !(msg.GetType() == Propose && msg.GetStep() == Prepare) {
@@ -254,6 +255,7 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	}
 
 	if qc.Block == nil {
+		fmt.Println("OLSH TEST")
 		return typesCons.ErrNilBlockInQC
 	}
 

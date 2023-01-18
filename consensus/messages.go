@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"fmt"
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -19,6 +20,7 @@ func CreateProposeMessage(
 		return nil, typesCons.ErrNilBlockVote
 	}
 
+	fmt.Println("OLSH Creating propose message", step, block, qc)
 	msg := &typesCons.HotstuffMessage{
 		Type:          Propose,
 		Height:        height,

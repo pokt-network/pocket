@@ -30,5 +30,6 @@ func (m *pacemaker) SetManualMode(manualMode bool) {
 }
 
 func (m *pacemaker) ForceNextView() {
+	// This is non-nil for some reason. Where/how should we nullify it?
 	m.startNextView(m.debug.quorumCertificate, true)
 }

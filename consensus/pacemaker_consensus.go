@@ -10,7 +10,7 @@ import (
 )
 
 // Implementations of the type ConsensusPacemaker interface
-// SetHeight, SeetRound, SetStep are implemented for ConsensusDebugModule
+// SetHeight, SetRound, SetStep are implemented for ConsensusDebugModule
 func (m *consensusModule) ResetRound() {
 	m.clearLeader()
 	m.clearMessagesPool()

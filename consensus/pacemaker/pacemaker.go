@@ -40,6 +40,7 @@ type Pacemaker interface {
 	RestartTimer()
 	NewHeight()
 	InterruptRound(reason string)
+	SetLogPrefix(logPrefix string)
 }
 
 type pacemaker struct {
@@ -59,8 +60,14 @@ func CreatePacemaker(bus modules.Bus) (modules.Module, error) {
 	return m.Create(bus)
 }
 
+func (m *pacemaker) SetLogPrefix(logPrefix string) {
+	m.logPrefix = logPrefix
+}
+
 func (*pacemaker) Create(bus modules.Bus) (modules.Module, error) {
-	m := &pacemaker{}
+	m := &pacemaker{
+		logPrefix: defaultLogPrefix,
+	}
 	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
@@ -237,6 +244,7 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	consensusMod.ReleaseUtilityContext()
 
 	// TECHDEBT: This if structure for debug purposes only; think of a way to externalize it from the main consensus flow...
+	// manual mode && not forcing next view
 	if m.debug.manualMode && !forceNextView {
 		m.debug.quorumCertificate = qc
 		return

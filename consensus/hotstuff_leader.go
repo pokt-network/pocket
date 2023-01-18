@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"fmt"
 	"unsafe"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
@@ -62,6 +63,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 			m.paceMaker.InterruptRound("failed to prepare & apply block")
 			return
 		}
+		highPrepareQC = nil
 		m.block = block
 	} else {
 		// Leader acts like a replica if `prepareQC` is not `nil`
@@ -400,15 +402,20 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 // ADDTEST: Add more tests for all the different scenarios here
 func (m *consensusModule) shouldPrepareNewBlock(highPrepareQC *typesCons.QuorumCertificate) bool {
 	if highPrepareQC == nil {
+		fmt.Println("OLSH shouldPrepareNewBlock 1")
 		m.nodeLog("Preparing a new block - no prepareQC found")
 		return true
 	} else if m.isPrepareQCFromPast(highPrepareQC) {
+		// Issue; the pacemaker is not resetting QC properly
+		fmt.Println("OLSH shouldPrepareNewBlock 2")
 		m.nodeLog("Preparing a new block - prepareQC is from the past")
 		return true
 	} else if highPrepareQC.Block == nil {
+		fmt.Println("OLSH shouldPrepareNewBlock 3")
 		m.nodeLog("[WARN] Preparing a new block - prepareQC SHOULD be used but block is nil")
 		return true
 	}
+	fmt.Println("OLSH shouldPrepareNewBlock", highPrepareQC, highPrepareQC.Block)
 	return false
 }
 
