@@ -8,6 +8,7 @@ import (
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
@@ -51,7 +52,7 @@ func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) {
 		return
 	}
 
-	block := &types.Block{}
+	block := &coreTypes.Block{}
 	if err := codec.GetCodec().Unmarshal(blockBytes, block); err != nil {
 		log.Printf("Error decoding block %d from block store: %s \n", height, err)
 		return

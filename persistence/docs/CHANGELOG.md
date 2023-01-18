@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.23] - 2023-01-18
 
+- Consolidate the `Block` proto structures under `shared/core/types`
 - Added `debug.FreeOSMemory()` on `ResetToGenesis` to free-up memory and stabilize `LocalNet`.
 
 ## [0.0.0.22] - 2023-01-14
@@ -17,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update `connectToDatabase` function in `db.go` to connect via `pgxpool` to postgres database and accept `PersistenceConfig` interface as input.
 - Update `github.com/jackc/pgx/v4` -> `github.com/jackc/pgx/v5`.
 
-##  [0.0.0.21] - 2023-01-11
+## [0.0.0.21] - 2023-01-11
 
 - Add `init()` function to `gov.go` to build a map of parameter names and their types
 - Deprecated `GetBlocksPerSession()` and `GetServiceNodesPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
