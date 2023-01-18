@@ -6,7 +6,6 @@ option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
 import "google/protobuf/timestamp.proto";
 
-// TECHDEBT: Re-evaluate fields copied over from Tendermint's structures
 message BlockHeader {
   uint64 height = 1;
   string networkId = 2; // used to differentiate what network the chain is on (Tendermint legacy)
@@ -17,23 +16,14 @@ message BlockHeader {
 
   // INVESTIGATE(#361): Decide if we need `transactionsHash` given that it is captured in the `transactionsTree`.
   bytes transactionsHash = 7; // The hash of all the transactions in the block
+
+  // TECHDEBT: Re-evaluate fields copied over from Tendermint's structures
   google.protobuf.Timestamp time = 8;
-  uint32 numTxs = 9;
-  int64 totalTxs = 10; // Total = total in the entire chain Num = total in block (Tendermint legacy)
+  uint32 numTxs = 9; // Num txs in this block (Tendermint legacy)
+  int64 totalTxs = 10; // Total in the entire chain Num (Tendermint legacy)
 }
 
-// CONSOLIDATE: Consolidate all `Block` and `BlockHeader` structures into one in a shared location
 message Block {
   core.BlockHeader blockHeader = 1;
   repeated bytes transactions = 2;
 }
-
-// message Block {
-//     uint64 height = 1;
-//     string stateHash = 2;
-//     string prevStateHash = 3;
-//     bytes proposerAddress = 4;
-//     bytes quorumCertificate = 5;
-//     // INVESTIGATE(#361): Decide if we need `transactionsHash` given that it is captured in the `transactionsTree`.
-//     bytes transactionsHash = 6; // The hash of all the transactions in the block
-// }
