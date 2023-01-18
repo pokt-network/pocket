@@ -232,6 +232,7 @@ protogen_show: ## A simple `find` command that shows you the generated protobufs
 protogen_clean: ## Remove all the generated protobufs.
 	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs -r rm
 
+# IMPROVE: Look into using buf in the future; https://github.com/bufbuild/buf.
 PROTOC = protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative
 PROTOC_SHARED = $(PROTOC) -I=./shared
 
