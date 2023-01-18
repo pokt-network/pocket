@@ -251,7 +251,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 				genesisState: expectedGenesis,
 				clock:        clock.New(),
 			},
-			assertion: func(tt require.TestingT, want, got interface{}, _ ...interface{}) {
+			assertion: func(tt require.TestingT, want, got any, _ ...any) {
 				require.Equal(tt, want.(*Manager).config, got.(*Manager).config)
 				require.Equal(tt, want.(*Manager).genesisState, got.(*Manager).genesisState)
 			},
@@ -282,7 +282,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 				genesisState: expectedGenesis,
 				clock:        clock.New(),
 			},
-			assertion: func(tt require.TestingT, want, got interface{}, _ ...interface{}) {
+			assertion: func(tt require.TestingT, want, got any, _ ...any) {
 				require.Equal(tt, want.(*Manager).config.P2P, got.(*Manager).config.P2P)
 			},
 		},

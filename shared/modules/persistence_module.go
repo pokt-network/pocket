@@ -113,11 +113,11 @@ type PersistenceWriteContext interface {
 
 	// Param Operations
 	InitGenesisParams(params *genesis.Params) error
-	SetParam(paramName string, value interface{}) error
+	SetParam(paramName string, value any) error
 
 	// Flag Operations
 	InitFlags() error
-	SetFlag(paramName string, value interface{}, enabled bool) error
+	SetFlag(paramName string, value any, enabled bool) error
 }
 
 type PersistenceReadContext interface {
