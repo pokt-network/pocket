@@ -3,6 +3,7 @@ package persistence
 import (
 	"crypto/sha256"
 	"log"
+	"runtime/debug"
 
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/types"
@@ -88,6 +89,8 @@ func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
 	}
 
 	log.Println("Cleared all the state")
+	// reclaming memory manually because the above calls deallocate and reallocate a lot of memory
+	debug.FreeOSMemory()
 	return nil
 }
 
