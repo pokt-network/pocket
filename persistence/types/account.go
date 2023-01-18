@@ -1,5 +1,7 @@
 package types
 
+var _ ProtocolAccountSchema = &AccountSchema{}
+
 type AccountSchema struct {
 	BaseProtocolAccountSchema
 }
