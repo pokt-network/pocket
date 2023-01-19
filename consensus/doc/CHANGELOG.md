@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.19] - 2023-01-11
+## [0.0.0.20] - 2023-01-19
 
 - Added LocalNet development environment suite with Tilt to utilize kubernetes via pocket-operator for local development
+
+## [0.0.0.19] - 2023-01-18
+
+- Remove `Block` proto definition to consolidate under `shared/core/types`
 
 ## [0.0.0.18] - 2023-01-11
 
