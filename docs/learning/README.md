@@ -6,7 +6,6 @@ _This is a live document on how to get ramped up on all the knowledge you need t
 - [🏗️ Technical Foundation](#️-technical-foundation)
   - [Github Development](#github-development)
   - [Golang](#golang)
-  - [Mermaid](#mermaid)
 - [📚 Technical References](#-technical-references)
   - [Pocket Specific](#pocket-specific)
   - [Consensus](#consensus)
@@ -30,40 +29,24 @@ This is a general set of steps we have found to help new core team members onboa
 
    - This will help you understand the core building components of a Pocket V1 Node
 
-2. Run a **LocalNet** by following the [development guide](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md). _(1-3 hours)_
+2. Run a **LocalNet** by following the [development guide](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md). _(1-2 hours)_
 
    - This will get you set up to start contributing
    - Reach out to the core team in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel if you hit any issues
    - _TIP: Once you clone the Github repo, you can `cd pocket` and run `make` from to see all the available commands._
 
-3. Get an understanding of the the V1 spec summaries by reading about the [4 modules in our docs](https://docs.pokt.network/home/learn/future). _(2-4 hours)_
+3. Get an understanding of the the V1 spec summaries by reading about the [4 modules in our docs](https://docs.pokt.network/home/learn/future). _(3-5 hours)_
 
    - This will get you understand the spec foundations for Pocket V1
-   - [Utility](https://docs.pokt.network/learn/future/utility/)
-   - [Consensus](https://docs.pokt.network/learn/future/consensus/)
-   - [P2P](https://docs.pokt.network/learn/future/peer-to-peer/)
-   - [Persistence](https://docs.pokt.network/learn/future/persistence/)-
 
-4. **Optional**: Go through [Otto's Pocket Guide](https://drive.google.com/drive/folders/1t-t0n7uMyvx-wBraDWBKVRLh532ZfD-c?usp=share_link) presentations to understand how Pocket V0 works.
-
-   - [Volume 1](https://docs.google.com/presentation/d/1ftD1B_HTah1rzcO2yOqVZLsPtmIKKWunoAm7WvDpFPQ): The Claim and Proof lifecycle
-   - [Volume 2](https://docs.google.com/presentation/d/1swFg6pzJSKXz9JnWkoQx5NegPnzuDWHnS4s25t7djt8): Block, Chains and Staking
-   - [Volume 3](https://docs.google.com/presentation/d/1jGkJN7sWouavU1VgSxheL-UnV_Fdyb2ZIO65cwWZGUM): For The Builders and Hackers I - History Lesson
-   - [Volume 4](https://docs.google.com/presentation/d/1D7hAAkMPW6Vo4uNA7PGY3KUZ8bcVF2SOjm4jLJdFwMY): For The Builders and Hackers II - History Lesson Continued
-
-5. **Optional**: If you’re interested, you can view the [_OG v0 Pocket whitepaper_](https://pocket-network-assets.s3-us-west-2.amazonaws.com/pdfs/Pocket-Network-Whitepaper-v0.3.0.pdf). _(3-5 hours)_
+4. **Optional**: If you’re interested, you can view the [_OG v0 Pocket whitepaper_](https://pocket-network-assets.s3-us-west-2.amazonaws.com/pdfs/Pocket-Network-Whitepaper-v0.3.0.pdf). _(10-12 hours)_
 
    - This can provide both valuable and interesting historical context into Pocket
 
-6. **Optional**: If you’re interested, you can view the [V0 Claim & Proof Lifecycle](https://github.com/pokt-network/pocket-core/blob/staging/doc/specs/reward_protocol.md) specifications. _(2-4 hours)_
+5. Over time, **and not all at once**, you can start making your way through and updating the [V1 specifications](https://github.com/pokt-network/pocket-network-protocol). _(30 hours)_
 
-   - It is a proprietary algorithm that you are unlikely to ever need to touch/modify, but it is fun & interesting to reason about and understand.
-
-7. **Eventually**: Over time, **and not all at once**, you can start making your way through and updating the [V1 specifications](https://github.com/pokt-network/pocket-network-protocol). _(15-30 hours)_
-
-   - Treat these specifications as guidelines and not sources of truth. If you are reading this, you will likely modify them at some point.
    - Mastering these concepts won't be easy but will make you an expert on Pocket V1
-   - _TIP: We hope to publish it with V1 benchmarks on arxiv one day, so this is your chance to contribute 🙂_
+   - _TIP: We hope to publish it with V1 benchmarks on arxiv one day, so this is your change to contribute 🙂_
    - **Optional**: If you're a core team member or heavily involved in the project, reach out to the team about getting access to the V1 specification research documents.
     <!-- For internal use only. If you're external and are reading this, reach out to the team.
        These decks from October 2021 might also help:
@@ -73,18 +56,18 @@ This is a general set of steps we have found to help new core team members onboa
          - [Consensus](https://docs.google.com/presentation/d/18CtSxxLLHY1N7HEJtja633mVF1_a9blaE2fe2-WgGAo/edit)
    -->
 
-8. Start getting acquainted with the code structure by looking at the [docs on the shared architecture](https://github.com/pokt-network/pocket/tree/main/shared). _(1 hour)_
+6. Start getting acquainted with the code structure by looking at the [docs on the shared architecture](https://github.com/pokt-network/pocket/tree/main/shared). _(1 hour)_
 
    - This will help you understand the code architecture of Pocket V1
 
-9. View our [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md). _(10 mins)_
+7. View our [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md). _(10 mins)_
 
    - This will give you insight into our development & release timelines
 
-10. Get a sense of all the open issues and tickets [in out Github project](https://github.com/orgs/pokt-network/projects/142/views/12). _(1 hour)_
-11. If you don't already have a starter task, pick one from [Dework](https://app.dework.xyz/pokt-network), our [open issues](https://github.com/pokt-network/pocket/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) or ask the team in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel. _(1 hour)_
+8. Get a sense of all the open issues and tickets [in out Github project](https://github.com/orgs/pokt-network/projects/142/views/12). _(1 hour)_
+9. If you don't already have a starter task, pick one from [Dework](https://app.dework.xyz/pokt-network), our [open issues](https://github.com/pokt-network/pocket/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) or ask the team in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel. _(1 hour)_
 
-12. Jump on a call and pair code! _(∞ and beyond)_
+10. Jump on a call and pair code! _(∞ and beyond)_
 
 - If you need a walk-through of the code and some pointers before getting started, **jump on a call!**
 - If you need to take your time to understand the problem and the code first, do so, and then **jump on a call!**
@@ -105,10 +88,6 @@ Afterwards, two great references you can constantly refer to are:
 
 - [Effective Go](https://go.dev/doc/effective_go) by the official Gopher community
 - [Practical Go](https://dave.cheney.net/practical-go) by Dave Cheney
-
-### Mermaid
-
-We used [Mermaid](https://mermaid.js.org/#/) as our [text-to-diagram](https://text-to-diagram.com/) framework to embed visuals alongside all of our visualisations. It makes the documentation easier to understand and maintain. As explained in [this comment](https://github.com/pokt-network/pocket/issues/335#issuecomment-1352064588), you can use [mermaid.live](https://mermaid.live) to work on them in your browser or install an extension in your editor of choice; which should probably be VSCode 🤓
 
 ## 📚 Technical References
 
@@ -184,8 +163,6 @@ This is a general set of technical links and recommended reading our team has fo
 
 - [Eclipsing Ethereum Peers with False Friends](https://arxiv.org/pdf/1908.10141.pdf)
   - A detailed explanation of how Kademlia (DHT for P2P networks) works, accompanying a deep dive into peer management and peer discovery in Geth, with the goal of outlining several attack vectors and their countermeasures.
-- [A Brief Overview of Kademlia, and its use in various decentralized platforms](https://medium.com/coinmonks/a-brief-overview-of-kademlia-and-its-use-in-various-decentralized-platforms-da08a7f72b8f)
-  - Short article from 2019 about some kademlia extensions Storj implemented (published in 2007) to prevent Sybil and Eclipse attacks.
 
 ### Blogs
 
@@ -209,7 +186,6 @@ This is a general set of technical links and recommended reading our team has fo
 - [Mike's blog](https://morourke.org/)
 - [Joachim Neu](https://www.jneu.net/)
   - See the articles under the **Technical reports** section
-- [Decentralized Thoughts by Ittai Ibrahim](https://decentralizedthoughts.github.io/about-ittai); the RSS feed is available [here](https://decentralizedthoughts.github.io/feed.xml)
 
 ## ❌ Non-suggested reads
 

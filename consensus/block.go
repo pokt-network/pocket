@@ -6,10 +6,9 @@ import (
 	"unsafe"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
-func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
+func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 	// Commit the context
 	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
@@ -51,7 +50,7 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 	// If the current block being processed (i.e. voted on) by consensus is non nil, we need to make
 	// sure that the data (height, round, step, txs, etc) is the same before we start validating the signatures
 	if m.block != nil {
-		if m.block.BlockHeader.StateHash != block.BlockHeader.StateHash {
+		if m.block.BlockHeader.Hash != block.BlockHeader.Hash {
 			return false, fmt.Errorf("validateBlockBasic failed - block hash is not the same as the current block being processed by consensus")
 		}
 

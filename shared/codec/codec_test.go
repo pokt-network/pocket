@@ -1,9 +1,8 @@
 package codec
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestSharedCodec(t *testing.T) {

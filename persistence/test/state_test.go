@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/indexer"
+	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 )
@@ -107,12 +107,12 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify the block contents
-		var block coreTypes.Block
+		var block types.Block
 		err = codec.GetCodec().Unmarshal(blockBz, &block)
 		require.NoError(t, err)
-		require.Equal(t, expectedStateHash, block.BlockHeader.StateHash) // verify block hash
+		require.Equal(t, expectedStateHash, block.StateHash) // verify block hash
 		if i > 0 {
-			require.Equal(t, stateHashes[i-1], block.BlockHeader.PrevStateHash) // verify chain chain
+			require.Equal(t, stateHashes[i-1], block.PrevStateHash) // verify chain chain
 		}
 	}
 }

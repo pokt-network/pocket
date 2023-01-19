@@ -6,7 +6,6 @@ import (
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 // CONSOLIDATE: Last/Prev & AppHash/StateHash/BlockHash
@@ -350,7 +349,7 @@ func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) e
 // This is a helper function intended to be called by a leader/validator during a view change
 // to prepare a new block that is applied to the new underlying context.
 // TODO: Split this into atomic & functional `prepareBlock` and `applyBlock` methods
-func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) (*coreTypes.Block, error) {
+func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) (*typesCons.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
@@ -376,21 +375,21 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	}
 
 	// Construct the block
-	blockHeader := &coreTypes.BlockHeader{
-		Height:            m.height,
-		StateHash:         stateHash,
-		PrevStateHash:     prevBlockHash,
+	blockHeader := &typesCons.BlockHeader{
+		Height:            int64(m.height),
+		Hash:              stateHash,
 		NumTxs:            uint32(len(txs)),
+		LastBlockHash:     prevBlockHash,
 		ProposerAddress:   m.privateKey.Address().Bytes(),
 		QuorumCertificate: qcBytes,
 	}
-	block := &coreTypes.Block{
+	block := &typesCons.Block{
 		BlockHeader:  blockHeader,
 		Transactions: txs,
 	}
 
 	// Set the proposal block in the persistence context
-	if err = m.utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err = m.utilityContext.SetProposalBlock(blockHeader.Hash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return nil, err
 	}
 

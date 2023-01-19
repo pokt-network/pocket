@@ -1,22 +1,23 @@
-# Development Overview <!-- omit in toc -->
+# Development Overview
 
 Please note that this repository is under very active development and breaking changes are likely to occur. If the documentation falls out of date please see our [guide](./../contributing/README.md) on how to contribute!
 
-- [LFG - Development](#lfg---development)
-  - [Install Dependencies](#install-dependencies)
-  - [Prepare Local Environment](#prepare-local-environment)
-  - [Pocket Network CLI](#pocket-network-cli)
-  - [Swagger UI](#swagger-ui)
-  - [View Available Commands](#view-available-commands)
-  - [Running Unit Tests](#running-unit-tests)
-  - [Running LocalNet](#running-localnet)
-- [Code Organization](#code-organization)
-  - [Linters](#linters)
-    - [Installation of golangci-lint](#installation-of-golangci-lint)
-    - [Running linters locally](#running-linters-locally)
-    - [VSCode Integration](#vscode-integration)
-    - [Configuration](#configuration)
-    - [Custom linters](#custom-linters)
+- [Development Overview](#development-overview)
+  - [LFG - Development](#lfg---development)
+    - [Install Dependencies](#install-dependencies)
+    - [Prepare Local Environment](#prepare-local-environment)
+    - [Pocket Network CLI](#pocket-network-cli)
+    - [Swagger UI](#swagger-ui)
+    - [View Available Commands](#view-available-commands)
+    - [Running Unit Tests](#running-unit-tests)
+    - [Running LocalNet](#running-localnet)
+  - [Code Organization](#code-organization)
+    - [Linters](#linters)
+      - [Installation of golangci-lint](#installation-of-golangci-lint)
+      - [Running linters locally](#running-linters-locally)
+      - [VSCode Integration](#vscode-integration)
+      - [Configuration](#configuration)
+      - [Custom linters](#custom-linters)
 
 ## LFG - Development
 
@@ -67,7 +68,6 @@ $ make develop_start
 ```
 
 Optionally activate changelog pre-commit hook
-
 ```bash
 cp .githooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit

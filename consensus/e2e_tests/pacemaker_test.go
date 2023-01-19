@@ -9,7 +9,6 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -161,15 +160,15 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	require.NoError(t, err)
 
 	// Placeholder block
-	blockHeader := &coreTypes.BlockHeader{
-		Height:            testHeight,
-		StateHash:         stateHash,
-		PrevStateHash:     "",
+	blockHeader := &typesCons.BlockHeader{
+		Height:            int64(testHeight),
+		Hash:              stateHash,
 		NumTxs:            0,
+		LastBlockHash:     "",
 		ProposerAddress:   consensusPK.Address(),
 		QuorumCertificate: nil,
 	}
-	block := &coreTypes.Block{
+	block := &typesCons.Block{
 		BlockHeader:  blockHeader,
 		Transactions: make([][]byte, 0),
 	}

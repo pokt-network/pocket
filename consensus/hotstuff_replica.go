@@ -6,7 +6,6 @@ import (
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 // CONSOLIDATE: Terminology of `appHash` and `stateHash`
@@ -229,10 +228,10 @@ func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 }
 
 // This helper applies the block metadata to the utility & persistence layers
-func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
+func (m *consensusModule) applyBlock(block *typesCons.Block) error {
 	blockHeader := block.BlockHeader
 	// Set the proposal block in the persistence context
-	if err := m.utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err := m.utilityContext.SetProposalBlock(blockHeader.Hash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return err
 	}
 
@@ -242,8 +241,8 @@ func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 		return err
 	}
 
-	if blockHeader.StateHash != stateHash {
-		return typesCons.ErrInvalidAppHash(blockHeader.StateHash, stateHash)
+	if blockHeader.Hash != stateHash {
+		return typesCons.ErrInvalidAppHash(blockHeader.Hash, stateHash)
 	}
 
 	return nil
