@@ -169,6 +169,7 @@ db_bench: docker_check ## Run a local benchmark against the local postgres insta
 db_show_schemas: docker_check ## Show all the node schemas in the local SQL DB
 	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/show_all_schemas.sql"
 
+# IMPROVE: Bind the login credentials to the postgres container so its automatically logged in.
 .PHONY: db_admin
 db_admin: ## Helper to access to postgres admin GUI interface
 	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
