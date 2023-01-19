@@ -8,9 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## [0.0.0.13] - 2023-01-17
+
+## [0.0.0.14] - 2023-01-20
 
 - Add `ConsensusPacemaker` interface that is implemented by the consensus module
+
+
+## [0.0.0.13] - 2023-01-18
+
+- Create `block.proto` which consolidates the definition of a `Block` protobuf under `shared/core/types`
 
 
 ## [0.0.0.12] - 2023-01-11
