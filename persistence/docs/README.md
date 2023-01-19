@@ -114,13 +114,17 @@ SET search_path=node1; // Set the search path to a schema `node1`
 
 #### Admin View - db_admin
 
+<!--
+# IMPROVE: Bind the login credentials to the postgres container so its automatically logged in and debug why the docker-compose configurations do not automatically prepare the server
+-->
+
 Running `make db_admin` should echo the following to your terminal:
 
 ```bash
 echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 ```
 
-If the `pgadmin` configs in our [docker-compose file](../../build/deployments/docker-compose.yaml) do not automatically bind, you might need to configure the server yourself like so:
+If the `pgadmin` configs in our [docker-compose file](../../build/deployments/docker-compose.yaml) do not automatically bind, you might need to configure the server yourself as seen in the image below (you will also need to set a name in the `General` tab):
 
 ![Postgres' admin configuration](./pgadmin_config.png "pgadmin config view")
 
@@ -130,7 +134,7 @@ The following screenshot shows where the tables for each schema can be found:
 
 #### Benchmarking - db_bench
 
-<!-- TODO: Build on top of `make db_bench` to enable a proper suite for benchmarking the node -->
+TODO: Build on top of `make db_bench` to enable a proper suite for benchmarking the node
 
 ## Testing
 
@@ -226,7 +230,6 @@ Mid-term (i.e. new feature or major refactor) tasks:
 - [ ] TODO(https://github.com/pokt-network/pocket/issues/77): Implement proper DB SQL migrations
 - [ ] INVESTIGATE: Benchmark the queries (especially the ones that need to do sorting)
 - [ ] DISCUSS: Look into `address` is being computed (string <-> hex) and determine if we could/should avoid it
--
 
 Long-term (i.e. design) tasks
 
