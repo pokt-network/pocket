@@ -7,6 +7,7 @@ import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 )
@@ -78,7 +79,12 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		pss = append(pss, msg.GetPartialSignature())
 	}
 
-	if err := m.isOptimisticThresholdMet(len(pss)); err != nil {
+	validators, err := m.getValidatorsAtHeight(height)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.isOptimisticThresholdMet(len(pss), validators); err != nil {
 		return nil, err
 	}
 
@@ -131,13 +137,17 @@ func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signa
 }
 
 func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
-	return m.isOptimisticThresholdMet(len(m.messagePool[step]))
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return err
+	}
+	return m.isOptimisticThresholdMet(len(m.messagePool[step]), validators)
 }
 
-func (m *consensusModule) isOptimisticThresholdMet(n int) error {
-	numValidators := len(m.validatorMap)
-	if !(float64(n) > ByzantineThreshold*float64(numValidators)) {
-		return typesCons.ErrByzantineThresholdCheck(n, ByzantineThreshold*float64(numValidators))
+func (m *consensusModule) isOptimisticThresholdMet(numSignatures int, validators []*coreTypes.Actor) error {
+	numValidators := len(validators)
+	if !(float64(numSignatures) > ByzantineThreshold*float64(numValidators)) {
+		return typesCons.ErrByzantineThresholdCheck(numSignatures, ByzantineThreshold*float64(numValidators))
 	}
 	return nil
 }
@@ -159,41 +169,60 @@ func protoHash(m proto.Message) string {
 
 /*** P2P Helpers ***/
 
-func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
-	// TODO(olshansky): This can happen due to a race condition with the pacemaker.
+func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
+	m.nodeLog(typesCons.SendingMessage(msg, *m.leaderId))
+
+	// TODO: This can happen due to a race condition with the pacemaker.
 	if m.leaderId == nil {
 		m.logger.Error().Msg(typesCons.ErrNilLeaderId.Error())
 		return
 	}
 
-	m.logger.Info().Msg(typesCons.SendingMessage(msg, *m.leaderId))
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
 		return
 	}
-	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.idToValAddrMap[*m.leaderId]), anyConsensusMessage); err != nil {
-		m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
+
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
+	}
+
+	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
+
+	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(idToValAddrMap[*m.leaderId]), anyConsensusMessage); err != nil {
+		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return
 	}
 }
 
-func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
-	m.logger.Info().Msg(typesCons.BroadcastingMessage(msg))
+// Star-like (O(n)) broadcast - send to all nodes directly
+// INVESTIGATE: Re-evaluate if we should be using our structured broadcast (RainTree O(log3(n))) algorithm instead
+func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
+	m.nodeLog(typesCons.BroadcastingMessage(msg))
+
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
 		return
 	}
-	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage); err != nil {
-		m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
-		return
+
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
+	}
+
+	for _, val := range validators {
+		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
+			m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
+		}
 	}
 }
 
 /*** Persistence Helpers ***/
 
-// TECHDEBT: Integrate this with the `persistence` module or a real mempool.
+// TECHDEBT(#388): Integrate this with the `persistence` module or a real mempool.
 func (m *consensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
 		m.messagePool[step] = make([]*typesCons.HotstuffMessage, 0)
@@ -234,34 +263,51 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 		m.clearLeader()
 		return err
 	}
-
 	m.leaderId = &leaderId
+
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return err
+	}
+
+	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 
 	if m.isLeader() {
 		m.setLogPrefix("LEADER")
-
-		m.logger.Info().Fields(map[string]interface{}{
-			"height": m.height,
-			"round":  m.round,
-			"addr":   m.idToValAddrMap[*m.leaderId],
-		}).Msg("👑👑👑👑👑👑 I am the new leader")
+		m.nodeLog(typesCons.ElectedSelfAsNewLeader(idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
 	} else {
 		m.setLogPrefix("REPLICA")
-
-		m.logger.Info().Fields(map[string]interface{}{
-			"height": m.height,
-			"round":  m.round,
-			"addr":   m.idToValAddrMap[*m.leaderId],
-		}).Msg("👑 Elected new leader")
+		m.nodeLog(typesCons.ElectedNewLeader(idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
 	}
 
 	return nil
 }
 
 /*** General Infrastructure Helpers ***/
+
+// TODO(#164): Remove this once we have a proper logging system.
+func (m *consensusModule) nodeLog(s string) {
+	log.Printf("[%s][%d] %s\n", m.logPrefix, m.nodeId, s)
+}
+
+// TODO(#164): Remove this once we have a proper logging system.
+func (m *consensusModule) nodeLogError(s string, err error) {
+	log.Printf("🐞[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.nodeId, s, err)
+}
+
 func (m *consensusModule) setLogPrefix(logPrefix string) {
 	logger.Global.UpdateFields(map[string]interface{}{
 		"kind": logPrefix,
 	})
 	m.logger = logger.Global.CreateLoggerForModule("consensus")
+}
+
+func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
+	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
+	if err != nil {
+		return nil, err
+	}
+	defer persistenceReadContext.Close()
+
+	return persistenceReadContext.GetAllValidators(int64(height))
 }

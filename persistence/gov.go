@@ -3,9 +3,13 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
+	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime/genesis"
 )
 
 // TODO : Deprecate these two constants when we change the persistenceRWContext interface to pass the `paramName`
@@ -14,24 +18,53 @@ const (
 	ServiceNodesPerSessionParamName = "service_nodes_per_session"
 )
 
-// TODO (Team) BUG setting parameters twice on the same height causes issues. We need to move the schema away from 'end_height' and
-// more towards the height_constraint architecture
+// Mapping of parameter names and their stringified type names
+var parameterNameTypeMap = make(map[string]string)
 
-func (p PostgresContext) GetBlocksPerSession(height int64) (int, error) {
-	return p.GetIntParam(BlocksPerSessionParamName, height)
+// Using the json tag of the fields in the Params struct to extract the name of the
+// parameters and build a mapping in memory of the types associated to each parameter
+// name according to the struct generated from: persistence_genesis.proto
+func init() {
+	fields := reflect.VisibleFields(reflect.TypeOf(genesis.Params{}))
+	// Loop through struct fields to build parameterNameTypeMap
+	for _, field := range fields {
+		if !field.IsExported() {
+			continue
+		}
+		json := field.Tag.Get("json") // Match the json tag of field: json:"paramName,omitempty"
+		paramName := strings.Split(json, ",")[0]
+		typ := field.Type.Name() // Get string version of field's type
+		parameterNameTypeMap[paramName] = typ
+	}
 }
 
-func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) {
-	return p.GetIntParam(ServiceNodesPerSessionParamName, height)
-}
-
-func (p PostgresContext) InitParams() error {
+func (p PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, types.InsertParams(types.DefaultParams(), p.Height))
+	if p.Height != 0 {
+		return fmt.Errorf("cannot initialize params at height %d", p.Height)
+	}
+	_, err = tx.Exec(ctx, types.InsertParams(params, p.Height))
 	return err
+}
+
+// Match paramName against the ParameterNameTypeMap struct and call the proper
+// getter function getParamOrFlag[int | string | byte] and return its values
+func (p PostgresContext) GetParameter(paramName string, height int64) (v any, err error) {
+	paramType := parameterNameTypeMap[paramName]
+	switch paramType {
+	case "int", "int32", "int64":
+		v, _, err = getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
+	case "string":
+		v, _, err = getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
+	case "[]uint8": // []byte
+		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
+	default:
+		return nil, fmt.Errorf("unhandled type for param: got %s.", paramType)
+	}
+	return v, err
 }
 
 func (p PostgresContext) GetIntParam(paramName string, height int64) (int, error) {

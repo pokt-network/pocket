@@ -4,13 +4,15 @@ package modules
 
 import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/pokt-network/pocket/runtime/genesis"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
+const PersistenceModuleName = "persistence"
+
 type PersistenceModule interface {
 	Module
-	ConfigurableModule
-	GenesisDependentModule
 
 	// Context operations
 	NewRWContext(height int64) (PersistenceRWContext, error)
@@ -110,7 +112,7 @@ type PersistenceWriteContext interface {
 	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
 
 	// Param Operations
-	InitParams() error
+	InitGenesisParams(params *genesis.Params) error
 	SetParam(paramName string, value interface{}) error
 
 	// Flag Operations
@@ -125,24 +127,23 @@ type PersistenceReadContext interface {
 
 	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries
-	GetLatestBlockHeight() (uint64, error)         // Returns the height of the latest block in the persistence layer
-	GetBlockHash(height int64) (string, error)     // Returns the app hash corresponding to the height provided
-	GetBlocksPerSession(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
+	GetLatestBlockHeight() (uint64, error)     // Returns the height of the latest block in the persistence layer
+	GetBlockHash(height int64) (string, error) // Returns the app hash corresponding to the height provided
 
 	// Pool Queries
 
 	// Returns "0" if the account does not exist
 	GetPoolAmount(name string, height int64) (amount string, err error)
-	GetAllPools(height int64) ([]Account, error)
+	GetAllPools(height int64) ([]*coreTypes.Account, error)
 
 	// Account Queries
 
 	// Returns "0" if the account does not exist
 	GetAccountAmount(address []byte, height int64) (string, error)
-	GetAllAccounts(height int64) ([]Account, error)
+	GetAllAccounts(height int64) ([]*coreTypes.Account, error)
 
 	// App Queries
-	GetAllApps(height int64) ([]Actor, error)
+	GetAllApps(height int64) ([]*coreTypes.Actor, error)
 	GetAppExists(address []byte, height int64) (exists bool, err error)
 	GetAppStakeAmount(height int64, address []byte) (string, error)
 	GetAppsReadyToUnstake(height int64, status int32) (apps []IUnstakingActor, err error)
@@ -151,7 +152,7 @@ type PersistenceReadContext interface {
 	GetAppOutputAddress(operator []byte, height int64) (output []byte, err error)
 
 	// ServiceNode Queries
-	GetAllServiceNodes(height int64) ([]Actor, error)
+	GetAllServiceNodes(height int64) ([]*coreTypes.Actor, error)
 	GetServiceNodeExists(address []byte, height int64) (exists bool, err error)
 	GetServiceNodeStakeAmount(height int64, address []byte) (string, error)
 	GetServiceNodesReadyToUnstake(height int64, status int32) (serviceNodes []IUnstakingActor, err error)
@@ -159,10 +160,9 @@ type PersistenceReadContext interface {
 	GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error)
 	GetServiceNodeCount(chain string, height int64) (int, error)
-	GetServiceNodesPerSessionAt(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
 
 	// Fisherman Queries
-	GetAllFishermen(height int64) ([]Actor, error)
+	GetAllFishermen(height int64) ([]*coreTypes.Actor, error)
 	GetFishermanExists(address []byte, height int64) (exists bool, err error)
 	GetFishermanStakeAmount(height int64, address []byte) (string, error)
 	GetFishermenReadyToUnstake(height int64, status int32) (fishermen []IUnstakingActor, err error)
@@ -171,7 +171,7 @@ type PersistenceReadContext interface {
 	GetFishermanOutputAddress(operator []byte, height int64) (output []byte, err error)
 
 	// Validator Queries
-	GetAllValidators(height int64) ([]Actor, error)
+	GetAllValidators(height int64) ([]*coreTypes.Actor, error)
 	GetValidatorExists(address []byte, height int64) (exists bool, err error)
 	GetValidatorStakeAmount(height int64, address []byte) (string, error)
 	GetValidatorsReadyToUnstake(height int64, status int32) (validators []IUnstakingActor, err error)
@@ -181,12 +181,13 @@ type PersistenceReadContext interface {
 	GetValidatorMissedBlocks(address []byte, height int64) (int, error)
 
 	// Actors Queries
-	GetAllStakedActors(height int64) ([]Actor, error)
+	GetAllStakedActors(height int64) ([]*coreTypes.Actor, error)
 
 	// Params
 	GetIntParam(paramName string, height int64) (int, error)
 	GetStringParam(paramName string, height int64) (string, error)
 	GetBytesParam(paramName string, height int64) ([]byte, error)
+	GetParameter(paramName string, height int64) (any, error)
 
 	// Flags
 	GetIntFlag(paramName string, height int64) (int, bool, error)

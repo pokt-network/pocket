@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/rs/zerolog"
 )
@@ -12,7 +13,8 @@ import (
 type loggerModule struct {
 	zerolog.Logger
 	bus    modules.Bus
-	config modules.LoggerConfig
+	logger modules.Logger
+	config *configs.LoggerConfig
 }
 
 // Each module should have it's own logger to easily configure & filter logs by module.
@@ -25,35 +27,36 @@ var Global = loggerModule{
 
 var _ modules.LoggerModule = &loggerModule{}
 
-const (
-	ModuleName = "logger"
-)
-
-var pocketLogLevelToZeroLog = map[LogLevel]zerolog.Level{
-	LogLevel_LOG_LEVEL_UNSPECIFIED: zerolog.NoLevel,
-	LogLevel_LOG_LEVEL_DEBUG:       zerolog.DebugLevel,
-	LogLevel_LOG_LEVEL_INFO:        zerolog.InfoLevel,
-	LogLevel_LOG_LEVEL_WARN:        zerolog.WarnLevel,
-	LogLevel_LOG_LEVEL_ERROR:       zerolog.ErrorLevel,
-	LogLevel_LOG_LEVEL_FATAL:       zerolog.FatalLevel,
-	LogLevel_LOG_LEVEL_PANIC:       zerolog.PanicLevel,
+var pocketLogLevelToZeroLog = map[configs.LogLevel]zerolog.Level{
+	configs.LogLevel_LOG_LEVEL_UNSPECIFIED: zerolog.NoLevel,
+	configs.LogLevel_LOG_LEVEL_DEBUG:       zerolog.DebugLevel,
+	configs.LogLevel_LOG_LEVEL_INFO:        zerolog.InfoLevel,
+	configs.LogLevel_LOG_LEVEL_WARN:        zerolog.WarnLevel,
+	configs.LogLevel_LOG_LEVEL_ERROR:       zerolog.ErrorLevel,
+	configs.LogLevel_LOG_LEVEL_FATAL:       zerolog.FatalLevel,
+	configs.LogLevel_LOG_LEVEL_PANIC:       zerolog.PanicLevel,
 }
 
-var pocketLogFormatToEnum = map[string]LogFormat{
-	"json":   LogFormat_LOG_FORMAT_JSON,
-	"pretty": LogFormat_LOG_FORMAT_PRETTY,
+var pocketLogFormatToEnum = map[string]configs.LogFormat{
+	"json":   configs.LogFormat_LOG_FORMAT_JSON,
+	"pretty": configs.LogFormat_LOG_FORMAT_PRETTY,
 }
 
-func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	return new(loggerModule).Create(runtimeMgr)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(loggerModule).Create(bus)
 }
 
 func (*loggerModule) CreateLoggerForModule(moduleName string) modules.Logger {
 	return Global.Logger.With().Str("module", moduleName).Logger()
 }
 
-func (*loggerModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+func (*loggerModule) Create(bus modules.Bus) (modules.Module, error) {
+	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
+	m := &loggerModule{
+		config: cfg.Logger,
+	}
+	bus.RegisterModule(m)
 
 	Global.config = cfg.GetLoggerConfig()
 	Global.InitLogger()
@@ -88,7 +91,7 @@ func (m *loggerModule) Stop() error {
 }
 
 func (m *loggerModule) GetModuleName() string {
-	return ModuleName
+	return modules.LoggerModuleName
 }
 
 func (m *loggerModule) SetBus(bus modules.Bus) {

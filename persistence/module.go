@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jackc/pgx/v4"
-	"github.com/pokt-network/pocket/logger"
+	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
-	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -16,17 +16,15 @@ var (
 	_ modules.PersistenceModule = &persistenceModule{}
 	_ modules.PersistenceModule = &persistenceModule{}
 
-	_ modules.PersistenceRWContext    = &PostgresContext{}
-	_ modules.PersistenceGenesisState = &types.PersistenceGenesisState{}
-	_ modules.PersistenceConfig       = &types.PersistenceConfig{}
+	_ modules.PersistenceRWContext = &PostgresContext{}
 )
 
 // TODO: convert address and public key to string not bytes in all account and actor functions
 // TODO: remove address parameter from all pool operations
 type persistenceModule struct {
 	bus          modules.Bus
-	config       modules.PersistenceConfig
-	genesisState modules.PersistenceGenesisState
+	config       *configs.PersistenceConfig
+	genesisState *genesis.GenesisState
 
 	blockStore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
@@ -38,31 +36,22 @@ type persistenceModule struct {
 	writeContext *PostgresContext // only one write context is allowed at a time
 }
 
-const (
-	persistenceModuleName = "persistence"
-)
-
-func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	return new(persistenceModule).Create(runtimeMgr)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(persistenceModule).Create(bus)
 }
 
-func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	var m *persistenceModule
-
-	cfg := runtimeMgr.GetConfig()
-
-	if err := m.ValidateConfig(cfg); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
+func (*persistenceModule) Create(bus modules.Bus) (modules.Module, error) {
+	m := &persistenceModule{
+		writeContext: nil,
 	}
-	persistenceCfg := cfg.GetPersistenceConfig()
+	bus.RegisterModule(m)
 
-	genesis := runtimeMgr.GetGenesis()
-	if err := m.ValidateGenesis(genesis); err != nil {
-		return nil, fmt.Errorf("genesis validation failed: %w", err)
-	}
-	persistenceGenesis := genesis.GetPersistenceGenesisState()
+	runtimeMgr := bus.GetRuntimeMgr()
 
-	conn, err := connectToDatabase(persistenceCfg.GetPostgresUrl(), persistenceCfg.GetNodeSchema())
+	persistenceCfg := runtimeMgr.GetConfig().Persistence
+	genesisState := runtimeMgr.GetGenesis()
+
+	conn, err := connectToDatabase(persistenceCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -72,32 +61,27 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 	conn.Close(context.TODO())
 
 	// TODO: Follow the same pattern as txIndexer below for initializing the blockStore
-	blockStore, err := initializeBlockStore(persistenceCfg.GetBlockStorePath())
+	blockStore, err := initializeBlockStore(persistenceCfg.BlockStorePath)
 	if err != nil {
 		return nil, err
 	}
 
-	txIndexer, err := indexer.NewTxIndexer(persistenceCfg.GetTxIndexerPath())
+	txIndexer, err := indexer.NewTxIndexer(persistenceCfg.TxIndexerPath)
 	if err != nil {
 		return nil, err
 	}
 
-	stateTrees, err := newStateTrees(persistenceCfg.GetTreesStoreDir())
+	stateTrees, err := newStateTrees(persistenceCfg.TreesStoreDir)
 	if err != nil {
 		return nil, err
 	}
 
-	m = &persistenceModule{
-		bus:          nil,
-		config:       persistenceCfg,
-		genesisState: persistenceGenesis,
+	m.config = persistenceCfg
+	m.genesisState = genesisState
 
-		blockStore: blockStore,
-		txIndexer:  txIndexer,
-		stateTrees: stateTrees,
-
-		writeContext: nil,
-	}
+	m.blockStore = blockStore
+	m.txIndexer = txIndexer
+	m.stateTrees = stateTrees
 
 	// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
 	// 		     this forces the genesis state to be reloaded on every node startup until state
@@ -106,7 +90,7 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 	if shouldHydrateGenesis, err := m.shouldHydrateGenesisDb(); err != nil {
 		return nil, err
 	} else if shouldHydrateGenesis {
-		m.populateGenesisState(persistenceGenesis) // fatal if there's an error
+		m.populateGenesisState(genesisState) // fatal if there's an error
 	} else {
 		// This configurations will connect to the SQL database and key-value stores specified
 		// in the configurations and connected to those.
@@ -128,7 +112,7 @@ func (m *persistenceModule) Stop() error {
 }
 
 func (m *persistenceModule) GetModuleName() string {
-	return persistenceModuleName
+	return modules.PersistenceModuleName
 }
 
 func (m *persistenceModule) SetBus(bus modules.Bus) {
@@ -142,21 +126,11 @@ func (m *persistenceModule) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (*persistenceModule) ValidateConfig(cfg modules.Config) error {
-	// TODO (#334): implement this
-	return nil
-}
-
-func (*persistenceModule) ValidateGenesis(genesis modules.GenesisState) error {
-	// TODO (#334): implement this
-	return nil
-}
-
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
 	if m.writeContext != nil && !m.writeContext.conn.IsClosed() {
 		return nil, fmt.Errorf("write context already exists")
 	}
-	conn, err := connectToDatabase(m.config.GetPostgresUrl(), m.config.GetNodeSchema())
+	conn, err := connectToDatabase(m.config)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +161,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 }
 
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
-	conn, err := connectToDatabase(m.config.GetPostgresUrl(), m.config.GetNodeSchema())
+	conn, err := connectToDatabase(m.config)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +215,8 @@ func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 }
 
 // HACK(olshansky): Simplify and externalize the logic for whether genesis should be populated and
-//                  move the if logic out of this file.
+//
+//	move the if logic out of this file.
 func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	checkContext, err := m.NewReadContext(-1)
 	if err != nil {

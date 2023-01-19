@@ -1,7 +1,9 @@
 package types
 
 // REFACTOR: Move schema related functions to a separate sub-package
-import "github.com/pokt-network/pocket/shared/modules"
+import (
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+)
 
 var _ ProtocolActorSchema = &BaseProtocolActorSchema{}
 
@@ -10,6 +12,9 @@ var _ ProtocolActorSchema = &BaseProtocolActorSchema{}
 // Note that this implementation assumes the protocol actor is chain dependant, so that behaviour needs
 // to be overridden if the actor (e.g. Validator) is chain independent.
 type BaseProtocolActorSchema struct {
+	// Actor Type
+	actorType coreTypes.ActorType
+
 	// SQL Tables
 	tableName       string
 	chainsTableName string
@@ -20,6 +25,10 @@ type BaseProtocolActorSchema struct {
 	// SQL Constraints
 	heightConstraintName       string
 	chainsHeightConstraintName string
+}
+
+func (actor *BaseProtocolActorSchema) GetActorType() coreTypes.ActorType {
+	return actor.actorType
 }
 
 func (actor *BaseProtocolActorSchema) GetTableName() string {
@@ -83,7 +92,7 @@ func (actor *BaseProtocolActorSchema) GetChainsQuery(address string, height int6
 }
 
 func (actor *BaseProtocolActorSchema) InsertQuery(address, publicKey, stakedTokens, generic, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string {
-	return Insert(&Actor{
+	return Insert(&coreTypes.Actor{
 		Address:         address,
 		PublicKey:       publicKey,
 		StakedAmount:    stakedTokens,
@@ -128,13 +137,4 @@ func (actor *BaseProtocolActorSchema) ClearAllQuery() string {
 
 func (actor *BaseProtocolActorSchema) ClearAllChainsQuery() string {
 	return ClearAll(actor.chainsTableName)
-}
-
-var _ modules.Actor = &Actor{}
-
-func (x *Actor) GetActorTyp() modules.ActorType {
-	if x != nil {
-		return x.GetActorType()
-	}
-	return ActorType_Undefined
 }

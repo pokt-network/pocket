@@ -9,13 +9,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/runtime/defaults"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
+	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/utility"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -32,7 +32,7 @@ var (
 	defaultTestingChainsEdited = []string{"0002"}
 
 	defaultUnstaking   = int64(2017)
-	defaultNonceString = utilTypes.BigIntToString(defaults.DefaultAccountAmount)
+	defaultNonceString = utilTypes.BigIntToString(test_artifacts.DefaultAccountAmount)
 
 	testNonce           = "defaultNonceString"
 	testSchema          = "test_schema"
@@ -42,11 +42,11 @@ var (
 var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 var testUtilityMod modules.UtilityModule         // initialized in TestMain
 
-var actorTypes = []utilTypes.ActorType{
-	utilTypes.ActorType_App,
-	utilTypes.ActorType_ServiceNode,
-	utilTypes.ActorType_Fisherman,
-	utilTypes.ActorType_Validator,
+var actorTypes = []coreTypes.ActorType{
+	coreTypes.ActorType_ACTOR_TYPE_APP,
+	coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
+	coreTypes.ActorType_ACTOR_TYPE_FISH,
+	coreTypes.ActorType_ACTOR_TYPE_VAL,
 }
 
 func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
@@ -56,9 +56,13 @@ func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	runtimeCfg := newTestRuntimeConfig(dbUrl)
+	bus, err := runtime.CreateBus(runtimeCfg)
+	if err != nil {
+		log.Fatalf("Error creating bus: %s", err)
+	}
 
-	testUtilityMod = newTestUtilityModule(runtimeCfg)
-	testPersistenceMod = newTestPersistenceModule(runtimeCfg)
+	testUtilityMod = newTestUtilityModule(bus)
+	testPersistenceMod = newTestPersistenceModule(bus)
 
 	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
@@ -96,26 +100,36 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 }
 
 func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
-	cfg := runtime.NewConfig(
-		&runtime.BaseConfig{},
-		runtime.WithPersistenceConfig(&types.PersistenceConfig{
-			PostgresUrl:    databaseUrl,
-			NodeSchema:     testSchema,
-			BlockStorePath: "",
-			TxIndexerPath:  "",
-			TreesStoreDir:  "",
-		}),
-		runtime.WithUtilityConfig(&utilTypes.UtilityConfig{
+	cfg := &configs.Config{
+		Persistence: &configs.PersistenceConfig{
+			PostgresUrl:       databaseUrl,
+			NodeSchema:        testSchema,
+			BlockStorePath:    "",
+			TxIndexerPath:     "",
+			TreesStoreDir:     "",
+			MaxConnsCount:     4,
+			MinConnsCount:     0,
+			MaxConnLifetime:   "1h",
+			MaxConnIdleTime:   "30m",
+			HealthCheckPeriod: "5m",
+		},
+		Utility: &configs.UtilityConfig{
 			MaxMempoolTransactionBytes: 1000000,
 			MaxMempoolTransactions:     1000,
-		}))
-	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
+		},
+	}
+	genesisState, _ := test_artifacts.NewGenesisState(
+		testingValidatorCount,
+		testingServiceNodeCount,
+		testingApplicationCount,
+		testingFishermenCount,
+	)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
 	return runtimeCfg
 }
 
-func newTestUtilityModule(runtimeCfg *runtime.Manager) modules.UtilityModule {
-	utilityMod, err := utility.Create(runtimeCfg)
+func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
+	utilityMod, err := utility.Create(bus)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
@@ -129,7 +143,7 @@ func newTestUtilityModule(runtimeCfg *runtime.Manager) modules.UtilityModule {
 func mockBusInTestModules(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	busMock := modulesMock.NewMockBus(ctrl)
+	busMock := mockModules.NewMockBus(ctrl)
 	busMock.EXPECT().GetPersistenceModule().Return(testPersistenceMod).AnyTimes()
 	busMock.EXPECT().GetUtilityModule().Return(testUtilityMod).AnyTimes()
 
@@ -143,8 +157,8 @@ func mockBusInTestModules(t *testing.T) {
 }
 
 // TODO(#290): Mock the persistence module so the utility module is not dependant on it.
-func newTestPersistenceModule(runtimeCfg *runtime.Manager) modules.PersistenceModule {
-	persistenceMod, err := persistence.Create(runtimeCfg)
+func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
+	persistenceMod, err := persistence.Create(bus)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}

@@ -1,21 +1,22 @@
-# Development Overview
+# Development Overview <!-- omit in toc -->
 
 Please note that this repository is under very active development and breaking changes are likely to occur. If the documentation falls out of date please see our [guide](./../contributing/README.md) on how to contribute!
 
-- [Development Overview](#development-overview)
-  - [LFG - Development](#lfg---development)
-    - [Install Dependencies](#install-dependencies)
-    - [Prepare Local Environment](#prepare-local-environment)
-    - [View Available Commands](#view-available-commands)
-    - [Running Unit Tests](#running-unit-tests)
-    - [Running LocalNet](#running-localnet)
-  - [Code Organization](#code-organization)
-    - [Linters](#linters)
-      - [Installation of golangci-lint](#installation-of-golangci-lint)
-      - [Running linters locally](#running-linters-locally)
-      - [VSCode Integration](#vscode-integration)
-      - [Configuration](#configuration)
-      - [Custom linters](#custom-linters)
+- [LFG - Development](#lfg---development)
+  - [Install Dependencies](#install-dependencies)
+  - [Prepare Local Environment](#prepare-local-environment)
+  - [Pocket Network CLI](#pocket-network-cli)
+  - [Swagger UI](#swagger-ui)
+  - [View Available Commands](#view-available-commands)
+  - [Running Unit Tests](#running-unit-tests)
+  - [Running LocalNet](#running-localnet)
+- [Code Organization](#code-organization)
+  - [Linters](#linters)
+    - [Installation of golangci-lint](#installation-of-golangci-lint)
+    - [Running linters locally](#running-linters-locally)
+    - [VSCode Integration](#vscode-integration)
+    - [Configuration](#configuration)
+    - [Custom linters](#custom-linters)
 
 ## LFG - Development
 
@@ -66,6 +67,7 @@ $ make develop_start
 ```
 
 Optionally activate changelog pre-commit hook
+
 ```bash
 cp .githooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
@@ -73,6 +75,38 @@ chmod +x .git/hooks/pre-commit
 
 _Please note that the Github workflow will still prevent this from merging
 unless the CHANGELOG is updated._
+
+### Pocket Network CLI
+
+The Pocket node provides a CLI for interacting with Pocket RPC Server. The CLI can be used for both read & write operations by users and to aid in automation.
+
+In order to build the CLI:
+
+1. Generate local files
+
+```bash
+make develop_start
+```
+
+2. Build the CLI binary
+
+```bash
+make build
+```
+
+The cli binary will be available at `bin/p1` and can be used instead of `go run app/client/*.go`
+
+The commands available are listed [here](../../rpc/doc/README.md) or acessible via `bin/p1 --help`
+
+### Swagger UI
+
+Swagger UI is available to help during the development process.
+
+In order to spin a local instance of it with the API definition for the Pocket Network Node RPC interface automatically pre-loaded you can run:
+
+```bash
+make swagger-ui
+```
 
 ### View Available Commands
 
@@ -152,22 +186,43 @@ $ make client_start && make client_connect
 
 ```bash
 Pocket
-├── app              # Entrypoint to running the Pocket node and clients
-|   ├── client       # Entrypoint to running a local Pocket debug client
-|   ├── pocket       # Entrypoint to running a local Pocket node
-├── bin              # [currently-unused] Destination for compiled pocket binaries
-├── build            # Build related source files including Docker, scripts, etc
-|   ├── config       # Configuration files for to run nodes in development
-|   ├── deployments  # Docker-compose to run different cluster of services for development
-|   ├── Docker*      # Various Dockerfile(s)
-├── consensus        # Implementation of the Consensus module
-├── core             # [currently-unused]
-├── docs             # Links to V1 Protocol implementation documentation (excluding the protocol specification)
-├── p2p              # Implementation of the P2P module
-├── persistence      # Implementation of the Persistence module
-├── shared           # [to-be-refactored] Shared types, modules and utils
-├── utility          # Implementation of the Utility module
-├── Makefile         # [to-be-deleted] The source of targets used to develop, build and test
+├── app                               # Entrypoint to running the Pocket node and clients
+│   ├── client                        # Entrypoint to running a local Pocket debug client
+│   └── pocket                        # Entrypoint to running a local Pocket node
+├── bin                               # Destination for compiled pocket binaries
+├── build                             # Build related source files including Docker, scripts, etc
+│   ├── config                        # Configuration files for to run nodes in development
+│   ├── deployments                   # Docker-compose to run different cluster of services for development
+│   ├── docs                          # Links to V1 Protocol implementation documentation (excluding the protocol specification)
+├── consensus                         # Implementation of the Consensus module
+├── docs                              # Links to V1 Protocol implementation documentation (excluding the protocol specification)
+├── logger                            # Implementation of the Logger module
+├── p2p                               # Implementation of the P2P module
+├── persistence                       # Implementation of the Persistence module
+├── rpc                               # Implementation of the RPC module
+├── runtime                           # Implementation of the Runtime module
+│   ├── configs                       # Configuration struct definitions
+│   │   └── proto                     # Protobuf representing the specific configuration of the various modules
+│   ├── defaults                      # Default values for the configuration structs
+│   ├── genesis
+│   │   └── proto                     # Protobuf representing the genesis state of the Pocket blockchain
+│   └── test_artifacts                # Componentry used for generating test artifacts such as particular genesis states used in testing
+├── shared                            # Shared types, modules and utils
+│   ├── codec
+│   │   └── proto
+│   ├── converters
+│   ├── core                          # Core types (Actor, Pools, etc.) used throughout the codebase
+│   │   └── types
+│   │       └── proto                 # Protobuf representing the core types used throughout the codebase
+│   ├── crypto
+│   ├── docs
+│   │   └── flows
+│   ├── messaging                     # Messaging structs and functions
+│   │   └── proto
+│   └── modules                       # Shared modules definitions (interfaces)
+├── telemetry                         # Implementation of the Telemetry module
+├── utility                           # Implementation of the Utility module
+└── Makefile                          # The source of targets used to develop, build and test
 ```
 
 ### Linters

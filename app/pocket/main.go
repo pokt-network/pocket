@@ -22,8 +22,12 @@ func main() {
 	}
 
 	runtimeMgr := runtime.NewManagerFromFiles(*configFilename, *genesisFilename)
+	bus, err := runtime.CreateBus(runtimeMgr)
+	if err != nil {
+		log.Fatalf("Failed to create bus: %s", err)
+	}
 
-	pocketNode, err := shared.CreateNode(runtimeMgr)
+	pocketNode, err := shared.CreateNode(bus)
 	if err != nil {
 		logger.Global.Logger.Fatal().Err(err).Msg("Failed to create pocket node")
 	}

@@ -4,6 +4,7 @@ import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
@@ -11,7 +12,7 @@ func CreateProposeMessage(
 	height uint64,
 	round uint64,
 	step typesCons.HotstuffStep,
-	block *typesCons.Block,
+	block *coreTypes.Block,
 	qc *typesCons.QuorumCertificate,
 ) (*typesCons.HotstuffMessage, error) {
 	if block == nil {
@@ -47,7 +48,7 @@ func CreateVoteMessage(
 	height uint64,
 	round uint64,
 	step typesCons.HotstuffStep,
-	block *typesCons.Block,
+	block *coreTypes.Block,
 	privKey crypto.PrivateKey, // used to sign the vote
 ) (*typesCons.HotstuffMessage, error) {
 	if block == nil {

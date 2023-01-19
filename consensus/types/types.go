@@ -2,10 +2,7 @@ package types
 
 // TODO: Split this file into multiple types files.
 import (
-	"fmt"
-	"sort"
-
-	"github.com/pokt-network/pocket/shared/modules"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 type NodeId uint64
@@ -13,7 +10,7 @@ type NodeId uint64
 type (
 	ValAddrToIdMap map[string]NodeId // Mapping from hex encoded address to an integer node id.
 	IdToValAddrMap map[NodeId]string // Mapping from node id to a hex encoded string address.
-	ValidatorMap   map[string]modules.Actor
+	ValidatorMap   map[string]*coreTypes.Actor
 )
 
 type ConsensusNodeState struct {
@@ -26,53 +23,10 @@ type ConsensusNodeState struct {
 	IsLeader bool
 }
 
-// String returns a string representation of the NodeId.
-func (n NodeId) String() string {
-	return fmt.Sprintf("%d", n)
-}
-
-func GetValAddrToIdMap(validatorMap ValidatorMap) (ValAddrToIdMap, IdToValAddrMap) {
-	valAddresses := make([]string, 0, len(validatorMap))
-	for addr := range validatorMap {
-		valAddresses = append(valAddresses, addr)
-	}
-	sort.Strings(valAddresses)
-
-	valToIdMap := make(ValAddrToIdMap, len(valAddresses))
-	idToValMap := make(IdToValAddrMap, len(valAddresses))
-	for i, addr := range valAddresses {
-		nodeId := NodeId(i + 1)
-		valToIdMap[addr] = nodeId
-		idToValMap[nodeId] = addr
-	}
-
-	return valToIdMap, idToValMap
-}
-
-func (x *PacemakerConfig) SetTimeoutMsec(u uint64) {
-	x.TimeoutMsec = u
-}
-
-func ValidatorMapToModulesValidatorMap(validatorMap ValidatorMap) (vm modules.ValidatorMap) {
-	vm = make(modules.ValidatorMap)
-	for _, v := range validatorMap {
-		vm[v.GetAddress()] = v
-	}
-	return
-}
-
-func ActorListToValidatorMap(actors []modules.Actor) (m ValidatorMap) {
+func ActorListToValidatorMap(actors []*coreTypes.Actor) (m ValidatorMap) {
 	m = make(ValidatorMap, len(actors))
 	for _, a := range actors {
 		m[a.GetAddress()] = a
 	}
 	return
 }
-
-var _ modules.Actor = &Validator{}
-
-func (x *Validator) GetPausedHeight() int64         { panic("not implemented on consensus validator") }
-func (x *Validator) GetUnstakingHeight() int64      { panic("not implemented on consensus validator") }
-func (x *Validator) GetOutput() string              { panic("not implemented on consensus validator") }
-func (x *Validator) GetActorTyp() modules.ActorType { panic("not implemented on consensus validator") }
-func (x *Validator) GetChains() []string            { panic("not implemented on consensus validator") }

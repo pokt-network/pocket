@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.13] - 2023-01-18
+
+- Create `block.proto` which consolidates the definition of a `Block` protobuf under `shared/core/types`
+
+## [0.0.0.12] - 2023-01-11
+
+- Deprecated `GetBlocksPerSession()` and `GetServiceNodesPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
+
+## [0.0.0.11] - 2023-01-11
+
+- Make the events channel hold pointers rather than copies of the message
+
+## [0.0.0.10] - 2023-01-10
+
+- Updated modules constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering modules with the `bus` via `RegisterModule` method
+
+## [0.0.0.9] - 2023-01-04
+
+- Removed `ValidatorMap() ValidatorMap` from `ConsensusModule` interface
+- Added `GetIsClientOnly()` to `P2PConfig`
+
+## [0.0.0.8] - 2023-01-03
+
+- Added `PoolNames.FriendlyName` method
+- Renamed enums as per code-review
+- Updated `InitParams` logic to use genesisState instead of hardcoded values
+
+## [0.0.0.7] - 2022-12-21
+
+- Updated to use the new centralized config and genesis handling
+- Created `Actor` struct under `coreTypes`
+- Created `Account` struct under `coreTypes`
+- Created `PoolNames` enum under `coreTypes`
+- Updated module to use the new `coreTypes`
+- Simplified `*Module` interfaces
+- Updated tests and mocks
+
 ## [0.0.0.6] - 2022-12-14
 
 - Added `GetMaxMempoolCount`

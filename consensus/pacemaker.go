@@ -3,15 +3,18 @@ package consensus
 import (
 	"context"
 	"fmt"
-	timePkg "time"
+	"log"
+	"time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
 const (
 	pacemakerModuleName = "pacemaker"
+	timeoutBuffer       = 30 * time.Millisecond // A buffer around the pacemaker timeout to avoid race condition; 30ms was arbitrarily chosen
 )
 
 type Pacemaker interface {
@@ -23,17 +26,15 @@ type Pacemaker interface {
 	// for the height/round/step/etc, and interface with the module that way.
 	SetConsensusModule(module *consensusModule)
 
-	ValidateMessage(message *typesCons.HotstuffMessage) error
+	ShouldHandleMessage(message *typesCons.HotstuffMessage) (bool, error)
 	RestartTimer()
 	NewHeight()
-	InterruptRound()
+	InterruptRound(reason string)
 }
 
 var (
-	_ modules.Module             = &paceMaker{}
-	_ modules.ConfigurableModule = &paceMaker{}
-	_ PacemakerDebug             = &paceMaker{}
-	_ modules.PacemakerConfig    = &typesCons.PacemakerConfig{}
+	_ modules.Module = &paceMaker{}
+	_ PacemakerDebug = &paceMaker{}
 )
 
 type paceMaker struct {
@@ -45,7 +46,7 @@ type paceMaker struct {
 	// a great idea in production code.
 	consensusMod *consensusModule
 
-	pacemakerCfg modules.PacemakerConfig
+	pacemakerCfg *configs.PacemakerConfig
 
 	stepCancelFunc context.CancelFunc
 
@@ -53,33 +54,28 @@ type paceMaker struct {
 	paceMakerDebug
 }
 
-func CreatePacemaker(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+func CreatePacemaker(bus modules.Bus) (modules.Module, error) {
 	var m paceMaker
-	return m.Create(runtimeMgr)
+	return m.Create(bus)
 }
 
-func (m *paceMaker) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+func (*paceMaker) Create(bus modules.Bus) (modules.Module, error) {
+	m := &paceMaker{}
+	bus.RegisterModule(m)
+
+	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
-	if err := m.ValidateConfig(cfg); err != nil {
-		m.consensusMod.logger.Fatal().Err(err).Msg("config validation failed")
+
+	pacemakerCfg := cfg.Consensus.PacemakerConfig
+
+	m.pacemakerCfg = pacemakerCfg
+	m.paceMakerDebug = paceMakerDebug{
+		manualMode:                pacemakerCfg.GetManual(),
+		debugTimeBetweenStepsMsec: pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
+		quorumCertificate:         nil,
 	}
 
-	pacemakerCfg := cfg.GetConsensusConfig().(HasPacemakerConfig).GetPacemakerConfig()
-
-	return &paceMaker{
-		bus:          nil,
-		consensusMod: nil,
-
-		pacemakerCfg: pacemakerCfg,
-
-		stepCancelFunc: nil, // Only set on restarts
-
-		paceMakerDebug: paceMakerDebug{
-			manualMode:                pacemakerCfg.GetManual(),
-			debugTimeBetweenStepsMsec: pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
-			quorumCertificate:         nil,
-		},
-	}, nil
+	return m, nil
 }
 
 func (p *paceMaker) Start() error {
@@ -92,7 +88,7 @@ func (p *paceMaker) Stop() error {
 }
 
 func (p *paceMaker) GetModuleName() string {
-	return pacemakerModuleName
+	return modules.PacemakerModuleName
 }
 
 func (m *paceMaker) SetBus(pocketBus modules.Bus) {
@@ -106,73 +102,72 @@ func (m *paceMaker) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (*paceMaker) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.GetConsensusConfig().(HasPacemakerConfig); !ok {
-		return fmt.Errorf("cannot cast to PacemakeredConsensus")
-	}
-	return nil
-}
-
 func (m *paceMaker) SetConsensusModule(c *consensusModule) {
 	m.consensusMod = c
 }
 
-func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
+func (p *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, error) {
 	currentHeight := p.consensusMod.height
 	currentRound := p.consensusMod.round
+	currentStep := p.consensusMod.step
+
 	// Consensus message is from the past
-	if m.Height < currentHeight {
-		return typesCons.ErrPacemakerUnexpectedMessageHeight(typesCons.ErrOlderMessage, currentHeight, m.Height)
+	if msg.Height < currentHeight {
+		p.consensusMod.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height))
+		return false, nil
 	}
 
+	// TODO: Need to restart state sync or be in state sync mode right now
 	// Current node is out of sync
-	if m.Height > currentHeight {
-		// TODO(design): Need to restart state sync
-		return typesCons.ErrPacemakerUnexpectedMessageHeight(typesCons.ErrFutureMessage, currentHeight, m.Height)
+	if msg.Height > currentHeight {
+		p.consensusMod.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d < message at height %d", currentHeight, msg.Height))
+		return false, nil
 	}
 
+	// TODO(olshansky): This code branch is a result of the optimization in the leader
+	//                  handlers. Since the leader also acts as a replica but doesn't use the replica's
+	//                  handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
 	// Do not handle messages if it is a self proposal
-	if p.consensusMod.isLeader() && m.Type == Propose && m.Step != NewRound {
-		// TODO(olshansky): This code branch is a result of the optimization in the leader
-		// handlers. Since the leader also acts as a replica but doesn't use the replica's
-		// handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
-		return typesCons.ErrSelfProposal
+	if p.consensusMod.isLeader() && msg.Type == Propose && msg.Step != NewRound {
+		// TODO: Noisy log - make it a DEBUG
+		// p.consensusMod.nodeLog(typesCons.ErrSelfProposal.Error())
+		return false, nil
 	}
 
 	// Message is from the past
-	if m.Round < currentRound || (m.Round == currentRound && m.Step < p.consensusMod.step) {
-		return typesCons.ErrPacemakerUnexpectedMessageStepRound(typesCons.ErrOlderStepRound, p.consensusMod.step, currentRound, m)
+	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
+		p.consensusMod.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round))
+		return false, nil
 	}
 
 	// Everything checks out!
-	if m.Height == currentHeight && m.Step == p.consensusMod.step && m.Round == currentRound {
-		return nil
+	if msg.Height == currentHeight && msg.Step == currentStep && msg.Round == currentRound {
+		return true, nil
 	}
 
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
-	if m.Round > currentRound || (m.Round == currentRound && m.Step > p.consensusMod.step) {
-		p.consensusMod.logger.Info().Msg((typesCons.PacemakerCatchup(currentHeight, uint64(p.consensusMod.step), currentRound, m.Height, uint64(m.Step), m.Round)))
-		p.consensusMod.step = m.Step
-		p.consensusMod.round = m.Round
+	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {
+		p.consensusMod.nodeLog(typesCons.PacemakerCatchup(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
+		p.consensusMod.step = msg.Step
+		p.consensusMod.round = msg.Round
 
 		// TODO(olshansky): Add tests for this. When we catch up to a later step, the leader is still the same.
 		// However, when we catch up to a later round, the leader at the same height will be different.
-		if currentRound != m.Round || p.consensusMod.leaderId == nil {
-			p.consensusMod.electNextLeader(m)
+		if currentRound != msg.Round || p.consensusMod.leaderId == nil {
+			p.consensusMod.electNextLeader(msg)
 		}
 
-		return nil
+		return true, nil
 	}
 
-	return typesCons.ErrUnexpectedPacemakerCase
+	return false, typesCons.ErrUnexpectedPacemakerCase
 }
 
 func (p *paceMaker) RestartTimer() {
+	// NOTE: Not deferring a cancel call because this function is asynchronous.
 	if p.stepCancelFunc != nil {
 		p.stepCancelFunc()
 	}
-
-	// NOTE: Not defering a cancel call because this function is asynchronous.
 
 	stepTimeout := p.getStepTimeout(p.consensusMod.round)
 
@@ -185,21 +180,16 @@ func (p *paceMaker) RestartTimer() {
 		select {
 		case <-ctx.Done():
 			if ctx.Err() == context.DeadlineExceeded {
-				p.consensusMod.logger.Info().Msg(typesCons.PacemakerTimeout(p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
-				p.InterruptRound()
+				p.InterruptRound("timeout")
 			}
-		case <-clock.After(stepTimeout + 30*timePkg.Millisecond): // Adding 30ms to the context timeout to avoid race condition.
+		case <-clock.After(stepTimeout + timeoutBuffer):
 			return
 		}
 	}()
 }
 
-func (p *paceMaker) InterruptRound() {
-	p.consensusMod.logger.Info().Fields(map[string]interface{}{
-		"step":   p.consensusMod.step,
-		"round":  p.consensusMod.round,
-		"height": p.consensusMod.CurrentHeight(),
-	}).Msg("INTERRUPT")
+func (p *paceMaker) InterruptRound(reason string) {
+	p.consensusMod.nodeLog(typesCons.PacemakerInterrupt(reason, p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
 
 	p.consensusMod.round++
 	p.startNextView(p.consensusMod.highPrepareQC, false)
@@ -262,11 +252,11 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	}
 
 	p.RestartTimer()
-	p.consensusMod.broadcastToNodes(hotstuffMessage)
+	p.consensusMod.broadcastToValidators(hotstuffMessage)
 }
 
 // TODO(olshansky): Increase timeout using exponential backoff.
-func (p *paceMaker) getStepTimeout(round uint64) timePkg.Duration {
-	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerCfg.GetTimeoutMsec()))
+func (p *paceMaker) getStepTimeout(round uint64) time.Duration {
+	baseTimeout := time.Duration(int64(time.Millisecond) * int64(p.pacemakerCfg.TimeoutMsec))
 	return baseTimeout
 }

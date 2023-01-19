@@ -3,7 +3,7 @@ package utility
 import (
 	"fmt"
 
-	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
@@ -12,13 +12,12 @@ import (
 
 var (
 	_ modules.UtilityModule = &utilityModule{}
-	_ modules.UtilityConfig = &types.UtilityConfig{}
 	_ modules.Module        = &utilityModule{}
 )
 
 type utilityModule struct {
 	bus    modules.Bus
-	config modules.UtilityConfig
+	config *configs.UtilityConfig
 
 	logger modules.Logger
 
@@ -26,28 +25,26 @@ type utilityModule struct {
 }
 
 const (
-	utilityModuleName = "utility"
-
 	TransactionGossipMessageContentType = "utility.TransactionGossipMessage"
 )
 
-func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	return new(utilityModule).Create(runtime)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(utilityModule).Create(bus)
 }
 
-func (*utilityModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	var m *utilityModule
+func (*utilityModule) Create(bus modules.Bus) (modules.Module, error) {
+	m := &utilityModule{}
+	bus.RegisterModule(m)
 
-	cfg := runtime.GetConfig()
-	if err := m.ValidateConfig(cfg); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
-	}
-	utilityCfg := cfg.GetUtilityConfig()
+	runtimeMgr := bus.GetRuntimeMgr()
 
-	return &utilityModule{
-		config:  utilityCfg,
-		Mempool: types.NewMempool(utilityCfg.GetMaxMempoolTransactionBytes(), utilityCfg.GetMaxMempoolTransactions()),
-	}, nil
+	cfg := runtimeMgr.GetConfig()
+	utilityCfg := cfg.Utility
+
+	m.config = utilityCfg
+	m.Mempool = types.NewMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
+
+	return m, nil
 }
 
 func (u *utilityModule) Start() error {
@@ -60,7 +57,7 @@ func (u *utilityModule) Stop() error {
 }
 
 func (u *utilityModule) GetModuleName() string {
-	return utilityModuleName
+	return modules.UtilityModuleName
 }
 
 func (u *utilityModule) SetBus(bus modules.Bus) {
@@ -72,11 +69,6 @@ func (u *utilityModule) GetBus() modules.Bus {
 		u.logger.Fatal().Msg("Bus is not initialized")
 	}
 	return u.bus
-}
-
-func (*utilityModule) ValidateConfig(cfg modules.Config) error {
-	// TODO (#334): implement this
-	return nil
 }
 
 func (u *utilityModule) HandleMessage(message *anypb.Any) error {

@@ -5,16 +5,12 @@ import (
 
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mockP2PCfg := mockModules.NewMockP2PConfig(ctrl)
-	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMaxMempoolCount).AnyTimes()
 
 	// starting with an empty address book and only self
 	selfAddr, err := cryptoPocket.GenerateAddress()
@@ -26,8 +22,9 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 
 	busMock := mockBus(ctrl)
 	addrBookProviderMock := mockAddrBookProvider(ctrl, addrBook)
+	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-	network := NewRainTreeNetwork(selfAddr, busMock, mockP2PCfg, addrBookProviderMock).(*rainTreeNetwork)
+	network := NewRainTreeNetwork(selfAddr, busMock, addrBookProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
 
 	peerAddr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
@@ -52,9 +49,6 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	mockP2PCfg := mockModules.NewMockP2PConfig(ctrl)
-	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMaxMempoolCount).AnyTimes()
-
 	// starting with an address book having only self and an arbitrary number of peers `numAddressesInAddressBook``
 	numAddressesInAddressBook := 3
 	addrBook := getAddrBook(nil, numAddressesInAddressBook)
@@ -65,8 +59,9 @@ func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 
 	busMock := mockBus(ctrl)
 	addrBookProviderMock := mockAddrBookProvider(ctrl, addrBook)
+	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-	network := NewRainTreeNetwork(selfAddr, busMock, mockP2PCfg, addrBookProviderMock).(*rainTreeNetwork)
+	network := NewRainTreeNetwork(selfAddr, busMock, addrBookProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
 	stateView := network.peersManager.getNetworkView()
 	require.Equal(t, numAddressesInAddressBook+1, len(stateView.addrList)) // +1 to account for self in the addrBook as well
 

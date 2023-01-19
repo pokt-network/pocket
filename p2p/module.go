@@ -1,10 +1,10 @@
 package p2p
 
 import (
-	"fmt"
+	"log"
 
-	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/p2p/addrbook_provider"
+	"github.com/pokt-network/pocket/p2p/providers"
+	persABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	"github.com/pokt-network/pocket/p2p/transport"
@@ -19,13 +19,8 @@ import (
 
 var _ modules.P2PModule = &p2pModule{}
 
-const (
-	p2pModuleName = "p2p"
-)
-
 type p2pModule struct {
-	bus    modules.Bus
-	p2pCfg modules.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
+	bus modules.Bus
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
@@ -33,41 +28,67 @@ type p2pModule struct {
 	logger modules.Logger
 
 	network typesP2P.Network
+
+	injectedAddrBookProvider      providers.AddrBookProvider
+	injectedCurrentHeightProvider providers.CurrentHeightProvider
 }
 
-// TECHDEBT(drewsky): Discuss how to best expose/access `Address` throughout the codebase.
-func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
-	return m.address, nil
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(p2pModule).Create(bus)
 }
 
-func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	return new(p2pModule).Create(runtimeMgr)
-}
+// TODO(#429): need to define a better pattern for dependency injection. Currently we are probably limiting ourselves by having a common constructor `Create(bus modules.Bus) (modules.Module, error)` for all modules.
+func CreateWithProviders(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
+	log.Println("Creating network module")
+	m := &p2pModule{}
+	bus.RegisterModule(m)
 
-func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	var m *p2pModule
-	logger.Global.Info().Msg("Creating network module")
-
+	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
-	if err := m.ValidateConfig(cfg); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
-	}
-	p2pCfg := cfg.GetP2PConfig()
+	p2pCfg := cfg.P2P
 
-	l, err := transport.CreateListener(p2pCfg)
-	if err != nil {
-		return nil, err
-	}
 	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.GetPrivateKey())
 	if err != nil {
 		return nil, err
 	}
-	m = &p2pModule{
-		p2pCfg: p2pCfg,
+	m.address = privateKey.Address()
+	m.injectedAddrBookProvider = addrBookProvider
+	m.injectedCurrentHeightProvider = currentHeightProvider
 
-		listener: l,
-		address:  privateKey.Address(),
+	if !cfg.ClientDebugMode {
+		l, err := transport.CreateListener(p2pCfg)
+		if err != nil {
+			return nil, err
+		}
+		m.listener = l
 	}
+
+	return m, nil
+}
+
+func (*p2pModule) Create(bus modules.Bus) (modules.Module, error) {
+	log.Println("Creating network module")
+	m := &p2pModule{}
+	bus.RegisterModule(m)
+
+	runtimeMgr := bus.GetRuntimeMgr()
+	cfg := runtimeMgr.GetConfig()
+	p2pCfg := cfg.P2P
+
+	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	m.address = privateKey.Address()
+
+	if !cfg.ClientDebugMode {
+		l, err := transport.CreateListener(p2pCfg)
+		if err != nil {
+			return nil, err
+		}
+		m.listener = l
+	}
+
 	return m, nil
 }
 
@@ -86,11 +107,26 @@ func (m *p2pModule) GetBus() modules.Bus {
 }
 
 func (m *p2pModule) GetModuleName() string {
-	return p2pModuleName
+	return modules.P2PModuleName
 }
 
 func (m *p2pModule) Start() error {
 	logger.Global.Info().Msg("Starting network module")
+
+	addrbookProvider := getAddrBookProvider(m)
+	currentHeightProvider := getCurrentHeightProvider(m)
+
+	cfg := m.GetBus().GetRuntimeMgr().GetConfig()
+
+	if cfg.P2P.UseRainTree {
+		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), addrbookProvider, currentHeightProvider)
+	} else {
+		m.network = stdnetwork.NewNetwork(m.GetBus(), addrbookProvider, currentHeightProvider)
+	}
+
+	if cfg.ClientDebugMode {
+		return nil
+	}
 
 	m.GetBus().
 		GetTelemetryModule().
@@ -99,16 +135,6 @@ func (m *p2pModule) Start() error {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME,
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
-
-	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
-
-	addrbookProvider := addrbook_provider.NewPersistenceAddrBookProvider(m.GetBus(), m.p2pCfg)
-
-	if m.p2pCfg.GetUseRainTree() {
-		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), m.p2pCfg, addrbookProvider)
-	} else {
-		m.network = stdnetwork.NewNetwork(m.GetBus(), m.p2pCfg, addrbookProvider)
-	}
 
 	go func() {
 		for {
@@ -127,6 +153,28 @@ func (m *p2pModule) Start() error {
 		CounterIncrement(telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
 
 	return nil
+}
+
+// CLEANUP(#429): marked for removal since we'll implement a better pattern for dependency injection
+func getAddrBookProvider(m *p2pModule) providers.AddrBookProvider {
+	var addrbookProvider providers.AddrBookProvider
+	if m.injectedAddrBookProvider == nil {
+		addrbookProvider = persABP.NewPersistenceAddrBookProvider(m.GetBus())
+	} else {
+		addrbookProvider = m.injectedAddrBookProvider
+	}
+	return addrbookProvider
+}
+
+// CLEANUP(#429): marked for removal since we'll implement a better pattern for dependency injection
+func getCurrentHeightProvider(m *p2pModule) providers.CurrentHeightProvider {
+	var currentHeightProvider providers.CurrentHeightProvider
+	if m.injectedCurrentHeightProvider == nil {
+		currentHeightProvider = m.GetBus().GetConsensusModule()
+	} else {
+		currentHeightProvider = m.injectedCurrentHeightProvider
+	}
+	return currentHeightProvider
 }
 
 func (m *p2pModule) Stop() error {
@@ -162,9 +210,9 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 	return m.network.NetworkSend(data, addr)
 }
 
-func (*p2pModule) ValidateConfig(cfg modules.Config) error {
-	// TODO (#334): implement this
-	return nil
+// TECHDEBT(drewsky): Discuss how to best expose/access `Address` throughout the codebase.
+func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
+	return m.address, nil
 }
 
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {

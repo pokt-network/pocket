@@ -5,7 +5,7 @@ package persistence
 import (
 	"context"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -97,7 +97,7 @@ func (p PostgresContext) Release() error {
 }
 
 func (p PostgresContext) Close() error {
-	p.logger.Info().Int64("height", p.Height).Msg("About to close context")
+	p.logger.Info().Int64("height", p.Height).Msg("About to close postgres context")
 	return p.conn.Close(context.TODO())
 }
 

@@ -5,36 +5,35 @@ import (
 )
 
 var (
-	_ modules.Module          = &telemetryModule{}
-	_ modules.TelemetryConfig = &TelemetryConfig{}
+	_                   modules.Module = &telemetryModule{}
+	ImplementationNames                = []string{
+		new(PrometheusTelemetryModule).GetModuleName(),
+		new(NoopTelemetryModule).GetModuleName(),
+	}
 )
 
-const (
-	telemetryModuleName = "telemetry"
-)
-
-func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	return new(telemetryModule).Create(runtime)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(telemetryModule).Create(bus)
 }
 
 // TODO(pocket/issues/99): Add a switch statement and configuration variable when support for other telemetry modules is added.
-func (*telemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	cfg := runtime.GetConfig()
+func (*telemetryModule) Create(bus modules.Bus) (modules.Module, error) {
+	runtimeMgr := bus.GetRuntimeMgr()
+	cfg := runtimeMgr.GetConfig()
 
-	telemetryCfg := cfg.GetTelemetryConfig()
+	telemetryCfg := cfg.Telemetry
 
-	if telemetryCfg.GetEnabled() {
-		return CreatePrometheusTelemetryModule(runtime)
+	if telemetryCfg.Enabled {
+		return CreatePrometheusTelemetryModule(bus)
 	} else {
-		return CreateNoopTelemetryModule(runtime)
+		return CreateNoopTelemetryModule(bus)
 	}
 }
 
 type telemetryModule struct{}
 
-func (t *telemetryModule) GetModuleName() string                                          { return telemetryModuleName }
-func (t *telemetryModule) InitGenesis(_ string) (genesis modules.GenesisState, err error) { return }
-func (t *telemetryModule) SetBus(bus modules.Bus)                                         {}
-func (t *telemetryModule) GetBus() modules.Bus                                            { return nil }
-func (t *telemetryModule) Start() error                                                   { return nil }
-func (t *telemetryModule) Stop() error                                                    { return nil }
+func (t *telemetryModule) GetModuleName() string  { return modules.TelemetryModuleName }
+func (t *telemetryModule) SetBus(bus modules.Bus) {}
+func (t *telemetryModule) GetBus() modules.Bus    { return nil }
+func (t *telemetryModule) Start() error           { return nil }
+func (t *telemetryModule) Stop() error            { return nil }

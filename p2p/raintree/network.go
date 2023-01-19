@@ -3,10 +3,11 @@ package raintree
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 
-	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/p2p/addrbook_provider"
+	"github.com/pokt-network/pocket/p2p/providers"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -25,7 +26,7 @@ type rainTreeNetwork struct {
 	bus modules.Bus
 
 	selfAddr         cryptoPocket.Address
-	addrBookProvider typesP2P.AddrBookProvider
+	addrBookProvider addrbook_provider.AddrBookProvider
 
 	peersManager *peersManager
 
@@ -35,36 +36,12 @@ type rainTreeNetwork struct {
 	// TODO(#388): generalize to use the shared `FIFOMempool` type (in `utility/types/mempool.go` at the time of writing) in here as well for this.
 	nonceSet         map[uint64]struct{}
 	nonceList        []uint64
-	mampoolMaxNonces uint64
+	mempoolMaxNonces uint64
+	nonceSetMutex    sync.Mutex
 }
 
-func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p2pCfg modules.P2PConfig) typesP2P.Network {
-	pm, err := newPeersManager(addr, addrBook, true)
-
-	logger := logger.Global.CreateLoggerForModule("p2p")
-
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
-	}
-
-	mempoolMaxNonces := p2pCfg.GetMaxMempoolCount()
-	n := &rainTreeNetwork{
-		selfAddr:         addr,
-		peersManager:     pm,
-		logger:           logger,
-		nonceSet:         make(map[uint64]struct{}),
-		nonceList:        make([]uint64, 0, mempoolMaxNonces),
-		mampoolMaxNonces: mempoolMaxNonces,
-	}
-
-	return typesP2P.Network(n)
-}
-
-func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg modules.P2PConfig, addrBookProvider typesP2P.AddrBookProvider) typesP2P.Network {
-	addrBook, err := addrbook_provider.GetAddrBook(bus, addrBookProvider)
-
-	logger := logger.Global.CreateLoggerForModule("p2p")
-
+func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error getting addrBook")
 	}
@@ -74,12 +51,13 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg modul
 		logger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
 	}
 
+	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
+
 	n := &rainTreeNetwork{
 		selfAddr:         addr,
 		peersManager:     pm,
 		nonceSet:         make(map[uint64]struct{}),
-		logger:           logger,
-		nonceList:        make([]uint64, 0, p2pCfg.GetMaxMempoolCount()),
+		nonceList:        make([]uint64, 0, p2pCfg.MaxMempoolCount),
 		addrBookProvider: addrBookProvider,
 	}
 	n.SetBus(bus)
@@ -160,7 +138,13 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return err
 	}
 
-	n.GetBus().
+	// A bus is not available In client debug mode
+	bus := n.GetBus()
+	if bus == nil {
+		return nil
+	}
+
+	bus.
 		GetTelemetryModule().
 		GetEventMetricsAgent().
 		EmitEvent(
@@ -203,10 +187,17 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		}
 	}
 
+	// TODO(#388): The lock is necessary because `HandleNetworkData` can be called concurrently
+	// which has led to `fatal error: concurrent map writes` errors. Once a proper, shared, mempool
+	// implementation is available, this should no longer be necessary.
+	n.nonceSetMutex.Lock()
+	defer n.nonceSetMutex.Unlock()
+
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
 	if _, contains := n.nonceSet[rainTreeMsg.Nonce]; contains {
+		log.Printf("RainTree message with nonce %d already processed, skipping\n", rainTreeMsg.Nonce)
 		n.GetBus().
 			GetTelemetryModule().
 			GetEventMetricsAgent().
@@ -222,7 +213,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	n.nonceSet[rainTreeMsg.Nonce] = struct{}{}
 	n.nonceList = append(n.nonceList, rainTreeMsg.Nonce)
-	if uint64(len(n.nonceList)) > n.mampoolMaxNonces {
+	if uint64(len(n.nonceList)) > n.mempoolMaxNonces {
 		// removing the oldest nonce and the oldest key from the slice
 		delete(n.nonceSet, n.nonceList[0])
 		n.nonceList = n.nonceList[1:]
@@ -255,11 +246,6 @@ func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
 }
 
 func (n *rainTreeNetwork) GetBus() modules.Bus {
-	// TODO: Do we need this if?
-	// if n.bus == nil {
-	// 	log.Printf("[WARN] PocketBus is not initialized in rainTreeNetwork")
-	// 	return nil
-	// }
 	return n.bus
 }
 

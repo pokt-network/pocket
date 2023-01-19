@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package configs;
+
+option go_package = "github.com/pokt-network/pocket/runtime/configs";
+
+message PersistenceConfig {
+  string postgres_url = 1;
+  string node_schema = 2;
+  string block_store_path = 3;
+  string tx_indexer_path = 4;
+  string trees_store_dir = 5;
+  int32 max_conns_count = 6;
+  int32 min_conns_count = 7;
+  string max_conn_lifetime = 8; // See pkg.go.dev/time#ParseDuration for reference
+  string max_conn_idle_time = 9; // See pkg.go.dev/time#ParseDuration for reference
+  string health_check_period = 10; // See pkg.go.dev/time#ParseDuration for reference
+}

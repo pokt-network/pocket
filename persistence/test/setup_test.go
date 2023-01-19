@@ -14,8 +14,11 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
 	"github.com/pokt-network/pocket/shared/converters"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
@@ -46,6 +49,11 @@ var (
 	OlshanskyChains = []string{"OLSH"}
 
 	testSchema = "test_schema"
+
+	genesisStateNumValidators   = 5
+	genesisStateNumServiceNodes = 1
+	genesisStateNumApplications = 1
+	genesisStateNumFishermen    = 1
 )
 var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 
@@ -80,21 +88,37 @@ func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresCon
 
 // TODO(olshansky): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
-	// HACK: See `runtime/test_artifacts/generator.go` for why we're doing this to get deterministic key generation.
-	os.Setenv(test_artifacts.PrivateKeySeedEnv, "42")
-	defer os.Unsetenv(test_artifacts.PrivateKeySeedEnv)
+	teardownDeterministicKeygen := keygenerator.GetInstance().SetSeed(42)
+	defer teardownDeterministicKeygen()
 
-	cfg := runtime.NewConfig(&runtime.BaseConfig{}, runtime.WithPersistenceConfig(&types.PersistenceConfig{
-		PostgresUrl:    databaseUrl,
-		NodeSchema:     testSchema,
-		BlockStorePath: "",
-		TxIndexerPath:  "",
-		TreesStoreDir:  "",
-	}))
-	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
-	runtimeCfg := runtime.NewManager(cfg, genesisState)
+	cfg := &configs.Config{
+		Persistence: &configs.PersistenceConfig{
+			PostgresUrl:       databaseUrl,
+			NodeSchema:        testSchema,
+			BlockStorePath:    "",
+			TxIndexerPath:     "",
+			TreesStoreDir:     "",
+			MaxConnsCount:     4,
+			MinConnsCount:     0,
+			MaxConnLifetime:   "1h",
+			MaxConnIdleTime:   "30m",
+			HealthCheckPeriod: "5m",
+		},
+	}
 
-	persistenceMod, err := persistence.Create(runtimeCfg)
+	genesisState, _ := test_artifacts.NewGenesisState(
+		genesisStateNumValidators,
+		genesisStateNumServiceNodes,
+		genesisStateNumApplications,
+		genesisStateNumServiceNodes,
+	)
+	runtimeMgr := runtime.NewManager(cfg, genesisState)
+	bus, err := runtime.CreateBus(runtimeMgr)
+	if err != nil {
+		log.Fatalf("Error creating bus: %s", err)
+	}
+
+	persistenceMod, err := persistence.Create(bus)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
@@ -104,8 +128,8 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
 func fuzzSingleProtocolActor(
 	f *testing.F,
-	newTestActor func() (*types.Actor, error),
-	getTestActor func(db *persistence.PostgresContext, address string) (*types.Actor, error),
+	newTestActor func() (*coreTypes.Actor, error),
+	getTestActor func(db *persistence.PostgresContext, address string) (*coreTypes.Actor, error),
 	protocolActorSchema types.ProtocolActorSchema,
 ) {
 	// Clear the genesis state.
@@ -173,7 +197,7 @@ func fuzzSingleProtocolActor(
 					}
 				}
 			}
-			updatedActor := &types.Actor{
+			updatedActor := &coreTypes.Actor{
 				Address:         originalActor.Address,
 				PublicKey:       originalActor.PublicKey,
 				StakedAmount:    newStakedTokens,

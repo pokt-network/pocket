@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/indexer"
-	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 )
@@ -48,9 +48,9 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	// that the business logic doesn't change and that they remain deterministic. Anytime the business
 	// logic changes, these hashes will need to be updated based on the test output.
 	stateHashes := []string{
-		"b076081d48f6652d2302c974f20e5371b4728c7950735f6617aac7b6be62f581",
-		"171af2b820d2a65861c4e63f0cdd9c8bdde4798e6ace28c47d0e83467848ab02",
-		"b168dff3a83215f12093e548aa22cdf907fbfdb1e12d217ffbb4a07beca065f1",
+		"d3e433812bef43bf8639be73f7584e85822f98378d46de436d363683aa9020c1",
+		"81e7af742329dead35969a163862337fba7bebc0444351cca54f00fc34bf48e2",
+		"6fc07bdec8f96f8ef59c86d44062e4947ba2591a2adf9d6b2fe7838cea6a1b4b",
 	}
 
 	stakeAmount := initialStakeAmount
@@ -107,12 +107,12 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify the block contents
-		var block types.Block
+		var block coreTypes.Block
 		err = codec.GetCodec().Unmarshal(blockBz, &block)
 		require.NoError(t, err)
-		require.Equal(t, expectedStateHash, block.StateHash) // verify block hash
+		require.Equal(t, expectedStateHash, block.BlockHeader.StateHash) // verify block hash
 		if i > 0 {
-			require.Equal(t, stateHashes[i-1], block.PrevStateHash) // verify chain chain
+			require.Equal(t, stateHashes[i-1], block.BlockHeader.PrevStateHash) // verify chain chain
 		}
 	}
 }

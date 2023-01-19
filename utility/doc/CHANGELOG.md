@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.18] - 2023-01-14
+
+- Updated "test/module_test.go" to encorporate MaxConnsCount, MinConnsCount, MaxConnLifetime, MaxConnIdleTime, and HealthCheckPeriod in persistence config.
+
+## [0.0.0.17] - 2023-01-11
+
+- Deprecated `GetBlocksPerSession()` in favour of the more general parameter getter function `GetParameter()`
+- Update unit test for `GetBlocksPerSession()` to use the `GetParameter()` function
+
+## [0.0.0.16] - 2023-01-10
+
+- Updated module constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering module with the `bus` via `RegisterModule` method
+
+## [0.0.0.15] - 2023-01-03
+
+- Renamed enum names as per code-review
+- Using defaults from `test_artifacts` for tests
+- Updated tests to reflect the above changes
+
+## [0.0.0.14] - 2022-12-21
+
+- Updated to use the new centralized config and genesis handling
+- Updated to use the new `Actor` struct under `coreTypes`
+- Updated tests and mocks
+
 ## [0.0.0.13] - 2022-12-10
 
 - Introduce `SetProposalBlock` and local vars to keep proposal state

@@ -1,13 +1,13 @@
 package rpc
 
 import (
-	"fmt"
+	"log"
 
 	// importing because used by code-generated files that are git ignored and to allow go mod tidy and go mod vendor to function properly
 	_ "github.com/getkin/kin-openapi/openapi3"
 	_ "github.com/labstack/echo/v4"
 
-	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -15,40 +15,31 @@ var _ modules.RPCModule = &rpcModule{}
 
 type rpcModule struct {
 	bus    modules.Bus
-	config modules.RPCConfig
-
-	logger modules.Logger
+	config *configs.RPCConfig
 }
 
-const (
-	rpcModuleName = "rpc"
-)
-
-func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	return new(rpcModule).Create(runtime)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(rpcModule).Create(bus)
 }
 
-func (m *rpcModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	cfg := runtime.GetConfig()
-	if err := m.ValidateConfig(cfg); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
-	}
-	rpcCfg := cfg.GetRPCConfig()
-
-	if !rpcCfg.GetEnabled() {
-		return &noopRpcModule{}, nil
-	}
-
-	return &rpcModule{
+func (*rpcModule) Create(bus modules.Bus) (modules.Module, error) {
+	runtimeMgr := bus.GetRuntimeMgr()
+	cfg := runtimeMgr.GetConfig()
+	rpcCfg := cfg.RPC
+	rpcMod := modules.RPCModule(&rpcModule{
 		config: rpcCfg,
-	}, nil
+	})
+	if !rpcCfg.Enabled {
+		rpcMod = &noopRpcModule{}
+	}
+	bus.RegisterModule(rpcMod)
+
+	return rpcMod, nil
 }
 
 func (u *rpcModule) Start() error {
 	u.logger = logger.Global.CreateLoggerForModule(u.GetModuleName())
-
-	go NewRPCServer(u.GetBus()).StartRPC(u.config.GetPort(), u.config.GetTimeout(), u.logger)
-
+	go NewRPCServer(u.GetBus()).StartRPC(u.config.Port, u.config.Timeout)
 	return nil
 }
 
@@ -57,7 +48,7 @@ func (u *rpcModule) Stop() error {
 }
 
 func (u *rpcModule) GetModuleName() string {
-	return rpcModuleName
+	return modules.RPCModuleName
 }
 
 func (u *rpcModule) SetBus(bus modules.Bus) {
@@ -69,9 +60,4 @@ func (u *rpcModule) GetBus() modules.Bus {
 		u.logger.Fatal().Msg("Bus is not initialized")
 	}
 	return u.bus
-}
-
-func (*rpcModule) ValidateConfig(cfg modules.Config) error {
-	// TODO (#334): implement this
-	return nil
 }

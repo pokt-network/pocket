@@ -6,6 +6,7 @@ import (
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
@@ -32,7 +33,7 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMess
 		if err := m.clearAllState(debugMessage); err != nil {
 			return err
 		}
-		g := m.genesisState.(*types.PersistenceGenesisState)
+		g := m.genesisState
 		m.populateGenesisState(g) // fatal if there's an error
 	default:
 		m.logger.Debug().Str("message", debugMessage.Message.String()).Msg("Debug message not handled by persistence module")
@@ -49,7 +50,7 @@ func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) {
 		return
 	}
 
-	block := &types.Block{}
+	block := &coreTypes.Block{}
 	if err := codec.GetCodec().Unmarshal(blockBytes, block); err != nil {
 		m.logger.Error().Err(err).Uint64("height", height).Msg("Error decoding block from block store")
 		return

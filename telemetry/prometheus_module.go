@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -12,18 +12,17 @@ import (
 )
 
 var (
-	_ modules.Module             = &PrometheusTelemetryModule{}
-	_ modules.ConfigurableModule = &PrometheusTelemetryModule{}
-	_ modules.TelemetryModule    = &PrometheusTelemetryModule{}
-	_ modules.EventMetricsAgent  = &PrometheusTelemetryModule{}
-	_ modules.TimeSeriesAgent    = &PrometheusTelemetryModule{}
+	_ modules.Module            = &PrometheusTelemetryModule{}
+	_ modules.TelemetryModule   = &PrometheusTelemetryModule{}
+	_ modules.EventMetricsAgent = &PrometheusTelemetryModule{}
+	_ modules.TimeSeriesAgent   = &PrometheusTelemetryModule{}
 )
 
 // DISCUSS(team): Should the warning logs in this module be handled differently?
 
 type PrometheusTelemetryModule struct {
 	bus    modules.Bus
-	config modules.TelemetryConfig
+	config *configs.TelemetryConfig
 
 	logger modules.Logger
 
@@ -32,28 +31,25 @@ type PrometheusTelemetryModule struct {
 	gaugeVectors map[string]prometheus.GaugeVec
 }
 
-const (
-	prometheusModuleName = "prometheus"
-)
-
-func CreatePrometheusTelemetryModule(runtime modules.RuntimeMgr) (modules.Module, error) {
+func CreatePrometheusTelemetryModule(bus modules.Bus) (modules.Module, error) {
 	var m PrometheusTelemetryModule
-	return m.Create(runtime)
+	return m.Create(bus)
 }
 
-func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	cfg := runtime.GetConfig()
-	if err := m.ValidateConfig(cfg); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
-	}
-	telemetryCfg := cfg.GetTelemetryConfig()
+func (*PrometheusTelemetryModule) Create(bus modules.Bus) (modules.Module, error) {
+	m := &PrometheusTelemetryModule{}
+	bus.RegisterModule(m)
 
-	return &PrometheusTelemetryModule{
-		config:       telemetryCfg,
-		counters:     map[string]prometheus.Counter{},
-		gauges:       map[string]prometheus.Gauge{},
-		gaugeVectors: map[string]prometheus.GaugeVec{},
-	}, nil
+	runtimeMgr := bus.GetRuntimeMgr()
+	cfg := runtimeMgr.GetConfig()
+	telemetryCfg := cfg.Telemetry
+
+	m.config = telemetryCfg
+	m.counters = map[string]prometheus.Counter{}
+	m.gauges = map[string]prometheus.Gauge{}
+	m.gaugeVectors = map[string]prometheus.GaugeVec{}
+
+	return m, nil
 }
 
 func (m *PrometheusTelemetryModule) Start() error {
@@ -63,8 +59,8 @@ func (m *PrometheusTelemetryModule) Start() error {
 
 	m.logger.Info().Str("address", uri).Msg("Starting Prometheus metrics exporter...")
 
-	http.Handle(m.config.GetEndpoint(), promhttp.Handler())
-	go http.ListenAndServe(m.config.GetAddress(), nil)
+	http.Handle(m.config.Endpoint, promhttp.Handler())
+	go http.ListenAndServe(m.config.Address, nil)
 
 	m.logger.Info().Str("address", uri).Msg("Prometheus metrics exporter started")
 
@@ -80,7 +76,7 @@ func (m *PrometheusTelemetryModule) SetBus(bus modules.Bus) {
 }
 
 func (m *PrometheusTelemetryModule) GetModuleName() string {
-	return prometheusModuleName
+	return fmt.Sprintf("%s_prometheus", modules.TelemetryModuleName)
 }
 
 func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
@@ -88,11 +84,6 @@ func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
 		m.logger.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
-}
-
-func (*PrometheusTelemetryModule) ValidateConfig(cfg modules.Config) error {
-	// TODO (#334): implement this
-	return nil
 }
 
 // EventMetricsAgent interface implementation

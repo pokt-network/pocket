@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 )
@@ -44,7 +45,7 @@ type Message interface {
 	SetSigner(signer []byte)
 	ValidateBasic() Error
 	GetCanonicalBytes() []byte
-	GetActorType() ActorType
+	GetActorType() coreTypes.ActorType
 	GetMessageName() string
 	GetMessageRecipient() string
 }
@@ -59,8 +60,8 @@ var (
 	_ Message = &MessageDoubleSign{}
 )
 
-func (msg *MessageSend) GetActorType() ActorType {
-	return ActorType_Undefined // there's no actor type for message send, so return zero to allow fee retrieval
+func (msg *MessageSend) GetActorType() coreTypes.ActorType {
+	return coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED // there's no actor type for message send, so return zero to allow fee retrieval
 }
 
 func (msg *MessageStake) ValidateBasic() Error {
@@ -150,15 +151,15 @@ func (msg *MessageDoubleSign) GetMessageRecipient() string      { return "" }
 func (msg *MessageUnstake) ValidateBasic() Error { return ValidateAddress(msg.Address) }
 func (msg *MessageUnpause) ValidateBasic() Error { return ValidateAddress(msg.Address) }
 
-func (msg *MessageStake) SetSigner(signer []byte)           { msg.Signer = signer }
-func (msg *MessageEditStake) SetSigner(signer []byte)       { msg.Signer = signer }
-func (msg *MessageUnstake) SetSigner(signer []byte)         { msg.Signer = signer }
-func (msg *MessageUnpause) SetSigner(signer []byte)         { msg.Signer = signer }
-func (msg *MessageDoubleSign) SetSigner(signer []byte)      { msg.ReporterAddress = signer }
-func (msg *MessageSend) SetSigner(signer []byte)            { /*no op*/ }
-func (msg *MessageChangeParameter) SetSigner(signer []byte) { msg.Signer = signer }
-func (x *MessageChangeParameter) GetActorType() ActorType   { return -1 }
-func (x *MessageDoubleSign) GetActorType() ActorType        { return -1 }
+func (msg *MessageStake) SetSigner(signer []byte)                   { msg.Signer = signer }
+func (msg *MessageEditStake) SetSigner(signer []byte)               { msg.Signer = signer }
+func (msg *MessageUnstake) SetSigner(signer []byte)                 { msg.Signer = signer }
+func (msg *MessageUnpause) SetSigner(signer []byte)                 { msg.Signer = signer }
+func (msg *MessageDoubleSign) SetSigner(signer []byte)              { msg.ReporterAddress = signer }
+func (msg *MessageSend) SetSigner(signer []byte)                    { /*no op*/ }
+func (msg *MessageChangeParameter) SetSigner(signer []byte)         { msg.Signer = signer }
+func (x *MessageChangeParameter) GetActorType() coreTypes.ActorType { return -1 }
+func (x *MessageDoubleSign) GetActorType() coreTypes.ActorType      { return -1 }
 
 func (msg *MessageStake) GetCanonicalBytes() []byte           { return getCanonicalBytes(msg) }
 func (msg *MessageEditStake) GetCanonicalBytes() []byte       { return getCanonicalBytes(msg) }
@@ -237,13 +238,13 @@ func ValidateAmount(amount string) Error {
 	return nil
 }
 
-func ValidateActorType(_ ActorType) Error {
+func ValidateActorType(_ coreTypes.ActorType) Error {
 	// TODO (team) not sure if there's anything we can do here
 	return nil
 }
 
-func ValidateServiceUrl(actorType ActorType, uri string) Error {
-	if actorType == ActorType_App {
+func ValidateServiceUrl(actorType coreTypes.ActorType, uri string) Error {
+	if actorType == coreTypes.ActorType_ACTOR_TYPE_APP {
 		return nil
 	}
 	uri = strings.ToLower(uri)
@@ -297,7 +298,7 @@ func (rc *RelayChain) Validate() Error {
 }
 
 type MessageStaker interface {
-	GetActorType() ActorType
+	GetActorType() coreTypes.ActorType
 	GetAmount() string
 	GetChains() []string
 	GetServiceUrl() string

@@ -4,10 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime/configs"
 )
 
 const (
@@ -64,31 +68,58 @@ func (pg *PostgresContext) ResetContext() error {
 	return nil
 }
 
-// TECHDEBT: Implement proper connection pooling
-func connectToDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
+func connectToDatabase(cfg *configs.PersistenceConfig) (*pgx.Conn, error) {
 	ctx := context.TODO()
 
-	conn, err := pgx.Connect(context.Background(), postgresUrl)
+	config, err := pgxpool.ParseConfig(cfg.GetPostgresUrl())
+	if err != nil {
+		return nil, fmt.Errorf("unable to create database config: %v", err)
+	}
+	maxConnLifetime, err := time.ParseDuration(cfg.GetMaxConnLifetime())
+	if err == nil {
+		config.MaxConnLifetime = maxConnLifetime
+	} else {
+		return nil, fmt.Errorf("unable to set max connection lifetime: %v", err)
+	}
+	maxConnIdleTime, err := time.ParseDuration(cfg.GetMaxConnIdleTime())
+	if err == nil {
+		config.MaxConnIdleTime = maxConnIdleTime
+	} else {
+		return nil, fmt.Errorf("unable to set max connection idle time : %v", err)
+	}
+	config.MaxConns = cfg.GetMaxConnsCount()
+	config.MinConns = cfg.GetMinConnsCount()
+	healthCheckPeriod, err := time.ParseDuration(cfg.GetHealthCheckPeriod())
+	if err == nil {
+		config.HealthCheckPeriod = healthCheckPeriod
+	} else {
+		return nil, fmt.Errorf("unable to set healthcheck period: %v", err)
+	}
+
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to database: %v", err)
 	}
 
+	conn, _ := pool.Acquire(ctx)
+
+	nodeSchema := cfg.GetNodeSchema()
 	// Creating and setting a new schema so we can running multiple nodes on one postgres instance. See
 	// more details at https://github.com/go-pg/pg/issues/351.
-	if _, err = conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, schema)); err != nil {
+	if _, err = conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, nodeSchema)); err != nil {
 		return nil, err
 	}
 
 	// Creating and setting a new schema so we can run multiple nodes on one postgres instance.
 	// See more details at https://github.com/go-pg/pg/issues/351.
-	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, schema)); err != nil {
+	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, nodeSchema)); err != nil {
 		return nil, err
 	}
-	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, schema)); err != nil {
+	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, nodeSchema)); err != nil {
 		return nil, err
 	}
 
-	return conn, nil
+	return conn.Conn(), nil
 }
 
 // TODO(pokt-network/pocket/issues/77): Enable proper up and down migrations

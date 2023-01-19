@@ -2,14 +2,6 @@ include build.mk
 
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
-# This flag is useful when running the consensus unit tests. It causes the test to wait up to the
-# maximum delay specified in the source code and errors if additional unexpected messages are received.
-# For example, if the test expects to receive 5 messages within 2 seconds:
-# 	When EXTRA_MSG_FAIL = false: continue if 5 messages are received in 0.5 seconds
-# 	When EXTRA_MSG_FAIL = true: wait for another 1.5 seconds after 5 messages are received in 0.5
-#		                        seconds, and fail if any additional messages are received.
-EXTRA_MSG_FAIL ?= false
-
 # IMPROVE: Add `-shuffle=on` to the `go test` command to randomize the order in which tests are run.
 
 # An easy way to turn off verbose test output for some of the test targets. For example
@@ -122,11 +114,15 @@ develop_test: docker_check ## Run all of the make commands necessary to develop 
 
 .PHONY: client_start
 client_start: docker_check ## Run a client daemon which is only used for debugging purposes
-	docker-compose -f build/deployments/docker-compose.yaml up -d client --build
+	docker-compose -f build/deployments/docker-compose.yaml up -d client
+
+.PHONY: rebuild_client_start
+rebuild_client_start: docker_check ## Rebuild and run a client daemon which is only used for debugging purposes
+	docker-compose -f build/deployments/docker-compose.yaml up -d --build client
 
 .PHONY: client_connect
 client_connect: docker_check ## Connect to the running client debugging daemon
-	docker exec -it client /bin/bash -c "go run -tags=debug app/client/*.go debug"
+	docker exec -it client /bin/bash -c "POCKET_P2P_IS_CLIENT_ONLY=true go run -tags=debug app/client/*.go debug"
 
 .PHONY: build_and_watch
 build_and_watch: ## Continous build Pocket's main entrypoint as files change
@@ -220,11 +216,11 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
-	$(eval p2p_types_dir = "p2p/types")
+	$(eval p2p_dir = "p2p")
 	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
 	find ${p2p_type_mocks_dir} -type f ! -name "mocks.go" -exec rm {} \;
-	go generate ./${p2p_types_dir}
-	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
+	go generate ./${p2p_dir}/...
+	echo "P2P mocks generated in ${p2p_type_mocks_dir}"
 
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
@@ -236,22 +232,40 @@ protogen_show: ## A simple `find` command that shows you the generated protobufs
 protogen_clean: ## Remove all the generated protobufs.
 	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs -r rm
 
+# IMPROVE: Look into using buf in the future; https://github.com/bufbuild/buf.
+PROTOC = protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative
+PROTOC_SHARED = $(PROTOC) -I=./shared
+
 .PHONY: protogen_local
 protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
-	$(eval proto_dir = ".")
-	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    --go_out=./shared/messaging      	./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./persistence/indexer/proto --go_out=./persistence/indexer/   ./persistence/indexer/proto/*.proto --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  	./persistence/proto/*.proto         --experimental_allow_proto3_optional
+	# Shared
+	$(PROTOC) -I=./shared/core/types/proto --go_out=./shared/core/types ./shared/core/types/proto/*.proto
+	$(PROTOC) -I=./shared/messaging/proto  --go_out=./shared/messaging  ./shared/messaging/proto/*.proto
+	$(PROTOC) -I=./shared/codec/proto      --go_out=./shared/codec      ./shared/codec/proto/*.proto
+
+	# Runtime
+	$(PROTOC_SHARED) -I=./runtime/configs/proto  --go_out=./runtime/configs ./runtime/configs/proto/*.proto
+	$(PROTOC_SHARED) -I=./runtime/genesis/proto  --go_out=./runtime/genesis ./runtime/genesis/proto/*.proto
+	protoc-go-inject-tag -input="./runtime/genesis/*.pb.go"
+
+	# Persistence
+	$(PROTOC_SHARED) -I=./persistence/indexer/proto 	--go_out=./persistence/indexer ./persistence/indexer/proto/*.proto
+	$(PROTOC_SHARED) -I=./persistence/proto         	--go_out=./persistence/types   ./persistence/proto/*.proto
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
-	protoc --go_opt=paths=source_relative  -I=./utility/types/proto       --go_out=./utility/types      	./utility/types/proto/*.proto       --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./consensus/types/proto     --go_out=./consensus/types    	./consensus/types/proto/*.proto     --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./p2p/raintree/types/proto  --go_out=./p2p/types          	./p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./p2p/types/proto           --go_out=./p2p/types          	./p2p/types/proto/*.proto           --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./telemetry/proto           --go_out=./telemetry          	./telemetry/proto/*.proto           --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./logger/proto              --go_out=./logger             	./logger/proto/*.proto              --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./rpc/types/proto 		  --go_out=./rpc/types          	./rpc/types/proto/*.proto           --experimental_allow_proto3_optional
-	echo "View generated proto files by running: make protogen_show"
+
+	# Utility
+	$(PROTOC_SHARED) -I=./utility/types/proto --go_out=./utility/types ./utility/types/proto/*.proto
+
+	# Consensus
+	$(PROTOC_SHARED) -I=./consensus/types/proto --go_out=./consensus/types ./consensus/types/proto/*.proto
+
+	# P2P
+	$(PROTOC_SHARED) -I=./p2p/raintree/types/proto --go_out=./p2p/types ./p2p/raintree/types/proto/*.proto
+
+	# echo "View generated proto files by running: make protogen_show"
+
+# CONSIDERATION: Some proto files contain unused gRPC services so we may need to add the following
+#                if/when we decide to include it: `grpc--go-grpc_opt=paths=source_relative --go-grpc_out=./output/path`
 
 .PHONY: protogen_docker_m1
 ## TECHDEBT: Test, validate & update.
@@ -305,20 +319,25 @@ test_shared: ## Run all go unit tests in the shared module
 test_consensus: ## Run all go unit tests in the consensus module
 	go test ${VERBOSE_TEST} -count=1 ./consensus/...
 
+# These tests are isolated to a single package which enables logs to be streamed in realtime. More details here: https://stackoverflow.com/a/74903989/768439
+.PHONY: test_consensus_e2e
+test_consensus_e2e: ## Run all go t2e unit tests in the consensus module w/ log streaming
+	go test ${VERBOSE_TEST} -count=1 ./consensus/e2e_tests/...
+
 .PHONY: test_consensus_concurrent_tests
 test_consensus_concurrent_tests: ## Run unit tests in the consensus module that could be prone to race conditions (#192)
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestPacemakerTimeoutIncreasesRound$  ./consensus/e2e_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/e2e_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestPacemakerTimeoutIncreasesRound$  ./consensus/e2e_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/e2e_tests; done;
 
 .PHONY: test_hotstuff
 test_hotstuff: ## Run all go unit tests related to hotstuff consensus
-	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Hotstuff
 
 .PHONY: test_pacemaker
 test_pacemaker: ## Run all go unit tests related to the hotstuff pacemaker
-	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Pacemaker
 
 .PHONY: test_vrf
 test_vrf: ## Run all go unit tests in the VRF library
@@ -376,9 +395,10 @@ benchmark_p2p_addrbook: ## Benchmark all P2P addr book related tests
 # CONSOLIDATE   - We likely have similar implementations/types of the same thing, and we should consolidate them.
 # ADDTEST       - Add more tests for a specific code section
 # DEPRECATE     - Code that should be removed in the future
+# RESEARCH      - A non-trivial action item that requires deep research and investigation being next steps can be taken
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST"
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;

@@ -1,5 +1,7 @@
 package types
 
+import coreTypes "github.com/pokt-network/pocket/shared/core/types"
+
 var _ ProtocolActorSchema = &ServiceNodeSchema{}
 
 type ServiceNodeSchema struct {
@@ -15,6 +17,8 @@ const (
 
 var ServiceNodeActor ProtocolActorSchema = &ServiceNodeSchema{
 	BaseProtocolActorSchema: BaseProtocolActorSchema{
+		actorType: coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
+
 		tableName:       ServiceNodeTableName,
 		chainsTableName: ServiceNodeChainsTableName,
 

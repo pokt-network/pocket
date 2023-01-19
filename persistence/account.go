@@ -6,8 +6,9 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/converters"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 )
 
 // TODO(https://github.com/pokt-network/pocket/issues/102): Generalize Pool and Account operations.
@@ -68,7 +69,7 @@ func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	return nil
 }
 
-func (p PostgresContext) GetAccountsUpdated(height int64) (accounts []*types.Account, err error) {
+func (p PostgresContext) GetAccountsUpdated(height int64) (accounts []*coreTypes.Account, err error) {
 	return p.getPoolOrAccUpdatedInternal(types.GetAccountsUpdatedAtHeightQuery(height))
 }
 
@@ -146,14 +147,14 @@ func (p *PostgresContext) operationPoolAmount(name string, amount string, op fun
 	return p.operationPoolOrAccAmount(name, amount, op, p.GetPoolAmount, types.InsertPoolAmountQuery)
 }
 
-func (p PostgresContext) GetPoolsUpdated(height int64) ([]*types.Account, error) {
+func (p PostgresContext) GetPoolsUpdated(height int64) ([]*coreTypes.Account, error) {
 	return p.getPoolOrAccUpdatedInternal(types.GetPoolsUpdatedAtHeightQuery(height))
 }
 
 // Joint Pool & Account Helpers
 
 // Shared logic between `getPoolsUpdated` & `getAccountsUpdated` to keep explicit external interfaces
-func (p *PostgresContext) getPoolOrAccUpdatedInternal(query string) (accounts []*types.Account, err error) {
+func (p *PostgresContext) getPoolOrAccUpdatedInternal(query string) (accounts []*coreTypes.Account, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return
@@ -166,7 +167,7 @@ func (p *PostgresContext) getPoolOrAccUpdatedInternal(query string) (accounts []
 	defer rows.Close()
 
 	for rows.Next() {
-		account := new(types.Account)
+		account := new(coreTypes.Account)
 		if err = rows.Scan(&account.Address, &account.Amount); err != nil {
 			return nil, err
 		}
