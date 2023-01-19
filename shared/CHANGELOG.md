@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## [0.0.0.13] - 2023-01-17
+## [0.0.0.13] - 2023-01-19
 
 - Add `ConsensusPacemaker` interface that is implemented by the consensus module
 
