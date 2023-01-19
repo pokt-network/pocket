@@ -74,6 +74,10 @@ func (m *consensusModule) NewLeader(msg *anypb.Any) error {
 	return m.electNextLeader(message)
 }
 
+func (m *consensusModule) IsPrepareQCNil() bool {
+	return m.prepareQC == nil
+}
+
 func (m *consensusModule) GetPrepareQC() (*anypb.Any, error) {
 	anyProto, err := anypb.New(m.prepareQC)
 	if err != nil {

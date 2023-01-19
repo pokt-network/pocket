@@ -195,6 +195,11 @@ func (m *pacemaker) InterruptRound(reason string) {
 
 	consensusMod.SetRound(consensusMod.CurrentRound() + 1)
 
+	if m.GetBus().GetConsensusModule().IsPrepareQCNil() {
+		m.startNextView(nil, false)
+		return
+	}
+
 	msgAny, err := consensusMod.GetPrepareQC()
 	if err != nil {
 		return
@@ -209,6 +214,7 @@ func (m *pacemaker) InterruptRound(reason string) {
 	if !ok {
 		return
 	}
+
 	m.startNextView(quorumCertificate, false)
 }
 
