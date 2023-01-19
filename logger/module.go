@@ -15,9 +15,9 @@ type loggerModule struct {
 	config modules.LoggerConfig
 }
 
-// The idea is to create a logger for each module, so that we can easily filter logs by module.
-// But we also need a global logger, because sometimes we need to log outside of modules, e.g. when the process just
-// started, and modules are not initiated yet.
+// Each module should have it's own logger to easily configure & filter logs by module.
+
+// A Global logger is also created to enable logging outside of modules (e.g. when the node is starting).
 var Global = loggerModule{
 	// All loggers branch out of mainLogger, that way configuration changes to mainLogger propagate to others.
 	Logger: zerolog.New(os.Stdout).With().Timestamp().Logger(),
