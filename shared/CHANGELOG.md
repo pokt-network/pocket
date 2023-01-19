@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.13] - 2023-01-18
 
-- Consolidate the `Block` proto structures under `shared/core/types`
+- Create `block.proto` which consolidates the definition of a `Block` protobuf under `shared/core/types`
 
 ## [0.0.0.12] - 2023-01-11
 
