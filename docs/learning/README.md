@@ -133,7 +133,6 @@ This is a general set of technical links and recommended reading our team has fo
 
 - [Pocket YouTube Channel](https://www.youtube.com/c/PocketNetwork/videos)
   - Contains everything from Infracon presentations, to contributor hour calls, etc...
-  -
 
 ### Consensus
 
