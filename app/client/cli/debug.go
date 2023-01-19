@@ -158,7 +158,7 @@ func handleSelect(selection string) {
 func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
-		logger.Global.Logger.Error().Err(err).Msg("Failed to create Any proto")
+		logger.Global.Logger.Fatal().Err(err).Msg("Failed to create Any proto")
 	}
 
 	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use

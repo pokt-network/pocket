@@ -36,7 +36,13 @@ func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 	firstTarget := n.getTarget(firstMsgTargetPercentage, addrBookLengthAtHeight, level)
 	secondTarget := n.getTarget(secondMsgTargetPercentage, addrBookLengthAtHeight, level)
 
-	n.logger.Debug().Str("firstTarget", firstTarget.DebugString(n)).Str("secondTarget", secondTarget.DebugString(n)).Msg("Targets at height")
+	n.logger.Debug().Fields(
+		map[string]any{
+			"firstTarget":  firstTarget,
+			"secondTarget": secondTarget,
+			"height":         height,
+		}
+	).Msg("Targets at height")
 
 	return []target{firstTarget, secondTarget}
 }

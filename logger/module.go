@@ -21,7 +21,7 @@ type loggerModule struct {
 
 // A Global logger is also created to enable logging outside of modules (e.g. when the node is starting).
 var Global = loggerModule{
-	// All loggers branch out of mainLogger, that way configuration changes to mainLogger propagate to others.
+	// All loggers branch out of Global, that way configuration changes to Global propagate to others.
 	Logger: zerolog.New(os.Stdout).With().Timestamp().Logger(),
 }
 
