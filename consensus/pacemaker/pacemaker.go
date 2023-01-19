@@ -36,6 +36,7 @@ type Pacemaker interface {
 	PacemakerDebug
 
 	ShouldHandleMessage(message *typesCons.HotstuffMessage) (bool, error)
+	SetLogPrefix(string)
 
 	RestartTimer()
 	NewHeight()
@@ -60,7 +61,9 @@ func CreatePacemaker(bus modules.Bus) (modules.Module, error) {
 }
 
 func (*pacemaker) Create(bus modules.Bus) (modules.Module, error) {
-	m := &pacemaker{}
+	m := &pacemaker{
+		logPrefix: defaultLogPrefix,
+	}
 	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
@@ -101,11 +104,15 @@ func (m *pacemaker) GetBus() modules.Bus {
 	return m.bus
 }
 
+func (m *pacemaker) SetLogPrefix(logPrefix string) {
+	m.logPrefix = logPrefix
+}
+
 func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, error) {
 	consensusMod := m.GetBus().GetConsensusModule()
 
-	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	currentRound := m.GetBus().GetConsensusModule().CurrentRound()
+	currentHeight := consensusMod.CurrentHeight()
+	currentRound := consensusMod.CurrentRound()
 	currentStep := typesCons.HotstuffStep(consensusMod.CurrentStep())
 
 	// Consensus message is from the past
@@ -195,6 +202,7 @@ func (m *pacemaker) InterruptRound(reason string) {
 
 	consensusMod.SetRound(consensusMod.CurrentRound() + 1)
 
+	//ADDTEST: check if this is indeed ensured after a successful round
 	if m.GetBus().GetConsensusModule().IsPrepareQCNil() {
 		m.startNextView(nil, false)
 		return
