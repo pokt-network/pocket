@@ -112,7 +112,7 @@ func (p *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// Consensus message is from the past
 	if msg.Height < currentHeight {
 		p.consensusMod.logger.Warn().Fields(
-			map[string]interface{}{
+			map[string]any{
 				"msgHeight":     msg.Height,
 				"currentHeight": currentHeight,
 			},
@@ -124,7 +124,7 @@ func (p *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// Current node is out of sync
 	if msg.Height > currentHeight {
 		p.consensusMod.logger.Warn().Fields(
-			map[string]interface{}{
+			map[string]any{
 				"msgHeight":     msg.Height,
 				"currentHeight": currentHeight,
 			},
@@ -145,7 +145,7 @@ func (p *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// Message is from the past
 	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
 		p.consensusMod.logger.Warn().Fields(
-			map[string]interface{}{
+			map[string]any{
 				"msgHeight":     msg.Height,
 				"msgRound":      msg.Round,
 				"msgStep":       msg.Step,
@@ -163,7 +163,7 @@ func (p *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
 	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {
 		p.consensusMod.logger.Info().Fields(
-			map[string]interface{}{
+			map[string]any{
 				"msgHeight":     msg.Height,
 				"msgRound":      msg.Round,
 				"msgStep":       msg.Step,
@@ -213,7 +213,7 @@ func (p *paceMaker) RestartTimer() {
 }
 
 func (p *paceMaker) InterruptRound(reason string) {
-	p.consensusMod.logger.Info().Fields(map[string]interface{}{
+	p.consensusMod.logger.Info().Fields(map[string]any{
 		"reason": reason,
 		"step":   p.consensusMod.step,
 		"round":  p.consensusMod.round,
@@ -225,7 +225,7 @@ func (p *paceMaker) InterruptRound(reason string) {
 }
 
 func (p *paceMaker) NewHeight() {
-	p.consensusMod.logger.Info().Fields(map[string]interface{}{
+	p.consensusMod.logger.Info().Fields(map[string]any{
 		"step":   p.consensusMod.step,
 		"round":  p.consensusMod.round,
 		"height": p.consensusMod.CurrentHeight(),

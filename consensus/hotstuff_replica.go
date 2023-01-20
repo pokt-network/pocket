@@ -282,7 +282,7 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
 		// just serialize `Message` once and verify each signature without re-serializing every time.
 		if !isSignatureValid(msgToJustify, validator.GetPublicKey(), partialSig.Signature) {
-			m.logger.Warn().Fields(map[string]interface{}{
+			m.logger.Warn().Fields(map[string]any{
 				"address": partialSig.Address,
 				"nodeId":  valAddrToIdMap[partialSig.Address],
 			}).Msg("QC contains an invalid partial signature")

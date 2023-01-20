@@ -16,7 +16,7 @@ type HotstuffMessageHandler interface {
 func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) error {
 	step := msg.GetStep()
 
-	m.logger.Debug().Fields(map[string]interface{}{
+	m.logger.Debug().Fields(map[string]any{
 		"step":   msg.GetStep(),
 		"height": msg.Height,
 		"round":  msg.Round,
@@ -27,7 +27,7 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 		return err
 	}
 
-	m.logger.Debug().Fields(map[string]interface{}{
+	m.logger.Debug().Fields(map[string]any{
 		"step":   msg.GetStep(),
 		"height": msg.Height,
 		"round":  msg.Round,

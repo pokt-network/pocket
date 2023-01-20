@@ -115,12 +115,12 @@ func (m *loggerModule) GetLogger() modules.Logger {
 
 // INVESTIGATE(#420): https://github.com/pokt-network/pocket/pull/420/files#r1072574513
 // SetFields sets the fields for the global logger
-func (m *loggerModule) SetFields(fields map[string]interface{}) {
+func (m *loggerModule) SetFields(fields map[string]any) {
 	m.Logger = m.Logger.With().Fields(fields).Logger()
 }
 
 // UpdateFields updates the fields for the global logger
-func (m *loggerModule) UpdateFields(fields map[string]interface{}) {
+func (m *loggerModule) UpdateFields(fields map[string]any) {
 	m.Logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
 		for k, v := range fields {
 			c = c.Interface(k, v)

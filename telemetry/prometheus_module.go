@@ -98,7 +98,7 @@ func (m *PrometheusTelemetryModule) GetEventMetricsAgent() modules.EventMetricsA
 // will be removed in the future in favor of more thorough event metrics tooling.
 // TECHDEBT(team): Deprecate using logs for event metrics for a more sophisticated and durable solution
 func (m *PrometheusTelemetryModule) EmitEvent(namespace, event string, labels ...any) {
-	logArgs := map[string]interface{}{
+	logArgs := map[string]any{
 		"level":     "EVENT",
 		"namespace": namespace,
 		"event":     event,

@@ -41,7 +41,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		if msg.GetPartialSignature() == nil {
 
 			m.logger.Warn().Fields(
-				map[string]interface{}{
+				map[string]any{
 					"height": msg.GetHeight(),
 					"step":   msg.GetStep(),
 					"round":  msg.GetRound(),
@@ -53,7 +53,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		if msg.GetHeight() != height || msg.GetStep() != step || msg.GetRound() != round {
 
 			m.logger.Warn().Fields(
-				map[string]interface{}{
+				map[string]any{
 					"height": msg.GetHeight(),
 					"step":   msg.GetStep(),
 					"round":  msg.GetRound(),
@@ -67,7 +67,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		if ps.Signature == nil || len(ps.Address) == 0 {
 
 			m.logger.Warn().Fields(
-				map[string]interface{}{
+				map[string]any{
 					"height": msg.GetHeight(),
 					"step":   msg.GetStep(),
 					"round":  msg.GetRound(),
@@ -208,7 +208,7 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 // INVESTIGATE: Re-evaluate if we should be using our structured broadcast (RainTree O(log3(n))) algorithm instead
 func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
 	m.logger.Info().Fields(
-		map[string]interface{}{
+		map[string]any{
 			"height": m.CurrentHeight(),
 			"step":   m.step,
 			"round":  m.round,
@@ -266,7 +266,7 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 	if err != nil || leaderId == 0 {
 
 		m.logger.Error().Err(err).Fields(
-			map[string]interface{}{
+			map[string]any{
 				"leaderId": leaderId,
 				"height":   m.height,
 				"round":    m.round,
@@ -288,7 +288,7 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 	if m.isLeader() {
 		m.setLogPrefix("LEADER")
 		m.logger.Info().Fields(
-			map[string]interface{}{
+			map[string]any{
 				"leaderId": idToValAddrMap[*m.leaderId],
 				"height":   m.height,
 				"round":    m.round,
@@ -297,7 +297,7 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 	} else {
 		m.setLogPrefix("REPLICA")
 		m.logger.Info().Fields(
-			map[string]interface{}{
+			map[string]any{
 				"leaderId": idToValAddrMap[*m.leaderId],
 				"height":   m.height,
 				"round":    m.round,
@@ -311,7 +311,7 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 /*** General Infrastructure Helpers ***/
 
 func (m *consensusModule) setLogPrefix(logPrefix string) {
-	logger.Global.UpdateFields(map[string]interface{}{
+	logger.Global.UpdateFields(map[string]any{
 		"kind": logPrefix,
 	})
 	m.logger = logger.Global.CreateLoggerForModule("consensus")

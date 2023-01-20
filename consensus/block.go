@@ -15,10 +15,11 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 	}
 
 	m.logger.Info().
-		Fields(map[string]interface{}{
-			"height":       block.BlockHeader.Height,
-			"transactions": len(block.Transactions),
-		}).
+		Fields(
+			map[string]any{
+				"height":       block.BlockHeader.Height,
+				"transactions": len(block.Transactions),
+			}).
 		Msg("🧱🧱🧱 Committing block 🧱🧱🧱")
 
 	// Release the context

@@ -43,7 +43,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	}
 
 	m.logger.Info().Fields(
-		map[string]interface{}{
+		map[string]any{
 			"height": m.height,
 			"round":  m.round,
 			"step":   Prepare,
@@ -118,7 +118,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	}
 
 	m.logger.Info().Fields(
-		map[string]interface{}{
+		map[string]any{
 			"height": m.height,
 			"round":  m.round,
 			"step":   Prepare,
@@ -169,7 +169,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 	}
 
 	m.logger.Info().Fields(
-		map[string]interface{}{
+		map[string]any{
 			"height": m.height,
 			"round":  m.round,
 			"step":   Prepare,
@@ -220,7 +220,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	}
 
 	m.logger.Info().Fields(
-		map[string]interface{}{
+		map[string]any{
 			"height": m.height,
 			"round":  m.round,
 			"step":   Prepare,
