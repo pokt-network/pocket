@@ -233,7 +233,7 @@ func ErrPacemakerUnexpectedMessageStepRound(err error, step HotstuffStep, round 
 	return fmt.Errorf("%s: Current (step, round): (%s, %d); Message (step, round): (%s, %d)", err, StepToString[step], round, StepToString[msg.GetStep()], msg.Round)
 }
 
-func ErrUnknownConsensusMessageType(msg interface{}) error {
+func ErrUnknownConsensusMessageType(msg any) error {
 	return fmt.Errorf("unknown consensus message type: %v", msg)
 }
 
