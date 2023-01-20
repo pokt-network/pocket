@@ -1,5 +1,7 @@
 package types
 
+// CLEANUP: Move SQL specific business logic into a `sql` package under `persistence`
+
 import "fmt"
 
 func protocolAccountTableSchema(accountSpecificColName, constraintName string) string {

@@ -9,7 +9,7 @@ var _ ProtocolAccountSchema = &baseProtocolAccountSchema{}
 // Implements the ProtocolAccountSchema interface that can be shared across both Accounts and Pools
 // allowing for the generalisation and sharing of code between these two entities
 type baseProtocolAccountSchema struct {
-	// SQL Tables
+	// SQL Table
 	tableName string
 
 	// SQL Columns
