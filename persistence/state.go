@@ -354,11 +354,39 @@ func (p *PostgresContext) updateTransactionsTree() error {
 }
 
 func (p *PostgresContext) updateParamsTree() error {
-	// TODO(#361): Create a core starter task to implement this
+	paramsOrFlags, err := p.getParamsOrFlags(types.ParamsTableName, p.Height, false)
+	if err != nil {
+		return err
+	}
+
+	for _, pf := range paramsOrFlags {
+		pfHash, err := pf.Hash()
+		if err != nil {
+			return err
+		}
+		if _, err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(pfHash, pf.GetBytes()); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (p *PostgresContext) updateFlagsTree() error {
-	// TODO(#361): Create a core starter task to implement this
+	paramsOrFlags, err := p.getParamsOrFlags(types.FlagsTableName, p.Height, false)
+	if err != nil {
+		return err
+	}
+
+	for _, pf := range paramsOrFlags {
+		pfHash, err := pf.Hash()
+		if err != nil {
+			return err
+		}
+		if _, err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(pfHash, pf.GetBytes()); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

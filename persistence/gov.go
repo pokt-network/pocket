@@ -178,3 +178,35 @@ func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, param
 	}
 	return
 }
+
+func (p PostgresContext) getParamsOrFlags(tableName string, height int64, descending bool) ([]types.ParamOrFlag, error) {
+	ctx, tx, err := p.getCtxAndTx()
+	if err != nil {
+		return nil, err
+	}
+	// Get all parameters / flags at current height
+	rows, err := tx.Query(ctx, p.getParamsOrFlagsAtHeightQuery(tableName, height, descending))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var pfSlice []types.ParamOrFlag // Store returned rows
+	// Loop over all rows returned and load them into the ParamOrFlag struct array
+	for rows.Next() {
+		var pf types.ParamOrFlag
+		if tableName == types.ParamsTableName {
+			err := rows.Scan(&pf.Name, &pf.Value)
+			if err != nil {
+				return nil, err
+			}
+		} else if tableName == types.FlagsTableName {
+			err := rows.Scan(&pf.Name, &pf.Value, &pf.Enabled)
+			if err != nil {
+				return nil, err
+			}
+		}
+		pf.Height = height
+		pfSlice = append(pfSlice, pf)
+	}
+	return pfSlice, nil
+}

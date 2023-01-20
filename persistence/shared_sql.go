@@ -334,3 +334,18 @@ func (p PostgresContext) getActorStakeAmount(actorSchema types.ProtocolActorSche
 	}
 	return stakeAmount, nil
 }
+
+func (p *PostgresContext) getParamsOrFlagsAtHeightQuery(tableName string, height int64, descending bool) string {
+	fields := "name,value"
+	if tableName == types.FlagsTableName {
+		fields += ",enabled"
+	}
+	// Build correct query to get all Params/Flags at certain height ordered by their name values
+	query := fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d ORDER BY name`, fields, tableName, height)
+	if descending {
+		query += " DESC"
+	} else {
+		query += " ASC"
+	}
+	return query
+}
