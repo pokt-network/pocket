@@ -66,7 +66,7 @@ func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook, 
 
 	i := sort.SearchStrings(pm.addrList, pm.selfAddr.String())
 	if i == len(pm.addrList) {
-		logger.Global.Logger.Warn().
+		logger.Global.Warn().
 			Str("address", pm.selfAddr.String()).
 			Str("mode", "client-only").
 			Msg("self address not found in addrBook so this client can send messages but does not propagate them")

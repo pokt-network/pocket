@@ -11,6 +11,6 @@ func main() {
 	cmd := cli.GetRootCmd()
 	err := doc.GenMarkdownTree(cmd, "../doc/commands")
 	if err != nil {
-		logger.Global.Logger.Fatal().Err(err).Msg("failed to generate markdown tree")
+		logger.Global.Fatal().Err(err).Msg("failed to generate markdown tree")
 	}
 }

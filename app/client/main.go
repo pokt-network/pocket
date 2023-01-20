@@ -14,12 +14,12 @@ func main() {
 	ctx := newCLIContext()
 	err := cli.ExecuteContext(ctx)
 	if ctx.Err() == context.Canceled || err == context.Canceled {
-		logger.Global.Logger.Fatal().Msg("aborted")
+		logger.Global.Fatal().Msg("aborted")
 		return
 	}
 
 	if err != nil {
-		logger.Global.Logger.Fatal().Err(err).Msg("failed to execute command")
+		logger.Global.Fatal().Err(err).Msg("failed to execute command")
 	}
 }
 

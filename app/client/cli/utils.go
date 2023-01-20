@@ -61,7 +61,7 @@ func credentials(pwd string) string {
 	}
 	bytePassword, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
-		logger.Global.Logger.Fatal().Err(err).Msg("failed to read password")
+		logger.Global.Fatal().Err(err).Msg("failed to read password")
 	}
 	return strings.TrimSpace(string(bytePassword))
 }

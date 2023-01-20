@@ -111,7 +111,7 @@ func promptGetInput() (string, error) {
 	}
 
 	if err != nil {
-		logger.Global.Logger.Error().Err(err).Msg("Prompt failed")
+		logger.Global.Error().Err(err).Msg("Prompt failed")
 		return "", err
 	}
 
@@ -151,7 +151,7 @@ func handleSelect(selection string) {
 		}
 		sendDebugMessage(m)
 	default:
-		logger.Global.Logger.Error().Msg("Selection not yet implemented...")
+		logger.Global.Error().Msg("Selection not yet implemented...")
 	}
 }
 
@@ -159,7 +159,7 @@ func handleSelect(selection string) {
 func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
-		logger.Global.Logger.Fatal().Err(err).Msg("Failed to create Any proto")
+		logger.Global.Fatal().Err(err).Msg("Failed to create Any proto")
 	}
 
 	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
@@ -170,7 +170,7 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 	for _, valAddr := range validators {
 		addr, err := pocketCrypto.NewAddress(valAddr.GetAddress())
 		if err != nil {
-			logger.Global.Logger.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
+			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 		}
 		p2pMod.Send(addr, anyProto)
 	}
@@ -180,7 +180,7 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
-		logger.Global.Logger.Error().Err(err).Msg("Failed to create Any proto")
+		logger.Global.Error().Err(err).Msg("Failed to create Any proto")
 	}
 
 	var validatorAddress []byte

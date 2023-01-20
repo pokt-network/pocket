@@ -17,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	if *v {
-		logger.Global.Logger.Info().Str("version", app.AppVersion).Msg("Version flag currently unused")
+		logger.Global.Info().Str("version", app.AppVersion).Msg("Version flag currently unused")
 		return
 	}
 

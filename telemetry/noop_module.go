@@ -19,7 +19,7 @@ type NoopTelemetryModule struct {
 }
 
 func NOOP(args ...interface{}) {
-	logger.Global.Logger.Debug().Msg("NOOP")
+	logger.Global.Debug().Msg("NOOP")
 }
 
 func CreateNoopTelemetryModule(bus modules.Bus) (modules.Module, error) {
@@ -53,7 +53,7 @@ func (m *NoopTelemetryModule) SetBus(bus modules.Bus) {
 
 func (m *NoopTelemetryModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		logger.Global.Logger.Fatal().Msg("PocketBus is not initialized")
+		logger.Global.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
 }
