@@ -70,7 +70,7 @@ type PersistenceWriteContext interface {
 	AddPoolAmount(name string, amount string) error
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
-	InsertPool(name string, address []byte, amount string) error // TODO(#149): remove address from pool
+	InsertPool(name string, amount string) error
 
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error

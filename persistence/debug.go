@@ -13,8 +13,8 @@ import (
 
 // A list of functions to clear data from the DB not associated with protocol actors
 var nonActorClearFunctions = []func() string{
-	types.ClearAllAccounts,
-	types.ClearAllPools,
+	types.Account.ClearAllAccounts,
+	types.Pool.ClearAllAccounts,
 	types.ClearAllGovParamsQuery,
 	types.ClearAllGovFlagsQuery,
 	types.ClearAllBlocksQuery,
