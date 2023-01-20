@@ -5,6 +5,7 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -22,29 +23,33 @@ type StateSyncServerModule interface {
 
 func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) error {
 
-	peerId, err := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
+	serverNodePeerId, err := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
 	if err != nil {
 		return err
 	}
+
+	clientPeerId := metadataReq.PeerId
+	m.nodeLog(fmt.Sprintf("%s Received State Sync MetaData Req from: %s", serverNodePeerId, clientPeerId))
+
 	minHeight, maxHeight := m.aggregateMetaResults()
 
-	m.nodeLog(fmt.Sprintf("%s RECEIVED STATE SYNC METADATA REQUEST FROM: %s", peerId, metadataReq.PeerId))
-
-	metadataRes := typesCons.StateSyncMetadataResponse{
-		PeerId:    peerId,
-		MinHeight: minHeight,
-		MaxHeight: maxHeight,
+	stateSyncMessage := typesCons.StateSyncMessage{
+		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE,
+		Message: &typesCons.StateSyncMessage_MetadataRes{
+			MetadataRes: &typesCons.StateSyncMetadataResponse{
+				PeerId:    serverNodePeerId,
+				MinHeight: minHeight,
+				MaxHeight: maxHeight,
+			},
+		},
 	}
 
-	anyStateSyncMessage, err := anypb.New(&metadataRes)
+	anyMsg, err := anypb.New(&stateSyncMessage)
 	if err != nil {
 		return err
 	}
 
-	m.nodeLog(fmt.Sprintf("REPLYING TO STATE SYNC METADATA REQUEST: %s", metadataRes.String()))
-
-	return m.sendToPeer(anyStateSyncMessage, metadataReq.PeerId)
-	//return nil
+	return m.sendToPeer(anyMsg, cryptoPocket.AddressFromString(clientPeerId))
 }
 
 func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
@@ -69,10 +74,10 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 		return err
 	}
 
-	return m.sendToPeer(anyStateSyncMessage, blockReq.PeerId)
+	return m.sendToPeer(anyStateSyncMessage, cryptoPocket.AddressFromString(blockReq.PeerId))
 }
 
-// TODO! Placeholder function for metadata aggregation of data received from different peers
+// TODO! IMPLEMENT Placeholder function for metadata aggregation of data received from different peers
 func (m *stateSync) aggregateMetaResults() (uint64, uint64) {
 	minHeight := m.GetBus().GetConsensusModule().CurrentHeight()
 	maxHeight := m.GetBus().GetConsensusModule().CurrentHeight()

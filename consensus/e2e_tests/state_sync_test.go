@@ -9,6 +9,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -27,19 +28,6 @@ func TestStateSyncServer(t *testing.T) {
 	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
-	//targetBlockHeight := 3
-
-	// //for i := 0; i < 3; i++ {
-	// ConsensusProceedToNextBlock(
-	// 	t,
-	// 	clockMock,
-	// 	eventsChannel,
-	// 	pocketNodes,
-	// 	targetBlockHeight,
-	// )
-	//advanceTime(t, clockMock, 10*time.Millisecond)
-
-	// Starting point
 	testHeight := uint64(4)
 	testStep := uint8(consensus.NewRound)
 	testRound := uint64(0)
@@ -82,10 +70,6 @@ func TestStateSyncServer(t *testing.T) {
 		consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
 	}
 
-	//}
-
-	// _, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 250, true)
-	// require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, pocketId,
@@ -150,6 +134,15 @@ func TestStateSyncServer(t *testing.T) {
 
 	// start waiting for the state sync message on server node,
 	numExpectedMsgs = 1
-	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE, serverNode.GetP2PAddress(), numExpectedMsgs, 250, false)
+	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE, requesterNode.GetP2PAddress(), numExpectedMsgs, 250, false)
 	require.NoError(t, err)
+
+	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
+	require.NoError(t, err)
+
+	stateSyncMessage, ok := msg.(*typesCons.StateSyncMessage)
+	require.True(t, ok)
+
+	metaDataRes := stateSyncMessage.GetMetadataRes()
+	require.NotEmpty(t, metaDataRes)
 }

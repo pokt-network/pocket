@@ -28,6 +28,9 @@ const (
 
 	HotstuffMessageContentType  = "consensus.HotstuffMessage"
 	StateSyncMessageContentType = "consensus.StateSyncMessage"
+
+	//StateSyncMetaDataReq = typesCons.StateSyncMetadataResponse
+	//StateSyncMetaDataRes = typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE
 )
 
 var (
