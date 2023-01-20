@@ -96,7 +96,7 @@ make build
 
 The cli binary will be available at `bin/p1` and can be used instead of `go run app/client/*.go`
 
-The commands available are listed [here](../../rpc/doc/README.md) or acessible via `bin/p1 --help`
+The commands available are listed [here](../../rpc/doc/README.md) or accessible via `bin/p1 --help`
 
 ### Swagger UI
 
