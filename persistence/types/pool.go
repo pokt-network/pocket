@@ -3,7 +3,7 @@ package types
 var _ ProtocolAccountSchema = &PoolSchema{}
 
 type PoolSchema struct {
-	BaseProtocolAccountSchema
+	baseProtocolAccountSchema
 }
 
 const (
@@ -12,7 +12,7 @@ const (
 )
 
 var Pool ProtocolAccountSchema = &PoolSchema{
-	BaseProtocolAccountSchema{
+	baseProtocolAccountSchema{
 		tableName:              PoolTableName,
 		accountSpecificColName: NameCol,
 		heightConstraintName:   PoolHeightConstraint,

@@ -4,11 +4,11 @@ import (
 	"fmt"
 )
 
-var _ ProtocolAccountSchema = &BaseProtocolAccountSchema{}
+var _ ProtocolAccountSchema = &baseProtocolAccountSchema{}
 
 // Implements the ProtocolAccountSchema interface that can be shared across both Accounts and Pools
 // allowing for the generalisation and sharing of code between these two entities
-type BaseProtocolAccountSchema struct {
+type baseProtocolAccountSchema struct {
 	// SQL Tables
 	tableName string
 
@@ -19,34 +19,34 @@ type BaseProtocolAccountSchema struct {
 	heightConstraintName string
 }
 
-func (account *BaseProtocolAccountSchema) GetTableName() string {
+func (account baseProtocolAccountSchema) GetTableName() string {
 	return account.tableName
 }
 
-func (account *BaseProtocolAccountSchema) GetAccountSpecificColName() string {
+func (account baseProtocolAccountSchema) GetAccountSpecificColName() string {
 	return account.accountSpecificColName
 }
 
-func (account *BaseProtocolAccountSchema) GetTableSchema() string {
+func (account baseProtocolAccountSchema) GetTableSchema() string {
 	return protocolAccountTableSchema(account.accountSpecificColName, account.heightConstraintName)
 }
 
-func (account *BaseProtocolAccountSchema) GetAccountAmountQuery(address string, height int64) string {
-	return SelectBalance(account.accountSpecificColName, address, height, account.tableName)
+func (account baseProtocolAccountSchema) GetAccountAmountQuery(identifier string, height int64) string {
+	return SelectBalance(account.accountSpecificColName, identifier, height, account.tableName)
 }
 
-func (account *BaseProtocolAccountSchema) GetAccountsUpdatedAtHeightQuery(height int64) string {
+func (account baseProtocolAccountSchema) GetAccountsUpdatedAtHeightQuery(height int64) string {
 	return SelectAtHeight(fmt.Sprintf("%s,%s", account.accountSpecificColName, BalanceCol), height, account.tableName)
 }
 
-func (account *BaseProtocolAccountSchema) GetAllQuery(height int64) string {
+func (account baseProtocolAccountSchema) GetAllQuery(height int64) string {
 	return SelectAccounts(height, account.accountSpecificColName, account.tableName)
 }
 
-func (account *BaseProtocolAccountSchema) InsertAccountQuery(address, amount string, height int64) string {
-	return InsertAcc(account.accountSpecificColName, address, amount, height, account.tableName, account.heightConstraintName)
+func (account baseProtocolAccountSchema) InsertAccountQuery(identifier, amount string, height int64) string {
+	return InsertAccount(account.accountSpecificColName, identifier, amount, height, account.tableName, account.heightConstraintName)
 }
 
-func (account *BaseProtocolAccountSchema) ClearAllAccounts() string {
+func (account baseProtocolAccountSchema) ClearAllAccounts() string {
 	return fmt.Sprintf(`DELETE FROM %s`, account.tableName)
 }

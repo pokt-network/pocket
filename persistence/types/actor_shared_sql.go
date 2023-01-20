@@ -32,16 +32,6 @@ const (
 	HeightCol          = "height"
 )
 
-func protocolAccountTableSchema(accountSpecificColName, constraintName string) string {
-	return fmt.Sprintf(`(
-			%s TEXT NOT NULL,
-			%s TEXT NOT NULL,
-			%s BIGINT NOT NULL,
-
-		    CONSTRAINT %s UNIQUE (%s, %s)
-		)`, accountSpecificColName, BalanceCol, HeightCol, constraintName, accountSpecificColName, HeightCol)
-}
-
 func protocolActorTableSchema(actorSpecificColName, constraintName string) string {
 	return fmt.Sprintf(`(
 			%s TEXT NOT NULL,
@@ -91,15 +81,6 @@ func Select(selector, address string, height int64, tableName string) string {
 		selector, tableName, address, height)
 }
 
-func SelectAccounts(height int64, colName, tableName string) string {
-	return fmt.Sprintf(`
-			SELECT DISTINCT ON (%s) %s, balance, height
-			FROM %s
-			WHERE height<=%d
-			ORDER BY %s, height DESC
-       `, colName, colName, tableName, height, colName)
-}
-
 func SelectActors(actorSpecificParam string, height int64, tableName string) string {
 	return fmt.Sprintf(`
 			SELECT DISTINCT ON (address) address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height
@@ -107,11 +88,6 @@ func SelectActors(actorSpecificParam string, height int64, tableName string) str
 			WHERE height<=%d
 			ORDER BY address, height DESC
        `, actorSpecificParam, tableName, height)
-}
-
-func SelectBalance(actorSpecificParam, actorSpecificParamValue string, height int64, tableName string) string {
-	return fmt.Sprintf(`SELECT balance FROM %s WHERE %s='%s' AND height<=%d ORDER BY height DESC LIMIT 1`,
-		tableName, actorSpecificParam, actorSpecificParamValue, height)
 }
 
 func selectChains(selector, address string, height int64, actorTableName, chainsTableName string) string {
@@ -180,15 +156,6 @@ func insertChains(address string, chains []string, height int64, tableName, cons
 	buffer.WriteString(fmt.Sprintf("\nON CONFLICT ON CONSTRAINT %s DO NOTHING", constraintName))
 
 	return buffer.String()
-}
-
-func InsertAcc(actorSpecificParam, actorSpecificParamValue, amount string, height int64, tableName, constraintName string) string {
-	return fmt.Sprintf(`
-		INSERT INTO %s (%s, balance, height)
-			VALUES ('%s','%s',%d)
-			ON CONFLICT ON CONSTRAINT %s
-			DO UPDATE SET balance=EXCLUDED.balance, height=EXCLUDED.height
-		`, tableName, actorSpecificParam, actorSpecificParamValue, amount, height, constraintName)
 }
 
 func Update(address, stakedTokens, actorSpecificParam, actorSpecificParamValue string, height int64, tableName, constraintName string) string {

@@ -28,14 +28,11 @@ func (p PostgresContext) SubtractAccountAmount(address []byte, amount string) er
 	})
 }
 
-// DISCUSS(team): If we are okay with `GetAccountAmount` return 0 as a default, this function can leverage
-// `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
 func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
-	return p.insertAccount(types.Account, hex.EncodeToString(address), amount)
-	// return p.operationAccountAmount(types.Account, hex.EncodeToString(address), amount, func(orig, delta *big.Int) error {
-	//	orig.Set(delta)
-	//	return nil
-	// })
+	return p.operationAccountAmount(types.Account, hex.EncodeToString(address), amount, func(orig, amount *big.Int) error {
+		orig.Set(amount)
+		return nil
+	})
 }
 
 func (p PostgresContext) GetAccountsUpdated(height int64) (accounts []*coreTypes.Account, err error) {
@@ -66,17 +63,11 @@ func (p PostgresContext) SubtractPoolAmount(name string, amount string) error {
 	})
 }
 
-// DISCUSS(team): If we are okay with `GetPoolAmount` return 0 as a default, this function can leverage
-//
-//	`operationAccountAmount` with `*orig = *delta` and make everything much simpler.
-//
-// DISCUSS(team): Do we have a use-case for this function?
 func (p PostgresContext) SetPoolAmount(name string, amount string) error {
-	return p.insertAccount(types.Pool, name, amount) // Follows same logic as InsertPool
-	// return p.operationAccountAmount(types.Pool, name, amount, func(orig, delta *big.Int) error {
-	//	orig.Set(delta)
-	//	return nil
-	// })
+	return p.operationAccountAmount(types.Pool, name, amount, func(orig, amount *big.Int) error {
+		orig.Set(amount)
+		return nil
+	})
 }
 
 func (p PostgresContext) GetPoolsUpdated(height int64) ([]*coreTypes.Account, error) {

@@ -17,14 +17,14 @@ type ProtocolAccountSchema interface {
 	// Returns a query to get all accounts
 	GetAllQuery(height int64) string
 	// Returns a query to get the balance of an account at a specified height
-	GetAccountAmountQuery(address string, height int64) string
+	GetAccountAmountQuery(identifier string, height int64) string // Identifier can either be address (cryptographic ID) (Account) or semantic name (Pool)
 	// Returns a query to select all accounts updated at a specified height
 	GetAccountsUpdatedAtHeightQuery(height int64) string
 
 	/*** Create/Insert Queries ***/
 
 	// Returns a query to insert an account amount at a specified height
-	InsertAccountQuery(address, amount string, height int64) string
+	InsertAccountQuery(identifier, amount string, height int64) string // Identifier can either be address (cryptographic ID) (Account) or semantic name (Pool)
 
 	/*** Debug Queries Only ***/
 

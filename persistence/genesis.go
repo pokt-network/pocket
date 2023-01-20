@@ -46,7 +46,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 		}
 	}
 	for _, pool := range state.GetPools() {
-		err = rwContext.InsertPool(pool.GetAddress(), pool.GetAmount())
+		err = rwContext.InsertPool(pool.GetAddress(), pool.GetAmount()) // pool.GetAddress() returns the pool's semantic name
 		if err != nil {
 			log.Fatalf("an error occurred inserting an pool in the genesis state: %s", err.Error())
 		}
