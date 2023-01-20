@@ -35,18 +35,18 @@ spec:
             - name: POCKET_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: v1-localnet-private-keys
-                  key: val2
+                  name: v1-localnet-validators-private-keys
+                  key: "002"
             - name: POCKET_CONSENSUS_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: v1-localnet-private-keys
-                  key: val2
+                  name: v1-localnet-validators-private-keys
+                  key: "002"
             - name: POCKET_P2P_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: v1-localnet-private-keys
-                  key: val2
+                  name: v1-localnet-validators-private-keys
+                  key: "002"
             - name: POSTGRES_USER
               value: "postgres"
             - name: POSTGRES_PASSWORD

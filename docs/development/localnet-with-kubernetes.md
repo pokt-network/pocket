@@ -4,6 +4,7 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
 
 - [Dependencies](#dependencies)
 - [Running the LocalNet](#running-the-localnet)
+- [Scaling actors on LocalNet](#scaling-actors-on-localnet)
 - [Stopping and cleaning up the resources](#stopping-and-cleaning-up-the-resources)
 - [Interaction with the LocalNet](#interaction-with-the-localnet)
 - [How does it work?](#how-does-it-work)
@@ -32,6 +33,10 @@ The developer can then view the logs of services running via:
     - Going to [localhost:10350](http://localhost:10350/)
 
 ![tilt UI](tilt-ui.png)
+
+### Scaling actors on LocalNet
+
+Once you start LocalNet, new file `localnet_config.yaml` is going to get created in the root of the repo. You can interact with numbers in that config file, and as long as `localnet_up` is running, it will automatically scale the network within seconds.
 
 ### Stopping and cleaning up the resources
 

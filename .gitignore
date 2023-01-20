@@ -71,3 +71,5 @@ bin/*
 # Validator keys used for testing/demoes
 val1.json
 val2.json
+
+localnet_config.yaml

@@ -2,6 +2,22 @@ load('ext://helm_resource', 'helm_resource', 'helm_repo')
 load('ext://namespace', 'namespace_create')
 load('ext://restart_process', 'docker_build_with_restart')
 
+# Create localnet config file from defaults, and if some default configuration doesn't exist in it - populate with default values
+localnet_config_defaults = {
+    "validators": {
+        "count": 4
+    }
+}
+
+localnet_config_file = read_yaml('localnet_config.yaml', default=localnet_config_defaults)
+localnet_config = {}
+localnet_config.update(localnet_config_defaults)
+localnet_config.update(localnet_config_file)
+
+if read_yaml('localnet_config.yaml') != localnet_config:
+    print('Updating localnet_config.yaml')
+    local('cat - > localnet_config.yaml', stdin=encode_yaml(localnet_config))
+
 # List of directories Tilt watches to trigger a hot-reload on changes
 deps = [
     'app',
@@ -65,13 +81,11 @@ COPY bin/client-linux /usr/local/bin/client
 # Pushes localnet manifests to the cluster.
 k8s_yaml([
     'build/localnet/private-keys.yaml',
-    'build/localnet/v1-validator1.yaml',
-    'build/localnet/v1-validator2.yaml',
-    'build/localnet/v1-validator3.yaml',
-    'build/localnet/v1-validator4.yaml',
     'build/localnet/configs.yaml',
     'build/localnet/cli-client.yaml',
-    'build/localnet/network.yaml'])
+    'build/localnet/network.yaml',
+    local("build/localnet/v1-validator-template.sh %s" % localnet_config['validators']['count'], quiet=True),
+])
 
 # # Exposes postgres port to 5432 on the host machine.
 # k8s_resource(new_name='postgres',

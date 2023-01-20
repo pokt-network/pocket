@@ -461,7 +461,7 @@ localnet_logs_validators:
 .PHONY: localnet_logs_validators_follow
 ## Outputs logs from all validators and follows them
 localnet_logs_validators_follow:
-	kubectl logs -l v1-purpose=validator --all-containers=true --tail=-1 -f
+	kubectl logs -l v1-purpose=validator --all-containers=true --max-log-requests=1000 --tail=-1 -f
 
 .PHONY: localnet_down
 ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + postgres database)
