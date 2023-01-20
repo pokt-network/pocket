@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.24] - 2023-01-20
+
+- Added `debug.FreeOSMemory()` on `ResetToGenesis` to free-up memory and stabilize `LocalNet`.
+
 ## [0.0.0.23] - 2023-01-18
 
 - Consolidate the `Block` proto structures under `shared/core/types`
-- Added `debug.FreeOSMemory()` on `ResetToGenesis` to free-up memory and stabilize `LocalNet`.
+- Remove `Block` proto definition to consolidate under `shared/core/types`
 
 ## [0.0.0.22] - 2023-01-14
 
