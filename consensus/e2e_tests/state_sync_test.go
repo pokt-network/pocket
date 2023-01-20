@@ -145,4 +145,6 @@ func TestStateSyncServer(t *testing.T) {
 
 	metaDataRes := stateSyncMessage.GetMetadataRes()
 	require.NotEmpty(t, metaDataRes)
+
+	require.Equal(t, uint64(4), metaDataRes.MaxHeight)
 }
