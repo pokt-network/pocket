@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.24] - 2023-01-20
+
+- Consolidate common behaviour of `Pool` and `Account` functions into a shared interface `ProtocolAccountSchema`
+- Create `account_shared_sql.go` and `types/account_shared_sql.go` and rename `shared_sql.go` and `type/shared_sql.go` to `actor_shared_sql.go` and `types/actor_shared_sql.go` seperating shared sql logic
+
 ## [0.0.0.23] - 2023-01-18
 
 - Remove `Block` proto definition to consolidate under `shared/core/types`
