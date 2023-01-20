@@ -7,6 +7,7 @@ This document is meant to be a supplement to the living protocol specification a
 - [Debugging \& Development](#debugging--development)
   - [Code Structure](#code-structure)
   - [Makefile Helpers](#makefile-helpers)
+    - [Populating the database](#populating-the-database)
     - [CLI Access - db\_cli\_node](#cli-access---db_cli_node)
     - [Admin View - db\_admin](#admin-view---db_admin)
     - [Benchmarking - db\_bench](#benchmarking---db_bench)
@@ -93,6 +94,12 @@ persistence         # Directly contains the persistence module interface for eac
 Running `make` from the root of the `pocket` repo will show several targets prefixed with `db_` to help with the design, development & debugging of this module.
 
 A subset of these are explained below.
+
+#### Populating the database
+
+Any targets or helpers to configure and launch the database instances do not populate the actual database.
+
+A LocalNet (see `make compose_and_watch`) must have been executed in order to trigger creation of schemas and hydration of the relevant tables.
 
 #### CLI Access - db_cli_node
 
