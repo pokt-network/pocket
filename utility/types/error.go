@@ -469,7 +469,7 @@ func ErrGetLatestHeight(err error) Error {
 	return NewError(CodeGetLatestHeightError, fmt.Sprintf("%s: %s", GetLatestHeightError, err.Error()))
 }
 
-func ErrUnknownMessage(msg interface{}) Error {
+func ErrUnknownMessage(msg any) Error {
 	return NewError(CodeUnknownMessageError, fmt.Sprintf("%s: %T", UnknownMessageError, msg))
 }
 
@@ -505,7 +505,7 @@ func ErrSetAccountAmount(err error) Error {
 	return NewError(CodeSetAccountError, fmt.Sprintf("%s, %s", SetAccountError, err.Error()))
 }
 
-func ErrInterfaceConversion(got interface{}, expected interface{}) Error {
+func ErrInterfaceConversion(got any, expected any) Error {
 	return NewError(CodeInterfaceConversionError, fmt.Sprintf("%s: %T, expected %T", InterfaceConversionError, got, expected))
 }
 
@@ -593,7 +593,7 @@ func ErrTransactionSign(err error) Error {
 	return NewError(CodeTransactionSignError, fmt.Sprintf("%s: %s", TransactionSignError, err.Error()))
 }
 
-func ErrInvalidParamValue(got, expected interface{}) Error {
+func ErrInvalidParamValue(got, expected any) Error {
 	return NewError(CodeInvalidParamValueError, fmt.Sprintf("%s: got %T expected %T", InvalidParamValueError, got, expected))
 }
 
@@ -794,7 +794,7 @@ func ErrUnknownActorType(actorType string) Error {
 	return NewError(CodeUnknownActorType, fmt.Sprintf("%s: %s", UnknownActorTypeError, actorType))
 }
 
-func ErrUnknownMessageType(messageType interface{}) Error {
+func ErrUnknownMessageType(messageType any) Error {
 	return NewError(CodeUnknownMessageType, fmt.Sprintf("%s: %v", UnknownMessageTypeError, messageType))
 }
 
