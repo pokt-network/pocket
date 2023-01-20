@@ -340,12 +340,11 @@ func (p *PostgresContext) getParamsOrFlagsAtHeightQuery(tableName string, height
 	if tableName == types.FlagsTableName {
 		fields += ",enabled"
 	}
-	// Build correct query to get all Params/Flags at certain height ordered by their name values
-	query := fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d ORDER BY name`, fields, tableName, height)
+	sort := "ASC"
 	if descending {
-		query += " DESC"
-	} else {
-		query += " ASC"
+		sort = "DESC"
 	}
+	// Build correct query to get all Params/Flags at certain height ordered by their name values
+	query := fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d ORDER BY name %s`, fields, tableName, height, sort)
 	return query
 }
