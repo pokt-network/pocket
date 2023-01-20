@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.24] - 2023-01-20
+
+- Update the persistence module README, focusing on `pgadmin` and Makefile helpers
+
 ## [0.0.0.23] - 2023-01-18
 
 - Remove `Block` proto definition to consolidate under `shared/core/types`

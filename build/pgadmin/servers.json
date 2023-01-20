@@ -1,9 +1,9 @@
 {
   "Servers": {
     "1": {
-      "Name": "Pocket LocalNet DB",
+      "Name": "Pocket LocalNet",
       "Group": "Servers",
-      "Host": "host.docker.internal",
+      "Host": "pocket-db",
       "Port": 5432,
       "MaintenanceDB": "postgres",
       "Username": "postgres",
