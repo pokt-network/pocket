@@ -78,6 +78,16 @@ if err != nil {
 }
 ```
 
+When defining the start function for the module it is important to note that a logger should be created and set on the module object.
+
+```golang
+func (m *newModule) Start() error {
+    m.logger = logger.Global.CreateLoggerForModule(u.GetModuleName())
+    ...
+}
+```
+
+
 #### Get the module `bus`
 
 The bus may be accessed by the module object at anytime using the `getter`
