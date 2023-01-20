@@ -2,7 +2,6 @@ package consensus
 
 import (
 	"fmt"
-	"log"
 	"unsafe"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -42,7 +41,7 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 		if step != NewRound {
 			return false, fmt.Errorf("validateBlockBasic failed - block is nil during step %s", typesCons.StepToString[m.step])
 		}
-		m.nodeLog("[DEBUG] Nil (expected) block is present during NewRound step.")
+		m.logger.Debug().Msg("Nil (expected) block is present during NewRound step.")
 		return true, nil
 	}
 
@@ -64,7 +63,7 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 		// DISCUSS: The only difference between blocks from one step to another is the QC, so we need
 		//          to determine where/how to validate this
 		if protoHash(m.block) != protoHash(block) {
-			log.Println("[TECHDEBT] validateBlockBasic warning - block hash is the same but serialization is not")
+			m.logger.Warn().Bool("TECHDEBT", true).Msg("WalidateBlockBasic warning - block hash is the same but serialization is not")
 		}
 	}
 

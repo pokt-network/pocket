@@ -40,8 +40,8 @@ func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 		map[string]any{
 			"firstTarget":  firstTarget,
 			"secondTarget": secondTarget,
-			"height":         height,
-		}
+			"height":       height,
+		},
 	).Msg("Targets at height")
 
 	return []target{firstTarget, secondTarget}

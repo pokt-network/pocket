@@ -2,10 +2,12 @@ package raintree
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"sync"
 	"time"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -43,12 +45,12 @@ type rainTreeNetwork struct {
 func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Error getting addrBook")
+		logger.Global.Fatal().Err(err).Msg("Error getting addrBook")
 	}
 
 	pm, err := newPeersManager(addr, addrBook, true)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
+		logger.Global.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
 	}
 
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P

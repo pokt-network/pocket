@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/manifoldco/promptui"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	debugABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/debug"
 	debugCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/debug"
@@ -76,7 +77,7 @@ func NewDebugCommand() *cobra.Command {
 			// TODO(#429): refactor injecting the dependencies into the bus so that they can be consumed in an updated `P2PModule.Create()` implementation
 			p2pM, err := p2p.CreateWithProviders(runtimeMgr.GetBus(), debugAddressBookProvider, debugCurrentHeightProvider)
 			if err != nil {
-				log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
+				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
 			}
 			p2pMod = p2pM.(modules.P2PModule)
 
@@ -184,13 +185,13 @@ func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 
 	var validatorAddress []byte
 	if len(validators) == 0 {
-		log.Fatalf("[ERROR] No validators found")
+		logger.Global.Fatal().Msg("No validators found")
 	}
 
 	// if the message needs to be broadcast, it'll be handled by the business logic of the message handler
 	validatorAddress, err = pocketCrypto.NewAddress(validators[0].GetAddress())
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
+		logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 	}
 
 	p2pMod.Send(validatorAddress, anyProto)

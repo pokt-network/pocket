@@ -2,8 +2,6 @@ package consensus
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
@@ -113,14 +111,24 @@ func (p *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Consensus message is from the past
 	if msg.Height < currentHeight {
-		p.consensusMod.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height))
+		p.consensusMod.logger.Warn().Fields(
+			map[string]interface{}{
+				"msgHeight":     msg.Height,
+				"currentHeight": currentHeight,
+			},
+		).Msg("⚠️ DISCARDING ⚠️ Node")
 		return false, nil
 	}
 
 	// TODO: Need to restart state sync or be in state sync mode right now
 	// Current node is out of sync
 	if msg.Height > currentHeight {
-		p.consensusMod.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d < message at height %d", currentHeight, msg.Height))
+		p.consensusMod.logger.Warn().Fields(
+			map[string]interface{}{
+				"msgHeight":     msg.Height,
+				"currentHeight": currentHeight,
+			},
+		).Msg("⚠️ DISCARDING ⚠️ Node")
 		return false, nil
 	}
 
@@ -136,7 +144,14 @@ func (p *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Message is from the past
 	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
-		p.consensusMod.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round))
+		p.consensusMod.logger.Warn().Fields(
+			map[string]interface{}{
+				"msgHeight":     msg.Height,
+				"msgRound":      msg.Round,
+				"msgStep":       msg.Step,
+				"currentHeight": currentHeight,
+			},
+		).Msg("⚠️ DISCARDING ⚠️ Node")
 		return false, nil
 	}
 
@@ -147,7 +162,16 @@ func (p *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
 	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {
-		p.consensusMod.nodeLog(typesCons.PacemakerCatchup(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
+		p.consensusMod.logger.Info().Fields(
+			map[string]interface{}{
+				"msgHeight":     msg.Height,
+				"msgRound":      msg.Round,
+				"msgStep":       msg.Step,
+				"currentHeight": currentHeight,
+				"currentRound":  currentRound,
+				"currentStep":   currentStep,
+			}).Msg("🏃 Pacemaker catching 🏃 up")
+
 		p.consensusMod.step = msg.Step
 		p.consensusMod.round = msg.Round
 
@@ -189,7 +213,12 @@ func (p *paceMaker) RestartTimer() {
 }
 
 func (p *paceMaker) InterruptRound(reason string) {
-	p.consensusMod.nodeLog(typesCons.PacemakerInterrupt(reason, p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
+	p.consensusMod.logger.Info().Fields(map[string]interface{}{
+		"reason": reason,
+		"step":   p.consensusMod.step,
+		"round":  p.consensusMod.round,
+		"height": p.consensusMod.CurrentHeight(),
+	}).Msg("⏰ Interrupting round ⏰")
 
 	p.consensusMod.round++
 	p.startNextView(p.consensusMod.highPrepareQC, false)

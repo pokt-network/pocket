@@ -170,7 +170,14 @@ func protoHash(m proto.Message) string {
 /*** P2P Helpers ***/
 
 func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
-	m.nodeLog(typesCons.SendingMessage(msg, *m.leaderId))
+	m.logger.Info().Fields(
+		map[string]any{
+			"node_id": m.leaderId,
+			"height":  msg.GetHeight(),
+			"step":    msg.GetStep(),
+			"round":   msg.GetRound(),
+		},
+	).Msg("✉️ Sending message ✉️")
 
 	// TODO: This can happen due to a race condition with the pacemaker.
 	if m.leaderId == nil {
@@ -186,13 +193,13 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
-		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
 
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 
 	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(idToValAddrMap[*m.leaderId]), anyConsensusMessage); err != nil {
-		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
 		return
 	}
 }
@@ -200,7 +207,13 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 // Star-like (O(n)) broadcast - send to all nodes directly
 // INVESTIGATE: Re-evaluate if we should be using our structured broadcast (RainTree O(log3(n))) algorithm instead
 func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
-	m.nodeLog(typesCons.BroadcastingMessage(msg))
+	m.logger.Info().Fields(
+		map[string]interface{}{
+			"height": m.CurrentHeight(),
+			"step":   m.step,
+			"round":  m.round,
+		},
+	).Msg("📣 Broadcasting message 📣")
 
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
@@ -210,12 +223,12 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
-		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
 
 	for _, val := range validators {
 		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
-			m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
+			m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
 		}
 	}
 }
@@ -274,26 +287,28 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 	if m.isLeader() {
 		m.setLogPrefix("LEADER")
-		m.nodeLog(typesCons.ElectedSelfAsNewLeader(idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
+		m.logger.Info().Fields(
+			map[string]interface{}{
+				"leaderId": idToValAddrMap[*m.leaderId],
+				"height":   m.height,
+				"round":    m.round,
+			},
+		).Msg("👑 I am the leader 👑")
 	} else {
 		m.setLogPrefix("REPLICA")
-		m.nodeLog(typesCons.ElectedNewLeader(idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
+		m.logger.Info().Fields(
+			map[string]interface{}{
+				"leaderId": idToValAddrMap[*m.leaderId],
+				"height":   m.height,
+				"round":    m.round,
+			},
+		).Msg("🙇 Elected leader 🙇")
 	}
 
 	return nil
 }
 
 /*** General Infrastructure Helpers ***/
-
-// TODO(#164): Remove this once we have a proper logging system.
-func (m *consensusModule) nodeLog(s string) {
-	log.Printf("[%s][%d] %s\n", m.logPrefix, m.nodeId, s)
-}
-
-// TODO(#164): Remove this once we have a proper logging system.
-func (m *consensusModule) nodeLogError(s string, err error) {
-	log.Printf("🐞[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.nodeId, s, err)
-}
 
 func (m *consensusModule) setLogPrefix(logPrefix string) {
 	logger.Global.UpdateFields(map[string]interface{}{

@@ -3,7 +3,6 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"strings"

@@ -41,7 +41,14 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(NewRound, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(m.height, NewRound, m.round))
+
+	m.logger.Info().Fields(
+		map[string]interface{}{
+			"height": m.height,
+			"round":  m.round,
+			"step":   Prepare,
+		},
+	).Msg("📬 Received enough 📬 votes")
 
 	// Clear the previous utility context, if it exists, and create a new one
 	if err := m.refreshUtilityContext(); err != nil {
@@ -58,7 +65,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	if m.shouldPrepareNewBlock(highPrepareQC) {
 		block, err := m.prepareAndApplyBlock(highPrepareQC)
 		if err != nil {
-			m.nodeLogError(typesCons.ErrPrepareBlock.Error(), err)
+			m.logger.Error().Err(err).Msg(typesCons.ErrPrepareBlock.Error())
 			m.paceMaker.InterruptRound("failed to prepare & apply block")
 			return
 		}
@@ -67,7 +74,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		// Leader acts like a replica if `highPrepareQC` is not `nil`
 		// TODO: Do we need to call `validateProposal` here similar to how replicas does it
 		if err := m.applyBlock(highPrepareQC.Block); err != nil {
-			m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
+			m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())
 			m.paceMaker.InterruptRound("failed to apply block")
 			return
 		}
@@ -79,7 +86,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 	prepareProposeMessage, err := CreateProposeMessage(m.height, m.round, Prepare, m.block, highPrepareQC)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateProposeMessage(Prepare).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateProposeMessage(Prepare).Error())
 		m.paceMaker.InterruptRound("failed to create propose message")
 		return
 	}
@@ -109,7 +116,14 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(Prepare, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(m.height, Prepare, m.round))
+
+	m.logger.Info().Fields(
+		map[string]interface{}{
+			"height": m.height,
+			"round":  m.round,
+			"step":   Prepare,
+		},
+	).Msg("📬 Received enough 📬 votes")
 
 	prepareQC, err := m.getQuorumCertificate(m.height, Prepare, m.round)
 	if err != nil {
@@ -123,7 +137,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 	preCommitProposeMessage, err := CreateProposeMessage(m.height, m.round, PreCommit, m.block, prepareQC)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateProposeMessage(PreCommit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateProposeMessage(PreCommit).Error())
 		m.paceMaker.InterruptRound("failed to create propose message")
 		return
 	}
@@ -153,7 +167,14 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(PreCommit, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(m.height, PreCommit, m.round))
+
+	m.logger.Info().Fields(
+		map[string]interface{}{
+			"height": m.height,
+			"round":  m.round,
+			"step":   Prepare,
+		},
+	).Msg("📬 Received enough 📬 votes")
 
 	preCommitQC, err := m.getQuorumCertificate(m.height, PreCommit, m.round)
 	if err != nil {
@@ -167,7 +188,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 	commitProposeMessage, err := CreateProposeMessage(m.height, m.round, Commit, m.block, preCommitQC)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateProposeMessage(Commit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateProposeMessage(Commit).Error())
 		m.paceMaker.InterruptRound("failed to create propose message")
 		return
 	}
@@ -197,7 +218,14 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(Commit, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(m.height, Commit, m.round))
+
+	m.logger.Info().Fields(
+		map[string]interface{}{
+			"height": m.height,
+			"round":  m.round,
+			"step":   Prepare,
+		},
+	).Msg("📬 Received enough 📬 votes")
 
 	commitQC, err := m.getQuorumCertificate(m.height, Commit, m.round)
 	if err != nil {
@@ -210,14 +238,14 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 
 	decideProposeMessage, err := CreateProposeMessage(m.height, m.round, Decide, m.block, commitQC)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateProposeMessage(Decide).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateProposeMessage(Decide).Error())
 		m.paceMaker.InterruptRound("failed to create propose message")
 		return
 	}
 	m.broadcastToValidators(decideProposeMessage)
 
 	if err := m.commitBlock(m.block); err != nil {
-		m.nodeLogError(typesCons.ErrCommitBlock.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCommitBlock.Error())
 		m.paceMaker.InterruptRound("failed to commit block")
 		return
 	}
@@ -284,14 +312,14 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 
 	if msg.GetStep() == NewRound {
 		if partialSig != nil {
-			m.nodeLog(typesCons.ErrUnnecessaryPartialSigForNewRound.Error())
+			m.logger.Error().Err(typesCons.ErrUnnecessaryPartialSigForNewRound)
 		}
 		return nil
 	}
 
 	if msg.GetType() == Propose {
 		if partialSig != nil {
-			m.nodeLog(typesCons.ErrUnnecessaryPartialSigForLeaderProposal.Error())
+			m.logger.Error().Err(typesCons.ErrUnnecessaryPartialSigForLeaderProposal)
 		}
 		return nil
 	}
@@ -335,7 +363,7 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 //	Add proper tests and implementation once the mempool is implemented.
 func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) error {
 	if m.consCfg.MaxMempoolBytes < uint64(unsafe.Sizeof(m.messagePool)) {
-		m.nodeLogError(typesCons.DisregardHotstuffMessage, typesCons.ErrConsensusMempoolFull)
+		m.logger.Error().Err(typesCons.ErrConsensusMempoolFull).Msg(typesCons.DisregardHotstuffMessage)
 		return typesCons.ErrConsensusMempoolFull
 	}
 

@@ -8,6 +8,7 @@ import (
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -313,7 +314,7 @@ func (m *consensusModule) loadPersistedState() error {
 
 	m.height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
 
-	m.nodeLog(fmt.Sprintf("Starting consensus module at height %d", latestHeight))
+	m.logger.Info().Uint64("height", m.height).Msg("Starting consensus module")
 
 	return nil
 }

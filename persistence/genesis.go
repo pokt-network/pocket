@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/hex"
+	"log"
 	"math/big"
 
 	"github.com/pokt-network/pocket/persistence/types"

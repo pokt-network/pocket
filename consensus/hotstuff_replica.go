@@ -54,14 +54,14 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 	}
 
 	if err := m.validateProposal(msg); err != nil {
-		m.nodeLogError(fmt.Sprintf("Invalid proposal in %s message", Prepare), err)
+		m.logger.Error().Err(err).Str("message", Prepare.String()).Msg("Invalid proposal")
 		m.paceMaker.InterruptRound("invalid proposal")
 		return
 	}
 
 	block := msg.GetBlock()
 	if err := m.applyBlock(block); err != nil {
-		m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())
 		m.paceMaker.InterruptRound("failed to apply block")
 		return
 	}
@@ -89,7 +89,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 
 	quorumCert := msg.GetQuorumCertificate()
 	if err := m.validateQuorumCertificate(quorumCert); err != nil {
-		m.nodeLogError(typesCons.ErrQCInvalid(PreCommit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(PreCommit).Error())
 		m.paceMaker.InterruptRound("invalid quorum certificate")
 		return
 	}
@@ -118,7 +118,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 
 	quorumCert := msg.GetQuorumCertificate()
 	if err := m.validateQuorumCertificate(quorumCert); err != nil {
-		m.nodeLogError(typesCons.ErrQCInvalid(Commit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Commit).Error())
 		m.paceMaker.InterruptRound("invalid quorum certificate")
 		return
 	}
@@ -147,13 +147,13 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 
 	quorumCert := msg.GetQuorumCertificate()
 	if err := m.validateQuorumCertificate(quorumCert); err != nil {
-		m.nodeLogError(typesCons.ErrQCInvalid(Decide).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Decide).Error())
 		m.paceMaker.InterruptRound("invalid quorum certificate")
 		return
 	}
 
 	if err := m.commitBlock(m.block); err != nil {
-		m.nodeLogError("Could not commit block", err)
+		m.logger.Error().Err(err).Msg("Could not commit block")
 		m.paceMaker.InterruptRound("failed to commit block")
 		return
 	}
@@ -276,13 +276,16 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	for _, partialSig := range qc.ThresholdSignature.Signatures {
 		validator, ok := validatorMap[partialSig.Address]
 		if !ok {
-			m.nodeLogError(typesCons.ErrMissingValidator(partialSig.Address, valAddrToIdMap[partialSig.Address]).Error(), nil)
+			m.logger.Error().Msgf(typesCons.ErrMissingValidator(partialSig.Address, valAddrToIdMap[partialSig.Address]).Error())
 			continue
 		}
 		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
 		// just serialize `Message` once and verify each signature without re-serializing every time.
 		if !isSignatureValid(msgToJustify, validator.GetPublicKey(), partialSig.Signature) {
-			m.nodeLog(typesCons.WarnInvalidPartialSigInQC(partialSig.Address, valAddrToIdMap[partialSig.Address]))
+			m.logger.Warn().Fields(map[string]interface{}{
+				"address": partialSig.Address,
+				"nodeId":  valAddrToIdMap[partialSig.Address],
+			}).Msg("QC contains an invalid partial signature")
 			continue
 		}
 		numValid++

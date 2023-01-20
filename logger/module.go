@@ -58,17 +58,17 @@ func (*loggerModule) Create(bus modules.Bus) (modules.Module, error) {
 	}
 	bus.RegisterModule(m)
 
-	Global.config = cfg.GetLoggerConfig()
+	Global.config = m.config
 	Global.InitLogger()
 
 	// Mapping config string value to the proto enum
-	if pocketLogLevel, ok := LogLevel_value[`LOG_LEVEL_`+strings.ToUpper(Global.config.GetLevel())]; ok {
-		zerolog.SetGlobalLevel(pocketLogLevelToZeroLog[LogLevel(pocketLogLevel)])
+	if pocketLogLevel, ok := configs.LogLevel_value[`LOG_LEVEL_`+strings.ToUpper(Global.config.GetLevel())]; ok {
+		zerolog.SetGlobalLevel(pocketLogLevelToZeroLog[configs.LogLevel(pocketLogLevel)])
 	} else {
 		zerolog.SetGlobalLevel(zerolog.NoLevel)
 	}
 
-	if pocketLogFormatToEnum[Global.config.GetFormat()] == LogFormat_LOG_FORMAT_PRETTY {
+	if pocketLogFormatToEnum[Global.config.GetFormat()] == configs.LogFormat_LOG_FORMAT_PRETTY {
 		logStructure := zerolog.ConsoleWriter{Out: os.Stdout}
 		logStructure.FormatLevel = func(i interface{}) string {
 			return fmt.Sprintf("level=%s", strings.ToUpper(i.(string)))
@@ -113,6 +113,7 @@ func (m *loggerModule) GetLogger() modules.Logger {
 	return m.Logger
 }
 
+// INVESTIGATE(#420): https://github.com/pokt-network/pocket/pull/420/files#r1072574513
 // SetFields sets the fields for the global logger
 func (m *loggerModule) SetFields(fields map[string]interface{}) {
 	m.Logger = m.Logger.With().Fields(fields).Logger()

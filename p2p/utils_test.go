@@ -158,7 +158,7 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.Moc
 
 // createMockGenesisState configures and returns a mocked GenesisState
 func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
-	var genesisState = new(genesis.GenesisState)
+	genesisState := new(genesis.GenesisState)
 
 	validators := make([]*coreTypes.Actor, len(valKeys))
 	for i, valKey := range valKeys {
