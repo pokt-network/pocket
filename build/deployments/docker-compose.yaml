@@ -165,9 +165,8 @@ services:
       PGADMIN_LISTEN_ADDRESS: 0.0.0.0
       PGADMIN_LISTEN_PORT: 5050
     volumes:
-      - ${PWD}/build/pgadmin/servers.json:/pgadmin4/servers.json
-      - ${PWD}/build/pgadmin/pgpass.json:/pgpass
-
+      - ${PWD}/build/pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - ${PWD}/build/pgadmin/pgpass:/pgpass
     ports:
       - "5050:5050"
 

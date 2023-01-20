@@ -21,7 +21,7 @@ _This is a live document on how to get ramped up on all the knowledge you need t
 
 ## 🏁 Where to Start?
 
-_IMPORTANT: If you are reading this, understand that if something is looks incomplete, confusing or wrong, it most likely is. Don't be afraid to openly ask questions & submit a PR to change it!_
+_IMPORTANT: If you are reading this, understand that if something looks incomplete, confusing or wrong, it most likely is. Don't be afraid to openly ask questions & submit a PR to change it!_
 
 This is a general set of steps we have found to help new core team members onboard to Protocol development.
 
@@ -35,7 +35,7 @@ This is a general set of steps we have found to help new core team members onboa
    - Reach out to the core team in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel if you hit any issues
    - _TIP: Once you clone the Github repo, you can `cd pocket` and run `make` from to see all the available commands._
 
-3. Get an understanding of the the V1 spec summaries by reading about the [4 modules in our docs](https://docs.pokt.network/home/learn/future). _(3-5 hours)_
+3. Get an understanding of the V1 spec summaries by reading about the [4 modules in our docs](https://docs.pokt.network/home/learn/future). _(2-4 hours)_
 
    - This will get you understand the spec foundations for Pocket V1
 
@@ -112,7 +112,6 @@ This is a general set of technical links and recommended reading our team has fo
 
 - [Pocket YouTube Channel](https://www.youtube.com/c/PocketNetwork/videos)
   - Contains everything from Infracon presentations, to contributor hour calls, etc...
-  -
 
 ### Consensus
 
@@ -151,7 +150,7 @@ This is a general set of technical links and recommended reading our team has fo
 ### Cryptography
 
 - [Anoma Whitepaper](https://github.com/anoma/whitepaper/blob/main/whitepaper.pdf)
-  - This whitepaper is a bit dense but introduces a a great way of thinking about the building blocks of decentralized applications and blockchains focused on security and intent. It always provides a great historical background on both Bitcoin and Ethereum.
+  - This whitepaper is a bit dense but introduces a great way of thinking about the building blocks of decentralized applications and blockchains focused on security and intent. It always provides a great historical background on both Bitcoin and Ethereum.
 - [Threshold signatures presentation](https://docs.google.com/presentation/d/1G4XGqrBLwqMyDQce_xpPQUEMOK4lFrneuvGYU3MVDsI/edit#slide=id.g1246936523c_0_26)
   - A great presentation by Alin Tomescu (founding engineer) that builds intuition around threshold signatures, signature aggregation, etc
 - [ECDSA is not that bad: two-party signing without Schnorr or BLS](https://medium.com/cryptoadvance/ecdsa-is-not-that-bad-two-party-signing-without-schnorr-or-bls-1941806ec36f)
