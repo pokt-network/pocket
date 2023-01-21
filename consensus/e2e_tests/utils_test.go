@@ -203,7 +203,6 @@ func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 // This is a helper for `waitForEventsInternal` that creates the `includeFilter` function based on
 // consensus specific parameters.
 // failOnExtraMessages:
-//
 //	This flag is useful when running the consensus unit tests. It causes the test to wait up to the
 //	maximum delay specified in the source code and errors if additional unexpected messages are received.
 //	For example, if the test expects to receive 5 messages within 2 seconds:
