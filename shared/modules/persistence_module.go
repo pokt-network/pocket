@@ -70,7 +70,7 @@ type PersistenceWriteContext interface {
 	AddPoolAmount(name string, amount string) error
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
-	InsertPool(name string, address []byte, amount string) error // TODO(#149): remove address from pool
+	InsertPool(name string, amount string) error
 
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error
@@ -113,11 +113,11 @@ type PersistenceWriteContext interface {
 
 	// Param Operations
 	InitGenesisParams(params *genesis.Params) error
-	SetParam(paramName string, value interface{}) error
+	SetParam(paramName string, value any) error
 
 	// Flag Operations
 	InitFlags() error
-	SetFlag(paramName string, value interface{}, enabled bool) error
+	SetFlag(paramName string, value any, enabled bool) error
 }
 
 type PersistenceReadContext interface {

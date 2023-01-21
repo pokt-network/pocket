@@ -1,5 +1,7 @@
 package types
 
+// CLEANUP: Move SQL specific business logic into a `sql` package under `persistence`
+
 import (
 	"bytes"
 	"fmt"
@@ -100,10 +102,11 @@ func Exists(address string, height int64, tableName string) string {
 }
 
 // Explainer:
-//   (SELECT MAX(height), address FROM %s GROUP BY address) ->
-//       returns latest/max height for each address
-//   (height, address) IN (SELECT MAX(height), address FROM %s GROUP BY address) ->
-//       ensures the query is acting on max height for the addresses
+//
+//	(SELECT MAX(height), address FROM %s GROUP BY address) ->
+//	    returns latest/max height for each address
+//	(height, address) IN (SELECT MAX(height), address FROM %s GROUP BY address) ->
+//	    ensures the query is acting on max height for the addresses
 func readyToUnstake(unstakingHeight int64, tableName string) string {
 	return fmt.Sprintf(`
 		SELECT address, staked_tokens, output_address

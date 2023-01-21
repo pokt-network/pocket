@@ -7,13 +7,14 @@ import (
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
 // A list of functions to clear data from the DB not associated with protocol actors
 var nonActorClearFunctions = []func() string{
-	types.ClearAllAccounts,
-	types.ClearAllPools,
+	types.Account.ClearAllAccounts,
+	types.Pool.ClearAllAccounts,
 	types.ClearAllGovParamsQuery,
 	types.ClearAllGovFlagsQuery,
 	types.ClearAllBlocksQuery,
@@ -50,7 +51,7 @@ func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) {
 		return
 	}
 
-	block := &types.Block{}
+	block := &coreTypes.Block{}
 	if err := codec.GetCodec().Unmarshal(blockBytes, block); err != nil {
 		log.Printf("Error decoding block %d from block store: %s \n", height, err)
 		return

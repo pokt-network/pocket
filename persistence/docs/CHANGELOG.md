@@ -7,13 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.25] - 2023-01-20
+
+- Consolidate common behaviour of `Pool` and `Account` functions into a shared interface `ProtocolAccountSchema`
+- Create `account_shared_sql.go` and `types/account_shared_sql.go` and rename `shared_sql.go` and `type/shared_sql.go` to `actor_shared_sql.go` and `types/actor_shared_sql.go` seperating shared sql logic
+
+## [0.0.0.24] - 2023-01-20
+
+- Update the persistence module README, focusing on `pgadmin` and Makefile helpers
+
+## [0.0.0.23] - 2023-01-18
+
+- Remove `Block` proto definition to consolidate under `shared/core/types`
+
 ## [0.0.0.22] - 2023-01-14
 
 - Add `max_conns_count`, `min_conns_count`, `max_conn_lifetime`, `max_conn_idle_time` and `health_check_period` to `PersistenceConfig`.
 - Update `connectToDatabase` function in `db.go` to connect via `pgxpool` to postgres database and accept `PersistenceConfig` interface as input.
 - Update `github.com/jackc/pgx/v4` -> `github.com/jackc/pgx/v5`.
 
-##  [0.0.0.21] - 2023-01-11
+## [0.0.0.21] - 2023-01-11
 
 - Add `init()` function to `gov.go` to build a map of parameter names and their types
 - Deprecated `GetBlocksPerSession()` and `GetServiceNodesPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
