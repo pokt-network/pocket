@@ -307,6 +307,10 @@ test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, outp
 test_race: ## Identify all unit tests that may result in race conditions
 	go test ${VERBOSE_TEST} -race ./...
 
+.PHONY: test_app
+test_app: ## Run all go app module unit tests
+	go test ${VERBOSE_TEST} -p=1 -count=1  ./app/...
+
 .PHONY: test_utility
 test_utility: ## Run all go utility module unit tests
 	go test ${VERBOSE_TEST} -p=1 -count=1  ./utility/...
