@@ -6,6 +6,7 @@ import (
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 // CONSOLIDATE: Last/Prev & AppHash/StateHash/BlockHash
@@ -50,7 +51,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 	// Likely to be `nil` if blockchain is progressing well.
 	// TECHDEBT: How do we properly validate `prepareQC` here?
-	// prepareQC named as highPrepareQC since when leader is executing it is the highest QC.s
+	// prepareQC named as highPrepareQC since when leader is executing it represents the highest QC.
 	highPrepareQC := m.findHighQC(m.messagePool[NewRound])
 
 	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
@@ -349,7 +350,7 @@ func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) e
 // This is a helper function intended to be called by a leader/validator during a view change
 // to prepare a new block that is applied to the new underlying context.
 // TODO: Split this into atomic & functional `prepareBlock` and `applyBlock` methods
-func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) (*typesCons.Block, error) {
+func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) (*coreTypes.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
@@ -375,21 +376,21 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	}
 
 	// Construct the block
-	blockHeader := &typesCons.BlockHeader{
-		Height:            int64(m.height),
-		Hash:              stateHash,
+	blockHeader := &coreTypes.BlockHeader{
+		Height:            m.height,
+		StateHash:         stateHash,
+		PrevStateHash:     prevBlockHash,
 		NumTxs:            uint32(len(txs)),
-		LastBlockHash:     prevBlockHash,
 		ProposerAddress:   m.privateKey.Address().Bytes(),
 		QuorumCertificate: qcBytes,
 	}
-	block := &typesCons.Block{
+	block := &coreTypes.Block{
 		BlockHeader:  blockHeader,
 		Transactions: txs,
 	}
 
 	// Set the proposal block in the persistence context
-	if err = m.utilityContext.SetProposalBlock(blockHeader.Hash, blockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err = m.utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return nil, err
 	}
 
