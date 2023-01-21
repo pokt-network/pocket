@@ -19,7 +19,7 @@ const (
 type ConsensusModule interface {
 	Module
 	KeyholderModule
-	ConsensusPacemaker
+	ConsensusPacemaker // TODO: Olshansky likes TODOs too much
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
