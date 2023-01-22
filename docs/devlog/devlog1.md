@@ -20,7 +20,7 @@
 ### Iteration 8
 
 - Duration: January 11 - 24
-- [Backlog](https://github.com/orgs/pokt-network/projects/142/views/12?filterQuery=iteration%3A%22Iteration+8%22) 
+- [Backlog](https://github.com/orgs/pokt-network/projects/142/views/52?filterQuery=is%3Aclosed+iteration%3A%22Iteration+8%22)
 
 #### Iteration Goals
 - M1: PoS
