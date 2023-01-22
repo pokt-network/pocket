@@ -41,7 +41,7 @@
 ### Iteration 9
 
 - Duration: January 25 - February 7
-- [Backlog](https://github.com/orgs/pokt-network/projects/142/views/12?filterQuery=iteration%3A%22Iteration+9%22)
+- [Backlog](https://github.com/orgs/pokt-network/projects/142/views/41?filterQuery=is%3Aopen+iteration%3A%22Iteration+9%22)
 
 -----------------------------
 
