@@ -12,6 +12,7 @@ import (
 	"fmt"
 	poktCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"golang.org/x/crypto/scrypt"
+	"strings"
 )
 
 const (
@@ -20,6 +21,11 @@ const (
 	r    = 8
 	p    = 1
 	klen = 32
+)
+
+var (
+	// Errors
+	ErrorWrongPassphrase = fmt.Errorf("Can't decrypt private key: wrong passphrase")
 )
 
 func init() {
@@ -44,8 +50,18 @@ func NewKeyPair(pub poktCrypto.PublicKey, priv string) KeyPair {
 }
 
 // Return the byte slice address of the public key
-func (kp KeyPair) GetAddress() []byte {
+func (kp KeyPair) GetAddressBytes() []byte {
 	return kp.PublicKey.Address().Bytes()
+}
+
+// Return the string address of the public key
+func (kp KeyPair) GetAddressString() string {
+	return kp.PublicKey.Address().String()
+}
+
+// Unarmour the private key with the passphrase provided
+func (kp KeyPair) Unarmour(passphrase string) (poktCrypto.PrivateKey, error) {
+	return unarmourDecryptPrivKey(kp.PrivKeyArmour, passphrase)
 }
 
 // Armoured Private Key struct with fields to unarmour it later
@@ -83,11 +99,30 @@ func CreateNewKey(passphrase string) (KeyPair, error) {
 	return keyPair, nil
 }
 
-// Generate new private ED25519 key from the bytes provided, encrypt and
-// armour it as a string
+// Generate new private ED25519 key from the bytes provided, encrypt and armour it as a string
 // Returns a KeyPair struct of the Public Key and Armoured String
+// DISCUSSION: Is this needed?
 func CreateNewKeyFromBytes(privBytes []byte, passphrase string) (KeyPair, error) {
 	privKey, err := poktCrypto.NewPrivateKeyFromBytes(privBytes)
+	if err != nil {
+		return KeyPair{}, err
+	}
+
+	privArmour, err := encryptArmourPrivKey(privKey, passphrase)
+	if err != nil || privArmour == "" {
+		return KeyPair{}, nil
+	}
+
+	pubKey := privKey.PublicKey()
+	keyPair := NewKeyPair(pubKey, privArmour)
+
+	return keyPair, nil
+}
+
+// Generate new private ED25519 key from the hex string provided, encrypt and armour it as a string
+// Returns a KeyPair struct of the Public Key and Armoured String
+func CreateNewKeyFromString(privStr, passphrase string) (KeyPair, error) {
+	privKey, err := poktCrypto.NewPrivateKey(privStr)
 	if err != nil {
 		return KeyPair{}, err
 	}
@@ -134,13 +169,13 @@ func encryptPrivKey(privKey poktCrypto.PrivateKey, passphrase string) (saltBytes
 	// Get random bytes for salt
 	saltBytes = randBytes(16)
 
-	// derive key for encryption, see: https://pkg.go.dev/golang.org/x/crypto/scrypt#Key
+	// Derive key for encryption, see: https://pkg.go.dev/golang.org/x/crypto/scrypt#Key
 	key, err := scrypt.Key([]byte(passphrase), saltBytes, n, r, p, klen)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	//encrypt using AES
+	// Encrypt using AES
 	privKeyBytes := privKey.Bytes()
 	encBytes, err = encryptAESGCM(key, privKeyBytes)
 	if err != nil {
@@ -161,7 +196,7 @@ func unarmourDecryptPrivKey(armourStr string, passphrase string) (privKey poktCr
 		return nil, err
 	}
 
-	// check the ArmouredKey for the correct parameters on kdf and salt
+	// Check the ArmouredKey for the correct parameters on kdf and salt
 	if armouredKey.Kdf != "scrypt" {
 		return nil, fmt.Errorf("Unrecognized KDF type: %v", armouredKey.Kdf)
 	}
@@ -169,40 +204,39 @@ func unarmourDecryptPrivKey(armourStr string, passphrase string) (privKey poktCr
 		return nil, fmt.Errorf("Missing salt bytes")
 	}
 
-	//decoding the salt
+	// Decoding the salt
 	saltBytes, err := hex.DecodeString(armouredKey.Salt)
 	if err != nil {
 		return nil, fmt.Errorf("Error decoding salt: %v", err.Error())
 	}
 
-	//decoding the "armoured" ciphertext stored in base64
+	// Decoding the "armoured" ciphertext stored in base64
 	encBytes, err := base64.StdEncoding.DecodeString(armouredKey.CipherText)
 	if err != nil {
 		return nil, fmt.Errorf("Error decoding ciphertext: %v", err.Error())
 	}
 
-	//decrypt the actual privkey with the parameters
+	// Decrypt the actual privkey with the parameters
 	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase)
 
 	return privKey, err
 }
 
 // Decrypt the AES-256 GCM encrypted bytes using the passphrase given
-func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey poktCrypto.PrivateKey, err error) {
-	// derive key for decryption
+func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (poktCrypto.PrivateKey, error) {
+	// Derive key for decryption, see: https://pkg.go.dev/golang.org/x/crypto/scrypt#Key
 	key, err := scrypt.Key([]byte(passphrase), saltBytes, n, r, p, klen)
 	if err != nil {
 		return nil, err
 	}
 
-	//decrypt using AES
+	// Decrypt using AES
 	privKeyBytes, err := decryptAESGCM(key, encBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get private key from decrypted bytes
-	privKeyBytes, _ = hex.DecodeString(string(privKeyBytes))
 	pk, err := poktCrypto.NewPrivateKeyFromBytes(privKeyBytes)
 	if err != nil {
 		return nil, err
@@ -238,7 +272,9 @@ func decryptAESGCM(key []byte, enBytes []byte) ([]byte, error) {
 	}
 	nonce := key[:12]
 	result, err := gcm.Open(nil, nonce, enBytes, nil)
-	if err != nil {
+	if err != nil && strings.Contains(err.Error(), "authentication failed") {
+		return nil, ErrorWrongPassphrase
+	} else if err != nil {
 		return nil, fmt.Errorf("Can't Decrypt Using AES : %s \n", err)
 	}
 	return result, nil
