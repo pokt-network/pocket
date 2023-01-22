@@ -1,7 +1,7 @@
 package keybase
 
 import (
-	"github.com/dgraph-io/badger/v3"
+	"encoding/hex"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -83,6 +83,20 @@ func TestKeybase_CreateNewKeyFromString(t *testing.T) {
 	require.Equal(t, privKey.String(), testKey.String())
 }
 
+// TODO: Improve this test/create functions to check string validity
+func TestKeybase_CreateNewKeyFromStringInvalidString(t *testing.T) {
+	db, err := initDB()
+	defer db.Stop()
+	require.NoError(t, err)
+
+	falseAddr := testKey.String() + "aa"
+	falseBz, err := hex.DecodeString(falseAddr)
+	require.NoError(t, err)
+
+	err = db.CreateFromString(falseAddr, testPassphrase)
+	require.EqualError(t, err, crypto.ErrInvalidPrivateKeyLen(len(falseBz)).Error())
+}
+
 func TestKeybase_GetKey(t *testing.T) {
 	db, err := initDB()
 	defer db.Stop()
@@ -91,7 +105,7 @@ func TestKeybase_GetKey(t *testing.T) {
 	err = db.CreateFromString(testKey.String(), testPassphrase)
 	require.NoError(t, err)
 
-	kp, err := db.Get(testKey.Address().Bytes())
+	kp, err := db.Get(testKey.Address().String())
 	require.NoError(t, err)
 	require.Equal(t, testKey.Address().Bytes(), kp.GetAddressBytes())
 	require.Equal(t, kp.GetAddressString(), testKey.Address().String())
@@ -102,6 +116,39 @@ func TestKeybase_GetKey(t *testing.T) {
 	equal := privKey.Equals(testKey)
 	require.Equal(t, equal, true)
 	require.Equal(t, privKey.String(), testKey.String())
+}
+
+func TestKeybase_GetKeyDoesntExist(t *testing.T) {
+	db, err := initDB()
+	defer db.Stop()
+	require.NoError(t, err)
+
+	kp, err := db.Get(testKey.Address().String())
+	require.EqualError(t, err, ErrorAddrNotFound(testKey.Address().String()).Error())
+	require.Equal(t, kp, KeyPair{})
+}
+
+func TestKeybase_CheckKeyExists(t *testing.T) {
+	db, err := initDB()
+	defer db.Stop()
+	require.NoError(t, err)
+
+	err = db.CreateFromString(testKey.String(), testPassphrase)
+	require.NoError(t, err)
+
+	exists, err := db.Exists(testKey.Address().String())
+	require.NoError(t, err)
+	require.Equal(t, exists, true)
+}
+
+func TestKeybase_CheckKeyExistsDoesntExist(t *testing.T) {
+	db, err := initDB()
+	defer db.Stop()
+	require.NoError(t, err)
+
+	exists, err := db.Exists(testKey.Address().String())
+	require.EqualError(t, err, ErrorAddrNotFound(testKey.Address().String()).Error())
+	require.Equal(t, exists, false)
 }
 
 func TestKeybase_GetAllKeys(t *testing.T) {
@@ -143,7 +190,7 @@ func TestKeybase_GetPrivKey(t *testing.T) {
 	err = db.CreateFromString(testKey.String(), testPassphrase)
 	require.NoError(t, err)
 
-	privKey, err := db.GetPrivKey(testKey.Address().Bytes(), testPassphrase)
+	privKey, err := db.GetPrivKey(testKey.Address().String(), testPassphrase)
 	require.NoError(t, err)
 	require.Equal(t, testKey.Address().Bytes(), privKey.Address().Bytes())
 	require.Equal(t, privKey.Address().String(), testKey.Address().String())
@@ -161,8 +208,8 @@ func TestKeybase_GetPrivKeyWrongPassphrase(t *testing.T) {
 	err = db.CreateFromString(testKey.String(), testPassphrase)
 	require.NoError(t, err)
 
-	privKey, err := db.GetPrivKey(testKey.Address().Bytes(), testNewPassphrase)
-	require.ErrorIs(t, err, ErrorWrongPassphrase)
+	privKey, err := db.GetPrivKey(testKey.Address().String(), testNewPassphrase)
+	require.Equal(t, err, ErrorWrongPassphrase)
 	require.Nil(t, privKey)
 }
 
@@ -174,13 +221,13 @@ func TestBadgerKeybase_UpdatePassphrase(t *testing.T) {
 	err = db.CreateFromString(testKey.String(), testPassphrase)
 	require.NoError(t, err)
 
-	_, err = db.GetPrivKey(testKey.Address().Bytes(), testPassphrase)
+	_, err = db.GetPrivKey(testKey.Address().String(), testPassphrase)
 	require.NoError(t, err)
 
-	err = db.UpdatePassphrase(testKey.Address().Bytes(), testPassphrase, testNewPassphrase)
+	err = db.UpdatePassphrase(testKey.Address().String(), testPassphrase, testNewPassphrase)
 	require.NoError(t, err)
 
-	privKey, err := db.GetPrivKey(testKey.Address().Bytes(), testNewPassphrase)
+	privKey, err := db.GetPrivKey(testKey.Address().String(), testNewPassphrase)
 	require.NoError(t, err)
 	require.Equal(t, testKey.Address().Bytes(), privKey.Address().Bytes())
 	require.Equal(t, privKey.Address().String(), testKey.Address().String())
@@ -198,10 +245,10 @@ func TestBadgerKeybase_UpdatePassphraseWrongPassphrase(t *testing.T) {
 	err = db.CreateFromString(testKey.String(), testPassphrase)
 	require.NoError(t, err)
 
-	_, err = db.GetPrivKey(testKey.Address().Bytes(), testPassphrase)
+	_, err = db.GetPrivKey(testKey.Address().String(), testPassphrase)
 	require.NoError(t, err)
 
-	err = db.UpdatePassphrase(testKey.Address().Bytes(), testNewPassphrase, testNewPassphrase)
+	err = db.UpdatePassphrase(testKey.Address().String(), testNewPassphrase, testNewPassphrase)
 	require.ErrorIs(t, err, ErrorWrongPassphrase)
 }
 
@@ -213,14 +260,14 @@ func TestBadgerKeybase_DeleteKey(t *testing.T) {
 	err = db.CreateFromString(testKey.String(), testPassphrase)
 	require.NoError(t, err)
 
-	_, err = db.GetPrivKey(testKey.Address().Bytes(), testPassphrase)
+	_, err = db.GetPrivKey(testKey.Address().String(), testPassphrase)
 	require.NoError(t, err)
 
-	err = db.Delete(testKey.Address().Bytes(), testPassphrase)
+	err = db.Delete(testKey.Address().String(), testPassphrase)
 	require.NoError(t, err)
 
-	kp, err := db.Get(testKey.Address().Bytes())
-	require.ErrorIs(t, err, badger.ErrKeyNotFound)
+	kp, err := db.Get(testKey.Address().String())
+	require.EqualError(t, err, ErrorAddrNotFound(testKey.Address().String()).Error())
 	require.Equal(t, kp, KeyPair{})
 }
 
@@ -232,10 +279,10 @@ func TestBadgerKeybase_DeleteKeyWrongPassphrase(t *testing.T) {
 	err = db.CreateFromString(testKey.String(), testPassphrase)
 	require.NoError(t, err)
 
-	_, err = db.GetPrivKey(testKey.Address().Bytes(), testPassphrase)
+	_, err = db.GetPrivKey(testKey.Address().String(), testPassphrase)
 	require.NoError(t, err)
 
-	err = db.Delete(testKey.Address().Bytes(), testNewPassphrase)
+	err = db.Delete(testKey.Address().String(), testNewPassphrase)
 	require.ErrorIs(t, err, ErrorWrongPassphrase)
 }
 
