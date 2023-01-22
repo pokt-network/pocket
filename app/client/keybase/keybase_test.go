@@ -2,9 +2,10 @@ package keybase
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 const (
@@ -213,7 +214,7 @@ func TestKeybase_GetPrivKeyWrongPassphrase(t *testing.T) {
 	require.Nil(t, privKey)
 }
 
-func TestBadgerKeybase_UpdatePassphrase(t *testing.T) {
+func TestKeybase_UpdatePassphrase(t *testing.T) {
 	db, err := initDB()
 	defer db.Stop()
 	require.NoError(t, err)
@@ -237,7 +238,7 @@ func TestBadgerKeybase_UpdatePassphrase(t *testing.T) {
 	require.Equal(t, privKey.String(), testKey.String())
 }
 
-func TestBadgerKeybase_UpdatePassphraseWrongPassphrase(t *testing.T) {
+func TestKeybase_UpdatePassphraseWrongPassphrase(t *testing.T) {
 	db, err := initDB()
 	defer db.Stop()
 	require.NoError(t, err)
@@ -252,7 +253,7 @@ func TestBadgerKeybase_UpdatePassphraseWrongPassphrase(t *testing.T) {
 	require.ErrorIs(t, err, ErrorWrongPassphrase)
 }
 
-func TestBadgerKeybase_DeleteKey(t *testing.T) {
+func TestKeybase_DeleteKey(t *testing.T) {
 	db, err := initDB()
 	defer db.Stop()
 	require.NoError(t, err)
@@ -271,7 +272,7 @@ func TestBadgerKeybase_DeleteKey(t *testing.T) {
 	require.Equal(t, kp, KeyPair{})
 }
 
-func TestBadgerKeybase_DeleteKeyWrongPassphrase(t *testing.T) {
+func TestKeybase_DeleteKeyWrongPassphrase(t *testing.T) {
 	db, err := initDB()
 	defer db.Stop()
 	require.NoError(t, err)
