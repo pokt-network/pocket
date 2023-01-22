@@ -9,11 +9,11 @@
 
 ### Agenda <!-- omit in toc -->
 
-- [Iteration #8](###-iteration-8)
-   - [Goals](####-iteration-goals)
-   - [Results](####-iteration-results)
-- [Iteration #9](####-iteration-9)
-- [Feedback and Open Discussion](####-feedback-and-open-discussion)
+- [Iteration #8](#-iteration-8)
+   - [Goals](#-iteration-goals)
+   - [Results](#-iteration-results)
+- [Iteration #9](#-iteration-9)
+- [Feedback and Open Discussion](#-feedback-and-open-discussion)
 
 -----------------------------
 
