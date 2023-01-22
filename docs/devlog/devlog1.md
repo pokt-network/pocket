@@ -58,6 +58,7 @@ V1 is an open source project that is open to external contributors. Find informa
 - [Configure Development Environment](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md)
 - [Available Developer Bounties](https://app.dework.xyz/pokt-network/v1-protocol)
 - [V1 Project Board](https://github.com/orgs/pokt-network/projects/142/views/12)
+- [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md#m1-pocket-pos-proof-of-stake)
 
 ### About Pocket
 
