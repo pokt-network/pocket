@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/gob"
+	"fmt"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
@@ -15,6 +16,9 @@ func init() {
 	gob.Register(ArmouredKey{})
 }
 
+// badgerKeybase implements the KeyBase interface
+var _ Keybase = &badgerKeybase{}
+
 // Keybase interface implements the CRUD operations for the keybase
 type Keybase interface {
 	// Close the DB connection
@@ -24,14 +28,20 @@ type Keybase interface {
 	Create(passphrase string) error
 	// Insert new keypair from private key []byte provided into the DB
 	CreateFromBytes(privBytes []byte, passphrase string) error
+	// Insert a new keypair from the private key hex string provided into the DB
+	CreateFromString(privStr, passphrase string) error
 
 	// Accessors
 	Get(address []byte) (KeyPair, error)
+	GetPrivKey(address []byte, passphrase string) (crypto.PrivateKey, error)
 	GetAll() (addresses [][]byte, keyPairs []KeyPair, err error)
 	Exists(key []byte) (bool, error)
 
+	// Updator
+	UpdatePassphrase(address []byte, oldPassphrase, newPassphrase string) error
+
 	// Removals
-	Delete(address []byte) error
+	Delete(address []byte, passphrase string) error
 	ClearAll() error
 }
 
@@ -75,7 +85,7 @@ func (keybase *badgerKeybase) Create(passphrase string) error {
 		}
 
 		// Use key address as key in DB
-		key := keyPair.GetAddress()
+		key := keyPair.GetAddressBytes()
 		// Encode entire KeyPair struct into []byte for value
 		bz := new(bytes.Buffer)
 		enc := gob.NewEncoder(bz)
@@ -94,8 +104,9 @@ func (keybase *badgerKeybase) Create(passphrase string) error {
 	return err
 }
 
-// Crate a new key and store it in the DB by encoding the KeyPair struct into a []byte
+// Crate a new KeyPair from the []byte provided and store it in the DB by encoding the KeyPair struct into a []byte
 // Using the PublicKey.Address() return value as the key for storage
+// DISCUSSION: Is this needed?
 func (keybase *badgerKeybase) CreateFromBytes(privBytes []byte, passphrase string) error {
 	err := keybase.db.Update(func(tx *badger.Txn) error {
 		keyPair, err := CreateNewKeyFromBytes(privBytes, passphrase)
@@ -104,7 +115,36 @@ func (keybase *badgerKeybase) CreateFromBytes(privBytes []byte, passphrase strin
 		}
 
 		// Use key address as key in DB
-		key := keyPair.GetAddress()
+		key := keyPair.GetAddressBytes()
+		// Encode entire KeyPair struct into []byte for value
+		bz := new(bytes.Buffer)
+		enc := gob.NewEncoder(bz)
+		if err = enc.Encode(keyPair); err != nil {
+			return err
+		}
+
+		err = tx.Set(key, bz.Bytes())
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+// Crate a new KeyPair from the private key hex string and store it in the DB by encoding the KeyPair struct into a []byte
+// Using the PublicKey.Address() return value as the key for storage
+func (keybase *badgerKeybase) CreateFromString(privStr, passphrase string) error {
+	err := keybase.db.Update(func(tx *badger.Txn) error {
+		keyPair, err := CreateNewKeyFromString(privStr, passphrase)
+		if err != nil {
+			return err
+		}
+
+		// Use key address as key in DB
+		key := keyPair.GetAddressBytes()
 		// Encode entire KeyPair struct into []byte for value
 		bz := new(bytes.Buffer)
 		enc := gob.NewEncoder(bz)
@@ -155,6 +195,43 @@ func (keybase *badgerKeybase) Get(address []byte) (KeyPair, error) {
 	return kp, nil
 }
 
+// Returns a PrivateKey interface provided the address was found in the DB and the passphrase was correct
+func (keybase *badgerKeybase) GetPrivKey(address []byte, passphrase string) (crypto.PrivateKey, error) {
+	var kp KeyPair
+	bz := new(bytes.Buffer)
+
+	err := keybase.db.View(func(tx *badger.Txn) error {
+		item, err := tx.Get(address)
+		if err != nil {
+			return err
+		}
+
+		value, err := item.ValueCopy(nil)
+		if err != nil {
+			return err
+		}
+
+		// Decode []byte value back into KeyPair struct
+		bz.Write(value)
+		dec := gob.NewDecoder(bz)
+		if err = dec.Decode(&kp); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	privKey, err := kp.Unarmour(passphrase)
+	if err != nil {
+		return nil, err
+	}
+
+	return privKey, nil
+}
+
 // Get all the addresses and key pairs stored in the keybase
 // Returns addresses stored and all the KeyPair structs stored in the DB
 func (keybase *badgerKeybase) GetAll() (addresses [][]byte, keyPairs []KeyPair, err error) {
@@ -167,10 +244,12 @@ func (keybase *badgerKeybase) GetAll() (addresses [][]byte, keyPairs []KeyPair, 
 		for it.Rewind(); it.Valid(); it.Next() {
 			item := it.Item()
 			err := item.Value(func(val []byte) error {
+				b := make([]byte, len(val))
+				copy(b, val)
 				// Decode []byte value back into KeyPair struct
 				var kp KeyPair
 				bz := new(bytes.Buffer)
-				bz.Write(val)
+				bz.Write(b)
 				dec := gob.NewDecoder(bz)
 				if err = dec.Decode(&kp); err != nil {
 					return err
@@ -203,10 +282,51 @@ func (keybase *badgerKeybase) Exists(address []byte) (bool, error) {
 	return val == KeyPair{}, nil
 }
 
+func (keybase *badgerKeybase) UpdatePassphrase(address []byte, oldPassphrase, newPassphrase string) error {
+	// Check the oldPassphrase is correct
+	privKey, err := keybase.GetPrivKey(address, oldPassphrase)
+	if err != nil {
+		return err
+	}
+	privStr := privKey.String()
+
+	err = keybase.db.Update(func(tx *badger.Txn) error {
+		keyPair, err := CreateNewKeyFromString(privStr, newPassphrase)
+		if err != nil {
+			return err
+		}
+
+		// Use key address as key in DB
+		key := keyPair.GetAddressBytes()
+		if bytes.Compare(key, address) != 0 {
+			return fmt.Errorf("Key address does not match previous address.")
+		}
+		// Encode entire KeyPair struct into []byte for value
+		bz := new(bytes.Buffer)
+		enc := gob.NewEncoder(bz)
+		if err = enc.Encode(keyPair); err != nil {
+			return err
+		}
+
+		err = tx.Set(key, bz.Bytes())
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return err
+}
+
 // Remove a KeyPair from the DB given the address
-// TODO: Add a check that the user can decrypt this KeyPair
-func (keybase *badgerKeybase) Delete(address []byte) error {
-	err := keybase.db.Update(func(tx *badger.Txn) error {
+func (keybase *badgerKeybase) Delete(address []byte, passphrase string) error {
+	_, err := keybase.GetPrivKey(address, passphrase)
+	if err != nil {
+		return err
+	}
+
+	err = keybase.db.Update(func(tx *badger.Txn) error {
 		tx.Delete(address)
 		return nil
 	})
@@ -215,6 +335,7 @@ func (keybase *badgerKeybase) Delete(address []byte) error {
 
 // Remove all keys in the DB
 // TODO: Add a check that the use can decrypt all the keys
+// DISCUSSION: Is this needed?
 func (keybase *badgerKeybase) ClearAll() error {
 	return keybase.db.DropAll()
 }
