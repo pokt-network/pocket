@@ -11,6 +11,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	poktCrypto "github.com/pokt-network/pocket/shared/crypto"
@@ -23,6 +24,8 @@ const (
 	r    = 8
 	p    = 1
 	klen = 32
+	// Sec param
+	secParam = 12
 )
 
 var (
@@ -74,14 +77,18 @@ func (kp KeyPair) Unarmour(passphrase string) (poktCrypto.PrivateKey, error) {
 type ArmouredKey struct {
 	Kdf        string
 	Salt       string
+	SecParam   string
+	Hint       string
 	CipherText string
 }
 
 // Generate new armoured private key struct with parameters for unarmouring
-func NewArmouredKey(kdf, salt, cipher string) ArmouredKey {
+func NewArmouredKey(kdf, salt, hint, cipher string) ArmouredKey {
 	return ArmouredKey{
 		Kdf:        kdf,
 		Salt:       salt,
+		SecParam:   strconv.Itoa(secParam),
+		Hint:       hint,
 		CipherText: cipher,
 	}
 }
@@ -105,28 +112,7 @@ func CreateNewKey(passphrase string) (KeyPair, error) {
 	return keyPair, nil
 }
 
-// Generate new private ED25519 key from the bytes provided, encrypt and armour it as a string
-// Returns a KeyPair struct of the Public Key and Armoured String
-// DISCUSSION: Is this needed?
-func CreateNewKeyFromBytes(privBytes []byte, passphrase string) (KeyPair, error) {
-	privKey, err := poktCrypto.NewPrivateKeyFromBytes(privBytes)
-	if err != nil {
-		return KeyPair{}, err
-	}
-
-	privArmour, err := encryptArmourPrivKey(privKey, passphrase)
-	if err != nil || privArmour == "" {
-		return KeyPair{}, nil
-	}
-
-	pubKey := privKey.PublicKey()
-	keyPair := NewKeyPair(pubKey, privArmour)
-
-	return keyPair, nil
-}
-
-// Generate new private ED25519 key from the hex string provided, encrypt and armour it as a string
-// Returns a KeyPair struct of the Public Key and Armoured String
+// Generate new KeyPair from the hex string provided, encrypt and armour it as a string
 func CreateNewKeyFromString(privStr, passphrase string) (KeyPair, error) {
 	privKey, err := poktCrypto.NewPrivateKey(privStr)
 	if err != nil {
@@ -157,7 +143,8 @@ func encryptArmourPrivKey(privKey poktCrypto.PrivateKey, passphrase string) (str
 	armourStr := base64.StdEncoding.EncodeToString(encBytes)
 
 	// Create ArmouredKey object so can unarmour later
-	armoured := NewArmouredKey("scrypt", fmt.Sprintf("%X", saltBytes), armourStr)
+	armoured := NewArmouredKey("scrypt", fmt.Sprintf("%X", saltBytes), "", armourStr)
+	//fmt.Println(armoured.CipherText)
 
 	// Encode armoured struct into []byte
 	var bz bytes.Buffer
