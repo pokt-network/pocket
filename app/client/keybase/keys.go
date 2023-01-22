@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/gob"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	poktCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"golang.org/x/crypto/scrypt"
@@ -25,8 +26,12 @@ const (
 
 var (
 	// Errors
-	ErrorWrongPassphrase = fmt.Errorf("Can't decrypt private key: wrong passphrase")
+	ErrorWrongPassphrase = errors.New("Can't decrypt private key: wrong passphrase")
 )
+
+func ErrorAddrNotFound(addr string) error {
+	return fmt.Errorf("No key found with address: %s", addr)
+}
 
 func init() {
 	gob.Register(poktCrypto.Ed25519PublicKey{})
