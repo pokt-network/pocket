@@ -20,7 +20,7 @@
 ### Iteration 8
 
 - Duration: January 11 - 24
-- [Backlog](https://github.com/orgs/pokt-network/projects/142/views/52?filterQuery=is%3Aclosed+iteration%3A%22Iteration+8%22)
+- [Backlog](https://github.com/orgs/pokt-network/projects/142/views/12?layout=table&filterQuery=iteration%3A%22Iteration+8%22)
 
 #### Iteration Goals
 - M1: PoS
@@ -41,7 +41,7 @@
 ### Iteration 9
 
 - Duration: January 25 - February 7
-- [Backlog](https://github.com/orgs/pokt-network/projects/142/views/41?filterQuery=is%3Aopen+iteration%3A%22Iteration+9%22)
+- [Backlog](https://github.com/orgs/pokt-network/projects/142/views/12?layout=table&filterQuery=iteration%3A%22Iteration+9%22)
 
 -----------------------------
 
