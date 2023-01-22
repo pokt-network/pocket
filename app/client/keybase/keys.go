@@ -11,9 +11,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
+
 	poktCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"golang.org/x/crypto/scrypt"
-	"strings"
 )
 
 const (
