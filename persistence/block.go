@@ -3,10 +3,12 @@ package persistence
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 func (p *persistenceModule) TransactionExists(transactionHash string) (bool, error) {
@@ -54,7 +56,7 @@ func (p PostgresContext) GetHeight() (int64, error) {
 }
 
 // Creates a block protobuf object using the schema defined in the persistence module
-func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*types.Block, error) {
+func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTypes.Block, error) {
 	var prevBlockHash string
 	if p.Height != 0 {
 		var err error
@@ -69,7 +71,7 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*types.
 		return nil, err
 	}
 
-	block := &types.Block{
+	blockHeader := &coreTypes.BlockHeader{
 		Height:            uint64(p.Height),
 		StateHash:         p.stateHash,
 		PrevStateHash:     prevBlockHash,
@@ -77,23 +79,31 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*types.
 		QuorumCertificate: quorumCert,
 		TransactionsHash:  txsHash,
 	}
+	block := &coreTypes.Block{
+		BlockHeader: blockHeader,
+	}
 
 	return block, nil
 }
 
 // Inserts the block into the postgres database
-func (p *PostgresContext) insertBlock(block *types.Block) error {
+func (p *PostgresContext) insertBlock(block *coreTypes.Block) error {
+	if block.BlockHeader == nil {
+		return fmt.Errorf("block header is nil")
+	}
+	blockHeader := block.BlockHeader
+
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, types.InsertBlockQuery(block.Height, block.StateHash, block.ProposerAddress, block.QuorumCertificate))
+	_, err = tx.Exec(ctx, types.InsertBlockQuery(blockHeader.Height, blockHeader.StateHash, blockHeader.ProposerAddress, blockHeader.QuorumCertificate))
 	return err
 }
 
 // Stores the block in the key-value store
-func (p PostgresContext) storeBlock(block *types.Block) error {
+func (p PostgresContext) storeBlock(block *coreTypes.Block) error {
 	blockBz, err := codec.GetCodec().Marshal(block)
 	if err != nil {
 		return err

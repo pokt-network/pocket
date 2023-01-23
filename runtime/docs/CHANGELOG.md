@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.8] - 2023-01-19
+
+- Rewrite `interface{}` to `any`
+
+## [0.0.0.7] - 2023-01-14
+
+- Added MaxConnsCount, MinConnsCount, MaxConnLifetime, MaxConnIdleTime, and HealthCheckPeriod to persistence config.
+
 ## [0.0.0.6] - 2023-01-11
 
 - Updated tests to reflect the updated genesis file

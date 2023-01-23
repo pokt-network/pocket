@@ -214,11 +214,16 @@ func TestNewManagerFromReaders(t *testing.T) {
 						MaxMempoolTransactions:     9000,
 					},
 					Persistence: &configs.PersistenceConfig{
-						PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
-						NodeSchema:     "node1",
-						BlockStorePath: "/var/blockstore",
-						TxIndexerPath:  "",
-						TreesStoreDir:  "/var/trees",
+						PostgresUrl:       "postgres://postgres:postgres@pocket-db:5432/postgres",
+						NodeSchema:        "node1",
+						BlockStorePath:    "/var/blockstore",
+						TxIndexerPath:     "",
+						TreesStoreDir:     "/var/trees",
+						MaxConnsCount:     8,
+						MinConnsCount:     0,
+						MaxConnLifetime:   "1h",
+						MaxConnIdleTime:   "30m",
+						HealthCheckPeriod: "5m",
 					},
 					P2P: &configs.P2PConfig{
 						PrivateKey:            "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a",
@@ -246,7 +251,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 				genesisState: expectedGenesis,
 				clock:        clock.New(),
 			},
-			assertion: func(tt require.TestingT, want, got interface{}, _ ...interface{}) {
+			assertion: func(tt require.TestingT, want, got any, _ ...any) {
 				require.Equal(tt, want.(*Manager).config, got.(*Manager).config)
 				require.Equal(tt, want.(*Manager).genesisState, got.(*Manager).genesisState)
 			},
@@ -277,7 +282,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 				genesisState: expectedGenesis,
 				clock:        clock.New(),
 			},
-			assertion: func(tt require.TestingT, want, got interface{}, _ ...interface{}) {
+			assertion: func(tt require.TestingT, want, got any, _ ...any) {
 				require.Equal(tt, want.(*Manager).config.P2P, got.(*Manager).config.P2P)
 			},
 		},

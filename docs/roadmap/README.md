@@ -59,7 +59,7 @@ gantt
 
 - [ ] Build supporting infrastructure & automation in conjunction to Milestones 1 & 3
 - [ ] Deploy Pocket V1 to DevNet
-- [ ] Build services to enable visiblity and benchmarking via telemetry and logging
+- [ ] Build services to enable visibility and benchmarking via telemetry and logging
 
 ### [M3. Pocket RoS (Relay or Slash)](https://github.com/pokt-network/pocket/milestone/15)
 

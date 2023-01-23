@@ -71,7 +71,7 @@ func (u *UtilityContext) GetPoolAmount(name string) (*big.Int, types.Error) {
 
 func (u *UtilityContext) InsertPool(name string, address []byte, amount string) types.Error {
 	store := u.Store()
-	if err := store.InsertPool(name, address, amount); err != nil {
+	if err := store.InsertPool(name, amount); err != nil {
 		return types.ErrSetPool(name, err)
 	}
 	return nil

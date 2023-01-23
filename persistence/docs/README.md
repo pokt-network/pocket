@@ -1,48 +1,49 @@
 # Persistence Module <!-- omit in toc -->
 
-This document is meant to be a supplement to the living protocol specification at [1.0 Pocket's Persistence Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/persistence) primarily focused on the implementation, details related to the design of the codebase, and information related to testing and development.
+This document is meant to be a supplement to the living protocol specification at [1.0 Pocket's Persistence Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/persistence) primarily focused on the design, implementation and testing details.
 
 - [Database Migrations](#database-migrations)
 - [Node Configuration](#node-configuration)
-- [Debugging & Development](#debugging--development)
+- [Debugging \& Development](#debugging--development)
   - [Code Structure](#code-structure)
   - [Makefile Helpers](#makefile-helpers)
-    - [Admin View - db_admin](#admin-view---db_admin)
-    - [Benchmarking - db_bench](#benchmarking---db_bench)
+    - [Populating the database](#populating-the-database)
+    - [CLI Access - db\_cli\_node](#cli-access---db_cli_node)
+    - [Admin View - db\_admin](#admin-view---db_admin)
+    - [Benchmarking - db\_bench](#benchmarking---db_bench)
 - [Testing](#testing)
-  - [Unit Tests](#unit-tests)
+  - [Unit Tests - All](#unit-tests---all)
+  - [Unit Tests - State Hash](#unit-tests---state-hash)
   - [Dependencies](#dependencies)
   - [Setup](#setup)
     - [Setup Issue - Docker Daemon is not Running](#setup-issue---docker-daemon-is-not-running)
-    - [Setup Issue - Docker Daemon is not Running](#setup-issue---docker-daemon-is-not-running-1)
-- [Implementation FAQ](#implementation-faq)
-- [Implementation TODOs](#implementation-todos)
+    - [Setup Issue - Port already allocated](#setup-issue---port-already-allocated)
+- [\[OUTDATED\]Implementation FAQ](#outdatedimplementation-faq)
+- [\[OUTDATED\] Implementation TODOs](#outdated-implementation-todos)
 
 ## Database Migrations
 
-**TODO**: https://github.com/pokt-network/pocket/issues/77
+<!-- TODO(#77) -->
 
 ## Node Configuration
 
-The persistence specific configuration within a node's `config.json` looks like this:
+The config specification can be found at [persistence_config.proto](../../runtime/configs/proto/persistence_config.proto), and an example can be found at [config1.json](../../build/config/config1.json).
 
-```
+Note that the `node_schema` parameter **MUST** be unique for each node pointing to the same Postgres instance. There is currently no check or validation to guarantee this.
+
+```json
   "persistence": {
-    "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
-    "schema": "node1",
-    "block_store_path": "/var/blockstore",
-    "tx_indexer_path": "",
-    "trees_store_dir": "/var/trees"
-  }
+    // ...
+    "node_schema": "node1",
+    // ...
+  },
 ```
-
-See [config.go](./shared/config/config.go) for the specification and [config1.json](./build/config/config1.json) for an example.
-
-**IMPORTANT**: The `schema` parameter **MUST** be unique for each node associated with the same Postgres instance, and there is currently no check or validation for it.
 
 ## Debugging & Development
 
 ### Code Structure
+
+<!-- TODO(olshansky): Update and explain the code tree structure -->
 
 ```bash
 persistence         # Directly contains the persistence module interface for each actor
@@ -53,7 +54,7 @@ persistence         # Directly contains the persistence module interface for eac
 ├── application.go
 ├── block.go
 ├── context.go      # Postgres context logic
-├── debug.go        # For temporary localnet
+├── debug.go        # For temporary LocalNet
 ├── db.go           # Helpers to connect and initialize the Postgres database
 ├── fisherman.go
 ├── genesis.go      # Populate genesis logic
@@ -90,41 +91,79 @@ persistence         # Directly contains the persistence module interface for eac
 
 ### Makefile Helpers
 
-If you run `make` from the root of the `pocket` repo, there will be several targets prefixed with `db_` that can help with design & development of the infrastructure associated with this module
+Running `make` from the root of the `pocket` repo will show several targets prefixed with `db_` to help with the design, development & debugging of this module.
 
-We only explain a subset of these in the list below.
+A subset of these are explained below.
+
+#### Populating the database
+
+Any targets or helpers to configure and launch the database instances do not populate the actual database.
+
+A LocalNet (see `make compose_and_watch`) must have been executed in order to trigger creation of schemas and hydration of the relevant tables.
+
+#### CLI Access - db_cli_node
+
+Open up a CLI to the postgres database via:
+
+```bash
+make db_cli # Connect to the DB before connecting to a specific schema
+# OR
+psqlSchema=node3 make db_cli_node # Immediately connect to the schema of node3
+```
+
+Then you can make use of the following SQL commands and explore:
+
+```sql
+SELECT schema_name FROM information_schema.schemata; // View all of the schemas available
+SET search_path=node1; // Set the search path to a schema `node1`
+/dt // View all available tables
+```
 
 #### Admin View - db_admin
 
-When you run `db_admin`, the following will be echoed to your screen
+<!--
+# IMPROVE: Bind the login credentials to the postgres container so its automatically logged in and debug why the docker-compose configurations do not automatically prepare the server
+-->
 
-```
+Running `make db_admin` should echo the following to your terminal:
+
+```bash
 echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 ```
 
-After logging in, you can view the tables within each schema by following the following screenshot.
+If the `pgadmin` configs in our [docker-compose file](../../build/deployments/docker-compose.yaml) do not automatically bind, you might need to configure the server yourself as seen in the image below (you will also need to set a name in the `General` tab):
 
-![](./docs/pgadmin.png "pgadmin view")
+![Postgres' admin configuration](./pgadmin_config.png "pgadmin config view")
+
+The following screenshot shows where the tables for each schema can be found:
+
+![Postgres' admin view of LocalNet tables & schemas](./pgadmin.png "pgadmin view")
 
 #### Benchmarking - db_bench
 
-// TODO(olshansky)
+TODO: Build on top of `make db_bench` to enable a proper suite for benchmarking the node
 
 ## Testing
 
-_Note: There are many TODO's in the testing environment including thread safety. It's possible that running the tests in parallel may cause tests to break so it is recommended to use `-p 1` flag_
-
-### Unit Tests
+### Unit Tests - All
 
 Unit tests can be executed with:
 
 ```bash
-$ make test_persistence
+make test_persistence
+```
+
+### Unit Tests - State Hash
+
+Unit tests can be executed with:
+
+```bash
+make test_persistence_state_hash
 ```
 
 ### Dependencies
 
-We use a library called [dockertest](https://github.com/ory/dockertest), along with `TestMain` (learn more [here](https://medium.com/goingogo/why-use-testmain-for-testing-in-go-dafb52b406bc]), to use the local Docker Daemon for unit testing.
+We use [dockertest](https://github.com/ory/dockertest) to configure a local Postgres Docker Daemon during unit testing.
 
 ### Setup
 
@@ -132,25 +171,33 @@ Make sure you have a Docker daemon running. See the [Development Guide](docs/dev
 
 #### Setup Issue - Docker Daemon is not Running
 
-If you see an issue similar to the one below, make sure your Docker Daemon is running.
-
-```
+```bash
 not start resource: : dial unix /var/run/docker.sock: connect: no such file or directory
 ```
 
-For example, on macOS, you can run `open /Applications/Docker.app` to start it up.
+Double check your Docker Daemon is running. For example, on macOS, you can run:
 
-#### Setup Issue - Docker Daemon is not Running
-
-If you see an issue similar to the one below, make sure you don't already have a Postgres docker container running or one running on your host machine.
-
+```bash
+open /Applications/Docker.app
 ```
+
+#### Setup Issue - Port already allocated
+
+```bash
 Bind for 0.0.0.0:5432 failed: port is already allocated
 ```
 
-For example, on macOS, you can check for this with `lsof -i:5432` and kill the appropriate process if one exists.
+Double check you don't already have a Postgres docker container running on your host machine. For example, on macOS, you can run:
 
-## Implementation FAQ
+```bash
+lsof -i:5432
+```
+
+And kill the relevant process if one exists.
+
+## [OUTDATED]Implementation FAQ
+
+_NOTE: This section has not been reviewed/updated in a while and will nee to be re-reviewed by someone on the core team._
 
 **Q**: Why do `Get` methods (e.g. `GetAccountAmount`) not return 0 by default?
 **A**: This was done intentionally to differentiate between accounts with a history and without a history. Since accounts are just a proxy into a public key, they all "exist by default" in some senses.
@@ -167,7 +214,9 @@ For example, on macOS, you can check for this with `lsof -i:5432` and kill the a
 **Q**: What is a `Flag` in the `Gov` schema?
 **A**: A flag is very much alike a `Param` with the difference that it also has a boolean flag to specify if that setting is enabled or not at any point in time (height). We are discussing if we should replace the boolean flag and allow multivariate feature flags.
 
-## Implementation TODOs
+## [OUTDATED] Implementation TODOs
+
+_NOTE: This section has not been reviewed/updated in a while and will nee to be re-reviewed by someone on the core team._
 
 These are major TODOs spanning the entire repo so they are documented in one place instead.
 
@@ -188,7 +237,6 @@ Mid-term (i.e. new feature or major refactor) tasks:
 - [ ] TODO(https://github.com/pokt-network/pocket/issues/77): Implement proper DB SQL migrations
 - [ ] INVESTIGATE: Benchmark the queries (especially the ones that need to do sorting)
 - [ ] DISCUSS: Look into `address` is being computed (string <-> hex) and determine if we could/should avoid it
--
 
 Long-term (i.e. design) tasks
 
