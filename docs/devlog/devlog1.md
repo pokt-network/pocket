@@ -4,6 +4,7 @@
 ##### Location: [Discord](https://discord.gg/pokt)
 ##### Duration: 60 minutes
 ##### [Recording]
+##### [Feedback and Discussion Form](https://app.sli.do/event/eF13JYg93rGq4pGLRnHLF5) 
 
 -----------------------------
 
@@ -47,7 +48,7 @@
 
 #### Feedback and Open Discussion
 
-TBD
+[Feedback and Discussion Form](https://app.sli.do/event/eF13JYg93rGq4pGLRnHLF5)
 
 -----------------------------
 
