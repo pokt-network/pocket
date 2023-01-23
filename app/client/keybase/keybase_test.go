@@ -161,6 +161,23 @@ func TestKeybase_GetAllKeys(t *testing.T) {
 	}
 }
 
+func TestKeybase_GetPubKey(t *testing.T) {
+	db, err := initDB()
+	defer db.Stop()
+	require.NoError(t, err)
+
+	err = db.ImportFromString(testKey.String(), testPassphrase)
+	require.NoError(t, err)
+
+	pubKey, err := db.GetPubKey(testKey.Address().String())
+	require.NoError(t, err)
+	require.Equal(t, testKey.Address().Bytes(), pubKey.Address().Bytes())
+	require.Equal(t, pubKey.Address().String(), testKey.Address().String())
+
+	equal := pubKey.Equals(testKey.PublicKey())
+	require.Equal(t, equal, true)
+}
+
 func TestKeybase_GetPrivKey(t *testing.T) {
 	db, err := initDB()
 	defer db.Stop()

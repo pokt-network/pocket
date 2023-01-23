@@ -31,10 +31,12 @@ type Keybase interface {
 	Create(passphrase string) error
 	// Insert a new keypair from the private key hex string provided into the DB
 	ImportFromString(privStr, passphrase string) error
+	// Insert a new keypair from the JSON string of the encrypted private key into the DB
+	//ImportFromJSON(jsonStr, passphrase string) error
 
 	// Accessors
 	Get(address string) (KeyPair, error)
-	//GetPubKey(address string) (crypto.PublicKey, error)
+	GetPubKey(address string) (crypto.PublicKey, error)
 	GetPrivKey(address, passphrase string) (crypto.PrivateKey, error)
 	GetAll() (addresses [][]byte, keyPairs []KeyPair, err error)
 	Exists(address string) (bool, error)
@@ -176,37 +178,19 @@ func (keybase *badgerKeybase) Get(address string) (KeyPair, error) {
 	return kp, nil
 }
 
-// Returns a PrivateKey interface provided the address was found in the DB and the passphrase was correct
-func (keybase *badgerKeybase) GetPrivKey(address, passphrase string) (crypto.PrivateKey, error) {
-	var kp KeyPair
-	bz := new(bytes.Buffer)
-	addrBz, err := hex.DecodeString(address)
+// Returns a PublicKey interface provided the address was found in the DB
+func (keybase *badgerKeybase) GetPubKey(address string) (crypto.PublicKey, error) {
+	kp, err := keybase.Get(address)
 	if err != nil {
 		return nil, err
 	}
 
-	err = keybase.db.View(func(tx *badger.Txn) error {
-		item, err := tx.Get(addrBz)
-		if err != nil && strings.Contains(err.Error(), "not found") {
-			return ErrorAddrNotFound(address)
-		} else if err != nil {
-			return err
-		}
+	return kp.PublicKey, nil
+}
 
-		value, err := item.ValueCopy(nil)
-		if err != nil {
-			return err
-		}
-
-		// Decode []byte value back into KeyPair struct
-		bz.Write(value)
-		dec := gob.NewDecoder(bz)
-		if err = dec.Decode(&kp); err != nil {
-			return err
-		}
-
-		return nil
-	})
+// Returns a PrivateKey interface provided the address was found in the DB and the passphrase was correct
+func (keybase *badgerKeybase) GetPrivKey(address, passphrase string) (crypto.PrivateKey, error) {
+	kp, err := keybase.Get(address)
 	if err != nil {
 		return nil, err
 	}
