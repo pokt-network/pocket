@@ -34,12 +34,15 @@ func TestKeybase_CreateNewKey(t *testing.T) {
 	err = db.Create(testPassphrase)
 	require.NoError(t, err)
 
-	keypairs, err := db.GetAll()
+	addresses, keypairs, err := db.GetAll()
 	require.NoError(t, err)
+	require.Equal(t, len(addresses), 1)
 	require.Equal(t, len(keypairs), 1)
 
+	addr := addresses[0]
 	kp := keypairs[0]
 	require.Equal(t, len(kp.GetAddressBytes()), crypto.AddressLen)
+	require.Equal(t, addr, kp.GetAddressString())
 }
 
 func TestKeybase_CreateNewKeyNoPassphrase(t *testing.T) {
@@ -50,12 +53,15 @@ func TestKeybase_CreateNewKeyNoPassphrase(t *testing.T) {
 	err = db.Create("")
 	require.NoError(t, err)
 
-	keypairs, err := db.GetAll()
+	addresses, keypairs, err := db.GetAll()
 	require.NoError(t, err)
+	require.Equal(t, len(addresses), 1)
 	require.Equal(t, len(keypairs), 1)
 
+	addr := addresses[0]
 	kp := keypairs[0]
 	require.Equal(t, len(kp.GetAddressBytes()), crypto.AddressLen)
+	require.Equal(t, addr, kp.GetAddressString())
 }
 
 func TestKeybase_ImportKeyFromString(t *testing.T) {
@@ -66,12 +72,15 @@ func TestKeybase_ImportKeyFromString(t *testing.T) {
 	err = db.ImportFromString(testPrivString, testPassphrase)
 	require.NoError(t, err)
 
-	keypairs, err := db.GetAll()
+	addresses, keypairs, err := db.GetAll()
 	require.NoError(t, err)
+	require.Equal(t, len(addresses), 1)
 	require.Equal(t, len(keypairs), 1)
 
+	addr := addresses[0]
 	kp := keypairs[0]
 	require.Equal(t, len(kp.GetAddressBytes()), crypto.AddressLen)
+	require.Equal(t, addr, kp.GetAddressString())
 	require.Equal(t, kp.GetAddressString(), testAddr)
 	require.Equal(t, kp.PublicKey.String(), testPubString)
 
@@ -88,12 +97,15 @@ func TestKeybase_ImportKeyFromStringNoPassphrase(t *testing.T) {
 	err = db.ImportFromString(testPrivString, "")
 	require.NoError(t, err)
 
-	keypairs, err := db.GetAll()
+	addresses, keypairs, err := db.GetAll()
 	require.NoError(t, err)
+	require.Equal(t, len(addresses), 1)
 	require.Equal(t, len(keypairs), 1)
 
+	addr := addresses[0]
 	kp := keypairs[0]
 	require.Equal(t, len(kp.GetAddressBytes()), crypto.AddressLen)
+	require.Equal(t, addr, kp.GetAddressString())
 	require.Equal(t, kp.GetAddressString(), testAddr)
 	require.Equal(t, kp.PublicKey.String(), testPubString)
 
@@ -132,8 +144,8 @@ func TestKeybase_ImportKeyFromJSON(t *testing.T) {
 
 	addr := addresses[0]
 	kp := keypairs[0]
-	require.Equal(t, len(addr), crypto.AddressLen)
-	require.Equal(t, addr, kp.GetAddressBytes())
+	require.Equal(t, len(kp.GetAddressBytes()), crypto.AddressLen)
+	require.Equal(t, addr, kp.GetAddressString())
 	require.Equal(t, kp.GetAddressString(), testKey.Address().String())
 
 	privKey, err := kp.Unarmour(testPassphrase)
@@ -210,13 +222,16 @@ func TestKeybase_GetAllKeys(t *testing.T) {
 		pks[pk.Address().String()] = pk
 	}
 
-	keypairs, err := db.GetAll()
+	addresses, keypairs, err := db.GetAll()
 	require.NoError(t, err)
 	require.Equal(t, len(keypairs), 5)
 
 	for i := 0; i < 5; i++ {
 		privKey, err := keypairs[i].Unarmour(testPassphrase)
 		require.NoError(t, err)
+
+		require.Equal(t, addresses[i], keypairs[i].GetAddressString())
+		require.Equal(t, addresses[i], privKey.Address().String())
 
 		equal := privKey.Equals(pks[privKey.Address().String()])
 		require.Equal(t, equal, true)

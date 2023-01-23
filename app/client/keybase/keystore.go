@@ -37,7 +37,7 @@ type Keybase interface {
 	Get(address string) (KeyPair, error)
 	GetPubKey(address string) (crypto.PublicKey, error)
 	GetPrivKey(address, passphrase string) (crypto.PrivateKey, error)
-	GetAll() (keyPairs []KeyPair, err error)
+	GetAll() (addresses []string, keyPairs []KeyPair, err error)
 	Exists(address string) (bool, error)
 
 	// Exporters
@@ -237,7 +237,7 @@ func (keybase *badgerKeybase) GetPrivKey(address, passphrase string) (crypto.Pri
 
 // Get all the addresses and key pairs stored in the keybase
 // Returns addresses stored and all the KeyPair structs stored in the DB
-func (keybase *badgerKeybase) GetAll() (keyPairs []KeyPair, err error) {
+func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []KeyPair, err error) {
 	// View executes the function provided managing a read only transaction
 	err = keybase.db.View(func(tx *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
@@ -258,6 +258,7 @@ func (keybase *badgerKeybase) GetAll() (keyPairs []KeyPair, err error) {
 					return err
 				}
 
+				addresses = append(addresses, kp.GetAddressString())
 				keyPairs = append(keyPairs, kp)
 				return nil
 			})
@@ -269,10 +270,10 @@ func (keybase *badgerKeybase) GetAll() (keyPairs []KeyPair, err error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return keyPairs, nil
+	return addresses, keyPairs, nil
 }
 
 // Check whether an address is currently stored in the DB
