@@ -68,3 +68,6 @@ bin/*
 # Validator keys used for testing/demoes
 val1.json
 val2.json
+
+# Neo4j DB files
+neo4j/

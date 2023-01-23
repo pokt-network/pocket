@@ -264,6 +264,10 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 
 	# echo "View generated proto files by running: make protogen_show"
 
+## Detached deployment of the neo4j container.
+neo_d:
+	docker-compose -f deployments/docker-compose.yaml up -d neo4j
+
 # CONSIDERATION: Some proto files contain unused gRPC services so we may need to add the following
 #                if/when we decide to include it: `grpc--go-grpc_opt=paths=source_relative --go-grpc_out=./output/path`
 
