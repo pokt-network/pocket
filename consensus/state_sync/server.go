@@ -5,6 +5,7 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -84,20 +85,20 @@ func (m *stateSync) aggregateMetaResults() (uint64, uint64) {
 	return minHeight, maxHeight
 }
 
-func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*typesCons.Block, error) {
+func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, error) {
 
 	blockStore := m.GetBus().GetPersistenceModule().GetBlockStore()
 	heightBytes := heightToBytes(int64(blockHeight))
 	blockBytes, err := blockStore.Get(heightBytes)
 
 	if err != nil {
-		return &typesCons.Block{}, err
+		return &coreTypes.Block{}, err
 	}
 
-	var block typesCons.Block
+	var block coreTypes.Block
 	err = codec.GetCodec().Unmarshal(blockBytes, &block)
 	if err != nil {
-		return &typesCons.Block{}, err
+		return &coreTypes.Block{}, err
 	}
 
 	return &block, nil
