@@ -71,7 +71,7 @@ type consensusModule struct {
 
 	// TECHDEBT: Rename this to `consensusMessagePool` or something similar
 	//           and reconsider if an in-memory map is the best approach
-	messagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
+	consensusMessagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
 }
 
 // Functions exposed by the debug interface should only be used for testing puposes.
@@ -143,7 +143,7 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 
 		logPrefix: DefaultLogPrefix,
 
-		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
+		consensusMessagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
 	}
 	bus.RegisterModule(m)
 

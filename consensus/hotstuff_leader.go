@@ -51,7 +51,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 	// Likely to be `nil` if blockchain is progressing well.
 	// TECHDEBT: How do we properly validate `highPrepareQC` here?
-	highPrepareQC := m.findHighQC(m.messagePool[NewRound])
+	highPrepareQC := m.findHighQC(m.consensusMessagePool[NewRound])
 
 	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
 	// TODO: Add more unit tests for these checks...
@@ -75,7 +75,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	}
 
 	m.step = Prepare
-	m.messagePool[NewRound] = nil
+	m.consensusMessagePool[NewRound] = nil
 
 	prepareProposeMessage, err := CreateProposeMessage(m.height, m.round, Prepare, m.block, highPrepareQC)
 	if err != nil {
@@ -119,7 +119,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 	m.step = PreCommit
 	m.highPrepareQC = prepareQC
-	m.messagePool[Prepare] = nil
+	m.consensusMessagePool[Prepare] = nil
 
 	preCommitProposeMessage, err := CreateProposeMessage(m.height, m.round, PreCommit, m.block, prepareQC)
 	if err != nil {
@@ -163,7 +163,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 	m.step = Commit
 	m.lockedQC = preCommitQC
-	m.messagePool[PreCommit] = nil
+	m.consensusMessagePool[PreCommit] = nil
 
 	commitProposeMessage, err := CreateProposeMessage(m.height, m.round, Commit, m.block, preCommitQC)
 	if err != nil {
@@ -206,7 +206,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	}
 
 	m.step = Decide
-	m.messagePool[Commit] = nil
+	m.consensusMessagePool[Commit] = nil
 
 	decideProposeMessage, err := CreateProposeMessage(m.height, m.round, Decide, m.block, commitQC)
 	if err != nil {
@@ -334,14 +334,14 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 //	and does not recursively determine the size of all the underlying elements
 //	Add proper tests and implementation once the mempool is implemented.
 func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) error {
-	if m.consCfg.MaxMempoolBytes < uint64(unsafe.Sizeof(m.messagePool)) {
+	if m.consCfg.MaxMempoolBytes < uint64(unsafe.Sizeof(m.consensusMessagePool)) {
 		m.nodeLogError(typesCons.DisregardHotstuffMessage, typesCons.ErrConsensusMempoolFull)
 		return typesCons.ErrConsensusMempoolFull
 	}
 
 	// Only the leader needs to aggregate consensus related messages.
 	step := msg.GetStep()
-	m.messagePool[step] = append(m.messagePool[step], msg)
+	m.consensusMessagePool[step] = append(m.consensusMessagePool[step], msg)
 
 	return nil
 }
