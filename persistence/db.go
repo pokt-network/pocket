@@ -167,10 +167,10 @@ func initializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor type
 }
 
 func initializeAccountTables(ctx context.Context, db *pgx.Conn) error {
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.AccountTableName, types.AccountTableSchema)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.AccountTableName, types.Account.GetTableSchema())); err != nil {
 		return err
 	}
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.PoolTableName, types.PoolTableSchema)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.PoolTableName, types.Pool.GetTableSchema())); err != nil {
 		return err
 	}
 	return nil
