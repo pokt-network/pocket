@@ -300,7 +300,7 @@ func (keybase *badgerKeybase) ExportPrivJSON(address, passphrase string) (string
 	if err != nil {
 		return "", err
 	}
-	return kp.ExportJSON(passphrase), nil
+	return kp.ExportJSON(passphrase)
 }
 
 func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassphrase string) error {
