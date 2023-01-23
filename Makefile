@@ -244,8 +244,8 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 	$(PROTOC) -I=./shared/codec/proto      --go_out=./shared/codec      ./shared/codec/proto/*.proto
 
 	# Runtime
-	protoc --go_opt=paths=source_relative  -I=./runtime/configs/types/proto				--go_out=./runtime/configs/types	./runtime/configs/types/proto/*.proto     --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./runtime/configs/proto	-I=./runtime/configs/types/proto     				--go_out=./runtime/configs      ./runtime/configs/proto/*.proto     --experimental_allow_proto3_optional
+	$(PROTOC) --go_opt=paths=source_relative  -I=./runtime/configs/types/proto				--go_out=./runtime/configs/types	./runtime/configs/types/proto/*.proto     --experimental_allow_proto3_optional
+	$(PROTOC) --go_opt=paths=source_relative  -I=./runtime/configs/proto	-I=./runtime/configs/types/proto     				--go_out=./runtime/configs      ./runtime/configs/proto/*.proto     --experimental_allow_proto3_optional
 	$(PROTOC_SHARED) -I=./runtime/genesis/proto  --go_out=./runtime/genesis ./runtime/genesis/proto/*.proto
 	protoc-go-inject-tag -input="./runtime/genesis/*.pb.go"
 
