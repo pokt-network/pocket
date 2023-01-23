@@ -46,8 +46,8 @@ func init() {
 
 // KeyPair struct stores the public key and the passphrase encrypted private key
 type KeyPair struct {
-	PublicKey     poktCrypto.PublicKey
-	PrivKeyArmour string
+	PublicKey     poktCrypto.PublicKey `json:"pubkey"`
+	PrivKeyArmour string               `json:"privkey.armor"`
 }
 
 // Generate a new KeyPair struct given the public key and armoured private key
@@ -75,11 +75,11 @@ func (kp KeyPair) Unarmour(passphrase string) (poktCrypto.PrivateKey, error) {
 
 // Armoured Private Key struct with fields to unarmour it later
 type ArmouredKey struct {
-	Kdf        string
-	Salt       string
-	SecParam   string
-	Hint       string
-	CipherText string
+	Kdf        string `json:"kdf"`
+	Salt       string `json:"salt"`
+	SecParam   string `json:"secparam"`
+	Hint       string `json:"hint"`
+	CipherText string `json:"ciphertext"`
 }
 
 // Generate new armoured private key struct with parameters for unarmouring
