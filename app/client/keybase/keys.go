@@ -1,7 +1,6 @@
 package keybase
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/ed25519"
@@ -9,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/gob"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -41,7 +41,6 @@ func init() {
 	gob.Register(poktCrypto.Ed25519PublicKey{})
 	gob.Register(ed25519.PublicKey{})
 	gob.Register(KeyPair{})
-	gob.Register(ArmouredKey{})
 }
 
 // KeyPair struct stores the public key and the passphrase encrypted private key
@@ -71,6 +70,20 @@ func (kp KeyPair) GetAddressString() string {
 // Unarmour the private key with the passphrase provided
 func (kp KeyPair) Unarmour(passphrase string) (poktCrypto.PrivateKey, error) {
 	return unarmourDecryptPrivKey(kp.PrivKeyArmour, passphrase)
+}
+
+// Export Private Key String
+func (kp KeyPair) ExportString(passphrase string) (string, error) {
+	privKey, err := unarmourDecryptPrivKey(kp.PrivKeyArmour, passphrase)
+	if err != nil {
+		return "", err
+	}
+	return privKey.String(), nil
+}
+
+// Export Private Key as armoured JSON string with fields to decrypt
+func (kp KeyPair) ExportJSON(passphrase string) string {
+	return kp.PrivKeyArmour
 }
 
 // Armoured Private Key struct with fields to unarmour it later
@@ -130,6 +143,19 @@ func CreateNewKeyFromString(privStr, passphrase string) (KeyPair, error) {
 	return keyPair, nil
 }
 
+// Create new KeyPair from the JSON encoded privStr
+func ImportKeyFromJSON(jsonStr, passphrase string) (KeyPair, error) {
+	// Get Private Key from armouredStr
+	privKey, err := unarmourDecryptPrivKey(jsonStr, passphrase)
+	if err != nil {
+		return KeyPair{}, err
+	}
+	pubKey := privKey.PublicKey()
+	keyPair := NewKeyPair(pubKey, jsonStr)
+
+	return keyPair, nil
+}
+
 // Encrypt the given privKey with the passphrase, armour it by encoding the ecnrypted
 // []byte into base64, and convert into a json string with the parameters for unarmouring
 func encryptArmourPrivKey(privKey poktCrypto.PrivateKey, passphrase string) (string, error) {
@@ -144,16 +170,14 @@ func encryptArmourPrivKey(privKey poktCrypto.PrivateKey, passphrase string) (str
 
 	// Create ArmouredKey object so can unarmour later
 	armoured := NewArmouredKey("scrypt", fmt.Sprintf("%X", saltBytes), "", armourStr)
-	//fmt.Println(armoured.CipherText)
 
 	// Encode armoured struct into []byte
-	var bz bytes.Buffer
-	enc := gob.NewEncoder(&bz)
-	if err = enc.Encode(armoured); err != nil {
+	js, err := json.Marshal(armoured)
+	if err != nil {
 		return "", err
 	}
 
-	return bz.String(), nil
+	return string(js), nil
 }
 
 // Encrypt the given privKey with the passphrase using a randomly
@@ -182,10 +206,8 @@ func encryptPrivKey(privKey poktCrypto.PrivateKey, passphrase string) (saltBytes
 func unarmourDecryptPrivKey(armourStr string, passphrase string) (privKey poktCrypto.PrivateKey, err error) {
 	// Decode armourStr back into ArmouredKey struct
 	armouredKey := ArmouredKey{}
-	var bz bytes.Buffer
-	bz.Write([]byte(armourStr))
-	dec := gob.NewDecoder(&bz)
-	if err = dec.Decode(&armouredKey); err != nil {
+	err = json.Unmarshal([]byte(armourStr), &armouredKey)
+	if err != nil {
 		return nil, err
 	}
 

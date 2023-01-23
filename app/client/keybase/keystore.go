@@ -16,7 +16,6 @@ func init() {
 	gob.Register(crypto.Ed25519PublicKey{})
 	gob.Register(ed25519.PublicKey{})
 	gob.Register(KeyPair{})
-	gob.Register(ArmouredKey{})
 }
 
 // badgerKeybase implements the KeyBase interface
@@ -32,7 +31,7 @@ type Keybase interface {
 	// Insert a new keypair from the private key hex string provided into the DB
 	ImportFromString(privStr, passphrase string) error
 	// Insert a new keypair from the JSON string of the encrypted private key into the DB
-	//ImportFromJSON(jsonStr, passphrase string) error
+	ImportFromJSON(jsonStr, passphrase string) error
 
 	// Accessors
 	Get(address string) (KeyPair, error)
@@ -40,6 +39,10 @@ type Keybase interface {
 	GetPrivKey(address, passphrase string) (crypto.PrivateKey, error)
 	GetAll() (addresses [][]byte, keyPairs []KeyPair, err error)
 	Exists(address string) (bool, error)
+
+	// Exporters
+	ExportPrivString(address, passphrase string) (string, error)
+	ExportPrivJSON(address, passphrase string) (string, error)
 
 	// Updator
 	UpdatePassphrase(address, oldPassphrase, newPassphrase string) error
@@ -116,6 +119,35 @@ func (keybase *badgerKeybase) Create(passphrase string) error {
 func (keybase *badgerKeybase) ImportFromString(privStr, passphrase string) error {
 	err := keybase.db.Update(func(tx *badger.Txn) error {
 		keyPair, err := CreateNewKeyFromString(privStr, passphrase)
+		if err != nil {
+			return err
+		}
+
+		// Use key address as key in DB
+		key := keyPair.GetAddressBytes()
+		// Encode entire KeyPair struct into []byte for value
+		bz := new(bytes.Buffer)
+		enc := gob.NewEncoder(bz)
+		if err = enc.Encode(keyPair); err != nil {
+			return err
+		}
+
+		err = tx.Set(key, bz.Bytes())
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+// Crate a new KeyPair from the private key JSON string and store it in the DB by encoding the KeyPair struct into a []byte
+// Using the PublicKey.Address() return value as the key for storage
+func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
+	err := keybase.db.Update(func(tx *badger.Txn) error {
+		keyPair, err := ImportKeyFromJSON(jsonStr, passphrase)
 		if err != nil {
 			return err
 		}
@@ -251,6 +283,24 @@ func (keybase *badgerKeybase) Exists(address string) (bool, error) {
 		return false, err
 	}
 	return val != KeyPair{}, nil
+}
+
+// Export the Private Key string of the given address
+func (keybase *badgerKeybase) ExportPrivString(address, passphrase string) (string, error) {
+	kp, err := keybase.Get(address)
+	if err != nil {
+		return "", err
+	}
+	return kp.ExportString(passphrase)
+}
+
+// Export the Private Key of the given address as a JSON object
+func (keybase *badgerKeybase) ExportPrivJSON(address, passphrase string) (string, error) {
+	kp, err := keybase.Get(address)
+	if err != nil {
+		return "", err
+	}
+	return kp.ExportJSON(passphrase), nil
 }
 
 func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassphrase string) error {
