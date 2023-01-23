@@ -30,10 +30,11 @@ type Keybase interface {
 	// Create new keypair entry in DB
 	Create(passphrase string) error
 	// Insert a new keypair from the private key hex string provided into the DB
-	CreateFromString(privStr, passphrase string) error
+	ImportFromString(privStr, passphrase string) error
 
 	// Accessors
 	Get(address string) (KeyPair, error)
+	//GetPubKey(address string) (crypto.PublicKey, error)
 	GetPrivKey(address, passphrase string) (crypto.PrivateKey, error)
 	GetAll() (addresses [][]byte, keyPairs []KeyPair, err error)
 	Exists(address string) (bool, error)
@@ -110,7 +111,7 @@ func (keybase *badgerKeybase) Create(passphrase string) error {
 
 // Crate a new KeyPair from the private key hex string and store it in the DB by encoding the KeyPair struct into a []byte
 // Using the PublicKey.Address() return value as the key for storage
-func (keybase *badgerKeybase) CreateFromString(privStr, passphrase string) error {
+func (keybase *badgerKeybase) ImportFromString(privStr, passphrase string) error {
 	err := keybase.db.Update(func(tx *badger.Txn) error {
 		keyPair, err := CreateNewKeyFromString(privStr, passphrase)
 		if err != nil {
