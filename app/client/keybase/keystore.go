@@ -31,7 +31,7 @@ type Keybase interface {
 	// Insert a new keypair from the private key hex string provided into the DB
 	ImportFromString(privStr, passphrase string) error
 	// Insert a new keypair from the JSON string of the encrypted private key into the DB
-	ImportFromJSON(jsonStr, passphrase string) error
+	ImportFromJSON(jsonStr, passphrase string) error // TODO: Figure out why V0 keys are too long to import
 
 	// Accessors
 	Get(address string) (KeyPair, error)
