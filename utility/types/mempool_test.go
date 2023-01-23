@@ -37,7 +37,7 @@ func TestMempool(t *testing.T) {
 				}
 			}
 
-			require.Equal(t, len(tt.wantItems), txFifoMempool.Len(), "mismatching Len (capacity filled with elements)")
+			require.Equal(t, len(tt.wantItems), txFifoMempool.Size(), "mismatching Size (capacity filled with elements)")
 
 			for _, wantItem := range tt.wantItems {
 				wantHash := crypto.GetHashStringFromBytes(wantItem)
