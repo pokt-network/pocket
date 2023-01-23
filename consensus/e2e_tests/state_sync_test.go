@@ -112,28 +112,26 @@ func TestStateSyncServer(t *testing.T) {
 	// We choose node 2 as the requester node.
 	requesterNode := pocketNodes[2]
 	requesterNodePeerId, err := requesterNode.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
-	if err != nil {
-		//TODO check if this must be failed, rather than logged.
-		t.Logf("Can't get the peerId%s", err)
-	}
+	require.NoError(t, err)
 
-	stateSyncReq := typesCons.StateSyncMetadataRequest{
+	// Test MetaData Req
+	stateSyncMetaDataReq := typesCons.StateSyncMetadataRequest{
 		PeerId: requesterNodePeerId,
 	}
 
-	stateSyncMessage := &typesCons.StateSyncMessage{
+	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
 		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_METADATA_REQUEST,
 		Message: &typesCons.StateSyncMessage_MetadataReq{
-			MetadataReq: &stateSyncReq,
+			MetadataReq: &stateSyncMetaDataReq,
 		},
 	}
-	anyProto, err := anypb.New(stateSyncMessage)
+	anyProto, err := anypb.New(stateSyncMetaDataReqMessage)
 	require.NoError(t, err)
 
 	// send metadata request to the server node
 	P2PSend(t, serverNode, anyProto)
 
-	// start waiting for the state sync message on server node,
+	// start waiting for the metadata request on server node,
 	numExpectedMsgs = 1
 	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE, requesterNode.GetP2PAddress(), numExpectedMsgs, 250, false)
 	require.NoError(t, err)
@@ -141,11 +139,48 @@ func TestStateSyncServer(t *testing.T) {
 	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
 	require.NoError(t, err)
 
-	stateSyncMessage, ok := msg.(*typesCons.StateSyncMessage)
+	stateSyncMetaDataResMessage, ok := msg.(*typesCons.StateSyncMessage)
 	require.True(t, ok)
 
-	metaDataRes := stateSyncMessage.GetMetadataRes()
+	metaDataRes := stateSyncMetaDataResMessage.GetMetadataRes()
 	require.NotEmpty(t, metaDataRes)
 
 	require.Equal(t, uint64(4), metaDataRes.MaxHeight)
+
+	// // Test GetBlock Req
+	stateSyncGetBlockReq := typesCons.GetBlockRequest{
+		PeerId: requesterNodePeerId,
+		Height: 0,
+	}
+
+	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_REQUEST,
+		Message: &typesCons.StateSyncMessage_GetBlockReq{
+			GetBlockReq: &stateSyncGetBlockReq,
+		},
+	}
+
+	anyProto, err = anypb.New(stateSyncGetBlockMessage)
+	require.NoError(t, err)
+
+	// send get block request to the server node
+	P2PSend(t, serverNode, anyProto)
+
+	// start waiting for the get block request on server node,
+	numExpectedMsgs = 1
+	receivedMsg, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE, requesterNode.GetP2PAddress(), numExpectedMsgs, 250, false)
+	require.NoError(t, err)
+
+	// msg, err = codec.GetCodec().FromAny(receivedMsg[0])
+	// require.NoError(t, err)
+
+	// stateSyncGetBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
+	// require.True(t, ok)
+
+	// getBlockRes := stateSyncGetBlockResMessage.GetGetBlockRes()
+	// require.NotEmpty(t, metaDataRes)
+
+	// fmt.Printf("Get Block Response: %s", getBlockRes)
+	// require.Equal(t, getBlockRes.Block.GetBlockHeader().Height, testHeight)
+
 }

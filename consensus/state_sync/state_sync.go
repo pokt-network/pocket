@@ -63,7 +63,9 @@ func (*stateSync) Create(bus modules.Bus) (modules.Module, error) {
 	m := &stateSync{}
 	bus.RegisterModule(m)
 
-	//! TODO: think about what must be the default mode
+	// TODO: think about what must be the default mode,
+	// Synched seems reasonable, as switching to pacemaker and sync modes must trigger operations
+	// And target state for the node must be synched.
 	m.currentMode = Synched
 
 	m.serverMode = false

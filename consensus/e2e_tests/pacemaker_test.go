@@ -270,5 +270,5 @@ func TestPacemakerNotSafeProposal(t *testing.T) {
 }
 
 func TestPacemakerExponentialTimeouts(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }

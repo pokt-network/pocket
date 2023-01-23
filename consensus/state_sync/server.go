@@ -54,11 +54,14 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 }
 
 func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
-
-	peerId, err := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
+	serverNodePeerId, err := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
 	if err != nil {
 		return err
 	}
+
+	clientPeerId := blockReq.PeerId
+
+	m.nodeLog(fmt.Sprintf("%s Received State Sync Get Block Req from: %s", serverNodePeerId, clientPeerId))
 
 	block, err := m.getBlockAtHeight(blockReq.Height)
 	if err != nil {
@@ -66,7 +69,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	}
 
 	metadataRes := typesCons.GetBlockResponse{
-		PeerId: peerId,
+		PeerId: serverNodePeerId,
 		Block:  block,
 	}
 
@@ -78,17 +81,19 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	return m.sendToPeer(anyStateSyncMessage, cryptoPocket.AddressFromString(blockReq.PeerId))
 }
 
-// TODO! IMPLEMENT Placeholder function for metadata aggregation of data received from different peers
+// TODO IMPLEMENT
+// Placeholder function for metadata aggregation of data received from different peers
 func (m *stateSync) aggregateMetaResults() (uint64, uint64) {
 	minHeight := m.GetBus().GetConsensusModule().CurrentHeight()
 	maxHeight := m.GetBus().GetConsensusModule().CurrentHeight()
 	return minHeight, maxHeight
 }
 
+// Get a block from persistance module given block height
 func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, error) {
-
 	blockStore := m.GetBus().GetPersistenceModule().GetBlockStore()
 	heightBytes := heightToBytes(int64(blockHeight))
+
 	blockBytes, err := blockStore.Get(heightBytes)
 
 	if err != nil {
@@ -102,5 +107,4 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 	}
 
 	return &block, nil
-
 }

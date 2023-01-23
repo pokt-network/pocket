@@ -8,12 +8,12 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// Helper function for sending state sync message to
 func (m *stateSync) sendToPeer(msg *anypb.Any, peerId cryptoPocket.Address) error {
 	if err := m.GetBus().GetP2PModule().Send(peerId, msg); err != nil {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return err
 	}
-
 	return nil
 }
 
