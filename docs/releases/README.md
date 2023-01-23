@@ -18,7 +18,7 @@ For example, `v0.0.1-alpha.pre.1` is the tag used for the first milestone merge 
 
 Automatic development / test / production builds are still a work in progress, but we plan to incorporate the following when we reach that point:
 
-- `+dirty` for uncommited changes
+- `+dirty` for uncommitted changes
 - `-version` flag that can be injected or defaults to `UNKNOWN`
 - `branch_name` and a shortened `commit_hash` should be included
 
