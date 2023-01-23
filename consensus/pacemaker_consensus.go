@@ -10,7 +10,7 @@ import (
 )
 
 // Implementations of the type ConsensusPacemaker interface
-// SetHeight, SeetRound, SetStep are implemented for ConsensusDebugModule
+// SetHeight, SetRound, SetStep are implemented for ConsensusDebugModule
 func (m *consensusModule) ResetRound() {
 	m.clearLeader()
 	m.clearMessagesPool()
@@ -68,6 +68,10 @@ func (m *consensusModule) NewLeader(msg *anypb.Any) error {
 	}
 
 	return m.electNextLeader(message)
+}
+
+func (m *consensusModule) IsPrepareQCNil() bool {
+	return m.prepareQC == nil
 }
 
 func (m *consensusModule) GetPrepareQC() (*anypb.Any, error) {

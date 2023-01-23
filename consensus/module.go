@@ -13,6 +13,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 
@@ -47,7 +48,7 @@ type consensusModule struct {
 	height uint64
 	round  uint64
 	step   typesCons.HotstuffStep
-	block  *typesCons.Block // The current block being proposed / voted on; it has not been committed to finality
+	block  *coreTypes.Block // The current block being proposed / voted on; it has not been committed to finality
 	// TODO(#315): Move the statefulness of `TxResult` to the persistence module
 	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
@@ -85,7 +86,7 @@ type ConsensusDebugModule interface {
 	SetRound(uint64)
 	//REFACTOR: This should accept typesCons.HotstuffStep.
 	SetStep(uint8)
-	SetBlock(*typesCons.Block)
+	SetBlock(*coreTypes.Block)
 	SetLeaderId(*typesCons.NodeId)
 	SetUtilityContext(modules.UtilityContext)
 }
@@ -102,7 +103,7 @@ func (m *consensusModule) SetStep(step uint8) {
 	m.step = typesCons.HotstuffStep(step)
 }
 
-func (m *consensusModule) SetBlock(block *typesCons.Block) {
+func (m *consensusModule) SetBlock(block *coreTypes.Block) {
 	m.block = block
 }
 

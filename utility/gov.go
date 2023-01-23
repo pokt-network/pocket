@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func (u *UtilityContext) UpdateParam(paramName string, value interface{}) typesUtil.Error {
+func (u *UtilityContext) UpdateParam(paramName string, value any) typesUtil.Error {
 	store := u.Store()
 	switch t := value.(type) {
 	case *wrapperspb.Int32Value:
@@ -34,16 +34,8 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) typesU
 	return typesUtil.ErrUnknownParam(paramName)
 }
 
-func (u *UtilityContext) GetBlocksPerSession() (int, typesUtil.Error) {
-	store, height, er := u.GetStoreAndHeight()
-	if er != nil {
-		return 0, er
-	}
-	blocksPerSession, err := store.GetBlocksPerSession(height)
-	if err != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetParam(typesUtil.BlocksPerSessionParamName, err)
-	}
-	return blocksPerSession, nil
+func (u *UtilityContext) GetParameter(paramName string, height int64) (any, error) {
+	return u.Store().GetParameter(paramName, height)
 }
 
 func (u *UtilityContext) GetAppMinimumStake() (*big.Int, typesUtil.Error) {

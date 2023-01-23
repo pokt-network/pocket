@@ -15,14 +15,14 @@ import (
 )
 
 const (
-	DefaultLogPrefix    = "NODE"
+	defaultLogPrefix    = "NODE"
 	pacemakerModuleName = "pacemaker"
 
 	// A buffer around the pacemaker timeout to avoid race condition; 30ms was arbitrarily chosen
 	timeoutBuffer = 30 * time.Millisecond
 
-	NewRound = typesCons.HotstuffStep_HOTSTUFF_STEP_NEWROUND
-	Propose  = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_PROPOSE
+	newRound = typesCons.HotstuffStep_HOTSTUFF_STEP_NEWROUND
+	propose  = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_PROPOSE
 )
 
 var (
@@ -36,6 +36,7 @@ type Pacemaker interface {
 	PacemakerDebug
 
 	ShouldHandleMessage(message *typesCons.HotstuffMessage) (bool, error)
+	SetLogPrefix(string)
 
 	RestartTimer()
 	NewHeight()
@@ -48,7 +49,7 @@ type pacemaker struct {
 	stepCancelFunc context.CancelFunc
 
 	// Only used for development and debugging.
-	pacemakerdebug
+	debug pacemakerDebug
 
 	//REFACTOR: this should be removed, when we build a shared and proper logger
 	logPrefix string
@@ -60,7 +61,9 @@ func CreatePacemaker(bus modules.Bus) (modules.Module, error) {
 }
 
 func (*pacemaker) Create(bus modules.Bus) (modules.Module, error) {
-	m := &pacemaker{}
+	m := &pacemaker{
+		logPrefix: defaultLogPrefix,
+	}
 	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
@@ -69,7 +72,7 @@ func (*pacemaker) Create(bus modules.Bus) (modules.Module, error) {
 	pacemakerCfg := cfg.Consensus.PacemakerConfig
 
 	m.pacemakerCfg = pacemakerCfg
-	m.pacemakerdebug = pacemakerdebug{
+	m.debug = pacemakerDebug{
 		manualMode:                pacemakerCfg.GetManual(),
 		debugTimeBetweenStepsMsec: pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
 		quorumCertificate:         nil,
@@ -101,11 +104,15 @@ func (m *pacemaker) GetBus() modules.Bus {
 	return m.bus
 }
 
+func (m *pacemaker) SetLogPrefix(logPrefix string) {
+	m.logPrefix = logPrefix
+}
+
 func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, error) {
 	consensusMod := m.GetBus().GetConsensusModule()
 
-	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	currentRound := m.GetBus().GetConsensusModule().CurrentRound()
+	currentHeight := consensusMod.CurrentHeight()
+	currentRound := consensusMod.CurrentRound()
 	currentStep := typesCons.HotstuffStep(consensusMod.CurrentStep())
 
 	// Consensus message is from the past
@@ -125,7 +132,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	//                  handlers. Since the leader also acts as a replica but doesn't use the replica's
 	//                  handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
 	// Do not handle messages if it is a self proposal
-	if consensusMod.IsLeader() && msg.Type == Propose && msg.Step != NewRound {
+	if consensusMod.IsLeader() && msg.Type == propose && msg.Step != newRound {
 		return false, nil
 	}
 
@@ -195,20 +202,27 @@ func (m *pacemaker) InterruptRound(reason string) {
 
 	consensusMod.SetRound(consensusMod.CurrentRound() + 1)
 
+	//ADDTEST: check if this is indeed ensured after a successful round
+	if m.GetBus().GetConsensusModule().IsPrepareQCNil() {
+		m.startNextView(nil, false)
+		return
+	}
+
 	msgAny, err := consensusMod.GetPrepareQC()
 	if err != nil {
 		return
 	}
 
 	msg, err := codec.GetCodec().FromAny(msgAny)
-
 	if err != nil {
 		return
 	}
+
 	quorumCertificate, ok := msg.(*typesCons.QuorumCertificate)
 	if !ok {
 		return
 	}
+
 	m.startNextView(quorumCertificate, false)
 }
 
@@ -221,8 +235,7 @@ func (m *pacemaker) NewHeight() {
 
 	m.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
 
-	m.
-		GetBus().
+	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
 		CounterIncrement(
@@ -233,20 +246,20 @@ func (m *pacemaker) NewHeight() {
 func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
 	// DISCUSS: Should we lock the consensus module here?
 	consensusMod := m.GetBus().GetConsensusModule()
-	consensusMod.SetStep(uint8(NewRound))
+	consensusMod.SetStep(uint8(newRound))
 	consensusMod.ResetRound()
 	consensusMod.ReleaseUtilityContext()
 
 	// TECHDEBT: This if structure for debug purposes only; think of a way to externalize it from the main consensus flow...
-	if m.manualMode && !forceNextView {
-		m.quorumCertificate = qc
+	if m.debug.manualMode && !forceNextView {
+		m.debug.quorumCertificate = qc
 		return
 	}
 
 	hotstuffMessage := &typesCons.HotstuffMessage{
-		Type:          Propose,
+		Type:          propose,
 		Height:        consensusMod.CurrentHeight(),
-		Step:          NewRound,
+		Step:          newRound,
 		Round:         consensusMod.CurrentRound(),
 		Block:         nil,
 		Justification: nil, // Set below if qc is not nil

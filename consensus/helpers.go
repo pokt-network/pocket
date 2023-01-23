@@ -255,6 +255,7 @@ func (m *consensusModule) nodeLogError(s string, err error) {
 
 func (m *consensusModule) setLogPrefix(logPrefix string) {
 	m.logPrefix = logPrefix
+	m.paceMaker.SetLogPrefix(logPrefix)
 }
 
 func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {

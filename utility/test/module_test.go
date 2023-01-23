@@ -102,11 +102,16 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
 	cfg := &configs.Config{
 		Persistence: &configs.PersistenceConfig{
-			PostgresUrl:    databaseUrl,
-			NodeSchema:     testSchema,
-			BlockStorePath: "",
-			TxIndexerPath:  "",
-			TreesStoreDir:  "",
+			PostgresUrl:       databaseUrl,
+			NodeSchema:        testSchema,
+			BlockStorePath:    "",
+			TxIndexerPath:     "",
+			TreesStoreDir:     "",
+			MaxConnsCount:     4,
+			MinConnsCount:     0,
+			MaxConnLifetime:   "1h",
+			MaxConnIdleTime:   "30m",
+			HealthCheckPeriod: "5m",
 		},
 		Utility: &configs.UtilityConfig{
 			MaxMempoolTransactionBytes: 1000000,

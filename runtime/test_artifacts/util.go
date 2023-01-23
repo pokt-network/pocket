@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
 	"github.com/pokt-network/pocket/utility"

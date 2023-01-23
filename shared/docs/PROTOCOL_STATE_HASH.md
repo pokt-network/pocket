@@ -106,8 +106,8 @@ graph TD
     D[Did I get any prepareQCs?] --> |Find highest valid prepareQC| E
     D[Did I get any prepareQCs?] --> |No| Z
 
-    E[Am I ahead of prepareQC?] --> |Yes| G
-    E[Am I ahead of prepareQC?] --> |No| Z
+    E[Am I ahead of highPrepareQC?] --> |Yes| G
+    E[Am I ahead of highPrepareQC?] --> |No| Z
 
     G[Do I have a lockedQC] --> |No| H
     G[Do I have a lockedQC] --> |Yes| I

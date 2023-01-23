@@ -2,6 +2,7 @@ package state_sync
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
@@ -94,5 +95,5 @@ type StateSyncModuleLEGACY interface {
 
 	// Uses `HandleBlock` to process retrieved blocks from peers
 	// Must update sync state using `SetMissingBlockHeight`
-	ProcessBlock(block *typesCons.Block) error
+	ProcessBlock(block *coreTypes.Block) error
 }

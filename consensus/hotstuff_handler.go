@@ -46,10 +46,3 @@ func (m *consensusModule) shouldElectNextLeader() bool {
 	// Execute leader election if there is no leader and we are in a new round
 	return m.step == NewRound && m.leaderId == nil
 }
-
-func (m *consensusModule) shouldHandleHotstuffMessage(step typesCons.HotstuffStep) bool {
-	// If a replica is not a leader for this round, but has already determined a leader,
-	// and continues to receive NewRound messages, we avoid logging the "message discard"
-	// because it creates unnecessary spam.
-	return !(m.leaderId != nil && !m.IsLeader() && step == NewRound)
-}
