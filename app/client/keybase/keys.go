@@ -26,6 +26,8 @@ const (
 	klen = 32
 	// Sec param
 	secParam = 12
+	// No passphrase
+	defaultPassphrase = "passphrase"
 )
 
 var (
@@ -187,6 +189,11 @@ func encryptArmourPrivKey(privKey poktCrypto.PrivateKey, passphrase string) (str
 // Encrypt the given privKey with the passphrase using a randomly
 // generated salt and the AES-256 GCM cipher
 func encryptPrivKey(privKey poktCrypto.PrivateKey, passphrase string) (saltBytes []byte, encBytes []byte, err error) {
+	// Use a default passphrase when none is given
+	if passphrase == "" {
+		passphrase = defaultPassphrase
+	}
+
 	// Get random bytes for salt
 	saltBytes = randBytes(16)
 
@@ -243,6 +250,11 @@ func unarmourDecryptPrivKey(armourStr string, passphrase string) (privKey poktCr
 
 // Decrypt the AES-256 GCM encrypted bytes using the passphrase given
 func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (poktCrypto.PrivateKey, error) {
+	// Use a default passphrase when none is given
+	if passphrase == "" {
+		passphrase = defaultPassphrase
+	}
+
 	// Derive key for decryption, see: https://pkg.go.dev/golang.org/x/crypto/scrypt#Key
 	key, err := scrypt.Key([]byte(passphrase), saltBytes, n, r, p, klen)
 	if err != nil {
