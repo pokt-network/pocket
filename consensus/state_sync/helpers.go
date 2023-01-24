@@ -19,8 +19,8 @@ func (m *stateSync) sendToPeer(msg *anypb.Any, peerId cryptoPocket.Address) erro
 
 // This is copy paste from Peristantace/state_test.go
 // TODO Check if can be done without copy paste
-func heightToBytes(height int64) []byte {
+func heightToBytes(height uint64) []byte {
 	heightBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(heightBytes, uint64(height))
+	binary.LittleEndian.PutUint64(heightBytes, height)
 	return heightBytes
 }

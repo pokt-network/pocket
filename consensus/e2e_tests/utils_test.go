@@ -360,6 +360,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 
 	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
 	blockStoreMock.EXPECT().Get(gomock.Any()).Return([]byte{}, nil).AnyTimes()
+	//blockStoreMock.EXPECT().Get(gomock.Any()).Return([]byte{}, nil).AnyTimes()
 	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
@@ -368,6 +369,8 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
+
+	//persistenceReadContextMock.EXPECT().GetBlockHash(gomock.Any()).Return(String).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 

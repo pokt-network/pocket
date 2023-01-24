@@ -104,6 +104,7 @@ func (m *consensusModule) SetStep(step uint8) {
 }
 
 func (m *consensusModule) SetBlock(block *coreTypes.Block) {
+	m.nodeLog("setting block!")
 	m.block = block
 }
 

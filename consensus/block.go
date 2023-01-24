@@ -11,6 +11,7 @@ import (
 
 func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 	// Commit the context
+	fmt.Printf("Committing block at height: %d,   block height: %d \n", m.height, block.BlockHeader.Height)
 	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
@@ -20,6 +21,7 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 	if err := m.utilityContext.Release(); err != nil {
 		log.Println("[WARN] Error releasing utility context: ", err)
 	}
+	fmt.Printf("Committed block at height: %d,   block height: %d \n", m.height, block.BlockHeader.Height)
 
 	m.utilityContext = nil
 

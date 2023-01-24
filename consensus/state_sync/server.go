@@ -68,6 +68,11 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 		return err
 	}
 
+	// blockHash, err := m.getBlockHashAtHeight(blockReq.Height)
+	// if err != nil {
+	// 	return err
+	// }
+
 	metadataRes := typesCons.GetBlockResponse{
 		PeerId: serverNodePeerId,
 		Block:  block,
@@ -79,25 +84,21 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	}
 
 	return m.sendToPeer(anyStateSyncMessage, cryptoPocket.AddressFromString(blockReq.PeerId))
-}
-
-// TODO IMPLEMENT
-// Placeholder function for metadata aggregation of data received from different peers
-func (m *stateSync) aggregateMetaResults() (uint64, uint64) {
-	minHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	maxHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	return minHeight, maxHeight
+	//return
 }
 
 // Get a block from persistance module given block height
 func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, error) {
 	blockStore := m.GetBus().GetPersistenceModule().GetBlockStore()
-	heightBytes := heightToBytes(int64(blockHeight))
+	heightBytes := heightToBytes(blockHeight)
 
 	blockBytes, err := blockStore.Get(heightBytes)
 	if err != nil {
+		m.nodeLog("Couldn't receive the block")
 		return &coreTypes.Block{}, err
 	}
+
+	m.nodeLog(fmt.Sprintf("Found block bytes len: %d", len(blockBytes)))
 
 	var block coreTypes.Block
 	err = codec.GetCodec().Unmarshal(blockBytes, &block)
@@ -106,4 +107,27 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 	}
 
 	return &block, nil
+}
+
+// func (m *stateSync) getBlockHashAtHeight(blockHeight uint64) (string, error) {
+// 	persistenceContext, err := m.GetBus().GetPersistenceModule().
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	blockHash, err := persistenceContext.GetBlockHash(int64(blockHeight))
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	return blockHash, nil
+
+// }
+
+// TODO IMPLEMENT
+// Placeholder function for metadata aggregation of data received from different peers
+func (m *stateSync) aggregateMetaResults() (uint64, uint64) {
+	minHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+	maxHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+	return minHeight, maxHeight
 }

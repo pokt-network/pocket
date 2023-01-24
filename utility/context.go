@@ -2,6 +2,7 @@ package utility
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -63,6 +64,7 @@ func (u *UtilityContext) GetPersistenceContext() modules.PersistenceRWContext {
 }
 
 func (u *UtilityContext) Commit(quorumCert []byte) error {
+	fmt.Println("GOKHAN COMMITTING BLOCK")
 	if err := u.Context.PersistenceRWContext.Commit(u.proposalProposerAddr, quorumCert); err != nil {
 		return err
 	}
