@@ -65,7 +65,6 @@ func (g *GenericFIFOSet[TIdx, TData]) Push(item TData) error {
 	g.onAdd(item, g)
 
 	if g.isOverflowing != nil && g.isOverflowing(g) {
-		//if g.queue.Len() > g.capacity {
 		front := g.queue.Front()
 		delete(g.set, g.indexerFn(front.Value.(TData)))
 		g.queue.Remove(front)
