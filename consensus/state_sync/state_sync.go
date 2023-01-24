@@ -51,6 +51,7 @@ type stateSync struct {
 	serverMode  bool
 
 	//REFACTOR: this should be removed, when we build a shared and proper logger
+	//! TODO: initialize log and node prefix as in pacemaker module, currently printed as empty without node id.
 	logPrefix string
 }
 

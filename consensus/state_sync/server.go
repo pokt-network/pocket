@@ -98,7 +98,9 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 		return &coreTypes.Block{}, err
 	}
 
-	m.nodeLog(fmt.Sprintf("Found block bytes len: %d", len(blockBytes)))
+	//! TODO
+	//! This is nil, so it is not able to find the block, why?
+	m.nodeLog(fmt.Sprintf("Found block bytes: %s", blockBytes))
 
 	var block coreTypes.Block
 	err = codec.GetCodec().Unmarshal(blockBytes, &block)
