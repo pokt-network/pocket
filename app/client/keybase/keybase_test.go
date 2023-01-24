@@ -19,7 +19,12 @@ const (
 	// Other
 	testNewPassphrase = "321gnitsetgnitset"
 	testTx            = "79fca587bbcfd5da86d73e1d849769017b1c91cc8177dec0fc0e3e0d345f2b35"
-	//testJSONString    = `{"kdf":"scrypt","salt":"6abd9619621dc8c2a62860c05dea6df3","secparam":"12","hint":"pocket wallet","ciphertext":"SZHQyzlYHke9g/7u/x1pCMPpA7wdeJSDjUN+9Oe5W0ep+y5enf2r2qVUnEgsZiQLin+t/kd5zS5DtgIS1IQwDrU3CR0ulbc7B5qy16oKkmE6lSCYO5MoLT1ixyenqNINvlmCwN2yaGpZ0LgDumI2pVAI1acjwXdNydG+Ph2m4RsoMwbEhftXN5LNekzjgbuV"}`
+
+	// JSON account
+	testJSONAddr       = "572f306e2d29cb8d77c02ebed7d11a5750c815f2"
+	testJSONPubString  = "408bec6320b540aa0cc86b3e633e214f2fd4dce4caa08f164fa3a9d3e577b46c"
+	testJSONPrivString = "3554119cec1c0c8c5b3845a5d3fc6346eb44ed21aab5c063ae9b6b1d38bec275408bec6320b540aa0cc86b3e633e214f2fd4dce4caa08f164fa3a9d3e577b46c"
+	testJSONString     = `{"kdf":"scrypt","salt":"197d2754445a7e5ce3e6c8d7b1d0ff6f","secparam":"12","hint":"pocket wallet","ciphertext":"B/AORJrSeQrR5ewQGel4FeCCXscoCsMUzq9gXAAxDqjXMmMxa7TedBTuemtO82JyTCoQWFHbGxRx8A7IoETNh5T5yBAjNNrr7DDkVrcfSAM3ez9lQem17DsfowCvRtmbesDlvbSZMRy8mQgClLqWRN+c6W/fPQ/lxLUy1G1A965U/uImcMXzSwbfqYrBPEux"}`
 )
 
 var (
@@ -128,7 +133,6 @@ func TestKeybase_ImportKeyFromStringInvalidString(t *testing.T) {
 	require.EqualError(t, err, crypto.ErrInvalidPrivateKeyLen(len(falseBz)).Error())
 }
 
-/*
 func TestKeybase_ImportKeyFromJSON(t *testing.T) {
 	db, err := initDB()
 	defer db.Stop()
@@ -146,13 +150,13 @@ func TestKeybase_ImportKeyFromJSON(t *testing.T) {
 	kp := keypairs[0]
 	require.Equal(t, len(kp.GetAddressBytes()), crypto.AddressLen)
 	require.Equal(t, addr, kp.GetAddressString())
-	require.Equal(t, kp.GetAddressString(), testKey.Address().String())
+	require.Equal(t, kp.GetAddressString(), testJSONAddr)
+	require.Equal(t, kp.PublicKey.String(), testJSONPubString)
 
 	privKey, err := kp.Unarmour(testPassphrase)
 	require.NoError(t, err)
-	require.Equal(t, privKey.String(), testKey.String())
+	require.Equal(t, privKey.String(), testJSONPrivString)
 }
-*/
 
 func TestKeybase_GetKey(t *testing.T) {
 	db, err := initDB()

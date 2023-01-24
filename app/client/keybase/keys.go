@@ -204,8 +204,8 @@ func encryptPrivKey(privKey poktCrypto.PrivateKey, passphrase string) (saltBytes
 	}
 
 	// Encrypt using AES
-	privKeyBytes := privKey.Bytes()
-	encBytes, err = encryptAESGCM(key, privKeyBytes)
+	privKeyBytes := privKey.String()
+	encBytes, err = encryptAESGCM(key, []byte(privKeyBytes))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -266,9 +266,13 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (poktC
 	if err != nil {
 		return nil, err
 	}
+	bz, err := hex.DecodeString(string(privKeyBytes))
+	if err != nil {
+		return nil, err
+	}
 
 	// Get private key from decrypted bytes
-	pk, err := poktCrypto.NewPrivateKeyFromBytes(privKeyBytes)
+	pk, err := poktCrypto.NewPrivateKeyFromBytes(bz)
 	if err != nil {
 		return nil, err
 	}
