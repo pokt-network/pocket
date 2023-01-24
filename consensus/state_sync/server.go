@@ -95,7 +95,6 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 	heightBytes := heightToBytes(int64(blockHeight))
 
 	blockBytes, err := blockStore.Get(heightBytes)
-
 	if err != nil {
 		return &coreTypes.Block{}, err
 	}

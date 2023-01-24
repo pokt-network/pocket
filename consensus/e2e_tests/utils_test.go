@@ -13,6 +13,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	mocksPer "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
@@ -25,6 +26,7 @@ import (
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
+	//mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 )
 
 func TestMain(m *testing.M) {
@@ -228,11 +230,12 @@ func WaitForNetworkStateSyncEvents(
 // This is a helper for `waitForEventsInternal` that creates the `includeFilter` function based on
 // consensus specific parameters.
 // failOnExtraMessages:
-// 		This flag is useful when running the consensus unit tests. It causes the test to wait up to the
-// 		maximum delay specified in the source code and errors if additional unexpected messages are received.
-// 		For example, if the test expects to receive 5 messages within 2 seconds:
-// 			false: continue if 5 messages are received in 0.5 seconds
-// 			true: wait for another 1.5 seconds after 5 messages are received in 0.5 seconds, and fail if any additional messages are received.
+//
+//	This flag is useful when running the consensus unit tests. It causes the test to wait up to the
+//	maximum delay specified in the source code and errors if additional unexpected messages are received.
+//	For example, if the test expects to receive 5 messages within 2 seconds:
+//		false: continue if 5 messages are received in 0.5 seconds
+//		true: wait for another 1.5 seconds after 5 messages are received in 0.5 seconds, and fail if any additional messages are received.
 func WaitForNetworkConsensusEvents(
 	t *testing.T,
 	clock *clock.Mock,
@@ -343,6 +346,8 @@ loop:
 // Creates a persistence module mock with mock implementations of some basic functionality
 func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *mockModules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
+	//mockModules.NewMockPersistenceModule()
+	//mockModules.
 	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
 	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
 	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
@@ -352,6 +357,10 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
+
+	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
+	blockStoreMock.EXPECT().Get(gomock.Any()).Return([]byte{}, nil).AnyTimes()
+	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
 	// of the consensus module. This one is only used when loading the initial consensus module
