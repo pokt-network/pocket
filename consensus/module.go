@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
+	"github.com/pokt-network/pocket/consensus/pacemaker"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -49,9 +50,8 @@ type consensusModule struct {
 	// TODO(#315): Move the statefulness of `TxResult` to the persistence module
 	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
-	// IMPROVE: Consider renaming `highPrepareQC` to simply `prepareQC`
-	highPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
-	lockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
+	prepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
+	lockedQC  *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
 	leaderId *typesCons.NodeId
@@ -63,7 +63,7 @@ type consensusModule struct {
 	//                to streamline how its accessed in the module (see the ticket).
 
 	utilityContext    modules.UtilityContext
-	paceMaker         Pacemaker
+	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
 	// DEPRECATE: Remove later when we build a shared/proper/injected logger
@@ -76,34 +76,42 @@ type consensusModule struct {
 type ConsensusDebugModule interface {
 	SetHeight(uint64)
 	SetRound(uint64)
-	SetStep(typesCons.HotstuffStep)
+	// REFACTOR: This should accept typesCons.HotstuffStep.
+	SetStep(uint8)
 	SetBlock(*coreTypes.Block)
 	SetLeaderId(*typesCons.NodeId)
 	SetUtilityContext(modules.UtilityContext)
 }
 
-func (c *consensusModule) SetHeight(height uint64) {
-	c.height = height
+func (m *consensusModule) SetHeight(height uint64) {
+	m.height = height
 }
 
-func (c *consensusModule) SetRound(round uint64) {
-	c.round = round
+func (m *consensusModule) SetRound(round uint64) {
+	m.round = round
 }
 
-func (c *consensusModule) SetStep(step typesCons.HotstuffStep) {
-	c.step = step
+func (m *consensusModule) SetStep(step uint8) {
+	m.step = typesCons.HotstuffStep(step)
 }
 
-func (c *consensusModule) SetBlock(block *coreTypes.Block) {
-	c.block = block
+func (m *consensusModule) SetBlock(block *coreTypes.Block) {
+	m.block = block
 }
 
-func (c *consensusModule) SetLeaderId(leaderId *typesCons.NodeId) {
-	c.leaderId = leaderId
+func (m *consensusModule) SetLeaderId(leaderId *typesCons.NodeId) {
+	m.leaderId = leaderId
 }
 
-func (c *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
-	c.utilityContext = utilityContext
+func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
+	m.utilityContext = utilityContext
+}
+
+// Implementations of the type PaceMakerAccessModule interface
+// SetHeight, SeetRound, SetStep are implemented for ConsensusDebugModule
+func (m *consensusModule) ClearLeaderMessagesPool() {
+	m.clearLeader()
+	m.clearMessagesPool()
 }
 
 func Create(bus modules.Bus) (modules.Module, error) {
@@ -116,13 +124,12 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		return nil, err
 	}
 
-	// TODO(olshansky): Can we make this a submodule?
-	paceMakerMod, err := CreatePacemaker(bus)
+	paceMakerMod, err := pacemaker.CreatePacemaker(bus)
 	if err != nil {
 		return nil, err
 	}
 
-	pacemaker := paceMakerMod.(Pacemaker)
+	pacemaker := paceMakerMod.(pacemaker.Pacemaker)
 	m := &consensusModule{
 		paceMaker:         pacemaker,
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
@@ -132,8 +139,8 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		step:   NewRound,
 		block:  nil,
 
-		highPrepareQC: nil,
-		lockedQC:      nil,
+		prepareQC: nil,
+		lockedQC:  nil,
 
 		leaderId: nil,
 
@@ -144,9 +151,6 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		consensusMessagePool: make(map[typesCons.HotstuffStep]*hotstuffFifoMempool),
 	}
 	bus.RegisterModule(m)
-
-	// TODO(#395): Decouple the pacemaker and consensus modules
-	pacemaker.SetConsensusModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 

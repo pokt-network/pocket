@@ -134,13 +134,6 @@ func (m *consensusModule) isOptimisticThresholdMet(numSignatures int, validators
 	return nil
 }
 
-func (m *consensusModule) resetForNewHeight() {
-	m.round = 0
-	m.block = nil
-	m.highPrepareQC = nil
-	m.lockedQC = nil
-}
-
 func protoHash(m proto.Message) string {
 	b, err := codec.GetCodec().Marshal(m)
 	if err != nil {
@@ -218,17 +211,8 @@ func (m *consensusModule) initMessagesPool() {
 }
 
 /*** Leader Election Helpers ***/
-
-func (m *consensusModule) isLeaderUnknown() bool {
-	return m.leaderId == nil
-}
-
-func (m *consensusModule) isLeader() bool {
-	return m.leaderId != nil && *m.leaderId == m.nodeId
-}
-
 func (m *consensusModule) isReplica() bool {
-	return !m.isLeader()
+	return !m.IsLeader()
 }
 
 func (m *consensusModule) clearLeader() {
@@ -252,7 +236,7 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 
-	if m.isLeader() {
+	if m.IsLeader() {
 		m.setLogPrefix("LEADER")
 		m.nodeLog(typesCons.ElectedSelfAsNewLeader(idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
 	} else {
@@ -277,6 +261,7 @@ func (m *consensusModule) nodeLogError(s string, err error) {
 
 func (m *consensusModule) setLogPrefix(logPrefix string) {
 	m.logPrefix = logPrefix
+	m.paceMaker.SetLogPrefix(logPrefix)
 }
 
 func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {

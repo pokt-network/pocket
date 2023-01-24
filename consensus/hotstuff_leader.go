@@ -48,7 +48,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	}
 
 	// Likely to be `nil` if blockchain is progressing well.
-	// TECHDEBT: How do we properly validate `highPrepareQC` here?
+	// TECHDEBT: How do we properly validate `prepareQC` here?
 	highPrepareQC := m.findHighQC(m.consensusMessagePool[NewRound].GetAll()) //TODO: improve this
 
 	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
@@ -62,7 +62,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		}
 		m.block = block
 	} else {
-		// Leader acts like a replica if `highPrepareQC` is not `nil`
+		// Leader acts like a replica if `prepareQC` is not `nil`
 		// TODO: Do we need to call `validateProposal` here similar to how replicas does it
 		if err := m.applyBlock(highPrepareQC.Block); err != nil {
 			m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
@@ -116,8 +116,8 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	}
 
 	m.step = PreCommit
-	m.highPrepareQC = prepareQC
-	m.consensusMessagePool[Prepare].Clear()
+	m.prepareQC = prepareQC
+	m.messagePool[Prepare].Clear()
 
 	preCommitProposeMessage, err := CreateProposeMessage(m.height, m.round, PreCommit, m.block, prepareQC)
 	if err != nil {
@@ -398,19 +398,19 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 // ADDTEST: Add more tests for all the different scenarios here
 func (m *consensusModule) shouldPrepareNewBlock(highPrepareQC *typesCons.QuorumCertificate) bool {
 	if highPrepareQC == nil {
-		m.nodeLog("Preparing a new block - no highPrepareQC found")
+		m.nodeLog("Preparing a new block - no prepareQC found")
 		return true
-	} else if m.isHighPrepareQCFromPast(highPrepareQC) {
-		m.nodeLog("Preparing a new block - highPrepareQC is from the past")
+	} else if m.isPrepareQCFromPast(highPrepareQC) {
+		m.nodeLog("Preparing a new block - prepareQC is from the past")
 		return true
 	} else if highPrepareQC.Block == nil {
-		m.nodeLog("[WARN] Preparing a new block - highPrepareQC SHOULD be used but block is nil")
+		m.nodeLog("[WARN] Preparing a new block - prepareQC SHOULD be used but block is nil")
 		return true
 	}
 	return false
 }
 
-// The `highPrepareQC` is from the past so we can safely ignore it
-func (m *consensusModule) isHighPrepareQCFromPast(highPrepareQC *typesCons.QuorumCertificate) bool {
+// The `prepareQC` is from the past so we can safely ignore it
+func (m *consensusModule) isPrepareQCFromPast(highPrepareQC *typesCons.QuorumCertificate) bool {
 	return highPrepareQC.Height < m.height || highPrepareQC.Round < m.round
 }
