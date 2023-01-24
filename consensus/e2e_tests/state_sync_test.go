@@ -33,29 +33,6 @@ func TestStateSyncServerGetMetaDataReq(t *testing.T) {
 	testRound := uint64(0)
 
 	leaderId := typesCons.NodeId(2)
-	// leader := pocketNodes[leaderId]
-
-	// consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
-	// require.NoError(t, err)
-
-	// blockHeader := &coreTypes.BlockHeader{
-	// 	Height:            testHeight,
-	// 	StateHash:         stateHash,
-	// 	PrevStateHash:     "",
-	// 	NumTxs:            0,
-	// 	ProposerAddress:   consensusPK.Address(),
-	// 	QuorumCertificate: nil,
-	// }
-
-	// block := &coreTypes.Block{
-	// 	BlockHeader:  blockHeader,
-	// 	Transactions: make([][]byte, 0),
-	// }
-
-	// leaderConsensusModImpl := GetConsensusModImpl(leader)
-	// leaderConsensusModImpl.MethodByName("SetBlock").Call([]reflect.Value{reflect.ValueOf(block)})
-
-	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS
 	for _, pocketNode := range pocketNodes {
 		// Update height, step, leaderId, and utility context via setters exposed with the debug interface
 		consensusModImpl := GetConsensusModImpl(pocketNode)
@@ -81,27 +58,6 @@ func TestStateSyncServerGetMetaDataReq(t *testing.T) {
 			nodeState)
 		require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
 	}
-	/*
-		prepareProposal := &typesCons.HotstuffMessage{
-			Type:          consensus.Propose,
-			Height:        4,
-			Step:          consensus.Prepare,
-			Round:         0,
-			Block:         block,
-			Justification: nil,
-		}
-		anyMsg, err := anypb.New(prepareProposal)
-		require.NoError(t, err)
-
-		P2PBroadcast(t, pocketNodes, anyMsg)
-
-		numExpectedMsgs := numValidators - 1 // -1 because one of the messages is a self proposal (leader to itself as a replica) that is not passed through the network
-		_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Vote, numExpectedMsgs, 250, true)
-		require.NoError(t, err)
-
-		nodeState := GetConsensusNodeState(pocketNodes[1])
-		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
-	*/
 
 	// Choose node 1 as the server node.
 	// We first enable server mode of the node 1.
