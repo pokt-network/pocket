@@ -117,7 +117,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 	m.step = PreCommit
 	m.prepareQC = prepareQC
-	m.messagePool[Prepare].Clear()
+	m.consensusMessagePool[Prepare].Clear()
 
 	preCommitProposeMessage, err := CreateProposeMessage(m.height, m.round, PreCommit, m.block, prepareQC)
 	if err != nil {
