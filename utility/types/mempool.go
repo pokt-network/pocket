@@ -7,19 +7,7 @@ import (
 	"github.com/pokt-network/pocket/shared/mempool"
 )
 
-type Mempool interface {
-	Contains(hash string) bool
-	AddTransaction(tx []byte) Error
-	RemoveTransaction(tx []byte) Error
-
-	Clear()
-	Size() uint32 // Returns the number of transactions stored in the mempool
-	IsEmpty() bool
-	TxsBytes() uint64 // Returns the total sum of all transactions' sizes (in bytes) stored in the mempool
-	PopTransaction() (tx []byte, err Error)
-}
-
-var _ Mempool = &fIFOMempool{}
+var _ mempool.TXMempool = &fIFOMempool{}
 
 type fIFOMempool struct {
 	g          *mempool.GenericFIFOSet[string, []byte]
@@ -30,7 +18,7 @@ type fIFOMempool struct {
 }
 
 // AddTransaction implements Mempool
-func (t *fIFOMempool) AddTransaction(tx []byte) Error {
+func (t *fIFOMempool) AddTransaction(tx []byte) error {
 	if err := t.g.Push(tx); err != nil {
 		return ErrDuplicateTransaction()
 	}
@@ -49,12 +37,12 @@ func (t *fIFOMempool) IsEmpty() bool {
 	return t.g.IsEmpty()
 }
 
-func (t *fIFOMempool) PopTransaction() ([]byte, Error) {
+func (t *fIFOMempool) PopTransaction() ([]byte, error) {
 	popTx, err := t.g.Pop()
 	return []byte(popTx), NewError(-1, err.Error()) // TODO: prettier
 }
 
-func (t *fIFOMempool) RemoveTransaction(tx []byte) Error {
+func (t *fIFOMempool) RemoveTransaction(tx []byte) error {
 	t.g.Remove(tx)
 	return nil
 }

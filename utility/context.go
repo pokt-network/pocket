@@ -10,9 +10,9 @@ import (
 
 // TODO: The implementation of `UtilityContext` should not be exposed.
 type UtilityContext struct {
+	Bus     modules.Bus
 	Height  int64
-	Mempool typesUtil.Mempool // IMPROVE: Look into accessing this directly from the module without needing to pass and save another pointer (e.g. access via bus)
-	Context *Context          // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
+	Context *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
 
 	// Data related to the Block being proposed
 	// TECHDEBT: When we consolidate everything to have a single `Block` object (a struct backed by a protobuf),
@@ -37,8 +37,8 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 		return nil, typesUtil.ErrNewPersistenceContext(err)
 	}
 	return &UtilityContext{
-		Height:  height,
-		Mempool: u.Mempool,
+		Bus:    u.GetBus(),
+		Height: height,
 		Context: &Context{
 			PersistenceRWContext: ctx,
 			SavePoints:           make([][]byte, 0),
@@ -127,6 +127,10 @@ func (u *UtilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
 	u.Context.SavePoints = append(u.Context.SavePoints, transactionHash)
 	u.Context.SavePointsM[txHash] = struct{}{}
 	return nil
+}
+
+func (u *UtilityContext) GetBus() modules.Bus {
+	return u.Bus
 }
 
 func (c *Context) Reset() typesUtil.Error {

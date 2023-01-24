@@ -6,9 +6,10 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/mempool"
 )
 
-var _ Mempool = &legacyFIFOMempool{}
+var _ mempool.TXMempool = &legacyFIFOMempool{}
 
 type legacyFIFOMempool struct {
 	l          sync.RWMutex
@@ -20,7 +21,7 @@ type legacyFIFOMempool struct {
 	maxTxs     uint32              // maximum number of transactions allowed in the mempool
 }
 
-func NewMempool(maxTransactionBytes uint64, maxTransactions uint32) Mempool {
+func NewMempool(maxTransactionBytes uint64, maxTransactions uint32) mempool.TXMempool {
 	return &legacyFIFOMempool{
 		l:          sync.RWMutex{},
 		txSet:      make(map[string]struct{}),
@@ -32,7 +33,7 @@ func NewMempool(maxTransactionBytes uint64, maxTransactions uint32) Mempool {
 	}
 }
 
-func (f *legacyFIFOMempool) AddTransaction(tx []byte) Error {
+func (f *legacyFIFOMempool) AddTransaction(tx []byte) error {
 	f.l.Lock()
 	defer f.l.Unlock()
 
@@ -69,7 +70,7 @@ func (f *legacyFIFOMempool) Contains(hash string) bool {
 	return false
 }
 
-func (f *legacyFIFOMempool) RemoveTransaction(tx []byte) Error {
+func (f *legacyFIFOMempool) RemoveTransaction(tx []byte) error {
 	f.l.Lock()
 	defer f.l.Unlock()
 
@@ -89,7 +90,7 @@ func (f *legacyFIFOMempool) RemoveTransaction(tx []byte) Error {
 	return nil
 }
 
-func (f *legacyFIFOMempool) PopTransaction() ([]byte, Error) {
+func (f *legacyFIFOMempool) PopTransaction() ([]byte, error) {
 	f.l.RLock()
 	defer f.l.RUnlock()
 
@@ -131,11 +132,11 @@ func (f *legacyFIFOMempool) TxsBytes() uint64 {
 	return f.txBytes
 }
 
-func (f *legacyFIFOMempool) popTransaction() ([]byte, Error) {
+func (f *legacyFIFOMempool) popTransaction() ([]byte, error) {
 	return f.removeTransaction(f.txQueue.Front())
 }
 
-func (f *legacyFIFOMempool) removeTransaction(e *list.Element) ([]byte, Error) {
+func (f *legacyFIFOMempool) removeTransaction(e *list.Element) ([]byte, error) {
 	if f.size == 0 {
 		return nil, nil
 	}
