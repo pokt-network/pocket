@@ -151,7 +151,6 @@ func mockBusInTestModules(t *testing.T) {
 
 	t.Cleanup(func() {
 		testPersistenceMod.SetBus(nil)
-		// testUtilityMod.SetBus(nil)
 	})
 }
 

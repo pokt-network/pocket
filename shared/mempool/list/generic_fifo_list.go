@@ -2,17 +2,19 @@ package list
 
 import (
 	"container/list"
+	"encoding/json"
 	"fmt"
+	"log"
 	"sync"
 )
 
 type GenericFIFOList[TData any] struct {
-	set      map[any]struct{}
+	set      map[string]struct{}
 	queue    *list.List
 	capacity int
 	m        sync.Mutex
 
-	indexerFn     func(any) any
+	indexerFn     func(any) string
 	isOverflowing func(*GenericFIFOList[TData]) bool
 
 	onAdd       func(TData, *GenericFIFOList[TData])
@@ -22,11 +24,16 @@ type GenericFIFOList[TData any] struct {
 
 func NewGenericFIFOList[TData any](capacity int, options ...func(*GenericFIFOList[TData])) *GenericFIFOList[TData] {
 	gfs := &GenericFIFOList[TData]{
-		set:      make(map[any]struct{}, capacity),
+		set:      make(map[string]struct{}, capacity),
 		queue:    list.New(),
 		capacity: capacity,
-		indexerFn: func(item any) any {
-			return item
+		indexerFn: func(item any) string {
+			// INVESTIGATE: is this the best way to do this? we could use our codec package but we cannot assume that item is a protoMessage
+			bytes, err := json.Marshal(item)
+			if err != nil {
+				log.Fatalf("failed to marshal item: %v", err)
+			}
+			return string(bytes)
 		},
 		isOverflowing: defaultIsOverflowing[TData],
 		onAdd: func(item TData, g *GenericFIFOList[TData]) {
@@ -66,16 +73,17 @@ func (g *GenericFIFOList[TData]) Push(item TData) error {
 		front := g.queue.Front()
 		delete(g.set, g.indexerFn(front.Value.(TData)))
 		g.queue.Remove(front)
+		g.onRemove(item, g)
 	}
 	return nil
 }
 
-func (g *GenericFIFOList[TData]) Pop() (TData, error) {
+func (g *GenericFIFOList[TData]) Pop() (v TData, err error) {
 	g.m.Lock()
 	defer g.m.Unlock()
 
 	if g.queue.Len() == 0 {
-		return any(nil).(TData), fmt.Errorf("empty set")
+		return v, fmt.Errorf("empty set")
 	}
 
 	front := g.queue.Front()
@@ -96,6 +104,7 @@ func (g *GenericFIFOList[TData]) Remove(item TData) {
 		for e := g.queue.Front(); e != nil; e = e.Next() {
 			if g.indexerFn(e.Value.(TData)) == itemIndex {
 				g.queue.Remove(e)
+				g.onRemove(item, g)
 				break
 			}
 		}
@@ -113,8 +122,8 @@ func (g *GenericFIFOList[TData]) Clear() {
 	g.m.Lock()
 	defer g.m.Unlock()
 
-	g.set = make(map[any]struct{}, g.capacity)
-	g.queue = list.New()
+	g.set = make(map[string]struct{}, g.capacity)
+	g.queue.Init()
 }
 
 func (g *GenericFIFOList[TData]) IsEmpty() bool {
@@ -132,7 +141,7 @@ func (g *GenericFIFOList[TData]) Contains(item TData) bool {
 	return ok
 }
 
-func (g *GenericFIFOList[TData]) ContainsIndex(index any) bool {
+func (g *GenericFIFOList[TData]) ContainsIndex(index string) bool {
 	g.m.Lock()
 	defer g.m.Unlock()
 
@@ -140,9 +149,20 @@ func (g *GenericFIFOList[TData]) ContainsIndex(index any) bool {
 	return ok
 }
 
+func (g *GenericFIFOList[TData]) GetAll() []TData {
+	g.m.Lock()
+	defer g.m.Unlock()
+
+	items := make([]TData, 0, g.queue.Len())
+	for e := g.queue.Front(); e != nil; e = e.Next() {
+		items = append(items, e.Value.(TData))
+	}
+	return items
+}
+
 // Options
 
-func WithIndexerFn[TData any](fn func(any) any) func(*GenericFIFOList[TData]) {
+func WithIndexerFn[TData any](fn func(any) string) func(*GenericFIFOList[TData]) {
 	return func(g *GenericFIFOList[TData]) {
 		g.indexerFn = fn
 	}

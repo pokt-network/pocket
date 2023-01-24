@@ -39,7 +39,11 @@ var (
 // TODO: Add unit tests for all quorumCert creation & validation logic...
 func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
 	var pss []*typesCons.PartialSignature
-	for _, msg := range m.consensusMessagePool[step] {
+	for !m.consensusMessagePool[step].IsEmpty() {
+		msg, err := m.consensusMessagePool[step].Pop()
+		if err != nil {
+			return nil, err
+		}
 		if msg.GetPartialSignature() == nil {
 			m.nodeLog(typesCons.WarnMissingPartialSig(msg))
 			continue
@@ -119,7 +123,7 @@ func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.Hotstuff
 	if err != nil {
 		return err
 	}
-	return m.isOptimisticThresholdMet(len(m.consensusMessagePool[step]), validators)
+	return m.isOptimisticThresholdMet(int(m.consensusMessagePool[step].Size()), validators)
 }
 
 func (m *consensusModule) isOptimisticThresholdMet(numSignatures int, validators []*coreTypes.Actor) error {
@@ -203,7 +207,13 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 // TECHDEBT(#388): Integrate this with the `persistence` module or a real mempool.
 func (m *consensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
-		m.consensusMessagePool[step] = make([]*typesCons.HotstuffMessage, 0)
+		m.consensusMessagePool[step].Clear()
+	}
+}
+
+func (m *consensusModule) initMessagesPool() {
+	for _, step := range HotstuffSteps {
+		m.consensusMessagePool[step] = NewHotstuffFIFOMempool(m.consCfg.MaxMempoolBytes)
 	}
 }
 
