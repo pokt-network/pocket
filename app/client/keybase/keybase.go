@@ -15,10 +15,10 @@ type Keybase interface {
 	ImportFromJSON(jsonStr, passphrase string) error
 
 	// Accessors
-	Get(address string) (KeyPair, error)
+	Get(address string) (crypto.KeyPair, error)
 	GetPubKey(address string) (crypto.PublicKey, error)
 	GetPrivKey(address, passphrase string) (crypto.PrivateKey, error)
-	GetAll() (addresses []string, keyPairs []KeyPair, err error)
+	GetAll() (addresses []string, keyPairs []crypto.KeyPair, err error)
 	Exists(address string) (bool, error)
 
 	// Exporters
