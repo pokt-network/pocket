@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.6] - 2023-01-23
+
+- Added pprof feature flag guideline in docker-compose.yml
+
 ## [0.0.0.5] - 2023-01-20
 
 - Update the docker-compose and relevant files to automatically load `pgadmin` server configs by binding the appropriate configs
