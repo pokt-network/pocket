@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.22] - 2023-01-25
+
+- Add a note on consensus test related workaround related to #462
+
 ## [0.0.0.21] - 2023-01-24
 
 - Decouple consensus module and pacemaker module
