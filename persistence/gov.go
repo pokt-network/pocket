@@ -210,3 +210,31 @@ func (p PostgresContext) getParamsOrFlags(tableName string, height int64, descen
 	}
 	return pfSlice, nil
 }
+
+func (p *PostgresContext) getParamsOrFlagsAtHeightQuery(tableName string, height int64, descending bool) string {
+	fields := "name,value"
+	if tableName == types.FlagsTableName {
+		fields += ",enabled"
+	}
+	sort := "ASC"
+	if descending {
+		sort = "DESC"
+	}
+	// Build correct query to get all Params/Flags at certain height ordered by their name values
+	query := fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d ORDER BY name %s`, fields, tableName, height, sort)
+	return query
+}
+
+func (p *PostgresContext) getParamsOrFlagsAtHeightQuery(tableName string, height int64, descending bool) string {
+	fields := "name,value"
+	if tableName == types.FlagsTableName {
+		fields += ",enabled"
+	}
+	sort := "ASC"
+	if descending {
+		sort = "DESC"
+	}
+	// Build correct query to get all Params/Flags at certain height ordered by their name values
+	query := fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d ORDER BY name %s`, fields, tableName, height, sort)
+	return query
+}
