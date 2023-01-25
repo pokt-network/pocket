@@ -21,7 +21,7 @@ func ErrorAddrNotFound(addr string) error {
 func init() {
 	gob.Register(crypto.Ed25519PublicKey{})
 	gob.Register(ed25519.PublicKey{})
-	gob.Register(crypto.KeyPair{})
+	gob.Register(crypto.EncKeyPair{})
 }
 
 // badgerKeybase implements the KeyBase interface
@@ -127,11 +127,11 @@ func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 
 // Returns a KeyPair struct provided the address was found in the DB
 func (keybase *badgerKeybase) Get(address string) (crypto.KeyPair, error) {
-	var kp crypto.KeyPair
+	var kp crypto.EncKeyPair
 	keypairBz := new(bytes.Buffer)
 	addrBz, err := hex.DecodeString(address)
 	if err != nil {
-		return crypto.KeyPair{}, err
+		return nil, err
 	}
 
 	err = keybase.db.View(func(tx *badger.Txn) error {
@@ -157,7 +157,7 @@ func (keybase *badgerKeybase) Get(address string) (crypto.KeyPair, error) {
 		return nil
 	})
 	if err != nil {
-		return crypto.KeyPair{}, err
+		return nil, err
 	}
 
 	return kp, nil
@@ -170,7 +170,7 @@ func (keybase *badgerKeybase) GetPubKey(address string) (crypto.PublicKey, error
 		return nil, err
 	}
 
-	return kp.PublicKey, nil
+	return kp.GetPublicKey(), nil
 }
 
 // Returns a PrivateKey interface provided the address was found in the DB and the passphrase was correct
@@ -203,7 +203,7 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 				b := make([]byte, len(val))
 				copy(b, val)
 				// Decode []byte value back into KeyPair struct
-				var kp crypto.KeyPair
+				var kp crypto.EncKeyPair
 				keypairBz := new(bytes.Buffer)
 				keypairBz.Write(b)
 				dec := gob.NewDecoder(keypairBz)
@@ -235,7 +235,7 @@ func (keybase *badgerKeybase) Exists(address string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return val != crypto.KeyPair{}, nil
+	return val != nil, nil
 }
 
 // Export the Private Key string of the given address
@@ -312,7 +312,7 @@ func (keybase *badgerKeybase) Verify(address string, msg, sig []byte) (bool, err
 	if err != nil {
 		return false, err
 	}
-	pubKey := kp.PublicKey
+	pubKey := kp.GetPublicKey()
 	return pubKey.Verify(msg, sig), nil
 }
 

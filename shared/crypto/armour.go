@@ -185,7 +185,7 @@ func encryptAESGCM(key, plaintext []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	nonce := key[:12]
+	nonce := key[:AESNonceSize]
 	encBz := gcm.Seal(nil, nonce, plaintext, nil)
 	return encBz, nil
 }
@@ -200,7 +200,7 @@ func decryptAESGCM(key, encBz []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	nonce := key[:12]
+	nonce := key[:AESNonceSize]
 	result, err := gcm.Open(nil, nonce, encBz, nil)
 	if err != nil && strings.Contains(err.Error(), "authentication failed") {
 		return nil, ErrorWrongPassphrase

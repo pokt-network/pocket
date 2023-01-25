@@ -81,7 +81,7 @@ func TestKeybase_ImportKeyFromString(t *testing.T) {
 	require.Equal(t, len(kp.GetAddressBytes()), crypto.AddressLen)
 	require.Equal(t, addr, kp.GetAddressString())
 	require.Equal(t, kp.GetAddressString(), testAddr)
-	require.Equal(t, kp.PublicKey.String(), testPubString)
+	require.Equal(t, kp.GetPublicKey().String(), testPubString)
 
 	privKey, err := kp.Unarmour(testPassphrase)
 	require.NoError(t, err)
@@ -105,7 +105,7 @@ func TestKeybase_ImportKeyFromStringNoPassphrase(t *testing.T) {
 	require.Equal(t, len(kp.GetAddressBytes()), crypto.AddressLen)
 	require.Equal(t, addr, kp.GetAddressString())
 	require.Equal(t, kp.GetAddressString(), testAddr)
-	require.Equal(t, kp.PublicKey.String(), testPubString)
+	require.Equal(t, kp.GetPublicKey().String(), testPubString)
 
 	privKey, err := kp.Unarmour("")
 	require.NoError(t, err)
@@ -144,7 +144,7 @@ func TestKeybase_ImportKeyFromJSON(t *testing.T) {
 	require.Equal(t, len(kp.GetAddressBytes()), crypto.AddressLen)
 	require.Equal(t, addr, kp.GetAddressString())
 	require.Equal(t, kp.GetAddressString(), testJSONAddr)
-	require.Equal(t, kp.PublicKey.String(), testJSONPubString)
+	require.Equal(t, kp.GetPublicKey().String(), testJSONPubString)
 
 	privKey, err := kp.Unarmour(testPassphrase)
 	require.NoError(t, err)
@@ -181,7 +181,7 @@ func TestKeybase_GetKeyDoesntExist(t *testing.T) {
 
 	kp, err := db.Get(testKey.Address().String())
 	require.EqualError(t, err, ErrorAddrNotFound(testKey.Address().String()).Error())
-	require.Equal(t, kp, crypto.KeyPair{})
+	require.Equal(t, kp, nil)
 }
 
 func TestKeybase_CheckKeyExists(t *testing.T) {
@@ -346,7 +346,7 @@ func TestKeybase_DeleteKey(t *testing.T) {
 
 	kp, err := db.Get(testKey.Address().String())
 	require.EqualError(t, err, ErrorAddrNotFound(testKey.Address().String()).Error())
-	require.Equal(t, kp, crypto.KeyPair{})
+	require.Equal(t, kp, nil)
 }
 
 func TestKeybase_DeleteKeyWrongPassphrase(t *testing.T) {
