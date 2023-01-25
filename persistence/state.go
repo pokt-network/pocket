@@ -360,12 +360,12 @@ func (p *PostgresContext) updateParamsTree() error {
 	}
 
 	for _, param := range params {
-		pBz := []byte(param.String())
-		pMarshal, err := proto.Marshal(param)
+		paramSumBz := sha256.Sum256([]byte(param.String()))
+		paramBz, err := proto.Marshal(param)
 		if err != nil {
 			return err
 		}
-		if _, err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(pBz, pMarshal); err != nil {
+		if _, err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(paramSumBz[:], paramBz); err != nil {
 			return err
 		}
 	}
@@ -380,12 +380,12 @@ func (p *PostgresContext) updateFlagsTree() error {
 	}
 
 	for _, flag := range flags {
-		fBz := []byte(flag.String())
-		fMarshal, err := proto.Marshal(flag)
+		flagSumBz := sha256.Sum256([]byte(flag.String()))
+		flagBz, err := proto.Marshal(flag)
 		if err != nil {
 			return err
 		}
-		if _, err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(fBz, fMarshal); err != nil {
+		if _, err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(flagSumBz[:], flagBz); err != nil {
 			return err
 		}
 	}
