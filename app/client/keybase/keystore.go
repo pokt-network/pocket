@@ -57,6 +57,34 @@ func (keybase *badgerKeybase) Stop() error {
 	return keybase.db.Close()
 }
 
+// Use the supplied function func(privStr, passphrase) (KeyPair, error)
+// to create the new keypair and then insert it into the DB
+func (keybase *badgerKeybase) newKeyPairFromString(fn func(string, string) (crypto.KeyPair, error), privStr, passphrase string) error {
+	err := keybase.db.Update(func(tx *badger.Txn) error {
+		keyPair, err := fn(privStr, passphrase)
+		if err != nil {
+			return err
+		}
+
+		// Use key address as key in DB
+		addrKey := keyPair.GetAddressBytes()
+		// Encode entire KeyPair struct into []byte for value
+		keypairBz := new(bytes.Buffer)
+		enc := gob.NewEncoder(keypairBz)
+		if err = enc.Encode(keyPair); err != nil {
+			return err
+		}
+
+		if err = tx.Set(addrKey, keypairBz.Bytes()); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return err
+}
+
 // Create a new key and store it in the DB by encoding the KeyPair struct into a []byte
 // Using the PublicKey.Address() return value as the key for storage
 func (keybase *badgerKeybase) Create(passphrase string) error {
@@ -88,57 +116,13 @@ func (keybase *badgerKeybase) Create(passphrase string) error {
 // Create a new KeyPair from the private key hex string and store it in the DB by encoding the KeyPair struct into a []byte
 // Using the PublicKey.Address() return value as the key for storage
 func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase string) error {
-	err := keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.CreateNewKeyFromString(privKeyHex, passphrase)
-		if err != nil {
-			return err
-		}
-
-		// Use key address as key in DB
-		addrKey := keyPair.GetAddressBytes()
-		// Encode entire KeyPair struct into []byte for value
-		keypairBz := new(bytes.Buffer)
-		enc := gob.NewEncoder(keypairBz)
-		if err = enc.Encode(keyPair); err != nil {
-			return err
-		}
-
-		if err = tx.Set(addrKey, keypairBz.Bytes()); err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	return err
+	return keybase.newKeyPairFromString(crypto.CreateNewKeyFromString, privKeyHex, passphrase)
 }
 
 // Create a new KeyPair from the private key JSON string and store it in the DB by encoding the KeyPair struct into a []byte
 // Using the PublicKey.Address() return value as the key for storage
 func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
-	err := keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.ImportKeyFromJSON(jsonStr, passphrase)
-		if err != nil {
-			return err
-		}
-
-		// Use key address as key in DB
-		addrKey := keyPair.GetAddressBytes()
-		// Encode entire KeyPair struct into []byte for value
-		keypairBz := new(bytes.Buffer)
-		enc := gob.NewEncoder(keypairBz)
-		if err = enc.Encode(keyPair); err != nil {
-			return err
-		}
-
-		if err = tx.Set(addrKey, keypairBz.Bytes()); err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	return err
+	return keybase.newKeyPairFromString(crypto.ImportKeyFromJSON, jsonStr, passphrase)
 }
 
 // Returns a KeyPair struct provided the address was found in the DB
