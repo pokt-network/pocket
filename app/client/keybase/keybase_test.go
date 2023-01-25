@@ -181,7 +181,7 @@ func TestKeybase_GetKeyDoesntExist(t *testing.T) {
 
 	kp, err := db.Get(testKey.Address().String())
 	require.EqualError(t, err, ErrorAddrNotFound(testKey.Address().String()).Error())
-	require.Equal(t, kp, KeyPair{})
+	require.Equal(t, kp, crypto.KeyPair{})
 }
 
 func TestKeybase_CheckKeyExists(t *testing.T) {
@@ -284,7 +284,7 @@ func TestKeybase_GetPrivKeyWrongPassphrase(t *testing.T) {
 	require.NoError(t, err)
 
 	privKey, err := db.GetPrivKey(testKey.Address().String(), testNewPassphrase)
-	require.Equal(t, err, ErrorWrongPassphrase)
+	require.Equal(t, err, crypto.ErrorWrongPassphrase)
 	require.Nil(t, privKey)
 }
 
@@ -326,7 +326,7 @@ func TestKeybase_UpdatePassphraseWrongPassphrase(t *testing.T) {
 	require.NoError(t, err)
 
 	err = db.UpdatePassphrase(testKey.Address().String(), testNewPassphrase, testNewPassphrase)
-	require.ErrorIs(t, err, ErrorWrongPassphrase)
+	require.ErrorIs(t, err, crypto.ErrorWrongPassphrase)
 }
 
 func TestKeybase_DeleteKey(t *testing.T) {
@@ -346,7 +346,7 @@ func TestKeybase_DeleteKey(t *testing.T) {
 
 	kp, err := db.Get(testKey.Address().String())
 	require.EqualError(t, err, ErrorAddrNotFound(testKey.Address().String()).Error())
-	require.Equal(t, kp, KeyPair{})
+	require.Equal(t, kp, crypto.KeyPair{})
 }
 
 func TestKeybase_DeleteKeyWrongPassphrase(t *testing.T) {
@@ -362,7 +362,7 @@ func TestKeybase_DeleteKeyWrongPassphrase(t *testing.T) {
 	require.NoError(t, err)
 
 	err = db.Delete(testKey.Address().String(), testNewPassphrase)
-	require.ErrorIs(t, err, ErrorWrongPassphrase)
+	require.ErrorIs(t, err, crypto.ErrorWrongPassphrase)
 }
 
 func TestKeybase_SignMessage(t *testing.T) {
@@ -404,7 +404,7 @@ func TestKeybase_SignMessageWrongPassphrase(t *testing.T) {
 	require.NoError(t, err)
 
 	signedMsg, err := db.Sign(privKey.Address().String(), testNewPassphrase, txBz)
-	require.ErrorIs(t, err, ErrorWrongPassphrase)
+	require.ErrorIs(t, err, crypto.ErrorWrongPassphrase)
 	require.Nil(t, signedMsg)
 }
 
