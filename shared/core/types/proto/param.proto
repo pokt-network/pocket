@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/shared/core/types";
+
+message Param {
+    string Name = 1;
+    string Value = 2;
+    int64  Height = 3;
+}
+
+message Flag {
+    string Name = 1;
+    string Value = 2;
+    string Enabled = 3;
+    int64  Height = 4;
+}

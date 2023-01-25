@@ -354,17 +354,18 @@ func (p *PostgresContext) updateTransactionsTree() error {
 }
 
 func (p *PostgresContext) updateParamsTree() error {
-	paramsOrFlags, err := p.getParamsOrFlags(types.ParamsTableName, p.Height, false)
+	params, err := p.getParamsUpdated(p.Height)
 	if err != nil {
 		return err
 	}
 
-	for _, pf := range paramsOrFlags {
-		pfHash, err := pf.Hash()
+	for _, param := range params {
+		pBz := []byte(param.String())
+		pMarshal, err := proto.Marshal(param)
 		if err != nil {
 			return err
 		}
-		if _, err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(pfHash, pf.GetBytes()); err != nil {
+		if _, err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(pBz, pMarshal); err != nil {
 			return err
 		}
 	}
@@ -373,17 +374,18 @@ func (p *PostgresContext) updateParamsTree() error {
 }
 
 func (p *PostgresContext) updateFlagsTree() error {
-	paramsOrFlags, err := p.getParamsOrFlags(types.FlagsTableName, p.Height, false)
+	flags, err := p.getFlagsUpdated(p.Height)
 	if err != nil {
 		return err
 	}
 
-	for _, pf := range paramsOrFlags {
-		pfHash, err := pf.Hash()
+	for _, flag := range flags {
+		fBz := []byte(flag.String())
+		fMarshal, err := proto.Marshal(flag)
 		if err != nil {
 			return err
 		}
-		if _, err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(pfHash, pf.GetBytes()); err != nil {
+		if _, err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(fBz, fMarshal); err != nil {
 			return err
 		}
 	}

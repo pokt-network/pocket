@@ -3,6 +3,7 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"log"
 	"reflect"
 	"strconv"
@@ -179,62 +180,62 @@ func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, param
 	return
 }
 
-func (p PostgresContext) getParamsOrFlags(tableName string, height int64, descending bool) ([]types.ParamOrFlag, error) {
+func (p PostgresContext) getParamsUpdated(height int64) ([]*coreTypes.Param, error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
 	// Get all parameters / flags at current height
-	rows, err := tx.Query(ctx, p.getParamsOrFlagsAtHeightQuery(tableName, height, descending))
+	rows, err := tx.Query(ctx, p.getParamsOrFlagsAtHeightQuery(types.ParamsTableName, height))
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var pfSlice []types.ParamOrFlag // Store returned rows
+	var paramSlice []*coreTypes.Param // Store returned rows
 	// Loop over all rows returned and load them into the ParamOrFlag struct array
 	for rows.Next() {
-		var pf types.ParamOrFlag
-		if tableName == types.ParamsTableName {
-			err := rows.Scan(&pf.Name, &pf.Value)
-			if err != nil {
-				return nil, err
-			}
-		} else if tableName == types.FlagsTableName {
-			err := rows.Scan(&pf.Name, &pf.Value, &pf.Enabled)
-			if err != nil {
-				return nil, err
-			}
+		param := new(coreTypes.Param)
+		err := rows.Scan(&param.Name, &param.Value)
+		if err != nil {
+			return nil, err
 		}
-		pf.Height = height
-		pfSlice = append(pfSlice, pf)
+		param.Height = height
+		paramSlice = append(paramSlice, param)
 	}
-	return pfSlice, nil
+	return paramSlice, nil
 }
 
-func (p *PostgresContext) getParamsOrFlagsAtHeightQuery(tableName string, height int64, descending bool) string {
+func (p PostgresContext) getFlagsUpdated(height int64) ([]*coreTypes.Flag, error) {
+	ctx, tx, err := p.getCtxAndTx()
+	if err != nil {
+		return nil, err
+	}
+	// Get all parameters / flags at current height
+	rows, err := tx.Query(ctx, p.getParamsOrFlagsAtHeightQuery(types.FlagsTableName, height))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var flagSlice []*coreTypes.Flag // Store returned rows
+	// Loop over all rows returned and load them into the ParamOrFlag struct array
+	for rows.Next() {
+		flag := new(coreTypes.Flag)
+		err := rows.Scan(&flag.Name, &flag.Value, &flag.Enabled)
+		if err != nil {
+			return nil, err
+		}
+		flag.Height = height
+		flagSlice = append(flagSlice, flag)
+	}
+	return flagSlice, nil
+}
+
+func (p *PostgresContext) getParamsOrFlagsAtHeightQuery(tableName string, height int64) string {
 	fields := "name,value"
 	if tableName == types.FlagsTableName {
 		fields += ",enabled"
 	}
-	sort := "ASC"
-	if descending {
-		sort = "DESC"
-	}
 	// Build correct query to get all Params/Flags at certain height ordered by their name values
-	query := fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d ORDER BY name %s`, fields, tableName, height, sort)
-	return query
-}
-
-func (p *PostgresContext) getParamsOrFlagsAtHeightQuery(tableName string, height int64, descending bool) string {
-	fields := "name,value"
-	if tableName == types.FlagsTableName {
-		fields += ",enabled"
-	}
-	sort := "ASC"
-	if descending {
-		sort = "DESC"
-	}
-	// Build correct query to get all Params/Flags at certain height ordered by their name values
-	query := fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d ORDER BY name %s`, fields, tableName, height, sort)
+	query := fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d ORDER BY name ASC`, fields, tableName, height)
 	return query
 }
