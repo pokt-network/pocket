@@ -35,6 +35,10 @@ docker_check:
 prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 
+.PHONY: warn_destructive
+warn_destructive: ## Print WARNING to the user
+	@echo "This is a destructive action that will affect docker resources outside the scope of this repo!"
+
 .PHONY: go_vet
 go_vet: ## Run `go vet` on all files in the current project
 	go vet ./...
@@ -178,7 +182,7 @@ docker_kill_all: docker_check ## Kill all containers started by the docker-compo
 	docker-compose -f build/deployments/docker-compose.yaml down
 
 .PHONY: docker_wipe
-docker_wipe: docker_check prompt_user ## [WARNING] Remove all the docker containers, images and volumes.
+docker_wipe: docker_check warn_destructive prompt_user ## [WARNING] Remove all the docker containers, images and volumes.
 	docker ps -a -q | xargs -r -I {} docker stop {}
 	docker ps -a -q | xargs -r -I {} docker rm {}
 	docker images -q | xargs -r -I {} docker rmi {}
