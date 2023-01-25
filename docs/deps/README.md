@@ -23,7 +23,7 @@ VRFs are not part of Golang's [standard crypto library](https://pkg.go.dev/crypt
    - This is a great repository that also compares, lists and evaluates some of the other VRF libraries available, but was implemented by a single individual and while the explanation is very extensive, it lacks the backing and verification of a larger company.
 4. [ProtonMail/Go-ECVRF](https://github.com/ProtonMail/go-ecvrf)
 
-   - This is a very small and light-weight library dedidcated to a VRF implementation in Go, that was released in December of 2021 by ProtonMail: a well-known privacy-focused impartial company with
+   - This is a very small and light-weight library dedicated to a VRF implementation in Go, that was released in December of 2021 by ProtonMail: a well-known privacy-focused impartial company with
      great documentation and a very easy to use API
    - This implementation of VRFs uses the [new draft](https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/), which introduced several changes to the original implementations, some of which improved the security model.
 
