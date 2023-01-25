@@ -26,6 +26,7 @@ const (
 	testJSONPubString  = "408bec6320b540aa0cc86b3e633e214f2fd4dce4caa08f164fa3a9d3e577b46c"
 	testJSONPrivString = "3554119cec1c0c8c5b3845a5d3fc6346eb44ed21aab5c063ae9b6b1d38bec275408bec6320b540aa0cc86b3e633e214f2fd4dce4caa08f164fa3a9d3e577b46c"
 	testJSONString     = `{"kdf":"scrypt","salt":"197d2754445a7e5ce3e6c8d7b1d0ff6f","secparam":"12","hint":"pocket wallet","ciphertext":"B/AORJrSeQrR5ewQGel4FeCCXscoCsMUzq9gXAAxDqjXMmMxa7TedBTuemtO82JyTCoQWFHbGxRx8A7IoETNh5T5yBAjNNrr7DDkVrcfSAM3ez9lQem17DsfowCvRtmbesDlvbSZMRy8mQgClLqWRN+c6W/fPQ/lxLUy1G1A965U/uImcMXzSwbfqYrBPEux"}`
+	testJSONPassphrase = "Testing@Testing123"
 )
 
 func TestKeybase_CreateNewKey(t *testing.T) {
@@ -131,7 +132,7 @@ func TestKeybase_ImportKeyFromJSON(t *testing.T) {
 	db := initDB(t)
 	defer db.Stop()
 
-	err := db.ImportFromJSON(testJSONString, testPassphrase)
+	err := db.ImportFromJSON(testJSONString, testJSONPassphrase)
 	require.NoError(t, err)
 
 	addresses, keypairs, err := db.GetAll()
@@ -146,7 +147,7 @@ func TestKeybase_ImportKeyFromJSON(t *testing.T) {
 	require.Equal(t, kp.GetAddressString(), testJSONAddr)
 	require.Equal(t, kp.GetPublicKey().String(), testJSONPubString)
 
-	privKey, err := kp.Unarmour(testPassphrase)
+	privKey, err := kp.Unarmour(testJSONPassphrase)
 	require.NoError(t, err)
 	require.Equal(t, privKey.String(), testJSONPrivString)
 }

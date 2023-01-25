@@ -27,9 +27,6 @@ const (
 	klen = 32    // bytes
 	// Sec param
 	secParam = 12
-	// An empty passphrase causes encryption to be unrecoverable
-	// When no passphrase is given a default passphrase is used instead
-	defaultPassphrase = "passphrase"
 )
 
 // Errors
@@ -67,7 +64,7 @@ func encryptArmourPrivKey(privKey PrivateKey, passphrase string) (string, error)
 	}
 
 	// Armour encrypted bytes by encoding into Base64
-	armourStr := base64.StdEncoding.EncodeToString(encBz)
+	armourStr := base64.RawStdEncoding.EncodeToString(encBz)
 
 	// Create ArmouredKey object so can unarmour later
 	armoured := NewArmouredKey(kdf, hex.EncodeToString(saltBz), "", armourStr)
@@ -84,11 +81,6 @@ func encryptArmourPrivKey(privKey PrivateKey, passphrase string) (string, error)
 // Encrypt the given privKey with the passphrase using a randomly
 // generated salt and the AES-256 GCM cipher
 func encryptPrivKey(privKey PrivateKey, passphrase string) (saltBz, encBz []byte, err error) {
-	// Use a default passphrase when none is given
-	if passphrase == "" {
-		passphrase = defaultPassphrase
-	}
-
 	// Get random bytes for salt
 	saltBz = randBytes(randBz)
 
@@ -132,7 +124,7 @@ func unarmourDecryptPrivKey(armourStr string, passphrase string) (privKey Privat
 	}
 
 	// Decoding the "armoured" ciphertext stored in base64
-	encBz, err := base64.StdEncoding.DecodeString(armouredKey.CipherText)
+	encBz, err := base64.RawStdEncoding.DecodeString(armouredKey.CipherText)
 	if err != nil {
 		return nil, fmt.Errorf("Error decoding ciphertext: %v", err.Error())
 	}
@@ -145,11 +137,6 @@ func unarmourDecryptPrivKey(armourStr string, passphrase string) (privKey Privat
 
 // Decrypt the AES-256 GCM encrypted bytes using the passphrase given
 func decryptPrivKey(saltBz, encBz []byte, passphrase string) (PrivateKey, error) {
-	// Use a default passphrase when none is given
-	if passphrase == "" {
-		passphrase = defaultPassphrase
-	}
-
 	// Derive key for decryption, see: https://pkg.go.dev/golang.org/x/crypto/scrypt#Key
 	encryptionKey, err := scrypt.Key([]byte(passphrase), saltBz, n, r, p, klen)
 	if err != nil {
