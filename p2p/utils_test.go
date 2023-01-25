@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"encoding/binary"
 	"fmt"
+	types "github.com/pokt-network/pocket/runtime/configs/types"
 	"log"
 	"sort"
 	"sync"
@@ -121,10 +122,10 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 			RootDirectory: "",
 			PrivateKey:    valKeys[i].String(),
 			P2P: &configs.P2PConfig{
-				PrivateKey:            valKeys[i].String(),
-				ConsensusPort:         8080,
-				UseRainTree:           true,
-				IsEmptyConnectionType: true,
+				PrivateKey:     valKeys[i].String(),
+				ConsensusPort:  8080,
+				UseRainTree:    true,
+				ConnectionType: types.ConnectionType_EmptyConnection,
 			},
 		}
 

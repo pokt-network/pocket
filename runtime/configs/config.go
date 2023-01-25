@@ -36,10 +36,10 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			BlockStorePath: defaults.DefaultPersistenceBlockStorePath,
 		},
 		P2P: &P2PConfig{
-			ConsensusPort:         defaults.DefaultP2PConsensusPort,
-			UseRainTree:           defaults.DefaultP2PUseRainTree,
-			IsEmptyConnectionType: defaults.DefaultP2PIsEmptyConnectionType,
-			MaxMempoolCount:       defaults.DefaultP2PMaxMempoolCount,
+			ConsensusPort:   defaults.DefaultP2PConsensusPort,
+			UseRainTree:     defaults.DefaultP2PUseRainTree,
+			ConnectionType:  defaults.DefaultP2PConnectionType,
+			MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
 		},
 		Telemetry: &TelemetryConfig{
 			Enabled:  defaults.DefaultTelemetryEnabled,
