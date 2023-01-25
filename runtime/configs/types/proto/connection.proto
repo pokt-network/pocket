@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package conn;
+
+option go_package = "github.com/pokt-network/pocket/runtime/configs/types";
+
+enum ConnectionType {
+  EmptyConnection = 0;
+  TCPConnection = 1;
+}

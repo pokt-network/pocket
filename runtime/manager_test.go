@@ -8,6 +8,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/runtime/configs"
+	configTypes "github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
@@ -226,11 +227,11 @@ func TestNewManagerFromReaders(t *testing.T) {
 						HealthCheckPeriod: "5m",
 					},
 					P2P: &configs.P2PConfig{
-						PrivateKey:            "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a",
-						ConsensusPort:         8080,
-						UseRainTree:           true,
-						IsEmptyConnectionType: false,
-						MaxMempoolCount:       1e5,
+						PrivateKey:      "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a",
+						ConsensusPort:   8080,
+						UseRainTree:     true,
+						ConnectionType:  configTypes.ConnectionType_TCPConnection,
+						MaxMempoolCount: 1e5,
 					},
 					Telemetry: &configs.TelemetryConfig{
 						Enabled:  true,
@@ -272,11 +273,11 @@ func TestNewManagerFromReaders(t *testing.T) {
 			want: &Manager{
 				config: &configs.Config{
 					P2P: &configs.P2PConfig{
-						PrivateKey:            "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
-						ConsensusPort:         8080,
-						UseRainTree:           true,
-						IsEmptyConnectionType: false,
-						MaxMempoolCount:       defaults.DefaultP2PMaxMempoolCount,
+						PrivateKey:      "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
+						ConsensusPort:   8080,
+						UseRainTree:     true,
+						ConnectionType:  configTypes.ConnectionType_TCPConnection,
+						MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
 					},
 				},
 				genesisState: expectedGenesis,

@@ -2,6 +2,8 @@ package defaults
 
 import (
 	"fmt"
+
+	types "github.com/pokt-network/pocket/runtime/configs/types"
 )
 
 const (
@@ -27,10 +29,10 @@ var (
 	DefaultPersistencePostgresUrl    = "postgres://postgres:postgres@pocket-db:5432/postgres"
 	DefaultPersistenceBlockStorePath = "/var/blockstore"
 	// p2p
-	DefaultP2PConsensusPort         = uint32(8080)
-	DefaultP2PUseRainTree           = true
-	DefaultP2PIsEmptyConnectionType = false
-	DefaultP2PMaxMempoolCount       = uint64(1e5)
+	DefaultP2PConsensusPort   = uint32(8080)
+	DefaultP2PUseRainTree     = true
+	DefaultP2PConnectionType  = types.ConnectionType_TCPConnection
+	DefaultP2PMaxMempoolCount = uint64(1e5)
 	// telemetry
 	DefaultTelemetryEnabled  = true
 	DefaultTelemetryAddress  = "0.0.0.0:9000"
