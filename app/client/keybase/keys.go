@@ -3,10 +3,8 @@ package keybase
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/ed25519"
 	crand "crypto/rand"
 	"encoding/base64"
-	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -20,10 +18,10 @@ import (
 
 const (
 	// Scrypt params
-	n    = 32768
-	r    = 8
-	p    = 1
-	klen = 32
+	n    = 32768 // CPU/memory cost param; power of 2 greater than 1
+	r    = 8     // r * p < 2³⁰
+	p    = 1     // r * p < 2³⁰
+	klen = 32    // bytes
 	// Sec param
 	secParam = 12
 	// No passphrase
@@ -34,16 +32,6 @@ var (
 	// Errors
 	ErrorWrongPassphrase = errors.New("Can't decrypt private key: wrong passphrase")
 )
-
-func ErrorAddrNotFound(addr string) error {
-	return fmt.Errorf("No key found with address: %s", addr)
-}
-
-func init() {
-	gob.Register(poktCrypto.Ed25519PublicKey{})
-	gob.Register(ed25519.PublicKey{})
-	gob.Register(KeyPair{})
-}
 
 // KeyPair struct stores the public key and the passphrase encrypted private key
 type KeyPair struct {
@@ -204,8 +192,8 @@ func encryptPrivKey(privKey poktCrypto.PrivateKey, passphrase string) (saltBytes
 	}
 
 	// Encrypt using AES
-	privKeyBytes := privKey.String()
-	encBytes, err = encryptAESGCM(key, []byte(privKeyBytes))
+	privKeyHexString := privKey.String()
+	encBytes, err = encryptAESGCM(key, []byte(privKeyHexString))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -262,11 +250,11 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (poktC
 	}
 
 	// Decrypt using AES
-	privKeyBytes, err := decryptAESGCM(key, encBytes)
+	privKeyRawHexBytes, err := decryptAESGCM(key, encBytes)
 	if err != nil {
 		return nil, err
 	}
-	bz, err := hex.DecodeString(string(privKeyBytes))
+	bz, err := hex.DecodeString(string(privKeyRawHexBytes))
 	if err != nil {
 		return nil, err
 	}
