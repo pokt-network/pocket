@@ -20,7 +20,7 @@ type KeyPair interface {
 
 var _ KeyPair = &EncKeyPair{}
 
-// KeyPair struct stores the public key and the passphrase encrypted private key
+// EncKeyPair struct stores the public key and the passphrase encrypted private key
 type EncKeyPair struct {
 	PublicKey     PublicKey
 	PrivKeyArmour string
