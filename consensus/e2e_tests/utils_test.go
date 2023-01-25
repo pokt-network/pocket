@@ -3,6 +3,7 @@ package e2e_tests
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"os"
 	"reflect"
 	"sort"
@@ -20,6 +21,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -359,8 +361,15 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
 
 	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
-	blockStoreMock.EXPECT().Get(gomock.Any()).Return([]byte{}, nil).AnyTimes()
-	//blockStoreMock.EXPECT().Get(gomock.Any()).Return([]byte{}, nil).AnyTimes()
+
+	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
+		blockWithHeight := &coreTypes.Block{
+			BlockHeader: &coreTypes.BlockHeader{
+				Height: heightFromBytes(height),
+			},
+		}
+		return codec.GetCodec().Marshal(blockWithHeight)
+	}).AnyTimes()
 	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
@@ -375,6 +384,10 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
 	return persistenceMock
+}
+
+func heightFromBytes(heightBz []byte) uint64 {
+	return new(big.Int).SetBytes(heightBz).Uint64()
 }
 
 // Creates a p2p module mock with mock implementations of some basic functionality

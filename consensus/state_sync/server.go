@@ -95,12 +95,14 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 	blockBytes, err := blockStore.Get(heightBytes)
 	if err != nil {
 		m.nodeLog("Couldn't receive the block")
-		return &coreTypes.Block{}, err
+		return nil, err
 	}
 
-	//! TODO
-	//! This is nil, so it is not able to find the block, why?
-	m.nodeLog(fmt.Sprintf("Found block bytes: %s", blockBytes))
+	if blockBytes == nil {
+		return nil, fmt.Errorf("block is nil")
+	} else {
+		m.nodeLog(fmt.Sprintf("[DEBUG] Found non-nil block bytes: %s", blockBytes))
+	}
 
 	var block coreTypes.Block
 	err = codec.GetCodec().Unmarshal(blockBytes, &block)
