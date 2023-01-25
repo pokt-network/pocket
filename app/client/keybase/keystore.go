@@ -12,14 +12,16 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
+// Errors
 func ErrorAddrNotFound(addr string) error {
 	return fmt.Errorf("No key found with address: %s", addr)
 }
 
+// Encoding is used to serialise the data to store the KeyPairs in the database
 func init() {
 	gob.Register(crypto.Ed25519PublicKey{})
 	gob.Register(ed25519.PublicKey{})
-	gob.Register(KeyPair{})
+	gob.Register(crypto.KeyPair{})
 }
 
 // badgerKeybase implements the KeyBase interface
@@ -55,25 +57,25 @@ func (keybase *badgerKeybase) Stop() error {
 	return keybase.db.Close()
 }
 
-// Crate a new key and store it in the DB by encoding the KeyPair struct into a []byte
+// Create a new key and store it in the DB by encoding the KeyPair struct into a []byte
 // Using the PublicKey.Address() return value as the key for storage
 func (keybase *badgerKeybase) Create(passphrase string) error {
 	err := keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := CreateNewKey(passphrase)
+		keyPair, err := crypto.CreateNewKey(passphrase)
 		if err != nil {
 			return err
 		}
 
 		// Use key address as key in DB
-		key := keyPair.GetAddressBytes()
+		addrKey := keyPair.GetAddressBytes()
 		// Encode entire KeyPair struct into []byte for value
-		bz := new(bytes.Buffer)
-		enc := gob.NewEncoder(bz)
+		keypairBz := new(bytes.Buffer)
+		enc := gob.NewEncoder(keypairBz)
 		if err = enc.Encode(keyPair); err != nil {
 			return err
 		}
 
-		err = tx.Set(key, bz.Bytes())
+		err = tx.Set(addrKey, keypairBz.Bytes())
 		if err != nil {
 			return err
 		}
@@ -84,25 +86,25 @@ func (keybase *badgerKeybase) Create(passphrase string) error {
 	return err
 }
 
-// Crate a new KeyPair from the private key hex string and store it in the DB by encoding the KeyPair struct into a []byte
+// Create a new KeyPair from the private key hex string and store it in the DB by encoding the KeyPair struct into a []byte
 // Using the PublicKey.Address() return value as the key for storage
-func (keybase *badgerKeybase) ImportFromString(privStr, passphrase string) error {
+func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase string) error {
 	err := keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := CreateNewKeyFromString(privStr, passphrase)
+		keyPair, err := crypto.CreateNewKeyFromString(privKeyHex, passphrase)
 		if err != nil {
 			return err
 		}
 
 		// Use key address as key in DB
-		key := keyPair.GetAddressBytes()
+		addrKey := keyPair.GetAddressBytes()
 		// Encode entire KeyPair struct into []byte for value
-		bz := new(bytes.Buffer)
-		enc := gob.NewEncoder(bz)
+		keypairBz := new(bytes.Buffer)
+		enc := gob.NewEncoder(keypairBz)
 		if err = enc.Encode(keyPair); err != nil {
 			return err
 		}
 
-		err = tx.Set(key, bz.Bytes())
+		err = tx.Set(addrKey, keypairBz.Bytes())
 		if err != nil {
 			return err
 		}
@@ -113,25 +115,25 @@ func (keybase *badgerKeybase) ImportFromString(privStr, passphrase string) error
 	return err
 }
 
-// Crate a new KeyPair from the private key JSON string and store it in the DB by encoding the KeyPair struct into a []byte
+// Create a new KeyPair from the private key JSON string and store it in the DB by encoding the KeyPair struct into a []byte
 // Using the PublicKey.Address() return value as the key for storage
 func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 	err := keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := ImportKeyFromJSON(jsonStr, passphrase)
+		keyPair, err := crypto.ImportKeyFromJSON(jsonStr, passphrase)
 		if err != nil {
 			return err
 		}
 
 		// Use key address as key in DB
-		key := keyPair.GetAddressBytes()
+		addrKey := keyPair.GetAddressBytes()
 		// Encode entire KeyPair struct into []byte for value
-		bz := new(bytes.Buffer)
-		enc := gob.NewEncoder(bz)
+		keypairBz := new(bytes.Buffer)
+		enc := gob.NewEncoder(keypairBz)
 		if err = enc.Encode(keyPair); err != nil {
 			return err
 		}
 
-		err = tx.Set(key, bz.Bytes())
+		err = tx.Set(addrKey, keypairBz.Bytes())
 		if err != nil {
 			return err
 		}
@@ -143,17 +145,17 @@ func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 }
 
 // Returns a KeyPair struct provided the address was found in the DB
-func (keybase *badgerKeybase) Get(address string) (KeyPair, error) {
-	var kp KeyPair
-	bz := new(bytes.Buffer)
+func (keybase *badgerKeybase) Get(address string) (crypto.KeyPair, error) {
+	var kp crypto.KeyPair
+	keypairBz := new(bytes.Buffer)
 	addrBz, err := hex.DecodeString(address)
 	if err != nil {
-		return KeyPair{}, err
+		return crypto.KeyPair{}, err
 	}
 
 	err = keybase.db.View(func(tx *badger.Txn) error {
 		item, err := tx.Get(addrBz)
-		if err != nil && strings.Contains(err.Error(), "Key not found") {
+		if err != nil && strings.Contains(err.Error(), "not found") {
 			return ErrorAddrNotFound(address)
 		} else if err != nil {
 			return err
@@ -165,8 +167,8 @@ func (keybase *badgerKeybase) Get(address string) (KeyPair, error) {
 		}
 
 		// Decode []byte value back into KeyPair struct
-		bz.Write(value)
-		dec := gob.NewDecoder(bz)
+		keypairBz.Write(value)
+		dec := gob.NewDecoder(keypairBz)
 		if err = dec.Decode(&kp); err != nil {
 			return err
 		}
@@ -174,7 +176,7 @@ func (keybase *badgerKeybase) Get(address string) (KeyPair, error) {
 		return nil
 	})
 	if err != nil {
-		return KeyPair{}, err
+		return crypto.KeyPair{}, err
 	}
 
 	return kp, nil
@@ -207,7 +209,7 @@ func (keybase *badgerKeybase) GetPrivKey(address, passphrase string) (crypto.Pri
 
 // Get all the addresses and key pairs stored in the keybase
 // Returns addresses stored and all the KeyPair structs stored in the DB
-func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []KeyPair, err error) {
+func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.KeyPair, err error) {
 	// View executes the function provided managing a read only transaction
 	err = keybase.db.View(func(tx *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
@@ -220,10 +222,10 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []KeyPair, 
 				b := make([]byte, len(val))
 				copy(b, val)
 				// Decode []byte value back into KeyPair struct
-				var kp KeyPair
-				bz := new(bytes.Buffer)
-				bz.Write(b)
-				dec := gob.NewDecoder(bz)
+				var kp crypto.KeyPair
+				keypairBz := new(bytes.Buffer)
+				keypairBz.Write(b)
+				dec := gob.NewDecoder(keypairBz)
 				if err = dec.Decode(&kp); err != nil {
 					return err
 				}
@@ -252,7 +254,7 @@ func (keybase *badgerKeybase) Exists(address string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return val != KeyPair{}, nil
+	return val != crypto.KeyPair{}, nil
 }
 
 // Export the Private Key string of the given address
@@ -287,24 +289,24 @@ func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassph
 	}
 
 	err = keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := CreateNewKeyFromString(privStr, newPassphrase)
+		keyPair, err := crypto.CreateNewKeyFromString(privStr, newPassphrase)
 		if err != nil {
 			return err
 		}
 
 		// Use key address as key in DB
-		key := keyPair.GetAddressBytes()
-		if bytes.Compare(key, addrBz) != 0 {
+		addrKey := keyPair.GetAddressBytes()
+		if bytes.Compare(addrKey, addrBz) != 0 {
 			return fmt.Errorf("Key address does not match previous address.")
 		}
 		// Encode entire KeyPair struct into []byte for value
-		bz := new(bytes.Buffer)
-		enc := gob.NewEncoder(bz)
+		keypairBz := new(bytes.Buffer)
+		enc := gob.NewEncoder(keypairBz)
 		if err = enc.Encode(keyPair); err != nil {
 			return err
 		}
 
-		err = tx.Set(key, bz.Bytes())
+		err = tx.Set(addrKey, keypairBz.Bytes())
 		if err != nil {
 			return err
 		}
@@ -336,8 +338,7 @@ func (keybase *badgerKeybase) Verify(address string, msg, sig []byte) (bool, err
 
 // Remove a KeyPair from the DB given the address
 func (keybase *badgerKeybase) Delete(address, passphrase string) error {
-	_, err := keybase.GetPrivKey(address, passphrase)
-	if err != nil {
+	if _, err := keybase.GetPrivKey(address, passphrase); err != nil {
 		return err
 	}
 
@@ -346,11 +347,9 @@ func (keybase *badgerKeybase) Delete(address, passphrase string) error {
 		return err
 	}
 
-	err = keybase.db.Update(func(tx *badger.Txn) error {
-		tx.Delete(addrBz)
-		return nil
-	})
-	return err
+	tx := keybase.db.NewTransaction(true)
+	defer tx.Discard()
+	return tx.Delete(addrBz)
 }
 
 // Return badger.Options for the given DB path - disable logging
