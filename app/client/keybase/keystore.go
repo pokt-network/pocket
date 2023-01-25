@@ -75,8 +75,7 @@ func (keybase *badgerKeybase) Create(passphrase string) error {
 			return err
 		}
 
-		err = tx.Set(addrKey, keypairBz.Bytes())
-		if err != nil {
+		if err = tx.Set(addrKey, keypairBz.Bytes()); err != nil {
 			return err
 		}
 
@@ -104,8 +103,7 @@ func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase string) er
 			return err
 		}
 
-		err = tx.Set(addrKey, keypairBz.Bytes())
-		if err != nil {
+		if err = tx.Set(addrKey, keypairBz.Bytes()); err != nil {
 			return err
 		}
 
@@ -133,8 +131,7 @@ func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 			return err
 		}
 
-		err = tx.Set(addrKey, keypairBz.Bytes())
-		if err != nil {
+		if err = tx.Set(addrKey, keypairBz.Bytes()); err != nil {
 			return err
 		}
 
@@ -306,8 +303,7 @@ func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassph
 			return err
 		}
 
-		err = tx.Set(addrKey, keypairBz.Bytes())
-		if err != nil {
+		if err = tx.Set(addrKey, keypairBz.Bytes()); err != nil {
 			return err
 		}
 
@@ -347,9 +343,11 @@ func (keybase *badgerKeybase) Delete(address, passphrase string) error {
 		return err
 	}
 
-	tx := keybase.db.NewTransaction(true)
-	defer tx.Discard()
-	return tx.Delete(addrBz)
+	err = keybase.db.Update(func(tx *badger.Txn) error {
+		tx.Delete(addrBz)
+		return nil
+	})
+	return err
 }
 
 // Return badger.Options for the given DB path - disable logging
