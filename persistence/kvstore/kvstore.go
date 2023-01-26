@@ -1,7 +1,5 @@
 package kvstore
 
-//go:generate mockgen -source=$GOFILE -destination=../types/mocks/block_store_mock.go github.com/pokt-network/pocket/persistence/types KVStore
-
 import (
 	"errors"
 	"log"
