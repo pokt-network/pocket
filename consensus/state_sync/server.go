@@ -60,7 +60,6 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	}
 
 	clientPeerId := blockReq.PeerId
-
 	m.nodeLog(fmt.Sprintf("%s Received State Sync Get Block Req from: %s", serverNodePeerId, clientPeerId))
 
 	block, err := m.getBlockAtHeight(blockReq.Height)
@@ -73,18 +72,35 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	// 	return err
 	// }
 
-	metadataRes := typesCons.GetBlockResponse{
-		PeerId: serverNodePeerId,
-		Block:  block,
+	// metadataRes := typesCons.GetBlockResponse{
+	// 	PeerId: serverNodePeerId,
+	// 	Block:  block,
+	// }
+
+	// anyStateSyncMessage, err := anypb.New(&metadataRes)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// return m.sendToPeer(anyStateSyncMessage, cryptoPocket.AddressFromString(blockReq.PeerId))
+
+	stateSyncMessage := typesCons.StateSyncMessage{
+		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE,
+		Message: &typesCons.StateSyncMessage_GetBlockRes{
+			GetBlockRes: &typesCons.GetBlockResponse{
+				PeerId: serverNodePeerId,
+				Block:  block,
+			},
+		},
 	}
 
-	anyStateSyncMessage, err := anypb.New(&metadataRes)
+	anyMsg, err := anypb.New(&stateSyncMessage)
 	if err != nil {
 		return err
 	}
+	m.nodeLog("HandleGetBlockRequest: SENDING GETBLOCKRESPONSE")
 
-	return m.sendToPeer(anyStateSyncMessage, cryptoPocket.AddressFromString(blockReq.PeerId))
-	//return
+	return m.sendToPeer(anyMsg, cryptoPocket.AddressFromString(clientPeerId))
 }
 
 // Get a block from persistance module given block height

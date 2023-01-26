@@ -37,6 +37,7 @@ type StateSyncModule interface {
 
 	IsServerModEnabled() bool
 	EnableServerMode()
+	SetLogPrefix(string)
 }
 
 var (
@@ -101,6 +102,10 @@ func (m *stateSync) IsServerModEnabled() bool {
 	return m.serverMode
 }
 
+func (m *stateSync) SetLogPrefix(logPrefix string) {
+	m.logPrefix = logPrefix
+}
+
 func (m *stateSync) EnableServerMode() {
 	m.nodeLog("ENABLING SERVER MODE")
 	m.currentMode = Server
@@ -108,7 +113,7 @@ func (m *stateSync) EnableServerMode() {
 }
 
 func (m *stateSync) HandleGetBlockResponse(*typesCons.GetBlockResponse) error {
-	//! TODO implement
+	m.nodeLog("GOKHAN RECEIVED GET BLOCK RESPONSE!")
 	return nil
 }
 

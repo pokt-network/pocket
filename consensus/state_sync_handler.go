@@ -55,7 +55,6 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 			return err
 		}
 	case typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_REQUEST:
-		m.nodeLog("GET BLOCK REQ")
 		if !m.stateSync.IsServerModEnabled() {
 			return fmt.Errorf("server module is not enabled")
 		}
