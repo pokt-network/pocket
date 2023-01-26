@@ -165,3 +165,4 @@ func (tx *Transaction) GetMessage() (proto.Message, error) {
 func TransactionHash(transactionProtoBytes []byte) string {
 	return crypto.GetHashStringFromBytes(transactionProtoBytes)
 }
+

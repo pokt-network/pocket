@@ -89,7 +89,7 @@ func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
 	return height, nil
 }
 
-func (u *UtilityContext) GetStoreAndHeight() (*Context, int64, typesUtil.Error) {
+func (u *UtilityContext) getStoreAndHeight() (*Context, int64, typesUtil.Error) {
 	store := u.Store()
 	height, er := store.GetHeight()
 	if er != nil {

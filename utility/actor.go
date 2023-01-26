@@ -97,7 +97,7 @@ func (u *UtilityContext) SetActorPauseHeight(actorType coreTypes.ActorType, addr
 // getters
 
 func (u *UtilityContext) GetActorStakedTokens(actorType coreTypes.ActorType, address []byte) (*big.Int, typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
+	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (u *UtilityContext) GetActorStakedTokens(actorType coreTypes.ActorType, add
 }
 
 func (u *UtilityContext) GetMaxPausedBlocks(actorType coreTypes.ActorType) (maxPausedBlocks int, err typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
+	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
 	}
@@ -159,7 +159,7 @@ func (u *UtilityContext) GetMaxPausedBlocks(actorType coreTypes.ActorType) (maxP
 }
 
 func (u *UtilityContext) GetMinimumPauseBlocks(actorType coreTypes.ActorType) (minPauseBlocks int, err typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
+	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
 	}
@@ -187,7 +187,7 @@ func (u *UtilityContext) GetMinimumPauseBlocks(actorType coreTypes.ActorType) (m
 }
 
 func (u *UtilityContext) GetPauseHeight(actorType coreTypes.ActorType, address []byte) (pauseHeight int64, err typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
+	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
 	}
@@ -214,7 +214,7 @@ func (u *UtilityContext) GetPauseHeight(actorType coreTypes.ActorType, address [
 }
 
 func (u *UtilityContext) GetActorStatus(actorType coreTypes.ActorType, address []byte) (status int32, err typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
+	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
 	}
@@ -241,7 +241,7 @@ func (u *UtilityContext) GetActorStatus(actorType coreTypes.ActorType, address [
 }
 
 func (u *UtilityContext) GetMinimumStake(actorType coreTypes.ActorType) (*big.Int, typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
+	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +270,7 @@ func (u *UtilityContext) GetMinimumStake(actorType coreTypes.ActorType) (*big.In
 
 func (u *UtilityContext) GetStakeAmount(actorType coreTypes.ActorType, address []byte) (*big.Int, typesUtil.Error) {
 	var stakeAmount string
-	store, height, er := u.GetStoreAndHeight()
+	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return nil, er
 	}
@@ -297,7 +297,7 @@ func (u *UtilityContext) GetStakeAmount(actorType coreTypes.ActorType, address [
 }
 
 func (u *UtilityContext) GetUnstakingHeight(actorType coreTypes.ActorType) (unstakingHeight int64, err typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
+	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
 	}
@@ -327,7 +327,7 @@ func (u *UtilityContext) GetUnstakingHeight(actorType coreTypes.ActorType) (unst
 }
 
 func (u *UtilityContext) GetMaxChains(actorType coreTypes.ActorType) (maxChains int, err typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
+	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
 	}
@@ -354,7 +354,7 @@ func (u *UtilityContext) GetMaxChains(actorType coreTypes.ActorType) (maxChains 
 }
 
 func (u *UtilityContext) GetActorExists(actorType coreTypes.ActorType, address []byte) (bool, typesUtil.Error) {
-	store, height, er := u.GetStoreAndHeight()
+	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return false, er
 	}
@@ -382,7 +382,7 @@ func (u *UtilityContext) GetActorExists(actorType coreTypes.ActorType, address [
 }
 
 func (u *UtilityContext) GetActorOutputAddress(actorType coreTypes.ActorType, operator []byte) (output []byte, err typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
+	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return nil, err
 	}

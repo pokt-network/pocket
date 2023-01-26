@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func (u *UtilityContext) UpdateParam(paramName string, value any) typesUtil.Error {
+func (u *UtilityContext) updateParam(paramName string, value any) typesUtil.Error {
 	store := u.Store()
 	switch t := value.(type) {
 	case *wrapperspb.Int32Value:
@@ -254,7 +254,7 @@ func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
 	// DISCUSS (@deblasis): here we could potentially leverage the struct tags in gov.proto by specifying an `owner` key
 	// eg: `app_minimum_stake` could have `pokt:"owner=app_minimum_stake_owner"`
 	// in here we would use that map to point to the owner, removing this switch, centralizing the logic and making it declarative
-	store, height, er := u.GetStoreAndHeight()
+	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return nil, er
 	}
@@ -543,7 +543,6 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType coreTypes.Actor
 	default:
 		return nil, typesUtil.ErrUnknownMessage(x)
 	}
-	return nil, nil
 }
 
 func (u *UtilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUtil.MessageChangeParameter) ([][]byte, typesUtil.Error) {
@@ -555,7 +554,7 @@ func (u *UtilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUti
 }
 
 func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.Error) {
-	store, height, er := u.GetStoreAndHeight()
+	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return nil, er
 	}
@@ -568,7 +567,7 @@ func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.E
 }
 
 func (u *UtilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
-	store, height, er := u.GetStoreAndHeight()
+	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return 0, er
 	}
@@ -580,7 +579,7 @@ func (u *UtilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
 }
 
 func (u *UtilityContext) getInt64Param(paramName string) (int64, typesUtil.Error) {
-	store, height, er := u.GetStoreAndHeight()
+	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return 0, er
 	}
@@ -592,7 +591,7 @@ func (u *UtilityContext) getInt64Param(paramName string) (int64, typesUtil.Error
 }
 
 func (u *UtilityContext) getByteArrayParam(paramName string) ([]byte, typesUtil.Error) {
-	store, height, er := u.GetStoreAndHeight()
+	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return nil, er
 	}

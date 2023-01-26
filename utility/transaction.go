@@ -350,7 +350,7 @@ func (u *UtilityContext) HandleMessageChangeParameter(message *typesUtil.Message
 	if err != nil {
 		return typesUtil.ErrProtoFromAny(err)
 	}
-	return u.UpdateParam(message.ParameterKey, v)
+	return u.updateParam(message.ParameterKey, v)
 }
 
 func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, typesUtil.Error) {

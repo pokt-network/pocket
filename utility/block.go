@@ -328,7 +328,7 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 
 // GetValidatorMissedBlocks gets the total blocks that a validator has not signed a certain window of time denominated by blocks
 func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
+	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
 	}

@@ -11,8 +11,14 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-var _ modules.UtilityModule = &utilityModule{}
-var _ modules.Module = &utilityModule{}
+var (
+	_ modules.UtilityModule = &utilityModule{}
+	_ modules.Module        = &utilityModule{}
+)
+
+const (
+	TransactionGossipMessageContentType = "utility.TransactionGossipMessage"
+)
 
 type utilityModule struct {
 	bus    modules.Bus
@@ -20,10 +26,6 @@ type utilityModule struct {
 
 	Mempool types.Mempool
 }
-
-const (
-	TransactionGossipMessageContentType = "utility.TransactionGossipMessage"
-)
 
 func Create(bus modules.Bus) (modules.Module, error) {
 	return new(utilityModule).Create(bus)
@@ -74,16 +76,18 @@ func (u *utilityModule) HandleMessage(message *anypb.Any) error {
 		if err != nil {
 			return err
 		}
-		transactionGossipMsg, ok := msg.(*types.TransactionGossipMessage)
-		if !ok {
+
+		if transactionGossipMsg, ok := msg.(*types.TransactionGossipMessage); !ok {
 			return fmt.Errorf("failed to cast message to UtilityMessage")
-		}
-		if err := u.CheckTransaction(transactionGossipMsg.Tx); err != nil {
+		} else if err := u.CheckTransaction(transactionGossipMsg.Tx); err != nil {
 			return err
 		}
+
 		log.Println("MEMPOOOL: Successfully added a new message to the mempool!")
+
 	default:
 		return types.ErrUnknownMessageType(message.MessageName())
 	}
+
 	return nil
 }

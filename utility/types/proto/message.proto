@@ -1,17 +1,20 @@
 syntax = "proto3";
 package utility;
 
+// This
+
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
 import "google/protobuf/any.proto";
 import "core/types/proto/actor.proto";
 
+// Send funds from one address to another
 message MessageSend {
   bytes from_address = 1;
   bytes to_address = 2;
   string amount = 3;
 }
-
+// Stake on behalf of a protocol actor
 message MessageStake {
   core.ActorType actor_type = 1;
   bytes public_key = 2;
