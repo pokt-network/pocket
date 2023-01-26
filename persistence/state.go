@@ -362,8 +362,7 @@ func (p *PostgresContext) updateParamsTree() error {
 
 	for _, param := range params {
 		paramKey := crypto.SHA3Hash([]byte(param.String()))
-		codec := codec.GetCodec()
-		paramBz, err := codec.Marshal(param)
+		paramBz, err := codec.GetCodec().Marshal(param)
 		if err != nil {
 			return err
 		}
@@ -383,8 +382,7 @@ func (p *PostgresContext) updateFlagsTree() error {
 
 	for _, flag := range flags {
 		flagKey := crypto.SHA3Hash([]byte(flag.String()))
-		codec := codec.GetCodec()
-		flagBz, err := codec.Marshal(flag)
+		flagBz, err := codec.GetCodec().Marshal(flag)
 		if err != nil {
 			return err
 		}
