@@ -206,7 +206,7 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 }
 
 func GetAllTestingAccounts(t *testing.T, ctx utilityContext) []*coreTypes.Account {
-	accs, err := (ctx.persistenceContext.PersistenceRWContext).GetAllAccounts(0)
+	accs, err := (ctx.persistenceContext).GetAllAccounts(0)
 	require.NoError(t, err)
 	sort.Slice(accs, func(i, j int) bool {
 		return accs[i].GetAddress() < accs[j].GetAddress()
@@ -215,7 +215,7 @@ func GetAllTestingAccounts(t *testing.T, ctx utilityContext) []*coreTypes.Accoun
 }
 
 func GetAllTestingPools(t *testing.T, ctx utilityContext) []*coreTypes.Account {
-	accs, err := (ctx.persistenceContext.PersistenceRWContext).GetAllPools(0)
+	accs, err := (ctx.persistenceContext).GetAllPools(0)
 	require.NoError(t, err)
 	sort.Slice(accs, func(i, j int) bool {
 		return accs[i].GetAddress() < accs[j].GetAddress()

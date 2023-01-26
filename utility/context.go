@@ -9,23 +9,18 @@ import (
 )
 
 type utilityContext struct {
-	height             int64
-	mempool            typesUtil.Mempool
-	persistenceContext *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
+	height  int64
+	mempool typesUtil.Mempool
+
+	persistenceContext modules.PersistenceRWContext
+	// INVESTIGATE: Can we use the
+	savePointsSet  map[string]struct{}
+	savePointsList [][]byte
 
 	// TECHDEBT: Consolidate all these types with the shared Protobuf struct and create a `proposalBlock`
 	proposalProposerAddr []byte
 	proposalStateHash    string
 	proposalBlockTxs     [][]byte
-}
-
-// IMPROVE: Consider renaming to `persistenceContext` or `storeContext`?
-type Context struct {
-	// CLEANUP: Since `Context` embeds `PersistenceRWContext`, we don't need to do `u.Context.PersistenceRWContext`, but can call `u.Context` directly
-	modules.PersistenceRWContext
-	// TODO(#327): `SavePoints`` have not been implemented yet
-	SavePointsM map[string]struct{}
-	SavePoints  [][]byte
 }
 
 func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error) {
@@ -34,13 +29,11 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 		return nil, typesUtil.ErrNewPersistenceContext(err)
 	}
 	return &utilityContext{
-		height:  height,
-		mempool: u.mempool,
-		persistenceContext: &Context{
-			PersistenceRWContext: ctx,
-			SavePoints:           make([][]byte, 0),
-			SavePointsM:          make(map[string]struct{}),
-		},
+		height:             height,
+		mempool:            u.mempool,
+		persistenceContext: ctx,
+		savePointsList:     make([][]byte, 0),
+		savePointsSet:      make(map[string]struct{}),
 	}, nil
 }
 
@@ -51,16 +44,16 @@ func (p *utilityContext) SetProposalBlock(blockHash string, proposerAddr []byte,
 	return nil
 }
 
-func (u *utilityContext) Store() *Context {
+func (u *utilityContext) Store() modules.PersistenceRWContext {
 	return u.persistenceContext
 }
 
 func (u *utilityContext) GetPersistenceContext() modules.PersistenceRWContext {
-	return u.persistenceContext.PersistenceRWContext
+	return u.persistenceContext
 }
 
 func (u *utilityContext) Commit(quorumCert []byte) error {
-	if err := u.persistenceContext.PersistenceRWContext.Commit(u.proposalProposerAddr, quorumCert); err != nil {
+	if err := u.persistenceContext.Commit(u.proposalProposerAddr, quorumCert); err != nil {
 		return err
 	}
 	u.persistenceContext = nil
@@ -86,7 +79,7 @@ func (u *utilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
 	return height, nil
 }
 
-func (u *utilityContext) getStoreAndHeight() (*Context, int64, typesUtil.Error) {
+func (u *utilityContext) getStoreAndHeight() (modules.PersistenceRWContext, int64, typesUtil.Error) {
 	store := u.Store()
 	height, er := store.GetHeight()
 	if er != nil {
@@ -100,34 +93,34 @@ func (u *utilityContext) Codec() codec.Codec {
 }
 
 func (u *utilityContext) RevertLastSavePoint() typesUtil.Error {
-	if len(u.persistenceContext.SavePointsM) == typesUtil.ZeroInt {
+	if len(u.savePointsSet) == typesUtil.ZeroInt {
 		return typesUtil.ErrEmptySavePoints()
 	}
 	var key []byte
-	popIndex := len(u.persistenceContext.SavePoints) - 1
-	key, u.persistenceContext.SavePoints = u.persistenceContext.SavePoints[popIndex], u.persistenceContext.SavePoints[:popIndex]
-	delete(u.persistenceContext.SavePointsM, hex.EncodeToString(key))
-	if err := u.persistenceContext.PersistenceRWContext.RollbackToSavePoint(key); err != nil {
+	popIndex := len(u.savePointsList) - 1
+	key, u.savePointsList = u.savePointsList[popIndex], u.savePointsList[:popIndex]
+	delete(u.savePointsSet, hex.EncodeToString(key))
+	if err := u.persistenceContext.RollbackToSavePoint(key); err != nil {
 		return typesUtil.ErrRollbackSavePoint(err)
 	}
 	return nil
 }
 
 func (u *utilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
-	if err := u.persistenceContext.PersistenceRWContext.NewSavePoint(transactionHash); err != nil {
+	if err := u.persistenceContext.NewSavePoint(transactionHash); err != nil {
 		return typesUtil.ErrNewSavePoint(err)
 	}
 	txHash := hex.EncodeToString(transactionHash)
-	if _, exists := u.persistenceContext.SavePointsM[txHash]; exists {
+	if _, exists := u.savePointsSet[txHash]; exists {
 		return typesUtil.ErrDuplicateSavePoint()
 	}
-	u.persistenceContext.SavePoints = append(u.persistenceContext.SavePoints, transactionHash)
-	u.persistenceContext.SavePointsM[txHash] = struct{}{}
+	u.savePointsList = append(u.savePointsList, transactionHash)
+	u.savePointsSet[txHash] = struct{}{}
 	return nil
 }
 
-func (c *Context) Reset() typesUtil.Error {
-	if err := c.PersistenceRWContext.Release(); err != nil {
+func (u *utilityContext) Reset() typesUtil.Error {
+	if err := u.persistenceContext.Release(); err != nil {
 		return typesUtil.ErrResetContext(err)
 	}
 	return nil

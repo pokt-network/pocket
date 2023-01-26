@@ -86,13 +86,11 @@ func NewTestingUtilityContext(t *testing.T, height int64) utilityContext {
 	})
 
 	return utilityContext{
-		height:  height,
-		mempool: mempool,
-		persistenceContext: &Context{
-			PersistenceRWContext: persistenceContext,
-			SavePointsM:          make(map[string]struct{}),
-			SavePoints:           make([][]byte, 0),
-		},
+		height:             height,
+		mempool:            mempool,
+		persistenceContext: persistenceContext,
+		savePointsSet:      make(map[string]struct{}),
+		savePointsList:     make([][]byte, 0),
 	}
 }
 
