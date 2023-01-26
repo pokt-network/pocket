@@ -51,7 +51,7 @@ type pacemaker struct {
 	// Only used for development and debugging.
 	debug pacemakerDebug
 
-	//REFACTOR: this should be removed, when we build a shared and proper logger
+	// REFACTOR: this should be removed, when we build a shared and proper logger
 	logPrefix string
 }
 
@@ -69,12 +69,10 @@ func (*pacemaker) Create(bus modules.Bus) (modules.Module, error) {
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 
-	pacemakerCfg := cfg.Consensus.PacemakerConfig
-
-	m.pacemakerCfg = pacemakerCfg
+	m.pacemakerCfg = cfg.Consensus.PacemakerConfig
 	m.debug = pacemakerDebug{
-		manualMode:                pacemakerCfg.GetManual(),
-		debugTimeBetweenStepsMsec: pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
+		manualMode:                m.pacemakerCfg.GetManual(),
+		debugTimeBetweenStepsMsec: m.pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
 		quorumCertificate:         nil,
 	}
 

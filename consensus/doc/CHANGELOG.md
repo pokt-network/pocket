@@ -7,13 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-<<<<<<< HEAD
-## [0.0.0.21] - 2023-01-21
-### Consensus - Core
+## [0.0.0.22] - 2023-01-25
+
+- Add a note on consensus test related workaround related to #462
+
+## [0.0.0.21] - 2023-01-24
+
 - Decouple consensus module and pacemaker module
 - Add `pacemaker` submodule
 - Update pacemaker struct to remove consensus module field, and related functions
-- Create new `pacemaker_consensus.go` source file that consists ConsensusPacemaker function implementations 
+- Create new `pacemaker_consensus.go` source file that consists ConsensusPacemaker function implementations
 
 ## [0.0.0.20] - 2023-01-19
 

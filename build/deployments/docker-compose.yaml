@@ -48,6 +48,8 @@ services:
       - "seccomp:unconfined"
     environment:
       - POCKET_RPC_USE_CORS=true
+    # Uncomment to enable the pprof server
+    #  - PPROF_ENABLED=true
     # Uncomment to enable DLV debugging
     #   - DEBUG_PORT=7081
 

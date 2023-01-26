@@ -84,7 +84,7 @@ type consensusModule struct {
 type ConsensusDebugModule interface {
 	SetHeight(uint64)
 	SetRound(uint64)
-	//REFACTOR: This should accept typesCons.HotstuffStep.
+	// REFACTOR: This should accept typesCons.HotstuffStep.
 	SetStep(uint8)
 	SetBlock(*coreTypes.Block)
 	SetLeaderId(*typesCons.NodeId)
@@ -117,14 +117,6 @@ func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContex
 }
 
 // Implementations of the ConsensusStateSync interface
-func (m *consensusModule) GetNodeId() uint64 {
-	return uint64(m.nodeId)
-}
-
-func (m *consensusModule) IsLeaderSet() bool {
-	return m.leaderId != nil
-}
-
 func (m *consensusModule) GetLeaderId() uint64 {
 	if m.leaderId == nil {
 		return 0

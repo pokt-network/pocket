@@ -19,6 +19,7 @@ const (
 type ConsensusModule interface {
 	Module
 	KeyholderModule
+	ConsensusPacemaker
 
 	ConsensusStateSync
 	ConsensusPacemaker
@@ -41,21 +42,28 @@ type ConsensusModule interface {
 
 // This interface represents functions exposed by the Consensus module for Pacemaker specific business logic.
 // These functions are intended to only be called by the Pacemaker module.
-// TODO(#428): This interface will be removed when the communication between the pacemaker and consensus module become asynchronous.
+// TODO(#428): This interface will be removed when the communication between the pacemaker and consensus module become asynchronous via the bus.
 type ConsensusPacemaker interface {
+	// Clearers
 	ResetRound()
+	ResetForNewHeight()
 	ClearLeaderMessagesPool()
+	ReleaseUtilityContext() error
+
+	// Setters
 	SetHeight(uint64)
 	SetRound(uint64)
-	// IMPROVE: Consider changing the input to type to `typesCons.HotstuffStep`. This currently causes an import cycle and requires significant refactoring.
-	SetStep(uint8)
-	ResetForNewHeight()
-	ReleaseUtilityContext() error
+	SetStep(uint8) // CONSIDERATION: Change to `typesCons.HotstuffStep; causes an import cycle.
+
+	// Communicators
 	BroadcastMessageToValidators(*anypb.Any) error
+
+	// Leader helpers
 	IsLeader() bool
 	IsLeaderSet() bool
-	// IMPROVE: Consider changing input to typesCons.HotstuffMessage. This requires to do refactoring.
-	NewLeader(*anypb.Any) error
+	NewLeader(*anypb.Any) error // CONSIDERATION: Consider changing input to typesCons.HotstuffMessage. This requires to do refactoring.
+
+	// Getters
 	IsPrepareQCNil() bool
 	GetPrepareQC() (*anypb.Any, error)
 	GetNodeId() uint64
@@ -65,10 +73,8 @@ type ConsensusPacemaker interface {
 // These functions are intended to only be called by the StateSync module.
 // Redeclared functions with ConsensusPacemaker interface are kept for providing usage clarity.
 type ConsensusStateSync interface {
-	GetNodeId() uint64
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetCurrentNodeAddressFromNodeId() (string, error)
-	IsLeaderSet() bool
 	GetLeaderId() uint64
 	//GetStateSyncModule() state_sync.StateSyncModule
 }

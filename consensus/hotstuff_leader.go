@@ -51,7 +51,6 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 	// Likely to be `nil` if blockchain is progressing well.
 	// TECHDEBT: How do we properly validate `prepareQC` here?
-	// prepareQC named as highPrepareQC since when leader is executing it represents the highest QC.
 	highPrepareQC := m.findHighQC(m.messagePool[NewRound])
 
 	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
@@ -112,17 +111,17 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	}
 	m.nodeLog(typesCons.OptimisticVoteCountPassed(m.height, Prepare, m.round))
 
-	highPrepareQC, err := m.getQuorumCertificate(m.height, Prepare, m.round)
+	prepareQC, err := m.getQuorumCertificate(m.height, Prepare, m.round)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrQCInvalid(Prepare).Error(), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
 	m.step = PreCommit
-	m.prepareQC = highPrepareQC
+	m.prepareQC = prepareQC
 	m.messagePool[Prepare] = nil
 
-	preCommitProposeMessage, err := CreateProposeMessage(m.height, m.round, PreCommit, m.block, highPrepareQC)
+	preCommitProposeMessage, err := CreateProposeMessage(m.height, m.round, PreCommit, m.block, prepareQC)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateProposeMessage(PreCommit).Error(), err)
 		m.paceMaker.InterruptRound("failed to create propose message")
