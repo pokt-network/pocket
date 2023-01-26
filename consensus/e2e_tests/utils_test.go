@@ -243,7 +243,6 @@ func WaitForNetworkStateSyncEvents(
 	clock *clock.Mock,
 	eventsChannel modules.EventsChannel,
 	msgType typesCons.StateSyncMessageType,
-	_serverNodeAddress cryptoPocket.Address,
 	numExpectedMsgs int,
 	millis time.Duration,
 	failOnExtraMessages bool,
@@ -255,7 +254,6 @@ func WaitForNetworkStateSyncEvents(
 		stateSyncMessage, ok := msg.(*typesCons.StateSyncMessage)
 		require.True(t, ok)
 
-		// TODO filter on server node address
 		return stateSyncMessage.MsgType == msgType
 	}
 

@@ -61,6 +61,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 
 	m.nodeLog(fmt.Sprintf("%s Received State Sync Get Block Req from: %s", serverNodePeerId, clientPeerId))
 
+	// IMPROVE: Consider checking the hishest block from persistance, rather than the consensus module
 	// check the max block height, if higher height is requested, return error
 	if consensusMod.CurrentHeight() < blockReq.Height {
 		return fmt.Errorf(" requested block height is higher than node's block height ")

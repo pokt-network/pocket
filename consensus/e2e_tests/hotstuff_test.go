@@ -2,14 +2,17 @@ package e2e_tests
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
@@ -188,6 +191,51 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 			nodeState)
 		require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
 	}
+
+	// Test also State Sync Get block, currently chain has finished the first round
+	serverNode := pocketNodes[1]
+	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
+	serverNodeConsensusModImpl.MethodByName("EnableServerMode").Call([]reflect.Value{})
+
+	// We choose node 2 as the requester node.
+	requesterNode := pocketNodes[2]
+	requesterNodePeerId, err := requesterNode.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
+	require.NoError(t, err)
+
+	stateSyncGetBlockReq := typesCons.GetBlockRequest{
+		PeerId: requesterNodePeerId,
+		Height: 1,
+	}
+
+	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_REQUEST,
+		Message: &typesCons.StateSyncMessage_GetBlockReq{
+			GetBlockReq: &stateSyncGetBlockReq,
+		},
+	}
+
+	anyProto, err := anypb.New(stateSyncGetBlockMessage)
+	require.NoError(t, err)
+
+	// send get block request to the server node
+	P2PSend(t, serverNode, anyProto)
+
+	// start waiting for the get block request on server node,
+	numExpectedMsgs := 1
+	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE, numExpectedMsgs, 250, false)
+	require.NoError(t, err)
+
+	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
+	require.NoError(t, err)
+
+	stateSyncGetBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
+	require.True(t, ok)
+
+	getBlockRes := stateSyncGetBlockResMessage.GetGetBlockRes()
+	require.NotEmpty(t, getBlockRes)
+
+	//fmt.Printf("Get Block Response: %s", getBlockRes)
+	require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
 }
 
 // TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
