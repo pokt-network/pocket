@@ -10,7 +10,6 @@ import (
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
@@ -362,7 +361,7 @@ func (p *PostgresContext) updateParamsTree() error {
 
 	for _, param := range params {
 		paramKey := crypto.SHA3Hash([]byte(param.String()))
-		paramBz, err := codec.GetCodec().Marshal(param)
+		paramBz, err := proto.Marshal(param)
 		if err != nil {
 			return err
 		}
@@ -382,7 +381,7 @@ func (p *PostgresContext) updateFlagsTree() error {
 
 	for _, flag := range flags {
 		flagKey := crypto.SHA3Hash([]byte(flag.String()))
-		flagBz, err := codec.GetCodec().Marshal(flag)
+		flagBz, err := proto.Marshal(flag)
 		if err != nil {
 			return err
 		}
