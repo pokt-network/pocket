@@ -13,6 +13,6 @@ message Param {
 message Flag {
     string Name = 1;
     string Value = 2;
-    string Enabled = 3;
-    int64  Height = 4;
+    int64  Height = 3;
+    string Enabled = 4;
 }

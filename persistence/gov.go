@@ -3,11 +3,12 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"log"
 	"reflect"
 	"strconv"
 	"strings"
+
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
@@ -186,7 +187,7 @@ func (p PostgresContext) getParamsUpdated(height int64) ([]*coreTypes.Param, err
 		return nil, err
 	}
 	// Get all parameters / flags at current height
-	rows, err := tx.Query(ctx, p.getParamsOrFlagsAtHeightQuery(types.ParamsTableName, height))
+	rows, err := tx.Query(ctx, p.getParamsOrFlagsUpdateAtHeightQuery(types.ParamsTableName, height))
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +212,7 @@ func (p PostgresContext) getFlagsUpdated(height int64) ([]*coreTypes.Flag, error
 		return nil, err
 	}
 	// Get all parameters / flags at current height
-	rows, err := tx.Query(ctx, p.getParamsOrFlagsAtHeightQuery(types.FlagsTableName, height))
+	rows, err := tx.Query(ctx, p.getParamsOrFlagsUpdateAtHeightQuery(types.FlagsTableName, height))
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +231,7 @@ func (p PostgresContext) getFlagsUpdated(height int64) ([]*coreTypes.Flag, error
 	return flagSlice, nil
 }
 
-func (p *PostgresContext) getParamsOrFlagsAtHeightQuery(tableName string, height int64) string {
+func (p *PostgresContext) getParamsOrFlagsUpdateAtHeightQuery(tableName string, height int64) string {
 	fields := "name,value"
 	if tableName == types.FlagsTableName {
 		fields += ",enabled"

@@ -10,6 +10,7 @@ import (
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
@@ -360,12 +361,13 @@ func (p *PostgresContext) updateParamsTree() error {
 	}
 
 	for _, param := range params {
-		paramHash := crypto.SHA3Hash([]byte(param.String()))
-		paramBz, err := proto.Marshal(param)
+		paramKey := crypto.SHA3Hash([]byte(param.String()))
+		codec := codec.GetCodec()
+		paramBz, err := codec.Marshal(param)
 		if err != nil {
 			return err
 		}
-		if _, err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(paramHash[:], paramBz); err != nil {
+		if _, err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(paramKey[:], paramBz); err != nil {
 			return err
 		}
 	}
@@ -380,12 +382,13 @@ func (p *PostgresContext) updateFlagsTree() error {
 	}
 
 	for _, flag := range flags {
-		flagHash := crypto.SHA3Hash([]byte(flag.String()))
-		flagBz, err := proto.Marshal(flag)
+		flagKey := crypto.SHA3Hash([]byte(flag.String()))
+		codec := codec.GetCodec()
+		flagBz, err := codec.Marshal(flag)
 		if err != nil {
 			return err
 		}
-		if _, err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(flagHash[:], flagBz); err != nil {
+		if _, err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(flagKey[:], flagBz); err != nil {
 			return err
 		}
 	}
