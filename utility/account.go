@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/pokt-network/pocket/utility/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 // 'Accounts' are structures in the utility module that closely resemble currency holding vehicles: like a bank account.
@@ -17,9 +18,9 @@ func (u *UtilityContext) GetAccountAmount(address []byte) (*big.Int, types.Error
 	}
 	amount, err := store.GetAccountAmount(address, height)
 	if err != nil {
-		return nil, types.ErrGetAccountAmount(err)
+		return nil, typesUtil.ErrGetAccountAmount(err)
 	}
-	return types.StringToBigInt(amount)
+	return typesUtil.StringToBigInt(amount)
 }
 
 func (u *UtilityContext) AddAccountAmount(address []byte, amountToAdd *big.Int) types.Error {

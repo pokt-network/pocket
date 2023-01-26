@@ -1,4 +1,4 @@
-package test
+package utility
 
 import (
 	"encoding/hex"
@@ -9,7 +9,6 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -33,8 +32,6 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	amount, err := ctx.GetAccountAmount(signer.Address())
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
-
-	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_ApplyTransaction(t *testing.T) {
@@ -53,8 +50,6 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	amount, err = ctx.GetAccountAmount(signer.Address())
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
-
-	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_CheckTransaction(t *testing.T) {
@@ -71,8 +66,6 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, ctx.Mempool.Contains(hash)) // IMPROVE: Access the mempool from the `testUtilityMod` directly
 	require.Equal(t, testUtilityMod.CheckTransaction(txBz).Error(), typesUtil.ErrDuplicateTransaction().Error())
-
-	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetSignerCandidates(t *testing.T) {
@@ -91,8 +84,6 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 
 	require.Equal(t, 1, len(candidates), "wrong number of candidates")
 	require.Equal(t, accs[0].GetAddress(), hex.EncodeToString(candidates[0]), "unexpected signer candidate")
-
-	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
@@ -111,8 +102,6 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	require.NotEmpty(t, appHash)
 	require.Equal(t, 1, len(txs))
 	require.Equal(t, txs[0], txBz)
-
-	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_HandleMessage(t *testing.T) {
@@ -141,11 +130,9 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter), "unexpected sender balance")
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), "unexpected recipient balance")
-
-	test_artifacts.CleanupTest(ctx)
 }
 
-func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
+func newTestingTransaction(t *testing.T, ctx UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
 	amountSent = new(big.Int).Set(defaultSendAmount)
 	startingBalance = new(big.Int).Set(test_artifacts.DefaultAccountAmount)
 

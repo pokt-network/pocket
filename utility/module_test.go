@@ -1,4 +1,4 @@
-package test
+package utility
 
 import (
 	"encoding/hex"
@@ -16,7 +16,6 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/pokt-network/pocket/utility"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
@@ -69,7 +68,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
+func NewTestingUtilityContext(t *testing.T, height int64) UtilityContext {
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
@@ -88,10 +87,10 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 		mempool.Clear()
 	})
 
-	return utility.UtilityContext{
+	return UtilityContext{
 		Height:  height,
 		Mempool: mempool,
-		Context: &utility.Context{
+		Context: &Context{
 			PersistenceRWContext: persistenceContext,
 			SavePointsM:          make(map[string]struct{}),
 			SavePoints:           make([][]byte, 0),
@@ -129,7 +128,7 @@ func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
 }
 
 func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
-	utilityMod, err := utility.Create(bus)
+	utilityMod, err := Create(bus)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}

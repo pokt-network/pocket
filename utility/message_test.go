@@ -1,8 +1,9 @@
-package test
+package utility
 
 import (
-	"github.com/pokt-network/pocket/utility/types"
 	"testing"
+
+	"github.com/pokt-network/pocket/utility/types"
 )
 
 func NewTestingSendMessage(_ *testing.T, fromAddress, toAddress []byte, amount string) types.MessageSend {

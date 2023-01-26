@@ -12,7 +12,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
-	"github.com/pokt-network/pocket/utility"
 )
 
 const (
@@ -94,6 +93,3 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 		log.Fatalf("could not purge resource: %s", err)
 	}
 }
-
-// CLEANUP: Remove this since it's no longer used or necessary but make sure remote tests are still passing
-func CleanupTest(u utility.UtilityContext) {}
