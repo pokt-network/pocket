@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"log"
 	"reflect"
 	"strings"
@@ -42,36 +41,6 @@ const (
 		PRIMARY KEY(name, height)
 		)`
 )
-
-type ParamOrFlag struct {
-	Name    string
-	Value   string
-	Enabled string // Flags
-	Height  int64
-}
-
-func (pf ParamOrFlag) GetBytes() []byte {
-	var hs string
-	if pf.Enabled != "" { // Flags
-		hs = fmt.Sprintf("%s,%s,%s,%d", pf.Name, pf.Value, pf.Enabled, pf.Height)
-	} else { // Params
-		hs = fmt.Sprintf("%s,%s,%d", pf.Name, pf.Value, pf.Height)
-	}
-	bz := []byte(hs)
-
-	return bz
-}
-
-func (pf ParamOrFlag) Hash() ([]byte, error) {
-	var hs string
-	if pf.Enabled != "" { // Flags
-		hs = fmt.Sprintf("%s,%s,%s,%d", pf.Name, pf.Value, pf.Enabled, pf.Height)
-	} else { // Params
-		hs = fmt.Sprintf("%s,%s,%d", pf.Name, pf.Value, pf.Height)
-	}
-	bz := []byte(hs)
-	return crypto.SHA3Hash(bz), nil
-}
 
 var (
 	govParamMetadataMap  map[string]govParamMetadata
