@@ -42,7 +42,7 @@ func BigIntLessThan(a, b *big.Int) bool {
 	return false
 }
 
-func StringToBytes(s string) ([]byte, Error) {
+func HexStringToBytes(s string) ([]byte, Error) {
 	b, err := hex.DecodeString(s)
 	if err != nil {
 		return []byte{}, ErrStringToByteArray(err)

@@ -163,6 +163,7 @@ const (
 	CodeUnknownActorType                  Code = 130
 	CodeUnknownMessageType                Code = 131
 	CodeStringToByteArrayError            Code = 132
+	CodeTypeCastError                     Code = 133
 
 	GetStakedTokensError              = "an error occurred getting the validator staked tokens"
 	SetValidatorStakedTokensError     = "an error occurred setting the validator staked tokens"
@@ -291,6 +292,7 @@ const (
 	UnknownActorTypeError             = "the actor type is not recognized"
 	UnknownMessageTypeError           = "the message being by the utility message is not recognized"
 	StringToByteArrayError            = "an error occurred converting the string primitive to []byte"
+	TypeCastError                     = "an error occured type casting the parameter"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -800,4 +802,8 @@ func ErrUnknownMessageType(messageType any) Error {
 
 func ErrStringToByteArray(err error) Error {
 	return NewError(CodeStringToByteArrayError, fmt.Sprintf("%s: %s", StringToByteArrayError, err.Error()))
+}
+
+func ErrTypeCast(paramName, cast string) Error {
+	return NewError(CodeTypeCastError, fmt.Sprintf("%s: %s to %s", TypeCastError, paramName, cast))
 }

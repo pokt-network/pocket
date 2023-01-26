@@ -130,11 +130,6 @@ func (u *UtilityContext) GetActorStakedTokens(actorType coreTypes.ActorType, add
 }
 
 func (u *UtilityContext) GetMaxPausedBlocks(actorType coreTypes.ActorType) (maxPausedBlocks int, err typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
-	if err != nil {
-		return 0, err
-	}
-
 	var paramName string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -149,21 +144,15 @@ func (u *UtilityContext) GetMaxPausedBlocks(actorType coreTypes.ActorType) (maxP
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	param, er := store.GetParameter(paramName, height)
+	maxPausedBlocks, er := u.getIntParam(paramName)
 	if er != nil {
 		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 	}
-	maxPausedBlocks = param.(int)
 
 	return
 }
 
 func (u *UtilityContext) GetMinimumPauseBlocks(actorType coreTypes.ActorType) (minPauseBlocks int, err typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
-	if err != nil {
-		return 0, err
-	}
-
 	var paramName string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -178,11 +167,10 @@ func (u *UtilityContext) GetMinimumPauseBlocks(actorType coreTypes.ActorType) (m
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	param, er := store.GetParameter(paramName, height)
+	minPauseBlocks, er := u.getIntParam(paramName)
 	if er != nil {
 		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 	}
-	minPauseBlocks = param.(int)
 
 	return
 }
@@ -242,11 +230,6 @@ func (u *UtilityContext) GetActorStatus(actorType coreTypes.ActorType, address [
 }
 
 func (u *UtilityContext) GetMinimumStake(actorType coreTypes.ActorType) (*big.Int, typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
-	if err != nil {
-		return nil, err
-	}
-
 	var paramName string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -261,12 +244,7 @@ func (u *UtilityContext) GetMinimumStake(actorType coreTypes.ActorType) (*big.In
 		return nil, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	minStake, er := store.GetParameter(paramName, height)
-	if er != nil {
-		return nil, typesUtil.ErrGetParam(paramName, er)
-	}
-
-	return typesUtil.StringToBigInt(minStake.(string))
+	return u.getBigIntParam(paramName)
 }
 
 func (u *UtilityContext) GetStakeAmount(actorType coreTypes.ActorType, address []byte) (*big.Int, typesUtil.Error) {
@@ -298,11 +276,6 @@ func (u *UtilityContext) GetStakeAmount(actorType coreTypes.ActorType, address [
 }
 
 func (u *UtilityContext) GetUnstakingHeight(actorType coreTypes.ActorType) (unstakingHeight int64, err typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
-	if err != nil {
-		return 0, err
-	}
-
 	var paramName string
 	var unstakingBlocks int
 	switch actorType {
@@ -318,21 +291,15 @@ func (u *UtilityContext) GetUnstakingHeight(actorType coreTypes.ActorType) (unst
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	param, er := store.GetParameter(paramName, height)
+	unstakingBlocks, er := u.getIntParam(paramName)
 	if er != nil {
 		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 	}
-	unstakingBlocks = param.(int)
 
 	return u.CalculateUnstakingHeight(int64(unstakingBlocks))
 }
 
 func (u *UtilityContext) GetMaxChains(actorType coreTypes.ActorType) (maxChains int, err typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
-	if err != nil {
-		return 0, err
-	}
-
 	var paramName string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -345,11 +312,10 @@ func (u *UtilityContext) GetMaxChains(actorType coreTypes.ActorType) (maxChains 
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	param, er := store.GetParameter(paramName, height)
+	maxChains, er := u.getIntParam(paramName)
 	if er != nil {
 		return 0, typesUtil.ErrGetParam(paramName, er)
 	}
-	maxChains = param.(int)
 
 	return
 }

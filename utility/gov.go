@@ -554,6 +554,22 @@ func (u *UtilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUti
 	return [][]byte{owner}, nil
 }
 
+func (u *UtilityContext) getStringParam(paramName string) (string, typesUtil.Error) {
+	store, height, er := u.GetStoreAndHeight()
+	if er != nil {
+		return "", er
+	}
+	value, err := store.GetParameter(paramName, height)
+	if err != nil {
+		return "", typesUtil.ErrGetParam(paramName, err)
+	}
+	str, ok := value.(string)
+	if !ok {
+		return "", typesUtil.ErrTypeCast(paramName, "string")
+	}
+	return str, nil
+}
+
 func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.Error) {
 	store, height, er := u.GetStoreAndHeight()
 	if er != nil {
@@ -564,7 +580,11 @@ func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.E
 		log.Printf("err: %v\n", err)
 		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
-	return typesUtil.StringToBigInt(value.(string))
+	str, ok := value.(string)
+	if !ok {
+		return nil, typesUtil.ErrTypeCast(paramName, "string")
+	}
+	return typesUtil.StringToBigInt(str)
 }
 
 func (u *UtilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
@@ -576,7 +596,11 @@ func (u *UtilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
 	if err != nil {
 		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
 	}
-	return value.(int), nil
+	num, ok := value.(int)
+	if !ok {
+		return 0, typesUtil.ErrTypeCast(paramName, "int")
+	}
+	return num, nil
 }
 
 func (u *UtilityContext) getInt64Param(paramName string) (int64, typesUtil.Error) {
@@ -588,7 +612,11 @@ func (u *UtilityContext) getInt64Param(paramName string) (int64, typesUtil.Error
 	if err != nil {
 		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
 	}
-	return int64(value.(int)), nil
+	num, ok := value.(int)
+	if !ok {
+		return 0, typesUtil.ErrTypeCast(paramName, "int")
+	}
+	return int64(num), nil
 }
 
 func (u *UtilityContext) getByteArrayParam(paramName string) ([]byte, typesUtil.Error) {
@@ -600,5 +628,9 @@ func (u *UtilityContext) getByteArrayParam(paramName string) ([]byte, typesUtil.
 	if err != nil {
 		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
-	return typesUtil.StringToBytes(value.(string))
+	str, ok := value.(string)
+	if !ok {
+		return nil, typesUtil.ErrTypeCast(paramName, "string")
+	}
+	return typesUtil.HexStringToBytes(str)
 }
