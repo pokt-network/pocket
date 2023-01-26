@@ -313,5 +313,5 @@ func TestStateSyncServerGetBlock(t *testing.T) {
 	require.NotEmpty(t, getBlockRes)
 
 	fmt.Printf("Get Block Response: %s", getBlockRes)
-	//require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
+	require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
 }

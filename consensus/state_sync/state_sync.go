@@ -1,6 +1,7 @@
 package state_sync
 
 import (
+	"fmt"
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -33,8 +34,6 @@ type StateSyncModule interface {
 	// and catch up to the global world state
 	HandleGetBlockResponse(*typesCons.GetBlockResponse) error
 
-	//HandleStateSyncMetadataRequest
-
 	IsServerModEnabled() bool
 	EnableServerMode()
 	SetLogPrefix(string)
@@ -51,8 +50,6 @@ type stateSync struct {
 	currentMode SyncMode
 	serverMode  bool
 
-	//REFACTOR: this should be removed, when we build a shared and proper logger
-	//! TODO: initialize log and node prefix as in pacemaker module, currently printed as empty without node id.
 	logPrefix string
 }
 
@@ -107,18 +104,17 @@ func (m *stateSync) SetLogPrefix(logPrefix string) {
 }
 
 func (m *stateSync) EnableServerMode() {
-	m.nodeLog("ENABLING SERVER MODE")
 	m.currentMode = Server
 	m.serverMode = true
 }
 
-func (m *stateSync) HandleGetBlockResponse(*typesCons.GetBlockResponse) error {
-	m.nodeLog("GOKHAN RECEIVED GET BLOCK RESPONSE!")
+func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
+	m.nodeLog(fmt.Sprintf("Received get block response: %s", blockRes.Block.String()))
 	return nil
 }
 
 func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
-	//! TODO implement
+	m.nodeLog(fmt.Sprintf("Received get metadata response: %s", metaDataRes.String()))
 	return nil
 }
 

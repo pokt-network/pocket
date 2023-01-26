@@ -2,8 +2,8 @@ package e2e_tests
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
-	"math/big"
 	"os"
 	"reflect"
 	"sort"
@@ -204,31 +204,6 @@ func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 	node.GetBus().PublishEventToBus(e)
 }
 
-func WaitForNetworkStateSyncEvents(
-	t *testing.T,
-	clock *clock.Mock,
-	eventsChannel modules.EventsChannel,
-	msgType typesCons.StateSyncMessageType,
-	_serverNodeAddress cryptoPocket.Address,
-	numExpectedMsgs int,
-	millis time.Duration,
-	failOnExtraMessages bool,
-) (messages []*anypb.Any, err error) {
-	includeFilter := func(anyMsg *anypb.Any) bool {
-		msg, err := codec.GetCodec().FromAny(anyMsg)
-		require.NoError(t, err)
-
-		stateSyncMessage, ok := msg.(*typesCons.StateSyncMessage)
-		require.True(t, ok)
-
-		// TODO filter on server node address
-		return stateSyncMessage.MsgType == msgType
-	}
-
-	errMsg := fmt.Sprintf("StateSyncMessage type: %s", typesCons.StateSyncMessageType_name[int32(msgType)])
-	return waitForEventsInternal(t, clock, eventsChannel, consensus.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
-}
-
 // This is a helper for `waitForEventsInternal` that creates the `includeFilter` function based on
 // consensus specific parameters.
 // failOnExtraMessages:
@@ -259,6 +234,33 @@ func WaitForNetworkConsensusEvents(
 	}
 	errMsg := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(msgType)])
 	return waitForEventsInternal(t, clock, eventsChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+}
+
+// IMPROVE: Consider unifying this function with WaitForNetworkConsensusEvents
+// This is a helper for 'waitForEventsInternal' that creates the `includeFilter` function based on state sync message specific parameters.
+func WaitForNetworkStateSyncEvents(
+	t *testing.T,
+	clock *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	msgType typesCons.StateSyncMessageType,
+	_serverNodeAddress cryptoPocket.Address,
+	numExpectedMsgs int,
+	millis time.Duration,
+	failOnExtraMessages bool,
+) (messages []*anypb.Any, err error) {
+	includeFilter := func(anyMsg *anypb.Any) bool {
+		msg, err := codec.GetCodec().FromAny(anyMsg)
+		require.NoError(t, err)
+
+		stateSyncMessage, ok := msg.(*typesCons.StateSyncMessage)
+		require.True(t, ok)
+
+		// TODO filter on server node address
+		return stateSyncMessage.MsgType == msgType
+	}
+
+	errMsg := fmt.Sprintf("StateSyncMessage type: %s", typesCons.StateSyncMessageType_name[int32(msgType)])
+	return waitForEventsInternal(t, clock, eventsChannel, consensus.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework
@@ -371,6 +373,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 		}
 		return codec.GetCodec().Marshal(blockWithHeight)
 	}).AnyTimes()
+
 	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
@@ -388,7 +391,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 }
 
 func heightFromBytes(heightBz []byte) uint64 {
-	return new(big.Int).SetBytes(heightBz).Uint64()
+	return binary.LittleEndian.Uint64(heightBz)
 }
 
 // Creates a p2p module mock with mock implementations of some basic functionality

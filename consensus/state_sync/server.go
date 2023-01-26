@@ -13,8 +13,6 @@ import (
 // This module is responsible for handling requests and business logic that advertises and shares
 // local state metadata with other peers synching to the latest block.
 type StateSyncServerModule interface {
-	//modules.Module
-
 	// Advertise (send) the local state sync metadata to the requesting peer
 	HandleStateSyncMetadataRequest(*typesCons.StateSyncMetadataRequest) error
 
@@ -23,7 +21,6 @@ type StateSyncServerModule interface {
 }
 
 func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) error {
-
 	serverNodePeerId, err := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
 	if err != nil {
 		return err
@@ -54,35 +51,26 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 }
 
 func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
-	serverNodePeerId, err := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
+	consensusMod := m.GetBus().GetConsensusModule()
+	serverNodePeerId, err := consensusMod.GetCurrentNodeAddressFromNodeId()
 	if err != nil {
 		return err
 	}
 
 	clientPeerId := blockReq.PeerId
+
 	m.nodeLog(fmt.Sprintf("%s Received State Sync Get Block Req from: %s", serverNodePeerId, clientPeerId))
 
+	// check the max block height, if higher height is requested, return error
+	if consensusMod.CurrentHeight() < blockReq.Height {
+		return fmt.Errorf(" requested block height is higher than node's block height ")
+	}
+
+	// get block from the persistence module
 	block, err := m.getBlockAtHeight(blockReq.Height)
 	if err != nil {
 		return err
 	}
-
-	// blockHash, err := m.getBlockHashAtHeight(blockReq.Height)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// metadataRes := typesCons.GetBlockResponse{
-	// 	PeerId: serverNodePeerId,
-	// 	Block:  block,
-	// }
-
-	// anyStateSyncMessage, err := anypb.New(&metadataRes)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// return m.sendToPeer(anyStateSyncMessage, cryptoPocket.AddressFromString(blockReq.PeerId))
 
 	stateSyncMessage := typesCons.StateSyncMessage{
 		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE,
@@ -98,7 +86,6 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	if err != nil {
 		return err
 	}
-	m.nodeLog("HandleGetBlockRequest: SENDING GETBLOCKRESPONSE")
 
 	return m.sendToPeer(anyMsg, cryptoPocket.AddressFromString(clientPeerId))
 }
@@ -115,9 +102,7 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 	}
 
 	if blockBytes == nil {
-		return nil, fmt.Errorf("block is nil")
-	} else {
-		m.nodeLog(fmt.Sprintf("[DEBUG] Found non-nil block bytes: %s", blockBytes))
+		return nil, fmt.Errorf("block not found")
 	}
 
 	var block coreTypes.Block
@@ -126,23 +111,10 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 		return &coreTypes.Block{}, err
 	}
 
+	m.nodeLog(fmt.Sprintf("GS height after: %d: \n", block.BlockHeader.Height))
+
 	return &block, nil
 }
-
-// func (m *stateSync) getBlockHashAtHeight(blockHeight uint64) (string, error) {
-// 	persistenceContext, err := m.GetBus().GetPersistenceModule().
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	blockHash, err := persistenceContext.GetBlockHash(int64(blockHeight))
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	return blockHash, nil
-
-// }
 
 // TODO IMPLEMENT
 // Placeholder function for metadata aggregation of data received from different peers
