@@ -51,66 +51,6 @@ func TestMessage_ChangeParameter_ValidateBasic(t *testing.T) {
 	require.Equal(t, ErrEmptyParamValue().Code(), msgMissingParamValue.ValidateBasic().Code())
 }
 
-func TestMessage_DoubleSign_ValidateBasic(t *testing.T) {
-	pk, err := crypto.GeneratePublicKey()
-	require.NoError(t, err)
-
-	hashA := crypto.SHA3Hash(pk.Bytes())
-	hashB := crypto.SHA3Hash(pk.Address())
-	voteA := &LegacyVote{
-		PublicKey: pk.Bytes(),
-		Height:    1,
-		Round:     2,
-		Type:      DoubleSignEvidenceType,
-		BlockHash: hashA,
-	}
-	voteB := &LegacyVote{
-		PublicKey: pk.Bytes(),
-		Height:    1,
-		Round:     2,
-		Type:      DoubleSignEvidenceType,
-		BlockHash: hashB,
-	}
-	reporter, _ := crypto.GenerateAddress()
-	msg := &MessageDoubleSign{
-		VoteA:           voteA,
-		VoteB:           voteB,
-		ReporterAddress: reporter,
-	}
-	er := msg.ValidateBasic()
-	require.NoError(t, er)
-
-	pk2, err := crypto.GeneratePublicKey()
-	require.NoError(t, err)
-	msgUnequalPubKeys := new(MessageDoubleSign)
-	msgUnequalPubKeys.VoteA = proto.Clone(msg.VoteA).(*LegacyVote)
-	msgUnequalPubKeys.VoteB = proto.Clone(msg.VoteB).(*LegacyVote)
-	msgUnequalPubKeys.VoteA.PublicKey = pk2.Bytes()
-	er = msgUnequalPubKeys.ValidateBasic()
-	require.Equal(t, ErrUnequalPublicKeys().Code(), er.Code())
-
-	msgUnequalHeights := new(MessageDoubleSign)
-	msgUnequalHeights.VoteA = proto.Clone(msg.VoteA).(*LegacyVote)
-	msgUnequalHeights.VoteB = proto.Clone(msg.VoteB).(*LegacyVote)
-	msgUnequalHeights.VoteA.Height = 2
-	er = msgUnequalHeights.ValidateBasic()
-	require.Equal(t, ErrUnequalHeights().Code(), er.Code())
-
-	msgUnequalRounds := new(MessageDoubleSign)
-	msgUnequalRounds.VoteA = proto.Clone(msg.VoteA).(*LegacyVote)
-	msgUnequalRounds.VoteB = proto.Clone(msg.VoteB).(*LegacyVote)
-	msgUnequalRounds.VoteA.Round = 1
-	er = msgUnequalRounds.ValidateBasic()
-	require.Equal(t, ErrUnequalRounds().Code(), er.Code())
-
-	msgEqualVoteHash := new(MessageDoubleSign)
-	msgEqualVoteHash.VoteA = proto.Clone(msg.VoteA).(*LegacyVote)
-	msgEqualVoteHash.VoteB = proto.Clone(msg.VoteB).(*LegacyVote)
-	msgEqualVoteHash.VoteB.BlockHash = hashA
-	er = msgEqualVoteHash.ValidateBasic()
-	require.Equal(t, ErrEqualVotes().Code(), er.Code())
-}
-
 func TestMessage_EditStake_ValidateBasic(t *testing.T) {
 	addr, err := crypto.GenerateAddress()
 	require.NoError(t, err)

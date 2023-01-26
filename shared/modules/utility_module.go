@@ -11,14 +11,14 @@ const UtilityModuleName = "utility"
 type UtilityModule interface {
 	Module
 
+	// General purpose handler of utility specific messages that are not externalized in shared directories
 	HandleMessage(*anypb.Any) error
 
-	// Creates a `utilityContext` with an underlying read-write `persistenceContext``; only 1 of which can exist at a time
+	// Creates a `utilityContext` with an underlying read-write `persistenceContext`; only 1 of which can exist at a time
 	NewContext(height int64) (UtilityContext, error)
 
 	// Basic Transaction validation.
 	// IMPROVE: A side effect of `Check Transaction` is its addition to the mempool, which is not obvious from the functional name.
-	// TODO: Replace []byte with semantic type
 	CheckTransaction(tx []byte) error
 }
 
