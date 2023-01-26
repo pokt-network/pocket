@@ -100,8 +100,6 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg types
 
 func (u *UtilityContext) HandleMessage(msg typesUtil.Message) (err typesUtil.Error) {
 	switch x := msg.(type) {
-	case *typesUtil.MessageDoubleSign:
-		return u.HandleMessageDoubleSign(x)
 	case *typesUtil.MessageSend:
 		return u.HandleMessageSend(x)
 	case *typesUtil.MessageStake:
@@ -355,8 +353,6 @@ func (u *UtilityContext) HandleMessageChangeParameter(message *typesUtil.Message
 
 func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, typesUtil.Error) {
 	switch x := msg.(type) {
-	case *typesUtil.MessageDoubleSign:
-		return u.GetMessageDoubleSignSignerCandidates(x)
 	case *typesUtil.MessageSend:
 		return u.GetMessageSendSignerCandidates(x)
 	case *typesUtil.MessageStake:

@@ -482,8 +482,6 @@ func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
 
 func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType coreTypes.ActorType) (amount *big.Int, err typesUtil.Error) {
 	switch x := msg.(type) {
-	case *typesUtil.MessageDoubleSign:
-		return u.GetMessageDoubleSignFee()
 	case *typesUtil.MessageSend:
 		return u.GetMessageSendFee()
 	case *typesUtil.MessageStake:

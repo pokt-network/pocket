@@ -1,7 +1,6 @@
 package types
 
 import (
-	"bytes"
 	"encoding/hex"
 	"log"
 	"net/url"
@@ -56,7 +55,6 @@ var _ Message = &MessageEditStake{}
 var _ Message = &MessageUnstake{}
 var _ Message = &MessageUnpause{}
 var _ Message = &MessageChangeParameter{}
-var _ Message = &MessageDoubleSign{}
 
 func (msg *MessageSend) GetActorType() coreTypes.ActorType {
 	return coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED // there's no actor type for message send, so return zero to allow fee retrieval
@@ -77,31 +75,6 @@ func (msg *MessageEditStake) ValidateBasic() Error {
 		return err
 	}
 	return ValidateStaker(msg)
-}
-
-func (msg *MessageDoubleSign) ValidateBasic() Error {
-	if err := msg.VoteA.ValidateBasic(); err != nil {
-		return err
-	}
-	if err := msg.VoteB.ValidateBasic(); err != nil {
-		return err
-	}
-	if !bytes.Equal(msg.VoteA.PublicKey, msg.VoteB.PublicKey) {
-		return ErrUnequalPublicKeys()
-	}
-	if msg.VoteA.Type != msg.VoteB.Type {
-		return ErrUnequalVoteTypes()
-	}
-	if msg.VoteA.Height != msg.VoteB.Height {
-		return ErrUnequalHeights()
-	}
-	if msg.VoteA.Round != msg.VoteB.Round {
-		return ErrUnequalRounds()
-	}
-	if bytes.Equal(msg.VoteA.BlockHash, msg.VoteB.BlockHash) {
-		return ErrEqualVotes()
-	}
-	return nil
 }
 
 func (msg *MessageSend) ValidateBasic() Error {
@@ -136,7 +109,6 @@ func (msg *MessageUnpause) GetMessageName() string         { return getMessageTy
 func (msg *MessageEditStake) GetMessageName() string       { return getMessageType(msg) }
 func (msg *MessageStake) GetMessageName() string           { return getMessageType(msg) }
 func (msg *MessageChangeParameter) GetMessageName() string { return getMessageType(msg) }
-func (msg *MessageDoubleSign) GetMessageName() string      { return getMessageType(msg) }
 
 func (msg *MessageSend) GetMessageRecipient() string            { return hex.EncodeToString(msg.ToAddress) }
 func (msg *MessageUnstake) GetMessageRecipient() string         { return "" }
@@ -157,11 +129,9 @@ func (msg *MessageDoubleSign) SetSigner(signer []byte)              { msg.Report
 func (msg *MessageSend) SetSigner(signer []byte)                    { /*no op*/ }
 func (msg *MessageChangeParameter) SetSigner(signer []byte)         { msg.Signer = signer }
 func (x *MessageChangeParameter) GetActorType() coreTypes.ActorType { return -1 }
-func (x *MessageDoubleSign) GetActorType() coreTypes.ActorType      { return -1 }
 
 func (msg *MessageStake) GetCanonicalBytes() []byte           { return getCanonicalBytes(msg) }
 func (msg *MessageEditStake) GetCanonicalBytes() []byte       { return getCanonicalBytes(msg) }
-func (msg *MessageDoubleSign) GetCanonicalBytes() []byte      { return getCanonicalBytes(msg) }
 func (msg *MessageSend) GetCanonicalBytes() []byte            { return getCanonicalBytes(msg) }
 func (msg *MessageChangeParameter) GetCanonicalBytes() []byte { return getCanonicalBytes(msg) }
 func (msg *MessageUnstake) GetCanonicalBytes() []byte         { return getCanonicalBytes(msg) }

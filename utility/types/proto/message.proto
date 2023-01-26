@@ -52,18 +52,3 @@ message MessageChangeParameter {
   string parameter_key = 3;
   google.protobuf.Any parameter_value = 4;
 }
-
-message MessageDoubleSign {
-  utility.LegacyVote vote_a = 1;
-  utility.LegacyVote vote_b = 2;
-  optional bytes reporter_address = 3;
-}
-
-// TECHDEBT: Consolidate this with consensus
-message LegacyVote {
-  bytes public_key = 1;
-  int64 height = 2;
-  uint32 round = 3;
-  uint32 type = 4;
-  bytes block_hash = 5;
-}
