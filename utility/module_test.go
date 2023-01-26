@@ -24,21 +24,22 @@ const (
 	testingServiceNodeCount = 1
 	testingApplicationCount = 1
 	testingFishermenCount   = 1
-)
-
-var (
-	defaultTestingChainsEdited = []string{"0002"}
-
-	defaultUnstaking   = int64(2017)
-	defaultNonceString = utilTypes.BigIntToString(test_artifacts.DefaultAccountAmount)
 
 	testNonce           = "defaultNonceString"
 	testSchema          = "test_schema"
 	testMessageSendType = "MessageSend"
 )
 
-var testPersistenceMod modules.PersistenceModule // initialized in TestMain
-var testUtilityMod modules.UtilityModule         // initialized in TestMain
+var (
+	defaultTestingChainsEdited = []string{"0002"}
+	defaultNonceString         = utilTypes.BigIntToString(test_artifacts.DefaultAccountAmount)
+	defaultUnstakingHeight     = int64(2017)
+)
+
+var (
+	testPersistenceMod modules.PersistenceModule // initialized in TestMain
+	testUtilityMod     modules.UtilityModule     // initialized in TestMain
+)
 
 var actorTypes = []coreTypes.ActorType{
 	coreTypes.ActorType_ACTOR_TYPE_APP,

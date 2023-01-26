@@ -185,7 +185,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			require.NoError(t, err, "handle unstake message")
 
 			actor = getActorByAddr(t, ctx, actorType, addr)
-			require.Equal(t, defaultUnstaking, actor.GetUnstakingHeight(), "actor should be unstaking")
+			require.Equal(t, defaultUnstakingHeight, actor.GetUnstakingHeight(), "actor should be unstaking")
 
 		})
 	}
@@ -442,7 +442,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			require.NoError(t, err, "error unstaking actor pause before height 1")
 
 			actor = getActorByAddr(t, ctx, actorType, addr)
-			require.Equal(t, actor.GetUnstakingHeight(), defaultUnstaking, "status does not equal unstaking")
+			require.Equal(t, actor.GetUnstakingHeight(), defaultUnstakingHeight, "status does not equal unstaking")
 
 			var unstakingBlocks int64
 			switch actorType {
