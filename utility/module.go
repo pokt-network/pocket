@@ -1,14 +1,11 @@
 package utility
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/runtime/configs"
-	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var (
@@ -16,15 +13,11 @@ var (
 	_ modules.Module        = &utilityModule{}
 )
 
-const (
-	TransactionGossipMessageContentType = "utility.TransactionGossipMessage"
-)
-
 type utilityModule struct {
 	bus    modules.Bus
 	config *configs.UtilityConfig
 
-	Mempool types.Mempool
+	mempool types.Mempool
 }
 
 func Create(bus modules.Bus) (modules.Module, error) {
@@ -41,7 +34,7 @@ func (*utilityModule) Create(bus modules.Bus) (modules.Module, error) {
 	utilityCfg := cfg.Utility
 
 	m.config = utilityCfg
-	m.Mempool = types.NewMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
+	m.mempool = types.NewMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
 
 	return m, nil
 }
@@ -67,27 +60,4 @@ func (u *utilityModule) GetBus() modules.Bus {
 		log.Fatalf("Bus is not initialized")
 	}
 	return u.bus
-}
-
-func (u *utilityModule) HandleMessage(message *anypb.Any) error {
-	switch message.MessageName() {
-	case TransactionGossipMessageContentType:
-		msg, err := codec.GetCodec().FromAny(message)
-		if err != nil {
-			return err
-		}
-
-		if transactionGossipMsg, ok := msg.(*types.TransactionGossipMessage); !ok {
-			return fmt.Errorf("failed to cast message to UtilityMessage")
-		} else if err := u.CheckTransaction(transactionGossipMsg.Tx); err != nil {
-			return err
-		}
-
-		log.Println("MEMPOOOL: Successfully added a new message to the mempool!")
-
-	default:
-		return types.ErrUnknownMessageType(message.MessageName())
-	}
-
-	return nil
 }

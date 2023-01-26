@@ -11,7 +11,7 @@ import (
 //  Accounts enable the 'ownership' or 'custody' over uPOKT tokens. These structures are fundamental to enabling
 //  the utility economy.
 
-func (u *UtilityContext) GetAccountAmount(address []byte) (*big.Int, types.Error) {
+func (u *utilityContext) GetAccountAmount(address []byte) (*big.Int, types.Error) {
 	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return nil, er
@@ -23,7 +23,7 @@ func (u *UtilityContext) GetAccountAmount(address []byte) (*big.Int, types.Error
 	return typesUtil.StringToBigInt(amount)
 }
 
-func (u *UtilityContext) AddAccountAmount(address []byte, amountToAdd *big.Int) types.Error {
+func (u *utilityContext) AddAccountAmount(address []byte, amountToAdd *big.Int) types.Error {
 	store := u.Store()
 	if err := store.AddAccountAmount(address, types.BigIntToString(amountToAdd)); err != nil {
 		return types.ErrAddAccountAmount(err)
@@ -31,7 +31,7 @@ func (u *UtilityContext) AddAccountAmount(address []byte, amountToAdd *big.Int) 
 	return nil
 }
 
-func (u *UtilityContext) AddAccountAmountString(address []byte, amountToAdd string) types.Error {
+func (u *utilityContext) AddAccountAmountString(address []byte, amountToAdd string) types.Error {
 	store := u.Store()
 	if err := store.AddAccountAmount(address, amountToAdd); err != nil {
 		return types.ErrAddAccountAmount(err)
@@ -39,7 +39,7 @@ func (u *UtilityContext) AddAccountAmountString(address []byte, amountToAdd stri
 	return nil
 }
 
-func (u *UtilityContext) AddPoolAmount(name string, amountToAdd *big.Int) types.Error {
+func (u *utilityContext) AddPoolAmount(name string, amountToAdd *big.Int) types.Error {
 	store := u.Store()
 	if err := store.AddPoolAmount(name, types.BigIntToString(amountToAdd)); err != nil {
 		return types.ErrAddPoolAmount(name, err)
@@ -47,7 +47,7 @@ func (u *UtilityContext) AddPoolAmount(name string, amountToAdd *big.Int) types.
 	return nil
 }
 
-func (u *UtilityContext) SubPoolAmount(name string, amountToSub string) types.Error {
+func (u *utilityContext) SubPoolAmount(name string, amountToSub string) types.Error {
 	store := u.Store()
 	if err := store.SubtractPoolAmount(name, amountToSub); err != nil {
 		return types.ErrSubPoolAmount(name, err)
@@ -55,7 +55,7 @@ func (u *UtilityContext) SubPoolAmount(name string, amountToSub string) types.Er
 	return nil
 }
 
-func (u *UtilityContext) GetPoolAmount(name string) (*big.Int, types.Error) {
+func (u *utilityContext) GetPoolAmount(name string) (*big.Int, types.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (u *UtilityContext) GetPoolAmount(name string) (*big.Int, types.Error) {
 	return amount, nil
 }
 
-func (u *UtilityContext) InsertPool(name string, address []byte, amount string) types.Error {
+func (u *utilityContext) InsertPool(name string, address []byte, amount string) types.Error {
 	store := u.Store()
 	if err := store.InsertPool(name, amount); err != nil {
 		return types.ErrSetPool(name, err)
@@ -79,7 +79,7 @@ func (u *UtilityContext) InsertPool(name string, address []byte, amount string) 
 	return nil
 }
 
-func (u *UtilityContext) SetPoolAmount(name string, amount *big.Int) types.Error {
+func (u *utilityContext) SetPoolAmount(name string, amount *big.Int) types.Error {
 	store := u.Store()
 	if err := store.SetPoolAmount(name, types.BigIntToString(amount)); err != nil {
 		return types.ErrSetPoolAmount(name, err)
@@ -87,7 +87,7 @@ func (u *UtilityContext) SetPoolAmount(name string, amount *big.Int) types.Error
 	return nil
 }
 
-func (u *UtilityContext) SetAccountWithAmountString(address []byte, amount string) types.Error {
+func (u *utilityContext) SetAccountWithAmountString(address []byte, amount string) types.Error {
 	store := u.Store()
 	if err := store.SetAccountAmount(address, amount); err != nil {
 		return types.ErrSetAccountAmount(err)
@@ -95,7 +95,7 @@ func (u *UtilityContext) SetAccountWithAmountString(address []byte, amount strin
 	return nil
 }
 
-func (u *UtilityContext) SetAccountAmount(address []byte, amount *big.Int) types.Error {
+func (u *utilityContext) SetAccountAmount(address []byte, amount *big.Int) types.Error {
 	store := u.Store()
 	if err := store.SetAccountAmount(address, types.BigIntToString(amount)); err != nil {
 		return types.ErrSetAccountAmount(err)
@@ -103,7 +103,7 @@ func (u *UtilityContext) SetAccountAmount(address []byte, amount *big.Int) types
 	return nil
 }
 
-func (u *UtilityContext) SubtractAccountAmount(address []byte, amountToSubtract *big.Int) types.Error {
+func (u *utilityContext) SubtractAccountAmount(address []byte, amountToSubtract *big.Int) types.Error {
 	store := u.Store()
 	if err := store.SubtractAccountAmount(address, types.BigIntToString(amountToSubtract)); err != nil {
 		return types.ErrSetAccountAmount(err)

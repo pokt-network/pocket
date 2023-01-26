@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func (u *UtilityContext) updateParam(paramName string, value any) typesUtil.Error {
+func (u *utilityContext) updateParam(paramName string, value any) typesUtil.Error {
 	store := u.Store()
 	switch t := value.(type) {
 	case *wrapperspb.Int32Value:
@@ -34,223 +34,223 @@ func (u *UtilityContext) updateParam(paramName string, value any) typesUtil.Erro
 	return typesUtil.ErrUnknownParam(paramName)
 }
 
-func (u *UtilityContext) GetParameter(paramName string, height int64) (any, error) {
+func (u *utilityContext) GetParameter(paramName string, height int64) (any, error) {
 	return u.Store().GetParameter(paramName, height)
 }
 
-func (u *UtilityContext) GetAppMinimumStake() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetAppMinimumStake() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.AppMinimumStakeParamName)
 }
 
-func (u *UtilityContext) GetAppMaxChains() (int, typesUtil.Error) {
+func (u *utilityContext) GetAppMaxChains() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppMaxChainsParamName)
 }
 
-func (u *UtilityContext) GetBaselineAppStakeRate() (int, typesUtil.Error) {
+func (u *utilityContext) GetBaselineAppStakeRate() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppBaselineStakeRateParamName)
 }
 
-func (u *UtilityContext) GetStabilityAdjustment() (int, typesUtil.Error) {
+func (u *utilityContext) GetStabilityAdjustment() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppStakingAdjustmentParamName)
 }
 
-func (u *UtilityContext) GetAppUnstakingBlocks() (int64, typesUtil.Error) {
+func (u *utilityContext) GetAppUnstakingBlocks() (int64, typesUtil.Error) {
 	return u.getInt64Param(typesUtil.AppUnstakingBlocksParamName)
 }
 
-func (u *UtilityContext) GetAppMinimumPauseBlocks() (int, typesUtil.Error) {
+func (u *utilityContext) GetAppMinimumPauseBlocks() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppMinimumPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetAppMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
+func (u *utilityContext) GetAppMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppMaxPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetServiceNodeMinimumStake() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetServiceNodeMinimumStake() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.ServiceNodeMinimumStakeParamName)
 }
 
-func (u *UtilityContext) GetServiceNodeMaxChains() (int, typesUtil.Error) {
+func (u *utilityContext) GetServiceNodeMaxChains() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.ServiceNodeMaxChainsParamName)
 }
 
-func (u *UtilityContext) GetServiceNodeUnstakingBlocks() (int64, typesUtil.Error) {
+func (u *utilityContext) GetServiceNodeUnstakingBlocks() (int64, typesUtil.Error) {
 	return u.getInt64Param(typesUtil.ServiceNodeUnstakingBlocksParamName)
 }
 
-func (u *UtilityContext) GetServiceNodeMinimumPauseBlocks() (int, typesUtil.Error) {
+func (u *utilityContext) GetServiceNodeMinimumPauseBlocks() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetServiceNodeMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
+func (u *utilityContext) GetServiceNodeMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
 	return u.getIntParam(typesUtil.ServiceNodeMaxPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetValidatorMinimumStake() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetValidatorMinimumStake() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.ValidatorMinimumStakeParamName)
 }
 
-func (u *UtilityContext) GetValidatorUnstakingBlocks() (int64, typesUtil.Error) {
+func (u *utilityContext) GetValidatorUnstakingBlocks() (int64, typesUtil.Error) {
 	return u.getInt64Param(typesUtil.ValidatorUnstakingBlocksParamName)
 }
 
-func (u *UtilityContext) GetValidatorMinimumPauseBlocks() (int, typesUtil.Error) {
+func (u *utilityContext) GetValidatorMinimumPauseBlocks() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.ValidatorMinimumPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetValidatorMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
+func (u *utilityContext) GetValidatorMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
 	return u.getIntParam(typesUtil.ValidatorMaxPausedBlocksParamName)
 }
 
-func (u *UtilityContext) GetProposerPercentageOfFees() (proposerPercentage int, err typesUtil.Error) {
+func (u *utilityContext) GetProposerPercentageOfFees() (proposerPercentage int, err typesUtil.Error) {
 	return u.getIntParam(typesUtil.ProposerPercentageOfFeesParamName)
 }
 
-func (u *UtilityContext) GetValidatorMaxMissedBlocks() (maxMissedBlocks int, err typesUtil.Error) {
+func (u *utilityContext) GetValidatorMaxMissedBlocks() (maxMissedBlocks int, err typesUtil.Error) {
 	return u.getIntParam(typesUtil.ValidatorMaximumMissedBlocksParamName)
 }
 
-func (u *UtilityContext) GetMaxEvidenceAgeInBlocks() (maxMissedBlocks int, err typesUtil.Error) {
+func (u *utilityContext) GetMaxEvidenceAgeInBlocks() (maxMissedBlocks int, err typesUtil.Error) {
 	return u.getIntParam(typesUtil.ValidatorMaxEvidenceAgeInBlocksParamName)
 }
 
-func (u *UtilityContext) GetDoubleSignBurnPercentage() (burnPercentage int, err typesUtil.Error) {
+func (u *utilityContext) GetDoubleSignBurnPercentage() (burnPercentage int, err typesUtil.Error) {
 	return u.getIntParam(typesUtil.DoubleSignBurnPercentageParamName)
 }
 
-func (u *UtilityContext) GetMissedBlocksBurnPercentage() (burnPercentage int, err typesUtil.Error) {
+func (u *utilityContext) GetMissedBlocksBurnPercentage() (burnPercentage int, err typesUtil.Error) {
 	return u.getIntParam(typesUtil.MissedBlocksBurnPercentageParamName)
 }
 
-func (u *UtilityContext) GetFishermanMinimumStake() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetFishermanMinimumStake() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.FishermanMinimumStakeParamName)
 }
 
-func (u *UtilityContext) GetFishermanMaxChains() (int, typesUtil.Error) {
+func (u *utilityContext) GetFishermanMaxChains() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.FishermanMaxChainsParamName)
 }
 
-func (u *UtilityContext) GetFishermanUnstakingBlocks() (int64, typesUtil.Error) {
+func (u *utilityContext) GetFishermanUnstakingBlocks() (int64, typesUtil.Error) {
 	return u.getInt64Param(typesUtil.FishermanUnstakingBlocksParamName)
 }
 
-func (u *UtilityContext) GetFishermanMinimumPauseBlocks() (int, typesUtil.Error) {
+func (u *utilityContext) GetFishermanMinimumPauseBlocks() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.FishermanMinimumPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetFishermanMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
+func (u *utilityContext) GetFishermanMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
 	return u.getIntParam(typesUtil.FishermanMaxPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetMessageDoubleSignFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageDoubleSignFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageDoubleSignFee)
 }
 
-func (u *UtilityContext) GetMessageSendFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageSendFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageSendFee)
 }
 
-func (u *UtilityContext) GetMessageStakeFishermanFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageStakeFishermanFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageStakeFishermanFee)
 }
 
-func (u *UtilityContext) GetMessageEditStakeFishermanFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageEditStakeFishermanFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageEditStakeFishermanFee)
 }
 
-func (u *UtilityContext) GetMessageUnstakeFishermanFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageUnstakeFishermanFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageUnstakeFishermanFee)
 }
 
-func (u *UtilityContext) GetMessagePauseFishermanFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessagePauseFishermanFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessagePauseFishermanFee)
 }
 
-func (u *UtilityContext) GetMessageUnpauseFishermanFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageUnpauseFishermanFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageUnpauseFishermanFee)
 }
 
-func (u *UtilityContext) GetMessageFishermanPauseServiceNodeFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageFishermanPauseServiceNodeFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageFishermanPauseServiceNodeFee)
 }
 
-func (u *UtilityContext) GetMessageTestScoreFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageTestScoreFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageTestScoreFee)
 }
 
-func (u *UtilityContext) GetMessageProveTestScoreFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageProveTestScoreFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageProveTestScoreFee)
 }
 
-func (u *UtilityContext) GetMessageStakeAppFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageStakeAppFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageStakeAppFee)
 }
 
-func (u *UtilityContext) GetMessageEditStakeAppFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageEditStakeAppFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageEditStakeAppFee)
 }
 
-func (u *UtilityContext) GetMessageUnstakeAppFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageUnstakeAppFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageUnstakeAppFee)
 }
 
-func (u *UtilityContext) GetMessagePauseAppFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessagePauseAppFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessagePauseAppFee)
 }
 
-func (u *UtilityContext) GetMessageUnpauseAppFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageUnpauseAppFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageUnpauseAppFee)
 }
 
-func (u *UtilityContext) GetMessageStakeValidatorFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageStakeValidatorFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageStakeValidatorFee)
 }
 
-func (u *UtilityContext) GetMessageEditStakeValidatorFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageEditStakeValidatorFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageEditStakeValidatorFee)
 }
 
-func (u *UtilityContext) GetMessageUnstakeValidatorFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageUnstakeValidatorFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageUnstakeValidatorFee)
 }
 
-func (u *UtilityContext) GetMessagePauseValidatorFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessagePauseValidatorFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessagePauseValidatorFee)
 }
 
-func (u *UtilityContext) GetMessageUnpauseValidatorFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageUnpauseValidatorFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageUnpauseValidatorFee)
 }
 
-func (u *UtilityContext) GetMessageStakeServiceNodeFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageStakeServiceNodeFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageStakeServiceNodeFee)
 }
 
-func (u *UtilityContext) GetMessageEditStakeServiceNodeFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageEditStakeServiceNodeFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageEditStakeServiceNodeFee)
 }
 
-func (u *UtilityContext) GetMessageUnstakeServiceNodeFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageUnstakeServiceNodeFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageUnstakeServiceNodeFee)
 }
 
-func (u *UtilityContext) GetMessagePauseServiceNodeFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessagePauseServiceNodeFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessagePauseServiceNodeFee)
 }
 
-func (u *UtilityContext) GetMessageUnpauseServiceNodeFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageUnpauseServiceNodeFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageUnpauseServiceNodeFee)
 }
 
-func (u *UtilityContext) GetMessageChangeParameterFee() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMessageChangeParameterFee() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.MessageChangeParameterFee)
 }
 
-func (u *UtilityContext) GetDoubleSignFeeOwner() (owner []byte, err typesUtil.Error) {
+func (u *utilityContext) GetDoubleSignFeeOwner() (owner []byte, err typesUtil.Error) {
 	return u.getByteArrayParam(typesUtil.MessageDoubleSignFeeOwner)
 }
 
-func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
+func (u *utilityContext) GetParamOwner(paramName string) ([]byte, error) {
 	// DISCUSS (@deblasis): here we could potentially leverage the struct tags in gov.proto by specifying an `owner` key
 	// eg: `app_minimum_stake` could have `pokt:"owner=app_minimum_stake_owner"`
 	// in here we would use that map to point to the owner, removing this switch, centralizing the logic and making it declarative
@@ -480,7 +480,7 @@ func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
 	}
 }
 
-func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType coreTypes.ActorType) (amount *big.Int, err typesUtil.Error) {
+func (u *utilityContext) GetFee(msg typesUtil.Message, actorType coreTypes.ActorType) (amount *big.Int, err typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:
 		return u.GetMessageSendFee()
@@ -543,7 +543,7 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType coreTypes.Actor
 	}
 }
 
-func (u *UtilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUtil.MessageChangeParameter) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUtil.MessageChangeParameter) ([][]byte, typesUtil.Error) {
 	owner, err := u.GetParamOwner(msg.ParameterKey)
 	if err != nil {
 		return nil, typesUtil.ErrGetParam(msg.ParameterKey, err)
@@ -551,7 +551,7 @@ func (u *UtilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUti
 	return [][]byte{owner}, nil
 }
 
-func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.Error) {
+func (u *utilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.Error) {
 	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return nil, er
@@ -564,7 +564,7 @@ func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.E
 	return typesUtil.StringToBigInt(value)
 }
 
-func (u *UtilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
+func (u *utilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
 	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return 0, er
@@ -576,7 +576,7 @@ func (u *UtilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
 	return value, nil
 }
 
-func (u *UtilityContext) getInt64Param(paramName string) (int64, typesUtil.Error) {
+func (u *utilityContext) getInt64Param(paramName string) (int64, typesUtil.Error) {
 	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return 0, er
@@ -588,7 +588,7 @@ func (u *UtilityContext) getInt64Param(paramName string) (int64, typesUtil.Error
 	return int64(value), nil
 }
 
-func (u *UtilityContext) getByteArrayParam(paramName string) ([]byte, typesUtil.Error) {
+func (u *utilityContext) getByteArrayParam(paramName string) ([]byte, typesUtil.Error) {
 	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return nil, er

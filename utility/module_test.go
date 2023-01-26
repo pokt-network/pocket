@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"log"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -68,12 +67,11 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func NewTestingUtilityContext(t *testing.T, height int64) UtilityContext {
+func NewTestingUtilityContext(t *testing.T, height int64) utilityContext {
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
-	// TODO(#388): Expose a `GetMempool` function in `utility_module` so we can remove this reflection.
-	mempool := reflect.ValueOf(testUtilityMod).Elem().FieldByName("Mempool").Interface().(utilTypes.Mempool)
+	mempool := testUtilityMod.(*utilityModule).mempool
 
 	// TECHDEBT: Move the internal of cleanup into a separate function and call this in the
 	// beginning of every test. This (the current implementation) is an issue because if we call
@@ -87,10 +85,10 @@ func NewTestingUtilityContext(t *testing.T, height int64) UtilityContext {
 		mempool.Clear()
 	})
 
-	return UtilityContext{
-		Height:  height,
-		Mempool: mempool,
-		Context: &Context{
+	return utilityContext{
+		height:  height,
+		mempool: mempool,
+		persistenceContext: &Context{
 			PersistenceRWContext: persistenceContext,
 			SavePointsM:          make(map[string]struct{}),
 			SavePoints:           make([][]byte, 0),

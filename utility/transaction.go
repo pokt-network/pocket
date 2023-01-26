@@ -14,7 +14,7 @@ import (
 func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	// Is the tx already in the mempool (in memory)?
 	txHash := typesUtil.TransactionHash(txProtoBytes)
-	if u.Mempool.Contains(txHash) {
+	if u.mempool.Contains(txHash) {
 		return typesUtil.ErrDuplicateTransaction()
 	}
 
@@ -39,19 +39,19 @@ func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	}
 
 	// Store the tx in the mempool
-	return u.Mempool.AddTransaction(txProtoBytes)
+	return u.mempool.AddTransaction(txProtoBytes)
 }
 
-func (u *UtilityContext) ApplyTransaction(index int, tx *typesUtil.Transaction) (modules.TxResult, typesUtil.Error) {
+func (u *utilityContext) ApplyTransaction(index int, tx *typesUtil.Transaction) (modules.TxResult, typesUtil.Error) {
 	msg, signer, err := u.AnteHandleMessage(tx)
 	if err != nil {
 		return nil, err
 	}
-	return tx.ToTxResult(u.Height, index, signer, msg.GetMessageRecipient(), msg.GetMessageName(), u.HandleMessage(msg))
+	return tx.ToTxResult(u.height, index, signer, msg.GetMessageRecipient(), msg.GetMessageName(), u.HandleMessage(msg))
 }
 
 // CLEANUP: Exposed for testing purposes only
-func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg typesUtil.Message, signer string, err typesUtil.Error) {
+func (u *utilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg typesUtil.Message, signer string, err typesUtil.Error) {
 	msg, err = tx.Message()
 	if err != nil {
 		return nil, "", err
@@ -98,7 +98,7 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg types
 	return msg, signer, nil
 }
 
-func (u *UtilityContext) HandleMessage(msg typesUtil.Message) (err typesUtil.Error) {
+func (u *utilityContext) HandleMessage(msg typesUtil.Message) (err typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:
 		return u.HandleMessageSend(x)
@@ -117,7 +117,7 @@ func (u *UtilityContext) HandleMessage(msg typesUtil.Message) (err typesUtil.Err
 	}
 }
 
-func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) typesUtil.Error {
+func (u *utilityContext) HandleMessageSend(message *typesUtil.MessageSend) typesUtil.Error {
 	// convert the amount to big.Int
 	amount, err := typesUtil.StringToBigInt(message.Amount)
 	if err != nil {
@@ -146,7 +146,7 @@ func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) types
 	return nil
 }
 
-func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typesUtil.Error {
+func (u *utilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typesUtil.Error {
 	publicKey, err := u.BytesToPublicKey(message.PublicKey)
 	if err != nil {
 		return err
@@ -208,7 +208,7 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 	return nil
 }
 
-func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditStake) typesUtil.Error {
+func (u *utilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditStake) typesUtil.Error {
 	// ensure actor exists
 	if exists, err := u.GetActorExists(message.ActorType, message.Address); err != nil || !exists {
 		if !exists {
@@ -271,7 +271,7 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 	return nil
 }
 
-func (u *UtilityContext) HandleUnstakeMessage(message *typesUtil.MessageUnstake) typesUtil.Error {
+func (u *utilityContext) HandleUnstakeMessage(message *typesUtil.MessageUnstake) typesUtil.Error {
 	if status, err := u.GetActorStatus(message.ActorType, message.Address); err != nil || status != int32(typesUtil.StakeStatus_Staked) {
 		if status != int32(typesUtil.StakeStatus_Staked) {
 			return typesUtil.ErrInvalidStatus(status, int32(typesUtil.StakeStatus_Staked))
@@ -288,7 +288,7 @@ func (u *UtilityContext) HandleUnstakeMessage(message *typesUtil.MessageUnstake)
 	return nil
 }
 
-func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause) typesUtil.Error {
+func (u *utilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause) typesUtil.Error {
 	pausedHeight, err := u.GetPauseHeight(message.ActorType, message.Address)
 	if err != nil {
 		return err
@@ -313,7 +313,7 @@ func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause)
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubleSign) typesUtil.Error {
+func (u *utilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubleSign) typesUtil.Error {
 	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
@@ -342,7 +342,7 @@ func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubl
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageChangeParameter(message *typesUtil.MessageChangeParameter) typesUtil.Error {
+func (u *utilityContext) HandleMessageChangeParameter(message *typesUtil.MessageChangeParameter) typesUtil.Error {
 	cdc := u.Codec()
 	v, err := cdc.FromAny(message.ParameterValue)
 	if err != nil {
@@ -351,7 +351,7 @@ func (u *UtilityContext) HandleMessageChangeParameter(message *typesUtil.Message
 	return u.updateParam(message.ParameterKey, v)
 }
 
-func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:
 		return u.GetMessageSendSignerCandidates(x)
@@ -368,7 +368,7 @@ func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, t
 	}
 }
 
-func (u *UtilityContext) GetMessageStakeSignerCandidates(msg *typesUtil.MessageStake) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) GetMessageStakeSignerCandidates(msg *typesUtil.MessageStake) ([][]byte, typesUtil.Error) {
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
@@ -379,7 +379,7 @@ func (u *UtilityContext) GetMessageStakeSignerCandidates(msg *typesUtil.MessageS
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.MessageEditStake) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.MessageEditStake) ([][]byte, typesUtil.Error) {
 	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
@@ -390,7 +390,7 @@ func (u *UtilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.Mess
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.MessageUnstake) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.MessageUnstake) ([][]byte, typesUtil.Error) {
 	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
@@ -401,7 +401,7 @@ func (u *UtilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.Messag
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnpauseSignerCandidates(msg *typesUtil.MessageUnpause) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) GetMessageUnpauseSignerCandidates(msg *typesUtil.MessageUnpause) ([][]byte, typesUtil.Error) {
 	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
@@ -412,10 +412,10 @@ func (u *UtilityContext) GetMessageUnpauseSignerCandidates(msg *typesUtil.Messag
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageSendSignerCandidates(msg *typesUtil.MessageSend) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) GetMessageSendSignerCandidates(msg *typesUtil.MessageSend) ([][]byte, typesUtil.Error) {
 	return [][]byte{msg.FromAddress}, nil
 }
 
-func (u *UtilityContext) GetMessageDoubleSignSignerCandidates(msg *typesUtil.MessageDoubleSign) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) GetMessageDoubleSignSignerCandidates(msg *typesUtil.MessageDoubleSign) ([][]byte, typesUtil.Error) {
 	return [][]byte{msg.ReporterAddress}, nil
 }

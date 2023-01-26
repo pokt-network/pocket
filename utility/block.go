@@ -22,7 +22,7 @@ import (
 */
 
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
-func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (string, [][]byte, error) {
+func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (string, [][]byte, error) {
 	lastBlockByzantineVals, err := u.GetLastBlockByzantineValidators()
 	if err != nil {
 		return "", nil, err
@@ -34,8 +34,8 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	transactions := make([][]byte, 0)
 	totalTxsSizeInBytes := 0
 	txIndex := 0
-	for !u.Mempool.IsEmpty() {
-		txBytes, err := u.Mempool.PopTransaction()
+	for !u.mempool.IsEmpty() {
+		txBytes, err := u.mempool.PopTransaction()
 		if err != nil {
 			return "", nil, err
 		}
@@ -47,7 +47,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		totalTxsSizeInBytes += txTxsSizeInBytes
 		if totalTxsSizeInBytes >= maxTransactionBytes {
 			// Add back popped transaction to be applied in a future block
-			err := u.Mempool.AddTransaction(txBytes)
+			err := u.mempool.AddTransaction(txBytes)
 			if err != nil {
 				return "", nil, err
 			}
@@ -63,7 +63,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			totalTxsSizeInBytes -= txTxsSizeInBytes
 			continue
 		}
-		if err := u.Context.IndexTransaction(txResult); err != nil {
+		if err := u.persistenceContext.IndexTransaction(txResult); err != nil {
 			log.Fatalf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
 		}
 
@@ -75,7 +75,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		return "", nil, err
 	}
 	// return the app hash (consensus module will get the validator set directly)
-	stateHash, err := u.Context.ComputeStateHash()
+	stateHash, err := u.persistenceContext.ComputeStateHash()
 	if err != nil {
 		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
 	}
@@ -86,7 +86,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
-func (u *UtilityContext) ApplyBlock() (string, error) {
+func (u *utilityContext) ApplyBlock() (string, error) {
 	lastByzantineValidators, err := u.GetLastBlockByzantineValidators()
 	if err != nil {
 		return "", err
@@ -116,7 +116,7 @@ func (u *UtilityContext) ApplyBlock() (string, error) {
 			return "", err
 		}
 
-		if err := u.Context.IndexTransaction(txResult); err != nil {
+		if err := u.persistenceContext.IndexTransaction(txResult); err != nil {
 			log.Fatalf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
 		}
 
@@ -132,7 +132,7 @@ func (u *UtilityContext) ApplyBlock() (string, error) {
 		return "", err
 	}
 	// return the app hash (consensus module will get the validator set directly)
-	stateHash, err := u.Context.ComputeStateHash()
+	stateHash, err := u.persistenceContext.ComputeStateHash()
 	if err != nil {
 		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
 		return "", typesUtil.ErrAppHash(err)
@@ -143,14 +143,14 @@ func (u *UtilityContext) ApplyBlock() (string, error) {
 	return stateHash, nil
 }
 
-func (u *UtilityContext) BeginBlock(previousBlockByzantineValidators [][]byte) typesUtil.Error {
+func (u *utilityContext) BeginBlock(previousBlockByzantineValidators [][]byte) typesUtil.Error {
 	if err := u.HandleByzantineValidators(previousBlockByzantineValidators); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
+func (u *utilityContext) EndBlock(proposer []byte) typesUtil.Error {
 	// reward the block proposer
 	if err := u.HandleProposalRewards(proposer); err != nil {
 		return err
@@ -167,7 +167,7 @@ func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
 }
 
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
-func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
+func (u *utilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
 	latestBlockHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
@@ -204,7 +204,7 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 	return nil
 }
 
-func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
+func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	var er error
 	store := u.Store()
 	latestHeight, err := u.GetLatestBlockHeight()
@@ -246,7 +246,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	return nil
 }
 
-func (u *UtilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
+func (u *utilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
 	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
@@ -272,7 +272,7 @@ func (u *UtilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
 	return nil
 }
 
-func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, ActorType coreTypes.ActorType) (err typesUtil.Error) {
+func (u *utilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, ActorType coreTypes.ActorType) (err typesUtil.Error) {
 	var er error
 	store := u.Store()
 	unstakingHeight, err := u.GetUnstakingHeight(ActorType)
@@ -295,7 +295,7 @@ func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, Acto
 	return nil
 }
 
-func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error {
+func (u *utilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error {
 	feePoolName := coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName()
 	feesAndRewardsCollected, err := u.GetPoolAmount(feePoolName)
 	if err != nil {
@@ -327,7 +327,7 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 }
 
 // GetValidatorMissedBlocks gets the total blocks that a validator has not signed a certain window of time denominated by blocks
-func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
+func (u *utilityContext) GetValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
@@ -339,7 +339,7 @@ func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (int, typesUti
 	return missedBlocks, nil
 }
 
-func (u *UtilityContext) PauseValidatorAndSetMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) typesUtil.Error {
+func (u *utilityContext) PauseValidatorAndSetMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) typesUtil.Error {
 	store := u.Store()
 	if err := store.SetValidatorPauseHeightAndMissedBlocks(address, pauseHeight, missedBlocks); err != nil {
 		return typesUtil.ErrSetPauseHeight(err)
@@ -347,7 +347,7 @@ func (u *UtilityContext) PauseValidatorAndSetMissedBlocks(address []byte, pauseH
 	return nil
 }
 
-func (u *UtilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) typesUtil.Error {
+func (u *utilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) typesUtil.Error {
 	store := u.Store()
 	er := store.SetValidatorMissedBlocks(address, missedBlocks)
 	if er != nil {

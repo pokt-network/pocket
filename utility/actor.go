@@ -22,7 +22,7 @@ import (
 
 // setters
 
-func (u *UtilityContext) SetActorStakedTokens(actorType coreTypes.ActorType, tokens *big.Int, address []byte) typesUtil.Error {
+func (u *utilityContext) SetActorStakedTokens(actorType coreTypes.ActorType, tokens *big.Int, address []byte) typesUtil.Error {
 	store := u.Store()
 
 	var er error
@@ -46,7 +46,7 @@ func (u *UtilityContext) SetActorStakedTokens(actorType coreTypes.ActorType, tok
 	return nil
 }
 
-func (u *UtilityContext) SetActorUnstaking(actorType coreTypes.ActorType, unstakingHeight int64, address []byte) typesUtil.Error {
+func (u *utilityContext) SetActorUnstaking(actorType coreTypes.ActorType, unstakingHeight int64, address []byte) typesUtil.Error {
 	store := u.Store()
 
 	var er error
@@ -70,7 +70,7 @@ func (u *UtilityContext) SetActorUnstaking(actorType coreTypes.ActorType, unstak
 	return nil
 }
 
-func (u *UtilityContext) SetActorPauseHeight(actorType coreTypes.ActorType, address []byte, height int64) typesUtil.Error {
+func (u *utilityContext) SetActorPauseHeight(actorType coreTypes.ActorType, address []byte, height int64) typesUtil.Error {
 	store := u.Store()
 
 	var err error
@@ -96,7 +96,7 @@ func (u *UtilityContext) SetActorPauseHeight(actorType coreTypes.ActorType, addr
 
 // getters
 
-func (u *UtilityContext) GetActorStakedTokens(actorType coreTypes.ActorType, address []byte) (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetActorStakedTokens(actorType coreTypes.ActorType, address []byte) (*big.Int, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func (u *UtilityContext) GetActorStakedTokens(actorType coreTypes.ActorType, add
 	return i, nil
 }
 
-func (u *UtilityContext) GetMaxPausedBlocks(actorType coreTypes.ActorType) (maxPausedBlocks int, err typesUtil.Error) {
+func (u *utilityContext) GetMaxPausedBlocks(actorType coreTypes.ActorType) (maxPausedBlocks int, err typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
@@ -158,7 +158,7 @@ func (u *UtilityContext) GetMaxPausedBlocks(actorType coreTypes.ActorType) (maxP
 	return
 }
 
-func (u *UtilityContext) GetMinimumPauseBlocks(actorType coreTypes.ActorType) (minPauseBlocks int, err typesUtil.Error) {
+func (u *utilityContext) GetMinimumPauseBlocks(actorType coreTypes.ActorType) (minPauseBlocks int, err typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
@@ -186,7 +186,7 @@ func (u *UtilityContext) GetMinimumPauseBlocks(actorType coreTypes.ActorType) (m
 	return
 }
 
-func (u *UtilityContext) GetPauseHeight(actorType coreTypes.ActorType, address []byte) (pauseHeight int64, err typesUtil.Error) {
+func (u *utilityContext) GetPauseHeight(actorType coreTypes.ActorType, address []byte) (pauseHeight int64, err typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
@@ -213,7 +213,7 @@ func (u *UtilityContext) GetPauseHeight(actorType coreTypes.ActorType, address [
 	return
 }
 
-func (u *UtilityContext) GetActorStatus(actorType coreTypes.ActorType, address []byte) (status int32, err typesUtil.Error) {
+func (u *utilityContext) GetActorStatus(actorType coreTypes.ActorType, address []byte) (status int32, err typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
@@ -240,7 +240,7 @@ func (u *UtilityContext) GetActorStatus(actorType coreTypes.ActorType, address [
 	return status, nil
 }
 
-func (u *UtilityContext) GetMinimumStake(actorType coreTypes.ActorType) (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetMinimumStake(actorType coreTypes.ActorType) (*big.Int, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return nil, err
@@ -268,7 +268,7 @@ func (u *UtilityContext) GetMinimumStake(actorType coreTypes.ActorType) (*big.In
 	return typesUtil.StringToBigInt(minStake)
 }
 
-func (u *UtilityContext) GetStakeAmount(actorType coreTypes.ActorType, address []byte) (*big.Int, typesUtil.Error) {
+func (u *utilityContext) GetStakeAmount(actorType coreTypes.ActorType, address []byte) (*big.Int, typesUtil.Error) {
 	var stakeAmount string
 	store, height, er := u.getStoreAndHeight()
 	if er != nil {
@@ -296,7 +296,7 @@ func (u *UtilityContext) GetStakeAmount(actorType coreTypes.ActorType, address [
 	return typesUtil.StringToBigInt(stakeAmount)
 }
 
-func (u *UtilityContext) GetUnstakingHeight(actorType coreTypes.ActorType) (unstakingHeight int64, err typesUtil.Error) {
+func (u *utilityContext) GetUnstakingHeight(actorType coreTypes.ActorType) (unstakingHeight int64, err typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
@@ -326,7 +326,7 @@ func (u *UtilityContext) GetUnstakingHeight(actorType coreTypes.ActorType) (unst
 	return u.CalculateUnstakingHeight(int64(unstakingBlocks))
 }
 
-func (u *UtilityContext) GetMaxChains(actorType coreTypes.ActorType) (maxChains int, err typesUtil.Error) {
+func (u *utilityContext) GetMaxChains(actorType coreTypes.ActorType) (maxChains int, err typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, err
@@ -353,7 +353,7 @@ func (u *UtilityContext) GetMaxChains(actorType coreTypes.ActorType) (maxChains 
 	return
 }
 
-func (u *UtilityContext) GetActorExists(actorType coreTypes.ActorType, address []byte) (bool, typesUtil.Error) {
+func (u *utilityContext) GetActorExists(actorType coreTypes.ActorType, address []byte) (bool, typesUtil.Error) {
 	store, height, er := u.getStoreAndHeight()
 	if er != nil {
 		return false, er
@@ -381,7 +381,7 @@ func (u *UtilityContext) GetActorExists(actorType coreTypes.ActorType, address [
 	return exists, nil
 }
 
-func (u *UtilityContext) GetActorOutputAddress(actorType coreTypes.ActorType, operator []byte) (output []byte, err typesUtil.Error) {
+func (u *utilityContext) GetActorOutputAddress(actorType coreTypes.ActorType, operator []byte) (output []byte, err typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return nil, err
@@ -410,7 +410,7 @@ func (u *UtilityContext) GetActorOutputAddress(actorType coreTypes.ActorType, op
 
 // calculators
 
-func (u *UtilityContext) BurnActor(actorType coreTypes.ActorType, percentage int, address []byte) typesUtil.Error {
+func (u *utilityContext) BurnActor(actorType coreTypes.ActorType, percentage int, address []byte) typesUtil.Error {
 	tokens, err := u.GetActorStakedTokens(actorType, address)
 	if err != nil {
 		return err
@@ -450,7 +450,7 @@ func (u *UtilityContext) BurnActor(actorType coreTypes.ActorType, percentage int
 	return nil
 }
 
-func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, typesUtil.Error) {
+func (u *utilityContext) CalculateAppRelays(stakedTokens string) (string, typesUtil.Error) {
 	tokens, err := typesUtil.StringToBigInt(stakedTokens)
 	if err != nil {
 		return typesUtil.EmptyString, err
@@ -488,7 +488,7 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, typesU
 	return typesUtil.BigIntToString(result), nil
 }
 
-func (u *UtilityContext) CheckAboveMinStake(actorType coreTypes.ActorType, amount string) (a *big.Int, err typesUtil.Error) {
+func (u *utilityContext) CheckAboveMinStake(actorType coreTypes.ActorType, amount string) (a *big.Int, err typesUtil.Error) {
 	minStake, er := u.GetMinimumStake(actorType)
 	if er != nil {
 		return nil, er
@@ -503,7 +503,7 @@ func (u *UtilityContext) CheckAboveMinStake(actorType coreTypes.ActorType, amoun
 	return // for convenience this returns amount as a big.Int
 }
 
-func (u *UtilityContext) CheckBelowMaxChains(actorType coreTypes.ActorType, chains []string) typesUtil.Error {
+func (u *utilityContext) CheckBelowMaxChains(actorType coreTypes.ActorType, chains []string) typesUtil.Error {
 	// validators don't have chains field
 
 	if actorType == coreTypes.ActorType_ACTOR_TYPE_VAL {
@@ -520,12 +520,12 @@ func (u *UtilityContext) CheckBelowMaxChains(actorType coreTypes.ActorType, chai
 	return nil
 }
 
-func (u *UtilityContext) GetLastBlockByzantineValidators() ([][]byte, error) {
+func (u *utilityContext) GetLastBlockByzantineValidators() ([][]byte, error) {
 	// TODO(#271): Need to retrieve byzantine validators from the persistence module
 	return nil, nil
 }
 
-func (u *UtilityContext) CalculateUnstakingHeight(unstakingBlocks int64) (int64, typesUtil.Error) {
+func (u *utilityContext) CalculateUnstakingHeight(unstakingBlocks int64) (int64, typesUtil.Error) {
 	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return typesUtil.ZeroInt, err
@@ -535,7 +535,7 @@ func (u *UtilityContext) CalculateUnstakingHeight(unstakingBlocks int64) (int64,
 
 // util
 
-func (u *UtilityContext) BytesToPublicKey(publicKey []byte) (crypto.PublicKey, typesUtil.Error) {
+func (u *utilityContext) BytesToPublicKey(publicKey []byte) (crypto.PublicKey, typesUtil.Error) {
 	pk, er := crypto.NewPublicKeyFromBytes(publicKey)
 	if er != nil {
 		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)

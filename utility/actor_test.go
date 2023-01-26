@@ -111,13 +111,13 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			var err error
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				err = ctx.Context.SetParam(typesUtil.ValidatorMinimumPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.ValidatorMinimumPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				err = ctx.Context.SetParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
-				err = ctx.Context.SetParam(typesUtil.AppMinimumPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.AppMinimumPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				err = ctx.Context.SetParam(typesUtil.FishermanMinimumPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.FishermanMinimumPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -158,13 +158,13 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			var err error
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
-				err = ctx.Context.SetParam(typesUtil.AppMinimumPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.AppMinimumPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				err = ctx.Context.SetParam(typesUtil.ValidatorMinimumPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.ValidatorMinimumPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				err = ctx.Context.SetParam(typesUtil.FishermanMinimumPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.FishermanMinimumPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				err = ctx.Context.SetParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -202,13 +202,13 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
-				err = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				err = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				err = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				err = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -423,13 +423,13 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			var er error
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
-				er = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
+				er = ctx.persistenceContext.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				er = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
+				er = ctx.persistenceContext.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				er = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
+				er = ctx.persistenceContext.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				er = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
+				er = ctx.persistenceContext.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -484,10 +484,10 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 			}
 			ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
 
-			err := ctx.Context.SetParam(typesUtil.AppUnstakingBlocksParamName, 0)
+			err := ctx.persistenceContext.SetParam(typesUtil.AppUnstakingBlocksParamName, 0)
 			require.NoError(t, err)
 
-			err = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
+			err = ctx.persistenceContext.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
 			require.NoError(t, err)
 
 			actors := getAllTestingActors(t, ctx, actorType)
@@ -523,13 +523,13 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			var err error
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
-				err = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				err = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				err = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				err = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
+				err = ctx.persistenceContext.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -553,7 +553,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 
 // Helpers
 
-func getAllTestingActors(t *testing.T, ctx UtilityContext, actorType coreTypes.ActorType) (actors []*coreTypes.Actor) {
+func getAllTestingActors(t *testing.T, ctx utilityContext, actorType coreTypes.ActorType) (actors []*coreTypes.Actor) {
 	actors = make([]*coreTypes.Actor, 0)
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -583,24 +583,24 @@ func getAllTestingActors(t *testing.T, ctx UtilityContext, actorType coreTypes.A
 	return
 }
 
-func getFirstActor(t *testing.T, ctx UtilityContext, actorType coreTypes.ActorType) *coreTypes.Actor {
+func getFirstActor(t *testing.T, ctx utilityContext, actorType coreTypes.ActorType) *coreTypes.Actor {
 	return getAllTestingActors(t, ctx, actorType)[0]
 }
 
-func getActorByAddr(t *testing.T, ctx UtilityContext, actorType coreTypes.ActorType, addr string) (actor *coreTypes.Actor) {
+func getActorByAddr(t *testing.T, ctx utilityContext, actorType coreTypes.ActorType, addr string) (actor *coreTypes.Actor) {
 	actors := getAllTestingActors(t, ctx, actorType)
 	idx := slices.IndexFunc(actors, func(a *coreTypes.Actor) bool { return a.GetAddress() == addr })
 	return actors[idx]
 }
 
-func getAllTestingApps(t *testing.T, ctx UtilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.Context.PersistenceRWContext).GetAllApps(ctx.Height)
+func getAllTestingApps(t *testing.T, ctx utilityContext) []*coreTypes.Actor {
+	actors, err := (ctx.persistenceContext.PersistenceRWContext).GetAllApps(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
 
-func getAllTestingValidators(t *testing.T, ctx UtilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.Context.PersistenceRWContext).GetAllValidators(ctx.Height)
+func getAllTestingValidators(t *testing.T, ctx utilityContext) []*coreTypes.Actor {
+	actors, err := (ctx.persistenceContext.PersistenceRWContext).GetAllValidators(ctx.height)
 	require.NoError(t, err)
 	sort.Slice(actors, func(i, j int) bool {
 		return actors[i].GetAddress() < actors[j].GetAddress()
@@ -608,14 +608,14 @@ func getAllTestingValidators(t *testing.T, ctx UtilityContext) []*coreTypes.Acto
 	return actors
 }
 
-func getAllTestingFish(t *testing.T, ctx UtilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.Context.PersistenceRWContext).GetAllFishermen(ctx.Height)
+func getAllTestingFish(t *testing.T, ctx utilityContext) []*coreTypes.Actor {
+	actors, err := (ctx.persistenceContext.PersistenceRWContext).GetAllFishermen(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
 
-func getAllTestingNodes(t *testing.T, ctx UtilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.Context.PersistenceRWContext).GetAllServiceNodes(ctx.Height)
+func getAllTestingNodes(t *testing.T, ctx utilityContext) []*coreTypes.Actor {
+	actors, err := (ctx.persistenceContext.PersistenceRWContext).GetAllServiceNodes(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
