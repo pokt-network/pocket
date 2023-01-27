@@ -18,18 +18,19 @@ func TransactionFromBytes(txProtoABytes []byte) (*Transaction, Error) {
 }
 
 func (tx *Transaction) ValidateBasic() Error {
+	// Nonce cannot be empty to avoid transaction replays
 	if tx.Nonce == "" {
 		return ErrEmptyNonce()
 	}
-	if _, err := codec.GetCodec().FromAny(tx.Msg); err != nil {
-		return ErrProtoFromAny(err)
-	}
+
+	// Is there a signature we can verify?
 	if tx.Signature == nil {
 		return ErrEmptySignature()
 	}
 	if err := tx.Signature.ValidateBasic(); err != nil {
 		return err
 	}
+
 	publicKey, err := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
 	if err != nil {
 		return ErrNewPublicKeyFromBytes(err)
@@ -41,16 +42,19 @@ func (tx *Transaction) ValidateBasic() Error {
 	if ok := publicKey.Verify(signBytes, tx.Signature.Signature); !ok {
 		return ErrSignatureVerificationFailed()
 	}
+
+	// Is there a valid msg that can be decoded?
 	if _, err := tx.Message(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (tx *Transaction) Message() (Message, Error) {
 	msg, err := codec.GetCodec().FromAny(tx.Msg)
 	if err != nil {
-		return nil, ErrProtoMarshal(err)
+		return nil, ErrProtoFromAny(err)
 	}
 	message, ok := msg.(Message)
 	if !ok {
@@ -61,11 +65,11 @@ func (tx *Transaction) Message() (Message, Error) {
 
 func (tx *Transaction) Sign(privateKey crypto.PrivateKey) Error {
 	publicKey := privateKey.PublicKey()
-	bz, err := tx.SignBytes()
+	txSignableBz, err := tx.SignBytes()
 	if err != nil {
-		return err
+		return ErrProtoMarshal(err)
 	}
-	signature, er := privateKey.Sign(bz)
+	signature, er := privateKey.Sign(txSignableBz)
 	if er != nil {
 		return ErrTransactionSign(er)
 	}
@@ -84,22 +88,14 @@ func (tx *Transaction) Hash() (string, Error) {
 	return TransactionHash(b), nil
 }
 
-func (tx *Transaction) SignBytes() ([]byte, Error) {
+func (tx *Transaction) SignBytes() ([]byte, error) {
 	transaction := proto.Clone(tx).(*Transaction)
 	transaction.Signature = nil
-	bz, err := codec.GetCodec().Marshal(transaction)
-	if err != nil {
-		return nil, ErrProtoMarshal(err)
-	}
-	return bz, nil
+	return codec.GetCodec().Marshal(transaction)
 }
 
-func (tx *Transaction) Bytes() ([]byte, Error) {
-	bz, err := codec.GetCodec().Marshal(tx)
-	if err != nil {
-		return nil, ErrProtoMarshal(err)
-	}
-	return bz, nil
+func (tx *Transaction) Bytes() ([]byte, error) {
+	return codec.GetCodec().Marshal(tx)
 }
 
 func (tx *Transaction) Equals(tx2 *Transaction) bool {
@@ -137,7 +133,7 @@ func (x *DefaultTxResult) HashFromBytes(bz []byte) ([]byte, error) {
 func (tx *Transaction) ToTxResult(height int64, index int, signer, recipient, msgType string, error Error) (*DefaultTxResult, Error) {
 	txBytes, err := tx.Bytes()
 	if err != nil {
-		return nil, err
+		return nil, ErrProtoMarshal(err)
 	}
 	code, errString := int32(0), ""
 	if error != nil {

@@ -18,15 +18,14 @@ func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 		return typesUtil.ErrDuplicateTransaction()
 	}
 
-	// Is the tx already indexed (on disk)?
+	// Is the tx already committed & indexed (on disk)?
 	if txExists, err := u.GetBus().GetPersistenceModule().TransactionExists(txHash); err != nil {
 		return err
 	} else if txExists {
-		// TODO: non-ordered nonce requires non-pruned tx indexer
 		return typesUtil.ErrTransactionAlreadyCommitted()
 	}
 
-	// Can the txBytes be decoded as a protobuf?
+	// Can the tx be decoded?
 	transaction := &typesUtil.Transaction{}
 	if err := codec.GetCodec().Unmarshal(txProtoBytes, transaction); err != nil {
 		return typesUtil.ErrProtoUnmarshal(err)

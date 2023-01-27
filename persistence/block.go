@@ -11,6 +11,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
+// INCOMPLETE: Need to think through how we will handle pruned vs non-pruned txIndexers
 func (p *persistenceModule) TransactionExists(transactionHash string) (bool, error) {
 	hash, err := hex.DecodeString(transactionHash)
 	if err != nil {
