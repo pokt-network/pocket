@@ -24,8 +24,3 @@ func heightToBytes(height uint64) []byte {
 	binary.LittleEndian.PutUint64(heightBytes, height)
 	return heightBytes
 }
-
-// func heightFromBytes(heightBz []byte) uint64 {
-// 	return binary.LittleEndian.Uint64(heightBz)
-// 	//return new(big.Int).SetBytes(heightBz).Uint64()
-// }

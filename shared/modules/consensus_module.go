@@ -35,8 +35,6 @@ type ConsensusModule interface {
 	CurrentRound() uint64
 	CurrentStep() uint64
 
-	//ValidatorMap() ValidatorMap
-
 	EnableServerMode()
 }
 
@@ -76,5 +74,4 @@ type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetCurrentNodeAddressFromNodeId() (string, error)
 	GetLeaderId() uint64
-	//GetStateSyncModule() state_sync.StateSyncModule
 }

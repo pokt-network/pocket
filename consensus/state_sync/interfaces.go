@@ -35,6 +35,8 @@ type PeerSyncMeta interface {
 	// the minimum height the peer has in the block store
 	GetMinHeight() int64
 }
+
+// LEGACY interface definition
 type StateSyncModuleLEGACY interface {
 	// -- Constructor Setter Functions --
 

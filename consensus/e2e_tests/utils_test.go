@@ -206,7 +206,6 @@ func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 // This is a helper for `waitForEventsInternal` that creates the `includeFilter` function based on
 // consensus specific parameters.
 // failOnExtraMessages:
-//
 //	This flag is useful when running the consensus unit tests. It causes the test to wait up to the
 //	maximum delay specified in the source code and errors if additional unexpected messages are received.
 //	For example, if the test expects to receive 5 messages within 2 seconds:
@@ -303,7 +302,6 @@ loop:
 	for {
 		select {
 		case nodeEvent := <-eventsChannel:
-
 			if nodeEvent.GetContentType() != eventContentType {
 				unusedEvents = append(unusedEvents, nodeEvent)
 				continue
@@ -348,8 +346,6 @@ loop:
 // Creates a persistence module mock with mock implementations of some basic functionality
 func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *mockModules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
-	//mockModules.NewMockPersistenceModule()
-	//mockModules.
 	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
 	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
 	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
@@ -379,8 +375,6 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
-
-	//persistenceReadContextMock.EXPECT().GetBlockHash(gomock.Any()).Return(String).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 

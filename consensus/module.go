@@ -8,6 +8,7 @@ import (
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	"github.com/pokt-network/pocket/consensus/pacemaker"
+	"github.com/pokt-network/pocket/consensus/state_sync"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -16,8 +17,6 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
-
-	"github.com/pokt-network/pocket/consensus/state_sync"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -71,9 +70,7 @@ type consensusModule struct {
 	// DEPRECATE: Remove later when we build a shared/proper/injected logger
 	logPrefix string
 
-	// State sync
 	stateSync state_sync.StateSyncModule
-	//serverMode bool
 
 	// TECHDEBT: Rename this to `consensusMessagePool` or something similar
 	//           and reconsider if an in-memory map is the best approach
