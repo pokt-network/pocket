@@ -96,7 +96,7 @@ do
     module="$(echo "${log}" | sed 's/\/.*//')"
     # consider files changed since branching off main
     # filter for files relevant to current module
-    changed_module_files=$(git diff --name-only main..HEAD | grep -e "^$module" )
+    changed_module_files=($( printf '%s\n' "${BRANCH_CHANGED_FILES[@]}" | grep "${module}" ))
     # sort commits affecting module files by date and take most recent
     latest_module_commit_date=$(sort -r <(echo "$changed_module_files" | xargs -I {} git --no-pager log -1 --format=%cs {}) | head -n 1)
 
