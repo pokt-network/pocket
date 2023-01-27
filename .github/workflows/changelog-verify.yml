@@ -39,4 +39,4 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Verify changelogs
-        run: bash ./.githooks/pre-push ${{needs.changedfiles.outputs.all}}
+        run: bash ./.githooks/pre-receive "${{needs.changedfiles.outputs.all}}"
