@@ -20,24 +20,6 @@ import (
 validations possible before even checking the state storage layer.
 */
 
-// CLEANUP: Move these to a better shared location or inline the vars.
-const (
-	MillionInt       = 1000000
-	ZeroInt          = 0
-	HeightNotUsed    = int64(-1)
-	EmptyString      = ""
-	HttpsPrefix      = "https://"
-	HttpPrefix       = "http://"
-	Colon            = ":"
-	Period           = "."
-	InvalidURLPrefix = "the url must start with http:// or https://"
-	PortRequired     = "a port is required"
-	NonNumberPort    = "invalid port, cant convert to integer"
-	PortOutOfRange   = "invalid port, out of valid port range"
-	NoPeriod         = "must contain one '.'"
-	MaxPort          = 65535
-)
-
 type Message interface {
 	proto.Message
 
@@ -136,7 +118,6 @@ func (msg *MessageSend) GetCanonicalBytes() []byte            { return getCanoni
 func (msg *MessageChangeParameter) GetCanonicalBytes() []byte { return getCanonicalBytes(msg) }
 func (msg *MessageUnstake) GetCanonicalBytes() []byte         { return getCanonicalBytes(msg) }
 func (msg *MessageUnpause) GetCanonicalBytes() []byte         { return getCanonicalBytes(msg) }
-
 
 // helpers
 

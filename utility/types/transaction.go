@@ -9,9 +9,9 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func TransactionFromBytes(txProtoABytes []byte) (*Transaction, Error) {
+func TransactionFromBytes(txProtoBytes []byte) (*Transaction, Error) {
 	tx := &Transaction{}
-	if err := codec.GetCodec().Unmarshal(txProtoABytes, tx); err != nil {
+	if err := codec.GetCodec().Unmarshal(txProtoBytes, tx); err != nil {
 		return nil, ErrUnmarshalTransaction(err)
 	}
 	return tx, nil
@@ -99,7 +99,7 @@ func (tx *Transaction) Bytes() ([]byte, error) {
 }
 
 func (tx *Transaction) Equals(tx2 *Transaction) bool {
-	b, _ := tx2.Bytes()
+	b, _ := tx.Bytes()
 	b1, _ := tx2.Bytes()
 	return bytes.Equal(b, b1)
 }
