@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
-	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -28,39 +27,12 @@ func TestStateSyncServerGetMetaDataReq(t *testing.T) {
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	testHeight := uint64(4)
-	testStep := uint8(consensus.NewRound)
-	testRound := uint64(0)
 
-	leaderId := typesCons.NodeId(2)
-	for _, pocketNode := range pocketNodes {
-		// Update height, step, leaderId, and utility context via setters exposed with the debug interface
-		consensusModImpl := GetConsensusModImpl(pocketNode)
-		consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
-		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
-		consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(testRound)})
-		consensusModImpl.MethodByName("SetLeaderId").Call([]reflect.Value{reflect.Zero(reflect.TypeOf(&leaderId))})
-
-		// utilityContext is only set on new rounds, which is skipped in this test
-		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
-		require.NoError(t, err)
-		consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
-	}
-
-	for pocketId, pocketNode := range pocketNodes {
-		nodeState := GetConsensusNodeState(pocketNode)
-		assertNodeConsensusView(t, pocketId,
-			typesCons.ConsensusNodeState{
-				Height: 4,
-				Step:   uint8(consensus.NewRound),
-				Round:  0,
-			},
-			nodeState)
-		require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
-	}
-
-	// Choose node 1 as the server node, enable server mode of the node 1.
+	// Choose node 1 as the server node, enable server mode of the node 1
+	// Set server node's height to test height.
 	serverNode := pocketNodes[1]
 	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
+	serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
 	serverNodeConsensusModImpl.MethodByName("EnableServerMode").Call([]reflect.Value{})
 
 	// We choose node 2 as the requester node.
@@ -82,12 +54,11 @@ func TestStateSyncServerGetMetaDataReq(t *testing.T) {
 	anyProto, err := anypb.New(stateSyncMetaDataReqMessage)
 	require.NoError(t, err)
 
-	// send metadata request to the server node
+	// Send metadata request to the server node
 	P2PSend(t, serverNode, anyProto)
 
-	// start waiting for the metadata request on server node,
-	numExpectedMsgs := 1
-	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE, numExpectedMsgs, 250, false)
+	// Start waiting for the metadata request on server node,
+	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE, 1, 250, false)
 	require.NoError(t, err)
 
 	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
@@ -120,12 +91,10 @@ func TestStateSyncServerGetBlock(t *testing.T) {
 
 	serverNode := pocketNodes[1]
 	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
+	serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
 	serverNodeConsensusModImpl.MethodByName("EnableServerMode").Call([]reflect.Value{})
 
-	consensusModImpl := GetConsensusModImpl(serverNode)
-	consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
-
-	// We choose node 2 as the requester node.
+	// Choose node 2 as the requester node
 	requesterNode := pocketNodes[2]
 	requesterNodePeerId, err := requesterNode.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
 	require.NoError(t, err)
@@ -147,10 +116,10 @@ func TestStateSyncServerGetBlock(t *testing.T) {
 	anyProto, err := anypb.New(stateSyncGetBlockMessage)
 	require.NoError(t, err)
 
-	// send get block request to the server node
+	// Send get block request to the server node
 	P2PSend(t, serverNode, anyProto)
 
-	// start waiting for the get block request on server node,
+	// Start waiting for the get block request on server node, expect to return error
 	numExpectedMsgs := 1
 	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE, numExpectedMsgs, 250, false)
 	require.NoError(t, err)
@@ -183,10 +152,10 @@ func TestStateSyncServerGetBlock(t *testing.T) {
 	anyProto, err = anypb.New(stateSyncGetBlockMessage)
 	require.NoError(t, err)
 
-	// send get block request to the server node
+	// Send get block request to the server node
 	P2PSend(t, serverNode, anyProto)
 
-	// start waiting for the get block request on server node,
+	// Start waiting for the get block request on server node, expect to return error
 	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE, numExpectedMsgs, 250, false)
 	require.Error(t, err)
 }
