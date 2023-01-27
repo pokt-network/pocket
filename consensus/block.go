@@ -20,6 +20,7 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 	if err := m.utilityContext.Release(); err != nil {
 		log.Println("[WARN] Error releasing utility context: ", err)
 	}
+
 	m.utilityContext = nil
 
 	return nil

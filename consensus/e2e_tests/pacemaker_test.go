@@ -1,7 +1,6 @@
 package e2e_tests
 
 import (
-	"fmt"
 	"reflect"
 	"runtime"
 	"testing"
@@ -176,9 +175,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	}
 
 	leaderConsensusModImpl := GetConsensusModImpl(leader)
-	fmt.Print("\n\n\nCalling SETBLOCK: \n\n\n")
 	leaderConsensusModImpl.MethodByName("SetBlock").Call([]reflect.Value{reflect.ValueOf(block)})
-	fmt.Print("SETBLOCK CALLED: \n")
 
 	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS
 	for _, pocketNode := range pocketNodes {

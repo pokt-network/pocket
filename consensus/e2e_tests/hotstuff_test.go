@@ -192,7 +192,9 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
 	}
 
-	// Test also State Sync Get block, currently chain has finished the first round
+	// Test state synchronisation's get block functionality
+	// As this stage, the chain has finished the first round
+	// So, get block request for block height 1 must return non-nill block
 	serverNode := pocketNodes[1]
 	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
 	serverNodeConsensusModImpl.MethodByName("EnableServerMode").Call([]reflect.Value{})
@@ -217,10 +219,10 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	anyProto, err := anypb.New(stateSyncGetBlockMessage)
 	require.NoError(t, err)
 
-	// send get block request to the server node
+	// Send get block request to the server node
 	P2PSend(t, serverNode, anyProto)
 
-	// start waiting for the get block request on server node,
+	// Start waiting for the get block request on server node,
 	numExpectedMsgs := 1
 	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE, numExpectedMsgs, 250, false)
 	require.NoError(t, err)
