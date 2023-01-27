@@ -11,7 +11,6 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -31,22 +30,15 @@ const (
 )
 
 var (
-	defaultTestingChainsEdited = []string{"0002"}
-	defaultNonceString         = utilTypes.BigIntToString(test_artifacts.DefaultAccountAmount)
-	defaultUnstakingHeight     = int64(2017)
+	defaultNonceString     = utilTypes.BigIntToString(test_artifacts.DefaultAccountAmount)
+	defaultUnstakingHeight = int64(2017)
 )
 
 var (
-	testPersistenceMod modules.PersistenceModule // initialized in TestMain
-	testUtilityMod     modules.UtilityModule     // initialized in TestMain
+	// Initialized in TestMain
+	testPersistenceMod modules.PersistenceModule
+	testUtilityMod     modules.UtilityModule
 )
-
-var actorTypes = []coreTypes.ActorType{
-	coreTypes.ActorType_ACTOR_TYPE_APP,
-	coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
-	coreTypes.ActorType_ACTOR_TYPE_FISH,
-	coreTypes.ActorType_ACTOR_TYPE_VAL,
-}
 
 func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 	return utilTypes.NewMempool(1000000, 1000)

@@ -20,7 +20,7 @@ import (
 // CLEANUP: Move `App` specific tests to `app_test.go`
 
 func TestUtilityContext_HandleMessageStake(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageStake", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
@@ -62,7 +62,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageEditStake", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
@@ -79,7 +79,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 				ActorType: actorType,
 			}
 			msgChainsEdited := proto.Clone(msg).(*typesUtil.MessageEditStake)
-			msgChainsEdited.Chains = defaultTestingChainsEdited
+			msgChainsEdited.Chains = []string{"0002"}
 
 			err = ctx.HandleEditStakeMessage(msgChainsEdited)
 			require.NoError(t, err, "handle edit stake message")
@@ -104,7 +104,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageUnpause", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
@@ -151,7 +151,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageUnstake", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
@@ -192,7 +192,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 }
 
 func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPaused", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 			actor := getFirstActor(t, ctx, actorType)
@@ -236,7 +236,7 @@ func TestUtilityContext_CalculateMaxAppRelays(t *testing.T) {
 }
 
 func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.CalculateUnstakingHeight", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			var unstakingBlocks int64
@@ -264,7 +264,7 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 }
 
 func TestUtilityContext_GetExists(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetExists", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
@@ -288,7 +288,7 @@ func TestUtilityContext_GetExists(t *testing.T) {
 }
 
 func TestUtilityContext_GetOutputAddress(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetOutputAddress", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
@@ -305,7 +305,7 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 }
 
 func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetPauseHeightIfExists", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			pauseHeight := int64(100)
@@ -332,7 +332,7 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageEditStakeSignerCandidates", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
@@ -358,7 +358,7 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageUnpauseSignerCandidates", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
@@ -382,7 +382,7 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageUnstakeSignerCandidates", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
@@ -406,7 +406,7 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.UnstakePausedBefore", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
@@ -465,7 +465,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 }
 
 func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.UnstakeActorsThatAreReady", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
@@ -515,7 +515,7 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 }
 
 func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
-	for _, actorType := range actorTypes {
+	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPausedActors", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 			actor := getFirstActor(t, ctx, actorType)
