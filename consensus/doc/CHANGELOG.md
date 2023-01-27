@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.23] - 2023-01-27
+
+- Add `state_sync` submodule, with `state_sync` struct
+- Implement state sync server to advertise blocks and metadata
+- Create new `state_snyc_handler.go` source file that handles stateSyncMessages sent to the consensus module
+- Write two tests `TestStateSyncServerGetMetaDataReq` and `TestStateSyncServerGetBlock` for state_sync server in new test file `state_snyc_test.go`
+- Update `TestHotstuff4Nodes1BlockHappyPath` test to test get block request
+
 ## [0.0.0.22] - 2023-01-25
 
 - Add a note on consensus test related workaround related to #462

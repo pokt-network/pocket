@@ -6,16 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.0.27] - 2023-01-27
 
-<<<<<<< HEAD
-## [0.0.0.25] - 2023-01-21
-=======
+- Added mock generation to the `kvstore/kvstore.go`.
+
 ## [0.0.0.26] - 2023-01-23
 
 - Added `debug.FreeOSMemory()` on `ResetToGenesis` to free-up memory and stabilize `LocalNet`.
 
 ## [0.0.0.25] - 2023-01-20
->>>>>>> main
 
 - Consolidate common behaviour of `Pool` and `Account` functions into a shared interface `ProtocolAccountSchema`
 - Create `account_shared_sql.go` and `types/account_shared_sql.go` and rename `shared_sql.go` and `type/shared_sql.go` to `actor_shared_sql.go` and `types/actor_shared_sql.go` seperating shared sql logic
