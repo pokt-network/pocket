@@ -27,7 +27,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	}
 
 	clientPeerId := metadataReq.PeerId
-	m.nodeLog(fmt.Sprintf("%s Received State Sync MetaData Req from: %s", serverNodePeerId, clientPeerId))
+	m.nodeLog(fmt.Sprintf("%s received State Sync MetaData Req from: %s", serverNodePeerId, clientPeerId))
 
 	minHeight, maxHeight := m.aggregateMetaResults()
 

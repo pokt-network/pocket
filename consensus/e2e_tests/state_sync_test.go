@@ -58,8 +58,7 @@ func TestStateSyncServerGetMetaDataReq(t *testing.T) {
 		require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
 	}
 
-	// Choose node 1 as the server node.
-	// We first enable server mode of the node 1.
+	// Choose node 1 as the server node, enable server mode of the node 1.
 	serverNode := pocketNodes[1]
 	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
 	serverNodeConsensusModImpl.MethodByName("EnableServerMode").Call([]reflect.Value{})
@@ -132,7 +131,6 @@ func TestStateSyncServerGetBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	// Passing Test
-
 	// Test GetBlock Req
 	stateSyncGetBlockReq := typesCons.GetBlockRequest{
 		PeerId: requesterNodePeerId,
@@ -166,10 +164,10 @@ func TestStateSyncServerGetBlock(t *testing.T) {
 	getBlockRes := stateSyncGetBlockResMessage.GetGetBlockRes()
 	require.NotEmpty(t, getBlockRes)
 
-	//fmt.Printf("Get Block Response: %s", getBlockRes)
 	require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
 
-	// Test Failing Get Block Req
+	// Failing Test
+	// Get Block Req
 	stateSyncGetBlockReq = typesCons.GetBlockRequest{
 		PeerId: requesterNodePeerId,
 		Height: testHeight + 1,

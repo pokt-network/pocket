@@ -28,7 +28,6 @@ import (
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
-	//mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 )
 
 func TestMain(m *testing.M) {
