@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Usage: bash pre-receive <CHANGED FILES>
-BRANCH_CHANGED_FILES=($1)
+BRANCH_CHANGED_FILES=($@)
 
 # Initialise arrays and script wide variables
 IGNORE_DIRS=(".github" ".githooks" "docs" "bin")
