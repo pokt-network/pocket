@@ -22,7 +22,7 @@ import (
 func TestUtilityContext_HandleMessageStake(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageStake", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 0)
+			ctx := newTestingUtilityContext(t, 0)
 
 			pubKey, err := crypto.GeneratePublicKey()
 			require.NoError(t, err)
@@ -43,7 +43,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 				ActorType:     actorType,
 			}
 
-			er := ctx.HandleStakeMessage(msg)
+			er := ctx.handleStakeMessage(msg)
 			require.NoError(t, er, "handle stake message")
 
 			actor := getActorByAddr(t, ctx, actorType, pubKey.Address().String())
@@ -64,7 +64,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageEditStake", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 0)
+			ctx := newTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
 
 			addr := actor.GetAddress()
@@ -81,7 +81,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			msgChainsEdited := proto.Clone(msg).(*typesUtil.MessageEditStake)
 			msgChainsEdited.Chains = []string{"0002"}
 
-			err = ctx.HandleEditStakeMessage(msgChainsEdited)
+			err = ctx.handleEditStakeMessage(msgChainsEdited)
 			require.NoError(t, err, "handle edit stake message")
 
 			actor = getActorByAddr(t, ctx, actorType, addr)
@@ -96,7 +96,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			msgAmountEdited := proto.Clone(msg).(*typesUtil.MessageEditStake)
 			msgAmountEdited.Amount = amountEditedString
 
-			err = ctx.HandleEditStakeMessage(msgAmountEdited)
+			err = ctx.handleEditStakeMessage(msgAmountEdited)
 			require.NoError(t, err, "handle edit stake message")
 
 		})
@@ -106,7 +106,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageUnpause", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 1)
+			ctx := newTestingUtilityContext(t, 1)
 
 			var err error
 			switch actorType {
@@ -140,7 +140,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 				ActorType: actorType,
 			}
 
-			err = ctx.HandleUnpauseMessage(msgUnpauseActor)
+			err = ctx.handleUnpauseMessage(msgUnpauseActor)
 			require.NoError(t, err, "handle unpause message")
 
 			actor = getActorByAddr(t, ctx, actorType, addr)
@@ -153,7 +153,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageUnstake", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 1)
+			ctx := newTestingUtilityContext(t, 1)
 
 			var err error
 			switch actorType {
@@ -181,7 +181,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 				ActorType: actorType,
 			}
 
-			err = ctx.HandleUnstakeMessage(msg)
+			err = ctx.handleUnstakeMessage(msg)
 			require.NoError(t, err, "handle unstake message")
 
 			actor = getActorByAddr(t, ctx, actorType, addr)
@@ -194,7 +194,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPaused", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 1)
+			ctx := newTestingUtilityContext(t, 1)
 			actor := getFirstActor(t, ctx, actorType)
 
 			addrBz, err := hex.DecodeString(actor.GetAddress())
@@ -228,7 +228,7 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 }
 
 func TestUtilityContext_CalculateMaxAppRelays(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 1)
+	ctx := newTestingUtilityContext(t, 1)
 	actor := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_APP)
 	newMaxRelays, err := ctx.CalculateAppRelays(actor.GetStakedAmount())
 	require.NoError(t, err)
@@ -238,7 +238,7 @@ func TestUtilityContext_CalculateMaxAppRelays(t *testing.T) {
 func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.CalculateUnstakingHeight", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 0)
+			ctx := newTestingUtilityContext(t, 0)
 			var unstakingBlocks int64
 			var err error
 			switch actorType {
@@ -266,7 +266,7 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 func TestUtilityContext_GetExists(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetExists", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 0)
+			ctx := newTestingUtilityContext(t, 0)
 
 			actor := getFirstActor(t, ctx, actorType)
 			randAddr, err := crypto.GenerateAddress()
@@ -290,7 +290,7 @@ func TestUtilityContext_GetExists(t *testing.T) {
 func TestUtilityContext_GetOutputAddress(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetOutputAddress", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 0)
+			ctx := newTestingUtilityContext(t, 0)
 
 			actor := getFirstActor(t, ctx, actorType)
 			addrBz, err := hex.DecodeString(actor.GetAddress())
@@ -307,7 +307,7 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetPauseHeightIfExists", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 0)
+			ctx := newTestingUtilityContext(t, 0)
 			pauseHeight := int64(100)
 			actor := getFirstActor(t, ctx, actorType)
 
@@ -334,7 +334,7 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageEditStakeSignerCandidates", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 0)
+			ctx := newTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
 
 			addrBz, err := hex.DecodeString(actor.GetAddress())
@@ -360,7 +360,7 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageUnpauseSignerCandidates", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 0)
+			ctx := newTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
 
 			addrBz, err := hex.DecodeString(actor.GetAddress())
@@ -370,7 +370,7 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 				Address:   addrBz,
 				ActorType: actorType,
 			}
-			candidates, err := ctx.GetMessageUnpauseSignerCandidates(msg)
+			candidates, err := ctx.getMessageUnpauseSignerCandidates(msg)
 			require.NoError(t, err)
 
 			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
@@ -384,7 +384,7 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageUnstakeSignerCandidates", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 0)
+			ctx := newTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
 
 			addrBz, err := hex.DecodeString(actor.GetAddress())
@@ -408,7 +408,7 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.UnstakePausedBefore", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 1)
+			ctx := newTestingUtilityContext(t, 1)
 
 			actor := getFirstActor(t, ctx, actorType)
 			require.Equal(t, actor.GetUnstakingHeight(), int64(-1), "wrong starting status")
@@ -467,7 +467,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.UnstakeActorsThatAreReady", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 1)
+			ctx := newTestingUtilityContext(t, 1)
 
 			var poolName string
 			switch actorType {
@@ -517,7 +517,7 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPausedActors", actorType.String()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 1)
+			ctx := newTestingUtilityContext(t, 1)
 			actor := getFirstActor(t, ctx, actorType)
 
 			var err error

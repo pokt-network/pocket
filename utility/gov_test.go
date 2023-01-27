@@ -20,7 +20,7 @@ func DefaultTestingParams(_ *testing.T) *genesis.Params {
 }
 
 func TestUtilityContext_GetAppMaxChains(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	maxChains, err := ctx.GetAppMaxChains()
 	require.NoError(t, err)
@@ -28,7 +28,7 @@ func TestUtilityContext_GetAppMaxChains(t *testing.T) {
 }
 
 func TestUtilityContext_GetAppMaxPausedBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	gotParam, err := ctx.GetAppMaxPausedBlocks()
 	require.NoError(t, err)
@@ -36,7 +36,7 @@ func TestUtilityContext_GetAppMaxPausedBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetAppMinimumPauseBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetAppMinimumPauseBlocks())
 	gotParam, err := ctx.GetAppMinimumPauseBlocks()
@@ -46,7 +46,7 @@ func TestUtilityContext_GetAppMinimumPauseBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetAppMinimumStake(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetAppMinimumStake()
 	gotParam, err := ctx.GetAppMinimumStake()
@@ -56,7 +56,7 @@ func TestUtilityContext_GetAppMinimumStake(t *testing.T) {
 }
 
 func TestUtilityContext_GetAppUnstakingBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int64(defaultParams.GetAppUnstakingBlocks())
 	gotParam, err := ctx.GetAppUnstakingBlocks()
@@ -66,7 +66,7 @@ func TestUtilityContext_GetAppUnstakingBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetBaselineAppStakeRate(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetAppBaselineStakeRate())
 	gotParam, err := ctx.GetBaselineAppStakeRate()
@@ -76,7 +76,7 @@ func TestUtilityContext_GetBaselineAppStakeRate(t *testing.T) {
 }
 
 func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetBlocksPerSession())
 	gotParam, err := ctx.GetParameter(typesUtil.BlocksPerSessionParamName, 0)
@@ -86,7 +86,7 @@ func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
 }
 
 func TestUtilityContext_GetDoubleSignBurnPercentage(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetDoubleSignBurnPercentage())
 	gotParam, err := ctx.GetDoubleSignBurnPercentage()
@@ -96,7 +96,7 @@ func TestUtilityContext_GetDoubleSignBurnPercentage(t *testing.T) {
 }
 
 func TestUtilityContext_GetDoubleSignFeeOwner(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageDoubleSignFeeOwner()
 	gotParam, err := ctx.GetDoubleSignFeeOwner()
@@ -110,7 +110,7 @@ func TestUtilityContext_GetDoubleSignFeeOwner(t *testing.T) {
 }
 
 func TestUtilityContext_GetFishermanMaxChains(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetFishermanMaxChains())
 	gotParam, err := ctx.GetFishermanMaxChains()
@@ -120,7 +120,7 @@ func TestUtilityContext_GetFishermanMaxChains(t *testing.T) {
 }
 
 func TestUtilityContext_GetFishermanMaxPausedBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetFishermanMaxPauseBlocks())
 	gotParam, err := ctx.GetFishermanMaxPausedBlocks()
@@ -130,7 +130,7 @@ func TestUtilityContext_GetFishermanMaxPausedBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetFishermanMinimumPauseBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetFishermanMinimumPauseBlocks())
 	gotParam, err := ctx.GetFishermanMinimumPauseBlocks()
@@ -140,7 +140,7 @@ func TestUtilityContext_GetFishermanMinimumPauseBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetFishermanMinimumStake(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetFishermanMinimumStake()
 	gotParam, err := ctx.GetFishermanMinimumStake()
@@ -150,7 +150,7 @@ func TestUtilityContext_GetFishermanMinimumStake(t *testing.T) {
 }
 
 func TestUtilityContext_GetFishermanUnstakingBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int64(defaultParams.GetFishermanUnstakingBlocks())
 	gotParam, err := ctx.GetFishermanUnstakingBlocks()
@@ -160,7 +160,7 @@ func TestUtilityContext_GetFishermanUnstakingBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetMaxEvidenceAgeInBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetValidatorMaxEvidenceAgeInBlocks())
 	gotParam, err := ctx.GetMaxEvidenceAgeInBlocks()
@@ -170,7 +170,7 @@ func TestUtilityContext_GetMaxEvidenceAgeInBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageChangeParameterFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageChangeParameterFee()
 	gotParam, err := ctx.GetMessageChangeParameterFee()
@@ -180,7 +180,7 @@ func TestUtilityContext_GetMessageChangeParameterFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageDoubleSignFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageDoubleSignFee()
 	gotParam, err := ctx.GetMessageDoubleSignFee()
@@ -190,7 +190,7 @@ func TestUtilityContext_GetMessageDoubleSignFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageEditStakeAppFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageEditStakeAppFee()
 	gotParam, err := ctx.GetMessageEditStakeAppFee()
@@ -199,7 +199,7 @@ func TestUtilityContext_GetMessageEditStakeAppFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageEditStakeFishermanFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageEditStakeFishermanFee()
 	gotParam, err := ctx.GetMessageEditStakeFishermanFee()
@@ -208,7 +208,7 @@ func TestUtilityContext_GetMessageEditStakeFishermanFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageEditStakeServiceNodeFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageEditStakeServiceNodeFee()
 	gotParam, err := ctx.GetMessageEditStakeServiceNodeFee()
@@ -217,7 +217,7 @@ func TestUtilityContext_GetMessageEditStakeServiceNodeFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageEditStakeValidatorFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageEditStakeValidatorFee()
 	gotParam, err := ctx.GetMessageEditStakeValidatorFee()
@@ -226,7 +226,7 @@ func TestUtilityContext_GetMessageEditStakeValidatorFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageFishermanPauseServiceNodeFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageFishermanPauseServiceNodeFee()
 	gotParam, err := ctx.GetMessageFishermanPauseServiceNodeFee()
@@ -235,7 +235,7 @@ func TestUtilityContext_GetMessageFishermanPauseServiceNodeFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessagePauseAppFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessagePauseAppFee()
 	gotParam, err := ctx.GetMessagePauseAppFee()
@@ -244,7 +244,7 @@ func TestUtilityContext_GetMessagePauseAppFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessagePauseFishermanFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessagePauseFishermanFee()
 	gotParam, err := ctx.GetMessagePauseFishermanFee()
@@ -253,7 +253,7 @@ func TestUtilityContext_GetMessagePauseFishermanFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessagePauseServiceNodeFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessagePauseServiceNodeFee()
 	gotParam, err := ctx.GetMessagePauseServiceNodeFee()
@@ -262,7 +262,7 @@ func TestUtilityContext_GetMessagePauseServiceNodeFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessagePauseValidatorFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessagePauseValidatorFee()
 	gotParam, err := ctx.GetMessagePauseValidatorFee()
@@ -271,7 +271,7 @@ func TestUtilityContext_GetMessagePauseValidatorFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageProveTestScoreFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageProveTestScoreFee()
 	gotParam, err := ctx.GetMessageProveTestScoreFee()
@@ -281,7 +281,7 @@ func TestUtilityContext_GetMessageProveTestScoreFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageSendFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageSendFee()
 	gotParam, err := ctx.GetMessageSendFee()
@@ -290,7 +290,7 @@ func TestUtilityContext_GetMessageSendFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageStakeAppFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageStakeAppFee()
 	gotParam, err := ctx.GetMessageStakeAppFee()
@@ -299,7 +299,7 @@ func TestUtilityContext_GetMessageStakeAppFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageStakeFishermanFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageStakeFishermanFee()
 	gotParam, err := ctx.GetMessageStakeFishermanFee()
@@ -309,7 +309,7 @@ func TestUtilityContext_GetMessageStakeFishermanFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageStakeServiceNodeFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageStakeServiceNodeFee()
 	gotParam, err := ctx.GetMessageStakeServiceNodeFee()
@@ -318,7 +318,7 @@ func TestUtilityContext_GetMessageStakeServiceNodeFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageStakeValidatorFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageStakeValidatorFee()
 	gotParam, err := ctx.GetMessageStakeValidatorFee()
@@ -327,7 +327,7 @@ func TestUtilityContext_GetMessageStakeValidatorFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageTestScoreFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageTestScoreFee()
 	gotParam, err := ctx.GetMessageTestScoreFee()
@@ -336,7 +336,7 @@ func TestUtilityContext_GetMessageTestScoreFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnpauseAppFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnpauseAppFee()
 	gotParam, err := ctx.GetMessageUnpauseAppFee()
@@ -345,7 +345,7 @@ func TestUtilityContext_GetMessageUnpauseAppFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnpauseFishermanFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnpauseFishermanFee()
 	gotParam, err := ctx.GetMessageUnpauseFishermanFee()
@@ -354,7 +354,7 @@ func TestUtilityContext_GetMessageUnpauseFishermanFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnpauseServiceNodeFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnpauseServiceNodeFee()
 	gotParam, err := ctx.GetMessageUnpauseServiceNodeFee()
@@ -363,7 +363,7 @@ func TestUtilityContext_GetMessageUnpauseServiceNodeFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnpauseValidatorFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnpauseValidatorFee()
 	gotParam, err := ctx.GetMessageUnpauseValidatorFee()
@@ -373,7 +373,7 @@ func TestUtilityContext_GetMessageUnpauseValidatorFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnstakeAppFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnstakeAppFee()
 	gotParam, err := ctx.GetMessageUnstakeAppFee()
@@ -383,7 +383,7 @@ func TestUtilityContext_GetMessageUnstakeAppFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnstakeFishermanFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnstakeFishermanFee()
 	gotParam, err := ctx.GetMessageUnstakeFishermanFee()
@@ -392,7 +392,7 @@ func TestUtilityContext_GetMessageUnstakeFishermanFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnstakeServiceNodeFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnstakeServiceNodeFee()
 	gotParam, err := ctx.GetMessageUnstakeServiceNodeFee()
@@ -401,7 +401,7 @@ func TestUtilityContext_GetMessageUnstakeServiceNodeFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnstakeValidatorFee(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnstakeValidatorFee()
 	gotParam, err := ctx.GetMessageUnstakeValidatorFee()
@@ -410,7 +410,7 @@ func TestUtilityContext_GetMessageUnstakeValidatorFee(t *testing.T) {
 }
 
 func TestUtilityContext_GetMissedBlocksBurnPercentage(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetMissedBlocksBurnPercentage())
 	gotParam, err := ctx.GetMissedBlocksBurnPercentage()
@@ -419,7 +419,7 @@ func TestUtilityContext_GetMissedBlocksBurnPercentage(t *testing.T) {
 }
 
 func TestUtilityContext_GetProposerPercentageOfFees(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetProposerPercentageOfFees())
 	gotParam, err := ctx.GetProposerPercentageOfFees()
@@ -428,7 +428,7 @@ func TestUtilityContext_GetProposerPercentageOfFees(t *testing.T) {
 }
 
 func TestUtilityContext_GetServiceNodeMaxChains(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetServiceNodeMaxChains())
 	gotParam, err := ctx.GetServiceNodeMaxChains()
@@ -437,7 +437,7 @@ func TestUtilityContext_GetServiceNodeMaxChains(t *testing.T) {
 }
 
 func TestUtilityContext_GetServiceNodeMaxPausedBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetServiceNodeMaxPauseBlocks())
 	gotParam, err := ctx.GetServiceNodeMaxPausedBlocks()
@@ -446,7 +446,7 @@ func TestUtilityContext_GetServiceNodeMaxPausedBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetServiceNodeMinimumPauseBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetServiceNodeMinimumPauseBlocks())
 	gotParam, err := ctx.GetServiceNodeMinimumPauseBlocks()
@@ -455,7 +455,7 @@ func TestUtilityContext_GetServiceNodeMinimumPauseBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetServiceNodeMinimumStake(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetServiceNodeMinimumStake()
 	gotParam, err := ctx.GetServiceNodeMinimumStake()
@@ -464,7 +464,7 @@ func TestUtilityContext_GetServiceNodeMinimumStake(t *testing.T) {
 }
 
 func TestUtilityContext_GetServiceNodeUnstakingBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int64(defaultParams.GetServiceNodeUnstakingBlocks())
 	gotParam, err := ctx.GetServiceNodeUnstakingBlocks()
@@ -473,7 +473,7 @@ func TestUtilityContext_GetServiceNodeUnstakingBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetStakingAdjustment(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetAppStakingAdjustment())
 	gotParam, err := ctx.GetStabilityAdjustment()
@@ -482,7 +482,7 @@ func TestUtilityContext_GetStakingAdjustment(t *testing.T) {
 }
 
 func TestUtilityContext_GetValidatorMaxMissedBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetValidatorMaximumMissedBlocks())
 	gotParam, err := ctx.GetValidatorMaxMissedBlocks()
@@ -491,7 +491,7 @@ func TestUtilityContext_GetValidatorMaxMissedBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetValidatorMaxPausedBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetValidatorMaxPauseBlocks())
 	gotParam, err := ctx.GetValidatorMaxPausedBlocks()
@@ -500,7 +500,7 @@ func TestUtilityContext_GetValidatorMaxPausedBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetValidatorMinimumPauseBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetValidatorMinimumPauseBlocks())
 	gotParam, err := ctx.GetValidatorMinimumPauseBlocks()
@@ -509,7 +509,7 @@ func TestUtilityContext_GetValidatorMinimumPauseBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_GetValidatorMinimumStake(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetValidatorMinimumStake()
 	gotParam, err := ctx.GetValidatorMinimumStake()
@@ -518,7 +518,7 @@ func TestUtilityContext_GetValidatorMinimumStake(t *testing.T) {
 }
 
 func TestUtilityContext_GetValidatorUnstakingBlocks(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int64(defaultParams.GetValidatorUnstakingBlocks())
 	gotParam, err := ctx.GetValidatorUnstakingBlocks()
@@ -528,7 +528,7 @@ func TestUtilityContext_GetValidatorUnstakingBlocks(t *testing.T) {
 
 func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
 	cdc := codec.GetCodec()
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetMissedBlocksBurnPercentage())
 	gotParam, err := ctx.GetMissedBlocksBurnPercentage()
@@ -545,7 +545,7 @@ func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
 		ParameterKey:   typesUtil.MissedBlocksBurnPercentageParamName,
 		ParameterValue: any,
 	}
-	require.NoError(t, ctx.HandleMessageChangeParameter(msg), "handle message change param")
+	require.NoError(t, ctx.handleMessageChangeParameter(msg), "handle message change param")
 	gotParam, err = ctx.GetMissedBlocksBurnPercentage()
 	require.NoError(t, err)
 	require.Equal(t, int(newParamValue), gotParam)
@@ -553,7 +553,7 @@ func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
 }
 
 func TestUtilityContext_GetParamOwner(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetAclOwner()
 	gotParam, err := ctx.GetParamOwner(typesUtil.AclOwner)

@@ -19,10 +19,10 @@ var (
 )
 
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 
 	tx, startingBalance, _, signer := newTestingTransaction(t, ctx)
-	_, signerString, err := ctx.AnteHandleMessage(tx)
+	_, signerString, err := ctx.anteHandleMessage(tx)
 	require.NoError(t, err)
 	require.Equal(t, signer.Address().String(), signerString)
 	feeBig, err := ctx.GetMessageSendFee()
@@ -35,10 +35,10 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 }
 
 func TestUtilityContext_ApplyTransaction(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 
 	tx, startingBalance, amount, signer := newTestingTransaction(t, ctx)
-	txResult, err := ctx.ApplyTransaction(0, tx)
+	txResult, err := ctx.applyTransaction(0, tx)
 	require.NoError(t, err)
 	require.Equal(t, int32(0), txResult.GetResultCode())
 	require.Equal(t, "", txResult.GetError())
@@ -55,7 +55,7 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 func TestUtilityContext_CheckTransaction(t *testing.T) {
 	mockBusInTestModules(t)
 
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
 	txBz, err := tx.Bytes()
@@ -69,7 +69,7 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 }
 
 func TestUtilityContext_GetSignerCandidates(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	accs := GetAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
@@ -89,7 +89,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	mockBusInTestModules(t)
 
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
 	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
@@ -105,7 +105,7 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessage(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	accs := GetAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
@@ -120,7 +120,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	addrBz2, er := hex.DecodeString(accs[1].GetAddress())
 	require.NoError(t, er)
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
-	require.NoError(t, ctx.HandleMessageSend(&msg))
+	require.NoError(t, ctx.handleMessageSend(&msg))
 	accs = GetAllTestingAccounts(t, ctx)
 	senderBalanceAfter, err := typesUtil.StringToBigInt(accs[0].GetAmount())
 	require.NoError(t, err)

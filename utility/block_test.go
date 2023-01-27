@@ -10,7 +10,7 @@ import (
 )
 
 func TestUtilityContext_ApplyBlock(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	tx, startingBalance, amountSent, signer := newTestingTransaction(t, ctx)
 
 	txBz, er := tx.Bytes()
@@ -63,7 +63,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 }
 
 func TestUtilityContext_BeginBlock(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
 	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
@@ -89,7 +89,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 }
 
 func TestUtilityContext_EndBlock(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
 	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)

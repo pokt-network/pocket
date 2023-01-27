@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"encoding/hex"
 	"log"
 	"os"
 	"testing"
@@ -45,7 +44,9 @@ func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 }
 
 func TestMain(m *testing.M) {
+	// TODO(#261): Utility module tests should have no dependencies on a postgres container
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
+
 	runtimeCfg := newTestRuntimeConfig(dbUrl)
 	bus, err := runtime.CreateBus(runtimeCfg)
 	if err != nil {
@@ -60,7 +61,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func NewTestingUtilityContext(t *testing.T, height int64) utilityContext {
+func newTestingUtilityContext(t *testing.T, height int64) utilityContext {
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
@@ -124,6 +125,15 @@ func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
 	return utilityMod.(modules.UtilityModule)
 }
 
+// TODO(#261): Utility module tests should have no dependencies on the persistence module
+func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
+	persistenceMod, err := persistence.Create(bus)
+	if err != nil {
+		log.Fatalf("Error creating persistence module: %s", err)
+	}
+	return persistenceMod.(modules.PersistenceModule)
+}
+
 // IMPROVE: Not part of `TestMain` because a mock requires `testing.T` to be initialized.
 // We are trying to only initialize one `testPersistenceModule` in all the tests, so when the
 // utility module tests are no longer dependant on the persistence module explicitly, this
@@ -142,29 +152,4 @@ func mockBusInTestModules(t *testing.T) {
 		testPersistenceMod.SetBus(nil)
 		testUtilityMod.SetBus(nil)
 	})
-}
-
-// TODO(#290): Mock the persistence module so the utility module is not dependant on it.
-func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
-	persistenceMod, err := persistence.Create(bus)
-	if err != nil {
-		log.Fatalf("Error creating persistence module: %s", err)
-	}
-	return persistenceMod.(modules.PersistenceModule)
-}
-
-func requireValidTestingTxResults(t *testing.T, tx *utilTypes.Transaction, txResults []modules.TxResult) {
-	for _, txResult := range txResults {
-		msg, err := tx.GetMessage()
-		sendMsg, ok := msg.(*utilTypes.MessageSend)
-		require.True(t, ok)
-		require.NoError(t, err)
-		require.Equal(t, int32(0), txResult.GetResultCode())
-		require.Equal(t, "", txResult.GetError())
-		require.Equal(t, testMessageSendType, txResult.GetMessageType())
-		require.Equal(t, int32(0), txResult.GetIndex())
-		require.Equal(t, int64(0), txResult.GetHeight())
-		require.Equal(t, hex.EncodeToString(sendMsg.ToAddress), txResult.GetRecipientAddr())
-		require.Equal(t, hex.EncodeToString(sendMsg.FromAddress), txResult.GetSignerAddr())
-	}
 }

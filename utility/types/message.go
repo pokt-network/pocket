@@ -49,12 +49,14 @@ type Message interface {
 	GetMessageRecipient() string
 }
 
-var _ Message = &MessageSend{}
-var _ Message = &MessageStake{}
-var _ Message = &MessageEditStake{}
-var _ Message = &MessageUnstake{}
-var _ Message = &MessageUnpause{}
-var _ Message = &MessageChangeParameter{}
+var (
+	_ Message = &MessageSend{}
+	_ Message = &MessageStake{}
+	_ Message = &MessageEditStake{}
+	_ Message = &MessageUnstake{}
+	_ Message = &MessageUnpause{}
+	_ Message = &MessageChangeParameter{}
+)
 
 func (msg *MessageSend) GetActorType() coreTypes.ActorType {
 	return coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED // there's no actor type for message send, so return zero to allow fee retrieval
@@ -116,7 +118,6 @@ func (msg *MessageUnpause) GetMessageRecipient() string         { return "" }
 func (msg *MessageEditStake) GetMessageRecipient() string       { return "" }
 func (msg *MessageStake) GetMessageRecipient() string           { return "" }
 func (msg *MessageChangeParameter) GetMessageRecipient() string { return "" }
-func (msg *MessageDoubleSign) GetMessageRecipient() string      { return "" }
 
 func (msg *MessageUnstake) ValidateBasic() Error { return ValidateAddress(msg.Address) }
 func (msg *MessageUnpause) ValidateBasic() Error { return ValidateAddress(msg.Address) }
@@ -125,7 +126,6 @@ func (msg *MessageStake) SetSigner(signer []byte)                   { msg.Signer
 func (msg *MessageEditStake) SetSigner(signer []byte)               { msg.Signer = signer }
 func (msg *MessageUnstake) SetSigner(signer []byte)                 { msg.Signer = signer }
 func (msg *MessageUnpause) SetSigner(signer []byte)                 { msg.Signer = signer }
-func (msg *MessageDoubleSign) SetSigner(signer []byte)              { msg.ReporterAddress = signer }
 func (msg *MessageSend) SetSigner(signer []byte)                    { /*no op*/ }
 func (msg *MessageChangeParameter) SetSigner(signer []byte)         { msg.Signer = signer }
 func (x *MessageChangeParameter) GetActorType() coreTypes.ActorType { return -1 }
@@ -136,6 +136,7 @@ func (msg *MessageSend) GetCanonicalBytes() []byte            { return getCanoni
 func (msg *MessageChangeParameter) GetCanonicalBytes() []byte { return getCanonicalBytes(msg) }
 func (msg *MessageUnstake) GetCanonicalBytes() []byte         { return getCanonicalBytes(msg) }
 func (msg *MessageUnpause) GetCanonicalBytes() []byte         { return getCanonicalBytes(msg) }
+
 
 // helpers
 
@@ -242,27 +243,6 @@ func ValidateServiceUrl(actorType coreTypes.ActorType, uri string) Error {
 
 func getMessageType(msg Message) string {
 	return string(msg.ProtoReflect().Descriptor().Name())
-}
-
-// CLEANUP: Figure out where these other types should be defined.
-//          It's a bit weird that they are hidden at the bottom of the file.
-
-const (
-	RelayChainLength = 4 // pre-determined length that strikes a balance between combination possibilities & storage
-)
-
-type RelayChain string
-
-// TODO: Consider adding a governance parameter for a list of valid relay chains
-func (rc *RelayChain) Validate() Error {
-	if rc == nil || *rc == "" {
-		return ErrEmptyRelayChain()
-	}
-	rcLen := len(*rc)
-	if rcLen != RelayChainLength {
-		return ErrInvalidRelayChainLength(rcLen, RelayChainLength)
-	}
-	return nil
 }
 
 type MessageStaker interface {

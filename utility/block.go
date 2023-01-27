@@ -54,7 +54,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			totalTxsSizeInBytes -= txTxsSizeInBytes
 			break // we've reached our max
 		}
-		txResult, err := u.ApplyTransaction(txIndex, transaction)
+		txResult, err := u.applyTransaction(txIndex, transaction)
 		if err != nil {
 			// TODO(#327): Properly implement 'unhappy path' for save points
 			if err := u.RevertLastSavePoint(); err != nil {
@@ -111,7 +111,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 		//             Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 
 		// Validate and apply the transaction to the Postgres database
-		txResult, err := u.ApplyTransaction(index, tx)
+		txResult, err := u.applyTransaction(index, tx)
 		if err != nil {
 			return "", err
 		}

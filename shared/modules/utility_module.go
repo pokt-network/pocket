@@ -18,7 +18,7 @@ type UtilityModule interface {
 	NewContext(height int64) (UtilityContext, error)
 
 	// Basic Transaction validation.
-	// IMPROVE: A side effect of `Check Transaction` is its addition to the mempool, which is not obvious from the functional name.
+	// SIDE EFFECT: Transaction is added to the utility's module mempool if valid to be repeated in the future; not obvious from the functional name.
 	CheckTransaction(tx []byte) error
 }
 

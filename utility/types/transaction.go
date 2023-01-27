@@ -9,9 +9,9 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func TransactionFromBytes(transaction []byte) (*Transaction, Error) {
+func TransactionFromBytes(txProtoABytes []byte) (*Transaction, Error) {
 	tx := &Transaction{}
-	if err := codec.GetCodec().Unmarshal(transaction, tx); err != nil {
+	if err := codec.GetCodec().Unmarshal(txProtoABytes, tx); err != nil {
 		return nil, ErrUnmarshalTransaction(err)
 	}
 	return tx, nil
@@ -24,11 +24,11 @@ func (tx *Transaction) ValidateBasic() Error {
 	if _, err := codec.GetCodec().FromAny(tx.Msg); err != nil {
 		return ErrProtoFromAny(err)
 	}
-	if tx.Signature == nil || tx.Signature.Signature == nil {
+	if tx.Signature == nil {
 		return ErrEmptySignature()
 	}
-	if tx.Signature.PublicKey == nil {
-		return ErrEmptyPublicKey()
+	if err := tx.Signature.ValidateBasic(); err != nil {
+		return err
 	}
 	publicKey, err := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
 	if err != nil {
@@ -48,10 +48,9 @@ func (tx *Transaction) ValidateBasic() Error {
 }
 
 func (tx *Transaction) Message() (Message, Error) {
-	codec := codec.GetCodec()
-	msg, er := codec.FromAny(tx.Msg)
-	if er != nil {
-		return nil, ErrProtoMarshal(er)
+	msg, err := codec.GetCodec().FromAny(tx.Msg)
+	if err != nil {
+		return nil, ErrProtoMarshal(err)
 	}
 	message, ok := msg.(Message)
 	if !ok {
@@ -86,10 +85,9 @@ func (tx *Transaction) Hash() (string, Error) {
 }
 
 func (tx *Transaction) SignBytes() ([]byte, Error) {
-	// transaction := proto.Clone(tx).(*Transaction)
-	transaction := *tx
+	transaction := proto.Clone(tx).(*Transaction)
 	transaction.Signature = nil
-	bz, err := codec.GetCodec().Marshal(&transaction)
+	bz, err := codec.GetCodec().Marshal(transaction)
 	if err != nil {
 		return nil, ErrProtoMarshal(err)
 	}
@@ -165,4 +163,3 @@ func (tx *Transaction) GetMessage() (proto.Message, error) {
 func TransactionHash(transactionProtoBytes []byte) string {
 	return crypto.GetHashStringFromBytes(transactionProtoBytes)
 }
-
