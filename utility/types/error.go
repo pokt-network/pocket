@@ -1,5 +1,7 @@
 package types
 
+// DISCUSS(M5): Discuss the design of this file.
+
 import (
 	"encoding/hex"
 	"errors"
@@ -11,21 +13,23 @@ type Error interface {
 	error
 }
 
-type StdErr struct {
+var _ Error = &stdErr{}
+
+type stdErr struct {
 	CodeError Code
 	error
 }
 
-func (se StdErr) Error() string {
+func (se *stdErr) Error() string {
 	return fmt.Sprintf("CODE: %v, ERROR: %s", se.Code(), se.error.Error())
 }
 
-func (se StdErr) Code() Code {
+func (se *stdErr) Code() Code {
 	return se.CodeError
 }
 
 func NewError(code Code, msg string) Error {
-	return StdErr{
+	return &stdErr{
 		CodeError: code,
 		error:     errors.New(msg),
 	}
@@ -93,7 +97,7 @@ const (
 	CodeAlreadyExistsError               Code = 60
 	CodeGetExistsError                   Code = 61
 	CodeGetLatestHeightError             Code = 62
-
+	// DEPRECATED                         Code = 63
 	CodeGetPauseHeightError               Code = 64
 	CodeAlreadyPausedError                Code = 65
 	CodeSetPauseHeightError               Code = 66
@@ -162,7 +166,9 @@ const (
 	CodeGetHeightError                    Code = 129
 	CodeUnknownActorType                  Code = 130
 	CodeUnknownMessageType                Code = 131
+)
 
+const (
 	GetStakedTokensError              = "an error occurred getting the validator staked tokens"
 	SetValidatorStakedTokensError     = "an error occurred setting the validator staked tokens"
 	EqualVotesError                   = "the votes are identical and not equivocating"

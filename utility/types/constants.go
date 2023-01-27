@@ -1,6 +1,6 @@
 package types
 
-// CLEANUP: Move these to a better shared location or inline the vars.
+// CLEANUP: Consider moving into a shared location or eliminating them altogether.
 const (
 	MillionInt       = 1000000
 	ZeroInt          = 0

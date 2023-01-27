@@ -1,5 +1,5 @@
 package types
 
 type Validatable interface {
-	ValidatableBasic() Error
+	ValidateBasic() Error
 }

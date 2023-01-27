@@ -9,6 +9,9 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// No need for a Signature interface abstraction for the time being.
+var _ Validatable = &Transaction{}
+
 func TransactionFromBytes(txProtoBytes []byte) (*Transaction, Error) {
 	tx := &Transaction{}
 	if err := codec.GetCodec().Unmarshal(txProtoBytes, tx); err != nil {

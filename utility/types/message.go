@@ -21,6 +21,7 @@ validations possible before even checking the state storage layer.
 */
 
 type Message interface {
+	Validatable
 	proto.Message
 
 	SetSigner(signer []byte)
