@@ -13,7 +13,6 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"google.golang.org/protobuf/proto"
 )
 
 type merkleTree float64
@@ -239,7 +238,7 @@ func (p *PostgresContext) updateActorsTree(actorType coreTypes.ActorType) error 
 			return err
 		}
 
-		actorBz, err := proto.Marshal(actor)
+		actorBz, err := codec.GetCodec().Marshal(actor)
 		if err != nil {
 			return err
 		}
@@ -299,7 +298,7 @@ func (p *PostgresContext) updateAccountTrees() error {
 			return err
 		}
 
-		accBz, err := proto.Marshal(account)
+		accBz, err := codec.GetCodec().Marshal(account)
 		if err != nil {
 			return err
 		}
@@ -320,7 +319,7 @@ func (p *PostgresContext) updatePoolTrees() error {
 
 	for _, pool := range pools {
 		bzAddr := []byte(pool.GetAddress())
-		accBz, err := proto.Marshal(pool)
+		accBz, err := codec.GetCodec().Marshal(pool)
 		if err != nil {
 			return err
 		}
