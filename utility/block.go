@@ -238,7 +238,7 @@ func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 			if err = u.SubPoolAmount(poolName, actor.GetStakeAmount()); err != nil {
 				return err
 			}
-			if err = u.AddAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
+			if err = u.addAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
 				return err
 			}
 		}
@@ -317,10 +317,10 @@ func (u *utilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 	amountToProposerFloat.Quo(amountToProposerFloat, big.NewFloat(100))
 	amountToProposer, _ := amountToProposerFloat.Int(nil)
 	amountToDAO := feesAndRewardsCollected.Sub(feesAndRewardsCollected, amountToProposer)
-	if err = u.AddAccountAmount(proposer, amountToProposer); err != nil {
+	if err = u.addAccountAmount(proposer, amountToProposer); err != nil {
 		return err
 	}
-	if err = u.AddPoolAmount(coreTypes.Pools_POOLS_DAO.FriendlyName(), amountToDAO); err != nil {
+	if err = u.addPoolAmount(coreTypes.Pools_POOLS_DAO.FriendlyName(), amountToDAO); err != nil {
 		return err
 	}
 	return nil
@@ -330,7 +330,7 @@ func (u *utilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 func (u *utilityContext) GetValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
-		return 0, err
+		return 0, typesUtil.ErrGetHeight(err)
 	}
 	missedBlocks, er := store.GetValidatorMissedBlocks(address, height)
 	if er != nil {

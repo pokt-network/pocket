@@ -62,7 +62,7 @@ func (u *utilityContext) anteHandleMessage(tx *typesUtil.Transaction) (msg types
 		return nil, "", typesUtil.ErrNewPublicKeyFromBytes(er)
 	}
 	address := pubKey.Address()
-	accountAmount, err := u.GetAccountAmount(address)
+	accountAmount, err := u.getAccountAmount(address)
 	if err != nil {
 		return nil, "", typesUtil.ErrGetAccountAmount(err)
 	}
@@ -88,7 +88,7 @@ func (u *utilityContext) anteHandleMessage(tx *typesUtil.Transaction) (msg types
 	if err := u.SetAccountAmount(address, accountAmount); err != nil {
 		return nil, signer, err
 	}
-	if err := u.AddPoolAmount(coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName(), fee); err != nil {
+	if err := u.addPoolAmount(coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName(), fee); err != nil {
 		return nil, "", err
 	}
 	msg.SetSigner(address)

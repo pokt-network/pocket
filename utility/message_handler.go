@@ -66,7 +66,7 @@ func (u *utilityContext) handleMessageSend(message *typesUtil.MessageSend) types
 		return err
 	}
 	// get the sender's account amount
-	fromAccountAmount, err := u.GetAccountAmount(message.FromAddress)
+	fromAccountAmount, err := u.getAccountAmount(message.FromAddress)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (u *utilityContext) handleMessageSend(message *typesUtil.MessageSend) types
 		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.FromAddress))
 	}
 	// add the amount to the recipient's account
-	if err = u.AddAccountAmount(message.ToAddress, amount); err != nil {
+	if err = u.addAccountAmount(message.ToAddress, amount); err != nil {
 		return err
 	}
 	// set the sender's account amount
@@ -99,7 +99,7 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 	// ensure signer has sufficient funding for the stake
-	signerAccountAmount, err := u.GetAccountAmount(message.Signer)
+	signerAccountAmount, err := u.getAccountAmount(message.Signer)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 	// move funds from account to pool
-	if err = u.AddPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
+	if err = u.addPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
 		return err
 	}
 	var er error
@@ -172,7 +172,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 		return typesUtil.ErrStakeLess()
 	}
 	// ensure signer has sufficient funding for the stake
-	signerAccountAmount, err := u.GetAccountAmount(message.Signer)
+	signerAccountAmount, err := u.getAccountAmount(message.Signer)
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
+	if err := u.addPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
 		return err
 	}
 	store := u.Store()
@@ -256,8 +256,7 @@ func (u *utilityContext) handleUnpauseMessage(message *typesUtil.MessageUnpause)
 }
 
 func (u *utilityContext) handleMessageChangeParameter(message *typesUtil.MessageChangeParameter) typesUtil.Error {
-	cdc := u.Codec()
-	v, err := cdc.FromAny(message.ParameterValue)
+	v, err := codec.GetCodec().FromAny(message.ParameterValue)
 	if err != nil {
 		return typesUtil.ErrProtoFromAny(err)
 	}

@@ -552,9 +552,9 @@ func (u *utilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUti
 }
 
 func (u *utilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.Error) {
-	store, height, er := u.getStoreAndHeight()
-	if er != nil {
-		return nil, er
+	store, height, err := u.getStoreAndHeight()
+	if err != nil {
+		return nil, typesUtil.ErrGetHeight(err)
 	}
 	value, err := store.GetStringParam(paramName, height)
 	if err != nil {
@@ -565,9 +565,9 @@ func (u *utilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.E
 }
 
 func (u *utilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
-	store, height, er := u.getStoreAndHeight()
-	if er != nil {
-		return 0, er
+	store, height, err := u.getStoreAndHeight()
+	if err != nil {
+		return 0, typesUtil.ErrGetHeight(err)
 	}
 	value, err := store.GetIntParam(paramName, height)
 	if err != nil {
@@ -577,9 +577,9 @@ func (u *utilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
 }
 
 func (u *utilityContext) getInt64Param(paramName string) (int64, typesUtil.Error) {
-	store, height, er := u.getStoreAndHeight()
-	if er != nil {
-		return 0, er
+	store, height, err := u.getStoreAndHeight()
+	if err != nil {
+		return 0, typesUtil.ErrGetHeight(err)
 	}
 	value, err := store.GetIntParam(paramName, height)
 	if err != nil {
@@ -589,9 +589,9 @@ func (u *utilityContext) getInt64Param(paramName string) (int64, typesUtil.Error
 }
 
 func (u *utilityContext) getByteArrayParam(paramName string) ([]byte, typesUtil.Error) {
-	store, height, er := u.getStoreAndHeight()
-	if er != nil {
-		return nil, er
+	store, height, err := u.getStoreAndHeight()
+	if err != nil {
+		return nil, typesUtil.ErrGetHeight(err)
 	}
 	value, err := store.GetBytesParam(paramName, height)
 	if err != nil {

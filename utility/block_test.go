@@ -21,7 +21,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	addrBz, err := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, err)
 
-	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
+	proposerBeforeBalance, err := ctx.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	err = ctx.SetProposalBlock("", addrBz, [][]byte{txBz})
@@ -42,7 +42,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 
 	expectedAmountSubtracted := big.NewInt(0).Add(amountSent, feeBig)
 	expectedAfterBalance := big.NewInt(0).Sub(startingBalance, expectedAmountSubtracted)
-	amountAfter, err := ctx.GetAccountAmount(signer.Address())
+	amountAfter, err := ctx.getAccountAmount(signer.Address())
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amountAfter, "unexpected after balance; expected %v got %v", expectedAfterBalance, amountAfter)
 
@@ -54,7 +54,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	feesAndRewardsCollectedFloat.Quo(feesAndRewardsCollectedFloat, big.NewFloat(100))
 	expectedProposerBalanceDifference, _ := feesAndRewardsCollectedFloat.Int(nil)
 
-	proposerAfterBalance, err := ctx.GetAccountAmount(addrBz)
+	proposerAfterBalance, err := ctx.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
@@ -100,7 +100,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
 
-	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
+	proposerBeforeBalance, err := ctx.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	er = ctx.SetProposalBlock("", addrBz, [][]byte{txBz})
@@ -119,7 +119,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	feesAndRewardsCollectedFloat.Mul(feesAndRewardsCollectedFloat, big.NewFloat(float64(proposerCutPercentage)))
 	feesAndRewardsCollectedFloat.Quo(feesAndRewardsCollectedFloat, big.NewFloat(100))
 	expectedProposerBalanceDifference, _ := feesAndRewardsCollectedFloat.Int(nil)
-	proposerAfterBalance, err := ctx.GetAccountAmount(addrBz)
+	proposerAfterBalance, err := ctx.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)

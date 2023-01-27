@@ -3,7 +3,6 @@ package utility
 import (
 	"encoding/hex"
 
-	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
@@ -79,17 +78,10 @@ func (u *utilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
 	return height, nil
 }
 
-func (u *utilityContext) getStoreAndHeight() (modules.PersistenceRWContext, int64, typesUtil.Error) {
+func (u *utilityContext) getStoreAndHeight() (modules.PersistenceRWContext, int64, error) {
 	store := u.Store()
-	height, er := store.GetHeight()
-	if er != nil {
-		return nil, 0, typesUtil.ErrGetHeight(er)
-	}
-	return store, height, nil
-}
-
-func (u *utilityContext) Codec() codec.Codec {
-	return codec.GetCodec()
+	height, err := store.GetHeight()
+	return store, height, err
 }
 
 func (u *utilityContext) RevertLastSavePoint() typesUtil.Error {

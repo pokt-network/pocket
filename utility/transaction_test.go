@@ -29,7 +29,7 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	require.NoError(t, err)
 
 	expectedAfterBalance := big.NewInt(0).Sub(startingBalance, feeBig)
-	amount, err := ctx.GetAccountAmount(signer.Address())
+	amount, err := ctx.getAccountAmount(signer.Address())
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 }
@@ -47,7 +47,7 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 
 	expectedAmountSubtracted := amount.Add(amount, feeBig)
 	expectedAfterBalance := big.NewInt(0).Sub(startingBalance, expectedAmountSubtracted)
-	amount, err = ctx.GetAccountAmount(signer.Address())
+	amount, err = ctx.getAccountAmount(signer.Address())
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 }

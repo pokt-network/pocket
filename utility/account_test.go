@@ -41,8 +41,8 @@ func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 	addAmountString := types.BigIntToString(addAmount)
 	addrBz, er := hex.DecodeString(acc.GetAddress())
 	require.NoError(t, er)
-	require.NoError(t, ctx.AddAccountAmountString(addrBz, addAmountString), "add account amount string")
-	afterAmount, err := ctx.GetAccountAmount(addrBz)
+	require.NoError(t, ctx.addAccountAmountString(addrBz, addAmountString), "add account amount string")
+	afterAmount, err := ctx.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
@@ -57,7 +57,7 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	addAmount := big.NewInt(1)
-	require.NoError(t, ctx.AddPoolAmount(pool.GetAddress(), addAmount), "add pool amount")
+	require.NoError(t, ctx.addPoolAmount(pool.GetAddress(), addAmount), "add pool amount")
 	afterAmount, err := ctx.GetPoolAmount(pool.GetAddress())
 	require.NoError(t, err)
 
@@ -136,7 +136,7 @@ func TestUtilityContext_SetAccountAmount(t *testing.T) {
 
 	amount := big.NewInt(100)
 	require.NoError(t, ctx.SetAccountAmount(addr, amount), "set account amount")
-	gotAmount, err := ctx.GetAccountAmount(addr)
+	gotAmount, err := ctx.getAccountAmount(addr)
 	require.NoError(t, err)
 	require.Equal(t, amount, gotAmount)
 }
@@ -150,7 +150,7 @@ func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
 	amount := big.NewInt(100)
 	amountString := types.BigIntToString(amount)
 	require.NoError(t, ctx.SetAccountWithAmountString(addr, amountString), "set account amount string")
-	gotAmount, err := ctx.GetAccountAmount(addr)
+	gotAmount, err := ctx.getAccountAmount(addr)
 	require.NoError(t, err)
 	require.Equal(t, amount, gotAmount)
 }
@@ -198,7 +198,7 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	addrBz, er := hex.DecodeString(acc.GetAddress())
 	require.NoError(t, er)
 	require.NoError(t, ctx.SubtractAccountAmount(addrBz, subAmountBig), "sub account amount")
-	amount, err := ctx.GetAccountAmount(addrBz)
+	amount, err := ctx.getAccountAmount(addrBz)
 	require.NoError(t, err)
 	require.NotEqual(t, beforeAmountBig, amount)
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
