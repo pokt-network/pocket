@@ -97,13 +97,13 @@ func CreateNewKey(passphrase, hint string) (KeyPair, error) {
 }
 
 // Generate new KeyPair from the hex string provided, encrypt and armour it as a string
-func CreateNewKeyFromString(privStrHex, passphrase string) (KeyPair, error) {
+func CreateNewKeyFromString(privStrHex, passphrase, hint string) (KeyPair, error) {
 	privKey, err := NewPrivateKey(privStrHex)
 	if err != nil {
 		return nil, err
 	}
 
-	privArmour, err := encryptArmourPrivKey(privKey, passphrase)
+	privArmour, err := encryptArmourPrivKey(privKey, passphrase, hint)
 	if err != nil || privArmour == "" {
 		return nil, err
 	}
