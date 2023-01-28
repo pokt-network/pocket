@@ -97,7 +97,7 @@ var expectedGenesis = &genesis.GenesisState{
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
 			Address:         "00104055c00bed7c983a48aac7dc6335d7c607a7",
-			PublicKey:       "f48654c9bffccd7a858dc5577551ff650f8df9f1ec5bb668f339f594f2380ba1",
+			PublicKey:       "dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 			Chains:          nil,
 			GenericParam:    "node1.consensus:8080",
 			StakedAmount:    "1000000000000",
@@ -108,7 +108,7 @@ var expectedGenesis = &genesis.GenesisState{
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
 			Address:         "00204737d2a165ebe4be3a7d5b0af905b0ea91d8",
-			PublicKey:       "caa495ca5958ff1ea9361716da270f5a03ca7e9cb85f955393e97264880d2c80",
+			PublicKey:       "eb2c78364525a210d994a83e02d18b4287ab81f6670cf4510ab6c9f51e296d91",
 			Chains:          nil,
 			GenericParam:    "node2.consensus:8080",
 			StakedAmount:    "1000000000000",
@@ -119,7 +119,7 @@ var expectedGenesis = &genesis.GenesisState{
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
 			Address:         "00304d0101847b37fd62e7bebfbdddecdbb7133e",
-			PublicKey:       "130584fbf284bf68010b643a868b89dbbee68dc72d4e8f5e6c9bb9b48df67cd4",
+			PublicKey:       "1041a9c76539791fef9bee5b4fcd5bf4a1a489e0790c44cbdfa776b901e13b50",
 			Chains:          nil,
 			GenericParam:    "node3.consensus:8080",
 			StakedAmount:    "1000000000000",
@@ -130,7 +130,7 @@ var expectedGenesis = &genesis.GenesisState{
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
 			Address:         "00404a570febd061274f72b50d0a37f611dfe339",
-			PublicKey:       "f511f0037512e802a584a1ef714790013f3db8d79e5f62cc2cae6902e1d7410b",
+			PublicKey:       "d6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
 			Chains:          nil,
 			GenericParam:    "node4.consensus:8080",
 			StakedAmount:    "1000000000000",
