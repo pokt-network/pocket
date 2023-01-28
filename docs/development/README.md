@@ -10,6 +10,7 @@ Please note that this repository is under very active development and breaking c
   - [View Available Commands](#view-available-commands)
   - [Running Unit Tests](#running-unit-tests)
   - [Running LocalNet](#running-localnet)
+  - [Profiling](#profiling)
 - [Code Organization](#code-organization)
   - [Linters](#linters)
     - [Installation of golangci-lint](#installation-of-golangci-lint)
@@ -96,7 +97,7 @@ make build
 
 The cli binary will be available at `bin/p1` and can be used instead of `go run app/client/*.go`
 
-The commands available are listed [here](../../rpc/doc/README.md) or acessible via `bin/p1 --help`
+The commands available are listed [here](../../rpc/doc/README.md) or accessible via `bin/p1 --help`
 
 ### Swagger UI
 
@@ -181,6 +182,11 @@ $ make client_start && make client_connect
 ✔ TogglePacemakerMode # Check that it’s automatic now
 ✔ TriggerNextView # Let it rip!
 ```
+
+### Profiling
+
+If you need to profile the node for CPU and/or memory usage, you can use the `pprof` tool.
+A quick guide is available [here](./PROFILING.md).
 
 ## Code Organization
 

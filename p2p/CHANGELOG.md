@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.20] - 2023-01-20
+
+- Updated `P2PConfig#IsEmptyConnectionType` bool to `P2PConfig#ConnectionType` enum
+
+## [0.0.0.19] - 2023-01-19
+
+- Rewrite `interface{}` to `any`
 ## [0.0.0.18] - 2023-01-11
 
 - Add a lock to the mempool to avoid parallel messages which has caused the node to crash in the past

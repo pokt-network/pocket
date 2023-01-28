@@ -28,10 +28,10 @@ The demo showcases a successful end-to-end transaction that includes the followi
 - A LocalNet composed of 4 hard-coded Validators
 - A LocalNet that is started from genesis
 - Orchestration that is driven by Docker & docker-compose
-- A CLI that can be use to submit send transactions that are gossiped throughout the network
+- A CLI that can be used to submit send transactions that are gossiped throughout the network
 - A basic & functional version of HotPOKT for Consensus
 - A basic & functional version of RainTree for P2P
-- A persistence layer than leverages PostgreSQL, BadgerDB and Celestia's SMT for state commitment and state storage
+- A persistence layer that leverages PostgreSQL, BadgerDB and Celestia's SMT for state commitment and state storage
 
 ## Shell #1: Setup LocalNet
 

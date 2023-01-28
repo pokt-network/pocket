@@ -8,6 +8,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/runtime/configs"
+	configTypes "github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
@@ -226,11 +227,11 @@ func TestNewManagerFromReaders(t *testing.T) {
 						HealthCheckPeriod: "5m",
 					},
 					P2P: &configs.P2PConfig{
-						PrivateKey:            "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
-						ConsensusPort:         8080,
-						UseRainTree:           true,
-						IsEmptyConnectionType: false,
-						MaxMempoolCount:       1e5,
+						PrivateKey:      "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
+						ConsensusPort:   8080,
+						UseRainTree:     true,
+						ConnectionType:  configTypes.ConnectionType_TCPConnection,
+						MaxMempoolCount: 1e5,
 					},
 					Telemetry: &configs.TelemetryConfig{
 						Enabled:  true,
@@ -251,7 +252,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 				genesisState: expectedGenesis,
 				clock:        clock.New(),
 			},
-			assertion: func(tt require.TestingT, want, got interface{}, _ ...interface{}) {
+			assertion: func(tt require.TestingT, want, got any, _ ...any) {
 				require.Equal(tt, want.(*Manager).config, got.(*Manager).config)
 				require.Equal(tt, want.(*Manager).genesisState, got.(*Manager).genesisState)
 			},
@@ -272,17 +273,17 @@ func TestNewManagerFromReaders(t *testing.T) {
 			want: &Manager{
 				config: &configs.Config{
 					P2P: &configs.P2PConfig{
-						PrivateKey:            "4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
-						ConsensusPort:         8080,
-						UseRainTree:           true,
-						IsEmptyConnectionType: false,
-						MaxMempoolCount:       defaults.DefaultP2PMaxMempoolCount,
+						PrivateKey:      "4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
+						ConsensusPort:   8080,
+						UseRainTree:     true,
+						ConnectionType:  configTypes.ConnectionType_TCPConnection,
+						MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
 					},
 				},
 				genesisState: expectedGenesis,
 				clock:        clock.New(),
 			},
-			assertion: func(tt require.TestingT, want, got interface{}, _ ...interface{}) {
+			assertion: func(tt require.TestingT, want, got any, _ ...any) {
 				require.Equal(tt, want.(*Manager).config.P2P, got.(*Manager).config.P2P)
 			},
 		},
