@@ -1,28 +1,7 @@
 #!/usr/bin/env bash
 
-# An example hook script to verify what is about to be pushed.  Called by "git
-# push" after it has checked the remote status, but before anything has been
-# pushed.  If this script exits with a non-zero status nothing will be pushed.
-#
-# This hook is called with the following parameters:
-#
-# $1 -- Name of the remote to which the push is being done
-# $2 -- URL to which the push is being done
-#
-# If pushing without using a named remote those arguments will be equal.
-#
-# Information about the commits which are being pushed is supplied as lines to
-# the standard input in the form:
-#
-#   <local ref> <local oid> <remote ref> <remote oid>
-#
-# This sample shows how to prevent push of commits where the log message starts
-# with "WIP" (work in progress).
-
-remote="$1"
-url="$2"
-
-BRANCH_CHANGED_FILES=($(git diff --name-only main..HEAD))
+# Usage: bash pre-receive <CHANGED FILES>
+BRANCH_CHANGED_FILES=($@)
 
 # Initialise arrays and script wide variables
 IGNORE_DIRS=(".github" ".githooks" "docs" "bin")
@@ -117,7 +96,7 @@ do
     module="$(echo "${log}" | sed 's/\/.*//')"
     # consider files changed since branching off main
     # filter for files relevant to current module
-    changed_module_files=$(git diff --name-only main..HEAD | grep -e "^$module" )
+    changed_module_files=($( printf '%s\n' "${BRANCH_CHANGED_FILES[@]}" | grep "${module}" ))
     # sort commits affecting module files by date and take most recent
     latest_module_commit_date=$(sort -r <(echo "$changed_module_files" | xargs -I {} git --no-pager log -1 --format=%cs {}) | head -n 1)
 
