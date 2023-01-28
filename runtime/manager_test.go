@@ -51,19 +51,19 @@ var expectedGenesis = &genesis.GenesisState{
 	},
 	Accounts: []*types.Account{
 		{
-			Address: "004aaa1375c252eecc1e8737b2062b967532b07f",
+			Address: "00404a570febd061274f72b50d0a37f611dfe339",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "003aabccc8c3938c772e783ffdd9b9fabdc118cd",
+			Address: "00304d0101847b37fd62e7bebfbdddecdbb7133e",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "002aad32c4e0924b1182370cddb0b3071bb84a86",
+			Address: "00204737d2a165ebe4be3a7d5b0af905b0ea91d8",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "001aaba8fa5409efe6cd881649743bc7576acd46",
+			Address: "00104055c00bed7c983a48aac7dc6335d7c607a7",
 			Amount:  "100000000000000",
 		},
 		{
@@ -95,47 +95,47 @@ var expectedGenesis = &genesis.GenesisState{
 	Validators: []*types.Actor{
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
-			Address:         "001aaba8fa5409efe6cd881649743bc7576acd46",
+			Address:         "00104055c00bed7c983a48aac7dc6335d7c607a7",
 			PublicKey:       "f48654c9bffccd7a858dc5577551ff650f8df9f1ec5bb668f339f594f2380ba1",
 			Chains:          nil,
 			GenericParam:    "node1.consensus:8080",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
-			Output:          "001aaba8fa5409efe6cd881649743bc7576acd46",
+			Output:          "00104055c00bed7c983a48aac7dc6335d7c607a7",
 		},
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
-			Address:         "002aad32c4e0924b1182370cddb0b3071bb84a86",
+			Address:         "00204737d2a165ebe4be3a7d5b0af905b0ea91d8",
 			PublicKey:       "caa495ca5958ff1ea9361716da270f5a03ca7e9cb85f955393e97264880d2c80",
 			Chains:          nil,
 			GenericParam:    "node2.consensus:8080",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
-			Output:          "002aad32c4e0924b1182370cddb0b3071bb84a86",
+			Output:          "00204737d2a165ebe4be3a7d5b0af905b0ea91d8",
 		},
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
-			Address:         "003aabccc8c3938c772e783ffdd9b9fabdc118cd",
+			Address:         "00304d0101847b37fd62e7bebfbdddecdbb7133e",
 			PublicKey:       "130584fbf284bf68010b643a868b89dbbee68dc72d4e8f5e6c9bb9b48df67cd4",
 			Chains:          nil,
 			GenericParam:    "node3.consensus:8080",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
-			Output:          "003aabccc8c3938c772e783ffdd9b9fabdc118cd",
+			Output:          "00304d0101847b37fd62e7bebfbdddecdbb7133e",
 		},
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
-			Address:         "004aaa1375c252eecc1e8737b2062b967532b07f",
+			Address:         "00404a570febd061274f72b50d0a37f611dfe339",
 			PublicKey:       "f511f0037512e802a584a1ef714790013f3db8d79e5f62cc2cae6902e1d7410b",
 			Chains:          nil,
 			GenericParam:    "node4.consensus:8080",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
-			Output:          "004aaa1375c252eecc1e8737b2062b967532b07f",
+			Output:          "00404a570febd061274f72b50d0a37f611dfe339",
 		},
 	},
 	ServiceNodes: []*types.Actor{
@@ -199,9 +199,9 @@ func TestNewManagerFromReaders(t *testing.T) {
 			want: &Manager{
 				config: &configs.Config{
 					RootDirectory: "/go/src/github.com/pocket-network",
-					PrivateKey:    "7e1cd00241f5a743dc1a42919ef56b0d32d8e868eae216c03d44c52faa415ef2f48654c9bffccd7a858dc5577551ff650f8df9f1ec5bb668f339f594f2380ba1",
+					PrivateKey:    "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 					Consensus: &configs.ConsensusConfig{
-						PrivateKey:      "7e1cd00241f5a743dc1a42919ef56b0d32d8e868eae216c03d44c52faa415ef2f48654c9bffccd7a858dc5577551ff650f8df9f1ec5bb668f339f594f2380ba1",
+						PrivateKey:      "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 						MaxMempoolBytes: 500000000,
 						PacemakerConfig: &configs.PacemakerConfig{
 							TimeoutMsec:               5000,
@@ -226,7 +226,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						HealthCheckPeriod: "5m",
 					},
 					P2P: &configs.P2PConfig{
-						PrivateKey:            "7e1cd00241f5a743dc1a42919ef56b0d32d8e868eae216c03d44c52faa415ef2f48654c9bffccd7a858dc5577551ff650f8df9f1ec5bb668f339f594f2380ba1",
+						PrivateKey:            "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 						ConsensusPort:         8080,
 						UseRainTree:           true,
 						IsEmptyConnectionType: false,
@@ -264,7 +264,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 					  "consensus_port": 8080,
 					  "use_rain_tree": true,
 					  "is_empty_connection_type": false,
-					  "private_key": "d936becdefdc21490dd1d1789c1887676ef2b17139526a68c79cfa66075fad2df511f0037512e802a584a1ef714790013f3db8d79e5f62cc2cae6902e1d7410b"
+					  "private_key": "4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45"
 					}
 				  }`)),
 				genesisReader: strings.NewReader(string(buildGenesisBytes)),
@@ -272,7 +272,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 			want: &Manager{
 				config: &configs.Config{
 					P2P: &configs.P2PConfig{
-						PrivateKey:            "d936becdefdc21490dd1d1789c1887676ef2b17139526a68c79cfa66075fad2df511f0037512e802a584a1ef714790013f3db8d79e5f62cc2cae6902e1d7410b",
+						PrivateKey:            "4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
 						ConsensusPort:         8080,
 						UseRainTree:           true,
 						IsEmptyConnectionType: false,

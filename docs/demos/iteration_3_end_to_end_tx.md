@@ -106,9 +106,9 @@ For the following steps, you'll need to use the accounts of the first two valida
 1. You can just:
 
 ```bash
-echo '"d936becdefdc21490dd1d1789c1887676ef2b17139526a68c79cfa66075fad2df511f0037512e802a584a1ef714790013f3db8d79e5f62cc2cae6902e1d7410b"' > /tmp/val1.json
+echo '"4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45"' > /tmp/val1.json
 
-echo '"02e31dc1242d2350d1dd463672f6b6c82881db0870705ea004cb5f8afeb52996130584fbf284bf68010b643a868b89dbbee68dc72d4e8f5e6c9bb9b48df67cd4"' > /tmp/val2.json
+echo '"25b385b367a827eaafcdb1003bd17a25f2ecc0d10d41f138846f52ae1015aa941041a9c76539791fef9bee5b4fcd5bf4a1a489e0790c44cbdfa776b901e13b50"' > /tmp/val2.json
 ```
 
 2. You can use `jq` and run these commands:
@@ -125,7 +125,7 @@ cat ./build/config/config2.json | jq '.private_key' > /tmp/val2.json
 Trigger a send transaction from validator 1 to validator 2.
 
 ```bash
-go run app/client/*.go --path_to_private_key_file=/tmp/val1.json Account Send 004aaa1375c252eecc1e8737b2062b967532b07f 003aabccc8c3938c772e783ffdd9b9fabdc118cd 1000
+go run app/client/*.go --path_to_private_key_file=/tmp/val1.json Account Send 00404a570febd061274f72b50d0a37f611dfe339 00304d0101847b37fd62e7bebfbdddecdbb7133e 1000
 ```
 
 1. Use shell #2 to `TriggerNextView` and confirm height increased via `PrintNodeState`
@@ -144,7 +144,7 @@ go run app/client/*.go --path_to_private_key_file=/tmp/val1.json Account Send 00
 Trigger a send transaction from validator 2 to validator 1.
 
 ```bash
-go run app/client/*.go --path_to_private_key_file=/tmp/val2.json Account Send 003aabccc8c3938c772e783ffdd9b9fabdc118cd 004aaa1375c252eecc1e8737b2062b967532b07f 1000
+go run app/client/*.go --path_to_private_key_file=/tmp/val2.json Account Send 00304d0101847b37fd62e7bebfbdddecdbb7133e 00404a570febd061274f72b50d0a37f611dfe339 1000
 ```
 
 1. Use shell #2 to `TriggerNextView` (one or more times) and confirm height increased via `PrintNodeState`
