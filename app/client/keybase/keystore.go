@@ -2,8 +2,6 @@ package keybase
 
 import (
 	"bytes"
-	"crypto/ed25519"
-	"encoding/gob"
 	"encoding/hex"
 	"fmt"
 	"strings"
@@ -15,13 +13,6 @@ import (
 // Errors
 func ErrorAddrNotFound(addr string) error {
 	return fmt.Errorf("No key found with address: %s", addr)
-}
-
-// Encoding is used to serialise the data to store the KeyPairs in the database
-func init() {
-	gob.Register(crypto.Ed25519PublicKey{})
-	gob.Register(ed25519.PublicKey{})
-	gob.Register(crypto.EncKeyPair{})
 }
 
 // badgerKeybase implements the KeyBase interface
@@ -68,14 +59,14 @@ func (keybase *badgerKeybase) Create(passphrase, hint string) error {
 
 		// Use key address as key in DB
 		addrKey := keyPair.GetAddressBytes()
+
 		// Encode entire KeyPair struct into []byte for value
-		keypairBz := new(bytes.Buffer)
-		enc := gob.NewEncoder(keypairBz)
-		if err = enc.Encode(keyPair); err != nil {
+		keypairBz, err := keyPair.Marshal()
+		if err != nil {
 			return err
 		}
 
-		if err = tx.Set(addrKey, keypairBz.Bytes()); err != nil {
+		if err = tx.Set(addrKey, keypairBz); err != nil {
 			return err
 		}
 
@@ -96,14 +87,14 @@ func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint stri
 
 		// Use key address as key in DB
 		addrKey := keyPair.GetAddressBytes()
+
 		// Encode entire KeyPair struct into []byte for value
-		keypairBz := new(bytes.Buffer)
-		enc := gob.NewEncoder(keypairBz)
-		if err = enc.Encode(keyPair); err != nil {
+		keypairBz, err := keyPair.Marshal()
+		if err != nil {
 			return err
 		}
 
-		if err = tx.Set(addrKey, keypairBz.Bytes()); err != nil {
+		if err = tx.Set(addrKey, keypairBz); err != nil {
 			return err
 		}
 
@@ -124,14 +115,14 @@ func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 
 		// Use key address as key in DB
 		addrKey := keyPair.GetAddressBytes()
+
 		// Encode entire KeyPair struct into []byte for value
-		keypairBz := new(bytes.Buffer)
-		enc := gob.NewEncoder(keypairBz)
-		if err = enc.Encode(keyPair); err != nil {
+		keypairBz, err := keyPair.Marshal()
+		if err != nil {
 			return err
 		}
 
-		if err = tx.Set(addrKey, keypairBz.Bytes()); err != nil {
+		if err = tx.Set(addrKey, keypairBz); err != nil {
 			return err
 		}
 
@@ -143,8 +134,7 @@ func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 
 // Returns a KeyPair struct provided the address was found in the DB
 func (keybase *badgerKeybase) Get(address string) (crypto.KeyPair, error) {
-	var kp crypto.EncKeyPair
-	keypairBz := new(bytes.Buffer)
+	kp := crypto.GetKeypair()
 	addrBz, err := hex.DecodeString(address)
 	if err != nil {
 		return nil, err
@@ -164,9 +154,7 @@ func (keybase *badgerKeybase) Get(address string) (crypto.KeyPair, error) {
 		}
 
 		// Decode []byte value back into KeyPair struct
-		keypairBz.Write(value)
-		dec := gob.NewDecoder(keypairBz)
-		if err = dec.Decode(&kp); err != nil {
+		if err := kp.Unmarshal(value); err != nil {
 			return err
 		}
 
@@ -219,11 +207,8 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 				b := make([]byte, len(val))
 				copy(b, val)
 				// Decode []byte value back into KeyPair struct
-				var kp crypto.EncKeyPair
-				keypairBz := new(bytes.Buffer)
-				keypairBz.Write(b)
-				dec := gob.NewDecoder(keypairBz)
-				if err = dec.Decode(&kp); err != nil {
+				kp := crypto.GetKeypair()
+				if err := kp.Unmarshal(b); err != nil {
 					return err
 				}
 
@@ -296,14 +281,14 @@ func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassph
 		if bytes.Compare(addrKey, addrBz) != 0 {
 			return fmt.Errorf("Key address does not match previous address.")
 		}
+
 		// Encode entire KeyPair struct into []byte for value
-		keypairBz := new(bytes.Buffer)
-		enc := gob.NewEncoder(keypairBz)
-		if err = enc.Encode(keyPair); err != nil {
+		keypairBz, err := keyPair.Marshal()
+		if err != nil {
 			return err
 		}
 
-		if err = tx.Set(addrKey, keypairBz.Bytes()); err != nil {
+		if err = tx.Set(addrKey, keypairBz); err != nil {
 			return err
 		}
 
