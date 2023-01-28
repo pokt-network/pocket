@@ -6,9 +6,9 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +16,7 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	_ = newTestingUtilityContext(t, 0)
 	// acc := GetAllTestingAccounts(t, ctx)[0]
 
-	// initialAmount, err := types.StringToBigInt(acc.GetAmount())
+	// initialAmount, err := converters.StringToBigInt(acc.GetAmount())
 	// require.NoError(t, err)
 
 	// addAmount := big.NewInt(1)
@@ -34,11 +34,11 @@ func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	acc := GetAllTestingAccounts(t, ctx)[0]
 
-	initialAmount, err := types.StringToBigInt(acc.GetAmount())
+	initialAmount, err := converters.StringToBigInt(acc.GetAmount())
 	require.NoError(t, err)
 
 	addAmount := big.NewInt(1)
-	addAmountString := types.BigIntToString(addAmount)
+	addAmountString := converters.BigIntToString(addAmount)
 	addrBz, er := hex.DecodeString(acc.GetAddress())
 	require.NoError(t, er)
 	require.NoError(t, ctx.addAccountAmountString(addrBz, addAmountString), "add account amount string")
@@ -53,7 +53,7 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	pool := GetAllTestingPools(t, ctx)[0]
 
-	initialAmount, err := types.StringToBigInt(pool.GetAmount())
+	initialAmount, err := converters.StringToBigInt(pool.GetAmount())
 	require.NoError(t, err)
 
 	addAmount := big.NewInt(1)
@@ -70,11 +70,11 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 	accs := GetAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
-	sendAmountString := types.BigIntToString(sendAmount)
-	senderBalanceBefore, err := types.StringToBigInt(accs[0].GetAmount())
+	sendAmountString := converters.BigIntToString(sendAmount)
+	senderBalanceBefore, err := converters.StringToBigInt(accs[0].GetAmount())
 	require.NoError(t, err)
 
-	recipientBalanceBefore, err := types.StringToBigInt(accs[1].GetAmount())
+	recipientBalanceBefore, err := converters.StringToBigInt(accs[1].GetAmount())
 	require.NoError(t, err)
 	addrBz, er := hex.DecodeString(accs[0].GetAddress())
 	require.NoError(t, er)
@@ -85,10 +85,10 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 	require.NoError(t, err, "handle message send")
 
 	accs = GetAllTestingAccounts(t, ctx)
-	senderBalanceAfter, err := types.StringToBigInt(accs[0].GetAmount())
+	senderBalanceAfter, err := converters.StringToBigInt(accs[0].GetAmount())
 	require.NoError(t, err)
 
-	recipientBalanceAfter, err := types.StringToBigInt(accs[1].GetAmount())
+	recipientBalanceAfter, err := converters.StringToBigInt(accs[1].GetAmount())
 	require.NoError(t, err)
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter))
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore))
@@ -99,7 +99,7 @@ func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 	accs := GetAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
-	sendAmountString := types.BigIntToString(sendAmount)
+	sendAmountString := converters.BigIntToString(sendAmount)
 	addrBz, er := hex.DecodeString(accs[0].GetAddress())
 	require.NoError(t, er)
 	addrBz2, er := hex.DecodeString(accs[1].GetAddress())
@@ -118,13 +118,13 @@ func TestUtilityContext_InsertPool(t *testing.T) {
 	addr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
-	amount := types.BigIntToString(big.NewInt(1000))
+	amount := converters.BigIntToString(big.NewInt(1000))
 	err = ctx.InsertPool(testPoolName, addr, amount)
 	require.NoError(t, err, "insert pool")
 	gotAmount, err := ctx.GetPoolAmount(testPoolName)
 	require.NoError(t, err)
 
-	gotAmountString := types.BigIntToString(gotAmount)
+	gotAmountString := converters.BigIntToString(gotAmount)
 	require.Equal(t, amount, gotAmountString)
 }
 
@@ -148,7 +148,7 @@ func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
 	require.NoError(t, err)
 
 	amount := big.NewInt(100)
-	amountString := types.BigIntToString(amount)
+	amountString := converters.BigIntToString(amount)
 	require.NoError(t, ctx.SetAccountWithAmountString(addr, amountString), "set account amount string")
 	gotAmount, err := ctx.getAccountAmount(addr)
 	require.NoError(t, err)
@@ -159,7 +159,7 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	pool := GetAllTestingPools(t, ctx)[0]
 	beforeAmount := pool.GetAmount()
-	beforeAmountBig, err := types.StringToBigInt(beforeAmount)
+	beforeAmountBig, err := converters.StringToBigInt(beforeAmount)
 	require.NoError(t, err)
 
 	expectedAfterAmount := big.NewInt(100)
@@ -177,7 +177,7 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	beforeAmountBig := big.NewInt(1000000000000000)
 	ctx.SetPoolAmount(pool.GetAddress(), beforeAmountBig)
 	subAmountBig := big.NewInt(100)
-	subAmount := types.BigIntToString(subAmountBig)
+	subAmount := converters.BigIntToString(subAmountBig)
 	require.NoError(t, ctx.SubPoolAmount(pool.GetAddress(), subAmount), "sub pool amount")
 	amount, err := ctx.GetPoolAmount(pool.GetAddress())
 	require.NoError(t, err)
@@ -191,7 +191,7 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	acc := GetAllTestingAccounts(t, ctx)[0]
 
 	beforeAmount := acc.GetAmount()
-	beforeAmountBig, err := types.StringToBigInt(beforeAmount)
+	beforeAmountBig, err := converters.StringToBigInt(beforeAmount)
 	require.NoError(t, err)
 
 	subAmountBig := big.NewInt(100)

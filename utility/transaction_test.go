@@ -7,10 +7,10 @@ import (
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -73,7 +73,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	accs := GetAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
-	sendAmountString := typesUtil.BigIntToString(sendAmount)
+	sendAmountString := converters.BigIntToString(sendAmount)
 	addrBz, er := hex.DecodeString(accs[0].GetAddress())
 	require.NoError(t, er)
 	addrBz2, er := hex.DecodeString(accs[1].GetAddress())
@@ -109,11 +109,11 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	accs := GetAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
-	sendAmountString := typesUtil.BigIntToString(sendAmount)
-	senderBalanceBefore, err := typesUtil.StringToBigInt(accs[0].GetAmount())
+	sendAmountString := converters.BigIntToString(sendAmount)
+	senderBalanceBefore, err := converters.StringToBigInt(accs[0].GetAmount())
 	require.NoError(t, err)
 
-	recipientBalanceBefore, err := typesUtil.StringToBigInt(accs[1].GetAmount())
+	recipientBalanceBefore, err := converters.StringToBigInt(accs[1].GetAmount())
 	require.NoError(t, err)
 	addrBz, er := hex.DecodeString(accs[0].GetAddress())
 	require.NoError(t, er)
@@ -122,10 +122,10 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
 	require.NoError(t, ctx.handleMessageSend(&msg))
 	accs = GetAllTestingAccounts(t, ctx)
-	senderBalanceAfter, err := typesUtil.StringToBigInt(accs[0].GetAmount())
+	senderBalanceAfter, err := converters.StringToBigInt(accs[0].GetAmount())
 	require.NoError(t, err)
 
-	recipientBalanceAfter, err := typesUtil.StringToBigInt(accs[1].GetAmount())
+	recipientBalanceAfter, err := converters.StringToBigInt(accs[1].GetAmount())
 	require.NoError(t, err)
 
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter), "unexpected sender balance")
@@ -145,7 +145,7 @@ func newTestingTransaction(t *testing.T, ctx utilityContext) (transaction *types
 	signerAddr := signer.Address()
 	require.NoError(t, ctx.SetAccountAmount(signerAddr, startingBalance))
 
-	msg := NewTestingSendMessage(t, signerAddr, recipientAddr.Bytes(), utilTypes.BigIntToString(amountSent))
+	msg := NewTestingSendMessage(t, signerAddr, recipientAddr.Bytes(), converters.BigIntToString(amountSent))
 	any, err := codec.GetCodec().ToAny(&msg)
 	require.NoError(t, err)
 

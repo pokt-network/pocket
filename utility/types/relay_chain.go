@@ -1,19 +1,23 @@
 package types
 
-type RelayChain string
-
 const (
-	RelayChainLength = 4 // pre-determined length that strikes a balance between combination possibilities & storage
+	// TODO: Move this to a global shared package
+	relayChainLength = 4 // pre-determined length that strikes a balance between combination possibilities & storage
 )
 
+type relayChain string
+
+// No need for a Signature interface abstraction for the time being
+var _ Validatable = relayChain("")
+
 // TODO: Consider adding a governance parameter for a list of valid relay chains
-func (rc *RelayChain) Validate() Error {
-	if rc == nil || *rc == "" {
+func (rc relayChain) ValidateBasic() Error {
+	if rc == "" {
 		return ErrEmptyRelayChain()
 	}
-	rcLen := len(*rc)
-	if rcLen != RelayChainLength {
-		return ErrInvalidRelayChainLength(rcLen, RelayChainLength)
+	rcLen := len(rc)
+	if rcLen != relayChainLength {
+		return ErrInvalidRelayChainLength(rcLen, relayChainLength)
 	}
 	return nil
 }

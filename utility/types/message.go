@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
@@ -171,8 +172,8 @@ func ValidateRelayChains(chains []string) Error {
 		return ErrEmptyRelayChains()
 	}
 	for _, chain := range chains {
-		relayChain := RelayChain(chain)
-		if err := relayChain.Validate(); err != nil {
+		relayChain := relayChain(chain)
+		if err := relayChain.ValidateBasic(); err != nil {
 			return err
 		}
 	}
@@ -183,8 +184,8 @@ func ValidateAmount(amount string) Error {
 	if amount == "" {
 		return ErrEmptyAmount()
 	}
-	if _, err := StringToBigInt(amount); err != nil {
-		return err
+	if _, err := converters.StringToBigInt(amount); err != nil {
+		return ErrStringToBigInt()
 	}
 	return nil
 }
@@ -227,14 +228,14 @@ func getMessageType(msg Message) string {
 	return string(msg.ProtoReflect().Descriptor().Name())
 }
 
-type MessageStaker interface {
+type messageStaker interface {
 	GetActorType() coreTypes.ActorType
 	GetAmount() string
 	GetChains() []string
 	GetServiceUrl() string
 }
 
-func ValidateStaker(msg MessageStaker) Error {
+func ValidateStaker(msg messageStaker) Error {
 	if err := ValidateActorType(msg.GetActorType()); err != nil {
 		return err
 	}

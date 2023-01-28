@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -51,7 +52,7 @@ func TestUtilityContext_GetAppMinimumStake(t *testing.T) {
 	defaultParam := defaultParams.GetAppMinimumStake()
 	gotParam, err := ctx.GetAppMinimumStake()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 
 }
 
@@ -145,7 +146,7 @@ func TestUtilityContext_GetFishermanMinimumStake(t *testing.T) {
 	defaultParam := defaultParams.GetFishermanMinimumStake()
 	gotParam, err := ctx.GetFishermanMinimumStake()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 
 }
 
@@ -175,7 +176,7 @@ func TestUtilityContext_GetMessageChangeParameterFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageChangeParameterFee()
 	gotParam, err := ctx.GetMessageChangeParameterFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 
 }
 
@@ -185,7 +186,7 @@ func TestUtilityContext_GetMessageDoubleSignFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageDoubleSignFee()
 	gotParam, err := ctx.GetMessageDoubleSignFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 
 }
 
@@ -195,7 +196,7 @@ func TestUtilityContext_GetMessageEditStakeAppFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageEditStakeAppFee()
 	gotParam, err := ctx.GetMessageEditStakeAppFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageEditStakeFishermanFee(t *testing.T) {
@@ -204,7 +205,7 @@ func TestUtilityContext_GetMessageEditStakeFishermanFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageEditStakeFishermanFee()
 	gotParam, err := ctx.GetMessageEditStakeFishermanFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageEditStakeServiceNodeFee(t *testing.T) {
@@ -213,7 +214,7 @@ func TestUtilityContext_GetMessageEditStakeServiceNodeFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageEditStakeServiceNodeFee()
 	gotParam, err := ctx.GetMessageEditStakeServiceNodeFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageEditStakeValidatorFee(t *testing.T) {
@@ -222,7 +223,7 @@ func TestUtilityContext_GetMessageEditStakeValidatorFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageEditStakeValidatorFee()
 	gotParam, err := ctx.GetMessageEditStakeValidatorFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageFishermanPauseServiceNodeFee(t *testing.T) {
@@ -231,7 +232,7 @@ func TestUtilityContext_GetMessageFishermanPauseServiceNodeFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageFishermanPauseServiceNodeFee()
 	gotParam, err := ctx.GetMessageFishermanPauseServiceNodeFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessagePauseAppFee(t *testing.T) {
@@ -240,7 +241,7 @@ func TestUtilityContext_GetMessagePauseAppFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessagePauseAppFee()
 	gotParam, err := ctx.GetMessagePauseAppFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessagePauseFishermanFee(t *testing.T) {
@@ -249,7 +250,7 @@ func TestUtilityContext_GetMessagePauseFishermanFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessagePauseFishermanFee()
 	gotParam, err := ctx.GetMessagePauseFishermanFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessagePauseServiceNodeFee(t *testing.T) {
@@ -258,7 +259,7 @@ func TestUtilityContext_GetMessagePauseServiceNodeFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessagePauseServiceNodeFee()
 	gotParam, err := ctx.GetMessagePauseServiceNodeFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessagePauseValidatorFee(t *testing.T) {
@@ -267,7 +268,7 @@ func TestUtilityContext_GetMessagePauseValidatorFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessagePauseValidatorFee()
 	gotParam, err := ctx.GetMessagePauseValidatorFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageProveTestScoreFee(t *testing.T) {
@@ -276,7 +277,7 @@ func TestUtilityContext_GetMessageProveTestScoreFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageProveTestScoreFee()
 	gotParam, err := ctx.GetMessageProveTestScoreFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 
 }
 
@@ -286,7 +287,7 @@ func TestUtilityContext_GetMessageSendFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageSendFee()
 	gotParam, err := ctx.GetMessageSendFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageStakeAppFee(t *testing.T) {
@@ -295,7 +296,7 @@ func TestUtilityContext_GetMessageStakeAppFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageStakeAppFee()
 	gotParam, err := ctx.GetMessageStakeAppFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageStakeFishermanFee(t *testing.T) {
@@ -304,7 +305,7 @@ func TestUtilityContext_GetMessageStakeFishermanFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageStakeFishermanFee()
 	gotParam, err := ctx.GetMessageStakeFishermanFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 
 }
 
@@ -314,7 +315,7 @@ func TestUtilityContext_GetMessageStakeServiceNodeFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageStakeServiceNodeFee()
 	gotParam, err := ctx.GetMessageStakeServiceNodeFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageStakeValidatorFee(t *testing.T) {
@@ -323,7 +324,7 @@ func TestUtilityContext_GetMessageStakeValidatorFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageStakeValidatorFee()
 	gotParam, err := ctx.GetMessageStakeValidatorFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageTestScoreFee(t *testing.T) {
@@ -332,7 +333,7 @@ func TestUtilityContext_GetMessageTestScoreFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageTestScoreFee()
 	gotParam, err := ctx.GetMessageTestScoreFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageUnpauseAppFee(t *testing.T) {
@@ -341,7 +342,7 @@ func TestUtilityContext_GetMessageUnpauseAppFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageUnpauseAppFee()
 	gotParam, err := ctx.GetMessageUnpauseAppFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageUnpauseFishermanFee(t *testing.T) {
@@ -350,7 +351,7 @@ func TestUtilityContext_GetMessageUnpauseFishermanFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageUnpauseFishermanFee()
 	gotParam, err := ctx.GetMessageUnpauseFishermanFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageUnpauseServiceNodeFee(t *testing.T) {
@@ -359,7 +360,7 @@ func TestUtilityContext_GetMessageUnpauseServiceNodeFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageUnpauseServiceNodeFee()
 	gotParam, err := ctx.GetMessageUnpauseServiceNodeFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageUnpauseValidatorFee(t *testing.T) {
@@ -368,7 +369,7 @@ func TestUtilityContext_GetMessageUnpauseValidatorFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageUnpauseValidatorFee()
 	gotParam, err := ctx.GetMessageUnpauseValidatorFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 
 }
 
@@ -378,7 +379,7 @@ func TestUtilityContext_GetMessageUnstakeAppFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageUnstakeAppFee()
 	gotParam, err := ctx.GetMessageUnstakeAppFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 
 }
 
@@ -388,7 +389,7 @@ func TestUtilityContext_GetMessageUnstakeFishermanFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageUnstakeFishermanFee()
 	gotParam, err := ctx.GetMessageUnstakeFishermanFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageUnstakeServiceNodeFee(t *testing.T) {
@@ -397,7 +398,7 @@ func TestUtilityContext_GetMessageUnstakeServiceNodeFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageUnstakeServiceNodeFee()
 	gotParam, err := ctx.GetMessageUnstakeServiceNodeFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMessageUnstakeValidatorFee(t *testing.T) {
@@ -406,7 +407,7 @@ func TestUtilityContext_GetMessageUnstakeValidatorFee(t *testing.T) {
 	defaultParam := defaultParams.GetMessageUnstakeValidatorFee()
 	gotParam, err := ctx.GetMessageUnstakeValidatorFee()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetMissedBlocksBurnPercentage(t *testing.T) {
@@ -460,7 +461,7 @@ func TestUtilityContext_GetServiceNodeMinimumStake(t *testing.T) {
 	defaultParam := defaultParams.GetServiceNodeMinimumStake()
 	gotParam, err := ctx.GetServiceNodeMinimumStake()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetServiceNodeUnstakingBlocks(t *testing.T) {
@@ -514,7 +515,7 @@ func TestUtilityContext_GetValidatorMinimumStake(t *testing.T) {
 	defaultParam := defaultParams.GetValidatorMinimumStake()
 	gotParam, err := ctx.GetValidatorMinimumStake()
 	require.NoError(t, err)
-	require.Equal(t, defaultParam, typesUtil.BigIntToString(gotParam))
+	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
 func TestUtilityContext_GetValidatorUnstakingBlocks(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"log"
 	"math/big"
 
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -561,7 +562,11 @@ func (u *utilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.E
 		log.Printf("err: %v\n", err)
 		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
-	return typesUtil.StringToBigInt(value)
+	amount, err := converters.StringToBigInt(value)
+	if err != nil {
+		return nil, typesUtil.ErrStringToBigInt()
+	}
+	return amount, nil
 }
 
 func (u *utilityContext) getIntParam(paramName string) (int, typesUtil.Error) {

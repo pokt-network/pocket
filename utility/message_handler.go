@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility/types"
@@ -61,9 +62,9 @@ func (u *utilityContext) handleMessage(msg typesUtil.Message) (err typesUtil.Err
 
 func (u *utilityContext) handleMessageSend(message *typesUtil.MessageSend) typesUtil.Error {
 	// convert the amount to big.Int
-	amount, err := typesUtil.StringToBigInt(message.Amount)
-	if err != nil {
-		return err
+	amount, er := converters.StringToBigInt(message.Amount)
+	if er != nil {
+		return typesUtil.ErrStringToBigInt()
 	}
 	// get the sender's account amount
 	fromAccountAmount, err := u.getAccountAmount(message.FromAddress)
@@ -162,9 +163,9 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 	if err != nil {
 		return err
 	}
-	amount, err := typesUtil.StringToBigInt(message.Amount)
-	if err != nil {
-		return err
+	amount, er := converters.StringToBigInt(message.Amount)
+	if er != nil {
+		return typesUtil.ErrStringToBigInt()
 	}
 	// ensure new stake >= current stake
 	amount.Sub(amount, currentStakeAmount)
@@ -192,7 +193,6 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 		return err
 	}
 	store := u.Store()
-	var er error
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		maxRelays, err := u.CalculateAppRelays(message.Amount)

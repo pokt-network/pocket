@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -92,7 +93,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "incorrect unstaking height")
 
 			amountEdited := test_artifacts.DefaultAccountAmount.Add(test_artifacts.DefaultAccountAmount, big.NewInt(1))
-			amountEditedString := typesUtil.BigIntToString(amountEdited)
+			amountEditedString := converters.BigIntToString(amountEdited)
 			msgAmountEdited := proto.Clone(msg).(*typesUtil.MessageEditStake)
 			msgAmountEdited.Amount = amountEditedString
 

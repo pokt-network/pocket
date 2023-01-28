@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -28,13 +29,13 @@ func (u *utilityContext) SetActorStakedTokens(actorType coreTypes.ActorType, tok
 	var er error
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		er = store.SetAppStakeAmount(address, typesUtil.BigIntToString(tokens))
+		er = store.SetAppStakeAmount(address, converters.BigIntToString(tokens))
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = store.SetFishermanStakeAmount(address, typesUtil.BigIntToString(tokens))
+		er = store.SetFishermanStakeAmount(address, converters.BigIntToString(tokens))
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		er = store.SetServiceNodeStakeAmount(address, typesUtil.BigIntToString(tokens))
+		er = store.SetServiceNodeStakeAmount(address, converters.BigIntToString(tokens))
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		er = store.SetValidatorStakeAmount(address, typesUtil.BigIntToString(tokens))
+		er = store.SetValidatorStakeAmount(address, converters.BigIntToString(tokens))
 	default:
 		er = typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -121,7 +122,11 @@ func (u *utilityContext) GetActorStakedTokens(actorType coreTypes.ActorType, add
 		return nil, typesUtil.ErrGetStakedTokens(er)
 	}
 
-	return typesUtil.StringToBigInt(stakedTokens)
+	amount, err := converters.StringToBigInt(stakedTokens)
+	if err != nil {
+		return nil, typesUtil.ErrStringToBigInt()
+	}
+	return amount, nil
 }
 
 func (u *utilityContext) GetMaxPausedBlocks(actorType coreTypes.ActorType) (int, typesUtil.Error) {
@@ -258,7 +263,11 @@ func (u *utilityContext) GetMinimumStake(actorType coreTypes.ActorType) (*big.In
 		return nil, typesUtil.ErrGetParam(paramName, er)
 	}
 
-	return typesUtil.StringToBigInt(minStake)
+	amount, err := converters.StringToBigInt(minStake)
+	if err != nil {
+		return nil, typesUtil.ErrStringToBigInt()
+	}
+	return amount, nil
 }
 
 func (u *utilityContext) GetStakeAmount(actorType coreTypes.ActorType, address []byte) (*big.Int, typesUtil.Error) {
@@ -285,7 +294,11 @@ func (u *utilityContext) GetStakeAmount(actorType coreTypes.ActorType, address [
 		return nil, typesUtil.ErrGetStakeAmount(err)
 	}
 
-	return typesUtil.StringToBigInt(stakeAmount)
+	amount, err := converters.StringToBigInt(stakeAmount)
+	if err != nil {
+		return nil, typesUtil.ErrStringToBigInt()
+	}
+	return amount, nil
 }
 
 func (u *utilityContext) GetUnstakingHeight(actorType coreTypes.ActorType) (int64, typesUtil.Error) {
@@ -415,7 +428,7 @@ func (u *utilityContext) BurnActor(actorType coreTypes.ActorType, percentage int
 	}
 	newTokensAfterBurn := big.NewInt(0).Sub(tokens, truncatedTokens)
 	// remove from pool
-	if err := u.SubPoolAmount(coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName(), typesUtil.BigIntToString(truncatedTokens)); err != nil {
+	if err := u.SubPoolAmount(coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName(), converters.BigIntToString(truncatedTokens)); err != nil {
 		return err
 	}
 	// remove from actor
@@ -441,9 +454,9 @@ func (u *utilityContext) BurnActor(actorType coreTypes.ActorType, percentage int
 }
 
 func (u *utilityContext) CalculateAppRelays(stakedTokens string) (string, typesUtil.Error) {
-	tokens, err := typesUtil.StringToBigInt(stakedTokens)
-	if err != nil {
-		return typesUtil.EmptyString, err
+	tokens, er := converters.StringToBigInt(stakedTokens)
+	if er != nil {
+		return typesUtil.EmptyString, typesUtil.ErrStringToBigInt()
 	}
 	// The constant integer adjustment that the DAO may use to move the stake. The DAO may manually
 	// adjust an application's MaxRelays at the time of staking to correct for short-term fluctuations
@@ -475,22 +488,22 @@ func (u *utilityContext) CalculateAppRelays(stakedTokens string) (string, typesU
 	if i := result.Cmp(max); i < -1 {
 		result = max
 	}
-	return typesUtil.BigIntToString(result), nil
+	return converters.BigIntToString(result), nil
 }
 
-func (u *utilityContext) CheckAboveMinStake(actorType coreTypes.ActorType, amount string) (a *big.Int, err typesUtil.Error) {
-	minStake, er := u.GetMinimumStake(actorType)
-	if er != nil {
-		return nil, er
-	}
-	a, err = typesUtil.StringToBigInt(amount)
+func (u *utilityContext) CheckAboveMinStake(actorType coreTypes.ActorType, amountStr string) (*big.Int, typesUtil.Error) {
+	minStake, err := u.GetMinimumStake(actorType)
 	if err != nil {
 		return nil, err
 	}
-	if typesUtil.BigIntLessThan(a, minStake) {
+	amount, er := converters.StringToBigInt(amountStr)
+	if er != nil {
+		return nil, typesUtil.ErrStringToBigInt()
+	}
+	if converters.BigIntLessThan(amount, minStake) {
 		return nil, typesUtil.ErrMinimumStake()
 	}
-	return // for convenience this returns amount as a big.Int
+	return amount, nil
 }
 
 func (u *utilityContext) CheckBelowMaxChains(actorType coreTypes.ActorType, chains []string) typesUtil.Error {

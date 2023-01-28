@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/shared/converters"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -29,7 +30,7 @@ const (
 )
 
 var (
-	defaultNonceString     = utilTypes.BigIntToString(test_artifacts.DefaultAccountAmount)
+	defaultNonceString     = converters.BigIntToString(test_artifacts.DefaultAccountAmount)
 	defaultUnstakingHeight = int64(2017)
 )
 
