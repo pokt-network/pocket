@@ -60,7 +60,7 @@ func (keybase *badgerKeybase) Create(passphrase, hint string) error {
 		// Use key address as key in DB
 		addrKey := keyPair.GetAddressBytes()
 
-		// Encode entire KeyPair struct into []byte for value
+		// Encode KeyPair into []byte for value
 		keypairBz, err := keyPair.Marshal()
 		if err != nil {
 			return err
@@ -88,7 +88,7 @@ func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint stri
 		// Use key address as key in DB
 		addrKey := keyPair.GetAddressBytes()
 
-		// Encode entire KeyPair struct into []byte for value
+		// Encode KeyPair into []byte for value
 		keypairBz, err := keyPair.Marshal()
 		if err != nil {
 			return err
@@ -116,7 +116,7 @@ func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 		// Use key address as key in DB
 		addrKey := keyPair.GetAddressBytes()
 
-		// Encode entire KeyPair struct into []byte for value
+		// Encode KeyPair into []byte for value
 		keypairBz, err := keyPair.Marshal()
 		if err != nil {
 			return err
@@ -153,7 +153,7 @@ func (keybase *badgerKeybase) Get(address string) (crypto.KeyPair, error) {
 			return err
 		}
 
-		// Decode []byte value back into KeyPair struct
+		// Decode []byte value back into KeyPair
 		if err := kp.Unmarshal(value); err != nil {
 			return err
 		}
@@ -206,7 +206,8 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 			err := item.Value(func(val []byte) error {
 				b := make([]byte, len(val))
 				copy(b, val)
-				// Decode []byte value back into KeyPair struct
+
+				// Decode []byte value back into KeyPair
 				kp := crypto.GetKeypair()
 				if err := kp.Unmarshal(b); err != nil {
 					return err
@@ -282,7 +283,7 @@ func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassph
 			return fmt.Errorf("Key address does not match previous address.")
 		}
 
-		// Encode entire KeyPair struct into []byte for value
+		// Encode KeyPair into []byte for value
 		keypairBz, err := keyPair.Marshal()
 		if err != nil {
 			return err
