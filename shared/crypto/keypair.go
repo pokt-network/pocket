@@ -44,7 +44,7 @@ type encKeyPair struct {
 }
 
 // Generate a new KeyPair struct given the public key and armoured private key
-func NewKeyPair(pub PublicKey, priv string) KeyPair {
+func newKeyPair(pub PublicKey, priv string) KeyPair {
 	return &encKeyPair{
 		PublicKey:     pub,
 		PrivKeyArmour: priv,
@@ -136,7 +136,7 @@ func CreateNewKey(passphrase, hint string) (KeyPair, error) {
 	}
 
 	pubKey := privKey.PublicKey()
-	kp := NewKeyPair(pubKey, privArmour)
+	kp := newKeyPair(pubKey, privArmour)
 
 	return kp, nil
 }
@@ -154,7 +154,7 @@ func CreateNewKeyFromString(privStrHex, passphrase, hint string) (KeyPair, error
 	}
 
 	pubKey := privKey.PublicKey()
-	kp := NewKeyPair(pubKey, privArmour)
+	kp := newKeyPair(pubKey, privArmour)
 
 	return kp, nil
 }
@@ -167,7 +167,7 @@ func ImportKeyFromJSON(jsonStr, passphrase string) (KeyPair, error) {
 		return nil, err
 	}
 	pubKey := privKey.PublicKey()
-	kp := NewKeyPair(pubKey, jsonStr)
+	kp := newKeyPair(pubKey, jsonStr)
 
 	return kp, nil
 }
