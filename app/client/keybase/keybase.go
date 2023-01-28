@@ -8,7 +8,7 @@ type Keybase interface {
 	Stop() error
 
 	// Create new keypair entry in DB
-	Create(passphrase string) error
+	Create(passphrase, hint string) error
 	// Insert a new keypair from the private key hex string provided into the DB
 	ImportFromString(privStr, passphrase string) error
 	// Insert a new keypair from the JSON string of the encrypted private key into the DB

@@ -54,9 +54,9 @@ func NewArmouredKey(kdf, salt, hint, cipher string) ArmouredKey {
 	}
 }
 
-// Encrypt the given privKey with the passphrase, armour it by encoding the ecnrypted
+// Encrypt the given privKey with the passphrase, armour it by encoding the encrypted
 // []byte into base64, and convert into a json string with the parameters for unarmouring
-func encryptArmourPrivKey(privKey PrivateKey, passphrase string) (string, error) {
+func encryptArmourPrivKey(privKey PrivateKey, passphrase, hint string) (string, error) {
 	// Encrypt privKey usign AES-256 GCM Cipher
 	saltBz, encBz, err := encryptPrivKey(privKey, passphrase)
 	if err != nil {
@@ -67,7 +67,7 @@ func encryptArmourPrivKey(privKey PrivateKey, passphrase string) (string, error)
 	armourStr := base64.RawStdEncoding.EncodeToString(encBz)
 
 	// Create ArmouredKey object so can unarmour later
-	armoured := NewArmouredKey(kdf, hex.EncodeToString(saltBz), "", armourStr)
+	armoured := NewArmouredKey(kdf, hex.EncodeToString(saltBz), hint, armourStr)
 
 	// Encode armoured struct into []byte
 	js, err := json.Marshal(armoured)

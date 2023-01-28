@@ -87,9 +87,9 @@ func (keybase *badgerKeybase) newKeyPairFromString(fn func(string, string) (cryp
 
 // Create a new key and store it in the DB by encoding the KeyPair struct into a []byte
 // Using the PublicKey.Address() return value as the key for storage
-func (keybase *badgerKeybase) Create(passphrase string) error {
+func (keybase *badgerKeybase) Create(passphrase, hint string) error {
 	err := keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.CreateNewKey(passphrase)
+		keyPair, err := crypto.CreateNewKey(passphrase, hint)
 		if err != nil {
 			return err
 		}

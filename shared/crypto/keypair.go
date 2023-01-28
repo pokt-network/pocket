@@ -79,13 +79,13 @@ func (kp EncKeyPair) ExportJSON(passphrase string) (string, error) {
 
 // Generate new private ED25519 key and encrypt and armour it as a string
 // Returns a KeyPair struct of the Public Key and Armoured String
-func CreateNewKey(passphrase string) (KeyPair, error) {
+func CreateNewKey(passphrase, hint string) (KeyPair, error) {
 	privKey, err := GeneratePrivateKey()
 	if err != nil {
 		return nil, err
 	}
 
-	privArmour, err := encryptArmourPrivKey(privKey, passphrase)
+	privArmour, err := encryptArmourPrivKey(privKey, passphrase, hint)
 	if err != nil || privArmour == "" {
 		return nil, err
 	}
