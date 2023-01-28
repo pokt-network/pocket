@@ -20,7 +20,7 @@ The Keybase package uses a filesystem key-value database, `BadgerDB`, as its bac
 
 _The current keybase has not been integrated with any CLI endpoints, and as such is only accessible through the [keybase interface](#keybase-interface); tracked by #150_
 
-The DB stores the local key pairs in `EncKeyPair` structs encoded into `[]byte` using `encoding/gob` this is only used for internal storage in the DB. The `EncKeyPair` struct implements the [KeyPair interface](#keypair-interface) and as such has a number of methods that can be used on it. But relevent to the DB storage of these is the `GetAddressBytes()` function that returns the `[]byte` of the `PublicKey` field's hex address from the struct. The `[]byte` returned by the `GetAddressBytes()` function is used as the key in the key-value store and the value is the `gob` encoded `[]byte` of the `EncKeyPair` struct as a whole - which contains both the `PublicKey` and `PrivKeyArmour` (JSON encoded, encrypted private key string).
+The DB stores the local keys encoded into `[]byte` using `encoding/gob` this is only used for internal storage in the DB. The [KeyPair interface](#keypair-interface) has a number of methods that can be used on it. But relevent to the DB storage of these is the `GetAddressBytes()` function that returns the `[]byte` of the `PublicKey` field's hex address from the struct. The `[]byte` returned by the `GetAddressBytes()` function is used as the key in the key-value store and the value is the `gob` encoded `[]byte` of the `KeyPair` interface as a whole - which contains both the `PublicKey` and `PrivKeyArmour` (JSON encoded, encrypted private key string).
 
 The Keybase DB layer then allows for a number of functions to be used which are exposed by the [Keybase interface](#keybase-interface) to fulfill CRUD operations on the DB itself.
 
@@ -73,8 +73,9 @@ The [KeyPair interface](../../../shared/crypto/keypair.go) exposes methods relat
 - Get Public key address `[]byte` or hex `string`
 - Unarmour the private key JSON string
 - Export the private key hex string/JSON armoured string
+- Marshal and unmarshal the KeyPair in and out of a `[]byte`
 
-The [KeyPair](../../../shared/crypto/keypair.go) interface is implemented by the `EncKeyPair` struct, which stores the `PublicKey` of the key pair and the JSON encoded, `armoured` key string.
+The [KeyPair](../../../shared/crypto/keypair.go) interface is implemented by the `encKeyPair` struct, which stores the `PublicKey` of the key pair and the JSON encoded, `armoured` key string.
 
 The private key armoured JSON string is created after the [encryption step](#encryption-and-armouring) has encrypted the private key and marshalled it into a JSON string.
 
