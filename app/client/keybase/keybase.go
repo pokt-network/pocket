@@ -26,7 +26,7 @@ type Keybase interface {
 	ExportPrivJSON(address, passphrase string) (string, error)
 
 	// Updator
-	UpdatePassphrase(address, oldPassphrase, newPassphrase string) error
+	UpdatePassphrase(address, oldPassphrase, newPassphrase, hint string) error
 
 	// Sign Messages
 	Sign(address, passphrase string, msg []byte) ([]byte, error)

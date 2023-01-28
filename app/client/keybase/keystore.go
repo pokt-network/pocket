@@ -272,7 +272,7 @@ func (keybase *badgerKeybase) ExportPrivJSON(address, passphrase string) (string
 	return kp.ExportJSON(passphrase)
 }
 
-func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassphrase string) error {
+func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassphrase, hint string) error {
 	// Check the oldPassphrase is correct
 	privKey, err := keybase.GetPrivKey(address, oldPassphrase)
 	if err != nil {
@@ -286,7 +286,7 @@ func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassph
 	}
 
 	err = keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.CreateNewKeyFromString(privStr, newPassphrase)
+		keyPair, err := crypto.CreateNewKeyFromString(privStr, newPassphrase, hint)
 		if err != nil {
 			return err
 		}
