@@ -35,7 +35,7 @@ var (
 )
 
 // Armoured Private Key struct with fields to unarmour it later
-type ArmouredKey struct {
+type armouredKey struct {
 	Kdf        string `json:"kdf"`
 	Salt       string `json:"salt"`
 	SecParam   string `json:"secparam"`
@@ -44,8 +44,8 @@ type ArmouredKey struct {
 }
 
 // Generate new armoured private key struct with parameters for unarmouring
-func NewArmouredKey(kdf, salt, hint, cipher string) ArmouredKey {
-	return ArmouredKey{
+func newArmouredKey(kdf, salt, hint, cipher string) armouredKey {
+	return armouredKey{
 		Kdf:        kdf,
 		Salt:       salt,
 		SecParam:   strconv.Itoa(secParam),
@@ -67,7 +67,7 @@ func encryptArmourPrivKey(privKey PrivateKey, passphrase, hint string) (string, 
 	armourStr := base64.RawStdEncoding.EncodeToString(encBz)
 
 	// Create ArmouredKey object so can unarmour later
-	armoured := NewArmouredKey(kdf, hex.EncodeToString(saltBz), hint, armourStr)
+	armoured := newArmouredKey(kdf, hex.EncodeToString(saltBz), hint, armourStr)
 
 	// Encode armoured struct into []byte
 	js, err := json.Marshal(armoured)
@@ -103,28 +103,28 @@ func encryptPrivKey(privKey PrivateKey, passphrase string) (saltBz, encBz []byte
 // Unarmor and decrypt the private key using the passphrase provided
 func unarmourDecryptPrivKey(armourStr string, passphrase string) (privKey PrivateKey, err error) {
 	// Decode armourStr back into ArmouredKey struct
-	armouredKey := ArmouredKey{}
-	err = json.Unmarshal([]byte(armourStr), &armouredKey)
+	ak := armouredKey{}
+	err = json.Unmarshal([]byte(armourStr), &ak)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check the ArmouredKey for the correct parameters on kdf and salt
-	if armouredKey.Kdf != kdf {
-		return nil, fmt.Errorf("Unrecognized KDF type: %v", armouredKey.Kdf)
+	if ak.Kdf != kdf {
+		return nil, fmt.Errorf("Unrecognized KDF type: %v", ak.Kdf)
 	}
-	if armouredKey.Salt == "" {
+	if ak.Salt == "" {
 		return nil, fmt.Errorf("Missing salt bytes")
 	}
 
 	// Decoding the salt
-	saltBz, err := hex.DecodeString(armouredKey.Salt)
+	saltBz, err := hex.DecodeString(ak.Salt)
 	if err != nil {
 		return nil, fmt.Errorf("Error decoding salt: %v", err.Error())
 	}
 
 	// Decoding the "armoured" ciphertext stored in base64
-	encBz, err := base64.RawStdEncoding.DecodeString(armouredKey.CipherText)
+	encBz, err := base64.RawStdEncoding.DecodeString(ak.CipherText)
 	if err != nil {
 		return nil, fmt.Errorf("Error decoding ciphertext: %v", err.Error())
 	}
