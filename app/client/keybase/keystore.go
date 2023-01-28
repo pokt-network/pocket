@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/dgraph-io/badger/v3"
@@ -24,8 +25,12 @@ type badgerKeybase struct {
 }
 
 // Creates/Opens the DB at the specified path
-// WARNING: path must be a valid directory that already exists
+// DISCUSS: Should this create the directory if it doesn't exist?
 func NewKeybase(path string) (Keybase, error) {
+	pathExists, err := dirExists(path)
+	if err != nil || !pathExists {
+		return nil, err
+	}
 	db, err := badger.Open(badgerOptions(path))
 	if err != nil {
 		return nil, err
@@ -341,4 +346,20 @@ func badgerOptions(path string) badger.Options {
 	opts := badger.DefaultOptions(path)
 	opts.Logger = nil // Badger logger is very noisy
 	return opts
+}
+
+// Check directory exists / create if not
+// Check that a file exists at the given path
+func dirExists(path string) (bool, error) {
+	stat, err := os.Stat(path)
+	if err == nil {
+		if !stat.IsDir() {
+			return false, fmt.Errorf("Keybase path is not a directory: %s", path)
+		}
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
 }
