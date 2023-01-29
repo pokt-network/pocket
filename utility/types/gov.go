@@ -1,5 +1,7 @@
 package types
 
+// IMPROVE: Rename `UnstakingBlocks` to `UnbondingPeriod` or `UnstakingBlocksUnbondingPeriod`
+
 const (
 	// Session gov params
 	BlocksPerSessionParamName = "blocks_per_session"

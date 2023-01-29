@@ -5,7 +5,7 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 )
 
 func (p PostgresContext) GetFishermanExists(address []byte, height int64) (exists bool, err error) {
@@ -57,7 +57,7 @@ func (p PostgresContext) SetFishermanStakeAmount(address []byte, stakeAmount str
 	return p.setActorStakeAmount(types.FishermanActor, address, stakeAmount)
 }
 
-func (p PostgresContext) GetFishermenReadyToUnstake(height int64, status int32) ([]modules.IUnstakingActor, error) {
+func (p PostgresContext) GetFishermenReadyToUnstake(height int64, status int32) ([]*moduleTypes.UnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.FishermanActor, height)
 }
 

@@ -21,6 +21,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -228,8 +229,8 @@ func fuzzSingleProtocolActor(
 			if originalActor.UnstakingHeight != db.Height { // Not ready to unstake
 				require.Nil(t, unstakingActors)
 			} else {
-				idx := slices.IndexFunc(unstakingActors, func(a modules.IUnstakingActor) bool {
-					return originalActor.Address == hex.EncodeToString(a.GetAddress())
+				idx := slices.IndexFunc(unstakingActors, func(a *moduleTypes.UnstakingActor) bool {
+					return originalActor.Address == a.Address
 				})
 				require.NotEqual(t, idx, -1, fmt.Sprintf("actor that is unstaking was not found %+v", originalActor))
 			}

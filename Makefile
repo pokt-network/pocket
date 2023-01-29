@@ -243,9 +243,10 @@ PROTOC_SHARED = $(PROTOC) -I=./shared
 .PHONY: protogen_local
 protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
 	# Shared
-	$(PROTOC) -I=./shared/core/types/proto --go_out=./shared/core/types ./shared/core/types/proto/*.proto
-	$(PROTOC) -I=./shared/messaging/proto  --go_out=./shared/messaging  ./shared/messaging/proto/*.proto
-	$(PROTOC) -I=./shared/codec/proto      --go_out=./shared/codec      ./shared/codec/proto/*.proto
+	$(PROTOC) -I=./shared/core/types/proto    --go_out=./shared/core/types          ./shared/core/types/proto/*.proto
+	$(PROTOC) -I=./shared/modules/types/proto --go_out=./shared/modules/types ./shared/modules/types/proto/*.proto
+	$(PROTOC) -I=./shared/messaging/proto     --go_out=./shared/messaging           ./shared/messaging/proto/*.proto
+	$(PROTOC) -I=./shared/codec/proto         --go_out=./shared/codec               ./shared/codec/proto/*.proto
 
 	# Runtime
 	$(PROTOC) -I=./runtime/configs/types/proto				--go_out=./runtime/configs/types	./runtime/configs/types/proto/*.proto
@@ -255,8 +256,6 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 
 	# Persistence
 	$(PROTOC_SHARED) -I=./persistence/indexer/proto 	--go_out=./persistence/indexer ./persistence/indexer/proto/*.proto
-	$(PROTOC_SHARED) -I=./persistence/proto         	--go_out=./persistence/types   ./persistence/proto/*.proto
-	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 
 	# Utility
 	$(PROTOC_SHARED) -I=./utility/types/proto --go_out=./utility/types ./utility/types/proto/*.proto

@@ -130,13 +130,13 @@ func TestGetServiceNodesReadyToUnstake(t *testing.T) {
 	unstakingServiceNodes, err := db.GetServiceNodesReadyToUnstake(0, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingServiceNodes), "wrong number of actors ready to unstake at height 0")
-	require.Equal(t, serviceNode.Address, hex.EncodeToString(unstakingServiceNodes[0].GetAddress()), "unexpected serviceNodelication actor returned")
+	require.Equal(t, serviceNode.Address, unstakingServiceNodes[0].Address, "unexpected serviceNodelication actor returned")
 
 	// Check unstaking serviceNodes at height 1
 	unstakingServiceNodes, err = db.GetServiceNodesReadyToUnstake(1, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingServiceNodes), "wrong number of actors ready to unstake at height 1")
-	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingServiceNodes[0].GetAddress(), unstakingServiceNodes[1].GetAddress()})
+	require.ElementsMatch(t, []string{serviceNode2.Address, serviceNode3.Address}, []string{unstakingServiceNodes[0].Address, unstakingServiceNodes[1].Address})
 }
 
 func TestGetServiceNodeStatus(t *testing.T) {

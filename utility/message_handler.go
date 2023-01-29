@@ -220,7 +220,7 @@ func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake)
 		}
 		return err
 	}
-	unstakingHeight, err := u.GetUnstakingHeight(message.ActorType)
+	unstakingHeight, err := u.getUnstakingHeight(message.ActorType)
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func (u *utilityContext) handleUnpauseMessage(message *typesUtil.MessageUnpause)
 	if err != nil {
 		return err
 	}
-	latestHeight, err := u.GetLatestBlockHeight()
+	latestHeight, err := u.getLatestBlockHeight()
 	if err != nil {
 		return err
 	}

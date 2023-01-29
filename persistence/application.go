@@ -5,7 +5,7 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 )
 
 func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool, err error) {
@@ -60,7 +60,7 @@ func (p PostgresContext) SetAppStakeAmount(address []byte, stakeAmount string) e
 	return p.setActorStakeAmount(types.ApplicationActor, address, stakeAmount)
 }
 
-func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int32) ([]modules.IUnstakingActor, error) {
+func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int32) ([]*moduleTypes.UnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.ApplicationActor, height)
 }
 

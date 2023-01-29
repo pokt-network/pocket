@@ -223,7 +223,7 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 
 			status, err := ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, int32(typesUtil.StakeStatus_Unstaking), status, "actor should be unstaking")
+			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be unstaking")
 		})
 	}
 }
@@ -256,7 +256,7 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 			}
 			require.NoError(t, err, "error getting unstaking blocks")
 
-			unstakingHeight, err := ctx.GetUnstakingHeight(actorType)
+			unstakingHeight, err := ctx.getUnstakingHeight(actorType)
 			require.NoError(t, err)
 			require.Equal(t, unstakingBlocks, unstakingHeight, "unexpected unstaking height")
 
@@ -546,7 +546,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			require.NoError(t, err)
 
 			status, err := ctx.getActorStatus(actorType, addrBz)
-			require.Equal(t, int32(typesUtil.StakeStatus_Unstaking), status, "incorrect status")
+			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "incorrect status")
 
 		})
 	}

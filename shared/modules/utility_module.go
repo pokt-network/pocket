@@ -56,6 +56,6 @@ type UtilityContext interface {
 // TECHDEBT: Remove this interface from `shared/modules`
 type UnstakingActor interface {
 	GetAddress() []byte
-	GetStakeAmount() string
+	// GetStakeAmount() string
 	GetOutputAddress() []byte
 }

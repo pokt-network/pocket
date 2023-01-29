@@ -5,7 +5,7 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 )
 
 func (p PostgresContext) GetServiceNodeExists(address []byte, height int64) (exists bool, err error) {
@@ -61,7 +61,7 @@ func (p PostgresContext) GetServiceNodeCount(chain string, height int64) (int, e
 	panic("GetServiceNodeCount not implemented")
 }
 
-func (p PostgresContext) GetServiceNodesReadyToUnstake(height int64, status int32) ([]modules.IUnstakingActor, error) {
+func (p PostgresContext) GetServiceNodesReadyToUnstake(height int64, status int32) ([]*moduleTypes.UnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.ServiceNodeActor, height)
 }
 

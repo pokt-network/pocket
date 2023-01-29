@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 )
 
 // IMPROVE(team): Move this into a proto enum. We are not using `iota` for the time being
@@ -188,7 +189,7 @@ func (p *PostgresContext) UpdateActor(actorSchema types.ProtocolActorSchema, act
 	return nil
 }
 
-func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema types.ProtocolActorSchema, height int64) (actors []modules.IUnstakingActor, err error) {
+func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema types.ProtocolActorSchema, height int64) (actors []*moduleTypes.UnstakingActor, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
@@ -201,15 +202,11 @@ func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema types.ProtocolActo
 	defer rows.Close()
 
 	for rows.Next() {
-		unstakingActor := &types.UnstakingActor{}
-		var addr, output, stakeAmount string
-		if err = rows.Scan(&addr, &stakeAmount, &output); err != nil {
+		actor := &moduleTypes.UnstakingActor{}
+		if err = rows.Scan(&actor.Address, &actor.StakeAmount, &actor.OutputAddress); err != nil {
 			return
 		}
-		unstakingActor.SetAddress(addr)
-		unstakingActor.SetStakeAmount(stakeAmount)
-		unstakingActor.SetOutputAddress(output)
-		actors = append(actors, unstakingActor)
+		actors = append(actors, actor)
 	}
 	return
 }

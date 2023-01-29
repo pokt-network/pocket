@@ -1,11 +1,12 @@
 package utility
 
 import (
+	"encoding/hex"
 	"log"
 	"math/big"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -168,7 +169,7 @@ func (u *utilityContext) EndBlock(proposer []byte) typesUtil.Error {
 
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
 func (u *utilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
-	latestBlockHeight, err := u.GetLatestBlockHeight()
+	latestBlockHeight, err := u.getLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -207,12 +208,12 @@ func (u *utilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	latestHeight, err := u.GetLatestBlockHeight()
+	latestHeight, err := u.getLatestBlockHeight()
 	if err != nil {
 		return err
 	}
 	for _, actorTypeInt32 := range coreTypes.ActorType_value {
-		var readyToUnstake []modules.IUnstakingActor
+		var readyToUnstake []*moduleTypes.UnstakingActor
 		actorType := coreTypes.ActorType(actorTypeInt32)
 		var poolName string
 		switch actorType {
@@ -238,7 +239,11 @@ func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 			if err = u.subPoolAmount(poolName, actor.GetStakeAmount()); err != nil {
 				return err
 			}
-			if err = u.addAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
+			outputAddrBz, er := hex.DecodeString(actor.OutputAddress)
+			if er != nil {
+				return typesUtil.ErrHexDecodeFromString(er)
+			}
+			if err = u.addAccountAmountString(outputAddrBz, actor.StakeAmount); err != nil {
 				return err
 			}
 		}
@@ -247,7 +252,7 @@ func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 }
 
 func (u *utilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
-	latestHeight, err := u.GetLatestBlockHeight()
+	latestHeight, err := u.getLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -275,7 +280,7 @@ func (u *utilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
 func (u *utilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, ActorType coreTypes.ActorType) (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	unstakingHeight, err := u.GetUnstakingHeight(ActorType)
+	unstakingHeight, err := u.getUnstakingHeight(ActorType)
 	if err != nil {
 		return err
 	}

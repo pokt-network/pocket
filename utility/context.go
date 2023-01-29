@@ -70,10 +70,11 @@ func (u *utilityContext) Release() error {
 	return nil
 }
 
-func (u *utilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
-	height, er := u.Store().GetHeight()
-	if er != nil {
-		return 0, typesUtil.ErrGetHeight(er)
+// DISCUSS_IN_THIS_COMMIT: Should this function even exist or should we just return `u.Height`?
+func (u *utilityContext) getLatestBlockHeight() (int64, typesUtil.Error) {
+	height, err := u.Store().GetHeight()
+	if err != nil {
+		return 0, typesUtil.ErrGetHeight(err)
 	}
 	return height, nil
 }

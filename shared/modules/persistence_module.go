@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/genesis"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
+	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 )
 
 const PersistenceModuleName = "persistence"
@@ -146,7 +147,7 @@ type PersistenceReadContext interface {
 	GetAllApps(height int64) ([]*coreTypes.Actor, error)
 	GetAppExists(address []byte, height int64) (exists bool, err error)
 	GetAppStakeAmount(height int64, address []byte) (string, error)
-	GetAppsReadyToUnstake(height int64, status int32) (apps []IUnstakingActor, err error)
+	GetAppsReadyToUnstake(height int64, status int32) (apps []*moduleTypes.UnstakingActor, err error)
 	GetAppStatus(address []byte, height int64) (status int32, err error)
 	GetAppPauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetAppOutputAddress(operator []byte, height int64) (output []byte, err error)
@@ -155,7 +156,7 @@ type PersistenceReadContext interface {
 	GetAllServiceNodes(height int64) ([]*coreTypes.Actor, error)
 	GetServiceNodeExists(address []byte, height int64) (exists bool, err error)
 	GetServiceNodeStakeAmount(height int64, address []byte) (string, error)
-	GetServiceNodesReadyToUnstake(height int64, status int32) (serviceNodes []IUnstakingActor, err error)
+	GetServiceNodesReadyToUnstake(height int64, status int32) (serviceNodes []*moduleTypes.UnstakingActor, err error)
 	GetServiceNodeStatus(address []byte, height int64) (status int32, err error)
 	GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error)
@@ -165,7 +166,7 @@ type PersistenceReadContext interface {
 	GetAllFishermen(height int64) ([]*coreTypes.Actor, error)
 	GetFishermanExists(address []byte, height int64) (exists bool, err error)
 	GetFishermanStakeAmount(height int64, address []byte) (string, error)
-	GetFishermenReadyToUnstake(height int64, status int32) (fishermen []IUnstakingActor, err error)
+	GetFishermenReadyToUnstake(height int64, status int32) (fishermen []*moduleTypes.UnstakingActor, err error)
 	GetFishermanStatus(address []byte, height int64) (status int32, err error)
 	GetFishermanPauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetFishermanOutputAddress(operator []byte, height int64) (output []byte, err error)
@@ -174,7 +175,7 @@ type PersistenceReadContext interface {
 	GetAllValidators(height int64) ([]*coreTypes.Actor, error)
 	GetValidatorExists(address []byte, height int64) (exists bool, err error)
 	GetValidatorStakeAmount(height int64, address []byte) (string, error)
-	GetValidatorsReadyToUnstake(height int64, status int32) (validators []IUnstakingActor, err error)
+	GetValidatorsReadyToUnstake(height int64, status int32) (validators []*moduleTypes.UnstakingActor, err error)
 	GetValidatorStatus(address []byte, height int64) (status int32, err error)
 	GetValidatorPauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetValidatorOutputAddress(operator []byte, height int64) (output []byte, err error)

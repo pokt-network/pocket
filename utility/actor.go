@@ -300,14 +300,14 @@ func (u *utilityContext) GetStakeAmount(actorType coreTypes.ActorType, addr []by
 	return amount, nil
 }
 
-func (u *utilityContext) GetUnstakingHeight(actorType coreTypes.ActorType) (int64, typesUtil.Error) {
+func (u *utilityContext) getUnstakingHeight(actorType coreTypes.ActorType) (int64, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, typesUtil.ErrGetHeight(err)
 	}
 
 	var paramName string
-	var unstakingBlocks int
+	var unstakingBlocksPeriod int
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		paramName = typesUtil.AppUnstakingBlocksParamName
@@ -321,13 +321,17 @@ func (u *utilityContext) GetUnstakingHeight(actorType coreTypes.ActorType) (int6
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	var er error
-	unstakingBlocks, er = store.GetIntParam(paramName, height)
-	if er != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
+	unstakingBlocksPeriod, err = store.GetIntParam(paramName, height)
+	if err != nil {
+		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
 	}
 
-	return u.CalculateUnstakingHeight(int64(unstakingBlocks))
+	latestHeight, er := u.getLatestBlockHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, er
+	}
+
+	return latestHeight + int64(unstakingBlocksPeriod), nil
 }
 
 func (u *utilityContext) GetMaxChains(actorType coreTypes.ActorType) (int, typesUtil.Error) {
@@ -441,7 +445,7 @@ func (u *utilityContext) BurnActor(actorType coreTypes.ActorType, percentage int
 	}
 	// fell below minimum stake
 	if minStake.Cmp(truncatedTokens) == 1 {
-		unstakingHeight, err := u.GetUnstakingHeight(actorType)
+		unstakingHeight, err := u.getUnstakingHeight(actorType)
 		if err != nil {
 			return err
 		}
@@ -525,14 +529,6 @@ func (u *utilityContext) CheckBelowMaxChains(actorType coreTypes.ActorType, chai
 func (u *utilityContext) GetLastBlockByzantineValidators() ([][]byte, error) {
 	// TODO(#271): Need to retrieve byzantine validators from the persistence module
 	return nil, nil
-}
-
-func (u *utilityContext) CalculateUnstakingHeight(unstakingBlocks int64) (int64, typesUtil.Error) {
-	latestHeight, err := u.GetLatestBlockHeight()
-	if err != nil {
-		return typesUtil.ZeroInt, err
-	}
-	return unstakingBlocks + latestHeight, nil
 }
 
 // util
