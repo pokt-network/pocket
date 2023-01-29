@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
 type Error interface {
@@ -521,8 +523,8 @@ func ErrGetBlockHash(err error) Error {
 	return NewError(CodeGetBlockHashError, fmt.Sprintf("%s: %s", GetBlockHashError, err.Error()))
 }
 
-func ErrInvalidPublicKeyLen(err error) Error {
-	return NewError(CodeInvalidPublicKeyLenError, fmt.Sprintf("%s: %s", InvalidPublicKeyLenError, err.Error()))
+func ErrInvalidPublicKeyLen(pubKeyLen int) Error {
+	return NewError(CodeInvalidPublicKeyLenError, fmt.Sprintf("%s: %s", InvalidPublicKeyLenError, cryptoPocket.ErrInvalidPublicKeyLen(pubKeyLen)))
 }
 
 func ErrInvalidNonce() Error {
@@ -762,8 +764,8 @@ func ErrInvalidTransactionCount() Error {
 	return NewError(CodeInvalidTransactionCountError, InvalidTransactionCountError)
 }
 
-func ErrInvalidHashLength(err error) Error {
-	return NewError(CodeInvalidHashLengthError, fmt.Sprintf("%s: %s", InvalidHashLengthError, err.Error()))
+func ErrInvalidHashLength(hashLen int) Error {
+	return NewError(CodeInvalidHashLengthError, fmt.Sprintf("%s: %s", InvalidHashLengthError, cryptoPocket.ErrInvalidHashLen(hashLen)))
 }
 
 func ErrNilQuorumCertificate() Error {
