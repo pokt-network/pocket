@@ -23,7 +23,7 @@ func (u *utilityContext) getAccountAmount(address []byte) (*big.Int, types.Error
 	}
 	amount, err := converters.StringToBigInt(amountStr)
 	if err != nil {
-		return nil, typesUtil.ErrStringToBigInt()
+		return nil, typesUtil.ErrStringToBigInt(err)
 	}
 	return amount, nil
 }
@@ -71,7 +71,7 @@ func (u *utilityContext) GetPoolAmount(name string) (*big.Int, types.Error) {
 	}
 	amount, err := converters.StringToBigInt(tokens)
 	if err != nil {
-		return nil, types.ErrStringToBigInt()
+		return nil, types.ErrStringToBigInt(err)
 	}
 	return amount, nil
 }

@@ -64,7 +64,7 @@ func (u *utilityContext) handleMessageSend(message *typesUtil.MessageSend) types
 	// convert the amount to big.Int
 	amount, er := converters.StringToBigInt(message.Amount)
 	if er != nil {
-		return typesUtil.ErrStringToBigInt()
+		return typesUtil.ErrStringToBigInt(er)
 	}
 	// get the sender's account amount
 	fromAccountAmount, err := u.getAccountAmount(message.FromAddress)
@@ -165,7 +165,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 	}
 	amount, er := converters.StringToBigInt(message.Amount)
 	if er != nil {
-		return typesUtil.ErrStringToBigInt()
+		return typesUtil.ErrStringToBigInt(err)
 	}
 	// ensure new stake >= current stake
 	amount.Sub(amount, currentStakeAmount)

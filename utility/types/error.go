@@ -263,7 +263,7 @@ const (
 	PayloadTooBigError                = "socket error: payload size is too big. "
 	SocketIOStartFailedError          = "socket error: failed to start socket reading/writing (io)"
 	EmptyTransactionError             = "the transaction is empty"
-	StringToBigIntError               = "an error occurred converting the string primitive to big.Int, the conversion was unsuccessful with base 10"
+	StringToBigIntError               = "error converting string to big int"
 	GetAllValidatorsError             = "an error occurred getting all validators from the state"
 	InvalidAmountError                = "the amount field is invalid; cannot be converted to big.Int"
 	InvalidAddressLenError            = "the length of the address is not valid"
@@ -674,8 +674,8 @@ func ErrDuplicateTransaction() Error {
 	return NewError(CodeDuplicateTransactionError, DuplicateTransactionError)
 }
 
-func ErrStringToBigInt() Error {
-	return NewError(CodeStringToBigIntError, StringToBigIntError)
+func ErrStringToBigInt(err error) Error {
+	return NewError(CodeStringToBigIntError, fmt.Sprintf("%s: %s", StringToBigIntError, err.Error()))
 }
 
 func ErrInsufficientAmount(address string) Error {

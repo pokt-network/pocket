@@ -564,7 +564,7 @@ func (u *utilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.E
 	}
 	amount, err := converters.StringToBigInt(value)
 	if err != nil {
-		return nil, typesUtil.ErrStringToBigInt()
+		return nil, typesUtil.ErrStringToBigInt(err)
 	}
 	return amount, nil
 }

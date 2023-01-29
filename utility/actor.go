@@ -124,7 +124,7 @@ func (u *utilityContext) GetActorStakedTokens(actorType coreTypes.ActorType, add
 
 	amount, err := converters.StringToBigInt(stakedTokens)
 	if err != nil {
-		return nil, typesUtil.ErrStringToBigInt()
+		return nil, typesUtil.ErrStringToBigInt(err)
 	}
 	return amount, nil
 }
@@ -265,7 +265,7 @@ func (u *utilityContext) GetMinimumStake(actorType coreTypes.ActorType) (*big.In
 
 	amount, err := converters.StringToBigInt(minStake)
 	if err != nil {
-		return nil, typesUtil.ErrStringToBigInt()
+		return nil, typesUtil.ErrStringToBigInt(err)
 	}
 	return amount, nil
 }
@@ -296,7 +296,7 @@ func (u *utilityContext) GetStakeAmount(actorType coreTypes.ActorType, address [
 
 	amount, err := converters.StringToBigInt(stakeAmount)
 	if err != nil {
-		return nil, typesUtil.ErrStringToBigInt()
+		return nil, typesUtil.ErrStringToBigInt(err)
 	}
 	return amount, nil
 }
@@ -456,7 +456,7 @@ func (u *utilityContext) BurnActor(actorType coreTypes.ActorType, percentage int
 func (u *utilityContext) CalculateAppRelays(stakedTokens string) (string, typesUtil.Error) {
 	tokens, er := converters.StringToBigInt(stakedTokens)
 	if er != nil {
-		return typesUtil.EmptyString, typesUtil.ErrStringToBigInt()
+		return typesUtil.EmptyString, typesUtil.ErrStringToBigInt(er)
 	}
 	// The constant integer adjustment that the DAO may use to move the stake. The DAO may manually
 	// adjust an application's MaxRelays at the time of staking to correct for short-term fluctuations
@@ -498,7 +498,7 @@ func (u *utilityContext) CheckAboveMinStake(actorType coreTypes.ActorType, amoun
 	}
 	amount, er := converters.StringToBigInt(amountStr)
 	if er != nil {
-		return nil, typesUtil.ErrStringToBigInt()
+		return nil, typesUtil.ErrStringToBigInt(err)
 	}
 	if converters.BigIntLessThan(amount, minStake) {
 		return nil, typesUtil.ErrMinimumStake()

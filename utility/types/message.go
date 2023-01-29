@@ -179,7 +179,7 @@ func validateAmount(amount string) Error {
 		return ErrEmptyAmount()
 	}
 	if _, err := converters.StringToBigInt(amount); err != nil {
-		return ErrStringToBigInt()
+		return ErrStringToBigInt(err)
 	}
 	return nil
 }
