@@ -92,7 +92,7 @@ func (u *utilityContext) setActorPausedHeight(actorType coreTypes.ActorType, add
 
 // getters
 
-func (u *utilityContext) getActorStakedAmount(actorType coreTypes.ActorType, address []byte) (*big.Int, typesUtil.Error) {
+func (u *utilityContext) getActorStakedAmount(actorType coreTypes.ActorType, addr []byte) (*big.Int, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return nil, typesUtil.ErrGetHeight(err)
@@ -101,13 +101,13 @@ func (u *utilityContext) getActorStakedAmount(actorType coreTypes.ActorType, add
 	var stakedTokens string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		stakedTokens, err = store.GetAppStakeAmount(height, address)
+		stakedTokens, err = store.GetAppStakeAmount(height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		stakedTokens, err = store.GetFishermanStakeAmount(height, address)
+		stakedTokens, err = store.GetFishermanStakeAmount(height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		stakedTokens, err = store.GetServiceNodeStakeAmount(height, address)
+		stakedTokens, err = store.GetServiceNodeStakeAmount(height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		stakedTokens, err = store.GetValidatorStakeAmount(height, address)
+		stakedTokens, err = store.GetValidatorStakeAmount(height, addr)
 	default:
 		err = typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -206,7 +206,7 @@ func (u *utilityContext) getPausedHeightIfExists(actorType coreTypes.ActorType, 
 	return pauseHeight, nil
 }
 
-func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, address []byte) (typesUtil.StakeStatus, typesUtil.Error) {
+func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, addr []byte) (typesUtil.StakeStatus, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, typesUtil.ErrGetHeight(err)
@@ -215,13 +215,13 @@ func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, address [
 	var status int32
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		status, err = store.GetAppStatus(address, height)
+		status, err = store.GetAppStatus(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		status, err = store.GetFishermanStatus(address, height)
+		status, err = store.GetFishermanStatus(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		status, err = store.GetServiceNodeStatus(address, height)
+		status, err = store.GetServiceNodeStatus(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		status, err = store.GetValidatorStatus(address, height)
+		status, err = store.GetValidatorStatus(addr, height)
 	default:
 		err = typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -360,7 +360,7 @@ func (u *utilityContext) GetMaxChains(actorType coreTypes.ActorType) (int, types
 	return maxChains, nil
 }
 
-func (u *utilityContext) GetActorExists(actorType coreTypes.ActorType, address []byte) (bool, typesUtil.Error) {
+func (u *utilityContext) GetActorExists(actorType coreTypes.ActorType, addr []byte) (bool, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return false, typesUtil.ErrGetHeight(err)
@@ -369,13 +369,13 @@ func (u *utilityContext) GetActorExists(actorType coreTypes.ActorType, address [
 	var exists bool
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		exists, err = store.GetAppExists(address, height)
+		exists, err = store.GetAppExists(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		exists, err = store.GetFishermanExists(address, height)
+		exists, err = store.GetFishermanExists(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		exists, err = store.GetServiceNodeExists(address, height)
+		exists, err = store.GetServiceNodeExists(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		exists, err = store.GetValidatorExists(address, height)
+		exists, err = store.GetValidatorExists(addr, height)
 	default:
 		return false, typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -416,8 +416,8 @@ func (u *utilityContext) GetActorOutputAddress(actorType coreTypes.ActorType, op
 
 // calculators
 
-func (u *utilityContext) BurnActor(actorType coreTypes.ActorType, percentage int, address []byte) typesUtil.Error {
-	tokens, err := u.getActorStakedAmount(actorType, address)
+func (u *utilityContext) BurnActor(actorType coreTypes.ActorType, percentage int, addr []byte) typesUtil.Error {
+	tokens, err := u.getActorStakedAmount(actorType, addr)
 	if err != nil {
 		return err
 	}
@@ -435,7 +435,7 @@ func (u *utilityContext) BurnActor(actorType coreTypes.ActorType, percentage int
 		return err
 	}
 	// remove from actor
-	if err := u.setActorStakedAmount(actorType, address, newTokensAfterBurn); err != nil {
+	if err := u.setActorStakedAmount(actorType, addr, newTokensAfterBurn); err != nil {
 		return err
 	}
 	// check to see if they fell below minimum stake
@@ -449,7 +449,7 @@ func (u *utilityContext) BurnActor(actorType coreTypes.ActorType, percentage int
 		if err != nil {
 			return err
 		}
-		if err := u.setActorUnstakingHeight(actorType, address, unstakingHeight); err != nil {
+		if err := u.setActorUnstakingHeight(actorType, addr, unstakingHeight); err != nil {
 			return err
 		}
 	}
