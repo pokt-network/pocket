@@ -1,7 +1,20 @@
 syntax = "proto3";
-package shared;
+
+package utility;
 
 option go_package = "github.com/pokt-network/pocket/utility/types";
+
+import "transaction.proto";
+
+message TransactionResult {
+  uint32 code = 1;
+  bytes signer = 2;
+  bytes recipient = 3;
+  string message_type = 4;
+  int64 height = 5;
+  uint32 index = 6;
+  utility.Transaction transaction = 7;
+}
 
 message DefaultTxResult {
   bytes tx = 1;      // The bytes of the indexed transaction

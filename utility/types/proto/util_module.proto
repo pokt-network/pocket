@@ -1,4 +1,5 @@
 syntax = "proto3";
+
 package utility;
 
 option go_package = "github.com/pokt-network/pocket/utility/types";
