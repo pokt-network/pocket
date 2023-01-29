@@ -14,19 +14,13 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-/*
-`message.go`` contains `ValidateBasic` and `SetSigner`` logic for all message types.
-
-`ValidateBasic` is a **stateless** validation check that should encapsulate all
-validations possible before even checking the state storage layer.
-*/
-
+// A message is a component of a transaction (excluding metadata such as the signature)
+// defining the action driving the state transition
 type Message interface {
-	Validatable
 	proto.Message
+	Validatable
 
 	SetSigner(signer []byte)
-	ValidateBasic() Error
 	GetCanonicalBytes() []byte
 	GetActorType() coreTypes.ActorType
 	GetMessageName() string
@@ -42,8 +36,17 @@ var (
 	_ Message = &MessageChangeParameter{}
 )
 
-func (msg *MessageSend) GetActorType() coreTypes.ActorType {
-	return coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED // there's no actor type for message send, so return zero to allow fee retrieval
+func (msg *MessageSend) ValidateBasic() Error {
+	if err := validateAddress(msg.FromAddress); err != nil {
+		return err
+	}
+	if err := validateAddress(msg.ToAddress); err != nil {
+		return err
+	}
+	if err := validateAmount(msg.Amount); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (msg *MessageStake) ValidateBasic() Error {
@@ -57,23 +60,10 @@ func (msg *MessageStake) ValidateBasic() Error {
 }
 
 func (msg *MessageEditStake) ValidateBasic() Error {
-	if err := ValidateAddress(msg.GetAddress()); err != nil {
+	if err := validateAddress(msg.GetAddress()); err != nil {
 		return err
 	}
 	return ValidateStaker(msg)
-}
-
-func (msg *MessageSend) ValidateBasic() Error {
-	if err := ValidateAddress(msg.FromAddress); err != nil {
-		return err
-	}
-	if err := ValidateAddress(msg.ToAddress); err != nil {
-		return err
-	}
-	if err := ValidateAmount(msg.Amount); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (msg *MessageChangeParameter) ValidateBasic() Error {
@@ -83,7 +73,7 @@ func (msg *MessageChangeParameter) ValidateBasic() Error {
 	if msg.ParameterValue == nil {
 		return ErrEmptyParamValue()
 	}
-	if err := ValidateAddress(msg.Owner); err != nil {
+	if err := validateAddress(msg.Owner); err != nil {
 		return err
 	}
 	return nil
@@ -103,15 +93,19 @@ func (msg *MessageEditStake) GetMessageRecipient() string       { return "" }
 func (msg *MessageStake) GetMessageRecipient() string           { return "" }
 func (msg *MessageChangeParameter) GetMessageRecipient() string { return "" }
 
-func (msg *MessageUnstake) ValidateBasic() Error { return ValidateAddress(msg.Address) }
-func (msg *MessageUnpause) ValidateBasic() Error { return ValidateAddress(msg.Address) }
+func (msg *MessageUnstake) ValidateBasic() Error { return validateAddress(msg.Address) }
+func (msg *MessageUnpause) ValidateBasic() Error { return validateAddress(msg.Address) }
 
-func (msg *MessageStake) SetSigner(signer []byte)                   { msg.Signer = signer }
-func (msg *MessageEditStake) SetSigner(signer []byte)               { msg.Signer = signer }
-func (msg *MessageUnstake) SetSigner(signer []byte)                 { msg.Signer = signer }
-func (msg *MessageUnpause) SetSigner(signer []byte)                 { msg.Signer = signer }
-func (msg *MessageSend) SetSigner(signer []byte)                    { /*no op*/ }
-func (msg *MessageChangeParameter) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageStake) SetSigner(signer []byte)           { msg.Signer = signer }
+func (msg *MessageEditStake) SetSigner(signer []byte)       { msg.Signer = signer }
+func (msg *MessageUnstake) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageUnpause) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageSend) SetSigner(signer []byte)            { /*no op*/ }
+func (msg *MessageChangeParameter) SetSigner(signer []byte) { msg.Signer = signer }
+
+func (msg *MessageSend) GetActorType() coreTypes.ActorType {
+	return coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED // there's no actor type for message send, so return zero to allow fee retrieval
+}
 func (x *MessageChangeParameter) GetActorType() coreTypes.ActorType { return -1 }
 
 func (msg *MessageStake) GetCanonicalBytes() []byte           { return getCanonicalBytes(msg) }
@@ -123,7 +117,7 @@ func (msg *MessageUnpause) GetCanonicalBytes() []byte         { return getCanoni
 
 // helpers
 
-func ValidateAddress(address []byte) Error {
+func validateAddress(address []byte) Error {
 	if address == nil {
 		return ErrEmptyAddress()
 	}
@@ -180,7 +174,7 @@ func ValidateRelayChains(chains []string) Error {
 	return nil
 }
 
-func ValidateAmount(amount string) Error {
+func validateAmount(amount string) Error {
 	if amount == "" {
 		return ErrEmptyAmount()
 	}
@@ -239,7 +233,7 @@ func ValidateStaker(msg messageStaker) Error {
 	if err := ValidateActorType(msg.GetActorType()); err != nil {
 		return err
 	}
-	if err := ValidateAmount(msg.GetAmount()); err != nil {
+	if err := validateAmount(msg.GetAmount()); err != nil {
 		return err
 	}
 	if err := ValidateRelayChains(msg.GetChains()); err != nil {

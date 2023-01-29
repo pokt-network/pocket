@@ -1,6 +1,6 @@
 package types
 
-// DISCUSS(M5): Discuss the design of this file.
+// DISCUSS(M5): Evaluate how Pocket specific errors should be managed and returned to the client
 
 import (
 	"encoding/hex"

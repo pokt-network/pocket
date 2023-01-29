@@ -79,8 +79,8 @@ const (
 )
 
 // TECHDEBT: The parameters below are equivalent to the list above with the suffix `_owner`. There
-//           is likely a clean way to better organize this code. This will also involve find discrepancies
-//           between the two lists.
+//           is likely a clean way to better organize this code. This will also involve finding
+//           discrepancies between the two lists from missing / duplicate types or owners.
 const (
 	AclOwner = "acl_owner"
 
