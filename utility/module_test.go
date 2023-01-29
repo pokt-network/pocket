@@ -62,7 +62,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func newTestingUtilityContext(t *testing.T, height int64) utilityContext {
+func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
@@ -80,7 +80,7 @@ func newTestingUtilityContext(t *testing.T, height int64) utilityContext {
 		mempool.Clear()
 	})
 
-	return utilityContext{
+	return &utilityContext{
 		height:             height,
 		mempool:            mempool,
 		persistenceContext: persistenceContext,

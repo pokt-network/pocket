@@ -428,7 +428,7 @@ func (u *utilityContext) BurnActor(actorType coreTypes.ActorType, percentage int
 	}
 	newTokensAfterBurn := big.NewInt(0).Sub(tokens, truncatedTokens)
 	// remove from pool
-	if err := u.SubPoolAmount(coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName(), converters.BigIntToString(truncatedTokens)); err != nil {
+	if err := u.subPoolAmount(coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName(), converters.BigIntToString(truncatedTokens)); err != nil {
 		return err
 	}
 	// remove from actor

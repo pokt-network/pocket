@@ -31,7 +31,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 			outputAddress, err := crypto.GenerateAddress()
 			require.NoError(t, err)
 
-			err = ctx.SetAccountAmount(outputAddress, test_artifacts.DefaultAccountAmount)
+			err = ctx.setAccountAmount(outputAddress, test_artifacts.DefaultAccountAmount)
 			require.NoError(t, err, "error setting account amount error")
 
 			msg := &typesUtil.MessageStake{
@@ -483,7 +483,7 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
+			ctx.setPoolAmount(poolName, big.NewInt(math.MaxInt64))
 
 			err := ctx.persistenceContext.SetParam(typesUtil.AppUnstakingBlocksParamName, 0)
 			require.NoError(t, err)
@@ -554,7 +554,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 
 // Helpers
 
-func getAllTestingActors(t *testing.T, ctx utilityContext, actorType coreTypes.ActorType) (actors []*coreTypes.Actor) {
+func getAllTestingActors(t *testing.T, ctx *utilityContext, actorType coreTypes.ActorType) (actors []*coreTypes.Actor) {
 	actors = make([]*coreTypes.Actor, 0)
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -584,23 +584,23 @@ func getAllTestingActors(t *testing.T, ctx utilityContext, actorType coreTypes.A
 	return
 }
 
-func getFirstActor(t *testing.T, ctx utilityContext, actorType coreTypes.ActorType) *coreTypes.Actor {
+func getFirstActor(t *testing.T, ctx *utilityContext, actorType coreTypes.ActorType) *coreTypes.Actor {
 	return getAllTestingActors(t, ctx, actorType)[0]
 }
 
-func getActorByAddr(t *testing.T, ctx utilityContext, actorType coreTypes.ActorType, addr string) (actor *coreTypes.Actor) {
+func getActorByAddr(t *testing.T, ctx *utilityContext, actorType coreTypes.ActorType, addr string) (actor *coreTypes.Actor) {
 	actors := getAllTestingActors(t, ctx, actorType)
 	idx := slices.IndexFunc(actors, func(a *coreTypes.Actor) bool { return a.GetAddress() == addr })
 	return actors[idx]
 }
 
-func getAllTestingApps(t *testing.T, ctx utilityContext) []*coreTypes.Actor {
+func getAllTestingApps(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.persistenceContext).GetAllApps(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
 
-func getAllTestingValidators(t *testing.T, ctx utilityContext) []*coreTypes.Actor {
+func getAllTestingValidators(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.persistenceContext).GetAllValidators(ctx.height)
 	require.NoError(t, err)
 	sort.Slice(actors, func(i, j int) bool {
@@ -609,13 +609,13 @@ func getAllTestingValidators(t *testing.T, ctx utilityContext) []*coreTypes.Acto
 	return actors
 }
 
-func getAllTestingFish(t *testing.T, ctx utilityContext) []*coreTypes.Actor {
+func getAllTestingFish(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.persistenceContext).GetAllFishermen(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
 
-func getAllTestingNodes(t *testing.T, ctx utilityContext) []*coreTypes.Actor {
+func getAllTestingNodes(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.persistenceContext).GetAllServiceNodes(ctx.height)
 	require.NoError(t, err)
 	return actors

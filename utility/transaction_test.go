@@ -70,7 +70,7 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 
 func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
-	accs := GetAllTestingAccounts(t, ctx)
+	accs := getAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := converters.BigIntToString(sendAmount)
@@ -106,7 +106,7 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 
 func TestUtilityContext_HandleMessage(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
-	accs := GetAllTestingAccounts(t, ctx)
+	accs := getAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := converters.BigIntToString(sendAmount)
@@ -121,7 +121,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	require.NoError(t, er)
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
 	require.NoError(t, ctx.handleMessageSend(&msg))
-	accs = GetAllTestingAccounts(t, ctx)
+	accs = getAllTestingAccounts(t, ctx)
 	senderBalanceAfter, err := converters.StringToBigInt(accs[0].GetAmount())
 	require.NoError(t, err)
 
@@ -132,7 +132,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), "unexpected recipient balance")
 }
 
-func newTestingTransaction(t *testing.T, ctx utilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
+func newTestingTransaction(t *testing.T, ctx *utilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
 	amountSent = new(big.Int).Set(defaultSendAmount)
 	startingBalance = new(big.Int).Set(test_artifacts.DefaultAccountAmount)
 
@@ -143,7 +143,7 @@ func newTestingTransaction(t *testing.T, ctx utilityContext) (transaction *types
 	require.NoError(t, err)
 
 	signerAddr := signer.Address()
-	require.NoError(t, ctx.SetAccountAmount(signerAddr, startingBalance))
+	require.NoError(t, ctx.setAccountAmount(signerAddr, startingBalance))
 
 	msg := NewTestingSendMessage(t, signerAddr, recipientAddr.Bytes(), converters.BigIntToString(amountSent))
 	any, err := codec.GetCodec().ToAny(&msg)

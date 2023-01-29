@@ -83,7 +83,7 @@ func (u *utilityContext) handleMessageSend(message *typesUtil.MessageSend) types
 		return err
 	}
 	// set the sender's account amount
-	if err = u.SetAccountAmount(message.FromAddress, fromAccountAmount); err != nil {
+	if err = u.setAccountAmount(message.FromAddress, fromAccountAmount); err != nil {
 		return err
 	}
 	return nil
@@ -121,7 +121,7 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 	// update account amount
-	if err = u.SetAccountAmount(message.Signer, signerAccountAmount); err != nil {
+	if err = u.setAccountAmount(message.Signer, signerAccountAmount); err != nil {
 		return err
 	}
 	// move funds from account to pool
@@ -185,7 +185,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 		return err
 	}
 	// update account amount
-	if err := u.SetAccountAmount(message.Signer, signerAccountAmount); err != nil {
+	if err := u.setAccountAmount(message.Signer, signerAccountAmount); err != nil {
 		return err
 	}
 	// move funds from account to pool

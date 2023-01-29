@@ -235,7 +235,7 @@ func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 			return typesUtil.ErrGetReadyToUnstake(er)
 		}
 		for _, actor := range readyToUnstake {
-			if err = u.SubPoolAmount(poolName, actor.GetStakeAmount()); err != nil {
+			if err = u.subPoolAmount(poolName, actor.GetStakeAmount()); err != nil {
 				return err
 			}
 			if err = u.addAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
@@ -297,11 +297,11 @@ func (u *utilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, Acto
 
 func (u *utilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error {
 	feePoolName := coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName()
-	feesAndRewardsCollected, err := u.GetPoolAmount(feePoolName)
+	feesAndRewardsCollected, err := u.getPoolAmount(feePoolName)
 	if err != nil {
 		return err
 	}
-	if err := u.SetPoolAmount(feePoolName, big.NewInt(0)); err != nil {
+	if err := u.setPoolAmount(feePoolName, big.NewInt(0)); err != nil {
 		return err
 	}
 	proposerCutPercentage, err := u.GetProposerPercentageOfFees()
