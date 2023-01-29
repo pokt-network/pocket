@@ -115,6 +115,7 @@ func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContex
 // Implementations of the ConsensusStateSync interface
 func (m *consensusModule) GetLeaderId() uint64 {
 	if m.leaderId == nil {
+		//REFACTOR: As per issue #434, once new id is sorted out, this return statement must be changed
 		return 0
 	}
 	return uint64(*m.leaderId)
@@ -124,6 +125,7 @@ func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error
 
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
+		//REFACTOR: As per issue #434, once new id is sorted out, this return statement must be changed
 		return 0, err
 	}
 

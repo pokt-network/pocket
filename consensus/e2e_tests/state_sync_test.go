@@ -136,7 +136,7 @@ func TestStateSyncServerGetBlock(t *testing.T) {
 	require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
 
 	// Failing Test
-	// Get Block Req
+	// Get Block Req is current block height + 1
 	stateSyncGetBlockReq = typesCons.GetBlockRequest{
 		PeerId: requesterNodePeerId,
 		Height: testHeight + 1,

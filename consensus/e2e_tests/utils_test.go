@@ -206,6 +206,7 @@ func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 // This is a helper for `waitForEventsInternal` that creates the `includeFilter` function based on
 // consensus specific parameters.
 // failOnExtraMessages:
+//
 //	This flag is useful when running the consensus unit tests. It causes the test to wait up to the
 //	maximum delay specified in the source code and errors if additional unexpected messages are received.
 //	For example, if the test expects to receive 5 messages within 2 seconds:
@@ -230,6 +231,7 @@ func WaitForNetworkConsensusEvents(
 
 		return hotstuffMessage.Type == msgType && hotstuffMessage.Step == step
 	}
+
 	errMsg := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(msgType)])
 	return waitForEventsInternal(t, clock, eventsChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
@@ -359,6 +361,10 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
 
 	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
+		heightInt := heightFromBytes(height)
+		if bus.GetConsensusModule().CurrentHeight() < heightInt {
+			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
+		}
 		blockWithHeight := &coreTypes.Block{
 			BlockHeader: &coreTypes.BlockHeader{
 				Height: heightFromBytes(height),

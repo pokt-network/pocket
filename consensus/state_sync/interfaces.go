@@ -5,6 +5,9 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
+// REFACTOR: Remove interface definitions from this file to their respective source code files,
+// keep interface definitions in the same file with the implementation as in server.go
+
 type SyncState interface {
 	// latest local height
 	LatestHeight() int64
@@ -37,6 +40,7 @@ type PeerSyncMeta interface {
 }
 
 // LEGACY interface definition
+// TODO: this must be deleted once state sync module is ready.
 type StateSyncModuleLEGACY interface {
 	// -- Constructor Setter Functions --
 

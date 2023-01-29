@@ -19,7 +19,6 @@ const (
 type ConsensusModule interface {
 	Module
 	KeyholderModule
-	ConsensusPacemaker
 
 	ConsensusStateSync
 	ConsensusPacemaker

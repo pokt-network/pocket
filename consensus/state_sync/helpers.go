@@ -17,8 +17,7 @@ func (m *stateSync) sendToPeer(msg *anypb.Any, peerId cryptoPocket.Address) erro
 	return nil
 }
 
-// This is copy paste from Peristantace/state_test.go
-// TODO Check if can be done without copy paste
+// TODO Check if heightToBytes can be a unified common function, as there is identical function in peristantace/state_test.go and persistence/block.go:
 func heightToBytes(height uint64) []byte {
 	heightBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(heightBytes, height)
