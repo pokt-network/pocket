@@ -87,7 +87,6 @@ func (m *newModule) Start() error {
 }
 ```
 
-
 #### Get the module `bus`
 
 The bus may be accessed by the module object at anytime using the `getter`
