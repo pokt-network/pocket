@@ -45,7 +45,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	contextBOriginalAmount, err := contextB.GetPoolAmount(poolName, 0)
 	require.NoError(t, err)
 	require.NotEqual(t, modifiedAmount, contextBOriginalAmount)
-	require.Equal(t, contextBOriginalAmount, contextAOriginalAmount)
+	require.Equal(t, contextAOriginalAmount, contextBOriginalAmount)
 }
 
 func TestPersistenceContextTwoWritesErrors(t *testing.T) {

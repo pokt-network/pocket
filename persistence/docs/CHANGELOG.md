@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.28] - 2023-01-29
+
+- Fix unit tests - `TestGetAppPauseHeightIfExists`, `TestGetAppOutputAddress`, `TestGetFishermanStatus`, `TestGetFishermanPauseHeightIfExists`, `TestGetFishermanOutputAddress`, `TestPersistenceContextParallelReadWrite`, `TestGetServiceNodePauseHeightIfExists`, `TestGetServiceNodeOutputAddress`, `fuzzSingleProtocolActor`, `TestGetValidatorPauseHeightIfExists`, and `TestGetValidatorOutputAddress` for misplaced expected and actual values in `require.Equal`.
+
 ## [0.0.0.27] - 2023-01-27
 
 - Add logic for `updateParamsTree()` and `updateFlagsTree()` functions when updating merkle root hash

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.23] - 2023-01-29
+
+- Fix `TestHotstuff4Nodes1BlockHappyPath` misplacement of actual and expected values in `require.Equal`
+
 ## [0.0.0.22] - 2023-01-25
 
 - Add a note on consensus test related workaround related to #462
