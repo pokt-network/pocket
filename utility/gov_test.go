@@ -513,7 +513,7 @@ func TestUtilityContext_GetValidatorMinimumStake(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetValidatorMinimumStake()
-	gotParam, err := ctx.GetValidatorMinimumStake()
+	gotParam, err := ctx.getValidatorMinimumStake()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }

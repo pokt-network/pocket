@@ -6,7 +6,6 @@ import (
 
 	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -237,7 +236,7 @@ func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, addr []by
 	return typesUtil.StakeStatus(status), nil
 }
 
-func (u *utilityContext) getMinRequiredStake(actorType coreTypes.ActorType) (*big.Int, typesUtil.Error) {
+func (u *utilityContext) getMinRequiredStakeAmount(actorType coreTypes.ActorType) (*big.Int, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return nil, typesUtil.ErrGetHeight(err)
@@ -269,7 +268,7 @@ func (u *utilityContext) getMinRequiredStake(actorType coreTypes.ActorType) (*bi
 	return amount, nil
 }
 
-func (u *utilityContext) GetStakeAmount(actorType coreTypes.ActorType, addr []byte) (*big.Int, typesUtil.Error) {
+func (u *utilityContext) getCurrentStakeAmount(actorType coreTypes.ActorType, addr []byte) (*big.Int, typesUtil.Error) {
 	var stakeAmount string
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
@@ -326,15 +325,10 @@ func (u *utilityContext) getUnstakingHeight(actorType coreTypes.ActorType) (int6
 		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
 	}
 
-	latestHeight, er := u.getLatestBlockHeight()
-	if er != nil {
-		return typesUtil.ZeroInt, er
-	}
-
-	return latestHeight + int64(unstakingBlocksPeriod), nil
+	return u.height + int64(unstakingBlocksPeriod), nil
 }
 
-func (u *utilityContext) GetMaxChains(actorType coreTypes.ActorType) (int, typesUtil.Error) {
+func (u *utilityContext) getMaxAllowedChains(actorType coreTypes.ActorType) (int, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, typesUtil.ErrGetHeight(err)
@@ -360,7 +354,7 @@ func (u *utilityContext) GetMaxChains(actorType coreTypes.ActorType) (int, types
 	return maxChains, nil
 }
 
-func (u *utilityContext) GetActorExists(actorType coreTypes.ActorType, addr []byte) (bool, typesUtil.Error) {
+func (u *utilityContext) getActorExists(actorType coreTypes.ActorType, addr []byte) (bool, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return false, typesUtil.ErrGetHeight(err)
@@ -387,22 +381,22 @@ func (u *utilityContext) GetActorExists(actorType coreTypes.ActorType, addr []by
 	return exists, nil
 }
 
-func (u *utilityContext) GetActorOutputAddress(actorType coreTypes.ActorType, operator []byte) ([]byte, typesUtil.Error) {
+func (u *utilityContext) getActorOutputAddress(actorType coreTypes.ActorType, operator []byte) ([]byte, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return nil, typesUtil.ErrGetHeight(err)
 	}
 
-	var output []byte
+	var outputAddr []byte
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		output, err = store.GetAppOutputAddress(operator, height)
+		outputAddr, err = store.GetAppOutputAddress(operator, height)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		output, err = store.GetFishermanOutputAddress(operator, height)
+		outputAddr, err = store.GetFishermanOutputAddress(operator, height)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		output, err = store.GetServiceNodeOutputAddress(operator, height)
+		outputAddr, err = store.GetServiceNodeOutputAddress(operator, height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		output, err = store.GetValidatorOutputAddress(operator, height)
+		outputAddr, err = store.GetValidatorOutputAddress(operator, height)
 	default:
 		err = typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -411,45 +405,56 @@ func (u *utilityContext) GetActorOutputAddress(actorType coreTypes.ActorType, op
 		return nil, typesUtil.ErrGetOutputAddress(operator, err)
 
 	}
-	return output, nil
+	return outputAddr, nil
 }
 
 // calculators
 
-func (u *utilityContext) BurnActor(actorType coreTypes.ActorType, percentage int, addr []byte) typesUtil.Error {
-	tokens, err := u.getActorStakedAmount(actorType, addr)
+func (u *utilityContext) burnValidator(percentage int, addr []byte) typesUtil.Error {
+	validatorType := coreTypes.ActorType_ACTOR_TYPE_VAL
+
+	stakeAmount, err := u.getActorStakedAmount(validatorType, addr)
 	if err != nil {
 		return err
 	}
+
+	// newStake = currentStake * percentageInt / 100
+	burnAmount := new(big.Float).SetInt(stakeAmount)
+	burnAmount.Mul(burnAmount, big.NewFloat(float64(percentage)))
+	burnAmount.Quo(burnAmount, big.NewFloat(100))
+	burnAmountTruncated, _ := burnAmount.Int(nil)
+
+	// Round up to 0 if -ve
 	zeroBigInt := big.NewInt(0)
-	tokensFloat := new(big.Float).SetInt(tokens)
-	tokensFloat.Mul(tokensFloat, big.NewFloat(float64(percentage)))
-	tokensFloat.Quo(tokensFloat, big.NewFloat(100))
-	truncatedTokens, _ := tokensFloat.Int(nil)
-	if truncatedTokens.Cmp(zeroBigInt) == -1 {
-		truncatedTokens = zeroBigInt
+	if burnAmountTruncated.Cmp(zeroBigInt) == -1 {
+		burnAmountTruncated = zeroBigInt
 	}
-	newTokensAfterBurn := big.NewInt(0).Sub(tokens, truncatedTokens)
+
+	newAmountAfterBurn := big.NewInt(0).Sub(stakeAmount, burnAmountTruncated)
+
 	// remove from pool
-	if err := u.subPoolAmount(coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName(), converters.BigIntToString(truncatedTokens)); err != nil {
+	if err := u.subPoolAmount(coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName(), converters.BigIntToString(burnAmountTruncated)); err != nil {
 		return err
 	}
+
 	// remove from actor
-	if err := u.setActorStakedAmount(actorType, addr, newTokensAfterBurn); err != nil {
+	if err := u.setActorStakedAmount(validatorType, addr, newAmountAfterBurn); err != nil {
 		return err
 	}
-	// check to see if they fell below minimum stake
-	minStake, err := u.GetValidatorMinimumStake()
+
+	// Need to check if new stake is below min required stake
+	minStake, err := u.getValidatorMinimumStake()
 	if err != nil {
 		return err
 	}
-	// fell below minimum stake
-	if minStake.Cmp(truncatedTokens) == 1 {
-		unstakingHeight, err := u.getUnstakingHeight(actorType)
+
+	// Is below min stake?
+	if minStake.Cmp(newAmountAfterBurn) == -1 {
+		unstakingHeight, err := u.getUnstakingHeight(validatorType)
 		if err != nil {
 			return err
 		}
-		if err := u.setActorUnstakingHeight(actorType, addr, unstakingHeight); err != nil {
+		if err := u.setActorUnstakingHeight(validatorType, addr, unstakingHeight); err != nil {
 			return err
 		}
 	}
@@ -492,51 +497,4 @@ func (u *utilityContext) CalculateAppRelays(stakedTokens string) (string, typesU
 		result = max
 	}
 	return converters.BigIntToString(result), nil
-}
-
-func (u *utilityContext) CheckAboveMinStake(actorType coreTypes.ActorType, amountStr string) (*big.Int, typesUtil.Error) {
-	minStake, err := u.getMinRequiredStake(actorType)
-	if err != nil {
-		return nil, err
-	}
-	amount, er := converters.StringToBigInt(amountStr)
-	if er != nil {
-		return nil, typesUtil.ErrStringToBigInt(err)
-	}
-	if converters.BigIntLessThan(amount, minStake) {
-		return nil, typesUtil.ErrMinimumStake()
-	}
-	return amount, nil
-}
-
-func (u *utilityContext) CheckBelowMaxChains(actorType coreTypes.ActorType, chains []string) typesUtil.Error {
-	// validators don't have chains field
-
-	if actorType == coreTypes.ActorType_ACTOR_TYPE_VAL {
-		return nil
-	}
-
-	maxChains, err := u.GetMaxChains(actorType)
-	if err != nil {
-		return err
-	}
-	if len(chains) > maxChains {
-		return typesUtil.ErrMaxChains(maxChains)
-	}
-	return nil
-}
-
-func (u *utilityContext) GetLastBlockByzantineValidators() ([][]byte, error) {
-	// TODO(#271): Need to retrieve byzantine validators from the persistence module
-	return nil, nil
-}
-
-// util
-
-func (u *utilityContext) BytesToPublicKey(publicKey []byte) (crypto.PublicKey, typesUtil.Error) {
-	pk, er := crypto.NewPublicKeyFromBytes(publicKey)
-	if er != nil {
-		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
-	}
-	return pk, nil
 }

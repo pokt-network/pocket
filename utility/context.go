@@ -70,15 +70,6 @@ func (u *utilityContext) Release() error {
 	return nil
 }
 
-// DISCUSS_IN_THIS_COMMIT: Should this function even exist or should we just return `u.Height`?
-func (u *utilityContext) getLatestBlockHeight() (int64, typesUtil.Error) {
-	height, err := u.Store().GetHeight()
-	if err != nil {
-		return 0, typesUtil.ErrGetHeight(err)
-	}
-	return height, nil
-}
-
 func (u *utilityContext) getStoreAndHeight() (modules.PersistenceRWContext, int64, error) {
 	store := u.Store()
 	height, err := store.GetHeight()

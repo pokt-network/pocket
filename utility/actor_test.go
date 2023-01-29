@@ -276,11 +276,11 @@ func TestUtilityContext_GetExists(t *testing.T) {
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
 
-			exists, err := ctx.GetActorExists(actorType, addrBz)
+			exists, err := ctx.getActorExists(actorType, addrBz)
 			require.NoError(t, err)
 			require.True(t, exists, "actor that should exist does not")
 
-			exists, err = ctx.GetActorExists(actorType, randAddr)
+			exists, err = ctx.getActorExists(actorType, randAddr)
 			require.NoError(t, err)
 			require.False(t, exists, "actor that shouldn't exist does")
 
@@ -297,7 +297,7 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
 
-			outputAddress, err := ctx.GetActorOutputAddress(actorType, addrBz)
+			outputAddress, err := ctx.getActorOutputAddress(actorType, addrBz)
 			require.NoError(t, err)
 			require.Equal(t, actor.GetOutput(), hex.EncodeToString(outputAddress), "unexpected output address")
 

@@ -87,7 +87,7 @@ func (u *utilityContext) GetServiceNodeMaxPausedBlocks() (maxPausedBlocks int, e
 	return u.getIntParam(typesUtil.ServiceNodeMaxPauseBlocksParamName)
 }
 
-func (u *utilityContext) GetValidatorMinimumStake() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) getValidatorMinimumStake() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.ValidatorMinimumStakeParamName)
 }
 

@@ -24,7 +24,7 @@ import (
 
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
 func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (string, [][]byte, error) {
-	lastBlockByzantineVals, err := u.GetLastBlockByzantineValidators()
+	lastBlockByzantineVals, err := u.getLastBlockByzantineValidators()
 	if err != nil {
 		return "", nil, err
 	}
@@ -88,7 +88,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
 func (u *utilityContext) ApplyBlock() (string, error) {
-	lastByzantineValidators, err := u.GetLastBlockByzantineValidators()
+	lastByzantineValidators, err := u.getLastBlockByzantineValidators()
 	if err != nil {
 		return "", err
 	}
@@ -169,10 +169,6 @@ func (u *utilityContext) EndBlock(proposer []byte) typesUtil.Error {
 
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
 func (u *utilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
-	latestBlockHeight, err := u.getLatestBlockHeight()
-	if err != nil {
-		return err
-	}
 	maxMissedBlocks, err := u.GetValidatorMaxMissedBlocks()
 	if err != nil {
 		return err
@@ -187,7 +183,7 @@ func (u *utilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 		// handle if over the threshold
 		if numberOfMissedBlocks >= maxMissedBlocks {
 			// pause the validator and reset missed blocks
-			if err = u.PauseValidatorAndSetMissedBlocks(address, latestBlockHeight, int(typesUtil.HeightNotUsed)); err != nil {
+			if err = u.PauseValidatorAndSetMissedBlocks(address, u.height, int(typesUtil.HeightNotUsed)); err != nil {
 				return err
 			}
 			// burn validator for missing blocks
@@ -195,7 +191,7 @@ func (u *utilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 			if err != nil {
 				return err
 			}
-			if err = u.BurnActor(coreTypes.ActorType_ACTOR_TYPE_VAL, burnPercentage, address); err != nil {
+			if err = u.burnValidator(burnPercentage, address); err != nil {
 				return err
 			}
 		} else if err := u.SetValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
@@ -208,26 +204,22 @@ func (u *utilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	latestHeight, err := u.getLatestBlockHeight()
-	if err != nil {
-		return err
-	}
 	for _, actorTypeInt32 := range coreTypes.ActorType_value {
 		var readyToUnstake []*moduleTypes.UnstakingActor
 		actorType := coreTypes.ActorType(actorTypeInt32)
 		var poolName string
 		switch actorType {
 		case coreTypes.ActorType_ACTOR_TYPE_APP:
-			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
+			readyToUnstake, er = store.GetAppsReadyToUnstake(u.height, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_APP_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
-			readyToUnstake, er = store.GetFishermenReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
+			readyToUnstake, er = store.GetFishermenReadyToUnstake(u.height, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
+			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(u.height, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_SERVICE_NODE_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
-			readyToUnstake, er = store.GetValidatorsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
+			readyToUnstake, er = store.GetValidatorsReadyToUnstake(u.height, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED:
 			continue
@@ -252,10 +244,6 @@ func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 }
 
 func (u *utilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
-	latestHeight, err := u.getLatestBlockHeight()
-	if err != nil {
-		return err
-	}
 	for _, actorTypeInt32 := range coreTypes.ActorType_value {
 		actorType := coreTypes.ActorType(actorTypeInt32)
 		if actorType == coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED {
@@ -265,7 +253,7 @@ func (u *utilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
 		if err != nil {
 			return err
 		}
-		beforeHeight := latestHeight - int64(maxPausedBlocks)
+		beforeHeight := u.height - int64(maxPausedBlocks)
 		// genesis edge case
 		if beforeHeight < 0 {
 			beforeHeight = 0
@@ -359,4 +347,9 @@ func (u *utilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks i
 		return typesUtil.ErrSetMissedBlocks(er)
 	}
 	return nil
+}
+
+// TODO(#271): Need to retrieve byzantine validators from the persistence module
+func (u *utilityContext) getLastBlockByzantineValidators() ([][]byte, error) {
+	return nil, nil
 }
