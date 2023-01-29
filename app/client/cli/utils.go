@@ -106,7 +106,7 @@ func prepareTxBytes(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte,
 		Nonce: getNonce(),
 	}
 
-	signBytes, err := tx.SignBytes()
+	signBytes, err := tx.SignableBytes()
 	if err != nil {
 		return nil, err
 	}

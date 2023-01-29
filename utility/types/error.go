@@ -1,6 +1,7 @@
 package types
 
 // DISCUSS(M5): Evaluate how Pocket specific errors should be managed and returned to the client
+// TECHDEBT: Remove reference to the term `Proto`; it's why we created a codec package
 
 import (
 	"encoding/hex"

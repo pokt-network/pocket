@@ -17,7 +17,7 @@ import (
 // A message is a component of a transaction (excluding metadata such as the signature)
 // defining the action driving the state transition
 type Message interface {
-	proto.Message
+	proto.Message // TECHDEBT: Should not be refere
 	Validatable
 
 	SetSigner(signer []byte)

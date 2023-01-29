@@ -9,13 +9,13 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
-	"google.golang.org/protobuf/proto"
 )
 
 // CLEANUP: Move `App` specific tests to `app_test.go`
@@ -79,7 +79,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 				Signer:    addrBz,
 				ActorType: actorType,
 			}
-			msgChainsEdited := proto.Clone(msg).(*typesUtil.MessageEditStake)
+			msgChainsEdited := codec.GetCodec().Clone(msg).(*typesUtil.MessageEditStake)
 			msgChainsEdited.Chains = []string{"0002"}
 
 			err = ctx.handleEditStakeMessage(msgChainsEdited)
@@ -94,7 +94,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 
 			amountEdited := test_artifacts.DefaultAccountAmount.Add(test_artifacts.DefaultAccountAmount, big.NewInt(1))
 			amountEditedString := converters.BigIntToString(amountEdited)
-			msgAmountEdited := proto.Clone(msg).(*typesUtil.MessageEditStake)
+			msgAmountEdited := codec.GetCodec().Clone(msg).(*typesUtil.MessageEditStake)
 			msgAmountEdited.Amount = amountEditedString
 
 			err = ctx.handleEditStakeMessage(msgAmountEdited)

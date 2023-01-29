@@ -7,7 +7,7 @@ import "google/protobuf/any.proto";
 
 message Transaction {
   google.protobuf.Any msg = 1; // CONSOLIDATE: Should be a oneof {} message
-  Signature signature = 2;
+  Signature signature = 2; // CONSOLIDATE: should use a shared crypto package type
   string nonce = 3;
 }
 

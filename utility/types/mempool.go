@@ -49,7 +49,7 @@ func (f *FIFOMempool) AddTransaction(tx []byte) Error {
 	defer f.l.Unlock()
 
 	// Check if present
-	hashString := crypto.GetHashStringFromBytes(tx)
+	hashString := TxHash(tx)
 	if _, ok := f.txSet[hashString]; ok {
 		return ErrDuplicateTransaction()
 	}

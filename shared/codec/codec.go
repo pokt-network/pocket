@@ -12,31 +12,36 @@ type Codec interface {
 	Unmarshal([]byte, proto.Message) error
 	ToAny(proto.Message) (*anypb.Any, error)
 	FromAny(*anypb.Any) (proto.Message, error)
+	Clone(proto.Message) proto.Message
 }
 
-var _ Codec = &ProtoCodec{}
+var _ Codec = &protoCodec{}
 
 // IMPROVE: Need to define a type similar to `type ProtoAny anypb.Any` so that we are
 //          referencing protobuf specific types (e.g. anypb.Any) anywhere in the codebase.
-type ProtoCodec struct{}
+type protoCodec struct{}
 
 func GetCodec() Codec {
-	return &ProtoCodec{}
+	return &protoCodec{}
 }
 
 // IMPROVE: If/when we move Pocket's `Error` type into a separate package, we can return `ErrProtoMarshal` here
-func (p *ProtoCodec) Marshal(message proto.Message) ([]byte, error) {
-	return proto.MarshalOptions{Deterministic: true}.Marshal(message)
+func (p *protoCodec) Marshal(msg proto.Message) ([]byte, error) {
+	return proto.MarshalOptions{Deterministic: true}.Marshal(msg)
 }
 
-func (p *ProtoCodec) Unmarshal(bz []byte, message proto.Message) error {
-	return proto.Unmarshal(bz, message)
+func (p *protoCodec) Unmarshal(bz []byte, msg proto.Message) error {
+	return proto.Unmarshal(bz, msg)
 }
 
-func (p *ProtoCodec) ToAny(message proto.Message) (*anypb.Any, error) {
-	return anypb.New(message)
+func (p *protoCodec) ToAny(msg proto.Message) (*anypb.Any, error) {
+	return anypb.New(msg)
 }
 
-func (p *ProtoCodec) FromAny(any *anypb.Any) (proto.Message, error) {
+func (p *protoCodec) FromAny(any *anypb.Any) (proto.Message, error) {
 	return anypb.UnmarshalNew(any, proto.UnmarshalOptions{})
+}
+
+func (p *protoCodec) Clone(msg proto.Message) proto.Message {
+	return proto.Clone(msg)
 }

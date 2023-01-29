@@ -13,7 +13,7 @@ import (
 
 func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	// Is the tx already in the mempool (in memory)?
-	txHash := typesUtil.TransactionHash(txProtoBytes)
+	txHash := typesUtil.TxHash(txProtoBytes)
 	if u.mempool.Contains(txHash) {
 		return typesUtil.ErrDuplicateTransaction()
 	}
@@ -49,7 +49,7 @@ func (u *utilityContext) applyTransaction(index int, tx *typesUtil.Transaction) 
 }
 
 func (u *utilityContext) anteHandleMessage(tx *typesUtil.Transaction) (msg typesUtil.Message, signer string, err typesUtil.Error) {
-	msg, err = tx.Message()
+	msg, err = tx.GetMessage()
 	if err != nil {
 		return nil, "", err
 	}
