@@ -231,7 +231,7 @@ func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, address [
 	}
 
 	if _, ok := typesUtil.StakeStatus_name[status]; !ok {
-		return typesUtil.ZeroInt, typesUtil.ErrInvalidStatus(status, -1)
+		return typesUtil.ZeroInt, typesUtil.ErrUnknownStatus(status)
 	}
 
 	return typesUtil.StakeStatus(status), nil

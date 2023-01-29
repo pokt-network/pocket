@@ -214,9 +214,9 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 }
 
 func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake) typesUtil.Error {
-	if status, err := u.getActorStatus(message.ActorType, message.Address); err != nil || status != int32(typesUtil.StakeStatus_Staked) {
-		if status != int32(typesUtil.StakeStatus_Staked) {
-			return typesUtil.ErrInvalidStatus(status, int32(typesUtil.StakeStatus_Staked))
+	if status, err := u.getActorStatus(message.ActorType, message.Address); err != nil || status != typesUtil.StakeStatus_Staked {
+		if status != typesUtil.StakeStatus_Staked {
+			return typesUtil.ErrInvalidStatus(status, typesUtil.StakeStatus_Staked)
 		}
 		return err
 	}
