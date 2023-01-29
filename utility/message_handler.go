@@ -214,7 +214,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 }
 
 func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake) typesUtil.Error {
-	if status, err := u.GetActorStatus(message.ActorType, message.Address); err != nil || status != int32(typesUtil.StakeStatus_Staked) {
+	if status, err := u.getActorStatus(message.ActorType, message.Address); err != nil || status != int32(typesUtil.StakeStatus_Staked) {
 		if status != int32(typesUtil.StakeStatus_Staked) {
 			return typesUtil.ErrInvalidStatus(status, int32(typesUtil.StakeStatus_Staked))
 		}
@@ -224,21 +224,21 @@ func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake)
 	if err != nil {
 		return err
 	}
-	if err = u.SetActorUnstaking(message.ActorType, unstakingHeight, message.Address); err != nil {
+	if err = u.setActorUnstakingHeight(message.ActorType, message.Address, unstakingHeight); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (u *utilityContext) handleUnpauseMessage(message *typesUtil.MessageUnpause) typesUtil.Error {
-	pausedHeight, err := u.GetPauseHeight(message.ActorType, message.Address)
+	pausedHeight, err := u.getPausedHeightIfExists(message.ActorType, message.Address)
 	if err != nil {
 		return err
 	}
 	if pausedHeight == typesUtil.HeightNotUsed {
 		return typesUtil.ErrNotPaused()
 	}
-	minPauseBlocks, err := u.GetMinimumPauseBlocks(message.ActorType)
+	minPauseBlocks, err := u.getMinRequiredPausedBlocks(message.ActorType)
 	if err != nil {
 		return err
 	}
@@ -249,7 +249,7 @@ func (u *utilityContext) handleUnpauseMessage(message *typesUtil.MessageUnpause)
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
 		return typesUtil.ErrNotReadyToUnpause()
 	}
-	if err = u.SetActorPauseHeight(message.ActorType, message.Address, typesUtil.HeightNotUsed); err != nil {
+	if err = u.setActorPausedHeight(message.ActorType, message.Address, typesUtil.HeightNotUsed); err != nil {
 		return err
 	}
 	return nil

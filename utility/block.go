@@ -256,7 +256,7 @@ func (u *utilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
 		if actorType == coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED {
 			continue
 		}
-		maxPausedBlocks, err := u.GetMaxPausedBlocks(actorType)
+		maxPausedBlocks, err := u.getMaxAllowedPausedBlocks(actorType)
 		if err != nil {
 			return err
 		}

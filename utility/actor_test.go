@@ -129,7 +129,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			addrBz, err := hex.DecodeString(addr)
 			require.NoError(t, err)
 
-			err = ctx.SetActorPauseHeight(actorType, addrBz, 1)
+			err = ctx.setActorPausedHeight(actorType, addrBz, 1)
 			require.NoError(t, err, "error setting pause height")
 
 			actor = getActorByAddr(t, ctx, actorType, addr)
@@ -215,13 +215,13 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			err = ctx.SetActorPauseHeight(actorType, addrBz, 0)
+			err = ctx.setActorPausedHeight(actorType, addrBz, 0)
 			require.NoError(t, err, "error setting actor pause height")
 
 			err = ctx.BeginUnstakingMaxPaused()
 			require.NoError(t, err, "error beginning unstaking max paused actors")
 
-			status, err := ctx.GetActorStatus(actorType, addrBz)
+			status, err := ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
 			require.Equal(t, int32(typesUtil.StakeStatus_Unstaking), status, "actor should be unstaking")
 		})
@@ -315,17 +315,17 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
 
-			err = ctx.SetActorPauseHeight(actorType, addrBz, pauseHeight)
+			err = ctx.setActorPausedHeight(actorType, addrBz, pauseHeight)
 			require.NoError(t, err, "error setting actor pause height")
 
-			gotPauseHeight, err := ctx.GetPauseHeight(actorType, addrBz)
+			gotPauseHeight, err := ctx.getPausedHeightIfExists(actorType, addrBz)
 			require.NoError(t, err)
 			require.Equal(t, pauseHeight, gotPauseHeight, "unable to get pause height from the actor")
 
 			randAddr, er := crypto.GenerateAddress()
 			require.NoError(t, er)
 
-			_, err = ctx.GetPauseHeight(actorType, randAddr)
+			_, err = ctx.getPausedHeightIfExists(actorType, randAddr)
 			require.Error(t, err, "non existent actor should error")
 
 		})
@@ -418,7 +418,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			addrBz, err := hex.DecodeString(addr)
 			require.NoError(t, err)
 
-			err = ctx.SetActorPauseHeight(actorType, addrBz, 0)
+			err = ctx.setActorPausedHeight(actorType, addrBz, 0)
 			require.NoError(t, err, "error setting actor pause height")
 
 			var er error
@@ -496,7 +496,7 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 				// require.Equal(t, int32(typesUtil.StakedStatus), actor.GetStatus(), "wrong starting status")
 				addrBz, er := hex.DecodeString(actor.GetAddress())
 				require.NoError(t, er)
-				er = ctx.SetActorPauseHeight(actorType, addrBz, 1)
+				er = ctx.setActorPausedHeight(actorType, addrBz, 1)
 				require.NoError(t, er)
 			}
 
@@ -539,13 +539,13 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			addrBz, er := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, er)
 
-			err = ctx.SetActorPauseHeight(actorType, addrBz, 0)
+			err = ctx.setActorPausedHeight(actorType, addrBz, 0)
 			require.NoError(t, err)
 
 			err = ctx.BeginUnstakingMaxPaused()
 			require.NoError(t, err)
 
-			status, err := ctx.GetActorStatus(actorType, addrBz)
+			status, err := ctx.getActorStatus(actorType, addrBz)
 			require.Equal(t, int32(typesUtil.StakeStatus_Unstaking), status, "incorrect status")
 
 		})
