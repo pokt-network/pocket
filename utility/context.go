@@ -133,6 +133,11 @@ func (u *UtilityContext) GetBus() modules.Bus {
 	return u.Bus
 }
 
+func (u UtilityContext) WithBus(bus modules.Bus) UtilityContext {
+	u.Bus = bus
+	return u
+}
+
 func (c *Context) Reset() typesUtil.Error {
 	if err := c.PersistenceRWContext.Release(); err != nil {
 		return typesUtil.ErrResetContext(err)

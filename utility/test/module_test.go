@@ -86,14 +86,13 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	})
 
 	return utility.UtilityContext{
-		Bus:    testUtilityMod.GetBus(), // TODO
 		Height: height,
 		Context: &utility.Context{
 			PersistenceRWContext: persistenceContext,
 			SavePointsM:          make(map[string]struct{}),
 			SavePoints:           make([][]byte, 0),
 		},
-	}
+	}.WithBus(testUtilityMod.GetBus())
 }
 
 func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
