@@ -59,7 +59,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 
 	clientPeerId := blockReq.PeerId
 
-	m.nodeLog(fmt.Sprintf("%s Received State Sync Get Block Req from: %s", serverNodePeerId, clientPeerId))
+	m.nodeLog(fmt.Sprintf("%s received State Sync Get Block Req from: %s", serverNodePeerId, clientPeerId))
 
 	// IMPROVE: Consider checking the hishest block from persistance, rather than the consensus module
 	// check the max block height, if higher height is requested, return error
@@ -102,6 +102,7 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 		return nil, err
 	}
 
+	// TODO check if this is needed
 	if blockBytes == nil {
 		return nil, fmt.Errorf("block not found")
 	}
@@ -111,8 +112,6 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 	if err != nil {
 		return &coreTypes.Block{}, err
 	}
-
-	m.nodeLog(fmt.Sprintf("GS height after: %d: \n", block.BlockHeader.Height))
 
 	return &block, nil
 }

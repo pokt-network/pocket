@@ -41,6 +41,7 @@ type StateSyncModule interface {
 
 var (
 	_ modules.Module        = &stateSync{}
+	_ StateSyncModule       = &stateSync{}
 	_ StateSyncServerModule = &stateSync{}
 )
 
@@ -108,11 +109,15 @@ func (m *stateSync) EnableServerMode() {
 	m.serverMode = true
 }
 
+// TODO implement
+// Placeholder function
 func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
 	m.nodeLog(fmt.Sprintf("Received get block response: %s", blockRes.Block.String()))
 	return nil
 }
 
+// TODO implement
+// Placeholder function
 func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
 	m.nodeLog(fmt.Sprintf("Received get metadata response: %s", metaDataRes.String()))
 	return nil

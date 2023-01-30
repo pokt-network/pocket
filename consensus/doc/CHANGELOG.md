@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.23] - 2023-01-27
+## [0.0.0.23] - 2023-01-30
 
 - Add `state_sync` submodule, with `state_sync` struct
 - Implement state sync server to advertise blocks and metadata
