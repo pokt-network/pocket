@@ -39,7 +39,7 @@ func (t *fIFOMempool) IsEmpty() bool {
 
 func (t *fIFOMempool) PopTransaction() ([]byte, error) {
 	popTx, err := t.g.Pop()
-	return []byte(popTx), NewError(-1, err.Error()) // TODO: prettier
+	return []byte(popTx), NewError(-1, err.Error())
 }
 
 func (t *fIFOMempool) RemoveTransaction(tx []byte) error {
