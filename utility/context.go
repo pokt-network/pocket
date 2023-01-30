@@ -10,7 +10,7 @@ import (
 
 // TODO: The implementation of `UtilityContext` should not be exposed.
 type UtilityContext struct {
-	Bus     modules.Bus
+	bus     modules.Bus
 	Height  int64
 	Context *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
 
@@ -37,7 +37,7 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 		return nil, typesUtil.ErrNewPersistenceContext(err)
 	}
 	return &UtilityContext{
-		Bus:    u.GetBus(),
+		bus:    u.GetBus(),
 		Height: height,
 		Context: &Context{
 			PersistenceRWContext: ctx,
@@ -130,11 +130,11 @@ func (u *UtilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
 }
 
 func (u *UtilityContext) GetBus() modules.Bus {
-	return u.Bus
+	return u.bus
 }
 
 func (u UtilityContext) WithBus(bus modules.Bus) UtilityContext {
-	u.Bus = bus
+	u.bus = bus
 	return u
 }
 
