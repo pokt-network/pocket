@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.17] - 2023-01-27
+## [0.0.0.18] - 2023-01-30
 
 - Add `ConsensusStateSync` interface that is implemented by the consensus module
+## [0.0.0.17] - 2023-01-27
+
+- Add `Param` and `Flag` protobufs for use in updating merkle tree
 
 ## [0.0.0.16] - 2023-01-24
 

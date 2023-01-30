@@ -1,11 +1,12 @@
 package persistence
 
 import (
+	"math/big"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"math/big"
 )
 
 const (
