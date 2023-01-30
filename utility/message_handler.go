@@ -134,7 +134,7 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 	// insert actor
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		maxRelays, err := u.CalculateAppRelays(message.Amount)
+		maxRelays, err := u.calculateMaxAppRelays(message.Amount)
 		if err != nil {
 			return err
 		}
@@ -196,7 +196,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 	store := u.Store()
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		maxRelays, err := u.CalculateAppRelays(message.Amount)
+		maxRelays, err := u.calculateMaxAppRelays(message.Amount)
 		if err != nil {
 			return err
 		}

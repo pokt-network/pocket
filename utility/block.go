@@ -254,8 +254,7 @@ func (u *utilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
 			return err
 		}
 		beforeHeight := u.height - int64(maxPausedBlocks)
-		// genesis edge case
-		if beforeHeight < 0 {
+		if beforeHeight < 0 { // genesis edge case
 			beforeHeight = 0
 		}
 		if err := u.UnstakeActorPausedBefore(beforeHeight, actorType); err != nil {
@@ -265,14 +264,14 @@ func (u *utilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
 	return nil
 }
 
-func (u *utilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, ActorType coreTypes.ActorType) (err typesUtil.Error) {
+func (u *utilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, actorType coreTypes.ActorType) (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	unstakingHeight, err := u.getUnstakingHeight(ActorType)
+	unstakingHeight, err := u.getUnstakingHeight(actorType)
 	if err != nil {
 		return err
 	}
-	switch ActorType {
+	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		er = store.SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:

@@ -81,11 +81,11 @@ func (u *utilityContext) getPoolAmount(name string) (*big.Int, types.Error) {
 	if err != nil {
 		return nil, typesUtil.ErrGetHeight(err)
 	}
-	tokens, err := store.GetPoolAmount(name, height)
+	amountStr, err := store.GetPoolAmount(name, height)
 	if err != nil {
 		return nil, types.ErrGetPoolAmount(name, err)
 	}
-	amount, err := converters.StringToBigInt(tokens)
+	amount, err := converters.StringToBigInt(amountStr)
 	if err != nil {
 		return nil, types.ErrStringToBigInt(err)
 	}

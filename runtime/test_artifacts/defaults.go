@@ -18,6 +18,7 @@ var (
 	DefaultPauseHeight         = int64(-1)
 	DefaultUnstakingHeight     = int64(-1)
 	DefaultChainID             = "testnet"
+	DefaultServiceUrl          = "https://localhost.com"
 	ServiceUrlFormat           = "node%d.consensus:8080"
 	DefaultMaxBlockBytes       = uint64(4000000)
 )

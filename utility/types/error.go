@@ -117,8 +117,8 @@ const (
 	CodeEqualVotesError                   Code = 77
 	CodeUnequalRoundsError                Code = 78
 	CodeMaxEvidenceAgeError               Code = 79
-	CodeGetStakedTokensError              Code = 80
-	CodeSetValidatorStakedTokensError     Code = 81
+	CodeGetStakedAmountError              Code = 80
+	CodeSetValidatorStakedAmountError     Code = 81
 	CodeSetPoolAmountError                Code = 82
 	CodeGetPoolAmountError                Code = 83
 	CodeInvalidProposerCutPercentageError Code = 84
@@ -172,8 +172,8 @@ const (
 )
 
 const (
-	GetStakedTokensError              = "an error occurred getting the validator staked tokens"
-	SetValidatorStakedTokensError     = "an error occurred setting the validator staked tokens"
+	GetStakedAmountsError             = "an error occurred getting the validator's amount staked"
+	SetValidatorStakedAmountError     = "an error occurred setting the validator' amount staked"
 	EqualVotesError                   = "the votes are identical and not equivocating"
 	UnequalRoundsError                = "the round numbers are not equal"
 	UnequalVoteTypesError             = "the vote types are not equal"
@@ -360,12 +360,12 @@ func ErrGetMissedBlocks(err error) Error {
 	return NewError(CodeGetMissedBlocksError, fmt.Sprintf("%s: %s", GetMissedBlocksError, err.Error()))
 }
 
-func ErrGetStakedTokens(err error) Error {
-	return NewError(CodeGetStakedTokensError, fmt.Sprintf("%s", GetStakedTokensError))
+func ErrGetStakedAmount(err error) Error {
+	return NewError(CodeGetStakedAmountError, fmt.Sprintf("%s", GetStakedAmountsError))
 }
 
-func ErrSetValidatorStakedTokens(err error) Error {
-	return NewError(CodeSetValidatorStakedTokensError, fmt.Sprintf("%s", SetValidatorStakedTokensError))
+func ErrSetValidatorStakedAmount(err error) Error {
+	return NewError(CodeSetValidatorStakedAmountError, fmt.Sprintf("%s", SetValidatorStakedAmountError))
 }
 
 func ErrGetExists(err error) Error {

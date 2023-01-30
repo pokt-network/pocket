@@ -38,7 +38,7 @@ func (u *utilityContext) setActorStakedAmount(actorType coreTypes.ActorType, add
 	}
 
 	if err != nil {
-		return typesUtil.ErrSetValidatorStakedTokens(err)
+		return typesUtil.ErrSetValidatorStakedAmount(err)
 	}
 	return nil
 }
@@ -97,25 +97,25 @@ func (u *utilityContext) getActorStakedAmount(actorType coreTypes.ActorType, add
 		return nil, typesUtil.ErrGetHeight(err)
 	}
 
-	var stakedTokens string
+	var stakedAmount string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		stakedTokens, err = store.GetAppStakeAmount(height, addr)
+		stakedAmount, err = store.GetAppStakeAmount(height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		stakedTokens, err = store.GetFishermanStakeAmount(height, addr)
+		stakedAmount, err = store.GetFishermanStakeAmount(height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		stakedTokens, err = store.GetServiceNodeStakeAmount(height, addr)
+		stakedAmount, err = store.GetServiceNodeStakeAmount(height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		stakedTokens, err = store.GetValidatorStakeAmount(height, addr)
+		stakedAmount, err = store.GetValidatorStakeAmount(height, addr)
 	default:
 		err = typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return nil, typesUtil.ErrGetStakedTokens(err)
+		return nil, typesUtil.ErrGetStakedAmount(err)
 	}
 
-	amount, err := converters.StringToBigInt(stakedTokens)
+	amount, err := converters.StringToBigInt(stakedAmount)
 	if err != nil {
 		return nil, typesUtil.ErrStringToBigInt(err)
 	}
@@ -411,9 +411,11 @@ func (u *utilityContext) getActorOutputAddress(actorType coreTypes.ActorType, op
 // calculators
 
 func (u *utilityContext) burnValidator(percentage int, addr []byte) typesUtil.Error {
-	validatorType := coreTypes.ActorType_ACTOR_TYPE_VAL
+	// TODO: Will need to extend this to support burning from other actors types & pools when the logic is implemented
+	validatorActorType := coreTypes.ActorType_ACTOR_TYPE_VAL
+	validatorPool := coreTypes.Pools_POOLS_VALIDATOR_STAKE
 
-	stakeAmount, err := u.getActorStakedAmount(validatorType, addr)
+	stakeAmount, err := u.getActorStakedAmount(validatorActorType, addr)
 	if err != nil {
 		return err
 	}
@@ -433,12 +435,12 @@ func (u *utilityContext) burnValidator(percentage int, addr []byte) typesUtil.Er
 	newAmountAfterBurn := big.NewInt(0).Sub(stakeAmount, burnAmountTruncated)
 
 	// remove from pool
-	if err := u.subPoolAmount(coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName(), converters.BigIntToString(burnAmountTruncated)); err != nil {
+	if err := u.subPoolAmount(validatorPool.FriendlyName(), converters.BigIntToString(burnAmountTruncated)); err != nil {
 		return err
 	}
 
 	// remove from actor
-	if err := u.setActorStakedAmount(validatorType, addr, newAmountAfterBurn); err != nil {
+	if err := u.setActorStakedAmount(validatorActorType, addr, newAmountAfterBurn); err != nil {
 		return err
 	}
 
@@ -448,46 +450,47 @@ func (u *utilityContext) burnValidator(percentage int, addr []byte) typesUtil.Er
 		return err
 	}
 
-	// Is below min stake?
+	// Check if amount after burn is below the min required stake
 	if minStake.Cmp(newAmountAfterBurn) == -1 {
-		unstakingHeight, err := u.getUnstakingHeight(validatorType)
+		unstakingHeight, err := u.getUnstakingHeight(validatorActorType)
 		if err != nil {
 			return err
 		}
-		if err := u.setActorUnstakingHeight(validatorType, addr, unstakingHeight); err != nil {
+		if err := u.setActorUnstakingHeight(validatorActorType, addr, unstakingHeight); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-func (u *utilityContext) CalculateAppRelays(stakedTokens string) (string, typesUtil.Error) {
-	tokens, er := converters.StringToBigInt(stakedTokens)
+// TODO: Reevaluate the implementation in this function when implementation the Application Protocol
+// and rate limiting
+func (u *utilityContext) calculateMaxAppRelays(stakeStr string) (string, typesUtil.Error) {
+	stakeBigInt, er := converters.StringToBigInt(stakeStr)
 	if er != nil {
 		return typesUtil.EmptyString, typesUtil.ErrStringToBigInt(er)
 	}
-	// The constant integer adjustment that the DAO may use to move the stake. The DAO may manually
-	// adjust an application's MaxRelays at the time of staking to correct for short-term fluctuations
-	// in the price of POKT, which may not be reflected in ParticipationRate
-	// When this parameter is set to 0, no adjustment is being made.
+
 	stabilityAdjustment, err := u.GetStabilityAdjustment()
 	if err != nil {
 		return typesUtil.EmptyString, err
 	}
+
 	baseRate, err := u.GetBaselineAppStakeRate()
 	if err != nil {
 		return typesUtil.EmptyString, err
 	}
+
 	// convert tokens to float64
-	tokensFloat64 := big.NewFloat(float64(tokens.Int64()))
-	// get the percentage of the baseline stake rate (can be over 100%)
+	stake := big.NewFloat(float64(stakeBigInt.Int64()))
+	// get the percentage of the baseline stake rate; can be over 100%
 	basePercentage := big.NewFloat(float64(baseRate) / float64(100))
 	// multiply the two
-	// DISCUSS evaluate whether or not we should use micro denomination or not
-	baselineThroughput := basePercentage.Mul(basePercentage, tokensFloat64)
-	// adjust for uPOKT
+	baselineThroughput := basePercentage.Mul(basePercentage, stake)
+	// Convert POKT to uPOKT
 	baselineThroughput.Quo(baselineThroughput, big.NewFloat(typesUtil.MillionInt))
-	// add staking adjustment (can be negative)
+	// add staking adjustment; can be -ve
 	adjusted := baselineThroughput.Add(baselineThroughput, big.NewFloat(float64(stabilityAdjustment)))
 	// truncate the integer
 	result, _ := adjusted.Int(nil)

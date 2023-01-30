@@ -30,8 +30,7 @@ const (
 )
 
 var (
-	defaultNonceString     = converters.BigIntToString(test_artifacts.DefaultAccountAmount)
-	defaultUnstakingHeight = int64(2017)
+	defaultNonceString = converters.BigIntToString(test_artifacts.DefaultAccountAmount)
 )
 
 var (

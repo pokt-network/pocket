@@ -10,10 +10,14 @@ const (
 	AppMinimumStakeParamName       = "app_minimum_stake"
 	AppMaxChainsParamName          = "app_max_chains"
 	AppBaselineStakeRateParamName  = "app_baseline_stake_rate"
-	AppStakingAdjustmentParamName  = "app_staking_adjustment"
 	AppUnstakingBlocksParamName    = "app_unstaking_blocks"
 	AppMinimumPauseBlocksParamName = "app_minimum_pause_blocks"
 	AppMaxPauseBlocksParamName     = "app_max_pause_blocks"
+	// The constant integer adjustment that the DAO may use to move the stake. The DAO may manually
+	// adjust an application's MaxRelays at the time of staking to correct for short-term fluctuations
+	// in the price of POKT, which may not be reflected in ParticipationRate
+	// When this parameter is set to 0, no adjustment is being made.
+	AppStakingAdjustmentParamName = "app_staking_adjustment" // IMPROVE: Document & explain the purpose of this parameter in more detail.
 
 	// Servicer actor gov params
 	ServiceNodeMinimumStakeParamName       = "service_node_minimum_stake"
