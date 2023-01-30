@@ -37,13 +37,13 @@ func NewGenericFIFOList[TData any](capacity int, options ...func(*GenericFIFOLis
 		},
 		isOverflowing: defaultIsOverflowing[TData],
 		onAdd: func(item TData, g *GenericFIFOList[TData]) {
-			// do nothing
+			// noop
 		},
 		onRemove: func(item TData, g *GenericFIFOList[TData]) {
-			// do nothing
+			// noop
 		},
 		onCollision: func(item TData, g *GenericFIFOList[TData]) {
-			// do nothing
+			// noop
 		},
 	}
 

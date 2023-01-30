@@ -31,10 +31,10 @@ func NewGenericFIFOSet[TIdx comparable, TData any](capacity int, options ...func
 		},
 		isOverflowing: defaultIsOverflowing[TIdx, TData],
 		onAdd: func(item TData, g *GenericFIFOSet[TIdx, TData]) {
-			// do nothing
+			// noop
 		},
 		onRemove: func(item TData, g *GenericFIFOSet[TIdx, TData]) {
-			// do nothing
+			// noop
 		},
 		onCollision: func(item TData, g *GenericFIFOSet[TIdx, TData]) error {
 			return fmt.Errorf("item %v already exists", item)
