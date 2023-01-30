@@ -23,23 +23,14 @@ type GenericFIFOSet[TIdx comparable, TData any] struct {
 
 func NewGenericFIFOSet[TIdx comparable, TData any](capacity int, options ...func(*GenericFIFOSet[TIdx, TData])) *GenericFIFOSet[TIdx, TData] {
 	gfs := &GenericFIFOSet[TIdx, TData]{
-		set:      make(map[TIdx]struct{}, capacity),
-		queue:    list.New(),
-		capacity: capacity,
-		indexerFn: func(item any) TIdx {
-			// by default we use the item itself as index (for simple cases like nonce deduping)
-			return item.(TIdx)
-		},
-		isOverflowing: defaultIsOverflowing[TIdx, TData],
-		onAdd: func(item TData, g *GenericFIFOSet[TIdx, TData]) {
-			// noop
-		},
-		onRemove: func(item TData, g *GenericFIFOSet[TIdx, TData]) {
-			// noop
-		},
-		onCollision: func(item TData, g *GenericFIFOSet[TIdx, TData]) error {
-			return fmt.Errorf("item %v already exists", item)
-		},
+		set:           make(map[TIdx]struct{}, capacity),
+		queue:         list.New(),
+		capacity:      capacity,
+		indexerFn:     selfIndexer[TIdx],
+		isOverflowing: overCapacity[TIdx, TData],
+		onAdd:         noop[TIdx, TData],
+		onRemove:      noop[TIdx, TData],
+		onCollision:   itemAlreadyExistsError[TIdx, TData],
 	}
 
 	for _, o := range options {
@@ -177,6 +168,21 @@ func WithOnCollision[TIdx comparable, TData any](fn func(TData, *GenericFIFOSet[
 
 // private methods
 
-func defaultIsOverflowing[TIdx comparable, TData any](g *GenericFIFOSet[TIdx, TData]) bool {
+// overCapacity returns true if the queue is overflowing its capacity
+func overCapacity[TIdx comparable, TData any](g *GenericFIFOSet[TIdx, TData]) bool {
 	return g.queue.Len() > g.capacity
+}
+
+// selfIndexer is the default indexer function that uses the item itself as index (for simple cases like nonce deduping)
+func selfIndexer[TIdx comparable](item any) TIdx {
+	return item.(TIdx)
+}
+
+// noop is the default onAdd/onRemove functions that does nothing
+func noop[TIdx comparable, TData any](item TData, g *GenericFIFOSet[TIdx, TData]) {
+	// noop
+}
+
+func itemAlreadyExistsError[TIdx comparable, TData any](item TData, g *GenericFIFOSet[TIdx, TData]) error {
+	return fmt.Errorf("item %v already exists", item)
 }
