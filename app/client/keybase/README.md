@@ -130,12 +130,12 @@ flowchart LR
         direction TB
         D["Cipher(key)"]
         E["GCM(block)"]
-        F["Open(encryptedBytes, nonce)"]
+        F["Open(ciphertext, nonce)"]
         D--Block-->E
         E--Nonce-->F
     end
     C--Salt-->S
-    C--EncryptedBytes-->AES-GCM
+    C--CipherText-->AES-GCM
     S--Key-->AES-GCM
 ```
 
