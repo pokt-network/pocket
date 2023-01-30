@@ -16,7 +16,7 @@ const (
 type SyncMode string
 
 const (
-	Snyc      SyncMode = "sync"
+	Sync      SyncMode = "sync"
 	Synched   SyncMode = "synched"
 	Pacemaker SyncMode = "pacemaker"
 	Server    SyncMode = "server"
@@ -63,10 +63,8 @@ func (*stateSync) Create(bus modules.Bus) (modules.Module, error) {
 	m := &stateSync{}
 	bus.RegisterModule(m)
 
-	// TODO: think about what must be the default mode,
-	// Synched seems reasonable, as switching to pacemaker and sync modes must trigger operations
-	// And target state for the node must be synched.
-	m.currentMode = Synched
+	// when node is starting, it is in sync mode, as it might need to bootstrap to the latest state
+	m.currentMode = Sync
 
 	m.serverMode = false
 
