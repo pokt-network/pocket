@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.21] - 2023-01-29
+## [0.0.0.21] - 2023-01-30
 
 - Updated `TestRainTreeAddrBookUtilsHandleUpdate` and `testRainTreeMessageTargets` to correct incorrect expected and actual value placements.
 
