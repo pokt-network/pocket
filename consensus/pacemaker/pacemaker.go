@@ -174,7 +174,6 @@ func (m *pacemaker) RestartTimer() {
 		m.stepCancelFunc()
 	}
 
-	// NOTE: Not defering a cancel call because this function is asynchronous.
 	consensusMod := m.GetBus().GetConsensusModule()
 	stepTimeout := m.getStepTimeout(consensusMod.CurrentRound())
 	clock := m.GetBus().GetRuntimeMgr().GetClock()

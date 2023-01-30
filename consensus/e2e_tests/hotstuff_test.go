@@ -193,7 +193,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	// Test state synchronisation's get block functionality
-	// As this stage, the chain has finished the first round
+	// At this stage, the chain has finished the first round
 	// So, get block request for block height 1 must return non-nill block
 	serverNode := pocketNodes[1]
 	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
