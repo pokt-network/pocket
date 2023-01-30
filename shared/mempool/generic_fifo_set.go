@@ -6,6 +6,7 @@ import (
 	"sync"
 )
 
+// DOCUMENT: Add a proper README for Pocket's GenericFifoSet & Mempool. See the source code for as an interface reference for now
 type GenericFIFOSet[TIdx comparable, TData any] struct {
 	set      map[TIdx]struct{}
 	queue    *list.List
