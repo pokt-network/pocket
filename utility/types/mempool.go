@@ -17,43 +17,50 @@ type fIFOMempool struct {
 	maxTxBytes uint64 // maximum total size of all txs allowed in the mempool
 }
 
-// AddTransaction implements Mempool
-func (t *fIFOMempool) AddTransaction(tx []byte) error {
+// AddTx adds a tx to the mempool
+func (t *fIFOMempool) AddTx(tx []byte) error {
 	if err := t.g.Push(tx); err != nil {
 		return ErrDuplicateTransaction()
 	}
 	return nil
 }
 
+// Clear clears the mempool
 func (t *fIFOMempool) Clear() {
 	t.g.Clear()
 }
 
+// Contains checks if a tx is in the mempool by its hash
 func (t *fIFOMempool) Contains(hash string) bool {
 	return t.g.ContainsIndex(hash)
 }
 
+// IsEmpty checks if the mempool is empty
 func (t *fIFOMempool) IsEmpty() bool {
 	return t.g.IsEmpty()
 }
 
-func (t *fIFOMempool) PopTransaction() ([]byte, error) {
+// PopTx pops a tx from the mempool
+func (t *fIFOMempool) PopTx() ([]byte, error) {
 	popTx, err := t.g.Pop()
 	return []byte(popTx), NewError(-1, err.Error())
 }
 
-func (t *fIFOMempool) RemoveTransaction(tx []byte) error {
+// RemoveTx removes a tx from the mempool
+func (t *fIFOMempool) RemoveTx(tx []byte) error {
 	t.g.Remove(tx)
 	return nil
 }
 
-func (t *fIFOMempool) Size() uint32 {
+// TxCount returns the number of txs in the mempool
+func (t *fIFOMempool) TxCount() uint32 {
 	t.m.Lock()
 	defer t.m.Unlock()
 	return uint32(t.size)
 }
 
-func (t *fIFOMempool) TxsBytes() uint64 {
+// TxsBytesTotal returns the total size, in bytes, of all txs in the mempool
+func (t *fIFOMempool) TxsBytesTotal() uint64 {
 	t.m.Lock()
 	defer t.m.Unlock()
 	return t.txBytes

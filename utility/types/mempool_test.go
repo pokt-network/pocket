@@ -27,7 +27,7 @@ func TestMempool(t *testing.T) {
 
 			if tt.args.initialElements != nil {
 				for _, item := range *tt.args.initialElements {
-					txFifoMempool.AddTransaction(item)
+					txFifoMempool.AddTx(item)
 				}
 			}
 
@@ -37,18 +37,18 @@ func TestMempool(t *testing.T) {
 				}
 			}
 
-			require.Equal(t, len(tt.wantItems), txFifoMempool.Size(), "mismatching Size (capacity filled with elements)")
+			require.Equal(t, len(tt.wantItems), txFifoMempool.TxCount(), "mismatching TxCount (capacity filled with elements)")
 
 			for _, wantItem := range tt.wantItems {
 				wantHash := crypto.GetHashStringFromBytes(wantItem)
 				require.True(t, txFifoMempool.Contains(wantHash), "missing element")
-				gotItem, err := txFifoMempool.PopTransaction()
+				gotItem, err := txFifoMempool.PopTx()
 				require.NoError(t, err, "unexpected error while popping element")
 				require.Equal(t, wantItem, gotItem, "mismatching element")
 			}
 
-			if txFifoMempool.Size() == 0 {
-				require.True(t, txFifoMempool.IsEmpty(), "IsEmpty should return true when Len() is 0")
+			if txFifoMempool.TxCount() == 0 {
+				require.True(t, txFifoMempool.IsEmpty(), "IsEmpty should return true when TxCount() is 0")
 			}
 		})
 	}

@@ -33,7 +33,7 @@ func NewMempool(maxTransactionBytes uint64, maxTransactions uint32) mempool.TXMe
 	}
 }
 
-func (f *legacyFIFOMempool) AddTransaction(tx []byte) error {
+func (f *legacyFIFOMempool) AddTx(tx []byte) error {
 	f.l.Lock()
 	defer f.l.Unlock()
 
@@ -70,7 +70,7 @@ func (f *legacyFIFOMempool) Contains(hash string) bool {
 	return false
 }
 
-func (f *legacyFIFOMempool) RemoveTransaction(tx []byte) error {
+func (f *legacyFIFOMempool) RemoveTx(tx []byte) error {
 	f.l.Lock()
 	defer f.l.Unlock()
 
@@ -90,7 +90,7 @@ func (f *legacyFIFOMempool) RemoveTransaction(tx []byte) error {
 	return nil
 }
 
-func (f *legacyFIFOMempool) PopTransaction() ([]byte, error) {
+func (f *legacyFIFOMempool) PopTx() ([]byte, error) {
 	f.l.RLock()
 	defer f.l.RUnlock()
 
@@ -111,7 +111,7 @@ func (f *legacyFIFOMempool) Clear() {
 	f.txBytes = 0
 }
 
-func (f *legacyFIFOMempool) Size() uint32 {
+func (f *legacyFIFOMempool) TxCount() uint32 {
 	f.l.RLock()
 	defer f.l.RUnlock()
 
@@ -125,7 +125,7 @@ func (f *legacyFIFOMempool) IsEmpty() bool {
 	return f.size == 0
 }
 
-func (f *legacyFIFOMempool) TxsBytes() uint64 {
+func (f *legacyFIFOMempool) TxsBytesTotal() uint64 {
 	f.l.RLock()
 	defer f.l.RUnlock()
 
