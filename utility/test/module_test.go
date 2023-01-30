@@ -73,8 +73,6 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
-	mempool := testUtilityMod.GetMempool()
-
 	// TECHDEBT: Move the internal of cleanup into a separate function and call this in the
 	// beginning of every test. This (the current implementation) is an issue because if we call
 	// `NewTestingUtilityContext` more than once in a single test, we create unnecessary calls to clean.
@@ -84,7 +82,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
 		}))
-		mempool.Clear()
+		testUtilityMod.GetMempool().Clear()
 	})
 
 	return utility.UtilityContext{
