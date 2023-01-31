@@ -58,7 +58,6 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	}
 
 	clientPeerId := blockReq.PeerId
-
 	m.nodeLog(fmt.Sprintf("%s received State Sync Get Block Req from: %s", serverNodePeerId, clientPeerId))
 
 	// IMPROVE: Consider checking the hishest block from persistance, rather than the consensus module
