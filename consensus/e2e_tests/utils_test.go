@@ -178,7 +178,7 @@ func TriggerNextView(t *testing.T, node *shared.Node) {
 
 func triggerDebugMessage(t *testing.T, node *shared.Node, action messaging.DebugMessageAction) {
 	debugMessage := &messaging.DebugMessage{
-		Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
+		Action:  action,
 		Message: nil,
 	}
 	anyProto, err := anypb.New(debugMessage)
