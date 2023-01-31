@@ -37,7 +37,9 @@ func CreatePrometheusTelemetryModule(bus modules.Bus) (modules.Module, error) {
 
 func (*PrometheusTelemetryModule) Create(bus modules.Bus) (modules.Module, error) {
 	m := &PrometheusTelemetryModule{}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
@@ -56,7 +58,6 @@ func (m *PrometheusTelemetryModule) Start() error {
 
 	http.Handle(m.config.Endpoint, promhttp.Handler())
 	go func() {
-		// DISCUSSION: Use a goroutine to catch any errors?
 		if err := http.ListenAndServe(m.config.Address, nil); err != nil {
 			log.Printf("[WARN] Error starting http server: %s", err)
 		}
@@ -105,7 +106,7 @@ func (m *PrometheusTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent
 	return modules.TimeSeriesAgent(m)
 }
 
-func (p *PrometheusTelemetryModule) CounterRegister(name string, description string) {
+func (p *PrometheusTelemetryModule) CounterRegister(name, description string) {
 	if _, exists := p.counters[name]; exists {
 		log.Printf("[WARNING] Trying to register and already registered counter: %s\n", name)
 		return
@@ -126,7 +127,7 @@ func (p *PrometheusTelemetryModule) CounterIncrement(name string) {
 	p.counters[name].Inc()
 }
 
-func (p *PrometheusTelemetryModule) GaugeRegister(name string, description string) {
+func (p *PrometheusTelemetryModule) GaugeRegister(name, description string) {
 	if _, exists := p.gauges[name]; exists {
 		log.Printf("[WARNING] Trying to register and already registered gauge: %s\n", name)
 		return
