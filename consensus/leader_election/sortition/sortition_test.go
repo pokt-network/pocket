@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/consensus/leader_election/vrf"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -53,7 +54,8 @@ func SingleSortitionTest(t *testing.T, uPOKTValidatorStake, uPOKTNetworkStake, n
 	selectCount := SortitionResult(0)
 	for i := uint64(0); i < numViewChanges; i++ {
 		var vrfOutput [vrf.VRFOutputSize]byte
-		rand.Read(vrfOutput[:])
+		_, err := rand.Read(vrfOutput[:])
+		require.NoError(t, err)
 
 		sortitionResult := Sortition(uPOKTValidatorStake, uPOKTNetworkStake, numCandidates, vrfOutput[:])
 		selectCount += sortitionResult
@@ -70,7 +72,8 @@ func BenchmarkSortition(b *testing.B) {
 
 	vrfOutputs := make([]vrf.VRFOutput, b.N)
 	for i := 0; i < b.N; i++ {
-		rand.Read(vrfOutputs[i][:])
+		_, err := rand.Read(vrfOutputs[i][:])
+		require.NoError(b, err)
 	}
 
 	b.StartTimer()
