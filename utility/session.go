@@ -106,12 +106,14 @@ func (s *session) findClosestYFishermen() []*coreTypes.Actor {
 // Q) why do we hash to find a newKey between every actor selection?
 // A) pseudo-random selection only works if each iteration is re-randomized
 //    or it would be subject to lexicographical proximity bias attacks
-func (s *session) pseudoRandomSelection(orderedListOfPublicKeys []string, numberOfActorsInSession int) []*coreTypes.Actor {
-	// IMPORTANT:
-	// THIS IS A DEMONSTRABLE FUNCTION THAT WILL NOT BE IMPLEMENTED AS SUCH
-	// IT EXISTS IN THIS COMMIT PURELY TO COMMUNICATE THE EXPECTED BEHAVIOR
-	return nil
-}
+/*
+	func (s *session) pseudoRandomSelection(orderedListOfPublicKeys []string, numberOfActorsInSession int) []*coreTypes.Actor {
+		// IMPORTANT:
+		// THIS IS A DEMONSTRABLE FUNCTION THAT WILL NOT BE IMPLEMENTED AS SUCH
+		// IT EXISTS IN THIS COMMIT PURELY TO COMMUNICATE THE EXPECTED BEHAVIOR
+		return nil
+	}
+*/
 
 func (s *session) GetServiceNodes() []*coreTypes.Actor {
 	return s.serviceNodes
