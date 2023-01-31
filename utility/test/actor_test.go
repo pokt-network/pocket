@@ -361,7 +361,7 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 			candidates, err := ctx.GetMessageEditStakeSignerCandidates(msgEditStake)
 			require.NoError(t, err)
 
-			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
+			require.Equal(t, 2, len(candidates), "unexpected number of candidates")
 			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
 			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
 
@@ -386,7 +386,7 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 			candidates, err := ctx.GetMessageUnpauseSignerCandidates(msg)
 			require.NoError(t, err)
 
-			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
+			require.Equal(t, 2, len(candidates), "unexpected number of candidates")
 			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
 			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
 
@@ -411,7 +411,7 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 			candidates, err := ctx.GetMessageUnstakeSignerCandidates(msg)
 			require.NoError(t, err)
 
-			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
+			require.Equal(t, 2, len(candidates), "unexpected number of candidates")
 			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
 			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
 
@@ -426,7 +426,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
 			actor := getFirstActor(t, ctx, actorType)
-			require.Equal(t, actor.GetUnstakingHeight(), int64(-1), "wrong starting status")
+			require.Equal(t, int64(-1), actor.GetUnstakingHeight(), "wrong starting status")
 
 			addr := actor.GetAddress()
 			addrBz, err := hex.DecodeString(addr)
@@ -457,7 +457,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			require.NoError(t, err, "error unstaking actor pause before height 1")
 
 			actor = getActorByAddr(t, ctx, actorType, addr)
-			require.Equal(t, actor.GetUnstakingHeight(), defaultUnstaking, "status does not equal unstaking")
+			require.Equal(t, defaultUnstaking, actor.GetUnstakingHeight(), "status does not equal unstaking")
 
 			var unstakingBlocks int64
 			switch actorType {
