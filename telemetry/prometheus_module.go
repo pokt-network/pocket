@@ -56,8 +56,9 @@ func (m *PrometheusTelemetryModule) Start() error {
 
 	http.Handle(m.config.Endpoint, promhttp.Handler())
 	go func() {
+		// DISCUSSION: Use a goroutine to catch any errors?
 		if err := http.ListenAndServe(m.config.Address, nil); err != nil {
-			log.Printf("[WARM] Error starting http server: %s", err)
+			log.Printf("[WARN] Error starting http server: %s", err)
 		}
 	}()
 
