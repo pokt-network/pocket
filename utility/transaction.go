@@ -284,7 +284,7 @@ func (u *UtilityContext) HandleUnstakeMessage(message *typesUtil.MessageUnstake)
 	if err != nil {
 		return err
 	}
-	if err = u.SetActorUnstaking(message.ActorType, unstakingHeight, message.Address); err != nil {
+	if err := u.SetActorUnstaking(message.ActorType, unstakingHeight, message.Address); err != nil {
 		return err
 	}
 	return nil
@@ -309,7 +309,7 @@ func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause)
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
 		return typesUtil.ErrNotReadyToUnpause()
 	}
-	if err = u.SetActorPauseHeight(message.ActorType, message.Address, typesUtil.HeightNotUsed); err != nil {
+	if err := u.SetActorPauseHeight(message.ActorType, message.Address, typesUtil.HeightNotUsed); err != nil {
 		return err
 	}
 	return nil
