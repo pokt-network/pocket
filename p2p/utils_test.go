@@ -79,7 +79,7 @@ func validatorId(i int) string {
 	return fmt.Sprintf(serviceUrlFormat, i)
 }
 
-func waitForNetworkSimulationCompletion(t *testing.T, p2pModules map[string]*p2pModule, wg *sync.WaitGroup) {
+func waitForNetworkSimulationCompletion(t *testing.T, wg *sync.WaitGroup) {
 	// Wait for all messages to be transmitted
 	done := make(chan struct{})
 	go func() {
@@ -117,7 +117,7 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 	mockRuntimeMgrs := make([]modules.RuntimeMgr, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
 	copy(valKeys[:], keys[:numValidators])
-	mockGenesisState := createMockGenesisState(t, valKeys)
+	mockGenesisState := createMockGenesisState(valKeys)
 	for i := range mockRuntimeMgrs {
 		cfg := &configs.Config{
 			RootDirectory: "",
@@ -159,7 +159,7 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.Moc
 }
 
 // createMockGenesisState configures and returns a mocked GenesisState
-func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
+func createMockGenesisState(valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
 	var genesisState = new(genesis.GenesisState)
 
 	validators := make([]*coreTypes.Actor, len(valKeys))
@@ -194,7 +194,7 @@ func prepareBusMock(busMock *mockModules.MockBus,
 }
 
 // Consensus mock - only needed for validatorMap access
-func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus, genesisState *genesis.GenesisState) *mockModules.MockConsensusModule {
+func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus) *mockModules.MockConsensusModule {
 	ctrl := gomock.NewController(t)
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
