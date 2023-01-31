@@ -162,11 +162,6 @@ func getRandomIntString(n int) string {
 	return strconv.Itoa(rand.Intn(n))
 }
 
-// NOTE: This is not current used but was added for future usage.
-func getRandomString(numChars int64) string {
-	return string(getRandomBytes(numChars))
-}
-
 func getRandomBytes(numBytes int64) []byte {
 	bz := make([]byte, numBytes)
 	rand.Read(bz)
