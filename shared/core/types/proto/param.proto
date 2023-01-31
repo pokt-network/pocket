@@ -5,14 +5,14 @@ package core;
 option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
 message Param {
-    string Name = 1;
-    string Value = 2;
-    int64  Height = 3;
+    string name = 1;
+    string value = 2;
+    int64  height = 3;
 }
 
 message Flag {
-    string Name = 1;
-    string Value = 2;
-    int64  Height = 3;
-    string Enabled = 4;
+    string name = 1;
+    string value = 2;
+    int64  height = 3;
+    string enabled = 4;
 }

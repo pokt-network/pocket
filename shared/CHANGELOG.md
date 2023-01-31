@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.18] - 2023-01-31
+
+- Match naming conventions in `Param` protobuf file
+
 ## [0.0.0.17] - 2023-01-27
 
 - Add `Param` and `Flag` protobufs for use in updating merkle tree
