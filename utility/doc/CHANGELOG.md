@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.21] - 2023-01-30
+
+- Updated `TestUtilityContext_SetPoolAmount`, `TestUtilityContext_GetMessageEditStakeSignerCandidates`, `TestUtilityContext_GetMessageUnpauseSignerCandidates`, `TestUtilityContext_GetMessageUnstakeSignerCandidates`, and `TestUtilityContext_UnstakePausedBefore` to correct misplaced expected and actual values in require.Equal.
+
 ## [0.0.0.20] - 2023-01-20
 
 - Remove `address []byte` argument from `InsertPool` function

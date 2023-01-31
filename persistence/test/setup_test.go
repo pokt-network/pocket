@@ -219,8 +219,8 @@ func fuzzSingleProtocolActor(
 			if strings.Contains(newActor.StakedAmount, "invalid") {
 				log.Println("")
 			}
-			require.Equal(t, newActor.StakedAmount, newStakedTokens, "staked tokens not updated")
-			require.Equal(t, newActor.GenericParam, newActorSpecificParam, "actor specific param not updated")
+			require.Equal(t, newStakedTokens, newActor.StakedAmount, "staked tokens not updated")
+			require.Equal(t, newActorSpecificParam, newActor.GenericParam, "actor specific param not updated")
 		case "GetActorsReadyToUnstake":
 			unstakingActors, err := db.GetActorsReadyToUnstake(protocolActorSchema, db.Height)
 			require.NoError(t, err)
