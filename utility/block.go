@@ -22,7 +22,7 @@ import (
 */
 
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
-func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (string, [][]byte, error) {
+func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (stateHash string, transactions [][]byte, err error) {
 	lastBlockByzantineVals, err := u.GetLastBlockByzantineValidators()
 	if err != nil {
 		return "", nil, err
@@ -31,7 +31,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	if err := u.BeginBlock(lastBlockByzantineVals); err != nil {
 		return "", nil, err
 	}
-	transactions := make([][]byte, 0)
+	transactions = make([][]byte, 0)
 	totalTxsSizeInBytes := 0
 	txIndex := 0
 	for !u.Mempool.IsEmpty() {
@@ -51,7 +51,6 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			if err != nil {
 				return "", nil, err
 			}
-			totalTxsSizeInBytes -= txTxsSizeInBytes
 			break // we've reached our max
 		}
 		txResult, err := u.ApplyTransaction(txIndex, transaction)
@@ -75,7 +74,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		return "", nil, err
 	}
 	// return the app hash (consensus module will get the validator set directly)
-	stateHash, err := u.Context.ComputeStateHash()
+	stateHash, err = u.Context.ComputeStateHash()
 	if err != nil {
 		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
 	}
@@ -186,7 +185,7 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 		// handle if over the threshold
 		if numberOfMissedBlocks >= maxMissedBlocks {
 			// pause the validator and reset missed blocks
-			if err = u.PauseValidatorAndSetMissedBlocks(address, latestBlockHeight, int(typesUtil.HeightNotUsed)); err != nil {
+			if err := u.PauseValidatorAndSetMissedBlocks(address, latestBlockHeight, int(typesUtil.HeightNotUsed)); err != nil {
 				return err
 			}
 			// burn validator for missing blocks
@@ -194,7 +193,7 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 			if err != nil {
 				return err
 			}
-			if err = u.BurnActor(coreTypes.ActorType_ACTOR_TYPE_VAL, burnPercentage, address); err != nil {
+			if err := u.BurnActor(coreTypes.ActorType_ACTOR_TYPE_VAL, burnPercentage, address); err != nil {
 				return err
 			}
 		} else if err := u.SetValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
@@ -235,10 +234,10 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 			return typesUtil.ErrGetReadyToUnstake(er)
 		}
 		for _, actor := range readyToUnstake {
-			if err = u.SubPoolAmount(poolName, actor.GetStakeAmount()); err != nil {
+			if err := u.SubPoolAmount(poolName, actor.GetStakeAmount()); err != nil {
 				return err
 			}
-			if err = u.AddAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
+			if err := u.AddAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
 				return err
 			}
 		}
@@ -272,14 +271,14 @@ func (u *UtilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
 	return nil
 }
 
-func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, ActorType coreTypes.ActorType) (err typesUtil.Error) {
+func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, actorType coreTypes.ActorType) (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	unstakingHeight, err := u.GetUnstakingHeight(ActorType)
+	unstakingHeight, err := u.GetUnstakingHeight(actorType)
 	if err != nil {
 		return err
 	}
-	switch ActorType {
+	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		er = store.SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
@@ -317,10 +316,10 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 	amountToProposerFloat.Quo(amountToProposerFloat, big.NewFloat(100))
 	amountToProposer, _ := amountToProposerFloat.Int(nil)
 	amountToDAO := feesAndRewardsCollected.Sub(feesAndRewardsCollected, amountToProposer)
-	if err = u.AddAccountAmount(proposer, amountToProposer); err != nil {
+	if err := u.AddAccountAmount(proposer, amountToProposer); err != nil {
 		return err
 	}
-	if err = u.AddPoolAmount(coreTypes.Pools_POOLS_DAO.FriendlyName(), amountToDAO); err != nil {
+	if err := u.AddPoolAmount(coreTypes.Pools_POOLS_DAO.FriendlyName(), amountToDAO); err != nil {
 		return err
 	}
 	return nil
