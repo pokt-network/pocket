@@ -99,13 +99,14 @@ The cli binary will be available at `bin/p1` and can be used instead of `go run 
 
 The commands available are listed [here](../../rpc/doc/README.md) or accessible via `bin/p1 --help`
 
-2.1 [OPTIONAL]: Add the binary to your `.rc`:
+2.1 [OPTIONAL] Add the binary to your `.rc`
 
 You can add the following function so you can run the `p1` from anywhere on your host:
 
 ```bash
 function p1 {
-    </your/path/to/pocket/repo>/bin/p1 "$@"
+    pocket_workdir="</your/path/to/pocket/repo>"
+    ${pocket_workdir}/bin/p1 "$@" --workdir=${pocket_workdir}
 }
 ```
 

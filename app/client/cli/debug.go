@@ -48,10 +48,17 @@ var (
 	// Its purpose is to allow the CLI to "discover" the nodes in the network. Since currently we don't have churn and we run nodes only in LocalNet, we can rely on the genesis state.
 	// HACK(#416): This is a temporary solution that guarantees backward compatibility while we implement peer discovery
 	validators []*coreTypes.Actor
+
+	// While the `p1` binary is in development, the debug commands require a config and a debug genesis file to operate.
+	// These currently live inside of the pocket repo so a workdir needs to be specified if `p1` is used from a directory
+	// other than the root of the pocket repo.
+	workdir string = ""
 )
 
 func init() {
-	rootCmd.AddCommand(NewDebugCommand())
+	debugCmd := NewDebugCommand()
+	debugCmd.Flags().StringVar(&workdir, "workdir", "", "workdir where the pocket repo is located, relative to which config & genesis files can be loaded")
+	rootCmd.AddCommand(debugCmd)
 }
 
 func NewDebugCommand() *cobra.Command {
@@ -61,7 +68,7 @@ func NewDebugCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			var err error
-			runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
+			runtimeMgr := runtime.NewManagerFromFiles(workdir+defaultConfigPath, workdir+defaultGenesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
 
 			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
 			validators = runtimeMgr.GetGenesis().Validators
