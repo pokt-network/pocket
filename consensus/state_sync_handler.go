@@ -24,10 +24,7 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 			return fmt.Errorf("failed to cast message to StateSyncMessage")
 		}
 
-		if err := m.handleStateSyncMessage(stateSyncMessage); err != nil {
-			return err
-		}
-
+		return m.handleStateSyncMessage(stateSyncMessage)
 	default:
 		return typesCons.ErrUnknownStateSyncMessageType(stateSyncMessageAny.MessageName())
 	}
