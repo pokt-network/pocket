@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.7] - 2023-01-31
+
+- Added `genesis_localhost.json`, a copy of `genesis.json` to be used by the localhost instead of a debug docker container
+
 ## [0.0.0.6] - 2023-01-23
 
 - Added pprof feature flag guideline in docker-compose.yml

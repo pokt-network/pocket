@@ -29,10 +29,10 @@ const (
 	// Genesis file to be used from within a docker container to connect to other containers
 	defaultGenesisPath = "build/config/genesis.json"
 	// HACK: Genesis file to be used from the host machine to connect to docker containers.
-	// Note that `genesis.json` is a copy-pasta of `genesis_debug.json` with the only
+	// Note that `genesis.json` is a copy-pasta of `genesis_localhost.json` with the only
 	// difference being that `node{X}.consensus:8080` is replaced with `localhost:808{X}` because
 	// container names cannot be resolved by Docker's DNS from the host.
-	hostGenesisPath = "build/config/genesis_debug.json"
+	hostGenesisPath = "build/config/genesis_localhost.json"
 )
 
 var (

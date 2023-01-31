@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.5] - 2023-01-31
+
+- Added `workdir` and `localhost` to the `p1 debug command`
+- Documentation and supporting logic to enable `p1 debug` to be used from localhost
+
 ## [0.0.0.4] - 2023-01-10
 
 - The `client` (i.e. CLI) no longer instantiates a `P2P` module along with a bus of optional modules. Instead, it instantiates a `client-only` `P2P` module that is disconnected from consensus and persistence. Interactions with the persistence & consensus layer happen via RPC.
