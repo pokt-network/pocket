@@ -81,7 +81,7 @@ func NewDebugCommand() *cobra.Command {
 			}
 			p2pMod = p2pM.(modules.P2PModule)
 
-			p2pMod.Start()
+			err = p2pMod.Start()
 		},
 		RunE: runDebug,
 	}
@@ -172,7 +172,9 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
 		}
-		p2pMod.Send(addr, anyProto)
+		if err := p2pMod.Send(addr, anyProto); err != nil {
+			log.Fatalf("[ERROR] Failed to send debug message: %v", err)
+		}
 	}
 }
 
