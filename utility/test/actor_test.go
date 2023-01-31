@@ -498,7 +498,9 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
+
+			er := ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
+			require.NoError(t, er)
 
 			err := ctx.Context.SetParam(typesUtil.AppUnstakingBlocksParamName, 0)
 			require.NoError(t, err)

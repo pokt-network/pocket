@@ -4,12 +4,13 @@ import (
 	"crypto/ed25519"
 	"encoding/binary"
 	"fmt"
-	types "github.com/pokt-network/pocket/runtime/configs/types"
 	"log"
 	"sort"
 	"sync"
 	"testing"
 	"time"
+
+	types "github.com/pokt-network/pocket/runtime/configs/types"
 
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -201,7 +202,8 @@ func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus, genesisSta
 	consensusMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	consensusMock.EXPECT().SetBus(busMock).AnyTimes()
 	consensusMock.EXPECT().GetModuleName().Return(modules.ConsensusModuleName).AnyTimes()
-	busMock.RegisterModule(consensusMock)
+	err := busMock.RegisterModule(consensusMock)
+	require.NoError(t, err)
 
 	return consensusMock
 }
@@ -220,7 +222,8 @@ func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisS
 	persistenceMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	persistenceMock.EXPECT().SetBus(busMock).AnyTimes()
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
-	busMock.RegisterModule(persistenceMock)
+	err := busMock.RegisterModule(persistenceMock)
+	require.NoError(t, err)
 
 	return persistenceMock
 }
@@ -239,7 +242,8 @@ func prepareTelemetryMock(t *testing.T, busMock *mockModules.MockBus, valId stri
 	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
 	telemetryMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	telemetryMock.EXPECT().SetBus(busMock).AnyTimes()
-	busMock.RegisterModule(telemetryMock)
+	err := busMock.RegisterModule(telemetryMock)
+	require.NoError(t, err)
 
 	return telemetryMock
 }

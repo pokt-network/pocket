@@ -130,7 +130,8 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 			for i := 0; i < numAddressesToBeAdded; i++ {
 				newAddr, err := cryptoPocket.GenerateAddress()
 				require.NoError(b, err)
-				network.AddPeerToAddrBook(&types.NetworkPeer{Address: newAddr})
+				err = network.AddPeerToAddrBook(&types.NetworkPeer{Address: newAddr})
+				require.NoError(b, err)
 			}
 
 			peersManagerStateView = network.peersManager.getNetworkView()

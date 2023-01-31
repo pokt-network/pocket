@@ -257,11 +257,12 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	p2pModules := createP2PModules(t, busMocks)
 	for validatorId, p2pMod := range p2pModules {
 		p2pMod.listener = connMocks[validatorId]
-		p2pMod.Start()
+		err := p2pMod.Start()
+		require.NoError(t, err)
 		for _, peer := range p2pMod.network.GetAddrBook() {
 			peer.Dialer = connMocks[peer.ServiceUrl]
 		}
-		defer p2pMod.Stop()
+		defer p2pStop(t, p2pMod)
 	}
 
 	// Wait for completion
@@ -283,4 +284,9 @@ func extractNumericId(valId string) int64 {
 	}
 
 	return num
+}
+
+func p2pStop(t *testing.T, p2pMod *p2pModule) {
+	err := p2pMod.Stop()
+	require.NoError(t, err)
 }
