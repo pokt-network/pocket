@@ -5,6 +5,7 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -93,7 +94,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 // Get a block from persistance module given block height
 func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, error) {
 	blockStore := m.GetBus().GetPersistenceModule().GetBlockStore()
-	heightBytes := heightToBytes(blockHeight)
+	heightBytes := converters.HeightToBytes(blockHeight)
 
 	blockBytes, err := blockStore.Get(heightBytes)
 	if err != nil {

@@ -1,13 +1,13 @@
 package persistence
 
 import (
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
@@ -108,11 +108,5 @@ func (p PostgresContext) storeBlock(block *coreTypes.Block) error {
 	if err != nil {
 		return err
 	}
-	return p.blockStore.Set(heightToBytes(p.Height), blockBz)
-}
-
-func heightToBytes(height int64) []byte {
-	heightBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(heightBytes, uint64(height))
-	return heightBytes
+	return p.blockStore.Set(converters.HeightToBytes(uint64(p.Height)), blockBz)
 }

@@ -2,7 +2,6 @@ package e2e_tests
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"reflect"
@@ -21,6 +20,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -361,13 +361,13 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
 
 	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
-		heightInt := heightFromBytes(height)
+		heightInt := converters.HeightFromBytes(height)
 		if bus.GetConsensusModule().CurrentHeight() < heightInt {
 			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
 		}
 		blockWithHeight := &coreTypes.Block{
 			BlockHeader: &coreTypes.BlockHeader{
-				Height: heightFromBytes(height),
+				Height: converters.HeightFromBytes(height),
 			},
 		}
 		return codec.GetCodec().Marshal(blockWithHeight)
@@ -385,10 +385,6 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
 	return persistenceMock
-}
-
-func heightFromBytes(heightBz []byte) uint64 {
-	return binary.LittleEndian.Uint64(heightBz)
 }
 
 // Creates a p2p module mock with mock implementations of some basic functionality

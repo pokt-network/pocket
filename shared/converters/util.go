@@ -1,6 +1,7 @@
 package converters
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math/big"
 )
@@ -20,4 +21,14 @@ func StringToBigInt(s string) (*big.Int, error) {
 
 func BigIntToString(b *big.Int) string {
 	return b.Text(DefaultDenomination)
+}
+
+func HeightFromBytes(heightBz []byte) uint64 {
+	return binary.LittleEndian.Uint64(heightBz)
+}
+
+func HeightToBytes(height uint64) []byte {
+	heightBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(heightBytes, height)
+	return heightBytes
 }
