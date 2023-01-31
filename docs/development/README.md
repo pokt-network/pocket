@@ -114,6 +114,8 @@ function p1 {
 }
 ```
 
+You can via a demo of it [here](https://user-images.githubusercontent.com/1892194/215901991-076734e5-bc94-4755-9f2a-3d1f3c1e4aef.mov).
+
 ### Swagger UI
 
 Swagger UI is available to help during the development process.
