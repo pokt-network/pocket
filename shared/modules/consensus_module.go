@@ -34,6 +34,7 @@ type ConsensusModule interface {
 	CurrentRound() uint64
 	CurrentStep() uint64
 
+        // State Sync functions
 	EnableServerMode()
 }
 
