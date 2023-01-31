@@ -37,8 +37,6 @@ func ActorToNetworkPeer(abp AddrBookProvider, actor *coreTypes.Actor) (*typesP2P
 	conn, err := abp.GetConnFactory()(abp.GetP2PConfig(), actor.GetGenericParam()) // generic param is service url
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)
-	} else {
-		log.Printf("OLSH connected to %s", actor.GetGenericParam())
 	}
 
 	pubKey, err := cryptoPocket.NewPublicKey(actor.GetPublicKey())
