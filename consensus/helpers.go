@@ -295,15 +295,10 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 /*** General Infrastructure Helpers ***/
 
 func (m *consensusModule) setLogPrefix(logPrefix string) {
-<<<<<<< HEAD
 	logger.Global.UpdateFields(map[string]any{
 		"kind": logPrefix,
 	})
 	m.logger = logger.Global.CreateLoggerForModule("consensus")
-=======
-	m.logPrefix = logPrefix
-	m.paceMaker.SetLogPrefix(logPrefix)
->>>>>>> 1d135866afd1e58e8e548b0ced55d829366112ed
 }
 
 func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
