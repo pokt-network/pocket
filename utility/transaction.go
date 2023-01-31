@@ -138,11 +138,11 @@ func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) types
 		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.FromAddress))
 	}
 	// add the amount to the recipient's account
-	if err = u.AddAccountAmount(message.ToAddress, amount); err != nil {
+	if err := u.AddAccountAmount(message.ToAddress, amount); err != nil {
 		return err
 	}
 	// set the sender's account amount
-	if err = u.SetAccountAmount(message.FromAddress, fromAccountAmount); err != nil {
+	if err := u.SetAccountAmount(message.FromAddress, fromAccountAmount); err != nil {
 		return err
 	}
 	return nil
@@ -169,7 +169,7 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.Signer))
 	}
 	// validators don't have chains field
-	if err = u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
+	if err := u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
 		return err
 	}
 	// ensure actor doesn't already exist
@@ -180,11 +180,11 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 	// update account amount
-	if err = u.SetAccountAmount(message.Signer, signerAccountAmount); err != nil {
+	if err := u.SetAccountAmount(message.Signer, signerAccountAmount); err != nil {
 		return err
 	}
 	// move funds from account to pool
-	if err = u.AddPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
+	if err := u.AddPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
 		return err
 	}
 	var er error
@@ -240,7 +240,7 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 	if signerAccountAmount.Sign() == -1 {
 		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.Signer))
 	}
-	if err = u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
+	if err := u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
 		return err
 	}
 	// update account amount
@@ -378,8 +378,7 @@ func (u *UtilityContext) GetMessageStakeSignerCandidates(msg *typesUtil.MessageS
 		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
 	}
 	candidates := make([][]byte, 0)
-	candidates = append(candidates, msg.OutputAddress)
-	candidates = append(candidates, pk.Address())
+	candidates = append(candidates, msg.OutputAddress, pk.Address())
 	return candidates, nil
 }
 
@@ -389,8 +388,7 @@ func (u *UtilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.Mess
 		return nil, err
 	}
 	candidates := make([][]byte, 0)
-	candidates = append(candidates, output)
-	candidates = append(candidates, msg.Address)
+	candidates = append(candidates, output, msg.Address)
 	return candidates, nil
 }
 
@@ -400,8 +398,7 @@ func (u *UtilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.Messag
 		return nil, err
 	}
 	candidates := make([][]byte, 0)
-	candidates = append(candidates, output)
-	candidates = append(candidates, msg.Address)
+	candidates = append(candidates, output, msg.Address)
 	return candidates, nil
 }
 
@@ -411,8 +408,7 @@ func (u *UtilityContext) GetMessageUnpauseSignerCandidates(msg *typesUtil.Messag
 		return nil, err
 	}
 	candidates := make([][]byte, 0)
-	candidates = append(candidates, output)
-	candidates = append(candidates, msg.Address)
+	candidates = append(candidates, output, msg.Address)
 	return candidates, nil
 }
 
