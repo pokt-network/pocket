@@ -41,7 +41,9 @@ func parseEd25519PrivateKeyFromReader(reader io.Reader) (pk crypto.Ed25519Privat
 	}
 
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(reader)
+	if _, err := buf.ReadFrom(reader); err != nil {
+		return nil, err
+	}
 
 	priv := &crypto.Ed25519PrivateKey{}
 	err = priv.UnmarshalJSON(buf.Bytes())
