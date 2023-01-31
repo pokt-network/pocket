@@ -25,8 +25,11 @@ const (
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
 
-	defaultConfigPath  = "build/config/config1.json"
-	defaultGenesisPath = "build/config/genesis.json"
+	defaultConfigPath = "build/config/config1.json"
+	// HACK: Note that `genesis.json` is a copy-pasta of `genesis_debug.json` with the only
+	// difference being that `node{X}.consensus:8080` is replaced with `localhost:808{X}` because
+	// container names cannot be resolved by Docker's DNS from the host.
+	defaultGenesisPath = "build/config/genesis_debug.json"
 )
 
 var (

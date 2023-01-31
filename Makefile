@@ -109,7 +109,8 @@ develop_start: ## Run all of the make commands necessary to develop on the proje
 		make protogen_clean && make protogen_local && \
 		make go_clean_deps && \
 		make mockgen && \
-		make generate_rpc_openapi
+		make generate_rpc_openapi && \
+		make build
 
 .PHONY: develop_test
 develop_test: docker_check ## Run all of the make commands necessary to develop on the project and verify the tests pass
