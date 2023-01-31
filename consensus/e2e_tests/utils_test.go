@@ -81,7 +81,7 @@ func CreateTestConsensusPocketNodes(
 	})
 
 	for i := range buses {
-		pocketNode := CreateTestConsensusPocketNode(t, &buses[i], eventsChannel)
+		pocketNode := CreateTestConsensusPocketNode(t, buses[i], eventsChannel)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
@@ -91,18 +91,18 @@ func CreateTestConsensusPocketNodes(
 // Creates a pocket node where all the primary modules, exception for consensus, are mocked
 func CreateTestConsensusPocketNode(
 	t *testing.T,
-	bus *modules.Bus,
+	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
 ) *shared.Node {
 	// persistence is a dependency of consensus, so we need to create it first
-	persistenceMock := basePersistenceMock(t, eventsChannel, *bus)
-	err := (*bus).RegisterModule(persistenceMock)
+	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
+	err := (bus).RegisterModule(persistenceMock)
 	require.NoError(t, err)
 
-	_, err = consensus.Create(*bus)
+	_, err = consensus.Create(bus)
 	require.NoError(t, err)
 
-	runtimeMgr := (*bus).GetRuntimeMgr()
+	runtimeMgr := (bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
 	p2pMock := baseP2PMock(t, eventsChannel)
@@ -118,7 +118,7 @@ func CreateTestConsensusPocketNode(
 		loggerMock,
 		rpcMock,
 	} {
-		err = (*bus).RegisterModule(module)
+		err = (bus).RegisterModule(module)
 		require.NoError(t, err)
 	}
 
@@ -129,7 +129,7 @@ func CreateTestConsensusPocketNode(
 
 	pocketNode := shared.NewNodeWithP2PAddress(pk.Address())
 
-	pocketNode.SetBus(*bus)
+	pocketNode.SetBus(bus)
 
 	return pocketNode
 }
