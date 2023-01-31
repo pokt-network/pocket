@@ -14,7 +14,7 @@ import (
 const (
 	defaultGenesisFilePathFormat = "build/config/%sgenesis.json"
 	defaultConfigFilePathFormat  = "build/config/%sconfig%d.json"
-	rwoPerm                      = 0777
+	rwoPerm                      = 0o0777
 )
 
 var (
