@@ -16,7 +16,7 @@ import (
 
 func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	acc := GetAllTestingAccounts(t, ctx)[0]
+	acc := GetAllTestingAccounts(t, &ctx)[0]
 
 	initialAmount, err := types.StringToBigInt(acc.GetAmount())
 	require.NoError(t, err)
@@ -36,7 +36,7 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 
 func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	acc := GetAllTestingAccounts(t, ctx)[0]
+	acc := GetAllTestingAccounts(t, &ctx)[0]
 
 	initialAmount, err := types.StringToBigInt(acc.GetAmount())
 	require.NoError(t, err)
@@ -56,7 +56,7 @@ func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 
 func TestUtilityContext_AddPoolAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	pool := GetAllTestingPools(t, ctx)[0]
+	pool := GetAllTestingPools(t, &ctx)[0]
 
 	initialAmount, err := types.StringToBigInt(pool.GetAmount())
 	require.NoError(t, err)
@@ -73,7 +73,7 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 
 func TestUtilityContext_HandleMessageSend(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	accs := GetAllTestingAccounts(t, ctx)
+	accs := GetAllTestingAccounts(t, &ctx)
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := types.BigIntToString(sendAmount)
@@ -90,7 +90,7 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 	err = ctx.HandleMessageSend(&msg)
 	require.NoError(t, err, "handle message send")
 
-	accs = GetAllTestingAccounts(t, ctx)
+	accs = GetAllTestingAccounts(t, &ctx)
 	senderBalanceAfter, err := types.StringToBigInt(accs[0].GetAmount())
 	require.NoError(t, err)
 
@@ -103,7 +103,7 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 
 func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	accs := GetAllTestingAccounts(t, ctx)
+	accs := GetAllTestingAccounts(t, &ctx)
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := types.BigIntToString(sendAmount)
@@ -168,7 +168,7 @@ func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
 
 func TestUtilityContext_SetPoolAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	pool := GetAllTestingPools(t, ctx)[0]
+	pool := GetAllTestingPools(t, &ctx)[0]
 	beforeAmount := pool.GetAmount()
 	beforeAmountBig, err := types.StringToBigInt(beforeAmount)
 	require.NoError(t, err)
@@ -184,7 +184,7 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 
 func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	pool := GetAllTestingPools(t, ctx)[0]
+	pool := GetAllTestingPools(t, &ctx)[0]
 
 	beforeAmountBig := big.NewInt(1000000000000000)
 	err := ctx.SetPoolAmount(pool.GetAddress(), beforeAmountBig)
@@ -202,7 +202,7 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 
 func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	acc := GetAllTestingAccounts(t, ctx)[0]
+	acc := GetAllTestingAccounts(t, &ctx)[0]
 
 	beforeAmount := acc.GetAmount()
 	beforeAmountBig, err := types.StringToBigInt(beforeAmount)
@@ -220,7 +220,7 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*coreTypes.Account {
+func GetAllTestingAccounts(t *testing.T, ctx *utility.UtilityContext) []*coreTypes.Account {
 	accs, err := (ctx.Context.PersistenceRWContext).GetAllAccounts(0)
 	require.NoError(t, err)
 	sort.Slice(accs, func(i, j int) bool {
@@ -229,7 +229,7 @@ func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*coreType
 	return accs
 }
 
-func GetAllTestingPools(t *testing.T, ctx utility.UtilityContext) []*coreTypes.Account {
+func GetAllTestingPools(t *testing.T, ctx *utility.UtilityContext) []*coreTypes.Account {
 	accs, err := (ctx.Context.PersistenceRWContext).GetAllPools(0)
 	require.NoError(t, err)
 	sort.Slice(accs, func(i, j int) bool {
