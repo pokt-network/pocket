@@ -9,10 +9,7 @@ import (
 //	can easily be refactored and condensed into a single function using a generic type or a common
 //  interface.
 func (p PostgresContext) GetAllApps(height int64) (apps []*coreTypes.Actor, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
+	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.ApplicationActor.GetAllQuery(height))
 	if err != nil {
 		return nil, err
@@ -38,10 +35,7 @@ func (p PostgresContext) GetAllApps(height int64) (apps []*coreTypes.Actor, err 
 }
 
 func (p PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Actor, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
+	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.ValidatorActor.GetAllQuery(height))
 	if err != nil {
 		return nil, err
@@ -68,10 +62,7 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Actor
 }
 
 func (p PostgresContext) GetAllServiceNodes(height int64) (sn []*coreTypes.Actor, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
+	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.ServiceNodeActor.GetAllQuery(height))
 	if err != nil {
 		return nil, err
@@ -97,10 +88,7 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []*coreTypes.Actor
 }
 
 func (p PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
+	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.FishermanActor.GetAllQuery(height))
 	if err != nil {
 		return nil, err

@@ -35,16 +35,16 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 	types.ValidatorActor,
 }
 
-func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx, error) {
-	return context.TODO(), pg.getTx(), nil
+func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx) {
+	return context.TODO(), pg.getTx()
 }
 
 func (pg *PostgresContext) getTx() pgx.Tx {
 	return pg.tx
 }
 
-func (pg *PostgresContext) getCtx() (context.Context, error) {
-	return context.TODO(), nil
+func (pg *PostgresContext) getCtx() context.Context {
+	return context.TODO()
 }
 
 func (pg *PostgresContext) ResetContext() error {

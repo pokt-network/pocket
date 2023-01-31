@@ -15,6 +15,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -66,13 +67,18 @@ func BenchmarkStateHash(b *testing.B) {
 				db := NewTestPostgresContext(b, height)
 				for txIdx := 0; txIdx < numTxPerHeight; txIdx++ {
 					for opIdx := 0; opIdx < numOpsPerTx; opIdx++ {
-						callRandomDatabaseModifierFunc(db, false)
+						_, _, err := callRandomDatabaseModifierFunc(db, false)
+						require.NoError(b, err)
 					}
-					db.IndexTransaction(modules.TxResult(getRandomTxResult(height)))
+					err := db.IndexTransaction(modules.TxResult(getRandomTxResult(height)))
+					require.NoError(b, err)
 				}
-				db.ComputeStateHash()
-				db.Commit([]byte("placeholderProposerAddr"), []byte("placeholderQuorumCert"))
-				db.Release()
+				_, err := db.ComputeStateHash()
+				require.NoError(b, err)
+				err = db.Commit([]byte("placeholderProposerAddr"), []byte("placeholderQuorumCert"))
+				require.NoError(b, err)
+				err = db.Release()
+				require.NoError(b, err)
 			}
 		})
 	}

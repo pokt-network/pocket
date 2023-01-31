@@ -28,23 +28,17 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 }
 
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return 0, err
-	}
+	ctx, tx := p.getCtxAndTx()
 
 	err = tx.QueryRow(ctx, types.GetLatestBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
 
 func (p PostgresContext) GetBlockHash(height int64) (string, error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return "", err
-	}
+	ctx, tx := p.getCtxAndTx()
 
 	var blockHash string
-	if err = tx.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&blockHash); err != nil {
+	if err := tx.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&blockHash); err != nil {
 		return "", err
 	}
 
@@ -93,12 +87,9 @@ func (p *PostgresContext) insertBlock(block *coreTypes.Block) error {
 	}
 	blockHeader := block.BlockHeader
 
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return err
-	}
+	ctx, tx := p.getCtxAndTx()
 
-	_, err = tx.Exec(ctx, types.InsertBlockQuery(blockHeader.Height, blockHeader.StateHash, blockHeader.ProposerAddress, blockHeader.QuorumCertificate))
+	_, err := tx.Exec(ctx, types.InsertBlockQuery(blockHeader.Height, blockHeader.StateHash, blockHeader.ProposerAddress, blockHeader.QuorumCertificate))
 	return err
 }
 

@@ -41,14 +41,11 @@ func init() {
 }
 
 func (p PostgresContext) InitGenesisParams(params *genesis.Params) error {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return err
-	}
+	ctx, tx := p.getCtxAndTx()
 	if p.Height != 0 {
 		return fmt.Errorf("cannot initialize params at height %d", p.Height)
 	}
-	_, err = tx.Exec(ctx, types.InsertParams(params, p.Height))
+	_, err := tx.Exec(ctx, types.InsertParams(params, p.Height))
 	return err
 }
 
@@ -131,10 +128,7 @@ func (p PostgresContext) setParamOrFlag(name string, value any, enabled *bool) e
 // setParamOrFlag sets a param or a flag.
 // If `enabled` is nil, we are dealing with a param, otherwise it's a flag
 func setParamOrFlag[T types.SupportedParamTypes](p PostgresContext, paramName string, paramValue T, enabled *bool) error {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return err
-	}
+	ctx, tx := p.getCtxAndTx()
 	height, err := p.GetHeight()
 	if err != nil {
 		return err
@@ -150,10 +144,7 @@ func setParamOrFlag[T types.SupportedParamTypes](p PostgresContext, paramName st
 }
 
 func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, paramName string, height int64) (i T, enabled bool, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return i, enabled, err
-	}
+	ctx, tx := p.getCtxAndTx()
 
 	var stringVal string
 	row := tx.QueryRow(ctx, types.GetParamOrFlagQuery(tableName, paramName, height))
@@ -182,10 +173,7 @@ func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, param
 }
 
 func (p PostgresContext) getParamsUpdated(height int64) ([]*coreTypes.Param, error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
+	ctx, tx := p.getCtxAndTx()
 	// Get all parameters / flags at current height
 	rows, err := tx.Query(ctx, p.getParamsOrFlagsUpdateAtHeightQuery(types.ParamsTableName, height))
 	if err != nil {
@@ -207,10 +195,7 @@ func (p PostgresContext) getParamsUpdated(height int64) ([]*coreTypes.Param, err
 }
 
 func (p PostgresContext) getFlagsUpdated(height int64) ([]*coreTypes.Flag, error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
+	ctx, tx := p.getCtxAndTx()
 	// Get all parameters / flags at current height
 	rows, err := tx.Query(ctx, p.getParamsOrFlagsUpdateAtHeightQuery(types.FlagsTableName, height))
 	if err != nil {

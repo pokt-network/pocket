@@ -96,17 +96,14 @@ func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
 }
 
 func (p *PostgresContext) clearAllSQLState() error {
-	ctx, clearTx, err := p.getCtxAndTx()
-	if err != nil {
-		return err
-	}
+	ctx, clearTx := p.getCtxAndTx()
 
 	for _, actor := range protocolActorSchemas {
-		if _, err = clearTx.Exec(ctx, actor.ClearAllQuery()); err != nil {
+		if _, err := clearTx.Exec(ctx, actor.ClearAllQuery()); err != nil {
 			return err
 		}
 		if actor.GetChainsTableName() != "" {
-			if _, err = clearTx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
+			if _, err := clearTx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
 				return err
 			}
 		}
@@ -118,7 +115,7 @@ func (p *PostgresContext) clearAllSQLState() error {
 		}
 	}
 
-	if err = clearTx.Commit(ctx); err != nil {
+	if err := clearTx.Commit(ctx); err != nil {
 		return err
 	}
 
