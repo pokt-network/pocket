@@ -36,7 +36,6 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 }
 
 func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.StateSyncMessage) error {
-
 	switch stateSyncMessage.MsgType {
 	case typesCons.StateSyncMessageType_STATE_SYNC_UNSPECIFIED:
 		return fmt.Errorf("unspecified state sync message type")
