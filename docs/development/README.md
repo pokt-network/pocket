@@ -105,8 +105,12 @@ You can add the following function so you can run the `p1` from anywhere on your
 
 ```bash
 function p1 {
-    pocket_workdir="</your/path/to/pocket/repo>"
-    ${pocket_workdir}/bin/p1 "$@" --workdir=${pocket_workdir}
+    pocket_workdir="/Users/olshansky/workspace/pocket/pocket/"
+    if [ "$1" = "debug" ]; then
+        ${pocket_workdir}/bin/p1 debug --localhost=true --workdir="${pocket_workdir}"
+    else
+        ${pocket_workdir}/bin/p1 "$@"
+    fi
 }
 ```
 

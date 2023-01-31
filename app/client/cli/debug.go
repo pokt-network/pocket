@@ -26,10 +26,13 @@ const (
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
 
 	defaultConfigPath = "build/config/config1.json"
-	// HACK: Note that `genesis.json` is a copy-pasta of `genesis_debug.json` with the only
+	// Genesis file to be used from within a docker container to connect to other containers
+	defaultGenesisPath = "build/config/genesis.json"
+	// HACK: Genesis file to be used from the host machine to connect to docker containers.
+	// Note that `genesis.json` is a copy-pasta of `genesis_debug.json` with the only
 	// difference being that `node{X}.consensus:8080` is replaced with `localhost:808{X}` because
 	// container names cannot be resolved by Docker's DNS from the host.
-	defaultGenesisPath = "build/config/genesis_debug.json"
+	hostGenesisPath = "build/config/genesis_debug.json"
 )
 
 var (
@@ -52,12 +55,14 @@ var (
 	// While the `p1` binary is in development, the debug commands require a config and a debug genesis file to operate.
 	// These currently live inside of the pocket repo so a workdir needs to be specified if `p1` is used from a directory
 	// other than the root of the pocket repo.
-	workdir string = ""
+	workdir   string
+	localhost bool
 )
 
 func init() {
 	debugCmd := NewDebugCommand()
-	debugCmd.Flags().StringVar(&workdir, "workdir", "", "workdir where the pocket repo is located, relative to which config & genesis files can be loaded")
+	debugCmd.Flags().StringVar(&workdir, "workdir", "./", "workdir where the pocket repo is located, relative to which config & genesis files can be loaded")
+	debugCmd.Flags().BoolVar(&localhost, "localhost", false, "true if the debug client is being initialized from the host; default: false (inside a container)")
 	rootCmd.AddCommand(debugCmd)
 }
 
@@ -67,8 +72,15 @@ func NewDebugCommand() *cobra.Command {
 		Short: "Debug utility for rapid development",
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			var genesisPath string
+			if localhost {
+				genesisPath = hostGenesisPath
+			} else {
+				genesisPath = defaultGenesisPath
+			}
+
 			var err error
-			runtimeMgr := runtime.NewManagerFromFiles(workdir+defaultConfigPath, workdir+defaultGenesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
+			runtimeMgr := runtime.NewManagerFromFiles(workdir+defaultConfigPath, workdir+genesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
 
 			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
 			validators = runtimeMgr.GetGenesis().Validators
