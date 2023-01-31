@@ -3,7 +3,7 @@ package test
 import (
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -27,7 +27,7 @@ var isModifierRe = regexp.MustCompile(`^(Insert|Set|Add|Subtract)`) // Add Updat
 // and key-value stores.
 // IMPROVE(#361): Improve the output of this benchmark to be more informative and human readable.
 func BenchmarkStateHash(b *testing.B) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stderr)
 
 	clearAllState()
