@@ -115,7 +115,7 @@ func (m *loggerModule) GetLogger() modules.Logger {
 	return m.Logger
 }
 
-// INVESTIGATE(#420): https://github.com/pokt-network/pocket/pull/420/files#r1072574513
+// INVESTIGATE(#420): https://github.com/pokt-network/pocket/issues/480
 // SetFields sets the fields for the global logger
 func (m *loggerModule) SetFields(fields map[string]any) {
 	m.Logger = m.Logger.With().Fields(fields).Logger()
