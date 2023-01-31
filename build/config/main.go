@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 )
@@ -36,7 +36,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if err = ioutil.WriteFile(fmt.Sprintf(defaultGenesisFilePathFormat, *genPrefix), genesisJson, rwoPerm); err != nil {
+	if err = os.WriteFile(fmt.Sprintf(defaultGenesisFilePathFormat, *genPrefix), genesisJson, rwoPerm); err != nil {
 		panic(err)
 	}
 	for i, config := range configs {
@@ -45,7 +45,7 @@ func main() {
 			panic(err)
 		}
 		filePath := fmt.Sprintf(defaultConfigFilePathFormat, *genPrefix, i+1)
-		if err := ioutil.WriteFile(filePath, configJson, rwoPerm); err != nil {
+		if err := os.WriteFile(filePath, configJson, rwoPerm); err != nil {
 			panic(err)
 		}
 	}
