@@ -66,10 +66,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		return nil, err
 	}
 
-	thresholdSig, err := getThresholdSignature(pss)
-	if err != nil {
-		return nil, err
-	}
+	thresholdSig := getThresholdSignature(pss)
 
 	return &typesCons.QuorumCertificate{
 		Height:             height,
@@ -93,11 +90,11 @@ func (m *consensusModule) findHighQC(msgs []*typesCons.HotstuffMessage) (qc *typ
 	return
 }
 
-func getThresholdSignature(partialSigs []*typesCons.PartialSignature) (*typesCons.ThresholdSignature, error) {
+func getThresholdSignature(partialSigs []*typesCons.PartialSignature) *typesCons.ThresholdSignature {
 	thresholdSig := new(typesCons.ThresholdSignature)
 	thresholdSig.Signatures = make([]*typesCons.PartialSignature, len(partialSigs))
 	copy(thresholdSig.Signatures, partialSigs)
-	return thresholdSig, nil
+	return thresholdSig
 }
 
 func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signature []byte) bool {

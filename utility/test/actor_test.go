@@ -564,6 +564,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			require.NoError(t, err)
 
 			status, err := ctx.GetActorStatus(actorType, addrBz)
+			require.NoError(t, err)
 			require.Equal(t, int32(typesUtil.StakeStatus_Unstaking), status, "incorrect status")
 
 			test_artifacts.CleanupTest(ctx)

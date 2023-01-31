@@ -96,9 +96,10 @@ func CreateTestConsensusPocketNode(
 ) *shared.Node {
 	// persistence is a dependency of consensus, so we need to create it first
 	persistenceMock := basePersistenceMock(t, eventsChannel, *bus)
-	(*bus).RegisterModule(persistenceMock)
+	err := (*bus).RegisterModule(persistenceMock)
+	require.NoError(t, err)
 
-	_, err := consensus.Create(*bus)
+	_, err = consensus.Create(*bus)
 	require.NoError(t, err)
 
 	runtimeMgr := (*bus).GetRuntimeMgr()
@@ -117,7 +118,8 @@ func CreateTestConsensusPocketNode(
 		loggerMock,
 		rpcMock,
 	} {
-		(*bus).RegisterModule(module)
+		err = (*bus).RegisterModule(module)
+		require.NoError(t, err)
 	}
 
 	require.NoError(t, err)
@@ -145,7 +147,7 @@ func GenerateBuses(t *testing.T, runtimeMgrs []*runtime.Manager) (buses []module
 // CLEANUP: Reduce package scope visibility in the consensus test module
 func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
 	for _, pocketNode := range pocketNodes {
-		go pocketNode.Start()
+		go startNode(t, pocketNode)
 		startEvent := pocketNode.GetBus().GetBusEvent()
 		require.Equal(t, startEvent.GetContentType(), messaging.NodeStartedEventType)
 	}
@@ -229,13 +231,12 @@ func WaitForNetworkConsensusEvents(
 	}
 
 	errMsg := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(msgType)])
-	return waitForEventsInternal(t, clock, eventsChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clock, eventsChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework
 // IMPROVE: This function can be extended to testing events outside of just the consensus module.
 func waitForEventsInternal(
-	t *testing.T,
 	clock *clock.Mock,
 	eventsChannel modules.EventsChannel,
 	eventContentType string,
@@ -505,4 +506,9 @@ func assertStep(t *testing.T, nodeId typesCons.NodeId, expected, actual typesCon
 
 func assertRound(t *testing.T, nodeId typesCons.NodeId, expected, actual uint8) {
 	require.Equal(t, expected, actual, "[NODE][%v] failed assertRound", nodeId)
+}
+
+func startNode(t *testing.T, pocketNode *shared.Node) {
+	err := pocketNode.Start()
+	require.NoError(t, err)
 }
