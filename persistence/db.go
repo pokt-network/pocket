@@ -43,10 +43,6 @@ func (pg *PostgresContext) getTx() pgx.Tx {
 	return pg.tx
 }
 
-func (pg *PostgresContext) getCtx() context.Context {
-	return context.TODO()
-}
-
 func (pg *PostgresContext) ResetContext() error {
 	if pg == nil {
 		return nil
