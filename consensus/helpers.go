@@ -50,7 +50,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		}
 
 		ps := msg.GetPartialSignature()
-		if ps.Signature == nil || len(ps.Address) == 0 {
+		if ps.Signature == nil || ps.Address == "" {
 			m.nodeLog(typesCons.WarnIncompletePartialSig(ps, msg))
 			continue
 		}
