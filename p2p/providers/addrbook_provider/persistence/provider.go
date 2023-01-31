@@ -12,8 +12,8 @@ var _ modules.IntegratableModule = &persistenceAddrBookProvider{}
 var _ addrbook_provider.AddrBookProvider = &persistenceAddrBookProvider{}
 
 type persistenceAddrBookProvider struct {
-	bus         modules.Bus
-	p2pCfg      *configs.P2PConfig
+	bus modules.Bus
+	//p2pCfg      *configs.P2PConfig
 	connFactory typesP2P.ConnectionFactory
 }
 
