@@ -60,7 +60,7 @@ func (m *PrometheusTelemetryModule) Start() error {
 	go func() {
 		// TODO: Add timeouts
 		if err := http.ListenAndServe(m.config.Address, nil); err != nil {
-			log.Fatalf("[ERROR] Error starting http server: %v", err)
+			log.Fatalf("[ERROR] Error starting http server: %v", err.Error())
 		}
 	}()
 
