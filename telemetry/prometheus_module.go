@@ -55,7 +55,11 @@ func (m *PrometheusTelemetryModule) Start() error {
 	log.Printf("\nPrometheus metrics exporter: Starting at %s%s...\n", m.config.Address, m.config.Endpoint)
 
 	http.Handle(m.config.Endpoint, promhttp.Handler())
-	go http.ListenAndServe(m.config.Address, nil)
+	go func() {
+		if err := http.ListenAndServe(m.config.Address, nil); err != nil {
+			log.Printf("[WARM] Error starting http server: %s", err)
+		}
+	}()
 
 	log.Println("Prometheus metrics exporter started: OK")
 
@@ -181,7 +185,7 @@ func (p *PrometheusTelemetryModule) GaugeAdd(name string, value float64) (promet
 
 func (p *PrometheusTelemetryModule) GaugeSub(name string, value float64) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil, NonExistentMetricErr("gauge", name, "substract from")
+		return nil, NonExistentMetricErr("gauge", name, "subtract from")
 	}
 
 	gg := p.gauges[name]
