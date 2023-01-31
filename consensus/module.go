@@ -125,7 +125,7 @@ func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error
 
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
-		//REFACTOR: As per issue #434, once new id is sorted out, this return statement must be changed
+		// REFACTOR(#434): As per issue #434, once the new id is sorted out, this return statement must be changed
 		return 0, err
 	}
 
