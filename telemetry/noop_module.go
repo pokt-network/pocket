@@ -29,7 +29,9 @@ func CreateNoopTelemetryModule(bus modules.Bus) (modules.Module, error) {
 
 func (*NoopTelemetryModule) Create(bus modules.Bus) (modules.Module, error) {
 	m := &NoopTelemetryModule{}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 	return m, nil
 }
 
@@ -70,7 +72,7 @@ func (m *NoopTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
 	return modules.TimeSeriesAgent(m)
 }
 
-func (*NoopTelemetryModule) CounterRegister(name string, description string) {
+func (*NoopTelemetryModule) CounterRegister(name, description string) {
 	NOOP("CounterRegister", "name", name, "description", description)
 }
 
@@ -78,7 +80,7 @@ func (*NoopTelemetryModule) CounterIncrement(name string) {
 	NOOP("CounterIncrement", "name", name)
 }
 
-func (*NoopTelemetryModule) GaugeRegister(name string, description string) {
+func (*NoopTelemetryModule) GaugeRegister(name, description string) {
 	NOOP("GaugeRegister", "name", name, "description", description)
 }
 
