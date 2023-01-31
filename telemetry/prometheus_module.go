@@ -102,11 +102,7 @@ func (m *PrometheusTelemetryModule) EmitEvent(namespace, event string, labels ..
 		"level":     "EVENT",
 		"namespace": namespace,
 		"event":     event,
-	}
-
-	// iterate over the labels and appens them in pairs to the logArgs
-	for i := 0; i < len(labels); i += 2 {
-		logArgs[fmt.Sprintf("%v", labels[i])] = labels[i+1]
+		"labels":    labels,
 	}
 
 	m.logger.Info().Fields(logArgs).Msg("Event emitted")

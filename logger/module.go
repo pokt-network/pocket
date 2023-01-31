@@ -20,10 +20,8 @@ type loggerModule struct {
 // Each module should have it's own logger to easily configure & filter logs by module.
 
 // A Global logger is also created to enable logging outside of modules (e.g. when the node is starting).
-var Global = loggerModule{
-	// All loggers branch out of Global, that way configuration changes to Global propagate to others.
-	Logger: zerolog.New(os.Stdout).With().Timestamp().Logger(),
-}
+// All loggers branch out of Global, that way configuration changes to Global propagate to others.
+var Global loggerModule
 
 var _ modules.LoggerModule = &loggerModule{}
 
@@ -40,6 +38,14 @@ var pocketLogLevelToZeroLog = map[configs.LogLevel]zerolog.Level{
 var pocketLogFormatToEnum = map[string]configs.LogFormat{
 	"json":   configs.LogFormat_LOG_FORMAT_JSON,
 	"pretty": configs.LogFormat_LOG_FORMAT_PRETTY,
+}
+
+// init is called when the package is imported.
+// It is used to initialize the global logger.
+func init() {
+	Global = loggerModule{
+		Logger: zerolog.New(os.Stdout).With().Timestamp().Logger(),
+	}
 }
 
 func Create(bus modules.Bus) (modules.Module, error) {
@@ -59,7 +65,7 @@ func (*loggerModule) Create(bus modules.Bus) (modules.Module, error) {
 	bus.RegisterModule(m)
 
 	Global.config = m.config
-	Global.InitLogger()
+	Global.CreateLoggerForModule("global")
 
 	// Mapping config string value to the proto enum
 	if pocketLogLevel, ok := configs.LogLevel_value[`LOG_LEVEL_`+strings.ToUpper(Global.config.GetLevel())]; ok {
@@ -103,10 +109,6 @@ func (m *loggerModule) GetBus() modules.Bus {
 		m.Logger.Fatal().Msg("Bus is not initialized")
 	}
 	return m.bus
-}
-
-func (m *loggerModule) InitLogger() {
-	m.Logger = m.CreateLoggerForModule(m.GetModuleName())
 }
 
 func (m *loggerModule) GetLogger() modules.Logger {
