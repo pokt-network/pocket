@@ -34,7 +34,8 @@ func FuzzAccountAmount(f *testing.F) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db.SetAccountAmount(addrBz, DefaultAccountAmount)
+	err = db.SetAccountAmount(addrBz, DefaultAccountAmount)
+	require.NoError(f, err)
 	expectedAmount := big.NewInt(DefaultAccountBig.Int64())
 
 	numDbOperations := 20
@@ -221,7 +222,8 @@ func FuzzPoolAmount(f *testing.F) {
 	numOperationTypes := len(operations)
 
 	pool := newTestPool(nil)
-	db.SetPoolAmount(pool.Address, DefaultAccountAmount)
+	err := db.SetPoolAmount(pool.Address, DefaultAccountAmount)
+	require.NoError(f, err)
 	expectedAmount := big.NewInt(DefaultAccountBig.Int64())
 
 	numDbOperations := 20
