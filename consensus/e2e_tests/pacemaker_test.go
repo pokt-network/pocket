@@ -200,7 +200,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	prepareProposal := &typesCons.HotstuffMessage{
 		Type:          consensus.Propose,
 		Height:        testHeight,
-		Step:          consensus.Prepare, //typesCons.HotstuffStep(testStep),
+		Step:          consensus.Prepare, // typesCons.HotstuffStep(testStep),
 		Round:         leaderRound,
 		Block:         block,
 		Justification: nil,
