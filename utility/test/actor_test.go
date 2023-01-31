@@ -576,24 +576,16 @@ func getAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType cor
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		apps := getAllTestingApps(t, ctx)
-		for _, a := range apps {
-			actors = append(actors, a)
-		}
+		actors = append(actors, apps...)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 		nodes := getAllTestingNodes(t, ctx)
-		for _, a := range nodes {
-			actors = append(actors, a)
-		}
+		actors = append(actors, nodes...)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		vals := getAllTestingValidators(t, ctx)
-		for _, a := range vals {
-			actors = append(actors, a)
-		}
+		actors = append(actors, vals...)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		fish := getAllTestingFish(t, ctx)
-		for _, a := range fish {
-			actors = append(actors, a)
-		}
+		actors = append(actors, fish...)
 	default:
 		t.Fatalf("unexpected actor type %s", actorType.String())
 	}
