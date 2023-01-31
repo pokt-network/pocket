@@ -528,7 +528,7 @@ func ErrNewPublicKeyFromBytes(err error) Error {
 }
 
 func ErrInvalidProposerCutPercentage() Error {
-	return NewError(CodeInvalidProposerCutPercentageError, fmt.Sprintf("%s", InvalidProposerCutPercentageError))
+	return NewError(CodeInvalidProposerCutPercentageError, InvalidProposerCutPercentageError)
 }
 
 func ErrMaxEvidenceAge() Error {
