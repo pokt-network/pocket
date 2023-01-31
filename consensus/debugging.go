@@ -58,7 +58,7 @@ func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
 	if err != nil {
 		return err
 	}
-	if err = m.GetBus().GetPersistenceModule().Start(); err != nil { // reload genesis state
+	if err := m.GetBus().GetPersistenceModule().Start(); err != nil { // reload genesis state
 		return err
 	}
 	return nil
