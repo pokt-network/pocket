@@ -164,7 +164,6 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	pacemaker := paceMakerMod.(pacemaker.Pacemaker)
 
 	stateSyncMod, err := state_sync.CreateStateSync(bus)
