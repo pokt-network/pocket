@@ -14,7 +14,6 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 
 	switch stateSyncMessageAny.MessageName() {
 	case StateSyncMessageContentType:
-
 		msg, err := codec.GetCodec().FromAny(stateSyncMessageAny)
 		if err != nil {
 			return err
