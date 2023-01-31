@@ -181,8 +181,7 @@ func (m *pacemaker) RestartTimer() {
 	}
 
 	// NOTE: Not defering a cancel call because this function is asynchronous.
-	consensusMod := m.GetBus().GetConsensusModule()
-	stepTimeout := m.getStepTimeout(consensusMod.CurrentRound())
+	stepTimeout := m.getStepTimeout()
 	clock := m.GetBus().GetRuntimeMgr().GetClock()
 
 	ctx, cancel := clock.WithTimeout(context.TODO(), stepTimeout)
@@ -292,7 +291,7 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 }
 
 // TODO: Increase timeout using exponential backoff.
-func (m *pacemaker) getStepTimeout(round uint64) time.Duration {
+func (m *pacemaker) getStepTimeout() time.Duration {
 	baseTimeout := time.Duration(int64(time.Millisecond) * int64(m.pacemakerCfg.TimeoutMsec))
 	return baseTimeout
 }
