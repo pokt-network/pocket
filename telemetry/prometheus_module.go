@@ -58,6 +58,7 @@ func (m *PrometheusTelemetryModule) Start() error {
 
 	http.Handle(m.config.Endpoint, promhttp.Handler())
 	go func() {
+		// TODO: Add timeouts
 		if err := http.ListenAndServe(m.config.Address, nil); err != nil {
 			log.Printf("[WARN] Error starting http server: %s", err)
 		}
