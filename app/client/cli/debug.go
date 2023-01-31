@@ -199,5 +199,7 @@ func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 		log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
 	}
 
-	p2pMod.Send(validatorAddress, anyProto)
+	if err := p2pMod.Send(validatorAddress, anyProto); err != nil {
+		log.Fatalf("[ERROR] Failed to send debug message: %v", err.Error())
+	}
 }
