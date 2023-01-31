@@ -543,7 +543,6 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType coreTypes.Actor
 	default:
 		return nil, typesUtil.ErrUnknownMessage(x)
 	}
-	return nil, nil
 }
 
 func (u *UtilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUtil.MessageChangeParameter) ([][]byte, typesUtil.Error) {
