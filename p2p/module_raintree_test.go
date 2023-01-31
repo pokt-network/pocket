@@ -245,7 +245,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 
 		connMocks[valId] = prepareConnMock(t, valId, &wg, expectedCall.numNetworkReads)
 		persistenceMock := preparePersistenceMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
-		consensusMock := prepareConsensusMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
+		consensusMock := prepareConsensusMock(t, busMocks[count])
 		telemetryMock := prepareTelemetryMock(t, busMocks[count], valId, &wg, expectedWrites)
 
 		prepareBusMock(busMocks[count], persistenceMock, consensusMock, telemetryMock)
@@ -266,7 +266,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	}
 
 	// Wait for completion
-	defer waitForNetworkSimulationCompletion(t, p2pModules, &wg)
+	defer waitForNetworkSimulationCompletion(t, &wg)
 
 	// Send the first message (by the originator) to trigger a RainTree broadcast
 	p := &anypb.Any{}
