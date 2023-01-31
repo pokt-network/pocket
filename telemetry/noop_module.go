@@ -18,7 +18,7 @@ type NoopTelemetryModule struct {
 	bus modules.Bus
 }
 
-func NOOP(args ...interface{}) {
+func NOOP(args ...any) {
 	logger.Global.Debug().Msg("NOOP")
 }
 

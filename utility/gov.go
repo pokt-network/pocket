@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func (u *UtilityContext) UpdateParam(paramName string, value interface{}) typesUtil.Error {
+func (u *UtilityContext) UpdateParam(paramName string, value any) typesUtil.Error {
 	store := u.Store()
 	switch t := value.(type) {
 	case *wrapperspb.Int32Value:

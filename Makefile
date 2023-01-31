@@ -35,6 +35,10 @@ docker_check:
 prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 
+.PHONY: warn_destructive
+warn_destructive: ## Print WARNING to the user
+	@echo "This is a destructive action that will affect docker resources outside the scope of this repo!"
+
 .PHONY: go_vet
 go_vet: ## Run `go vet` on all files in the current project
 	go vet ./...
@@ -138,7 +142,7 @@ rebuild_and_compose_and_watch: docker_check db_start monitoring_start ## Rebuild
 	docker-compose -f build/deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: db_start
-db_start: docker_check ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
+db_start: docker_check ## Start a detached local postgres and admin instance; compose_and_watch is responsible for instantiating the actual schemas
 	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db pgadmin
 
 .PHONY: db_cli
@@ -178,7 +182,7 @@ docker_kill_all: docker_check ## Kill all containers started by the docker-compo
 	docker-compose -f build/deployments/docker-compose.yaml down
 
 .PHONY: docker_wipe
-docker_wipe: docker_check prompt_user ## [WARNING] Remove all the docker containers, images and volumes.
+docker_wipe: docker_check warn_destructive prompt_user ## [WARNING] Remove all the docker containers, images and volumes.
 	docker ps -a -q | xargs -r -I {} docker stop {}
 	docker ps -a -q | xargs -r -I {} docker rm {}
 	docker images -q | xargs -r -I {} docker rmi {}
@@ -244,7 +248,8 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 	$(PROTOC) -I=./shared/codec/proto      --go_out=./shared/codec      ./shared/codec/proto/*.proto
 
 	# Runtime
-	$(PROTOC_SHARED) -I=./runtime/configs/proto  --go_out=./runtime/configs ./runtime/configs/proto/*.proto
+	$(PROTOC) -I=./runtime/configs/types/proto				--go_out=./runtime/configs/types	./runtime/configs/types/proto/*.proto
+	$(PROTOC) -I=./runtime/configs/proto	-I=./runtime/configs/types/proto     				--go_out=./runtime/configs      ./runtime/configs/proto/*.proto
 	$(PROTOC_SHARED) -I=./runtime/genesis/proto  --go_out=./runtime/genesis ./runtime/genesis/proto/*.proto
 	protoc-go-inject-tag -input="./runtime/genesis/*.pb.go"
 

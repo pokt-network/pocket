@@ -86,6 +86,10 @@ func BroadcastingMessage(msg *HotstuffMessage) string {
 	return fmt.Sprintf("📣 Broadcasting message 📣 (height, step, round): (%d, %d, %d)", msg.GetHeight(), msg.GetStep(), msg.GetRound())
 }
 
+func RestartTimer() string {
+	return fmt.Sprintln("Restarting timer")
+}
+
 func WarnInvalidPartialSigInQC(address string, nodeId NodeId) string {
 	return fmt.Sprintf("%s: from %s (%d)", InvalidPartialSigInQCWarning, address, nodeId)
 }
@@ -233,7 +237,7 @@ func ErrPacemakerUnexpectedMessageStepRound(err error, step HotstuffStep, round 
 	return fmt.Errorf("%s: Current (step, round): (%s, %d); Message (step, round): (%s, %d)", err, StepToString[step], round, StepToString[msg.GetStep()], msg.Round)
 }
 
-func ErrUnknownConsensusMessageType(msg interface{}) error {
+func ErrUnknownConsensusMessageType(msg any) error {
 	return fmt.Errorf("unknown consensus message type: %v", msg)
 }
 

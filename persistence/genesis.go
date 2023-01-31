@@ -46,8 +46,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 		}
 	}
 	for _, pool := range state.GetPools() {
-		poolNameBytes := []byte(pool.GetAddress())
-		err = rwContext.InsertPool(pool.GetAddress(), poolNameBytes, pool.GetAmount())
+		err = rwContext.InsertPool(pool.GetAddress(), pool.GetAmount()) // pool.GetAddress() returns the pool's semantic name
 		if err != nil {
 			m.logger.Fatal().Err(err).Str("address", pool.GetAddress()).Msg("an error occurred inserting an pool in the genesis state")
 		}
@@ -142,7 +141,7 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account
 	if err != nil {
 		return nil, err
 	}
-	rows, err := tx.Query(ctx, types.SelectAccounts(height, types.AccountTableName))
+	rows, err := tx.Query(ctx, types.Account.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +165,7 @@ func (p PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, e
 	if err != nil {
 		return nil, err
 	}
-	rows, err := tx.Query(ctx, types.SelectPools(height, types.PoolTableName))
+	rows, err := tx.Query(ctx, types.Pool.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}

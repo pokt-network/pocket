@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
 )
@@ -176,4 +178,63 @@ func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, param
 		p.logger.Fatal().Msgf("unhandled type for paramValue %T", tp)
 	}
 	return
+}
+
+func (p PostgresContext) getParamsUpdated(height int64) ([]*coreTypes.Param, error) {
+	ctx, tx, err := p.getCtxAndTx()
+	if err != nil {
+		return nil, err
+	}
+	// Get all parameters / flags at current height
+	rows, err := tx.Query(ctx, p.getParamsOrFlagsUpdateAtHeightQuery(types.ParamsTableName, height))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var paramSlice []*coreTypes.Param // Store returned rows
+	// Loop over all rows returned and load them into the ParamOrFlag struct array
+	for rows.Next() {
+		param := new(coreTypes.Param)
+		err := rows.Scan(&param.Name, &param.Value)
+		if err != nil {
+			return nil, err
+		}
+		param.Height = height
+		paramSlice = append(paramSlice, param)
+	}
+	return paramSlice, nil
+}
+
+func (p PostgresContext) getFlagsUpdated(height int64) ([]*coreTypes.Flag, error) {
+	ctx, tx, err := p.getCtxAndTx()
+	if err != nil {
+		return nil, err
+	}
+	// Get all parameters / flags at current height
+	rows, err := tx.Query(ctx, p.getParamsOrFlagsUpdateAtHeightQuery(types.FlagsTableName, height))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var flagSlice []*coreTypes.Flag // Store returned rows
+	// Loop over all rows returned and load them into the ParamOrFlag struct array
+	for rows.Next() {
+		flag := new(coreTypes.Flag)
+		err := rows.Scan(&flag.Name, &flag.Value, &flag.Enabled)
+		if err != nil {
+			return nil, err
+		}
+		flag.Height = height
+		flagSlice = append(flagSlice, flag)
+	}
+	return flagSlice, nil
+}
+
+func (p *PostgresContext) getParamsOrFlagsUpdateAtHeightQuery(tableName string, height int64) string {
+	fields := "name,value"
+	if tableName == types.FlagsTableName {
+		fields += ",enabled"
+	}
+	// Build correct query to get all Params/Flags at certain height ordered by their name values
+	return fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d ORDER BY name ASC`, fields, tableName, height)
 }

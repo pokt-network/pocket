@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"crypto/sha256"
+	"runtime/debug"
 
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/types"
@@ -12,8 +13,8 @@ import (
 
 // A list of functions to clear data from the DB not associated with protocol actors
 var nonActorClearFunctions = []func() string{
-	types.ClearAllAccounts,
-	types.ClearAllPools,
+	types.Account.ClearAllAccounts,
+	types.Pool.ClearAllAccounts,
 	types.ClearAllGovParamsQuery,
 	types.ClearAllGovFlagsQuery,
 	types.ClearAllBlocksQuery,
@@ -88,6 +89,8 @@ func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
 	}
 
 	m.logger.Info().Msg("Cleared all the state")
+	// reclaming memory manually because the above calls deallocate and reallocate a lot of memory
+	debug.FreeOSMemory()
 	return nil
 }
 
