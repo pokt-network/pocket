@@ -20,7 +20,7 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 // readEd25519PrivateKeyFromFile returns an Ed25519PrivateKey from a file where the file simply encodes it in a string (for now)
@@ -59,7 +59,7 @@ func credentials(pwd string) string {
 	if pwd != "" && strings.TrimSpace(pwd) != "" {
 		return strings.TrimSpace(pwd)
 	}
-	bytePassword, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+	bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
