@@ -178,7 +178,7 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 	amount, err := ctx.GetPoolAmount(pool.GetAddress())
 	require.NoError(t, err)
 	require.NotEqual(t, beforeAmountBig, amount)
-	require.Equal(t, amount, expectedAfterAmount)
+	require.Equal(t, expectedAfterAmount, amount)
 	test_artifacts.CleanupTest(ctx)
 }
 
