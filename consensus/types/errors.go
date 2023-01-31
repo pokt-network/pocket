@@ -85,7 +85,7 @@ func SendingMessage(msg *HotstuffMessage, nodeId NodeId) string {
 
 // TODO consider putting a better value for logs
 func SendingStateSyncMessage(msg *anypb.Any, nodeId NodeId) string {
-	return fmt.Sprintf("Sending State sync message %s to node %d", msg, nodeId)
+	return fmt.Sprintf("🔄 Sending State sync message %s to node %d 🔄", msg, nodeId)
 }
 
 func BroadcastingMessage(msg *HotstuffMessage) string {
