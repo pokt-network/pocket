@@ -1,7 +1,6 @@
 package test
 
 import (
-	"encoding/hex"
 	"log"
 	"os"
 	"reflect"
@@ -31,12 +30,10 @@ const (
 var (
 	defaultTestingChainsEdited = []string{"0002"}
 
-	defaultUnstaking   = int64(2017)
-	defaultNonceString = utilTypes.BigIntToString(test_artifacts.DefaultAccountAmount)
+	defaultUnstaking = int64(2017)
 
-	testNonce           = "defaultNonceString"
-	testSchema          = "test_schema"
-	testMessageSendType = "MessageSend"
+	testNonce  = "defaultNonceString"
+	testSchema = "test_schema"
 )
 
 var testPersistenceMod modules.PersistenceModule // initialized in TestMain
@@ -163,20 +160,4 @@ func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
 	return persistenceMod.(modules.PersistenceModule)
-}
-
-func requireValidTestingTxResults(t *testing.T, tx *utilTypes.Transaction, txResults []modules.TxResult) {
-	for _, txResult := range txResults {
-		msg, err := tx.GetMessage()
-		sendMsg, ok := msg.(*utilTypes.MessageSend)
-		require.True(t, ok)
-		require.NoError(t, err)
-		require.Equal(t, int32(0), txResult.GetResultCode())
-		require.Equal(t, "", txResult.GetError())
-		require.Equal(t, testMessageSendType, txResult.GetMessageType())
-		require.Equal(t, int32(0), txResult.GetIndex())
-		require.Equal(t, int64(0), txResult.GetHeight())
-		require.Equal(t, hex.EncodeToString(sendMsg.ToAddress), txResult.GetRecipientAddr())
-		require.Equal(t, hex.EncodeToString(sendMsg.FromAddress), txResult.GetSignerAddr())
-	}
 }
