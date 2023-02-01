@@ -116,11 +116,13 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	bus, err := runtime.CreateBus(runtimeMgr)
 	if err != nil {
 		log.Fatalf("Error creating bus: %s", err)
+		teardownDeterministicKeygen()
 	}
 
 	persistenceMod, err := persistence.Create(bus)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
+		teardownDeterministicKeygen()
 	}
 	return persistenceMod.(modules.PersistenceModule)
 }
