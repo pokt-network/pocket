@@ -444,33 +444,27 @@ clear_genesis_and_config: ## Clear the genesis and config files for LocalNet
 	rm build/config/gen.*.json
 
 .PHONY: localnet_up
-## Starts up a LocalNet with all necessary dependencies (tl;dr `tilt up`)
-localnet_up:
+localnet_up: ## Starts up a k8s LocalNet with all necessary dependencies (tl;dr `tilt up`)
 	tilt up
 
 .PHONY: localnet_client_debug
-## Opens a `client debug` cli. It allows to interact with blockchain, e.g. change pace maker mode, reset to genesis, etc. Though the binary updated automatiacally on every code change, if client is already open you need to re-run this command to execute freshly compiled binary.
-localnet_client_debug:
+localnet_client_debug: ## Opens a `client debug` cli to interact with blockchain (e.g. change pacemaker mode, reset to genesis, etc). Though the node binary updates automatiacally on every code change (i.e. hot reloads), if client is already open you need to re-run this command to execute freshly compiled binary.
 	kubectl exec -it deploy/pocket-v1-cli-client -- client debug
 
 .PHONY: localnet_shell
-## Opens a shell in the pod that has `client` cli available. The binary updated automatically whenever the code changes.
-localnet_shell:
+localnet_shell: ## Opens a shell in the pod that has the `client` cli available. The binary updates automatically whenever the code changes (i.e. hot reloads).
 	kubectl exec -it deploy/pocket-v1-cli-client -- /bin/bash
 
 .PHONY: localnet_logs_validators
-## Outputs logs from all validators
-localnet_logs_validators:
+localnet_logs_validators: ## Outputs logs from all validators
 	kubectl logs -l v1-purpose=validator --all-containers=true --tail=-1
 
 .PHONY: localnet_logs_validators_follow
-## Outputs logs from all validators and follows them
-localnet_logs_validators_follow:
+localnet_logs_validators_follow: ## Outputs logs from all validators and follows them (i.e. tail)
 	kubectl logs -l v1-purpose=validator --all-containers=true --max-log-requests=1000 --tail=-1 -f
 
 .PHONY: localnet_down
-## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + postgres database)
-localnet_down:
+localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + postgres database)
 	tilt down
 	kubectl delete pvc data-dependencies-postgresql-0
 
