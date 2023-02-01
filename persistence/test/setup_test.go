@@ -62,6 +62,9 @@ var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	testPersistenceMod = newTestPersistenceModule(dbUrl)
+	if testPersistenceMod == nil {
+		log.Fatal("[ERROR] Unable to create new test persistence module")
+	}
 	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
 	os.Exit(exitCode)
@@ -115,16 +118,18 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	runtimeMgr := runtime.NewManager(cfg, genesisState)
 	bus, err := runtime.CreateBus(runtimeMgr)
 	if err != nil {
-		teardownDeterministicKeygen()
-		log.Fatalf("Error creating bus: %s", err)
+		log.Printf("Error creating bus: %s", err)
 	}
 
 	persistenceMod, err := persistence.Create(bus)
 	if err != nil {
-		teardownDeterministicKeygen()
-		log.Fatalf("Error creating persistence module: %s", err)
+		log.Printf("Error creating persistence module: %s", err)
 	}
-	return persistenceMod.(modules.PersistenceModule)
+
+	if err != nil {
+		return persistenceMod.(modules.PersistenceModule)
+	}
+	return nil
 }
 
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
