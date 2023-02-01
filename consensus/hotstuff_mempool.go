@@ -1,11 +1,8 @@
 package consensus
 
 import (
-	"fmt"
 	"log"
-	"math/rand"
 	"sync"
-	"time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -16,11 +13,6 @@ import (
 const (
 	hostfuffFIFOMempoolCapacity = int(1e6)
 )
-
-// TODO: index HighQC incrementally
-// TODO: expose findHighQC
-// TODO: implement iterator
-// TODO: tests for list as well
 
 type hotstuffFIFOMempool struct {
 	g                *mempool.GenericFIFOList[*typesCons.HotstuffMessage]
@@ -40,11 +32,8 @@ func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
 
 	hotstuffFIFOMempool.g = mempool.NewGenericFIFOList(
 		hostfuffFIFOMempoolCapacity,
-		mempool.WithIndexerFn[*typesCons.HotstuffMessage](func(txBz any) string {
-			// We are implementing a list and we don't want deduplication (https://user-images.githubusercontent.com/1892194/214911491-5ad63a0f-8197-4300-89ba-772ebd1dd0ac.png)
-			// otherwise we would hash the message and use that as the key.
-			// Every message is unique => use a nonce as the indexing key
-			return getNonce()
+		mempool.WithIsEqual(func(a *typesCons.HotstuffMessage, b *typesCons.HotstuffMessage) bool {
+			return hashMsg(a) == hashMsg(b)
 		}),
 		mempool.WithCustomIsOverflowingFn(func(g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) bool {
 			hotstuffFIFOMempool.m.Lock()
@@ -52,26 +41,17 @@ func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
 			// we don't care about the number of messages, only the total size
 			return hotstuffFIFOMempool.totalMsgBytes >= hotstuffFIFOMempool.maxTotalMsgBytes
 		}),
-		mempool.WithOnCollision(func(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
-			// in here we could check if there is double signing...
-		}),
 		mempool.WithOnAdd(func(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
 			hotstuffFIFOMempool.m.Lock()
 			defer hotstuffFIFOMempool.m.Unlock()
 
-			bytes, _ := codec.GetCodec().Marshal(item)
-
-			hotstuffFIFOMempool.size++
-			hotstuffFIFOMempool.totalMsgBytes += uint64(len(bytes))
+			incrementCounters(item, hotstuffFIFOMempool)
 		}),
 		mempool.WithOnRemove(func(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
 			hotstuffFIFOMempool.m.Lock()
 			defer hotstuffFIFOMempool.m.Unlock()
 
-			bytes, _ := codec.GetCodec().Marshal(item)
-
-			hotstuffFIFOMempool.size--
-			hotstuffFIFOMempool.totalMsgBytes -= uint64(len(bytes))
+			decrementCounters(item, hotstuffFIFOMempool)
 		}),
 	)
 
@@ -130,9 +110,16 @@ func (mp *hotstuffFIFOMempool) Contains(msg *typesCons.HotstuffMessage) bool {
 	return false
 }
 
-func getNonce() string {
-	rand.Seed(time.Now().UTC().UnixNano())
-	return fmt.Sprintf("%d", rand.Uint64())
+func incrementCounters(item *typesCons.HotstuffMessage, hotstuffFIFOMempool *hotstuffFIFOMempool) {
+	bytes, _ := codec.GetCodec().Marshal(item)
+	hotstuffFIFOMempool.size++
+	hotstuffFIFOMempool.totalMsgBytes += uint64(len(bytes))
+}
+
+func decrementCounters(item *typesCons.HotstuffMessage, hotstuffFIFOMempool *hotstuffFIFOMempool) {
+	bytes, _ := codec.GetCodec().Marshal(item)
+	hotstuffFIFOMempool.size--
+	hotstuffFIFOMempool.totalMsgBytes -= uint64(len(bytes))
 }
 
 func hashMsg(msg *typesCons.HotstuffMessage) string {
