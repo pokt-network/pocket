@@ -131,9 +131,9 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		return nil, err
 	}
 
-	pacemaker := paceMakerMod.(pacemaker.Pacemaker)
+	pm := paceMakerMod.(pacemaker.Pacemaker)
 	m := &consensusModule{
-		paceMaker:         pacemaker,
+		paceMaker:         pm,
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
 
 		height: 0,
@@ -152,7 +152,9 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 
 		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
 	}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 
 	runtimeMgr := bus.GetRuntimeMgr()
 
@@ -234,15 +236,15 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	}
 }
 
-func (*consensusModule) ValidateGenesis(genesis *genesis.GenesisState) error {
+func (*consensusModule) ValidateGenesis(gen *genesis.GenesisState) error {
 	// Sort the validators by their generic param (i.e. service URL)
-	vals := genesis.GetValidators()
+	vals := gen.GetValidators()
 	sort.Slice(vals, func(i, j int) bool {
 		return vals[i].GetGenericParam() < vals[j].GetGenericParam()
 	})
 
 	// Sort the validators by their address
-	vals2 := vals[:]
+	vals2 := vals
 	sort.Slice(vals, func(i, j int) bool {
 		return vals[i].GetAddress() < vals[j].GetAddress()
 	})

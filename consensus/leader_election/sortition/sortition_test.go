@@ -64,7 +64,6 @@ func SingleSortitionTest(t *testing.T, uPOKTValidatorStake, uPOKTNetworkStake, n
 	errTolerance := float64(numViewChanges) * errThreshold
 	expectedSelections := uint64(numViewChanges * numCandidates * uPOKTValidatorStake / uPOKTNetworkStake)
 	assert.InDelta(t, expectedSelections, uint64(selectCount), errTolerance)
-	// log.Printf("Stake %%: %0.3f%%; ExpectedCount vs SelectedCount: %d vs %d\n", (uPOKTValidatorStake / uPOKTNetworkStake * 100), selectCount, expectedSelections)
 }
 
 func BenchmarkSortition(b *testing.B) {

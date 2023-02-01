@@ -300,7 +300,7 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 		return typesCons.ErrNilPartialSig
 	}
 
-	if partialSig.Signature == nil || len(partialSig.GetAddress()) == 0 {
+	if partialSig.Signature == nil || partialSig.GetAddress() == "" {
 		return typesCons.ErrNilPartialSigOrSourceNotSpecified
 	}
 
@@ -389,7 +389,7 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	}
 
 	// Set the proposal block in the persistence context
-	if err = m.utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err := m.utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return nil, err
 	}
 
