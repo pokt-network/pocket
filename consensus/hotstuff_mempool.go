@@ -44,7 +44,7 @@ func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
 		mempool.WithIndexerFn[*typesCons.HotstuffMessage](func(txBz any) string {
 			// We are implementing a list and we don't want deduplication (https://user-images.githubusercontent.com/1892194/214911491-5ad63a0f-8197-4300-89ba-772ebd1dd0ac.png)
 			// otherwise we would hash the message and use that as the key.
-			// This is why we are using a nonce as key. In this context. Every message is unique even if it's the same
+			// Every message is unique => use a nonce as the indexing key
 			return getNonce()
 		}),
 		mempool.WithCustomIsOverflowingFn(func(g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) bool {
