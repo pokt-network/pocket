@@ -31,4 +31,4 @@ jobs:
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: golangci/golangci-lint-action@v3
         with:
-          # only-new-issues: true
+          only-new-issues: true
