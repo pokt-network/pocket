@@ -27,13 +27,13 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 	return true, err
 }
 
-func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
+func (p PostgresContext) GetMaximumBlockHeight() (latestHeight uint64, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return 0, err
 	}
 
-	err = tx.QueryRow(ctx, types.GetLatestBlockHeightQuery()).Scan(&latestHeight)
+	err = tx.QueryRow(ctx, types.GetMaximumBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
 

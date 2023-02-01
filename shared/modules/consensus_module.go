@@ -34,7 +34,7 @@ type ConsensusModule interface {
 	CurrentRound() uint64
 	CurrentStep() uint64
 
-        // State Sync functions
+	// State Sync functions
 	EnableServerMode()
 }
 
@@ -72,5 +72,4 @@ type ConsensusPacemaker interface {
 type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetCurrentNodeAddressFromNodeId() (string, error)
-	GetLeaderId() uint64
 }

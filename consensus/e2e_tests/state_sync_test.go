@@ -74,7 +74,7 @@ func TestStateSync_ServerGetMetaDataReq_SuccessfulTest(t *testing.T) {
 	require.NotEmpty(t, metaDataRes)
 
 	require.Equal(t, uint64(4), metaDataRes.MaxHeight)
-	require.Equal(t, uint64(4), metaDataRes.MinHeight)
+	require.Equal(t, uint64(1), metaDataRes.MinHeight)
 	require.Equal(t, serverNodePeerId, metaDataRes.PeerId)
 }
 

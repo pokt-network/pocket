@@ -30,7 +30,15 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	clientPeerId := metadataReq.PeerId
 	m.nodeLog(fmt.Sprintf("%s received State Sync MetaData Req from: %s", serverNodePeerId, clientPeerId))
 
-	minHeight, maxHeight := m.aggregateMetaResults()
+	minHeight, err := m.GetBus().GetPersistenceModule().GetMinBlockHeight()
+	if err != nil {
+		return err
+	}
+
+	maxHeight, err := m.GetBus().GetPersistenceModule().GetMaxBlockHeight()
+	if err != nil {
+		return err
+	}
 
 	stateSyncMessage := typesCons.StateSyncMessage{
 		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE,
@@ -64,7 +72,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	// IMPROVE: Consider checking the highest block from persistence, rather than the consensus module
 	// check the max block height, if higher height is requested, return error
 	if consensusMod.CurrentHeight() < blockReq.Height {
-		return fmt.Errorf(" requested block height is higher than node's block height ")
+		return fmt.Errorf("requested block height: %d is higher than node's block height: %d", blockReq.Height, consensusMod.CurrentHeight())
 	}
 
 	// get block from the persistence module
@@ -98,13 +106,8 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 
 	blockBytes, err := blockStore.Get(heightBytes)
 	if err != nil {
-		m.nodeLog("Couldn't receive the block")
+		m.nodeLog("Couldn't retrieve the block")
 		return nil, err
-	}
-
-	// TODO check if this is needed
-	if blockBytes == nil {
-		return nil, fmt.Errorf("block not found")
 	}
 
 	var block coreTypes.Block
@@ -114,12 +117,4 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 	}
 
 	return &block, nil
-}
-
-// TODO IMPLEMENT
-// Placeholder function for metadata aggregation of data received from different peers
-func (m *stateSync) aggregateMetaResults() (uint64, uint64) {
-	minHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	maxHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	return minHeight, maxHeight
 }
