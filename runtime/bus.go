@@ -101,7 +101,9 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 	if err != nil {
 		log.Fatalf("failed to create noop telemetry module: %v", err)
 	}
-	m.RegisterModule(noopModule)
+	if err := m.RegisterModule(noopModule); err != nil {
+		log.Fatalf("[ERROR] Failed to register telemetry module: %v", err.Error())
+	}
 	return noopModule.(modules.TelemetryModule)
 }
 
