@@ -83,13 +83,6 @@ jobs:
       - name: Upload coverage to Codecov
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: codecov/codecov-action@v3
-      - name: Run golangci-lint
-        # Only run if the test failed on target version to avoid duplicated annotations on GitHub.
-        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
-        uses: golangci/golangci-lint-action@v3
-        with:
-          # only-new-issues: true
-          args: --issues-exit-code=0 # TODO: Remove this once we fix all the issues.
 
   # TODO(@okdas): reuse artifacts built by the previous job instead
   # of going through the build process in container build job again

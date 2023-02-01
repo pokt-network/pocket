@@ -1,0 +1,34 @@
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+
+env:
+  # Even though we can test against multiple versions, this one is considered a target version.
+  TARGET_GOLANG_VERSION: "1.19"
+
+jobs:
+  golangci:
+    name: Go Linter
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ["1.19"] # As we are relying on generics, we can't go lower than 1.18.
+      fail-fast: false
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        uses: golangci/golangci-lint-action@v3
+        with:
+          # only-new-issues: true
