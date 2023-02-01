@@ -13,24 +13,25 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
 
 ### Dependencies
 
-* [tilt](https://docs.tilt.dev/install.html) - installed automatically on `make install_cli_deps` command.
-* Kubernetes cluster ([different options available](https://docs.tilt.dev/choosing_clusters.html)).
-  * `kubectl` CLI is required and should be configured to access the cluster. That should happen automatically if you're using Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc.
-  * `helm` - required to template the yaml manifests for the dependencies (such as postgres, grafana). Installation instructions: https://helm.sh/docs/intro/install/.
+- [tilt](https://docs.tilt.dev/install.html) - installed automatically on `make install_cli_deps` command.
+- Kubernetes cluster ([different options available](https://docs.tilt.dev/choosing_clusters.html)).
+  - `kubectl` CLI is required and should be configured to access the cluster. That should happen automatically if you're using Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc.
+  - `helm` - required to template the yaml manifests for the dependencies (such as postgres, grafana). Installation instructions: https://helm.sh/docs/intro/install/.
 
 ### Running the LocalNet
 
-```
+```bash
 make localnet_up
 ```
 
 The developer can then view the logs of services running via:
-  - In terminal:
-    - `make localnet_logs_validators` - shows prior logs
-    - `make localnet_logs_validators_follow` - shows prior logs and follows the new log lines as validators do their work
-  - Tilt web UI, either by:
-    - Pressing `space` in the terminal where you started `tilt`
-    - Going to [localhost:10350](http://localhost:10350/)
+
+- In terminal:
+  - `make localnet_logs_validators` - shows prior logs
+  - `make localnet_logs_validators_follow` - shows prior logs and follows the new log lines as validators do their work
+- Tilt web UI, either by:
+  - Pressing `space` in the terminal where you started `tilt`
+  - Going to [localhost:10350](http://localhost:10350/)
 
 ![tilt UI](tilt-ui.png)
 
@@ -53,11 +54,13 @@ As the workloads run in Kubernetes, you can see and modify any resources on your
 We provide some usefult make targets:
 
 Open a shell in the pod that has `client` cli available. It gets updated automatically whenever the code changes:
+
 ```
 make localnet_shell
 ```
 
 Open a `client debug` cli. It allows to interact with blockchain, e.g. change pace maker mode, reset to genesis, etc. It gets updated automatically whenever the code changes (though you would need to stop/start the binary to execute the new code):
+
 ```
 make localnet_client_debug
 ```
@@ -67,6 +70,7 @@ make localnet_client_debug
 `tilt` reads the `Tiltfile` in the root of the project, where configuration of LocalNet is provided, and starts the services defined there. `Tiltfile` is written in Starlark, which is a dialect of Python.
 
 Kubernetes manifests `tilt` submits to the Kubernetes cluster can be found in [build/localnet directory](../..//build/localnet):
+
 - [dependencies](../../build/localnet/dependencies/) - a helm chart that installs all necessary dependencies to run and observe LocalNet - postgresql, prometheus, grafana, etc.
 - 4 validators. The validator binary that runs inside of the container gets updated automatically and process restarted on each code change.
 - v1 cli client - this is a binary that can be used to perform operations on testnet, e.g. you can run `make localnet_client_debug` to execute commands such as `ResetToGenesis`, or `TogglePacemakerMode`. This binary is also automatically updated when you make changes to the codebase.
