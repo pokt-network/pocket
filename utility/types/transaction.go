@@ -85,12 +85,13 @@ func (tx *Transaction) Hash() (string, Error) {
 }
 
 func (tx *Transaction) SignBytes() ([]byte, Error) {
-	transaction := *tx
-	transaction.Signature = nil
-	bz, err := codec.GetCodec().Marshal(&transaction)
+	sig := tx.Signature // Backup signature
+	tx.Signature = nil
+	bz, err := codec.GetCodec().Marshal(tx)
 	if err != nil {
 		return nil, ErrProtoMarshal(err)
 	}
+	tx.Signature = sig // Restore signature
 	return bz, nil
 }
 
