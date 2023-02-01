@@ -116,7 +116,7 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 	ctrl := gomock.NewController(t)
 	mockRuntimeMgrs := make([]modules.RuntimeMgr, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
-	copy(valKeys[:], keys[:numValidators])
+	copy(valKeys, keys[:numValidators])
 	mockGenesisState := createMockGenesisState(valKeys)
 	for i := range mockRuntimeMgrs {
 		cfg := &configs.Config{
