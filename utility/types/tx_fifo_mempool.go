@@ -42,8 +42,7 @@ func (t *txFIFOMempool) IsEmpty() bool {
 
 // PopTx pops a tx from the mempool
 func (t *txFIFOMempool) PopTx() ([]byte, error) {
-	popTx, err := t.g.Pop()
-	return []byte(popTx), NewError(-1, err.Error())
+	return t.g.Pop()
 }
 
 // RemoveTx removes a tx from the mempool
@@ -66,23 +65,23 @@ func (t *txFIFOMempool) TxsBytesTotal() uint64 {
 	return t.txsBytesTotal
 }
 
-func NewTxFIFOMempool(maxTransactionBytes uint64, maxTransactions uint32) *txFIFOMempool {
+func NewTxFIFOMempool(maxTxsBytesTotal uint64, maxTxs uint32) *txFIFOMempool {
 	txFIFOMempool := &txFIFOMempool{
 		m:                sync.Mutex{},
 		txCount:          0,
 		txsBytesTotal:    0,
-		maxTxsBytesTotal: maxTransactionBytes,
+		maxTxsBytesTotal: maxTxsBytesTotal,
 	}
 
 	txFIFOMempool.g = mempool.NewGenericFIFOSet(
-		int(maxTransactions),
+		int(maxTxs),
 		mempool.WithIndexerFn[string, []byte](func(txBz any) string {
 			return crypto.GetHashStringFromBytes(txBz.([]byte))
 		}),
 		mempool.WithCustomIsOverflowingFn(func(g *mempool.GenericFIFOSet[string, []byte]) bool {
 			txFIFOMempool.m.Lock()
 			defer txFIFOMempool.m.Unlock()
-			return txFIFOMempool.txCount >= maxTransactions || txFIFOMempool.txsBytesTotal >= txFIFOMempool.maxTxsBytesTotal
+			return txFIFOMempool.txCount >= maxTxs || txFIFOMempool.txsBytesTotal >= txFIFOMempool.maxTxsBytesTotal
 		}),
 		mempool.WithOnCollision(func(item []byte, g *mempool.GenericFIFOSet[string, []byte]) error {
 			return ErrDuplicateTransaction()
