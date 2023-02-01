@@ -41,7 +41,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	}
 
 	stateSyncMessage := typesCons.StateSyncMessage{
-		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE,
+		//MsgType: typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE,
 		Message: &typesCons.StateSyncMessage_MetadataRes{
 			MetadataRes: &typesCons.StateSyncMetadataResponse{
 				PeerId:    serverNodePeerId,
@@ -56,7 +56,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 		return err
 	}
 
-	m.nodeLog(typesCons.SendingStateSyncMessage(&stateSyncMessage, clientPeerId, m.bus.GetConsensusModule().CurrentHeight()))
+	m.nodeLog(typesCons.SendingStateSyncMessage(clientPeerId, m.bus.GetConsensusModule().CurrentHeight()))
 	return m.sendToPeer(anyMsg, cryptoPocket.AddressFromString(clientPeerId))
 }
 
@@ -83,7 +83,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	}
 
 	stateSyncMessage := typesCons.StateSyncMessage{
-		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE,
+		//MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE,
 		Message: &typesCons.StateSyncMessage_GetBlockRes{
 			GetBlockRes: &typesCons.GetBlockResponse{
 				PeerId: serverNodePeerId,
@@ -96,7 +96,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	if err != nil {
 		return err
 	}
-	m.nodeLog(typesCons.SendingStateSyncMessage(&stateSyncMessage, clientPeerId, blockReq.Height))
+	m.nodeLog(typesCons.SendingStateSyncMessage(clientPeerId, blockReq.Height))
 	return m.sendToPeer(anyMsg, cryptoPocket.AddressFromString(clientPeerId))
 }
 

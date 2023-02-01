@@ -28,29 +28,25 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 	default:
 		return typesCons.ErrUnknownStateSyncMessageType(stateSyncMessageAny.MessageName())
 	}
-
-	return nil
 }
 
 func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.StateSyncMessage) error {
-	switch stateSyncMessage.MsgType {
-	case typesCons.StateSyncMessageType_STATE_SYNC_UNSPECIFIED:
-		return fmt.Errorf("unspecified state sync message type")
-	case typesCons.StateSyncMessageType_STATE_SYNC_METADATA_REQUEST:
+	switch stateSyncMessage.Message.(type) {
+	case *typesCons.StateSyncMessage_MetadataReq:
 		if !m.stateSync.IsServerModEnabled() {
 			return fmt.Errorf("server module is not enabled")
 		}
 		return m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
-	case typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE:
+	case *typesCons.StateSyncMessage_MetadataRes:
 		return m.stateSync.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
-	case typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_REQUEST:
+	case *typesCons.StateSyncMessage_GetBlockReq:
 		if !m.stateSync.IsServerModEnabled() {
 			return fmt.Errorf("server module is not enabled")
 		}
 		return m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
-	case typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE:
+	case *typesCons.StateSyncMessage_GetBlockRes:
 		return m.stateSync.HandleGetBlockResponse(stateSyncMessage.GetGetBlockRes())
+	default:
+		return fmt.Errorf("unspecified state sync message type")
 	}
-
-	return nil
 }

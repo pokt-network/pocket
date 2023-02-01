@@ -49,7 +49,7 @@ func TestStateSync_ServerGetMetaDataReq_SuccessfulTest(t *testing.T) {
 	}
 
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
-		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_METADATA_REQUEST,
+		//MsgType: typesCons.StateSyncMessageType_STATE_SYNC_METADATA_REQUEST,
 		Message: &typesCons.StateSyncMessage_MetadataReq{
 			MetadataReq: &stateSyncMetaDataReq,
 		},
@@ -61,7 +61,8 @@ func TestStateSync_ServerGetMetaDataReq_SuccessfulTest(t *testing.T) {
 	P2PSend(t, serverNode, anyProto)
 
 	// Start waiting for the metadata request on server node,
-	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE, 1, 250, false)
+	errMsg := "StateSync Metadata Request"
+	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 250, false)
 	require.NoError(t, err)
 
 	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
@@ -112,7 +113,7 @@ func TestStateSync_ServerGetBlock_SuccessfulTest(t *testing.T) {
 	}
 
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_REQUEST,
+		//MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_REQUEST,
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
 			GetBlockReq: &stateSyncGetBlockReq,
 		},
@@ -125,8 +126,9 @@ func TestStateSync_ServerGetBlock_SuccessfulTest(t *testing.T) {
 	P2PSend(t, serverNode, anyProto)
 
 	// Start waiting for the get block request on server node, expect to return error
+	errMsg := "StateSync Get Block Request Message"
 	numExpectedMsgs := 1
-	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE, numExpectedMsgs, 250, false)
+	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
 	require.NoError(t, err)
 
 	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
@@ -175,7 +177,7 @@ func TestStateSync_ServerGetBlock_FailingTest(t *testing.T) {
 	}
 
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-		MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_REQUEST,
+		//MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_REQUEST,
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
 			GetBlockReq: &stateSyncGetBlockReq,
 		},
@@ -189,6 +191,7 @@ func TestStateSync_ServerGetBlock_FailingTest(t *testing.T) {
 
 	numExpectedMsgs := 1
 	// Start waiting for the get block request on server node, expect to return error
-	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE, numExpectedMsgs, 250, false)
+	errMsg := "StateSync Get Block Request Message"
+	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
 	require.Error(t, err)
 }

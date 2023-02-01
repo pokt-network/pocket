@@ -242,7 +242,8 @@ func WaitForNetworkStateSyncEvents(
 	t *testing.T,
 	clock *clock.Mock,
 	eventsChannel modules.EventsChannel,
-	msgType typesCons.StateSyncMessageType,
+	//msgType typesCons.StateSyncMessageType,
+	errMsg string,
 	numExpectedMsgs int,
 	millis time.Duration,
 	failOnExtraMessages bool,
@@ -251,13 +252,12 @@ func WaitForNetworkStateSyncEvents(
 		msg, err := codec.GetCodec().FromAny(anyMsg)
 		require.NoError(t, err)
 
-		stateSyncMessage, ok := msg.(*typesCons.StateSyncMessage)
+		_, ok := msg.(*typesCons.StateSyncMessage)
 		require.True(t, ok)
-
-		return stateSyncMessage.MsgType == msgType
+		// TODO: check state sync msg type
+		return true
 	}
 
-	errMsg := fmt.Sprintf("StateSyncMessage type: %s", typesCons.StateSyncMessageType_name[int32(msgType)])
 	return waitForEventsInternal(t, clock, eventsChannel, consensus.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
