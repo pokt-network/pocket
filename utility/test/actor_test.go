@@ -58,7 +58,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "incorrect actor unstaking height")
 			require.Equal(t, outputAddress.String(), actor.GetOutput(), "incorrect actor output address")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -101,7 +101,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			err = ctx.HandleEditStakeMessage(msgAmountEdited)
 			require.NoError(t, err, "handle edit stake message")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -149,7 +149,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			actor = getActorByAddr(t, &ctx, actorType, addr)
 			require.Equal(t, int64(-1), actor.GetPausedHeight())
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -191,7 +191,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			actor = getActorByAddr(t, &ctx, actorType, addr)
 			require.Equal(t, defaultUnstaking, actor.GetUnstakingHeight(), "actor should be unstaking")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -229,7 +229,7 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, int32(typesUtil.StakeStatus_Unstaking), status, "actor should be unstaking")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -240,7 +240,7 @@ func TestUtilityContext_CalculateMaxAppRelays(t *testing.T) {
 	newMaxRelays, err := ctx.CalculateAppRelays(actor.GetStakedAmount())
 	require.NoError(t, err)
 	require.Equal(t, actor.GetGenericParam(), newMaxRelays)
-	test_artifacts.CleanupTest(ctx)
+	test_artifacts.CleanupTest(&ctx)
 }
 
 func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
@@ -267,7 +267,7 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, unstakingBlocks, unstakingHeight, "unexpected unstaking height")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -292,7 +292,7 @@ func TestUtilityContext_GetExists(t *testing.T) {
 			require.NoError(t, err)
 			require.False(t, exists, "actor that shouldn't exist does")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -310,7 +310,7 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, actor.GetOutput(), hex.EncodeToString(outputAddress), "unexpected output address")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -338,7 +338,7 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 			_, err = ctx.GetPauseHeight(actorType, randAddr)
 			require.Error(t, err, "non existent actor should error")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -365,7 +365,7 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
 			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -390,7 +390,7 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
 			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -415,7 +415,7 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
 			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -475,7 +475,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			require.NoError(t, err, "error getting unstaking blocks")
 			require.Equal(t, unstakingBlocks+1, actor.GetUnstakingHeight(), "incorrect unstaking height")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -528,7 +528,7 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 
 			// TODO: We need to better define what 'deleted' really is in the postgres world.
 			// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }
@@ -567,7 +567,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, int32(typesUtil.StakeStatus_Unstaking), status, "incorrect status")
 
-			test_artifacts.CleanupTest(ctx)
+			test_artifacts.CleanupTest(&ctx)
 		})
 	}
 }

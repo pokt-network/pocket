@@ -34,7 +34,7 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 
-	test_artifacts.CleanupTest(ctx)
+	test_artifacts.CleanupTest(&ctx)
 }
 
 func TestUtilityContext_ApplyTransaction(t *testing.T) {
@@ -54,7 +54,7 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 
-	test_artifacts.CleanupTest(ctx)
+	test_artifacts.CleanupTest(&ctx)
 }
 
 func TestUtilityContext_CheckTransaction(t *testing.T) {
@@ -72,7 +72,7 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 	require.True(t, ctx.Mempool.Contains(hash)) // IMPROVE: Access the mempool from the `testUtilityMod` directly
 	require.Equal(t, testUtilityMod.CheckTransaction(txBz).Error(), typesUtil.ErrDuplicateTransaction().Error())
 
-	test_artifacts.CleanupTest(ctx)
+	test_artifacts.CleanupTest(&ctx)
 }
 
 func TestUtilityContext_GetSignerCandidates(t *testing.T) {
@@ -92,7 +92,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	require.Equal(t, 1, len(candidates), "wrong number of candidates")
 	require.Equal(t, accs[0].GetAddress(), hex.EncodeToString(candidates[0]), "unexpected signer candidate")
 
-	test_artifacts.CleanupTest(ctx)
+	test_artifacts.CleanupTest(&ctx)
 }
 
 func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
@@ -112,7 +112,7 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	require.Equal(t, 1, len(txs))
 	require.Equal(t, txs[0], txBz)
 
-	test_artifacts.CleanupTest(ctx)
+	test_artifacts.CleanupTest(&ctx)
 }
 
 func TestUtilityContext_HandleMessage(t *testing.T) {
@@ -142,7 +142,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter), "unexpected sender balance")
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), "unexpected recipient balance")
 
-	test_artifacts.CleanupTest(ctx)
+	test_artifacts.CleanupTest(&ctx)
 }
 
 func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {

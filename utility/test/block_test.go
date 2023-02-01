@@ -61,7 +61,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference, "unexpected before / after balance difference")
 
-	test_artifacts.CleanupTest(ctx)
+	test_artifacts.CleanupTest(&ctx)
 }
 
 func TestUtilityContext_BeginBlock(t *testing.T) {
@@ -88,7 +88,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	// require.NoError(t, err)
 	// require.Equal(t, missed, 1)
 
-	test_artifacts.CleanupTest(ctx)
+	test_artifacts.CleanupTest(&ctx)
 }
 
 func TestUtilityContext_EndBlock(t *testing.T) {
@@ -128,5 +128,5 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference)
 
-	test_artifacts.CleanupTest(ctx)
+	test_artifacts.CleanupTest(&ctx)
 }
