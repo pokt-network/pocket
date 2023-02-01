@@ -39,7 +39,9 @@ func Create(bus modules.Bus) (modules.Module, error) {
 func CreateWithProviders(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
 	log.Println("Creating network module")
 	m := &p2pModule{}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
@@ -223,7 +225,6 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	// There was no error, but we don't need to forward this to the app-specific bus.
 	// For example, the message has already been handled by the application.
 	if appMsgData == nil {
-		// log.Println("[DEBUG] No app-specific message to forward from the network")
 		return
 	}
 
