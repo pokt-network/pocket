@@ -30,7 +30,7 @@ func TestMempool(t *testing.T) {
 	type args struct {
 		maxTransactionBytes uint64
 		initialElements     *[]*typesCons.HotstuffMessage
-		actions             *[]func(*hotstuffFifoMempool)
+		actions             *[]func(*hotstuffFIFOMempool)
 	}
 	tests := []struct {
 		name      string
@@ -44,8 +44,8 @@ func TestMempool(t *testing.T) {
 			args: args{
 				maxTransactionBytes: 20,
 				initialElements:     &[]*typesCons.HotstuffMessage{hotstuffMessageFactory(10)},
-				actions: &[]func(*hotstuffFifoMempool){
-					func(txFifoMempool *hotstuffFifoMempool) {
+				actions: &[]func(*hotstuffFIFOMempool){
+					func(txFifoMempool *hotstuffFIFOMempool) {
 						txFifoMempool.Push(hotstuffMessageFactory(10))
 					},
 				},
@@ -62,8 +62,8 @@ func TestMempool(t *testing.T) {
 					hotstuffMessageFactory(83),
 					hotstuffMessageFactory(28),
 				},
-				actions: &[]func(*hotstuffFifoMempool){
-					func(txFifoMempool *hotstuffFifoMempool) {
+				actions: &[]func(*hotstuffFIFOMempool){
+					func(txFifoMempool *hotstuffFIFOMempool) {
 						for !txFifoMempool.IsEmpty() {
 							txFifoMempool.Pop()
 						}
@@ -77,8 +77,8 @@ func TestMempool(t *testing.T) {
 			args: args{
 				maxTransactionBytes: 1000,
 				initialElements:     &[]*typesCons.HotstuffMessage{hotstuffMessageFactory(19)},
-				actions: &[]func(*hotstuffFifoMempool){
-					func(txFifoMempool *hotstuffFifoMempool) {
+				actions: &[]func(*hotstuffFIFOMempool){
+					func(txFifoMempool *hotstuffFIFOMempool) {
 						msg, err := txFifoMempool.Pop()
 						require.NoError(t, err, "unexpected error while popping element")
 						expectedMsg := hotstuffMessageFactory(19)
@@ -94,8 +94,8 @@ func TestMempool(t *testing.T) {
 			args: args{
 				maxTransactionBytes: 1000,
 				initialElements:     &[]*typesCons.HotstuffMessage{},
-				actions: &[]func(*hotstuffFifoMempool){
-					func(txFifoMempool *hotstuffFifoMempool) {
+				actions: &[]func(*hotstuffFIFOMempool){
+					func(txFifoMempool *hotstuffFIFOMempool) {
 						_, err := txFifoMempool.Pop()
 						require.Error(t, err, "expected error while popping element")
 					},
@@ -108,8 +108,8 @@ func TestMempool(t *testing.T) {
 			args: args{
 				maxTransactionBytes: 1000,
 				initialElements:     &[]*typesCons.HotstuffMessage{},
-				actions: &[]func(*hotstuffFifoMempool){
-					func(txFifoMempool *hotstuffFifoMempool) {
+				actions: &[]func(*hotstuffFIFOMempool){
+					func(txFifoMempool *hotstuffFIFOMempool) {
 						txFifoMempool.Push(hotstuffMessageFactory(19))
 					},
 				},
@@ -126,8 +126,8 @@ func TestMempool(t *testing.T) {
 					hotstuffMessageFactory(83),
 					hotstuffMessageFactory(28),
 				},
-				actions: &[]func(*hotstuffFifoMempool){
-					func(txFifoMempool *hotstuffFifoMempool) {
+				actions: &[]func(*hotstuffFIFOMempool){
+					func(txFifoMempool *hotstuffFIFOMempool) {
 						txFifoMempool.Clear()
 						require.Equal(t, 0, txFifoMempool.Size(), "mismatching size")
 					},
@@ -145,8 +145,8 @@ func TestMempool(t *testing.T) {
 					hotstuffMessageFactory(83),
 					hotstuffMessageFactory(28),
 				},
-				actions: &[]func(*hotstuffFifoMempool){
-					func(txFifoMempool *hotstuffFifoMempool) {
+				actions: &[]func(*hotstuffFIFOMempool){
+					func(txFifoMempool *hotstuffFIFOMempool) {
 						expectedMsgs := []*typesCons.HotstuffMessage{
 							hotstuffMessageFactory(3),
 							hotstuffMessageFactory(19),
@@ -172,8 +172,8 @@ func TestMempool(t *testing.T) {
 			args: args{
 				maxTransactionBytes: 1000,
 				initialElements:     &[]*typesCons.HotstuffMessage{},
-				actions: &[]func(*hotstuffFifoMempool){
-					func(txFifoMempool *hotstuffFifoMempool) {
+				actions: &[]func(*hotstuffFIFOMempool){
+					func(txFifoMempool *hotstuffFIFOMempool) {
 						require.Equal(t, int(0), int(txFifoMempool.TotalMsgBytes()), "mismatching total size")
 					},
 				},
@@ -185,8 +185,8 @@ func TestMempool(t *testing.T) {
 			args: args{
 				maxTransactionBytes: 1000,
 				initialElements:     &[]*typesCons.HotstuffMessage{},
-				actions: &[]func(*hotstuffFifoMempool){
-					func(txFifoMempool *hotstuffFifoMempool) {
+				actions: &[]func(*hotstuffFIFOMempool){
+					func(txFifoMempool *hotstuffFIFOMempool) {
 						msg := hotstuffMessageFactory(3)
 						bytes, _ := proto.Marshal(msg)
 						txFifoMempool.Push(msg)

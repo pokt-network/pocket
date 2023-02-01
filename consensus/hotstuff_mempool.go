@@ -19,7 +19,7 @@ import (
 // TODO: implement iterator
 // TODO: tests for list as well
 
-type hotstuffFifoMempool struct {
+type hotstuffFIFOMempool struct {
 	g                *mempool.GenericFIFOList[*typesCons.HotstuffMessage]
 	m                sync.Mutex
 	size             uint32 // current number of transactions in the mempool
@@ -27,8 +27,8 @@ type hotstuffFifoMempool struct {
 	maxTotalMsgBytes uint64 // maximum total size of all txs allowed in the mempool
 }
 
-func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFifoMempool {
-	hotstuffFifoMempool := &hotstuffFifoMempool{
+func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
+	hotstuffFifoMempool := &hotstuffFIFOMempool{
 		m:                sync.Mutex{},
 		size:             0,
 		totalMsgBytes:    0,
@@ -75,11 +75,11 @@ func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFifoMempool {
 	return hotstuffFifoMempool
 }
 
-func (mp *hotstuffFifoMempool) Push(msg *typesCons.HotstuffMessage) error {
+func (mp *hotstuffFIFOMempool) Push(msg *typesCons.HotstuffMessage) error {
 	return mp.g.Push(msg)
 }
 
-func (mp *hotstuffFifoMempool) Clear() {
+func (mp *hotstuffFIFOMempool) Clear() {
 	mp.g.Clear()
 	mp.m.Lock()
 	defer mp.m.Unlock()
@@ -87,36 +87,36 @@ func (mp *hotstuffFifoMempool) Clear() {
 	mp.totalMsgBytes = 0
 }
 
-func (mp *hotstuffFifoMempool) IsEmpty() bool {
+func (mp *hotstuffFIFOMempool) IsEmpty() bool {
 	return mp.g.IsEmpty()
 }
 
-func (mp *hotstuffFifoMempool) Pop() (*typesCons.HotstuffMessage, error) {
+func (mp *hotstuffFIFOMempool) Pop() (*typesCons.HotstuffMessage, error) {
 	return mp.g.Pop()
 }
 
-func (mp *hotstuffFifoMempool) Remove(tx *typesCons.HotstuffMessage) error {
+func (mp *hotstuffFIFOMempool) Remove(tx *typesCons.HotstuffMessage) error {
 	mp.g.Remove(tx)
 	return nil
 }
 
-func (mp *hotstuffFifoMempool) Size() int {
+func (mp *hotstuffFIFOMempool) Size() int {
 	mp.m.Lock()
 	defer mp.m.Unlock()
 	return int(mp.size)
 }
 
-func (mp *hotstuffFifoMempool) TotalMsgBytes() uint64 {
+func (mp *hotstuffFIFOMempool) TotalMsgBytes() uint64 {
 	mp.m.Lock()
 	defer mp.m.Unlock()
 	return mp.totalMsgBytes
 }
 
-func (mp *hotstuffFifoMempool) GetAll() []*typesCons.HotstuffMessage {
+func (mp *hotstuffFIFOMempool) GetAll() []*typesCons.HotstuffMessage {
 	return mp.g.GetAll()
 }
 
-func (mp *hotstuffFifoMempool) Contains(msg *typesCons.HotstuffMessage) bool {
+func (mp *hotstuffFIFOMempool) Contains(msg *typesCons.HotstuffMessage) bool {
 	// since messages are NOT indexed by hash, we need to iterate over all of them
 	msgHash := hashMsg(msg)
 	for _, m := range mp.GetAll() {

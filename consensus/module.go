@@ -69,7 +69,7 @@ type consensusModule struct {
 	// DEPRECATE: Remove later when we build a shared/proper/injected logger
 	logPrefix string
 
-	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFifoMempool
+	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
 }
 
 // Functions exposed by the debug interface should only be used for testing puposes.
@@ -148,7 +148,7 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 
 		logPrefix: DefaultLogPrefix,
 
-		hotstuffMempool: make(map[typesCons.HotstuffStep]*hotstuffFifoMempool),
+		hotstuffMempool: make(map[typesCons.HotstuffStep]*hotstuffFIFOMempool),
 	}
 	bus.RegisterModule(m)
 

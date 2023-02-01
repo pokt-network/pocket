@@ -67,39 +67,39 @@ func (t *fIFOMempool) TxsBytesTotal() uint64 {
 }
 
 func NewTxFIFOMempool(maxTransactionBytes uint64, maxTransactions uint32) *fIFOMempool {
-	txFifoMempool := &fIFOMempool{
+	txFIFOMempool := &fIFOMempool{
 		m:          sync.Mutex{},
 		size:       0,
 		txBytes:    0,
 		maxTxBytes: maxTransactionBytes,
 	}
 
-	txFifoMempool.g = mempool.NewGenericFIFOSet(
+	txFIFOMempool.g = mempool.NewGenericFIFOSet(
 		int(maxTransactions),
 		mempool.WithIndexerFn[string, []byte](func(txBz any) string {
 			return crypto.GetHashStringFromBytes(txBz.([]byte))
 		}),
 		mempool.WithCustomIsOverflowingFn(func(g *mempool.GenericFIFOSet[string, []byte]) bool {
-			txFifoMempool.m.Lock()
-			defer txFifoMempool.m.Unlock()
-			return txFifoMempool.size >= maxTransactions || txFifoMempool.txBytes >= txFifoMempool.maxTxBytes
+			txFIFOMempool.m.Lock()
+			defer txFIFOMempool.m.Unlock()
+			return txFIFOMempool.size >= maxTransactions || txFIFOMempool.txBytes >= txFIFOMempool.maxTxBytes
 		}),
 		mempool.WithOnCollision(func(item []byte, g *mempool.GenericFIFOSet[string, []byte]) error {
 			return ErrDuplicateTransaction()
 		}),
 		mempool.WithOnAdd(func(item []byte, g *mempool.GenericFIFOSet[string, []byte]) {
-			txFifoMempool.m.Lock()
-			defer txFifoMempool.m.Unlock()
-			txFifoMempool.size++
-			txFifoMempool.txBytes += uint64(len(item))
+			txFIFOMempool.m.Lock()
+			defer txFIFOMempool.m.Unlock()
+			txFIFOMempool.size++
+			txFIFOMempool.txBytes += uint64(len(item))
 		}),
 		mempool.WithOnRemove(func(item []byte, g *mempool.GenericFIFOSet[string, []byte]) {
-			txFifoMempool.m.Lock()
-			defer txFifoMempool.m.Unlock()
-			txFifoMempool.size--
-			txFifoMempool.txBytes -= uint64(len(item))
+			txFIFOMempool.m.Lock()
+			defer txFIFOMempool.m.Unlock()
+			txFIFOMempool.size--
+			txFIFOMempool.txBytes -= uint64(len(item))
 		}),
 	)
 
-	return txFifoMempool
+	return txFIFOMempool
 }
