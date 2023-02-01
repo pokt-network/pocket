@@ -23,12 +23,12 @@ type hotstuffFIFOMempool struct {
 	hashCounterSet   map[string]uint8 // the set of hashes of messages in the mempool which tracks not only the presence but also the number of occurrences of a message in the mempool. Used to check for duplicates and potentially react to them
 }
 
-func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
+func NewHotstuffFIFOMempool(maxTotalMsgBytes uint64) *hotstuffFIFOMempool {
 	hotstuffFIFOMempool := &hotstuffFIFOMempool{
 		m:                sync.Mutex{},
 		size:             0,
 		totalMsgBytes:    0,
-		maxTotalMsgBytes: maxTransactionBytes,
+		maxTotalMsgBytes: maxTotalMsgBytes,
 		hashCounterSet:   make(map[string]uint8, hostfuffFIFOMempoolCapacity),
 	}
 

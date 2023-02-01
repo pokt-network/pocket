@@ -9,28 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// hotstuffMessageFactory returns a hotstuff message with a block with a single transaction of the given size
-//
-// it is used in tests to make sure that the mempool is correctly limiting the size of the transactions it stores
-//
-// IMPORTANT: the size of the transaction is not the size of the whole message on the wire, there's obviously some overhead in the protobuf
-func hotstuffMessageFactory(size int) *typesCons.HotstuffMessage {
-	tx := make([]byte, size)
-	for i := range tx {
-		tx[i] = 1
-	}
-	return &typesCons.HotstuffMessage{
-		Block: &types.Block{
-			Transactions: [][]byte{tx},
-		},
-	}
-}
-
 func TestMempool(t *testing.T) {
 	type args struct {
-		maxTransactionBytes uint64
-		initialMsgs         *[]*typesCons.HotstuffMessage
-		actions             *[]func(*hotstuffFIFOMempool)
+		maxTotalMsgBytes uint64
+		initialMsgs      *[]*typesCons.HotstuffMessage
+		actions          *[]func(*hotstuffFIFOMempool)
 	}
 	tests := []struct {
 		name     string
@@ -38,12 +21,12 @@ func TestMempool(t *testing.T) {
 		wantMsgs []*typesCons.HotstuffMessage
 	}{
 		{
-			// maxTransactionBytes is 20, we are starting with a message of size _at least_ 10 and adding another one of _at least_ 10
+			// maxTotalMsgBytes is 20, we are starting with a message of size _at least_ 10 and adding another one of _at least_ 10
 			// we expect the first one to be removed
 			name: "should correcly implement a FIFO set by removing the oldest message when at capacity",
 			args: args{
-				maxTransactionBytes: 20,
-				initialMsgs:         &[]*typesCons.HotstuffMessage{hotstuffMessageFactory(10)},
+				maxTotalMsgBytes: 20,
+				initialMsgs:      &[]*typesCons.HotstuffMessage{hotstuffMessageFactory(10)},
 				actions: &[]func(*hotstuffFIFOMempool){
 					func(txFIFOMempool *hotstuffFIFOMempool) {
 						txFIFOMempool.Push(hotstuffMessageFactory(10))
@@ -55,7 +38,7 @@ func TestMempool(t *testing.T) {
 		{
 			name: "looping over the mempool and Pop()ing all the messages should return an empty mempool",
 			args: args{
-				maxTransactionBytes: 1000,
+				maxTotalMsgBytes: 1000,
 				initialMsgs: &[]*typesCons.HotstuffMessage{
 					hotstuffMessageFactory(3),
 					hotstuffMessageFactory(19),
@@ -75,8 +58,8 @@ func TestMempool(t *testing.T) {
 		{
 			name: "Pop()ing a message should return it correctly",
 			args: args{
-				maxTransactionBytes: 1000,
-				initialMsgs:         &[]*typesCons.HotstuffMessage{hotstuffMessageFactory(19)},
+				maxTotalMsgBytes: 1000,
+				initialMsgs:      &[]*typesCons.HotstuffMessage{hotstuffMessageFactory(19)},
 				actions: &[]func(*hotstuffFIFOMempool){
 					func(txFIFOMempool *hotstuffFIFOMempool) {
 						msg, err := txFIFOMempool.Pop()
@@ -92,8 +75,8 @@ func TestMempool(t *testing.T) {
 		{
 			name: "Pop()ing a message from an empty mempool should return an error",
 			args: args{
-				maxTransactionBytes: 1000,
-				initialMsgs:         &[]*typesCons.HotstuffMessage{},
+				maxTotalMsgBytes: 1000,
+				initialMsgs:      &[]*typesCons.HotstuffMessage{},
 				actions: &[]func(*hotstuffFIFOMempool){
 					func(txFIFOMempool *hotstuffFIFOMempool) {
 						_, err := txFIFOMempool.Pop()
@@ -106,8 +89,8 @@ func TestMempool(t *testing.T) {
 		{
 			name: "Push()ing a message to an empty mempool should return the correct size",
 			args: args{
-				maxTransactionBytes: 1000,
-				initialMsgs:         &[]*typesCons.HotstuffMessage{},
+				maxTotalMsgBytes: 1000,
+				initialMsgs:      &[]*typesCons.HotstuffMessage{},
 				actions: &[]func(*hotstuffFIFOMempool){
 					func(txFIFOMempool *hotstuffFIFOMempool) {
 						txFIFOMempool.Push(hotstuffMessageFactory(19))
@@ -119,7 +102,7 @@ func TestMempool(t *testing.T) {
 		{
 			name: "Clear should empty the mempool",
 			args: args{
-				maxTransactionBytes: 1000,
+				maxTotalMsgBytes: 1000,
 				initialMsgs: &[]*typesCons.HotstuffMessage{
 					hotstuffMessageFactory(3),
 					hotstuffMessageFactory(19),
@@ -138,7 +121,7 @@ func TestMempool(t *testing.T) {
 		{
 			name: "GetAll should return all the messages in the mempool, in the order they were added in the first place",
 			args: args{
-				maxTransactionBytes: 1000,
+				maxTotalMsgBytes: 1000,
 				initialMsgs: &[]*typesCons.HotstuffMessage{
 					hotstuffMessageFactory(3),
 					hotstuffMessageFactory(19),
@@ -170,8 +153,8 @@ func TestMempool(t *testing.T) {
 		{
 			name: "TotalMsgBytes should return 0 for an empty mempool",
 			args: args{
-				maxTransactionBytes: 1000,
-				initialMsgs:         &[]*typesCons.HotstuffMessage{},
+				maxTotalMsgBytes: 1000,
+				initialMsgs:      &[]*typesCons.HotstuffMessage{},
 				actions: &[]func(*hotstuffFIFOMempool){
 					func(txFIFOMempool *hotstuffFIFOMempool) {
 						require.Equal(t, int(0), int(txFIFOMempool.TotalMsgBytes()), "mismatching total size")
@@ -183,8 +166,8 @@ func TestMempool(t *testing.T) {
 		{
 			name: "TotalMsgBytes should return the correct amount",
 			args: args{
-				maxTransactionBytes: 1000,
-				initialMsgs:         &[]*typesCons.HotstuffMessage{},
+				maxTotalMsgBytes: 1000,
+				initialMsgs:      &[]*typesCons.HotstuffMessage{},
 				actions: &[]func(*hotstuffFIFOMempool){
 					func(txFIFOMempool *hotstuffFIFOMempool) {
 						msg := hotstuffMessageFactory(3)
@@ -199,7 +182,7 @@ func TestMempool(t *testing.T) {
 		{
 			name: "Remove should remove the correct message",
 			args: args{
-				maxTransactionBytes: 1000,
+				maxTotalMsgBytes: 1000,
 				initialMsgs: &[]*typesCons.HotstuffMessage{
 					hotstuffMessageFactory(3),
 					hotstuffMessageFactory(19),
@@ -222,7 +205,7 @@ func TestMempool(t *testing.T) {
 		{
 			name: "Contains should return true for a message that is in the mempool and false otherwise",
 			args: args{
-				maxTransactionBytes: 1000,
+				maxTotalMsgBytes: 1000,
 				initialMsgs: &[]*typesCons.HotstuffMessage{
 					hotstuffMessageFactory(3),
 					hotstuffMessageFactory(19),
@@ -246,7 +229,7 @@ func TestMempool(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			txFIFOMempool := NewHotstuffFIFOMempool(tt.args.maxTransactionBytes)
+			txFIFOMempool := NewHotstuffFIFOMempool(tt.args.maxTotalMsgBytes)
 
 			if tt.args.initialMsgs != nil {
 				for _, item := range *tt.args.initialMsgs {
@@ -273,5 +256,22 @@ func TestMempool(t *testing.T) {
 				require.True(t, txFIFOMempool.IsEmpty(), "IsEmpty should return true when Len() is 0")
 			}
 		})
+	}
+}
+
+// hotstuffMessageFactory returns a hotstuff message with a block with a single transaction of the given size
+//
+// it is used in tests to make sure that the mempool is correctly limiting the size of the transactions it stores
+//
+// IMPORTANT: the size of the transaction is not the size of the whole message on the wire, there's obviously some overhead in the protobuf
+func hotstuffMessageFactory(size int) *typesCons.HotstuffMessage {
+	tx := make([]byte, size)
+	for i := range tx {
+		tx[i] = 1
+	}
+	return &typesCons.HotstuffMessage{
+		Block: &types.Block{
+			Transactions: [][]byte{tx},
+		},
 	}
 }
