@@ -47,6 +47,13 @@ var (
 	validators []*coreTypes.Actor
 )
 
+func getEnv(key, defaultValue string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return defaultValue
+}
+
 func init() {
 	rootCmd.AddCommand(NewDebugCommand())
 }
@@ -95,13 +102,6 @@ func runDebug(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 	}
-}
-
-func getEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
 }
 
 func promptGetInput() (string, error) {

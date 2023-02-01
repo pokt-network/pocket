@@ -4,7 +4,6 @@ Please note that this repository is under very active development and breaking c
 
 - [LFG - Development](#lfg---development)
   - [Install Dependencies](#install-dependencies)
-  - [Prepare Local Environment](#prepare-local-environment)
   - [Pocket Network CLI](#pocket-network-cli)
   - [Swagger UI](#swagger-ui)
   - [View Available Commands](#view-available-commands)
@@ -33,39 +32,43 @@ _Note to the reader: Please update this list if you found anything missing._
 Last tested by with:
 
 ```bash
-$ docker --version
-Docker version 20.10.14, build a224086
+docker --version
+# Docker version 20.10.14, build a224086
+``
 
-$ protoc --version
-libprotoc 3.19.4
+``bash
+protoc --version
+# libprotoc 3.19.4
+```
 
-$ which protoc-go-inject-tag && echo "protoc-go-inject-tag Installed"
+which protoc-go-inject-tag && echo "protoc-go-inject-tag Installed"
 /your$HOME/go/bin/protoc-go-inject-tag
 protoc-go-inject-tag Installed
 
-$ go version
+go version
 go version go1.18.1 darwin/arm64
 
-$ mockgen --version
+mockgen --version
 v1.6.0
 
-$ system_profiler SPSoftwareDataType
+system_profiler SPSoftwareDataType
 Software:
 
     System Software Overview:
 
       System Version: macOS 12.3.1 (21E258)
       Kernel Version: Darwin 21.4.0
-```
+
+````
 
 ### Prepare Local Environment
 
 Generate local files
 
 ```bash
-$ git clone git@github.com:pokt-network/pocket.git && cd pocket
-$ make develop_start
-```
+git clone git@github.com:pokt-network/pocket.git && cd pocket
+make develop_start
+````
 
 Optionally activate changelog pre-commit hook
 
@@ -112,13 +115,13 @@ make swagger-ui
 ### View Available Commands
 
 ```bash
-$ make
+make
 ```
 
 ### Running Unit Tests
 
 ```bash
-$ make test_all
+make test_all
 ```
 
 Note that there are a few tests in the library that are prone to race conditions and we are working on improving them. This can be checked with `make test_race`.
@@ -130,19 +133,19 @@ Note that there are a few tests in the library that are prone to race conditions
 1. Delete any previous docker state
 
 ```bash
-$ make docker_wipe
+make docker_wipe
 ```
 
 2. In one shell, run the 4 nodes setup:
 
 ```bash
-$ make compose_and_watch
+make compose_and_watch
 ```
 
 4. In another shell, run the development client:
 
 ```bash
-$ make client_start && make client_connect
+make client_start && make client_connect
 ```
 
 4. Check the state of each node:

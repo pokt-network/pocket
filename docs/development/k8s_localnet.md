@@ -1,24 +1,35 @@
-# LocalNet on Kubernetes <!-- omit in toc -->
+# Kubernetes LocalNet <!-- omit in toc -->
 
 This guide shows how to deploy a LocalNet using [pocket-operator](https://github.com/pokt-network/pocket-operator).
 
+- [Source Code](#source-code)
 - [Dependencies](#dependencies)
-- [Running the LocalNet](#running-the-localnet)
-- [Scaling actors on LocalNet](#scaling-actors-on-localnet)
-- [Stopping and cleaning up the resources](#stopping-and-cleaning-up-the-resources)
-- [Interaction with the LocalNet](#interaction-with-the-localnet)
-- [How does it work?](#how-does-it-work)
-- [Troubleshooting](#troubleshooting)
-- [How to change configuration files](#how-to-change-configuration-files)
+  - [Enabling Kubernetes](#enabling-kubernetes)
+- [Interacting w/ LocalNet](#interacting-w-localnet)
+  - [Scaling actors on LocalNet](#scaling-actors-on-localnet)
+  - [Stopping and cleaning up the resources](#stopping-and-cleaning-up-the-resources)
+  - [Interaction with the LocalNet](#interaction-with-the-localnet)
+  - [How does it work?](#how-does-it-work)
+  - [Troubleshooting](#troubleshooting)
+  - [How to change configuration files](#how-to-change-configuration-files)
 
-### Dependencies
+## Source Code
 
-- [tilt](https://docs.tilt.dev/install.html) - installed automatically on `make install_cli_deps` command.
-- Kubernetes cluster ([different options available](https://docs.tilt.dev/choosing_clusters.html)).
-  - `kubectl` CLI is required and should be configured to access the cluster. That should happen automatically if you're using Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc.
-  - `helm` - required to template the yaml manifests for the dependencies (such as postgres, grafana). Installation instructions: https://helm.sh/docs/intro/install/.
+## Dependencies
 
-### Running the LocalNet
+1. [tilt](https://docs.tilt.dev/install.html)
+   - Note: automatically installed when running `make install_cli_deps`
+2. `Kubernetes cluster`: [installation options](https://docs.tilt.dev/choosing_clusters.html)
+3. `kubectl`: CLI is required and should be configured to access the cluster. This should happen automatically if using Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc.
+4. `helm`: required to template the yaml manifests for the dependencies (e.g. postgres, grafana). Installation instructions available [here](https://helm.sh/docs/intro/install).
+
+### Enabling Kubernetes
+
+You may need to manually enable Kubernetes if using Docker desktop:
+
+![Docker desktop kubernetes](https://user-images.githubusercontent.com/1892194/216165581-1372e2b8-c630-4211-8ced-5ec59b129330.png)
+
+## Interacting w/ LocalNet
 
 ```bash
 make localnet_up
@@ -33,7 +44,7 @@ The developer can then view the logs of services running via:
   - Pressing `space` in the terminal where you started `tilt`
   - Going to [localhost:10350](http://localhost:10350/)
 
-![tilt UI](tilt-ui.png)
+![tilt UI](https://user-images.githubusercontent.com/1892194/216165833-b9e5a98c-87a8-4355-87c9-0420a8a598bf.png)
 
 ### Scaling actors on LocalNet
 
@@ -41,7 +52,7 @@ Once you start LocalNet, new file `localnet_config.yaml` is going to get created
 
 ### Stopping and cleaning up the resources
 
-```
+```bash
 make localnet_down
 ```
 
@@ -55,13 +66,13 @@ We provide some usefult make targets:
 
 Open a shell in the pod that has `client` cli available. It gets updated automatically whenever the code changes:
 
-```
+```bash
 make localnet_shell
 ```
 
 Open a `client debug` cli. It allows to interact with blockchain, e.g. change pace maker mode, reset to genesis, etc. It gets updated automatically whenever the code changes (though you would need to stop/start the binary to execute the new code):
 
-```
+```bash
 make localnet_client_debug
 ```
 

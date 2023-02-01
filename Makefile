@@ -5,7 +5,7 @@ CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 # IMPROVE: Add `-shuffle=on` to the `go test` command to randomize the order in which tests are run.
 
 # An easy way to turn off verbose test output for some of the test targets. For example
-#  `$ make test_persistence` by default enables verbose testing
+#  `make test_persistence` by default enables verbose testing
 #  `VERBOSE_TEST="" make test_persistence` is an easy way to run the same tests without verbose output
 VERBOSE_TEST ?= -v
 

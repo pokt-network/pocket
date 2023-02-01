@@ -22,7 +22,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 
 <!--
   The list of documents below was created by manually curating the output of the following command:
-    $ find .. -name "*.md" | grep -v -e "vendor" -e "prototype" -e "SUMMARY.md" -e "TASTE.md"
+    find .. -name "*.md" | grep -v -e "vendor" -e "prototype" -e "SUMMARY.md" -e "TASTE.md"
 -->
 
 ### Guides
