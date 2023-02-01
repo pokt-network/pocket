@@ -1,8 +1,10 @@
 package raintree
 
 import (
+	crand "crypto/rand"
 	"fmt"
 	"log"
+	"math/big"
 	"math/rand"
 	"sync"
 	"time"
@@ -17,6 +19,8 @@ import (
 	telemetry "github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
 )
+
+const maxNonce = ^uint64(0)
 
 var _ typesP2P.Network = &rainTreeNetwork{}
 var _ modules.IntegratableModule = &rainTreeNetwork{}
@@ -246,20 +250,18 @@ func (n *rainTreeNetwork) GetBus() modules.Bus {
 	return n.bus
 }
 
+// Generate cryptographically secure random nonce
 func getNonce() uint64 {
-	rand.Seed(time.Now().UTC().UnixNano())
-	return rand.Uint64()
+	max := new(big.Int)
+	max.SetUint64(maxNonce)
+	bigNonce, err := crand.Int(crand.Reader, max)
+	if err != nil {
+		// If failed to get cryptographically secure nonce use a pseudo-random nonce
+		rand.Seed(time.Now().UTC().UnixNano())
+		return rand.Uint64()
+	}
+	return bigNonce.Uint64()
 }
-
-// INVESTIGATE(olshansky): This did not generate a random nonce on every call
-
-// func getNonce() uint64 {
-// 	seed, err := cryptRand.Int(cryptRand.Reader, big.NewInt(math.MaxInt64))
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	rand.Seed(seed.Int64())
-// }
 
 func shouldSendToTarget(target target) bool {
 	return !target.isSelf
