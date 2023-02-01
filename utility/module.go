@@ -40,7 +40,7 @@ func (*utilityModule) Create(bus modules.Bus) (modules.Module, error) {
 	utilityCfg := cfg.Utility
 
 	m.config = utilityCfg
-	m.mempool = types.NewMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
+	m.mempool = types.NewTxFIFOMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
 
 	return m, nil
 }
