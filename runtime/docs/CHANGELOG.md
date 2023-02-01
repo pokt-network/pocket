@@ -7,10 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.10] - 2023-01-25
+
+- move ConnectionType enum into its own package to avoid a cyclic import between configs and defaults packages (i.e. configs -> defaults -> configs) in the resulting, generated go package
+- update makefile protogen_local target to build additional proto file and include it in the import path for runtime/configs/proto/p2p_config.proto
+- replace `P2PConfig#IsEmptyConnectionType` bool with `P2PConfig#ConnectionType` enum
+- replace `DefaultP2PIsEmptyConnectionType` bool with `DefaultP2PConnectionType` enum
+
 ## [0.0.0.9] - 2023-01-23
 
 - Updated README.md with information about node profiling
-
 ## [0.0.0.8] - 2023-01-19
 
 - Rewrite `interface{}` to `any`
