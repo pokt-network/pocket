@@ -146,7 +146,6 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 
 	// UnitTestNet configs
 	paceMakerTimeoutMsec := uint64(500) // Set a small pacemaker timeout
-	// paceMakerTimeout := time.Duration(paceMakerTimeoutMsec) * time.Millisecond
 	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
 	for _, runtimeConfig := range runtimeMgrs {
 		runtimeConfig.GetConfig().Consensus.PacemakerConfig.TimeoutMsec = paceMakerTimeoutMsec
