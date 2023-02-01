@@ -27,7 +27,7 @@ type Manager struct {
 	bus   modules.Bus
 }
 
-func NewManager(config *configs.Config, genesis *genesis.GenesisState, options ...func(*Manager)) *Manager {
+func NewManager(config *configs.Config, gen *genesis.GenesisState, options ...func(*Manager)) *Manager {
 	var mgr = new(Manager)
 	bus, err := CreateBus(mgr)
 	if err != nil {
@@ -35,7 +35,7 @@ func NewManager(config *configs.Config, genesis *genesis.GenesisState, options .
 	}
 
 	mgr.config = config
-	mgr.genesisState = genesis
+	mgr.genesisState = gen
 	mgr.clock = clock.New()
 	mgr.bus = bus
 

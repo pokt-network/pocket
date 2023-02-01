@@ -65,7 +65,9 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 		}
 	}()
 
-	resource.Expire(1200) // Tell docker to hard kill the container in 20 minutes
+	if err := resource.Expire(1200); err != nil { // Tell docker to hard kill the container in 20 minutes
+		log.Fatalf("[ERROR] Failed to set expiration on docker container: %v", err.Error())
+	}
 
 	poolRetryChan := make(chan struct{}, 1)
 	retryConnectFn := func() error {
@@ -96,4 +98,4 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 }
 
 // CLEANUP: Remove this since it's no longer used or necessary but make sure remote tests are still passing
-func CleanupTest(u utility.UtilityContext) {}
+func CleanupTest(u *utility.UtilityContext) {}
