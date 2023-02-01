@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -60,7 +59,7 @@ func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
 			hotstuffFIFOMempool.m.Lock()
 			defer hotstuffFIFOMempool.m.Unlock()
 
-			bytes, _ := proto.Marshal(item)
+			bytes, _ := codec.GetCodec().Marshal(item)
 
 			hotstuffFIFOMempool.size++
 			hotstuffFIFOMempool.totalMsgBytes += uint64(len(bytes))
@@ -69,7 +68,7 @@ func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
 			hotstuffFIFOMempool.m.Lock()
 			defer hotstuffFIFOMempool.m.Unlock()
 
-			bytes, _ := proto.Marshal(item)
+			bytes, _ := codec.GetCodec().Marshal(item)
 
 			hotstuffFIFOMempool.size--
 			hotstuffFIFOMempool.totalMsgBytes -= uint64(len(bytes))

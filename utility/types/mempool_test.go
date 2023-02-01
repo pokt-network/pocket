@@ -9,10 +9,10 @@ import (
 
 func TestMempool(t *testing.T) {
 	type args struct {
-		maxTransactionBytes uint64
-		maxTransactions     uint32
-		initialElements     *[][]byte
-		actions             *[]func(*fIFOMempool)
+		maxTxBytes uint64
+		maxTxs     uint32
+		initialTxs *[][]byte
+		actions    *[]func(*fIFOMempool)
 	}
 	tests := []struct {
 		name      string
@@ -23,32 +23,32 @@ func TestMempool(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			txFifoMempool := NewTxFIFOMempool(tt.args.maxTransactionBytes, tt.args.maxTransactions)
+			txFIFOMempool := NewTxFIFOMempool(tt.args.maxTxBytes, tt.args.maxTxs)
 
-			if tt.args.initialElements != nil {
-				for _, item := range *tt.args.initialElements {
-					txFifoMempool.AddTx(item)
+			if tt.args.initialTxs != nil {
+				for _, item := range *tt.args.initialTxs {
+					txFIFOMempool.AddTx(item)
 				}
 			}
 
 			if tt.args.actions != nil {
 				for _, action := range *tt.args.actions {
-					action(txFifoMempool)
+					action(txFIFOMempool)
 				}
 			}
 
-			require.Equal(t, len(tt.wantItems), txFifoMempool.TxCount(), "mismatching TxCount (capacity filled with elements)")
+			require.Equal(t, len(tt.wantItems), txFIFOMempool.TxCount(), "mismatching TxCount (capacity filled with elements)")
 
 			for _, wantItem := range tt.wantItems {
 				wantHash := crypto.GetHashStringFromBytes(wantItem)
-				require.True(t, txFifoMempool.Contains(wantHash), "missing element")
-				gotItem, err := txFifoMempool.PopTx()
+				require.True(t, txFIFOMempool.Contains(wantHash), "missing element")
+				gotItem, err := txFIFOMempool.PopTx()
 				require.NoError(t, err, "unexpected error while popping element")
 				require.Equal(t, wantItem, gotItem, "mismatching element")
 			}
 
-			if txFifoMempool.TxCount() == 0 {
-				require.True(t, txFifoMempool.IsEmpty(), "IsEmpty should return true when TxCount() is 0")
+			if txFIFOMempool.TxCount() == 0 {
+				require.True(t, txFIFOMempool.IsEmpty(), "IsEmpty should return true when TxCount() is 0")
 			}
 		})
 	}
