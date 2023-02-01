@@ -102,7 +102,7 @@ func parseFiles(configJSONPath, genesisJSONPath string) (config *configs.Config,
 	viper.AutomaticEnv()
 
 	if err = viper.ReadInConfig(); err != nil {
-		err = fmt.Errorf("%w while reading %s", err, configJSONPath)
+		err = fmt.Errorf("error reading %s: %w", configJSONPath, err)
 		return
 	}
 
@@ -112,7 +112,7 @@ func parseFiles(configJSONPath, genesisJSONPath string) (config *configs.Config,
 		dc.TagName = "json"
 	}
 	if err = viper.Unmarshal(&config, decoderConfig); err != nil {
-		err = fmt.Errorf("%w while unmarshalling %s", err, configJSONPath)
+		err = fmt.Errorf("error unmarshalling %s: %w", configJSONPath, err)
 		return
 	}
 
