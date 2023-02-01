@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -58,8 +59,11 @@ func (m *PrometheusTelemetryModule) Start() error {
 
 	http.Handle(m.config.Endpoint, promhttp.Handler())
 	go func() {
-		// TODO: Add timeouts
-		if err := http.ListenAndServe(m.config.Address, nil); err != nil {
+		server := &http.Server{
+			Addr:              m.config.Address,
+			ReadHeaderTimeout: 5 * time.Second,
+		}
+		if err := server.ListenAndServe(); err != nil {
 			log.Fatalf("[ERROR] Error starting http server: %v", err.Error())
 		}
 	}()
