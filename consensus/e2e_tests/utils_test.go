@@ -396,8 +396,6 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
-	//persistenceContextMock.EXPECT().
-
 	return persistenceMock
 }
 

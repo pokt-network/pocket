@@ -40,28 +40,16 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		if !m.stateSync.IsServerModEnabled() {
 			return fmt.Errorf("server module is not enabled")
 		}
-		err := m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
-		if err != nil {
-			return err
-		}
+		return m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
 	case typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE:
-		err := m.stateSync.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
-		if err != nil {
-			return err
-		}
+		return m.stateSync.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
 	case typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_REQUEST:
 		if !m.stateSync.IsServerModEnabled() {
 			return fmt.Errorf("server module is not enabled")
 		}
-		err := m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
-		if err != nil {
-			return err
-		}
+		return m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
 	case typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE:
-		err := m.stateSync.HandleGetBlockResponse(stateSyncMessage.GetGetBlockRes())
-		if err != nil {
-			return err
-		}
+		return m.stateSync.HandleGetBlockResponse(stateSyncMessage.GetGetBlockRes())
 	}
 
 	return nil

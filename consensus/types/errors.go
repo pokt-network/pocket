@@ -10,7 +10,6 @@ import (
 
 	"github.com/pokt-network/pocket/shared/codec"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // Logs and warnings
@@ -83,9 +82,8 @@ func SendingMessage(msg *HotstuffMessage, nodeId NodeId) string {
 	return fmt.Sprintf("✉️ Sending message ✉️ to %d at (height, step, round) (%d, %d, %d)", nodeId, msg.Height, msg.Step, msg.Round)
 }
 
-// TODO consider putting a better value for logs
-func SendingStateSyncMessage(msg *anypb.Any, nodeId NodeId) string {
-	return fmt.Sprintf("🔄 Sending State sync message %s to node %d 🔄", msg, nodeId)
+func SendingStateSyncMessage(msg *StateSyncMessage, nodeId string, height uint64) string {
+	return fmt.Sprintf("🔄 Sending State sync %s message ✉️ to node  %s at height: (%d)  🔄", msg.MsgType, nodeId, height)
 }
 
 func BroadcastingMessage(msg *HotstuffMessage) string {
