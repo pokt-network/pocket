@@ -14,6 +14,10 @@ import (
 	mempool "github.com/pokt-network/pocket/shared/mempool/list"
 )
 
+const (
+	hostfuffFIFOMempoolCapacity = int(1e6)
+)
+
 // TODO: index HighQC incrementally
 // TODO: expose findHighQC
 // TODO: implement iterator
@@ -28,51 +32,51 @@ type hotstuffFIFOMempool struct {
 }
 
 func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
-	hotstuffFifoMempool := &hotstuffFIFOMempool{
+	hotstuffFIFOMempool := &hotstuffFIFOMempool{
 		m:                sync.Mutex{},
 		size:             0,
 		totalMsgBytes:    0,
 		maxTotalMsgBytes: maxTransactionBytes,
 	}
 
-	hotstuffFifoMempool.g = mempool.NewGenericFIFOList(
-		int(1e6), // TODO: make this configurable
+	hotstuffFIFOMempool.g = mempool.NewGenericFIFOList(
+		hostfuffFIFOMempoolCapacity,
 		mempool.WithIndexerFn[*typesCons.HotstuffMessage](func(txBz any) string {
-			// We are implementing a list and we don't want deduplication (https://discord.com/channels/824324475256438814/997192534168182905/1067115668136284170)
+			// We are implementing a list and we don't want deduplication (https://user-images.githubusercontent.com/1892194/214911491-5ad63a0f-8197-4300-89ba-772ebd1dd0ac.png)
 			// otherwise we would hash the message and use that as the key.
 			// This is why we are using a nonce as key. In this context. Every message is unique even if it's the same
 			return getNonce()
 		}),
 		mempool.WithCustomIsOverflowingFn(func(g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) bool {
-			hotstuffFifoMempool.m.Lock()
-			defer hotstuffFifoMempool.m.Unlock()
+			hotstuffFIFOMempool.m.Lock()
+			defer hotstuffFIFOMempool.m.Unlock()
 			// we don't care about the number of messages, only the total size apparently
-			return hotstuffFifoMempool.totalMsgBytes >= hotstuffFifoMempool.maxTotalMsgBytes
+			return hotstuffFIFOMempool.totalMsgBytes >= hotstuffFIFOMempool.maxTotalMsgBytes
 		}),
 		mempool.WithOnCollision(func(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
 			// in here we could check if there is double signing...
 		}),
 		mempool.WithOnAdd(func(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
-			hotstuffFifoMempool.m.Lock()
-			defer hotstuffFifoMempool.m.Unlock()
+			hotstuffFIFOMempool.m.Lock()
+			defer hotstuffFIFOMempool.m.Unlock()
 
 			bytes, _ := proto.Marshal(item)
 
-			hotstuffFifoMempool.size++
-			hotstuffFifoMempool.totalMsgBytes += uint64(len(bytes))
+			hotstuffFIFOMempool.size++
+			hotstuffFIFOMempool.totalMsgBytes += uint64(len(bytes))
 		}),
 		mempool.WithOnRemove(func(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
-			hotstuffFifoMempool.m.Lock()
-			defer hotstuffFifoMempool.m.Unlock()
+			hotstuffFIFOMempool.m.Lock()
+			defer hotstuffFIFOMempool.m.Unlock()
 
 			bytes, _ := proto.Marshal(item)
 
-			hotstuffFifoMempool.size--
-			hotstuffFifoMempool.totalMsgBytes -= uint64(len(bytes))
+			hotstuffFIFOMempool.size--
+			hotstuffFIFOMempool.totalMsgBytes -= uint64(len(bytes))
 		}),
 	)
 
-	return hotstuffFifoMempool
+	return hotstuffFIFOMempool
 }
 
 func (mp *hotstuffFIFOMempool) Push(msg *typesCons.HotstuffMessage) error {

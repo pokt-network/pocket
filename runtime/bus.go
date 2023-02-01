@@ -100,7 +100,7 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 		}
 	}
 	telemetryWarnOnce.Do(func() {
-		log.Printf("[WARNING] telemetry module not found, make sure you call RegisterModule(), using noop telemetry module instead")
+		log.Printf("[WARNING] telemetry module not found, creating a default noop telemetry module instead")
 	})
 	// this should happen only if called from the client
 	noopModule, err := telemetry.CreateNoopTelemetryModule(m)
