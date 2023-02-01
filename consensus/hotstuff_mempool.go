@@ -50,7 +50,7 @@ func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
 		mempool.WithCustomIsOverflowingFn(func(g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) bool {
 			hotstuffFIFOMempool.m.Lock()
 			defer hotstuffFIFOMempool.m.Unlock()
-			// we don't care about the number of messages, only the total size apparently
+			// we don't care about the number of messages, only the total size
 			return hotstuffFIFOMempool.totalMsgBytes >= hotstuffFIFOMempool.maxTotalMsgBytes
 		}),
 		mempool.WithOnCollision(func(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
