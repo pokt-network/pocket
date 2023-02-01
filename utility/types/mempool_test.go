@@ -12,7 +12,7 @@ func TestMempool(t *testing.T) {
 		maxTxBytes uint64
 		maxTxs     uint32
 		initialTxs *[][]byte
-		actions    *[]func(*fIFOMempool)
+		actions    *[]func(*txFIFOMempool)
 	}
 	tests := []struct {
 		name      string

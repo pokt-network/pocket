@@ -7,9 +7,9 @@ import (
 	"github.com/pokt-network/pocket/shared/mempool"
 )
 
-var _ mempool.TXMempool = &fIFOMempool{}
+var _ mempool.TXMempool = &txFIFOMempool{}
 
-type fIFOMempool struct {
+type txFIFOMempool struct {
 	g                *mempool.GenericFIFOSet[string, []byte]
 	m                sync.Mutex
 	txCount          uint32 // current number of transactions in the mempool
@@ -18,7 +18,7 @@ type fIFOMempool struct {
 }
 
 // AddTx adds a tx to the mempool
-func (t *fIFOMempool) AddTx(tx []byte) error {
+func (t *txFIFOMempool) AddTx(tx []byte) error {
 	if err := t.g.Push(tx); err != nil {
 		return ErrDuplicateTransaction()
 	}
@@ -26,48 +26,48 @@ func (t *fIFOMempool) AddTx(tx []byte) error {
 }
 
 // Clear clears the mempool
-func (t *fIFOMempool) Clear() {
+func (t *txFIFOMempool) Clear() {
 	t.g.Clear()
 }
 
 // Contains checks if a tx is in the mempool by its hash
-func (t *fIFOMempool) Contains(hash string) bool {
+func (t *txFIFOMempool) Contains(hash string) bool {
 	return t.g.ContainsIndex(hash)
 }
 
 // IsEmpty checks if the mempool is empty
-func (t *fIFOMempool) IsEmpty() bool {
+func (t *txFIFOMempool) IsEmpty() bool {
 	return t.g.IsEmpty()
 }
 
 // PopTx pops a tx from the mempool
-func (t *fIFOMempool) PopTx() ([]byte, error) {
+func (t *txFIFOMempool) PopTx() ([]byte, error) {
 	popTx, err := t.g.Pop()
 	return []byte(popTx), NewError(-1, err.Error())
 }
 
 // RemoveTx removes a tx from the mempool
-func (t *fIFOMempool) RemoveTx(tx []byte) error {
+func (t *txFIFOMempool) RemoveTx(tx []byte) error {
 	t.g.Remove(tx)
 	return nil
 }
 
 // TxCount returns the number of txs in the mempool
-func (t *fIFOMempool) TxCount() uint32 {
+func (t *txFIFOMempool) TxCount() uint32 {
 	t.m.Lock()
 	defer t.m.Unlock()
 	return uint32(t.txCount)
 }
 
 // TxsBytesTotal returns the total size, in bytes, of all txs in the mempool
-func (t *fIFOMempool) TxsBytesTotal() uint64 {
+func (t *txFIFOMempool) TxsBytesTotal() uint64 {
 	t.m.Lock()
 	defer t.m.Unlock()
 	return t.txsBytesTotal
 }
 
-func NewTxFIFOMempool(maxTransactionBytes uint64, maxTransactions uint32) *fIFOMempool {
-	txFIFOMempool := &fIFOMempool{
+func NewTxFIFOMempool(maxTransactionBytes uint64, maxTransactions uint32) *txFIFOMempool {
+	txFIFOMempool := &txFIFOMempool{
 		m:                sync.Mutex{},
 		txCount:          0,
 		txsBytesTotal:    0,
