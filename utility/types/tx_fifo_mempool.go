@@ -28,6 +28,10 @@ func (t *txFIFOMempool) AddTx(tx []byte) error {
 // Clear clears the mempool
 func (t *txFIFOMempool) Clear() {
 	t.g.Clear()
+	t.m.Lock()
+	defer t.m.Unlock()
+	t.txCount = 0
+	t.txsBytesTotal = 0
 }
 
 // Contains checks if a tx is in the mempool by its hash
@@ -81,7 +85,7 @@ func NewTxFIFOMempool(maxTxsBytesTotal uint64, maxTxs uint32) *txFIFOMempool {
 		mempool.WithCustomIsOverflowingFn(func(g *mempool.GenericFIFOSet[string, []byte]) bool {
 			txFIFOMempool.m.Lock()
 			defer txFIFOMempool.m.Unlock()
-			return txFIFOMempool.txCount >= maxTxs || txFIFOMempool.txsBytesTotal >= txFIFOMempool.maxTxsBytesTotal
+			return txFIFOMempool.txCount > maxTxs || txFIFOMempool.txsBytesTotal > txFIFOMempool.maxTxsBytesTotal
 		}),
 		mempool.WithOnCollision(func(item []byte, g *mempool.GenericFIFOSet[string, []byte]) error {
 			return ErrDuplicateTransaction()

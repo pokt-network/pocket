@@ -60,16 +60,17 @@ func (g *GenericFIFOSet[TIdx, TData]) Push(item TData) error {
 		front := g.queue.Front()
 		delete(g.set, g.indexerFn(front.Value.(TData)))
 		g.queue.Remove(front)
+		g.onRemove(item, g)
 	}
 	return nil
 }
 
-func (g *GenericFIFOSet[TIdx, TData]) Pop() (TData, error) {
+func (g *GenericFIFOSet[TIdx, TData]) Pop() (v TData, err error) {
 	g.m.Lock()
 	defer g.m.Unlock()
 
 	if g.queue.Len() == 0 {
-		return any(nil).(TData), fmt.Errorf("empty set")
+		return v, fmt.Errorf("empty set")
 	}
 
 	front := g.queue.Front()
@@ -90,6 +91,7 @@ func (g *GenericFIFOSet[TIdx, TData]) Remove(item TData) {
 		for e := g.queue.Front(); e != nil; e = e.Next() {
 			if g.indexerFn(e.Value.(TData)) == itemIndex {
 				g.queue.Remove(e)
+				g.onRemove(item, g)
 				break
 			}
 		}
