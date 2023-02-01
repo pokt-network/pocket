@@ -510,7 +510,6 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 
 			actors := getAllTestingActors(t, &ctx, actorType)
 			for _, actor := range actors {
-				// require.Equal(t, int32(typesUtil.StakedStatus), actor.GetStatus(), "wrong starting status")
 				addrBz, er := hex.DecodeString(actor.GetAddress())
 				require.NoError(t, er)
 				er = ctx.SetActorPauseHeight(actorType, addrBz, 1)

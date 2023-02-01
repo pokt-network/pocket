@@ -22,7 +22,7 @@ var (
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 
-	tx, startingBalance, _, signer := newTestingTransaction(t, ctx)
+	tx, startingBalance, _, signer := newTestingTransaction(t, &ctx)
 	_, signerString, err := ctx.AnteHandleMessage(tx)
 	require.NoError(t, err)
 	require.Equal(t, signer.Address().String(), signerString)
@@ -40,7 +40,7 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 
-	tx, startingBalance, amount, signer := newTestingTransaction(t, ctx)
+	tx, startingBalance, amount, signer := newTestingTransaction(t, &ctx)
 	txResult, err := ctx.ApplyTransaction(0, tx)
 	require.NoError(t, err)
 	require.Equal(t, int32(0), txResult.GetResultCode())
@@ -61,7 +61,7 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 	mockBusInTestModules(t)
 
 	ctx := NewTestingUtilityContext(t, 0)
-	tx, _, _, _ := newTestingTransaction(t, ctx)
+	tx, _, _, _ := newTestingTransaction(t, &ctx)
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
@@ -99,7 +99,7 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	mockBusInTestModules(t)
 
 	ctx := NewTestingUtilityContext(t, 0)
-	tx, _, _, _ := newTestingTransaction(t, ctx)
+	tx, _, _, _ := newTestingTransaction(t, &ctx)
 
 	proposer := getFirstActor(t, &ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
 	txBz, err := tx.Bytes()
@@ -145,7 +145,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	test_artifacts.CleanupTest(&ctx)
 }
 
-func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
+func newTestingTransaction(t *testing.T, ctx *utility.UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
 	amountSent = new(big.Int).Set(defaultSendAmount)
 	startingBalance = new(big.Int).Set(test_artifacts.DefaultAccountAmount)
 
