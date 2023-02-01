@@ -140,13 +140,7 @@ func (p *PostgresContext) updateMerkleTrees() (string, error) {
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
 		// Actor Merkle Trees
-		case appMerkleTree:
-			fallthrough
-		case valMerkleTree:
-			fallthrough
-		case fishMerkleTree:
-			fallthrough
-		case serviceNodeMerkleTree:
+		case appMerkleTree, valMerkleTree, fishMerkleTree, serviceNodeMerkleTree:
 			actorType, ok := merkleTreeToActorTypeName[treeType]
 			if !ok {
 				return "", fmt.Errorf("no actor type found for merkle tree: %v\n", treeType)
