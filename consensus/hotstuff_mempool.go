@@ -11,15 +11,16 @@ import (
 )
 
 const (
-	hostfuffFIFOMempoolCapacity = int(1e6)
+	hostfuffFIFOMempoolCapacity = int(1e5)
 )
 
 type hotstuffFIFOMempool struct {
 	g                *mempool.GenericFIFOList[*typesCons.HotstuffMessage]
 	m                sync.Mutex
-	size             uint32 // current number of transactions in the mempool
-	totalMsgBytes    uint64 // current sum of all transactions' sizes (in bytes)
-	maxTotalMsgBytes uint64 // maximum total size of all txs allowed in the mempool
+	size             uint32           // current number of transactions in the mempool
+	totalMsgBytes    uint64           // current sum of all transactions' sizes (in bytes)
+	maxTotalMsgBytes uint64           // maximum total size of all txs allowed in the mempool
+	hashCounterSet   map[string]uint8 // the set of hashes of messages in the mempool which tracks not only the presence but also the number of occurrences of a message in the mempool. Used to check for duplicates and potentially react to them
 }
 
 func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
@@ -28,6 +29,7 @@ func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
 		size:             0,
 		totalMsgBytes:    0,
 		maxTotalMsgBytes: maxTransactionBytes,
+		hashCounterSet:   make(map[string]uint8, hostfuffFIFOMempoolCapacity),
 	}
 
 	hotstuffFIFOMempool.g = mempool.NewGenericFIFOList(
@@ -44,12 +46,24 @@ func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
 		mempool.WithOnAdd(func(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
 			hotstuffFIFOMempool.m.Lock()
 			defer hotstuffFIFOMempool.m.Unlock()
+			hash := hashMsg(item)
+			if _, ok := hotstuffFIFOMempool.hashCounterSet[hash]; ok {
+				onDuplicateMessageDetected(item, g)
+			}
+			hotstuffFIFOMempool.hashCounterSet[hash]++
 
 			incrementCounters(item, hotstuffFIFOMempool)
 		}),
 		mempool.WithOnRemove(func(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
 			hotstuffFIFOMempool.m.Lock()
 			defer hotstuffFIFOMempool.m.Unlock()
+			hash := hashMsg(item)
+			if prevHashCount, ok := hotstuffFIFOMempool.hashCounterSet[hash]; ok {
+				hotstuffFIFOMempool.hashCounterSet[hash]--
+				if prevHashCount == 1 {
+					delete(hotstuffFIFOMempool.hashCounterSet, hash)
+				}
+			}
 
 			decrementCounters(item, hotstuffFIFOMempool)
 		}),
@@ -100,14 +114,11 @@ func (mp *hotstuffFIFOMempool) GetAll() []*typesCons.HotstuffMessage {
 }
 
 func (mp *hotstuffFIFOMempool) Contains(msg *typesCons.HotstuffMessage) bool {
-	// since messages are NOT indexed by hash, we need to iterate over all of them
-	msgHash := hashMsg(msg)
-	for _, m := range mp.GetAll() {
-		if hashMsg(m) == msgHash {
-			return true
-		}
-	}
-	return false
+	mp.m.Lock()
+	defer mp.m.Unlock()
+
+	_, ok := mp.hashCounterSet[hashMsg(msg)]
+	return ok
 }
 
 func incrementCounters(item *typesCons.HotstuffMessage, hotstuffFIFOMempool *hotstuffFIFOMempool) {
@@ -128,4 +139,9 @@ func hashMsg(msg *typesCons.HotstuffMessage) string {
 		log.Fatalf("could not marshal message: %v", err)
 	}
 	return crypto.GetHashStringFromBytes(msgBytes)
+}
+
+func onDuplicateMessageDetected(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
+	// TODO(#432): Potential place to check for double signing
+	log.Printf("duplicate message detected - hash: %s", hashMsg(item))
 }
