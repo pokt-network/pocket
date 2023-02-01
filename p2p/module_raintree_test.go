@@ -262,7 +262,6 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		for _, peer := range p2pMod.network.GetAddrBook() {
 			peer.Dialer = connMocks[peer.ServiceUrl]
 		}
-		defer p2pStop(t, p2pMod)
 	}
 
 	// Wait for completion
@@ -272,6 +271,12 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
 	require.NoError(t, p2pMod.Broadcast(p))
+
+	// Stop all p2p modules outside of loop
+	for _, p2pMod := range p2pModules {
+		err := p2pMod.Stop()
+		require.NoError(t, err)
+	}
 }
 
 func extractNumericId(valId string) int64 {
@@ -284,9 +289,4 @@ func extractNumericId(valId string) int64 {
 	}
 
 	return num
-}
-
-func p2pStop(t *testing.T, p2pMod *p2pModule) {
-	err := p2pMod.Stop()
-	require.NoError(t, err)
 }
