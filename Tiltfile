@@ -14,7 +14,7 @@ localnet_config = {}
 localnet_config.update(localnet_config_defaults)
 localnet_config.update(localnet_config_file)
 
-if read_yaml('localnet_config.yaml') != localnet_config:
+if localnet_config_file != localnet_config:
     print('Updating localnet_config.yaml')
     local('cat - > localnet_config.yaml', stdin=encode_yaml(localnet_config))
 
