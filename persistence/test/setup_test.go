@@ -119,17 +119,16 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	bus, err := runtime.CreateBus(runtimeMgr)
 	if err != nil {
 		log.Printf("Error creating bus: %s", err)
+		return nil
 	}
 
 	persistenceMod, err := persistence.Create(bus)
 	if err != nil {
 		log.Printf("Error creating persistence module: %s", err)
+		return nil
 	}
 
-	if err != nil {
-		return persistenceMod.(modules.PersistenceModule)
-	}
-	return nil
+	return persistenceMod.(modules.PersistenceModule)
 }
 
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
