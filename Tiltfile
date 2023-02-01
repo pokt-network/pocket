@@ -13,6 +13,7 @@ localnet_config = {}
 localnet_config.update(localnet_config_defaults)
 localnet_config.update(localnet_config_file)
 
+# Create a default config file if it does not exist
 if localnet_config_file != localnet_config:
     print("Updating localnet_config.yaml")
     local("cat - > localnet_config.yaml", stdin=encode_yaml(localnet_config))
@@ -100,7 +101,7 @@ COPY bin/client-linux /usr/local/bin/client
     live_update=[sync("bin/client-linux", "/usr/local/bin/client")],
 )
 
-# TODO(@okdas): https://github.com/tilt-dev/tilt/issues/3048
+# TODO: https://github.com/tilt-dev/tilt/issues/3048
 # Pushes localnet manifests to the cluster.
 k8s_yaml(
     [

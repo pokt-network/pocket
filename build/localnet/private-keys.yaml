@@ -8,16 +8,16 @@ metadata:
   namespace: default
 type: Opaque
 stringData:
-  # OLD keys for reference
+  # DEPRECATE: Delete this when enough time has passed; OLD keys kept around for reference
   # val1: "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a" # 113fdb095d42d6e09327ab5b8df13fd8197a1eaf
   # val2: "b37d3ba2f232060c41ba1177fea6008d885fcccad6826d64ee7d49f94d1dbc49a8b6be75d7551da093f788f7286c3a9cb885cfc8e52710eac5f1d5e5b4bf19b2" # 3f52e08c4b3b65ab7cf098d77df5bf8cedcf5f99
   # val3: "5db3e9d97d04d6d70359de924bb02039c602080d6bf01a692bad31ad5ef93524c16043323c83ffd901a8bf7d73543814b8655aa4695f7bfb49d01926fc161cdb" # 67eb3f0a50ae459fecf666be0e93176e92441317
   # val4: "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4" # 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a
 
-  # New keysthat start with a number that corresponds to a number of a validator. First two letters after the digits correspond to a type of actor. aa, being the first actor transitioning to this, is the validator.
+  # New keys that start with a number that corresponds to a number of a validator. First two letters after the digits correspond to a type of actor. aa, being the first actor transitioning to this, is the validator.
   # "000": 399541b5b074b4caf55c7801220606c485d48123f3148263852a0034c28b2ef9096c508491a9f7c22c48e7799abef324a9e55092818bb9e0f9964fb293995749 # 000aa963d447b3936bb800200cf04f2a6ed4f46e
   # "001": 7e1cd00241f5a743dc1a42919ef56b0d32d8e868eae216c03d44c52faa415ef2f48654c9bffccd7a858dc5577551ff650f8df9f1ec5bb668f339f594f2380ba1 # 001aaba8fa5409efe6cd881649743bc7576acd46
-  # "002": ba61ca1521b3ec82639f3209258482222d85d4585f6edff67634b7107f004337caa495ca5958ff1ea9361716da270f5a03ca7e9cb85f955393e97264880d2c80 # 002aad32c4e0924b1182370cddb0b3071bb84a86
+  # "002": ba61ca1521b3ec82639f3209258482222d85d4585f6edff67634b7107f004337caa495ca5958ff1ea9361716da270f5a03ca7e9cb85f95}5393e97264880d2c80 # 002aad32c4e0924b1182370cddb0b3071bb84a86
   # "003": 02e31dc1242d2350d1dd463672f6b6c82881db0870705ea004cb5f8afeb52996130584fbf284bf68010b643a868b89dbbee68dc72d4e8f5e6c9bb9b48df67cd4 # 003aabccc8c3938c772e783ffdd9b9fabdc118cd
   # "004": d936becdefdc21490dd1d1789c1887676ef2b17139526a68c79cfa66075fad2df511f0037512e802a584a1ef714790013f3db8d79e5f62cc2cae6902e1d7410b # 004aaa1375c252eecc1e8737b2062b967532b07f
 

@@ -4,11 +4,14 @@ Please note that this repository is under very active development and breaking c
 
 - [LFG - Development](#lfg---development)
   - [Install Dependencies](#install-dependencies)
+  - [Prepare Local Environment](#prepare-local-environment)
   - [Pocket Network CLI](#pocket-network-cli)
   - [Swagger UI](#swagger-ui)
   - [View Available Commands](#view-available-commands)
   - [Running Unit Tests](#running-unit-tests)
   - [Running LocalNet](#running-localnet)
+    - [\[Advanced\] Kubernetes](#advanced-kubernetes)
+    - [\[Basic\] Docker Compose](#basic-docker-compose)
   - [Profiling](#profiling)
 - [Code Organization](#code-organization)
   - [Linters](#linters)
@@ -34,32 +37,30 @@ Last tested by with:
 ```bash
 docker --version
 # Docker version 20.10.14, build a224086
-``
 
-``bash
 protoc --version
 # libprotoc 3.19.4
-```
 
 which protoc-go-inject-tag && echo "protoc-go-inject-tag Installed"
-/your$HOME/go/bin/protoc-go-inject-tag
-protoc-go-inject-tag Installed
+
+# /your$HOME/go/bin/protoc-go-inject-tag
+# protoc-go-inject-tag Installed
 
 go version
-go version go1.18.1 darwin/arm64
+# go version go1.18.1 darwin/arm64
 
 mockgen --version
-v1.6.0
+# v1.6.0
 
 system_profiler SPSoftwareDataType
-Software:
+# Software:
+#
+#     System Software Overview:
+#
+#       System Version: macOS 12.3.1 (21E258)
+#       Kernel Version: Darwin 21.4.0
 
-    System Software Overview:
-
-      System Version: macOS 12.3.1 (21E258)
-      Kernel Version: Darwin 21.4.0
-
-````
+```
 
 ### Prepare Local Environment
 
@@ -68,7 +69,7 @@ Generate local files
 ```bash
 git clone git@github.com:pokt-network/pocket.git && cd pocket
 make develop_start
-````
+```
 
 Optionally activate changelog pre-commit hook
 
@@ -128,7 +129,15 @@ Note that there are a few tests in the library that are prone to race conditions
 
 ### Running LocalNet
 
-![V1 Localnet Demo](./v1_localnet.gif)
+At the time of writing, we have two basic approaches to running a LocalNet. We suggest getting started with the `Docker Compose` approach outlined below before moving to the advanced Kubernetes configuration.
+
+#### [Advanced] Kubernetes
+
+The full documentation on running a LocalNet on kubernetes can be found [here](../../build/localnet/).
+
+#### [Basic] Docker Compose
+
+![V1 Localnet Demo](https://user-images.githubusercontent.com/1892194/216177846-9ec7734b-8e78-4641-9612-def6e1689fde.gif)
 
 1. Delete any previous docker state
 
