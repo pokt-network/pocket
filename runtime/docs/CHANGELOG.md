@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.11] - 2023-02-01
+
+- Updated to display the warning message about the telemetry module not registered only once
+
 ## [0.0.0.10] - 2023-01-25
 
 - move ConnectionType enum into its own package to avoid a cyclic import between configs and defaults packages (i.e. configs -> defaults -> configs) in the resulting, generated go package
