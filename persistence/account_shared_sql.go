@@ -67,7 +67,7 @@ func (p *PostgresContext) getAccountsUpdated(accountType types.ProtocolAccountSc
 
 	for rows.Next() {
 		acc := new(coreTypes.Account)
-		if err = rows.Scan(&acc.Address, &acc.Amount); err != nil {
+		if err := rows.Scan(&acc.Address, &acc.Amount); err != nil {
 			return nil, err
 		}
 		accounts = append(accounts, acc)

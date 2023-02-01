@@ -54,7 +54,7 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema
 	addrs := make([][]byte, 0)
 	for rows.Next() {
 		var addr string
-		if err = rows.Scan(&addr); err != nil {
+		if err := rows.Scan(&addr); err != nil {
 			return nil, err
 		}
 		addrBz, err := hex.DecodeString(addr)
