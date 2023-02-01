@@ -27,7 +27,10 @@ func FuzzTxIndexer(f *testing.F) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer indexer.Close()
+	defer func(f *testing.F, indexer TxIndexer) {
+		err := indexer.Close()
+		require.NoError(f, err)
+	}(f, indexer)
 
 	f.Fuzz(func(t *testing.T, op string) {
 		// seed random
@@ -86,7 +89,7 @@ func FuzzTxIndexer(f *testing.F) {
 
 func TestGetByHash(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
-	defer txIndexer.Close()
+	defer closeIndexer(t, txIndexer)
 	// setup 2 transactions
 	txResult := NewTestingTransactionResult(t, 0, 0)
 	require.NoError(t, err)
@@ -113,7 +116,7 @@ func TestGetByHash(t *testing.T) {
 
 func TestGetByHeight(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
-	defer txIndexer.Close()
+	defer closeIndexer(t, txIndexer)
 	// setup 3 transactions
 	txResult := NewTestingTransactionResult(t, 0, 0)
 	require.NoError(t, err)
@@ -141,7 +144,7 @@ func TestGetByHeight(t *testing.T) {
 
 func TestGetBySender(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
-	defer txIndexer.Close()
+	defer closeIndexer(t, txIndexer)
 	// setup transaction
 	txResult := NewTestingTransactionResult(t, 1, 0)
 	require.NoError(t, err)
@@ -164,7 +167,7 @@ func TestGetBySender(t *testing.T) {
 
 func TestGetByRecipient(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
-	defer txIndexer.Close()
+	defer closeIndexer(t, txIndexer)
 	// setup tx
 	txResult := NewTestingTransactionResult(t, 1, 0)
 	require.NoError(t, err)
@@ -265,4 +268,9 @@ func randLetterBytes() []byte {
 	randBytes := make([]byte, 50)
 	rand.Read(randBytes)
 	return randBytes
+}
+
+func closeIndexer(t *testing.T, indexer TxIndexer) {
+	err := indexer.Close()
+	require.NoError(t, err)
 }

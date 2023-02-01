@@ -144,11 +144,7 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account
 	}
 	for rows.Next() {
 		acc := new(coreTypes.Account)
-		if err = rows.Scan(&acc.Address, &acc.Amount, &height); err != nil {
-			return nil, err
-		}
-		// acc.Address, err = address
-		if err != nil {
+		if err := rows.Scan(&acc.Address, &acc.Amount, &height); err != nil {
 			return nil, err
 		}
 		accs = append(accs, acc)
@@ -165,7 +161,7 @@ func (p PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, e
 	}
 	for rows.Next() {
 		pool := new(coreTypes.Account)
-		if err = rows.Scan(&pool.Address, &pool.Amount, &height); err != nil {
+		if err := rows.Scan(&pool.Address, &pool.Amount, &height); err != nil {
 			return nil, err
 		}
 		accs = append(accs, pool)
