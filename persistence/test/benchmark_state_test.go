@@ -132,8 +132,6 @@ MethodLoop:
 				v = reflect.ValueOf(rand.Int63())
 			case reflect.Int:
 				v = reflect.ValueOf(rand.Int())
-			case reflect.Pointer:
-				fallthrough
 			default:
 				continue MethodLoop // IMPROVE: Other types not supported yet
 			}
