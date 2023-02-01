@@ -53,7 +53,7 @@ func NewHotstuffFIFOMempool(maxTransactionBytes uint64) *hotstuffFIFOMempool {
 			return hotstuffFIFOMempool.totalMsgBytes >= hotstuffFIFOMempool.maxTotalMsgBytes
 		}),
 		mempool.WithOnCollision(func(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
-			// in here we could check if there is double signing...
+			// TODO(#432): Potential place to check for double signing
 		}),
 		mempool.WithOnAdd(func(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
 			hotstuffFIFOMempool.m.Lock()
