@@ -190,7 +190,7 @@ func parseGovProto() (govParamMetadataMap map[string]govParamMetadata) {
 	return govParamMetadataMap
 }
 
-func extractStructTag(structTag string, key string) string {
+func extractStructTag(structTag, key string) string {
 	for len(structTag) > 0 {
 		i := strings.IndexByte(structTag, ',')
 		if i < 0 { // not found
