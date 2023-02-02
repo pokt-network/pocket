@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.5] - 2023-02-02
+
+### Added
+
+- Create `Keybase` interface to handle CRUD operations for `KeyPairs` with a `BadgerDB` backend
+- Add logic to create, import, export, list, delete and update (passphrase) key pairs
+- Add logic to sign and verify arbitrary messages
+- Add unit tests for the keybase
+
 ## [0.0.0.4] - 2023-01-10
 
 - The `client` (i.e. CLI) no longer instantiates a `P2P` module along with a bus of optional modules. Instead, it instantiates a `client-only` `P2P` module that is disconnected from consensus and persistence. Interactions with the persistence & consensus layer happen via RPC.
