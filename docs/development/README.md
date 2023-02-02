@@ -18,6 +18,7 @@ Please note that this repository is under very active development and breaking c
     - [VSCode Integration](#vscode-integration)
     - [Configuration](#configuration)
     - [Custom linters](#custom-linters)
+- [Neo4j](#neo4j)
 
 ## LFG - Development
 
@@ -271,3 +272,9 @@ The official documentation includes a list of different linters and their config
 We can write custom linters using [`go-ruleguard`](https://go-ruleguard.github.io/). The rules are located in the [`build/linters`](../../build/linters) directory. The rules are written in the [Ruleguard DSL](https://github.com/quasilyte/go-ruleguard/blob/master/_docs/dsl.md), if you've never worked with ruleguard in the past, it makes sense to go through [introduction article](https://quasilyte.dev/blog/post/ruleguard/) and [Ruleguard by example tour](https://go-ruleguard.github.io/by-example/).
 
 Ruleguard is run via `gocritic` linter which is a part of `golangci-lint`, so if you wish to change configuration or debug a particular rule, you can modify the `.golangci.yml` file.
+
+## Neo4j
+
+1. Visit http://localhost:7474/browser/
+2. Click Connect
+3. `MATCH (n) RETURN n LIMIT 100`

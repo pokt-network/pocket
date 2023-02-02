@@ -15,9 +15,10 @@ enum DebugMessageAction {
 	DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE = 4; // toggle between manual and automatic
 
 	DEBUG_SHOW_LATEST_BLOCK_IN_STORE = 5;
+	DEBUG_EXPORT_TO_NEO = 6; // NOTE_TO_REVIEWER: changing number does not matter at this stage in the project
 
-	DEBUG_PERSISTENCE_CLEAR_STATE = 6;
-	DEBUG_PERSISTENCE_RESET_TO_GENESIS = 7;
+	DEBUG_PERSISTENCE_CLEAR_STATE = 7;
+	DEBUG_PERSISTENCE_RESET_TO_GENESIS = 8;
 }
 
 message DebugMessage {

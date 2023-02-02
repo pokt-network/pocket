@@ -24,6 +24,7 @@ const (
 	PromptTriggerNextView        string = "TriggerNextView"
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
+	PromptExportToNeo            string = "PromptExportToNeo"
 
 	defaultConfigPath  = "build/config/config1.json"
 	defaultGenesisPath = "build/config/genesis.json"
@@ -39,6 +40,7 @@ var (
 		PromptTriggerNextView,
 		PromptTogglePacemakerMode,
 		PromptShowLatestBlockInStore,
+		PromptExportToNeo,
 	}
 
 	// validators holds the list of the validators at genesis time so that we can use it to create a debug address book provider.
@@ -147,6 +149,12 @@ func handleSelect(selection string) {
 	case PromptShowLatestBlockInStore:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
+			Message: nil,
+		}
+		sendDebugMessage(m)
+	case PromptExportToNeo:
+		m := &messaging.DebugMessage{
+			Action:  messaging.DebugMessageAction_DEBUG_EXPORT_TO_NEO,
 			Message: nil,
 		}
 		sendDebugMessage(m)

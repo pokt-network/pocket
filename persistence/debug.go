@@ -1,11 +1,14 @@
 package persistence
 
 import (
+	"context"
 	"crypto/sha256"
 	"log"
 	"runtime/debug"
 
 	"github.com/celestiaorg/smt"
+	"github.com/mindstand/gogm/v2"
+	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -23,13 +26,18 @@ var nonActorClearFunctions = []func() string{
 
 func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMessage) error {
 	switch debugMessage.Action {
+	// Prints the block with the largest height from the KV store
 	case messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
-		m.showLatestBlockInStore(debugMessage)
+		return m.showLatestBlockInStore(debugMessage)
+
+	// Prints the block with the largest height from the KV store
+	case messaging.DebugMessageAction_DEBUG_EXPORT_TO_NEO:
+		return m.exportToNeo(debugMessage)
+
 	// Clears all the state (SQL DB, KV Stores, Trees, etc) to nothing
 	case messaging.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE:
-		if err := m.clearAllState(debugMessage); err != nil {
-			return err
-		}
+		return m.clearAllState(debugMessage)
+
 	// Resets all the state (SQL DB, KV Stores, Trees, etc) to the tate specified in the genesis file provided
 	case messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS:
 		if err := m.clearAllState(debugMessage); err != nil {
@@ -37,28 +45,194 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMess
 		}
 		g := m.genesisState
 		m.populateGenesisState(g) // fatal if there's an error
+
+	// Not handled yet
 	default:
 		log.Printf("Debug message not handled by persistence module: %s \n", debugMessage.Message)
 	}
+
 	return nil
 }
 
-func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) {
+func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) error {
 	// TODO: Add an iterator to the `kvstore` and use that instead
 	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1
 	blockBytes, err := m.GetBlockStore().Get(heightToBytes(int64(height)))
 	if err != nil {
 		log.Printf("Error getting block %d from block store: %s \n", height, err)
-		return
+		return err
 	}
 
 	block := &coreTypes.Block{}
 	if err := codec.GetCodec().Unmarshal(blockBytes, block); err != nil {
 		log.Printf("Error decoding block %d from block store: %s \n", height, err)
-		return
+		return err
 	}
 
 	log.Printf("Block at height %d: %+v \n", height, block)
+
+	return nil
+}
+
+// func getNodeData(network p2p_types.Network) (actor []*types.ActorNeo) {
+// 	for _, networkModule := range network.GetAddrBook() {
+// 		conn, err := net.DialTCP("tcp", nil, networkModule.DebugAddr)
+// 		if err != nil {
+// 			log.Println("Error connecting to peer debug port: ", err)
+// 			continue
+// 		}
+// 		defer conn.Close()
+
+// 		data, err := ioutil.ReadAll(conn)
+// 		if err != nil {
+// 			log.Println("Error reading from conn: ", err)
+// 			return
+// 		}
+
+// 		var buff = bytes.NewBuffer(data)
+// 		dec := gob.NewDecoder(buff)
+// 		consensusNodeState := consensus_types.Actor{}
+// 		if err = dec.Decode(&consensusNodeState); err != nil {
+// 			log.Println("[ERROR] Error decoding: ", err)
+// 		}
+
+// 		node_data = append(node_data, &consensusNodeState)
+// 	}
+// 	return
+// }
+
+// A helper to clear the DB from scratch
+func dropAllNeo() {
+	driver, err := neo4j.NewDriver("bolt://neo4j:7687", neo4j.BasicAuth("root", "", ""), func(c *neo4j.Config) { c.Encrypted = false })
+	if err != nil {
+		log.Panic(err)
+	}
+	defer driver.Close()
+
+	session, err := driver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	if err != nil {
+		log.Panic(err)
+	}
+	defer session.Close()
+
+	// MATCH (n:Actor) RETURN n LIMIT 100
+	res, err := session.Run("MATCH (n:NeoPool) DETACH DELETE n", map[string]interface{}{})
+	if err != nil {
+		log.Panic(err)
+	}
+	log.Println(res)
+
+	res, err = session.Run("MATCH (n:NeoActor) DETACH DELETE n", map[string]interface{}{})
+	if err != nil {
+		log.Panic(err)
+	}
+	log.Println(res)
+
+	res, err = session.Run("MATCH (n:NeoAccount) DETACH DELETE n", map[string]interface{}{})
+	if err != nil {
+		log.Panic(err)
+	}
+	log.Println(res)
+}
+
+// See https://github.com/mindstand/gogm?ref=golangrepo.com as a reference
+func (m *persistenceModule) exportToNeo(_ *messaging.DebugMessage) error {
+	config := gogm.Config{
+		Host:     "neo4j",
+		Port:     7687,
+		Protocol: "bolt", // {neo4j neo4j+s, neo4j+ssc, bolt, bolt+s and bolt+ssc}
+		Username: "neo4j",
+		// Password:           "",
+		PoolSize: 50,
+		// IndexStrategy:      gogm.VALIDATE_INDEX, // {VALIDATE_INDEX, ASSERT_INDEX, IGNORE_INDEX}
+		IndexStrategy:      gogm.IGNORE_INDEX, // {VALIDATE_INDEX, ASSERT_INDEX, IGNORE_INDEX}
+		TargetDbs:          nil,
+		Logger:             gogm.GetDefaultLogger(),
+		LogLevel:           "DEBUG",
+		EnableDriverLogs:   false,
+		EnableLogParams:    false,
+		OpentracingEnabled: false,
+	}
+
+	_gogm, err := gogm.New(&config, gogm.DefaultPrimaryKeyStrategy, &coreTypes.NeoActor{}, &coreTypes.NeoAccount{}, &coreTypes.NeoPool{})
+	if err != nil {
+		return err
+	}
+
+	session, err := _gogm.NewSessionV2(gogm.SessionConfig{AccessMode: gogm.AccessModeWrite})
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	readCtx, err := m.NewReadContext(-1)
+	if err != nil {
+		return err
+	}
+
+	latestHeight, err := readCtx.GetLatestBlockHeight()
+	if err != nil {
+		return err
+	}
+
+	allActors, err := readCtx.GetAllStakedActors(int64(latestHeight))
+	if err != nil {
+		return err
+	}
+
+	allPools, err := readCtx.GetAllPools(int64(latestHeight))
+	if err != nil {
+		return err
+	}
+
+	allAccounts, err := readCtx.GetAllAccounts(int64(latestHeight))
+	if err != nil {
+		return err
+	}
+
+	// Drop all existing nodes in the neo4j DB
+	dropAllNeo()
+
+	sessionCtx := context.Background()
+	for _, actor := range allActors {
+		neoActor := &coreTypes.NeoActor{
+			ActorType: actor.ActorType.GetNameShort(),
+			Address:   actor.Address,
+			// PublicKey: actor.PublicKey,
+			// Chains:          actor.Chains,
+			// GenericParam:    actor.GenericParam,
+			StakedAmount: actor.StakedAmount,
+			// PausedHeight:    actor.PausedHeight,
+			// UnstakingHeight: actor.UnstakingHeight,
+			// Output:          actor.Output,
+		}
+
+		if err = session.Save(sessionCtx, neoActor); err != nil {
+			return err
+		}
+	}
+
+	for _, pool := range allPools {
+		neoPool := &coreTypes.NeoPool{
+			Name:   pool.Address,
+			Amount: pool.Amount,
+		}
+		if err = session.Save(sessionCtx, neoPool); err != nil {
+			return err
+		}
+	}
+
+	for _, account := range allAccounts {
+		neoAccount := &coreTypes.NeoAccount{
+			Address: account.Address,
+			Amount:  account.Amount,
+		}
+		if err = session.Save(sessionCtx, neoAccount); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // TECHDEBT: Make sure this is atomic

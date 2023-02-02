@@ -195,7 +195,7 @@ docker_wipe_nodes: docker_check prompt_user db_drop ## [WARNING] Remove all the 
 
 .PHONY: monitoring_start
 monitoring_start: docker_check ## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
-	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d grafana loki vm
+	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d grafana loki vm neo4j
 
 .PHONY: docker_loki_install
 docker_loki_install: docker_check ## Installs the loki docker driver
@@ -253,6 +253,8 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 	$(PROTOC_SHARED) -I=./runtime/genesis/proto  --go_out=./runtime/genesis ./runtime/genesis/proto/*.proto
 	protoc-go-inject-tag -input="./runtime/genesis/*.pb.go"
 
+# gogm.BaseNode // Provides required node fields for neo4j DB
+
 	# Persistence
 	$(PROTOC_SHARED) -I=./persistence/indexer/proto 	--go_out=./persistence/indexer ./persistence/indexer/proto/*.proto
 	$(PROTOC_SHARED) -I=./persistence/proto         	--go_out=./persistence/types   ./persistence/proto/*.proto
@@ -268,10 +270,6 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 	$(PROTOC_SHARED) -I=./p2p/raintree/types/proto --go_out=./p2p/types ./p2p/raintree/types/proto/*.proto
 
 	# echo "View generated proto files by running: make protogen_show"
-
-## Detached deployment of the neo4j container.
-neo_d:
-	docker-compose -f deployments/docker-compose.yaml up -d neo4j
 
 # CONSIDERATION: Some proto files contain unused gRPC services so we may need to add the following
 #                if/when we decide to include it: `grpc--go-grpc_opt=paths=source_relative --go-grpc_out=./output/path`

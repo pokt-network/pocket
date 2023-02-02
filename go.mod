@@ -26,7 +26,9 @@ require (
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/manifoldco/promptui v0.9.0
+	github.com/mindstand/gogm/v2 v2.3.6
 	github.com/mitchellh/mapstructure v1.5.0
+	github.com/neo4j/neo4j-go-driver v1.8.1-0.20200622090208-4295b59525c9
 	github.com/quasilyte/go-ruleguard/dsl v0.3.21
 	github.com/rs/zerolog v1.15.0
 	github.com/spf13/cobra v1.6.0
@@ -60,16 +62,22 @@ require (
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/net v0.2.0 // indirect
-	gotest.tools v2.2.0+incompatible // indirect
 )
 
 require (
+	github.com/adam-hanna/arrayOperations v0.2.6 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cornelk/hashmap v1.0.0 // indirect
+	github.com/dchest/siphash v1.2.1 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jackc/puddle/v2 v2.1.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/lib/pq v1.10.2 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2 // indirect
+	github.com/mindstand/go-cypherdsl v0.2.0 // indirect
+	github.com/neo4j/neo4j-go-driver/v4 v4.4.2-0.20220317151800-1a19fb114732 // indirect
+	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect

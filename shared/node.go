@@ -156,6 +156,8 @@ func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
 	// Persistence Debug
 	case messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		return node.GetBus().GetPersistenceModule().HandleDebugMessage(debugMessage)
+	case messaging.DebugMessageAction_DEBUG_EXPORT_TO_NEO:
+		return node.GetBus().GetPersistenceModule().HandleDebugMessage(debugMessage)
 	// Default Debug
 	default:
 		log.Printf("Debug message: %s \n", debugMessage.Message)
