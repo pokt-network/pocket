@@ -21,6 +21,7 @@ if localnet_config_file != localnet_config:
 # List of directories Tilt watches to trigger a hot-reload on changes
 deps = [
     'app',
+    'build/localnet',
     # 'build',
     'consensus',
     'p2p',
@@ -50,6 +51,7 @@ k8s_yaml(helm("build/localnet/dependencies", name='dependencies', namespace="def
 # Builds the pocket binary. Note target OS is linux, because no matter what your OS is, container runs linux natively or in VM.
 local_resource('pocket: Watch & Compile', 'GOOS=linux go build -o bin/pocket-linux app/pocket/main.go', deps=deps)
 local_resource('debug client: Watch & Compile', 'GOOS=linux go build -tags=debug -o bin/client-linux app/client/*.go', deps=deps)
+local_resource('cluster manager: Watch & Compile', 'GOOS=linux go build -o bin/cluster-manager build/localnet/cluster-manager/*.go', deps=deps)
 
 # Builds and maintains the validator container image after the binary is built on local machine, restarts a process on code change
 docker_build_with_restart('validator-image', '.',
@@ -77,12 +79,26 @@ COPY bin/client-linux /usr/local/bin/client
     ]
 )
 
+# Builds and maintains the cluster-manager container image after the binary is built on local machine
+docker_build_with_restart('cluster-manager-image', '.',
+    dockerfile_contents='''FROM debian:bullseye
+WORKDIR /
+COPY bin/cluster-manager /usr/local/bin/cluster-manager
+''',
+    only=['bin/cluster-manager'],
+    entrypoint=["/usr/local/bin/cluster-manager"],
+    live_update=[
+        sync('bin/cluster-manager', '/usr/local/bin/cluster-manager')
+    ]
+)
+
 # TODO(@okdas): https://github.com/tilt-dev/tilt/issues/3048
 # Pushes localnet manifests to the cluster.
 k8s_yaml([
     'build/localnet/private-keys.yaml',
     'build/localnet/configs.yaml',
     'build/localnet/cli-client.yaml',
+    'build/localnet/cluster-manager.yaml',
     'build/localnet/network.yaml',
     local("build/localnet/v1-validator-template.sh %s" % localnet_config['validators']['count'], quiet=True),
 ])

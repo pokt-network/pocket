@@ -1,0 +1,41 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: watcher
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: watcher-service-account
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: watcher-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: watcher-service-account
+    apiGroup: ""
+roleRef:
+  kind: Role
+  name: watcher
+  apiGroup: ""
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: v1-cluster-manager
+spec:
+  containers:
+    - name: cluster-manager
+      image: cluster-manager-image
+      imagePullPolicy: IfNotPresent
+      args:
+        - cluster-manager
+  serviceAccountName: watcher-service-account
