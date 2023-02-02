@@ -23,10 +23,28 @@ jobs:
         go: ["1.19"] # As we are relying on generics, we can't go lower than 1.18.
       fail-fast: false
     steps:
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go }}
-      - uses: actions/checkout@v3
+      - name: Setup Golang caches
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-${{ matrix.go }}-
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: install cli dependencies
+        run: make install_cli_deps
+      - name: generate protobufs, RPC server, RPC client and mocks
+        run: make protogen_local && make mockgen && make generate_rpc_openapi
       - name: golangci-lint
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: golangci/golangci-lint-action@v3
