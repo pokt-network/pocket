@@ -1,20 +1,18 @@
-# Keybase
+# Keybase <!-- omit in toc -->
 
 This document is intended to outline the current Keybase implementation used by the V1 client, and is primarily focused on its design and implementation as well as testing.
 
-<!-- TOC -->
-* [1. Backend Database](#1-backend-database)
-* [2. Keybase Interface](#2-keybase-interface)
-  * [2.1. Keybase Code Structure](#21-keybase-code-structure)
-  * [2.2. Makefile Helper](#22-makefile-helper)
-* [3. KeyPair Interface](#3-keypair-interface)
-  * [3.1. KeyPair Code Structure](#31-keypair-code-structure)
-* [4. Encryption and Armouring](#4-encryption-and-armouring)
-* [5. Testing](#5-testing)
-* [6. TODO](#6-todo)
-<!-- TOC -->
+- [1. Backend Database](#1-backend-database)
+- [2. Keybase Interface](#2-keybase-interface)
+  - [2.1. Keybase Code Structure](#21-keybase-code-structure)
+  - [2.2. Makefile Helper](#22-makefile-helper)
+- [3. KeyPair Interface](#3-keypair-interface)
+  - [3.1. KeyPair Code Structure](#31-keypair-code-structure)
+- [4. Encryption and Armouring](#4-encryption-and-armouring)
+- [5. Testing](#5-testing)
+- [6. TODO](#6-todo)
 
-##  1. Backend Database
+## 1. Backend Database
 
 The Keybase package uses a filesystem key-value database, `BadgerDB`, as its backend to persistently store keys locally on the client machine.
 
@@ -24,10 +22,10 @@ The DB stores the local keys encoded into `[]byte` using `encoding/gob` this is 
 
 The Keybase DB layer then allows for a number of functions to be used which are exposed by the [Keybase interface](#keybase-interface) to fulfill CRUD operations on the DB itself.
 
-
-##  2. Keybase Interface
+## 2. Keybase Interface
 
 The [Keybase interface](./keybase.go) exposes the CRUD operations to operate on keys, and supports the following operations:
+
 - Create password protected private keys
 - Export/Import string/json keypairs
 - Retrieve public/private keys or keypairs
@@ -37,17 +35,18 @@ The [Keybase interface](./keybase.go) exposes the CRUD operations to operate on 
 - Message signing and verification
 
 The `Keybase` interface allows for the import/export of keys between V0<->V1. Meaning any key created in the V0 protocol can be imported in two ways to the V1 protocol.
- 1. Via the JSON keyfile
+
+1.  Via the JSON keyfile
     - This method will take the JSON encoded, encrypted private key, and will import it into the V1 keybase - the `passphrase` supplied must be the same as the one use to encrypt the key in the first place or the key won't be able to be imported
- 2. Via the private key hex string
+2.  Via the private key hex string
     - This method will directly import the private key from the hex string provided and then encrypt it with the passphrase provided - this does mean than the passphrase can be different from the original as this is a decrypted form of the private key
 
 Although key pairs are stored in the local DB using the `[]byte` of the public key address as the key for retrieval all the accessing methods use the hex string of the public key's address to actually find the key for ease of use.
 
 Keys can be created without the use of any password - in order to do this the `passphrase` supplied to the functions must be `""`. The private key will still be encrypted but will simply use the empty string as the key.
 
+### 2.1. Keybase Code Structure
 
-###  2.1. Keybase Code Structure
 ```
 app
 └── client
@@ -60,15 +59,14 @@ app
 
 The interface itself is found in [keybase.go](./keybase.go) whereas its implementation can be found in [keystore.go](./keystore.go)
 
-
-###  2.2. Makefile Helper
+### 2.2. Makefile Helper
 
 To aid in the testing of the local keybase the following `Makefile` command has been exposed `make test_app` which will run the test suites from the `app` module alone, which includes the [keybase_test.go](./keybase_test.go) file which covers the functionality of the `Keybase` implementation
 
-
-##  3. KeyPair Interface
+## 3. KeyPair Interface
 
 The [KeyPair interface](../../../shared/crypto/keypair.go) exposes methods related to the operations used on the pairs of `PublicKey` types and JSON encoded, `PrivKeyArmour` strings., such as:
+
 - Retrieve the public key or armoured private key JSON string
 - Get Public key address `[]byte` or hex `string`
 - Unarmour the private key JSON string
@@ -79,8 +77,7 @@ The [KeyPair](../../../shared/crypto/keypair.go) interface is implemented by the
 
 The private key armoured JSON string is created after the [encryption step](#encryption-and-armouring) has encrypted the private key and marshalled it into a JSON string.
 
-
-###  3.1. KeyPair Code Structure
+### 3.1. KeyPair Code Structure
 
 The KeyPair code is seperated into two files [keypair.go](../../../shared/crypto/keypair.go) and [armour.go](../../../shared/crypto/armour.go)
 
@@ -91,8 +88,7 @@ shared
     └── keypair.go
 ```
 
-
-##  4. Encryption and Armouring
+## 4. Encryption and Armouring
 
 Whenever a new key is created or imported it is encrypted using the passphrase provided (this can be `""` for no passphrase).
 
@@ -139,13 +135,11 @@ flowchart LR
     S--Key-->AES-GCM
 ```
 
-
-##  5. Testing
+## 5. Testing
 
 The full test suite can be run with `make test_app` where the [Keybase interface's](#keybase-interface) methods are tested with unit tests.
 
-
-##  6. TODO
+## 6. TODO
 
 - [ ] Add better error catching and error messages for importing keys with invalid strings/invalid JSON
 - [ ] Research and implement threshold signatures and threshold keys
