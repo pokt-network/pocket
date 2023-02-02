@@ -237,7 +237,7 @@ func (p *PostgresContext) GetActorPauseHeightIfExists(actorSchema types.Protocol
 	return pausedHeight, nil
 }
 
-func (p PostgresContext) SetActorStatusAndUnstakingHeightIfPausedBefore(actorSchema types.ProtocolActorSchema, pausedBeforeHeight, unstakingHeight int64) error {
+func (p *PostgresContext) SetActorStatusAndUnstakingHeightIfPausedBefore(actorSchema types.ProtocolActorSchema, pausedBeforeHeight, unstakingHeight int64) error {
 	ctx, tx := p.getCtxAndTx()
 
 	currentHeight, err := p.GetHeight()
@@ -249,7 +249,7 @@ func (p PostgresContext) SetActorStatusAndUnstakingHeightIfPausedBefore(actorSch
 	return err
 }
 
-func (p PostgresContext) SetActorPauseHeight(actorSchema types.ProtocolActorSchema, address []byte, pauseHeight int64) error {
+func (p *PostgresContext) SetActorPauseHeight(actorSchema types.ProtocolActorSchema, address []byte, pauseHeight int64) error {
 	ctx, tx := p.getCtxAndTx()
 
 	currentHeight, err := p.GetHeight()
@@ -261,7 +261,7 @@ func (p PostgresContext) SetActorPauseHeight(actorSchema types.ProtocolActorSche
 	return err
 }
 
-func (p PostgresContext) setActorStakeAmount(actorSchema types.ProtocolActorSchema, address []byte, stakeAmount string) error {
+func (p *PostgresContext) setActorStakeAmount(actorSchema types.ProtocolActorSchema, address []byte, stakeAmount string) error {
 	ctx, tx := p.getCtxAndTx()
 
 	currentHeight, err := p.GetHeight()
@@ -272,7 +272,7 @@ func (p PostgresContext) setActorStakeAmount(actorSchema types.ProtocolActorSche
 	return err
 }
 
-func (p PostgresContext) GetActorOutputAddress(actorSchema types.ProtocolActorSchema, operatorAddr []byte, height int64) ([]byte, error) {
+func (p *PostgresContext) GetActorOutputAddress(actorSchema types.ProtocolActorSchema, operatorAddr []byte, height int64) ([]byte, error) {
 	ctx, tx := p.getCtxAndTx()
 
 	var outputAddr string
@@ -283,7 +283,7 @@ func (p PostgresContext) GetActorOutputAddress(actorSchema types.ProtocolActorSc
 	return hex.DecodeString(outputAddr)
 }
 
-func (p PostgresContext) getActorStakeAmount(actorSchema types.ProtocolActorSchema, address []byte, height int64) (string, error) {
+func (p *PostgresContext) getActorStakeAmount(actorSchema types.ProtocolActorSchema, address []byte, height int64) (string, error) {
 	ctx, tx := p.getCtxAndTx()
 
 	var stakeAmount string

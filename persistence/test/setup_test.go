@@ -132,6 +132,7 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 }
 
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
+//nolint:gosec // G404 - Weak random source is okay here
 func fuzzSingleProtocolActor(
 	f *testing.F,
 	newTestActor func() (*coreTypes.Actor, error),
@@ -307,6 +308,7 @@ func getRandomChains() (chains []string) {
 	numCharOptions := len(charOptions)
 
 	chainsMap := make(map[string]struct{})
+	//nolint:gosec // G404 - Weak random source is okay here
 	for i := 0; i < rand.Intn(14)+1; i++ {
 		b := make([]byte, 4)
 		for i := range b {
@@ -322,6 +324,7 @@ func getRandomChains() (chains []string) {
 	return
 }
 
+//nolint:gosec // G404 - Weak random source is okay here
 func getRandomServiceURL() string {
 	setRandomSeed()
 
@@ -337,7 +340,7 @@ func getRandomServiceURL() string {
 }
 
 func getRandomBigIntString() string {
-	return converters.BigIntToString(big.NewInt(rand.Int63()))
+	return converters.BigIntToString(big.NewInt(rand.Int63())) //nolint:gosec // G404 - Weak random source is okay here
 }
 
 func setRandomSeed() {

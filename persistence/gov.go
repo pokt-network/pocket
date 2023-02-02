@@ -40,7 +40,7 @@ func init() {
 	}
 }
 
-func (p PostgresContext) InitGenesisParams(params *genesis.Params) error {
+func (p *PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	ctx, tx := p.getCtxAndTx()
 	if p.Height != 0 {
 		return fmt.Errorf("cannot initialize params at height %d", p.Height)
@@ -51,7 +51,7 @@ func (p PostgresContext) InitGenesisParams(params *genesis.Params) error {
 
 // Match paramName against the ParameterNameTypeMap struct and call the proper
 // getter function getParamOrFlag[int | string | byte] and return its values
-func (p PostgresContext) GetParameter(paramName string, height int64) (v any, err error) {
+func (p *PostgresContext) GetParameter(paramName string, height int64) (v any, err error) {
 	paramType := parameterNameTypeMap[paramName]
 	switch paramType {
 	case "int", "int32", "int64":
@@ -66,48 +66,48 @@ func (p PostgresContext) GetParameter(paramName string, height int64) (v any, er
 	return v, err
 }
 
-func (p PostgresContext) GetIntParam(paramName string, height int64) (int, error) {
+func (p *PostgresContext) GetIntParam(paramName string, height int64) (int, error) {
 	v, _, err := getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
 	return v, err
 }
 
-func (p PostgresContext) GetStringParam(paramName string, height int64) (string, error) {
+func (p *PostgresContext) GetStringParam(paramName string, height int64) (string, error) {
 	v, _, err := getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
 	return v, err
 }
 
-func (p PostgresContext) GetBytesParam(paramName string, height int64) (param []byte, err error) {
+func (p *PostgresContext) GetBytesParam(paramName string, height int64) (param []byte, err error) {
 	v, _, err := getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
 	return v, err
 }
 
-func (p PostgresContext) SetParam(paramName string, value any) error {
+func (p *PostgresContext) SetParam(paramName string, value any) error {
 	return p.setParamOrFlag(paramName, value, nil)
 }
 
-func (p PostgresContext) InitFlags() error {
+func (p *PostgresContext) InitFlags() error {
 	// TODO: not implemented
 	return nil
 }
 
-func (p PostgresContext) GetIntFlag(flagName string, height int64) (value int, enabled bool, err error) {
+func (p *PostgresContext) GetIntFlag(flagName string, height int64) (value int, enabled bool, err error) {
 	return getParamOrFlag[int](p, types.FlagsTableName, flagName, height)
 }
 
-func (p PostgresContext) GetStringFlag(flagName string, height int64) (value string, enabled bool, err error) {
+func (p *PostgresContext) GetStringFlag(flagName string, height int64) (value string, enabled bool, err error) {
 	return getParamOrFlag[string](p, types.FlagsTableName, flagName, height)
 }
 
-func (p PostgresContext) GetBytesFlag(flagName string, height int64) (value []byte, enabled bool, err error) {
+func (p *PostgresContext) GetBytesFlag(flagName string, height int64) (value []byte, enabled bool, err error) {
 	return getParamOrFlag[[]byte](p, types.FlagsTableName, flagName, height)
 }
 
-func (p PostgresContext) SetFlag(flagName string, value any, enabled bool) error {
+func (p *PostgresContext) SetFlag(flagName string, value any, enabled bool) error {
 	return p.setParamOrFlag(flagName, value, &enabled)
 }
 
 // setParamOrFlag simply wraps the call to the generic function with the supplied underlying type
-func (p PostgresContext) setParamOrFlag(name string, value any, enabled *bool) error {
+func (p *PostgresContext) setParamOrFlag(name string, value any, enabled *bool) error {
 	switch t := value.(type) {
 	case int:
 		return setParamOrFlag(p, name, t, enabled)
@@ -127,7 +127,7 @@ func (p PostgresContext) setParamOrFlag(name string, value any, enabled *bool) e
 
 // setParamOrFlag sets a param or a flag.
 // If `enabled` is nil, we are dealing with a param, otherwise it's a flag
-func setParamOrFlag[T types.SupportedParamTypes](p PostgresContext, paramName string, paramValue T, enabled *bool) error {
+func setParamOrFlag[T types.SupportedParamTypes](p *PostgresContext, paramName string, paramValue T, enabled *bool) error {
 	ctx, tx := p.getCtxAndTx()
 	height, err := p.GetHeight()
 	if err != nil {
@@ -143,7 +143,7 @@ func setParamOrFlag[T types.SupportedParamTypes](p PostgresContext, paramName st
 	return nil
 }
 
-func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, paramName string, height int64) (i T, enabled bool, err error) {
+func getParamOrFlag[T int | string | []byte](p *PostgresContext, tableName, paramName string, height int64) (i T, enabled bool, err error) {
 	ctx, tx := p.getCtxAndTx()
 
 	var stringVal string
@@ -172,7 +172,7 @@ func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, param
 	return
 }
 
-func (p PostgresContext) getParamsUpdated(height int64) ([]*coreTypes.Param, error) {
+func (p *PostgresContext) getParamsUpdated(height int64) ([]*coreTypes.Param, error) {
 	ctx, tx := p.getCtxAndTx()
 	// Get all parameters / flags at current height
 	rows, err := tx.Query(ctx, p.getParamsOrFlagsUpdateAtHeightQuery(types.ParamsTableName, height))
@@ -194,7 +194,7 @@ func (p PostgresContext) getParamsUpdated(height int64) ([]*coreTypes.Param, err
 	return paramSlice, nil
 }
 
-func (p PostgresContext) getFlagsUpdated(height int64) ([]*coreTypes.Flag, error) {
+func (p *PostgresContext) getFlagsUpdated(height int64) ([]*coreTypes.Flag, error) {
 	ctx, tx := p.getCtxAndTx()
 	// Get all parameters / flags at current height
 	rows, err := tx.Query(ctx, p.getParamsOrFlagsUpdateAtHeightQuery(types.FlagsTableName, height))

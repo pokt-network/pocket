@@ -27,14 +27,14 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 	return true, err
 }
 
-func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
+func (p *PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
 	ctx, tx := p.getCtxAndTx()
 
 	err = tx.QueryRow(ctx, types.GetLatestBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
 
-func (p PostgresContext) GetBlockHash(height int64) (string, error) {
+func (p *PostgresContext) GetBlockHash(height int64) (string, error) {
 	ctx, tx := p.getCtxAndTx()
 
 	var blockHash string
@@ -45,7 +45,7 @@ func (p PostgresContext) GetBlockHash(height int64) (string, error) {
 	return blockHash, nil
 }
 
-func (p PostgresContext) GetHeight() (int64, error) {
+func (p *PostgresContext) GetHeight() (int64, error) {
 	return p.Height, nil
 }
 
@@ -94,7 +94,7 @@ func (p *PostgresContext) insertBlock(block *coreTypes.Block) error {
 }
 
 // Stores the block in the key-value store
-func (p PostgresContext) storeBlock(block *coreTypes.Block) error {
+func (p *PostgresContext) storeBlock(block *coreTypes.Block) error {
 	blockBz, err := codec.GetCodec().Marshal(block)
 	if err != nil {
 		return err

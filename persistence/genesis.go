@@ -136,7 +136,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 //
 //		can easily be refactored and condensed into a single function using a generic type or a common
 //	 interface.
-func (p PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account, err error) {
+func (p *PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account, err error) {
 	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.Account.GetAllQuery(height))
 	if err != nil {
@@ -153,7 +153,7 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account
 }
 
 // CLEANUP: Consolidate with GetAllAccounts.
-func (p PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, err error) {
+func (p *PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, err error) {
 	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.Pool.GetAllQuery(height))
 	if err != nil {

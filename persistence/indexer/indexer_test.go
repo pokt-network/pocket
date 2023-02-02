@@ -21,7 +21,7 @@ func FuzzTxIndexer(f *testing.F) {
 	numOperationTypes := len(operations)
 	numOperations := 100
 	for i := 0; i < numOperations; i++ {
-		f.Add(operations[rand.Intn(numOperationTypes)])
+		f.Add(operations[rand.Intn(numOperationTypes)]) //nolint:gosec // G404 - Weak random source is okay here
 	}
 	indexer, err := NewMemTxIndexer()
 	if err != nil {
@@ -36,9 +36,9 @@ func FuzzTxIndexer(f *testing.F) {
 		// seed random
 		rand.Seed(int64(time.Now().Nanosecond()))
 		// set height ordering to descending 50% of time
-		isDescending := rand.Intn(2) == 0
+		isDescending := rand.Intn(2) == 0 //nolint:gosec // G404 - Weak random source is okay here
 		// select a height 0 - 9 to index
-		height := int64(rand.Intn(10))
+		height := int64(rand.Intn(10)) //nolint:gosec // G404 - Weak random source is okay here
 		// get index
 		heightResult, err := indexer.GetByHeight(height, isDescending)
 		require.NoError(t, err)
@@ -242,7 +242,7 @@ func (mt MessageType) String() string {
 }
 
 func randomMessageType() string {
-	return msgTypes[rand.Intn(len(msgTypes))].String()
+	return msgTypes[rand.Intn(len(msgTypes))].String() //nolint:gosec // G404 - Weak random source is okay here
 }
 
 func randomAddress(t *testing.T) string {
@@ -256,6 +256,7 @@ func randomErr() (code int32, err string) {
 	errors := []string{"insufficient funds", "address not valid", "invalid signature"}
 	code = int32(0)
 	err = ""
+	//nolint:gosec // G404 - Weak random source is okay here
 	if rand.Intn(4) == 1 {
 		code = int32(rand.Intn(len(errors)))
 		err = errors[code]
@@ -264,6 +265,7 @@ func randomErr() (code int32, err string) {
 }
 
 // Generates a random alphanumeric sequence of exactly 50 characters
+//nolint:gosec // G404 - Weak random source is okay here
 func randLetterBytes() []byte {
 	randBytes := make([]byte, 50)
 	rand.Read(randBytes)

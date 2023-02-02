@@ -33,6 +33,7 @@ func NewError(code Code, msg string) Error {
 
 type Code float64
 
+//nolint:gosec // G101 - Not hard-coded credentials
 const (
 	CodeOK                               Code = 0
 	CodeEmptyTransactionError            Code = 2

@@ -201,7 +201,7 @@ func (p *PostgresContext) getStateHash() string {
 
 // Returns a digest (a single hash) of all the transactions included in the block.
 // This allows separating the integrity of the transactions from their storage.
-func (p PostgresContext) getTxsHash() (txs []byte, err error) {
+func (p *PostgresContext) getTxsHash() (txs []byte, err error) {
 	txResults, err := p.txIndexer.GetByHeight(p.Height, txsOrderInBlockHashDescending)
 	if err != nil {
 		return nil, err

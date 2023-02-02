@@ -8,7 +8,7 @@ import (
 // TODO (#399): All of the functions below following a structure similar to `GetAll<Actor>`
 //	can easily be refactored and condensed into a single function using a generic type or a common
 //  interface.
-func (p PostgresContext) GetAllApps(height int64) (apps []*coreTypes.Actor, err error) {
+func (p *PostgresContext) GetAllApps(height int64) (apps []*coreTypes.Actor, err error) {
 	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.ApplicationActor.GetAllQuery(height))
 	if err != nil {
@@ -34,7 +34,7 @@ func (p PostgresContext) GetAllApps(height int64) (apps []*coreTypes.Actor, err 
 	return
 }
 
-func (p PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Actor, err error) {
+func (p *PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Actor, err error) {
 	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.ValidatorActor.GetAllQuery(height))
 	if err != nil {
@@ -61,7 +61,7 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Actor
 	return
 }
 
-func (p PostgresContext) GetAllServiceNodes(height int64) (sn []*coreTypes.Actor, err error) {
+func (p *PostgresContext) GetAllServiceNodes(height int64) (sn []*coreTypes.Actor, err error) {
 	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.ServiceNodeActor.GetAllQuery(height))
 	if err != nil {
@@ -87,7 +87,7 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []*coreTypes.Actor
 	return
 }
 
-func (p PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, err error) {
+func (p *PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, err error) {
 	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.FishermanActor.GetAllQuery(height))
 	if err != nil {
@@ -114,7 +114,7 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, er
 }
 
 // IMPROVE: This is a proof of concept. Ideally we should have a single query that returns all actors.
-func (p PostgresContext) GetAllStakedActors(height int64) (allActors []*coreTypes.Actor, err error) {
+func (p *PostgresContext) GetAllStakedActors(height int64) (allActors []*coreTypes.Actor, err error) {
 	type actorGetter func(height int64) ([]*coreTypes.Actor, error)
 	actorGetters := []actorGetter{p.GetAllValidators, p.GetAllServiceNodes, p.GetAllFishermen, p.GetAllApps}
 	for _, actorGetter := range actorGetters {

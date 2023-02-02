@@ -29,13 +29,13 @@ type PostgresContext struct {
 	stateTrees *stateTrees
 }
 
-func (p PostgresContext) NewSavePoint(bytes []byte) error {
+func (p *PostgresContext) NewSavePoint(bytes []byte) error {
 	log.Println("TODO: NewSavePoint not implemented")
 	return nil
 }
 
 // TECHDEBT(#327): Guarantee atomicity betweens `prepareBlock`, `insertBlock` and `storeBlock` for save points & rollbacks.
-func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
+func (p *PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	log.Println("TODO: RollbackToSavePoint not fully implemented")
 	return p.getTx().Rollback(context.TODO())
 }
@@ -52,7 +52,7 @@ func (p *PostgresContext) ComputeStateHash() (string, error) {
 }
 
 // TECHDEBT(#327): Make sure these operations are atomic
-func (p PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
+func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 	log.Printf("About to commit block & context at height %d.\n", p.Height)
 
 	// Create a persistence block proto
@@ -83,7 +83,7 @@ func (p PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 	return nil
 }
 
-func (p PostgresContext) Release() error {
+func (p *PostgresContext) Release() error {
 	log.Printf("About to release postgres context at height %d.\n", p.Height)
 	ctx := context.TODO()
 	if err := p.getTx().Rollback(ctx); err != nil {
@@ -95,13 +95,13 @@ func (p PostgresContext) Release() error {
 	return nil
 }
 
-func (p PostgresContext) Close() error {
+func (p *PostgresContext) Close() error {
 	log.Printf("About to close postgres context at height %d.\n", p.Height)
 	return p.conn.Close(context.TODO())
 }
 
 // INVESTIGATE(#361): Revisit if is used correctly in the context of the lifecycle of a persistenceContext and a utilityContext
-func (p PostgresContext) IndexTransaction(txResult modules.TxResult) error {
+func (p *PostgresContext) IndexTransaction(txResult modules.TxResult) error {
 	return p.txIndexer.Index(txResult)
 }
 
