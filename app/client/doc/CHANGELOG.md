@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.6] - 2023-02-02
+
+## Added
+
+- Fix broken link to `shared/crypto/README.md` in keybase documentation
+
 ## [0.0.0.5] - 2023-02-02
 
 ### Added
