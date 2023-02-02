@@ -118,7 +118,11 @@ def run_wiki_migration():
     subprocess.call(["git", "config", "user.name", f"{user_name}"], cwd=TEMP_WIKI)
     subprocess.call(["git", "config", "user.email", f"{user_email}"], cwd=TEMP_WIKI)
     subprocess.call(
-        ["git", "pull", f"https://{github_actor}:{github_token}@github.com/{owner}/{repo_name}.wiki.git"],
+        [
+            "git",
+            "pull",
+            f"https://{github_actor}:{github_token}@github.com/{owner}/{repo_name}.wiki.git",
+        ],
         cwd=TEMP_WIKI,
     )
 
