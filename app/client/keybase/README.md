@@ -2,27 +2,28 @@
 
 This document is intended to outline the current Keybase implementation used by the V1 client, and is primarily focused on its design and implementation as well as testing.
 
-- [1. Backend Database](#1-backend-database)
-- [2. Keybase Interface](#2-keybase-interface)
-  - [2.1. Keybase Code Structure](#21-keybase-code-structure)
-  - [2.2. Makefile Helper](#22-makefile-helper)
-- [3. KeyPair Interface](#3-keypair-interface)
-  - [3.1. KeyPair Code Structure](#31-keypair-code-structure)
-- [4. Encryption and Armouring](#4-encryption-and-armouring)
-- [5. Testing](#5-testing)
-- [6. TODO](#6-todo)
+- [Backend Database](#backend-database)
+- [Keybase Interface](#keybase-interface)
+  - [V0\<-\>V1 Interoperability](#v0-v1-interoperability)
+  - [Keybase Code Structure](#keybase-code-structure)
+- [Makefile Testing Helper](#makefile-testing-helper)
+- [KeyPair Encryption \& Armouring](#keypair-encryption--armouring)
+- [TODO: Future Work](#todo-future-work)
 
-## 1. Backend Database
+_TODO(#150): The current keybase has not been integrated with any CLI endpoints, and as such is only accessible through the [keybase interface](#keybase-interface)_
 
-The Keybase package uses a filesystem key-value database, `BadgerDB`, as its backend to persistently store keys locally on the client machine.
+## Backend Database
 
-_The current keybase has not been integrated with any CLI endpoints, and as such is only accessible through the [keybase interface](#keybase-interface); tracked by #150_
+The Keybase package uses a filesystem key-value database, `BadgerDB`, as its backend to persistently store keys locally on the client machine. The DB stores the local keys encoded as `[]byte` using `encoding/gob`.
 
-The DB stores the local keys encoded into `[]byte` using `encoding/gob` this is only used for internal storage in the DB. The [KeyPair interface](#keypair-interface) has a number of methods that can be used on it. But relevent to the DB storage of these is the `GetAddressBytes()` function that returns the `[]byte` of the `PublicKey` field's hex address from the struct. The `[]byte` returned by the `GetAddressBytes()` function is used as the key in the key-value store and the value is the `gob` encoded `[]byte` of the `KeyPair` interface as a whole - which contains both the `PublicKey` and `PrivKeyArmour` (JSON encoded, encrypted private key string).
+The `KeyPair` defined in [crypto package](../../../shared/core/crypto) is the data structure that's stored in the DB. Specifically:
 
-The Keybase DB layer then allows for a number of functions to be used which are exposed by the [Keybase interface](#keybase-interface) to fulfill CRUD operations on the DB itself.
+- **Key**: The `[]byte` returned by the `GetAddressBytes()` function is used as the key in the key-value store.
+- **Value**: The `gob` encoded struct of the entire `KeyPair`, containing both the `PublicKey` and `PrivKeyArmour` (JSON encoded, encrypted private key string), is the value.
 
-## 2. Keybase Interface
+The Keybase DB layer exposes several functions, defined by the [Keybase interface](#keybase-interface), to fulfill CRUD operations on the DB itself and oeprate with the Keypairs.
+
+## Keybase Interface
 
 The [Keybase interface](./keybase.go) exposes the CRUD operations to operate on keys, and supports the following operations:
 
@@ -34,20 +35,23 @@ The [Keybase interface](./keybase.go) exposes the CRUD operations to operate on 
 - Update passphrase on a private key
 - Message signing and verification
 
-The `Keybase` interface allows for the import/export of keys between V0<->V1. Meaning any key created in the V0 protocol can be imported in two ways to the V1 protocol.
+### V0<->V1 Interoperability
 
-1.  Via the JSON keyfile
-    - This method will take the JSON encoded, encrypted private key, and will import it into the V1 keybase - the `passphrase` supplied must be the same as the one use to encrypt the key in the first place or the key won't be able to be imported
-2.  Via the private key hex string
-    - This method will directly import the private key from the hex string provided and then encrypt it with the passphrase provided - this does mean than the passphrase can be different from the original as this is a decrypted form of the private key
+The `Keybase` interface supports full interoperability of key export & import between Pocket [V0](https://github.com/pokt-network/pocket-core)<->[V1](https://github.com/pokt-network/pocket).
 
-Although key pairs are stored in the local DB using the `[]byte` of the public key address as the key for retrieval all the accessing methods use the hex string of the public key's address to actually find the key for ease of use.
+Any private key created in the V0 protocol can be imported into V1 via one of the following two ways:
 
-Keys can be created without the use of any password - in order to do this the `passphrase` supplied to the functions must be `""`. The private key will still be encrypted but will simply use the empty string as the key.
+1. **JSON keyfile**: This method will take the JSON encoded, encrypted private key, and will import it into the V1 keybase. The `passphrase` supplied must be the same as the one use to encrypt the key in the first place or the key won't be importable.
 
-### 2.1. Keybase Code Structure
+2. **Private Key Hex String**: This method will directly import the private key from the hex string provided and encrypt it with the passphrase provided. This enables the passphrase to be different from the original as the provided plaintext is already decrypted.
 
-```
+Although key pairs are stored in the local DB using the serialized (`[]byte`) representation of the public key, the associated address can be used for accessing the record in the DB for simplicity.
+
+Keys can be created without a password by specifying an empty (`""`) passphrase. The private key will still be encrypted at rest but will use the empty string as the passphrase for decryption.
+
+### Keybase Code Structure
+
+```bash
 app
 └── client
     └── keybase
@@ -57,90 +61,21 @@ app
           └── keystore.go
 ```
 
-The interface itself is found in [keybase.go](./keybase.go) whereas its implementation can be found in [keystore.go](./keystore.go)
+The interface is found in [keybase.go](./keybase.go) whereas its implementation can be found in [keystore.go](./keystore.go)
 
-### 2.2. Makefile Helper
+## Makefile Testing Helper
 
-To aid in the testing of the local keybase the following `Makefile` command has been exposed `make test_app` which will run the test suites from the `app` module alone, which includes the [keybase_test.go](./keybase_test.go) file which covers the functionality of the `Keybase` implementation
+The unit tests for the keybase are defined in [keybase_test.go](./keybase_test.go) and can therefore be executed alongside other application specific tests by running `make test_app`.
 
-## 3. KeyPair Interface
+## KeyPair Encryption & Armouring
 
-The [KeyPair interface](../../../shared/crypto/keypair.go) exposes methods related to the operations used on the pairs of `PublicKey` types and JSON encoded, `PrivKeyArmour` strings., such as:
+The [documentation in the crypto library](../../../shared/crypto/README.md) covers all of the details related to the `KeyPair` interface, as well as `PrivateKey` encryption, armouring and unarmouring.
 
-- Retrieve the public key or armoured private key JSON string
-- Get Public key address `[]byte` or hex `string`
-- Unarmour the private key JSON string
-- Export the private key hex string/JSON armoured string
-- Marshal and unmarshal the KeyPair in and out of a `[]byte`
+The primitives and functions defined there are heavily used throughout this package.
 
-The [KeyPair](../../../shared/crypto/keypair.go) interface is implemented by the `encKeyPair` struct, which stores the `PublicKey` of the key pair and the JSON encoded, `armoured` key string.
+## TODO: Future Work
 
-The private key armoured JSON string is created after the [encryption step](#encryption-and-armouring) has encrypted the private key and marshalled it into a JSON string.
-
-### 3.1. KeyPair Code Structure
-
-The KeyPair code is seperated into two files [keypair.go](../../../shared/crypto/keypair.go) and [armour.go](../../../shared/crypto/armour.go)
-
-```
-shared
-└── crypto
-    ├── armour.go
-    └── keypair.go
-```
-
-## 4. Encryption and Armouring
-
-Whenever a new key is created or imported it is encrypted using the passphrase provided (this can be `""` for no passphrase).
-
-```mermaid
-flowchart LR
-    subgraph C[core lib]
-        A["rand([16]byte)"]
-    end
-    subgraph S[scrypt lib]
-        B["key(salt, pass, ...)"]
-    end
-    subgraph AES-GCM
-        direction TB
-        D["Cipher(key)"]
-        E["GCM(block)"]
-        F["Seal(plaintext, nonce)"]
-        D--Block-->E
-        E--Nonce-->F
-    end
-    C--Salt-->S
-    S--Key-->AES-GCM
-```
-
-When unarmouring and decrypting the same process is done in reverse.
-
-```mermaid
-flowchart LR
-    subgraph C[core lib]
-        A["decode(privateKeyArmouredString)"]
-    end
-    subgraph S[scrypt lib]
-        B["key(salt, pass, ...)"]
-    end
-    subgraph AES-GCM
-        direction TB
-        D["Cipher(key)"]
-        E["GCM(block)"]
-        F["Open(ciphertext, nonce)"]
-        D--Block-->E
-        E--Nonce-->F
-    end
-    C--Salt-->S
-    C--CipherText-->AES-GCM
-    S--Key-->AES-GCM
-```
-
-## 5. Testing
-
-The full test suite can be run with `make test_app` where the [Keybase interface's](#keybase-interface) methods are tested with unit tests.
-
-## 6. TODO
-
-- [ ] Add better error catching and error messages for importing keys with invalid strings/invalid JSON
+- [ ] Improve error handling and error messages for importing keys with invalid strings/invalid JSON
 - [ ] Research and implement threshold signatures and threshold keys
 - [ ] Look into a fully feature signature implementation beyond trivial `[]byte` messages
+- [ ] Integrate the keybase with the CLI (#150)
