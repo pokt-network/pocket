@@ -172,7 +172,7 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 		return nil, err
 	}
 
-	return PostgresContext{
+	return &PostgresContext{
 		Height: height,
 		conn:   conn,
 		tx:     tx,
