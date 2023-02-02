@@ -58,8 +58,8 @@ flowchart LR
     end
     subgraph Armour
         direction LR
-        G["base64(encryptedPrivateKey)"]
-        H["base64(Salt)"]
+        G["base64Encode(encryptedPrivateKey)"]
+        H["hexEncode(Salt)"]
         G --> armoured
         H --> armoured
     end
@@ -76,21 +76,27 @@ The process above is reversed when unarmouring and decrypting a key in the keyba
 
 ```mermaid
 flowchart LR
-    subgraph C[core lib]
-        A["decode(privateKeyArmouredString)"]
+    subgraph U[Unarmour]
+        armoured
+        B["hexDecode(salt)"]
+        C["base64Decode(cipherText)"]
+        armoured-->B
+        armoured-->C
     end
     subgraph S[scrypt lib]
-        B["key(salt, pass, ...)"]
+        E["key(salt, pass, ...)"]
     end
     subgraph AES-GCM
         direction TB
-        D["Cipher(key)"]
-        E["GCM(block)"]
-        F["Open(ciphertext, nonce)"]
-        D--Block-->E
-        E--Nonce-->F
+        F["Cipher(key)"]
+        G["GCM(block)"]
+        H["Open(encryptedBytes, nonce)"]
+        F--Block-->G
+        G--Nonce-->H
     end
-    C--Salt-->S
-    C--CipherText-->AES-GCM
+    encryptedArmouredPrivateKey --Unmarshal--> U
+    B--Salt-->S
+    C--encryptedBytes-->AES-GCM
     S--Key-->AES-GCM
+    AES-GCM-->PrivateKey
 ```
