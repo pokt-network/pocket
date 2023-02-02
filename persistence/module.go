@@ -126,7 +126,7 @@ func (m *persistenceModule) GetBus() modules.Bus {
 }
 
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
-	if m.writeContext != nil && !m.writeContext.conn.IsClosed() {
+	if m.writeContext != nil && m.writeContext.conn != nil && !m.writeContext.conn.IsClosed() {
 		return nil, fmt.Errorf("write context already exists")
 	}
 	conn, err := connectToDatabase(m.config)
