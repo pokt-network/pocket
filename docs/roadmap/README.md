@@ -1,6 +1,6 @@
 # Roadmap & Milestones <!-- omit in toc -->
 
-This document was last updated on 09-15-2022.
+This document was last updated on 02-02-2022.
 
 - [V1 Roadmap](#v1-roadmap)
 - [Milestones](#milestones)
@@ -25,17 +25,17 @@ gantt
     title Pocket V1 Roadmap
     dateFormat  YYYY-MM-DD
     section Milestone 1
-        Pocket PoS       :a1, 2022-06-01, 333d
+      Pocket PoS       :a1, 2022-06-01, 395d
     section Milestone 2
-        Pocket DoS       :a1, 2022-07-01, 303d
+        Pocket DoS       :a1, 2022-07-01, 365d
     section Milestone 3
-        Pocket RoS       :a1, 2022-12-01, 180d
+        Pocket RoS       :a1, 2022-12-01, 241d
     section Milestone 4
-        Pocket CoS       :a1, 2023-05-01, 150d
+        Pocket CoS       :a1, 2023-07-01, 152d
     section Milestone 5
-        Pocket IoS       :a1, 2023-09-30, 45d
+        Pocket IoS       :a1, 2023-12-01, 45d
     section Milestone 6
-        Pocket FoS       :a1, 2023-09-30, 90d
+        Pocket FoS       :a1, 2024-01-15, 90d
 ```
 
 ## Milestones
@@ -69,7 +69,7 @@ gantt
   - Devnet supporting ETH relays
   - Initial implementation of reward distribution, report cards, etc...
 
-### M4. [Pocket CoS (Cloud of Services)](https://github.com/pokt-network/pocket/milestone/20)
+### [M4. Pocket CoS (Cloud of Services)](https://github.com/pokt-network/pocket/milestone/20)
 
 #### Goals:
 
