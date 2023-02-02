@@ -8,7 +8,7 @@ on:
       - '**/*.md' # 2. It detects changes to Markdowns files in the repository
 
 env: # 3. Set variables which the Python script uses for git commands
-  USER_TOKEN: ${{ secrets.WIKI_SYNC_SECRET }} # TODO_IN_THIS_COMMIT: provision repo secret through Pocket account
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # TODO_IN_THIS_COMMIT: provision repo secret through Pocket account
   USER_NAME: <user_name>
   USER_EMAIL: <user_email>
   OWNER: ${{ github.event.repository.owner.name }}
