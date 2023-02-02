@@ -25,9 +25,8 @@ type badgerKeybase struct {
 }
 
 // Creates/Opens the DB at the specified path
-// DISCUSS: Should this create the directory if it doesn't exist?
 func NewKeybase(path string) (Keybase, error) {
-	pathExists, err := dirExists(path)
+	pathExists, err := dirExists(path) // Creates path if it doesn't exist
 	if err != nil || !pathExists {
 		return nil, err
 	}
@@ -349,17 +348,21 @@ func badgerOptions(path string) badger.Options {
 }
 
 // Check directory exists / create if not
-// Check that a file exists at the given path
 func dirExists(path string) (bool, error) {
 	stat, err := os.Stat(path)
 	if err == nil {
+		// Exists but not directory
 		if !stat.IsDir() {
 			return false, fmt.Errorf("Keybase path is not a directory: %s", path)
 		}
 		return true, nil
 	}
 	if os.IsNotExist(err) {
-		return false, nil
+		// Create directories in path recursively
+		if err := os.MkdirAll(path, os.ModePerm); err != nil {
+			return false, fmt.Errorf("Error creating directory at path: %s, (%v)", path, err.Error())
+		}
+		return true, nil
 	}
 	return false, err
 }
