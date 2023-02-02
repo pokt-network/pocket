@@ -70,7 +70,7 @@ func (keybase *badgerKeybase) Create(passphrase, hint string) error {
 			return err
 		}
 
-		if err = tx.Set(addrKey, keypairBz); err != nil {
+		if err := tx.Set(addrKey, keypairBz); err != nil {
 			return err
 		}
 
@@ -98,7 +98,7 @@ func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint stri
 			return err
 		}
 
-		if err = tx.Set(addrKey, keypairBz); err != nil {
+		if err := tx.Set(addrKey, keypairBz); err != nil {
 			return err
 		}
 
@@ -126,7 +126,7 @@ func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 			return err
 		}
 
-		if err = tx.Set(addrKey, keypairBz); err != nil {
+		if err := tx.Set(addrKey, keypairBz); err != nil {
 			return err
 		}
 
@@ -283,7 +283,7 @@ func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassph
 
 		// Use key address as key in DB
 		addrKey := keyPair.GetAddressBytes()
-		if bytes.Compare(addrKey, addrBz) != 0 {
+		if !bytes.Equal(addrKey, addrBz) {
 			return fmt.Errorf("Key address does not match previous address.")
 		}
 
@@ -334,7 +334,9 @@ func (keybase *badgerKeybase) Delete(address, passphrase string) error {
 	}
 
 	err = keybase.db.Update(func(tx *badger.Txn) error {
-		tx.Delete(addrBz)
+		if err := tx.Delete(addrBz); err != nil {
+			return err
+		}
 		return nil
 	})
 	return err

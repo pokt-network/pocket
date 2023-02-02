@@ -44,13 +44,13 @@ type armouredKey struct {
 }
 
 // Generate new armoured private key struct with parameters for unarmouring
-func newArmouredKey(kdf, salt, hint, cipher string) armouredKey {
+func newArmouredKey(kdf, salt, hint, cipherText string) armouredKey {
 	return armouredKey{
 		Kdf:        kdf,
 		Salt:       salt,
 		SecParam:   strconv.Itoa(secParam),
 		Hint:       hint,
-		CipherText: cipher,
+		CipherText: cipherText,
 	}
 }
 
@@ -101,7 +101,7 @@ func encryptPrivKey(privKey PrivateKey, passphrase string) (saltBz, encBz []byte
 }
 
 // Unarmor and decrypt the private key using the passphrase provided
-func unarmourDecryptPrivKey(armourStr string, passphrase string) (privKey PrivateKey, err error) {
+func unarmourDecryptPrivKey(armourStr, passphrase string) (privKey PrivateKey, err error) {
 	// Decode armourStr back into ArmouredKey struct
 	ak := armouredKey{}
 	err = json.Unmarshal([]byte(armourStr), &ak)

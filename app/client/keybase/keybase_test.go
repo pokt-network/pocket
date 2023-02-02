@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//nolint:gosec // G101 Credentials are for tests
 const (
 	// Example account
 	testPrivString = "045e8380086abc6f6e941d6fe47ca93b86723bc246ec8c4beee411b410028675ed78c49592f836f7a4d47d4fb6a0e6b19f07aebc201d005f6b2c6afe389086e9"
@@ -30,7 +31,7 @@ const (
 
 func TestKeybase_CreateNewKey(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	err := db.Create(testPassphrase, testHint)
 	require.NoError(t, err)
@@ -48,7 +49,7 @@ func TestKeybase_CreateNewKey(t *testing.T) {
 
 func TestKeybase_CreateNewKeyNoPassphrase(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	err := db.Create("", "")
 	require.NoError(t, err)
@@ -66,7 +67,7 @@ func TestKeybase_CreateNewKeyNoPassphrase(t *testing.T) {
 
 func TestKeybase_ImportKeyFromString(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	err := db.ImportFromString(testPrivString, testPassphrase, testHint)
 	require.NoError(t, err)
@@ -90,7 +91,7 @@ func TestKeybase_ImportKeyFromString(t *testing.T) {
 
 func TestKeybase_ImportKeyFromStringNoPassphrase(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	err := db.ImportFromString(testPrivString, "", "")
 	require.NoError(t, err)
@@ -115,7 +116,7 @@ func TestKeybase_ImportKeyFromStringNoPassphrase(t *testing.T) {
 // TODO: Improve this test/create functions to check string validity
 func TestKeybase_ImportKeyFromStringInvalidString(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	testKey := createTestKeys(t, 1)[0]
 
@@ -129,7 +130,7 @@ func TestKeybase_ImportKeyFromStringInvalidString(t *testing.T) {
 
 func TestKeybase_ImportKeyFromJSON(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	err := db.ImportFromJSON(testJSONString, testPassphrase)
 	require.NoError(t, err)
@@ -153,7 +154,7 @@ func TestKeybase_ImportKeyFromJSON(t *testing.T) {
 
 func TestKeybase_GetKey(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	testKey := createTestKeys(t, 1)[0]
 
@@ -175,7 +176,7 @@ func TestKeybase_GetKey(t *testing.T) {
 
 func TestKeybase_GetKeyDoesntExist(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	testKey := createTestKeys(t, 1)[0]
 
@@ -186,7 +187,7 @@ func TestKeybase_GetKeyDoesntExist(t *testing.T) {
 
 func TestKeybase_CheckKeyExists(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	testKey := createTestKeys(t, 1)[0]
 
@@ -200,7 +201,7 @@ func TestKeybase_CheckKeyExists(t *testing.T) {
 
 func TestKeybase_CheckKeyExistsDoesntExist(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	testKey := createTestKeys(t, 1)[0]
 
@@ -211,7 +212,7 @@ func TestKeybase_CheckKeyExistsDoesntExist(t *testing.T) {
 
 func TestKeybase_GetAllKeys(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	pkm := make(map[string]crypto.PrivateKey, 0)
 	pks := createTestKeys(t, 5)
@@ -239,7 +240,7 @@ func TestKeybase_GetAllKeys(t *testing.T) {
 
 func TestKeybase_GetPubKey(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	testKey := createTestKeys(t, 1)[0]
 
@@ -257,7 +258,7 @@ func TestKeybase_GetPubKey(t *testing.T) {
 
 func TestKeybase_GetPrivKey(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	testKey := createTestKeys(t, 1)[0]
 
@@ -276,7 +277,7 @@ func TestKeybase_GetPrivKey(t *testing.T) {
 
 func TestKeybase_GetPrivKeyWrongPassphrase(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	testKey := createTestKeys(t, 1)[0]
 
@@ -290,7 +291,7 @@ func TestKeybase_GetPrivKeyWrongPassphrase(t *testing.T) {
 
 func TestKeybase_UpdatePassphrase(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	testKey := createTestKeys(t, 1)[0]
 
@@ -315,7 +316,7 @@ func TestKeybase_UpdatePassphrase(t *testing.T) {
 
 func TestKeybase_UpdatePassphraseWrongPassphrase(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	testKey := createTestKeys(t, 1)[0]
 
@@ -331,7 +332,7 @@ func TestKeybase_UpdatePassphraseWrongPassphrase(t *testing.T) {
 
 func TestKeybase_DeleteKey(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	testKey := createTestKeys(t, 1)[0]
 
@@ -351,7 +352,7 @@ func TestKeybase_DeleteKey(t *testing.T) {
 
 func TestKeybase_DeleteKeyWrongPassphrase(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	testKey := createTestKeys(t, 1)[0]
 
@@ -367,7 +368,7 @@ func TestKeybase_DeleteKeyWrongPassphrase(t *testing.T) {
 
 func TestKeybase_SignMessage(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	pk := createTestKeyFromString(t, testPrivString)
 
@@ -390,7 +391,7 @@ func TestKeybase_SignMessage(t *testing.T) {
 
 func TestKeybase_SignMessageWrongPassphrase(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	pk := createTestKeyFromString(t, testPrivString)
 
@@ -410,7 +411,7 @@ func TestKeybase_SignMessageWrongPassphrase(t *testing.T) {
 
 func TestKeybase_ExportString(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	err := db.ImportFromString(testPrivString, testPassphrase, testHint)
 	require.NoError(t, err)
@@ -422,7 +423,7 @@ func TestKeybase_ExportString(t *testing.T) {
 
 func TestKeybase_ExportJSON(t *testing.T) {
 	db := initDB(t)
-	defer db.Stop()
+	defer stopDB(t, db)
 
 	err := db.ImportFromString(testPrivString, testPassphrase, testHint)
 	require.NoError(t, err)
@@ -464,4 +465,9 @@ func createTestKeyFromString(t *testing.T, str string) crypto.PrivateKey {
 	privKey, err := crypto.NewPrivateKey(str)
 	require.NoError(t, err)
 	return privKey
+}
+
+func stopDB(t *testing.T, db Keybase) {
+	err := db.Stop()
+	require.NoError(t, err)
 }
