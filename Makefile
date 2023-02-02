@@ -446,7 +446,7 @@ clear_genesis_and_config: ## Clear the genesis and config files for LocalNet
 
 .PHONY: localnet_up
 localnet_up: ## Starts up a k8s LocalNet with all necessary dependencies (tl;dr `tilt up`)
-	tilt up
+	tilt up --file=build/localnet/Tiltfile
 
 .PHONY: localnet_client_debug
 localnet_client_debug: ## Opens a `client debug` cli to interact with blockchain (e.g. change pacemaker mode, reset to genesis, etc). Though the node binary updates automatiacally on every code change (i.e. hot reloads), if client is already open you need to re-run this command to execute freshly compiled binary.
@@ -466,8 +466,8 @@ localnet_logs_validators_follow: ## Outputs logs from all validators and follows
 
 .PHONY: localnet_down
 localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + postgres database)
-	tilt down
-	kubectl delete pvc data-dependencies-postgresql-0
+	tilt down --file=build/localnet/Tiltfile
+	kubectl delete pvc --ignore-not-found=true data-dependencies-postgresql-0
 
 .PHONY: check_cross_module_imports
 check_cross_module_imports: ## Lists cross-module imports

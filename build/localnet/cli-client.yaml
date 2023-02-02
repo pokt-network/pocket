@@ -21,6 +21,8 @@ spec:
           imagePullPolicy: IfNotPresent
           command: ["sleep", "infinity"]
           env:
+            - name: POCKET_P2P_IS_CLIENT_ONLY
+              value: "true"
             - name: CONFIG_PATH
               value: "/var/pocket/config/config.json"
             - name: GENESIS_PATH
@@ -62,7 +64,6 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            # should client have it's own config?
             name: v1-validator-default-config
             defaultMode: 420
         - name: genesis-volume

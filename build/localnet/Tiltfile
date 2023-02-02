@@ -21,7 +21,6 @@ if localnet_config_file != localnet_config:
 # List of directories Tilt watches to trigger a hot-reload on changes
 deps = [
     "app",
-    # 'build',
     "consensus",
     "p2p",
     "persistance",
@@ -117,7 +116,7 @@ k8s_yaml(
     ]
 )
 
-# # Exposes postgres port to 5432 on the host machine.
+# An example of how to expose postgres port to 5432 on the host machine in case developer wants to connect to postgres directly
 # k8s_resource(new_name='postgres',
 #              objects=['pocket-database:postgresql'],
 #              extra_pod_selectors=[{'cluster-name': 'pocket-database'}],

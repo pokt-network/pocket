@@ -93,6 +93,12 @@ Open a `client debug` cli. It allows to interact with blockchain, e.g. change pa
 make localnet_client_debug
 ```
 
+### Addresses and keys on LocalNet
+
+You can find private keys and addresses for all actors in the [private-keys.yaml](private-keys.yaml) file. They have been pre-generated and follow a specific pattern - they start with pre-determined numbers for easier troubleshooting and debugging.
+
+Addresses begin with `YYYXX` number, where `YYY` is a number of an actor and `XX` is [a type of actor](../../shared/core/types/proto/actor.proto#L7). For example, `420043b854e78f2d5f03895bba9ef16972913320` is a validator #420.
+
 ## How does it work?
 
 [tilt](https://tilt.dev/) reads the [`Tiltfile`](../../Tiltfile), where LocalNet configs are specified. `Tiltfile` is written in [Starlark](https://github.com/bazelbuild/starlark), a dialect of Python.
@@ -103,7 +109,7 @@ The k8s manifests that `tilt` submits to the cluster can be found in [this direc
 - **[4 Validators](./v1-validator-template.sh)**: The validator binary that runs inside of the container gets updated automatically and process restarted on each code change (i.e. hot reloads).
 - **[V1 CLI client](./cli-client.yaml)**: This binary that can be used to perform debug operations. Run `make localnet_client_debug` to execute commands such as `ResetToGenesis` or `TogglePacemakerMode`. This binary is also automatically updated when you make changes to the codebase.
 
-Tilt continuously monitors files on local filesystem, and it rebuilds the binary and distributes it to the pods on every code change. This allows developers to iterate on the code and see the changes immediately.
+Tilt continuously monitors files on local filesystem in [specific directories](Tiltfile#L22), and it rebuilds the binary and distributes it to the pods on every code change. This allows developers to iterate on the code and see the changes immediately.
 
 ## Troubleshooting
 
