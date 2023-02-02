@@ -80,8 +80,11 @@ flowchart LR
         armoured
         B["hexDecode(salt)"]
         C["base64Decode(cipherText)"]
-        armoured-->B
-        armoured-->C
+        D["verify"]
+        armoured--salt-->B
+        armoured--cipherText-->C
+        armoured--kdf-->D
+        
     end
     subgraph S[scrypt lib]
         E["key(salt, pass, ...)"]

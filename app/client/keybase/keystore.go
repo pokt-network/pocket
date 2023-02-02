@@ -53,7 +53,7 @@ func (keybase *badgerKeybase) Stop() error {
 	return keybase.db.Close()
 }
 
-// Create a new key and store it in the DB by encoding the KeyPair struct into a []byte
+// Create a new key and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
 func (keybase *badgerKeybase) Create(passphrase, hint string) error {
 	err := keybase.db.Update(func(tx *badger.Txn) error {
@@ -81,7 +81,7 @@ func (keybase *badgerKeybase) Create(passphrase, hint string) error {
 	return err
 }
 
-// Create a new KeyPair from the private key hex string and store it in the DB by encoding the KeyPair struct into a []byte
+// Create a new KeyPair from the private key hex string and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
 func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint string) error {
 	err := keybase.db.Update(func(tx *badger.Txn) error {
@@ -109,7 +109,7 @@ func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint stri
 	return err
 }
 
-// Create a new KeyPair from the private key JSON string and store it in the DB by encoding the KeyPair struct into a []byte
+// Create a new KeyPair from the private key JSON string and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
 func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 	err := keybase.db.Update(func(tx *badger.Txn) error {
