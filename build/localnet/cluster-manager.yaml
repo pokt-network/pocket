@@ -6,12 +6,16 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["services"]
-    verbs: ["get", "list", "watch"]
+    verbs: ["watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["v1-localnet-validators-private-keys"]
+    verbs: ["get"]
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: watcher-service-account
+  name: cluster-manager-account
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -20,7 +24,7 @@ metadata:
   namespace: default
 subjects:
   - kind: ServiceAccount
-    name: watcher-service-account
+    name: cluster-manager-account
     apiGroup: ""
 roleRef:
   kind: Role
@@ -38,4 +42,4 @@ spec:
       imagePullPolicy: IfNotPresent
       args:
         - cluster-manager
-  serviceAccountName: watcher-service-account
+  serviceAccountName: cluster-manager-account
