@@ -106,7 +106,6 @@ def run_wiki_migration():
     os.makedirs(TEMP_WIKI, exist_ok=True)
 
     # repo env variables
-    # secret = os.environ["USER_TOKEN"]
     github_actor = os.environ["GITHUB_ACTOR"]
     github_token = os.environ["GITHUB_TOKEN"]
     user_name = os.environ["USER_NAME"]
