@@ -258,6 +258,7 @@ func getNonce() uint64 {
 	if err != nil {
 		// If failed to get cryptographically secure nonce use a pseudo-random nonce
 		rand.Seed(time.Now().UTC().UnixNano())
+		//lint:ignore G404 - Weak random source is backup
 		return rand.Uint64()
 	}
 	return bigNonce.Uint64()
