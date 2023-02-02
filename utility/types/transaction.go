@@ -144,7 +144,7 @@ func (tx *Transaction) ToTxResult(height int64, index int, signer, recipient, ms
 	code, errString := int32(0), ""
 	if error != nil {
 		code = int32(error.Code())
-		errString = err.Error()
+		errString = error.Error()
 	}
 	return &DefaultTxResult{
 		Tx:            txBytes,
