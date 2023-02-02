@@ -70,11 +70,7 @@ func (keybase *badgerKeybase) Create(passphrase, hint string) error {
 			return err
 		}
 
-		if err := tx.Set(addrKey, keypairBz); err != nil {
-			return err
-		}
-
-		return nil
+		return tx.Set(addrKey, keypairBz)
 	})
 
 	return err
@@ -98,11 +94,7 @@ func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint stri
 			return err
 		}
 
-		if err := tx.Set(addrKey, keypairBz); err != nil {
-			return err
-		}
-
-		return nil
+		return tx.Set(addrKey, keypairBz)
 	})
 
 	return err
@@ -126,11 +118,7 @@ func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 			return err
 		}
 
-		if err := tx.Set(addrKey, keypairBz); err != nil {
-			return err
-		}
-
-		return nil
+		return tx.Set(addrKey, keypairBz)
 	})
 
 	return err
@@ -293,11 +281,7 @@ func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassph
 			return err
 		}
 
-		if err = tx.Set(addrKey, keypairBz); err != nil {
-			return err
-		}
-
-		return nil
+		return tx.Set(addrKey, keypairBz)
 	})
 
 	return err
@@ -334,10 +318,7 @@ func (keybase *badgerKeybase) Delete(address, passphrase string) error {
 	}
 
 	err = keybase.db.Update(func(tx *badger.Txn) error {
-		if err := tx.Delete(addrBz); err != nil {
-			return err
-		}
-		return nil
+		return tx.Delete(addrBz)
 	})
 	return err
 }
@@ -349,7 +330,7 @@ func badgerOptions(path string) badger.Options {
 	return opts
 }
 
-// Check directory exists / create if not
+// Check directory exists and creates path if it doesn't exist
 func dirExists(path string) (bool, error) {
 	stat, err := os.Stat(path)
 	if err == nil {
