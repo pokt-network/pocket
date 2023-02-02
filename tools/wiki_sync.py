@@ -9,7 +9,7 @@ from typing import Dict, List
 WIKI_DIR = "tools/wiki"
 TEMP_WIKI = "tools/temp_wiki"
 # text included in the Github Wiki formatting comment
-WIKI_TAG = "GITHUB_WIKI"  
+WIKI_TAG = "GITHUB_WIKI"
 
 
 @dataclass
@@ -90,7 +90,7 @@ def write_sidebar_file(sidebar: Dict[str, List[DocumentationFile]]) -> None:
 
 def write_wiki_pages(sidebar: Dict[str, List[DocumentationFile]]) -> None:
     # open md files in the repo an prepare for migration process
-    
+
     for category, doc_files in sidebar.items():
         for doc_file in doc_files:
             with open(doc_file.path) as source:
@@ -106,7 +106,9 @@ def run_wiki_migration():
     os.makedirs(TEMP_WIKI, exist_ok=True)
 
     # repo env variables
-    secret = os.environ["USER_TOKEN"]
+    # secret = os.environ["USER_TOKEN"]
+    github_actor = os.environ["GITHUB_ACTOR"]
+    github_token = os.environ["GITHUB_TOKEN"]
     user_name = os.environ["USER_NAME"]
     user_email = os.environ["USER_EMAIL"]
     owner = os.environ["OWNER"]
@@ -117,7 +119,7 @@ def run_wiki_migration():
     subprocess.call(["git", "config", "user.name", f"{user_name}"], cwd=TEMP_WIKI)
     subprocess.call(["git", "config", "user.email", f"{user_email}"], cwd=TEMP_WIKI)
     subprocess.call(
-        ["git", "pull", f"https://{secret}@github.com/{owner}/{repo_name}.wiki.git"],
+        ["git", "pull", f"https://{github_actor}:{github_token}@github.com/{owner}/{repo_name}.wiki.git"],
         cwd=TEMP_WIKI,
     )
 
@@ -152,7 +154,7 @@ def run_wiki_migration():
             "remote",
             "add",
             "master",
-            f"https://{secret}@github.com/{owner}/{repo_name}.wiki.git",
+            f"https://{github_actor}:{github_token}@github.com/{owner}/{repo_name}.wiki.git",
         ],
         cwd=TEMP_WIKI,
     )
