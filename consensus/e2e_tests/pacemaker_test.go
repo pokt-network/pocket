@@ -142,7 +142,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 
 	// Starting point
 	testHeight := uint64(3)
-	testStep := consensus.NewRound
+	testStep := uint8(consensus.NewRound)
 
 	// UnitTestNet configs
 	paceMakerTimeoutMsec := uint64(500) // Set a small pacemaker timeout

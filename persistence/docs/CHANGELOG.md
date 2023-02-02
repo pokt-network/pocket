@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.29] - 2023-01-31
+
+- Use hash of serialised protobufs for keys in `updateParamsTree()` and `updateFlagsTree()`
+
+## [0.0.0.28] - 2023-01-30
+
+- Fix unit tests - `TestGetAppPauseHeightIfExists`, `TestGetAppOutputAddress`, `TestGetFishermanStatus`, `TestGetFishermanPauseHeightIfExists`, `TestGetFishermanOutputAddress`, `TestPersistenceContextParallelReadWrite`, `TestGetServiceNodePauseHeightIfExists`, `TestGetServiceNodeOutputAddress`, `fuzzSingleProtocolActor`, `TestGetValidatorPauseHeightIfExists`, and `TestGetValidatorOutputAddress` for misplaced expected and actual values in `require.Equal`.
+
+## [0.0.0.27] - 2023-01-27
+
+- Add logic for `updateParamsTree()` and `updateFlagsTree()` functions when updating merkle root hash
+
+## [0.0.0.26] - 2023-01-23
+
+- Added `debug.FreeOSMemory()` on `ResetToGenesis` to free-up memory and stabilize `LocalNet`.
+
 ## [0.0.0.25] - 2023-01-20
 
 - Consolidate common behaviour of `Pool` and `Account` functions into a shared interface `ProtocolAccountSchema`

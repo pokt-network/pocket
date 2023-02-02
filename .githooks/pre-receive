@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+
+# Usage: bash pre-receive <CHANGED FILES>
+BRANCH_CHANGED_FILES=($@)
+
+# Initialise arrays and script wide variables
+IGNORE_DIRS=(".github" ".githooks" "docs" "bin")
+MODULES_EDITED=() # Modules are considered top-level directories directly under root
+MODULES_MISSING_CHANGELOG=()
+CHANGELOG_FILES=() # Full paths to CHANGELOG.md files
+CHANGELOG_ERRORS_FOUND=0
+
+# Loop through staged files
+for file in "${BRANCH_CHANGED_FILES[@]}"
+do
+    # Check the files contained in modules/top-level subdirs only
+    if [[ "${file}" =~ /+ ]]
+    then
+        module="$(echo "${file}" | sed 's/\/.*//')"
+        # Only add to modules list if not already present
+        if [[ ! "${MODULES_EDITED[*]}" =~ ${module} ]]
+        then
+            # Skip ignored modules if present
+            [[ ! "${IGNORE_DIRS[*]}" =~ ${module} ]] && MODULES_EDITED+=("${module}")
+        fi
+    # If not a subdir but root level CHANGELOG.md
+    elif [[ "${file}" == 'CHANGELOG.md' ]]
+    then
+        CHANGELOG_FILES+=("${file}") # Validate root changelog
+    fi
+done
+
+# Check that for each module edited the CHANGELOG.md file
+# was included in the commit
+if [[ "${#MODULES_EDITED[@]}" != 0 ]]
+then
+    # Loop through edited modules checking for CHANGELOG.md
+    for module in "${MODULES_EDITED[@]}"
+    do
+        MODULE_CHANGELOG_INCLUDED=0
+        for file in "${BRANCH_CHANGED_FILES[@]}"
+        do
+            # If any files under /root/{module}/* were edited, make
+            # sure that a CHANGELOG.md file was found and save the
+            # path to verify it has been updated
+            if [[ "${file}" =~ "${module}"/* ]]
+            then
+                # If the file's path string contains CHANGELOG.md add the
+                # path to the CHANGELOG_FILES array to be verified.
+                # This RegEx check accounts for CHANGELOG location
+                # inconsistencies: module root or doc/docs subdir
+                if [[ "${file}" =~ CHANGELOG.md ]]
+                then
+                    CHANGELOG_FILES+=("${file}")
+                    MODULE_CHANGELOG_INCLUDED=1
+                fi
+            fi
+        done
+        # Add modules missing CHANGELOG.md to array
+        if [[ "${MODULE_CHANGELOG_INCLUDED}" == 0 ]]
+        then
+            MODULES_MISSING_CHANGELOG+=("${module}")
+        fi
+        MODULE_CHANGELOG_INCLUDED=0
+    done
+fi
+
+# Print error messages and prepare exit for modules missing changelogs
+if [[ "${#MODULES_MISSING_CHANGELOG[@]}" != 0 ]]
+then
+    for module in "${MODULES_MISSING_CHANGELOG[@]}"
+    do
+        printf 'Missing changelog in module: %s/\n\n' "${module}" >&2
+        CHANGELOG_ERRORS_FOUND=1
+	done
+fi
+
+# Check version numbers and dates in changelogs provided
+for log in "${CHANGELOG_FILES[@]}"
+do
+    # sed using BRE expression for portability
+    head_versions=($(sed -n 's/^.*\(\[[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\]\) - \([0-9][0-9]*-[0-9][0-9]*-[0-9][0-9]*\).*$/\1 \2/p' "${log}" | head -n2))
+    # Get latest and previous versions and strip any leading 0s
+    # and check the latest version is greater than the previous
+    latest_version=$(($(echo "${head_versions[0]:1:-1}" | sed 's/\.//g' | sed 's/^0*//')+0))
+    previous_version=$(($(echo "${head_versions[2]:1:-1}" | sed 's/\.//g' | sed 's/^0*//')+0))
+    if [[ "${latest_version}" -le "${previous_version}" ]]
+    then
+        printf 'Latest version in %s is incorrect.\nLatest: %s, Previous: %s\n\n' "${log}" "${head_versions[0]}" "${head_versions[2]}" >&2
+        CHANGELOG_ERRORS_FOUND=1
+    fi
+    # compare date in string format YY-mm-dd
+    latest_changelog_date="${head_versions[1]}"
+
+    # get current changelog's module path
+    module="$(echo "${log}" | sed 's/\/.*//')"
+    # consider files changed since branching off main
+    # filter for files relevant to current module
+    changed_module_files=($( printf '%s\n' "${BRANCH_CHANGED_FILES[@]}" | grep "${module}" ))
+    # sort commits affecting module files by date and take most recent
+    latest_module_commit_date=$(sort -r <(echo "$changed_module_files" | xargs -I {} git --no-pager log -1 --format=%cs {}) | head -n 1)
+
+
+    if [[ "${latest_changelog_date}" != "${latest_module_commit_date}" ]]
+    then
+        printf 'Latest date in %s is incorrect.\nLatest: %s, Current: %s\n\n' "${log}" "${head_versions[1]}" "${latest_module_commit_date}" >&2
+        CHANGELOG_ERRORS_FOUND=1
+    fi
+done
+
+# Exit with error code 1 after all error messages have been
+# printed to stderr. If no errors detected exit with code 0
+if [[ "${CHANGELOG_ERRORS_FOUND}" == 1 ]]
+then
+    printf 'Changelog verification failed. See error messages for more detail.\n' >&2
+    exit 1
+fi
+
+exit 0

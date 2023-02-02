@@ -10,9 +10,9 @@ import (
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"google.golang.org/protobuf/proto"
 )
 
 type merkleTree float64
@@ -238,7 +238,7 @@ func (p *PostgresContext) updateActorsTree(actorType coreTypes.ActorType) error 
 			return err
 		}
 
-		actorBz, err := proto.Marshal(actor)
+		actorBz, err := codec.GetCodec().Marshal(actor)
 		if err != nil {
 			return err
 		}
@@ -298,7 +298,7 @@ func (p *PostgresContext) updateAccountTrees() error {
 			return err
 		}
 
-		accBz, err := proto.Marshal(account)
+		accBz, err := codec.GetCodec().Marshal(account)
 		if err != nil {
 			return err
 		}
@@ -319,7 +319,7 @@ func (p *PostgresContext) updatePoolTrees() error {
 
 	for _, pool := range pools {
 		bzAddr := []byte(pool.GetAddress())
-		accBz, err := proto.Marshal(pool)
+		accBz, err := codec.GetCodec().Marshal(pool)
 		if err != nil {
 			return err
 		}
@@ -354,11 +354,41 @@ func (p *PostgresContext) updateTransactionsTree() error {
 }
 
 func (p *PostgresContext) updateParamsTree() error {
-	// TODO(#361): Create a core starter task to implement this
+	params, err := p.getParamsUpdated(p.Height)
+	if err != nil {
+		return err
+	}
+
+	for _, param := range params {
+		paramBz, err := codec.GetCodec().Marshal(param)
+		paramKey := crypto.SHA3Hash(paramBz)
+		if err != nil {
+			return err
+		}
+		if _, err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(paramKey, paramBz); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (p *PostgresContext) updateFlagsTree() error {
-	// TODO(#361): Create a core starter task to implement this
+	flags, err := p.getFlagsUpdated(p.Height)
+	if err != nil {
+		return err
+	}
+
+	for _, flag := range flags {
+		flagBz, err := codec.GetCodec().Marshal(flag)
+		flagKey := crypto.SHA3Hash(flagBz)
+		if err != nil {
+			return err
+		}
+		if _, err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(flagKey, flagBz); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
