@@ -23,7 +23,8 @@ if (localnet_config_file != localnet_config) or (not os.path.exists(localnet_con
     print("Updating " + localnet_config_path + " with defaults")
     local("cat - > " + localnet_config_path, stdin=encode_yaml(localnet_config))
 
-# List of directories Tilt watches to trigger a hot-reload on changes. Potentially can be replaced with a list of excluded directories.
+# List of directories Tilt watches to trigger a hot-reload on changes.
+# CONSIDERATION: This can potentially can be replaced with a list of excluded directories.
 deps = [
     "app",
     "consensus",
