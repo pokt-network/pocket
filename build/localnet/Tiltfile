@@ -128,7 +128,7 @@ k8s_yaml(
     ]
 )
 
-# An example of how to expose postgres port to 5432 on the host machine in case developer wants to connect to postgres directly
+# Uncomment in order to expose postgres port to 5432 on the host machine in case the developer wants to connect to postgres directly
 # k8s_resource(new_name='postgres',
 #              objects=['pocket-database:postgresql'],
 #              extra_pod_selectors=[{'cluster-name': 'pocket-database'}],
