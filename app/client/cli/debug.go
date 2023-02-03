@@ -24,18 +24,13 @@ const (
 	PromptTriggerNextView        string = "TriggerNextView"
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
-
-	defaultConfigPath = "build/config/config1.json"
-	// Genesis file to be used from within a docker container to connect to other containers
-	defaultGenesisPath = "build/config/genesis.json"
-	// HACK: Genesis file to be used from the host machine to connect to docker containers.
-	// Note that `genesis.json` is a copy-pasta of `genesis_localhost.json` with the only
-	// difference being that `node{X}.consensus:8080` is replaced with `localhost:808{X}` because
-	// container names cannot be resolved by Docker's DNS from the host.
-	hostGenesisPath = "build/config/genesis_localhost.json"
 )
 
 var (
+	configPath = getEnv("CONFIG_PATH", "build/config/config1.json")
+	// Genesis file to be used from within a docker container to connect to other containers
+	genesisPath = getEnv("GENESIS_PATH", "build/config/genesis.json")
+
 	// A P2P module is initialized in order to broadcast a message to the local network
 	p2pMod modules.P2PModule
 
@@ -51,18 +46,10 @@ var (
 	// Its purpose is to allow the CLI to "discover" the nodes in the network. Since currently we don't have churn and we run nodes only in LocalNet, we can rely on the genesis state.
 	// HACK(#416): This is a temporary solution that guarantees backward compatibility while we implement peer discovery
 	validators []*coreTypes.Actor
-
-	// While the `p1` binary is in development, the debug commands require a config and a debug genesis file to operate.
-	// These currently live inside of the pocket repo so a workdir needs to be specified if `p1` is used from a directory
-	// other than the root of the pocket repo.
-	workdir   string
-	localhost bool
 )
 
 func init() {
 	debugCmd := NewDebugCommand()
-	debugCmd.Flags().StringVar(&workdir, "workdir", "./", "workdir where the pocket repo is located, relative to which config & genesis files can be loaded")
-	debugCmd.Flags().BoolVar(&localhost, "localhost", false, "true if the debug client is being initialized from the host; default: false (inside a container)")
 	rootCmd.AddCommand(debugCmd)
 }
 
@@ -72,15 +59,8 @@ func NewDebugCommand() *cobra.Command {
 		Short: "Debug utility for rapid development",
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			var genesisPath string
-			if localhost {
-				genesisPath = hostGenesisPath
-			} else {
-				genesisPath = defaultGenesisPath
-			}
-
 			var err error
-			runtimeMgr := runtime.NewManagerFromFiles(workdir+defaultConfigPath, workdir+genesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
+			runtimeMgr := runtime.NewManagerFromFiles(configPath, genesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
 
 			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
 			validators = runtimeMgr.GetGenesis().Validators
@@ -217,4 +197,11 @@ func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 	}
 
 	p2pMod.Send(validatorAddress, anyProto)
+}
+
+func getEnv(key, defaultValue string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return defaultValue
 }

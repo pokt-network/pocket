@@ -12,6 +12,10 @@ Please note that this repository is under very active development and breaking c
   - [Running LocalNet](#running-localnet)
   - [Profiling](#profiling)
 - [Code Organization](#code-organization)
+- [Maintaining Documentation](#maintaining-documentation)
+- [Documentation Resources and Implementation](#documentation-resources-and-implementation)
+  - [Github Actions File](#github-actions-file)
+  - [Python Script](#python-script)
   - [Linters](#linters)
     - [Installation of golangci-lint](#installation-of-golangci-lint)
     - [Running linters locally](#running-linters-locally)
@@ -105,12 +109,10 @@ You can add the following function so you can run the `p1` from anywhere on your
 
 ```bash
 function p1 {
-    pocket_workdir="/Users/olshansky/workspace/pocket/pocket/"
-    if [ "$1" = "debug" ]; then
-        ${pocket_workdir}/bin/p1 debug --localhost=true --workdir="${pocket_workdir}"
-    else
-        ${pocket_workdir}/bin/p1 "$@"
-    fi
+    POCKET_WORKDIR="${HOME}/workspace/pocket/pocket/"
+    CONFIG_PATH="${POCKET_WORKDIR}/build/config/config1.json"
+    GENESIS_PATH="${POCKET_WORKDIR}/build/config/genesis_localhost.json"
+    ${POCKET_WORKDIR}/bin/p1 "$@"
 }
 ```
 
@@ -268,9 +270,9 @@ The script finds the relevant Markdown files in the repository and organizes the
 
 Below, you can see some of the patterns between the Sidebar format, folder of markdowns in the Wiki Repository, and final sidebar/table of contents display.
 
-|Format|Folder|Wiki|
-|---|---|---|
-|![format](/tools/images/sidebar_format.png)|![Folder](/tools/images/folder.png)|![wiki](/tools/images/sidebar.png)|
+| Format                                      | Folder                              | Wiki                               |
+| ------------------------------------------- | ----------------------------------- | ---------------------------------- |
+| ![format](/tools/images/sidebar_format.png) | ![Folder](/tools/images/folder.png) | ![wiki](/tools/images/sidebar.png) |
 
 ### Linters
 
