@@ -8,6 +8,7 @@ import (
 )
 
 func TestNonceDeduper(t *testing.T) {
+	// pointers in this struct are meant to allow the tester to skip either `initialElements` or `actions` depending on what they are testing for
 	type args struct {
 		mempoolMaxNonces uint64
 		initialElements  *[]uint64
