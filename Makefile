@@ -474,6 +474,13 @@ localnet_down:
 	tilt down
 	kubectl delete pvc data-dependencies-postgresql-0
 
+.PHONY: localnet_db_cli
+## Open a CLI to the local containerized postgres instancedb_cli:
+localnet_db_cli:
+	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
+	kubectl exec -it services/dependencies-postgresql -- bash -c "psql postgresql://postgres:LocalNetPassword@localhost"
+
+
 .PHONY: check_cross_module_imports
 check_cross_module_imports: ## Lists cross-module imports
 	$(eval exclude_common=--exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime)
