@@ -104,3 +104,5 @@ if err != nil {
 	// handle error
 }
 ```
+
+<!-- GITHUB_WIKI: shared/modules/readme -->

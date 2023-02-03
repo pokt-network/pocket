@@ -9,8 +9,10 @@
 | HASHKEY      | `h/SHA3(TxResultProtoBytes)` | TxResultProtoBytes | store value by hash (the key here is equivalent to the VALs below) |
 | HEIGHTKEY    | `b/height/txIndex`             | HASHKEY            | store hashKey by height                                            |
 | SENDERKEY    | `s/senderAddr`               | HASHKEY            | store hashKey by sender                                            |
-| RECIPIENTKEY | `r/recipientAddr`            | HASHKEY            | store hashKey by recipient (if not empty)                          
+| RECIPIENTKEY | `r/recipientAddr`            | HASHKEY            | store hashKey by recipient (if not empty)
 
 ## ELEN Index
 
 The height/txIndex store uses [ELEN](https://github.com/jordanorelli/lexnum/blob/master/elen.pdf). This is to ensure the results are stored sorted (assuming the `KVStore` uses a byte-wise lexicographical sorting).
+
+<!-- GITHUB_WIKI: persistence/indexer/readme -->
