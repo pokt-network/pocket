@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"sync"
 	"time"
 
 	"github.com/pokt-network/pocket/logger"
@@ -13,6 +12,7 @@ import (
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	telemetry "github.com/pokt-network/pocket/telemetry"
@@ -34,12 +34,13 @@ type rainTreeNetwork struct {
 
 	logger modules.Logger
 
-	// TODO (#278): What should we use for de-duping messages within P2P?
+	// TODO(#278): What should we use for de-duping messages within P2P?
 	// TODO(#388): generalize to use the shared `FIFOMempool` type (in `utility/types/mempool.go` at the time of writing) in here as well for this.
 	nonceSet         map[uint64]struct{}
 	nonceList        []uint64
 	mempoolMaxNonces uint64
 	nonceSetMutex    sync.Mutex
+	nonceDeduper     *mempool.GenericFIFOSet[uint64, uint64]
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
@@ -58,8 +59,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProv
 	n := &rainTreeNetwork{
 		selfAddr:         addr,
 		peersManager:     pm,
-		nonceSet:         make(map[uint64]struct{}),
-		nonceList:        make([]uint64, 0, p2pCfg.MaxMempoolCount),
+		nonceDeduper:     mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
 		addrBookProvider: addrBookProvider,
 	}
 	n.SetBus(bus)
@@ -189,16 +189,10 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		}
 	}
 
-	// TODO(#388): The lock is necessary because `HandleNetworkData` can be called concurrently
-	// which has led to `fatal error: concurrent map writes` errors. Once a proper, shared, mempool
-	// implementation is available, this should no longer be necessary.
-	n.nonceSetMutex.Lock()
-	defer n.nonceSetMutex.Unlock()
-
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
-	if _, contains := n.nonceSet[rainTreeMsg.Nonce]; contains {
+	if contains := n.nonceDeduper.Contains(rainTreeMsg.Nonce); contains {
 		log.Printf("RainTree message with nonce %d already processed, skipping\n", rainTreeMsg.Nonce)
 		n.GetBus().
 			GetTelemetryModule().
@@ -213,13 +207,8 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		return nil, nil
 	}
 
-	n.nonceSet[rainTreeMsg.Nonce] = struct{}{}
-	n.nonceList = append(n.nonceList, rainTreeMsg.Nonce)
-	if uint64(len(n.nonceList)) > n.mempoolMaxNonces {
-		// removing the oldest nonce and the oldest key from the slice
-		delete(n.nonceSet, n.nonceList[0])
-		n.nonceList = n.nonceList[1:]
-	}
+	// Add the nonce to the deduper
+	n.nonceDeduper.Push(rainTreeMsg.Nonce)
 
 	// Return the data back to the caller so it can be handled by the app specific bus
 	return rainTreeMsg.Data, nil

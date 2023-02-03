@@ -171,12 +171,12 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 	// Check pause height when serviceNode does not exist
 	pauseHeight, err := db.GetServiceNodePauseHeightIfExists(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
+	require.Equal(t, DefaultPauseHeight, pauseHeight, "unexpected pause height")
 
 	// Check pause height when serviceNode does not exist
 	pauseHeight, err = db.GetServiceNodePauseHeightIfExists(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
+	require.Equal(t, DefaultPauseHeight, pauseHeight, "unexpected pause height")
 }
 
 func TestSetServiceNodePauseHeightAndUnstakeLater(t *testing.T) {
@@ -217,7 +217,7 @@ func TestGetServiceNodeOutputAddress(t *testing.T) {
 
 	output, err := db.GetServiceNodeOutputAddress(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, hex.EncodeToString(output), serviceNode.Output, "unexpected output address")
+	require.Equal(t, serviceNode.Output, hex.EncodeToString(output), "unexpected output address")
 }
 
 func newTestServiceNode() (*coreTypes.Actor, error) {

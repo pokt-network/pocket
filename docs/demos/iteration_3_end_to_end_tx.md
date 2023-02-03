@@ -163,3 +163,5 @@ go run app/client/*.go --path_to_private_key_file=/tmp/val2.json Account Send 67
 ```bash
 make swagger-ui
 ```
+
+<!-- GITHUB_WIKI: guides/demos/iteration_three_end_to_end -->

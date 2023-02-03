@@ -47,3 +47,5 @@ This module includes the following components:
   Clock is a drop-in replacement for some of the features offered by the `time` package, it acts as an injectable clock implementation used to provide time manipulation while testing.
 
   By default, the **real** clock is used and while testing it's possible to override it by using the "option" `WithClock(...)`
+
+<!-- GITHUB_WIKI: runtime/readme -->
