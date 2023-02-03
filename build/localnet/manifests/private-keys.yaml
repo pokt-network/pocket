@@ -1,6 +1,10 @@
 # Private keys on LocalNet have addresses that start with specific pattern:
 # NNNXX, where NNN is a number of an actor and XX is a type of actor.
 # For example, `00104055c00bed7c983a48aac7dc6335d7c607a7` is a validator with number 1.
+#
+# The keys are generated using `pocket-vanitygen`. There is a branch that makes it easier to generate keys
+# (for existing and new actors) in future:
+# https://github.com/okdas/pocket-vanitygen/blob/generate-private-keys-for-v1-localnet/main.go
 apiVersion: v1
 kind: Secret
 metadata:

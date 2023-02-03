@@ -3,22 +3,27 @@ load("ext://helm_resource", "helm_resource", "helm_repo")
 load("ext://namespace", "namespace_create")
 load("ext://restart_process", "docker_build_with_restart")
 
+tiltfile_dir = os.path.dirname(config.main_dir)
+root_dir = os.path.dirname(tiltfile_dir + '/../..')
+localnet_config_path = root_dir + "/localnet_config.yaml"
+
 # Create localnet config file from defaults, and if some default configuration doesn't exist in it - populate with default values
 localnet_config_defaults = {"validators": {"count": 4}}
 
 localnet_config_file = read_yaml(
-    "localnet_config.yaml", default=localnet_config_defaults
+    localnet_config_path, default=localnet_config_defaults
 )
+
 localnet_config = {}
 localnet_config.update(localnet_config_defaults)
 localnet_config.update(localnet_config_file)
 
 # Create a default config file if it does not exist
-if localnet_config_file != localnet_config:
-    print("Updating localnet_config.yaml")
-    local("cat - > localnet_config.yaml", stdin=encode_yaml(localnet_config))
+if (localnet_config_file != localnet_config) or (not os.path.exists(localnet_config_path)):
+    print("Updating " + localnet_config_path + " with defaults")
+    local("cat - > " + localnet_config_path, stdin=encode_yaml(localnet_config))
 
-# List of directories Tilt watches to trigger a hot-reload on changes
+# List of directories Tilt watches to trigger a hot-reload on changes. Potentially can be replaced with a list of excluded directories.
 deps = [
     "app",
     "consensus",
@@ -32,6 +37,8 @@ deps = [
     "vendor",
     "logger",
 ]
+
+deps_full_path = [root_dir + "/" + depdir for depdir in deps]
 
 # Deploy dependencies (grafana, postgres, prometheus) and wire it up with localnet
 helm_repo(
@@ -50,30 +57,34 @@ helm_repo(
 
 # Avoid downloading dependencies if no missing/outdated charts
 check_helm_dependencies = local(
-    "helm dependency list build/localnet/dependencies | awk '{print $4}' | grep -Ev 'ok|STATUS'"
+    "helm dependency list dependencies | awk '{print $4}' | grep -Ev 'ok|STATUS'"
 )
 helm_dependencies_not_ok_count = len(str(check_helm_dependencies).splitlines())
 if helm_dependencies_not_ok_count > 1:
-    local("helm dependency update build/localnet/dependencies")
+    local("helm dependency update dependencies")
 
-k8s_yaml(helm("build/localnet/dependencies", name="dependencies", namespace="default"))
+k8s_yaml(helm("dependencies", name="dependencies", namespace="default"))
 
 # Builds the pocket binary. Note target OS is linux, because no matter what your OS is, container runs linux natively or in VM.
 local_resource(
     "pocket: Watch & Compile",
-    "GOOS=linux go build -o bin/pocket-linux app/pocket/main.go",
-    deps=deps,
+    "GOOS=linux go build -o {root_dir}/bin/pocket-linux {root_dir}/app/pocket/main.go".format(
+        root_dir=root_dir
+    ),
+    deps=deps_full_path,
 )
 local_resource(
     "debug client: Watch & Compile",
-    "GOOS=linux go build -tags=debug -o bin/client-linux app/client/*.go",
-    deps=deps,
+    "GOOS=linux go build -tags=debug -o {root_dir}/bin/client-linux {root_dir}/app/client/*.go".format(
+        root_dir=root_dir
+    ),
+    deps=deps_full_path,
 )
 
 # Builds and maintains the validator container image after the binary is built on local machine, restarts a process on code change
 docker_build_with_restart(
     "validator-image",
-    ".",
+    root_dir,
     dockerfile_contents="""FROM debian:bullseye
 COPY bin/pocket-linux /usr/local/bin/pocket
 WORKDIR /
@@ -90,7 +101,7 @@ WORKDIR /
 # Builds and maintains the client container image after the binary is built on local machine
 docker_build_with_restart(
     "client-image",
-    ".",
+    root_dir,
     dockerfile_contents="""FROM debian:bullseye
 WORKDIR /
 COPY bin/client-linux /usr/local/bin/client
@@ -104,12 +115,12 @@ COPY bin/client-linux /usr/local/bin/client
 # Pushes localnet manifests to the cluster.
 k8s_yaml(
     [
-        "build/localnet/private-keys.yaml",
-        "build/localnet/configs.yaml",
-        "build/localnet/cli-client.yaml",
-        "build/localnet/network.yaml",
+        "manifests/private-keys.yaml",
+        "manifests/configs.yaml",
+        "manifests/cli-client.yaml",
+        "manifests/network.yaml",
         local(
-            "build/localnet/v1-validator-template.sh %s"
+            "templates/v1-validator-template.sh %s"
             % localnet_config["validators"]["count"],
             quiet=True,
         ),

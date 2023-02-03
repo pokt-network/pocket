@@ -3,7 +3,8 @@
 This guide shows how to deploy a LocalNet using [pocket-operator](https://github.com/pokt-network/pocket-operator).
 
 - [Dependencies](#dependencies)
-  - [Enabling Kubernetes](#enabling-kubernetes)
+  - [Choosing Kubernetes Distribution](#choosing-kubernetes-distribution)
+  - [Enabling Kubernetes For Docker Desktop](#enabling-kubernetes-for-docker-desktop)
 - [LocalNet](#localnet)
   - [Starting LocalNet](#starting-localnet)
   - [Viewing Logs](#viewing-logs)
@@ -13,29 +14,39 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
   - [Stopping \& Clean Resources](#stopping--clean-resources)
   - [Interacting w/ LocalNet](#interacting-w-localnet)
     - [Make Targets](#make-targets)
+  - [Addresses and keys on LocalNet](#addresses-and-keys-on-localnet)
+- [How to change configuration files](#how-to-change-configuration-files)
 - [How does it work?](#how-does-it-work)
 - [Troubleshooting](#troubleshooting)
   - [Why?](#why)
   - [Force Trigger an Update](#force-trigger-an-update)
   - [Force Restart](#force-restart)
   - [Full Cleanup](#full-cleanup)
-  - [Docker Desktop](#docker-desktop)
-- [How to change configuration files](#how-to-change-configuration-files)
 - [Code Structure](#code-structure)
 
 ## Dependencies
 
+All necessary dependencies, except Kubernetes cluster, are installed automatically when running `make install_cli_deps`. The following dependencies are required:
+
 1. [tilt](https://docs.tilt.dev/install.html)
-   - Note: automatically installed when running `make install_cli_deps`
-2. `Kubernetes cluster`: [installation options](https://docs.tilt.dev/choosing_clusters.html)
+2. `Kubernetes cluster`: refer to [Choosing Kubernetes Distribution](#choosing-kubernetes-distribution) section for more details.
 3. `kubectl`: CLI is required and should be configured to access the cluster. This should happen automatically if using Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc.
-4. `helm`: required to template the yaml manifests for the dependencies (e.g. postgres, grafana). Installation instructions available [here](https://helm.sh/docs/intro/install).
+4. [helm](https://helm.sh/docs/intro/install): required to template the yaml manifests for the dependencies (e.g. postgres, grafana). Installation instructions available .
 
-### Enabling Kubernetes
+### Choosing Kubernetes Distribution
 
-You may need to manually enable Kubernetes if using Docker desktop:
+While any Kubernetes distribution should work, we verified that LocalNet works on:
+- [Rancher Desktop](https://rancherdesktop.io/), which is GUI powered by a popular distribution `k3s`.
+- [kind](https://kind.sigs.k8s.io/) - official Kubernetes distribution that runs inside docker containers.
+
+Here is a list of alternative set ups that should work: https://docs.tilt.dev/choosing_clusters.html
+
+### Enabling Kubernetes For Docker Desktop
+
+You may need to manually enable Kubernetes if using Docker Desktop:
 
 ![Docker desktop kubernetes](https://user-images.githubusercontent.com/1892194/216165581-1372e2b8-c630-4211-8ced-5ec59b129330.png)
+
 
 ## LocalNet
 
@@ -44,6 +55,8 @@ You may need to manually enable Kubernetes if using Docker desktop:
 ```bash
 make localnet_up
 ```
+
+This action will create a file called `localnet_config.yaml` in the root of the repo if it doesn't exist. The default configuration can be found in [Tiltfile](Tiltfile#L7).
 
 ### Viewing Logs
 
@@ -95,19 +108,20 @@ make localnet_client_debug
 
 ### Addresses and keys on LocalNet
 
-You can find private keys and addresses for all actors in the [private-keys.yaml](private-keys.yaml) file. They have been pre-generated and follow a specific pattern - they start with pre-determined numbers for easier troubleshooting and debugging.
+You can find private keys and addresses for all actors in the [private-keys.yaml](./manifests/private-keys.yaml) file. They have been pre-generated and follow a specific pattern - they start with pre-determined numbers for easier troubleshooting and debugging.
 
 Addresses begin with `YYYXX` number, where `YYY` is a number of an actor and `XX` is [a type of actor](../../shared/core/types/proto/actor.proto#L7). For example, `420043b854e78f2d5f03895bba9ef16972913320` is a validator #420.
 
+
+## How to change configuration files
+
+Currently, we provide [a config file](./manifests/configs.yaml) that is shared between all validators and a pocket client. We make use of `pocket` client feature that allows us to override configuration via environment variables. You can check a [validator template](./templates/v1-validator-template.yaml.tpl) as a reference.
+
 ## How does it work?
 
-[tilt](https://tilt.dev/) reads the [`Tiltfile`](../../Tiltfile), where LocalNet configs are specified. `Tiltfile` is written in [Starlark](https://github.com/bazelbuild/starlark), a dialect of Python.
+[tilt](https://tilt.dev/) reads the [`Tiltfile`](./Tiltfile), where LocalNet configs are specified. `Tiltfile` is written in [Starlark](https://github.com/bazelbuild/starlark), a dialect of Python.
 
-The k8s manifests that `tilt` submits to the cluster can be found in [this directory](./):
-
-- **[dependencies](./dependencies/)**: a helm chart that installs all necessary dependencies to run and observe LocalNet (postgresql, prometheus, grafana, etc).
-- **[4 Validators](./v1-validator-template.sh)**: The validator binary that runs inside of the container gets updated automatically and process restarted on each code change (i.e. hot reloads).
-- **[V1 CLI client](./cli-client.yaml)**: This binary that can be used to perform debug operations. Run `make localnet_client_debug` to execute commands such as `ResetToGenesis` or `TogglePacemakerMode`. This binary is also automatically updated when you make changes to the codebase.
+The k8s manifests that `tilt` submits to the cluster can be found in [this directory](./). Please refer to [code structure](#code-structure) for more details where different parts are located.
 
 Tilt continuously monitors files on local filesystem in [specific directories](Tiltfile#L22), and it rebuilds the binary and distributes it to the pods on every code change. This allows developers to iterate on the code and see the changes immediately.
 
@@ -138,34 +152,29 @@ If force triggering an update didn't work, try the following:
 
 If a force restart didn't help, try rebuilding local kubernetes cluster using the tool you're managing your cluster with (e.g. Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc).
 
-### Docker Desktop
-
-# TODO_IN_THIS_COMMIT
-
-## How to change configuration files
-
-Currently, we provide [a config file](./configs.yaml) that is shared between all validators and a pocket client. We make use of `pocket` client feature that allows us to override configuration via environment variables. You can look at [one of the validators](../../build/localnet/v1-validator1.yaml) as a reference.
-
 ## Code Structure
 
 ```bash
-build/localnet # TODO_IN_THIS_COMMIT
-├── README.md # TODO_IN_THIS_COMMIT
-├── cli-client.yaml # TODO_IN_THIS_COMMIT
-├── configs.yaml # TODO_IN_THIS_COMMIT
-├── dependencies # TODO_IN_THIS_COMMIT
-│   ├── Chart.yaml # TODO_IN_THIS_COMMIT
-│   ├── dashboards # TODO_IN_THIS_COMMIT
-│   │   ├── README.md # TODO_IN_THIS_COMMIT
-│   │   └── raintree-telemetry-graphs.json # TODO_IN_THIS_COMMIT
-│   ├── requirements.yaml # TODO_IN_THIS_COMMIT
-│   ├── templates # TODO_IN_THIS_COMMIT
-│   │   ├── _helpers.tpl # TODO_IN_THIS_COMMIT
-│   │   ├── dashboards.yml # TODO_IN_THIS_COMMIT
-│   │   └── datasources.yml # TODO_IN_THIS_COMMIT
-│   └── values.yaml # TODO_IN_THIS_COMMIT
-├── network.yaml # TODO_IN_THIS_COMMIT
-├── private-keys.yaml # TODO_IN_THIS_COMMIT
-├── v1-validator-template.sh # TODO_IN_THIS_COMMIT
-└── v1-validator-template.yaml # TODO_IN_THIS_COMMIT
+build/localnet
+├── README.md # This file
+├── Tiltfile # This file
+├── dependencies # Helm chart that installs all the dependencies needed to run and observe LocalNet
+│   ├── Chart.yaml # Main file of the helm chart, contains metadata
+│   ├── dashboards # Directory with all the dashboards that are automatically imported to Grafana
+│   │   ├── README.md # README file with instructions on how to add a new dashboard
+│   │   └── raintree-telemetry-graphs.json # Raintree Telemetry dashboard
+│   ├── requirements.yaml # Specifies dependencies of the chart, this allows us to install all the dependencies with a single command
+│   ├── templates # Additional Kubernetes manifests that we need to connect different dependencies together
+│   │   ├── _helpers.tpl
+│   │   ├── dashboards.yml
+│   │   └── datasources.yml
+│   └── values.yaml # Configuration values that override the default values of the dependencies, this allows us to connect dependencies together and make them available to our LocalNet services
+├── manifests # Static YAML Kubernetes manifests that are consumed by `tilt`
+│   ├── cli-client.yaml # Pod that has the latest binary of the pocket client. Makefile targets run CLI in this pod.
+│   ├── configs.yaml # Location of the config files (default configs for all validators and a genesis file) that are shared between all actors
+│   ├── network.yaml # Networking configuration that is shared between different actors, currently a Service that points to all validators
+│   └── private-keys.yaml # Pre-generated private keys for everything
+└── templates # Templates for Kubernetes manifests that are consumed by `tilt`
+    ├── v1-validator-template.sh # Shell script that generates Kubenetes manifests for validators, consumed by `tilt`
+    └── v1-validator-template.yaml.tpl # Template for a single validator, consumed by `v1-validator-template.sh`
 ```
