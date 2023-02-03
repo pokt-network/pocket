@@ -10,6 +10,7 @@ import (
 )
 
 func TestMempool(t *testing.T) {
+	// pointers in this struct are meant to allow the tester to skip either `initialMsgs` or `actions` depending on what they are testing for
 	type args struct {
 		maxTotalMsgBytes uint64
 		initialMsgs      *[]*typesCons.HotstuffMessage
