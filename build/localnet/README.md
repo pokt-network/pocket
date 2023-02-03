@@ -56,7 +56,7 @@ You may need to manually enable Kubernetes if using Docker Desktop:
 make localnet_up
 ```
 
-This action will create a file called `localnet_config.yaml` in the root of the repo if it doesn't exist. The default configuration can be found in [Tiltfile](Tiltfile#L7).
+This action will create a file called `localnet_config.yaml` in the root of the repo if it doesn't exist. The default configuration can be found in [Tiltfile](Tiltfile#L11).
 
 ### Viewing Logs
 
@@ -123,7 +123,7 @@ Currently, we provide [a config file](./manifests/configs.yaml) that is shared b
 
 The k8s manifests that `tilt` submits to the cluster can be found in [this directory](./). Please refer to [code structure](#code-structure) for more details where different parts are located.
 
-Tilt continuously monitors files on local filesystem in [specific directories](Tiltfile#L22), and it rebuilds the binary and distributes it to the pods on every code change. This allows developers to iterate on the code and see the changes immediately.
+Tilt continuously monitors files on local filesystem in [specific directories](Tiltfile#L27), and it rebuilds the binary and distributes it to the pods on every code change. This allows developers to iterate on the code and see the changes immediately.
 
 ## Troubleshooting
 
