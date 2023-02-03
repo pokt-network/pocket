@@ -175,7 +175,7 @@ build/localnet
 │   ├── cli-client.yaml # Pod that has the latest binary of the pocket client. Makefile targets run CLI in this pod.
 │   ├── configs.yaml # Location of the config files (default configs for all validators and a genesis file) that are shared across all actors
 │   ├── network.yaml # Networking configuration that is shared between different actors, currently a Service that points to all validators
-│   └── private-keys.yaml # Pre-generated private keys for everything
+│   └── private-keys.yaml # Pre-generated private keys with a semantic format for easier development
 └── templates # Templates for Kubernetes manifests that are consumed by `tilt`
     ├── v1-validator-template.sh # Shell script that generates Kubenetes manifests for validators, consumed by `tilt`
     └── v1-validator-template.yaml.tpl # Template for a single validator, consumed by `v1-validator-template.sh`
