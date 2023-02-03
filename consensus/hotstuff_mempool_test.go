@@ -264,8 +264,8 @@ func TestMempool(t *testing.T) {
 // it is used in tests to make sure that the mempool is correctly limiting the size of the transactions it stores
 //
 // IMPORTANT: the size of the transaction is not the size of the whole message on the wire, there's obviously some overhead in the protobuf
-func hotstuffMessageFactory(size int) *typesCons.HotstuffMessage {
-	tx := make([]byte, size)
+func hotstuffMessageFactory(txSize int) *typesCons.HotstuffMessage {
+	tx := make([]byte, txSize)
 	for i := range tx {
 		tx[i] = 1
 	}
