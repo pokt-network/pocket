@@ -4,6 +4,7 @@ import (
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
@@ -20,6 +21,10 @@ func (m *consensusModule) HandleDebugMessage(debugMessage *messaging.DebugMessag
 		m.triggerNextView(debugMessage)
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
 		m.togglePacemakerManualMode(debugMessage)
+	case messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ:
+		m.sendGetBlockStateSyncMessage(debugMessage)
+	case messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ:
+		m.sendGetMetadataStateSyncMessage(debugMessage)
 	default:
 		log.Printf("Debug message: %s \n", debugMessage.Message)
 	}
@@ -85,4 +90,63 @@ func (m *consensusModule) togglePacemakerManualMode(_ *messaging.DebugMessage) {
 		m.nodeLog(typesCons.DebugTogglePacemakerManualMode("AUTOMATIC"))
 	}
 	m.paceMaker.SetManualMode(newMode)
+}
+
+// requests current block from all validators
+func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage) {
+	blockHeight := m.CurrentHeight() - 1
+	peerId, err := m.GetCurrentNodeAddressFromNodeId()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+		Message: &typesCons.StateSyncMessage_GetBlockReq{
+			GetBlockReq: &typesCons.GetBlockRequest{
+				PeerId: peerId,
+				Height: blockHeight,
+			},
+		},
+	}
+
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
+	}
+
+	for _, val := range validators {
+		if err := m.stateSync.SendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress()), blockHeight); err != nil {
+			m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
+		}
+	}
+
+}
+
+// requests metadata from all validators
+func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMessage) {
+	blockHeight := m.CurrentHeight() - 1
+	peerId, err := m.GetCurrentNodeAddressFromNodeId()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
+		Message: &typesCons.StateSyncMessage_MetadataReq{
+			MetadataReq: &typesCons.StateSyncMetadataRequest{
+				PeerId: peerId,
+			},
+		},
+	}
+
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
+	}
+
+	for _, val := range validators {
+		if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, cryptoPocket.AddressFromString(val.GetAddress()), blockHeight); err != nil {
+			m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
+		}
+	}
+
 }

@@ -5,6 +5,7 @@ import (
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -37,6 +38,8 @@ type StateSyncModule interface {
 	IsServerModEnabled() bool
 	EnableServerMode()
 	SetLogPrefix(string)
+
+	SendStateSyncMessage(*typesCons.StateSyncMessage, cryptoPocket.Address, uint64) error
 }
 
 var (

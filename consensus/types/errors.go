@@ -9,6 +9,7 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/shared/codec"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -82,8 +83,8 @@ func SendingMessage(msg *HotstuffMessage, nodeId NodeId) string {
 	return fmt.Sprintf("✉️ Sending message ✉️ to %d at (height, step, round) (%d, %d, %d)", nodeId, msg.Height, msg.Step, msg.Round)
 }
 
-func SendingStateSyncMessage(nodeId string, height uint64) string {
-	return fmt.Sprintf("🔄 Sending State sync message ✉️ to node  %s at height: (%d)  🔄", nodeId, height)
+func SendingStateSyncMessage(nodeId cryptoPocket.Address, height uint64) string {
+	return fmt.Sprintf("🔄 Sending State sync message ✉️ to node %s at height: (%d)  🔄", nodeId, height)
 }
 
 func BroadcastingMessage(msg *HotstuffMessage) string {

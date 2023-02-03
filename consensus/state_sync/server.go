@@ -8,7 +8,6 @@ import (
 	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // This module is responsible for handling requests and business logic that advertises and shares
@@ -51,13 +50,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 		},
 	}
 
-	anyMsg, err := anypb.New(&stateSyncMessage)
-	if err != nil {
-		return err
-	}
-
-	m.nodeLog(typesCons.SendingStateSyncMessage(clientPeerId, m.bus.GetConsensusModule().CurrentHeight()))
-	return m.sendToPeer(anyMsg, cryptoPocket.AddressFromString(clientPeerId))
+	return m.SendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerId), m.bus.GetConsensusModule().CurrentHeight())
 }
 
 func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
@@ -92,12 +85,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 		},
 	}
 
-	anyMsg, err := anypb.New(&stateSyncMessage)
-	if err != nil {
-		return err
-	}
-	m.nodeLog(typesCons.SendingStateSyncMessage(clientPeerId, blockReq.Height))
-	return m.sendToPeer(anyMsg, cryptoPocket.AddressFromString(clientPeerId))
+	return m.SendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerId), blockReq.Height)
 }
 
 // Get a block from persistance module given block height
@@ -107,7 +95,7 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 
 	blockBytes, err := blockStore.Get(heightBytes)
 	if err != nil {
-		m.nodeLog("Couldn't retrieve the block")
+		m.nodeLog(fmt.Sprintf("Couldn't retrieve the block %d, with height bytes %v size %d", blockHeight, heightBytes, len(heightBytes)))
 		return nil, err
 	}
 
