@@ -44,14 +44,11 @@ func TestStateSync_ServerGetMetaDataReq_SuccessfulTest(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test MetaData Req
-	stateSyncMetaDataReq := typesCons.StateSyncMetadataRequest{
-		PeerId: requesterNodePeerId,
-	}
-
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
-		//MsgType: typesCons.StateSyncMessageType_STATE_SYNC_METADATA_REQUEST,
 		Message: &typesCons.StateSyncMessage_MetadataReq{
-			MetadataReq: &stateSyncMetaDataReq,
+			MetadataReq: &typesCons.StateSyncMetadataRequest{
+				PeerId: requesterNodePeerId,
+			},
 		},
 	}
 	anyProto, err := anypb.New(stateSyncMetaDataReqMessage)
@@ -107,15 +104,12 @@ func TestStateSync_ServerGetBlock_SuccessfulTest(t *testing.T) {
 
 	// Passing Test
 	// Test GetBlock Req
-	stateSyncGetBlockReq := typesCons.GetBlockRequest{
-		PeerId: requesterNodePeerId,
-		Height: 1,
-	}
-
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-		//MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_REQUEST,
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
-			GetBlockReq: &stateSyncGetBlockReq,
+			GetBlockReq: &typesCons.GetBlockRequest{
+				PeerId: requesterNodePeerId,
+				Height: 1,
+			},
 		},
 	}
 
@@ -171,15 +165,12 @@ func TestStateSync_ServerGetBlock_FailingTest(t *testing.T) {
 
 	// Failing Test
 	// Get Block Req is current block height + 1
-	stateSyncGetBlockReq := typesCons.GetBlockRequest{
-		PeerId: requesterNodePeerId,
-		Height: testHeight + 1,
-	}
-
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-		//MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_REQUEST,
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
-			GetBlockReq: &stateSyncGetBlockReq,
+			GetBlockReq: &typesCons.GetBlockRequest{
+				PeerId: requesterNodePeerId,
+				Height: testHeight + 1,
+			},
 		},
 	}
 
