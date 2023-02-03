@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.22] - 2023-02-01
+## [0.0.0.22] - 2023-02-03
 
 - Using the generic `mempool.GenericFIFOSet` as a `nonceDeduper`
 - Added tests for `nonceDeduper` to ensure that it behaves as expected.

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.24] - 2023-02-01
+## [0.0.0.24] - 2023-02-03
 
 - Introduced `hotstuffFIFOMempool` that extends the logic provided by the genericized FIFO mempool in `shared`.
 - Added tests for `hotstuffFIFOMempool` to ensure that it behaves as expected.
