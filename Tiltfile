@@ -84,11 +84,13 @@ docker_build_with_restart('cluster-manager-image', '.',
     dockerfile_contents='''FROM debian:bullseye
 WORKDIR /
 COPY bin/cluster-manager /usr/local/bin/cluster-manager
+COPY bin/client-linux /usr/local/bin/client
 ''',
-    only=['bin/cluster-manager'],
+    only=['bin/cluster-manager', 'bin/client-linux'],
     entrypoint=["/usr/local/bin/cluster-manager"],
     live_update=[
-        sync('bin/cluster-manager', '/usr/local/bin/cluster-manager')
+        sync('bin/cluster-manager', '/usr/local/bin/cluster-manager'),
+        sync('bin/client-linux', '/usr/local/bin/client'),
     ]
 )
 
