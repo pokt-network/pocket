@@ -1,7 +1,5 @@
 package mempool
 
-// type GenericFIFOList = mempool_list.GenericFIFOList[any] // TODO: fix this aliasing
-
 type TXMempool interface {
 	Contains(hash string) bool
 	AddTx(tx []byte) error
