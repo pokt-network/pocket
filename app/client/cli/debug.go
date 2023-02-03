@@ -43,13 +43,12 @@ var (
 	// HACK(#416): This is a temporary solution that guarantees backward compatibility while we implement peer discovery
 	validators []*coreTypes.Actor
 
-	configPath  string
-	genesisPath string
+	configPath  string = getEnv("CONFIG_PATH", "build/config/config1.json")
+	genesisPath string = getEnv("GENESIS_PATH", "build/config/genesis.json")
 )
 
 func init() {
 	debugCmd := NewDebugCommand()
-
 	rootCmd.AddCommand(debugCmd)
 }
 
@@ -60,9 +59,6 @@ func NewDebugCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			var err error
-
-			configPath = getEnv("CONFIG_PATH", "build/config/config1.json")
-			genesisPath = getEnv("GENESIS_PATH", "build/config/genesis.json")
 
 			runtimeMgr := runtime.NewManagerFromFiles(configPath, genesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
 
