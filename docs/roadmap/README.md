@@ -103,3 +103,5 @@ gantt
 ## M7. Pocket NoS (North Star)
 
 Shoot for the ✨ and we will land on the 🌕
+
+<!-- GITHUB_WIKI: guides/roadmap/readme -->

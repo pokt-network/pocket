@@ -194,3 +194,5 @@ const NODES_ALIVE_COUNTER_TIME_SERIES_DESCRIPTION = "Number of nodes online"
 ```
 
 This makes referencing the metrics easier, and makes it easy to change the name of the metric later on, in addition to the fact that it gathers metric definitions in a single file.
+
+<!-- GITHUB_WIKI: guides/telemetry/readme -->

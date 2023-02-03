@@ -231,6 +231,30 @@ Pocket
 └── Makefile                          # The source of targets used to develop, build and test
 ```
 
+## Maintaining Documentation
+
+Documentation files currently found by the following command `find . -name "*.md" | grep -v -e "vendor" -e "app"` are added to the [Github Wiki Repository](https://github.com/pokt-network/pocket/wiki). The Wiki will be improved overtime but in its current form, provides an organized overview of the Repository.
+
+To keep the Wiki organized, a comment is added at the end of each `.md` file. For example, you can find the following one at the end of this file `<!-- GITHUB_WIKI: guides/development/readme -->`. The structure of the comment indicates the category (guides), subcategory(ies) (development) and filename (readme): `<!-- GITHUB_WIKI: <category>/<subcategory 1>/.../<filename>`. You can see the example output in the [Wiki Page](https://github.com/pokt-network/pocket/wiki/Development-Readme).
+
+If you are adding a new `.md` file for documentation please included a similar comment. Use your best judgment for the category and subcategory if its a new directory. Otherwise, copy the comment from a similar file in the directory and choose a relevant filename.
+
+## Documentation Resources and Implementation
+
+### [Github Actions File](/.github/workflows/wiki_sync_process.yml)
+
+The Action is triggered when there is a change to any Markdown file on the main branch of the Repository. When triggered, environment variables are set for a Python script that updates the Github Wiki Repository based on Pocket Repository files.
+
+### [Python Script](/tools/wiki_sync.py)
+
+The script finds the relevant Markdown files in the repository and organizes them for the Wiki Repository. Currently, the find command is filtered to exclude the `./app` and `./vendor` directories. Based on the list of `.md` file paths, it maps the formatting spec from [above](##Maintaining-Documentation) to some information about the file. Using the map, it creates a Sidebar file format which Github uses as a Table of Contents for the wiki. Also, from the Pocket repo we copy over the files with titles linking to the Sidebar format.
+
+Below, you can see some of the patterns between the Sidebar format, folder of markdowns in the Wiki Repository, and final sidebar/table of contents display.
+
+|Format|Folder|Wiki|
+|---|---|---|
+|![format](/tools/images/sidebar_format.png)|![Folder](/tools/images/folder.png)|![wiki](/tools/images/sidebar.png)|
+
 ### Linters
 
 We utilize `golangci-lint` to run the linters. It is a wrapper around a number of linters and is configured to run many at once. The linters are configured to run on every commit and pull request via CI, and all code issues are populated as GitHub annotations to let developers and reviewers easily locate an issue.
@@ -271,3 +295,5 @@ The official documentation includes a list of different linters and their config
 We can write custom linters using [`go-ruleguard`](https://go-ruleguard.github.io/). The rules are located in the [`build/linters`](../../build/linters) directory. The rules are written in the [Ruleguard DSL](https://github.com/quasilyte/go-ruleguard/blob/master/_docs/dsl.md), if you've never worked with ruleguard in the past, it makes sense to go through [introduction article](https://quasilyte.dev/blog/post/ruleguard/) and [Ruleguard by example tour](https://go-ruleguard.github.io/by-example/).
 
 Ruleguard is run via `gocritic` linter which is a part of `golangci-lint`, so if you wish to change configuration or debug a particular rule, you can modify the `.golangci.yml` file.
+
+<!-- GITHUB_WIKI: guides/development/readme -->
