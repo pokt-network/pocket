@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.7] - 2023-02-03
+
+- Changed readme to remove $ sign from code blocks
+
 ## [0.0.0.6] - 2023-01-23
 
 - Added `pprof` http server feature flag via build tags
