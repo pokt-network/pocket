@@ -203,7 +203,7 @@ func (p *PrometheusTelemetryModule) GaugeSub(name string, value float64) (promet
 
 func (p *PrometheusTelemetryModule) GaugeVecRegister(namespace, module, name, description string, labels []string) {
 	if _, exists := p.counters[name]; exists {
-		p.logger.Warn().Str("gauge vector", name).Msg("Trying to register and already registered gauge vector")
+		p.logger.Warn().Str("gauge_vector", name).Msg("Trying to register and already registered gauge vector")
 		return
 	}
 
