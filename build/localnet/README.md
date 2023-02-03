@@ -160,7 +160,7 @@ If a force restart didn't help, try rebuilding local kubernetes cluster using th
 build/localnet
 ├── README.md # This file
 ├── Tiltfile # File outlining tilt process
-├── dependencies # Helm chart that installs all the dependencies needed to run and observe LocalNet
+├── dependencies # Helm charts that install all the dependencies needed to run and observe LocalNet
 │   ├── Chart.yaml # Main file of the helm chart, contains metadata
 │   ├── dashboards # Directory with all the dashboards that are automatically imported to Grafana
 │   │   ├── README.md # README file with instructions on how to add a new dashboard
