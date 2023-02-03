@@ -173,7 +173,7 @@ build/localnet
 │   └── values.yaml # Configuration values that override the default values of the dependencies, this allows us to connect dependencies together and make them available to our LocalNet services
 ├── manifests # Static YAML Kubernetes manifests that are consumed by `tilt`
 │   ├── cli-client.yaml # Pod that has the latest binary of the pocket client. Makefile targets run CLI in this pod.
-│   ├── configs.yaml # Location of the config files (default configs for all validators and a genesis file) that are shared between all actors
+│   ├── configs.yaml # Location of the config files (default configs for all validators and a genesis file) that are shared across all actors
 │   ├── network.yaml # Networking configuration that is shared between different actors, currently a Service that points to all validators
 │   └── private-keys.yaml # Pre-generated private keys for everything
 └── templates # Templates for Kubernetes manifests that are consumed by `tilt`
