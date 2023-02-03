@@ -49,7 +49,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 	// Likely to be `nil` if blockchain is progressing well.
 	// TECHDEBT: How do we properly validate `prepareQC` here?
-	// DISCUSS: could this be improved by incrementally keeping track of highQC when we add/remove messages to the mempool? Probably premature optimization for now but something to keep in mind.
+	// CONSIDERATION(M5): could this be improved by incrementally keeping track of highQC when we add/remove messages to the mempool? Probably premature optimization for now but something to keep in mind.
 	highPrepareQC := m.findHighQC(m.hotstuffMempool[NewRound].GetAll())
 
 	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
