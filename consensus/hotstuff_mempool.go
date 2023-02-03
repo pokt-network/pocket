@@ -78,6 +78,11 @@ func (mp *hotstuffFIFOMempool) Push(msg *typesCons.HotstuffMessage) error {
 
 func (mp *hotstuffFIFOMempool) Clear() {
 	mp.g.Clear()
+	resetCounters(mp)
+}
+
+// resetCounters resets size and totalMsgBytes to 0
+func resetCounters(mp *hotstuffFIFOMempool) {
 	mp.m.Lock()
 	defer mp.m.Unlock()
 	mp.size = 0
