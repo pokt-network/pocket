@@ -129,10 +129,10 @@ k8s_yaml(
 )
 
 # Uncomment in order to expose postgres port to 5432 on the host machine in case the developer wants to connect to postgres directly
+# First port is the port on the host machine, second is the port on the container, so if you already have postgres running on the host machine, you can change the first port to something else
 # k8s_resource(new_name='postgres',
-#              objects=['pocket-database:postgresql'],
-#              extra_pod_selectors=[{'cluster-name': 'pocket-database'}],
-#              port_forwards=5432)
+#              workload="dependencies-postgresql",
+#              port_forwards="5432:5432")
 
 # Exposes grafana
 k8s_resource(
