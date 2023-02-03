@@ -109,9 +109,9 @@ You can add the following function so you can run the `p1` from anywhere on your
 
 ```bash
 function p1 {
-    POCKET_WORKDIR="${HOME}/workspace/pocket/pocket/"
-    CONFIG_PATH="${POCKET_WORKDIR}/build/config/config1.json"
-    GENESIS_PATH="${POCKET_WORKDIR}/build/config/genesis_localhost.json"
+    EXPORT POCKET_WORKDIR="${HOME}/workspace/pocket/pocket/"
+    EXPORT CONFIG_PATH="${POCKET_WORKDIR}/build/config/config1.json"
+    EXPORT GENESIS_PATH="${POCKET_WORKDIR}/build/config/genesis_localhost.json"
     ${POCKET_WORKDIR}/bin/p1 "$@"
 }
 ```

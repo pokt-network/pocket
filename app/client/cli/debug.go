@@ -27,10 +27,6 @@ const (
 )
 
 var (
-	configPath = getEnv("CONFIG_PATH", "build/config/config1.json")
-	// Genesis file to be used from within a docker container to connect to other containers
-	genesisPath = getEnv("GENESIS_PATH", "build/config/genesis.json")
-
 	// A P2P module is initialized in order to broadcast a message to the local network
 	p2pMod modules.P2PModule
 
@@ -46,10 +42,14 @@ var (
 	// Its purpose is to allow the CLI to "discover" the nodes in the network. Since currently we don't have churn and we run nodes only in LocalNet, we can rely on the genesis state.
 	// HACK(#416): This is a temporary solution that guarantees backward compatibility while we implement peer discovery
 	validators []*coreTypes.Actor
+
+	configPath  string
+	genesisPath string
 )
 
 func init() {
 	debugCmd := NewDebugCommand()
+
 	rootCmd.AddCommand(debugCmd)
 }
 
@@ -60,6 +60,10 @@ func NewDebugCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			var err error
+
+			configPath = getEnv("CONFIG_PATH", "build/config/config1.json")
+			genesisPath = getEnv("GENESIS_PATH", "build/config/genesis.json")
+
 			runtimeMgr := runtime.NewManagerFromFiles(configPath, genesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
 
 			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
