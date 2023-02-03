@@ -204,14 +204,11 @@ func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 
 // TODO implement, placeholger, state sync get block tests fails when used as it is
 func (m *persistenceModule) GetMinBlockHeight() (uint64, error) {
-	height, err := m.writeContext.GetMaximumBlockHeight()
-	if err != nil {
-		return 0, err
-	}
-	return height, nil
+
+	return 1, nil
 }
 
-// TODO implement, placeholger, state sync get block tests fails when used as it is
+// TODO implement, placeholder, state sync get block tests fails when used as it is
 func (m *persistenceModule) GetMaxBlockHeight() (uint64, error) {
 	height, err := m.writeContext.GetMaximumBlockHeight()
 	if err != nil {

@@ -33,6 +33,8 @@ func (p PostgresContext) GetMaximumBlockHeight() (latestHeight uint64, err error
 		return 0, err
 	}
 
+	fmt.Println("GETTING MAX BLOCK HEIGHT")
+
 	err = tx.QueryRow(ctx, types.GetMaximumBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
@@ -108,5 +110,6 @@ func (p PostgresContext) storeBlock(block *coreTypes.Block) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Storing block %d in block store! \n", block.BlockHeader.Height)
 	return p.blockStore.Set(converters.HeightToBytes(uint64(p.Height)), blockBz)
 }
