@@ -122,13 +122,21 @@ func (mp *hotstuffFIFOMempool) Contains(msg *typesCons.HotstuffMessage) bool {
 }
 
 func incrementCounters(item *typesCons.HotstuffMessage, hotstuffFIFOMempool *hotstuffFIFOMempool) {
-	bytes, _ := codec.GetCodec().Marshal(item)
+	bytes, err := codec.GetCodec().Marshal(item)
+	if err != nil {
+		log.Fatalf("could not marshal message: %v", err)
+		return
+	}
 	hotstuffFIFOMempool.size++
 	hotstuffFIFOMempool.totalMsgBytes += uint64(len(bytes))
 }
 
 func decrementCounters(item *typesCons.HotstuffMessage, hotstuffFIFOMempool *hotstuffFIFOMempool) {
-	bytes, _ := codec.GetCodec().Marshal(item)
+	bytes, err := codec.GetCodec().Marshal(item)
+	if err != nil {
+		log.Fatalf("could not marshal message: %v", err)
+		return
+	}
 	hotstuffFIFOMempool.size--
 	hotstuffFIFOMempool.totalMsgBytes -= uint64(len(bytes))
 }
