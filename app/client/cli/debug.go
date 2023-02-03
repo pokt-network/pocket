@@ -24,6 +24,8 @@ const (
 	PromptTriggerNextView        string = "TriggerNextView"
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
+	PromptSendMetadataRequest    string = "MetadataRequest"
+	PromptSendBlockRequest       string = "BlockRequest"
 
 	defaultConfigPath  = "build/config/config1.json"
 	defaultGenesisPath = "build/config/genesis.json"
@@ -39,6 +41,8 @@ var (
 		PromptTriggerNextView,
 		PromptTogglePacemakerMode,
 		PromptShowLatestBlockInStore,
+		PromptSendMetadataRequest,
+		PromptSendBlockRequest,
 	}
 
 	// validators holds the list of the validators at genesis time so that we can use it to create a debug address book provider.
@@ -150,6 +154,18 @@ func handleSelect(selection string) {
 			Message: nil,
 		}
 		sendDebugMessage(m)
+	case PromptSendMetadataRequest:
+		m := &messaging.DebugMessage{
+			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ,
+			Message: nil,
+		}
+		broadcastDebugMessage(m)
+	case PromptSendBlockRequest:
+		m := &messaging.DebugMessage{
+			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ,
+			Message: nil,
+		}
+		broadcastDebugMessage(m)
 	default:
 		log.Println("Selection not yet implemented...", selection)
 	}

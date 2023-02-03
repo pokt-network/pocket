@@ -31,6 +31,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create pocket node: %s", err)
 	}
+	pocketNode.GetBus().GetConsensusModule().EnableServerMode()
 
 	if err = pocketNode.Start(); err != nil {
 		log.Fatalf("Failed to start pocket node: %s", err)
