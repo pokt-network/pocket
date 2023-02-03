@@ -26,14 +26,21 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 	}
 	return true, err
 }
+func (p PostgresContext) GetMinimumBlockHeight() (latestHeight uint64, err error) {
+	ctx, tx, err := p.getCtxAndTx()
+	if err != nil {
+		return 0, err
+	}
+
+	err = tx.QueryRow(ctx, types.GetMinimumlockHeightQuery()).Scan(&latestHeight)
+	return
+}
 
 func (p PostgresContext) GetMaximumBlockHeight() (latestHeight uint64, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return 0, err
 	}
-
-	fmt.Println("GETTING MAX BLOCK HEIGHT")
 
 	err = tx.QueryRow(ctx, types.GetMaximumBlockHeightQuery()).Scan(&latestHeight)
 	return

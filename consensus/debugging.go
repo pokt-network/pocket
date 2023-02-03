@@ -95,16 +95,13 @@ func (m *consensusModule) togglePacemakerManualMode(_ *messaging.DebugMessage) {
 // requests current block from all validators
 func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage) {
 	blockHeight := m.CurrentHeight() - 1
-	peerId, err := m.GetCurrentNodeAddressFromNodeId()
-	if err != nil {
-		log.Fatal(err)
-	}
+	peerAddress := m.GetNodeAddress()
 
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
 			GetBlockReq: &typesCons.GetBlockRequest{
-				PeerId: peerId,
-				Height: blockHeight,
+				PeerAddress: peerAddress,
+				Height:      blockHeight,
 			},
 		},
 	}
@@ -125,15 +122,12 @@ func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage
 // requests metadata from all validators
 func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMessage) {
 	blockHeight := m.CurrentHeight() - 1
-	peerId, err := m.GetCurrentNodeAddressFromNodeId()
-	if err != nil {
-		log.Fatal(err)
-	}
+	peerAddress := m.GetNodeAddress()
 
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_MetadataReq{
 			MetadataReq: &typesCons.StateSyncMetadataRequest{
-				PeerId: peerId,
+				PeerAddress: peerAddress,
 			},
 		},
 	}

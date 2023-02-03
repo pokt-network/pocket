@@ -28,9 +28,6 @@ type PersistenceModule interface {
 
 	// Debugging / development only
 	HandleDebugMessage(*messaging.DebugMessage) error
-
-	GetMinBlockHeight() (uint64, error)
-	GetMaxBlockHeight() (uint64, error)
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.
@@ -131,6 +128,7 @@ type PersistenceReadContext interface {
 	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries
 	GetMaximumBlockHeight() (uint64, error)    // Returns the height of the latest block in the persistence layer
+	GetMinimumBlockHeight() (uint64, error)    // Returns the min block height in the persistence layer
 	GetBlockHash(height int64) (string, error) // Returns the app hash corresponding to the height provided
 
 	// Pool Queries

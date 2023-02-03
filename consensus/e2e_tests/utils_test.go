@@ -356,6 +356,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
+
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
 
 	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
@@ -375,12 +376,12 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 
 	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
 
-	persistenceMock.EXPECT().GetMaxBlockHeight().DoAndReturn(func() (uint64, error) {
+	persistenceReadContextMock.EXPECT().GetMaximumBlockHeight().DoAndReturn(func() (uint64, error) {
 		height := bus.GetConsensusModule().CurrentHeight()
 		return height, nil
 	}).AnyTimes()
 
-	persistenceMock.EXPECT().GetMinBlockHeight().DoAndReturn(func() (uint64, error) {
+	persistenceReadContextMock.EXPECT().GetMinimumBlockHeight().DoAndReturn(func() (uint64, error) {
 		if bus.GetConsensusModule().CurrentHeight() > 1 {
 			return 1, nil
 		}
@@ -391,7 +392,6 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	// of the consensus module. This one is only used when loading the initial consensus module
 	// state; hence the `-1` expectation in the call above.
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
-	persistenceReadContextMock.EXPECT().GetMaximumBlockHeight().Return(uint64(0), nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()

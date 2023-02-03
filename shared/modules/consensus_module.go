@@ -72,6 +72,7 @@ type ConsensusPacemaker interface {
 // These functions are intended to only be called by the StateSync module.
 type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
-	GetCurrentNodeAddressFromNodeId() (string, error)
+	//GetCurrentNodeAddressFromNodeId() (string, error)
+	GetNodeAddress() string
 	//SendStateSyncMessage(*anypb.Any, cryptoPocket.Address, uint64) error
 }

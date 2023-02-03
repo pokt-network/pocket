@@ -58,6 +58,8 @@ type consensusModule struct {
 	leaderId *typesCons.NodeId
 	nodeId   typesCons.NodeId
 
+	nodeAddress string
+
 	// Module Dependencies
 	// IMPROVE(#283): Investigate whether the current approach to how the `utilityContext` should be
 	//                managed or changed. Also consider exposing a function that exposes the context
@@ -125,15 +127,8 @@ func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error
 	return uint64(valAddrToIdMap[peerId]), nil
 }
 
-func (m *consensusModule) GetCurrentNodeAddressFromNodeId() (string, error) {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-	if err != nil {
-		return "", err
-	}
-
-	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
-
-	return idToValAddrMap[typesCons.NodeId(m.nodeId)], nil
+func (m *consensusModule) GetNodeAddress() string {
+	return m.nodeAddress
 }
 
 // Implementations of the type PaceMakerAccessModule interface
@@ -215,6 +210,7 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	m.genesisState = genesisState
 
 	m.nodeId = valAddrToIdMap[address]
+	m.nodeAddress = address
 
 	return m, nil
 }

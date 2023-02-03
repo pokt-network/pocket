@@ -201,12 +201,12 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 
 	// We choose node 2 as the requester node.
 	requesterNode := pocketNodes[2]
-	requesterNodePeerId, err := requesterNode.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
-	require.NoError(t, err)
+	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
+	//require.NoError(t, err)
 
 	stateSyncGetBlockReq := typesCons.GetBlockRequest{
-		PeerId: requesterNodePeerId,
-		Height: 1,
+		PeerAddress: requesterNodePeerAddress,
+		Height:      1,
 	}
 
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{

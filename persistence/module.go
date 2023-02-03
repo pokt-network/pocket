@@ -202,21 +202,6 @@ func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 	return m.writeContext
 }
 
-// TODO implement, placeholger, state sync get block tests fails when used as it is
-func (m *persistenceModule) GetMinBlockHeight() (uint64, error) {
-
-	return 1, nil
-}
-
-// TODO implement, placeholder, state sync get block tests fails when used as it is
-func (m *persistenceModule) GetMaxBlockHeight() (uint64, error) {
-	height, err := m.writeContext.GetMaximumBlockHeight()
-	if err != nil {
-		return 0, err
-	}
-	return height, nil
-}
-
 func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 	if blockStorePath == "" {
 		return kvstore.NewMemKVStore(), nil

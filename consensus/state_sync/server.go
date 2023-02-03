@@ -21,51 +21,51 @@ type StateSyncServerModule interface {
 }
 
 func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) error {
-	serverNodePeerId, err := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
+	consensusMod := m.GetBus().GetConsensusModule()
+	serverNodePeerId := m.GetBus().GetConsensusModule().GetNodeAddress()
+
+	clientPeerAddress := metadataReq.PeerAddress
+	m.nodeLog(fmt.Sprintf("%s received State Sync MetaData Req from: %s", serverNodePeerId, clientPeerAddress))
+
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(consensusMod.CurrentHeight()) - 1) //last finalized block
+	if err != nil {
+		return nil
+	}
+	defer persistenceContext.Close()
+
+	maxHeight, err := persistenceContext.GetMaximumBlockHeight()
 	if err != nil {
 		return err
 	}
 
-	clientPeerId := metadataReq.PeerId
-	m.nodeLog(fmt.Sprintf("%s received State Sync MetaData Req from: %s", serverNodePeerId, clientPeerId))
-
-	minHeight, err := m.GetBus().GetPersistenceModule().GetMinBlockHeight()
-	if err != nil {
-		return err
-	}
-
-	maxHeight, err := m.GetBus().GetPersistenceModule().GetMaxBlockHeight()
+	minHeight, err := persistenceContext.GetMinimumBlockHeight()
 	if err != nil {
 		return err
 	}
 
 	stateSyncMessage := typesCons.StateSyncMessage{
-		//MsgType: typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE,
 		Message: &typesCons.StateSyncMessage_MetadataRes{
 			MetadataRes: &typesCons.StateSyncMetadataResponse{
-				PeerId:    serverNodePeerId,
-				MinHeight: minHeight,
-				MaxHeight: maxHeight,
+				PeerAddress: serverNodePeerId,
+				MinHeight:   minHeight,
+				MaxHeight:   uint64(maxHeight),
 			},
 		},
 	}
 
-	return m.SendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerId), m.bus.GetConsensusModule().CurrentHeight())
+	return m.SendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress), m.bus.GetConsensusModule().CurrentHeight())
 }
 
 func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
 	consensusMod := m.GetBus().GetConsensusModule()
-	serverNodePeerId, err := consensusMod.GetCurrentNodeAddressFromNodeId()
-	if err != nil {
-		return err
-	}
+	serverNodePeerAddress := consensusMod.GetNodeAddress()
 
-	clientPeerId := blockReq.PeerId
-	m.nodeLog(fmt.Sprintf("%s received State Sync Get Block Req from: %s", serverNodePeerId, clientPeerId))
+	clientPeerAddress := blockReq.PeerAddress
+	m.nodeLog(fmt.Sprintf("%s received State Sync Get Block Req from: %s", serverNodePeerAddress, clientPeerAddress))
 
-	// IMPROVE: Consider checking the highest block from persistence, rather than the consensus module
-	// check the max block height, if higher height is requested, return error
-	if consensusMod.CurrentHeight() < blockReq.Height {
+	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+
+	if currentHeight < blockReq.Height {
 		return fmt.Errorf("requested block height: %d is higher than node's block height: %d", blockReq.Height, consensusMod.CurrentHeight())
 	}
 
@@ -76,16 +76,15 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	}
 
 	stateSyncMessage := typesCons.StateSyncMessage{
-		//MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_RESPONSE,
 		Message: &typesCons.StateSyncMessage_GetBlockRes{
 			GetBlockRes: &typesCons.GetBlockResponse{
-				PeerId: serverNodePeerId,
-				Block:  block,
+				PeerAddress: serverNodePeerAddress,
+				Block:       block,
 			},
 		},
 	}
 
-	return m.SendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerId), blockReq.Height)
+	return m.SendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress), blockReq.Height)
 }
 
 // Get a block from persistance module given block height

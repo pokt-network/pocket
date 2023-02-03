@@ -23,7 +23,6 @@ func TestStateSync_ServerGetMetaDataReq_SuccessfulTest(t *testing.T) {
 
 	// Create & start test pocket nodes
 	eventsChannel := make(modules.EventsChannel, 100)
-	//pocketNodes := CreateTestStateSyncPocketNodes(t, buses, eventsChannel)
 	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
@@ -32,22 +31,21 @@ func TestStateSync_ServerGetMetaDataReq_SuccessfulTest(t *testing.T) {
 	// Choose node 1 as the server node, enable server mode of the node 1
 	// Set server node's height to test height.
 	serverNode := pocketNodes[1]
-	serverNodePeerId, err := serverNode.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
-	require.NoError(t, err)
+	serverNodePeerId := serverNode.GetBus().GetConsensusModule().GetNodeAddress()
+	//require.NoError(t, err)
 	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
 	serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
 	serverNodeConsensusModImpl.MethodByName("EnableServerMode").Call([]reflect.Value{})
 
 	// We choose node 2 as the requester node.
 	requesterNode := pocketNodes[2]
-	requesterNodePeerId, err := requesterNode.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
-	require.NoError(t, err)
+	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
 	// Test MetaData Req
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_MetadataReq{
 			MetadataReq: &typesCons.StateSyncMetadataRequest{
-				PeerId: requesterNodePeerId,
+				PeerAddress: requesterNodePeerAddress,
 			},
 		},
 	}
@@ -73,7 +71,7 @@ func TestStateSync_ServerGetMetaDataReq_SuccessfulTest(t *testing.T) {
 
 	require.Equal(t, uint64(4), metaDataRes.MaxHeight)
 	require.Equal(t, uint64(1), metaDataRes.MinHeight)
-	require.Equal(t, serverNodePeerId, metaDataRes.PeerId)
+	require.Equal(t, serverNodePeerId, metaDataRes.PeerAddress)
 }
 
 func TestStateSync_ServerGetBlock_SuccessfulTest(t *testing.T) {
@@ -99,16 +97,15 @@ func TestStateSync_ServerGetBlock_SuccessfulTest(t *testing.T) {
 
 	// Choose node 2 as the requester node
 	requesterNode := pocketNodes[2]
-	requesterNodePeerId, err := requesterNode.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
-	require.NoError(t, err)
+	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
 	// Passing Test
 	// Test GetBlock Req
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
 			GetBlockReq: &typesCons.GetBlockRequest{
-				PeerId: requesterNodePeerId,
-				Height: 1,
+				PeerAddress: requesterNodePeerAddress,
+				Height:      1,
 			},
 		},
 	}
@@ -160,16 +157,15 @@ func TestStateSync_ServerGetBlock_FailingTest(t *testing.T) {
 
 	// Choose node 2 as the requester node
 	requesterNode := pocketNodes[2]
-	requesterNodePeerId, err := requesterNode.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
-	require.NoError(t, err)
+	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
 	// Failing Test
 	// Get Block Req is current block height + 1
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
 			GetBlockReq: &typesCons.GetBlockRequest{
-				PeerId: requesterNodePeerId,
-				Height: testHeight + 1,
+				PeerAddress: requesterNodePeerAddress,
+				Height:      testHeight + 1,
 			},
 		},
 	}
