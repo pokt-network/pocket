@@ -1,5 +1,7 @@
 version: "3.8"
 
+name: pocket-v1
+
 # Make sure you have the loki driver installed. If not, just run `make docker_loki_install`
 x-loki: &loki-logging
   driver: loki
