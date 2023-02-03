@@ -29,6 +29,7 @@ var (
 	pwd                  string
 	rawChainCleanupRegex *regexp.Regexp
 	oneMillion           *big.Int
+	notInteractive       bool
 )
 
 type (
@@ -108,9 +109,10 @@ If no changes are desired for the parameter, just enter the current param value 
 			chains := strings.Split(rawChains, ",")
 			serviceURI := args[3]
 
-			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
-			pwd = readPassphrase(pwd)
-
+			if !notInteractive {
+				// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
+				pwd = readPassphrase(pwd)
+			}
 			msg := &typesUtil.MessageStake{
 				PublicKey:     pk.PublicKey().Bytes(),
 				Chains:        chains,
@@ -137,6 +139,8 @@ If no changes are desired for the parameter, just enter the current param value 
 			return nil
 		},
 	}
+
+	stakeCmd.Flags().BoolVar(&notInteractive, "not_interactive", false, "if true skips the interactive prompt for passphrase and confirmation")
 
 	return stakeCmd
 }
@@ -209,8 +213,9 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			}
 
 			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
-			pwd = readPassphrase(pwd)
-
+			if !notInteractive {
+				pwd = readPassphrase(pwd)
+			}
 			msg := &typesUtil.MessageUnstake{
 				Address:   pk.Address(),
 				Signer:    pk.Address(),
@@ -233,6 +238,9 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			return nil
 		},
 	}
+
+	unstakeCmd.Flags().BoolVar(&notInteractive, "not_interactive", false, "if true skips the interactive prompt for passphrase and confirmation")
+
 	return unstakeCmd
 }
 
