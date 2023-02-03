@@ -10,6 +10,7 @@ import (
 )
 
 func TestTxFIFOMempool(t *testing.T) {
+	// pointers in this struct are meant to allow the tester to skip either `initialTxs` or `actions` depending on what they are testing for
 	type args struct {
 		maxTxBytes uint64
 		maxTxs     uint32
