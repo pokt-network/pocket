@@ -18,6 +18,8 @@ type UtilityModule interface {
 
 	// Basic Transaction validation. SIDE EFFECT: Adds the transaction to the mempool if valid.
 	CheckTransaction(tx []byte) error
+
+	ClearMempool()
 }
 
 // Interface defining the context within which the node can operate with the utility layer.

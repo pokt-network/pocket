@@ -87,3 +87,7 @@ func (u *utilityModule) HandleMessage(message *anypb.Any) error {
 	}
 	return nil
 }
+
+func (u *utilityModule) ClearMempool() {
+	u.Mempool.Clear()
+}
