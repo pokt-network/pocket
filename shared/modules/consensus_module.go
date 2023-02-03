@@ -73,4 +73,5 @@ type ConsensusPacemaker interface {
 type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetCurrentNodeAddressFromNodeId() (string, error)
+	//SendStateSyncMessage(*anypb.Any, cryptoPocket.Address, uint64) error
 }

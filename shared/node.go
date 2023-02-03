@@ -154,6 +154,10 @@ func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
 		fallthrough
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
+		fallthrough
+	case messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ:
+		fallthrough
+	case messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ:
 		return node.GetBus().GetConsensusModule().HandleDebugMessage(debugMessage)
 	// Persistence Debug
 	case messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
