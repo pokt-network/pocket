@@ -28,6 +28,11 @@ func (t *txFIFOMempool) AddTx(tx []byte) error {
 // Clear clears the mempool
 func (t *txFIFOMempool) Clear() {
 	t.g.Clear()
+	resetCounters(t)
+}
+
+// resetCounters resets txCount and txsBytesTotal to 0
+func resetCounters(t *txFIFOMempool) {
 	t.m.Lock()
 	defer t.m.Unlock()
 	t.txCount = 0
