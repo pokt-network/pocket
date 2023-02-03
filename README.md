@@ -14,7 +14,9 @@ The official implementation of the [V1 Pocket Network Protocol Specification](ht
 
 ---
 
-All the links you'll need are listed below. If you'd like to contribute to the Pocket V1 Protocol, start by:
+Some relevant links are listed below. Refer to the complete ongoing documentation at the **[Pocket GitHub Wiki](https://github.com/pokt-network/pocket/wiki)**.
+
+If you'd like to contribute to the Pocket V1 Protocol, start by:
 
 1. Get up and running by reading the [Development Guide](docs/development/README.md)
 2. Find a task by reading the [Contribution Guide](docs/contributing/README.md)
@@ -72,3 +74,5 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 ## License
 
 This project is licensed under the MIT License; see the [LICENSE](LICENSE) file for details.
+
+<!-- GITHUB_WIKI: home/readme -->

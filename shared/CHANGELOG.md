@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.19] - 2023-02-02
+
+- Add `KeyPair` interface
+- Add logic to create new keypairs, encrypt/armour them and decrypt/unarmour them
+
 ## [0.0.0.18] - 2023-01-31
 
 - Match naming conventions in `Param` protobuf file
@@ -126,3 +131,5 @@ Configs:
 - Shared interfaces and general 'base' configuration located here
 - Moved make client code to 'debug' to clarify that the event distribution is for the temporary local net
 - Left multiple `TODO` for remaining code in test_artifacts to think on removal of shared testing code
+
+<!-- GITHUB_WIKI: changelog/shared -->
