@@ -5,10 +5,10 @@
 
 ```golang
 type Session interface {
-    NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application modules.Actor) (Session, types.Error)
-    GetServiceNodes() []modules.Actor // the ServiceNodes providing Web3 access to the Application
-    GetFishermen() []modules.Actor    // the Fishermen monitoring the Service Nodes
-    GetApplication() modules.Actor    // the Application consuming Web3 access
+    NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application *coreTypes.Actor) (Session, types.Error)
+    GetServiceNodes() []*coreTypes.Actor // the ServiceNodes providing Web3 access to the Application
+    GetFishermen() []*coreTypes.Actor    // the Fishermen monitoring the Service Nodes
+    GetApplication() *coreTypes.Actor    // the Application consuming Web3 access
     GetRelayChain() RelayChain        // the identifier of the web3 Relay Chain
     GetGeoZone() GeoZone              // the geolocation zone where the Application is registered
     GetSessionHeight() int64          // the block height when the Session started

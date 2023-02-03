@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -29,24 +30,25 @@ type PrometheusTelemetryModule struct {
 	gaugeVectors map[string]prometheus.GaugeVec
 }
 
-const (
-	prometheusModuleName = "prometheus"
-)
-
-func CreatePrometheusTelemetryModule(runtime modules.RuntimeMgr) (modules.Module, error) {
+func CreatePrometheusTelemetryModule(bus modules.Bus) (modules.Module, error) {
 	var m PrometheusTelemetryModule
-	return m.Create(runtime)
+	return m.Create(bus)
 }
 
-func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	telemetryCfg := runtime.GetConfig().Telemetry
+func (*PrometheusTelemetryModule) Create(bus modules.Bus) (modules.Module, error) {
+	m := &PrometheusTelemetryModule{}
+	bus.RegisterModule(m)
 
-	return &PrometheusTelemetryModule{
-		config:       telemetryCfg,
-		counters:     map[string]prometheus.Counter{},
-		gauges:       map[string]prometheus.Gauge{},
-		gaugeVectors: map[string]prometheus.GaugeVec{},
-	}, nil
+	runtimeMgr := bus.GetRuntimeMgr()
+	cfg := runtimeMgr.GetConfig()
+	telemetryCfg := cfg.Telemetry
+
+	m.config = telemetryCfg
+	m.counters = map[string]prometheus.Counter{}
+	m.gauges = map[string]prometheus.Gauge{}
+	m.gaugeVectors = map[string]prometheus.GaugeVec{}
+
+	return m, nil
 }
 
 func (m *PrometheusTelemetryModule) Start() error {
@@ -69,7 +71,7 @@ func (m *PrometheusTelemetryModule) SetBus(bus modules.Bus) {
 }
 
 func (m *PrometheusTelemetryModule) GetModuleName() string {
-	return prometheusModuleName
+	return fmt.Sprintf("%s_prometheus", modules.TelemetryModuleName)
 }
 
 func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
@@ -90,7 +92,7 @@ func (m *PrometheusTelemetryModule) GetEventMetricsAgent() modules.EventMetricsA
 // will be removed in the future in favor of more thorough event metrics tooling.
 // TECHDEBT(team): Deprecate using logs for event metrics for a more sophisticated and durable solution
 func (m *PrometheusTelemetryModule) EmitEvent(namespace, event string, labels ...any) {
-	logArgs := append([]interface{}{"[EVENT]", namespace, event}, labels...)
+	logArgs := append([]any{"[EVENT]", namespace, event}, labels...)
 	log.Println(logArgs...)
 }
 

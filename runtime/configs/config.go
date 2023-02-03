@@ -3,8 +3,9 @@ package configs
 import "github.com/pokt-network/pocket/runtime/defaults"
 
 type Config struct {
-	RootDirectory string `json:"root_directory"`
-	PrivateKey    string `json:"private_key"` // INVESTIGATE(#150): better architecture for key management (keybase, keyfiles, etc.)
+	RootDirectory   string `json:"root_directory"`
+	PrivateKey      string `json:"private_key"` // INVESTIGATE(#150): better architecture for key management (keybase, keyfiles, etc.)
+	ClientDebugMode bool   `json:"client_debug_mode"`
 
 	Consensus   *ConsensusConfig   `json:"consensus"`
 	Utility     *UtilityConfig     `json:"utility"`
@@ -35,10 +36,10 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			BlockStorePath: defaults.DefaultPersistenceBlockStorePath,
 		},
 		P2P: &P2PConfig{
-			ConsensusPort:         defaults.DefaultP2PConsensusPort,
-			UseRainTree:           defaults.DefaultP2PUseRainTree,
-			IsEmptyConnectionType: defaults.DefaultP2PIsEmptyConnectionType,
-			MaxMempoolCount:       defaults.DefaultP2PMaxMempoolCount,
+			ConsensusPort:   defaults.DefaultP2PConsensusPort,
+			UseRainTree:     defaults.DefaultP2PUseRainTree,
+			ConnectionType:  defaults.DefaultP2PConnectionType,
+			MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
 		},
 		Telemetry: &TelemetryConfig{
 			Enabled:  defaults.DefaultTelemetryEnabled,

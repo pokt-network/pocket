@@ -25,7 +25,7 @@ This module includes the following components:
 
   It also has a `Base` configuration that is supposed to contain more cross-functional settings that cannot really find place in module-specific "subconfigs" (as another way to define module-specific configurations).
 
-  Configuration can be supplied via JSON file but also via environment variables ([12 factor app](12factor.net)).
+  Configuration can be supplied via JSON file but also via environment variables ([12 factor app](https://12factor.net/)).
 
   The naming convention is as follow:
 

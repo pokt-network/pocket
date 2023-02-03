@@ -7,7 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.9] - 2023-01-09
+## [0.0.0.19] - 2023-02-02
+
+- Add `KeyPair` interface
+- Add logic to create new keypairs, encrypt/armour them and decrypt/unarmour them
+
+## [0.0.0.18] - 2023-01-31
+
+- Match naming conventions in `Param` protobuf file
+
+## [0.0.0.17] - 2023-01-27
+
+- Add `Param` and `Flag` protobufs for use in updating merkle tree
+
+## [0.0.0.16] - 2023-01-24
+
+- Add `ConsensusPacemaker` interface that is implemented by the consensus module
+
+## [0.0.0.15] - 2023-01-20
+
+- Remove `address []byte` argument from `InsertPool` function in `PostgresRWContext`
+
+## [0.0.0.14] - 2023-01-19
+
+- Rewrite `interface{}` to `any`
+
+## [0.0.0.13] - 2023-01-18
+
+- Create `block.proto` which consolidates the definition of a `Block` protobuf under `shared/core/types`
+
+## [0.0.0.12] - 2023-01-11
+
+- Deprecated `GetBlocksPerSession()` and `GetServiceNodesPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
+
+## [0.0.0.11] - 2023-01-11
+
+- Make the events channel hold pointers rather than copies of the message
+
+## [0.0.0.10] - 2023-01-10
+
+- Updated modules constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering modules with the `bus` via `RegisterModule` method
+
+## [0.0.0.9] - 2023-01-04
 
 - Removed `ValidatorMap() ValidatorMap` from `ConsensusModule` interface
 - Added `GetIsClientOnly()` to `P2PConfig`

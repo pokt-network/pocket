@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.21] - 2023-01-30
+
+- Updated `TestUtilityContext_SetPoolAmount`, `TestUtilityContext_GetMessageEditStakeSignerCandidates`, `TestUtilityContext_GetMessageUnpauseSignerCandidates`, `TestUtilityContext_GetMessageUnstakeSignerCandidates`, and `TestUtilityContext_UnstakePausedBefore` to correct misplaced expected and actual values in require.Equal.
+
+## [0.0.0.20] - 2023-01-20
+
+- Remove `address []byte` argument from `InsertPool` function
+
+## [0.0.0.19] - 2023-01-19
+
+- Rewrite `interface{}` to `any`
+
+## [0.0.0.18] - 2023-01-14
+
+- Updated "test/module_test.go" to encorporate MaxConnsCount, MinConnsCount, MaxConnLifetime, MaxConnIdleTime, and HealthCheckPeriod in persistence config.
+
+## [0.0.0.17] - 2023-01-11
+
+- Deprecated `GetBlocksPerSession()` in favour of the more general parameter getter function `GetParameter()`
+- Update unit test for `GetBlocksPerSession()` to use the `GetParameter()` function
+
+## [0.0.0.16] - 2023-01-10
+
+- Updated module constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering module with the `bus` via `RegisterModule` method
+
 ## [0.0.0.15] - 2023-01-03
 
 - Renamed enum names as per code-review

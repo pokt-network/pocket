@@ -169,7 +169,7 @@ Utility implements the `UtilityModule` and subsequent interface
 To use, simply initialize a Utility instance using the factory function like so:
 
 ```go
-utilityMod, err := utility.Create(config)
+utilityMod, err := utility.Create(bus)
 ```
 
 and use `utilityMod` as desired.

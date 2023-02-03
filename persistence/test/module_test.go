@@ -11,7 +11,6 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 
 	// variables for testing
 	poolName := "fake"
-	poolAddress := []byte("address")
 	originalAmount := "15"
 	modifiedAmount := "10"
 	proposerAddr := []byte("proposerAddr")
@@ -20,7 +19,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	// setup a write context, insert a pool and commit it
 	context, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
-	require.NoError(t, context.InsertPool(poolName, poolAddress, originalAmount))
+	require.NoError(t, context.InsertPool(poolName, originalAmount))
 	require.NoError(t, context.Commit(proposerAddr, quorumCert))
 
 	// verify the insert in the previously committed context worked
@@ -46,7 +45,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	contextBOriginalAmount, err := contextB.GetPoolAmount(poolName, 0)
 	require.NoError(t, err)
 	require.NotEqual(t, modifiedAmount, contextBOriginalAmount)
-	require.Equal(t, contextBOriginalAmount, contextAOriginalAmount)
+	require.Equal(t, contextAOriginalAmount, contextBOriginalAmount)
 }
 
 func TestPersistenceContextTwoWritesErrors(t *testing.T) {

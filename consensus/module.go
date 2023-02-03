@@ -7,19 +7,20 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
+	"github.com/pokt-network/pocket/consensus/pacemaker"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
-	DefaultLogPrefix    = "NODE" // TODO(#164): Make implicit when logging is standardized
-	consensusModuleName = "consensus"
+	DefaultLogPrefix = "NODE" // TODO(#164): Make implicit when logging is standardized
 )
 
 var (
@@ -45,29 +46,24 @@ type consensusModule struct {
 	height uint64
 	round  uint64
 	step   typesCons.HotstuffStep
-	block  *typesCons.Block // The current block being proposed / voted on; it has not been committed to finality
+	block  *coreTypes.Block // The current block being proposed / voted on; it has not been committed to finality
 	// TODO(#315): Move the statefulness of `TxResult` to the persistence module
 	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
-	// IMPROVE: Consider renaming `highPrepareQC` to simply `prepareQC`
-	highPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
-	lockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
+	prepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
+	lockedQC  *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
-	leaderId       *typesCons.NodeId
-	nodeId         typesCons.NodeId
-	valAddrToIdMap typesCons.ValAddrToIdMap // TODO: This needs to be updated every time the ValMap is modified
-	idToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
-
-	// Consensus State
-	validatorMap typesCons.ValidatorMap
+	leaderId *typesCons.NodeId
+	nodeId   typesCons.NodeId
 
 	// Module Dependencies
 	// IMPROVE(#283): Investigate whether the current approach to how the `utilityContext` should be
 	//                managed or changed. Also consider exposing a function that exposes the context
 	//                to streamline how its accessed in the module (see the ticket).
+
 	utilityContext    modules.UtilityContext
-	paceMaker         Pacemaker
+	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
 	// DEPRECATE: Remove later when we build a shared/proper/injected logger
@@ -82,42 +78,83 @@ type consensusModule struct {
 type ConsensusDebugModule interface {
 	SetHeight(uint64)
 	SetRound(uint64)
-	SetStep(typesCons.HotstuffStep)
-	SetBlock(*typesCons.Block)
+	// REFACTOR: This should accept typesCons.HotstuffStep.
+	SetStep(uint8)
+	SetBlock(*coreTypes.Block)
 	SetLeaderId(*typesCons.NodeId)
 	SetUtilityContext(modules.UtilityContext)
 }
 
-func (c *consensusModule) SetHeight(height uint64) {
-	c.height = height
+func (m *consensusModule) SetHeight(height uint64) {
+	m.height = height
 }
 
-func (c *consensusModule) SetRound(round uint64) {
-	c.round = round
+func (m *consensusModule) SetRound(round uint64) {
+	m.round = round
 }
 
-func (c *consensusModule) SetStep(step typesCons.HotstuffStep) {
-	c.step = step
+func (m *consensusModule) SetStep(step uint8) {
+	m.step = typesCons.HotstuffStep(step)
 }
 
-func (c *consensusModule) SetBlock(block *typesCons.Block) {
-	c.block = block
+func (m *consensusModule) SetBlock(block *coreTypes.Block) {
+	m.block = block
 }
 
-func (c *consensusModule) SetLeaderId(leaderId *typesCons.NodeId) {
-	c.leaderId = leaderId
+func (m *consensusModule) SetLeaderId(leaderId *typesCons.NodeId) {
+	m.leaderId = leaderId
 }
 
-func (c *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
-	c.utilityContext = utilityContext
+func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
+	m.utilityContext = utilityContext
 }
 
-func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	return new(consensusModule).Create(runtimeMgr)
+// Implementations of the type PaceMakerAccessModule interface
+// SetHeight, SeetRound, SetStep are implemented for ConsensusDebugModule
+func (m *consensusModule) ClearLeaderMessagesPool() {
+	m.clearLeader()
+	m.clearMessagesPool()
 }
 
-func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	var m *consensusModule
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(consensusModule).Create(bus)
+}
+
+func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
+	leaderElectionMod, err := leader_election.Create(bus)
+	if err != nil {
+		return nil, err
+	}
+
+	paceMakerMod, err := pacemaker.CreatePacemaker(bus)
+	if err != nil {
+		return nil, err
+	}
+
+	pacemaker := paceMakerMod.(pacemaker.Pacemaker)
+	m := &consensusModule{
+		paceMaker:         pacemaker,
+		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
+
+		height: 0,
+		round:  0,
+		step:   NewRound,
+		block:  nil,
+
+		prepareQC: nil,
+		lockedQC:  nil,
+
+		leaderId: nil,
+
+		utilityContext: nil,
+
+		logPrefix: DefaultLogPrefix,
+
+		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
+	}
+	bus.RegisterModule(m)
+
+	runtimeMgr := bus.GetRuntimeMgr()
 
 	consensusCfg := runtimeMgr.GetConfig().Consensus
 
@@ -126,61 +163,24 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 		return nil, fmt.Errorf("genesis validation failed: %w", err)
 	}
 
-	leaderElectionMod, err := leader_election.Create(runtimeMgr)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO(olshansky): Can we make this a submodule?
-	paceMakerMod, err := CreatePacemaker(runtimeMgr)
-	if err != nil {
-		return nil, err
-	}
-
-	valMap := typesCons.ActorListToValidatorMap(genesisState.GetValidators())
-
-	privateKey, err := cryptoPocket.NewPrivateKey(consensusCfg.PrivateKey)
+	privateKey, err := cryptoPocket.NewPrivateKey(consensusCfg.GetPrivateKey())
 	if err != nil {
 		return nil, err
 	}
 	address := privateKey.Address().String()
-	valIdMap, idValMap := typesCons.GetValAddrToIdMap(valMap)
 
-	paceMaker := paceMakerMod.(Pacemaker)
-
-	m = &consensusModule{
-		bus: nil,
-
-		privateKey:   privateKey.(cryptoPocket.Ed25519PrivateKey),
-		consCfg:      consensusCfg,
-		genesisState: genesisState,
-
-		height: 0,
-		round:  0,
-		step:   NewRound,
-		block:  nil,
-
-		highPrepareQC: nil,
-		lockedQC:      nil,
-
-		nodeId:         valIdMap[address],
-		leaderId:       nil,
-		valAddrToIdMap: valIdMap,
-		idToValAddrMap: idValMap,
-
-		validatorMap: valMap,
-
-		utilityContext:    nil,
-		paceMaker:         paceMaker,
-		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
-
-		logPrefix:   DefaultLogPrefix,
-		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return nil, err
 	}
 
-	// TODO(olshansky): Look for a way to avoid doing this.
-	// TODO(goku): remove tight connection of pacemaker and consensus.
-	paceMaker.SetConsensusModule(m)
+	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
+
+	m.privateKey = privateKey.(cryptoPocket.Ed25519PrivateKey)
+	m.consCfg = consensusCfg
+	m.genesisState = genesisState
+
+	m.nodeId = valAddrToIdMap[address]
 
 	return m, nil
 }
@@ -214,7 +214,7 @@ func (m *consensusModule) Stop() error {
 }
 
 func (m *consensusModule) GetModuleName() string {
-	return consensusModuleName
+	return modules.ConsensusModuleName
 }
 
 func (m *consensusModule) GetBus() modules.Bus {
@@ -226,8 +226,12 @@ func (m *consensusModule) GetBus() modules.Bus {
 
 func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
-	m.paceMaker.SetBus(pocketBus)
-	m.leaderElectionMod.SetBus(pocketBus)
+	if m.paceMaker != nil {
+		m.paceMaker.SetBus(pocketBus)
+	}
+	if m.leaderElectionMod != nil {
+		m.leaderElectionMod.SetBus(pocketBus)
+	}
 }
 
 func (*consensusModule) ValidateGenesis(genesis *genesis.GenesisState) error {
@@ -305,13 +309,13 @@ func (m *consensusModule) loadPersistedState() error {
 
 	latestHeight, err := persistenceContext.GetLatestBlockHeight()
 	if err != nil || latestHeight == 0 {
-		m.nodeLog("TODO: State sync not implemented yet")
+		// TODO: Proper state sync not implemented yet
 		return nil
 	}
 
 	m.height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
 
-	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
+	m.nodeLog(fmt.Sprintf("Starting consensus module at height %d", latestHeight))
 
 	return nil
 }

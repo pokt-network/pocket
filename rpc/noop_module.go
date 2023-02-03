@@ -16,7 +16,7 @@ func (m *noopRpcModule) GetModuleName() string {
 	return "noop_rpc_module"
 }
 
-func (m *noopRpcModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
+func (m *noopRpcModule) Create(bus modules.Bus) (modules.Module, error) {
 	return &rpcModule{}, nil
 }
 

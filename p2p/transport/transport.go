@@ -2,6 +2,7 @@ package transport
 
 import (
 	"fmt"
+	types "github.com/pokt-network/pocket/runtime/configs/types"
 	"io/ioutil"
 	"net"
 
@@ -14,24 +15,24 @@ const (
 )
 
 func CreateListener(cfg *configs.P2PConfig) (typesP2P.Transport, error) {
-	switch cfg.IsEmptyConnectionType { // TECHDEBT kept in switch format because this should be an enum not a bool
-	case true:
+	switch cfg.ConnectionType {
+	case types.ConnectionType_EmptyConnection:
 		return createEmptyListener(cfg)
-	case false:
+	case types.ConnectionType_TCPConnection:
 		return createTCPListener(cfg)
 	default:
-		return nil, fmt.Errorf("unsupported connection type for listener: %v", cfg.IsEmptyConnectionType)
+		return nil, fmt.Errorf("unsupported connection type for listener: %v", cfg.ConnectionType)
 	}
 }
 
 func CreateDialer(cfg *configs.P2PConfig, url string) (typesP2P.Transport, error) {
-	switch cfg.IsEmptyConnectionType {
-	case true:
+	switch cfg.ConnectionType {
+	case types.ConnectionType_EmptyConnection:
 		return createEmptyDialer(cfg, url)
-	case false:
+	case types.ConnectionType_TCPConnection:
 		return createTCPDialer(cfg, url)
 	default:
-		return nil, fmt.Errorf("unsupported connection type for dialer: %v", cfg.IsEmptyConnectionType)
+		return nil, fmt.Errorf("unsupported connection type for dialer: %v", cfg.ConnectionType)
 	}
 }
 

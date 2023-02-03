@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.23] - 2023-01-30
+
+- Fix `TestHotstuff4Nodes1BlockHappyPath` misplacement of actual and expected values in `require.Equal`
+
+## [0.0.0.22] - 2023-01-25
+
+- Add a note on consensus test related workaround related to #462
+
+## [0.0.0.21] - 2023-01-24
+
+- Decouple consensus module and pacemaker module
+- Add `pacemaker` submodule
+- Update pacemaker struct to remove consensus module field, and related functions
+- Create new `pacemaker_consensus.go` source file that consists ConsensusPacemaker function implementations
+
+## [0.0.0.20] - 2023-01-19
+
+- Rewrite `interface{}` to `any`
+
+## [0.0.0.19] - 2023-01-18
+
+- Remove `Block` proto definition to consolidate under `shared/core/types`
+
+## [0.0.0.18] - 2023-01-11
+
+### Consensus - Core
+
+- Force consensus to use a "star-like" broadcast instead of "RainTree" broadcast
+- Improve logging throughout through the use of emojis and rewording certain statements
+- Slightly improve the block verification flow (renaming, minor fixes, etc…) to stabilize LocalNet
+
+### Consensus - Tests
+
+- Rename the `consensus_tests` package to `e2e_tests`
+- Internalize configuration related to `fail_on_extra_msgs` from the `Makefile` to the `consensus` module
+- Forced all tests to fail if we receive extra unexpected messages and modify tests appropriately
+- After #198, we made tests deterministic but there was a hidden bug that modified how the test utility functions because the clock would not move while we were waiting for messages. This prevented logs from streaming, tests from failing, and other issues. Tend to all related changes.
+
+### Consensus - Pacemaker
+
+- Rename `ValidateMessage` to `ShouldHandleMessage` and return a boolean
+- Pass a `reason` to `InterruptRound`
+- Improve readability of some parts of the code
+
+## [0.0.0.17] - 2023-01-10
+
+- Updated module constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering module with the `bus` via `RegisterModule` method
+- Updated tests and mocks accordingly
+
 ## [0.0.0.16] - 2023-01-09
 
 - Added protobuf message definitions for requests related to sharing state sync metadata and blocks
@@ -106,7 +156,7 @@ Consensus cleanup
 
 Consensus testing
 
-- Improved mock module initialization in `consensus/consensus_tests/utils_test.go`
+- Improved mock module initialization in `consensus/e2e_tests/utils_test.go`
 
 General
 

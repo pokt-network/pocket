@@ -87,7 +87,7 @@ func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetBlocksPerSession())
-	gotParam, err := ctx.GetBlocksPerSession()
+	gotParam, err := ctx.GetParameter(typesUtil.BlocksPerSessionParamName, 0)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 

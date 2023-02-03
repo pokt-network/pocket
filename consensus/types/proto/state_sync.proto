@@ -1,9 +1,12 @@
 syntax = "proto3";
+
+// This file captures all the different messages types and data types related to State Sync.
+
 package consensus;
 
 option go_package = "github.com/pokt-network/pocket/consensus/types";
 
-import "block.proto";
+import "core/types/proto/block.proto";
 
 // CONSIDERATION(#347): Once we integrate with libp2p, the definition of `peer_id` may change.
 //                      At the moment it is the address of the peer, but is named `id` to be
@@ -27,7 +30,7 @@ message GetBlockRequest {
 
 message GetBlockResponse {
     string peer_id = 1; // The `peer_id` needs to be populated by the P2P module of the receiving node so the sender cannot falsify its identity
-    consensus.Block block = 2; // The block being provided to the peer
+    core.Block block = 2; // The block being provided to the peer
 }
 
 // NOT USED: This gRPC interface is **not being used at the moment**. It is in place simply as a

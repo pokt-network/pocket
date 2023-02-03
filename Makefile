@@ -2,14 +2,6 @@ include build.mk
 
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
-# This flag is useful when running the consensus unit tests. It causes the test to wait up to the
-# maximum delay specified in the source code and errors if additional unexpected messages are received.
-# For example, if the test expects to receive 5 messages within 2 seconds:
-# 	When EXTRA_MSG_FAIL = false: continue if 5 messages are received in 0.5 seconds
-# 	When EXTRA_MSG_FAIL = true: wait for another 1.5 seconds after 5 messages are received in 0.5
-#		                        seconds, and fail if any additional messages are received.
-EXTRA_MSG_FAIL ?= false
-
 # IMPROVE: Add `-shuffle=on` to the `go test` command to randomize the order in which tests are run.
 
 # An easy way to turn off verbose test output for some of the test targets. For example
@@ -42,6 +34,10 @@ docker_check:
 # Internal helper target - prompt the user before continuing
 prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
+
+.PHONY: warn_destructive
+warn_destructive: ## Print WARNING to the user
+	@echo "This is a destructive action that will affect docker resources outside the scope of this repo!"
 
 .PHONY: go_vet
 go_vet: ## Run `go vet` on all files in the current project
@@ -146,7 +142,7 @@ rebuild_and_compose_and_watch: docker_check db_start monitoring_start ## Rebuild
 	docker-compose -f build/deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: db_start
-db_start: docker_check ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
+db_start: docker_check ## Start a detached local postgres and admin instance; compose_and_watch is responsible for instantiating the actual schemas
 	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db pgadmin
 
 .PHONY: db_cli
@@ -186,7 +182,7 @@ docker_kill_all: docker_check ## Kill all containers started by the docker-compo
 	docker-compose -f build/deployments/docker-compose.yaml down
 
 .PHONY: docker_wipe
-docker_wipe: docker_check prompt_user ## [WARNING] Remove all the docker containers, images and volumes.
+docker_wipe: docker_check warn_destructive prompt_user ## [WARNING] Remove all the docker containers, images and volumes.
 	docker ps -a -q | xargs -r -I {} docker stop {}
 	docker ps -a -q | xargs -r -I {} docker rm {}
 	docker images -q | xargs -r -I {} docker rmi {}
@@ -240,24 +236,39 @@ protogen_show: ## A simple `find` command that shows you the generated protobufs
 protogen_clean: ## Remove all the generated protobufs.
 	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs -r rm
 
+# IMPROVE: Look into using buf in the future; https://github.com/bufbuild/buf.
+PROTOC = protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative
+PROTOC_SHARED = $(PROTOC) -I=./shared
+
 .PHONY: protogen_local
 protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
-# TODO: Organize this code with a basic for loop
-	$(eval proto_dir = ".")
-# TODO: Use a forloop to avoid all the code duplication and improve readability
-	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    				--go_out=./shared/messaging     ./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        				--go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./persistence/indexer/proto 				--go_out=./persistence/indexer  ./persistence/indexer/proto/*.proto --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./shared/ -I=./persistence/proto         	--go_out=./persistence/types  	./persistence/proto/*.proto         --experimental_allow_proto3_optional
-	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
-	protoc --go_opt=paths=source_relative  -I=./shared/ -I=./utility/types/proto       				--go_out=./utility/types      	./utility/types/proto/*.proto       --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./consensus/types/proto     				--go_out=./consensus/types    	./consensus/types/proto/*.proto     --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./p2p/raintree/types/proto  				--go_out=./p2p/types          	./p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./runtime/configs/proto     				--go_out=./runtime/configs      ./runtime/configs/proto/*.proto     --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./shared/core/types/proto     			--go_out=./shared/core/types    ./shared/core/types/proto/*.proto   --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./shared/ -I=./runtime/genesis/proto     	--go_out=./runtime/genesis      ./runtime/genesis/proto/*.proto     --experimental_allow_proto3_optional
+	# Shared
+	$(PROTOC) -I=./shared/core/types/proto --go_out=./shared/core/types ./shared/core/types/proto/*.proto
+	$(PROTOC) -I=./shared/messaging/proto  --go_out=./shared/messaging  ./shared/messaging/proto/*.proto
+	$(PROTOC) -I=./shared/codec/proto      --go_out=./shared/codec      ./shared/codec/proto/*.proto
+
+	# Runtime
+	$(PROTOC) -I=./runtime/configs/types/proto				--go_out=./runtime/configs/types	./runtime/configs/types/proto/*.proto
+	$(PROTOC) -I=./runtime/configs/proto	-I=./runtime/configs/types/proto     				--go_out=./runtime/configs      ./runtime/configs/proto/*.proto
+	$(PROTOC_SHARED) -I=./runtime/genesis/proto  --go_out=./runtime/genesis ./runtime/genesis/proto/*.proto
 	protoc-go-inject-tag -input="./runtime/genesis/*.pb.go"
-	echo "View generated proto files by running: make protogen_show"
+
+	# Persistence
+	$(PROTOC_SHARED) -I=./persistence/indexer/proto 	--go_out=./persistence/indexer ./persistence/indexer/proto/*.proto
+	$(PROTOC_SHARED) -I=./persistence/proto         	--go_out=./persistence/types   ./persistence/proto/*.proto
+	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
+
+	# Utility
+	$(PROTOC_SHARED) -I=./utility/types/proto --go_out=./utility/types ./utility/types/proto/*.proto
+
+	# Consensus
+	$(PROTOC_SHARED) -I=./consensus/types/proto --go_out=./consensus/types ./consensus/types/proto/*.proto
+
+	# P2P
+	$(PROTOC_SHARED) -I=./p2p/raintree/types/proto --go_out=./p2p/types ./p2p/raintree/types/proto/*.proto
+
+	# echo "View generated proto files by running: make protogen_show"
+
 # CONSIDERATION: Some proto files contain unused gRPC services so we may need to add the following
 #                if/when we decide to include it: `grpc--go-grpc_opt=paths=source_relative --go-grpc_out=./output/path`
 
@@ -301,6 +312,10 @@ test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, outp
 test_race: ## Identify all unit tests that may result in race conditions
 	go test ${VERBOSE_TEST} -race ./...
 
+.PHONY: test_app
+test_app: ## Run all go app module unit tests
+	go test ${VERBOSE_TEST} -p=1 -count=1  ./app/...
+
 .PHONY: test_utility
 test_utility: ## Run all go utility module unit tests
 	go test ${VERBOSE_TEST} -p=1 -count=1  ./utility/...
@@ -313,20 +328,25 @@ test_shared: ## Run all go unit tests in the shared module
 test_consensus: ## Run all go unit tests in the consensus module
 	go test ${VERBOSE_TEST} -count=1 ./consensus/...
 
+# These tests are isolated to a single package which enables logs to be streamed in realtime. More details here: https://stackoverflow.com/a/74903989/768439
+.PHONY: test_consensus_e2e
+test_consensus_e2e: ## Run all go t2e unit tests in the consensus module w/ log streaming
+	go test ${VERBOSE_TEST} -count=1 ./consensus/e2e_tests/...
+
 .PHONY: test_consensus_concurrent_tests
 test_consensus_concurrent_tests: ## Run unit tests in the consensus module that could be prone to race conditions (#192)
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestPacemakerTimeoutIncreasesRound$  ./consensus/e2e_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/e2e_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestPacemakerTimeoutIncreasesRound$  ./consensus/e2e_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/e2e_tests; done;
 
 .PHONY: test_hotstuff
 test_hotstuff: ## Run all go unit tests related to hotstuff consensus
-	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Hotstuff
 
 .PHONY: test_pacemaker
 test_pacemaker: ## Run all go unit tests related to the hotstuff pacemaker
-	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Pacemaker
 
 .PHONY: test_vrf
 test_vrf: ## Run all go unit tests in the VRF library

@@ -93,11 +93,16 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 
 	cfg := &configs.Config{
 		Persistence: &configs.PersistenceConfig{
-			PostgresUrl:    databaseUrl,
-			NodeSchema:     testSchema,
-			BlockStorePath: "",
-			TxIndexerPath:  "",
-			TreesStoreDir:  "",
+			PostgresUrl:       databaseUrl,
+			NodeSchema:        testSchema,
+			BlockStorePath:    "",
+			TxIndexerPath:     "",
+			TreesStoreDir:     "",
+			MaxConnsCount:     4,
+			MinConnsCount:     0,
+			MaxConnLifetime:   "1h",
+			MaxConnIdleTime:   "30m",
+			HealthCheckPeriod: "5m",
 		},
 	}
 
@@ -107,9 +112,13 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 		genesisStateNumApplications,
 		genesisStateNumServiceNodes,
 	)
-	runtimeCfg := runtime.NewManager(cfg, genesisState)
+	runtimeMgr := runtime.NewManager(cfg, genesisState)
+	bus, err := runtime.CreateBus(runtimeMgr)
+	if err != nil {
+		log.Fatalf("Error creating bus: %s", err)
+	}
 
-	persistenceMod, err := persistence.Create(runtimeCfg)
+	persistenceMod, err := persistence.Create(bus)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
@@ -210,8 +219,8 @@ func fuzzSingleProtocolActor(
 			if strings.Contains(newActor.StakedAmount, "invalid") {
 				log.Println("")
 			}
-			require.Equal(t, newActor.StakedAmount, newStakedTokens, "staked tokens not updated")
-			require.Equal(t, newActor.GenericParam, newActorSpecificParam, "actor specific param not updated")
+			require.Equal(t, newStakedTokens, newActor.StakedAmount, "staked tokens not updated")
+			require.Equal(t, newActorSpecificParam, newActor.GenericParam, "actor specific param not updated")
 		case "GetActorsReadyToUnstake":
 			unstakingActors, err := db.GetActorsReadyToUnstake(protocolActorSchema, db.Height)
 			require.NoError(t, err)

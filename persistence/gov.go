@@ -4,7 +4,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"reflect"
 	"strconv"
+	"strings"
+
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
@@ -16,15 +20,24 @@ const (
 	ServiceNodesPerSessionParamName = "service_nodes_per_session"
 )
 
-// TODO (Team) BUG setting parameters twice on the same height causes issues. We need to move the schema away from 'end_height' and
-// more towards the height_constraint architecture
+// Mapping of parameter names and their stringified type names
+var parameterNameTypeMap = make(map[string]string)
 
-func (p PostgresContext) GetBlocksPerSession(height int64) (int, error) {
-	return p.GetIntParam(BlocksPerSessionParamName, height)
-}
-
-func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) {
-	return p.GetIntParam(ServiceNodesPerSessionParamName, height)
+// Using the json tag of the fields in the Params struct to extract the name of the
+// parameters and build a mapping in memory of the types associated to each parameter
+// name according to the struct generated from: persistence_genesis.proto
+func init() {
+	fields := reflect.VisibleFields(reflect.TypeOf(genesis.Params{}))
+	// Loop through struct fields to build parameterNameTypeMap
+	for _, field := range fields {
+		if !field.IsExported() {
+			continue
+		}
+		json := field.Tag.Get("json") // Match the json tag of field: json:"paramName,omitempty"
+		paramName := strings.Split(json, ",")[0]
+		typ := field.Type.Name() // Get string version of field's type
+		parameterNameTypeMap[paramName] = typ
+	}
 }
 
 func (p PostgresContext) InitGenesisParams(params *genesis.Params) error {
@@ -37,6 +50,23 @@ func (p PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	}
 	_, err = tx.Exec(ctx, types.InsertParams(params, p.Height))
 	return err
+}
+
+// Match paramName against the ParameterNameTypeMap struct and call the proper
+// getter function getParamOrFlag[int | string | byte] and return its values
+func (p PostgresContext) GetParameter(paramName string, height int64) (v any, err error) {
+	paramType := parameterNameTypeMap[paramName]
+	switch paramType {
+	case "int", "int32", "int64":
+		v, _, err = getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
+	case "string":
+		v, _, err = getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
+	case "[]uint8": // []byte
+		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
+	default:
+		return nil, fmt.Errorf("unhandled type for param: got %s.", paramType)
+	}
+	return v, err
 }
 
 func (p PostgresContext) GetIntParam(paramName string, height int64) (int, error) {
@@ -149,4 +179,63 @@ func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, param
 		log.Fatalf("unhandled type for paramValue %T", tp)
 	}
 	return
+}
+
+func (p PostgresContext) getParamsUpdated(height int64) ([]*coreTypes.Param, error) {
+	ctx, tx, err := p.getCtxAndTx()
+	if err != nil {
+		return nil, err
+	}
+	// Get all parameters / flags at current height
+	rows, err := tx.Query(ctx, p.getParamsOrFlagsUpdateAtHeightQuery(types.ParamsTableName, height))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var paramSlice []*coreTypes.Param // Store returned rows
+	// Loop over all rows returned and load them into the ParamOrFlag struct array
+	for rows.Next() {
+		param := new(coreTypes.Param)
+		err := rows.Scan(&param.Name, &param.Value)
+		if err != nil {
+			return nil, err
+		}
+		param.Height = height
+		paramSlice = append(paramSlice, param)
+	}
+	return paramSlice, nil
+}
+
+func (p PostgresContext) getFlagsUpdated(height int64) ([]*coreTypes.Flag, error) {
+	ctx, tx, err := p.getCtxAndTx()
+	if err != nil {
+		return nil, err
+	}
+	// Get all parameters / flags at current height
+	rows, err := tx.Query(ctx, p.getParamsOrFlagsUpdateAtHeightQuery(types.FlagsTableName, height))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var flagSlice []*coreTypes.Flag // Store returned rows
+	// Loop over all rows returned and load them into the ParamOrFlag struct array
+	for rows.Next() {
+		flag := new(coreTypes.Flag)
+		err := rows.Scan(&flag.Name, &flag.Value, &flag.Enabled)
+		if err != nil {
+			return nil, err
+		}
+		flag.Height = height
+		flagSlice = append(flagSlice, flag)
+	}
+	return flagSlice, nil
+}
+
+func (p *PostgresContext) getParamsOrFlagsUpdateAtHeightQuery(tableName string, height int64) string {
+	fields := "name,value"
+	if tableName == types.FlagsTableName {
+		fields += ",enabled"
+	}
+	// Build correct query to get all Params/Flags at certain height ordered by their name values
+	return fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d ORDER BY name ASC`, fields, tableName, height)
 }

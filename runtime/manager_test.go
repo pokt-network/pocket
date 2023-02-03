@@ -8,6 +8,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/runtime/configs"
+	configTypes "github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
@@ -93,35 +94,23 @@ var expectedGenesis = &genesis.GenesisState{
 		},
 	},
 	Validators: []*types.Actor{
-
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
-			Address:         "6f66574e1f50f0ef72dff748c3f11b9e0e89d32a",
-			PublicKey:       "b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
+			Address:         "113fdb095d42d6e09327ab5b8df13fd8197a1eaf",
+			PublicKey:       "53ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a",
 			Chains:          nil,
 			GenericParam:    "node1.consensus:8080",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
-			Output:          "6f66574e1f50f0ef72dff748c3f11b9e0e89d32a",
-		},
-		{
-			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
-			Address:         "67eb3f0a50ae459fecf666be0e93176e92441317",
-			PublicKey:       "c16043323c83ffd901a8bf7d73543814b8655aa4695f7bfb49d01926fc161cdb",
-			Chains:          nil,
-			GenericParam:    "node2.consensus:8080",
-			StakedAmount:    "1000000000000",
-			PausedHeight:    -1,
-			UnstakingHeight: -1,
-			Output:          "67eb3f0a50ae459fecf666be0e93176e92441317",
+			Output:          "113fdb095d42d6e09327ab5b8df13fd8197a1eaf",
 		},
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
 			Address:         "3f52e08c4b3b65ab7cf098d77df5bf8cedcf5f99",
 			PublicKey:       "a8b6be75d7551da093f788f7286c3a9cb885cfc8e52710eac5f1d5e5b4bf19b2",
 			Chains:          nil,
-			GenericParam:    "node3.consensus:8080",
+			GenericParam:    "node2.consensus:8080",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -129,14 +118,25 @@ var expectedGenesis = &genesis.GenesisState{
 		},
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
-			Address:         "113fdb095d42d6e09327ab5b8df13fd8197a1eaf",
-			PublicKey:       "53ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a",
+			Address:         "67eb3f0a50ae459fecf666be0e93176e92441317",
+			PublicKey:       "c16043323c83ffd901a8bf7d73543814b8655aa4695f7bfb49d01926fc161cdb",
+			Chains:          nil,
+			GenericParam:    "node3.consensus:8080",
+			StakedAmount:    "1000000000000",
+			PausedHeight:    -1,
+			UnstakingHeight: -1,
+			Output:          "67eb3f0a50ae459fecf666be0e93176e92441317",
+		},
+		{
+			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
+			Address:         "6f66574e1f50f0ef72dff748c3f11b9e0e89d32a",
+			PublicKey:       "b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
 			Chains:          nil,
 			GenericParam:    "node4.consensus:8080",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
-			Output:          "113fdb095d42d6e09327ab5b8df13fd8197a1eaf",
+			Output:          "6f66574e1f50f0ef72dff748c3f11b9e0e89d32a",
 		},
 	},
 	ServiceNodes: []*types.Actor{
@@ -198,11 +198,11 @@ func TestNewManagerFromReaders(t *testing.T) {
 				genesisReader: strings.NewReader(string(buildGenesisBytes)),
 			},
 			want: &Manager{
-				&configs.Config{
+				config: &configs.Config{
 					RootDirectory: "/go/src/github.com/pocket-network",
-					PrivateKey:    "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
+					PrivateKey:    "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a",
 					Consensus: &configs.ConsensusConfig{
-						PrivateKey:      "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
+						PrivateKey:      "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a",
 						MaxMempoolBytes: 500000000,
 						PacemakerConfig: &configs.PacemakerConfig{
 							TimeoutMsec:               5000,
@@ -215,18 +215,23 @@ func TestNewManagerFromReaders(t *testing.T) {
 						MaxMempoolTransactions:     9000,
 					},
 					Persistence: &configs.PersistenceConfig{
-						PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
-						NodeSchema:     "node1",
-						BlockStorePath: "/var/blockstore",
-						TxIndexerPath:  "",
-						TreesStoreDir:  "/var/trees",
+						PostgresUrl:       "postgres://postgres:postgres@pocket-db:5432/postgres",
+						NodeSchema:        "node1",
+						BlockStorePath:    "/var/blockstore",
+						TxIndexerPath:     "",
+						TreesStoreDir:     "/var/trees",
+						MaxConnsCount:     8,
+						MinConnsCount:     0,
+						MaxConnLifetime:   "1h",
+						MaxConnIdleTime:   "30m",
+						HealthCheckPeriod: "5m",
 					},
 					P2P: &configs.P2PConfig{
-						PrivateKey:            "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
-						ConsensusPort:         8080,
-						UseRainTree:           true,
-						IsEmptyConnectionType: false,
-						MaxMempoolCount:       1e5,
+						PrivateKey:      "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a",
+						ConsensusPort:   8080,
+						UseRainTree:     true,
+						ConnectionType:  configTypes.ConnectionType_TCPConnection,
+						MaxMempoolCount: 1e5,
 					},
 					Telemetry: &configs.TelemetryConfig{
 						Enabled:  true,
@@ -244,10 +249,13 @@ func TestNewManagerFromReaders(t *testing.T) {
 						UseCors: false,
 					},
 				},
-				expectedGenesis,
-				clock.New(),
+				genesisState: expectedGenesis,
+				clock:        clock.New(),
 			},
-			assertion: require.Equal,
+			assertion: func(tt require.TestingT, want, got any, _ ...any) {
+				require.Equal(tt, want.(*Manager).config, got.(*Manager).config)
+				require.Equal(tt, want.(*Manager).genesisState, got.(*Manager).genesisState)
+			},
 		},
 		{
 			name: "unset MaxMempoolCount should fallback to default value",
@@ -263,19 +271,19 @@ func TestNewManagerFromReaders(t *testing.T) {
 				genesisReader: strings.NewReader(string(buildGenesisBytes)),
 			},
 			want: &Manager{
-				&configs.Config{
+				config: &configs.Config{
 					P2P: &configs.P2PConfig{
-						PrivateKey:            "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
-						ConsensusPort:         8080,
-						UseRainTree:           true,
-						IsEmptyConnectionType: false,
-						MaxMempoolCount:       defaults.DefaultP2PMaxMempoolCount,
+						PrivateKey:      "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
+						ConsensusPort:   8080,
+						UseRainTree:     true,
+						ConnectionType:  configTypes.ConnectionType_TCPConnection,
+						MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
 					},
 				},
-				expectedGenesis,
-				clock.New(),
+				genesisState: expectedGenesis,
+				clock:        clock.New(),
 			},
-			assertion: func(tt require.TestingT, want, got interface{}, _ ...interface{}) {
+			assertion: func(tt require.TestingT, want, got any, _ ...any) {
 				require.Equal(tt, want.(*Manager).config.P2P, got.(*Manager).config.P2P)
 			},
 		},

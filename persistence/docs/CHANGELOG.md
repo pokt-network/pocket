@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.29] - 2023-01-31
+
+- Use hash of serialised protobufs for keys in `updateParamsTree()` and `updateFlagsTree()`
+
+## [0.0.0.28] - 2023-01-30
+
+- Fix unit tests - `TestGetAppPauseHeightIfExists`, `TestGetAppOutputAddress`, `TestGetFishermanStatus`, `TestGetFishermanPauseHeightIfExists`, `TestGetFishermanOutputAddress`, `TestPersistenceContextParallelReadWrite`, `TestGetServiceNodePauseHeightIfExists`, `TestGetServiceNodeOutputAddress`, `fuzzSingleProtocolActor`, `TestGetValidatorPauseHeightIfExists`, and `TestGetValidatorOutputAddress` for misplaced expected and actual values in `require.Equal`.
+
+## [0.0.0.27] - 2023-01-27
+
+- Add logic for `updateParamsTree()` and `updateFlagsTree()` functions when updating merkle root hash
+
+## [0.0.0.26] - 2023-01-23
+
+- Added `debug.FreeOSMemory()` on `ResetToGenesis` to free-up memory and stabilize `LocalNet`.
+
+## [0.0.0.25] - 2023-01-20
+
+- Consolidate common behaviour of `Pool` and `Account` functions into a shared interface `ProtocolAccountSchema`
+- Create `account_shared_sql.go` and `types/account_shared_sql.go` and rename `shared_sql.go` and `type/shared_sql.go` to `actor_shared_sql.go` and `types/actor_shared_sql.go` seperating shared sql logic
+
+## [0.0.0.24] - 2023-01-20
+
+- Update the persistence module README, focusing on `pgadmin` and Makefile helpers
+
+## [0.0.0.23] - 2023-01-18
+
+- Remove `Block` proto definition to consolidate under `shared/core/types`
+
+## [0.0.0.22] - 2023-01-14
+
+- Add `max_conns_count`, `min_conns_count`, `max_conn_lifetime`, `max_conn_idle_time` and `health_check_period` to `PersistenceConfig`.
+- Update `connectToDatabase` function in `db.go` to connect via `pgxpool` to postgres database and accept `PersistenceConfig` interface as input.
+- Update `github.com/jackc/pgx/v4` -> `github.com/jackc/pgx/v5`.
+
+## [0.0.0.21] - 2023-01-11
+
+- Add `init()` function to `gov.go` to build a map of parameter names and their types
+- Deprecated `GetBlocksPerSession()` and `GetServiceNodesPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
+- Update unit tests replacing `GetIntParam()` and `GetStringParam()` calls with `GetParameter()`
+
+## [0.0.0.20] - 2023-01-11
+
+- Minor logging improvements
+
+## [0.0.0.19] - 2023-01-10
+
+- Updated module constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering module with the `bus` via `RegisterModule` method
+- Updated tests and mocks accordingly
+
 ## [0.0.0.18] - 2023-01-03
 
 - Renamed `InitParams` to `InitGenesisParams`
@@ -130,13 +181,11 @@ KVStore changes
 - Ported over storing blocks and block components to the Persistence module from Consensus and Utility modules
 - Encapsulated `TxIndexer` logic to the persistence context only
 
-
 ## [0.0.0.9] - 2022-10-19
 
 - Fixed `ToPersistenceActors()` by filling all structure fields
 - Deprecated `BaseActor` -> `Actor`
 - Changed default actor type to `ActorType_Undefined`
-
 
 ## [0.0.0.8] - 2022-10-12
 
@@ -155,8 +204,6 @@ KVStore changes
 - Don't ignore the exit code of `m.Run()` in the unit tests
 - Fixed several broken unit tests related to type casting
 
-
-
 ## [0.0.0.6] - 2022-09-30
 
 - Removed no-op `DeleteActor` code
@@ -165,7 +212,6 @@ KVStore changes
 - Deprecated `persMod.ResetContext()` for -> `persRWContext.ResetContext()` for more appropriate encapsulation
 - Added ticks to CHANGELOG.md
 - Removed reference to Utility Mod's `BigIntToString()` and used internal `BigIntToString()`
-
 
 ## [0.0.0.5] - 2022-09-14
 

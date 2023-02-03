@@ -161,12 +161,12 @@ func TestGetAppPauseHeightIfExists(t *testing.T) {
 	// Check pause height when app does not exist
 	pauseHeight, err := db.GetAppPauseHeightIfExists(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
+	require.Equal(t, DefaultPauseHeight, pauseHeight, "unexpected pause height")
 
 	// Check pause height when app does not exist
 	pauseHeight, err = db.GetAppPauseHeightIfExists(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
+	require.Equal(t, DefaultPauseHeight, pauseHeight, "unexpected pause height")
 }
 
 func TestSetAppPauseHeightAndUnstakeLater(t *testing.T) {
@@ -204,7 +204,7 @@ func TestGetAppOutputAddress(t *testing.T) {
 	require.NoError(t, err)
 	output, err := db.GetAppOutputAddress(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, hex.EncodeToString(output), app.Output, "unexpected output address")
+	require.Equal(t, app.Output, hex.EncodeToString(output), "unexpected output address")
 }
 
 func newTestApp() (*coreTypes.Actor, error) {

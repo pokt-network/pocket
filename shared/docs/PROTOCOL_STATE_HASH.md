@@ -112,8 +112,8 @@ graph TD
     G[Do I have a lockedQC] --> |No| H
     G[Do I have a lockedQC] --> |Yes| I
 
-    I[Is highPrepareQC.view > lockedQC.view] --> |"No<br>(lockedQC.block)"| Z
-    I[Is highPrepareQC.view > lockedQC.view] --> |"Yes<br>(highPrepareQC.block)"| Z
+    I[Is prepareQC.view > lockedQC.view] --> |"No<br>(lockedQC.block)"| Z
+    I[Is prepareQC.view > lockedQC.view] --> |"Yes<br>(prepareQC.block)"| Z
 
     H[CreateAndApplyProposalBlock]
     Z[ApplyBlock]

@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.10] - 2023-01-25
+
+- move ConnectionType enum into its own package to avoid a cyclic import between configs and defaults packages (i.e. configs -> defaults -> configs) in the resulting, generated go package
+- update makefile protogen_local target to build additional proto file and include it in the import path for runtime/configs/proto/p2p_config.proto
+- replace `P2PConfig#IsEmptyConnectionType` bool with `P2PConfig#ConnectionType` enum
+- replace `DefaultP2PIsEmptyConnectionType` bool with `DefaultP2PConnectionType` enum
+
+## [0.0.0.9] - 2023-01-23
+
+- Updated README.md with information about node profiling
+## [0.0.0.8] - 2023-01-19
+
+- Rewrite `interface{}` to `any`
+
+## [0.0.0.7] - 2023-01-14
+
+- Added MaxConnsCount, MinConnsCount, MaxConnLifetime, MaxConnIdleTime, and HealthCheckPeriod to persistence config.
+
+## [0.0.0.6] - 2023-01-11
+
+- Updated tests to reflect the updated genesis file
+
+## [0.0.0.5] - 2023-01-10
+
+- Updated modules constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering modules with the `bus` via `RegisterModule` method
+- Providing Dependency Injection functionality via `bus`
+- Updated tests and mocks accordingly
+
 ## [0.0.0.4] - 2023-01-09
 
 - Added 'is_client_only' to `P2PConfig`
