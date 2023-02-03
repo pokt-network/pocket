@@ -19,10 +19,8 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var (
-	_ typesP2P.Network           = &rainTreeNetwork{}
-	_ modules.IntegratableModule = &rainTreeNetwork{}
-)
+var _ typesP2P.Network = &rainTreeNetwork{}
+var _ modules.IntegratableModule = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
 	bus modules.Bus
@@ -31,16 +29,9 @@ type rainTreeNetwork struct {
 	addrBookProvider addrbook_provider.AddrBookProvider
 
 	peersManager *peersManager
+	nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]
 
 	logger modules.Logger
-
-	// TODO(#278): What should we use for de-duping messages within P2P?
-	// TODO(#388): generalize to use the shared `FIFOMempool` type (in `utility/types/mempool.go` at the time of writing) in here as well for this.
-	nonceSet         map[uint64]struct{}
-	nonceList        []uint64
-	mempoolMaxNonces uint64
-	nonceSetMutex    sync.Mutex
-	nonceDeduper     *mempool.GenericFIFOSet[uint64, uint64]
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
