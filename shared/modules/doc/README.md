@@ -78,7 +78,10 @@ if err != nil {
 }
 ```
 
-When defining the start function for the module it is important to note that a logger should be created and set on the module object.
+
+##### Add a logger to the module
+
+When defining the start function for the module, it is essential to initialise a namespace logger as well:
 
 ```golang
 func (m *newModule) Start() error {
