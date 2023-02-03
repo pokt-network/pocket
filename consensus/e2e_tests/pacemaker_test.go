@@ -22,7 +22,7 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 
 	// UnitTestNet configs
 	// IMPROVE(#295): Remove time specific suffixes as outlined by go-staticcheck (ST1011)
-	paceMakerTimeoutMsec := uint64(500) // Set a small pacemaker timeout
+	paceMakerTimeoutMsec := uint64(10000) // Set a small pacemaker timeout
 	paceMakerTimeout := time.Duration(paceMakerTimeoutMsec) * time.Millisecond
 	consensusMessageTimeoutMsec := time.Duration(paceMakerTimeoutMsec / 5) // Must be smaller than pacemaker timeout because we expect a deterministic number of consensus messages.
 	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)

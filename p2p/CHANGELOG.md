@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.22] - 2023-02-03
+
+- Using the generic `mempool.GenericFIFOSet` as a `nonceDeduper`
+- Added tests for `nonceDeduper` to ensure that it behaves as expected.
+
 ## [0.0.0.21] - 2023-01-30
 
 - Updated `TestRainTreeAddrBookUtilsHandleUpdate` and `testRainTreeMessageTargets` to correct incorrect expected and actual value placements.

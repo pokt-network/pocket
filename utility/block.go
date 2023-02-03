@@ -34,8 +34,9 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	transactions := make([][]byte, 0)
 	totalTxsSizeInBytes := 0
 	txIndex := 0
-	for !u.Mempool.IsEmpty() {
-		txBytes, err := u.Mempool.PopTransaction()
+	mempool := u.GetBus().GetUtilityModule().GetMempool()
+	for !mempool.IsEmpty() {
+		txBytes, err := mempool.PopTx()
 		if err != nil {
 			return "", nil, err
 		}
@@ -47,7 +48,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		totalTxsSizeInBytes += txTxsSizeInBytes
 		if totalTxsSizeInBytes >= maxTransactionBytes {
 			// Add back popped transaction to be applied in a future block
-			err := u.Mempool.AddTransaction(txBytes)
+			err := mempool.AddTx(txBytes)
 			if err != nil {
 				return "", nil, err
 			}
