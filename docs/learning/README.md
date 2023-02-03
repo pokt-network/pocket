@@ -206,6 +206,7 @@ This is a general set of technical links and recommended reading our team has fo
 - [OG Pocket Network Blog](https://medium.com/@POKTnetwork)
 - [Vitalik's blog](https://vitalik.ca/categories/blockchains.html)
 - [Mike's blog](https://morourke.org/)
+- [Alin Tomescu](https://alinush.github.io/)
 - [Joachim Neu](https://www.jneu.net/)
   - See the articles under the **Technical reports** section
 - [Decentralized Thoughts by Ittai Ibrahim](https://decentralizedthoughts.github.io/about-ittai); the RSS feed is available [here](https://decentralizedthoughts.github.io/feed.xml)
