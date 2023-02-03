@@ -47,7 +47,6 @@ You may need to manually enable Kubernetes if using Docker Desktop:
 
 ![Docker desktop kubernetes](https://user-images.githubusercontent.com/1892194/216165581-1372e2b8-c630-4211-8ced-5ec59b129330.png)
 
-
 ## LocalNet
 
 ### Starting LocalNet
