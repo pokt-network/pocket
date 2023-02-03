@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.11] - 2023-01-31
+## [0.0.0.12] - 2023-02-03
 
 - Added additional logging information to be able to tell which config file contains an error
 - Changed hardcoded addresses and public keys to reflect new addresses pattern from LocalNet on Kubernetes
+
+## [0.0.0.11] - 2023-02-03
+
+- Updated to display the warning message about the telemetry module not registered only once
 
 ## [0.0.0.10] - 2023-01-25
 
@@ -76,3 +80,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Modules now accept `interfaces` instead of paths.
 - Unmarshalling is done in a new `runtime` package (runtime because what we do in there affects the runtime of the application)
 - We are now able to accept configuration via environment variables (thanks to @okdas for inspiration and [sp13 for Viper]("github.com/spf13/viper"))
+
+<!-- GITHUB_WIKI: changelog/runtime -->

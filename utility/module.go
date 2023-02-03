@@ -6,6 +6,7 @@ import (
 
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -18,7 +19,7 @@ type utilityModule struct {
 	bus    modules.Bus
 	config *configs.UtilityConfig
 
-	Mempool types.Mempool
+	mempool mempool.TXMempool
 }
 
 const (
@@ -39,7 +40,7 @@ func (*utilityModule) Create(bus modules.Bus) (modules.Module, error) {
 	utilityCfg := cfg.Utility
 
 	m.config = utilityCfg
-	m.Mempool = types.NewMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
+	m.mempool = types.NewTxFIFOMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
 
 	return m, nil
 }
@@ -86,4 +87,8 @@ func (u *utilityModule) HandleMessage(message *anypb.Any) error {
 		return types.ErrUnknownMessageType(message.MessageName())
 	}
 	return nil
+}
+
+func (u *utilityModule) GetMempool() mempool.TXMempool {
+	return u.mempool
 }
