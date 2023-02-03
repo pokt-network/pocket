@@ -37,3 +37,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.0] - 2022-12-22
 
 - Introduced this `CHANGELOG.md`
+
+<!-- GITHUB_WIKI: changelog/build -->

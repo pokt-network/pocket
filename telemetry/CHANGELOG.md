@@ -23,3 +23,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.0] - 2023-01-03
 
 - Introduced this `CHANGELOG.md`
+
+<!-- GITHUB_WIKI: changelog/telemetry -->

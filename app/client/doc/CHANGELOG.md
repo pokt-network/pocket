@@ -61,3 +61,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Functionally mocked a keybase in the form of a json file (default: pk.json) that will contain the privatekey
 - CLI calling RPC via generated client
 - Default configuration handling/overrides
+
+<!-- GITHUB_WIKI: changelog/app -->

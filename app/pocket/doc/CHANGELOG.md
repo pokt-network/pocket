@@ -17,3 +17,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added the simplest form of feature flagging for the RPC server functionality
 - Calling the RPC server entrypoint in a goroutine if enabled
+
+<!-- GITHUB_WIKI: changelog/app -->

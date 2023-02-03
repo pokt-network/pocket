@@ -12,9 +12,9 @@ In order to enable it, you can simply add the environment variable `PPROF_ENABLE
 You can do that in several ways, the most obvious spot would be the `docker-compose.yml` file, in the `environment` section of the `node1.consensus` service.
 
 ```yaml
-    environment:
-    # Uncomment to enable the pprof server
-    #  - PPROF_ENABLED=true
+environment:
+# Uncomment to enable the pprof server
+#  - PPROF_ENABLED=true
 ```
 
 ### Example
@@ -36,6 +36,7 @@ $ curl http://localhost:6060/debug/pprof/heap > baseline.heap
 ```bash
 curl http://localhost:6060/debug/pprof/heap > after_reset.heap
 ```
+
 5. Compare the two profiles using the `pprof` tool:
 
 ```bash
@@ -55,3 +56,4 @@ $ go tool pprof -base=baseline.heap after_reset.heap
 - PProf: https://go.dev/blog/pprof
 - Memory leaking scenarios: https://go101.org/article/memory-leaking.html
 
+<!-- GITHUB_WIKI: guides/development/profiling -->

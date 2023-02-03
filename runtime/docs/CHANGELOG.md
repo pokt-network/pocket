@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.9] - 2023-01-23
 
 - Updated README.md with information about node profiling
+
 ## [0.0.0.8] - 2023-01-19
 
 - Rewrite `interface{}` to `any`

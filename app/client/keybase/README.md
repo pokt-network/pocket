@@ -79,3 +79,5 @@ The primitives and functions defined there are heavily used throughout this pack
 - [ ] Research and implement threshold signatures and threshold keys
 - [ ] Look into a fully feature signature implementation beyond trivial `[]byte` messages
 - [ ] Integrate the keybase with the CLI (#150)
+
+<!-- GITHUB_WIKI: app/client/keybase -->

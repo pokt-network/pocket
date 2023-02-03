@@ -39,6 +39,7 @@ genesis
 ```
 
 TODO(#235): Update once runtime configs are implemented
+
 ### Module Typical Usage Example
 
 #### Create the module
