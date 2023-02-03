@@ -81,8 +81,6 @@ The config file can be modified to scale the number of actors up/down. As long a
 
 [Watch demo](https://user-images.githubusercontent.com/4950477/216490690-8ac4c16a-25e1-4202-b2e5-03215030c82c.mp4)
 
-![Watch demo](https://user-images.githubusercontent.com/4950477/216490690-8ac4c16a-25e1-4202-b2e5-03215030c82c.mp4)
-
 
 ### Stopping & Clean Resources
 
