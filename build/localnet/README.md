@@ -80,6 +80,11 @@ When starting a k8s LocalNet, `localnet_config.yaml` is generated (with default 
 
 The config file can be modified to scale the number of actors up/down. As long as `localnet_up` is running, the changes should be automatically applied within seconds.
 
+[Watch demo](https://user-images.githubusercontent.com/4950477/216490690-8ac4c16a-25e1-4202-b2e5-03215030c82c.mp4)
+
+![Watch demo](https://user-images.githubusercontent.com/4950477/216490690-8ac4c16a-25e1-4202-b2e5-03215030c82c.mp4)
+
+
 ### Stopping & Clean Resources
 
 ```bash
