@@ -19,8 +19,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var _ typesP2P.Network = &rainTreeNetwork{}
-var _ modules.IntegratableModule = &rainTreeNetwork{}
+var (
+	_ typesP2P.Network           = &rainTreeNetwork{}
+	_ modules.IntegratableModule = &rainTreeNetwork{}
+)
 
 type rainTreeNetwork struct {
 	bus modules.Bus

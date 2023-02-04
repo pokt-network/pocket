@@ -1,62 +1,91 @@
-## 1. Configuration
+# Logger <!-- omit in toc -->
 
-Logger module has the following configuration options:
+- [Configuration](#configuration)
+- [Log Types](#log-types)
+  - [Levels](#levels)
+  - [Fields](#fields)
+    - [Int Field](#int-field)
+    - [String Field](#string-field)
+    - [Map Field](#map-field)
+- [Global Logging](#global-logging)
+- [Module Logging](#module-logging)
+  - [Logger Initialization](#logger-initialization)
+- [Accessing Logs](#accessing-logs)
+  - [Grafana](#grafana)
+  - [Example Queries](#example-queries)
+
+## Configuration
+
+The logger module has the following configuration options found [here](./runtime/confg/../../../../runtime/configs/proto/logger_config.proto):
 
 ```json
 {
   "logger": {
     "level": "debug",
     "format": "pretty"
-  },
+  }
 }
 ```
 
-* `level` - the level of logging. Can be one of `debug`, `info`, `warn`, `error`, `fatal`, `panic`
-* `format` - the format of the logs. Can be one of `pretty`, `json`
+- `level`: log level; one of `debug`, `info`, `warn`, `error`, `fatal`, `panic`
+- `format`: log format; one of `pretty`, `json`
 
-When utilizing additional wrappers to run processes, beware that they can change stdout output. For example, `reflex` we use for hot reloading modifies the log lines. To avoid this, we use the `--decoration` flag.
+NOTE: Additional process wrapper ma change stdout output. For example, `reflex`, used for hot reloading, modifies the log lines. This can be avoided by using the `--decoration` flag.
 
+## Log Types
 
-## 2. Log Types
+### Levels
 
-### 2.1 Levels
+The developer needs to provide the logging level for each log message:
 
-The developer needs to provide the logging level for each log output.
+- Debug: `logger.Global.Logger.Debug().Msg(msg)`
+- Error with `err`: `logger.Global.Logger.Error().Err(err).Msg(msg)`
+- Error without `err`: `logger.Global.Logger.Error().Msg(msg)`
+- Fatal:: `logger.Global.Fatal().Err(err).Msg(msg)`
 
-* When logging debug: `logger.Global.Logger.Debug().Msg(msg)`
-* When logging error with `err`: `logger.Global.Logger.Error().Err(err).Msg(msg)`
-* When logging error without `err`: `logger.Global.Logger.Error().Msg(msg)`
-* When logging a fatal error: `logger.Global.Fatal().Err(err).Msg(msg)`
+### Fields
 
-### 2.2. Fields
+Metadata can, and should, be attached to each log level. Using the same key throughout makes the logs easier to parse.
 
-We encourage to provide additional context to the log message by using fields. Please be consistent with the field names, e.g. utilizing "height" key for the height of a block instead of "h" or "block_height" because it makes it easier to search for logs related to that context.
+Refer to the [zerolog documentation](https://github.com/rs/zerolog#field-types) for more information on the available field types.
 
-For example:
+#### Int Field
+
+For example, a single int field can be added like so:
+
 ```golang
 logger.Global.Logger.Debug().Uint64("height", height).Msg("Block committed")
 ```
 
-Refer to the [zerolog documentation](https://github.com/rs/zerolog#field-types) for more information on the available field types.
+#### String Field
 
-Fields also can be provided utilizing a map:
+A single string field can be added like so:
+
+```golang
+logger.Global.Logger.Debug().String("hash", hash).Msg("Block committed")
+```
+
+#### Map Field
+
+Multiple fields can be provided using a map:
 
 ```golang
 fields := map[string]interface{}{
     "height": height,
     "hash": hash,
 }
+
 logger.Global.Logger.Debug.Fields(fields).Msg("Block committed")
 ```
 
-## 3. Global Logging
+## Global Logging
 
-When not logging inside a module, use the global logger.
+The global logger should be used when logging outside a module:
 
 ```golang
 import (
-	...
-	"github.com/pokt-network/pocket/logger"
+    ...
+    "github.com/pokt-network/pocket/logger"
     ...
 )
 
@@ -64,13 +93,11 @@ func DoSomething() {
     logger.Global.Fatal().Msg("Oops, something went wrong!")
     ...
 }
-
 ```
 
+## Module Logging
 
-## 4. Module Logging
-
-As each module has its own logger, please utilize it instead of the global logger.
+Each module should have its own logger to appropriately namespace the logs.
 
 ```golang
 type sweetModule struct {
@@ -78,12 +105,12 @@ type sweetModule struct {
 }
 
 func (m *sweetModule) DoSomething() {
-    m.Fatal().Msg("Something is fishy!")
+    m.logger.Fatal().Msg("Something is fishy!")
     ...
 }
 ```
 
-### 4.1 Logger Initialization
+### Logger Initialization
 
 `Global` logger is always available from the `logger` package.
 
@@ -101,14 +128,16 @@ func (m *sweetModule) Start() error {
 }
 ```
 
-## 5. Accessing Logs
+## Accessing Logs
 
-Logs are written to stdout. In our LocalNet we use Loki to capture log output and query logs using [LogQL](https://grafana.com/docs/loki/latest/logql/) syntax. We also use Grafana to visualize the logs.
+Logs are written to stdout. In LocalNet, Loki is used to capture log output. Logs can then be queried using [LogQL](https://grafana.com/docs/loki/latest/logql/) syntax. Grafana can be used to visualize the logs.
 
-### 5.1. Grafana
+### Grafana
 
-If you run the LocalNet using the `make localnet_up` command, you can access Grafana at http://localhost:42000.
+When running LocalNet via `make localnet_up`, Grafana can be accessed at [localhost:42000](https://localhost:42000).
 
-#### 5.2. Example Queries
+### Example Queries
 
-We will populate this section with useful queries as we go.
+DOCUMENT: Add common query examples.
+
+<!-- GITHUB_WIKI: logger/readme -->

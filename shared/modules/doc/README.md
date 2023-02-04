@@ -35,10 +35,10 @@ genesis
 ├── test_artifacts      # the central point of all testing code (WIP)
 │   ├── generator.go    # generate the genesis and config.json for tests and build
 │   ├── gov.go          # default testing parameters
-
 ```
 
 TODO(#235): Update once runtime configs are implemented
+
 ### Module Typical Usage Example
 
 #### Create the module
@@ -77,7 +77,6 @@ if err != nil {
 	// handle error
 }
 ```
-
 
 ##### Add a logger to the module
 

@@ -308,6 +308,7 @@ func (m *consensusModule) setLogPrefix(logPrefix string) {
 	logger.Global.UpdateFields(map[string]any{
 		"kind": logPrefix,
 	})
+	// INVESTIGATE: Do we need to create a new logger here?
 	m.logger = logger.Global.CreateLoggerForModule("consensus")
 }
 
