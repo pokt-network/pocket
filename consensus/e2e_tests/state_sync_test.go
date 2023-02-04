@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func TestStateSync_ServerGetMetaDataReq_SuccessfulTest(t *testing.T) {
+func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
