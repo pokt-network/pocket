@@ -2,10 +2,18 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
+)
+
+// Hardcoded keybase related constants
+const (
+	KEYBASE_PATH_SUFFIX    = "/.pocket/keys"      // TODO: Find a good place for this
+	PRIVATEKEY_YAML_SUFFIX = "/private-keys.yaml" // Remove when PR#354 is merged then use `build/localnet/manifests/private-keys.yaml`
 )
 
 func init() {
@@ -34,22 +42,31 @@ func accountCommands() []*cobra.Command {
 			Short:   "Send <fromAddr> <to> <amount>",
 			Long:    "Sends <amount> to address <to> from address <fromAddr>",
 			Aliases: []string{"send"},
-			Args:    cobra.ExactArgs(3), // REFACTOR(#150): <fromAddr> not being used at the moment. Update once a keybase is implemented.
+			Args:    cobra.ExactArgs(3),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				// TODO(#150): update when we have keybase
-				pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
+				homeDir, err := os.UserHomeDir()
 				if err != nil {
 					return err
 				}
-				// NOTE: since we don't have a keybase yet (tracked in #150), we are currently inferring the `fromAddr` from the PrivateKey supplied via the flag `--path_to_private_key_file`
-				// the following line is commented out to show that once we have a keybase, `fromAddr` should come from the command arguments and not the PrivateKey (pk) anymore.
-				//
-				// fromAddr := crypto.AddressFromString(args[0])
+				keybase, err := keybase.InitialiseKeybase(homeDir+KEYBASE_PATH_SUFFIX, homeDir+PRIVATEKEY_YAML_SUFFIX) // Change when PR#354 is merged
+				if err != nil {
+					return err
+				}
+
+				// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
+				pwd = readPassphrase(pwd)
+
+				pk, err := keybase.GetPrivKey(args[0], pwd)
+				if err != nil {
+					return err
+				}
+
+				fromAddr := crypto.AddressFromString(args[0])
 				toAddr := crypto.AddressFromString(args[1])
 				amount := args[2]
 
 				msg := &types.MessageSend{
-					FromAddress: pk.Address(),
+					FromAddress: fromAddr,
 					ToAddress:   toAddr,
 					Amount:      amount,
 				}

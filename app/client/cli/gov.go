@@ -2,7 +2,9 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -38,8 +40,19 @@ func govCommands() []*cobra.Command {
 				// TODO(deblasis): implement RPC client, route and handler
 				fmt.Printf("changing parameter %s owned by %s to %s\n", args[1], args[0], args[2])
 
-				// TODO(#150): update when we have keybase
-				pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
+				homeDir, err := os.UserHomeDir()
+				if err != nil {
+					return err
+				}
+				keybase, err := keybase.InitialiseKeybase(homeDir+KEYBASE_PATH_SUFFIX, homeDir+PRIVATEKEY_YAML_SUFFIX) // Change when PR#354 is merged
+				if err != nil {
+					return err
+				}
+
+				// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
+				pwd = readPassphrase(pwd)
+
+				pk, err := keybase.GetPrivKey(args[0], pwd)
 				if err != nil {
 					return err
 				}

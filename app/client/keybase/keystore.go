@@ -9,6 +9,7 @@ import (
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"gopkg.in/yaml.v2"
 )
 
 // Errors
@@ -44,6 +45,79 @@ func NewKeybaseInMemory() (Keybase, error) {
 	if err != nil {
 		return nil, err
 	}
+	return &badgerKeybase{db: db}, nil
+}
+
+type yamlConfig struct {
+	ApiVersion string            `yaml:"apiVersion"`
+	Kind       string            `yaml:"kind"`
+	MetaData   map[string]string `yaml:"metadata"`
+	Type       string            `yaml:"type"`
+	StringData map[string]string `yaml:"stringData"`
+}
+
+// Creates/Opens the DB and initialises the keys from the YAML file
+// FOR DEV/LOCANET PURPOSES ONLY
+func InitialiseKeybase(path, yamlFile string) (Keybase, error) {
+	// Create/Open the keybase
+	pathExists, err := dirExists(path) // Creates path if it doesn't exist
+	if err != nil || !pathExists {
+		return nil, err
+	}
+	db, err := badger.Open(badgerOptions(path))
+	if err != nil {
+		return nil, err
+	}
+	kb := &badgerKeybase{db: db}
+
+	if exists, err := fileExists(yamlFile); !exists || err != nil {
+		return nil, fmt.Errorf("Unable to find YAML file: %s", yamlFile)
+	}
+
+	// Parse the YAML file and load into the yamlConfig struct
+	yfile, err := os.ReadFile(yamlFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var config yamlConfig
+	if err := yaml.Unmarshal([]byte(yfile), &config); err != nil {
+		return nil, err
+	}
+
+	// Add the keys if the keybase contains less than 999
+	curAddr, _, err := kb.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(curAddr) < 999 {
+		// Use writebatch to speed up bulk insert
+		wb := db.NewWriteBatch()
+		for _, privHexString := range config.StringData {
+			// Import the keys into the keybase with no passphrase or hint
+			keyPair, err := crypto.CreateNewKeyFromString(privHexString, "", "")
+			if err != nil {
+				return nil, err
+			}
+
+			// Use key address as key in DB
+			addrKey := keyPair.GetAddressBytes()
+
+			// Encode KeyPair into []byte for value
+			keypairBz, err := keyPair.Marshal()
+			if err != nil {
+				return nil, err
+			}
+			if err := wb.Set(addrKey, keypairBz); err != nil {
+				return nil, err
+			}
+		}
+		if err := wb.Flush(); err != nil {
+			return nil, err
+		}
+	}
+
 	return &badgerKeybase{db: db}, nil
 }
 
@@ -190,7 +264,7 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 	// View executes the function provided managing a read only transaction
 	err = keybase.db.View(func(tx *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.PrefetchSize = 5
+		opts.PrefetchSize = 15
 		it := tx.NewIterator(opts)
 		defer it.Close()
 		for it.Rewind(); it.Valid(); it.Next() {
@@ -346,6 +420,18 @@ func dirExists(path string) (bool, error) {
 			return false, fmt.Errorf("Error creating directory at path: %s, (%v)", path, err.Error())
 		}
 		return true, nil
+	}
+	return false, err
+}
+
+// Check file at the given path given exists
+func fileExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
 	}
 	return false, err
 }
