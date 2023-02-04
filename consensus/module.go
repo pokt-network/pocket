@@ -66,11 +66,7 @@ type consensusModule struct {
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-<<<<<<< HEAD
-	// TO_DEPRECATE: Remove later when we build a shared/proper/injected logger
-=======
 	logger    modules.Logger
->>>>>>> main
 	logPrefix string
 
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool

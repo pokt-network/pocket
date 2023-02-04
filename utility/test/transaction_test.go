@@ -22,7 +22,7 @@ var (
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 
-	tx, startingBalance, _, signer := newTestingTransaction(t, &ctx)
+	tx, startingBalance, _, signer := newTestingTransaction(t, ctx)
 	_, signerString, err := ctx.AnteHandleMessage(tx)
 	require.NoError(t, err)
 	require.Equal(t, signer.Address().String(), signerString)
@@ -34,13 +34,13 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 
-	test_artifacts.CleanupTest(&ctx)
+	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 
-	tx, startingBalance, amount, signer := newTestingTransaction(t, &ctx)
+	tx, startingBalance, amount, signer := newTestingTransaction(t, ctx)
 	txResult, err := ctx.ApplyTransaction(0, tx)
 	require.NoError(t, err)
 	require.Equal(t, int32(0), txResult.GetResultCode())
@@ -54,14 +54,14 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 
-	test_artifacts.CleanupTest(&ctx)
+	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_CheckTransaction(t *testing.T) {
 	mockBusInTestModules(t)
 
 	ctx := NewTestingUtilityContext(t, 0)
-	tx, _, _, _ := newTestingTransaction(t, &ctx)
+	tx, _, _, _ := newTestingTransaction(t, ctx)
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
@@ -72,12 +72,12 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 	require.True(t, testUtilityMod.GetMempool().Contains(hash))
 	require.Equal(t, testUtilityMod.CheckTransaction(txBz).Error(), typesUtil.ErrDuplicateTransaction().Error())
 
-	test_artifacts.CleanupTest(&ctx)
+	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	accs := GetAllTestingAccounts(t, &ctx)
+	accs := GetAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := typesUtil.BigIntToString(sendAmount)
@@ -92,16 +92,16 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	require.Equal(t, 1, len(candidates), "wrong number of candidates")
 	require.Equal(t, accs[0].GetAddress(), hex.EncodeToString(candidates[0]), "unexpected signer candidate")
 
-	test_artifacts.CleanupTest(&ctx)
+	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	mockBusInTestModules(t)
 
 	ctx := NewTestingUtilityContext(t, 0)
-	tx, _, _, _ := newTestingTransaction(t, &ctx)
+	tx, _, _, _ := newTestingTransaction(t, ctx)
 
-	proposer := getFirstActor(t, &ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
+	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
 	require.NoError(t, testUtilityMod.CheckTransaction(txBz))
@@ -112,12 +112,12 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	require.Equal(t, 1, len(txs))
 	require.Equal(t, txs[0], txBz)
 
-	test_artifacts.CleanupTest(&ctx)
+	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_HandleMessage(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	accs := GetAllTestingAccounts(t, &ctx)
+	accs := GetAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := typesUtil.BigIntToString(sendAmount)
@@ -132,7 +132,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	require.NoError(t, er)
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
 	require.NoError(t, ctx.HandleMessageSend(&msg))
-	accs = GetAllTestingAccounts(t, &ctx)
+	accs = GetAllTestingAccounts(t, ctx)
 	senderBalanceAfter, err := typesUtil.StringToBigInt(accs[0].GetAmount())
 	require.NoError(t, err)
 
@@ -142,7 +142,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter), "unexpected sender balance")
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), "unexpected recipient balance")
 
-	test_artifacts.CleanupTest(&ctx)
+	test_artifacts.CleanupTest(ctx)
 }
 
 func newTestingTransaction(t *testing.T, ctx *utility.UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {

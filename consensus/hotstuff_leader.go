@@ -368,7 +368,9 @@ func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) e
 
 	// Only the leader needs to aggregate consensus related messages.
 	step := msg.GetStep()
-	m.hotstuffMempool[step].Push(msg)
+	if err := m.hotstuffMempool[step].Push(msg); err != nil {
+		return err
+	}
 
 	return nil
 }

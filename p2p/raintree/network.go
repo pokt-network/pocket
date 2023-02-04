@@ -3,12 +3,6 @@ package raintree
 import (
 	"fmt"
 	"log"
-<<<<<<< HEAD
-	"sync"
-=======
-	"math/rand"
-	"time"
->>>>>>> main
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
@@ -206,7 +200,9 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	}
 
 	// Add the nonce to the deduper
-	n.nonceDeduper.Push(rainTreeMsg.Nonce)
+	if err := n.nonceDeduper.Push(rainTreeMsg.Nonce); err != nil {
+		return nil, err
+	}
 
 	// Return the data back to the caller so it can be handled by the app specific bus
 	return rainTreeMsg.Data, nil

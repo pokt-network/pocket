@@ -13,7 +13,6 @@ import (
 type loggerModule struct {
 	zerolog.Logger
 	bus    modules.Bus
-	logger modules.Logger
 	config *configs.LoggerConfig
 }
 

@@ -70,7 +70,7 @@ func (m *PrometheusTelemetryModule) Start() error {
 			ReadHeaderTimeout: 5 * time.Second,
 		}
 		if err := server.ListenAndServe(); err != nil {
-			log.Fatalf("[ERROR] Error starting http server: %v", err.Error())
+			m.logger.Fatal().Err(err).Msg("Error starting Prometheus metrics exporter http server")
 		}
 	}()
 

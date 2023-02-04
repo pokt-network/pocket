@@ -12,12 +12,12 @@ import (
 
 func TestUtilityContext_ApplyBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	tx, startingBalance, amountSent, signer := newTestingTransaction(t, &ctx)
+	tx, startingBalance, amountSent, signer := newTestingTransaction(t, ctx)
 
 	txBz, er := tx.Bytes()
 	require.NoError(t, er)
 
-	proposer := getFirstActor(t, &ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
+	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
 
 	addrBz, err := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, err)
@@ -61,14 +61,14 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference, "unexpected before / after balance difference")
 
-	test_artifacts.CleanupTest(&ctx)
+	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_BeginBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	tx, _, _, _ := newTestingTransaction(t, &ctx)
+	tx, _, _, _ := newTestingTransaction(t, ctx)
 
-	proposer := getFirstActor(t, &ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
+	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
@@ -88,14 +88,14 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	// require.NoError(t, err)
 	// require.Equal(t, missed, 1)
 
-	test_artifacts.CleanupTest(&ctx)
+	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_EndBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	tx, _, _, _ := newTestingTransaction(t, &ctx)
+	tx, _, _, _ := newTestingTransaction(t, ctx)
 
-	proposer := getFirstActor(t, &ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
+	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
@@ -128,5 +128,5 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference)
 
-	test_artifacts.CleanupTest(&ctx)
+	test_artifacts.CleanupTest(ctx)
 }
