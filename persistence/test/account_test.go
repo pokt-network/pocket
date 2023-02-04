@@ -40,11 +40,11 @@ func FuzzAccountAmount(f *testing.F) {
 
 	numDbOperations := 20
 	for i := 0; i < numDbOperations; i++ {
-		f.Add(operations[rand.Intn(numOperationTypes)]) //nolint:gosec // G404 - Weak source of random okay here
+		f.Add(operations[rand.Intn(numOperationTypes)]) //nolint:gosec // G404 - Weak source of random okay in unit tests
 	}
 
 	f.Fuzz(func(t *testing.T, op string) {
-		delta := big.NewInt(int64(rand.Intn(1000))) //nolint:gosec // G404 - Weak random source is okay here
+		delta := big.NewInt(int64(rand.Intn(1000))) //nolint:gosec // G404 - Weak random source is okay in unit tests
 		deltaString := converters.BigIntToString(delta)
 
 		switch op {
@@ -228,11 +228,11 @@ func FuzzPoolAmount(f *testing.F) {
 
 	numDbOperations := 20
 	for i := 0; i < numDbOperations; i++ {
-		f.Add(operations[rand.Intn(numOperationTypes)]) //nolint:gosec // G404 - Weak random source is okay here
+		f.Add(operations[rand.Intn(numOperationTypes)]) //nolint:gosec // G404 - Weak random source is okay in unit tests
 	}
 
 	f.Fuzz(func(t *testing.T, op string) {
-		delta := big.NewInt(int64(rand.Intn(1000))) //nolint:gosec // G404 - Weak random source is okay here
+		delta := big.NewInt(int64(rand.Intn(1000))) //nolint:gosec // G404 - Weak random source is okay in unit tests
 		deltaString := converters.BigIntToString(delta)
 
 		switch op {

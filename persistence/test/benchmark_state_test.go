@@ -85,7 +85,7 @@ func BenchmarkStateHash(b *testing.B) {
 }
 
 // Calls a random database modifier function on the given persistence context
-//nolint:gosec // G404 - Weak random source is okay here
+//nolint:gosec // G404 - Weak random source is okay in unit tests
 func callRandomDatabaseModifierFunc(
 	p *persistence.PostgresContext,
 	mustSucceed bool,
@@ -164,11 +164,11 @@ func getRandomTxResult(height int64) *indexer.TxRes {
 }
 
 func getRandomIntString(n int) string {
-	return strconv.Itoa(rand.Intn(n)) //nolint:gosec // G404 - Weak random source is okay here
+	return strconv.Itoa(rand.Intn(n)) //nolint:gosec // G404 - Weak random source is okay in unit tests
 }
 
 func getRandomBytes(numBytes int64) []byte {
 	bz := make([]byte, numBytes)
-	rand.Read(bz) //nolint:gosec // G404 - Weak random source is okay here
+	rand.Read(bz) //nolint:gosec // G404 - Weak random source is okay in unit tests
 	return []byte(hex.EncodeToString(bz))
 }
