@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.23] - 2023-02-03
+
+- Changed log lines to utilize new logger module.
+
 ## [0.0.0.22] - 2023-02-03
 
 - Introduced `txFIFOMempool` which extends the new `GenericFIFOSet` in order to replace the legacy logic

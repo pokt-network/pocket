@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.30] - 2023-02-03
+
+- Changed log lines to utilize new logger module.
+
 ## [0.0.0.29] - 2023-01-31
 
 - Use hash of serialised protobufs for keys in `updateParamsTree()` and `updateFlagsTree()`

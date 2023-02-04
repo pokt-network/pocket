@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.3] - 2023-02-03
+
+- Added readme
+- Moved initialization of `Global` logger to `init` function
+- Added `SetFields` and `UpdateFields` methods to `Logger` module
+
 ## [0.0.0.2] - 2023-01-10
 
 - Updated module constructor to accept a `bus` and not a `runtimeMgr` anymore
