@@ -116,7 +116,6 @@ func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage
 			m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
 		}
 	}
-
 }
 
 // requests metadata from all validators
