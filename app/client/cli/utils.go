@@ -4,16 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	crand "crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"math/big"
-	"math/rand"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -23,8 +20,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
-
-const maxNonce = ^uint64(0)
 
 // readEd25519PrivateKeyFromFile returns an Ed25519PrivateKey from a file where the file simply encodes it in a string (for now)
 // HACK(#150): this is a temporary hack since we don't have yet a keybase, the next step would be to read from an "ArmoredJson" like in V0
@@ -108,7 +103,7 @@ func prepareTxBytes(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte,
 
 	tx := &typesUtil.Transaction{
 		Msg:   anyMsg,
-		Nonce: getNonce(),
+		Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
 	}
 
 	signBytes, err := tx.SignBytes()
@@ -149,18 +144,6 @@ func postRawTx(ctx context.Context, pk crypto.Ed25519PrivateKey, j []byte) (*rpc
 		return nil, err
 	}
 	return resp, nil
-}
-
-func getNonce() string {
-	max := new(big.Int)
-	max.SetUint64(maxNonce)
-	bigNonce, err := crand.Int(crand.Reader, max)
-	if err != nil {
-		// If failed to get cryptographically secure nonce use a pseudo-random nonce
-		rand.Seed(time.Now().UTC().UnixNano())
-		return fmt.Sprintf("%d", rand.Uint64()) //nolint:gosec // G404 - Weak source of random here is fallback
-	}
-	return fmt.Sprintf("%d", bigNonce.Uint64())
 }
 
 func readPassphrase(currPwd string) string {

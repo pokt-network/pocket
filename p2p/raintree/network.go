@@ -1,18 +1,15 @@
 package raintree
 
 import (
-	crand "crypto/rand"
 	"fmt"
 	"log"
-	"math/big"
-	"math/rand"
 	"sync"
-	"time"
 
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -112,7 +109,7 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 	msg := &typesP2P.RainTreeMessage{
 		Level: 0, // Direct send that does not need to be propagated
 		Data:  data,
-		Nonce: getNonce(),
+		Nonce: crypto.GetNonce(),
 	}
 
 	bz, err := codec.GetCodec().Marshal(msg)
@@ -248,19 +245,6 @@ func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
 
 func (n *rainTreeNetwork) GetBus() modules.Bus {
 	return n.bus
-}
-
-// Generate cryptographically secure random nonce
-func getNonce() uint64 {
-	max := new(big.Int)
-	max.SetUint64(maxNonce)
-	bigNonce, err := crand.Int(crand.Reader, max)
-	if err != nil {
-		// If failed to get cryptographically secure nonce use a pseudo-random nonce
-		rand.Seed(time.Now().UTC().UnixNano())
-		return rand.Uint64() //nolint:gosec // G404 - Weak source of random here is fallback
-	}
-	return bigNonce.Uint64()
 }
 
 func shouldSendToTarget(target target) bool {
