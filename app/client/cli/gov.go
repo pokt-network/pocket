@@ -49,7 +49,6 @@ func govCommands() []*cobra.Command {
 					return err
 				}
 
-				// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 				pwd = readPassphrase(pwd)
 
 				pk, err := keybase.GetPrivKey(args[0], pwd)

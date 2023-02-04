@@ -100,7 +100,6 @@ If no changes are desired for the parameter, just enter the current param value 
 				return err
 			}
 
-			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 			pwd = readPassphrase(pwd)
 
 			pk, err := keybase.GetPrivKey(args[0], pwd)
@@ -119,9 +118,6 @@ If no changes are desired for the parameter, just enter the current param value 
 			rawChains := rawChainCleanupRegex.ReplaceAllString(args[2], "")
 			chains := strings.Split(rawChains, ",")
 			serviceURI := args[3]
-
-			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
-			pwd = readPassphrase(pwd)
 
 			msg := &typesUtil.MessageStake{
 				PublicKey:     fromAddr,
@@ -169,7 +165,6 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 			pwd = readPassphrase(pwd)
 
 			pk, err := keybase.GetPrivKey(args[0], pwd)
@@ -187,9 +182,6 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			rawChains := rawChainCleanupRegex.ReplaceAllString(args[2], "")
 			chains := strings.Split(rawChains, ",")
 			serviceURI := args[3]
-
-			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
-			pwd = readPassphrase(pwd)
 
 			msg := &typesUtil.MessageEditStake{
 				Address:    fromAddr,
@@ -235,7 +227,6 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 			pwd = readPassphrase(pwd)
 
 			pk, err := keybase.GetPrivKey(args[0], pwd)
@@ -284,7 +275,6 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 			pwd = readPassphrase(pwd)
 
 			pk, err := keybase.GetPrivKey(args[0], pwd)

@@ -12,7 +12,7 @@ import (
 
 // Hardcoded keybase related constants
 const (
-	KEYBASE_PATH_SUFFIX    = "/.pocket/keys"      // TODO: Find a good place for this
+	KEYBASE_PATH_SUFFIX    = "/.pocket/keys"      // TODO: Implement a `--data-dir` flag with a default value
 	PRIVATEKEY_YAML_SUFFIX = "/private-keys.yaml" // Remove when PR#354 is merged then use `build/localnet/manifests/private-keys.yaml`
 )
 
@@ -53,7 +53,6 @@ func accountCommands() []*cobra.Command {
 					return err
 				}
 
-				// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 				pwd = readPassphrase(pwd)
 
 				pk, err := keybase.GetPrivKey(args[0], pwd)
