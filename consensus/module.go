@@ -66,7 +66,6 @@ type consensusModule struct {
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	// Internal Logging
 	logger    modules.Logger
 	logPrefix string
 

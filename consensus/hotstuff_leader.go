@@ -44,7 +44,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		map[string]any{
 			"height": m.height,
 			"round":  m.round,
-			"step":   Prepare,
+			"step":   NewRound,
 		},
 	).Msg("📬 Received enough 📬 votes")
 
@@ -171,7 +171,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		map[string]any{
 			"height": m.height,
 			"round":  m.round,
-			"step":   Prepare,
+			"step":   PreCommit,
 		},
 	).Msg("📬 Received enough 📬 votes")
 
@@ -222,7 +222,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		map[string]any{
 			"height": m.height,
 			"round":  m.round,
-			"step":   Prepare,
+			"step":   Commit,
 		},
 	).Msg("📬 Received enough 📬 votes")
 
@@ -362,7 +362,7 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 //	Add proper tests and implementation once the mempool is implemented.
 func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) error {
 	if m.consCfg.MaxMempoolBytes < uint64(m.hotstuffMempool[typesCons.HotstuffStep(msg.Type)].TotalMsgBytes()) {
-    m.logger.Error().Err(typesCons.ErrConsensusMempoolFull).Msg(typesCons.DisregardHotstuffMessage)
+		m.logger.Error().Err(typesCons.ErrConsensusMempoolFull).Msg(typesCons.DisregardHotstuffMessage)
 		return typesCons.ErrConsensusMempoolFull
 	}
 
