@@ -53,7 +53,7 @@ func accountCommands() []*cobra.Command {
 					return err
 				}
 
-				pwd = readPassphrase(pwd)
+				pwd = readPassphrase(privateKeyPassphrase)
 
 				pk, err := keybase.GetPrivKey(args[0], pwd)
 				if err != nil {

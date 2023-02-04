@@ -100,7 +100,7 @@ If no changes are desired for the parameter, just enter the current param value 
 				return err
 			}
 
-			pwd = readPassphrase(pwd)
+			pwd = readPassphrase(privateKeyPassphrase)
 
 			pk, err := keybase.GetPrivKey(args[0], pwd)
 			if err != nil {
@@ -165,7 +165,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			pwd = readPassphrase(pwd)
+			pwd = readPassphrase(privateKeyPassphrase)
 
 			pk, err := keybase.GetPrivKey(args[0], pwd)
 			if err != nil {
@@ -227,7 +227,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			pwd = readPassphrase(pwd)
+			pwd = readPassphrase(privateKeyPassphrase)
 
 			pk, err := keybase.GetPrivKey(args[0], pwd)
 			if err != nil {
@@ -275,7 +275,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			pwd = readPassphrase(pwd)
+			pwd = readPassphrase(privateKeyPassphrase)
 
 			pk, err := keybase.GetPrivKey(args[0], pwd)
 			if err != nil {

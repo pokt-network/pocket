@@ -10,13 +10,13 @@ import (
 const cliExecutableName = "client"
 
 var (
-	remoteCLIURL       string
-	privateKeyFilePath string
+	remoteCLIURL         string
+	privateKeyPassphrase string
 )
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remote_cli_url", defaults.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
-	rootCmd.PersistentFlags().StringVar(&privateKeyFilePath, "path_to_private_key_file", "./pk.json", "Path to private key to use when signing")
+	rootCmd.PersistentFlags().StringVar(&privateKeyPassphrase, "privatekey_passphrase", "", "Passphrase to decrypt the private key when being used")
 }
 
 var rootCmd = &cobra.Command{
