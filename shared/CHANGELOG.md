@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.21] - 2023-02-03
+## [0.0.0.21] - 2023-02-04
 
 - Changed log lines to utilize new logger module.
 - Added example to Readme how to initiate a logger using new logger module.
