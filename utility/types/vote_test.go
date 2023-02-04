@@ -29,11 +29,9 @@ func TestVoteValidateBasic(t *testing.T) {
 	require.Equal(t, v3.ValidateBasic(), ErrEmptyHash())
 	// negative height
 	v4 := createLegacyVote(publicKey.Bytes(), -1, DoubleSignEvidenceType, testHash)
-	v4.Height = -1
 	require.Equal(t, v4.ValidateBasic(), ErrInvalidBlockHeight())
 	// bad type
-	v5 := createLegacyVote(publicKey.Bytes(), 0, 1, testHash)
-	v5.Type = 0
+	v5 := createLegacyVote(publicKey.Bytes(), 0, 0, testHash)
 	require.Equal(t, v5.ValidateBasic(), ErrInvalidEvidenceType())
 }
 

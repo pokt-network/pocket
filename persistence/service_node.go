@@ -12,7 +12,7 @@ func (p *PostgresContext) GetServiceNodeExists(address []byte, height int64) (ex
 	return p.GetExists(types.ServiceNodeActor, address, height)
 }
 
-//nolint:gocritic
+//nolint:gocritic // tooManyResultsChecker This function needs to return many values
 func (p *PostgresContext) GetServiceNode(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, err error) {
 	actor, err := p.getActor(types.ServiceNodeActor, address, height)
 	operator = actor.Address

@@ -17,8 +17,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const maxNonce = ^uint64(0)
-
 var _ typesP2P.Network = &rainTreeNetwork{}
 var _ modules.IntegratableModule = &rainTreeNetwork{}
 
@@ -63,7 +61,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProv
 }
 
 func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
-	return n.networkBroadcastAtLevel(data, n.peersManager.getNetworkView().maxNumLevels, getNonce())
+	return n.networkBroadcastAtLevel(data, n.peersManager.getNetworkView().maxNumLevels, crypto.GetNonce())
 }
 
 func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, nonce uint64) error {

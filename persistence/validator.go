@@ -12,7 +12,7 @@ func (p *PostgresContext) GetValidatorExists(address []byte, height int64) (exis
 	return p.GetExists(types.ValidatorActor, address, height)
 }
 
-//nolint:gocritic
+//nolint:gocritic // tooManyResultsChecker This function needs to return many values
 func (p *PostgresContext) GetValidator(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, err error) {
 	actor, err := p.getActor(types.ValidatorActor, address, height)
 	operator = actor.Address

@@ -32,7 +32,7 @@ func newCLIContext() context.Context {
 		syscall.SIGTERM,
 		syscall.SIGINT,
 		syscall.SIGQUIT,
-		os.Kill, //nolint
+		os.Kill, //nolint:staticcheck // SA1016 os.Kill cannot be trapped
 		os.Interrupt)
 	go func() {
 		<-quit
