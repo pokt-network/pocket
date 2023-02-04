@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -18,8 +19,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var _ typesP2P.Network = &rainTreeNetwork{}
-var _ modules.IntegratableModule = &rainTreeNetwork{}
+var (
+	_ typesP2P.Network           = &rainTreeNetwork{}
+	_ modules.IntegratableModule = &rainTreeNetwork{}
+)
 
 type rainTreeNetwork struct {
 	bus modules.Bus
@@ -29,17 +32,19 @@ type rainTreeNetwork struct {
 
 	peersManager *peersManager
 	nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]
+
+	logger modules.Logger
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		log.Fatalf("[ERROR] Error getting addrBook: %v", err)
+		logger.Global.Fatal().Err(err).Msg("Error getting addrBook")
 	}
 
 	pm, err := newPeersManager(addr, addrBook, true)
 	if err != nil {
-		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
+		logger.Global.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
 	}
 
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
@@ -76,13 +81,13 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 	for _, target := range n.getTargetsAtLevel(level) {
 		if shouldSendToTarget(target) {
 			if err = n.networkSendInternal(msgBz, target.address); err != nil {
-				log.Println("Error sending to peer during broadcast: ", err)
+				n.logger.Error().Err(err).Msg("Error sending to peer during broadcast")
 			}
 		}
 	}
 
 	if err = n.demote(msg); err != nil {
-		log.Println("Error demoting self during RainTree message propagation: ", err)
+		n.logger.Error().Err(err).Msg("Error demoting self during RainTree message propagation")
 	}
 
 	return nil
@@ -120,11 +125,11 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 
 	peer, ok := n.peersManager.getNetworkView().addrBookMap[address.String()]
 	if !ok {
-		return fmt.Errorf("address %s not found in addrBookMap", address.String())
+		n.logger.Error().Str("address", address.String()).Msg("address not found in addrBookMap")
 	}
 
 	if err := peer.Dialer.Write(data); err != nil {
-		log.Println("Error writing to peer during send: ", err)
+		n.logger.Error().Err(err).Msg("Error writing to peer during send")
 		return err
 	}
 
@@ -166,7 +171,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
-		log.Println("Error decoding network message: ", err)
+		n.logger.Error().Err(err).Msg("Error decoding network message")
 		return nil, err
 	}
 

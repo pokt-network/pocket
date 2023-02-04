@@ -10,6 +10,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/mitchellh/mapstructure"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -28,7 +29,7 @@ type Manager struct {
 }
 
 func NewManager(config *configs.Config, genesis *genesis.GenesisState, options ...func(*Manager)) *Manager {
-	var mgr = new(Manager)
+	mgr := new(Manager)
 	bus, err := CreateBus(mgr)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to initialize bus: %v", err)
@@ -58,10 +59,10 @@ func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manage
 //
 // Useful for testing and when the user doesn't want to rely on the filesystem and instead intends plugging in different configuration management system.
 func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...func(*Manager)) *Manager {
-	var cfg = configs.NewDefaultConfig()
+	cfg := configs.NewDefaultConfig()
 	parseFromReader(configReader, cfg)
 
-	var genesisState = new(genesis.GenesisState)
+	genesisState := new(genesis.GenesisState)
 	parseFromReader(genesisReader, genesisState)
 
 	return NewManager(cfg, genesisState, options...)
@@ -120,11 +121,10 @@ func parseFiles(configJSONPath, genesisJSONPath string) (config *configs.Config,
 func parseFromReader[T *configs.Config | *genesis.GenesisState](reader io.Reader, target T) {
 	bz, err := io.ReadAll(reader)
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to read from reader: %v", err)
-
+		logger.Global.Err(err).Msg("Failed to read from reader")
 	}
 	if err := json.Unmarshal(bz, target); err != nil {
-		log.Fatalf("[ERROR] Failed to unmarshal: %v", err)
+		logger.Global.Err(err).Msg("Failed to unmarshal")
 	}
 }
 
@@ -133,7 +133,7 @@ func parseFromReader[T *configs.Config | *genesis.GenesisState](reader io.Reader
 func WithRandomPK() func(*Manager) {
 	privateKey, err := cryptoPocket.GeneratePrivateKey()
 	if err != nil {
-		log.Fatalf("unable to generate private key")
+		logger.Global.Fatal().Err(err).Msg("unable to generate private key")
 	}
 
 	return WithPK(privateKey.String())
