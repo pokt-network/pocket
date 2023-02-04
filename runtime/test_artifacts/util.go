@@ -22,6 +22,7 @@ const (
 	sqlSchema        = "test_schema"
 	dialect          = "postgres"
 	connStringFormat = "postgres://%s:%s@%s/%s?sslmode=disable"
+	timeOut          = 1200
 )
 
 // DISCUSS(team) both the persistence module and the utility module share this code which is less than ideal
@@ -65,7 +66,7 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 		}
 	}()
 
-	if err := resource.Expire(1200); err != nil { // Tell docker to hard kill the container in 20 minutes
+	if err := resource.Expire(timeOut); err != nil { // Tell docker to hard kill the container in 20 minutes
 		log.Fatalf("[ERROR] Failed to set expiration on docker container: %v", err.Error())
 	}
 
