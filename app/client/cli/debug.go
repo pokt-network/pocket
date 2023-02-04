@@ -81,8 +81,7 @@ func NewDebugCommand() *cobra.Command {
 			}
 			p2pMod = p2pM.(modules.P2PModule)
 
-			err = p2pMod.Start()
-			if err != nil {
+			if err := p2pMod.Start(); err != nil {
 				log.Fatalf("[ERROR] Failed to start p2p module: %v", err.Error())
 			}
 		},

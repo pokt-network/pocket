@@ -51,11 +51,10 @@ func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
 	m.ResetForNewHeight()
 	m.clearLeader()
 	m.clearMessagesPool()
-	err := m.GetBus().GetPersistenceModule().HandleDebugMessage(&messaging.DebugMessage{
+	if err := m.GetBus().GetPersistenceModule().HandleDebugMessage(&messaging.DebugMessage{
 		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 		Message: nil,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 	if err := m.GetBus().GetPersistenceModule().Start(); err != nil { // reload genesis state
