@@ -461,11 +461,13 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 }
 
 func logTime(t *testing.T, clck *clock.Mock) {
+	t.Helper()
 	t.Logf("[⌚ CLOCK ⌚] the time is: %v ms from UNIX Epoch [%v]", clck.Now().UTC().UnixMilli(), clck.Now().UTC())
 }
 
 // advanceTime moves the time forward on the mock clock and logs what just happened.
 func advanceTime(t *testing.T, clck *clock.Mock, duration time.Duration) {
+	t.Helper()
 	clck.Add(duration)
 	t.Logf("[⌚ CLOCK ⏩] advanced by %v", duration)
 	logTime(t, clck)
@@ -475,6 +477,7 @@ func advanceTime(t *testing.T, clck *clock.Mock, duration time.Duration) {
 //
 // Note: time has to be moved forward in a separate goroutine, see `advanceTime`.
 func sleep(t *testing.T, clck *clock.Mock, duration time.Duration) {
+	t.Helper()
 	t.Logf("[⌚ CLOCK 💤] sleeping for %v", duration)
 	clck.Sleep(duration)
 }

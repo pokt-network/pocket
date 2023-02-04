@@ -2,10 +2,10 @@ package telemetry
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/prometheus/client_golang/prometheus"
@@ -25,6 +25,8 @@ var (
 type PrometheusTelemetryModule struct {
 	bus    modules.Bus
 	config *configs.TelemetryConfig
+
+	logger modules.Logger
 
 	counters     map[string]prometheus.Counter
 	gauges       map[string]prometheus.Gauge
@@ -55,7 +57,11 @@ func (*PrometheusTelemetryModule) Create(bus modules.Bus) (modules.Module, error
 }
 
 func (m *PrometheusTelemetryModule) Start() error {
-	log.Printf("\nPrometheus metrics exporter: Starting at %s%s...\n", m.config.Address, m.config.Endpoint)
+	uri := m.config.GetAddress() + m.config.GetEndpoint()
+
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
+
+	m.logger.Info().Str("address", uri).Msg("Starting Prometheus metrics exporter...")
 
 	http.Handle(m.config.Endpoint, promhttp.Handler())
 	go func() {
@@ -68,7 +74,7 @@ func (m *PrometheusTelemetryModule) Start() error {
 		}
 	}()
 
-	log.Println("Prometheus metrics exporter started: OK")
+	m.logger.Info().Str("address", uri).Msg("Prometheus metrics exporter started")
 
 	return nil
 }
@@ -87,7 +93,7 @@ func (m *PrometheusTelemetryModule) GetModuleName() string {
 
 func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		m.logger.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
 }
@@ -103,8 +109,14 @@ func (m *PrometheusTelemetryModule) GetEventMetricsAgent() modules.EventMetricsA
 // will be removed in the future in favor of more thorough event metrics tooling.
 // TECHDEBT(team): Deprecate using logs for event metrics for a more sophisticated and durable solution
 func (m *PrometheusTelemetryModule) EmitEvent(namespace, event string, labels ...any) {
-	logArgs := append([]any{"[EVENT]", namespace, event}, labels...)
-	log.Println(logArgs...)
+	logArgs := map[string]any{
+		"level":     "EVENT",
+		"namespace": namespace,
+		"event":     event,
+		"labels":    labels,
+	}
+
+	m.logger.Info().Fields(logArgs).Msg("Event emitted")
 }
 
 func (m *PrometheusTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
@@ -113,7 +125,7 @@ func (m *PrometheusTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent
 
 func (p *PrometheusTelemetryModule) CounterRegister(name, description string) {
 	if _, exists := p.counters[name]; exists {
-		log.Printf("[WARNING] Trying to register and already registered counter: %s\n", name)
+		p.logger.Warn().Str("counter", name).Msg("Trying to register and already registered counter")
 		return
 	}
 
@@ -125,7 +137,7 @@ func (p *PrometheusTelemetryModule) CounterRegister(name, description string) {
 
 func (p *PrometheusTelemetryModule) CounterIncrement(name string) {
 	if _, exists := p.counters[name]; !exists {
-		log.Printf("[WARNING] Trying to increment a non-existent counter: %s\n", name)
+		p.logger.Warn().Str("counter", name).Msg("Trying to increment a non-existent counter")
 		return
 	}
 
@@ -134,7 +146,7 @@ func (p *PrometheusTelemetryModule) CounterIncrement(name string) {
 
 func (p *PrometheusTelemetryModule) GaugeRegister(name, description string) {
 	if _, exists := p.gauges[name]; exists {
-		log.Printf("[WARNING] Trying to register and already registered gauge: %s\n", name)
+		p.logger.Warn().Str("gauge", name).Msg("Trying to register and already registered gauge")
 		return
 	}
 
@@ -202,7 +214,7 @@ func (p *PrometheusTelemetryModule) GaugeSub(name string, value float64) (promet
 
 func (p *PrometheusTelemetryModule) GaugeVecRegister(namespace, module, name, description string, labels []string) {
 	if _, exists := p.counters[name]; exists {
-		log.Printf("[WARNING] Trying to register and already registered vector gauge: %s\n", name)
+		p.logger.Warn().Str("gauge_vector", name).Msg("Trying to register and already registered gauge vector")
 		return
 	}
 

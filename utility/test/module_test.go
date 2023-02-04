@@ -3,7 +3,6 @@ package test
 import (
 	"log"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -12,6 +11,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -46,8 +46,8 @@ var actorTypes = []coreTypes.ActorType{
 	coreTypes.ActorType_ACTOR_TYPE_VAL,
 }
 
-func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
-	return utilTypes.NewMempool(1000000, 1000)
+func NewTestingMempool(_ *testing.T) mempool.TXMempool {
+	return utilTypes.NewTxFIFOMempool(1000000, 1000)
 }
 
 func TestMain(m *testing.M) {
@@ -70,9 +70,6 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
-	// TODO(#388): Expose a `GetMempool` function in `utility_module` so we can remove this reflection.
-	mempool := reflect.ValueOf(testUtilityMod).Elem().FieldByName("Mempool").Interface().(utilTypes.Mempool)
-
 	// TECHDEBT: Move the internal of cleanup into a separate function and call this in the
 	// beginning of every test. This (the current implementation) is an issue because if we call
 	// `NewTestingUtilityContext` more than once in a single test, we create unnecessary calls to clean.
@@ -82,18 +79,17 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
 		}))
-		mempool.Clear()
+		testUtilityMod.GetMempool().Clear()
 	})
 
 	return utility.UtilityContext{
-		Height:  height,
-		Mempool: mempool,
+		Height: height,
 		Context: &utility.Context{
 			PersistenceRWContext: persistenceContext,
 			SavePointsM:          make(map[string]struct{}),
 			SavePoints:           make([][]byte, 0),
 		},
-	}
+	}.WithBus(testUtilityMod.GetBus())
 }
 
 func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
@@ -149,7 +145,6 @@ func mockBusInTestModules(t *testing.T) {
 
 	t.Cleanup(func() {
 		testPersistenceMod.SetBus(nil)
-		testUtilityMod.SetBus(nil)
 	})
 }
 

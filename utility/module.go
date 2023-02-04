@@ -2,23 +2,27 @@ package utility
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-var _ modules.UtilityModule = &utilityModule{}
-var _ modules.Module = &utilityModule{}
+var (
+	_ modules.UtilityModule = &utilityModule{}
+	_ modules.Module        = &utilityModule{}
+)
 
 type utilityModule struct {
 	bus    modules.Bus
 	config *configs.UtilityConfig
 
-	Mempool types.Mempool
+	logger modules.Logger
+	mempool mempool.TXMempool
 }
 
 const (
@@ -41,12 +45,13 @@ func (*utilityModule) Create(bus modules.Bus) (modules.Module, error) {
 	utilityCfg := cfg.Utility
 
 	m.config = utilityCfg
-	m.Mempool = types.NewMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
+	m.mempool = types.NewTxFIFOMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
 
 	return m, nil
 }
 
 func (u *utilityModule) Start() error {
+	u.logger = logger.Global.CreateLoggerForModule(u.GetModuleName())
 	return nil
 }
 
@@ -64,7 +69,7 @@ func (u *utilityModule) SetBus(bus modules.Bus) {
 
 func (u *utilityModule) GetBus() modules.Bus {
 	if u.bus == nil {
-		log.Fatalf("Bus is not initialized")
+		u.logger.Fatal().Msg("Bus is not initialized")
 	}
 	return u.bus
 }
@@ -83,9 +88,13 @@ func (u *utilityModule) HandleMessage(message *anypb.Any) error {
 		if err := u.CheckTransaction(transactionGossipMsg.Tx); err != nil {
 			return err
 		}
-		log.Println("MEMPOOOL: Successfully added a new message to the mempool!")
+		u.logger.Info().Str("source", "MEMPOOL").Msg("Successfully added a new message to the mempool!")
 	default:
 		return types.ErrUnknownMessageType(message.MessageName())
 	}
 	return nil
+}
+
+func (u *utilityModule) GetMempool() mempool.TXMempool {
+	return u.mempool
 }

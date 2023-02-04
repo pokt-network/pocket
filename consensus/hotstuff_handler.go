@@ -16,12 +16,22 @@ type HotstuffMessageHandler interface {
 func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) error {
 	step := msg.GetStep()
 
-	m.nodeLog(typesCons.DebugReceivedHandlingHotstuffMessage(msg))
+	m.logger.Debug().Fields(map[string]any{
+		"step":   msg.GetStep(),
+		"height": msg.Height,
+		"round":  msg.Round,
+	}).Msg("Received hotstuff msg")
+
 	// Pacemaker - Liveness & safety checks
 	if shouldHandle, err := m.paceMaker.ShouldHandleMessage(msg); !shouldHandle {
 		return err
 	}
-	m.nodeLog(typesCons.DebugHandlingHotstuffMessage(msg))
+
+	m.logger.Debug().Fields(map[string]any{
+		"step":   msg.GetStep(),
+		"height": msg.Height,
+		"round":  msg.Round,
+	}).Msg("Handling hotstuff msg")
 
 	// Elect a leader for the current round if needed
 	if m.shouldElectNextLeader() {

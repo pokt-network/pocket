@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.30] - 2023-02-04
+
+- Changed log lines to utilize new logger module.
+
 ## [0.0.0.29] - 2023-01-31
 
 - Use hash of serialised protobufs for keys in `updateParamsTree()` and `updateFlagsTree()`
@@ -284,3 +288,5 @@ Pocket Persistence 1st Iteration (https://github.com/pokt-network/pocket/pull/73
 - Update to the Persistence module interface to enable historical height queries
 - Library / infrastructure for persistence unit fuzz testing
 - Tests triggered via `make test_persistence`
+
+<!-- GITHUB_WIKI: changelog/persistence -->

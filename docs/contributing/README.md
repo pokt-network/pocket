@@ -9,3 +9,5 @@ Once V1 is closer to mainnet launch, we will have an [extensive contribution gui
 ![](./badge.png)
 
 3. Collaborate with the team and other core contributors on Discord in the [#v1-dev channel](https://discord.com/channels/553741558869131266/986789914379186226) or [#v1-research channel](https://discord.com/channels/553741558869131266/936666517498650644).
+
+<!-- GITHUB_WIKI: guides/contributing/readme -->

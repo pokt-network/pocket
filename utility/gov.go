@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"log"
 	"math/big"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -30,7 +29,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value any) typesUtil.Erro
 	default:
 		break
 	}
-	log.Fatalf("unhandled value type %T for %v", value, value)
+	u.logger.Fatal().Msgf("unhandled value type %T for %v", value, value)
 	return typesUtil.ErrUnknownParam(paramName)
 }
 
@@ -560,7 +559,7 @@ func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.E
 	}
 	value, err := store.GetStringParam(paramName, height)
 	if err != nil {
-		log.Printf("err: %v\n", err)
+		u.logger.Err(err)
 		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
 	return typesUtil.StringToBigInt(value)

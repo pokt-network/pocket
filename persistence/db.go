@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/jackc/pgconn"
@@ -57,7 +56,7 @@ func (pg *PostgresContext) ResetContext() error {
 	}
 	if !conn.IsClosed() {
 		if err := pg.Release(); err != nil {
-			log.Println("[TODO][ERROR] Error releasing write context...", err)
+			pg.logger.Error().Err(err).Bool("TODO", true).Msg("error releasing write context")
 		}
 	}
 	pg.tx = nil

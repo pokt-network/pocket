@@ -1,8 +1,6 @@
 package consensus
 
 import (
-	"log"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
@@ -23,7 +21,7 @@ func (m *consensusModule) HandleDebugMessage(debugMessage *messaging.DebugMessag
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
 		m.togglePacemakerManualMode(debugMessage)
 	default:
-		log.Printf("Debug message: %s \n", debugMessage.Message)
+		m.logger.Debug().Msgf("Debug message: %s", debugMessage.Message)
 	}
 	return nil
 }
@@ -45,8 +43,7 @@ func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 }
 
 func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
-	m.nodeLog(typesCons.DebugResetToGenesis)
-
+	m.logger.Debug().Msg(typesCons.DebugResetToGenesis)
 	m.height = 0
 	m.ResetForNewHeight()
 	m.clearLeader()
@@ -65,11 +62,16 @@ func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
 
 func (m *consensusModule) printNodeState(_ *messaging.DebugMessage) {
 	state := m.GetNodeState()
-	m.nodeLog(typesCons.DebugNodeState(state))
+	m.logger.Debug().
+		Fields(map[string]any{
+			"step":   state.Step,
+			"height": state.Height,
+			"round":  state.Round,
+		}).Msg("Node state")
 }
 
 func (m *consensusModule) triggerNextView(_ *messaging.DebugMessage) {
-	m.nodeLog(typesCons.DebugTriggerNextView)
+	m.logger.Debug().Msg(typesCons.DebugTriggerNextView)
 
 	currentHeight := m.height
 	currentStep := m.step
@@ -87,9 +89,9 @@ func (m *consensusModule) triggerNextView(_ *messaging.DebugMessage) {
 func (m *consensusModule) togglePacemakerManualMode(_ *messaging.DebugMessage) {
 	newMode := !m.paceMaker.IsManualMode()
 	if newMode {
-		m.nodeLog(typesCons.DebugTogglePacemakerManualMode("MANUAL"))
+		m.logger.Debug().Str("pacemaker_mode", "MANUAL").Msg("Toggle pacemaker to MANUAL mode")
 	} else {
-		m.nodeLog(typesCons.DebugTogglePacemakerManualMode("AUTOMATIC"))
+		m.logger.Debug().Str("pacemaker_mode", "AUTOMATIC").Msg("Toggle pacemaker to AUTOMATIC mode")
 	}
 	m.paceMaker.SetManualMode(newMode)
 }

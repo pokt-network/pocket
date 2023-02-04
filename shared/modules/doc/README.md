@@ -35,10 +35,10 @@ genesis
 ├── test_artifacts      # the central point of all testing code (WIP)
 │   ├── generator.go    # generate the genesis and config.json for tests and build
 │   ├── gov.go          # default testing parameters
-
 ```
 
 TODO(#235): Update once runtime configs are implemented
+
 ### Module Typical Usage Example
 
 #### Create the module
@@ -78,6 +78,17 @@ if err != nil {
 }
 ```
 
+##### Add a logger to the module
+
+When defining the start function for the module, it is essential to initialise a namespace logger as well:
+
+```golang
+func (m *newModule) Start() error {
+    m.logger = logger.Global.CreateLoggerForModule(u.GetModuleName())
+    ...
+}
+```
+
 #### Get the module `bus`
 
 The bus may be accessed by the module object at anytime using the `getter`
@@ -104,3 +115,5 @@ if err != nil {
 	// handle error
 }
 ```
+
+<!-- GITHUB_WIKI: shared/modules/readme -->

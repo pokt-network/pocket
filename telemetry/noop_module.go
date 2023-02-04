@@ -2,8 +2,8 @@ package telemetry
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -19,7 +19,7 @@ type NoopTelemetryModule struct {
 }
 
 func NOOP(args ...any) {
-	log.Printf("\n[telemetry=noop][%s]\n", args)
+	logger.Global.Debug().Msg("NOOP")
 }
 
 func CreateNoopTelemetryModule(bus modules.Bus) (modules.Module, error) {
@@ -55,7 +55,7 @@ func (m *NoopTelemetryModule) SetBus(bus modules.Bus) {
 
 func (m *NoopTelemetryModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		logger.Global.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
 }

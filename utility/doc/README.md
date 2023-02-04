@@ -203,3 +203,5 @@ utility
 │   ├── util.go
 │   ├── vote.go        # vote structure for double sign transaction
 ```
+
+<!-- GITHUB_WIKI: utility/readme -->

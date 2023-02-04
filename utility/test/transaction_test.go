@@ -69,7 +69,7 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 
 	hash, err := tx.Hash()
 	require.NoError(t, err)
-	require.True(t, ctx.Mempool.Contains(hash)) // IMPROVE: Access the mempool from the `testUtilityMod` directly
+	require.True(t, testUtilityMod.GetMempool().Contains(hash))
 	require.Equal(t, testUtilityMod.CheckTransaction(txBz).Error(), typesUtil.ErrDuplicateTransaction().Error())
 
 	test_artifacts.CleanupTest(&ctx)

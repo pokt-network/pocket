@@ -7,11 +7,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 	"math/big"
 	"os"
 	"strings"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/converters"
@@ -61,7 +61,7 @@ func credentials(pwd string) string {
 	}
 	bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
-		log.Fatalf(err.Error())
+		logger.Global.Fatal().Err(err).Msg("failed to read password")
 	}
 	return strings.TrimSpace(string(bytePassword))
 }
