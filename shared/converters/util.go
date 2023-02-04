@@ -28,9 +28,7 @@ func HeightFromBytes(heightBz []byte) uint64 {
 }
 
 func HeightToBytes(height uint64) []byte {
-
 	heightBytes := make([]byte, 8)
-	//binary.LittleEndian.AppendUint64(heightBytes, height)
 	binary.LittleEndian.PutUint64(heightBytes, height)
 	fmt.Printf("INSIDE BLOCK HEIGHT CONVERTER FOR: %d, byte array size: %d \n", height, len(heightBytes))
 	return heightBytes
