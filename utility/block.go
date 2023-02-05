@@ -57,6 +57,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		}
 		txResult, err := u.ApplyTransaction(txIndex, transaction)
 		if err != nil {
+			log.Printf("Error in ApplyTransaction: %v\n", err)
 			// TODO(#327): Properly implement 'unhappy path' for save points
 			if err := u.RevertLastSavePoint(); err != nil {
 				return "", nil, err
