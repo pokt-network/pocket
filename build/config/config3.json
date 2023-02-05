@@ -8,7 +8,8 @@
       "manual": true,
       "debug_time_between_steps_msec": 1000
     },
-    "private_key": "5db3e9d97d04d6d70359de924bb02039c602080d6bf01a692bad31ad5ef93524c16043323c83ffd901a8bf7d73543814b8655aa4695f7bfb49d01926fc161cdb"
+    "private_key": "5db3e9d97d04d6d70359de924bb02039c602080d6bf01a692bad31ad5ef93524c16043323c83ffd901a8bf7d73543814b8655aa4695f7bfb49d01926fc161cdb",
+    "server_mode_enabled": true
   },
   "utility": {
     "max_mempool_transaction_bytes": 1073741824,
