@@ -110,14 +110,14 @@ func (m *stateSync) EnableServerMode() {
 	m.serverMode = true
 }
 
-// TODO implement
+// TODO implement issue #352
 // Placeholder function
 func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
 	m.nodeLog(fmt.Sprintf("Received get block response: %s", blockRes.Block.String()))
 	return nil
 }
 
-// TODO implement
+// TODO implement issue #352
 // Placeholder function
 func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
 	m.nodeLog(fmt.Sprintf("Received get metadata response: %s", metaDataRes.String()))

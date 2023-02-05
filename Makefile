@@ -225,6 +225,7 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
 	find ${p2p_type_mocks_dir} -type f ! -name "mocks.go" -exec rm {} \;
 	go generate ./${p2p_dir}/...
 	echo "P2P mocks generated in ${p2p_type_mocks_dir}"
+	
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
 .PHONY: protogen_show
