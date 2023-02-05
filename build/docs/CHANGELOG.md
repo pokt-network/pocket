@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.8] - 2023-02-05
+
+- U Updated all `config*.json` files with new `server_mode_enabled` value
+
 ## [0.0.0.7] - 2023-02-04
 
 - Added `--decoration="none"` flag to `reflex`
