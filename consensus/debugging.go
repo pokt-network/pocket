@@ -49,7 +49,7 @@ func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) {
 	m.ResetForNewHeight()
 	m.clearLeader()
 	m.clearMessagesPool()
-	m.GetBus().GetUtilityModule().ClearMempool()
+	m.GetBus().GetUtilityModule().GetMempool().Clear()
 	m.GetBus().GetPersistenceModule().HandleDebugMessage(&messaging.DebugMessage{
 		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 		Message: nil,

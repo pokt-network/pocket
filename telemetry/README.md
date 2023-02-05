@@ -152,13 +152,13 @@ If you haven't already, make sure you install all necessary pre-requisites in th
 Make sure you've installed the docker Loki dependencies:
 
 ```bash
-$ make docker_loki_install
+make docker_loki_install
 ```
 
 1. Spin up the stack
 
 ```bash
-$ make compose_and_watch
+make compose_and_watch
 ```
 
 2. Wait a few seconds and **Voila!**
@@ -194,3 +194,5 @@ const NODES_ALIVE_COUNTER_TIME_SERIES_DESCRIPTION = "Number of nodes online"
 ```
 
 This makes referencing the metrics easier, and makes it easy to change the name of the metric later on, in addition to the fact that it gathers metric definitions in a single file.
+
+<!-- GITHUB_WIKI: guides/telemetry/readme -->

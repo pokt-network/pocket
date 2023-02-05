@@ -5,6 +5,8 @@ metadata:
   name: v1-validator${VALIDATOR_NUMBER}
   namespace: default
 spec:
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
   selector:
     matchLabels:
       app: v1-validator${VALIDATOR_NUMBER}

@@ -42,3 +42,5 @@ sudo chcon -Rt svirt_sandbox_file_t ./pocket
 ```
 
 See [this stackoverflow post](https://stackoverflow.com/questions/24288616/permission-denied-on-accessing-host-directory-in-docker) for more details.
+
+<!-- GITHUB_WIKI: guides/development/FAQ -->

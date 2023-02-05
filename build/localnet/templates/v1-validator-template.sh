@@ -5,5 +5,5 @@ set -Eeuo pipefail
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
 
 for ((i = 1; i <= $1; i++)); do
-    VALIDATOR_NUMBER=$(printf "%03d" $i) envsubst <"$script_dir/v1-validator-template.yaml"
+    VALIDATOR_NUMBER=$(printf "%03d" $i) envsubst <"$script_dir/v1-validator-template.yaml.tpl"
 done

@@ -69,9 +69,7 @@ type consensusModule struct {
 	// DEPRECATE: Remove later when we build a shared/proper/injected logger
 	logPrefix string
 
-	// TECHDEBT: Rename this to `consensusMessagePool` or something similar
-	//           and reconsider if an in-memory map is the best approach
-	messagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
+	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
 }
 
 // Functions exposed by the debug interface should only be used for testing puposes.
@@ -150,7 +148,7 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 
 		logPrefix: DefaultLogPrefix,
 
-		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
+		hotstuffMempool: make(map[typesCons.HotstuffStep]*hotstuffFIFOMempool),
 	}
 	bus.RegisterModule(m)
 
@@ -181,6 +179,8 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	m.genesisState = genesisState
 
 	m.nodeId = valAddrToIdMap[address]
+
+	m.initMessagesPool()
 
 	return m, nil
 }
