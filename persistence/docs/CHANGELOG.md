@@ -6,10 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.0.31] - 2023-02-06
+
+- Added mock generation to the `kvstore/kvstore.go`.
+
+## [0.0.0.30] - 2023-02-04
+
+- Changed log lines to utilize new logger module.
+
+## [0.0.0.29] - 2023-01-31
+
+- Use hash of serialised protobufs for keys in `updateParamsTree()` and `updateFlagsTree()`
 
 ## [0.0.0.28] - 2023-01-30
 
-- Added mock generation to the `kvstore/kvstore.go`.
+- Fix unit tests - `TestGetAppPauseHeightIfExists`, `TestGetAppOutputAddress`, `TestGetFishermanStatus`, `TestGetFishermanPauseHeightIfExists`, `TestGetFishermanOutputAddress`, `TestPersistenceContextParallelReadWrite`, `TestGetServiceNodePauseHeightIfExists`, `TestGetServiceNodeOutputAddress`, `fuzzSingleProtocolActor`, `TestGetValidatorPauseHeightIfExists`, and `TestGetValidatorOutputAddress` for misplaced expected and actual values in `require.Equal`.
 
 ## [0.0.0.27] - 2023-01-27
 
@@ -280,3 +291,5 @@ Pocket Persistence 1st Iteration (https://github.com/pokt-network/pocket/pull/73
 - Update to the Persistence module interface to enable historical height queries
 - Library / infrastructure for persistence unit fuzz testing
 - Tests triggered via `make test_persistence`
+
+<!-- GITHUB_WIKI: changelog/persistence -->

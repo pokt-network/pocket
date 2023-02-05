@@ -4,25 +4,29 @@ package stdnetwork
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var _ typesP2P.Network = &network{}
-var _ modules.IntegratableModule = &network{}
+var (
+	_ typesP2P.Network           = &network{}
+	_ modules.IntegratableModule = &network{}
+)
 
 type network struct {
 	addrBookMap typesP2P.AddrBookMap
+
+	logger modules.Logger
 }
 
 func NewNetwork(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		log.Fatalf("[ERROR] Error getting addrBook: %v", err)
+		logger.Global.Fatal().Err(err).Msg("Error getting addrBook")
 	}
 
 	addrBookMap := make(typesP2P.AddrBookMap)
@@ -30,6 +34,7 @@ func NewNetwork(bus modules.Bus, addrBookProvider providers.AddrBookProvider, cu
 		addrBookMap[peer.Address.String()] = peer
 	}
 	return &network{
+		logger:      bus.GetLoggerModule().CreateLoggerForModule("network"),
 		addrBookMap: addrBookMap,
 	}
 }
@@ -38,7 +43,7 @@ func NewNetwork(bus modules.Bus, addrBookProvider providers.AddrBookProvider, cu
 func (n *network) NetworkBroadcast(data []byte) error {
 	for _, peer := range n.addrBookMap {
 		if err := peer.Dialer.Write(data); err != nil {
-			log.Println("Error writing to one of the peers during broadcast: ", err)
+			n.logger.Error().Err(err).Msg("Error writing to one of the peers during broadcast")
 			continue
 		}
 	}
@@ -52,7 +57,7 @@ func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) error {
 	}
 
 	if err := peer.Dialer.Write(data); err != nil {
-		log.Println("Error writing to peer during send: ", err)
+		n.logger.Error().Err(err).Msg("Error writing to peer during send")
 		return err
 	}
 

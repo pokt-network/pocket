@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"log"
 
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -181,7 +180,7 @@ func (p *PostgresContext) updateMerkleTrees() (string, error) {
 
 		// Default
 		default:
-			log.Fatalf("Not handled yet in state commitment update. Merkle tree #{%v}\n", treeType)
+			p.logger.Fatal().Msgf("Not handled yet in state commitment update. Merkle tree #{%v}", treeType)
 		}
 	}
 
@@ -360,12 +359,12 @@ func (p *PostgresContext) updateParamsTree() error {
 	}
 
 	for _, param := range params {
-		paramKey := crypto.SHA3Hash([]byte(param.String()))
 		paramBz, err := codec.GetCodec().Marshal(param)
+		paramKey := crypto.SHA3Hash(paramBz)
 		if err != nil {
 			return err
 		}
-		if _, err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(paramKey[:], paramBz); err != nil {
+		if _, err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(paramKey, paramBz); err != nil {
 			return err
 		}
 	}
@@ -380,12 +379,12 @@ func (p *PostgresContext) updateFlagsTree() error {
 	}
 
 	for _, flag := range flags {
-		flagKey := crypto.SHA3Hash([]byte(flag.String()))
 		flagBz, err := codec.GetCodec().Marshal(flag)
+		flagKey := crypto.SHA3Hash(flagBz)
 		if err != nil {
 			return err
 		}
-		if _, err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(flagKey[:], flagBz); err != nil {
+		if _, err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(flagKey, flagBz); err != nil {
 			return err
 		}
 	}

@@ -34,6 +34,5 @@ type P2PAddressableModule interface {
 }
 
 type ObservableModule interface {
-	InitLogger()
 	GetLogger() Logger
 }

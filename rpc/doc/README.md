@@ -109,3 +109,5 @@ Definitely we'll need ways to retrieve transactions as well so we can envisage:
 └── v1
     └── openapi.yaml         # OpenAPI v3.0 spec (source for the generated files above)
 ```
+
+<!-- GITHUB_WIKI: rpc/readme -->

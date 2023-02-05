@@ -142,5 +142,4 @@ func TestInsertParams(t *testing.T) {
 			}
 		})
 	}
-
 }

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.12] - 2023-02-04
+
+- Changed log lines to utilize new logger module.
+
+## [0.0.0.11] - 2023-02-03
+
+- Updated to display the warning message about the telemetry module not registered only once
+
 ## [0.0.0.10] - 2023-01-25
 
 - move ConnectionType enum into its own package to avoid a cyclic import between configs and defaults packages (i.e. configs -> defaults -> configs) in the resulting, generated go package
@@ -70,3 +78,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Modules now accept `interfaces` instead of paths.
 - Unmarshalling is done in a new `runtime` package (runtime because what we do in there affects the runtime of the application)
 - We are now able to accept configuration via environment variables (thanks to @okdas for inspiration and [sp13 for Viper]("github.com/spf13/viper"))
+
+<!-- GITHUB_WIKI: changelog/runtime -->

@@ -6,8 +6,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"log"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
@@ -271,7 +271,7 @@ func ErrLeaderElection(msg *HotstuffMessage) error {
 func protoHash(m proto.Message) string {
 	b, err := codec.GetCodec().Marshal(m)
 	if err != nil {
-		log.Fatalf("Could not marshal proto message: %v", err)
+		logger.Global.Fatal().Err(err).Msg("Could not marshal proto message")
 	}
 	return base64.StdEncoding.EncodeToString(b)
 }

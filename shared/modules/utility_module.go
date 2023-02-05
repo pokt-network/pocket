@@ -3,6 +3,7 @@ package modules
 //go:generate mockgen -source=$GOFILE -destination=./mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 import (
+	"github.com/pokt-network/pocket/shared/mempool"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -18,6 +19,8 @@ type UtilityModule interface {
 
 	// Basic Transaction validation. SIDE EFFECT: Adds the transaction to the mempool if valid.
 	CheckTransaction(tx []byte) error
+
+	GetMempool() mempool.TXMempool
 }
 
 // Interface defining the context within which the node can operate with the utility layer.

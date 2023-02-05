@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.23] - 2023-02-04
+
+- Changed log lines to utilize new logger module.
+
+## [0.0.0.22] - 2023-02-03
+
+- Introduced `txFIFOMempool` which extends the new `GenericFIFOSet` in order to replace the legacy logic
+- Added tests for `txFIFOMempool`
+- Accessing `TxMempool` via the `bus` in `utilityContext`
+
+## [0.0.0.21] - 2023-01-30
+
+- Updated `TestUtilityContext_SetPoolAmount`, `TestUtilityContext_GetMessageEditStakeSignerCandidates`, `TestUtilityContext_GetMessageUnpauseSignerCandidates`, `TestUtilityContext_GetMessageUnstakeSignerCandidates`, and `TestUtilityContext_UnstakePausedBefore` to correct misplaced expected and actual values in require.Equal.
+
 ## [0.0.0.20] - 2023-01-20
 
 - Remove `address []byte` argument from `InsertPool` function
@@ -178,3 +192,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Unpause
     - Send
 - Added initial governance params
+
+<!-- GITHUB_WIKI: changelog/utility -->

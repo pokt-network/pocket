@@ -47,3 +47,5 @@ The config and genesis files located in the `./build/config/` directory are need
 These builds currently expect four (validator) `config.json` file and a single `genesis.json` file.
 
 Until #186 is implemented, take caution when overwriting / deleting the files with different configurations.
+
+<!-- GITHUB_WIKI: build/config/readme -->

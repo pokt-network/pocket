@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"log"
 
 	"github.com/pokt-network/pocket/app"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared"
 )
@@ -17,23 +17,23 @@ func main() {
 	flag.Parse()
 
 	if *v {
-		log.Printf("Version flag currently unused %s\n", app.AppVersion)
+		logger.Global.Info().Str("version", app.AppVersion).Msg("Version flag currently unused")
 		return
 	}
 
 	runtimeMgr := runtime.NewManagerFromFiles(*configFilename, *genesisFilename)
 	bus, err := runtime.CreateBus(runtimeMgr)
 	if err != nil {
-		log.Fatalf("Failed to create bus: %s", err)
+		logger.Global.Fatal().Err(err).Msg("Failed to create bus")
 	}
 
 	pocketNode, err := shared.CreateNode(bus)
 	if err != nil {
-		log.Fatalf("Failed to create pocket node: %s", err)
+		logger.Global.Fatal().Err(err).Msg("Failed to create pocket node")
 	}
 	pocketNode.GetBus().GetConsensusModule().EnableServerMode()
 
 	if err = pocketNode.Start(); err != nil {
-		log.Fatalf("Failed to start pocket node: %s", err)
+		logger.Global.Fatal().Err(err).Msg("Failed to start pocket node")
 	}
 }
