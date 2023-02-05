@@ -15,6 +15,15 @@ spec:
       labels:
         app: v1-cli-client
     spec:
+      initContainers:
+        - name: wait-for-v1-validator001
+          image: busybox
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z v1-validator001 8080; do echo waiting for v1-validator001...; sleep 2; done;",
+            ]
       containers:
         - name: pocket
           image: client-image
