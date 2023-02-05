@@ -61,6 +61,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 				Manual:                    false,
 				DebugTimeBetweenStepsMsec: 0,
 			},
+			ServerModeEnabled: true,
 		}
 		runtimeMgrs[i] = runtime.NewManager(config, genesisState, runtime.WithClock(clockMgr))
 	}
@@ -242,7 +243,6 @@ func WaitForNetworkStateSyncEvents(
 	t *testing.T,
 	clock *clock.Mock,
 	eventsChannel modules.EventsChannel,
-	//msgType typesCons.StateSyncMessageType,
 	errMsg string,
 	numExpectedMsgs int,
 	millis time.Duration,
@@ -254,7 +254,7 @@ func WaitForNetworkStateSyncEvents(
 
 		_, ok := msg.(*typesCons.StateSyncMessage)
 		require.True(t, ok)
-		// TODO: check state sync msg type
+
 		return true
 	}
 
@@ -382,7 +382,8 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	}).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().GetMinimumBlockHeight().DoAndReturn(func() (uint64, error) {
-		if bus.GetConsensusModule().CurrentHeight() > 1 {
+		// mock minimum block height in persistence module to 1 if current height is equal or more than 1, else return 0 as the minimum height
+		if bus.GetConsensusModule().CurrentHeight() >= 1 {
 			return 1, nil
 		}
 		return 0, nil

@@ -212,6 +212,10 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	m.nodeId = valAddrToIdMap[address]
 	m.nodeAddress = address
 
+	if consensusCfg.ServerModeEnabled {
+		m.stateSync.EnableServerMode()
+	}
+
 	return m, nil
 }
 

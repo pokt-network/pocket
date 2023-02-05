@@ -28,14 +28,12 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 
 	testHeight := uint64(4)
 
-	// Choose node 1 as the server node, enable server mode of the node 1
+	// Choose node 1 as the server node
 	// Set server node's height to test height.
 	serverNode := pocketNodes[1]
 	serverNodePeerId := serverNode.GetBus().GetConsensusModule().GetNodeAddress()
-	//require.NoError(t, err)
 	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
 	serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
-	serverNodeConsensusModImpl.MethodByName("EnableServerMode").Call([]reflect.Value{})
 
 	// We choose node 2 as the requester node.
 	requesterNode := pocketNodes[2]
@@ -74,7 +72,7 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 	require.Equal(t, serverNodePeerId, metaDataRes.PeerAddress)
 }
 
-func TestStateSync_ServerGetBlock_SuccessfulTest(t *testing.T) {
+func TestStateSync_ServerGetBlock_Success(t *testing.T) {
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
@@ -93,7 +91,6 @@ func TestStateSync_ServerGetBlock_SuccessfulTest(t *testing.T) {
 	serverNode := pocketNodes[1]
 	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
 	serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
-	serverNodeConsensusModImpl.MethodByName("EnableServerMode").Call([]reflect.Value{})
 
 	// Choose node 2 as the requester node
 	requesterNode := pocketNodes[2]
@@ -134,7 +131,7 @@ func TestStateSync_ServerGetBlock_SuccessfulTest(t *testing.T) {
 	require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
 }
 
-func TestStateSync_ServerGetBlock_FailingTest(t *testing.T) {
+func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
@@ -153,7 +150,6 @@ func TestStateSync_ServerGetBlock_FailingTest(t *testing.T) {
 	serverNode := pocketNodes[1]
 	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
 	serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
-	serverNodeConsensusModImpl.MethodByName("EnableServerMode").Call([]reflect.Value{})
 
 	// Choose node 2 as the requester node
 	requesterNode := pocketNodes[2]
@@ -161,11 +157,12 @@ func TestStateSync_ServerGetBlock_FailingTest(t *testing.T) {
 
 	// Failing Test
 	// Get Block Req is current block height + 1
+	requestHeight := testHeight + 1
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
 			GetBlockReq: &typesCons.GetBlockRequest{
 				PeerAddress: requesterNodePeerAddress,
-				Height:      testHeight + 1,
+				Height:      requestHeight,
 			},
 		},
 	}

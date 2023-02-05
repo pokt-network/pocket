@@ -13,6 +13,8 @@ enum DebugMessageAction {
 	DEBUG_CONSENSUS_PRINT_NODE_STATE = 2;
 	DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW = 3;
 	DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE = 4; // toggle between manual and automatic
+	
+	// TODO: Add persistence prefix
 	DEBUG_CONSENSUS_SEND_METADATA_REQ = 5;
 	DEBUG_CONSENSUS_SEND_BLOCK_REQ = 6;
 

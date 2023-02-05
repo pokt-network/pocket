@@ -94,33 +94,36 @@ func (m *consensusModule) togglePacemakerManualMode(_ *messaging.DebugMessage) {
 
 // requests current block from all validators
 func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage) {
-	blockHeight := m.CurrentHeight() - 1
+	currentHeight := m.CurrentHeight()
+	requestHeight := currentHeight - 1
 	peerAddress := m.GetNodeAddress()
 
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
 			GetBlockReq: &typesCons.GetBlockRequest{
 				PeerAddress: peerAddress,
-				Height:      blockHeight,
+				Height:      requestHeight,
 			},
 		},
 	}
 
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.getValidatorsAtHeight(currentHeight)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
 	}
 
 	for _, val := range validators {
-		if err := m.stateSync.SendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress()), blockHeight); err != nil {
-			m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
+		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
+		if err := m.stateSync.SendStateSyncMessage(stateSyncGetBlockMessage, valAddress, requestHeight); err != nil {
+			m.nodeLogError(typesCons.SendingStateSyncMessage(valAddress, requestHeight), err)
 		}
 	}
 }
 
 // requests metadata from all validators
 func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMessage) {
-	blockHeight := m.CurrentHeight() - 1
+	currentHeight := m.CurrentHeight()
+	requestHeight := currentHeight - 1
 	peerAddress := m.GetNodeAddress()
 
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
@@ -131,14 +134,15 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 		},
 	}
 
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.getValidatorsAtHeight(currentHeight)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
 	}
 
 	for _, val := range validators {
-		if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, cryptoPocket.AddressFromString(val.GetAddress()), blockHeight); err != nil {
-			m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
+		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
+		if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, valAddress, requestHeight); err != nil {
+			m.nodeLogError(typesCons.SendingStateSyncMessage(valAddress, requestHeight), err)
 		}
 	}
 

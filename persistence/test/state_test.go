@@ -227,9 +227,3 @@ func verifyReplayableBlocks(t *testing.T, replayableBlocks []*TestReplayableBloc
 		require.NoError(t, err)
 	}
 }
-
-// func heightToBytes(height int64) []byte {
-// 	heightBytes := make([]byte, 8)
-// 	binary.LittleEndian.PutUint64(heightBytes, uint64(height))
-// 	return heightBytes
-// }

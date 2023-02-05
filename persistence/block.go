@@ -3,6 +3,7 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
@@ -117,6 +118,6 @@ func (p PostgresContext) storeBlock(block *coreTypes.Block) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Storing block %d in block store! \n", block.BlockHeader.Height)
+	log.Printf("Storing block %d in block store.\n", block.BlockHeader.Height)
 	return p.blockStore.Set(converters.HeightToBytes(uint64(p.Height)), blockBz)
 }

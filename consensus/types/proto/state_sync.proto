@@ -14,6 +14,7 @@ import "core/types/proto/block.proto";
 //                      explicit enough.
 
 message StateSyncMetadataRequest {
+    //CONSOLIDATE(#347): Integrate with LibP2P
     string peer_address = 1; // The peer id of the node that is requesting the metadata
 }
 
@@ -32,14 +33,6 @@ message GetBlockResponse {
     string peer_address = 1; // The `peer_id` needs to be populated by the P2P module of the receiving node so the sender cannot falsify its identity
     core.Block block = 2; // The block being provided to the peer
 }
-
-// enum StateSyncMessageType {
-//     STATE_SYNC_UNSPECIFIED = 0;
-//     STATE_SYNC_METADATA_REQUEST = 1;
-//     STATE_SYNC_METADATA_RESPONSE = 2;
-//     STATE_SYNC_GET_BLOCK_REQUEST = 3;
-//     STATE_SYNC_GET_BLOCK_RESPONSE = 4;
-// }
 
 message StateSyncMessage {
     //StateSyncMessageType msgType = 1;

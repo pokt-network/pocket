@@ -2,7 +2,6 @@ package e2e_tests
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 	"time"
 
@@ -193,16 +192,12 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	// Test state synchronisation's get block functionality
-	// At this stage, the chain has finished the first round
-	// So, get block request for block height 1 must return non-nill block
+	// At this stage, first round is finished, get block request for block height 1 must return non-nill block
 	serverNode := pocketNodes[1]
-	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
-	serverNodeConsensusModImpl.MethodByName("EnableServerMode").Call([]reflect.Value{})
 
 	// We choose node 2 as the requester node.
 	requesterNode := pocketNodes[2]
 	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
-	//require.NoError(t, err)
 
 	stateSyncGetBlockReq := typesCons.GetBlockRequest{
 		PeerAddress: requesterNodePeerAddress,
@@ -210,7 +205,6 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-		//MsgType: typesCons.StateSyncMessageType_STATE_SYNC_GET_BLOCK_REQUEST,
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
 			GetBlockReq: &stateSyncGetBlockReq,
 		},
