@@ -27,6 +27,7 @@ if (localnet_config_file != localnet_config) or (not os.path.exists(localnet_con
 # CONSIDERATION: This can potentially can be replaced with a list of excluded directories.
 deps = [
     "app",
+    "build/localnet",
     "consensus",
     "p2p",
     "persistance",
@@ -81,6 +82,14 @@ local_resource(
     ),
     deps=deps_full_path,
 )
+# Builds the cluster manager binary
+local_resource(
+    'cluster manager: Watch & Compile',
+    'GOOS=linux go build -o {root_dir}/bin/cluster-manager {root_dir}/build/localnet/cluster-manager/*.go'.format(
+        root_dir=root_dir
+    ),
+    deps=deps_full_path,
+)
 
 # Builds and maintains the validator container image after the binary is built on local machine, restarts a process on code change
 docker_build_with_restart(
@@ -112,6 +121,23 @@ COPY bin/client-linux /usr/local/bin/client
     live_update=[sync("bin/client-linux", "/usr/local/bin/client")],
 )
 
+# Builds and maintains the cluster-manager container image after the binary is built on local machine
+docker_build_with_restart(
+    "cluster-manager-image",
+    root_dir,
+    dockerfile_contents="""FROM debian:bullseye
+WORKDIR /
+COPY bin/cluster-manager /usr/local/bin/cluster-manager
+COPY bin/client-linux /usr/local/bin/client
+""",
+    only=['bin/cluster-manager', 'bin/client-linux'],
+    entrypoint=["/usr/local/bin/cluster-manager"],
+    live_update=[
+        sync("bin/cluster-manager", "/usr/local/bin/cluster-manager"),
+        sync("bin/client-linux", "/usr/local/bin/client"),
+    ]
+)
+
 # TODO: https://github.com/tilt-dev/tilt/issues/3048
 # Pushes localnet manifests to the cluster.
 k8s_yaml(
@@ -119,6 +145,7 @@ k8s_yaml(
         "manifests/private-keys.yaml",
         "manifests/configs.yaml",
         "manifests/cli-client.yaml",
+        'manifests/cluster-manager.yaml',
         "manifests/network.yaml",
         local(
             "templates/v1-validator-template.sh %s"
