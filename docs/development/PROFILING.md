@@ -27,7 +27,7 @@ These are the necessary steps:
 2. Collect a "baseline" heap profile of the node by running the following command:
 
 ```bash
-$ curl http://localhost:6060/debug/pprof/heap > baseline.heap
+curl http://localhost:6060/debug/pprof/heap > baseline.heap
 ```
 
 3. Run the `ResetToGenesis` command from the debug CLI
@@ -40,7 +40,7 @@ curl http://localhost:6060/debug/pprof/heap > after_reset.heap
 5. Compare the two profiles using the `pprof` tool:
 
 ```bash
-$ go tool pprof -base=baseline.heap after_reset.heap
+go tool pprof -base=baseline.heap after_reset.heap
 ```
 
 6. From the `pprof` prompt, you can run the `top` command to see the top 10 (can be any number) memory consumers:

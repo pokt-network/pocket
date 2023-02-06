@@ -178,7 +178,7 @@ and use `utilityMod` as desired.
 ## How to test
 
 ```
-$ make test_utility_types && make test_utility_module
+make test_utility_types && make test_utility_module
 ```
 
 ## Code Organization

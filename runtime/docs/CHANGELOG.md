@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.13] - 2023-02-06
+
+- Added additional logging information to be able to tell which config file contains an error
+- Changed hardcoded addresses and public keys to reflect new addresses pattern from LocalNet on Kubernetes
+
 ## [0.0.0.12] - 2023-02-04
 
 - Changed log lines to utilize new logger module.
