@@ -1,6 +1,7 @@
 package utility
 
 import (
+	"log"
 	"math/big"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
