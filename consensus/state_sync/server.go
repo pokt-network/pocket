@@ -25,7 +25,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	serverNodePeerId := m.GetBus().GetConsensusModule().GetNodeAddress()
 
 	clientPeerAddress := metadataReq.PeerAddress
-	m.nodeLog(fmt.Sprintf("%s received State Sync MetaData Req from: %s", serverNodePeerId, clientPeerAddress))
+	m.logger.Info().Msg(fmt.Sprintf("%s received State Sync MetaData Req from: %s", serverNodePeerId, clientPeerAddress))
 
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(consensusMod.CurrentHeight()) - 1) //last finalized block
 	if err != nil {
@@ -61,7 +61,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 
 	clientPeerAddress := blockReq.PeerAddress
-	m.nodeLog(fmt.Sprintf("%s received State Sync Get Block Req from: %s", serverNodePeerAddress, clientPeerAddress))
+	m.logger.Info().Msg(fmt.Sprintf("%s received state sync Get Block Req from: %s", serverNodePeerAddress, clientPeerAddress))
 
 	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
 
@@ -94,7 +94,7 @@ func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, erro
 
 	blockBytes, err := blockStore.Get(heightBytes)
 	if err != nil {
-		m.nodeLog(fmt.Sprintf("Couldn't retrieve the block %d, with height bytes %v size %d", blockHeight, heightBytes, len(heightBytes)))
+		m.logger.Error().Err(typesCons.ErrConsensusMempoolFull).Msg(typesCons.DisregardHotstuffMessage)
 		return nil, err
 	}
 

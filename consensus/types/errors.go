@@ -171,6 +171,7 @@ const (
 	broadcastMessageError                       = "error broadcasting message"
 	createConsensusMessageError                 = "error creating consensus message"
 	createStateSyncMessageError                 = "error creating state sync message"
+	blockRetrievalError                         = "couldn't retrieve the block from persistence module"
 	anteValidationError                         = "discarding hotstuff message because ante validation failed"
 	nilLeaderIdError                            = "attempting to send a message to leader when LeaderId is nil"
 	newPersistenceReadContextError              = "error creating new persistence read context"
@@ -209,6 +210,7 @@ var (
 	ErrBroadcastMessage                       = errors.New(broadcastMessageError)
 	ErrCreateConsensusMessage                 = errors.New(createConsensusMessageError)
 	ErrCreateStateSyncMessage                 = errors.New(createStateSyncMessageError)
+	ErrBlockRetrievalMessage                  = errors.New(blockRetrievalError)
 	ErrHotstuffValidation                     = errors.New(anteValidationError)
 	ErrNilLeaderId                            = errors.New(nilLeaderIdError)
 	ErrNewPersistenceReadContext              = errors.New(newPersistenceReadContextError)

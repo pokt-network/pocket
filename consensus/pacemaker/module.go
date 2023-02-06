@@ -8,6 +8,7 @@ import (
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -51,7 +52,7 @@ type pacemaker struct {
 	// Only used for development and debugging.
 	debug pacemakerDebug
 
-	// REFACTOR: this should be removed, when we build a shared and proper logger
+	logger    modules.Logger
 	logPrefix string
 }
 
@@ -80,6 +81,7 @@ func (*pacemaker) Create(bus modules.Bus) (modules.Module, error) {
 }
 
 func (m *pacemaker) Start() error {
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 	m.RestartTimer()
 	return nil
 }
@@ -115,14 +117,14 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Consensus message is from the past
 	if msg.Height < currentHeight {
-		m.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height))
+		m.logger.Info().Msg(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height))
 		return false, nil
 	}
 
 	// TODO: Need to restart state sync or be in state sync mode right now
 	// Current node is out of sync
 	if msg.Height > currentHeight {
-		m.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d < message at height %d", currentHeight, msg.Height))
+		m.logger.Info().Msg(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height))
 		return false, nil
 	}
 
@@ -136,7 +138,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Message is from the past
 	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
-		m.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round))
+		m.logger.Info().Msg(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round))
 		return false, nil
 	}
 
@@ -147,7 +149,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
 	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {
-		m.nodeLog(typesCons.PacemakerCatchup(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
+		m.logger.Info().Msg(typesCons.PacemakerCatchup(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
 		consensusMod.SetStep(uint8(msg.Step))
 		consensusMod.SetRound(msg.Round)
 
@@ -195,7 +197,7 @@ func (m *pacemaker) RestartTimer() {
 
 func (m *pacemaker) InterruptRound(reason string) {
 	consensusMod := m.GetBus().GetConsensusModule()
-	m.nodeLog(typesCons.PacemakerInterrupt(reason, consensusMod.CurrentHeight(), typesCons.HotstuffStep(consensusMod.CurrentStep()), consensusMod.CurrentRound()))
+	m.logger.Info().Msg(typesCons.PacemakerInterrupt(reason, consensusMod.CurrentHeight(), typesCons.HotstuffStep(consensusMod.CurrentStep()), consensusMod.CurrentRound()))
 
 	consensusMod.SetRound(consensusMod.CurrentRound() + 1)
 
@@ -226,7 +228,7 @@ func (m *pacemaker) InterruptRound(reason string) {
 func (m *pacemaker) NewHeight() {
 	consensusMod := m.GetBus().GetConsensusModule()
 
-	m.nodeLog(typesCons.PacemakerNewHeight(consensusMod.CurrentHeight() + 1))
+	m.logger.Info().Msg(typesCons.PacemakerNewHeight(consensusMod.CurrentHeight() + 1))
 	consensusMod.SetHeight(consensusMod.CurrentHeight() + 1)
 	consensusMod.ResetForNewHeight()
 
@@ -282,9 +284,4 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 func (m *pacemaker) getStepTimeout(round uint64) time.Duration {
 	baseTimeout := time.Duration(int64(time.Millisecond) * int64(m.pacemakerCfg.TimeoutMsec))
 	return baseTimeout
-}
-
-// TODO: Remove once we have a proper logging system.
-func (m *pacemaker) nodeLog(s string) {
-	log.Printf("[%s][%d] %s\n", m.logPrefix, m.GetBus().GetConsensusModule().GetNodeId(), s)
 }

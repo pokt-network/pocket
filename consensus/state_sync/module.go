@@ -2,15 +2,15 @@ package state_sync
 
 import (
 	"fmt"
-	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
 const (
-	DefaultLogPrefix    = "NODE"
+	DefaultLogPrefix    = "NODE-StateSync Module"
 	stateSyncModuleName = "stateSyncModule"
 )
 
@@ -37,7 +37,6 @@ type StateSyncModule interface {
 
 	IsServerModEnabled() bool
 	EnableServerMode()
-	SetLogPrefix(string)
 
 	SendStateSyncMessage(*typesCons.StateSyncMessage, cryptoPocket.Address, uint64) error
 }
@@ -54,6 +53,7 @@ type stateSync struct {
 	currentMode SyncMode
 	serverMode  bool
 
+	logger    modules.Logger
 	logPrefix string
 }
 
@@ -63,18 +63,21 @@ func CreateStateSync(bus modules.Bus) (modules.Module, error) {
 }
 
 func (*stateSync) Create(bus modules.Bus) (modules.Module, error) {
-	m := &stateSync{}
+	m := &stateSync{
+		logPrefix: DefaultLogPrefix,
+	}
 	bus.RegisterModule(m)
 
 	// when node is starting, it is in sync mode, as it might need to bootstrap to the latest state
 	m.currentMode = Sync
-
 	m.serverMode = false
 
 	return m, nil
 }
 
 func (m *stateSync) Start() error {
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
+
 	return nil
 }
 
@@ -88,7 +91,7 @@ func (m *stateSync) SetBus(pocketBus modules.Bus) {
 
 func (m *stateSync) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		logger.Global.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
 }
@@ -113,23 +116,13 @@ func (m *stateSync) EnableServerMode() {
 // TODO implement issue #352
 // Placeholder function
 func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-	m.nodeLog(fmt.Sprintf("Received get block response: %s", blockRes.Block.String()))
+	m.logger.Debug().Msg(fmt.Sprintf("Received get block response: %s", blockRes.Block.String()))
 	return nil
 }
 
-// TODO implement issue #352
+// TODO implement issue #352git ch
 // Placeholder function
 func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
-	m.nodeLog(fmt.Sprintf("Received get metadata response: %s", metaDataRes.String()))
+	m.logger.Debug().Msg(fmt.Sprintf("Received get metadata response: %s", metaDataRes.String()))
 	return nil
-}
-
-// IMPROVE: Remove this once we have a proper logging system.
-func (m *stateSync) nodeLog(s string) {
-	log.Printf("[%s][%d] %s\n", m.logPrefix, m.GetBus().GetConsensusModule().GetNodeId(), s)
-}
-
-// IMPROVE: Remove this once we have a proper logging system.
-func (m *stateSync) nodeLogError(s string, err error) {
-	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.GetBus().GetConsensusModule().GetNodeId(), s, err)
 }
