@@ -23,10 +23,9 @@ func TestMessage_ChangeParameter_ValidateBasic(t *testing.T) {
 	owner, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
-	codec := codec.GetCodec()
 	paramKey := "key"
 	paramValueRaw := wrapperspb.Int32(1)
-	paramValueAny, err := codec.ToAny(paramValueRaw)
+	paramValueAny, err := codec.GetCodec().ToAny(paramValueRaw)
 	require.NoError(t, err)
 
 	msg := MessageChangeParameter{

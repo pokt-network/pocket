@@ -3,8 +3,8 @@ package messaging
 import (
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 )
 
 func Test_UnpackMessage_Roundtrip(t *testing.T) {

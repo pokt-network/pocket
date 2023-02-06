@@ -3,7 +3,7 @@ package test
 import (
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -15,6 +15,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -27,7 +28,7 @@ var isModifierRe = regexp.MustCompile(`^(Insert|Set|Add|Subtract)`) // Add Updat
 // and key-value stores.
 // IMPROVE(#361): Improve the output of this benchmark to be more informative and human readable.
 func BenchmarkStateHash(b *testing.B) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	defer log.SetOutput(os.Stderr)
 
 	clearAllState()
@@ -66,19 +67,25 @@ func BenchmarkStateHash(b *testing.B) {
 				db := NewTestPostgresContext(b, height)
 				for txIdx := 0; txIdx < numTxPerHeight; txIdx++ {
 					for opIdx := 0; opIdx < numOpsPerTx; opIdx++ {
-						callRandomDatabaseModifierFunc(db, false)
+						_, _, err := callRandomDatabaseModifierFunc(db, false)
+						require.NoError(b, err)
 					}
-					db.IndexTransaction(modules.TxResult(getRandomTxResult(height)))
+					err := db.IndexTransaction(modules.TxResult(getRandomTxResult(height)))
+					require.NoError(b, err)
 				}
-				db.ComputeStateHash()
-				db.Commit([]byte("placeholderProposerAddr"), []byte("placeholderQuorumCert"))
-				db.Release()
+				_, err := db.ComputeStateHash()
+				require.NoError(b, err)
+				err = db.Commit([]byte("placeholderProposerAddr"), []byte("placeholderQuorumCert"))
+				require.NoError(b, err)
+				err = db.Release()
+				require.NoError(b, err)
 			}
 		})
 	}
 }
 
 // Calls a random database modifier function on the given persistence context
+//nolint:gosec // G404 - Weak random source is okay in unit tests
 func callRandomDatabaseModifierFunc(
 	p *persistence.PostgresContext,
 	mustSucceed bool,
@@ -126,8 +133,6 @@ MethodLoop:
 				v = reflect.ValueOf(rand.Int63())
 			case reflect.Int:
 				v = reflect.ValueOf(rand.Int())
-			case reflect.Pointer:
-				fallthrough
 			default:
 				continue MethodLoop // IMPROVE: Other types not supported yet
 			}
@@ -159,16 +164,11 @@ func getRandomTxResult(height int64) *indexer.TxRes {
 }
 
 func getRandomIntString(n int) string {
-	return strconv.Itoa(rand.Intn(n))
-}
-
-// NOTE: This is not current used but was added for future usage.
-func getRandomString(numChars int64) string {
-	return string(getRandomBytes(numChars))
+	return strconv.Itoa(rand.Intn(n)) //nolint:gosec // G404 - Weak random source is okay in unit tests
 }
 
 func getRandomBytes(numBytes int64) []byte {
 	bz := make([]byte, numBytes)
-	rand.Read(bz)
+	rand.Read(bz) //nolint:gosec // G404 - Weak random source is okay in unit tests
 	return []byte(hex.EncodeToString(bz))
 }

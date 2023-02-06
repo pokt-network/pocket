@@ -13,7 +13,7 @@ const (
 		)`
 )
 
-func InsertBlockQuery(height uint64, hashString string, proposerAddr []byte, quorumCert []byte) string {
+func InsertBlockQuery(height uint64, hashString string, proposerAddr, quorumCert []byte) string {
 	return fmt.Sprintf(
 		`INSERT INTO %s(height, hash, proposer_address, quorum_certificate)
 			VALUES(%d, '%s', '%b', '%b')`,
