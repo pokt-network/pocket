@@ -1,10 +1,10 @@
 package cli
 
 import (
-	"log"
 	"os"
 
 	"github.com/manifoldco/promptui"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	debugABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/debug"
 	debugCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/debug"
@@ -24,9 +24,6 @@ const (
 	PromptTriggerNextView        string = "TriggerNextView"
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
-
-	defaultConfigPath  = "build/config/config1.json"
-	defaultGenesisPath = "build/config/genesis.json"
 )
 
 var (
@@ -41,11 +38,21 @@ var (
 		PromptShowLatestBlockInStore,
 	}
 
+	defaultConfigPath  = getEnv("CONFIG_PATH", "build/config/config1.json")
+	defaultGenesisPath = getEnv("GENESIS_PATH", "build/config/genesis.json")
+
 	// validators holds the list of the validators at genesis time so that we can use it to create a debug address book provider.
 	// Its purpose is to allow the CLI to "discover" the nodes in the network. Since currently we don't have churn and we run nodes only in LocalNet, we can rely on the genesis state.
 	// HACK(#416): This is a temporary solution that guarantees backward compatibility while we implement peer discovery
 	validators []*coreTypes.Actor
 )
+
+func getEnv(key, defaultValue string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return defaultValue
+}
 
 func init() {
 	rootCmd.AddCommand(NewDebugCommand())
@@ -77,7 +84,7 @@ func NewDebugCommand() *cobra.Command {
 			// TODO(#429): refactor injecting the dependencies into the bus so that they can be consumed in an updated `P2PModule.Create()` implementation
 			p2pM, err := p2p.CreateWithProviders(runtimeMgr.GetBus(), debugAddressBookProvider, debugCurrentHeightProvider)
 			if err != nil {
-				log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
+				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
 			}
 			p2pMod = p2pM.(modules.P2PModule)
 
@@ -111,7 +118,7 @@ func promptGetInput() (string, error) {
 	}
 
 	if err != nil {
-		log.Printf("Prompt failed %v\n", err)
+		logger.Global.Error().Err(err).Msg("Prompt failed")
 		return "", err
 	}
 
@@ -151,7 +158,7 @@ func handleSelect(selection string) {
 		}
 		sendDebugMessage(m)
 	default:
-		log.Println("Selection not yet implemented...", selection)
+		logger.Global.Error().Msg("Selection not yet implemented...")
 	}
 }
 
@@ -159,7 +166,7 @@ func handleSelect(selection string) {
 func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
+		logger.Global.Fatal().Err(err).Msg("Failed to create Any proto")
 	}
 
 	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
@@ -170,7 +177,7 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 	for _, valAddr := range validators {
 		addr, err := pocketCrypto.NewAddress(valAddr.GetAddress())
 		if err != nil {
-			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
+			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 		}
 		p2pMod.Send(addr, anyProto)
 	}
@@ -180,18 +187,18 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
+		logger.Global.Error().Err(err).Msg("Failed to create Any proto")
 	}
 
 	var validatorAddress []byte
 	if len(validators) == 0 {
-		log.Fatalf("[ERROR] No validators found")
+		logger.Global.Fatal().Msg("No validators found")
 	}
 
 	// if the message needs to be broadcast, it'll be handled by the business logic of the message handler
 	validatorAddress, err = pocketCrypto.NewAddress(validators[0].GetAddress())
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
+		logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 	}
 
 	p2pMod.Send(validatorAddress, anyProto)

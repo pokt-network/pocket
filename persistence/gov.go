@@ -3,7 +3,6 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -176,7 +175,7 @@ func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, param
 		return any(v).(T), enabled, err
 
 	default:
-		log.Fatalf("unhandled type for paramValue %T", tp)
+		p.logger.Fatal().Msgf("unhandled type for paramValue %T", tp)
 	}
 	return
 }

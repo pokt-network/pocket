@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.13] - 2023-02-06
+
+- Added additional logging information to be able to tell which config file contains an error
+- Changed hardcoded addresses and public keys to reflect new addresses pattern from LocalNet on Kubernetes
+
+## [0.0.0.12] - 2023-02-04
+
+- Changed log lines to utilize new logger module.
+
 ## [0.0.0.11] - 2023-02-03
 
 - Updated to display the warning message about the telemetry module not registered only once
@@ -21,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.9] - 2023-01-23
 
 - Updated README.md with information about node profiling
+
 ## [0.0.0.8] - 2023-01-19
 
 - Rewrite `interface{}` to `any`

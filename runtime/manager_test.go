@@ -52,19 +52,19 @@ var expectedGenesis = &genesis.GenesisState{
 	},
 	Accounts: []*types.Account{
 		{
-			Address: "6f66574e1f50f0ef72dff748c3f11b9e0e89d32a",
+			Address: "00404a570febd061274f72b50d0a37f611dfe339",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "67eb3f0a50ae459fecf666be0e93176e92441317",
+			Address: "00304d0101847b37fd62e7bebfbdddecdbb7133e",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "3f52e08c4b3b65ab7cf098d77df5bf8cedcf5f99",
+			Address: "00204737d2a165ebe4be3a7d5b0af905b0ea91d8",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "113fdb095d42d6e09327ab5b8df13fd8197a1eaf",
+			Address: "00104055c00bed7c983a48aac7dc6335d7c607a7",
 			Amount:  "100000000000000",
 		},
 		{
@@ -96,47 +96,47 @@ var expectedGenesis = &genesis.GenesisState{
 	Validators: []*types.Actor{
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
-			Address:         "113fdb095d42d6e09327ab5b8df13fd8197a1eaf",
-			PublicKey:       "53ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a",
+			Address:         "00104055c00bed7c983a48aac7dc6335d7c607a7",
+			PublicKey:       "dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 			Chains:          nil,
 			GenericParam:    "node1.consensus:8080",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
-			Output:          "113fdb095d42d6e09327ab5b8df13fd8197a1eaf",
+			Output:          "00104055c00bed7c983a48aac7dc6335d7c607a7",
 		},
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
-			Address:         "3f52e08c4b3b65ab7cf098d77df5bf8cedcf5f99",
-			PublicKey:       "a8b6be75d7551da093f788f7286c3a9cb885cfc8e52710eac5f1d5e5b4bf19b2",
+			Address:         "00204737d2a165ebe4be3a7d5b0af905b0ea91d8",
+			PublicKey:       "eb2c78364525a210d994a83e02d18b4287ab81f6670cf4510ab6c9f51e296d91",
 			Chains:          nil,
 			GenericParam:    "node2.consensus:8080",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
-			Output:          "3f52e08c4b3b65ab7cf098d77df5bf8cedcf5f99",
+			Output:          "00204737d2a165ebe4be3a7d5b0af905b0ea91d8",
 		},
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
-			Address:         "67eb3f0a50ae459fecf666be0e93176e92441317",
-			PublicKey:       "c16043323c83ffd901a8bf7d73543814b8655aa4695f7bfb49d01926fc161cdb",
+			Address:         "00304d0101847b37fd62e7bebfbdddecdbb7133e",
+			PublicKey:       "1041a9c76539791fef9bee5b4fcd5bf4a1a489e0790c44cbdfa776b901e13b50",
 			Chains:          nil,
 			GenericParam:    "node3.consensus:8080",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
-			Output:          "67eb3f0a50ae459fecf666be0e93176e92441317",
+			Output:          "00304d0101847b37fd62e7bebfbdddecdbb7133e",
 		},
 		{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
-			Address:         "6f66574e1f50f0ef72dff748c3f11b9e0e89d32a",
-			PublicKey:       "b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
+			Address:         "00404a570febd061274f72b50d0a37f611dfe339",
+			PublicKey:       "d6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
 			Chains:          nil,
 			GenericParam:    "node4.consensus:8080",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
-			Output:          "6f66574e1f50f0ef72dff748c3f11b9e0e89d32a",
+			Output:          "00404a570febd061274f72b50d0a37f611dfe339",
 		},
 	},
 	ServiceNodes: []*types.Actor{
@@ -200,9 +200,9 @@ func TestNewManagerFromReaders(t *testing.T) {
 			want: &Manager{
 				config: &configs.Config{
 					RootDirectory: "/go/src/github.com/pocket-network",
-					PrivateKey:    "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a",
+					PrivateKey:    "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 					Consensus: &configs.ConsensusConfig{
-						PrivateKey:      "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a",
+						PrivateKey:      "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 						MaxMempoolBytes: 500000000,
 						PacemakerConfig: &configs.PacemakerConfig{
 							TimeoutMsec:               5000,
@@ -227,7 +227,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						HealthCheckPeriod: "5m",
 					},
 					P2P: &configs.P2PConfig{
-						PrivateKey:      "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a",
+						PrivateKey:      "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 						ConsensusPort:   8080,
 						UseRainTree:     true,
 						ConnectionType:  configTypes.ConnectionType_TCPConnection,
@@ -265,7 +265,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 					  "consensus_port": 8080,
 					  "use_rain_tree": true,
 					  "is_empty_connection_type": false,
-					  "private_key": "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4"
+					  "private_key": "4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45"
 					}
 				  }`)),
 				genesisReader: strings.NewReader(string(buildGenesisBytes)),
@@ -273,7 +273,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 			want: &Manager{
 				config: &configs.Config{
 					P2P: &configs.P2PConfig{
-						PrivateKey:      "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
+						PrivateKey:      "4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
 						ConsensusPort:   8080,
 						UseRainTree:     true,
 						ConnectionType:  configTypes.ConnectionType_TCPConnection,

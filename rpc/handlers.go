@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"encoding/hex"
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -58,12 +57,12 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 
 	anyUtilityMessage, err := codec.GetCodec().ToAny(utilMsg)
 	if err != nil {
-		log.Printf("[ERROR] Failed to create Any proto from transaction gossip: %v", err)
+		s.logger.Error().Err(err).Msg("Failed to create Any proto from transaction gossip")
 		return err
 	}
 
 	if err := s.GetBus().GetP2PModule().Broadcast(anyUtilityMessage); err != nil {
-		log.Printf("[ERROR] Failed to broadcast utility message: %v", err)
+		s.logger.Error().Err(err).Msg("Failed to broadcast utility message")
 		return err
 	}
 	return nil
