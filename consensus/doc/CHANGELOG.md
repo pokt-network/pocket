@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.26] - 2023-02-06
+
+- Address legacy linter errors from `golangci-lint`
+
 ## [0.0.0.25] - 2023-02-04
 
 - Changed log lines to utilize new logger module.
