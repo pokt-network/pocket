@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"log"
 
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -181,7 +180,7 @@ func (p *PostgresContext) updateMerkleTrees() (string, error) {
 
 		// Default
 		default:
-			log.Fatalf("Not handled yet in state commitment update. Merkle tree #{%v}\n", treeType)
+			p.logger.Fatal().Msgf("Not handled yet in state commitment update. Merkle tree #{%v}", treeType)
 		}
 	}
 

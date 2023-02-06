@@ -3,9 +3,9 @@ package persistence
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -30,6 +30,8 @@ type persistenceModule struct {
 	blockStore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
 	stateTrees *stateTrees
+
+	logger modules.Logger
 
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time
@@ -93,14 +95,15 @@ func (*persistenceModule) Create(bus modules.Bus) (modules.Module, error) {
 	} else {
 		// This configurations will connect to the SQL database and key-value stores specified
 		// in the configurations and connected to those.
-		log.Println("Loading state from disk...")
+		logger.Global.Info().Msg("Loading state from disk...")
 	}
 
 	return m, nil
 }
 
 func (m *persistenceModule) Start() error {
-	log.Println("Starting persistence module...")
+	m.logger.Info().Msg("Starting module...")
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 	return nil
 }
 
@@ -119,7 +122,7 @@ func (m *persistenceModule) SetBus(bus modules.Bus) {
 
 func (m *persistenceModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		logger.Global.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
 }
@@ -148,13 +151,14 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 
 		stateHash: "",
 
+		logger: m.logger,
+
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
 		stateTrees: m.stateTrees,
 	}
 
 	return m.writeContext, nil
-
 }
 
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
@@ -178,6 +182,8 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 
 		stateHash: "",
 
+		logger: m.logger,
+
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
 		stateTrees: m.stateTrees,
@@ -187,7 +193,7 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 func (m *persistenceModule) ReleaseWriteContext() error {
 	if m.writeContext != nil {
 		if err := m.writeContext.resetContext(); err != nil {
-			log.Println("[TODO][ERROR] Error releasing write context...", err)
+			logger.Global.Error().Err(err).Msg("Error releasing write context")
 		}
 		m.writeContext = nil
 	}

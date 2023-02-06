@@ -50,13 +50,15 @@ type Message interface {
 	GetMessageRecipient() string
 }
 
-var _ Message = &MessageSend{}
-var _ Message = &MessageStake{}
-var _ Message = &MessageEditStake{}
-var _ Message = &MessageUnstake{}
-var _ Message = &MessageUnpause{}
-var _ Message = &MessageChangeParameter{}
-var _ Message = &MessageDoubleSign{}
+var (
+	_ Message = &MessageSend{}
+	_ Message = &MessageStake{}
+	_ Message = &MessageEditStake{}
+	_ Message = &MessageUnstake{}
+	_ Message = &MessageUnpause{}
+	_ Message = &MessageChangeParameter{}
+	_ Message = &MessageDoubleSign{}
+)
 
 func (msg *MessageSend) GetActorType() coreTypes.ActorType {
 	return coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED // there's no actor type for message send, so return zero to allow fee retrieval

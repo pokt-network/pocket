@@ -218,9 +218,7 @@ const (
 	UnjailMessage
 )
 
-var (
-	msgTypes = []MessageType{SendMessage, StakeMessage, UnstakeMessage, EditStakeMessage, UnjailMessage}
-)
+var msgTypes = []MessageType{SendMessage, StakeMessage, UnstakeMessage, EditStakeMessage, UnjailMessage}
 
 func (mt MessageType) String() string {
 	switch mt {

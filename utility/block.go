@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"log"
 	"math/big"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -66,7 +65,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			continue
 		}
 		if err := u.Context.IndexTransaction(txResult); err != nil {
-			log.Fatalf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
+			u.logger.Fatal().Err(err).Msg("TODO(#327): We can apply the transaction but not index it. Crash the process for now")
 		}
 
 		transactions = append(transactions, txBytes)
@@ -79,9 +78,9 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	// return the app hash (consensus module will get the validator set directly)
 	stateHash, err := u.Context.ComputeStateHash()
 	if err != nil {
-		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
+		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 	}
-	log.Println("CreateAndApplyProposalBlock - computed state hash:", stateHash)
+	u.logger.Info().Msgf("CreateAndApplyProposalBlock - computed state hash: %s", stateHash)
 
 	return stateHash, transactions, err
 }
@@ -119,7 +118,7 @@ func (u *UtilityContext) ApplyBlock() (string, error) {
 		}
 
 		if err := u.Context.IndexTransaction(txResult); err != nil {
-			log.Fatalf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
+			u.logger.Fatal().Err(err).Msg("TODO(#327): We can apply the transaction but not index it. Crash the process for now")
 		}
 
 		// TODO: if found, remove transaction from mempool.
@@ -136,10 +135,10 @@ func (u *UtilityContext) ApplyBlock() (string, error) {
 	// return the app hash (consensus module will get the validator set directly)
 	stateHash, err := u.Context.ComputeStateHash()
 	if err != nil {
-		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
+		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return "", typesUtil.ErrAppHash(err)
 	}
-	log.Println("ApplyBlock - computed state hash:", stateHash)
+	u.logger.Info().Msgf("ApplyBlock - computed state hash: %s", stateHash)
 
 	// return the app hash; consensus module will get the validator set directly
 	return stateHash, nil
