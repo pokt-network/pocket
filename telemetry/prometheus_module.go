@@ -37,7 +37,7 @@ func CreatePrometheusTelemetryModule(bus modules.Bus) (modules.Module, error) {
 
 func (*PrometheusTelemetryModule) Create(bus modules.Bus) (modules.Module, error) {
 	m := &PrometheusTelemetryModule{}
-	bus.RegisterModule(m)
+	bus.GetModulesRegistry().RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()

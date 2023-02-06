@@ -32,7 +32,7 @@ func Create(bus modules.Bus) (modules.Module, error) {
 
 func (*utilityModule) Create(bus modules.Bus) (modules.Module, error) {
 	m := &utilityModule{}
-	bus.RegisterModule(m)
+	bus.GetModulesRegistry().RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 

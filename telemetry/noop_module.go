@@ -29,7 +29,7 @@ func CreateNoopTelemetryModule(bus modules.Bus) (modules.Module, error) {
 
 func (*NoopTelemetryModule) Create(bus modules.Bus) (modules.Module, error) {
 	m := &NoopTelemetryModule{}
-	bus.RegisterModule(m)
+	bus.GetModulesRegistry().RegisterModule(m)
 	return m, nil
 }
 

@@ -21,7 +21,7 @@ type bus struct {
 	// Node events
 	channel modules.EventsChannel
 
-	modulesMap map[string]modules.Module
+	modulesRegistry modules.ModulesRegistry
 
 	runtimeMgr modules.RuntimeMgr
 }
@@ -34,8 +34,8 @@ func (b *bus) Create(runtimeMgr modules.RuntimeMgr) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, defaults.DefaultBusBufferSize),
 
-		runtimeMgr: runtimeMgr,
-		modulesMap: make(map[string]modules.Module),
+		runtimeMgr:      runtimeMgr,
+		modulesRegistry: newModulesRegistry(),
 	}
 
 	return bus, nil
@@ -43,7 +43,7 @@ func (b *bus) Create(runtimeMgr modules.RuntimeMgr) (modules.Bus, error) {
 
 func (m *bus) RegisterModule(module modules.Module) error {
 	module.SetBus(m)
-	m.modulesMap[module.GetModuleName()] = module
+	m.modulesRegistry.RegisterModule(module)
 	return nil
 }
 
@@ -61,41 +61,46 @@ func (m *bus) GetEventBus() modules.EventsChannel {
 }
 
 func (m *bus) GetPersistenceModule() modules.PersistenceModule {
-	if mod, ok := m.modulesMap[modules.PersistenceModuleName]; ok {
+	var err error
+	if mod, err := m.modulesRegistry.GetModule(modules.PersistenceModuleName); err != nil {
 		return mod.(modules.PersistenceModule)
 	}
-	log.Fatalf("%s", ErrModuleNotRegistered("persistence"))
+	log.Fatalf("%s", err)
 	return nil
 }
 
 func (m *bus) GetP2PModule() modules.P2PModule {
-	if mod, ok := m.modulesMap[modules.P2PModuleName]; ok {
+	var err error
+	if mod, err := m.modulesRegistry.GetModule(modules.P2PModuleName); err != nil {
 		return mod.(modules.P2PModule)
 	}
-	log.Fatalf("%s", ErrModuleNotRegistered("P2P"))
+	log.Fatalf("%s", err)
 	return nil
 }
 
 func (m *bus) GetUtilityModule() modules.UtilityModule {
-	if mod, ok := m.modulesMap[modules.UtilityModuleName]; ok {
+	var err error
+	if mod, err := m.modulesRegistry.GetModule(modules.UtilityModuleName); err != nil {
 		return mod.(modules.UtilityModule)
 	}
-	log.Fatalf("%s", ErrModuleNotRegistered(modules.UtilityModuleName))
+	log.Fatalf("%s", err)
 	return nil
 }
 
 func (m *bus) GetConsensusModule() modules.ConsensusModule {
-	if mod, ok := m.modulesMap[modules.ConsensusModuleName]; ok {
+	var err error
+	if mod, err := m.modulesRegistry.GetModule(modules.ConsensusModuleName); err != nil {
 		return mod.(modules.ConsensusModule)
 	}
-	log.Fatalf("%s", ErrModuleNotRegistered(modules.ConsensusModuleName))
+	log.Fatalf("%s", err)
 	return nil
 }
 
 func (m *bus) GetTelemetryModule() modules.TelemetryModule {
+	var err error
 	for _, moduleName := range telemetry.ImplementationNames {
-		telemetryMod, ok := m.modulesMap[moduleName]
-		if ok {
+		telemetryMod, err := m.modulesRegistry.GetModule(moduleName)
+		if err != nil {
 			return telemetryMod.(modules.TelemetryModule)
 		}
 	}
@@ -112,18 +117,20 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 }
 
 func (m *bus) GetLoggerModule() modules.LoggerModule {
-	if mod, ok := m.modulesMap[modules.LoggerModuleName]; ok {
+	var err error
+	if mod, err := m.modulesRegistry.GetModule(modules.LoggerModuleName); err != nil {
 		return mod.(modules.LoggerModule)
 	}
-	log.Fatalf("%s", ErrModuleNotRegistered(modules.LoggerModuleName))
+	log.Fatalf("%s", err)
 	return nil
 }
 
 func (m *bus) GetRPCModule() modules.RPCModule {
-	if mod, ok := m.modulesMap[modules.RPCModuleName]; ok {
+	var err error
+	if mod, err := m.modulesRegistry.GetModule(modules.RPCModuleName); err != nil {
 		return mod.(modules.RPCModule)
 	}
-	log.Fatalf("%s", ErrModuleNotRegistered(modules.RPCModuleName))
+	log.Fatalf("%s", err)
 	return nil
 }
 

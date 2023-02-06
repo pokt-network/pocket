@@ -43,7 +43,7 @@ func (*persistenceModule) Create(bus modules.Bus) (modules.Module, error) {
 	m := &persistenceModule{
 		writeContext: nil,
 	}
-	bus.RegisterModule(m)
+	bus.GetModulesRegistry().RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 
