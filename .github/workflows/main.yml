@@ -87,6 +87,8 @@ jobs:
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: golangci/golangci-lint-action@v3
         with:
+          version: latest
+          skip-go-installation: true
           only-new-issues: true
 
   # TODO(@okdas): reuse artifacts built by the previous job instead
