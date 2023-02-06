@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/dgraph-io/badger/v3"
@@ -61,10 +60,11 @@ type yamlConfig struct {
 // Creates/Opens the DB and initialises the keys from the YAML file
 // FOR DEV/LOCANET PURPOSES ONLY
 func InitialiseKeybase(path string) (Keybase, error) {
-	// Get project root and find private keys file
-	_, b, _, _ := runtime.Caller(0)
-	basepath := filepath.Dir(b)
-	yamlFile := basepath + "/build/localnet/manifests/private-keys.yaml"
+	// Get private keys from manifest file
+	yamlFile, err := filepath.Abs("./build/localnet/manifests/private-keys.yaml")
+	if err != nil {
+		return nil, err
+	}
 
 	// Create/Open the keybase
 	pathExists, err := dirExists(path) // Creates path if it doesn't exist

@@ -2,18 +2,13 @@ package cli
 
 import (
 	"fmt"
-	"os"
+	"log"
+	"path/filepath"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
-)
-
-// Hardcoded keybase related constants
-const (
-	KEYBASE_PATH_SUFFIX    = "/.pocket/keys"      // TODO: Implement a `--data-dir` flag with a default value
-	PRIVATEKEY_YAML_SUFFIX = "/private-keys.yaml" // Remove when PR#354 is merged then use `build/localnet/manifests/private-keys.yaml`
 )
 
 func init() {
@@ -44,11 +39,13 @@ func accountCommands() []*cobra.Command {
 			Aliases: []string{"send"},
 			Args:    cobra.ExactArgs(3),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				homeDir, err := os.UserHomeDir()
+				keybaseDir, err := filepath.Abs(dataDir + "/keys")
 				if err != nil {
 					return err
 				}
-				keybase, err := keybase.InitialiseKeybase(homeDir + KEYBASE_PATH_SUFFIX)
+				log.Fatal(keybaseDir)
+
+				keybase, err := keybase.InitialiseKeybase(keybaseDir)
 				if err != nil {
 					return err
 				}

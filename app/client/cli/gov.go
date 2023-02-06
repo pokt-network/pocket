@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"os"
+	"path/filepath"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/utility/types"
@@ -40,11 +40,12 @@ func govCommands() []*cobra.Command {
 				// TODO(deblasis): implement RPC client, route and handler
 				fmt.Printf("changing parameter %s owned by %s to %s\n", args[1], args[0], args[2])
 
-				homeDir, err := os.UserHomeDir()
+				keybaseDir, err := filepath.Abs(dataDir + "/keys")
 				if err != nil {
 					return err
 				}
-				keybase, err := keybase.InitialiseKeybase(homeDir + KEYBASE_PATH_SUFFIX)
+
+				keybase, err := keybase.InitialiseKeybase(keybaseDir)
 				if err != nil {
 					return err
 				}

@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 	"math/big"
-	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -91,11 +91,12 @@ If the node is currently staked at X and you submit an update with new stake Y. 
 If no changes are desired for the parameter, just enter the current param value just as before.`,
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			homeDir, err := os.UserHomeDir()
+			keybaseDir, err := filepath.Abs(dataDir + "/keys")
 			if err != nil {
 				return err
 			}
-			keybase, err := keybase.InitialiseKeybase(homeDir + KEYBASE_PATH_SUFFIX)
+
+			keybase, err := keybase.InitialiseKeybase(keybaseDir)
 			if err != nil {
 				return err
 			}
@@ -156,11 +157,12 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Stakes a new <amount> for the %s actor with address <fromAddr> for the specified <relayChainIDs> and <serviceURI>.`, cmdDef.Name),
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			homeDir, err := os.UserHomeDir()
+			keybaseDir, err := filepath.Abs(dataDir + "/keys")
 			if err != nil {
 				return err
 			}
-			keybase, err := keybase.InitialiseKeybase(homeDir + KEYBASE_PATH_SUFFIX)
+
+			keybase, err := keybase.InitialiseKeybase(keybaseDir)
 			if err != nil {
 				return err
 			}
@@ -218,11 +220,12 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Unstakes the prevously staked tokens for the %s actor with address <fromAddr>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			homeDir, err := os.UserHomeDir()
+			keybaseDir, err := filepath.Abs(dataDir + "/keys")
 			if err != nil {
 				return err
 			}
-			keybase, err := keybase.InitialiseKeybase(homeDir + KEYBASE_PATH_SUFFIX)
+
+			keybase, err := keybase.InitialiseKeybase(keybaseDir)
 			if err != nil {
 				return err
 			}
@@ -266,11 +269,12 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Unpauses the %s actor with address <fromAddr>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			homeDir, err := os.UserHomeDir()
+			keybaseDir, err := filepath.Abs(dataDir + "/keys")
 			if err != nil {
 				return err
 			}
-			keybase, err := keybase.InitialiseKeybase(homeDir + KEYBASE_PATH_SUFFIX)
+
+			keybase, err := keybase.InitialiseKeybase(keybaseDir)
 			if err != nil {
 				return err
 			}
