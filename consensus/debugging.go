@@ -45,8 +45,7 @@ func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) {
 	m.nodeLog(typesCons.DebugResetToGenesis)
 
-	m.height = 0
-	m.publishNewHeightEvent(m.height)
+	m.SetHeight(0)
 	m.ResetForNewHeight()
 	m.clearLeader()
 	m.clearMessagesPool()
