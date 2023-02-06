@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package consensus;
-
-option go_package = "github.com/pokt-network/pocket/consensus/types";
-
-message NewHeightEvent {
-  uint64 height = 1;
-}
