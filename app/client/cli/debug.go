@@ -38,6 +38,9 @@ var (
 		PromptShowLatestBlockInStore,
 	}
 
+	defaultConfigPath  = getEnv("CONFIG_PATH", "build/config/config1.json")
+	defaultGenesisPath = getEnv("GENESIS_PATH", "build/config/genesis.json")
+
 	// validators holds the list of the validators at genesis time so that we can use it to create a debug address book provider.
 	// Its purpose is to allow the CLI to "discover" the nodes in the network. Since currently we don't have churn and we run nodes only in LocalNet, we can rely on the genesis state.
 	// HACK(#416): This is a temporary solution that guarantees backward compatibility while we implement peer discovery
@@ -46,6 +49,13 @@ var (
 	configPath  string = getEnv("CONFIG_PATH", "build/config/config1.json")
 	genesisPath string = getEnv("GENESIS_PATH", "build/config/genesis.json")
 )
+
+func getEnv(key, defaultValue string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return defaultValue
+}
 
 func init() {
 	debugCmd := NewDebugCommand()

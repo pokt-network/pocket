@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"path"
@@ -102,6 +103,7 @@ func parseFiles(configJSONPath, genesisJSONPath string) (config *configs.Config,
 	viper.AutomaticEnv()
 
 	if err = viper.ReadInConfig(); err != nil {
+		err = fmt.Errorf("error reading %s: %w", configJSONPath, err)
 		return
 	}
 
@@ -111,6 +113,7 @@ func parseFiles(configJSONPath, genesisJSONPath string) (config *configs.Config,
 		dc.TagName = "json"
 	}
 	if err = viper.Unmarshal(&config, decoderConfig); err != nil {
+		err = fmt.Errorf("error unmarshalling %s: %w", configJSONPath, err)
 		return
 	}
 
