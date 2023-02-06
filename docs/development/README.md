@@ -109,6 +109,9 @@ The commands available are listed [here](../../rpc/doc/README.md) or accessible 
 
 2.1 [OPTIONAL] Add the binary to your `.rc`
 
+_IMPORTANT: Note that this helper ONLY works with the docker-compose LocalNet setup and DOES NOT work with the k8s setup_
+_TODO: This section can be deleted once the CLI accepts a `--remoteURL` option._
+
 You can add the following function so you can run the `p1` from anywhere on your host:
 
 ```bash
