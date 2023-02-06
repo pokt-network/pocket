@@ -14,6 +14,10 @@ Please note that this repository is under very active development and breaking c
     - [\[Basic\] Docker Compose](#basic-docker-compose)
   - [Profiling](#profiling)
 - [Code Organization](#code-organization)
+- [Maintaining Documentation](#maintaining-documentation)
+- [Documentation Resources and Implementation](#documentation-resources-and-implementation)
+  - [Github Actions File](#github-actions-file)
+  - [Python Script](#python-script)
   - [Linters](#linters)
     - [Installation of golangci-lint](#installation-of-golangci-lint)
     - [Running linters locally](#running-linters-locally)
@@ -102,6 +106,24 @@ make build
 The cli binary will be available at `bin/p1` and can be used instead of `go run app/client/*.go`
 
 The commands available are listed [here](../../rpc/doc/README.md) or accessible via `bin/p1 --help`
+
+2.1 [OPTIONAL] Add the binary to your `.rc`
+
+_IMPORTANT: Note that this helper ONLY works with the docker-compose LocalNet setup and DOES NOT work with the k8s setup_
+_TODO: This section can be deleted once the CLI accepts a `--remoteURL` option._
+
+You can add the following function so you can run the `p1` from anywhere on your host:
+
+```bash
+function p1 {
+    EXPORT POCKET_WORKDIR="${HOME}/workspace/pocket/pocket/"
+    EXPORT CONFIG_PATH="${POCKET_WORKDIR}/build/config/config1.json"
+    EXPORT GENESIS_PATH="${POCKET_WORKDIR}/build/config/genesis_localhost.json"
+    ${POCKET_WORKDIR}/bin/p1 "$@"
+}
+```
+
+You can via a demo of it [here](https://user-images.githubusercontent.com/1892194/215901991-076734e5-bc94-4755-9f2a-3d1f3c1e4aef.mov).
 
 ### Swagger UI
 
@@ -263,9 +285,9 @@ The script finds the relevant Markdown files in the repository and organizes the
 
 Below, you can see some of the patterns between the Sidebar format, folder of markdowns in the Wiki Repository, and final sidebar/table of contents display.
 
-|Format|Folder|Wiki|
-|---|---|---|
-|![format](/tools/images/sidebar_format.png)|![Folder](/tools/images/folder.png)|![wiki](/tools/images/sidebar.png)|
+| Format                                      | Folder                              | Wiki                               |
+| ------------------------------------------- | ----------------------------------- | ---------------------------------- |
+| ![format](/tools/images/sidebar_format.png) | ![Folder](/tools/images/folder.png) | ![wiki](/tools/images/sidebar.png) |
 
 ### Linters
 

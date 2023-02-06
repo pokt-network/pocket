@@ -38,13 +38,13 @@ var (
 		PromptShowLatestBlockInStore,
 	}
 
-	defaultConfigPath  = getEnv("CONFIG_PATH", "build/config/config1.json")
-	defaultGenesisPath = getEnv("GENESIS_PATH", "build/config/genesis.json")
-
 	// validators holds the list of the validators at genesis time so that we can use it to create a debug address book provider.
 	// Its purpose is to allow the CLI to "discover" the nodes in the network. Since currently we don't have churn and we run nodes only in LocalNet, we can rely on the genesis state.
 	// HACK(#416): This is a temporary solution that guarantees backward compatibility while we implement peer discovery
 	validators []*coreTypes.Actor
+
+	configPath  string = getEnv("CONFIG_PATH", "build/config/config1.json")
+	genesisPath string = getEnv("GENESIS_PATH", "build/config/genesis.json")
 )
 
 func getEnv(key, defaultValue string) string {
@@ -55,7 +55,8 @@ func getEnv(key, defaultValue string) string {
 }
 
 func init() {
-	rootCmd.AddCommand(NewDebugCommand())
+	debugCmd := NewDebugCommand()
+	rootCmd.AddCommand(debugCmd)
 }
 
 func NewDebugCommand() *cobra.Command {
@@ -64,8 +65,7 @@ func NewDebugCommand() *cobra.Command {
 		Short: "Debug utility for rapid development",
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			var err error
-			runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
+			runtimeMgr := runtime.NewManagerFromFiles(configPath, genesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
 
 			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
 			validators = runtimeMgr.GetGenesis().Validators
