@@ -26,8 +26,10 @@ const (
 	BadgerKeyNotFoundError = "Key not found"
 )
 
-var _ KVStore = &badgerKVStore{}
-var _ smt.MapStore = &badgerKVStore{}
+var (
+	_ KVStore      = &badgerKVStore{}
+	_ smt.MapStore = &badgerKVStore{}
+)
 
 var (
 	ErrKVStoreExists    = errors.New("kvstore already exists")

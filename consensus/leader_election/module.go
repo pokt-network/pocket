@@ -1,9 +1,8 @@
 package leader_election
 
 import (
-	"log"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -47,7 +46,7 @@ func (m *leaderElectionModule) SetBus(pocketBus modules.Bus) {
 
 func (m *leaderElectionModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		logger.Global.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
 }
