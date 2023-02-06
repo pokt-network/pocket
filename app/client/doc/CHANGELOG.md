@@ -72,4 +72,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI calling RPC via generated client
 - Default configuration handling/overrides
 
-<!-- GITHUB_WIKI: changelog/app -->
+<!-- GITHUB_WIKI: changelog/client -->
