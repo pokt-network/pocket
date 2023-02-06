@@ -127,7 +127,7 @@ func (actor *BaseProtocolActorSchema) UpdateUnstakedHeightIfPausedBeforeQuery(pa
 	return updateUnstakedHeightIfPausedBefore(actor.actorSpecificColName, unstakingHeight, pauseBeforeHeight, height, actor.tableName, actor.heightConstraintName)
 }
 
-func (actor *BaseProtocolActorSchema) SetStakeAmountQuery(address string, stakedTokens string, height int64) string {
+func (actor *BaseProtocolActorSchema) SetStakeAmountQuery(address, stakedTokens string, height int64) string {
 	return updateStakeAmount(address, actor.actorSpecificColName, stakedTokens, height, actor.tableName, actor.heightConstraintName)
 }
 

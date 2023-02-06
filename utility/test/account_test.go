@@ -187,7 +187,8 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	pool := GetAllTestingPools(t, ctx)[0]
 
 	beforeAmountBig := big.NewInt(1000000000000000)
-	ctx.SetPoolAmount(pool.GetAddress(), beforeAmountBig)
+	err := ctx.SetPoolAmount(pool.GetAddress(), beforeAmountBig)
+	require.NoError(t, err)
 	subAmountBig := big.NewInt(100)
 	subAmount := types.BigIntToString(subAmountBig)
 	require.NoError(t, ctx.SubPoolAmount(pool.GetAddress(), subAmount), "sub pool amount")
@@ -219,7 +220,7 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*coreTypes.Account {
+func GetAllTestingAccounts(t *testing.T, ctx *utility.UtilityContext) []*coreTypes.Account {
 	accs, err := (ctx.Context.PersistenceRWContext).GetAllAccounts(0)
 	require.NoError(t, err)
 	sort.Slice(accs, func(i, j int) bool {
@@ -228,7 +229,7 @@ func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*coreType
 	return accs
 }
 
-func GetAllTestingPools(t *testing.T, ctx utility.UtilityContext) []*coreTypes.Account {
+func GetAllTestingPools(t *testing.T, ctx *utility.UtilityContext) []*coreTypes.Account {
 	accs, err := (ctx.Context.PersistenceRWContext).GetAllPools(0)
 	require.NoError(t, err)
 	sort.Slice(accs, func(i, j int) bool {

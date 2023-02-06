@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.9] - 2023-02-06
+## [0.0.0.10] - 2023-02-06
 
 - Added `genesis_localhost.json`, a copy of `genesis.json` to be used by the localhost instead of a debug docker container
+
+## [0.0.0.9] - 2023-02-06
+
+- Address legacy linter errors from `golangci-lint`
 
 ## [0.0.0.8] - 2023-02-06
 

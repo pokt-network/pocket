@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/consensus/leader_election/vrf"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -53,7 +54,8 @@ func SingleSortitionTest(t *testing.T, uPOKTValidatorStake, uPOKTNetworkStake, n
 	selectCount := SortitionResult(0)
 	for i := uint64(0); i < numViewChanges; i++ {
 		var vrfOutput [vrf.VRFOutputSize]byte
-		rand.Read(vrfOutput[:])
+		_, err := rand.Read(vrfOutput[:])
+		require.NoError(t, err)
 
 		sortitionResult := Sortition(uPOKTValidatorStake, uPOKTNetworkStake, numCandidates, vrfOutput[:])
 		selectCount += sortitionResult
@@ -62,7 +64,6 @@ func SingleSortitionTest(t *testing.T, uPOKTValidatorStake, uPOKTNetworkStake, n
 	errTolerance := float64(numViewChanges) * errThreshold
 	expectedSelections := uint64(numViewChanges * numCandidates * uPOKTValidatorStake / uPOKTNetworkStake)
 	assert.InDelta(t, expectedSelections, uint64(selectCount), errTolerance)
-	// log.Printf("Stake %%: %0.3f%%; ExpectedCount vs SelectedCount: %d vs %d\n", (uPOKTValidatorStake / uPOKTNetworkStake * 100), selectCount, expectedSelections)
 }
 
 func BenchmarkSortition(b *testing.B) {
@@ -70,7 +71,8 @@ func BenchmarkSortition(b *testing.B) {
 
 	vrfOutputs := make([]vrf.VRFOutput, b.N)
 	for i := 0; i < b.N; i++ {
-		rand.Read(vrfOutputs[i][:])
+		_, err := rand.Read(vrfOutputs[i][:])
+		require.NoError(b, err)
 	}
 
 	b.StartTimer()

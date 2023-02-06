@@ -16,9 +16,6 @@ import (
 )
 
 const (
-	txBytesRandSeed = "42"
-	txBytesSize     = 42
-
 	proposerBytesSize   = 10
 	quorumCertBytesSize = 10
 

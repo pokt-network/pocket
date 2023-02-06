@@ -24,8 +24,6 @@ linters-settings:
   # Gocritic settings
   # https://go-critic.com/overview
   gocritic:
-    enabled-checks:
-      - ruleguard
     enabled-tags:
       - diagnostic
       - experimental

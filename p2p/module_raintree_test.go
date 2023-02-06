@@ -245,7 +245,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 
 		connMocks[valId] = prepareConnMock(t, valId, &wg, expectedCall.numNetworkReads)
 		persistenceMock := preparePersistenceMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
-		consensusMock := prepareConsensusMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
+		consensusMock := prepareConsensusMock(t, busMocks[count])
 		telemetryMock := prepareTelemetryMock(t, busMocks[count], valId, &wg, expectedWrites)
 
 		prepareBusMock(busMocks[count], persistenceMock, consensusMock, telemetryMock)
@@ -257,20 +257,26 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	p2pModules := createP2PModules(t, busMocks)
 	for validatorId, p2pMod := range p2pModules {
 		p2pMod.listener = connMocks[validatorId]
-		p2pMod.Start()
+		err := p2pMod.Start()
+		require.NoError(t, err)
 		for _, peer := range p2pMod.network.GetAddrBook() {
 			peer.Dialer = connMocks[peer.ServiceUrl]
 		}
-		defer p2pMod.Stop()
 	}
 
 	// Wait for completion
-	defer waitForNetworkSimulationCompletion(t, p2pModules, &wg)
+	defer waitForNetworkSimulationCompletion(t, &wg)
 
 	// Send the first message (by the originator) to trigger a RainTree broadcast
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
 	require.NoError(t, p2pMod.Broadcast(p))
+
+	// Stop all p2p modules outside of loop
+	for _, p2pMod := range p2pModules {
+		err := p2pMod.Stop()
+		require.NoError(t, err)
+	}
 }
 
 func extractNumericId(valId string) int64 {
