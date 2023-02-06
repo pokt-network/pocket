@@ -5,6 +5,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
 
+# TODO: There is no way to easily test this workflow locally. Need to document and add a tool
+# to test this.
+
 # directories used for copying over md files
 WIKI_DIR = "tools/wiki"
 TEMP_WIKI = "tools/temp_wiki"
@@ -45,11 +48,16 @@ def categorize_paths() -> Dict[str, List[DocumentationFile]]:
     # Map is used to create a sidebar file, and a copy paste the files from the Pocket Repository to Github Wiki
 
     sidebar = defaultdict(list)
+    seen_wiki_paths = set()
     for path in get_all_markdown_file_paths():
         wiki_path_format = get_file_to_wiki_comment(path)
 
         if not wiki_path_format:
             continue
+
+        if wiki_path_format in seen_wiki_paths:
+            raise ValueError(f"Duplicate wiki path: {wiki_path_format}")
+        seen_wiki_paths.add(wiki_path_format)
 
         dirname = os.path.dirname(wiki_path_format)
         file = os.path.basename(wiki_path_format)
