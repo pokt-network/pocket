@@ -95,7 +95,7 @@ If no changes are desired for the parameter, just enter the current param value 
 			if err != nil {
 				return err
 			}
-			keybase, err := keybase.InitialiseKeybase(homeDir+KEYBASE_PATH_SUFFIX, homeDir+PRIVATEKEY_YAML_SUFFIX) // Change when PR#354 is merged
+			keybase, err := keybase.InitialiseKeybase(homeDir + KEYBASE_PATH_SUFFIX)
 			if err != nil {
 				return err
 			}
@@ -160,7 +160,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			keybase, err := keybase.InitialiseKeybase(homeDir+KEYBASE_PATH_SUFFIX, homeDir+PRIVATEKEY_YAML_SUFFIX) // Change when PR#354 is merged
+			keybase, err := keybase.InitialiseKeybase(homeDir + KEYBASE_PATH_SUFFIX)
 			if err != nil {
 				return err
 			}
@@ -222,7 +222,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			keybase, err := keybase.InitialiseKeybase(homeDir+KEYBASE_PATH_SUFFIX, homeDir+PRIVATEKEY_YAML_SUFFIX) // Change when PR#354 is merged
+			keybase, err := keybase.InitialiseKeybase(homeDir + KEYBASE_PATH_SUFFIX)
 			if err != nil {
 				return err
 			}
@@ -270,7 +270,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			keybase, err := keybase.InitialiseKeybase(homeDir+KEYBASE_PATH_SUFFIX, homeDir+PRIVATEKEY_YAML_SUFFIX) // Change when PR#354 is merged
+			keybase, err := keybase.InitialiseKeybase(homeDir + KEYBASE_PATH_SUFFIX)
 			if err != nil {
 				return err
 			}

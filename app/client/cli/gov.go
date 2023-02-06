@@ -44,7 +44,7 @@ func govCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
-				keybase, err := keybase.InitialiseKeybase(homeDir+KEYBASE_PATH_SUFFIX, homeDir+PRIVATEKEY_YAML_SUFFIX) // Change when PR#354 is merged
+				keybase, err := keybase.InitialiseKeybase(homeDir + KEYBASE_PATH_SUFFIX)
 				if err != nil {
 					return err
 				}
