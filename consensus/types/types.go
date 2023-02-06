@@ -7,9 +7,11 @@ import (
 
 type NodeId uint64
 
-type ValAddrToIdMap map[string]NodeId // Mapping from hex encoded address to an integer node id.
-type IdToValAddrMap map[NodeId]string // Mapping from node id to a hex encoded string address.
-type ValidatorMap map[string]*coreTypes.Actor
+type (
+	ValAddrToIdMap map[string]NodeId // Mapping from hex encoded address to an integer node id.
+	IdToValAddrMap map[NodeId]string // Mapping from node id to a hex encoded string address.
+	ValidatorMap   map[string]*coreTypes.Actor
+)
 
 type ConsensusNodeState struct {
 	NodeId NodeId

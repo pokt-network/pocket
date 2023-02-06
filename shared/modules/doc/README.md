@@ -35,7 +35,6 @@ genesis
 ├── test_artifacts      # the central point of all testing code (WIP)
 │   ├── generator.go    # generate the genesis and config.json for tests and build
 │   ├── gov.go          # default testing parameters
-
 ```
 
 TODO(#235): Update once runtime configs are implemented
@@ -76,6 +75,17 @@ err := newModule.Start()
 
 if err != nil {
 	// handle error
+}
+```
+
+##### Add a logger to the module
+
+When defining the start function for the module, it is essential to initialise a namespace logger as well:
+
+```golang
+func (m *newModule) Start() error {
+    m.logger = logger.Global.CreateLoggerForModule(u.GetModuleName())
+    ...
 }
 ```
 

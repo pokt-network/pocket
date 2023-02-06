@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.25] - 2023-02-04
+
+- Changed log lines to utilize new logger module.
+
+## [0.0.0.24] - 2023-02-03
+
+- Introduced `hotstuffFIFOMempool` that extends the logic provided by the genericized FIFO mempool in `shared`.
+- Added tests for `hotstuffFIFOMempool` to ensure that it behaves as expected.
+
 ## [0.0.0.23] - 2023-01-30
 
 - Fix `TestHotstuff4Nodes1BlockHappyPath` misplacement of actual and expected values in `require.Equal`

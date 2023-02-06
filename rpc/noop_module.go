@@ -6,9 +6,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var (
-	_ modules.RPCModule = &noopRpcModule{}
-)
+var _ modules.RPCModule = &noopRpcModule{}
 
 type noopRpcModule struct{}
 

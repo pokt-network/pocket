@@ -14,7 +14,7 @@ import (
 func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	// Is the tx already in the mempool (in memory)?
 	txHash := typesUtil.TransactionHash(txProtoBytes)
-	if u.Mempool.Contains(txHash) {
+	if u.mempool.Contains(txHash) {
 		return typesUtil.ErrDuplicateTransaction()
 	}
 
@@ -39,7 +39,7 @@ func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	}
 
 	// Store the tx in the mempool
-	return u.Mempool.AddTransaction(txProtoBytes)
+	return u.mempool.AddTx(txProtoBytes)
 }
 
 func (u *UtilityContext) ApplyTransaction(index int, tx *typesUtil.Transaction) (modules.TxResult, typesUtil.Error) {

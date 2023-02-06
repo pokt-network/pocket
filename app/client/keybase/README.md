@@ -16,7 +16,7 @@ _TODO(#150): The current keybase has not been integrated with any CLI endpoints,
 
 The Keybase package uses a filesystem key-value database, `BadgerDB`, as its backend to persistently store keys locally on the client machine. The DB stores the local keys encoded as `[]byte` using `encoding/gob`.
 
-The `KeyPair` defined in [crypto package](../../../shared/core/crypto) is the data structure that's stored in the DB. Specifically:
+The `KeyPair` defined in [crypto package](../../../shared/crypto) is the data structure that's stored in the DB. Specifically:
 
 - **Key**: The `[]byte` returned by the `GetAddressBytes()` function is used as the key in the key-value store.
 - **Value**: The `gob` encoded struct of the entire `KeyPair`, containing both the `PublicKey` and `PrivKeyArmour` (JSON encoded, encrypted private key string), is the value.

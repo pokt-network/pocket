@@ -43,7 +43,7 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 - _Coming Soon: Consensus Architecture_ // TODO(olshansky): needs a README file with proper code structure
 - [Persistence Architecture](persistence/docs/README.md)
 - [P2P Architecture](p2p/README.md)
-- [CLI Architecture](app/client/cli/doc/README.md)
+- [APP Architecture](app/client/doc/README.md)
 - [RPC Architecture](app/pocket/rpc/doc/README.md)
 - [Node binary Architecture](app/pocket/doc/README.md)
 
@@ -54,7 +54,7 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 - [Consensus Changelog](consensus/doc/CHANGELOG.md)
 - [Persistence Changelog](persistence/docs/CHANGELOG.md)
 - [P2P Changelog](p2p/CHANGELOG.md)
-- [CLI Changelog](app/client/cli/doc/CHANGELOG.md)
+- [APP Changelog](app/client/doc/CHANGELOG.md)
 - [RPC Changelog](app/pocket/rpc/doc/CHANGELOG.md)
 - [Node binary Changelog](app/pocket/doc/CHANGELOG.md)
 
