@@ -13,13 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.6] - 2023-02-02
 
-### Added
-
 - Fix broken link to `shared/crypto/README.md` in keybase documentation
 
 ## [0.0.0.5] - 2023-02-02
-
-### Added
 
 - Create `Keybase` interface to handle CRUD operations for `KeyPairs` with a `BadgerDB` backend
 - Add logic to create, import, export, list, delete and update (passphrase) key pairs
@@ -39,8 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.2] - 2022-11-02
 
-### Added
-
 - Fixed message signing
 - Reporting RPC StatusCode and body
 - System commands working end-to-end
@@ -48,13 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.1] - 2022-09-09
 
-### Added
-
 - Commands documentation generator
 
 ## [0.0.0.0] - 2022-09-07
-
-### Added
 
 - Basic implementation with Utility commands
   - Account
