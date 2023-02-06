@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pocket-v1-cli-client
+  namespace: default
+  labels:
+    app: v1-cli-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: v1-cli-client
+  template:
+    metadata:
+      labels:
+        app: v1-cli-client
+    spec:
+      containers:
+        - name: pocket
+          image: client-image
+          imagePullPolicy: IfNotPresent
+          command: ["sleep", "infinity"]
+          env:
+            - name: POCKET_P2P_IS_CLIENT_ONLY
+              value: "true"
+            - name: CONFIG_PATH
+              value: "/var/pocket/config/config.json"
+            - name: GENESIS_PATH
+              value: "/var/pocket/genesis/genesis.json"
+            - name: POCKET_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: v1-localnet-validators-private-keys
+                  key: "001"
+            - name: POCKET_CONSENSUS_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: v1-localnet-validators-private-keys
+                  key: "001"
+            - name: POCKET_P2P_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: v1-localnet-validators-private-keys
+                  key: "001"
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: LocalNetPassword
+            - name: POSTGRES_HOST
+              value: dependencies-postgresql
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: "postgres"
+            - name: POCKET_PERSISTENCE_POSTGRES_URL
+              value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+            - name: POCKET_PERSISTENCE_NODE_SCHEMA
+              value: validator1
+          volumeMounts:
+            - mountPath: /var/pocket/config
+              name: config-volume
+            - mountPath: /var/pocket/genesis
+              name: genesis-volume
+      volumes:
+        - name: config-volume
+          configMap:
+            name: v1-validator-default-config
+            defaultMode: 420
+        - name: genesis-volume
+          configMap:
+            name: v1-localnet-genesis
+            defaultMode: 420

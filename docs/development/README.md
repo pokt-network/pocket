@@ -10,6 +10,8 @@ Please note that this repository is under very active development and breaking c
   - [View Available Commands](#view-available-commands)
   - [Running Unit Tests](#running-unit-tests)
   - [Running LocalNet](#running-localnet)
+    - [\[Advanced\] Kubernetes](#advanced-kubernetes)
+    - [\[Basic\] Docker Compose](#basic-docker-compose)
   - [Profiling](#profiling)
 - [Code Organization](#code-organization)
   - [Linters](#linters)
@@ -33,29 +35,31 @@ _Note to the reader: Please update this list if you found anything missing._
 Last tested by with:
 
 ```bash
-$ docker --version
-Docker version 20.10.14, build a224086
+docker --version
+# Docker version 20.10.14, build a224086
 
-$ protoc --version
-libprotoc 3.19.4
+protoc --version
+# libprotoc 3.19.4
 
-$ which protoc-go-inject-tag && echo "protoc-go-inject-tag Installed"
-/your$HOME/go/bin/protoc-go-inject-tag
-protoc-go-inject-tag Installed
+which protoc-go-inject-tag && echo "protoc-go-inject-tag Installed"
 
-$ go version
-go version go1.18.1 darwin/arm64
+# /your$HOME/go/bin/protoc-go-inject-tag
+# protoc-go-inject-tag Installed
 
-$ mockgen --version
-v1.6.0
+go version
+# go version go1.18.1 darwin/arm64
 
-$ system_profiler SPSoftwareDataType
-Software:
+mockgen --version
+# v1.6.0
 
-    System Software Overview:
+system_profiler SPSoftwareDataType
+# Software:
+#
+#     System Software Overview:
+#
+#       System Version: macOS 12.3.1 (21E258)
+#       Kernel Version: Darwin 21.4.0
 
-      System Version: macOS 12.3.1 (21E258)
-      Kernel Version: Darwin 21.4.0
 ```
 
 ### Prepare Local Environment
@@ -63,8 +67,8 @@ Software:
 Generate local files
 
 ```bash
-$ git clone git@github.com:pokt-network/pocket.git && cd pocket
-$ make develop_start
+git clone git@github.com:pokt-network/pocket.git && cd pocket
+make develop_start
 ```
 
 Optionally activate changelog pre-commit hook
@@ -112,37 +116,45 @@ make swagger-ui
 ### View Available Commands
 
 ```bash
-$ make
+make
 ```
 
 ### Running Unit Tests
 
 ```bash
-$ make test_all
+make test_all
 ```
 
 Note that there are a few tests in the library that are prone to race conditions and we are working on improving them. This can be checked with `make test_race`.
 
 ### Running LocalNet
 
-![V1 Localnet Demo](./v1_localnet.gif)
+At the time of writing, we have two basic approaches to running a LocalNet. We suggest getting started with the `Docker Compose` approach outlined below before moving to the advanced Kubernetes configuration.
+
+#### [Advanced] Kubernetes
+
+The full documentation on running a LocalNet on kubernetes can be found [here](../../build/localnet/).
+
+#### [Basic] Docker Compose
+
+![V1 Localnet Demo](https://user-images.githubusercontent.com/1892194/216177846-9ec7734b-8e78-4641-9612-def6e1689fde.gif)
 
 1. Delete any previous docker state
 
 ```bash
-$ make docker_wipe
+make docker_wipe
 ```
 
 2. In one shell, run the 4 nodes setup:
 
 ```bash
-$ make compose_and_watch
+make compose_and_watch
 ```
 
 4. In another shell, run the development client:
 
 ```bash
-$ make client_start && make client_connect
+make client_start && make client_connect
 ```
 
 4. Check the state of each node:

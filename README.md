@@ -24,7 +24,7 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 
 <!--
   The list of documents below was created by manually curating the output of the following command:
-    $ find .. -name "*.md" | grep -v -e "vendor" -e "prototype" -e "SUMMARY.md" -e "TASTE.md"
+    find .. -name "*.md" | grep -v -e "vendor" -e "prototype" -e "SUMMARY.md" -e "TASTE.md"
 -->
 
 ### Guides
