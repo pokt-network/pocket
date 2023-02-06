@@ -304,7 +304,6 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 }
 
 /*** General Infrastructure Helpers ***/
-// TODO: check if logs are working properlyh
 func (m *consensusModule) setLogPrefix(logPrefix string) {
 	logger.Global.UpdateFields(map[string]any{
 		"kind": logPrefix,
