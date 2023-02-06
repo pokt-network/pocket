@@ -8,10 +8,8 @@ import (
 	"fmt"
 	"io"
 	"math/big"
-	"math/rand"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
@@ -29,7 +27,9 @@ func parseEd25519PrivateKeyFromReader(reader io.Reader) (pk crypto.Ed25519Privat
 	}
 
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(reader)
+	if _, err := buf.ReadFrom(reader); err != nil {
+		return nil, err
+	}
 
 	priv := &crypto.Ed25519PrivateKey{}
 	err = priv.UnmarshalJSON(buf.Bytes())
@@ -91,7 +91,7 @@ func prepareTxBytes(msg typesUtil.Message, pk crypto.PrivateKey) ([]byte, error)
 
 	tx := &typesUtil.Transaction{
 		Msg:   anyMsg,
-		Nonce: getNonce(),
+		Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
 	}
 
 	signBytes, err := tx.SignBytes()
@@ -132,11 +132,6 @@ func postRawTx(ctx context.Context, pk crypto.PrivateKey, j []byte) (*rpc.PostV1
 		return nil, err
 	}
 	return resp, nil
-}
-
-func getNonce() string {
-	rand.Seed(time.Now().UTC().UnixNano())
-	return fmt.Sprintf("%d", rand.Uint64())
 }
 
 func readPassphrase(currPwd string) string {

@@ -43,7 +43,8 @@ func TestTxFIFOMempool(t *testing.T) {
 				initialTxs: &[][]byte{messageSendFactory(10)},
 				actions: &[]func(*txFIFOMempool){
 					func(txFIFOMempool *txFIFOMempool) {
-						txFIFOMempool.AddTx(messageSendFactory(10))
+						err := txFIFOMempool.AddTx(messageSendFactory(10))
+						require.Contains(t, err.Error(), "already found in")
 					},
 				},
 			},
@@ -57,8 +58,10 @@ func TestTxFIFOMempool(t *testing.T) {
 				initialTxs: &[][]byte{messageSendFactory(10)},
 				actions: &[]func(*txFIFOMempool){
 					func(txFIFOMempool *txFIFOMempool) {
-						txFIFOMempool.AddTx(messageSendFactory(9))
-						txFIFOMempool.AddTx(messageSendFactory(8))
+						err := txFIFOMempool.AddTx(messageSendFactory(9))
+						require.NoError(t, err)
+						err = txFIFOMempool.AddTx(messageSendFactory(8))
+						require.NoError(t, err)
 					},
 				},
 			},
@@ -79,7 +82,8 @@ func TestTxFIFOMempool(t *testing.T) {
 				actions: &[]func(*txFIFOMempool){
 					func(txFIFOMempool *txFIFOMempool) {
 						for !txFIFOMempool.IsEmpty() {
-							txFIFOMempool.PopTx()
+							_, err := txFIFOMempool.PopTx()
+							require.NoError(t, err)
 						}
 					},
 				},
@@ -213,7 +217,8 @@ func TestTxFIFOMempool(t *testing.T) {
 				},
 				actions: &[]func(*txFIFOMempool){
 					func(txFIFOMempool *txFIFOMempool) {
-						txFIFOMempool.RemoveTx(messageSendFactory(9))
+						err := txFIFOMempool.RemoveTx(messageSendFactory(9))
+						require.NoError(t, err)
 					},
 				},
 			},
@@ -251,7 +256,7 @@ func TestTxFIFOMempool(t *testing.T) {
 
 			if tt.args.initialTxs != nil {
 				for _, item := range *tt.args.initialTxs {
-					txFIFOMempool.AddTx(item)
+					txFIFOMempool.AddTx(item) //nolint:errcheck // Do not error check
 				}
 			}
 

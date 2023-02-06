@@ -16,20 +16,20 @@ const (
 	CreatePublicKeyError          = "an error occurred creating the public key"
 )
 
-func ErrInvalidAddressLen(len int) error {
-	return fmt.Errorf("%s, expected length %d, actual length %d", InvalidAddressLenError, AddressLen, len)
+func ErrInvalidAddressLen(length int) error {
+	return fmt.Errorf("%s, expected length %d, actual length %d", InvalidAddressLenError, AddressLen, length)
 }
 
-func ErrInvalidHashLen(len int) error {
-	return fmt.Errorf("%s, expected length %d, actual length %d", InvalidHashLenError, SHA3HashLen, len)
+func ErrInvalidHashLen(length int) error {
+	return fmt.Errorf("%s, expected length %d, actual length %d", InvalidHashLenError, SHA3HashLen, length)
 }
 
 func ErrCreateAddress(err error) error {
 	return fmt.Errorf("%s; %s", CreateAddressError, err.Error())
 }
 
-func ErrInvalidPrivateKeyLen(len int) error {
-	return fmt.Errorf("%s, expected length %d, actual length %d", InvalidPrivateKeyLenError, ed25519.PrivateKeySize, len)
+func ErrInvalidPrivateKeyLen(length int) error {
+	return fmt.Errorf("%s, expected length %d, actual length %d", InvalidPrivateKeyLenError, ed25519.PrivateKeySize, length)
 }
 
 func ErrInvalidPrivateKeySeedLenError(seedLen int) error {
@@ -40,8 +40,8 @@ func ErrCreatePrivateKey(err error) error {
 	return fmt.Errorf("%s; %s", CreatePrivateKeyError, err.Error())
 }
 
-func ErrInvalidPublicKeyLen(len int) error {
-	return fmt.Errorf("%s, expected length %d, actual length: %d", InvalidPublicKeyLenError, ed25519.PublicKeySize, len)
+func ErrInvalidPublicKeyLen(length int) error {
+	return fmt.Errorf("%s, expected length %d, actual length: %d", InvalidPublicKeyLenError, ed25519.PublicKeySize, length)
 }
 
 func ErrCreatePublicKey(err error) error {

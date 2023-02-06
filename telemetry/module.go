@@ -12,6 +12,8 @@ var (
 	}
 )
 
+type telemetryModule struct{}
+
 func Create(bus modules.Bus) (modules.Module, error) {
 	return new(telemetryModule).Create(bus)
 }
@@ -29,8 +31,6 @@ func (*telemetryModule) Create(bus modules.Bus) (modules.Module, error) {
 		return CreateNoopTelemetryModule(bus)
 	}
 }
-
-type telemetryModule struct{}
 
 func (t *telemetryModule) GetModuleName() string  { return modules.TelemetryModuleName }
 func (t *telemetryModule) SetBus(bus modules.Bus) {}

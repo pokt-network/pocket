@@ -62,6 +62,9 @@ var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	testPersistenceMod = newTestPersistenceModule(dbUrl)
+	if testPersistenceMod == nil {
+		log.Fatal("[ERROR] Unable to create new test persistence module")
+	}
 	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
 	os.Exit(exitCode)
@@ -115,17 +118,21 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	runtimeMgr := runtime.NewManager(cfg, genesisState)
 	bus, err := runtime.CreateBus(runtimeMgr)
 	if err != nil {
-		log.Fatalf("Error creating bus: %s", err)
+		log.Printf("Error creating bus: %s", err)
+		return nil
 	}
 
 	persistenceMod, err := persistence.Create(bus)
 	if err != nil {
-		log.Fatalf("Error creating persistence module: %s", err)
+		log.Printf("Error creating persistence module: %s", err)
+		return nil
 	}
+
 	return persistenceMod.(modules.PersistenceModule)
 }
 
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
+//nolint:gosec // G404 - Weak random source is okay in unit tests
 func fuzzSingleProtocolActor(
 	f *testing.F,
 	newTestActor func() (*coreTypes.Actor, error),
@@ -301,6 +308,7 @@ func getRandomChains() (chains []string) {
 	numCharOptions := len(charOptions)
 
 	chainsMap := make(map[string]struct{})
+	//nolint:gosec // G404 - Weak random source is okay in unit tests
 	for i := 0; i < rand.Intn(14)+1; i++ {
 		b := make([]byte, 4)
 		for i := range b {
@@ -316,6 +324,7 @@ func getRandomChains() (chains []string) {
 	return
 }
 
+//nolint:gosec // G404 - Weak random source is okay in unit tests
 func getRandomServiceURL() string {
 	setRandomSeed()
 
@@ -331,7 +340,7 @@ func getRandomServiceURL() string {
 }
 
 func getRandomBigIntString() string {
-	return converters.BigIntToString(big.NewInt(rand.Int63()))
+	return converters.BigIntToString(big.NewInt(rand.Int63())) //nolint:gosec // G404 - Weak random source is okay in unit tests
 }
 
 func setRandomSeed() {

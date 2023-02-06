@@ -48,7 +48,7 @@ func NewHotstuffFIFOMempool(maxTotalMsgBytes uint64) *hotstuffFIFOMempool {
 			defer hotstuffFIFOMempool.m.Unlock()
 			hash := hashMsg(item)
 			if _, ok := hotstuffFIFOMempool.hashCounterSet[hash]; ok {
-				onDuplicateMessageDetected(item, g)
+				onDuplicateMessageDetected(item)
 			}
 			hotstuffFIFOMempool.hashCounterSet[hash]++
 
@@ -154,7 +154,7 @@ func hashMsg(msg *typesCons.HotstuffMessage) string {
 	return crypto.GetHashStringFromBytes(msgBytes)
 }
 
-func onDuplicateMessageDetected(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
+func onDuplicateMessageDetected(item *typesCons.HotstuffMessage) {
 	// TODO(#432): Potential place to check for double signing
 	log.Printf("duplicate message detected - hash: %s", hashMsg(item))
 }

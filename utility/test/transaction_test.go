@@ -145,7 +145,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
+func newTestingTransaction(t *testing.T, ctx *utility.UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
 	amountSent = new(big.Int).Set(defaultSendAmount)
 	startingBalance = new(big.Int).Set(test_artifacts.DefaultAccountAmount)
 

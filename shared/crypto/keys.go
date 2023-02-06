@@ -36,11 +36,11 @@ func (a *Address) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	bytes, err := hex.DecodeString(address)
+	bz, err := hex.DecodeString(address)
 	if err != nil {
 		return err
 	}
-	*a = bytes
+	*a = bz
 	return nil
 }
 
@@ -57,9 +57,9 @@ func (a Address) Equals(other Address) bool {
 }
 
 func AddressFromString(s string) Address {
-	bytes, err := hex.DecodeString(s)
+	bz, err := hex.DecodeString(s)
 	if err != nil {
 		log.Fatal("Should never fail on decoding an address from string: ", err)
 	}
-	return Address(bytes)
+	return Address(bz)
 }

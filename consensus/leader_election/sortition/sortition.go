@@ -94,7 +94,7 @@ Reasoning:
 [4] github.com/pokt-network/pocket-network-protocol/tree/main/consensus
 */
 // Seed to be used for soritition when generating the vrfOut and vrfProof
-func FormatSeed(height uint64, round uint64, prevBlockHash string) []byte {
+func FormatSeed(height, round uint64, prevBlockHash string) []byte {
 	return []byte(fmt.Sprintf("%d:%d:%s", height, round, prevBlockHash))
 }
 

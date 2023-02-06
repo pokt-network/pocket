@@ -27,8 +27,8 @@ func NewRPCServer(bus modules.Bus) *rpcServer {
 	return s
 }
 
-func (s *rpcServer) StartRPC(port string, timeout uint64, logger modules.Logger) {
-	s.logger = logger
+func (s *rpcServer) StartRPC(port string, timeout uint64, logger *modules.Logger) {
+	s.logger = *logger
 
 	s.logger.Info().Msgf("Starting RPC on port " + port)
 
