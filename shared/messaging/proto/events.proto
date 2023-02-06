@@ -5,3 +5,7 @@ package pocket;
 option go_package = "github.com/pokt-network/pocket/shared/messaging";
 
 message NodeStartedEvent {}
+
+message ConsensusNewHeightEvent {
+  uint64 height = 1;
+}
