@@ -1,0 +1,72 @@
+global:
+  postgresql:
+    auth:
+      postgresPassword: LocalNetPassword
+
+grafana:
+  enabled: true
+  adminPassword: none
+  sidecar:
+    datasources:
+      label: ""
+      labelValue: ""
+      enabled: true
+      maxLines: 1000
+    dashboards:
+      enabled: true
+  dashboardsConfigMaps: {}
+  grafana.ini:
+    auth:
+      disable_login_form: true
+      disable_signout_menu: true
+    auth.anonymous:
+      enabled: true
+      org_role: Admin
+    users:
+      allow_sign_up: false
+      allow_org_create: false
+      auto_assign_org: true
+      auto_assign_org_role: Admin
+      auto_assign_org_id: 1
+      viewers_can_edit: true
+    security:
+      allow_embedding: true
+
+loki:
+  enabled: true
+  isDefault: true
+  url: http://dependencies-loki:{{ .Values.loki.service.port }}
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 45
+  datasource:
+    jsonData: {}
+    uid: ""
+
+promtail:
+  enabled: true
+  config:
+    logLevel: info
+    serverPort: 3101
+    clients:
+      - url: http://{{ .Release.Name }}-loki:3100/loki/api/v1/push
+
+prometheus:
+  enabled: true
+  isDefault: false
+  url: http://{{ include "prometheus.fullname" .}}:{{ .Values.prometheus.server.service.servicePort }}{{ .Values.prometheus.server.prefixURL }}
+  datasource:
+    jsonData: {}
+
+# https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml
+postgres:
+  enabled: true
+  image:
+    tag: "14"
