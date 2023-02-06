@@ -246,7 +246,7 @@ func (*consensusModule) ValidateGenesis(gen *genesis.GenesisState) error {
 	})
 
 	// Sort the validators by their address
-	vals2 := vals
+	vals2 := vals[:] //nolint:gocritic // Make a copy of the slice to retain order
 	sort.Slice(vals, func(i, j int) bool {
 		return vals[i].GetAddress() < vals[j].GetAddress()
 	})
