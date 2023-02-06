@@ -4,22 +4,25 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"sync"
 	"time"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	telemetry "github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
 )
 
-var _ typesP2P.Network = &rainTreeNetwork{}
-var _ modules.IntegratableModule = &rainTreeNetwork{}
+var (
+	_ typesP2P.Network           = &rainTreeNetwork{}
+	_ modules.IntegratableModule = &rainTreeNetwork{}
+)
 
 type rainTreeNetwork struct {
 	bus modules.Bus
@@ -28,24 +31,20 @@ type rainTreeNetwork struct {
 	addrBookProvider addrbook_provider.AddrBookProvider
 
 	peersManager *peersManager
+	nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]
 
-	// TODO (#278): What should we use for de-duping messages within P2P?
-	// TODO(#388): generalize to use the shared `FIFOMempool` type (in `utility/types/mempool.go` at the time of writing) in here as well for this.
-	nonceSet         map[uint64]struct{}
-	nonceList        []uint64
-	mempoolMaxNonces uint64
-	nonceSetMutex    sync.Mutex
+	logger modules.Logger
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		log.Fatalf("[ERROR] Error getting addrBook: %v", err)
+		logger.Global.Fatal().Err(err).Msg("Error getting addrBook")
 	}
 
 	pm, err := newPeersManager(addr, addrBook, true)
 	if err != nil {
-		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
+		logger.Global.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
 	}
 
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
@@ -53,8 +52,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProv
 	n := &rainTreeNetwork{
 		selfAddr:         addr,
 		peersManager:     pm,
-		nonceSet:         make(map[uint64]struct{}),
-		nonceList:        make([]uint64, 0, p2pCfg.MaxMempoolCount),
+		nonceDeduper:     mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
 		addrBookProvider: addrBookProvider,
 	}
 	n.SetBus(bus)
@@ -83,13 +81,13 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 	for _, target := range n.getTargetsAtLevel(level) {
 		if shouldSendToTarget(target) {
 			if err = n.networkSendInternal(msgBz, target.address); err != nil {
-				log.Println("Error sending to peer during broadcast: ", err)
+				n.logger.Error().Err(err).Msg("Error sending to peer during broadcast")
 			}
 		}
 	}
 
 	if err = n.demote(msg); err != nil {
-		log.Println("Error demoting self during RainTree message propagation: ", err)
+		n.logger.Error().Err(err).Msg("Error demoting self during RainTree message propagation")
 	}
 
 	return nil
@@ -127,11 +125,11 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 
 	peer, ok := n.peersManager.getNetworkView().addrBookMap[address.String()]
 	if !ok {
-		return fmt.Errorf("address %s not found in addrBookMap", address.String())
+		n.logger.Error().Str("address", address.String()).Msg("address not found in addrBookMap")
 	}
 
 	if err := peer.Dialer.Write(data); err != nil {
-		log.Println("Error writing to peer during send: ", err)
+		n.logger.Error().Err(err).Msg("Error writing to peer during send")
 		return err
 	}
 
@@ -173,7 +171,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
-		log.Println("Error decoding network message: ", err)
+		n.logger.Error().Err(err).Msg("Error decoding network message")
 		return nil, err
 	}
 
@@ -184,16 +182,10 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		}
 	}
 
-	// TODO(#388): The lock is necessary because `HandleNetworkData` can be called concurrently
-	// which has led to `fatal error: concurrent map writes` errors. Once a proper, shared, mempool
-	// implementation is available, this should no longer be necessary.
-	n.nonceSetMutex.Lock()
-	defer n.nonceSetMutex.Unlock()
-
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
-	if _, contains := n.nonceSet[rainTreeMsg.Nonce]; contains {
+	if contains := n.nonceDeduper.Contains(rainTreeMsg.Nonce); contains {
 		log.Printf("RainTree message with nonce %d already processed, skipping\n", rainTreeMsg.Nonce)
 		n.GetBus().
 			GetTelemetryModule().
@@ -208,13 +200,8 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		return nil, nil
 	}
 
-	n.nonceSet[rainTreeMsg.Nonce] = struct{}{}
-	n.nonceList = append(n.nonceList, rainTreeMsg.Nonce)
-	if uint64(len(n.nonceList)) > n.mempoolMaxNonces {
-		// removing the oldest nonce and the oldest key from the slice
-		delete(n.nonceSet, n.nonceList[0])
-		n.nonceList = n.nonceList[1:]
-	}
+	// Add the nonce to the deduper
+	n.nonceDeduper.Push(rainTreeMsg.Nonce)
 
 	// Return the data back to the caller so it can be handled by the app specific bus
 	return rainTreeMsg.Data, nil

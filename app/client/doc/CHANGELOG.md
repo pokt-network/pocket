@@ -7,14 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.6] - 2023-02-02
+## [0.0.0.8] - 2023-02-06
 
-- Added `workdir` and `localhost` to the `p1 debug command`
 - Documentation and supporting logic to enable `p1 debug` to be used from localhost
 
-## [0.0.0.5] - 2023-02-02
+## [0.0.0.7] - 2023-02-04
 
-### Added
+- Changed log lines to utilize new logger module.
+
+## [0.0.0.6] - 2023-02-02
+
+- Fix broken link to `shared/crypto/README.md` in keybase documentation
+
+## [0.0.0.5] - 2023-02-02
 
 - Create `Keybase` interface to handle CRUD operations for `KeyPairs` with a `BadgerDB` backend
 - Add logic to create, import, export, list, delete and update (passphrase) key pairs

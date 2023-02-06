@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.21] - 2023-02-04
+
+- Changed log lines to utilize new logger module.
+- Added example to Readme how to initiate a logger using new logger module.
+
+## [0.0.0.20] - 2023-02-03
+
+- Introduced `GenericFIFOList` to handle generic FIFO mempool lists (can contain duplicates)
+- Introduced `GenericFIFOSet` to handle generic FIFO mempool sets (items are unique)
+- Updated `Utility` module interface to expose mempool access via `GetMempool()`
+
 ## [0.0.0.19] - 2023-02-02
 
 - Add `KeyPair` interface
