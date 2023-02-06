@@ -61,46 +61,41 @@ func (m *bus) GetEventBus() modules.EventsChannel {
 }
 
 func (m *bus) GetPersistenceModule() modules.PersistenceModule {
-	var err error
-	if mod, err := m.modulesRegistry.GetModule(modules.PersistenceModuleName); err != nil {
-		return mod.(modules.PersistenceModule)
+	mod, err := m.modulesRegistry.GetModule(modules.PersistenceModuleName)
+	if err != nil {
+		log.Fatalf("failed to get module from modulesRegistry: %s", err)
 	}
-	log.Fatalf("%s", err)
-	return nil
+	return mod.(modules.PersistenceModule)
 }
 
 func (m *bus) GetP2PModule() modules.P2PModule {
-	var err error
-	if mod, err := m.modulesRegistry.GetModule(modules.P2PModuleName); err != nil {
-		return mod.(modules.P2PModule)
+	mod, err := m.modulesRegistry.GetModule(modules.P2PModuleName)
+	if err != nil {
+		log.Fatalf("failed to get module from modulesRegistry: %s", err)
 	}
-	log.Fatalf("%s", err)
-	return nil
+	return mod.(modules.P2PModule)
 }
 
 func (m *bus) GetUtilityModule() modules.UtilityModule {
-	var err error
-	if mod, err := m.modulesRegistry.GetModule(modules.UtilityModuleName); err != nil {
-		return mod.(modules.UtilityModule)
+	mod, err := m.modulesRegistry.GetModule(modules.UtilityModuleName)
+	if err != nil {
+		log.Fatalf("failed to get module from modulesRegistry: %s", err)
 	}
-	log.Fatalf("%s", err)
-	return nil
+	return mod.(modules.UtilityModule)
 }
 
 func (m *bus) GetConsensusModule() modules.ConsensusModule {
-	var err error
-	if mod, err := m.modulesRegistry.GetModule(modules.ConsensusModuleName); err != nil {
-		return mod.(modules.ConsensusModule)
+	mod, err := m.modulesRegistry.GetModule(modules.ConsensusModuleName)
+	if err != nil {
+		log.Fatalf("failed to get module from modulesRegistry: %s", err)
 	}
-	log.Fatalf("%s", err)
-	return nil
+	return mod.(modules.ConsensusModule)
 }
 
 func (m *bus) GetTelemetryModule() modules.TelemetryModule {
-	var err error
 	for _, moduleName := range telemetry.ImplementationNames {
 		telemetryMod, err := m.modulesRegistry.GetModule(moduleName)
-		if err != nil {
+		if err == nil {
 			return telemetryMod.(modules.TelemetryModule)
 		}
 	}
@@ -117,21 +112,19 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 }
 
 func (m *bus) GetLoggerModule() modules.LoggerModule {
-	var err error
-	if mod, err := m.modulesRegistry.GetModule(modules.LoggerModuleName); err != nil {
-		return mod.(modules.LoggerModule)
+	mod, err := m.modulesRegistry.GetModule(modules.LoggerModuleName)
+	if err != nil {
+		log.Fatalf("failed to get module from modulesRegistry: %s", err)
 	}
-	log.Fatalf("%s", err)
-	return nil
+	return mod.(modules.LoggerModule)
 }
 
 func (m *bus) GetRPCModule() modules.RPCModule {
-	var err error
-	if mod, err := m.modulesRegistry.GetModule(modules.RPCModuleName); err != nil {
-		return mod.(modules.RPCModule)
+	mod, err := m.modulesRegistry.GetModule(modules.RPCModuleName)
+	if err != nil {
+		log.Fatalf("failed to get module from modulesRegistry: %s", err)
 	}
-	log.Fatalf("%s", err)
-	return nil
+	return mod.(modules.RPCModule)
 }
 
 func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {
