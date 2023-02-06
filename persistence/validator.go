@@ -83,31 +83,6 @@ func (p *PostgresContext) GetValidatorOutputAddress(operator []byte, height int6
 	return p.GetActorOutputAddress(types.ValidatorActor, operator, height)
 }
 
-// TODO(team): The Get & Update operations need to be made atomic
-// TODO(team): Deprecate this functiona altogether and use UpdateValidator where applicable
-//nolint:unused // This function is currently unused
-func (p *PostgresContext) setValidatorStakedTokens(address []byte, tokens string) error {
-	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	operator, _, _, serviceURL, _, _, _, err := p.GetValidator(address, height)
-	if err != nil {
-		return err
-	}
-	addr, err := hex.DecodeString(operator)
-	if err != nil {
-		return err
-	}
-	return p.UpdateValidator(addr, serviceURL, tokens)
-}
-
-//nolint:unused // This function is currently unused
-func (p *PostgresContext) getValidatorStakedTokens(address []byte, height int64) (tokens string, err error) {
-	_, _, tokens, _, _, _, _, err = p.GetValidator(address, height)
-	return
-}
-
 // TODO: implement missed blocks
 func (p *PostgresContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, pausedHeight int64, missedBlocks int) error {
 	return nil
