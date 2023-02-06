@@ -140,7 +140,7 @@ func TestGetSetToggleStringFlag(t *testing.T) {
 	require.Equal(t, newServiceNodeMinimumStake, serviceNodeMinimumStake)
 	require.Equal(t, false, enabled)
 
-	//toggle to true
+	// toggle to true
 	err = db.SetFlag(ServiceNodeMinimumStakeParamName, newServiceNodeMinimumStake, true)
 	require.NoError(t, err)
 
@@ -177,7 +177,7 @@ func TestGetSetToggleByteArrayFlag(t *testing.T) {
 	require.Equal(t, newOwner, owner)
 	require.Equal(t, false, enabled)
 
-	//toggle to true
+	// toggle to true
 	err = db.SetFlag(ServiceNodeUnstakingBlocksOwner, newOwner, true)
 	require.NoError(t, err)
 

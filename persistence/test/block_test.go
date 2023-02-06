@@ -17,9 +17,10 @@ func TestGetBlockBlockHash(t *testing.T) {
 	// Cannot get a hash at height 1 since it doesn't exist
 	blockHash, err = db.GetBlockHash(1)
 	require.Error(t, err)
+	require.Equal(t, blockHash, "")
 
 	// Cannot get a hash at height 10 since it doesn't exist
 	blockHash, err = db.GetBlockHash(10)
 	require.Error(t, err)
-
+	require.Equal(t, blockHash, "")
 }

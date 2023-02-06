@@ -498,7 +498,9 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
+
+			er := ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
+			require.NoError(t, er)
 
 			err := ctx.Context.SetParam(typesUtil.AppUnstakingBlocksParamName, 0)
 			require.NoError(t, err)
@@ -508,7 +510,6 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 
 			actors := getAllTestingActors(t, ctx, actorType)
 			for _, actor := range actors {
-				// require.Equal(t, int32(typesUtil.StakedStatus), actor.GetStatus(), "wrong starting status")
 				addrBz, er := hex.DecodeString(actor.GetAddress())
 				require.NoError(t, er)
 				er = ctx.SetActorPauseHeight(actorType, addrBz, 1)
@@ -562,6 +563,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			require.NoError(t, err)
 
 			status, err := ctx.GetActorStatus(actorType, addrBz)
+			require.NoError(t, err)
 			require.Equal(t, int32(typesUtil.StakeStatus_Unstaking), status, "incorrect status")
 
 			test_artifacts.CleanupTest(ctx)
@@ -571,29 +573,21 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 
 // Helpers
 
-func getAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType coreTypes.ActorType) (actors []*coreTypes.Actor) {
+func getAllTestingActors(t *testing.T, ctx *utility.UtilityContext, actorType coreTypes.ActorType) (actors []*coreTypes.Actor) {
 	actors = make([]*coreTypes.Actor, 0)
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		apps := getAllTestingApps(t, ctx)
-		for _, a := range apps {
-			actors = append(actors, a)
-		}
+		actors = append(actors, apps...)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 		nodes := getAllTestingNodes(t, ctx)
-		for _, a := range nodes {
-			actors = append(actors, a)
-		}
+		actors = append(actors, nodes...)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		vals := getAllTestingValidators(t, ctx)
-		for _, a := range vals {
-			actors = append(actors, a)
-		}
+		actors = append(actors, vals...)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		fish := getAllTestingFish(t, ctx)
-		for _, a := range fish {
-			actors = append(actors, a)
-		}
+		actors = append(actors, fish...)
 	default:
 		t.Fatalf("unexpected actor type %s", actorType.String())
 	}
@@ -601,23 +595,23 @@ func getAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType cor
 	return
 }
 
-func getFirstActor(t *testing.T, ctx utility.UtilityContext, actorType coreTypes.ActorType) *coreTypes.Actor {
+func getFirstActor(t *testing.T, ctx *utility.UtilityContext, actorType coreTypes.ActorType) *coreTypes.Actor {
 	return getAllTestingActors(t, ctx, actorType)[0]
 }
 
-func getActorByAddr(t *testing.T, ctx utility.UtilityContext, actorType coreTypes.ActorType, addr string) (actor *coreTypes.Actor) {
+func getActorByAddr(t *testing.T, ctx *utility.UtilityContext, actorType coreTypes.ActorType, addr string) (actor *coreTypes.Actor) {
 	actors := getAllTestingActors(t, ctx, actorType)
 	idx := slices.IndexFunc(actors, func(a *coreTypes.Actor) bool { return a.GetAddress() == addr })
 	return actors[idx]
 }
 
-func getAllTestingApps(t *testing.T, ctx utility.UtilityContext) []*coreTypes.Actor {
+func getAllTestingApps(t *testing.T, ctx *utility.UtilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.Context.PersistenceRWContext).GetAllApps(ctx.Height)
 	require.NoError(t, err)
 	return actors
 }
 
-func getAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []*coreTypes.Actor {
+func getAllTestingValidators(t *testing.T, ctx *utility.UtilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.Context.PersistenceRWContext).GetAllValidators(ctx.Height)
 	require.NoError(t, err)
 	sort.Slice(actors, func(i, j int) bool {
@@ -626,13 +620,13 @@ func getAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []*coreTy
 	return actors
 }
 
-func getAllTestingFish(t *testing.T, ctx utility.UtilityContext) []*coreTypes.Actor {
+func getAllTestingFish(t *testing.T, ctx *utility.UtilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.Context.PersistenceRWContext).GetAllFishermen(ctx.Height)
 	require.NoError(t, err)
 	return actors
 }
 
-func getAllTestingNodes(t *testing.T, ctx utility.UtilityContext) []*coreTypes.Actor {
+func getAllTestingNodes(t *testing.T, ctx *utility.UtilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.Context.PersistenceRWContext).GetAllServiceNodes(ctx.Height)
 	require.NoError(t, err)
 	return actors

@@ -5,11 +5,15 @@ All notable changes to this module will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased]<<<<<<< HEAD
 
-## [0.0.0.22] - 2023-02-07
+## [0.0.0.23] - 2023-02-07
 
+- Added GITHUB_WIKI tags where it was missing
 
+## [0.0.0.22] - 2023-02-06
+
+- Address legacy linter errors from `golangci-lint`
 
 ## [0.0.0.21] - 2023-02-04
 

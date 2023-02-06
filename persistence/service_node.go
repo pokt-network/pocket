@@ -8,11 +8,12 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-func (p PostgresContext) GetServiceNodeExists(address []byte, height int64) (exists bool, err error) {
+func (p *PostgresContext) GetServiceNodeExists(address []byte, height int64) (exists bool, err error) {
 	return p.GetExists(types.ServiceNodeActor, address, height)
 }
 
-func (p PostgresContext) GetServiceNode(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, err error) {
+//nolint:gocritic // tooManyResultsChecker This function needs to return many values
+func (p *PostgresContext) GetServiceNode(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, err error) {
 	actor, err := p.getActor(types.ServiceNodeActor, address, height)
 	operator = actor.Address
 	publicKey = actor.PublicKey
@@ -25,7 +26,7 @@ func (p PostgresContext) GetServiceNode(address []byte, height int64) (operator,
 	return
 }
 
-func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, _ bool, _ int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (p *PostgresContext) InsertServiceNode(address, publicKey, output []byte, _ bool, _ int32, serviceURL, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error {
 	return p.InsertActor(types.ServiceNodeActor, &coreTypes.Actor{
 		ActorType:       coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
 		Address:         hex.EncodeToString(address),
@@ -39,7 +40,7 @@ func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, out
 	})
 }
 
-func (p PostgresContext) UpdateServiceNode(address []byte, serviceURL string, stakedAmount string, chains []string) error {
+func (p *PostgresContext) UpdateServiceNode(address []byte, serviceURL, stakedAmount string, chains []string) error {
 	return p.UpdateActor(types.ServiceNodeActor, &coreTypes.Actor{
 		ActorType:    coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
 		Address:      hex.EncodeToString(address),
@@ -49,42 +50,42 @@ func (p PostgresContext) UpdateServiceNode(address []byte, serviceURL string, st
 	})
 }
 
-func (p PostgresContext) GetServiceNodeStakeAmount(height int64, address []byte) (string, error) {
+func (p *PostgresContext) GetServiceNodeStakeAmount(height int64, address []byte) (string, error) {
 	return p.getActorStakeAmount(types.ServiceNodeActor, address, height)
 }
 
-func (p PostgresContext) SetServiceNodeStakeAmount(address []byte, stakeAmount string) error {
+func (p *PostgresContext) SetServiceNodeStakeAmount(address []byte, stakeAmount string) error {
 	return p.setActorStakeAmount(types.ServiceNodeActor, address, stakeAmount)
 }
 
-func (p PostgresContext) GetServiceNodeCount(chain string, height int64) (int, error) {
+func (p *PostgresContext) GetServiceNodeCount(chain string, height int64) (int, error) {
 	panic("GetServiceNodeCount not implemented")
 }
 
-func (p PostgresContext) GetServiceNodesReadyToUnstake(height int64, status int32) ([]modules.IUnstakingActor, error) {
+func (p *PostgresContext) GetServiceNodesReadyToUnstake(height int64, status int32) ([]modules.IUnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.ServiceNodeActor, height)
 }
 
-func (p PostgresContext) GetServiceNodeStatus(address []byte, height int64) (int32, error) {
+func (p *PostgresContext) GetServiceNodeStatus(address []byte, height int64) (int32, error) {
 	return p.GetActorStatus(types.ServiceNodeActor, address, height)
 }
 
-func (p PostgresContext) SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error {
+func (p *PostgresContext) SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error {
 	return p.SetActorUnstakingHeightAndStatus(types.ServiceNodeActor, address, unstakingHeight)
 }
 
-func (p PostgresContext) GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error) {
+func (p *PostgresContext) GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error) {
 	return p.GetActorPauseHeightIfExists(types.ServiceNodeActor, address, height)
 }
 
-func (p PostgresContext) SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error {
+func (p *PostgresContext) SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error {
 	return p.SetActorStatusAndUnstakingHeightIfPausedBefore(types.ServiceNodeActor, pausedBeforeHeight, unstakingHeight)
 }
 
-func (p PostgresContext) SetServiceNodePauseHeight(address []byte, height int64) error {
+func (p *PostgresContext) SetServiceNodePauseHeight(address []byte, height int64) error {
 	return p.SetActorPauseHeight(types.ServiceNodeActor, address, height)
 }
 
-func (p PostgresContext) GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error) {
+func (p *PostgresContext) GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error) {
 	return p.GetActorOutputAddress(types.ServiceNodeActor, operator, height)
 }

@@ -14,13 +14,13 @@ import (
 )
 
 // IMPROVE: Generate a proper genesis suite in the future.
-func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (*genesis.GenesisState, []string) {
+func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
 	apps, appsPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications)
 	vals, validatorPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_VAL, numValidators)
 	serviceNodes, snPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICENODE, numServiceNodes)
 	fish, fishPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFisherman)
 
-	genesisState := &genesis.GenesisState{
+	genesisState = &genesis.GenesisState{
 		GenesisTime:   timestamppb.Now(),
 		ChainId:       DefaultChainID,
 		MaxBlockBytes: DefaultMaxBlockBytes,
