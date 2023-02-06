@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
@@ -43,7 +42,6 @@ func accountCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
-				log.Fatal(keybaseDir)
 
 				keybase, err := keybase.InitialiseKeybase(keybaseDir)
 				if err != nil {

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"os"
 
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/spf13/cobra"
@@ -16,9 +17,10 @@ var (
 )
 
 func init() {
+	homeDir, _ := os.UserHomeDir()
 	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remote_cli_url", defaults.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
 	rootCmd.PersistentFlags().StringVar(&privateKeyPassphrase, "privatekey_passphrase", "", "Passphrase to decrypt the private key when being used")
-	rootCmd.PersistentFlags().StringVar(&dataDir, "data_dir", "~/.pocket", "Path to store pocket related data (keybase etc.)")
+	rootCmd.PersistentFlags().StringVar(&dataDir, "data_dir", homeDir+"/.pocket", "Path to store pocket related data (keybase etc.)")
 }
 
 var rootCmd = &cobra.Command{
