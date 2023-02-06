@@ -35,7 +35,7 @@ func (b *bus) Create(runtimeMgr modules.RuntimeMgr) (modules.Bus, error) {
 		channel: make(modules.EventsChannel, defaults.DefaultBusBufferSize),
 
 		runtimeMgr:      runtimeMgr,
-		modulesRegistry: newModulesRegistry(),
+		modulesRegistry: NewModulesRegistry(),
 	}
 
 	return bus, nil

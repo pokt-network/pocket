@@ -28,15 +28,15 @@ func (*rpcModule) Create(bus modules.Bus) (modules.Module, error) {
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 	rpcCfg := cfg.RPC
-	rpcMod := modules.RPCModule(&rpcModule{
+	m := modules.RPCModule(&rpcModule{
 		config: rpcCfg,
 	})
 	if !rpcCfg.Enabled {
-		rpcMod = &noopRpcModule{}
+		m = &noopRpcModule{}
 	}
-	bus.GetModulesRegistry().RegisterModule(rpcMod)
+	bus.RegisterModule(m)
 
-	return rpcMod, nil
+	return m, nil
 }
 
 func (u *rpcModule) Start() error {

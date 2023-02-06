@@ -54,7 +54,7 @@ func (*loggerModule) Create(bus modules.Bus) (modules.Module, error) {
 	m := &loggerModule{
 		config: cfg.Logger,
 	}
-	bus.GetModulesRegistry().RegisterModule(m)
+	bus.RegisterModule(m)
 
 	m.InitLogger()
 

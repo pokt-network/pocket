@@ -13,7 +13,7 @@ type modulesRegistry struct {
 	registry map[string]modules.Module
 }
 
-func newModulesRegistry() *modulesRegistry {
+func NewModulesRegistry() *modulesRegistry {
 	return &modulesRegistry{
 		registry: make(map[string]modules.Module),
 	}

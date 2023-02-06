@@ -67,7 +67,7 @@ func CreateWithProviders(bus modules.Bus, addrBookProvider providers.AddrBookPro
 func (*p2pModule) Create(bus modules.Bus) (modules.Module, error) {
 	log.Println("Creating network module")
 	m := &p2pModule{}
-	bus.GetModulesRegistry().RegisterModule(m)
+	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
