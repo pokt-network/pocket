@@ -435,7 +435,7 @@ func (u *utilityContext) burnValidator(percentage int, addr []byte) typesUtil.Er
 	newAmountAfterBurn := big.NewInt(0).Sub(stakeAmount, burnAmountTruncated)
 
 	// remove from pool
-	if err := u.subPoolAmount(validatorPool.FriendlyName(), converters.BigIntToString(burnAmountTruncated)); err != nil {
+	if err := u.subPoolAmount(validatorPool.FriendlyName(), burnAmountTruncated); err != nil {
 		return err
 	}
 

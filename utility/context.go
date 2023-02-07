@@ -74,6 +74,8 @@ func (u *utilityContext) Release() error {
 	return nil
 }
 
+// TECHDEBT: We should be using the height of the context and shouldn't need to be retrieving
+//           the height from the store either for "current height" operations.
 func (u *utilityContext) getStoreAndHeight() (modules.PersistenceRWContext, int64, error) {
 	store := u.Store()
 	height, err := store.GetHeight()

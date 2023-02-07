@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"math/big"
 
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -228,14 +229,19 @@ func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 			return typesUtil.ErrGetReadyToUnstake(er)
 		}
 		for _, actor := range readyToUnstake {
-			if err = u.subPoolAmount(poolName, actor.GetStakeAmount()); err != nil {
-				return err
+			stakeAmount, er := converters.StringToBigInt(actor.StakeAmount)
+			if er != nil {
+				return typesUtil.ErrStringToBigInt(er)
 			}
 			outputAddrBz, er := hex.DecodeString(actor.OutputAddress)
 			if er != nil {
 				return typesUtil.ErrHexDecodeFromString(er)
 			}
-			if err = u.addAccountAmountString(outputAddrBz, actor.StakeAmount); err != nil {
+
+			if err = u.subPoolAmount(poolName, stakeAmount); err != nil {
+				return err
+			}
+			if err = u.addAccountAmount(outputAddrBz, stakeAmount); err != nil {
 				return err
 			}
 		}
