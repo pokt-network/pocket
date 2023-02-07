@@ -20,7 +20,7 @@ var (
 type utilityModule struct {
 	modules.BaseIntegratableModule
 	modules.BaseInterruptableModule
-	
+
 	config *configs.UtilityConfig
 
 	logger  modules.Logger
@@ -31,11 +31,11 @@ const (
 	TransactionGossipMessageContentType = "utility.TransactionGossipMessage"
 )
 
-func Create(bus modules.Bus) (modules.Module, error) {
-	return new(utilityModule).Create(bus)
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(utilityModule).Create(bus, options...)
 }
 
-func (*utilityModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*utilityModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &utilityModule{}
 	bus.RegisterModule(m)
 

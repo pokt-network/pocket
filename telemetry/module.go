@@ -12,12 +12,12 @@ var (
 	}
 )
 
-func Create(bus modules.Bus) (modules.Module, error) {
-	return new(telemetryModule).Create(bus)
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(telemetryModule).Create(bus, options...)
 }
 
 // TODO(pocket/issues/99): Add a switch statement and configuration variable when support for other telemetry modules is added.
-func (*telemetryModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*telemetryModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 

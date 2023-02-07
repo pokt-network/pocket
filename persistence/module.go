@@ -38,11 +38,11 @@ type persistenceModule struct {
 	writeContext *PostgresContext // only one write context is allowed at a time
 }
 
-func Create(bus modules.Bus) (modules.Module, error) {
-	return new(persistenceModule).Create(bus)
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(persistenceModule).Create(bus, options...)
 }
 
-func (*persistenceModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &persistenceModule{
 		writeContext: nil,
 	}

@@ -22,12 +22,11 @@ func NOOP(args ...any) {
 	logger.Global.Debug().Msg("NOOP")
 }
 
-func CreateNoopTelemetryModule(bus modules.Bus) (modules.Module, error) {
-	var m NoopTelemetryModule
-	return m.Create(bus)
+func CreateNoopTelemetryModule(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(NoopTelemetryModule).Create(bus, options...)
 }
 
-func (*NoopTelemetryModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*NoopTelemetryModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &NoopTelemetryModule{}
 	bus.RegisterModule(m)
 	return m, nil

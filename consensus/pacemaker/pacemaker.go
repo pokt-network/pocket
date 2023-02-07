@@ -57,12 +57,11 @@ type pacemaker struct {
 	logPrefix string
 }
 
-func CreatePacemaker(bus modules.Bus) (modules.Module, error) {
-	var m pacemaker
-	return m.Create(bus)
+func CreatePacemaker(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(pacemaker).Create(bus, options...)
 }
 
-func (*pacemaker) Create(bus modules.Bus) (modules.Module, error) {
+func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &pacemaker{
 		logPrefix: defaultLogPrefix,
 	}

@@ -26,12 +26,12 @@ func NewNodeWithP2PAddress(address cryptoPocket.Address) *Node {
 	return &Node{p2pAddress: address}
 }
 
-func CreateNode(bus modules.Bus) (modules.Module, error) {
-	return new(Node).Create(bus)
+func CreateNode(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(Node).Create(bus, options...)
 }
 
-func (m *Node) Create(bus modules.Bus) (modules.Module, error) {
-	for _, mod := range []func(modules.Bus) (modules.Module, error){
+func (m *Node) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	for _, mod := range []func(modules.Bus, ...modules.ModuleOption) (modules.Module, error){
 		persistence.Create,
 		utility.Create,
 		consensus.Create,

@@ -51,15 +51,15 @@ func init() {
 	}
 }
 
-func Create(bus modules.Bus) (modules.Module, error) {
-	return new(loggerModule).Create(bus)
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(loggerModule).Create(bus, options...)
 }
 
 func (*loggerModule) CreateLoggerForModule(moduleName string) modules.Logger {
 	return Global.Logger.With().Str("module", moduleName).Logger()
 }
 
-func (*loggerModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*loggerModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 	m := &loggerModule{

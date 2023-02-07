@@ -21,7 +21,7 @@ func Create(bus modules.Bus) (modules.Module, error) {
 	return new(leaderElectionModule).Create(bus)
 }
 
-func (*leaderElectionModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*leaderElectionModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &leaderElectionModule{}
 	bus.RegisterModule(m)
 	return m, nil

@@ -34,12 +34,11 @@ type PrometheusTelemetryModule struct {
 	gaugeVectors map[string]prometheus.GaugeVec
 }
 
-func CreatePrometheusTelemetryModule(bus modules.Bus) (modules.Module, error) {
-	var m PrometheusTelemetryModule
-	return m.Create(bus)
+func CreatePrometheusTelemetryModule(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(PrometheusTelemetryModule).Create(bus, options...)
 }
 
-func (*PrometheusTelemetryModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*PrometheusTelemetryModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &PrometheusTelemetryModule{}
 	bus.RegisterModule(m)
 

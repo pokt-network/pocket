@@ -116,11 +116,11 @@ func (m *consensusModule) ClearLeaderMessagesPool() {
 	m.clearMessagesPool()
 }
 
-func Create(bus modules.Bus) (modules.Module, error) {
-	return new(consensusModule).Create(bus)
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(consensusModule).Create(bus, options...)
 }
 
-func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	leaderElectionMod, err := leader_election.Create(bus)
 	if err != nil {
 		return nil, err
