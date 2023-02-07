@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.10] - 2023-02-07
+
+- Added GITHUB_WIKI tags where it was missing
+
+## [0.0.0.9] - 2023-02-06
+
+- Documentation and supporting logic to enable `p1 debug` to be used from localhost
+
 ## [0.0.0.8] - 2023-02-06
 
 - Address legacy linter errors from `golangci-lint`
@@ -17,13 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.6] - 2023-02-02
 
-### Added
-
 - Fix broken link to `shared/crypto/README.md` in keybase documentation
 
 ## [0.0.0.5] - 2023-02-02
-
-### Added
 
 - Create `Keybase` interface to handle CRUD operations for `KeyPairs` with a `BadgerDB` backend
 - Add logic to create, import, export, list, delete and update (passphrase) key pairs
@@ -43,8 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.2] - 2022-11-02
 
-### Added
-
 - Fixed message signing
 - Reporting RPC StatusCode and body
 - System commands working end-to-end
@@ -52,13 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.1] - 2022-09-09
 
-### Added
-
 - Commands documentation generator
 
 ## [0.0.0.0] - 2022-09-07
-
-### Added
 
 - Basic implementation with Utility commands
   - Account
@@ -75,3 +73,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Functionally mocked a keybase in the form of a json file (default: pk.json) that will contain the privatekey
 - CLI calling RPC via generated client
 - Default configuration handling/overrides
+
+<!-- GITHUB_WIKI: changelog/client -->

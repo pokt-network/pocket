@@ -11,9 +11,9 @@ import (
 )
 
 func init() {
-	accounCmd := NewAccountCommand()
-	accounCmd.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
-	rootCmd.AddCommand(accounCmd)
+	accountCmd := NewAccountCommand()
+	accountCmd.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
+	rootCmd.AddCommand(accountCmd)
 }
 
 func NewAccountCommand() *cobra.Command {
