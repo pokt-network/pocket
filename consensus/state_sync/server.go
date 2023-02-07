@@ -87,7 +87,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	return m.SendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress), blockReq.Height)
 }
 
-// Get a block from persistance module given block height
+// Get a block from persistence module given block height
 func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, error) {
 	blockStore := m.GetBus().GetPersistenceModule().GetBlockStore()
 	heightBytes := converters.HeightToBytes(blockHeight)

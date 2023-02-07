@@ -66,7 +66,10 @@ func (*stateSync) Create(bus modules.Bus) (modules.Module, error) {
 	m := &stateSync{
 		logPrefix: DefaultLogPrefix,
 	}
-	bus.RegisterModule(m)
+
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 
 	// when node is starting, it is in sync mode, as it might need to bootstrap to the latest state
 	m.currentMode = Sync
