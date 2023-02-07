@@ -7,14 +7,14 @@ import (
 )
 
 const (
-	defaultRPCPort       = "50832"
+	DefaultRPCPort       = "50832"
 	defaultRPCHost       = "localhost"
 	defaultRPCTimeout    = 30000
 	DefaultBusBufferSize = 100
 )
 
 var (
-	DefaultRemoteCLIURL = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
+	DefaultRemoteCLIURL = fmt.Sprintf("http://%s:%s", defaultRPCHost, DefaultRPCPort)
 
 	// consensus
 	DefaultConsensusMaxMempoolBytes = uint64(500000000)
@@ -41,6 +41,6 @@ var (
 	DefaultLoggerLevel  = "debug"
 	DefaultLoggerFormat = "pretty"
 	// rpc
-	DefaultRpcPort    = defaultRPCPort
+	DefaultRpcPort    = DefaultRPCPort
 	DefaultRpcTimeout = uint64(defaultRPCTimeout)
 )
