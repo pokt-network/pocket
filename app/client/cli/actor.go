@@ -29,7 +29,6 @@ var (
 	pwd                  string
 	rawChainCleanupRegex *regexp.Regexp
 	oneMillion           *big.Int
-	notInteractive       bool
 )
 
 type (
@@ -140,8 +139,6 @@ If no changes are desired for the parameter, just enter the current param value 
 		},
 	}
 
-	stakeCmd.Flags().BoolVar(&notInteractive, "not_interactive", false, "if true skips the interactive prompt for passphrase and confirmation")
-
 	return stakeCmd
 }
 
@@ -238,8 +235,6 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			return nil
 		},
 	}
-
-	unstakeCmd.Flags().BoolVar(&notInteractive, "not_interactive", false, "if true skips the interactive prompt for passphrase and confirmation")
 
 	return unstakeCmd
 }
