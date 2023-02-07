@@ -11,6 +11,7 @@ import (
 	rpcABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/rpc"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
+	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -170,13 +171,28 @@ func handleSelect(cmd *cobra.Command, selection string) {
 }
 
 // Broadcast to the entire validator set
-func broadcastDebugMessage(_ *cobra.Command, debugMsg *messaging.DebugMessage) {
+func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to create Any proto")
 	}
 
-	p2pMod.Broadcast(anyProto)
+	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
+	// broadcast. The reason it cannot be done right now is because this client is not in the
+	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
+	// p2pMod.Broadcast(anyProto)
+
+	addrBook, err := fetchAddressBook(cmd)
+	for _, val := range addrBook {
+		addr := val.Address
+		if err != nil {
+			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
+		}
+		if err := p2pMod.Send(addr, anyProto); err != nil {
+			logger.Global.Fatal().Err(err).Msg("Failed to send debug message")
+		}
+	}
+
 }
 
 // Send to just a single (i.e. first) validator in the set
@@ -186,12 +202,7 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 		logger.Global.Error().Err(err).Msg("Failed to create Any proto")
 	}
 
-	addrBookProvider := cmd.Context().Value(addrBookProviderCtxKey)
-	currentHeightProvider := cmd.Context().Value(currentHeightProviderCtxKey)
-
-	height := currentHeightProvider.(current_height_provider.CurrentHeightProvider).CurrentHeight()
-
-	addrBook, err := addrBookProvider.(addrbook_provider.AddrBookProvider).GetStakedAddrBookAtHeight(height)
+	addrBook, err := fetchAddressBook(cmd)
 	if err != nil {
 		logger.Global.Fatal().Msg("Unable to retrieve the addrBook")
 	}
@@ -210,4 +221,17 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 	if err := p2pMod.Send(validatorAddress, anyProto); err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to send debug message")
 	}
+}
+
+// fetchAddressBook retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
+func fetchAddressBook(cmd *cobra.Command) (types.AddrBook, error) {
+	addrBookProvider := cmd.Context().Value(addrBookProviderCtxKey)
+	currentHeightProvider := cmd.Context().Value(currentHeightProviderCtxKey)
+
+	height := currentHeightProvider.(current_height_provider.CurrentHeightProvider).CurrentHeight()
+	addrBook, err := addrBookProvider.(addrbook_provider.AddrBookProvider).GetStakedAddrBookAtHeight(height)
+	if err != nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the addrBook")
+	}
+	return addrBook, err
 }
