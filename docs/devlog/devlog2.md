@@ -23,7 +23,7 @@
 
 ### Current Iteration 🗓️
 
-- Duration: January 11 - 24
+- Duration: January 25 - February 7
 - [Backlog](https://github.com/orgs/pokt-network/projects/142/views/12?layout=table&filterQuery=iteration%3A%22Iteration+9%22)
 
 #### Iteration Goals 🎯
@@ -84,7 +84,7 @@ Try it out ➡️ [Demo Guide](https://github.com/pokt-network/pocket/blob/main/
 
 ### Upcoming Iteration 🗓️
 
-- Duration: January 25 - February 7
+- Duration: February 8 - 21 
 - [Backlog Candidates](https://github.com/orgs/pokt-network/projects/142/views/12?layout=table&filterQuery=iteration%3A%22Iteration+10%22)
 
 ---
@@ -96,7 +96,7 @@ Try it out ➡️ [Demo Guide](https://github.com/pokt-network/pocket/blob/main/
 ##### Q: Can Localnet scale to 999 validators?
 A: Containers will be created but the validators will not be participating in consensus until peer discovery is in place and those validators are staked.
 
-##### Q: Where there other projects that inspired how to design the testing and deployment suite?
+##### Q: Were there other projects that inspired how to design the testing and deployment suite?
 A: A lot of learning from V0 and a commitment to visibility that won't only allow us to iterate faster but all contributors (reduce dependencies on the core team to make changes to the protocol). We looked at a lot of different projects when we started but most projects don't have these tools in place. In general the Tendermint and Cosmos ecosystem is going that direction, but it's more difficult because they are dealing with legacy code rather than the greenfield of V1. One of the best projects heading this direction is Aptos. They have very mature infrastructure and test suite. 
 
 ##### Q: Other projects, like Cosmos, allow people to configure different backends for key storage. Is it worth surveying the community to see what backends the keybase should integrate with (e.g. Leveldb or Pass)?
