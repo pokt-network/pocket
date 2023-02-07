@@ -17,6 +17,7 @@ type Config struct {
 }
 
 func NewDefaultConfig(options ...func(*Config)) *Config {
+
 	cfg := &Config{
 		RootDirectory: "/go/src/github.com/pocket-network",
 		Consensus: &ConsensusConfig{
