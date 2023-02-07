@@ -14,10 +14,10 @@
 
 ### Agenda <!-- omit in toc -->
 
-1. [Current Iteration](#current-iteration)
-2. [Demo](#demo)
-3. [Upcoming Iteration](#upcoming-iteration)
-4. [Feedback and Open Discussion](#feedback-and-open-discussion)
+1. [Current Iteration](#current-iteration-%EF%B8%8F)
+2. [Demo](#demo-)
+3. [Upcoming Iteration](#upcoming-iteration-%EF%B8%8F)
+4. [Feedback and Open Discussion](#feedback-and-open-discussion-)
 
 ---
 
