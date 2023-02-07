@@ -107,6 +107,24 @@ The cli binary will be available at `bin/p1` and can be used instead of `go run 
 
 The commands available are listed [here](../../rpc/doc/README.md) or accessible via `bin/p1 --help`
 
+2.1 [OPTIONAL] Add the binary to your `.rc`
+
+_IMPORTANT: Note that this helper ONLY works with the docker-compose LocalNet setup and DOES NOT work with the k8s setup_
+_TODO: This section can be deleted once the CLI accepts a `--remoteURL` option._
+
+You can add the following function so you can run the `p1` from anywhere on your host:
+
+```bash
+function p1 {
+    EXPORT POCKET_WORKDIR="${HOME}/workspace/pocket/pocket/"
+    EXPORT CONFIG_PATH="${POCKET_WORKDIR}/build/config/config1.json"
+    EXPORT GENESIS_PATH="${POCKET_WORKDIR}/build/config/genesis_localhost.json"
+    ${POCKET_WORKDIR}/bin/p1 "$@"
+}
+```
+
+You can via a demo of it [here](https://user-images.githubusercontent.com/1892194/215901991-076734e5-bc94-4755-9f2a-3d1f3c1e4aef.mov).
+
 ### Swagger UI
 
 Swagger UI is available to help during the development process.
