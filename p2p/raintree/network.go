@@ -30,6 +30,8 @@ type rainTreeNetwork struct {
 	peersManager *peersManager
 	nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]
 
+	currentHeightProvider providers.CurrentHeightProvider
+
 	logger modules.Logger
 }
 
@@ -47,10 +49,11 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProv
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
 
 	n := &rainTreeNetwork{
-		selfAddr:         addr,
-		peersManager:     pm,
-		nonceDeduper:     mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
-		addrBookProvider: addrBookProvider,
+		selfAddr:              addr,
+		peersManager:          pm,
+		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
+		addrBookProvider:      addrBookProvider,
+		currentHeightProvider: currentHeightProvider,
 	}
 	n.SetBus(bus)
 	return typesP2P.Network(n)
