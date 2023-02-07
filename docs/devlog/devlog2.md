@@ -1,4 +1,4 @@
-### Pocket V1 DevLog Call #1 Notes <!-- omit in toc -->
+### Pocket V1 DevLog Call #2 Notes <!-- omit in toc -->
 
 ##### Date and Time: Tuesday February 7, 2023 18:00 UTC
 
