@@ -19,16 +19,18 @@ import (
 
 // TECHDEBT: Lowercase variables / constants that do not need to be exported.
 const (
-	PromptResetToGenesis         string = "ResetToGenesis"
-	PromptPrintNodeState         string = "PrintNodeState"
-	PromptTriggerNextView        string = "TriggerNextView"
-	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
-	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
-	PromptSendMetadataRequest    string = "MetadataRequest"
-	PromptSendBlockRequest       string = "BlockRequest"
+	PromptResetToGenesis      string = "ResetToGenesis"
+	PromptPrintNodeState      string = "PrintNodeState"
+	PromptTriggerNextView     string = "TriggerNextView"
+	PromptTogglePacemakerMode string = "TogglePacemakerMode"
 
-	defaultConfigPath  = "build/config/config1.json"
-	defaultGenesisPath = "build/config/genesis.json"
+	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
+
+	PromptSendMetadataRequest string = "MetadataRequest"
+	PromptSendBlockRequest    string = "BlockRequest"
+
+	//defaultConfigPath  = "build/config/config1.json"
+	//defaultGenesisPath = "build/config/genesis.json"
 )
 
 var (

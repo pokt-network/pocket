@@ -148,8 +148,8 @@ func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
 		messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
 		messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
-		messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
-		messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ:
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ,
 		messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ:
 		return node.GetBus().GetConsensusModule().HandleDebugMessage(debugMessage)
 	// Persistence Debug

@@ -260,7 +260,7 @@ func WaitForNetworkStateSyncEvents(
 		return true
 	}
 
-	return waitForEventsInternal(t, clock, eventsChannel, consensus.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clock, eventsChannel, consensus.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework
@@ -279,7 +279,7 @@ func waitForEventsInternal(
 	unusedEvents := make([]*messaging.PocketEnvelope, 0) // "Recycle" events back into the events channel if we're not using them
 
 	// Limit the amount of time we're waiting for the messages to be published on the events channel
-	ctx, cancel := clock.WithTimeout(context.TODO(), time.Millisecond*maxWaitTime)
+	ctx, cancel := clck.WithTimeout(context.TODO(), time.Millisecond*maxWaitTime)
 	defer cancel()
 
 	// Since the tests use a mock clock, we need to manually advance the clock to trigger the timeout
