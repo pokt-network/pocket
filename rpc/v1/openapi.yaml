@@ -187,6 +187,7 @@ components:
         - height
       properties:
         actors:
+          type: "array"
           items:
             $ref: "#/components/schemas/Actor"
         height:
