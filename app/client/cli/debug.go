@@ -39,8 +39,8 @@ var (
 		PromptShowLatestBlockInStore,
 	}
 
-	defaultConfigPath  = getEnv("CONFIG_PATH", "build/config/config1.json")
-	defaultGenesisPath = getEnv("GENESIS_PATH", "build/config/genesis.json")
+	configPath  string = getEnv("CONFIG_PATH", "build/config/config1.json")
+	genesisPath string = getEnv("GENESIS_PATH", "build/config/genesis.json")
 )
 
 func getEnv(key, defaultValue string) string {
@@ -51,7 +51,8 @@ func getEnv(key, defaultValue string) string {
 }
 
 func init() {
-	rootCmd.AddCommand(NewDebugCommand())
+	debugCmd := NewDebugCommand()
+	rootCmd.AddCommand(debugCmd)
 }
 
 func NewDebugCommand() *cobra.Command {
@@ -85,7 +86,9 @@ func NewDebugCommand() *cobra.Command {
 			}
 			p2pMod = p2pM.(modules.P2PModule)
 
-			p2pMod.Start()
+			if err := p2pMod.Start(); err != nil {
+				logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
+			}
 		},
 		RunE: runDebug,
 	}
@@ -197,5 +200,7 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 		logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 	}
 
-	p2pMod.Send(validatorAddress, anyProto)
+	if err := p2pMod.Send(validatorAddress, anyProto); err != nil {
+		logger.Global.Fatal().Err(err).Msg("Failed to send debug message")
+	}
 }

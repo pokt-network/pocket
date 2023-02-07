@@ -46,7 +46,9 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 	m := &persistenceModule{
 		writeContext: nil,
 	}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 
 	runtimeMgr := bus.GetRuntimeMgr()
 
@@ -109,8 +111,7 @@ func (m *persistenceModule) Start() error {
 }
 
 func (m *persistenceModule) Stop() error {
-	m.blockStore.Stop()
-	return nil
+	return m.blockStore.Stop()
 }
 
 func (m *persistenceModule) GetModuleName() string {
@@ -118,7 +119,7 @@ func (m *persistenceModule) GetModuleName() string {
 }
 
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
-	if m.writeContext != nil && !m.writeContext.conn.IsClosed() {
+	if m.writeContext != nil && m.writeContext.conn != nil && !m.writeContext.conn.IsClosed() {
 		return nil, fmt.Errorf("write context already exists")
 	}
 	conn, err := connectToDatabase(m.config)
@@ -165,7 +166,7 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 		return nil, err
 	}
 
-	return PostgresContext{
+	return &PostgresContext{
 		Height: height,
 		conn:   conn,
 		tx:     tx,
@@ -221,7 +222,9 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	}
 
 	if blockHeight == 0 {
-		m.clearAllState(nil)
+		if err := m.clearAllState(nil); err != nil {
+			return false, err
+		}
 		return true, nil
 	}
 

@@ -23,7 +23,9 @@ func Create(bus modules.Bus) (modules.Module, error) {
 
 func (*leaderElectionModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &leaderElectionModule{}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 	return m, nil
 }
 

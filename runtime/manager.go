@@ -30,7 +30,7 @@ type Manager struct {
 	clock clock.Clock
 }
 
-func NewManager(config *configs.Config, genesis *genesis.GenesisState, options ...func(*Manager)) *Manager {
+func NewManager(config *configs.Config, gen *genesis.GenesisState, options ...func(*Manager)) *Manager {
 	mgr := new(Manager)
 	bus, err := CreateBus(mgr)
 	if err != nil {
@@ -38,7 +38,7 @@ func NewManager(config *configs.Config, genesis *genesis.GenesisState, options .
 	}
 
 	mgr.config = config
-	mgr.genesisState = genesis
+	mgr.genesisState = gen
 	mgr.clock = clock.New()
 	mgr.BaseIntegratableModule = *modules.NewBaseIntegratableModule(bus)
 

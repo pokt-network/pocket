@@ -136,22 +136,15 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 //
 //		can easily be refactored and condensed into a single function using a generic type or a common
 //	 interface.
-func (p PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
+func (p *PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account, err error) {
+	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.Account.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
 	for rows.Next() {
 		acc := new(coreTypes.Account)
-		if err = rows.Scan(&acc.Address, &acc.Amount, &height); err != nil {
-			return nil, err
-		}
-		// acc.Address, err = address
-		if err != nil {
+		if err := rows.Scan(&acc.Address, &acc.Amount, &height); err != nil {
 			return nil, err
 		}
 		accs = append(accs, acc)
@@ -160,18 +153,15 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account
 }
 
 // CLEANUP: Consolidate with GetAllAccounts.
-func (p PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
+func (p *PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, err error) {
+	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.Pool.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
 	for rows.Next() {
 		pool := new(coreTypes.Account)
-		if err = rows.Scan(&pool.Address, &pool.Amount, &height); err != nil {
+		if err := rows.Scan(&pool.Address, &pool.Amount, &height); err != nil {
 			return nil, err
 		}
 		accs = append(accs, pool)

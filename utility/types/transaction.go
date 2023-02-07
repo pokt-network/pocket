@@ -48,8 +48,7 @@ func (tx *Transaction) ValidateBasic() Error {
 }
 
 func (tx *Transaction) Message() (Message, Error) {
-	codec := codec.GetCodec()
-	msg, er := codec.FromAny(tx.Msg)
+	msg, er := codec.GetCodec().FromAny(tx.Msg)
 	if er != nil {
 		return nil, ErrProtoMarshal(er)
 	}
@@ -86,13 +85,13 @@ func (tx *Transaction) Hash() (string, Error) {
 }
 
 func (tx *Transaction) SignBytes() ([]byte, Error) {
-	// transaction := proto.Clone(tx).(*Transaction)
-	transaction := *tx
-	transaction.Signature = nil
-	bz, err := codec.GetCodec().Marshal(&transaction)
+	sig := tx.Signature // Backup signature
+	tx.Signature = nil
+	bz, err := codec.GetCodec().Marshal(tx)
 	if err != nil {
 		return nil, ErrProtoMarshal(err)
 	}
+	tx.Signature = sig // Restore signature
 	return bz, nil
 }
 
@@ -136,15 +135,15 @@ func (x *DefaultTxResult) HashFromBytes(bz []byte) ([]byte, error) {
 	return crypto.SHA3Hash(bz), nil
 }
 
-func (tx *Transaction) ToTxResult(height int64, index int, signer, recipient, msgType string, error Error) (*DefaultTxResult, Error) {
+func (tx *Transaction) ToTxResult(height int64, index int, signer, recipient, msgType string, er Error) (*DefaultTxResult, Error) {
 	txBytes, err := tx.Bytes()
 	if err != nil {
 		return nil, err
 	}
 	code, errString := int32(0), ""
-	if error != nil {
-		code = int32(error.Code())
-		errString = error.Error()
+	if er != nil {
+		code = int32(er.Code())
+		errString = err.Error()
 	}
 	return &DefaultTxResult{
 		Tx:            txBytes,

@@ -21,21 +21,24 @@ func FuzzTxIndexer(f *testing.F) {
 	numOperationTypes := len(operations)
 	numOperations := 100
 	for i := 0; i < numOperations; i++ {
-		f.Add(operations[rand.Intn(numOperationTypes)])
+		f.Add(operations[rand.Intn(numOperationTypes)]) //nolint:gosec // G404 - Weak random source is okay in unit tests
 	}
 	indexer, err := NewMemTxIndexer()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer indexer.Close()
+	defer func(f *testing.F, indexer TxIndexer) {
+		err := indexer.Close()
+		require.NoError(f, err)
+	}(f, indexer)
 
 	f.Fuzz(func(t *testing.T, op string) {
 		// seed random
 		rand.Seed(int64(time.Now().Nanosecond()))
 		// set height ordering to descending 50% of time
-		isDescending := rand.Intn(2) == 0
+		isDescending := rand.Intn(2) == 0 //nolint:gosec // G404 - Weak random source is okay in unit tests
 		// select a height 0 - 9 to index
-		height := int64(rand.Intn(10))
+		height := int64(rand.Intn(10)) //nolint:gosec // G404 - Weak random source is okay in unit tests
 		// get index
 		heightResult, err := indexer.GetByHeight(height, isDescending)
 		require.NoError(t, err)
@@ -86,7 +89,7 @@ func FuzzTxIndexer(f *testing.F) {
 
 func TestGetByHash(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
-	defer txIndexer.Close()
+	defer closeIndexer(t, txIndexer)
 	// setup 2 transactions
 	txResult := NewTestingTransactionResult(t, 0, 0)
 	require.NoError(t, err)
@@ -113,7 +116,7 @@ func TestGetByHash(t *testing.T) {
 
 func TestGetByHeight(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
-	defer txIndexer.Close()
+	defer closeIndexer(t, txIndexer)
 	// setup 3 transactions
 	txResult := NewTestingTransactionResult(t, 0, 0)
 	require.NoError(t, err)
@@ -141,7 +144,7 @@ func TestGetByHeight(t *testing.T) {
 
 func TestGetBySender(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
-	defer txIndexer.Close()
+	defer closeIndexer(t, txIndexer)
 	// setup transaction
 	txResult := NewTestingTransactionResult(t, 1, 0)
 	require.NoError(t, err)
@@ -164,7 +167,7 @@ func TestGetBySender(t *testing.T) {
 
 func TestGetByRecipient(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
-	defer txIndexer.Close()
+	defer closeIndexer(t, txIndexer)
 	// setup tx
 	txResult := NewTestingTransactionResult(t, 1, 0)
 	require.NoError(t, err)
@@ -237,7 +240,7 @@ func (mt MessageType) String() string {
 }
 
 func randomMessageType() string {
-	return msgTypes[rand.Intn(len(msgTypes))].String()
+	return msgTypes[rand.Intn(len(msgTypes))].String() //nolint:gosec // G404 - Weak random source is okay in unit tests
 }
 
 func randomAddress(t *testing.T) string {
@@ -251,6 +254,7 @@ func randomErr() (code int32, err string) {
 	errors := []string{"insufficient funds", "address not valid", "invalid signature"}
 	code = int32(0)
 	err = ""
+	//nolint:gosec // G404 - Weak random source is okay in unit tests
 	if rand.Intn(4) == 1 {
 		code = int32(rand.Intn(len(errors)))
 		err = errors[code]
@@ -259,8 +263,14 @@ func randomErr() (code int32, err string) {
 }
 
 // Generates a random alphanumeric sequence of exactly 50 characters
+//nolint:gosec // G404 - Weak random source is okay in unit tests
 func randLetterBytes() []byte {
 	randBytes := make([]byte, 50)
 	rand.Read(randBytes)
 	return randBytes
+}
+
+func closeIndexer(t *testing.T, indexer TxIndexer) {
+	err := indexer.Close()
+	require.NoError(t, err)
 }

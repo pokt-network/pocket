@@ -11,7 +11,9 @@ func (m *consensusModule) HandleDebugMessage(debugMessage *messaging.DebugMessag
 
 	switch debugMessage.Action {
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
-		m.resetToGenesis(debugMessage)
+		if err := m.resetToGenesis(debugMessage); err != nil {
+			return err
+		}
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
 		m.printNodeState(debugMessage)
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
@@ -40,7 +42,7 @@ func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	}
 }
 
-func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) {
+func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
 	m.logger.Debug().Msg(typesCons.DebugResetToGenesis)
 
 	m.SetHeight(0)
@@ -48,11 +50,16 @@ func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) {
 	m.clearLeader()
 	m.clearMessagesPool()
 	m.GetBus().GetUtilityModule().GetMempool().Clear()
-	m.GetBus().GetPersistenceModule().HandleDebugMessage(&messaging.DebugMessage{
+	if err := m.GetBus().GetPersistenceModule().HandleDebugMessage(&messaging.DebugMessage{
 		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 		Message: nil,
-	})
-	m.GetBus().GetPersistenceModule().Start() // reload genesis state
+	}); err != nil {
+		return err
+	}
+	if err := m.GetBus().GetPersistenceModule().Start(); err != nil { // reload genesis state
+		return err
+	}
+	return nil
 }
 
 func (m *consensusModule) printNodeState(_ *messaging.DebugMessage) {

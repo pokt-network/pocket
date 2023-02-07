@@ -35,8 +35,5 @@ func BigIntToString(b *big.Int) string {
 }
 
 func BigIntLessThan(a, b *big.Int) bool {
-	if a.Cmp(b) == -1 {
-		return true
-	}
-	return false
+	return a.Cmp(b) == -1
 }

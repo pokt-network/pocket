@@ -26,7 +26,8 @@ func TestNonceDeduper(t *testing.T) {
 				initialElements:  &[]uint64{1, 2, 3},
 				actions: &[]func(*mempool.GenericFIFOSet[uint64, uint64]){
 					func(nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]) {
-						nonceDeduper.Push(4)
+						err := nonceDeduper.Push(4)
+						require.NoError(t, err)
 					},
 				},
 			},
@@ -39,7 +40,8 @@ func TestNonceDeduper(t *testing.T) {
 				initialElements:  &[]uint64{1, 2, 3},
 				actions: &[]func(*mempool.GenericFIFOSet[uint64, uint64]){
 					func(nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]) {
-						nonceDeduper.Push(1)
+						err := nonceDeduper.Push(1)
+						require.Contains(t, err.Error(), "already exists")
 					},
 				},
 			},
@@ -78,7 +80,8 @@ func TestNonceDeduper(t *testing.T) {
 
 			if tt.args.initialElements != nil {
 				for _, item := range *tt.args.initialElements {
-					nonceDeduper.Push(item)
+					err := nonceDeduper.Push(item)
+					require.NoError(t, err)
 				}
 			}
 

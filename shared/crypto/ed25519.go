@@ -171,7 +171,7 @@ func (pub Ed25519PublicKey) Equals(other PublicKey) bool {
 	return ed25519.PublicKey(pub).Equal(ed25519.PublicKey(other.(Ed25519PublicKey)))
 }
 
-func (pub Ed25519PublicKey) Verify(msg []byte, sig []byte) bool {
+func (pub Ed25519PublicKey) Verify(msg, sig []byte) bool {
 	return ed25519.Verify(ed25519.PublicKey(pub), msg, sig)
 }
 
