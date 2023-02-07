@@ -112,7 +112,7 @@ func (u *utilityContext) getActorStakedAmount(actorType coreTypes.ActorType, add
 	}
 
 	if err != nil {
-		return nil, typesUtil.ErrGetStakedAmount(err)
+		return nil, typesUtil.ErrGetStakeAmount(err)
 	}
 
 	amount, err := converters.StringToBigInt(stakedAmount)

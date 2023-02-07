@@ -39,17 +39,17 @@ func (tx *Transaction) ValidateBasic() Error {
 		return ErrNewPublicKeyFromBytes(err)
 	}
 
+	// Is there a valid msg that can be decoded?
+	if _, err := tx.GetMessage(); err != nil {
+		return err
+	}
+
 	signBytes, err := tx.SignableBytes()
 	if err != nil {
 		return ErrProtoMarshal(err)
 	}
 	if ok := publicKey.Verify(signBytes, tx.Signature.Signature); !ok {
 		return ErrSignatureVerificationFailed()
-	}
-
-	// Is there a valid msg that can be decoded?
-	if _, err := tx.GetMessage(); err != nil {
-		return err
 	}
 
 	return nil

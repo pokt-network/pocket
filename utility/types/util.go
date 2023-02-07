@@ -2,6 +2,7 @@ package types
 
 import (
 	"crypto/rand"
+	"fmt"
 	"math/big"
 )
 
@@ -25,7 +26,7 @@ func StringToBigInt(s string) (*big.Int, Error) {
 	b := big.Int{}
 	i, ok := b.SetString(s, DefaultDenomination)
 	if !ok {
-		return nil, ErrStringToBigInt()
+		return nil, ErrStringToBigInt(fmt.Errorf("failed to convert string to big.Int: %s", s))
 	}
 	return i, nil
 }

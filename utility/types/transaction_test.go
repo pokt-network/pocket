@@ -57,7 +57,7 @@ func TestTransactionBytesAndFromBytes(t *testing.T) {
 
 func TestTransaction_Message(t *testing.T) {
 	tx := NewUnsignedTestingTransaction(t)
-	msg, err := tx.Message()
+	msg, err := tx.GetMessage()
 	require.NoError(t, err)
 
 	expected := NewTestingMsg(t)
@@ -77,8 +77,8 @@ func TestTransaction_Sign(t *testing.T) {
 	err := tx.Sign(testingSenderPrivateKey)
 	require.NoError(t, err)
 
-	msg, err := tx.SignBytes()
-	require.NoError(t, err)
+	msg, er := tx.SignableBytes()
+	require.NoError(t, er)
 
 	verified := testingSenderPublicKey.Verify(msg, tx.Signature.Signature)
 	require.True(t, verified, "signature should be verified")

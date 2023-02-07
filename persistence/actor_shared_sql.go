@@ -175,11 +175,6 @@ func (p *PostgresContext) UpdateActor(actorSchema types.ProtocolActorSchema, act
 }
 
 func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema types.ProtocolActorSchema, height int64) (actors []*moduleTypes.UnstakingActor, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
-func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema types.ProtocolActorSchema, height int64) (actors []modules.IUnstakingActor, err error) {
 	ctx, tx := p.getCtxAndTx()
 
 	rows, err := tx.Query(ctx, actorSchema.GetReadyToUnstakeQuery(height))

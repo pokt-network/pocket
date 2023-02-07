@@ -65,3 +65,7 @@ func (u *utilityModule) GetBus() modules.Bus {
 	}
 	return u.bus
 }
+
+func (u *utilityModule) GetMempool() mempool.TXMempool {
+	return u.mempool
+}

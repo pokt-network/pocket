@@ -23,7 +23,7 @@ import (
 
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
 func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (stateHash string, transactions [][]byte, err error) {
-	lastBlockByzantineVals, err := u.GetLastBlockByzantineValidators()
+	lastBlockByzantineVals, err := u.getLastBlockByzantineValidators()
 	if err != nil {
 		return "", nil, err
 	}
@@ -76,7 +76,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		return "", nil, err
 	}
 	// return the app hash (consensus module will get the validator set directly)
-	stateHash, err := u.persistenceContext.ComputeStateHash()
+	stateHash, err = u.persistenceContext.ComputeStateHash()
 	if err != nil {
 		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 	}
@@ -118,7 +118,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 		}
 
 		if err := u.persistenceContext.IndexTransaction(txResult); err != nil {
-			u.logger.Fatal().Err(err).Msg("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
+			u.logger.Fatal().Err(err).Msgf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
 		}
 
 		// TODO: if found, remove transaction from mempool.

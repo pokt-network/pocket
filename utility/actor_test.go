@@ -13,6 +13,7 @@ import (
 	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/utility/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -101,7 +102,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 
 			actor = getActorByAddr(t, ctx, actorType, addr)
 			require.NotEqual(t, test_artifacts.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect edited amount staked")
-			require.Equal(t, amountEditedString, actor.GetStakedAmount, "incorrect edited amount staked")
+			require.Equal(t, amountEditedString, actor.StakedAmount, "incorrect edited amount staked")
 		})
 	}
 }
@@ -447,13 +448,8 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 // 		t.Run(fmt.Sprintf("%s.UnstakePausedBefore", actorType.String()), func(t *testing.T) {
 // 			ctx := newTestingUtilityContext(t, 1)
 
-<<<<<<< HEAD:utility/actor_test.go
 // 			actor := getFirstActor(t, ctx, actorType)
-// 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "wrong starting status")
-=======
-			actor := getFirstActor(t, ctx, actorType)
-			require.Equal(t, int64(-1), actor.GetUnstakingHeight(), "wrong starting status")
->>>>>>> main:utility/test/actor_test.go
+// 			require.Equal(t, int64(-1), actor.GetUnstakingHeight(), "wrong starting status")
 
 // 			addr := actor.GetAddress()
 // 			addrBz, err := hex.DecodeString(addr)
@@ -586,15 +582,15 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			err = ctx.BeginUnstakingMaxPaused()
 			require.NoError(t, err)
 
-			status, err := ctx.GetActorStatus(actorType, addrBz)
+			status, err := ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, int32(typesUtil.StakeStatus_Unstaking), status, "incorrect status")
+			require.Equal(t, types.StakeStatus(typesUtil.StakeStatus_Unstaking), status, "incorrect status")
 		})
 	}
 }
 
 // Helpers
-func getAllTestingActors(t *testing.T, ctx *utility.UtilityContext, actorType coreTypes.ActorType) (actors []*coreTypes.Actor) {
+func getAllTestingActors(t *testing.T, ctx *utilityContext, actorType coreTypes.ActorType) (actors []*coreTypes.Actor) {
 	actors = make([]*coreTypes.Actor, 0)
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -616,31 +612,23 @@ func getAllTestingActors(t *testing.T, ctx *utility.UtilityContext, actorType co
 	return
 }
 
-<<<<<<< HEAD:utility/actor_test.go
 func getFirstActor(t *testing.T, ctx *utilityContext, actorType coreTypes.ActorType) *coreTypes.Actor {
 	return getAllTestingActors(t, ctx, actorType)[0]
 }
 
 func getActorByAddr(t *testing.T, ctx *utilityContext, actorType coreTypes.ActorType, addr string) (actor *coreTypes.Actor) {
-=======
-func getFirstActor(t *testing.T, ctx *utility.UtilityContext, actorType coreTypes.ActorType) *coreTypes.Actor {
-	return getAllTestingActors(t, ctx, actorType)[0]
-}
-
-func getActorByAddr(t *testing.T, ctx *utility.UtilityContext, actorType coreTypes.ActorType, addr string) (actor *coreTypes.Actor) {
->>>>>>> main:utility/test/actor_test.go
 	actors := getAllTestingActors(t, ctx, actorType)
 	idx := slices.IndexFunc(actors, func(a *coreTypes.Actor) bool { return a.GetAddress() == addr })
 	return actors[idx]
 }
 
-func getAllTestingApps(t *testing.T, ctx *utility.UtilityContext) []*coreTypes.Actor {
+func getAllTestingApps(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.persistenceContext).GetAllApps(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
 
-func getAllTestingValidators(t *testing.T, ctx *utility.UtilityContext) []*coreTypes.Actor {
+func getAllTestingValidators(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.persistenceContext).GetAllValidators(ctx.height)
 	require.NoError(t, err)
 	sort.Slice(actors, func(i, j int) bool {
@@ -649,13 +637,13 @@ func getAllTestingValidators(t *testing.T, ctx *utility.UtilityContext) []*coreT
 	return actors
 }
 
-func getAllTestingFish(t *testing.T, ctx *utility.UtilityContext) []*coreTypes.Actor {
+func getAllTestingFish(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.persistenceContext).GetAllFishermen(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
 
-func getAllTestingNodes(t *testing.T, ctx *utility.UtilityContext) []*coreTypes.Actor {
+func getAllTestingNodes(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.persistenceContext).GetAllServiceNodes(ctx.height)
 	require.NoError(t, err)
 	return actors

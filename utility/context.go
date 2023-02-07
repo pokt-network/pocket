@@ -8,6 +8,7 @@ import (
 )
 
 type utilityContext struct {
+	bus     modules.Bus
 	height  int64
 	mempool typesUtil.Mempool
 
@@ -33,7 +34,6 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 		bus:                u.GetBus(),
 		height:             height,
 		logger:             u.logger,
-		mempool:            u.mempool,
 		persistenceContext: ctx,
 		savePointsList:     make([][]byte, 0),
 		savePointsSet:      make(map[string]struct{}),
@@ -111,13 +111,13 @@ func (u *utilityContext) GetBus() modules.Bus {
 	return u.bus
 }
 
-func (u *utilityContext) WithBus(bus modules.Bus) *UtilityContext {
+func (u *utilityContext) WithBus(bus modules.Bus) *utilityContext {
 	u.bus = bus
 	return u
 }
 
-func (c *context) Reset() typesUtil.Error {
-	if err := c.PersistenceRWContext.Release(); err != nil {
+func (c *utilityContext) Reset() typesUtil.Error {
+	if err := c.persistenceContext.Release(); err != nil {
 		return typesUtil.ErrResetContext(err)
 	}
 	return nil
