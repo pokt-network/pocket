@@ -33,7 +33,7 @@ func (*rpcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	if !rpcCfg.Enabled {
 		m = &noopRpcModule{}
 	}
-	if err := bus.RegisterModule(rpcMod); err != nil {
+	if err := bus.RegisterModule(m); err != nil {
 		return nil, err
 	}
 
