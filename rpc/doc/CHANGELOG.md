@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.10] - 2023-02-07
+
+- Added GITHUB_WIKI tags where it was missing
+
 ## [0.0.0.9] - 2023-02-06
 
 - Address legacy linter errors from `golangci-lint`
@@ -43,15 +47,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.1] - 2022-11-02
 
-### Added
-
 - Consensus State endpoint
 - Added CORS feature flag and config
 - Added dockerized swagger-ui
 
 ## [0.0.0.0] - 2022-10-20
-
-### Added
 
 - First iteration of the RPC
   - Endpoint: Node liveness

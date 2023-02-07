@@ -55,3 +55,5 @@ go tool pprof -base=baseline.heap after_reset.heap
 
 - PProf: https://go.dev/blog/pprof
 - Memory leaking scenarios: https://go101.org/article/memory-leaking.html
+
+<!-- GITHUB_WIKI: guides/development/profiling -->

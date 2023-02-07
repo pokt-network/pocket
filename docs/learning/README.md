@@ -59,7 +59,11 @@ This is a general set of steps we have found to help new core team members onboa
 
    - It is a proprietary algorithm that you are unlikely to ever need to touch/modify, but it is fun & interesting to reason about and understand.
 
-7. **Eventually**: Over time, **and not all at once**, you can start making your way through and updating the [V1 specifications](https://github.com/pokt-network/pocket-network-protocol). _(15-30 hours)_
+7. Find all of our documentation on the [Github Wiki](https://github.com/pokt-network/pocket/wiki).
+
+   - The wiki mirrors all of the READMEs in our codebase so it's easy to find and navigate!
+
+8. **Eventually**: Over time, **and not all at once**, you can start making your way through and updating the [V1 specifications](https://github.com/pokt-network/pocket-network-protocol). _(15-30 hours)_
 
    - Treat these specifications as guidelines and not sources of truth. If you are reading this, you will likely modify them at some point.
    - Mastering these concepts won't be easy but will make you an expert on Pocket V1
@@ -73,18 +77,18 @@ This is a general set of steps we have found to help new core team members onboa
          - [Consensus](https://docs.google.com/presentation/d/18CtSxxLLHY1N7HEJtja633mVF1_a9blaE2fe2-WgGAo/edit)
    -->
 
-8. Start getting acquainted with the code structure by looking at the [docs on the shared architecture](https://github.com/pokt-network/pocket/tree/main/shared). _(1 hour)_
+9. Start getting acquainted with the code structure by looking at the [docs on the shared architecture](https://github.com/pokt-network/pocket/tree/main/shared). _(1 hour)_
 
-   - This will help you understand the code architecture of Pocket V1
+- This will help you understand the code architecture of Pocket V1
 
-9. View our [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md). _(10 mins)_
+10. View our [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md). _(10 mins)_
 
-   - This will give you insight into our development & release timelines
+    - This will give you insight into our development & release timelines
 
-10. Get a sense of all the open issues and tickets [in out Github project](https://github.com/orgs/pokt-network/projects/142/views/12). _(1 hour)_
-11. If you don't already have a starter task, pick one from [Dework](https://app.dework.xyz/pokt-network), our [open issues](https://github.com/pokt-network/pocket/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) or ask the team in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel. _(1 hour)_
+11. Get a sense of all the open issues and tickets [in out Github project](https://github.com/orgs/pokt-network/projects/142/views/12). _(1 hour)_
+12. If you don't already have a starter task, pick one from [Dework](https://app.dework.xyz/pokt-network), our [open issues](https://github.com/pokt-network/pocket/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) or ask the team in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel. _(1 hour)_
 
-12. Jump on a call and pair code! _(∞ and beyond)_
+13. Jump on a call and pair code! _(∞ and beyond)_
 
 - If you need a walk-through of the code and some pointers before getting started, **jump on a call!**
 - If you need to take your time to understand the problem and the code first, do so, and then **jump on a call!**
@@ -206,6 +210,7 @@ This is a general set of technical links and recommended reading our team has fo
 - [OG Pocket Network Blog](https://medium.com/@POKTnetwork)
 - [Vitalik's blog](https://vitalik.ca/categories/blockchains.html)
 - [Mike's blog](https://morourke.org/)
+- [Alin Tomescu](https://alinush.github.io/)
 - [Joachim Neu](https://www.jneu.net/)
   - See the articles under the **Technical reports** section
 - [Decentralized Thoughts by Ittai Ibrahim](https://decentralizedthoughts.github.io/about-ittai); the RSS feed is available [here](https://decentralizedthoughts.github.io/feed.xml)
