@@ -11,6 +11,9 @@ import (
 )
 
 type loggerModule struct {
+	modules.BaseIntegratableModule
+	modules.BaseInterruptableModule
+
 	zerolog.Logger
 	bus    modules.Bus
 	logger modules.Logger
@@ -92,23 +95,8 @@ func (m *loggerModule) Start() error {
 	return nil
 }
 
-func (m *loggerModule) Stop() error {
-	return nil
-}
-
 func (m *loggerModule) GetModuleName() string {
 	return modules.LoggerModuleName
-}
-
-func (m *loggerModule) SetBus(bus modules.Bus) {
-	m.bus = bus
-}
-
-func (m *loggerModule) GetBus() modules.Bus {
-	if m.bus == nil {
-		m.Logger.Fatal().Msg("Bus is not initialized")
-	}
-	return m.bus
 }
 
 func (m *loggerModule) GetLogger() modules.Logger {

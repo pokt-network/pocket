@@ -23,7 +23,8 @@ var (
 // TODO: convert address and public key to string not bytes in all account and actor functions
 // TODO: remove address parameter from all pool operations
 type persistenceModule struct {
-	bus          modules.Bus
+	modules.BaseIntegratableModule
+
 	config       *configs.PersistenceConfig
 	genesisState *genesis.GenesisState
 
@@ -114,17 +115,6 @@ func (m *persistenceModule) Stop() error {
 
 func (m *persistenceModule) GetModuleName() string {
 	return modules.PersistenceModuleName
-}
-
-func (m *persistenceModule) SetBus(bus modules.Bus) {
-	m.bus = bus
-}
-
-func (m *persistenceModule) GetBus() modules.Bus {
-	if m.bus == nil {
-		logger.Global.Fatal().Msg("PocketBus is not initialized")
-	}
-	return m.bus
 }
 
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {

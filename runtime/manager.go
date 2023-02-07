@@ -22,6 +22,8 @@ import (
 var _ modules.RuntimeMgr = &Manager{}
 
 type Manager struct {
+	modules.BaseIntegratableModule
+
 	config       *configs.Config
 	genesisState *genesis.GenesisState
 
@@ -75,10 +77,6 @@ func (m *Manager) GetConfig() *configs.Config {
 
 func (m *Manager) GetGenesis() *genesis.GenesisState {
 	return m.genesisState
-}
-
-func (b *Manager) GetBus() modules.Bus {
-	return b.bus
 }
 
 func (m *Manager) GetClock() clock.Clock {

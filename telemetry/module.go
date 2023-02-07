@@ -30,10 +30,9 @@ func (*telemetryModule) Create(bus modules.Bus) (modules.Module, error) {
 	}
 }
 
-type telemetryModule struct{}
+type telemetryModule struct {
+	modules.BaseIntegratableModule
+	modules.BaseInterruptableModule
+}
 
-func (t *telemetryModule) GetModuleName() string  { return modules.TelemetryModuleName }
-func (t *telemetryModule) SetBus(bus modules.Bus) {}
-func (t *telemetryModule) GetBus() modules.Bus    { return nil }
-func (t *telemetryModule) Start() error           { return nil }
-func (t *telemetryModule) Stop() error            { return nil }
+func (t *telemetryModule) GetModuleName() string { return modules.TelemetryModuleName }

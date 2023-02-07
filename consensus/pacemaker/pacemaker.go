@@ -44,7 +44,9 @@ type Pacemaker interface {
 }
 
 type pacemaker struct {
-	bus            modules.Bus
+	modules.BaseIntegratableModule
+	modules.BaseInterruptableModule
+
 	pacemakerCfg   *configs.PacemakerConfig
 	stepCancelFunc context.CancelFunc
 
@@ -83,23 +85,9 @@ func (m *pacemaker) Start() error {
 	m.RestartTimer()
 	return nil
 }
-func (*pacemaker) Stop() error {
-	return nil
-}
 
 func (*pacemaker) GetModuleName() string {
 	return pacemakerModuleName
-}
-
-func (m *pacemaker) SetBus(pocketBus modules.Bus) {
-	m.bus = pocketBus
-}
-
-func (m *pacemaker) GetBus() modules.Bus {
-	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
-	}
-	return m.bus
 }
 
 func (m *pacemaker) SetLogPrefix(logPrefix string) {

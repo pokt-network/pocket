@@ -19,13 +19,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var (
-	_ typesP2P.Network           = &rainTreeNetwork{}
-	_ modules.IntegratableModule = &rainTreeNetwork{}
-)
+var _ typesP2P.Network = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
-	bus modules.Bus
+	modules.BaseIntegratableModule
 
 	selfAddr         cryptoPocket.Address
 	addrBookProvider addrbook_provider.AddrBookProvider
@@ -223,14 +220,6 @@ func (n *rainTreeNetwork) RemovePeerToAddrBook(peer *typesP2P.NetworkPeer) error
 	n.peersManager.eventCh <- addressBookEvent{removeFromAddressBook, peer}
 	n.peersManager.wg.Wait()
 	return nil
-}
-
-func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
-	n.bus = bus
-}
-
-func (n *rainTreeNetwork) GetBus() modules.Bus {
-	return n.bus
 }
 
 func getNonce() uint64 {

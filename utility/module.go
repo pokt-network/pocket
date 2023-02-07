@@ -18,10 +18,12 @@ var (
 )
 
 type utilityModule struct {
-	bus    modules.Bus
+	modules.BaseIntegratableModule
+	modules.BaseInterruptableModule
+	
 	config *configs.UtilityConfig
 
-	logger modules.Logger
+	logger  modules.Logger
 	mempool mempool.TXMempool
 }
 
@@ -53,23 +55,8 @@ func (u *utilityModule) Start() error {
 	return nil
 }
 
-func (u *utilityModule) Stop() error {
-	return nil
-}
-
 func (u *utilityModule) GetModuleName() string {
 	return modules.UtilityModuleName
-}
-
-func (u *utilityModule) SetBus(bus modules.Bus) {
-	u.bus = bus
-}
-
-func (u *utilityModule) GetBus() modules.Bus {
-	if u.bus == nil {
-		u.logger.Fatal().Msg("Bus is not initialized")
-	}
-	return u.bus
 }
 
 func (u *utilityModule) HandleMessage(message *anypb.Any) error {

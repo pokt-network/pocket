@@ -22,7 +22,9 @@ var (
 // DISCUSS(team): Should the warning logs in this module be handled differently?
 
 type PrometheusTelemetryModule struct {
-	bus    modules.Bus
+	modules.BaseIntegratableModule
+	modules.BaseInterruptableModule
+
 	config *configs.TelemetryConfig
 
 	logger modules.Logger
@@ -68,23 +70,8 @@ func (m *PrometheusTelemetryModule) Start() error {
 	return nil
 }
 
-func (m *PrometheusTelemetryModule) Stop() error {
-	return nil
-}
-
-func (m *PrometheusTelemetryModule) SetBus(bus modules.Bus) {
-	m.bus = bus
-}
-
 func (m *PrometheusTelemetryModule) GetModuleName() string {
 	return fmt.Sprintf("%s_prometheus", modules.TelemetryModuleName)
-}
-
-func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
-	if m.bus == nil {
-		m.logger.Fatal().Msg("PocketBus is not initialized")
-	}
-	return m.bus
 }
 
 // EventMetricsAgent interface implementation

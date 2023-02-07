@@ -29,7 +29,8 @@ var (
 )
 
 type consensusModule struct {
-	bus        modules.Bus
+	modules.BaseIntegratableModule
+
 	privateKey cryptoPocket.Ed25519PrivateKey
 
 	consCfg      *configs.ConsensusConfig
@@ -221,14 +222,15 @@ func (m *consensusModule) GetModuleName() string {
 }
 
 func (m *consensusModule) GetBus() modules.Bus {
-	if m.bus == nil {
+	bus := m.BaseIntegratableModule.GetBus()
+	if bus == nil {
 		logger.Global.Fatal().Msg("PocketBus is not initialized")
 	}
-	return m.bus
+	return bus
 }
 
 func (m *consensusModule) SetBus(pocketBus modules.Bus) {
-	m.bus = pocketBus
+	m.BaseIntegratableModule.SetBus(pocketBus)
 	if m.paceMaker != nil {
 		m.paceMaker.SetBus(pocketBus)
 	}

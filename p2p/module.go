@@ -5,6 +5,7 @@ import (
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	persABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
@@ -102,8 +103,12 @@ func (m *p2pModule) SetBus(bus modules.Bus) {
 }
 
 func (m *p2pModule) setupDependencies() {
-	m.addrBookProvider = getAddrBookProvider(m)
-	m.currentHeightProvider = getCurrentHeightProvider(m)
+	addrBookProvider, err := m.GetBus().GetModulesRegistry().GetModule(addrbook_provider.ModuleName)
+	if err != nil {
+		addrBookProvider = persABP.NewPersistenceAddrBookProvider(m.GetBus())
+	}
+	m.addrBookProvider = addrBookProvider.(providers.AddrBookProvider)
+	m.currentHeightProvider = m.GetBus().GetConsensusModule()
 }
 
 func (m *p2pModule) GetBus() modules.Bus {
@@ -121,14 +126,12 @@ func (m *p2pModule) GetModuleName() string {
 func (m *p2pModule) Start() error {
 	logger.Global.Info().Msg("Starting network module")
 
-	addrbookProvider := m.addrBookProvider
-	currentHeightProvider := m.currentHeightProvider
 	cfg := m.GetBus().GetRuntimeMgr().GetConfig()
 
 	if cfg.P2P.UseRainTree {
-		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), addrbookProvider, currentHeightProvider)
+		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), m.addrBookProvider, m.currentHeightProvider)
 	} else {
-		m.network = stdnetwork.NewNetwork(m.GetBus(), addrbookProvider, currentHeightProvider)
+		m.network = stdnetwork.NewNetwork(m.GetBus(), m.addrBookProvider, m.currentHeightProvider)
 	}
 
 	if cfg.ClientDebugMode {
@@ -160,29 +163,6 @@ func (m *p2pModule) Start() error {
 		CounterIncrement(telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
 
 	return nil
-}
-
-// CLEANUP(#429): marked for removal since we'll implement a better pattern for dependency injection
-func getAddrBookProvider(m *p2pModule) providers.AddrBookProvider {
-	var addrbookProvider providers.AddrBookProvider
-
-	if m.addrBookProvider == nil {
-		addrbookProvider = persABP.NewPersistenceAddrBookProvider(m.GetBus())
-	} else {
-		addrbookProvider = m.addrBookProvider
-	}
-	return addrbookProvider
-}
-
-// CLEANUP(#429): marked for removal since we'll implement a better pattern for dependency injection
-func getCurrentHeightProvider(m *p2pModule) providers.CurrentHeightProvider {
-	var currentHeightProvider providers.CurrentHeightProvider
-	if m.currentHeightProvider == nil {
-		currentHeightProvider = m.GetBus().GetConsensusModule()
-	} else {
-		currentHeightProvider = m.currentHeightProvider
-	}
-	return currentHeightProvider
 }
 
 func (m *p2pModule) Stop() error {
