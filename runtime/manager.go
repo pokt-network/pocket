@@ -28,7 +28,6 @@ type Manager struct {
 	genesisState *genesis.GenesisState
 
 	clock clock.Clock
-	bus   modules.Bus
 }
 
 func NewManager(config *configs.Config, genesis *genesis.GenesisState, options ...func(*Manager)) *Manager {
@@ -41,7 +40,7 @@ func NewManager(config *configs.Config, genesis *genesis.GenesisState, options .
 	mgr.config = config
 	mgr.genesisState = genesis
 	mgr.clock = clock.New()
-	mgr.bus = bus
+	mgr.BaseIntegratableModule = *modules.NewBaseIntegratableModule(bus)
 
 	for _, o := range options {
 		o(mgr)
