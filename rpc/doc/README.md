@@ -30,7 +30,7 @@ The source of truth is the the [OpenAPI3.0 yaml file](../v1/openapi.yaml) (also 
 Anytime we make changes to the yaml file, we need to regenerate the boilerplate code by running
 
 ```bash
-$ make generate_rpc_openapi
+make generate_rpc_openapi
 ```
 
 The compilation errors should guide towards the next steps.
@@ -109,3 +109,5 @@ Definitely we'll need ways to retrieve transactions as well so we can envisage:
 └── v1
     └── openapi.yaml         # OpenAPI v3.0 spec (source for the generated files above)
 ```
+
+<!-- GITHUB_WIKI: rpc/readme -->

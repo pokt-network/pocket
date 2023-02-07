@@ -2,7 +2,6 @@ package utility
 
 import (
 	"encoding/hex"
-	"log"
 	"math/big"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -23,8 +22,8 @@ import (
 */
 
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
-func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (string, [][]byte, error) {
-	lastBlockByzantineVals, err := u.getLastBlockByzantineValidators()
+func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (stateHash string, transactions [][]byte, err error) {
+	lastBlockByzantineVals, err := u.GetLastBlockByzantineValidators()
 	if err != nil {
 		return "", nil, err
 	}
@@ -32,11 +31,13 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	if err := u.BeginBlock(lastBlockByzantineVals); err != nil {
 		return "", nil, err
 	}
-	transactions := make([][]byte, 0)
+	transactions = make([][]byte, 0)
 	totalTxsSizeInBytes := 0
 	txIndex := 0
-	for !u.mempool.IsEmpty() {
-		txBytes, err := u.mempool.PopTransaction()
+
+	mempool := u.GetBus().GetUtilityModule().GetMempool()
+	for !mempool.IsEmpty() {
+		txBytes, err := mempool.PopTx()
 		if err != nil {
 			return "", nil, err
 		}
@@ -48,11 +49,10 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		totalTxsSizeInBytes += txTxsSizeInBytes
 		if totalTxsSizeInBytes >= maxTransactionBytes {
 			// Add back popped transaction to be applied in a future block
-			err := u.mempool.AddTransaction(txBytes)
+			err := mempool.AddTx(txBytes)
 			if err != nil {
 				return "", nil, err
 			}
-			totalTxsSizeInBytes -= txTxsSizeInBytes
 			break // we've reached our max
 		}
 		txResult, err := u.applyTransaction(txIndex, transaction)
@@ -65,7 +65,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			continue
 		}
 		if err := u.persistenceContext.IndexTransaction(txResult); err != nil {
-			log.Fatalf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
+			u.logger.Fatal().Err(err).Msgf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
 		}
 
 		transactions = append(transactions, txBytes)
@@ -78,9 +78,9 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	// return the app hash (consensus module will get the validator set directly)
 	stateHash, err := u.persistenceContext.ComputeStateHash()
 	if err != nil {
-		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
+		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 	}
-	log.Println("CreateAndApplyProposalBlock - computed state hash:", stateHash)
+	u.logger.Info().Msgf("CreateAndApplyProposalBlock - computed state hash: %s", stateHash)
 
 	return stateHash, transactions, err
 }
@@ -118,7 +118,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 		}
 
 		if err := u.persistenceContext.IndexTransaction(txResult); err != nil {
-			log.Fatalf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
+			u.logger.Fatal().Err(err).Msg("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
 		}
 
 		// TODO: if found, remove transaction from mempool.
@@ -135,10 +135,10 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 	// return the app hash (consensus module will get the validator set directly)
 	stateHash, err := u.persistenceContext.ComputeStateHash()
 	if err != nil {
-		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
+		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return "", typesUtil.ErrAppHash(err)
 	}
-	log.Println("ApplyBlock - computed state hash:", stateHash)
+	u.logger.Info().Msgf("ApplyBlock - computed state hash: %s", stateHash)
 
 	// return the app hash; consensus module will get the validator set directly
 	return stateHash, nil

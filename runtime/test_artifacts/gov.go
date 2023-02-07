@@ -11,9 +11,7 @@ import (
 
 // TODO (Team) this entire file should be re-scoped. DefaultParameters are only a testing thing because prod defers to the genesis file
 
-var (
-	DefaultParamsOwner, _ = crypto.NewPrivateKey("ff538589deb7f28bbce1ba68b37d2efc0eaa03204b36513cf88422a875559e38d6cbe0430ddd85a5e48e0c99ef3dea47bf0d1a83c6e6ad1640f72201dc8a0120")
-)
+var DefaultParamsOwner, _ = crypto.NewPrivateKey("ff538589deb7f28bbce1ba68b37d2efc0eaa03204b36513cf88422a875559e38d6cbe0430ddd85a5e48e0c99ef3dea47bf0d1a83c6e6ad1640f72201dc8a0120")
 
 func DefaultParams() *genesis.Params {
 	return &genesis.Params{

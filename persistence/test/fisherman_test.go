@@ -151,12 +151,12 @@ func TestGetFishermanStatus(t *testing.T) {
 	// Check status before the fisherman exists
 	status, err := db.GetFishermanStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, status, persistence.UndefinedStakingStatus, "unexpected status")
+	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
 
 	// Check status after the fisherman exists
 	status, err = db.GetFishermanStatus(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
+	require.Equal(t, DefaultStakeStatus, status, "unexpected status")
 }
 
 func TestGetFishermanPauseHeightIfExists(t *testing.T) {
@@ -171,12 +171,12 @@ func TestGetFishermanPauseHeightIfExists(t *testing.T) {
 	// Check pause height when fisherman does not exist
 	pauseHeight, err := db.GetFishermanPauseHeightIfExists(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
+	require.Equal(t, DefaultPauseHeight, pauseHeight, "unexpected pause height")
 
 	// Check pause height when fisherman does not exist
 	pauseHeight, err = db.GetFishermanPauseHeightIfExists(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
+	require.Equal(t, DefaultPauseHeight, pauseHeight, "unexpected pause height")
 }
 
 func TestSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
@@ -217,7 +217,7 @@ func TestGetFishermanOutputAddress(t *testing.T) {
 
 	output, err := db.GetFishermanOutputAddress(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, hex.EncodeToString(output), fisherman.Output, "unexpected output address")
+	require.Equal(t, fisherman.Output, hex.EncodeToString(output), "unexpected output address")
 }
 
 func newTestFisherman() (*coreTypes.Actor, error) {

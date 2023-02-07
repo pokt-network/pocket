@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -10,18 +11,16 @@ import (
 )
 
 type loggerModule struct {
+	zerolog.Logger
 	bus    modules.Bus
-	logger modules.Logger
 	config *configs.LoggerConfig
 }
 
-// All loggers branch out of mainLogger, that way configuration changes to mainLogger propagate to others.
-var mainLogger = zerolog.New(os.Stderr).With().Timestamp().Logger()
+// Each module should have it's own logger to easily configure & filter logs by module.
 
-// The idea is to create a logger for each module, so that we can easily filter logs by module.
-// But we also need a global logger, because sometimes we need to log outside of modules, e.g. when the process just
-// started, and modules are not initiated yet.
-var Global = new(loggerModule).CreateLoggerForModule("global")
+// A Global logger is also created to enable logging outside of modules (e.g. when the node is starting).
+// All loggers branch out of Global, that way configuration changes to Global propagate to others.
+var Global loggerModule
 
 var _ modules.LoggerModule = &loggerModule{}
 
@@ -40,12 +39,20 @@ var pocketLogFormatToEnum = map[string]configs.LogFormat{
 	"pretty": configs.LogFormat_LOG_FORMAT_PRETTY,
 }
 
+// init is called when the package is imported.
+// It is used to initialize the global logger.
+func init() {
+	Global = loggerModule{
+		Logger: zerolog.New(os.Stdout).With().Timestamp().Logger(),
+	}
+}
+
 func Create(bus modules.Bus) (modules.Module, error) {
 	return new(loggerModule).Create(bus)
 }
 
 func (*loggerModule) CreateLoggerForModule(moduleName string) modules.Logger {
-	return mainLogger.With().Str("module", moduleName).Logger()
+	return Global.Logger.With().Str("module", moduleName).Logger()
 }
 
 func (*loggerModule) Create(bus modules.Bus) (modules.Module, error) {
@@ -54,26 +61,35 @@ func (*loggerModule) Create(bus modules.Bus) (modules.Module, error) {
 	m := &loggerModule{
 		config: cfg.Logger,
 	}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 
-	m.InitLogger()
+	Global.config = m.config
+	Global.CreateLoggerForModule("global")
 
 	// Mapping config string value to the proto enum
-	if pocketLogLevel, ok := configs.LogLevel_value[`LogLevel_LOG_LEVEL_`+strings.ToUpper(m.config.Level)]; ok {
+	if pocketLogLevel, ok := configs.LogLevel_value[`LOG_LEVEL_`+strings.ToUpper(Global.config.GetLevel())]; ok {
 		zerolog.SetGlobalLevel(pocketLogLevelToZeroLog[configs.LogLevel(pocketLogLevel)])
 	} else {
 		zerolog.SetGlobalLevel(zerolog.NoLevel)
 	}
 
-	if pocketLogFormatToEnum[m.config.Format] == configs.LogFormat_LOG_FORMAT_PRETTY {
-		mainLogger = mainLogger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-		mainLogger.Info().Msg("using pretty log format")
+	if pocketLogFormatToEnum[Global.config.GetFormat()] == configs.LogFormat_LOG_FORMAT_PRETTY {
+		logStructure := zerolog.ConsoleWriter{Out: os.Stdout}
+		logStructure.FormatLevel = func(i interface{}) string {
+			return fmt.Sprintf("level=%s", strings.ToUpper(i.(string)))
+		}
+
+		Global.Logger = Global.Logger.Output(logStructure)
+		Global.Logger.Info().Msg("using pretty log format")
 	}
 
-	return m, nil
+	return &Global, nil
 }
 
 func (m *loggerModule) Start() error {
+	Global.Logger = m.CreateLoggerForModule("global")
 	return nil
 }
 
@@ -91,15 +107,27 @@ func (m *loggerModule) SetBus(bus modules.Bus) {
 
 func (m *loggerModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		m.logger.Fatal().Msg("Bus is not initialized")
+		m.Logger.Fatal().Msg("Bus is not initialized")
 	}
 	return m.bus
 }
 
-func (m *loggerModule) InitLogger() {
-	m.logger = m.CreateLoggerForModule(m.GetModuleName())
+func (m *loggerModule) GetLogger() modules.Logger {
+	return m.Logger
 }
 
-func (m *loggerModule) GetLogger() modules.Logger {
-	return m.logger
+// INVESTIGATE(#420): https://github.com/pokt-network/pocket/issues/480
+// SetFields sets the fields for the global logger
+func (m *loggerModule) SetFields(fields map[string]any) {
+	m.Logger = m.Logger.With().Fields(fields).Logger()
+}
+
+// UpdateFields updates the fields for the global logger
+func (m *loggerModule) UpdateFields(fields map[string]any) {
+	m.Logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
+		for k, v := range fields {
+			c = c.Interface(k, v)
+		}
+		return c
+	})
 }

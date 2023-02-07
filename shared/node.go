@@ -1,8 +1,6 @@
 package shared
 
 import (
-	"log"
-
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
@@ -59,7 +57,7 @@ func (m *Node) Create(bus modules.Bus) (modules.Module, error) {
 }
 
 func (node *Node) Start() error {
-	log.Println("About to start pocket node modules...")
+	logger.Global.Info().Msg("About to start pocket node modules...")
 
 	// IMPORTANT: Order of module startup here matters
 
@@ -94,19 +92,19 @@ func (node *Node) Start() error {
 	}
 	node.GetBus().PublishEventToBus(signalNodeStartedEvent)
 
-	log.Println("About to start pocket node main loop...")
+	logger.Global.Info().Msg("About to start pocket node main loop...")
 
 	// While loop lasting throughout the entire lifecycle of the node to handle asynchronous events
 	for {
 		event := node.GetBus().GetBusEvent()
 		if err := node.handleEvent(event); err != nil {
-			log.Println("Error handling event:", err)
+			logger.Global.Error().Err(err).Msg("Error handling event")
 		}
 	}
 }
 
 func (node *Node) Stop() error {
-	log.Println("Stopping pocket node...")
+	logger.Global.Info().Msg("Stopping pocket node...")
 	return nil
 }
 
@@ -116,7 +114,7 @@ func (m *Node) SetBus(bus modules.Bus) {
 
 func (m *Node) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		logger.Global.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
 }
@@ -125,7 +123,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	contentType := message.GetContentType()
 	switch contentType {
 	case messaging.NodeStartedEventType:
-		log.Println("[NOOP] Received NodeStartedEvent")
+		logger.Global.Info().Msg("Received NodeStartedEvent")
 	case consensus.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 	case utility.TransactionGossipMessageContentType:
@@ -133,7 +131,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
 	default:
-		log.Printf("[WARN] Unsupported message content type: %s \n", contentType)
+		logger.Global.Warn().Msgf("Unsupported message content type: %s", contentType)
 	}
 	return nil
 }
@@ -145,20 +143,17 @@ func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
 		return err
 	}
 	switch debugMessage.Action {
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
-		fallthrough
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
-		fallthrough
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
-		fallthrough
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
+	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
 		return node.GetBus().GetConsensusModule().HandleDebugMessage(debugMessage)
 	// Persistence Debug
 	case messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		return node.GetBus().GetPersistenceModule().HandleDebugMessage(debugMessage)
 	// Default Debug
 	default:
-		log.Printf("Debug message: %s \n", debugMessage.Message)
+		logger.Global.Debug().Msgf("Received DebugMessage: %s", debugMessage.Message)
 	}
 
 	return nil

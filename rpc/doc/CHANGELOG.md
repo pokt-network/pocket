@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.10] - 2023-02-07
+
+- Added GITHUB_WIKI tags where it was missing
+
+## [0.0.0.9] - 2023-02-06
+
+- Address legacy linter errors from `golangci-lint`
+
+## [0.0.0.8] - 2023-02-06
+
+- Changed readme to remove $ sign from code blocks
+
+## [0.0.0.7] - 2023-02-04
+
+- Changed log lines to utilize new logger module.
+
 ## [0.0.0.6] - 2023-01-23
 
 - Added `pprof` http server feature flag via build tags
@@ -31,15 +47,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.1] - 2022-11-02
 
-### Added
-
 - Consensus State endpoint
 - Added CORS feature flag and config
 - Added dockerized swagger-ui
 
 ## [0.0.0.0] - 2022-10-20
-
-### Added
 
 - First iteration of the RPC
   - Endpoint: Node liveness
@@ -48,3 +60,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Spec: basic Openapi.yaml
   - Codegen: code generation for the Server + DTOs
   - Codegen: code generation for the Client
+
+<!-- GITHUB_WIKI: changelog/rpc -->

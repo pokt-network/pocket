@@ -77,3 +77,5 @@ graph TD
     E --> A
     C --> |IF selection is maxed| F[done]
 ```
+
+<!-- GITHUB_WIKI: utility/session_protocol -->

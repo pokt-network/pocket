@@ -11,6 +11,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/converters"
+	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -24,9 +25,8 @@ const (
 	testingApplicationCount = 1
 	testingFishermenCount   = 1
 
-	testNonce           = "defaultNonceString"
-	testSchema          = "test_schema"
-	testMessageSendType = "MessageSend"
+	testNonce  = "defaultNonceString"
+	testSchema = "test_schema"
 )
 
 var (
@@ -39,8 +39,8 @@ var (
 	testUtilityMod     modules.UtilityModule
 )
 
-func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
-	return utilTypes.NewMempool(1000000, 1000)
+func NewTestingMempool(_ *testing.T) mempool.TXMempool {
+	return utilTypes.NewTxFIFOMempool(1000000, 1000)
 }
 
 func TestMain(m *testing.M) {
@@ -61,11 +61,9 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
+func newTestingUtilityContext(t *testing.T, height int64) *utility.UtilityContext {
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
-
-	mempool := testUtilityMod.(*utilityModule).mempool
 
 	// TECHDEBT: Move the internal of cleanup into a separate function and call this in the
 	// beginning of every test. This (the current implementation) is an issue because if we call
@@ -76,16 +74,17 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
 		}))
-		mempool.Clear()
+		testUtilityMod.GetMempool().Clear()
 	})
 
-	return &utilityContext{
+	uc := &utility.UtilityContext{
 		height:             height,
-		mempool:            mempool,
 		persistenceContext: persistenceContext,
 		savePointsSet:      make(map[string]struct{}),
 		savePointsList:     make([][]byte, 0),
 	}
+
+	return uc.WithBus(testUtilityMod.GetBus())
 }
 
 func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
@@ -150,6 +149,5 @@ func mockBusInTestModules(t *testing.T) {
 
 	t.Cleanup(func() {
 		testPersistenceMod.SetBus(nil)
-		testUtilityMod.SetBus(nil)
 	})
 }

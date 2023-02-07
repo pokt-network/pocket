@@ -396,3 +396,5 @@ Aptos follow an **async "fire-and-forget"** pattern as can be seen [here](https:
   - A detailed list of the type of requests Chia uses for communication between peers
 - [https://docs.chia.net/node-syncing](https://docs.chia.net/node-syncing)
   - An explanation of the configurations Chia exposes for node synching
+
+<!-- GITHUB_WIKI: consensus/state_sync_protocol -->

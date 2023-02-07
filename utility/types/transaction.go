@@ -103,6 +103,16 @@ func (tx *Transaction) SignableBytes() ([]byte, error) {
 	return codec.GetCodec().Marshal(transaction)
 }
 
+// func (tx *Transaction) SignBytes() ([]byte, Error) {
+// 	sig := tx.Signature // Backup signature
+// 	tx.Signature = nil
+// 	bz, err := codec.GetCodec().Marshal(tx)
+// 	if err != nil {
+// 		return nil, ErrProtoMarshal(err)
+// 	}
+// 	tx.Signature = sig // Restore signature
+// 	return bz, nil
+
 func (tx *Transaction) Bytes() ([]byte, error) {
 	return codec.GetCodec().Marshal(tx)
 }

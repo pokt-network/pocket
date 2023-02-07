@@ -16,6 +16,8 @@ type utilityContext struct {
 	savePointsSet  map[string]struct{}
 	savePointsList [][]byte
 
+	logger modules.Logger
+
 	// TECHDEBT: Consolidate all these types with the shared Protobuf struct and create a `proposalBlock`
 	proposalProposerAddr []byte
 	proposalStateHash    string
@@ -28,7 +30,9 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 		return nil, typesUtil.ErrNewPersistenceContext(err)
 	}
 	return &utilityContext{
+		bus:                u.GetBus(),
 		height:             height,
+		logger:             u.logger,
 		mempool:            u.mempool,
 		persistenceContext: ctx,
 		savePointsList:     make([][]byte, 0),
@@ -103,8 +107,17 @@ func (u *utilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
 	return nil
 }
 
-func (u *utilityContext) Reset() typesUtil.Error {
-	if err := u.persistenceContext.Release(); err != nil {
+func (u *utilityContext) GetBus() modules.Bus {
+	return u.bus
+}
+
+func (u *utilityContext) WithBus(bus modules.Bus) *UtilityContext {
+	u.bus = bus
+	return u
+}
+
+func (c *context) Reset() typesUtil.Error {
+	if err := c.PersistenceRWContext.Release(); err != nil {
 		return typesUtil.ErrResetContext(err)
 	}
 	return nil

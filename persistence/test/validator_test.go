@@ -171,12 +171,12 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 	// Check pause height when validator does not exist
 	pauseHeight, err := db.GetValidatorPauseHeightIfExists(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
+	require.Equal(t, DefaultPauseHeight, pauseHeight, "unexpected pause height")
 
 	// Check pause height when validator does not exist
 	pauseHeight, err = db.GetValidatorPauseHeightIfExists(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
+	require.Equal(t, DefaultPauseHeight, pauseHeight, "unexpected pause height")
 }
 
 func TestSetValidatorPauseHeightAndUnstakeLater(t *testing.T) {
@@ -217,7 +217,7 @@ func TestGetValidatorOutputAddress(t *testing.T) {
 
 	output, err := db.GetValidatorOutputAddress(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, hex.EncodeToString(output), validator.Output, "unexpected output address")
+	require.Equal(t, validator.Output, hex.EncodeToString(output), "unexpected output address")
 }
 
 func newTestValidator() (*coreTypes.Actor, error) {

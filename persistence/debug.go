@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"crypto/sha256"
-	"log"
 	"runtime/debug"
 
 	"github.com/celestiaorg/smt"
@@ -38,7 +37,7 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMess
 		g := m.genesisState
 		m.populateGenesisState(g) // fatal if there's an error
 	default:
-		log.Printf("Debug message not handled by persistence module: %s \n", debugMessage.Message)
+		m.logger.Debug().Str("message", debugMessage.Message.String()).Msg("Debug message not handled by persistence module")
 	}
 	return nil
 }
@@ -48,17 +47,17 @@ func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) {
 	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1
 	blockBytes, err := m.GetBlockStore().Get(heightToBytes(int64(height)))
 	if err != nil {
-		log.Printf("Error getting block %d from block store: %s \n", height, err)
+		m.logger.Error().Err(err).Uint64("height", height).Msg("Error getting block from block store")
 		return
 	}
 
 	block := &coreTypes.Block{}
 	if err := codec.GetCodec().Unmarshal(blockBytes, block); err != nil {
-		log.Printf("Error decoding block %d from block store: %s \n", height, err)
+		m.logger.Error().Err(err).Uint64("height", height).Msg("Error decoding block from block store")
 		return
 	}
 
-	log.Printf("Block at height %d: %+v \n", height, block)
+	m.logger.Info().Uint64("height", height).Str("block", block.String()).Msg("Block from block store")
 }
 
 // TECHDEBT: Make sure this is atomic
@@ -89,24 +88,21 @@ func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
 		return err
 	}
 
-	log.Println("Cleared all the state")
+	m.logger.Info().Msg("Cleared all the state")
 	// reclaming memory manually because the above calls deallocate and reallocate a lot of memory
 	debug.FreeOSMemory()
 	return nil
 }
 
 func (p *PostgresContext) clearAllSQLState() error {
-	ctx, clearTx, err := p.getCtxAndTx()
-	if err != nil {
-		return err
-	}
+	ctx, clearTx := p.getCtxAndTx()
 
 	for _, actor := range protocolActorSchemas {
-		if _, err = clearTx.Exec(ctx, actor.ClearAllQuery()); err != nil {
+		if _, err := clearTx.Exec(ctx, actor.ClearAllQuery()); err != nil {
 			return err
 		}
 		if actor.GetChainsTableName() != "" {
-			if _, err = clearTx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
+			if _, err := clearTx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
 				return err
 			}
 		}
@@ -118,7 +114,7 @@ func (p *PostgresContext) clearAllSQLState() error {
 		}
 	}
 
-	if err = clearTx.Commit(ctx); err != nil {
+	if err := clearTx.Commit(ctx); err != nil {
 		return err
 	}
 

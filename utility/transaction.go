@@ -37,7 +37,7 @@ func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	}
 
 	// Store the tx in the mempool
-	return u.mempool.AddTransaction(txProtoBytes)
+	return u.mempool.AddTx(txProtoBytes)
 }
 
 func (u *utilityContext) applyTransaction(index int, tx *typesUtil.Transaction) (modules.TxResult, typesUtil.Error) {

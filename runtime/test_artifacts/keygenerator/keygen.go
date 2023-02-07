@@ -25,7 +25,7 @@ func GetInstance() *keyGenerator {
 
 func (k *keyGenerator) reset() {
 	rand.Seed(timestamppb.Now().Seconds)
-	k.privateKeySeed = rand.Int()
+	k.privateKeySeed = rand.Int() //nolint:gosec // G404 - Weak random source is okay here
 }
 
 func (k *keyGenerator) SetSeed(seed int) (teardown func()) {

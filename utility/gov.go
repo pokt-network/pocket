@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"log"
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/converters"
@@ -31,7 +30,7 @@ func (u *utilityContext) updateParam(paramName string, value any) typesUtil.Erro
 	default:
 		break
 	}
-	log.Fatalf("unhandled value type %T for %v", value, value)
+	u.logger.Fatal().Msgf("unhandled value type %T for %v", value, value)
 	return typesUtil.ErrUnknownParam(paramName)
 }
 
@@ -559,7 +558,7 @@ func (u *utilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.E
 	}
 	value, err := store.GetStringParam(paramName, height)
 	if err != nil {
-		log.Printf("err: %v\n", err)
+		u.logger.Err(err)
 		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
 	amount, err := converters.StringToBigInt(value)

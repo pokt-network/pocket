@@ -30,3 +30,5 @@ For a detailed overview of all the possible settings, please review `RuntimeMgr`
 The genesis file contains the initial state (aka genesis) of the blockchain associated with each module. Feel free to dive into the specific modules and their genesis-specific types for more information.
 
 For a detailed overview of all the possible settings, please look in the `RuntimeMgr` [README.md](../../../runtime/docs/README.md).
+
+<!-- GITHUB_WIKI: app/binary -->

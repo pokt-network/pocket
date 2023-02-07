@@ -1,12 +1,12 @@
 # Building & Versioning
 
-- [Building & Versioning](#building--versioning)
+- [Building \& Versioning](#building--versioning)
   - [Release Tag Versioning](#release-tag-versioning)
-  - [[WIP] Build Versioning](#wip-build-versioning)
+  - [\[WIP\] Build Versioning](#wip-build-versioning)
   - [Container Images](#container-images)
     - [Tags](#tags)
     - [Extended images with additional tooling](#extended-images-with-additional-tooling)
-  - [[TODO] Magefile build system](#todo-magefile-build-system)
+  - [\[TODO\] Magefile build system](#todo-magefile-build-system)
 
 ## Release Tag Versioning
 
@@ -43,3 +43,5 @@ Extended images with additional tooling are built to aid in troubleshoot and deb
 ## [TODO] Magefile build system
 
 Once the V1 implementation reaches the stage of testable binaries, we are looking to use [Mage](https://magefile.org/) which is being tracked in [pocket/issues/43](https://github.com/pokt-network/pocket/issues/43) that'll inject a version with the `-version` flag.
+
+<!-- GITHUB_WIKI: guides/releases/readme -->

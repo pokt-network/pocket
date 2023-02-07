@@ -2,8 +2,8 @@ package telemetry
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -19,7 +19,7 @@ type NoopTelemetryModule struct {
 }
 
 func NOOP(args ...any) {
-	log.Printf("\n[telemetry=noop][%s]\n", args)
+	logger.Global.Debug().Msg("NOOP")
 }
 
 func CreateNoopTelemetryModule(bus modules.Bus) (modules.Module, error) {
@@ -29,7 +29,9 @@ func CreateNoopTelemetryModule(bus modules.Bus) (modules.Module, error) {
 
 func (*NoopTelemetryModule) Create(bus modules.Bus) (modules.Module, error) {
 	m := &NoopTelemetryModule{}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 	return m, nil
 }
 
@@ -53,7 +55,7 @@ func (m *NoopTelemetryModule) SetBus(bus modules.Bus) {
 
 func (m *NoopTelemetryModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		logger.Global.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
 }
@@ -70,7 +72,7 @@ func (m *NoopTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
 	return modules.TimeSeriesAgent(m)
 }
 
-func (*NoopTelemetryModule) CounterRegister(name string, description string) {
+func (*NoopTelemetryModule) CounterRegister(name, description string) {
 	NOOP("CounterRegister", "name", name, "description", description)
 }
 
@@ -78,7 +80,7 @@ func (*NoopTelemetryModule) CounterIncrement(name string) {
 	NOOP("CounterIncrement", "name", name)
 }
 
-func (*NoopTelemetryModule) GaugeRegister(name string, description string) {
+func (*NoopTelemetryModule) GaugeRegister(name, description string) {
 	NOOP("GaugeRegister", "name", name, "description", description)
 }
 
