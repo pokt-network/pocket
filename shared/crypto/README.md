@@ -84,7 +84,7 @@ flowchart LR
         armoured--salt-->B
         armoured--cipherText-->C
         armoured--kdf-->D
-        
+
     end
     subgraph S[scrypt lib]
         E["key(salt, pass, ...)"]
@@ -103,3 +103,5 @@ flowchart LR
     S--Key-->AES-GCM
     AES-GCM-->PrivateKey
 ```
+
+<!-- GITHUB_WIKI: shared/crypto/readme -->

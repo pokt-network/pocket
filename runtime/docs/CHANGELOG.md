@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.15] - 2023-02-07
+## [0.0.0.16] - 2023-02-07
 
 - Update runtime consensus config with bool server mode variable
 - Update manager test
+
+## [0.0.0.15] - 2023-02-07
+
+- Added GITHUB_WIKI tags where it was missing
 
 ## [0.0.0.14] - 2023-02-06
 
