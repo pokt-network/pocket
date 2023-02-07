@@ -25,9 +25,10 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	serverNodePeerId := m.GetBus().GetConsensusModule().GetNodeAddress()
 
 	clientPeerAddress := metadataReq.PeerAddress
-	m.logger.Info().Msg(fmt.Sprintf("%s received State Sync MetaData Req from: %s", serverNodePeerId, clientPeerAddress))
+	m.logger.Info().Msg(fmt.Sprintf("%s received state sync metadata request from: %s", serverNodePeerId, clientPeerAddress))
 
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(consensusMod.CurrentHeight()) - 1) //last finalized block
+	// last finalized block
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(consensusMod.CurrentHeight()) - 1)
 	if err != nil {
 		return nil
 	}
