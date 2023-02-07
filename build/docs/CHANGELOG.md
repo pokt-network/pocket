@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.11] - 2023-02-07
+## [0.0.0.12] - 2023-02-07
 
 - Code formatting by VSCode
+
+## [0.0.0.11] - 2023-02-07
+
+- Added GITHUB_WIKI tags where it was missing
 
 ## [0.0.0.10] - 2023-02-06
 
@@ -57,3 +61,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.0] - 2022-12-22
 
 - Introduced this `CHANGELOG.md`
+
+<!-- GITHUB_WIKI: changelog/build -->

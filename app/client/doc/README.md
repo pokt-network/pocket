@@ -28,3 +28,5 @@ Command tree available [here](./commands/client.md)
 │   └── utils_test.go        # tests for the support functions
 └── main.go                  # entrypoint
 ```
+
+<!-- GITHUB_WIKI: app/client/readme -->

@@ -7,9 +7,9 @@
 | Key          | Index                        | Value              | Description                                                        |
 | ------------ | ---------------------------- | ------------------ | ------------------------------------------------------------------ |
 | HASHKEY      | `h/SHA3(TxResultProtoBytes)` | TxResultProtoBytes | store value by hash (the key here is equivalent to the VALs below) |
-| HEIGHTKEY    | `b/height/txIndex`             | HASHKEY            | store hashKey by height                                            |
+| HEIGHTKEY    | `b/height/txIndex`           | HASHKEY            | store hashKey by height                                            |
 | SENDERKEY    | `s/senderAddr`               | HASHKEY            | store hashKey by sender                                            |
-| RECIPIENTKEY | `r/recipientAddr`            | HASHKEY            | store hashKey by recipient (if not empty)
+| RECIPIENTKEY | `r/recipientAddr`            | HASHKEY            | store hashKey by recipient (if not empty)                          |
 
 ## ELEN Index
 
