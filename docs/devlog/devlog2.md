@@ -102,7 +102,7 @@ A: A lot of learning from V0 and a commitment to visibility that won't only allo
 ##### Q: Other projects, like Cosmos, allow people to configure different backends for key storage. Is it worth surveying the community to see what backends the keybase should integrate with (e.g. Leveldb or Pass)?
 A: The Keybase currently users badger.db to store locally in the file system. When it comes to key management, enabling anyone to integrate their own key manager into the codebase and identifying maybe one major integration. Please keep in mind that this is not useful for localnet but will be useful once we have a remote deployment.
 
-### Q: In V0, the Private Key is a plain text in the server but not in the Keybase. In V1, is this all inside of the Keybase or will there be plain text PKs?
+##### Q: In V0, the Private Key is a plain text in the server but not in the Keybase. In V1, is this all inside of the Keybase or will there be plain text PKs?
 A: The Keybase contains all the PK pairs associated with wallets only. Storing in the same way as V0 (base64) to allow for complete interoperability. 
 
 ---
