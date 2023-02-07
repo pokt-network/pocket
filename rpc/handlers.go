@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
 	"github.com/pokt-network/pocket/shared/codec"
+	typesCore "github.com/pokt-network/pocket/shared/core/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -66,4 +67,74 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 		return err
 	}
 	return nil
+}
+
+func (s *rpcServer) GetV1P2pAddressBook(ctx echo.Context, params GetV1P2pAddressBookParams) error {
+	var height int64
+	var actors []Actor
+
+	if params.Height != nil {
+		height = *params.Height
+	} else {
+		height = int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	}
+
+	persistenceContext, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	defer persistenceContext.Close()
+
+	var getter func(height int64) ([]*typesCore.Actor, error)
+
+	if params.ActorType == nil {
+		getter = persistenceContext.GetAllStakedActors
+	} else {
+		switch *params.ActorType {
+		case Application:
+			getter = persistenceContext.GetAllApps
+		case Fisherman:
+			getter = persistenceContext.GetAllFishermen
+		case ServiceNode:
+			getter = persistenceContext.GetAllServiceNodes
+		case Validator:
+			getter = persistenceContext.GetAllValidators
+		}
+	}
+
+	coreActors, err := getter(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	for _, coreActor := range coreActors {
+		actors = append(actors, Actor{
+			Address:    coreActor.Address,
+			Type:       coreActorTypeToActorTypesEnum(coreActor.ActorType),
+			PublicKey:  coreActor.PublicKey,
+			ServiceUrl: coreActor.GenericParam,
+		})
+	}
+
+	response := P2PStakedActorsResponse{
+		Actors: actors,
+		Height: height,
+	}
+
+	return ctx.JSON(http.StatusOK, response)
+}
+
+func coreActorTypeToActorTypesEnum(coreActorType typesCore.ActorType) ActorTypesEnum {
+	switch coreActorType {
+	case typesCore.ActorType_ACTOR_TYPE_APP:
+		return Application
+	case typesCore.ActorType_ACTOR_TYPE_FISH:
+		return Fisherman
+	case typesCore.ActorType_ACTOR_TYPE_SERVICENODE:
+		return ServiceNode
+	case typesCore.ActorType_ACTOR_TYPE_VAL:
+		return Validator
+	default:
+		panic("invalid actor type")
+	}
 }

@@ -1,6 +1,6 @@
 openapi: 3.0.3
 servers:
-  - url: 'http://localhost:50832'
+  - url: "http://localhost:50832"
 info:
   description: >-
     This is the API definition Pocket Network Node RPC interface.
@@ -12,12 +12,12 @@ info:
     Pocket verifies all relayed data and proportionally rewards the participating nodes with POKT.
   version: 1.0.0
   title: Pocket Network
-  termsOfService: 'https://pokt.network/terms/'
+  termsOfService: "https://pokt.network/terms/"
   contact:
     email: hola@pokt.network
   license:
     name: MIT License
-    url: 'https://github.com/pokt-network/pocket/blob/main/LICENSE'
+    url: "https://github.com/pokt-network/pocket/blob/main/LICENSE"
 tags:
   - name: version
     description: Version of the Pocket API
@@ -34,11 +34,11 @@ paths:
         - health
       summary: Get the liveness of the Pocket API node
       responses:
-        '200':
+        "200":
           description: Healthy
-        '404':
+        "404":
           description: Unhealthy - Unreachable
-        '500':
+        "500":
           description: Unhealthy - Server Error
   /v1/version:
     get:
@@ -64,13 +64,8 @@ paths:
           content:
             application/json:
               schema:
-                 $ref: '#/components/schemas/ConsensusState'
-              example:
-                {
-                  "height": 75016,
-                  "round": 0,
-                  "step": 3
-                }
+                $ref: "#/components/schemas/ConsensusState"
+              example: { "height": 75016, "round": 0, "step": 3 }
   /v1/client/broadcast_tx_sync:
     post:
       tags:
@@ -82,23 +77,64 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RawTXRequest'
+              $ref: "#/components/schemas/RawTXRequest"
       responses:
-        '200':
+        "200":
           description: Transaction added to the mempool without errors
-        '400':
+        "400":
           description: Bad request
           content:
             text/plain:
               example: "description of failure"
-        '500':
+        "500":
           description: An error occurred while adding the transaction to the mempool
           content:
             text/plain:
               example: "description of failure"
+
+  /v1/p2p/address_book:
+    get:
+      tags:
+        - p2p
+      summary: Gets the address book
+      parameters:
+        - in: query
+          name: height
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+          description: The height the query will be executed on. By default it uses the current height
+        - in: query
+          name: actor_type
+          required: false
+          schema:
+            $ref: "#/components/schemas/ActorTypesEnum"
+          description: The type of actor to be returned. By default it returns all actor types
+
+      responses:
+        "200":
+          description: Transaction added to the mempool without errors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/P2PStakedActorsResponse"
+
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while adding the transaction to the mempool
+          content:
+            text/plain:
+              example: "description of failure"
+
 externalDocs:
   description: Find out more about Pocket Network
-  url: 'https://pokt.network'
+  url: "https://pokt.network"
 components:
   schemas:
     RawTXRequest:
@@ -112,22 +148,59 @@ components:
         raw_hex_bytes:
           type: string
     ConsensusState:
-        type: object
-        required:
-          - height
-          - round
-          - step
-        properties:
-          height:
-            type: integer
-            format: int64
-          round:
-            type: integer
-            format: int64
-          step:
-            type: integer
-            format: int64
-  requestBodies: {}
+      type: object
+      required:
+        - height
+        - round
+        - step
+      properties:
+        height:
+          type: integer
+          format: int64
+        round:
+          type: integer
+          format: int64
+        step:
+          type: integer
+          format: int64
+    Actor:
+      type: object
+      required:
+        - type
+        - address
+        - public_key
+        - service_url
+      properties:
+        type:
+          $ref: "#/components/schemas/ActorTypesEnum"
+        address:
+          type: string
+        public_key:
+          type: string
+        service_url:
+          type: string
+
+    P2PStakedActorsResponse:
+      type: object
+      required:
+        - actors
+        - height
+      properties:
+        actors:
+          items:
+            $ref: "#/components/schemas/Actor"
+        height:
+          type: integer
+          format: int64
+
+    ActorTypesEnum:
+      type: string
+      enum:
+        - validator
+        - service_node
+        - fisherman
+        - application
+
   securitySchemes: {}
   links: {}
   callbacks: {}
