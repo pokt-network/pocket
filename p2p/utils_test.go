@@ -4,12 +4,13 @@ import (
 	"crypto/ed25519"
 	"encoding/binary"
 	"fmt"
-	types "github.com/pokt-network/pocket/runtime/configs/types"
 	"log"
 	"sort"
 	"sync"
 	"testing"
 	"time"
+
+	types "github.com/pokt-network/pocket/runtime/configs/types"
 
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -78,7 +79,7 @@ func validatorId(i int) string {
 	return fmt.Sprintf(serviceUrlFormat, i)
 }
 
-func waitForNetworkSimulationCompletion(t *testing.T, p2pModules map[string]*p2pModule, wg *sync.WaitGroup) {
+func waitForNetworkSimulationCompletion(t *testing.T, wg *sync.WaitGroup) {
 	// Wait for all messages to be transmitted
 	done := make(chan struct{})
 	go func() {
@@ -115,8 +116,8 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 	ctrl := gomock.NewController(t)
 	mockRuntimeMgrs := make([]modules.RuntimeMgr, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
-	copy(valKeys[:], keys[:numValidators])
-	mockGenesisState := createMockGenesisState(t, valKeys)
+	copy(valKeys, keys[:numValidators])
+	mockGenesisState := createMockGenesisState(valKeys)
 	for i := range mockRuntimeMgrs {
 		cfg := &configs.Config{
 			RootDirectory: "",
@@ -158,9 +159,8 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.Moc
 }
 
 // createMockGenesisState configures and returns a mocked GenesisState
-func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
+func createMockGenesisState(valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
 	genesisState := new(genesis.GenesisState)
-
 	validators := make([]*coreTypes.Actor, len(valKeys))
 	for i, valKey := range valKeys {
 		addr := valKey.Address().String()
@@ -193,7 +193,7 @@ func prepareBusMock(busMock *mockModules.MockBus,
 }
 
 // Consensus mock - only needed for validatorMap access
-func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus, genesisState *genesis.GenesisState) *mockModules.MockConsensusModule {
+func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus) *mockModules.MockConsensusModule {
 	ctrl := gomock.NewController(t)
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
@@ -201,7 +201,8 @@ func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus, genesisSta
 	consensusMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	consensusMock.EXPECT().SetBus(busMock).AnyTimes()
 	consensusMock.EXPECT().GetModuleName().Return(modules.ConsensusModuleName).AnyTimes()
-	busMock.RegisterModule(consensusMock)
+	err := busMock.RegisterModule(consensusMock)
+	require.NoError(t, err)
 
 	return consensusMock
 }
@@ -220,7 +221,8 @@ func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisS
 	persistenceMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	persistenceMock.EXPECT().SetBus(busMock).AnyTimes()
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
-	busMock.RegisterModule(persistenceMock)
+	err := busMock.RegisterModule(persistenceMock)
+	require.NoError(t, err)
 
 	return persistenceMock
 }
@@ -239,7 +241,8 @@ func prepareTelemetryMock(t *testing.T, busMock *mockModules.MockBus, valId stri
 	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
 	telemetryMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	telemetryMock.EXPECT().SetBus(busMock).AnyTimes()
-	busMock.RegisterModule(telemetryMock)
+	err := busMock.RegisterModule(telemetryMock)
+	require.NoError(t, err)
 
 	return telemetryMock
 }

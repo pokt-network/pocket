@@ -3,14 +3,13 @@ package raintree
 import (
 	"fmt"
 	"log"
-	"math/rand"
-	"time"
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -60,7 +59,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProv
 }
 
 func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
-	return n.networkBroadcastAtLevel(data, n.peersManager.getNetworkView().maxNumLevels, getNonce())
+	return n.networkBroadcastAtLevel(data, n.peersManager.getNetworkView().maxNumLevels, crypto.GetNonce())
 }
 
 func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, nonce uint64) error {
@@ -106,7 +105,7 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 	msg := &typesP2P.RainTreeMessage{
 		Level: 0, // Direct send that does not need to be propagated
 		Data:  data,
-		Nonce: getNonce(),
+		Nonce: crypto.GetNonce(),
 	}
 
 	bz, err := codec.GetCodec().Marshal(msg)
@@ -201,7 +200,9 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	}
 
 	// Add the nonce to the deduper
-	n.nonceDeduper.Push(rainTreeMsg.Nonce)
+	if err := n.nonceDeduper.Push(rainTreeMsg.Nonce); err != nil {
+		return nil, err
+	}
 
 	// Return the data back to the caller so it can be handled by the app specific bus
 	return rainTreeMsg.Data, nil
@@ -232,21 +233,6 @@ func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
 func (n *rainTreeNetwork) GetBus() modules.Bus {
 	return n.bus
 }
-
-func getNonce() uint64 {
-	rand.Seed(time.Now().UTC().UnixNano())
-	return rand.Uint64()
-}
-
-// INVESTIGATE(olshansky): This did not generate a random nonce on every call
-
-// func getNonce() uint64 {
-// 	seed, err := cryptRand.Int(cryptRand.Reader, big.NewInt(math.MaxInt64))
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	rand.Seed(seed.Int64())
-// }
 
 func shouldSendToTarget(target target) bool {
 	return !target.isSelf

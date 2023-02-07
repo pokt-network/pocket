@@ -3,10 +3,10 @@ package consensus
 import (
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/core/types"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestMempool(t *testing.T) {
@@ -30,7 +30,8 @@ func TestMempool(t *testing.T) {
 				initialMsgs:      &[]*typesCons.HotstuffMessage{hotstuffMessageFactory(10)},
 				actions: &[]func(*hotstuffFIFOMempool){
 					func(txFIFOMempool *hotstuffFIFOMempool) {
-						txFIFOMempool.Push(hotstuffMessageFactory(10))
+						err := txFIFOMempool.Push(hotstuffMessageFactory(10))
+						require.NoError(t, err)
 					},
 				},
 			},
@@ -49,7 +50,8 @@ func TestMempool(t *testing.T) {
 				actions: &[]func(*hotstuffFIFOMempool){
 					func(txFIFOMempool *hotstuffFIFOMempool) {
 						for !txFIFOMempool.IsEmpty() {
-							txFIFOMempool.Pop()
+							_, err := txFIFOMempool.Pop()
+							require.NoError(t, err)
 						}
 					},
 				},
@@ -94,7 +96,8 @@ func TestMempool(t *testing.T) {
 				initialMsgs:      &[]*typesCons.HotstuffMessage{},
 				actions: &[]func(*hotstuffFIFOMempool){
 					func(txFIFOMempool *hotstuffFIFOMempool) {
-						txFIFOMempool.Push(hotstuffMessageFactory(19))
+						err := txFIFOMempool.Push(hotstuffMessageFactory(19))
+						require.NoError(t, err)
 					},
 				},
 			},
@@ -173,7 +176,8 @@ func TestMempool(t *testing.T) {
 					func(txFIFOMempool *hotstuffFIFOMempool) {
 						msg := hotstuffMessageFactory(3)
 						bytes, _ := proto.Marshal(msg)
-						txFIFOMempool.Push(msg)
+						err := txFIFOMempool.Push(msg)
+						require.NoError(t, err)
 						require.Equal(t, len(bytes), int(txFIFOMempool.TotalMsgBytes()), "mismatching total size")
 					},
 				},
@@ -192,7 +196,8 @@ func TestMempool(t *testing.T) {
 				},
 				actions: &[]func(*hotstuffFIFOMempool){
 					func(txFIFOMempool *hotstuffFIFOMempool) {
-						txFIFOMempool.Remove(hotstuffMessageFactory(19))
+						err := txFIFOMempool.Remove(hotstuffMessageFactory(19))
+						require.NoError(t, err)
 						require.Equal(t, 3, txFIFOMempool.Size(), "mismatching size")
 					},
 				},
@@ -234,7 +239,8 @@ func TestMempool(t *testing.T) {
 
 			if tt.args.initialMsgs != nil {
 				for _, item := range *tt.args.initialMsgs {
-					txFIFOMempool.Push(item)
+					err := txFIFOMempool.Push(item)
+					require.NoError(t, err)
 				}
 			}
 

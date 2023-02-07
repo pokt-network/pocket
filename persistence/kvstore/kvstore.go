@@ -19,7 +19,7 @@ type KVStore interface {
 	// Accessors
 	// TODO: Add a proper iterator interface
 	// TODO: Add pagination for `GetAll`
-	GetAll(prefixKey []byte, descending bool) (keys [][]byte, values [][]byte, err error)
+	GetAll(prefixKey []byte, descending bool) (keys, values [][]byte, err error)
 	Exists(key []byte) (bool, error)
 	ClearAll() error
 }
@@ -98,7 +98,7 @@ func (store *badgerKVStore) Delete(key []byte) error {
 	return tx.Delete(key)
 }
 
-func (store *badgerKVStore) GetAll(prefix []byte, descending bool) (keys [][]byte, values [][]byte, err error) {
+func (store *badgerKVStore) GetAll(prefix []byte, descending bool) (keys, values [][]byte, err error) {
 	// INVESTIGATE: research `badger.views` for further improvements and optimizations
 	// Reference https://pkg.go.dev/github.com/dgraph-io/badger#readme-prefix-scans
 	txn := store.db.NewTransaction(false)

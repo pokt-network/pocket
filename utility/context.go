@@ -42,7 +42,7 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 	return &UtilityContext{
 		bus:    u.GetBus(),
 		Height: height,
-		logger:  u.logger,
+		logger: u.logger,
 		Context: &Context{
 			PersistenceRWContext: ctx,
 			SavePoints:           make([][]byte, 0),
@@ -137,7 +137,7 @@ func (u *UtilityContext) GetBus() modules.Bus {
 	return u.bus
 }
 
-func (u UtilityContext) WithBus(bus modules.Bus) UtilityContext {
+func (u *UtilityContext) WithBus(bus modules.Bus) *UtilityContext {
 	u.bus = bus
 	return u
 }

@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"path"
@@ -28,7 +29,7 @@ type Manager struct {
 	bus   modules.Bus
 }
 
-func NewManager(config *configs.Config, genesis *genesis.GenesisState, options ...func(*Manager)) *Manager {
+func NewManager(config *configs.Config, gen *genesis.GenesisState, options ...func(*Manager)) *Manager {
 	mgr := new(Manager)
 	bus, err := CreateBus(mgr)
 	if err != nil {
@@ -36,7 +37,7 @@ func NewManager(config *configs.Config, genesis *genesis.GenesisState, options .
 	}
 
 	mgr.config = config
-	mgr.genesisState = genesis
+	mgr.genesisState = gen
 	mgr.clock = clock.New()
 	mgr.bus = bus
 
@@ -102,6 +103,7 @@ func parseFiles(configJSONPath, genesisJSONPath string) (config *configs.Config,
 	viper.AutomaticEnv()
 
 	if err = viper.ReadInConfig(); err != nil {
+		err = fmt.Errorf("error reading %s: %w", configJSONPath, err)
 		return
 	}
 
@@ -111,6 +113,7 @@ func parseFiles(configJSONPath, genesisJSONPath string) (config *configs.Config,
 		dc.TagName = "json"
 	}
 	if err = viper.Unmarshal(&config, decoderConfig); err != nil {
+		err = fmt.Errorf("error unmarshalling %s: %w", configJSONPath, err)
 		return
 	}
 

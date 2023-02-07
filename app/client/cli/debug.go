@@ -49,10 +49,21 @@ var (
 	// Its purpose is to allow the CLI to "discover" the nodes in the network. Since currently we don't have churn and we run nodes only in LocalNet, we can rely on the genesis state.
 	// HACK(#416): This is a temporary solution that guarantees backward compatibility while we implement peer discovery
 	validators []*coreTypes.Actor
+
+	configPath  string = getEnv("CONFIG_PATH", "build/config/config1.json")
+	genesisPath string = getEnv("GENESIS_PATH", "build/config/genesis.json")
 )
 
+func getEnv(key, defaultValue string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return defaultValue
+}
+
 func init() {
-	rootCmd.AddCommand(NewDebugCommand())
+	debugCmd := NewDebugCommand()
+	rootCmd.AddCommand(debugCmd)
 }
 
 func NewDebugCommand() *cobra.Command {
@@ -61,8 +72,7 @@ func NewDebugCommand() *cobra.Command {
 		Short: "Debug utility for rapid development",
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			var err error
-			runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
+			runtimeMgr := runtime.NewManagerFromFiles(configPath, genesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
 
 			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
 			validators = runtimeMgr.GetGenesis().Validators
@@ -85,7 +95,9 @@ func NewDebugCommand() *cobra.Command {
 			}
 			p2pMod = p2pM.(modules.P2PModule)
 
-			p2pMod.Start()
+			if err := p2pMod.Start(); err != nil {
+				logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
+			}
 		},
 		RunE: runDebug,
 	}
@@ -188,7 +200,9 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 		if err != nil {
 			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 		}
-		p2pMod.Send(addr, anyProto)
+		if err := p2pMod.Send(addr, anyProto); err != nil {
+			logger.Global.Fatal().Err(err).Msg("Failed to send debug message")
+		}
 	}
 }
 
@@ -210,5 +224,7 @@ func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 		logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 	}
 
-	p2pMod.Send(validatorAddress, anyProto)
+	if err := p2pMod.Send(validatorAddress, anyProto); err != nil {
+		logger.Global.Fatal().Err(err).Msg("Failed to send debug message")
+	}
 }

@@ -69,7 +69,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		}
 
 		ps := msg.GetPartialSignature()
-		if ps.Signature == nil || len(ps.Address) == 0 {
+		if ps.Signature == nil || ps.Address == "" {
 
 			m.logger.Warn().Fields(
 				map[string]any{
@@ -78,7 +78,6 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 					"round":  msg.GetRound(),
 				},
 			).Msg("Partial signature is incomplete which should not happen...")
-
 			continue
 		}
 		pss = append(pss, msg.GetPartialSignature())
@@ -93,10 +92,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		return nil, err
 	}
 
-	thresholdSig, err := getThresholdSignature(pss)
-	if err != nil {
-		return nil, err
-	}
+	thresholdSig := getThresholdSignature(pss)
 
 	return &typesCons.QuorumCertificate{
 		Height:             height,
@@ -120,11 +116,11 @@ func (m *consensusModule) findHighQC(msgs []*typesCons.HotstuffMessage) (qc *typ
 	return
 }
 
-func getThresholdSignature(partialSigs []*typesCons.PartialSignature) (*typesCons.ThresholdSignature, error) {
+func getThresholdSignature(partialSigs []*typesCons.PartialSignature) *typesCons.ThresholdSignature {
 	thresholdSig := new(typesCons.ThresholdSignature)
 	thresholdSig.Signatures = make([]*typesCons.PartialSignature, len(partialSigs))
 	copy(thresholdSig.Signatures, partialSigs)
-	return thresholdSig, nil
+	return thresholdSig
 }
 
 func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signature []byte) bool {

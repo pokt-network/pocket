@@ -145,17 +145,12 @@ func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
 		return err
 	}
 	switch debugMessage.Action {
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
-		fallthrough
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
-		fallthrough
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
-		fallthrough
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
-		fallthrough
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ:
-		fallthrough
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ:
+	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ:
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ:
 		return node.GetBus().GetConsensusModule().HandleDebugMessage(debugMessage)
 	// Persistence Debug
 	case messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:

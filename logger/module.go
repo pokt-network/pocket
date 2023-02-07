@@ -13,7 +13,6 @@ import (
 type loggerModule struct {
 	zerolog.Logger
 	bus    modules.Bus
-	logger modules.Logger
 	config *configs.LoggerConfig
 }
 
@@ -62,7 +61,9 @@ func (*loggerModule) Create(bus modules.Bus) (modules.Module, error) {
 	m := &loggerModule{
 		config: cfg.Logger,
 	}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 
 	Global.config = m.config
 	Global.CreateLoggerForModule("global")

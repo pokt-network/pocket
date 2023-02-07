@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.26] - 2023-02-06
-
+## [0.0.0.27] - 2023-02-07
 - Add `state_sync` submodule, with `state_sync` struct
 - Implement state sync server to advertise blocks and metadata
 - Create new `state_sync_handler.go` source file that handles `StateSyncMessage`s sent to the `Consensus` module
 - Add two new tests in `state_sync_test.go`:`TestStateSyncServerGetMetaDataReq` and `TestStateSyncServerGetBlock`
 - Update `TestHotstuff4Nodes1BlockHappyPath` test to also retrieve the committed block
+
+## [0.0.0.26] - 2023-02-06
+- Address legacy linter errors from `golangci-lint`
 
 ## [0.0.0.25] - 2023-02-04
 

@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.22] - 2023-02-06
+## [0.0.0.23] - 2023-02-07
 
  - Add `ConsensusStateSync` interface that is implemented by the consensus module
+
+
+## [0.0.0.22] - 2023-02-06
+
+- Address legacy linter errors from `golangci-lint`
 
 ## [0.0.0.21] - 2023-02-04
 

@@ -179,7 +179,9 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 
 		hotstuffMempool: make(map[typesCons.HotstuffStep]*hotstuffFIFOMempool),
 	}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 
 	runtimeMgr := bus.GetRuntimeMgr()
 
@@ -274,15 +276,15 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	}
 }
 
-func (*consensusModule) ValidateGenesis(genesis *genesis.GenesisState) error {
+func (*consensusModule) ValidateGenesis(gen *genesis.GenesisState) error {
 	// Sort the validators by their generic param (i.e. service URL)
-	vals := genesis.GetValidators()
+	vals := gen.GetValidators()
 	sort.Slice(vals, func(i, j int) bool {
 		return vals[i].GetGenericParam() < vals[j].GetGenericParam()
 	})
 
 	// Sort the validators by their address
-	vals2 := vals[:]
+	vals2 := vals[:] //nolint:gocritic // Make a copy of the slice to retain order
 	sort.Slice(vals, func(i, j int) bool {
 		return vals[i].GetAddress() < vals[j].GetAddress()
 	})

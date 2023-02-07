@@ -65,7 +65,10 @@ func (*pacemaker) Create(bus modules.Bus) (modules.Module, error) {
 	m := &pacemaker{
 		logPrefix: defaultLogPrefix,
 	}
-	bus.RegisterModule(m)
+
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
@@ -161,7 +164,10 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 				log.Println("[WARN] NewHeight: Failed to convert pacemaker message to proto: ", err)
 				return false, err
 			}
-			consensusMod.NewLeader(anyProto)
+			// TODO: Add new custom error
+			if err := consensusMod.NewLeader(anyProto); err != nil {
+				return false, err
+			}
 		}
 
 		return true, nil
@@ -176,8 +182,8 @@ func (m *pacemaker) RestartTimer() {
 		m.stepCancelFunc()
 	}
 
-	consensusMod := m.GetBus().GetConsensusModule()
-	stepTimeout := m.getStepTimeout(consensusMod.CurrentRound())
+	// NOTE: Not defering a cancel call because this function is asynchronous.
+	stepTimeout := m.getStepTimeout()
 	clock := m.GetBus().GetRuntimeMgr().GetClock()
 
 	ctx, cancel := clock.WithTimeout(context.TODO(), stepTimeout)
@@ -247,7 +253,10 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	consensusMod := m.GetBus().GetConsensusModule()
 	consensusMod.SetStep(uint8(newRound))
 	consensusMod.ResetRound()
-	consensusMod.ReleaseUtilityContext()
+	if err := consensusMod.ReleaseUtilityContext(); err != nil {
+		log.Println("[WARN] NewHeight: Failed to release utility context: ", err)
+		return
+	}
 
 	// TECHDEBT: This if structure for debug purposes only; think of a way to externalize it from the main consensus flow...
 	if m.debug.manualMode && !forceNextView {
@@ -277,11 +286,14 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 		log.Println("[WARN] NewHeight: Failed to convert pacemaker message to proto: ", err)
 		return
 	}
-	consensusMod.BroadcastMessageToValidators(anyProto)
+	if err := consensusMod.BroadcastMessageToValidators(anyProto); err != nil {
+		log.Println("[WARN] NewHeight: Failed to broadcast message to validators: ", err)
+		return
+	}
 }
 
 // TODO: Increase timeout using exponential backoff.
-func (m *pacemaker) getStepTimeout(round uint64) time.Duration {
+func (m *pacemaker) getStepTimeout() time.Duration {
 	baseTimeout := time.Duration(int64(time.Millisecond) * int64(m.pacemakerCfg.TimeoutMsec))
 	return baseTimeout
 }

@@ -33,6 +33,7 @@ func NewError(code Code, msg string) Error {
 
 type Code float64
 
+//nolint:gosec // G101 - Not hard-coded credentials
 const (
 	CodeOK                               Code = 0
 	CodeEmptyTransactionError            Code = 2
@@ -296,23 +297,23 @@ func ErrUnknownParam(paramName string) Error {
 }
 
 func ErrUnequalPublicKeys() Error {
-	return NewError(CodeUnequalPublicKeysError, fmt.Sprintf("%s", UnequalPublicKeysError))
+	return NewError(CodeUnequalPublicKeysError, UnequalPublicKeysError)
 }
 
 func ErrEqualVotes() Error {
-	return NewError(CodeEqualVotesError, fmt.Sprintf("%s", EqualVotesError))
+	return NewError(CodeEqualVotesError, EqualVotesError)
 }
 
 func ErrUnequalVoteTypes() Error {
-	return NewError(CodeUnequalVoteTypesError, fmt.Sprintf("%s", UnequalVoteTypesError))
+	return NewError(CodeUnequalVoteTypesError, UnequalVoteTypesError)
 }
 
 func ErrUnequalHeights() Error {
-	return NewError(CodeUnequalHeightsError, fmt.Sprintf("%s", UnequalHeightsError))
+	return NewError(CodeUnequalHeightsError, UnequalHeightsError)
 }
 
 func ErrUnequalRounds() Error {
-	return NewError(CodeUnequalRoundsError, fmt.Sprintf("%s", UnequalRoundsError))
+	return NewError(CodeUnequalRoundsError, UnequalRoundsError)
 }
 
 func ErrInvalidServiceUrl(reason string) Error {
@@ -332,11 +333,11 @@ func ErrGetServiceNodeCount(chain string, height int64, err error) Error {
 }
 
 func ErrEmptyParamKey() Error {
-	return NewError(CodeEmptyParamKeyError, fmt.Sprintf("%s", EmptyParamKeyError))
+	return NewError(CodeEmptyParamKeyError, EmptyParamKeyError)
 }
 
 func ErrEmptyParamValue() Error {
-	return NewError(CodeEmptyParamValueError, fmt.Sprintf("%s", EmptyParamValueError))
+	return NewError(CodeEmptyParamValueError, EmptyParamValueError)
 }
 
 func ErrGetOutputAddress(operator []byte, err error) Error {
@@ -352,11 +353,11 @@ func ErrGetMissedBlocks(err error) Error {
 }
 
 func ErrGetStakedTokens(err error) Error {
-	return NewError(CodeGetStakedTokensError, fmt.Sprintf("%s", GetStakedTokensError))
+	return NewError(CodeGetStakedTokensError, GetStakedTokensError)
 }
 
 func ErrSetValidatorStakedTokens(err error) Error {
-	return NewError(CodeSetValidatorStakedTokensError, fmt.Sprintf("%s", SetValidatorStakedTokensError))
+	return NewError(CodeSetValidatorStakedTokensError, SetValidatorStakedTokensError)
 }
 
 func ErrGetExists(err error) Error {
@@ -380,31 +381,31 @@ func ErrUnmarshalTransaction(err error) Error {
 }
 
 func ErrAlreadyExists() Error {
-	return NewError(CodeAlreadyExistsError, fmt.Sprintf("%s", AlreadyExistsError))
+	return NewError(CodeAlreadyExistsError, AlreadyExistsError)
 }
 
 func ErrNotExists() Error {
-	return NewError(CodeNotExistsError, fmt.Sprintf("%s", NotExistsError))
+	return NewError(CodeNotExistsError, NotExistsError)
 }
 
 func ErrNilOutputAddress() Error {
-	return NewError(CodeNilOutputAddress, fmt.Sprintf("%s", NilOutputAddressError))
+	return NewError(CodeNilOutputAddress, NilOutputAddressError)
 }
 
 func ErrEmptyRelayChains() Error {
-	return NewError(CodeEmptyRelayChainsError, fmt.Sprintf("%s", EmptyRelayChainsError))
+	return NewError(CodeEmptyRelayChainsError, EmptyRelayChainsError)
 }
 
 func ErrInvalidRelayChainLength(got, expected int) Error {
-	return NewError(CodeInvalidRelayChainLengthError, fmt.Sprintf("%s", InvalidRelayChainLengthError))
+	return NewError(CodeInvalidRelayChainLengthError, InvalidRelayChainLengthError)
 }
 
 func ErrEmptyRelayChain() Error {
-	return NewError(CodeEmptyRelayChainError, fmt.Sprintf("%s", EmptyRelayChainError))
+	return NewError(CodeEmptyRelayChainError, EmptyRelayChainError)
 }
 
 func ErrMinimumStake() Error {
-	return NewError(CodeMinimumStakeError, fmt.Sprintf("%s", MinimumStakeError))
+	return NewError(CodeMinimumStakeError, MinimumStakeError)
 }
 
 func ErrGetParam(paramName string, err error) Error {
@@ -416,7 +417,7 @@ func ErrUnauthorizedParamChange(owner []byte) Error {
 }
 
 func ErrInvalidSigner() Error {
-	return NewError(CodeInvalidSignerError, fmt.Sprintf("%s", InvalidSignerError))
+	return NewError(CodeInvalidSignerError, InvalidSignerError)
 }
 
 func ErrMaxChains(maxChains int) Error {
@@ -424,15 +425,15 @@ func ErrMaxChains(maxChains int) Error {
 }
 
 func ErrAlreadyPaused() Error {
-	return NewError(CodeAlreadyPausedError, fmt.Sprintf("%s", AlreadyPausedError))
+	return NewError(CodeAlreadyPausedError, AlreadyPausedError)
 }
 
 func ErrNotPaused() Error {
-	return NewError(CodeNotPausedError, fmt.Sprintf("%s", NotPausedError))
+	return NewError(CodeNotPausedError, NotPausedError)
 }
 
 func ErrNotReadyToUnpause() Error {
-	return NewError(CodeNotReadyToUnpauseError, fmt.Sprintf("%s", NotReadyToUnpauseError))
+	return NewError(CodeNotReadyToUnpauseError, NotReadyToUnpauseError)
 }
 
 func ErrInvalidStatus(got, expected int32) Error {
@@ -503,7 +504,7 @@ func ErrSetAccountAmount(err error) Error {
 	return NewError(CodeSetAccountError, fmt.Sprintf("%s, %s", SetAccountError, err.Error()))
 }
 
-func ErrInterfaceConversion(got any, expected any) Error {
+func ErrInterfaceConversion(got, expected any) Error {
 	return NewError(CodeInterfaceConversionError, fmt.Sprintf("%s: %T, expected %T", InterfaceConversionError, got, expected))
 }
 
@@ -528,11 +529,11 @@ func ErrNewPublicKeyFromBytes(err error) Error {
 }
 
 func ErrInvalidProposerCutPercentage() Error {
-	return NewError(CodeInvalidProposerCutPercentageError, fmt.Sprintf("%s", InvalidProposerCutPercentageError))
+	return NewError(CodeInvalidProposerCutPercentageError, InvalidProposerCutPercentageError)
 }
 
 func ErrMaxEvidenceAge() Error {
-	return NewError(CodeMaxEvidenceAgeError, fmt.Sprintf("%s", MaxEvidenceAgeError))
+	return NewError(CodeMaxEvidenceAgeError, MaxEvidenceAgeError)
 }
 
 func ErrInvalidBlockHeight() Error {
@@ -576,7 +577,7 @@ func ErrSignatureVerificationFailed() Error {
 }
 
 func ErrDecodeMessage() Error {
-	return NewError(CodeDecodeMessageError, fmt.Sprintf("%s", DecodeMessageError))
+	return NewError(CodeDecodeMessageError, DecodeMessageError)
 }
 
 func ErrProtoFromAny(err error) Error {
@@ -616,15 +617,15 @@ func ErrResetContext(err error) Error {
 }
 
 func ErrDuplicateSavePoint() Error {
-	return NewError(CodeDuplicateSavePointError, fmt.Sprintf("%s", DuplicateSavePointError))
+	return NewError(CodeDuplicateSavePointError, DuplicateSavePointError)
 }
 
 func ErrEmptySavePoints() Error {
-	return NewError(CodeEmptySavePointsError, fmt.Sprintf("%s", EmptySavePointsError))
+	return NewError(CodeEmptySavePointsError, EmptySavePointsError)
 }
 
 func ErrSavePointNotFound() Error {
-	return NewError(CodeSavePointNotFoundError, fmt.Sprintf("%s", SavePointNotFoundError))
+	return NewError(CodeSavePointNotFoundError, SavePointNotFoundError)
 }
 
 func ErrCommitContext(err error) Error {
@@ -677,7 +678,7 @@ func ErrInsufficientAmount(address string) Error {
 }
 
 func ErrNegativeAmountError() Error {
-	return NewError(CodeNegativeAmountError, fmt.Sprintf("%s", NegativeAmountError))
+	return NewError(CodeNegativeAmountError, NegativeAmountError)
 }
 
 func ErrGetAllValidators(err error) Error {

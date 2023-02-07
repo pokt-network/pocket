@@ -1,8 +1,9 @@
 package types
 
 import (
-	"github.com/pokt-network/pocket/shared/codec"
 	"testing"
+
+	"github.com/pokt-network/pocket/shared/codec"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
@@ -25,10 +26,9 @@ func NewTestingMsg(_ *testing.T) Message {
 }
 
 func NewUnsignedTestingTransaction(t *testing.T) Transaction {
-	codec := codec.GetCodec()
 	msg := NewTestingMsg(t)
 
-	anyMsg, err := codec.ToAny(msg)
+	anyMsg, err := codec.GetCodec().ToAny(msg)
 	require.NoError(t, err)
 
 	return Transaction{

@@ -7,10 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.13] - 2023-02-06
+## [0.0.0.15] - 2023-02-07
 
 - Update runtime consensus config with bool server mode variable
 - Update manager test
+
+## [0.0.0.14] - 2023-02-06
+
+- Address legacy linter errors from `golangci-lint`
+
+## [0.0.0.13] - 2023-02-06
+
+- Added additional logging information to be able to tell which config file contains an error
+- Changed hardcoded addresses and public keys to reflect new addresses pattern from LocalNet on Kubernetes
 
 ## [0.0.0.12] - 2023-02-04
 
@@ -30,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.9] - 2023-01-23
 
 - Updated README.md with information about node profiling
+
 ## [0.0.0.8] - 2023-01-19
 
 - Rewrite `interface{}` to `any`
