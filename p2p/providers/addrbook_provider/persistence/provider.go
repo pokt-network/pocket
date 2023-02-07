@@ -8,19 +8,19 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var _ modules.IntegratableModule = &persistenceAddrBookProvider{}
 var _ addrbook_provider.AddrBookProvider = &persistenceAddrBookProvider{}
 
 type persistenceAddrBookProvider struct {
-	bus         modules.Bus
-	p2pCfg      *configs.P2PConfig
+	modules.BaseIntegratableModule
+	modules.BaseInterruptableModule
+
 	connFactory typesP2P.ConnectionFactory
 }
 
 func NewPersistenceAddrBookProvider(bus modules.Bus, options ...func(*persistenceAddrBookProvider)) *persistenceAddrBookProvider {
 	pabp := &persistenceAddrBookProvider{
-		bus:         bus,
-		connFactory: transport.CreateDialer, // default connection factory, overridable with WithConnectionFactory()
+		BaseIntegratableModule: *modules.NewBaseIntegratableModule(bus),
+		connFactory:            transport.CreateDialer, // default connection factory, overridable with WithConnectionFactory()
 	}
 
 	for _, o := range options {
@@ -30,12 +30,16 @@ func NewPersistenceAddrBookProvider(bus modules.Bus, options ...func(*persistenc
 	return pabp
 }
 
-func (pabp *persistenceAddrBookProvider) GetBus() modules.Bus {
-	return pabp.bus
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(persistenceAddrBookProvider).Create(bus, options...)
 }
 
-func (pabp *persistenceAddrBookProvider) SetBus(bus modules.Bus) {
-	pabp.bus = bus
+func (*persistenceAddrBookProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return NewPersistenceAddrBookProvider(bus), nil
+}
+
+func (*persistenceAddrBookProvider) GetModuleName() string {
+	return addrbook_provider.ModuleName
 }
 
 func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (typesP2P.AddrBook, error) {

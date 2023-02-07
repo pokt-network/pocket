@@ -10,10 +10,15 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
 )
+
+const ModuleName = "addrbook_provider"
 
 // AddrBookProvider is an interface that provides AddrBook accessors
 type AddrBookProvider interface {
+	modules.Module
+
 	GetStakedAddrBookAtHeight(height uint64) (typesP2P.AddrBook, error)
 	GetConnFactory() typesP2P.ConnectionFactory
 	GetP2PConfig() *configs.P2PConfig
