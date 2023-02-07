@@ -18,9 +18,10 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var _ addrbook_provider.AddrBookProvider = &rpcAddrBookProvider{}
-
-var rpcHost string = defaults.DefaultRemoteCLIURL // by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
+var (
+	_       addrbook_provider.AddrBookProvider = &rpcAddrBookProvider{}
+	rpcHost string                             = defaults.DefaultRemoteCLIURL // by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
+)
 
 func init() {
 	if os.Getenv("RPC_HOST") != "" {

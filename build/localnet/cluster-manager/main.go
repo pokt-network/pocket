@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/crypto"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +24,7 @@ var (
 
 func init() {
 	if os.Getenv("RPC_HOST") != "" {
-		rpcHost = os.Getenv("RPC_HOST")
+		rpcHost = fmt.Sprintf("http://%s:%s", os.Getenv("RPC_HOST"), defaults.DefaultRPCPort)
 	}
 }
 
@@ -70,7 +71,7 @@ func stakeValidator(pk crypto.Ed25519PrivateKey, amount string, chains []string,
 	fmt.Printf("Staking Validator with Address: %s\n", pk.Address())
 	os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0644)
 
-	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url=http://v1-validator001:50832", "Validator", "Stake", pk.Address().String(), amount, strings.Join(chains, ","), serviceURL).CombinedOutput()
+	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url="+rpcHost, "Validator", "Stake", pk.Address().String(), amount, strings.Join(chains, ","), serviceURL).CombinedOutput()
 	fmt.Println(string(out))
 	if err != nil {
 		log.Fatal(err)
@@ -81,7 +82,7 @@ func unstakeValidator(pk crypto.Ed25519PrivateKey) error {
 	fmt.Printf("Unstaking Validator with Address: %s\n", pk.Address())
 	os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0644)
 
-	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url=http://v1-validator001:50832", "Validator", "Unstake", pk.Address().String()).CombinedOutput()
+	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url="+rpcHost, "Validator", "Unstake", pk.Address().String()).CombinedOutput()
 	fmt.Println(string(out))
 	if err != nil {
 		log.Fatal(err)

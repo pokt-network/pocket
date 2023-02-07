@@ -43,6 +43,13 @@ var (
 	genesisPath string = getEnv("GENESIS_PATH", "build/config/genesis.json")
 )
 
+type ctxKey int
+
+const (
+	addrBookProviderCtxKey ctxKey = iota
+	currentHeightProviderCtxKey
+)
+
 func getEnv(key, defaultValue string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
@@ -74,11 +81,11 @@ func NewDebugCommand() *cobra.Command {
 				),
 			)
 			modulesRegistry.RegisterModule(addressBookProvider)
-			cmd.SetContext(context.WithValue(cmd.Context(), addrbook_provider.ModuleName, addressBookProvider))
+			cmd.SetContext(context.WithValue(cmd.Context(), addrBookProviderCtxKey, addressBookProvider))
 
 			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider()
 			modulesRegistry.RegisterModule(currentHeightProvider)
-			cmd.SetContext(context.WithValue(cmd.Context(), current_height_provider.ModuleName, currentHeightProvider))
+			cmd.SetContext(context.WithValue(cmd.Context(), currentHeightProviderCtxKey, currentHeightProvider))
 
 			p2pM, err := p2p.Create(runtimeMgr.GetBus())
 			if err != nil {
@@ -179,8 +186,8 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 		logger.Global.Error().Err(err).Msg("Failed to create Any proto")
 	}
 
-	addrBookProvider := cmd.Context().Value(addrbook_provider.ModuleName)
-	currentHeightProvider := cmd.Context().Value(current_height_provider.ModuleName)
+	addrBookProvider := cmd.Context().Value(addrBookProviderCtxKey)
+	currentHeightProvider := cmd.Context().Value(currentHeightProviderCtxKey)
 
 	height := currentHeightProvider.(current_height_provider.CurrentHeightProvider).CurrentHeight()
 
