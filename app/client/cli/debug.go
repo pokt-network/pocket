@@ -28,9 +28,6 @@ const (
 
 	PromptSendMetadataRequest string = "MetadataRequest"
 	PromptSendBlockRequest    string = "BlockRequest"
-
-	//defaultConfigPath  = "build/config/config1.json"
-	//defaultGenesisPath = "build/config/genesis.json"
 )
 
 var (

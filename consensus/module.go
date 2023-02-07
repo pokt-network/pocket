@@ -150,7 +150,7 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	if err != nil {
 		return nil, err
 	}
-	pacemaker := paceMakerMod.(pacemaker.Pacemaker)
+	pm := paceMakerMod.(pacemaker.Pacemaker)
 
 	stateSyncMod, err := state_sync.CreateStateSync(bus)
 	if err != nil {
@@ -159,7 +159,7 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	stateSync := stateSyncMod.(state_sync.StateSyncModule)
 
 	m := &consensusModule{
-		paceMaker:         pacemaker,
+		paceMaker:         pm,
 		stateSync:         stateSync,
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
 

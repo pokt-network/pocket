@@ -243,7 +243,7 @@ func WaitForNetworkConsensusEvents(
 // This is a helper for 'waitForEventsInternal' that creates the `includeFilter` function based on state sync message specific parameters.
 func WaitForNetworkStateSyncEvents(
 	t *testing.T,
-	clock *clock.Mock,
+	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
 	errMsg string,
 	numExpectedMsgs int,
@@ -260,7 +260,7 @@ func WaitForNetworkStateSyncEvents(
 		return true
 	}
 
-	return waitForEventsInternal(clock, eventsChannel, consensus.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clck, eventsChannel, consensus.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework
