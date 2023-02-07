@@ -3,8 +3,7 @@ package configs
 import "github.com/pokt-network/pocket/runtime/defaults"
 
 type Config struct {
-	RootDirectory string `json:"root_directory"`
-	// DISCUSSION: What to change this to? PublicKey hex address?
+	RootDirectory   string `json:"root_directory"`
 	PrivateKey      string `json:"private_key"` // INVESTIGATE(#150): better architecture for key management (keybase, keyfiles, etc.)
 	ClientDebugMode bool   `json:"client_debug_mode"`
 
