@@ -30,42 +30,42 @@ type p2pModule struct {
 
 	network typesP2P.Network
 
-	injectedAddrBookProvider      providers.AddrBookProvider
-	injectedCurrentHeightProvider providers.CurrentHeightProvider
+	addrBookProvider      providers.AddrBookProvider
+	currentHeightProvider providers.CurrentHeightProvider
 }
 
 func Create(bus modules.Bus) (modules.Module, error) {
 	return new(p2pModule).Create(bus)
 }
 
-// TODO(#429): need to define a better pattern for dependency injection. Currently we are probably limiting ourselves by having a common constructor `Create(bus modules.Bus) (modules.Module, error)` for all modules.
-func CreateWithProviders(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
-	log.Println("Creating network module")
-	m := &p2pModule{}
-	bus.RegisterModule(m)
+// // TODO(#429): need to define a better pattern for dependency injection. Currently we are probably limiting ourselves by having a common constructor `Create(bus modules.Bus) (modules.Module, error)` for all modules.
+// func CreateWithProviders(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
+// 	log.Println("Creating network module")
+// 	m := &p2pModule{}
+// 	bus.RegisterModule(m)
 
-	runtimeMgr := bus.GetRuntimeMgr()
-	cfg := runtimeMgr.GetConfig()
-	p2pCfg := cfg.P2P
+// 	runtimeMgr := bus.GetRuntimeMgr()
+// 	cfg := runtimeMgr.GetConfig()
+// 	p2pCfg := cfg.P2P
 
-	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.GetPrivateKey())
-	if err != nil {
-		return nil, err
-	}
-	m.address = privateKey.Address()
-	m.injectedAddrBookProvider = addrBookProvider
-	m.injectedCurrentHeightProvider = currentHeightProvider
+// 	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.GetPrivateKey())
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	m.address = privateKey.Address()
+// 	m.addrBookProvider = addrBookProvider
+// 	m.currentHeightProvider = currentHeightProvider
 
-	if !cfg.ClientDebugMode {
-		l, err := transport.CreateListener(p2pCfg)
-		if err != nil {
-			return nil, err
-		}
-		m.listener = l
-	}
+// 	if !cfg.ClientDebugMode {
+// 		l, err := transport.CreateListener(p2pCfg)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		m.listener = l
+// 	}
 
-	return m, nil
-}
+// 	return m, nil
+// }
 
 func (*p2pModule) Create(bus modules.Bus) (modules.Module, error) {
 	log.Println("Creating network module")
@@ -81,6 +81,8 @@ func (*p2pModule) Create(bus modules.Bus) (modules.Module, error) {
 		return nil, err
 	}
 	m.address = privateKey.Address()
+
+	m.setupDependencies()
 
 	if !cfg.ClientDebugMode {
 		l, err := transport.CreateListener(p2pCfg)
@@ -99,6 +101,11 @@ func (m *p2pModule) SetBus(bus modules.Bus) {
 	m.bus = bus
 }
 
+func (m *p2pModule) setupDependencies() {
+	m.addrBookProvider = getAddrBookProvider(m)
+	m.currentHeightProvider = getCurrentHeightProvider(m)
+}
+
 func (m *p2pModule) GetBus() modules.Bus {
 	if m.bus == nil {
 		m.logger.Warn().Msg("PocketBus is not initialized")
@@ -114,9 +121,8 @@ func (m *p2pModule) GetModuleName() string {
 func (m *p2pModule) Start() error {
 	logger.Global.Info().Msg("Starting network module")
 
-	addrbookProvider := getAddrBookProvider(m)
-	currentHeightProvider := getCurrentHeightProvider(m)
-
+	addrbookProvider := m.addrBookProvider
+	currentHeightProvider := m.currentHeightProvider
 	cfg := m.GetBus().GetRuntimeMgr().GetConfig()
 
 	if cfg.P2P.UseRainTree {
@@ -159,10 +165,11 @@ func (m *p2pModule) Start() error {
 // CLEANUP(#429): marked for removal since we'll implement a better pattern for dependency injection
 func getAddrBookProvider(m *p2pModule) providers.AddrBookProvider {
 	var addrbookProvider providers.AddrBookProvider
-	if m.injectedAddrBookProvider == nil {
+
+	if m.addrBookProvider == nil {
 		addrbookProvider = persABP.NewPersistenceAddrBookProvider(m.GetBus())
 	} else {
-		addrbookProvider = m.injectedAddrBookProvider
+		addrbookProvider = m.addrBookProvider
 	}
 	return addrbookProvider
 }
@@ -170,10 +177,10 @@ func getAddrBookProvider(m *p2pModule) providers.AddrBookProvider {
 // CLEANUP(#429): marked for removal since we'll implement a better pattern for dependency injection
 func getCurrentHeightProvider(m *p2pModule) providers.CurrentHeightProvider {
 	var currentHeightProvider providers.CurrentHeightProvider
-	if m.injectedCurrentHeightProvider == nil {
+	if m.currentHeightProvider == nil {
 		currentHeightProvider = m.GetBus().GetConsensusModule()
 	} else {
-		currentHeightProvider = m.injectedCurrentHeightProvider
+		currentHeightProvider = m.currentHeightProvider
 	}
 	return currentHeightProvider
 }

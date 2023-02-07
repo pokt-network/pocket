@@ -41,6 +41,10 @@ func (b *bus) Create(runtimeMgr modules.RuntimeMgr) (modules.Bus, error) {
 	return bus, nil
 }
 
+func (m *bus) GetModulesRegistry() modules.ModulesRegistry {
+	return m.modulesRegistry
+}
+
 func (m *bus) RegisterModule(module modules.Module) error {
 	module.SetBus(m)
 	m.modulesRegistry.RegisterModule(module)
