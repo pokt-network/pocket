@@ -14,7 +14,9 @@ import (
 var _ modules.RPCModule = &rpcModule{}
 
 type rpcModule struct {
-	bus    modules.Bus
+	modules.BaseIntegratableModule
+	modules.BaseInterruptableModule
+
 	logger modules.Logger
 	config *configs.RPCConfig
 }
@@ -44,21 +46,6 @@ func (u *rpcModule) Start() error {
 	return nil
 }
 
-func (u *rpcModule) Stop() error {
-	return nil
-}
-
 func (u *rpcModule) GetModuleName() string {
 	return modules.RPCModuleName
-}
-
-func (u *rpcModule) SetBus(bus modules.Bus) {
-	u.bus = bus
-}
-
-func (u *rpcModule) GetBus() modules.Bus {
-	if u.bus == nil {
-		u.logger.Fatal().Msg("Bus is not initialized")
-	}
-	return u.bus
 }
