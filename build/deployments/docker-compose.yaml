@@ -19,6 +19,8 @@ services:
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.client
+    environment:
+      - RPC_HOST=node1.consensus
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     stdin_open: true

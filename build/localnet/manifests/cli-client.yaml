@@ -65,6 +65,8 @@ spec:
               value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
             - name: POCKET_PERSISTENCE_NODE_SCHEMA
               value: validator1
+            - name: RPC_HOST
+              value: v1-validator001
           volumeMounts:
             - mountPath: /var/pocket/config
               name: config-volume
