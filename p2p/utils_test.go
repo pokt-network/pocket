@@ -4,7 +4,6 @@ import (
 	"crypto/ed25519"
 	"encoding/binary"
 	"fmt"
-	types "github.com/pokt-network/pocket/runtime/configs/types"
 	"log"
 	"sort"
 	"sync"
@@ -12,9 +11,12 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
+	types "github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -153,6 +155,9 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.Moc
 		m.SetBus(mockBus)
 		return nil
 	}).AnyTimes()
+	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
+	mockModulesRegistry.EXPECT().GetModule(addrbook_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(addrbook_provider.ModuleName)).AnyTimes()
+	mockBus.EXPECT().GetModulesRegistry().Return(mockModulesRegistry).AnyTimes()
 	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
 	return mockBus
 }
