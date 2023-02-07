@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/logger"
@@ -12,6 +13,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -204,4 +206,39 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	}
 
 	m.GetBus().PublishEventToBus(&event)
+}
+
+func (m *p2pModule) HandleEvent(event *anypb.Any) error {
+	switch event.MessageName() {
+	case messaging.ConsensusNewHeightEventType:
+		evt, err := codec.GetCodec().FromAny(event)
+		if err != nil {
+			return err
+		}
+		consensusNewHeightEvent, ok := evt.(*messaging.ConsensusNewHeightEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast event to ConsensusNewHeightEvent")
+		}
+
+		addrBook := m.network.GetAddrBook()
+		newAddrBook, err := m.addrBookProvider.GetStakedAddrBookAtHeight(consensusNewHeightEvent.Height)
+
+		if err != nil {
+			return err
+		}
+
+		added, removed := getAddrBookDelta(addrBook, newAddrBook)
+		for _, add := range added {
+			m.network.AddPeerToAddrBook(add)
+		}
+		for _, rm := range removed {
+			m.network.RemovePeerToAddrBook(rm)
+		}
+
+	default:
+		return fmt.Errorf("unknown event type: %s", event.MessageName())
+	}
+
+	return nil
+
 }
