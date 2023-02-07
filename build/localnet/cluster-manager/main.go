@@ -59,10 +59,14 @@ func main() {
 		switch event.Type {
 		case watch.Added:
 			fmt.Printf("Validator %s added to the cluster\n", service.Name)
-			stakeValidator(validatorKeysMap[validatorId], "150000000001", []string{"0001"}, fmt.Sprintf("v1-validator%s:8080", validatorId))
+			if err := stakeValidator(validatorKeysMap[validatorId], "150000000001", []string{"0001"}, fmt.Sprintf("v1-validator%s:8080", validatorId)); err != nil {
+				log.Printf("Error staking validator: %s", err.Error())
+			}
 		case watch.Deleted:
 			fmt.Printf("Validator %s deleted from the cluster\n", service.Name)
-			unstakeValidator(validatorKeysMap[validatorId])
+			if err := unstakeValidator(validatorKeysMap[validatorId]); err != nil {
+				log.Printf("Error unstaking validator: %s", err.Error())
+			}
 		}
 	}
 }

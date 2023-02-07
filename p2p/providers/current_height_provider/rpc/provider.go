@@ -49,17 +49,18 @@ func (*rpcCurrentHeightProvider) GetModuleName() string {
 
 func (dchp *rpcCurrentHeightProvider) CurrentHeight() uint64 {
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
-	defer cancel()
 
 	response, err := dchp.rpcClient.GetV1ConsensusStateWithResponse(ctx)
 	if err != nil {
+		cancel()
 		log.Fatalf("could not get consensus state from RPC: %v", err)
 	}
 	statusCode := response.StatusCode()
 	if statusCode != http.StatusOK {
+		cancel()
 		log.Fatalf("error retrieving consensus state from RPC. Unexpected status code: %d", statusCode)
 	}
-
+	cancel()
 	return uint64(response.JSONDefault.Height)
 }
 

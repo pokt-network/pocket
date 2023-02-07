@@ -170,7 +170,7 @@ func handleSelect(cmd *cobra.Command, selection string) {
 }
 
 // Broadcast to the entire validator set
-func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
+func broadcastDebugMessage(_ *cobra.Command, debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to create Any proto")
