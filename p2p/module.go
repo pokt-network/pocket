@@ -43,9 +43,7 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 func (*p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	log.Println("Creating network module")
 	m := &p2pModule{}
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
-	}
+	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()

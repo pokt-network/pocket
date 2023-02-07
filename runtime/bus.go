@@ -45,10 +45,9 @@ func (m *bus) GetModulesRegistry() modules.ModulesRegistry {
 	return m.modulesRegistry
 }
 
-func (m *bus) RegisterModule(module modules.Module) error {
+func (m *bus) RegisterModule(module modules.Module) {
 	module.SetBus(m)
 	m.modulesRegistry.RegisterModule(module)
-	return nil
 }
 
 func (m *bus) PublishEventToBus(e *messaging.PocketEnvelope) {
@@ -111,9 +110,7 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 	if err != nil {
 		log.Fatalf("failed to create noop telemetry module: %v", err)
 	}
-	if err := m.RegisterModule(noopModule); err != nil {
-		log.Fatalf("[ERROR] Failed to register telemetry module: %v", err.Error())
-	}
+	m.RegisterModule(noopModule)
 	return noopModule.(modules.TelemetryModule)
 }
 

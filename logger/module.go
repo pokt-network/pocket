@@ -64,9 +64,7 @@ func (*loggerModule) Create(bus modules.Bus, options ...modules.ModuleOption) (m
 	m := &loggerModule{
 		config: cfg.Logger,
 	}
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
-	}
+	bus.RegisterModule(m)
 
 	Global.config = m.config
 	Global.CreateLoggerForModule("global")

@@ -66,9 +66,7 @@ func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 		logPrefix: defaultLogPrefix,
 	}
 
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
-	}
+	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()

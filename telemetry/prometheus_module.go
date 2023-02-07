@@ -41,9 +41,7 @@ func CreatePrometheusTelemetryModule(bus modules.Bus, options ...modules.ModuleO
 
 func (*PrometheusTelemetryModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &PrometheusTelemetryModule{}
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
-	}
+	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()

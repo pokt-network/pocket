@@ -152,9 +152,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 
 		hotstuffMempool: make(map[typesCons.HotstuffStep]*hotstuffFIFOMempool),
 	}
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
-	}
+	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 

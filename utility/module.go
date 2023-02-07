@@ -37,9 +37,7 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 
 func (*utilityModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &utilityModule{}
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
-	}
+	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 

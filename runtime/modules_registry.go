@@ -19,11 +19,10 @@ func NewModulesRegistry() *modulesRegistry {
 	}
 }
 
-func (m *modulesRegistry) RegisterModule(module modules.Module) error {
+func (m *modulesRegistry) RegisterModule(module modules.Module) {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.registry[module.GetModuleName()] = module
-	return nil
 }
 
 func (m *modulesRegistry) GetModule(moduleName string) (modules.Module, error) {
