@@ -62,7 +62,7 @@ func NewDebugCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			runtimeMgr := runtime.NewManagerFromFiles(
-				defaultConfigPath, defaultGenesisPath,
+				configPath, genesisPath,
 				runtime.WithClientDebugMode(),
 				runtime.WithRandomPK(),
 			)
