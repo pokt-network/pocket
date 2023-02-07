@@ -56,6 +56,9 @@ func govCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
+				if err := keybase.Stop(); err != nil {
+					return err
+				}
 
 				key := args[1]
 				value := args[2]

@@ -107,6 +107,9 @@ If no changes are desired for the parameter, just enter the current param value 
 			if err != nil {
 				return err
 			}
+			if err := keybase.Stop(); err != nil {
+				return err
+			}
 
 			fromAddr := crypto.AddressFromString(args[0])
 			amount := args[1]
@@ -173,6 +176,9 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if err := keybase.Stop(); err != nil {
+				return err
+			}
 
 			fromAddr := crypto.AddressFromString(args[0])
 			amount := args[1]
@@ -236,6 +242,9 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if err := keybase.Stop(); err != nil {
+				return err
+			}
 
 			msg := &typesUtil.MessageUnstake{
 				Address:   pk.Address(),
@@ -283,6 +292,9 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 
 			pk, err := keybase.GetPrivKey(args[0], pwd)
 			if err != nil {
+				return err
+			}
+			if err := keybase.Stop(); err != nil {
 				return err
 			}
 

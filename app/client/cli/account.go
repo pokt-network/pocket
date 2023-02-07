@@ -54,6 +54,9 @@ func accountCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
+				if err := keybase.Stop(); err != nil {
+					return err
+				}
 
 				fromAddr := crypto.AddressFromString(args[0])
 				toAddr := crypto.AddressFromString(args[1])
