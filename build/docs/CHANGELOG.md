@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.12] - 2023-02-08
+
+- Fix bug related to installing Tilt in the Docker containers
+
 ## [0.0.0.11] - 2023-02-07
 
 - Added GITHUB_WIKI tags where it was missing
