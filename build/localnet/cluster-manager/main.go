@@ -19,7 +19,7 @@ import (
 
 var (
 	validatorKeysMap = make(map[string]crypto.Ed25519PrivateKey)
-	rpcHost          = "http://v1-validator001:8081"
+	rpcHost          = "http://v1-validator001:50832"
 )
 
 func init() {
