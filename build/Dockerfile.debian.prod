@@ -5,7 +5,6 @@ ARG TARGET_GOLANG_VERSION=1.19
 FROM golang:${TARGET_GOLANG_VERSION}-bullseye AS builder
 
 ENV PROTOC_VERSION 3.19.4
-ENV PATH $PATH:$GOPATH/bin
 # Needed to install Tilt without sudo permissions
 ENV PATH $PATH:$HOME/.local/bin
 
