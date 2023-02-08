@@ -33,8 +33,6 @@ var _ modules.P2PModule = &p2pModule{}
 type p2pModule struct {
 	modules.BaseIntegratableModule
 
-	bus modules.Bus
-
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
 
@@ -98,14 +96,6 @@ func (m *p2pModule) setupDependencies() {
 		currentHeightProvider = m.GetBus().GetConsensusModule()
 	}
 	m.currentHeightProvider = currentHeightProvider.(providers.CurrentHeightProvider)
-}
-
-func (m *p2pModule) GetBus() modules.Bus {
-	if m.bus == nil {
-		m.logger.Warn().Msg("PocketBus is not initialized")
-		return nil
-	}
-	return m.bus
 }
 
 func (m *p2pModule) GetModuleName() string {
