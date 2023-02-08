@@ -4,22 +4,22 @@ load("ext://namespace", "namespace_create")
 load("ext://restart_process", "docker_build_with_restart")
 
 tiltfile_dir = os.path.dirname(config.main_dir)
-root_dir = os.path.dirname(tiltfile_dir + '/../..')
+root_dir = os.path.dirname(tiltfile_dir + "/../..")
 localnet_config_path = root_dir + "/localnet_config.yaml"
 
 # Create localnet config file from defaults, and if some default configuration doesn't exist in it - populate with default values
 localnet_config_defaults = {"validators": {"count": 4}}
 
-localnet_config_file = read_yaml(
-    localnet_config_path, default=localnet_config_defaults
-)
+localnet_config_file = read_yaml(localnet_config_path, default=localnet_config_defaults)
 
 localnet_config = {}
 localnet_config.update(localnet_config_defaults)
 localnet_config.update(localnet_config_file)
 
 # Create a default config file if it does not exist
-if (localnet_config_file != localnet_config) or (not os.path.exists(localnet_config_path)):
+if (localnet_config_file != localnet_config) or (
+    not os.path.exists(localnet_config_path)
+):
     print("Updating " + localnet_config_path + " with defaults")
     local("cat - > " + localnet_config_path, stdin=encode_yaml(localnet_config))
 
