@@ -164,3 +164,9 @@ func WithClientDebugMode() func(*Manager) {
 		b.config.ClientDebugMode = true
 	}
 }
+
+func WithCustomBootstrapNodes(bootstrapNodesCsv string) func(*Manager) {
+	return func(b *Manager) {
+		b.config.P2P.BootstrapNodesCsv = bootstrapNodesCsv
+	}
+}
