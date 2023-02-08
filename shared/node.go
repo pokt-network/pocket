@@ -1,6 +1,8 @@
 package shared
 
 import (
+	"context"
+
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
@@ -9,6 +11,7 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/state_machine"
 	"github.com/pokt-network/pocket/telemetry"
 	"github.com/pokt-network/pocket/utility"
 )
@@ -32,6 +35,7 @@ func CreateNode(bus modules.Bus, options ...modules.ModuleOption) (modules.Modul
 
 func (m *Node) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	for _, mod := range []func(modules.Bus, ...modules.ModuleOption) (modules.Module, error){
+		state_machine.Create,
 		persistence.Create,
 		utility.Create,
 		consensus.Create,
@@ -60,6 +64,10 @@ func (node *Node) Start() error {
 	logger.Global.Info().Msg("About to start pocket node modules...")
 
 	// IMPORTANT: Order of module startup here matters
+
+	if err := node.GetBus().GetStateMachineModule().Start(); err != nil {
+		return err
+	}
 
 	if err := node.GetBus().GetTelemetryModule().Start(); err != nil {
 		return err
@@ -124,6 +132,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	switch contentType {
 	case messaging.NodeStartedEventType:
 		logger.Global.Info().Msg("Received NodeStartedEvent")
+		node.GetBus().GetStateMachineModule().Event(context.Background(), "start")
 	case consensus.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 	case utility.TransactionGossipMessageContentType:
@@ -131,6 +140,9 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
 	case messaging.ConsensusNewHeightEventType:
+		node.GetBus().GetP2PModule().HandleEvent(message.Content)
+		return nil
+	case messaging.StateMachineTransitionEventType:
 		node.GetBus().GetP2PModule().HandleEvent(message.Content)
 		return nil
 	default:

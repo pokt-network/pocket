@@ -9,3 +9,9 @@ message NodeStartedEvent {}
 message ConsensusNewHeightEvent {
   uint64 height = 1;
 }
+
+message StateMachineTransitionEvent {
+  string event = 1;
+  string src = 2;
+  string dst = 3;
+}
