@@ -8,9 +8,8 @@ import (
 )
 
 type utilityContext struct {
-	bus     modules.Bus
-	height  int64
-	mempool typesUtil.Mempool
+	bus    modules.Bus
+	height int64
 
 	persistenceContext modules.PersistenceRWContext
 	// INVESTIGATE: Can we use the

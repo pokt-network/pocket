@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"math"
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/converters"
@@ -9,30 +8,22 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-/*
-   `Actor` is the consolidated term for common functionality among the following network actors: app, fish, node, val.
+//	`Actor` is the consolidated term for common functionality among the following network actors: application, fisherman, servicer, validator, etc.
 
-   This file contains all the state based CRUD operations shared between these abstractions.
-
-   The ideology of the separation of the actors is based on the expectation of actor divergence in the near future.
-   The current implementation attempts to simplify code footprint and complexity while enabling future divergence.
-   It is important to note, that as production approaches, the idea is to attempt more consolidation at an architectural
-   multi-module level. Until then, it's a fine line to walk.
-*/
-
-func (u *utilityContext) setActorStakedAmount(actorType coreTypes.ActorType, addr []byte, amount *big.Int) typesUtil.Error {
+func (u *utilityContext) setActorStakeAmount(actorType coreTypes.ActorType, addr []byte, amount *big.Int) typesUtil.Error {
 	store := u.Store()
+	amountStr := converters.BigIntToString(amount)
 
 	var err error
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		err = store.SetAppStakeAmount(addr, converters.BigIntToString(amount))
+		err = store.SetAppStakeAmount(addr, amountStr)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		err = store.SetFishermanStakeAmount(addr, converters.BigIntToString(amount))
+		err = store.SetFishermanStakeAmount(addr, amountStr)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		err = store.SetServiceNodeStakeAmount(addr, converters.BigIntToString(amount))
+		err = store.SetServiceNodeStakeAmount(addr, amountStr)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		err = store.SetValidatorStakeAmount(addr, converters.BigIntToString(amount))
+		err = store.SetValidatorStakeAmount(addr, amountStr)
 	default:
 		err = typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -45,17 +36,18 @@ func (u *utilityContext) setActorStakedAmount(actorType coreTypes.ActorType, add
 
 func (u *utilityContext) setActorUnstakingHeight(actorType coreTypes.ActorType, addr []byte, height int64) typesUtil.Error {
 	store := u.Store()
+	unstakingStatus := int32(typesUtil.StakeStatus_Unstaking)
 
 	var err error
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		err = store.SetAppUnstakingHeightAndStatus(addr, height, int32(typesUtil.StakeStatus_Unstaking))
+		err = store.SetAppUnstakingHeightAndStatus(addr, height, unstakingStatus)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		err = store.SetFishermanUnstakingHeightAndStatus(addr, height, int32(typesUtil.StakeStatus_Unstaking))
+		err = store.SetFishermanUnstakingHeightAndStatus(addr, height, unstakingStatus)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		err = store.SetServiceNodeUnstakingHeightAndStatus(addr, height, int32(typesUtil.StakeStatus_Unstaking))
+		err = store.SetServiceNodeUnstakingHeightAndStatus(addr, height, unstakingStatus)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		err = store.SetValidatorUnstakingHeightAndStatus(addr, height, int32(typesUtil.StakeStatus_Unstaking))
+		err = store.SetValidatorUnstakingHeightAndStatus(addr, height, unstakingStatus)
 	default:
 		err = typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -89,24 +81,22 @@ func (u *utilityContext) setActorPausedHeight(actorType coreTypes.ActorType, add
 	return nil
 }
 
-// getters
-
-func (u *utilityContext) getActorStakedAmount(actorType coreTypes.ActorType, addr []byte) (*big.Int, typesUtil.Error) {
+func (u *utilityContext) getActorStakeAmount(actorType coreTypes.ActorType, addr []byte) (*big.Int, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return nil, typesUtil.ErrGetHeight(err)
 	}
 
-	var stakedAmount string
+	var stakeAmount string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		stakedAmount, err = store.GetAppStakeAmount(height, addr)
+		stakeAmount, err = store.GetAppStakeAmount(height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		stakedAmount, err = store.GetFishermanStakeAmount(height, addr)
+		stakeAmount, err = store.GetFishermanStakeAmount(height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		stakedAmount, err = store.GetServiceNodeStakeAmount(height, addr)
+		stakeAmount, err = store.GetServiceNodeStakeAmount(height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		stakedAmount, err = store.GetValidatorStakeAmount(height, addr)
+		stakeAmount, err = store.GetValidatorStakeAmount(height, addr)
 	default:
 		err = typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -115,7 +105,7 @@ func (u *utilityContext) getActorStakedAmount(actorType coreTypes.ActorType, add
 		return nil, typesUtil.ErrGetStakeAmount(err)
 	}
 
-	amount, err := converters.StringToBigInt(stakedAmount)
+	amount, err := converters.StringToBigInt(stakeAmount)
 	if err != nil {
 		return nil, typesUtil.ErrStringToBigInt(err)
 	}
@@ -268,37 +258,6 @@ func (u *utilityContext) getMinRequiredStakeAmount(actorType coreTypes.ActorType
 	return amount, nil
 }
 
-func (u *utilityContext) getCurrentStakeAmount(actorType coreTypes.ActorType, addr []byte) (*big.Int, typesUtil.Error) {
-	var stakeAmount string
-	store, height, err := u.getStoreAndHeight()
-	if err != nil {
-		return nil, typesUtil.ErrGetHeight(err)
-	}
-
-	switch actorType {
-	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		stakeAmount, err = store.GetAppStakeAmount(height, addr)
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		stakeAmount, err = store.GetFishermanStakeAmount(height, addr)
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		stakeAmount, err = store.GetServiceNodeStakeAmount(height, addr)
-	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		stakeAmount, err = store.GetValidatorStakeAmount(height, addr)
-	default:
-		err = typesUtil.ErrUnknownActorType(actorType.String())
-	}
-
-	if err != nil {
-		return nil, typesUtil.ErrGetStakeAmount(err)
-	}
-
-	amount, err := converters.StringToBigInt(stakeAmount)
-	if err != nil {
-		return nil, typesUtil.ErrStringToBigInt(err)
-	}
-	return amount, nil
-}
-
 func (u *utilityContext) getUnstakingHeight(actorType coreTypes.ActorType) (int64, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
@@ -381,6 +340,8 @@ func (u *utilityContext) getActorExists(actorType coreTypes.ActorType, addr []by
 	return exists, nil
 }
 
+// IMPROVE: Need to re-evaluate the design of `Output Address` to support things like "rev-share"
+// and multiple output addresses.
 func (u *utilityContext) getActorOutputAddress(actorType coreTypes.ActorType, operator []byte) ([]byte, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
@@ -406,98 +367,4 @@ func (u *utilityContext) getActorOutputAddress(actorType coreTypes.ActorType, op
 
 	}
 	return outputAddr, nil
-}
-
-// calculators
-
-func (u *utilityContext) burnValidator(percentage int, addr []byte) typesUtil.Error {
-	// TODO: Will need to extend this to support burning from other actors types & pools when the logic is implemented
-	validatorActorType := coreTypes.ActorType_ACTOR_TYPE_VAL
-	validatorPool := coreTypes.Pools_POOLS_VALIDATOR_STAKE
-
-	stakeAmount, err := u.getActorStakedAmount(validatorActorType, addr)
-	if err != nil {
-		return err
-	}
-
-	// newStake = currentStake * percentageInt / 100
-	burnAmount := new(big.Float).SetInt(stakeAmount)
-	burnAmount.Mul(burnAmount, big.NewFloat(float64(percentage)))
-	burnAmount.Quo(burnAmount, big.NewFloat(100))
-	burnAmountTruncated, _ := burnAmount.Int(nil)
-
-	// Round up to 0 if -ve
-	zeroBigInt := big.NewInt(0)
-	if burnAmountTruncated.Cmp(zeroBigInt) == -1 {
-		burnAmountTruncated = zeroBigInt
-	}
-
-	newAmountAfterBurn := big.NewInt(0).Sub(stakeAmount, burnAmountTruncated)
-
-	// remove from pool
-	if err := u.subPoolAmount(validatorPool.FriendlyName(), burnAmountTruncated); err != nil {
-		return err
-	}
-
-	// remove from actor
-	if err := u.setActorStakedAmount(validatorActorType, addr, newAmountAfterBurn); err != nil {
-		return err
-	}
-
-	// Need to check if new stake is below min required stake
-	minStake, err := u.getValidatorMinimumStake()
-	if err != nil {
-		return err
-	}
-
-	// Check if amount after burn is below the min required stake
-	if minStake.Cmp(newAmountAfterBurn) == -1 {
-		unstakingHeight, err := u.getUnstakingHeight(validatorActorType)
-		if err != nil {
-			return err
-		}
-		if err := u.setActorUnstakingHeight(validatorActorType, addr, unstakingHeight); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// TODO: Reevaluate the implementation in this function when implementation the Application Protocol
-// and rate limiting
-func (u *utilityContext) calculateMaxAppRelays(stakeStr string) (string, typesUtil.Error) {
-	stakeBigInt, er := converters.StringToBigInt(stakeStr)
-	if er != nil {
-		return typesUtil.EmptyString, typesUtil.ErrStringToBigInt(er)
-	}
-
-	stabilityAdjustment, err := u.GetStabilityAdjustment()
-	if err != nil {
-		return typesUtil.EmptyString, err
-	}
-
-	baseRate, err := u.GetBaselineAppStakeRate()
-	if err != nil {
-		return typesUtil.EmptyString, err
-	}
-
-	// convert tokens to float64
-	stake := big.NewFloat(float64(stakeBigInt.Int64()))
-	// get the percentage of the baseline stake rate; can be over 100%
-	basePercentage := big.NewFloat(float64(baseRate) / float64(100))
-	// multiply the two
-	baselineThroughput := basePercentage.Mul(basePercentage, stake)
-	// Convert POKT to uPOKT
-	baselineThroughput.Quo(baselineThroughput, big.NewFloat(typesUtil.MillionInt))
-	// add staking adjustment; can be -ve
-	adjusted := baselineThroughput.Add(baselineThroughput, big.NewFloat(float64(stabilityAdjustment)))
-	// truncate the integer
-	result, _ := adjusted.Int(nil)
-	// bounding Max Amount of relays to maxint64
-	max := big.NewInt(math.MaxInt64)
-	if i := result.Cmp(max); i < -1 {
-		result = max
-	}
-	return converters.BigIntToString(result), nil
 }

@@ -106,6 +106,7 @@ type PersistenceWriteContext interface {
 	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
 	UpdateValidator(address []byte, serviceURL string, amount string) error
 	SetValidatorStakeAmount(address []byte, stakeAmount string) error
+	// IMPROVE: Decouple and/or rename these functions
 	SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
 	SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
 	SetValidatorPauseHeight(address []byte, height int64) error

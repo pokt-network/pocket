@@ -10,7 +10,6 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
-	"github.com/pokt-network/pocket/shared/converters"
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -27,10 +26,6 @@ const (
 
 	testNonce  = "defaultNonceString"
 	testSchema = "test_schema"
-)
-
-var (
-	defaultNonceString = converters.BigIntToString(test_artifacts.DefaultAccountAmount)
 )
 
 var (

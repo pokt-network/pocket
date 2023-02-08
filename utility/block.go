@@ -184,7 +184,7 @@ func (u *utilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 		// handle if over the threshold
 		if numberOfMissedBlocks >= maxMissedBlocks {
 			// pause the validator and reset missed blocks
-			if err = u.PauseValidatorAndSetMissedBlocks(address, u.height, int(typesUtil.HeightNotUsed)); err != nil {
+			if err := u.PauseValidatorAndSetMissedBlocks(address, u.height, int(typesUtil.HeightNotUsed)); err != nil {
 				return err
 			}
 			// burn validator for missing blocks
@@ -192,7 +192,7 @@ func (u *utilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 			if err != nil {
 				return err
 			}
-			if err = u.burnValidator(burnPercentage, address); err != nil {
+			if err := u.burnValidator(burnPercentage, address); err != nil {
 				return err
 			}
 		} else if err := u.SetValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
@@ -238,10 +238,10 @@ func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 				return typesUtil.ErrHexDecodeFromString(er)
 			}
 
-			if err = u.subPoolAmount(poolName, stakeAmount); err != nil {
+			if err := u.subPoolAmount(poolName, stakeAmount); err != nil {
 				return err
 			}
-			if err = u.addAccountAmount(outputAddrBz, stakeAmount); err != nil {
+			if err := u.addAccountAmount(outputAddrBz, stakeAmount); err != nil {
 				return err
 			}
 		}
@@ -315,10 +315,10 @@ func (u *utilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 	amountToProposerFloat.Quo(amountToProposerFloat, big.NewFloat(100))
 	amountToProposer, _ := amountToProposerFloat.Int(nil)
 	amountToDAO := feesAndRewardsCollected.Sub(feesAndRewardsCollected, amountToProposer)
-	if err = u.addAccountAmount(proposer, amountToProposer); err != nil {
+	if err := u.addAccountAmount(proposer, amountToProposer); err != nil {
 		return err
 	}
-	if err = u.addPoolAmount(coreTypes.Pools_POOLS_DAO.FriendlyName(), amountToDAO); err != nil {
+	if err := u.addPoolAmount(coreTypes.Pools_POOLS_DAO.FriendlyName(), amountToDAO); err != nil {
 		return err
 	}
 	return nil

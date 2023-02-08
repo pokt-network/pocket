@@ -119,7 +119,8 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	pool := getFirstTestingPool(t, ctx)
 
 	beforeAmountBig := big.NewInt(1000000000000000)
-	ctx.setPoolAmount(pool.GetAddress(), beforeAmountBig)
+	require.NoError(t, ctx.setPoolAmount(pool.GetAddress(), beforeAmountBig))
+
 	subAmount := big.NewInt(100)
 	require.NoError(t, ctx.subPoolAmount(pool.GetAddress(), subAmount), "sub pool amount")
 

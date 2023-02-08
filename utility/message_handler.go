@@ -80,11 +80,11 @@ func (u *utilityContext) handleMessageSend(message *typesUtil.MessageSend) types
 		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.FromAddress))
 	}
 	// add the amount to the recipient's account
-	if err = u.addAccountAmount(message.ToAddress, amount); err != nil {
+	if err := u.addAccountAmount(message.ToAddress, amount); err != nil {
 		return err
 	}
 	// set the sender's account amount
-	if err = u.setAccountAmount(message.FromAddress, fromAccountAmount); err != nil {
+	if err := u.setAccountAmount(message.FromAddress, fromAccountAmount); err != nil {
 		return err
 	}
 	return nil
@@ -111,7 +111,7 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.Signer))
 	}
 	// validators don't have chains field
-	if err = u.checkBelowMaxChains(message.ActorType, message.Chains); err != nil {
+	if err := u.checkBelowMaxChains(message.ActorType, message.Chains); err != nil {
 		return err
 	}
 	// ensure actor doesn't already exist
@@ -122,11 +122,11 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 	// update account amount
-	if err = u.setAccountAmount(message.Signer, signerAccountAmount); err != nil {
+	if err := u.setAccountAmount(message.Signer, signerAccountAmount); err != nil {
 		return err
 	}
 	// move funds from account to pool
-	if err = u.addPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
+	if err := u.addPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
 		return err
 	}
 
@@ -160,7 +160,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 		}
 		return err
 	}
-	currentStakeAmount, err := u.getCurrentStakeAmount(message.ActorType, message.Address)
+	currentStakeAmount, err := u.getActorStakeAmount(message.ActorType, message.Address)
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 	if signerAccountAmount.Sign() == -1 {
 		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.Signer))
 	}
-	if err = u.checkBelowMaxChains(message.ActorType, message.Chains); err != nil {
+	if err := u.checkBelowMaxChains(message.ActorType, message.Chains); err != nil {
 		return err
 	}
 	// update account amount
@@ -225,7 +225,7 @@ func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake)
 	if err != nil {
 		return err
 	}
-	if err = u.setActorUnstakingHeight(message.ActorType, message.Address, unstakingHeight); err != nil {
+	if err := u.setActorUnstakingHeight(message.ActorType, message.Address, unstakingHeight); err != nil {
 		return err
 	}
 	return nil
@@ -246,7 +246,7 @@ func (u *utilityContext) handleUnpauseMessage(message *typesUtil.MessageUnpause)
 	if u.height < int64(minPauseBlocks)+pausedHeight {
 		return typesUtil.ErrNotReadyToUnpause()
 	}
-	if err = u.setActorPausedHeight(message.ActorType, message.Address, typesUtil.HeightNotUsed); err != nil {
+	if err := u.setActorPausedHeight(message.ActorType, message.Address, typesUtil.HeightNotUsed); err != nil {
 		return err
 	}
 	return nil
@@ -283,8 +283,7 @@ func (u *utilityContext) GetMessageStakeSignerCandidates(msg *typesUtil.MessageS
 		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
 	}
 	candidates := make([][]byte, 0)
-	candidates = append(candidates, msg.OutputAddress)
-	candidates = append(candidates, pk.Address())
+	candidates = append(candidates, msg.OutputAddress, pk.Address())
 	return candidates, nil
 }
 
@@ -294,8 +293,7 @@ func (u *utilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.Mess
 		return nil, err
 	}
 	candidates := make([][]byte, 0)
-	candidates = append(candidates, output)
-	candidates = append(candidates, msg.Address)
+	candidates = append(candidates, output, msg.Address)
 	return candidates, nil
 }
 
@@ -305,8 +303,7 @@ func (u *utilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.Messag
 		return nil, err
 	}
 	candidates := make([][]byte, 0)
-	candidates = append(candidates, output)
-	candidates = append(candidates, msg.Address)
+	candidates = append(candidates, output, msg.Address)
 	return candidates, nil
 }
 
@@ -316,8 +313,7 @@ func (u *utilityContext) getMessageUnpauseSignerCandidates(msg *typesUtil.Messag
 		return nil, err
 	}
 	candidates := make([][]byte, 0)
-	candidates = append(candidates, output)
-	candidates = append(candidates, msg.Address)
+	candidates = append(candidates, output, msg.Address)
 	return candidates, nil
 }
 

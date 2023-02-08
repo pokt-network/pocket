@@ -48,7 +48,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 
 			actor := getActorByAddr(t, ctx, actorType, pubKey.Address().String())
 			require.Equal(t, actor.GetAddress(), pubKey.Address().String(), "incorrect actor address")
-			require.Equal(t, typesUtil.HeightNotUsed, actor.GetPausedHeight(), "incorrect actor height")
+			require.Equal(t, typesUtil.HeightNotUsed, actor.GetPausedHeight(), "incorrect actorpaused height")
 			require.Equal(t, test_artifacts.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect actor stake amount")
 			require.Equal(t, outputAddress.String(), actor.GetOutput(), "incorrect actor output address")
 			if actorType != coreTypes.ActorType_ACTOR_TYPE_VAL {
@@ -93,6 +93,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			// Edit the staked amount
 			amountEdited := test_artifacts.DefaultAccountAmount.Add(test_artifacts.DefaultAccountAmount, big.NewInt(1))
 			amountEditedString := converters.BigIntToString(amountEdited)
+
 			msgAmountEdited := codec.GetCodec().Clone(msg).(*typesUtil.MessageEditStake)
 			msgAmountEdited.Amount = amountEditedString
 
@@ -108,21 +109,23 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
+	// The gov param for each actor will be set to this value
 	minPauseBlocksNumber := 5
+
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageUnpause", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 1)
 
 			var err error
 			switch actorType {
-			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				err = ctx.persistenceContext.SetParam(typesUtil.ValidatorMinimumPauseBlocksParamName, minPauseBlocksNumber)
-			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				err = ctx.persistenceContext.SetParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName, minPauseBlocksNumber)
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				err = ctx.persistenceContext.SetParam(typesUtil.AppMinimumPauseBlocksParamName, minPauseBlocksNumber)
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
+				err = ctx.persistenceContext.SetParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName, minPauseBlocksNumber)
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
 				err = ctx.persistenceContext.SetParam(typesUtil.FishermanMinimumPauseBlocksParamName, minPauseBlocksNumber)
+			case coreTypes.ActorType_ACTOR_TYPE_VAL:
+				err = ctx.persistenceContext.SetParam(typesUtil.ValidatorMinimumPauseBlocksParamName, minPauseBlocksNumber)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -151,15 +154,30 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			require.Error(t, err)
 			require.ErrorContains(t, err, "minimum number of blocks hasn't passed since pausing")
 
-			// Start a new context when the actor can be unpaused
-			ctx.Release()
-			ctx = newTestingUtilityContext(t, int64(minPauseBlocksNumber)+1)
+			// Start a new context when the actor still cannot be unpaused
+			require.NoError(t, ctx.Commit([]byte("empty qc")))
+			require.NoError(t, ctx.Release())
+			ctx = newTestingUtilityContext(t, int64(minPauseBlocksNumber)-1)
 
-			// Unpause the actor
+			// Try to unpause the actor
 			err = ctx.handleUnpauseMessage(msgUnpauseActor)
 			require.Error(t, err)
+			require.ErrorContains(t, err, "minimum number of blocks hasn't passed since pausing")
 
-			// Verify the actor is unpaused
+			// Verify the actor is still paused
+			actor = getActorByAddr(t, ctx, actorType, addr)
+			require.NotEqual(t, typesUtil.HeightNotUsed, actor.GetPausedHeight())
+
+			// Start a new context when the actor can be unpaused
+			require.Error(t, ctx.Commit([]byte("empty qc"))) // Nothing to commit so we expect an error
+			require.NoError(t, ctx.Release())
+			ctx = newTestingUtilityContext(t, int64(minPauseBlocksNumber)+1)
+
+			// Try to unpause the actor
+			err = ctx.handleUnpauseMessage(msgUnpauseActor)
+			require.NoError(t, err)
+
+			// Verify the actor is still paused
 			actor = getActorByAddr(t, ctx, actorType, addr)
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetPausedHeight())
 		})
@@ -167,7 +185,9 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
+	// The gov param for each actor will be set to this value
 	numUnstakingBlocks := 5
+
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageUnstake", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 1)
@@ -176,12 +196,12 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				err = ctx.persistenceContext.SetParam(typesUtil.AppUnstakingBlocksParamName, numUnstakingBlocks)
-			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				err = ctx.persistenceContext.SetParam(typesUtil.ValidatorUnstakingBlocksParamName, numUnstakingBlocks)
-			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				err = ctx.persistenceContext.SetParam(typesUtil.FishermanUnstakingBlocksParamName, numUnstakingBlocks)
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 				err = ctx.persistenceContext.SetParam(typesUtil.ServiceNodeUnstakingBlocksParamName, numUnstakingBlocks)
+			case coreTypes.ActorType_ACTOR_TYPE_FISH:
+				err = ctx.persistenceContext.SetParam(typesUtil.FishermanUnstakingBlocksParamName, numUnstakingBlocks)
+			case coreTypes.ActorType_ACTOR_TYPE_VAL:
+				err = ctx.persistenceContext.SetParam(typesUtil.ValidatorUnstakingBlocksParamName, numUnstakingBlocks)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -209,72 +229,75 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 	}
 }
 
-// func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
-// 	maxPausedBlocks := 5
-// 	for _, actorType := range coreTypes.ActorTypes {
-// 		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPaused", actorType.String()), func(t *testing.T) {
-// 			ctx := newTestingUtilityContext(t, 1)
-// 			actor := getFirstActor(t, ctx, actorType)
+func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
+	// The gov param for each actor will be set to this value
+	maxPausedBlocks := 5
 
-// 			addr := actor.GetAddress()
-// 			addrBz, err := hex.DecodeString(addr)
-// 			require.NoError(t, err)
+	for _, actorType := range coreTypes.ActorTypes {
+		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPaused", actorType.String()), func(t *testing.T) {
+			ctx := newTestingUtilityContext(t, 1)
+			actor := getFirstActor(t, ctx, actorType)
 
-// 			switch actorType {
-// 			case coreTypes.ActorType_ACTOR_TYPE_APP:
-// 				err = ctx.persistenceContext.SetParam(typesUtil.AppMaxPauseBlocksParamName, maxPausedBlocks)
-// 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-// 				err = ctx.persistenceContext.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, maxPausedBlocks)
-// 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-// 				err = ctx.persistenceContext.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, maxPausedBlocks)
-// 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-// 				err = ctx.persistenceContext.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, maxPausedBlocks)
-// 			default:
-// 				t.Fatalf("unexpected actor type %s", actorType.String())
-// 			}
-// 			require.NoError(t, err)
+			addr := actor.GetAddress()
+			addrBz, err := hex.DecodeString(addr)
+			require.NoError(t, err)
 
-// 			// Pause all the actors at height 0
-// 			err = ctx.setActorPausedHeight(actorType, addrBz, 0)
-// 			require.NoError(t, err, "error setting actor pause height")
+			switch actorType {
+			case coreTypes.ActorType_ACTOR_TYPE_APP:
+				err = ctx.persistenceContext.SetParam(typesUtil.AppMaxPauseBlocksParamName, maxPausedBlocks)
+			case coreTypes.ActorType_ACTOR_TYPE_VAL:
+				err = ctx.persistenceContext.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, maxPausedBlocks)
+			case coreTypes.ActorType_ACTOR_TYPE_FISH:
+				err = ctx.persistenceContext.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, maxPausedBlocks)
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
+				err = ctx.persistenceContext.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, maxPausedBlocks)
+			default:
+				t.Fatalf("unexpected actor type %s", actorType.String())
+			}
+			require.NoError(t, err)
 
-// 			// Start unstaking paused actors at the current height
-// 			err = ctx.BeginUnstakingMaxPaused()
-// 			require.NoError(t, err, "error beginning unstaking max paused actors")
+			// Pause all the actors at height 0
+			err = ctx.setActorPausedHeight(actorType, addrBz, 0)
+			require.NoError(t, err, "error setting actor pause height")
 
-// 			// Verify that the actor is still staked
-// 			status, err := ctx.getActorStatus(actorType, addrBz)
-// 			require.NoError(t, err)
-// 			require.Equal(t, typesUtil.StakeStatus_Staked, status, "actor should be staked")
+			// Start unstaking paused actors at the current height
+			err = ctx.BeginUnstakingMaxPaused()
+			require.NoError(t, err, "error beginning unstaking max paused actors")
 
-// 			// Start a new context when the actor still shouldn't be unstaked
-// 			ctx.Release()
-// 			ctx = newTestingUtilityContext(t, int64(maxPausedBlocks)-2)
+			// Verify that the actor is still staked
+			status, err := ctx.getActorStatus(actorType, addrBz)
+			require.NoError(t, err)
+			require.Equal(t, typesUtil.StakeStatus_Staked, status, "actor should be staked")
 
-// 			// Start unstaking paused actors at the current height
-// 			err = ctx.BeginUnstakingMaxPaused()
-// 			require.NoError(t, err, "error beginning unstaking max paused actors")
+			// Start a new context when the actor still shouldn't be unstaked
+			require.NoError(t, ctx.Commit([]byte("empty qc")))
+			require.NoError(t, ctx.Release())
+			ctx = newTestingUtilityContext(t, int64(maxPausedBlocks)-1)
 
-// 			// Verify that the actor is still staked
-// 			status, err = ctx.getActorStatus(actorType, addrBz)
-// 			require.NoError(t, err)
-// 			require.Equal(t, typesUtil.StakeStatus_Staked, status, "actor should be staked")
+			// Start unstaking paused actors at the current height
+			err = ctx.BeginUnstakingMaxPaused()
+			require.NoError(t, err, "error beginning unstaking max paused actors")
 
-// 			// Start a new context when the actor should be unstaked
-// 			ctx.Release()
-// 			ctx = newTestingUtilityContext(t, int64(maxPausedBlocks)+1)
+			// Verify that the actor is still staked
+			status, err = ctx.getActorStatus(actorType, addrBz)
+			require.NoError(t, err)
+			require.Equal(t, typesUtil.StakeStatus_Staked, status, "actor should be staked")
 
-// 			// Start unstaking paused actors at the current height
-// 			err = ctx.BeginUnstakingMaxPaused()
-// 			require.NoError(t, err, "error beginning unstaking max paused actors")
+			// Start a new context when the actor should be unstaked
+			require.NoError(t, ctx.Release())
+			ctx = newTestingUtilityContext(t, int64(maxPausedBlocks)+1)
 
-// 			// Verify that the actor is still staked
-// 			status, err = ctx.getActorStatus(actorType, addrBz)
-// 			require.NoError(t, err)
-// 			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be staked")
-// 		})
-// 	}
-// }
+			// Start unstaking paused actors at the current height
+			err = ctx.BeginUnstakingMaxPaused()
+			require.NoError(t, err, "error beginning unstaking max paused actors")
+
+			// Verify that the actor is still staked
+			status, err = ctx.getActorStatus(actorType, addrBz)
+			require.NoError(t, err)
+			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be staked")
+		})
+	}
+}
 
 func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
@@ -354,67 +377,25 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
 
+			// Paused height should not exist here
+			gotPauseHeight, err := ctx.getPausedHeightIfExists(actorType, addrBz)
+			require.NoError(t, err)
+			require.Equal(t, typesUtil.HeightNotUsed, gotPauseHeight)
+
+			// Paused height should be set after this
 			err = ctx.setActorPausedHeight(actorType, addrBz, pauseHeight)
 			require.NoError(t, err, "error setting actor pause height")
 
-			gotPauseHeight, err := ctx.getPausedHeightIfExists(actorType, addrBz)
+			gotPauseHeight, err = ctx.getPausedHeightIfExists(actorType, addrBz)
 			require.NoError(t, err)
 			require.Equal(t, pauseHeight, gotPauseHeight, "unable to get pause height from the actor")
 
+			// Random address shouldn't have a paused height
 			randAddr, er := crypto.GenerateAddress()
 			require.NoError(t, er)
 
 			_, err = ctx.getPausedHeightIfExists(actorType, randAddr)
 			require.Error(t, err, "non existent actor should error")
-		})
-	}
-}
-
-func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
-	for _, actorType := range coreTypes.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetMessageEditStakeSignerCandidates", actorType.String()), func(t *testing.T) {
-			ctx := newTestingUtilityContext(t, 0)
-			actor := getFirstActor(t, ctx, actorType)
-
-			addrBz, err := hex.DecodeString(actor.GetAddress())
-			require.NoError(t, err)
-
-			msgEditStake := &typesUtil.MessageEditStake{
-				Address:   addrBz,
-				Chains:    test_artifacts.DefaultChains,
-				Amount:    test_artifacts.DefaultStakeAmountString,
-				ActorType: actorType,
-			}
-			candidates, err := ctx.GetMessageEditStakeSignerCandidates(msgEditStake)
-			require.NoError(t, err)
-
-			require.Equal(t, 2, len(candidates), "unexpected number of candidates")
-			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
-			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
-		})
-	}
-}
-
-func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
-	for _, actorType := range coreTypes.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetMessageUnpauseSignerCandidates", actorType.String()), func(t *testing.T) {
-			ctx := newTestingUtilityContext(t, 0)
-			actor := getFirstActor(t, ctx, actorType)
-
-			addrBz, err := hex.DecodeString(actor.GetAddress())
-			require.NoError(t, err)
-
-			msg := &typesUtil.MessageUnpause{
-				Address:   addrBz,
-				ActorType: actorType,
-			}
-			candidates, err := ctx.getMessageUnpauseSignerCandidates(msg)
-			require.NoError(t, err)
-
-			require.Equal(t, 2, len(candidates), "unexpected number of candidates")
-			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
-			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
-
 		})
 	}
 }
@@ -438,7 +419,6 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 			require.Equal(t, 2, len(candidates), "unexpected number of candidates")
 			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
 			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
-
 		})
 	}
 }
@@ -511,12 +491,12 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				poolName = coreTypes.Pools_POOLS_APP_STAKE.FriendlyName()
-			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()
-			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 				poolName = coreTypes.Pools_POOLS_SERVICE_NODE_STAKE.FriendlyName()
+			case coreTypes.ActorType_ACTOR_TYPE_FISH:
+				poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
+			case coreTypes.ActorType_ACTOR_TYPE_VAL:
+				poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -562,12 +542,12 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				err = ctx.persistenceContext.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
-			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				err = ctx.persistenceContext.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
-			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				err = ctx.persistenceContext.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 				err = ctx.persistenceContext.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
+			case coreTypes.ActorType_ACTOR_TYPE_FISH:
+				err = ctx.persistenceContext.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
+			case coreTypes.ActorType_ACTOR_TYPE_VAL:
+				err = ctx.persistenceContext.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -589,6 +569,54 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 	}
 }
 
+func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
+	for _, actorType := range coreTypes.ActorTypes {
+		t.Run(fmt.Sprintf("%s.GetMessageEditStakeSignerCandidates", actorType.String()), func(t *testing.T) {
+			ctx := newTestingUtilityContext(t, 0)
+			actor := getFirstActor(t, ctx, actorType)
+
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
+
+			msgEditStake := &typesUtil.MessageEditStake{
+				Address:   addrBz,
+				Chains:    test_artifacts.DefaultChains,
+				Amount:    test_artifacts.DefaultStakeAmountString,
+				ActorType: actorType,
+			}
+			candidates, err := ctx.GetMessageEditStakeSignerCandidates(msgEditStake)
+			require.NoError(t, err)
+
+			require.Equal(t, 2, len(candidates), "unexpected number of candidates")
+			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
+			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
+		})
+	}
+}
+
+func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
+	for _, actorType := range coreTypes.ActorTypes {
+		t.Run(fmt.Sprintf("%s.GetMessageUnpauseSignerCandidates", actorType.String()), func(t *testing.T) {
+			ctx := newTestingUtilityContext(t, 0)
+			actor := getFirstActor(t, ctx, actorType)
+
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
+
+			msg := &typesUtil.MessageUnpause{
+				Address:   addrBz,
+				ActorType: actorType,
+			}
+			candidates, err := ctx.getMessageUnpauseSignerCandidates(msg)
+			require.NoError(t, err)
+
+			require.Equal(t, 2, len(candidates), "unexpected number of candidates")
+			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
+			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
+		})
+	}
+}
+
 // Helpers
 func getAllTestingActors(t *testing.T, ctx *utilityContext, actorType coreTypes.ActorType) (actors []*coreTypes.Actor) {
 	actors = make([]*coreTypes.Actor, 0)
@@ -597,14 +625,14 @@ func getAllTestingActors(t *testing.T, ctx *utilityContext, actorType coreTypes.
 		apps := getAllTestingApps(t, ctx)
 		actors = append(actors, apps...)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		nodes := getAllTestingNodes(t, ctx)
+		nodes := getAllTestingServicers(t, ctx)
 		actors = append(actors, nodes...)
-	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		vals := getAllTestingValidators(t, ctx)
-		actors = append(actors, vals...)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		fish := getAllTestingFish(t, ctx)
 		actors = append(actors, fish...)
+	case coreTypes.ActorType_ACTOR_TYPE_VAL:
+		vals := getAllTestingValidators(t, ctx)
+		actors = append(actors, vals...)
 	default:
 		t.Fatalf("unexpected actor type %s", actorType.String())
 	}
@@ -643,7 +671,7 @@ func getAllTestingFish(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
 	return actors
 }
 
-func getAllTestingNodes(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
+func getAllTestingServicers(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.persistenceContext).GetAllServiceNodes(ctx.height)
 	require.NoError(t, err)
 	return actors
