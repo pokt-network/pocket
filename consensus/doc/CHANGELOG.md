@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.27] - 2023-02-08
+
+- Modules embed `modules.BaseIntegratableModule` and `modules.BaseInterruptableModule` for DRYness
+- Updated modules `Create` to accept generic options
+- `resetToGenesis` clears the utility mempool as well
+- Publishing `ConsensusNewHeightEvent` on new height
+
 ## [0.0.0.26] - 2023-02-06
 
 - Address legacy linter errors from `golangci-lint`
