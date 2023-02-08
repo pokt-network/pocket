@@ -262,7 +262,9 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 				log.Println("Self address not found in addresbook, advertising")
 				// TODO: advertise node to network, populate internal addressbook adding self as first peer
 			}
-			m.GetBus().GetStateMachineModule().Event(context.TODO(), "P2P_isBootstrapped")
+			if err := m.GetBus().GetStateMachineModule().Event(context.TODO(), "P2P_isBootstrapped"); err != nil {
+				return err
+			}
 		}
 
 	default:
@@ -324,7 +326,9 @@ func bootstrap(m *p2pModule) error {
 
 	for _, peer := range addrBook {
 		log.Println("Adding peer to addrBook: " + peer.Address.String())
-		m.network.AddPeerToAddrBook(peer)
+		if err := m.network.AddPeerToAddrBook(peer); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -44,7 +44,9 @@ func parsePrivateKey(reader io.Reader) (pk crypto.Ed25519PrivateKey, err error) 
 	}
 
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(reader)
+	if _, err := buf.ReadFrom(reader); err != nil {
+		return nil, err
+	}
 
 	priv := &crypto.Ed25519PrivateKey{}
 	err = priv.UnmarshalText(buf.Bytes())

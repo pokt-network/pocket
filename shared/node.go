@@ -132,7 +132,9 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	switch contentType {
 	case messaging.NodeStartedEventType:
 		logger.Global.Info().Msg("Received NodeStartedEvent")
-		node.GetBus().GetStateMachineModule().Event(context.Background(), "start")
+		if err := node.GetBus().GetStateMachineModule().Event(context.Background(), "start"); err != nil {
+			return err
+		}
 	case consensus.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 	case utility.TransactionGossipMessageContentType:

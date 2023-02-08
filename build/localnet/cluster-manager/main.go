@@ -73,23 +73,27 @@ func main() {
 
 func stakeValidator(pk crypto.Ed25519PrivateKey, amount string, chains []string, serviceURL string) error {
 	fmt.Printf("Staking Validator with Address: %s\n", pk.Address())
-	os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0644)
+	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0644); err != nil {
+		log.Fatal(err)
+	}
 
 	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url="+rpcHost, "Validator", "Stake", pk.Address().String(), amount, strings.Join(chains, ","), serviceURL).CombinedOutput()
-	fmt.Println(string(out))
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(string(out))
 	return nil
 }
 func unstakeValidator(pk crypto.Ed25519PrivateKey) error {
 	fmt.Printf("Unstaking Validator with Address: %s\n", pk.Address())
-	os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0644)
+	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0644); err != nil {
+		log.Fatal(err)
+	}
 
 	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url="+rpcHost, "Validator", "Unstake", pk.Address().String()).CombinedOutput()
-	fmt.Println(string(out))
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(string(out))
 	return nil
 }

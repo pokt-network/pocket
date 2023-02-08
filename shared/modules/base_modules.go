@@ -27,9 +27,6 @@ func NewBaseIntegratableModule(bus Bus) *BaseIntegratableModule {
 }
 
 func (m *BaseIntegratableModule) GetBus() Bus {
-	// if m.bus == nil {
-	// 	logger.Global.Fatal().Msg("PocketBus is not initialized")
-	// }
 	return m.bus
 }
 
