@@ -21,11 +21,7 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 			{Name: "P2P_isBootstrapped", Src: []string{"P2P_bootstrapping"}, Dst: "P2P_bootstrapped"},
 			{Name: "Consensus_isUnsynched", Src: []string{"P2P_bootstrapped"}, Dst: "Consensus_unsynched"},
 			{Name: "Consensus_isSyncing", Src: []string{"Consensus_unsynched"}, Dst: "Consensus_syncMode"},
-			{Name: "enableServerMode", Src: []string{"Consensus_unsynched"}, Dst: "Consensus_syncMode_serverMode"},
-			{Name: "disableServerMode", Src: []string{"Consensus_syncMode_serverMode"}, Dst: "Consensus_unsynched"},
 			{Name: "Consensus_isCaughtUp", Src: []string{"P2P_bootstrapped", "Consensus_syncMode"}, Dst: "Consensus_synced"},
-			{Name: "enableServerMode", Src: []string{"Consensus_synced"}, Dst: "serverMode"},
-			{Name: "disableServerMode", Src: []string{"serverMode"}, Dst: "Consensus_synced"},
 		},
 		cb,
 	)
