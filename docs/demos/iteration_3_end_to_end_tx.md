@@ -1,6 +1,6 @@
-# Iteration 3 Demo <!-- omit in toc -->
+# Iteration 3 Demo: End-to-end LocalNet Tx POC <!-- omit in toc -->
 
-**Table of Contents**
+## Table of Contents <!-- omit in toc -->
 
 - [Goals](#goals)
   - [Features](#features)
