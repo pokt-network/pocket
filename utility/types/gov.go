@@ -1,6 +1,7 @@
 package types
 
 // IMPROVE: Rename `UnstakingBlocks` to `UnbondingPeriod` or `UnstakingBlocksUnbondingPeriod`
+// IMPROVE: Create a mapping from ActorType to the gov params that are relevant to that actor type.
 
 const (
 	// Session gov params

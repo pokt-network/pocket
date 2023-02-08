@@ -263,11 +263,11 @@ func (u *utilityContext) handleMessageChangeParameter(message *typesUtil.Message
 func (u *utilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:
-		return u.GetMessageSendSignerCandidates(x)
+		return u.getMessageSendSignerCandidates(x)
 	case *typesUtil.MessageStake:
-		return u.GetMessageStakeSignerCandidates(x)
+		return u.getMessageStakeSignerCandidates(x)
 	case *typesUtil.MessageUnstake:
-		return u.GetMessageUnstakeSignerCandidates(x)
+		return u.getMessageUnstakeSignerCandidates(x)
 	case *typesUtil.MessageUnpause:
 		return u.getMessageUnpauseSignerCandidates(x)
 	case *typesUtil.MessageChangeParameter:
@@ -277,7 +277,7 @@ func (u *utilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, t
 	}
 }
 
-func (u *utilityContext) GetMessageStakeSignerCandidates(msg *typesUtil.MessageStake) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) getMessageStakeSignerCandidates(msg *typesUtil.MessageStake) ([][]byte, typesUtil.Error) {
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
@@ -287,7 +287,7 @@ func (u *utilityContext) GetMessageStakeSignerCandidates(msg *typesUtil.MessageS
 	return candidates, nil
 }
 
-func (u *utilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.MessageEditStake) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) getMessageEditStakeSignerCandidates(msg *typesUtil.MessageEditStake) ([][]byte, typesUtil.Error) {
 	output, err := u.getActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
@@ -297,7 +297,7 @@ func (u *utilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.Mess
 	return candidates, nil
 }
 
-func (u *utilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.MessageUnstake) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) getMessageUnstakeSignerCandidates(msg *typesUtil.MessageUnstake) ([][]byte, typesUtil.Error) {
 	output, err := u.getActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
@@ -317,7 +317,7 @@ func (u *utilityContext) getMessageUnpauseSignerCandidates(msg *typesUtil.Messag
 	return candidates, nil
 }
 
-func (u *utilityContext) GetMessageSendSignerCandidates(msg *typesUtil.MessageSend) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) getMessageSendSignerCandidates(msg *typesUtil.MessageSend) ([][]byte, typesUtil.Error) {
 	return [][]byte{msg.FromAddress}, nil
 }
 

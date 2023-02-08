@@ -50,7 +50,7 @@ func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 	addrBz2, er := hex.DecodeString(accs[1].GetAddress())
 	require.NoError(t, er)
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
-	candidates, err := ctx.GetMessageSendSignerCandidates(&msg)
+	candidates, err := ctx.getMessageSendSignerCandidates(&msg)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(candidates))
 	require.Equal(t, addrBz, candidates[0])
