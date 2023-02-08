@@ -4,6 +4,7 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
+	"github.com/pokt-network/pocket/p2p/libp2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/rpc"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -31,6 +32,13 @@ func CreateNode(bus modules.Bus) (modules.Module, error) {
 }
 
 func (m *Node) Create(bus modules.Bus) (modules.Module, error) {
+	// TODO: comment and replace this todo
+	p2pConfig := bus.GetRuntimeMgr().GetConfig().P2P
+	p2pCreate := p2p.Create
+	if p2pConfig.UseLibP2P {
+		p2pCreate = libp2p.Create
+	}
+
 	for _, mod := range []func(modules.Bus) (modules.Module, error){
 		persistence.Create,
 		utility.Create,
@@ -38,7 +46,7 @@ func (m *Node) Create(bus modules.Bus) (modules.Module, error) {
 		telemetry.Create,
 		logger.Create,
 		rpc.Create,
-		p2p.Create,
+		p2pCreate,
 	} {
 		if _, err := mod(bus); err != nil {
 			return nil, err

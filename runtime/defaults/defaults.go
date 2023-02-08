@@ -31,6 +31,7 @@ var (
 	// p2p
 	DefaultP2PConsensusPort   = uint32(8080)
 	DefaultP2PUseRainTree     = true
+	DefaultP2PUseLibP2P       = false
 	DefaultP2PConnectionType  = types.ConnectionType_TCPConnection
 	DefaultP2PMaxMempoolCount = uint64(1e5)
 	// telemetry
