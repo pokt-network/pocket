@@ -10,7 +10,7 @@ import (
 )
 
 type rpcServer struct {
-	bus modules.Bus
+	modules.BaseIntegratableModule
 
 	logger modules.Logger
 }
@@ -65,12 +65,4 @@ func (s *rpcServer) StartRPC(port string, timeout uint64, logger *modules.Logger
 	if err := e.Start(":" + port); err != http.ErrServerClosed {
 		s.logger.Fatal().Err(err).Msg("RPC server failed to start")
 	}
-}
-
-func (s *rpcServer) SetBus(bus modules.Bus) {
-	s.bus = bus
-}
-
-func (s *rpcServer) GetBus() modules.Bus {
-	return s.bus
 }
