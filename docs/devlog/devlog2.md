@@ -94,7 +94,7 @@ Try it out ➡️ [Demo Guide](https://github.com/pokt-network/pocket/blob/main/
 [Feedback and Discussion Form](https://app.sli.do/event/2LFSdaBzJ4FPYANPFcGxC7/live/questions)
 
 ##### Q: Can Localnet scale to 999 validators?
-A: Containers will be created but the validators will not be participating in consensus until peer discovery is in place and those validators are staked.
+A: Containers will be created but the validators will not be participating in consensus until peer discovery is in place and those validators are staked it will be a 4 node network with many unstaked validators. So, technically, yes, but good luck with the resource consumption :)
 
 ##### Q: Were there other projects that inspired how to design the testing and deployment suite?
 A: A lot of learning from V0 and a commitment to visibility that won't only allow us to iterate faster but all contributors (reduce dependencies on the core team to make changes to the protocol). We looked at a lot of different projects when we started but most projects don't have these tools in place. In general the Tendermint and Cosmos ecosystem is going that direction, but it's more difficult because they are dealing with legacy code rather than the greenfield of V1. One of the best projects heading this direction is Aptos. They have very mature infrastructure and test suite. 
