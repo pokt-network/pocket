@@ -59,10 +59,10 @@ func (m *stateMachineModule) GetModuleName() string {
 
 // options
 
-func WithCustomFSM(fsm *fsm.FSM) modules.ModuleOption {
+func WithCustomStateMachine(stateMachine *fsm.FSM) modules.ModuleOption {
 	return func(m modules.InitializableModule) {
 		if m, ok := m.(*stateMachineModule); ok {
-			m.FSM = fsm
+			m.FSM = stateMachine
 		}
 	}
 }
