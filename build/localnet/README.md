@@ -23,6 +23,8 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
   - [Force Restart](#force-restart)
   - [Full Cleanup](#full-cleanup)
 - [Code Structure](#code-structure)
+- [About K8s](#about-k8s)
+- [About Tilt](#about-tilt)
 
 ## Dependencies
 
@@ -39,14 +41,29 @@ While any Kubernetes distribution should work, we verified that LocalNet works o
 
 - [Rancher Desktop](https://rancherdesktop.io/), which is GUI powered by a popular distribution `k3s`.
 - [kind](https://kind.sigs.k8s.io/) - official Kubernetes distribution that runs inside docker containers.
+- Docker Desktop running single-node Kubernetes cluster.
 
-Here is a list of alternative set ups that should work: https://docs.tilt.dev/choosing_clusters.html
+Here is a list of alternative set ups that should work: https://docs.tilt.dev/choosing_clusters.html.
 
-### Enabling Kubernetes For Docker Desktop
+If you do not have a preference, use a `kind` cluster created by `ctlptl` is recommended.
+
+#### kind Quickstart using Homebrew
+
+```sh
+brew install kubectl
+brew install kind
+brew install tilt-dev/tap/tilt
+brew install tilt-dev/tap/ctlptl
+ctlptl create cluster kind --registry=ctlptl-registry
+```
+
+#### Quickstart using only Docker Desktop
 
 You may need to manually enable Kubernetes if using Docker Desktop:
 
 ![Docker desktop kubernetes](https://user-images.githubusercontent.com/1892194/216165581-1372e2b8-c630-4211-8ced-5ec59b129330.png)
+
+Read more abouut [k8s](#about-k8s). Read more about [tilt](#about-tilt).
 
 ## LocalNet
 
@@ -193,3 +210,13 @@ build/localnet
     ├── v1-validator-template.sh # Shell script that generates Kubenetes manifests for validators, consumed by `tilt`
     └── v1-validator-template.yaml.tpl # Template for a single validator, consumed by `v1-validator-template.sh`
 ```
+
+##### About K8S
+
+Kubernetes is an open-source platform for automating the deployment, scaling, and management of containerized applications. It was developed by Google and is now maintained by the Cloud Native Computing Foundation (CNCF).
+
+Kubernetes provides a platform for deploying and managing containerized applications in a clustered environment. It uses a declarative approach, allowing users to specify the desired state of their application, and it automatically ensures that the application is running in the desired state. Kubernetes provides various features such as self-healing, scaling, rolling updates, and service discovery, making it a popular platform for running cloud-native applications.
+
+##### About tilt
+
+Tilt is a popular open-source tool that provides a local development environment for Kubernetes applications. It makes it easy for developers to run and debug their applications in a local Kubernetes cluster. Tilt provides a graphical user interface and integrates with popular development tools such as VS Code and GitHub to provide a smooth development experience. Tilt also has features like automatic rebuild and deploy, making it a popular choice for developers who want to streamline their local development workflow.
