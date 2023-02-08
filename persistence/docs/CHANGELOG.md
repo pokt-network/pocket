@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.33] - 2023-02-07
+## [0.0.0.33] - 2023-02-08
 
 - Added mock generation to the `kvstore/kvstore.go`.
 

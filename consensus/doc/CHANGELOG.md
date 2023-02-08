@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.27] - 2023-02-07
+## [0.0.0.27] - 2023-02-08
+
 - Add `state_sync` submodule, with `state_sync` struct
 - Implement state sync server to advertise blocks and metadata
 - Create new `state_sync_handler.go` source file that handles `StateSyncMessage`s sent to the `Consensus` module
