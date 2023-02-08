@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reacting to `ConsensusNewHeightEventType` adn `StateMachineTransitionEventType` to update the address book and current height and determine if a bootstrap is needed
 - Updated tests
 
-## [0.0.0.24] - 2023-0206
+## [0.0.0.24] - 2023-02-06
 
 - Address legacy linter errors from `golangci-lint`
 
