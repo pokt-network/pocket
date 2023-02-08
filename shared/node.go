@@ -140,11 +140,9 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
 	case messaging.ConsensusNewHeightEventType:
-		node.GetBus().GetP2PModule().HandleEvent(message.Content)
-		return nil
+		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
 	case messaging.StateMachineTransitionEventType:
-		node.GetBus().GetP2PModule().HandleEvent(message.Content)
-		return nil
+		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
 	default:
 		logger.Global.Warn().Msgf("Unsupported message content type: %s", contentType)
 	}
