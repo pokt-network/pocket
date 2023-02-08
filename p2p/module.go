@@ -230,10 +230,14 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 
 		added, removed := getAddrBookDelta(addrBook, newAddrBook)
 		for _, add := range added {
-			m.network.AddPeerToAddrBook(add)
+			if err := m.network.AddPeerToAddrBook(add); err != nil {
+				return err
+			}
 		}
 		for _, rm := range removed {
-			m.network.RemovePeerToAddrBook(rm)
+			if err := m.network.RemovePeerToAddrBook(rm); err != nil {
+				return err
+			}
 		}
 
 	case messaging.StateMachineTransitionEventType:
