@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.24] - 2023-02-06
+## [0.0.0.25] - 2023-02-08
+
+- Modules embed `modules.BaseIntegratableModule` and `modules.BaseInterruptableModule` for DRYness
+- Deprecated `debugAddressBookProvider`
+- Added `rpcAddressBookProvider` to source the address book from the RPC server
+- Leveraging `bus` for dependency injection of the `addressBookProvider` and `currentHeightProvider`
+- Deprecated `debugCurrentHeightProvider`
+- Added `rpcCurrentHeightProvider` to source the current height from the RPC server
+- Fixed raintree to use the `currentHeightProvider` instead of consensus (that was what we wanted to avoid in the first place)
+- Added `getAddrBookDelta` to calculate changes to the address book between heights and update the internal state and componentry accordingly
+- Added basic `bootstrap` nodes support
+- Reacting to `ConsensusNewHeightEventType` adn `StateMachineTransitionEventType` to update the address book and current height and determine if a bootstrap is needed
+- Updated tests
+
+## [0.0.0.24] - 2023-0206
 
 - Address legacy linter errors from `golangci-lint`
 
