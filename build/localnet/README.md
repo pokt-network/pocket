@@ -36,6 +36,7 @@ All necessary dependencies, except Kubernetes cluster, are installed automatical
 ### Choosing Kubernetes Distribution
 
 While any Kubernetes distribution should work, we verified that LocalNet works on:
+
 - [Rancher Desktop](https://rancherdesktop.io/), which is GUI powered by a popular distribution `k3s`.
 - [kind](https://kind.sigs.k8s.io/) - official Kubernetes distribution that runs inside docker containers.
 
@@ -81,7 +82,6 @@ The config file can be modified to scale the number of actors up/down. As long a
 
 [Watch demo](https://user-images.githubusercontent.com/4950477/216490690-8ac4c16a-25e1-4202-b2e5-03215030c82c.mp4)
 
-
 ### Stopping & Clean Resources
 
 ```bash
@@ -115,16 +115,18 @@ You can find private keys and addresses for all actors in the [private-keys.yaml
 Addresses begin with `YYYXX` number, where `YYY` is a number of an actor and `XX` is [a type of actor](../../shared/core/types/proto/actor.proto#L7).
 
 The current mapping for `XX` is:
-* `01` - Application
-* `02` - Servicer
-* `03` - Fisherman
-* `04` - Validator
+
+- `01` - Application
+- `02` - Servicer
+- `03` - Fisherman
+- `04` - Validator
 
 For example:
-*  `420043b854e78f2d5f03895bba9ef16972913320` is a validator #420.
-*  `66603bc4082281b7de23001ffd237da62c66a839` is a fisherperson #666.
-*  `0010297b55fc9278e4be4f1bcfe52bf9bd0443f8` is a service node (a servicer) #001.
-*  `314019dbb7faf8390c1f0cf4976ef1215c90b7e4` is an application #314.
+
+- `420043b854e78f2d5f03895bba9ef16972913320` is a validator #420.
+- `66603bc4082281b7de23001ffd237da62c66a839` is a fisherperson #666.
+- `0010297b55fc9278e4be4f1bcfe52bf9bd0443f8` is a service node (a servicer) #001.
+- `314019dbb7faf8390c1f0cf4976ef1215c90b7e4` is an application #314.
 
 ## How to change configuration files
 
