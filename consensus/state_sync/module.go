@@ -123,7 +123,7 @@ func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse)
 	return nil
 }
 
-// TODO implement issue #352git ch
+// TODO(#352): Implement the business to handle these correctly
 // Placeholder function
 func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
 	m.logger.Debug().Msg(fmt.Sprintf("Received get metadata response: %s", metaDataRes.String()))
