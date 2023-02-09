@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.11] - 2023-02-08
 
-- Added debugging init for state sync
-- SendMetadataRequest to send metadata request by all nodes to all nodes
-- SendBlockRequest to send get block request by all nodes to all nodes
+- Added debugging prompts to drive state sync requests
+- `SendMetadataRequest` to send metadata request by all nodes to all nodes
+- `SendBlockRequest` to send get block request by all nodes to all nodes
 
 ## [0.0.0.10] - 2023-02-07
 
