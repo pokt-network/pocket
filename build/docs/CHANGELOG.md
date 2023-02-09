@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.14] - 2023-02-08
+## [0.0.0.14] - 2023-02-09
 
 - Updated all `config*.json` files with new `server_mode_enabled` field (for state sync)
 

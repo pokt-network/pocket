@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.11] - 2023-02-08
+## [0.0.0.11] - 2023-02-09
 
 - Added debugging prompts to drive state sync requests
 - `SendMetadataRequest` to send metadata request by all nodes to all nodes
