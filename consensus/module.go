@@ -7,6 +7,7 @@ import (
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	"github.com/pokt-network/pocket/consensus/pacemaker"
+	"github.com/pokt-network/pocket/consensus/state_sync"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
@@ -57,6 +58,8 @@ type consensusModule struct {
 	leaderId *typesCons.NodeId
 	nodeId   typesCons.NodeId
 
+	nodeAddress string
+
 	// Module Dependencies
 	// IMPROVE(#283): Investigate whether the current approach to how the `utilityContext` should be
 	//                managed or changed. Also consider exposing a function that exposes the context
@@ -68,6 +71,8 @@ type consensusModule struct {
 
 	logger    modules.Logger
 	logPrefix string
+
+	stateSync state_sync.StateSyncModule
 
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
 }
@@ -107,6 +112,23 @@ func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContex
 	m.utilityContext = utilityContext
 }
 
+// Implementations of the ConsensusStateSync interface
+
+func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error) {
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		// REFACTOR(#434): As per issue #434, once the new id is sorted out, this return statement must be changed
+		return 0, err
+	}
+
+	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
+	return uint64(valAddrToIdMap[peerId]), nil
+}
+
+func (m *consensusModule) GetNodeAddress() string {
+	return m.nodeAddress
+}
+
 // Implementations of the type PaceMakerAccessModule interface
 // SetHeight, SeetRound, SetStep are implemented for ConsensusDebugModule
 func (m *consensusModule) ClearLeaderMessagesPool() {
@@ -128,10 +150,17 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	pm := paceMakerMod.(pacemaker.Pacemaker)
+
+	stateSyncMod, err := state_sync.CreateStateSync(bus)
+	if err != nil {
+		return nil, err
+	}
+	stateSync := stateSyncMod.(state_sync.StateSyncModule)
+
 	m := &consensusModule{
 		paceMaker:         pm,
+		stateSync:         stateSync,
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
 
 		height: 0,
@@ -181,6 +210,11 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	m.genesisState = genesisState
 
 	m.nodeId = valAddrToIdMap[address]
+	m.nodeAddress = address
+
+	if consensusCfg.ServerModeEnabled {
+		m.stateSync.EnableServerMode()
+	}
 
 	m.initMessagesPool()
 
@@ -203,6 +237,10 @@ func (m *consensusModule) Start() error {
 	}
 
 	if err := m.paceMaker.Start(); err != nil {
+		return err
+	}
+
+	if err := m.stateSync.Start(); err != nil {
 		return err
 	}
 
@@ -246,7 +284,7 @@ func (*consensusModule) ValidateGenesis(gen *genesis.GenesisState) error {
 	})
 
 	// Sort the validators by their address
-	vals2 := vals[:] //nolint:gocritic // Make a copy of the slice to retain order
+	vals2 := vals[:] // nolint:gocritic // Make a copy of the slice to retain order
 	sort.Slice(vals, func(i, j int) bool {
 		return vals[i].GetAddress() < vals[j].GetAddress()
 	})
@@ -311,7 +349,7 @@ func (m *consensusModule) loadPersistedState() error {
 	}
 	defer persistenceContext.Close()
 
-	latestHeight, err := persistenceContext.GetLatestBlockHeight()
+	latestHeight, err := persistenceContext.GetMaximumBlockHeight()
 	if err != nil || latestHeight == 0 {
 		// TODO: Proper state sync not implemented yet
 		return nil
@@ -322,4 +360,8 @@ func (m *consensusModule) loadPersistedState() error {
 	m.logger.Info().Uint64("height", m.height).Msg("Starting consensus module")
 
 	return nil
+}
+
+func (m *consensusModule) EnableServerMode() {
+	m.stateSync.EnableServerMode()
 }

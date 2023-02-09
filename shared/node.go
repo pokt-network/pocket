@@ -126,6 +126,8 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		logger.Global.Info().Msg("Received NodeStartedEvent")
 	case consensus.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
+	case consensus.StateSyncMessageContentType:
+		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
 	case utility.TransactionGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleMessage(message.Content)
 	case messaging.DebugMessageEventType:
@@ -146,7 +148,9 @@ func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
 		messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
 		messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
-		messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ,
+		messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ:
 		return node.GetBus().GetConsensusModule().HandleDebugMessage(debugMessage)
 	// Persistence Debug
 	case messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:

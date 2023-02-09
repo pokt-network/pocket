@@ -14,23 +14,33 @@ import "core/types/proto/block.proto";
 //                      explicit enough.
 
 message StateSyncMetadataRequest {
-    string peer_id = 1; // The peer id of the node that is requesting the metadata
+    // CONSOLIDATE(#347): Integrate with LibP2P
+    string peer_address = 1; // The peer id of the node that is requesting the metadata
 }
 
 message StateSyncMetadataResponse {
-    string peer_id = 1; // The `peer_id` needs to be populated by the P2P module of the receiving node so the sender cannot falsify its identity
+    string peer_address = 1; // The `peer_id` needs to be populated by the P2P module of the receiving node so the sender cannot falsify its identity
     uint64 min_height = 2; // The minimum height that a peer has in its BlockStore
     uint64 max_height = 3; // The maximum height that a peer has in its BlockStore
 }
 
 message GetBlockRequest {
-    string peer_id = 1; // The peer id of the node that is requesting the metadata
+    string peer_address = 1; // The peer id of the node that is requesting the metadata
     uint64 height = 2; // The height of the block being requested by the peer
 }
 
 message GetBlockResponse {
-    string peer_id = 1; // The `peer_id` needs to be populated by the P2P module of the receiving node so the sender cannot falsify its identity
+    string peer_address = 1; // The `peer_id` needs to be populated by the P2P module of the receiving node so the sender cannot falsify its identity
     core.Block block = 2; // The block being provided to the peer
+}
+
+message StateSyncMessage {
+    oneof message {
+        StateSyncMetadataRequest metadata_req = 2;
+        StateSyncMetadataResponse metadata_res = 3;
+        GetBlockRequest get_block_req = 4;
+        GetBlockResponse get_block_res = 5;
+    }
 }
 
 // NOT USED: This gRPC interface is **not being used at the moment**. It is in place simply as a

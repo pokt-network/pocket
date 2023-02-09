@@ -7,6 +7,7 @@ import (
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
@@ -45,7 +46,7 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMess
 func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) {
 	// TODO: Add an iterator to the `kvstore` and use that instead
 	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1
-	blockBytes, err := m.GetBlockStore().Get(heightToBytes(int64(height)))
+	blockBytes, err := m.GetBlockStore().Get(converters.HeightToBytes(height))
 	if err != nil {
 		m.logger.Error().Err(err).Uint64("height", height).Msg("Error getting block from block store")
 		return
