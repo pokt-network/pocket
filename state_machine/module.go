@@ -48,6 +48,10 @@ func (*stateMachineModule) Create(bus modules.Bus, options ...modules.ModuleOpti
 		},
 	})
 
+	for _, option := range options {
+		option(m)
+	}
+
 	bus.RegisterModule(m)
 
 	return m, nil
