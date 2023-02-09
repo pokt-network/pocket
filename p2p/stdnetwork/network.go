@@ -5,11 +5,11 @@ package stdnetwork
 import (
 	"fmt"
 
-	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/rs/zerolog"
 )
 
 var (
@@ -20,13 +20,13 @@ var (
 type network struct {
 	addrBookMap typesP2P.AddrBookMap
 
-	logger modules.Logger
+	logger zerolog.Logger
 }
 
-func NewNetwork(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
+func NewNetwork(logger zerolog.Logger, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Error getting addrBook")
+		logger.Fatal().Err(err).Msg("Error getting addrBook")
 	}
 
 	addrBookMap := make(typesP2P.AddrBookMap)
@@ -34,7 +34,7 @@ func NewNetwork(bus modules.Bus, addrBookProvider providers.AddrBookProvider, cu
 		addrBookMap[peer.Address.String()] = peer
 	}
 	return &network{
-		logger:      bus.GetLoggerModule().CreateLoggerForModule("network"),
+		logger:      logger,
 		addrBookMap: addrBookMap,
 	}
 }

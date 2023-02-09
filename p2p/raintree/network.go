@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -15,6 +14,7 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	telemetry "github.com/pokt-network/pocket/telemetry"
+	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -35,15 +35,15 @@ type rainTreeNetwork struct {
 	logger modules.Logger
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+func NewRainTreeNetwork(logger zerolog.Logger, bus modules.Bus, addr cryptoPocket.Address, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Error getting addrBook")
+		logger.Fatal().Err(err).Msg("Error getting addrBook")
 	}
 
 	pm, err := newPeersManager(addr, addrBook, true)
 	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
+		logger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
 	}
 
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
