@@ -26,7 +26,8 @@ const (
 
 	ByzantineThreshold = float64(2) / float64(3)
 
-	HotstuffMessageContentType = "consensus.HotstuffMessage"
+	HotstuffMessageContentType  = "consensus.HotstuffMessage"
+	StateSyncMessageContentType = "consensus.StateSyncMessage"
 )
 
 var HotstuffSteps = [...]typesCons.HotstuffStep{NewRound, Prepare, PreCommit, Commit, Decide}
@@ -299,7 +300,6 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 }
 
 /*** General Infrastructure Helpers ***/
-
 func (m *consensusModule) setLogPrefix(logPrefix string) {
 	logger.Global.UpdateFields(map[string]any{
 		"kind": logPrefix,
