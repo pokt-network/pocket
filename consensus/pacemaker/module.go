@@ -52,7 +52,7 @@ type pacemaker struct {
 	debug pacemakerDebug
 
 	logger modules.Logger
-	// REFACTOR: logPrefix should be removed
+	// REFACTOR: logPrefix should be removed in exchange for setting a namespace directly with the logger
 	logPrefix string
 }
 
