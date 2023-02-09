@@ -116,17 +116,19 @@ func (m *p2pModule) GetModuleName() string {
 }
 
 func (m *p2pModule) Start() error {
-	logger.Global.Info().Msg("Starting network module")
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
+	m.logger.Info().Msg("Starting network module")
 
 	addrbookProvider := getAddrBookProvider(m)
 	currentHeightProvider := getCurrentHeightProvider(m)
 
 	cfg := m.GetBus().GetRuntimeMgr().GetConfig()
 
+	// TODO: pass down logger
 	if cfg.P2P.UseRainTree {
-		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), addrbookProvider, currentHeightProvider)
+		m.network = raintree.NewRainTreeNetwork(m.logger, m.GetBus(), m.address, addrbookProvider, currentHeightProvider)
 	} else {
-		m.network = stdnetwork.NewNetwork(m.GetBus(), addrbookProvider, currentHeightProvider)
+		m.network = stdnetwork.NewNetwork(m.logger, m.GetBus(), addrbookProvider, currentHeightProvider)
 	}
 
 	if cfg.ClientDebugMode {
