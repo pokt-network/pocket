@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.24] - 2023-02-09
+
+- Added `UnmarshalText` to `Ed25519PrivateKey`
+- Added events `ConsensusNewHeightEvent` and `StateMachineTransitionEvent`
+- Introduced `BaseInterruptableModule` and `BaseIntegratableModule` to reduce repetition and boilerpate code (DRYness)
+- Added `ModulesRegistry` and `StateMachineModule` accessors and interfaces
+- Introduced generic `ModuleOption` pattern to fine tune modules behaviour
+- Added `StateMachine` to the `node` initialization
+
 ## [0.0.0.23] - 2023-02-07
 
 - Added GITHUB_WIKI tags where it was missing
