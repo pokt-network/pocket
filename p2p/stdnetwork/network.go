@@ -20,14 +20,16 @@ var (
 type network struct {
 	addrBookMap typesP2P.AddrBookMap
 
-	logger *modules.Logger
+	logger modules.Logger
 }
 
 func NewNetwork(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
-	logger := logger.Global.CreateLoggerForModule("network")
+	networkLogger := logger.Global.CreateLoggerForModule("network")
+	networkLogger.Info().Msg("Initializing stdnetwork")
+
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Error getting addrBook")
+		networkLogger.Fatal().Err(err).Msg("Error getting addrBook")
 	}
 
 	addrBookMap := make(typesP2P.AddrBookMap)
@@ -35,7 +37,7 @@ func NewNetwork(bus modules.Bus, addrBookProvider providers.AddrBookProvider, cu
 		addrBookMap[peer.Address.String()] = peer
 	}
 	return &network{
-		logger:      &logger,
+		logger:      networkLogger,
 		addrBookMap: addrBookMap,
 	}
 }
