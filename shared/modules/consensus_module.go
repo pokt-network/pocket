@@ -70,6 +70,7 @@ type ConsensusPacemaker interface {
 
 // This interface represents functions exposed by the Consensus module for StateSync specific business logic.
 // These functions are intended to only be called by the StateSync module.
+// INVESTIGATE: This interface enable a fast implementation of state sync but look into a way of removing it in the future
 type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
