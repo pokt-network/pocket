@@ -58,12 +58,12 @@ func main() {
 		validatorId := extractValidatorId(service.Name)
 		switch event.Type {
 		case watch.Added:
-			fmt.Printf("Validator %s added to the cluster\n", service.Name)
+			log.Printf("Validator %s added to the cluster\n", service.Name)
 			if err := stakeValidator(validatorKeysMap[validatorId], "150000000001", []string{"0001"}, fmt.Sprintf("v1-validator%s:8080", validatorId)); err != nil {
 				log.Printf("Error staking validator: %s", err.Error())
 			}
 		case watch.Deleted:
-			fmt.Printf("Validator %s deleted from the cluster\n", service.Name)
+			log.Printf("Validator %s deleted from the cluster\n", service.Name)
 			if err := unstakeValidator(validatorKeysMap[validatorId]); err != nil {
 				log.Printf("Error unstaking validator: %s", err.Error())
 			}
@@ -72,7 +72,7 @@ func main() {
 }
 
 func stakeValidator(pk crypto.Ed25519PrivateKey, amount string, chains []string, serviceURL string) error {
-	fmt.Printf("Staking Validator with Address: %s\n", pk.Address())
+	log.Printf("Staking Validator with Address: %s\n", pk.Address())
 	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0o600); err != nil {
 		return err
 	}
@@ -82,11 +82,12 @@ func stakeValidator(pk crypto.Ed25519PrivateKey, amount string, chains []string,
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(out))
+	log.Println(string(out))
 	return nil
 }
+
 func unstakeValidator(pk crypto.Ed25519PrivateKey) error {
-	fmt.Printf("Unstaking Validator with Address: %s\n", pk.Address())
+	log.Printf("Unstaking Validator with Address: %s\n", pk.Address())
 	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0o600); err != nil {
 		return err
 	}
@@ -96,6 +97,6 @@ func unstakeValidator(pk crypto.Ed25519PrivateKey) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(out))
+	log.Println(string(out))
 	return nil
 }
