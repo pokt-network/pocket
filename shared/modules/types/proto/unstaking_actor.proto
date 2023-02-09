@@ -9,23 +9,3 @@ message UnstakingActor {
   string stake_amount = 2;
   string output_address = 3;
 }
-
-// func (x *UnstakingActor) SetAddress(address string) { // TODO (team) convert address to string #149
-// 	s, err := hex.DecodeString(address)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	x.Address = s
-// }
-
-// func (x *UnstakingActor) SetStakeAmount(stakeAmount string) {
-// 	x.StakeAmount = stakeAmount
-// }
-
-// func (x *UnstakingActor) SetOutputAddress(address string) {
-// 	s, err := hex.DecodeString(address)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	x.OutputAddress = s
-// }

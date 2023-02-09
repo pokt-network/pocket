@@ -79,7 +79,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	addrBz2, er := hex.DecodeString(accs[1].GetAddress())
 	require.NoError(t, er)
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
-	candidates, err := ctx.GetSignerCandidates(&msg)
+	candidates, err := ctx.getSignerCandidates(&msg)
 	require.NoError(t, err)
 
 	require.Equal(t, 1, len(candidates), "wrong number of candidates")

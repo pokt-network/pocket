@@ -79,7 +79,7 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 		savePointsList:     make([][]byte, 0),
 	}
 
-	return uc.WithBus(testUtilityMod.GetBus())
+	return uc.withBus(testUtilityMod.GetBus())
 }
 
 func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {

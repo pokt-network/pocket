@@ -21,10 +21,13 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 
 	recipientBalanceBefore, err := converters.StringToBigInt(accs[1].GetAmount())
 	require.NoError(t, err)
+
 	addrBz, er := hex.DecodeString(accs[0].GetAddress())
 	require.NoError(t, er)
+
 	addrBz2, er := hex.DecodeString(accs[1].GetAddress())
 	require.NoError(t, er)
+
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
 	err = ctx.handleMessageSend(&msg)
 	require.NoError(t, err, "handle message send")
@@ -45,10 +48,13 @@ func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := converters.BigIntToString(sendAmount)
+
 	addrBz, er := hex.DecodeString(accs[0].GetAddress())
 	require.NoError(t, er)
+
 	addrBz2, er := hex.DecodeString(accs[1].GetAddress())
 	require.NoError(t, er)
+
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
 	candidates, err := ctx.getMessageSendSignerCandidates(&msg)
 	require.NoError(t, err)

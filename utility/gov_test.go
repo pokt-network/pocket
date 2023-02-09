@@ -23,7 +23,7 @@ func DefaultTestingParams(_ *testing.T) *genesis.Params {
 func TestUtilityContext_GetAppMaxChains(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	maxChains, err := ctx.GetAppMaxChains()
+	maxChains, err := ctx.getAppMaxChains()
 	require.NoError(t, err)
 	require.Equal(t, int(defaultParams.GetAppMaxChains()), maxChains)
 }
@@ -31,7 +31,7 @@ func TestUtilityContext_GetAppMaxChains(t *testing.T) {
 func TestUtilityContext_GetAppMaxPausedBlocks(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	gotParam, err := ctx.GetAppMaxPausedBlocks()
+	gotParam, err := ctx.getAppMaxPausedBlocks()
 	require.NoError(t, err)
 	require.Equal(t, int(defaultParams.GetAppMaxPauseBlocks()), gotParam)
 }
@@ -40,7 +40,7 @@ func TestUtilityContext_GetAppMinimumPauseBlocks(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetAppMinimumPauseBlocks())
-	gotParam, err := ctx.GetAppMinimumPauseBlocks()
+	gotParam, err := ctx.getAppMinimumPauseBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 
@@ -50,7 +50,7 @@ func TestUtilityContext_GetAppMinimumStake(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetAppMinimumStake()
-	gotParam, err := ctx.GetAppMinimumStake()
+	gotParam, err := ctx.getAppMinimumStake()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 
@@ -60,7 +60,7 @@ func TestUtilityContext_GetAppUnstakingBlocks(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int64(defaultParams.GetAppUnstakingBlocks())
-	gotParam, err := ctx.GetAppUnstakingBlocks()
+	gotParam, err := ctx.getAppUnstakingBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 
@@ -70,7 +70,7 @@ func TestUtilityContext_GetBaselineAppStakeRate(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetAppBaselineStakeRate())
-	gotParam, err := ctx.GetBaselineAppStakeRate()
+	gotParam, err := ctx.getBaselineAppStakeRate()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 
@@ -80,7 +80,7 @@ func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetBlocksPerSession())
-	gotParam, err := ctx.GetParameter(typesUtil.BlocksPerSessionParamName, 0)
+	gotParam, err := ctx.getParameter(typesUtil.BlocksPerSessionParamName, 0)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 
@@ -432,7 +432,7 @@ func TestUtilityContext_GetServiceNodeMaxChains(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetServiceNodeMaxChains())
-	gotParam, err := ctx.GetServiceNodeMaxChains()
+	gotParam, err := ctx.getServiceNodeMaxChains()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 }
@@ -450,7 +450,7 @@ func TestUtilityContext_GetServiceNodeMinimumPauseBlocks(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetServiceNodeMinimumPauseBlocks())
-	gotParam, err := ctx.GetServiceNodeMinimumPauseBlocks()
+	gotParam, err := ctx.getServiceNodeMinimumPauseBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 }
@@ -459,7 +459,7 @@ func TestUtilityContext_GetServiceNodeMinimumStake(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetServiceNodeMinimumStake()
-	gotParam, err := ctx.GetServiceNodeMinimumStake()
+	gotParam, err := ctx.getServiceNodeMinimumStake()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
@@ -468,7 +468,7 @@ func TestUtilityContext_GetServiceNodeUnstakingBlocks(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int64(defaultParams.GetServiceNodeUnstakingBlocks())
-	gotParam, err := ctx.GetServiceNodeUnstakingBlocks()
+	gotParam, err := ctx.getServiceNodeUnstakingBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 }
@@ -477,7 +477,7 @@ func TestUtilityContext_GetStakingAdjustment(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetAppStakingAdjustment())
-	gotParam, err := ctx.GetStabilityAdjustment()
+	gotParam, err := ctx.getStabilityAdjustment()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 }

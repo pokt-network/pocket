@@ -25,12 +25,12 @@ type UtilityModule interface {
 	GetMempool() mempool.TXMempool
 }
 
+// TECHDEBT: `CreateAndApplyProposalBlock` and `ApplyBlock` should be be refactored into a
+//           `GetProposalBlock` and `ApplyProposalBlock` functions
+
 // The context within which the node can operate with the utility layer.
 type UtilityContext interface {
 	// Block operations
-
-	// TECHDEBT: `CreateAndApplyProposalBlock` and `ApplyBlock` should be be refactored into a
-	//           `GetProposalBlock` and `ApplyProposalBlock` functions
 
 	// This function is intended to be called by any type of node during state transitions.
 	// For example, both block proposers and replicas/verifiers will use it to create a
@@ -59,6 +59,5 @@ type UtilityContext interface {
 // TECHDEBT: Remove this interface from `shared/modules`
 type UnstakingActor interface {
 	GetAddress() []byte
-	// GetStakeAmount() string
 	GetOutputAddress() []byte
 }

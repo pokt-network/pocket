@@ -9,6 +9,8 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
+// This file captures basic logic common across all the actors that need to stake regardless of their responsibility.
+
 const (
 	httpsPrefix      = "https://"
 	httpPrefix       = "http://"

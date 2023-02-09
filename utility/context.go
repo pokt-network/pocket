@@ -81,7 +81,8 @@ func (u *utilityContext) getStoreAndHeight() (modules.PersistenceRWContext, int6
 	return store, height, err
 }
 
-func (u *utilityContext) RevertLastSavePoint() typesUtil.Error {
+// TODO: This has not been tested or investigated in detail
+func (u *utilityContext) revertLastSavePoint() typesUtil.Error {
 	if len(u.savePointsSet) == typesUtil.ZeroInt {
 		return typesUtil.ErrEmptySavePoints()
 	}
@@ -95,7 +96,8 @@ func (u *utilityContext) RevertLastSavePoint() typesUtil.Error {
 	return nil
 }
 
-func (u *utilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
+// TODO: This has not been tested or investigated in detail
+func (u *utilityContext) newSavePoint(transactionHash []byte) typesUtil.Error {
 	if err := u.persistenceContext.NewSavePoint(transactionHash); err != nil {
 		return typesUtil.ErrNewSavePoint(err)
 	}
@@ -108,11 +110,11 @@ func (u *utilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
 	return nil
 }
 
-func (u *utilityContext) GetBus() modules.Bus {
+func (u *utilityContext) getBus() modules.Bus {
 	return u.bus
 }
 
-func (u *utilityContext) WithBus(bus modules.Bus) *utilityContext {
+func (u *utilityContext) withBus(bus modules.Bus) *utilityContext {
 	u.bus = bus
 	return u
 }

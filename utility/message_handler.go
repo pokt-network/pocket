@@ -261,7 +261,7 @@ func (u *utilityContext) handleMessageChangeParameter(message *typesUtil.Message
 }
 
 // REFACTOR: This can be moved over into utility/types/message.go
-func (u *utilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, typesUtil.Error) {
+func (u *utilityContext) getSignerCandidates(msg typesUtil.Message) ([][]byte, typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:
 		return u.getMessageSendSignerCandidates(x)

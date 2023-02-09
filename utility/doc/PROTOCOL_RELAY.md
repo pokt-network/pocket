@@ -175,13 +175,6 @@ This algorithm is not yet documented anywhere, so the following links can act as
 
 - Merkle: [pocketcore/types/merkle.go](https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/types/merkle.go)
 - Claim: [pocketcore/keeper/claim.go](https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/claim.go)
-
-# Proof: [pocketcore/keeper/proof.go](https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/proof.go)
-
-**Source code references:**
-
-- Merkle: https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/types/merkle.go
-- Claim: https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/claim.go
-- Proof: https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/proof.go
+- Proof: [pocketcore/keeper/proof.go](https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/proof.go)
 
 <!-- GITHUB_WIKI: utility/relay_protocol -->

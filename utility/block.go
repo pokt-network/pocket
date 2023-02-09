@@ -37,7 +37,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	totalTxsSizeInBytes := 0
 	txIndex := 0
 
-	mempool := u.GetBus().GetUtilityModule().GetMempool()
+	mempool := u.getBus().GetUtilityModule().GetMempool()
 	for !mempool.IsEmpty() {
 		txBytes, err := mempool.PopTx()
 		if err != nil {
@@ -60,7 +60,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		txResult, err := u.applyTransaction(txIndex, transaction)
 		if err != nil {
 			// TODO(#327): Properly implement 'unhappy path' for save points
-			if err := u.RevertLastSavePoint(); err != nil {
+			if err := u.revertLastSavePoint(); err != nil {
 				return "", nil, err
 			}
 			totalTxsSizeInBytes -= txTxsSizeInBytes

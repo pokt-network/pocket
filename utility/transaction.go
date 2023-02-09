@@ -70,7 +70,7 @@ func (u *utilityContext) anteHandleMessage(tx *typesUtil.Transaction) (msg types
 	if accountAmount.Sign() == -1 {
 		return nil, "", typesUtil.ErrInsufficientAmount(address.String())
 	}
-	signerCandidates, err := u.GetSignerCandidates(msg)
+	signerCandidates, err := u.getSignerCandidates(msg)
 	if err != nil {
 		return nil, "", err
 	}

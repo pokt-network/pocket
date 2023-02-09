@@ -34,51 +34,51 @@ func (u *utilityContext) updateParam(paramName string, value any) typesUtil.Erro
 	return typesUtil.ErrUnknownParam(paramName)
 }
 
-func (u *utilityContext) GetParameter(paramName string, height int64) (any, error) {
+func (u *utilityContext) getParameter(paramName string, height int64) (any, error) {
 	return u.Store().GetParameter(paramName, height)
 }
 
-func (u *utilityContext) GetAppMinimumStake() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) getAppMinimumStake() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.AppMinimumStakeParamName)
 }
 
-func (u *utilityContext) GetAppMaxChains() (int, typesUtil.Error) {
+func (u *utilityContext) getAppMaxChains() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppMaxChainsParamName)
 }
 
-func (u *utilityContext) GetBaselineAppStakeRate() (int, typesUtil.Error) {
+func (u *utilityContext) getBaselineAppStakeRate() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppBaselineStakeRateParamName)
 }
 
-func (u *utilityContext) GetStabilityAdjustment() (int, typesUtil.Error) {
+func (u *utilityContext) getStabilityAdjustment() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppStakingAdjustmentParamName)
 }
 
-func (u *utilityContext) GetAppUnstakingBlocks() (int64, typesUtil.Error) {
+func (u *utilityContext) getAppUnstakingBlocks() (int64, typesUtil.Error) {
 	return u.getInt64Param(typesUtil.AppUnstakingBlocksParamName)
 }
 
-func (u *utilityContext) GetAppMinimumPauseBlocks() (int, typesUtil.Error) {
+func (u *utilityContext) getAppMinimumPauseBlocks() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppMinimumPauseBlocksParamName)
 }
 
-func (u *utilityContext) GetAppMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
+func (u *utilityContext) getAppMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppMaxPauseBlocksParamName)
 }
 
-func (u *utilityContext) GetServiceNodeMinimumStake() (*big.Int, typesUtil.Error) {
+func (u *utilityContext) getServiceNodeMinimumStake() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.ServiceNodeMinimumStakeParamName)
 }
 
-func (u *utilityContext) GetServiceNodeMaxChains() (int, typesUtil.Error) {
+func (u *utilityContext) getServiceNodeMaxChains() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.ServiceNodeMaxChainsParamName)
 }
 
-func (u *utilityContext) GetServiceNodeUnstakingBlocks() (int64, typesUtil.Error) {
+func (u *utilityContext) getServiceNodeUnstakingBlocks() (int64, typesUtil.Error) {
 	return u.getInt64Param(typesUtil.ServiceNodeUnstakingBlocksParamName)
 }
 
-func (u *utilityContext) GetServiceNodeMinimumPauseBlocks() (int, typesUtil.Error) {
+func (u *utilityContext) getServiceNodeMinimumPauseBlocks() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName)
 }
 

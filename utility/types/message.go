@@ -186,5 +186,3 @@ func getCanonicalBytes(msg Message) []byte {
 	}
 	return bz // DISCUSS(#142): should we also sort the JSON like in V0?
 }
-
-// An internal helper interface to consolidate logic related to validating staking related messages

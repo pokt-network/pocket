@@ -238,11 +238,11 @@ func TestUtilityContext_GetUnbondingHeight(t *testing.T) {
 			var err error
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
-				unstakingBlocks, err = ctx.GetAppUnstakingBlocks()
+				unstakingBlocks, err = ctx.getAppUnstakingBlocks()
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
 				unstakingBlocks, err = ctx.GetFishermanUnstakingBlocks()
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				unstakingBlocks, err = ctx.GetServiceNodeUnstakingBlocks()
+				unstakingBlocks, err = ctx.getServiceNodeUnstakingBlocks()
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
 				unstakingBlocks, err = ctx.GetValidatorUnstakingBlocks()
 			default:
@@ -324,7 +324,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			// Verify that the actor is still staked
 			status, err = ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be staked")
+			require.Equal(t, typesUtil.StakeStatus_Unstaked, status, "actor should be staked")
 		})
 	}
 }

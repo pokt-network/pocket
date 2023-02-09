@@ -1,7 +1,7 @@
 package types
 
-// TODO(Optional): Evaluate a way to define an interface for the actors and remove all the `switch actorType`
-// statements throughout the codebase.
+// REFACTOR: Evaluate a way to define an interface for the actors which would enable to easily
+//           remove all the `switch actorType` statements in the codebase.
 
 var ActorTypes = []ActorType{
 	ActorType_ACTOR_TYPE_APP,

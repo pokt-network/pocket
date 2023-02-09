@@ -22,13 +22,13 @@ func (u *utilityContext) calculateMaxAppRelays(appStakeStr string) (string, type
 		return typesUtil.EmptyString, typesUtil.ErrStringToBigInt(er)
 	}
 
-	stabilityAdjustment, err := u.GetStabilityAdjustment()
+	stabilityAdjustment, err := u.getStabilityAdjustment()
 	if err != nil {
 		return typesUtil.EmptyString, err
 	}
 
 	// INVESTIGATE: Need to understand what `baseline adjustment` is
-	baseRate, err := u.GetBaselineAppStakeRate()
+	baseRate, err := u.getBaselineAppStakeRate()
 	if err != nil {
 		return typesUtil.EmptyString, err
 	}
