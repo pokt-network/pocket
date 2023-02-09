@@ -10,9 +10,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type loggerModule struct {
-	modules.Module
+var _ modules.Module = &loggerModule{}
 
+type loggerModule struct {
 	zerolog.Logger
 	bus    modules.Bus
 	config *configs.LoggerConfig
