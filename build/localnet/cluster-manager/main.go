@@ -77,6 +77,7 @@ func stakeValidator(pk crypto.Ed25519PrivateKey, amount string, chains []string,
 		return err
 	}
 
+	//nolint:gosec // G204 Dogfooding CLI
 	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url="+rpcHost, "Validator", "Stake", pk.Address().String(), amount, strings.Join(chains, ","), serviceURL).CombinedOutput()
 	if err != nil {
 		return err
@@ -90,6 +91,7 @@ func unstakeValidator(pk crypto.Ed25519PrivateKey) error {
 		return err
 	}
 
+	//nolint:gosec // G204 Dogfooding CLI
 	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url="+rpcHost, "Validator", "Unstake", pk.Address().String()).CombinedOutput()
 	if err != nil {
 		return err
