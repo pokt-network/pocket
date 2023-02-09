@@ -225,7 +225,7 @@ func updateUnstakedHeightIfPausedBefore(actorSpecificParam string, unstakingHeig
 		INSERT INTO %s (address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 		(
 			SELECT address, public_key, staked_tokens, %s, output_address, paused_height, %d, %d
-			FROM %s WHERE paused_height<%d
+			FROM %s WHERE paused_height<%d AND paused_height>0
 				AND (height,address) IN (SELECT MAX(height),address from %s GROUP BY address)
         )
 		ON CONFLICT ON CONSTRAINT %s

@@ -240,7 +240,6 @@ func (p *PostgresContext) SetActorStatusAndUnstakingHeightIfPausedBefore(actorSc
 	if err != nil {
 		return err
 	}
-
 	_, err = tx.Exec(ctx, actorSchema.UpdateUnstakedHeightIfPausedBeforeQuery(pausedBeforeHeight, unstakingHeight, currentHeight))
 	return err
 }

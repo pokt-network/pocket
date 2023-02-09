@@ -433,7 +433,6 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 			stakedAmount, err := converters.StringToBigInt(actor.StakedAmount)
 			require.NoError(t, err)
 			expectedAmount := big.NewInt(0).Sub(poolInitAMount, stakedAmount)
-			fmt.Println("OLSH", stakedAmount, poolInitAMount, expectedAmount)
 			require.Equalf(t, expectedAmount, amount, "pool amount should be unchanged for %s", poolName)
 
 			// Status should be changed from Unstaking to Unstaked
