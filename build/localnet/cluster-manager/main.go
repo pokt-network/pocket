@@ -73,7 +73,7 @@ func main() {
 
 func stakeValidator(pk crypto.Ed25519PrivateKey, amount string, chains []string, serviceURL string) error {
 	fmt.Printf("Staking Validator with Address: %s\n", pk.Address())
-	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0o644); err != nil {
+	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0o600); err != nil {
 		return err
 	}
 
@@ -87,7 +87,7 @@ func stakeValidator(pk crypto.Ed25519PrivateKey, amount string, chains []string,
 }
 func unstakeValidator(pk crypto.Ed25519PrivateKey) error {
 	fmt.Printf("Unstaking Validator with Address: %s\n", pk.Address())
-	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0o644); err != nil {
+	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0o600); err != nil {
 		return err
 	}
 

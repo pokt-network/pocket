@@ -18,7 +18,7 @@ func main() {
 
 	header := "# Node Finite State Machine\n\nThe following diagram displays the various states and events that govern the functionality of the node.\n\n```mermaid\n"
 	footer := "```"
-	if err := os.WriteFile("state_machine/docs/state-machine.diagram.md", []byte(header+mermaidStateDiagram+footer), 0644); err != nil {
+	if err := os.WriteFile("state_machine/docs/state-machine.diagram.md", []byte(header+mermaidStateDiagram+footer), 0o600); err != nil {
 		panic(err)
 	}
 }

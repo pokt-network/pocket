@@ -15,8 +15,6 @@ type stateMachineModule struct {
 	modules.BaseIntegratableModule
 	modules.BaseInterruptableModule
 
-	logger modules.Logger
-
 	*fsm.FSM
 }
 
