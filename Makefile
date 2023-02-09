@@ -89,7 +89,7 @@ go_clean_deps: ## Runs `go mod tidy` && `go mod vendor`
 
 .PHONY: go_lint
 go_lint: ## Run all linters that are triggered by the CI pipeline
-	golangci-lint run ./...
+	docker run -t --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.51.1 golangci-lint run -v
 
 .PHONY: gofmt
 gofmt: ## Format all the .go files in the project in place.
@@ -222,7 +222,7 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
 	$(eval modules_dir = "shared/modules")
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
-	
+
 	$(eval DIRS = p2p persistence)
 	for dir in $(DIRS); do \
 		echo "Processing $$dir mocks..."; \
@@ -230,7 +230,7 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
         go generate ./${dir_name}/...; \
         echo "$$dir mocks generated in $$dir/types/mocks"; \
     done
-	
+
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
 .PHONY: protogen_show
