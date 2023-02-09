@@ -235,7 +235,6 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			return nil
 		},
 	}
-
 	return unstakeCmd
 }
 

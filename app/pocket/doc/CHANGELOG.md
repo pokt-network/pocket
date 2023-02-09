@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2023-02-09
+
+- Updated to handle `bootstrap-nodes` flag that can be used to override the default bootstrap nodes
+
 ## [0.0.0.3] - 2023-02-06
 
 - Introduced `CONFIG_PATH` and `GENESIS_PATH` environment variables for debug CLI commands

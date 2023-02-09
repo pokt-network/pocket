@@ -12,7 +12,7 @@ import (
 func main() {
 	configFilename := flag.String("config", "", "Relative or absolute path to the config file.")
 	genesisFilename := flag.String("genesis", "", "Relative or absolute path to the genesis file.")
-	bootstrapNodes := flag.String("bootstrapNodes", "", "Comma separated list of bootstrap nodes.")
+	bootstrapNodes := flag.String("bootstrap-nodes", "", "Comma separated list of bootstrap nodes.")
 
 	v := flag.Bool("version", false, "")
 	flag.Parse()

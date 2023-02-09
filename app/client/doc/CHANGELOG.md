@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.10] - 2023-02-09
+
+- Added `not_interactive` flag to allow for non-interactive `Stake` and `Unstake` transactions (dogfooding in `cluster-manager`)
+- Updated CLI to use to source the address book and the current height from the RPC server leveraging the `rpcAddressBookProvider` and `rpcCurrentHeightProvider` respectively and the `bus` for dependency injection
+
 ## [0.0.0.9] - 2023-02-06
 
 - Documentation and supporting logic to enable `p1 debug` to be used from localhost
