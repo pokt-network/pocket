@@ -14,7 +14,7 @@ import "core/types/proto/block.proto";
 //                      explicit enough.
 
 message StateSyncMetadataRequest {
-    //CONSOLIDATE(#347): Integrate with LibP2P
+    // CONSOLIDATE(#347): Integrate with LibP2P
     string peer_address = 1; // The peer id of the node that is requesting the metadata
 }
 
