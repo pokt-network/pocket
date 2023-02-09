@@ -171,7 +171,7 @@ func (u *utilityContext) endBlock(proposer []byte) typesUtil.Error {
 
 // handleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
 func (u *utilityContext) handleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
-	maxMissedBlocks, err := u.GetValidatorMaxMissedBlocks()
+	maxMissedBlocks, err := u.getValidatorMaxMissedBlocks()
 	if err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func (u *utilityContext) handleByzantineValidators(lastBlockByzantineValidators 
 				return err
 			}
 			// burn validator for missing blocks
-			burnPercentage, err := u.GetMissedBlocksBurnPercentage()
+			burnPercentage, err := u.getMissedBlocksBurnPercentage()
 			if err != nil {
 				return err
 			}
@@ -306,7 +306,7 @@ func (u *utilityContext) handleProposerRewards(proposer []byte) typesUtil.Error 
 	if err := u.setPoolAmount(feePoolName, big.NewInt(0)); err != nil {
 		return err
 	}
-	proposerCutPercentage, err := u.GetProposerPercentageOfFees()
+	proposerCutPercentage, err := u.getProposerPercentageOfFees()
 	if err != nil {
 		return err
 	}

@@ -240,11 +240,11 @@ func TestUtilityContext_GetUnbondingHeight(t *testing.T) {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				unstakingBlocks, err = ctx.getAppUnstakingBlocks()
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				unstakingBlocks, err = ctx.GetFishermanUnstakingBlocks()
+				unstakingBlocks, err = ctx.getFishermanUnstakingBlocks()
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 				unstakingBlocks, err = ctx.getServiceNodeUnstakingBlocks()
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				unstakingBlocks, err = ctx.GetValidatorUnstakingBlocks()
+				unstakingBlocks, err = ctx.getValidatorUnstakingBlocks()
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}

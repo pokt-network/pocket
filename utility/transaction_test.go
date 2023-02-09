@@ -25,7 +25,7 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	_, signerString, err := ctx.anteHandleMessage(tx)
 	require.NoError(t, err)
 	require.Equal(t, signer.Address().String(), signerString)
-	feeBig, err := ctx.GetMessageSendFee()
+	feeBig, err := ctx.getMessageSendFee()
 	require.NoError(t, err)
 
 	expectedAfterBalance := big.NewInt(0).Sub(startingBalance, feeBig)
@@ -42,7 +42,7 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int32(0), txResult.GetResultCode())
 	require.Equal(t, "", txResult.GetError())
-	feeBig, err := ctx.GetMessageSendFee()
+	feeBig, err := ctx.getMessageSendFee()
 	require.NoError(t, err)
 
 	expectedAmountSubtracted := amount.Add(amount, feeBig)

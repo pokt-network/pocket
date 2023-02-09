@@ -33,11 +33,11 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
-	// missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
+	// missed, err := ctx.getValidatorMissedBlocks(byzantine.Address)
 	// require.NoError(t, err)
 	// require.Equal(t, missed, 1)
 
-	feeBig, err := ctx.GetMessageSendFee()
+	feeBig, err := ctx.getMessageSendFee()
 	require.NoError(t, err)
 
 	expectedAmountSubtracted := big.NewInt(0).Add(amountSent, feeBig)
@@ -46,7 +46,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amountAfter, "unexpected after balance; expected %v got %v", expectedAfterBalance, amountAfter)
 
-	proposerCutPercentage, err := ctx.GetProposerPercentageOfFees()
+	proposerCutPercentage, err := ctx.getProposerPercentageOfFees()
 	require.NoError(t, err)
 
 	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feeBig)
@@ -82,7 +82,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
-	// missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
+	// missed, err := ctx.getValidatorMissedBlocks(byzantine.Address)
 	// require.NoError(t, err)
 	// require.Equal(t, missed, 1)
 
@@ -109,10 +109,10 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	_, er = ctx.ApplyBlock()
 	require.NoError(t, er)
 
-	feeBig, err := ctx.GetMessageSendFee()
+	feeBig, err := ctx.getMessageSendFee()
 	require.NoError(t, err)
 
-	proposerCutPercentage, err := ctx.GetProposerPercentageOfFees()
+	proposerCutPercentage, err := ctx.getProposerPercentageOfFees()
 	require.NoError(t, err)
 
 	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feeBig)
