@@ -17,11 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.31] - 2023-02-06
 
-- Address legacy linter errors from `golangci-lint
+- Address legacy linter errors from `golangci-lint`
 
 ## [0.0.0.30] - 2023-02-04
 
-- Changed log lines to utilize new logger module.
+- Changed log lines to utilize new logger module
 
 ## [0.0.0.29] - 2023-01-31
 
