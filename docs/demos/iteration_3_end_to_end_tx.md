@@ -19,7 +19,7 @@
 
 The first video of this demo can be accessed [here](https://drive.google.com/file/d/1IOrzq-XJP04BJjyqPPpPu873aSfwrnur/view?usp=sharing).
 
-<img width="842" alt="Screenshot 2022-12-05 at 9 02 28 PM" src="https://user-images.githubusercontent.com/1892194/205820691-26e801e4-ff79-4132-a7a1-358860ca2335.png">
+![Demo Goals](https://user-images.githubusercontent.com/1892194/205820691-26e801e4-ff79-4132-a7a1-358860ca2335.png)
 
 ### Features
 
@@ -91,7 +91,7 @@ select * from pool;
 
 ### Available Commands
 
-Show all the commands available in the CLI:
+Show all the commands available in the CLI by running `p1` or:
 
 ```bash
 go run app/client/*.go

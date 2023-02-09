@@ -43,8 +43,8 @@ var (
 	StakeToUpdate        = converters.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
 
 	DefaultStakeStatus     = int32(persistence.StakedStatus)
-	DefaultPauseHeight     = int64(-1)
-	DefaultUnstakingHeight = int64(-1)
+	DefaultPauseHeight     = int64(-1) // pauseHeight=-1 means not paused
+	DefaultUnstakingHeight = int64(-1) // pauseHeight=-1 means not unstaking
 
 	OlshanskyURL    = "https://olshansky.info"
 	OlshanskyChains = []string{"OLSH"}
@@ -286,8 +286,8 @@ func fuzzSingleProtocolActor(
 			newActor, err := getTestActor(db, originalActor.Address)
 			require.NoError(t, err)
 
-			if db.Height > originalActor.PausedHeight { // isPausedAndReadyToUnstake
-				require.Equal(t, newActor.UnstakingHeight, newUnstakingHeight, "setPausedToUnstaking")
+			if db.Height > originalActor.PausedHeight && originalActor.PausedHeight != DefaultPauseHeight { // isPausedAndReadyToUnstake
+				require.Equal(t, newUnstakingHeight, newActor.UnstakingHeight, "setPausedToUnstaking")
 			}
 		case "GetActorOutputAddr":
 			outputAddr, err := db.GetActorOutputAddress(protocolActorSchema, addr, db.Height)
