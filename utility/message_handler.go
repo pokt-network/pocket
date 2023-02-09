@@ -221,11 +221,11 @@ func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake)
 		}
 		return err
 	}
-	unstakingHeight, err := u.getUnbondingHeight(message.ActorType)
+	unbondingHeight, err := u.getUnbondingHeight(message.ActorType)
 	if err != nil {
 		return err
 	}
-	if err := u.setActorUnstakingHeight(message.ActorType, message.Address, unstakingHeight); err != nil {
+	if err := u.setActorUnstakingHeight(message.ActorType, message.Address, unbondingHeight); err != nil {
 		return err
 	}
 	return nil

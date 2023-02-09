@@ -50,11 +50,11 @@ func (u *utilityContext) burnValidator(burnPercent int, addr []byte) typesUtil.E
 
 	// Check if amount after burn is below the min required stake
 	if minStake.Cmp(newAmountAfterBurn) == -1 {
-		unstakingHeight, err := u.getUnbondingHeight(validatorActorType)
+		unbondingHeight, err := u.getUnbondingHeight(validatorActorType)
 		if err != nil {
 			return err
 		}
-		if err := u.setActorUnstakingHeight(validatorActorType, addr, unstakingHeight); err != nil {
+		if err := u.setActorUnstakingHeight(validatorActorType, addr, unbondingHeight); err != nil {
 			return err
 		}
 	}

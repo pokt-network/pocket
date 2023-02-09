@@ -250,9 +250,9 @@ func TestUtilityContext_GetUnbondingHeight(t *testing.T) {
 			}
 			require.NoError(t, err, "error getting unstaking blocks")
 
-			unstakingHeight, err := ctx.getUnbondingHeight(actorType)
+			unbondingHeight, err := ctx.getUnbondingHeight(actorType)
 			require.NoError(t, err)
-			require.Equal(t, unstakingBlocks, unstakingHeight, "unexpected unstaking height")
+			require.Equal(t, unstakingBlocks, unbondingHeight, "unexpected unstaking height")
 		})
 	}
 }
@@ -286,8 +286,8 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			addrBz, err := hex.DecodeString(addr)
 			require.NoError(t, err)
 
-			// Pause all the actors at height 0
-			err = ctx.setActorPausedHeight(actorType, addrBz, 0)
+			// Pause the actor at height 0
+			err = ctx.setActorPausedHeight(actorType, addrBz, 1)
 			require.NoError(t, err, "error setting actor pause height")
 
 			// Start unstaking paused actors at the current height
@@ -315,7 +315,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 
 			// Start a new context when the actor should be unstaked
 			require.NoError(t, ctx.Release())
-			ctx = newTestingUtilityContext(t, int64(maxPausedBlocks)+1)
+			ctx = newTestingUtilityContext(t, int64(maxPausedBlocks)+2)
 
 			// Start unstaking paused actors at the current height
 			err = ctx.beginUnstakingMaxPausedActors()
@@ -324,7 +324,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			// Verify that the actor is still staked
 			status, err = ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Unstaked, status, "actor should be staked")
+			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be staked")
 		})
 	}
 }
