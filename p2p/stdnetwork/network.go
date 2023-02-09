@@ -5,6 +5,7 @@ package stdnetwork
 import (
 	"fmt"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -22,7 +23,8 @@ type network struct {
 	logger *modules.Logger
 }
 
-func NewNetwork(logger *modules.Logger, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
+func NewNetwork(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
+	logger := logger.Global.CreateLoggerForModule("network")
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error getting addrBook")
@@ -33,7 +35,7 @@ func NewNetwork(logger *modules.Logger, bus modules.Bus, addrBookProvider provid
 		addrBookMap[peer.Address.String()] = peer
 	}
 	return &network{
-		logger:      logger,
+		logger:      &logger,
 		addrBookMap: addrBookMap,
 	}
 }

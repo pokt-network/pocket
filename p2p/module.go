@@ -126,9 +126,9 @@ func (m *p2pModule) Start() error {
 
 	// TODO: pass down logger
 	if cfg.P2P.UseRainTree {
-		m.network = raintree.NewRainTreeNetwork(&m.logger, m.GetBus(), m.address, addrbookProvider, currentHeightProvider)
+		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), addrbookProvider, currentHeightProvider)
 	} else {
-		m.network = stdnetwork.NewNetwork(&m.logger, m.GetBus(), addrbookProvider, currentHeightProvider)
+		m.network = stdnetwork.NewNetwork(m.GetBus(), addrbookProvider, currentHeightProvider)
 	}
 
 	if cfg.ClientDebugMode {

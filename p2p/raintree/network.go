@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -34,7 +35,8 @@ type rainTreeNetwork struct {
 	logger *modules.Logger
 }
 
-func NewRainTreeNetwork(logger *modules.Logger, bus modules.Bus, addr cryptoPocket.Address, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+	logger := logger.Global.CreateLoggerForModule("network")
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error getting addrBook")
@@ -52,7 +54,7 @@ func NewRainTreeNetwork(logger *modules.Logger, bus modules.Bus, addr cryptoPock
 		peersManager:     pm,
 		nonceDeduper:     mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
 		addrBookProvider: addrBookProvider,
-		logger:           logger,
+		logger:           &logger,
 	}
 	n.SetBus(bus)
 	return typesP2P.Network(n)
