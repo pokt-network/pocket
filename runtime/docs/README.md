@@ -40,7 +40,6 @@ This module includes the following components:
   The genesis represents the initial state of the blockchain.
 
   This allows the binary to start with a specific initial state.
-  
 
 - **Clock**
 

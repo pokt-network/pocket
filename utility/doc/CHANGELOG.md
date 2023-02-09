@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.26] - 2023-02-07
+
+- Documentation update
+
 ## [0.0.0.25] - 2023-02-06
 
 - Address legacy linter errors from `golangci-lint`
@@ -152,8 +156,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.3] - 2022-09-15
 
-### Code cleanup
-
 - Consolidated `TransactionHash` to call a single implementation in `shared/crypto/sha3`
 - Extracted function calls from places where we were using the same logic
 
@@ -169,8 +171,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.1] - 2022-07-20
 
-### Code cleanup
-
 - Removed transaction fees from the transaction structure as fees will be enforced at the state level
 - Removed actor specific messages (besides DoubleSign) and added actorType field to the struct
 - Removed pause messages and functionality as it is out of scope for the current POS iteration
@@ -178,11 +178,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Consolidated unit test functionality for actors
 - Modified pre-persistence to match persistence for Update(actor), 'amountToAdd' is now just 'amount'
 
-## [Unreleased]
-
 ## [0.0.0] - 2022-03-15
-
-### Added
 
 - Added minimal 'proof of stake' implementation with few Pocket Specific terminologies and actors
   - Structures

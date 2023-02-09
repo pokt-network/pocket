@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.10] - 2023-02-09
+## [0.0.0.11] - 2023-02-09
 
 - Added `not_interactive` flag to allow for non-interactive `Stake` and `Unstake` transactions (dogfooding in `cluster-manager`)
 - Updated CLI to use to source the address book and the current height from the RPC server leveraging the `rpcAddressBookProvider` and `rpcCurrentHeightProvider` respectively and the `bus` for dependency injection
+
+## [0.0.0.10] - 2023-02-07
+
+- Added GITHUB_WIKI tags where it was missing
 
 ## [0.0.0.9] - 2023-02-06
 
@@ -48,8 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.2] - 2022-11-02
 
-### Added
-
 - Fixed message signing
 - Reporting RPC StatusCode and body
 - System commands working end-to-end
@@ -57,13 +59,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.1] - 2022-09-09
 
-### Added
-
 - Commands documentation generator
 
 ## [0.0.0.0] - 2022-09-07
-
-### Added
 
 - Basic implementation with Utility commands
   - Account
@@ -80,3 +78,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Functionally mocked a keybase in the form of a json file (default: pk.json) that will contain the privatekey
 - CLI calling RPC via generated client
 - Default configuration handling/overrides
+
+<!-- GITHUB_WIKI: changelog/client -->

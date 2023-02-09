@@ -1,12 +1,12 @@
 # Building & Versioning
 
-- [Building & Versioning](#building--versioning)
+- [Building \& Versioning](#building--versioning)
   - [Release Tag Versioning](#release-tag-versioning)
-  - [[WIP] Build Versioning](#wip-build-versioning)
+  - [\[WIP\] Build Versioning](#wip-build-versioning)
   - [Container Images](#container-images)
     - [Tags](#tags)
     - [Extended images with additional tooling](#extended-images-with-additional-tooling)
-  - [[TODO] Magefile build system](#todo-magefile-build-system)
+  - [\[TODO\] Magefile build system](#todo-magefile-build-system)
 
 ## Release Tag Versioning
 

@@ -7,13 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.32] - 2023-02-09
+## [0.0.0.34] - 2023-02-09
 
 - Module now embeds `modules.BaseIntegratableModule` for DRYness
 
+## [0.0.0.32] - 2023-02-07
+
+- Minor documentation cleanup
+
 ## [0.0.0.31] - 2023-02-06
 
-- Address legacy linter errors from `golangci-lint`
+- Address legacy linter errors from `golangci-lint
 
 ## [0.0.0.30] - 2023-02-04
 
