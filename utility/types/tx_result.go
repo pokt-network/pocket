@@ -6,7 +6,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// DISCUSS_IN_THIS_COMMIT: Reevaluate the whole concept of a `TxResult`.
+// INVESTIGATE: Look into a way of removing this type altogether or from shared interfaces.
 
 var _ modules.TxResult = &DefaultTxResult{}
 

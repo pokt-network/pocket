@@ -2,6 +2,7 @@ package utility
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/converters"
@@ -29,7 +30,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		return "", nil, err
 	}
 	// begin block lifecycle phase
-	if err := u.BeginBlock(lastBlockByzantineVals); err != nil {
+	if err := u.beginBlock(lastBlockByzantineVals); err != nil {
 		return "", nil, err
 	}
 	transactions = make([][]byte, 0)
@@ -42,7 +43,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		if err != nil {
 			return "", nil, err
 		}
-		transaction, err := typesUtil.TransactionFromBytes(txBytes)
+		transaction, err := typesUtil.TxFromBytes(txBytes)
 		if err != nil {
 			return "", nil, err
 		}
@@ -73,7 +74,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		txIndex++
 	}
 
-	if err := u.EndBlock(proposer); err != nil {
+	if err := u.endBlock(proposer); err != nil {
 		return "", nil, err
 	}
 	// return the app hash (consensus module will get the validator set directly)
@@ -95,13 +96,13 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 	}
 
 	// begin block lifecycle phase
-	if err := u.BeginBlock(lastByzantineValidators); err != nil {
+	if err := u.beginBlock(lastByzantineValidators); err != nil {
 		return "", err
 	}
 
 	// deliver txs lifecycle phase
 	for index, transactionProtoBytes := range u.proposalBlockTxs {
-		tx, err := typesUtil.TransactionFromBytes(transactionProtoBytes)
+		tx, err := typesUtil.TxFromBytes(transactionProtoBytes)
 		if err != nil {
 			return "", err
 		}
@@ -130,7 +131,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 	}
 
 	// end block lifecycle phase
-	if err := u.EndBlock(u.proposalProposerAddr); err != nil {
+	if err := u.endBlock(u.proposalProposerAddr); err != nil {
 		return "", err
 	}
 	// return the app hash (consensus module will get the validator set directly)
@@ -145,37 +146,37 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 	return stateHash, nil
 }
 
-func (u *utilityContext) BeginBlock(previousBlockByzantineValidators [][]byte) typesUtil.Error {
-	if err := u.HandleByzantineValidators(previousBlockByzantineValidators); err != nil {
+func (u *utilityContext) beginBlock(previousBlockByzantineValidators [][]byte) typesUtil.Error {
+	if err := u.handleByzantineValidators(previousBlockByzantineValidators); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *utilityContext) EndBlock(proposer []byte) typesUtil.Error {
+func (u *utilityContext) endBlock(proposer []byte) typesUtil.Error {
 	// reward the block proposer
-	if err := u.HandleProposalRewards(proposer); err != nil {
+	if err := u.handleProposerRewards(proposer); err != nil {
 		return err
 	}
 	// unstake actors that have been 'unstaking' for the <Actor>UnstakingBlocks
-	if err := u.UnstakeActorsThatAreReady(); err != nil {
+	if err := u.unbondUnstakingActors(); err != nil {
 		return err
 	}
 	// begin unstaking the actors who have been paused for MaxPauseBlocks
-	if err := u.BeginUnstakingMaxPaused(); err != nil {
+	if err := u.beginUnstakingMaxPausedActors(); err != nil {
 		return err
 	}
 	return nil
 }
 
-// HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
-func (u *utilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
+// handleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
+func (u *utilityContext) handleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
 	maxMissedBlocks, err := u.GetValidatorMaxMissedBlocks()
 	if err != nil {
 		return err
 	}
 	for _, address := range lastBlockByzantineValidators {
-		numberOfMissedBlocks, err := u.GetValidatorMissedBlocks(address)
+		numberOfMissedBlocks, err := u.getValidatorMissedBlocks(address)
 		if err != nil {
 			return err
 		}
@@ -184,7 +185,7 @@ func (u *utilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 		// handle if over the threshold
 		if numberOfMissedBlocks >= maxMissedBlocks {
 			// pause the validator and reset missed blocks
-			if err := u.PauseValidatorAndSetMissedBlocks(address, u.height, int(typesUtil.HeightNotUsed)); err != nil {
+			if err := u.pauseValidatorAndSetMissedBlocks(address, u.height, int(typesUtil.HeightNotUsed)); err != nil {
 				return err
 			}
 			// burn validator for missing blocks
@@ -195,14 +196,14 @@ func (u *utilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 			if err := u.burnValidator(burnPercentage, address); err != nil {
 				return err
 			}
-		} else if err := u.SetValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
+		} else if err := u.setValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
+func (u *utilityContext) unbondUnstakingActors() (err typesUtil.Error) {
 	var er error
 	store := u.Store()
 	for _, actorTypeInt32 := range coreTypes.ActorType_value {
@@ -229,6 +230,9 @@ func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 			return typesUtil.ErrGetReadyToUnstake(er)
 		}
 		for _, actor := range readyToUnstake {
+			if poolName == coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName() {
+				fmt.Println("unstaking validator", actor.StakeAmount)
+			}
 			stakeAmount, er := converters.StringToBigInt(actor.StakeAmount)
 			if er != nil {
 				return typesUtil.ErrStringToBigInt(er)
@@ -249,7 +253,7 @@ func (u *utilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	return nil
 }
 
-func (u *utilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
+func (u *utilityContext) beginUnstakingMaxPausedActors() (err typesUtil.Error) {
 	for _, actorTypeInt32 := range coreTypes.ActorType_value {
 		actorType := coreTypes.ActorType(actorTypeInt32)
 		if actorType == coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED {
@@ -263,17 +267,17 @@ func (u *utilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
 		if beforeHeight < 0 { // genesis edge case
 			beforeHeight = 0
 		}
-		if err := u.UnstakeActorPausedBefore(beforeHeight, actorType); err != nil {
+		if err := u.beginUnstakingActorsPausedBefore(beforeHeight, actorType); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (u *utilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, actorType coreTypes.ActorType) (err typesUtil.Error) {
+func (u *utilityContext) beginUnstakingActorsPausedBefore(pausedBeforeHeight int64, actorType coreTypes.ActorType) (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	unstakingHeight, err := u.getUnstakingHeight(actorType)
+	unstakingHeight, err := u.getUnbondingHeight(actorType)
 	if err != nil {
 		return err
 	}
@@ -293,7 +297,7 @@ func (u *utilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, acto
 	return nil
 }
 
-func (u *utilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error {
+func (u *utilityContext) handleProposerRewards(proposer []byte) typesUtil.Error {
 	feePoolName := coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName()
 	feesAndRewardsCollected, err := u.getPoolAmount(feePoolName)
 	if err != nil {
@@ -324,8 +328,8 @@ func (u *utilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 	return nil
 }
 
-// GetValidatorMissedBlocks gets the total blocks that a validator has not signed a certain window of time denominated by blocks
-func (u *utilityContext) GetValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
+// TODO: Need to design & document this business logic.
+func (u *utilityContext) getValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, typesUtil.ErrGetHeight(err)
@@ -337,7 +341,8 @@ func (u *utilityContext) GetValidatorMissedBlocks(address []byte) (int, typesUti
 	return missedBlocks, nil
 }
 
-func (u *utilityContext) PauseValidatorAndSetMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) typesUtil.Error {
+// TODO: Need to design & document this business logic.
+func (u *utilityContext) pauseValidatorAndSetMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) typesUtil.Error {
 	store := u.Store()
 	if err := store.SetValidatorPauseHeightAndMissedBlocks(address, pauseHeight, missedBlocks); err != nil {
 		return typesUtil.ErrSetPauseHeight(err)
@@ -345,7 +350,8 @@ func (u *utilityContext) PauseValidatorAndSetMissedBlocks(address []byte, pauseH
 	return nil
 }
 
-func (u *utilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) typesUtil.Error {
+// TODO: Need to design & document this business logic.
+func (u *utilityContext) setValidatorMissedBlocks(address []byte, missedBlocks int) typesUtil.Error {
 	store := u.Store()
 	er := store.SetValidatorMissedBlocks(address, missedBlocks)
 	if er != nil {
@@ -354,7 +360,7 @@ func (u *utilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks i
 	return nil
 }
 
-// TODO(#271): Need to retrieve byzantine validators from the persistence module
+// TODO: Need to design & document this business logic.
 func (u *utilityContext) getLastBlockByzantineValidators() ([][]byte, error) {
 	return nil, nil
 }

@@ -7,16 +7,32 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
-// No need for a Signature interface abstraction for the time being.
-// DISCUSS_IN_THIS_COMMIT: Should we create an interface for `Transaction` to capture the other functions it has?
-var _ Validatable = &Transaction{}
-
-func TransactionFromBytes(txProtoBytes []byte) (*Transaction, Error) {
+func TxFromBytes(txProtoBytes []byte) (*Transaction, Error) {
 	tx := &Transaction{}
 	if err := codec.GetCodec().Unmarshal(txProtoBytes, tx); err != nil {
 		return nil, ErrUnmarshalTransaction(err)
 	}
 	return tx, nil
+}
+
+func TxHash(txProtoBytes []byte) string {
+	return crypto.GetHashStringFromBytes(txProtoBytes)
+}
+
+var (
+	_ Validatable  = &Transaction{}
+	_ ITransaction = &Transaction{}
+)
+
+// `ITransaction` is an interface that helps capture the functions added to the `Transaction` data structure.
+// It is unlikely for there to be multiple implementations of this interface in prod.
+type ITransaction interface {
+	GetMessage() (Message, Error)
+	Sign(privateKey crypto.PrivateKey) Error
+	Hash() (string, Error)
+	SignableBytes() ([]byte, error)
+	Bytes() ([]byte, error)
+	Equals(tx2 ITransaction) bool
 }
 
 func (tx *Transaction) ValidateBasic() Error {
@@ -91,33 +107,20 @@ func (tx *Transaction) Hash() (string, Error) {
 	return TxHash(txProtoBz), nil
 }
 
-func TxHash(txProtoBytes []byte) string {
-	return crypto.GetHashStringFromBytes(txProtoBytes)
-}
-
 // The bytes of the transaction that should have been signed.
-// INVESTIGATE: Should this potentially be `tx.Message().GetCanonicalBytes()` instead?
 func (tx *Transaction) SignableBytes() ([]byte, error) {
+	// This is not simply `tx.Message().GetCanonicalBytes()` because the transaction also contains
+	// other metadata such as the nonce which has to be part signed as well.
 	transaction := codec.GetCodec().Clone(tx).(*Transaction)
 	transaction.Signature = nil
 	return codec.GetCodec().Marshal(transaction)
 }
 
-// func (tx *Transaction) SignBytes() ([]byte, Error) {
-// 	sig := tx.Signature // Backup signature
-// 	tx.Signature = nil
-// 	bz, err := codec.GetCodec().Marshal(tx)
-// 	if err != nil {
-// 		return nil, ErrProtoMarshal(err)
-// 	}
-// 	tx.Signature = sig // Restore signature
-// 	return bz, nil
-
 func (tx *Transaction) Bytes() ([]byte, error) {
 	return codec.GetCodec().Marshal(tx)
 }
 
-func (tx *Transaction) Equals(tx2 *Transaction) bool {
+func (tx *Transaction) Equals(tx2 ITransaction) bool {
 	b, err := tx.Bytes()
 	b2, err2 := tx2.Bytes()
 	return err != nil && err2 != nil && bytes.Equal(b, b2)

@@ -782,7 +782,7 @@ func ErrNewAddressFromBytes(err error) Error {
 	return NewError(CodeNewAddressFromBytesError, fmt.Sprintf("%s: %s", NewAddressFromBytesError, err.Error()))
 }
 
-// CONSIDERATION: If this is moved into the `codec` library, some of the code bloat can be reduced.
+// CONSIDERATION: Moving this into the `codec` library could reduce some code bloat
 func ErrProtoMarshal(err error) Error {
 	return NewError(CodeProtoMarshalError, fmt.Sprintf("%s: %s", ProtoMarshalError, err.Error()))
 }

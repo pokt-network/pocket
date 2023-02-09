@@ -3,7 +3,6 @@ package utility
 import (
 	"encoding/hex"
 	"fmt"
-	"math"
 	"math/big"
 	"sort"
 	"testing"
@@ -230,7 +229,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
+func TestUtilityContext_GetUnbondingHeight(t *testing.T) {
 	for _, actorType := range coreTypes.ActorTypes {
 		t.Run(fmt.Sprintf("%s.CalculateUnstakingHeight", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 0)
@@ -251,19 +250,19 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 			}
 			require.NoError(t, err, "error getting unstaking blocks")
 
-			unstakingHeight, err := ctx.getUnstakingHeight(actorType)
+			unstakingHeight, err := ctx.getUnbondingHeight(actorType)
 			require.NoError(t, err)
 			require.Equal(t, unstakingBlocks, unstakingHeight, "unexpected unstaking height")
 		})
 	}
 }
 
-func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
+func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 	// The gov param for each actor will be set to this value
 	maxPausedBlocks := 5
 
 	for _, actorType := range coreTypes.ActorTypes {
-		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPaused", actorType.String()), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPausedActors", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 1)
 
 			var paramName string
@@ -292,7 +291,7 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			require.NoError(t, err, "error setting actor pause height")
 
 			// Start unstaking paused actors at the current height
-			err = ctx.BeginUnstakingMaxPaused()
+			err = ctx.beginUnstakingMaxPausedActors()
 			require.NoError(t, err, "error beginning unstaking max paused actors")
 
 			// Verify that the actor is still staked
@@ -306,7 +305,7 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			ctx = newTestingUtilityContext(t, int64(maxPausedBlocks)-1)
 
 			// Start unstaking paused actors at the current height
-			err = ctx.BeginUnstakingMaxPaused()
+			err = ctx.beginUnstakingMaxPausedActors()
 			require.NoError(t, err, "error beginning unstaking max paused actors")
 
 			// Verify that the actor is still staked
@@ -319,7 +318,7 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			ctx = newTestingUtilityContext(t, int64(maxPausedBlocks)+1)
 
 			// Start unstaking paused actors at the current height
-			err = ctx.BeginUnstakingMaxPaused()
+			err = ctx.beginUnstakingMaxPausedActors()
 			require.NoError(t, err, "error beginning unstaking max paused actors")
 
 			// Verify that the actor is still staked
@@ -330,30 +329,50 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
+func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t *testing.T) {
 	// The gov param for each actor will be set to this value
 	maxPausedBlocks := 5
+	unstakingBlocks := 10
+
+	poolInitAMount := big.NewInt(10000000000000)
+	pauseHeight := int64(2)
 
 	for _, actorType := range coreTypes.ActorTypes {
-		t.Run(fmt.Sprintf("%s.UnstakePausedBefore", actorType.String()), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.BeginUnstakingActorsPausedBefore", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 1)
 
-			var paramName string
+			var poolName string
+			var paramName1 string
+			var paramName2 string
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
-				paramName = typesUtil.AppMaxPauseBlocksParamName
+				poolName = coreTypes.Pools_POOLS_APP_STAKE.FriendlyName()
+				paramName1 = typesUtil.AppMaxPauseBlocksParamName
+				paramName2 = typesUtil.AppUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				paramName = typesUtil.FishermanMaxPauseBlocksParamName
+				poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
+				paramName1 = typesUtil.FishermanMaxPauseBlocksParamName
+				paramName2 = typesUtil.FishermanUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				paramName = typesUtil.ServiceNodeMaxPauseBlocksParamName
+				poolName = coreTypes.Pools_POOLS_SERVICE_NODE_STAKE.FriendlyName()
+				paramName1 = typesUtil.ServiceNodeMaxPauseBlocksParamName
+				paramName2 = typesUtil.ServiceNodeUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				paramName = typesUtil.ValidatorMaxPausedBlocksParamName
+				poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()
+				paramName1 = typesUtil.ValidatorMaxPausedBlocksParamName
+				paramName2 = typesUtil.ValidatorUnstakingBlocksParamName
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			er := ctx.persistenceContext.SetParam(paramName, maxPausedBlocks)
-			require.NoError(t, er, "error setting max paused blocks")
 
+			er := ctx.persistenceContext.SetParam(paramName1, maxPausedBlocks)
+			require.NoError(t, er, "error setting max paused blocks")
+			er = ctx.persistenceContext.SetParam(paramName2, unstakingBlocks)
+			require.NoError(t, er, "error setting max paused blocks")
+			er = ctx.setPoolAmount(poolName, poolInitAMount)
+			require.NoError(t, er)
+
+			// Validate the actor is not unstaking
 			actor := getFirstActor(t, ctx, actorType)
 			addr := actor.GetAddress()
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "wrong starting status")
@@ -362,7 +381,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			require.NoError(t, err)
 
 			// Set the actor to be paused at height 1
-			err = ctx.setActorPausedHeight(actorType, addrBz, 2)
+			err = ctx.setActorPausedHeight(actorType, addrBz, pauseHeight)
 			require.NoError(t, err, "error setting actor pause height")
 
 			// Check that the actor is still not unstaking
@@ -370,87 +389,57 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "incorrect unstaking height")
 
 			// Verify that the actor is still not unstaking
-			err = ctx.UnstakeActorPausedBefore(1, actorType)
+			err = ctx.beginUnstakingActorsPausedBefore(pauseHeight-1, actorType)
 			require.NoError(t, err, "error unstaking actor pause before height 0")
 			actor = getActorByAddr(t, ctx, actorType, addr)
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "incorrect unstaking height")
 
+			unbondingHeight := pauseHeight - 1 + int64(unstakingBlocks)
+
 			// Verify that the actor is now unstaking
-			err = ctx.UnstakeActorPausedBefore(3, actorType)
+			err = ctx.beginUnstakingActorsPausedBefore(pauseHeight+1, actorType)
 			require.NoError(t, err, "error unstaking actor pause before height 1")
 			actor = getActorByAddr(t, ctx, actorType, addr)
-			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "incorrect unstaking height")
+			require.Equal(t, unbondingHeight, actor.GetUnstakingHeight(), "incorrect unstaking height")
 
-			// actor = getActorByAddr(t, ctx, actorType, addr)
-			// require.Equal(t, defaultUnstaking, defaultUnstakingHeight, "status does not equal unstaking")
+			status, err := ctx.getActorStatus(actorType, addrBz)
+			require.NoError(t, err)
+			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be unstaking")
 
-			// var unstakingBlocks int64
-			// switch actorType {
-			// case coreTypes.ActorType_ACTOR_TYPE_APP:
-			// 	unstakingBlocks, err = ctx.GetAppUnstakingBlocks()
-			// case coreTypes.ActorType_ACTOR_TYPE_FISH:
-			// 	unstakingBlocks, err = ctx.GetFishermanUnstakingBlocks()
-			// case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-			// 	unstakingBlocks, err = ctx.GetServiceNodeUnstakingBlocks()
-			// case coreTypes.ActorType_ACTOR_TYPE_VAL:
-			// 	unstakingBlocks, err = ctx.GetValidatorUnstakingBlocks()
-			// default:
-			// 	t.Fatalf("unexpected actor type %s", actorType.String())
-			// }
-			// require.NoError(t, err, "error getting number of unstaking unstaking blocks")
-			// require.Equal(t, unstakingBlocks+1, actor.GetUnstakingHeight(), "incorrect unstaking height")
+			// Commit the context and start a new one while the actor is still unstaking
+			require.NoError(t, ctx.Commit([]byte("empty QC")))
+			ctx = newTestingUtilityContext(t, unbondingHeight-1)
 
-		})
-	}
-}
+			status, err = ctx.getActorStatus(actorType, addrBz)
+			require.NoError(t, err)
+			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be unstaking")
 
-func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
+			// Release the context since there's nothing to commit and start a new one where the actors can be unbound
+			require.NoError(t, ctx.Release())
+			ctx = newTestingUtilityContext(t, unbondingHeight)
 
-	for _, actorType := range coreTypes.ActorTypes {
-		t.Run(fmt.Sprintf("%s.UnstakeActorsThatAreReady", actorType.String()), func(t *testing.T) {
-			ctx := newTestingUtilityContext(t, 1)
+			// Before unbonding, the pool amount should be unchanged
+			amount, err := ctx.getPoolAmount(poolName)
+			require.NoError(t, err)
+			require.Equal(t, poolInitAMount, amount, "pool amount should be unchanged")
 
-			var poolName string
-			switch actorType {
-			case coreTypes.ActorType_ACTOR_TYPE_APP:
-				poolName = coreTypes.Pools_POOLS_APP_STAKE.FriendlyName()
-			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
-			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				poolName = coreTypes.Pools_POOLS_SERVICE_NODE_STAKE.FriendlyName()
-			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()
-			default:
-				t.Fatalf("unexpected actor type %s", actorType.String())
-			}
-			er := ctx.setPoolAmount(poolName, big.NewInt(math.MaxInt64))
-			require.NoError(t, er)
-
-			err := ctx.persistenceContext.SetParam(typesUtil.AppUnstakingBlocksParamName, 0)
+			err = ctx.unbondUnstakingActors()
 			require.NoError(t, err)
 
-			err = ctx.persistenceContext.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
+			// Before unbonding, the money from the staked actor should go to the pool
+			amount, err = ctx.getPoolAmount(poolName)
 			require.NoError(t, err)
 
-			actors := getAllTestingActors(t, ctx, actorType)
-			for _, actor := range actors {
-				addrBz, er := hex.DecodeString(actor.GetAddress())
-				require.NoError(t, er)
-				er = ctx.setActorPausedHeight(actorType, addrBz, 1)
-				require.NoError(t, er)
-			}
-
-			err = ctx.UnstakeActorPausedBefore(2, actorType)
+			stakedAmount, err := converters.StringToBigInt(actor.StakedAmount)
 			require.NoError(t, err)
+			expectedAmount := big.NewInt(0).Sub(poolInitAMount, stakedAmount)
+			fmt.Println("OLSH", stakedAmount, poolInitAMount, expectedAmount)
+			require.Equalf(t, expectedAmount, amount, "pool amount should be unchanged for %s", poolName)
 
-			err = ctx.UnstakeActorsThatAreReady()
+			// Status should be changed from Unstaking to Unstaked
+			status, err = ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-
-			actors = getAllTestingActors(t, ctx, actorType)
-			require.NotEqual(t, actors[0].GetUnstakingHeight(), -1, "validators still exists after unstake that are ready() call")
-
-			// TODO: We need to better define what 'deleted' really is in the postgres world.
-			// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
+			require.Equal(t, typesUtil.StakeStatus_Unstaked, status, "actor should be unstaking")
 		})
 	}
 }

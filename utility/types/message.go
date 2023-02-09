@@ -3,27 +3,22 @@ package types
 import (
 	"encoding/hex"
 	"log"
-	"net/url"
-	"strconv"
-	"strings"
 
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"google.golang.org/protobuf/proto"
 )
 
 // A message is a component of a transaction (excluding metadata such as the signature)
 // defining the action driving the state transition
 type Message interface {
-	proto.Message // TECHDEBT: Should not be refere
+	codec.ICodec
 	Validatable
 
-	SetSigner(signer []byte)
-	GetActorType() coreTypes.ActorType
 	GetMessageName() string
 	GetMessageRecipient() string
+	SetSigner(signer []byte)
+	GetActorType() coreTypes.ActorType
 	GetCanonicalBytes() []byte
 }
 
@@ -119,8 +114,8 @@ func (msg *MessageChangeParameter) GetCanonicalBytes() []byte { return getCanoni
 
 // Helpers
 
-// CONSIDERATION: If the protobufs contain semantic types, we could potentially leverage
-//                a shared `address.ValidateBasic()` throughout the codebase.s
+// CONSIDERATION: If the protobufs contain semantic types (e.g. Address is an interface), we could
+// potentially leverage a shared `address.ValidateBasic()` throughout the codebase.
 func validateAddress(address []byte) Error {
 	if address == nil {
 		return ErrEmptyAddress()
@@ -132,7 +127,7 @@ func validateAddress(address []byte) Error {
 	return nil
 }
 
-// CONSIDERATION: Consolidate with `validateAddress`?
+// CONSIDERATION: Consolidate with `validateAddress`? The only difference is the error message.
 func validateOutputAddress(address []byte) Error {
 	if address == nil {
 		return ErrNilOutputAddress()
@@ -157,7 +152,7 @@ func validatePublicKey(publicKey []byte) Error {
 	return nil
 }
 
-func ValidateHash(hash []byte) Error {
+func validateHash(hash []byte) Error {
 	if hash == nil {
 		return ErrEmptyHash()
 	}
@@ -184,78 +179,12 @@ func getMessageType(msg Message) string {
 	return string(msg.ProtoReflect().Descriptor().Name())
 }
 
-// An internal helper interface to consolidate logic related to validating staking related messages
-type stakingMessage interface {
-	GetActorType() coreTypes.ActorType
-	GetAmount() string
-	GetChains() []string
-	GetServiceUrl() string
-}
-
-func validateStaker(msg stakingMessage) Error {
-	if err := validateActorType(msg.GetActorType()); err != nil {
-		return err
-	}
-	if err := validateAmount(msg.GetAmount()); err != nil {
-		return err
-	}
-	if err := validateRelayChains(msg.GetChains()); err != nil {
-		return err
-	}
-	return validateServiceUrl(msg.GetActorType(), msg.GetServiceUrl())
-}
-
 func getCanonicalBytes(msg Message) []byte {
 	bz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
 		log.Fatalf("must marshal %v", err)
 	}
-	// DISCUSS(#142): should we also sort the JSON like in V0?
-	return bz
+	return bz // DISCUSS(#142): should we also sort the JSON like in V0?
 }
 
-func validateActorType(_ coreTypes.ActorType) Error {
-	// TODO: Is there any sort of validation that should be done here?
-	return nil
-}
-
-func validateAmount(amount string) Error {
-	if amount == "" {
-		return ErrEmptyAmount()
-	}
-	if _, err := converters.StringToBigInt(amount); err != nil {
-		return ErrStringToBigInt(err)
-	}
-	return nil
-}
-
-func validateServiceUrl(actorType coreTypes.ActorType, uri string) Error {
-	if actorType == coreTypes.ActorType_ACTOR_TYPE_APP {
-		return nil
-	}
-
-	uri = strings.ToLower(uri)
-	_, err := url.ParseRequestURI(uri)
-	if err != nil {
-		return ErrInvalidServiceUrl(err.Error())
-	}
-	if !(uri[:8] == httpsPrefix || uri[:7] == httpPrefix) {
-		return ErrInvalidServiceUrl(invalidURLPrefix)
-	}
-
-	urlParts := strings.Split(uri, colon)
-	if len(urlParts) != 3 { // protocol:host:port
-		return ErrInvalidServiceUrl(portRequired)
-	}
-	port, err := strconv.Atoi(urlParts[2])
-	if err != nil {
-		return ErrInvalidServiceUrl(NonNumberPort)
-	}
-	if port > maxPort || port < 0 {
-		return ErrInvalidServiceUrl(PortOutOfRange)
-	}
-	if !strings.Contains(uri, period) {
-		return ErrInvalidServiceUrl(NoPeriod)
-	}
-	return nil
-}
+// An internal helper interface to consolidate logic related to validating staking related messages

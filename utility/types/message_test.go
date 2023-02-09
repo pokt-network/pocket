@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
@@ -15,7 +16,7 @@ import (
 var (
 	defaultTestingChains = []string{"0001"}
 	defaultAmountBig     = big.NewInt(1000000)
-	defaultAmount        = BigIntToString(defaultAmountBig)
+	defaultAmount        = converters.BigIntToString(defaultAmountBig)
 	defaultUnusedLength  = -1
 )
 
@@ -96,7 +97,7 @@ func TestMessage_EditStake_ValidateBasic(t *testing.T) {
 	require.Equal(t, expectedErr.Code(), er.Code())
 }
 
-func TestMessageSend_ValidateBasic(t *testing.T) {
+func TestMessage_Send_ValidateBasic(t *testing.T) {
 	addr1, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
@@ -132,7 +133,7 @@ func TestMessageSend_ValidateBasic(t *testing.T) {
 	require.Equal(t, ErrEmptyAmount().Code(), er.Code())
 }
 
-func TestMessageStake_ValidateBasic(t *testing.T) {
+func TestMessage_Stake_ValidateBasic(t *testing.T) {
 	pk, err := crypto.GeneratePublicKey()
 	require.NoError(t, err)
 
@@ -168,7 +169,7 @@ func TestMessageStake_ValidateBasic(t *testing.T) {
 	require.Equal(t, ErrNilOutputAddress().Code(), er.Code())
 }
 
-func TestMessageUnstake_ValidateBasic(t *testing.T) {
+func TestMessage_Unstake_ValidateBasic(t *testing.T) {
 	addr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
@@ -184,7 +185,7 @@ func TestMessageUnstake_ValidateBasic(t *testing.T) {
 	require.Equal(t, ErrEmptyAddress().Code(), er.Code())
 }
 
-func TestMessageUnpause_ValidateBasic(t *testing.T) {
+func TestMessage_Unpause_ValidateBasic(t *testing.T) {
 	addr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
@@ -198,20 +199,4 @@ func TestMessageUnpause_ValidateBasic(t *testing.T) {
 	msgMissingAddress.Address = nil
 	er = msgMissingAddress.ValidateBasic()
 	require.Equal(t, ErrEmptyAddress().Code(), er.Code())
-}
-
-func TestRelayChain_Validate(t *testing.T) {
-	relayChainValid := relayChain("0001")
-	err := relayChainValid.ValidateBasic()
-	require.NoError(t, err)
-
-	relayChainInvalidLength := relayChain("001")
-	expectedError := ErrInvalidRelayChainLength(0, relayChainLength)
-	err = relayChainInvalidLength.ValidateBasic()
-	require.Equal(t, expectedError.Code(), err.Code())
-
-	relayChainEmpty := relayChain("")
-	expectedError = ErrEmptyRelayChain()
-	err = relayChainEmpty.ValidateBasic()
-	require.Equal(t, expectedError.Code(), err.Code())
 }

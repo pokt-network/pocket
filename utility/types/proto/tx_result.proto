@@ -6,6 +6,8 @@ option go_package = "github.com/pokt-network/pocket/utility/types";
 
 import "transaction.proto";
 
+// INVESTIGATE: Look into a way of removing this type altogether or from shared interfaces.
+
 message TransactionResult {
   uint32 code = 1;
   bytes signer = 2;

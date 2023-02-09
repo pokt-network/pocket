@@ -221,7 +221,7 @@ func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake)
 		}
 		return err
 	}
-	unstakingHeight, err := u.getUnstakingHeight(message.ActorType)
+	unstakingHeight, err := u.getUnbondingHeight(message.ActorType)
 	if err != nil {
 		return err
 	}
@@ -260,6 +260,7 @@ func (u *utilityContext) handleMessageChangeParameter(message *typesUtil.Message
 	return u.updateParam(message.ParameterKey, v)
 }
 
+// REFACTOR: This can be moved over into utility/types/message.go
 func (u *utilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:
@@ -323,7 +324,6 @@ func (u *utilityContext) getMessageSendSignerCandidates(msg *typesUtil.MessageSe
 
 func (u *utilityContext) checkBelowMaxChains(actorType coreTypes.ActorType, chains []string) typesUtil.Error {
 	// validators don't have chains field
-
 	if actorType == coreTypes.ActorType_ACTOR_TYPE_VAL {
 		return nil
 	}

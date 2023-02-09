@@ -103,6 +103,7 @@ func getServiceUrl(n int) string {
 
 func NewDefaultActor(actorType int32, genericParam string) (actor *coreTypes.Actor, privateKey string) {
 	privKey, pubKey, addr := keygenerator.GetInstance().Next()
+	fmt.Println("OLSH", addr)
 	chains := DefaultChains
 	if actorType == int32(coreTypes.ActorType_ACTOR_TYPE_VAL) {
 		chains = nil

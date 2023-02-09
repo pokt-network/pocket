@@ -1,6 +1,7 @@
 package modules
 
 // The result of executing a transaction against the blockchain state so that it is included in the block
+
 type TxResult interface {
 	GetTx() []byte                        // the transaction object primitive
 	GetHeight() int64                     // the height at which the tx was applied

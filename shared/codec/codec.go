@@ -15,6 +15,8 @@ type Codec interface {
 	Clone(proto.Message) proto.Message
 }
 
+type ICodec proto.Message
+
 var _ Codec = &protoCodec{}
 
 // IMPROVE: Need to define a type similar to `type ProtoAny anypb.Any` so that we are

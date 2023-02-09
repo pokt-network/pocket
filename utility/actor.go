@@ -258,7 +258,7 @@ func (u *utilityContext) getMinRequiredStakeAmount(actorType coreTypes.ActorType
 	return amount, nil
 }
 
-func (u *utilityContext) getUnstakingHeight(actorType coreTypes.ActorType) (int64, typesUtil.Error) {
+func (u *utilityContext) getUnbondingHeight(actorType coreTypes.ActorType) (int64, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, typesUtil.ErrGetHeight(err)
