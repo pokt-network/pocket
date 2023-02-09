@@ -86,11 +86,8 @@ func TestUtilityContext_InsertPool(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	testPoolName := "TEST_POOL"
 
-	addr, err := crypto.GenerateAddress()
-	require.NoError(t, err)
-
 	amount := big.NewInt(1000)
-	err = ctx.insertPool(testPoolName, addr, amount)
+	err := ctx.insertPool(testPoolName, amount)
 	require.NoError(t, err, "insert pool")
 
 	poolAmount, err := ctx.getPoolAmount(testPoolName)

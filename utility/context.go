@@ -96,7 +96,7 @@ func (u *utilityContext) revertLastSavePoint() typesUtil.Error {
 	return nil
 }
 
-// TODO: This has not been tested or investigated in detail
+//nolint:unused // TODO: This has not been tested or investigated in detail
 func (u *utilityContext) newSavePoint(transactionHash []byte) typesUtil.Error {
 	if err := u.persistenceContext.NewSavePoint(transactionHash); err != nil {
 		return typesUtil.ErrNewSavePoint(err)

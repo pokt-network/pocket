@@ -55,7 +55,7 @@ func (p *PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount st
 	return p.setActorStakeAmount(types.ValidatorActor, address, stakeAmount)
 }
 
-func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, status int32) ([]*moduleTypes.UnstakingActor, error) {
+func (p *PostgresContext) GetValidatorsReadyToUnstake(height int64, status int32) ([]*moduleTypes.UnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.ValidatorActor, height)
 }
 

@@ -34,16 +34,12 @@ func (txr *DefaultTxResult) HashFromBytes(bz []byte) ([]byte, error) {
 	return crypto.SHA3Hash(bz), nil
 }
 
-func (tx *Transaction) ToTxResult(height int64, index int, signer, recipient, msgType string, error Error) (*DefaultTxResult, Error) {
-	txBytes, err := tx.Bytes()
-	if err != nil {
-		return nil, ErrProtoMarshal(err)
+func (tx *Transaction) ToTxResult(height int64, index int, signer, recipient, msgType string, err Error) (*DefaultTxResult, Error) {
+	txBytes, er := tx.Bytes()
+	if er != nil {
+		return nil, ErrProtoMarshal(er)
 	}
 	code, errString := int32(0), ""
-	if error != nil {
-		code = int32(error.Code())
-		errString = err.Error()
-	}
 	return &DefaultTxResult{
 		Tx:            txBytes,
 		Height:        height,

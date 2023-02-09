@@ -49,7 +49,7 @@ func (u *utilityContext) setAccountAmount(address []byte, amount *big.Int) types
 
 // 'Pools' are autonomous accounts owned by the protocol; e.g. an account for a fee pool that gets distributed
 
-func (u *utilityContext) insertPool(name string, address []byte, amount *big.Int) types.Error {
+func (u *utilityContext) insertPool(name string, amount *big.Int) types.Error {
 	if err := u.Store().InsertPool(name, converters.BigIntToString(amount)); err != nil {
 		return types.ErrSetPool(name, err)
 	}
