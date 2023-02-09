@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.15] - 2023-02-09
+
+- Added `bootstrap_nodes_csv` in `P2PConfig` to allow for a comma separated list of bootstrap nodes
+- Introduced `modules.ModulesRegistry` for better separation of concerns
+- Added `StateMachineModule` accessors
+- `Manager` embeds `modules.BaseIntegratableModule` for DRYness
+
 ## [0.0.0.14] - 2023-02-06
 
 - Address legacy linter errors from `golangci-lint`

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.10] - 2023-02-09
+
+- Updated RPC to expose the node's address book via GET /v1/p2p/address_book
+- Updated modules to embed `modules.BaseIntegratableModule` and `modules.BaseInterruptableModule` for DRYness
+
 ## [0.0.0.9] - 2023-02-06
 
 - Address legacy linter errors from `golangci-lint`

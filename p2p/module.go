@@ -19,6 +19,8 @@ import (
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
+	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -59,11 +61,7 @@ func (*p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	cfg := runtimeMgr.GetConfig()
 	p2pCfg := cfg.P2P
 
-	if p2pCfg.BootstrapNodesCsv == "" {
-		m.bootstrapNodes = strings.Split(defaultBootstrapNodesCsv, ",")
-	} else {
-		m.bootstrapNodes = strings.Split(p2pCfg.BootstrapNodesCsv, ",")
-	}
+	configureBootstrapNodes(p2pCfg, m)
 
 	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
 	if err != nil {
@@ -273,6 +271,14 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 
 	return nil
 
+}
+
+func configureBootstrapNodes(p2pCfg *configs.P2PConfig, m *p2pModule) {
+	if p2pCfg.BootstrapNodesCsv == "" {
+		m.bootstrapNodes = strings.Split(defaults.DefaultP2PBootstrapNodesCsv, ",")
+	} else {
+		m.bootstrapNodes = strings.Split(p2pCfg.BootstrapNodesCsv, ",")
+	}
 }
 
 func isSelfInAddrBook(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) bool {
