@@ -116,7 +116,7 @@ func (m *stateSync) EnableServerMode() {
 	m.serverMode = true
 }
 
-// TODO implement issue #352
+// TODO(#352): Implement this function
 // Placeholder function
 func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
 	m.logger.Debug().Msg(fmt.Sprintf("Received get block response: %s", blockRes.Block.String()))
