@@ -41,7 +41,6 @@ message StateSyncMessage {
         GetBlockRequest get_block_req = 4;
         GetBlockResponse get_block_res = 5;
     }
-
 }
 
 // NOT USED: This gRPC interface is **not being used at the moment**. It is in place simply as a
