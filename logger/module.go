@@ -11,6 +11,8 @@ import (
 )
 
 type loggerModule struct {
+	modules.Module
+
 	zerolog.Logger
 	bus    modules.Bus
 	config *configs.LoggerConfig
