@@ -53,7 +53,7 @@ func (u *utilityContext) anteHandleMessage(tx *typesUtil.Transaction) (msg types
 	if err != nil {
 		return nil, "", err
 	}
-	fee, err := u.GetFee(msg, msg.GetActorType())
+	fee, err := u.getFee(msg, msg.GetActorType())
 	if err != nil {
 		return nil, "", err
 	}

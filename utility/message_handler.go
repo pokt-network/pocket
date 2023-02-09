@@ -272,7 +272,7 @@ func (u *utilityContext) getSignerCandidates(msg typesUtil.Message) ([][]byte, t
 	case *typesUtil.MessageUnpause:
 		return u.getMessageUnpauseSignerCandidates(x)
 	case *typesUtil.MessageChangeParameter:
-		return u.GetMessageChangeParameterSignerCandidates(x)
+		return u.getMessageChangeParameterSignerCandidates(x)
 	default:
 		return nil, typesUtil.ErrUnknownMessage(x)
 	}
