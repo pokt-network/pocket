@@ -114,14 +114,14 @@ func (m *stateSync) EnableServerMode() {
 	m.serverMode = true
 }
 
-// TODO implement issue #352
+// TODO(#352): Implement this function
 // Placeholder function
 func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
 	m.logger.Debug().Msgf("Received get block response: %s", blockRes.Block.String())
 	return nil
 }
 
-// TODO implement issue #352git ch
+// TODO(#352): Implement the business to handle these correctly
 // Placeholder function
 func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
 	m.logger.Debug().Msgf("Received get metadata response: %s", metaDataRes.String())
