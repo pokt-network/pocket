@@ -1,8 +1,6 @@
 package state_sync
 
 import (
-	"fmt"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -10,7 +8,7 @@ import (
 )
 
 const (
-	DefaultLogPrefix    = "NODE-StateSync Module"
+	DefaultLogPrefix    = "NODE"
 	stateSyncModuleName = "stateSyncModule"
 )
 
@@ -119,13 +117,13 @@ func (m *stateSync) EnableServerMode() {
 // TODO implement issue #352
 // Placeholder function
 func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-	m.logger.Debug().Msg(fmt.Sprintf("Received get block response: %s", blockRes.Block.String()))
+	m.logger.Debug().Msgf("Received get block response: %s", blockRes.Block.String())
 	return nil
 }
 
 // TODO implement issue #352git ch
 // Placeholder function
 func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
-	m.logger.Debug().Msg(fmt.Sprintf("Received get metadata response: %s", metaDataRes.String()))
+	m.logger.Debug().Msgf("Received get metadata response: %s", metaDataRes.String())
 	return nil
 }

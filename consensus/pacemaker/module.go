@@ -2,7 +2,6 @@ package pacemaker
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -52,7 +51,8 @@ type pacemaker struct {
 	// Only used for development and debugging.
 	debug pacemakerDebug
 
-	logger    modules.Logger
+	logger modules.Logger
+	// REFACTOR: logPrefix should be removed
 	logPrefix string
 }
 
@@ -120,14 +120,14 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Consensus message is from the past
 	if msg.Height < currentHeight {
-		m.logger.Info().Msg(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height))
+		m.logger.Info().Msgf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
 		return false, nil
 	}
 
 	// TODO: Need to restart state sync or be in state sync mode right now
 	// Current node is out of sync
 	if msg.Height > currentHeight {
-		m.logger.Info().Msg(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height))
+		m.logger.Info().Msgf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
 		return false, nil
 	}
 
@@ -141,7 +141,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Message is from the past
 	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
-		m.logger.Info().Msg(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round))
+		m.logger.Info().Msgf("⚠️ [WARN][DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round)
 		return false, nil
 	}
 

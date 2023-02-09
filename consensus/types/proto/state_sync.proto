@@ -35,8 +35,6 @@ message GetBlockResponse {
 }
 
 message StateSyncMessage {
-    //StateSyncMessageType msgType = 1;
-
     oneof message {
         StateSyncMetadataRequest metadata_req = 2;
         StateSyncMetadataResponse metadata_res = 3;

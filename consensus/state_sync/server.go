@@ -25,7 +25,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	serverNodePeerId := m.GetBus().GetConsensusModule().GetNodeAddress()
 
 	clientPeerAddress := metadataReq.PeerAddress
-	m.logger.Info().Msg(fmt.Sprintf("%s received state sync metadata request from: %s", serverNodePeerId, clientPeerAddress))
+	m.logger.Info().Msgf("%s received state sync metadata request from: %s", serverNodePeerId, clientPeerAddress)
 
 	// last finalized block
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(consensusMod.CurrentHeight()) - 1)
@@ -62,7 +62,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 
 	clientPeerAddress := blockReq.PeerAddress
-	m.logger.Info().Msg(fmt.Sprintf("%s received state sync Get Block Req from: %s", serverNodePeerAddress, clientPeerAddress))
+	m.logger.Info().Msgf("%s received state sync Get Block Req from: %s", serverNodePeerAddress, clientPeerAddress)
 
 	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
 
