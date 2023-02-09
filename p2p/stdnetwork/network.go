@@ -9,7 +9,6 @@ import (
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/rs/zerolog"
 )
 
 var (
@@ -20,10 +19,10 @@ var (
 type network struct {
 	addrBookMap typesP2P.AddrBookMap
 
-	logger zerolog.Logger
+	logger *modules.Logger
 }
 
-func NewNetwork(logger zerolog.Logger, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
+func NewNetwork(logger *modules.Logger, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error getting addrBook")

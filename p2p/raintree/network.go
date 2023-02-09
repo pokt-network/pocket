@@ -14,7 +14,6 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	telemetry "github.com/pokt-network/pocket/telemetry"
-	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -32,10 +31,10 @@ type rainTreeNetwork struct {
 	peersManager *peersManager
 	nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]
 
-	logger modules.Logger
+	logger *modules.Logger
 }
 
-func NewRainTreeNetwork(logger zerolog.Logger, bus modules.Bus, addr cryptoPocket.Address, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+func NewRainTreeNetwork(logger *modules.Logger, bus modules.Bus, addr cryptoPocket.Address, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error getting addrBook")
@@ -53,6 +52,7 @@ func NewRainTreeNetwork(logger zerolog.Logger, bus modules.Bus, addr cryptoPocke
 		peersManager:     pm,
 		nonceDeduper:     mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
 		addrBookProvider: addrBookProvider,
+		logger:           logger,
 	}
 	n.SetBus(bus)
 	return typesP2P.Network(n)
