@@ -7,14 +7,15 @@ import (
 
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/rs/zerolog"
 )
 
 var _ modules.Module = &loggerModule{}
 
 type loggerModule struct {
-	modules.BaseIntegratableModule
-	modules.BaseInterruptableModule
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
 
 	zerolog.Logger
 	bus    modules.Bus

@@ -7,13 +7,14 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 var _ modules.StateMachineModule = &stateMachineModule{}
 
 type stateMachineModule struct {
-	modules.BaseIntegratableModule
-	modules.BaseInterruptableModule
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
 
 	*fsm.FSM
 }

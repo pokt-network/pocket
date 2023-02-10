@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `UnmarshalText` to `Ed25519PrivateKey`
 - Added events `ConsensusNewHeightEvent` and `StateMachineTransitionEvent`
-- Introduced `BaseInterruptableModule` and `BaseIntegratableModule` to reduce repetition and boilerpate code (DRYness)
+- Introduced `BaseInterruptableModule` and `IntegratableModule` to reduce repetition and boilerpate code (DRYness)
 - Added `ModulesRegistry` and `StateMachineModule` accessors and interfaces
 - Introduced generic `ModuleOption` pattern to fine tune modules behaviour
 - Added `StateMachine` to the `node` initialization

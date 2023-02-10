@@ -14,6 +14,7 @@ import (
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	telemetry "github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
 )
@@ -21,7 +22,7 @@ import (
 var _ typesP2P.Network = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
-	modules.BaseIntegratableModule
+	base_modules.IntegratableModule
 
 	selfAddr         cryptoPocket.Address
 	addrBookProvider addrbook_provider.AddrBookProvider

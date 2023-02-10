@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 var (
@@ -13,8 +14,8 @@ var (
 )
 
 type telemetryModule struct {
-	modules.BaseIntegratableModule
-	modules.BaseInterruptableModule
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {

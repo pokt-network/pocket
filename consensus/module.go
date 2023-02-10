@@ -17,6 +17,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -30,7 +31,7 @@ var (
 )
 
 type consensusModule struct {
-	modules.BaseIntegratableModule
+	base_modules.IntegratableModule
 
 	privateKey cryptoPocket.Ed25519PrivateKey
 
@@ -181,6 +182,11 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 
 		hotstuffMempool: make(map[typesCons.HotstuffStep]*hotstuffFIFOMempool),
 	}
+
+	for _, option := range options {
+		option(m)
+	}
+
 	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
@@ -260,7 +266,7 @@ func (m *consensusModule) GetModuleName() string {
 }
 
 func (m *consensusModule) GetBus() modules.Bus {
-	bus := m.BaseIntegratableModule.GetBus()
+	bus := m.IntegratableModule.GetBus()
 	if bus == nil {
 		logger.Global.Fatal().Msg("PocketBus is not initialized")
 	}
@@ -268,7 +274,7 @@ func (m *consensusModule) GetBus() modules.Bus {
 }
 
 func (m *consensusModule) SetBus(pocketBus modules.Bus) {
-	m.BaseIntegratableModule.SetBus(pocketBus)
+	m.IntegratableModule.SetBus(pocketBus)
 	if m.paceMaker != nil {
 		m.paceMaker.SetBus(pocketBus)
 	}

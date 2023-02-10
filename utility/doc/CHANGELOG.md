@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.27] - 2023-02-09
 
-- Module embeds `modules.BaseIntegratableModule` and `modules.BaseInterruptableModule` for DRYness
+- Module embeds `base_modules.IntegratableModule` and `base_modules.InterruptableModule` for DRYness
 - Logging error if `ApplyTransaction` fails (it was completely ignored before and it was really hard to understand what was going on)
 
 ## [0.0.0.26] - 2023-02-07

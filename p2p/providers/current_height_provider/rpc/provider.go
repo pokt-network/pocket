@@ -12,6 +12,7 @@ import (
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 var (
@@ -26,8 +27,8 @@ func init() {
 }
 
 type rpcCurrentHeightProvider struct {
-	modules.BaseIntegratableModule
-	modules.BaseInterruptableModule
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
 
 	rpcUrl    string
 	rpcClient *rpc.ClientWithResponses

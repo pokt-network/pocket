@@ -9,13 +9,14 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 var _ modules.RPCModule = &rpcModule{}
 
 type rpcModule struct {
-	modules.BaseIntegratableModule
-	modules.BaseInterruptableModule
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
 
 	logger modules.Logger
 	config *configs.RPCConfig

@@ -16,13 +16,14 @@ import (
 	"github.com/pokt-network/pocket/runtime/genesis"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/spf13/viper"
 )
 
 var _ modules.RuntimeMgr = &Manager{}
 
 type Manager struct {
-	modules.BaseIntegratableModule
+	base_modules.IntegratableModule
 
 	config       *configs.Config
 	genesisState *genesis.GenesisState
@@ -40,7 +41,7 @@ func NewManager(config *configs.Config, gen *genesis.GenesisState, options ...fu
 	mgr.config = config
 	mgr.genesisState = gen
 	mgr.clock = clock.New()
-	mgr.BaseIntegratableModule = *modules.NewBaseIntegratableModule(bus)
+	mgr.IntegratableModule = *base_modules.NewIntegratableModule(bus)
 
 	for _, o := range options {
 		o(mgr)

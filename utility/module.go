@@ -8,6 +8,7 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -18,8 +19,8 @@ var (
 )
 
 type utilityModule struct {
-	modules.BaseIntegratableModule
-	modules.BaseInterruptableModule
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
 
 	config *configs.UtilityConfig
 

@@ -16,6 +16,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 var (
@@ -30,8 +31,8 @@ func init() {
 }
 
 type rpcAddrBookProvider struct {
-	modules.BaseIntegratableModule
-	modules.BaseInterruptableModule
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
 
 	rpcUrl    string
 	p2pCfg    *configs.P2PConfig

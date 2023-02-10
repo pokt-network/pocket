@@ -3,6 +3,7 @@ package leader_election
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 type LeaderElectionModule interface {
@@ -13,8 +14,8 @@ type LeaderElectionModule interface {
 var _ LeaderElectionModule = &leaderElectionModule{}
 
 type leaderElectionModule struct {
-	modules.BaseIntegratableModule
-	modules.BaseInterruptableModule
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
 }
 
 func Create(bus modules.Bus) (modules.Module, error) {

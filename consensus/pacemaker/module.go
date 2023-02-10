@@ -11,6 +11,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -44,8 +45,8 @@ type Pacemaker interface {
 }
 
 type pacemaker struct {
-	modules.BaseIntegratableModule
-	modules.BaseInterruptableModule
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
 
 	pacemakerCfg   *configs.PacemakerConfig
 	stepCancelFunc context.CancelFunc

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.34] - 2023-02-10
 
-- Module now embeds `modules.BaseIntegratableModule` for DRYness
+- Module now embeds `base_modules.IntegratableModule` for DRYness
 
 ## [0.0.0.33] - 2023-02-09
 

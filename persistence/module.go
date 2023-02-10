@@ -11,6 +11,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 var (
@@ -23,7 +24,7 @@ var (
 // TODO: convert address and public key to string not bytes in all account and actor functions
 // TODO: remove address parameter from all pool operations
 type persistenceModule struct {
-	modules.BaseIntegratableModule
+	base_modules.IntegratableModule
 
 	config       *configs.PersistenceConfig
 	genesisState *genesis.GenesisState

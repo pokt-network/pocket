@@ -25,6 +25,7 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -33,7 +34,7 @@ import (
 var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
-	modules.BaseIntegratableModule
+	base_modules.IntegratableModule
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address

@@ -6,21 +6,22 @@ import (
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 var _ addrbook_provider.AddrBookProvider = &persistenceAddrBookProvider{}
 
 type persistenceAddrBookProvider struct {
-	modules.BaseIntegratableModule
-	modules.BaseInterruptableModule
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
 
 	connFactory typesP2P.ConnectionFactory
 }
 
 func NewPersistenceAddrBookProvider(bus modules.Bus, options ...func(*persistenceAddrBookProvider)) *persistenceAddrBookProvider {
 	pabp := &persistenceAddrBookProvider{
-		BaseIntegratableModule: *modules.NewBaseIntegratableModule(bus),
-		connFactory:            transport.CreateDialer, // default connection factory, overridable with WithConnectionFactory()
+		IntegratableModule: *base_modules.NewIntegratableModule(bus),
+		connFactory:        transport.CreateDialer, // default connection factory, overridable with WithConnectionFactory()
 	}
 
 	for _, o := range options {

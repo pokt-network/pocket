@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `bootstrap_nodes_csv` in `P2PConfig` to allow for a comma separated list of bootstrap nodes
 - Introduced `modules.ModulesRegistry` for better separation of concerns
 - Added `StateMachineModule` accessors
-- `Manager` embeds `modules.BaseIntegratableModule` for DRYness
+- `Manager` embeds `base_modules.IntegratableModule` for DRYness
 
 ## [0.0.0.16] - 2023-02-09
 
