@@ -10,6 +10,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var _ modules.Module = &loggerModule{}
+
 type loggerModule struct {
 	zerolog.Logger
 	bus    modules.Bus
