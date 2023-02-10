@@ -66,6 +66,11 @@ func (*loggerModule) Create(bus modules.Bus, options ...modules.ModuleOption) (m
 	m := &loggerModule{
 		config: cfg.Logger,
 	}
+
+	for _, option := range options {
+		option(m)
+	}
+
 	bus.RegisterModule(m)
 
 	Global.config = m.config

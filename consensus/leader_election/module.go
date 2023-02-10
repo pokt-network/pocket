@@ -23,6 +23,11 @@ func Create(bus modules.Bus) (modules.Module, error) {
 
 func (*leaderElectionModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &leaderElectionModule{}
+
+	for _, option := range options {
+		option(m)
+	}
+
 	bus.RegisterModule(m)
 	return m, nil
 }

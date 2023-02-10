@@ -67,6 +67,10 @@ func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 		logPrefix: defaultLogPrefix,
 	}
 
+	for _, option := range options {
+		option(m)
+	}
+
 	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()

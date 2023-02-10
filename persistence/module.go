@@ -46,6 +46,11 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 	m := &persistenceModule{
 		writeContext: nil,
 	}
+
+	for _, option := range options {
+		option(m)
+	}
+
 	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()

@@ -28,6 +28,11 @@ func CreateNoopTelemetryModule(bus modules.Bus, options ...modules.ModuleOption)
 
 func (*NoopTelemetryModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &NoopTelemetryModule{}
+
+	for _, option := range options {
+		option(m)
+	}
+
 	bus.RegisterModule(m)
 	return m, nil
 }

@@ -35,6 +35,11 @@ func (*rpcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	if !rpcCfg.Enabled {
 		m = &noopRpcModule{}
 	}
+
+	for _, option := range options {
+		option(m)
+	}
+
 	bus.RegisterModule(m)
 
 	return m, nil
