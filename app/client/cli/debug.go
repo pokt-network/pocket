@@ -4,8 +4,12 @@ import (
 	"os"
 
 	"github.com/manifoldco/promptui"
+	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
+	"github.com/pokt-network/pocket/p2p/libp2p"
 	debugABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/debug"
 	debugCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/debug"
 	"github.com/pokt-network/pocket/runtime"
@@ -13,8 +17,6 @@ import (
 	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // TECHDEBT: Lowercase variables / constants that do not need to be exported.
@@ -72,12 +74,13 @@ func NewDebugCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			runtimeMgr := runtime.NewManagerFromFiles(configPath, genesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
+			p2pConfig := runtimeMgr.GetConfig().P2P
 
 			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
 			validators = runtimeMgr.GetGenesis().Validators
 
 			debugAddressBookProvider := debugABP.NewDebugAddrBookProvider(
-				runtimeMgr.GetConfig().P2P,
+				p2pConfig,
 				debugABP.WithActorsByHeight(
 					map[int64][]*coreTypes.Actor{
 						debugABP.ANY_HEIGHT: validators,
@@ -88,11 +91,20 @@ func NewDebugCommand() *cobra.Command {
 			debugCurrentHeightProvider := debugCHP.NewDebugCurrentHeightProvider(0)
 
 			// TODO(#429): refactor injecting the dependencies into the bus so that they can be consumed in an updated `P2PModule.Create()` implementation
-			p2pM, err := p2p.CreateWithProviders(runtimeMgr.GetBus(), debugAddressBookProvider, debugCurrentHeightProvider)
+
+			var (
+				mod modules.Module
+				err error
+			)
+			if p2pConfig.UseLibP2P {
+				mod, err = libp2p.CreateWithProviders(runtimeMgr.GetBus(), debugAddressBookProvider, debugCurrentHeightProvider)
+			} else {
+				mod, err = p2p.CreateWithProviders(runtimeMgr.GetBus(), debugAddressBookProvider, debugCurrentHeightProvider)
+			}
 			if err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
 			}
-			p2pMod = p2pM.(modules.P2PModule)
+			p2pMod = mod.(modules.P2PModule)
 
 			if err := p2pMod.Start(); err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")

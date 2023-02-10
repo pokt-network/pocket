@@ -2,6 +2,7 @@ package libp2p
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"time"
@@ -10,28 +11,38 @@ import (
 	"github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
-	"github.com/libp2p/go-libp2p/core/protocol"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/common"
 	"github.com/pokt-network/pocket/p2p/libp2p/identity"
+	"github.com/pokt-network/pocket/p2p/libp2p/protocol"
+	"github.com/pokt-network/pocket/p2p/providers"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
+	poktCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
+var _ modules.P2PModule = &libp2pModule{}
+
 type libp2pModule struct {
-	bus          modules.Bus
-	cfg          *configs.P2PConfig
-	identity     libp2p.Option
-	listenAddrs  libp2p.Option
-	host         host.Host
-	pubsub       *pubsub.PubSub
-	topic        *pubsub.Topic
-	subscription *pubsub.Subscription
-	network      typesP2P.Network
+	bus                   modules.Bus
+	cfg                   *configs.P2PConfig
+	addrBookProvider      providers.AddrBookProvider
+	currentHeightProvider providers.CurrentHeightProvider
+	identity              libp2p.Option
+	listenAddrs           libp2p.Option
+	host                  host.Host
+	pubsub                *pubsub.PubSub
+	topic                 *pubsub.Topic
+	subscription          *pubsub.Subscription
+	network               typesP2P.Network
 }
 
 // NewReadStreamDeadline returns a future deadline
@@ -50,14 +61,18 @@ var (
 	ErrModule = common.NewErrFactory("LibP2P module error")
 	// ErrCloseStream wraps errors which occur when attempting to close a peer stream.
 	ErrCloseStream = common.NewErrFactory("an error occurred while closing peer stream")
-	// PoktProtocolID is the libp2p protocol ID matching current version of the pokt protocol.
-	PoktProtocolID = protocol.ID("pokt/v1.0.0")
-	// DefaultTopicStr is a "default" pubsub topic string for use when subscribing.
-	DefaultTopicStr = "pokt/default"
 )
 
 func Create(bus modules.Bus) (modules.Module, error) {
-	return new(libp2pModule).Create(bus)
+	return CreateWithProviders(
+		bus,
+		persistence.NewPersistenceAddrBookProvider(bus),
+		bus.GetConsensusModule(),
+	)
+}
+
+func CreateWithProviders(bus modules.Bus, addrBookProvider addrbook_provider.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
+	return new(libp2pModule).CreateWithProviders(bus, addrBookProvider, currentHeightProvider)
 }
 
 func (mod *libp2pModule) GetModuleName() string {
@@ -66,25 +81,27 @@ func (mod *libp2pModule) GetModuleName() string {
 }
 
 func (mod *libp2pModule) Create(bus modules.Bus) (modules.Module, error) {
-	*mod = libp2pModule{}
+	return Create(bus)
+}
+
+func (mod *libp2pModule) CreateWithProviders(bus modules.Bus, addrBookProvider addrbook_provider.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
+	*mod = libp2pModule{
+		addrBookProvider:      addrBookProvider,
+		currentHeightProvider: currentHeightProvider,
+	}
+
 	if err := bus.RegisterModule(mod); err != nil {
 		return nil, ErrModule("unable to register module", err)
 	}
 
 	log.Println("Creating libp2p-backed network module")
 
+	mod.cfg = bus.GetRuntimeMgr().GetConfig().P2P
+
 	// TODO: support RainTree network
 	if mod.cfg.UseRainTree {
 		return nil, ErrModule("raintree is not yet compatible with libp2p", nil)
 	}
-
-	// TODO: how should this effect things?
-	//if !cfg.ClientDebugMode {
-	//}
-
-	runtimeMgr := bus.GetRuntimeMgr()
-	cfg := runtimeMgr.GetConfig()
-	mod.cfg = cfg.P2P
 
 	// TODO(future): investigate any unnecessary
 	// key exposure / duplication in memory
@@ -95,11 +112,15 @@ func (mod *libp2pModule) Create(bus modules.Bus) (modules.Module, error) {
 	}
 
 	mod.identity = libp2p.Identity(secretKey)
-	mod.listenAddrs = libp2p.ListenAddrStrings()
+	// TODO: where is the hostname specified?
+	// TODO: parameterize listening IP address
+	// TODO: utilize transport config.
+	// NB: 0.0.0.0 listens on **all interfaces**
+	mod.listenAddrs = libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/0.0.0.0/tcp/%d", mod.cfg.ConsensusPort))
 
 	if err := bus.RegisterModule(mod); err != nil {
 		// TODO: wrap error
-		return nil, ErrModule("unable to register module", err)
+		return nil, ErrModule("registering module", err)
 	}
 
 	return mod, nil
@@ -112,16 +133,25 @@ func (mod *libp2pModule) Start() error {
 	// TODO: metrics integration.
 	var err error
 
-	mod.host, err = libp2p.New(
+	// TODO: disable services in client debug mode (?):
+	// i.e.:
+	opts := []libp2p.Option{
 		mod.identity,
 		mod.listenAddrs,
 		// TODO: transport security!
-	)
+	}
+	//if !mod.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode {
+	//	opts = append(opts,
+	//  	libp2p.DisableRelay(), // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#DisableRelay)
+	//  	libp2p.Ping(false),	   // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#Ping)
+	//  )
+	//}
+	mod.host, err = libp2p.New(opts...)
 	if err != nil {
 		return ErrModule("unable to create libp2p host", err)
 	}
 
-	mod.host.SetStreamHandler(PoktProtocolID, mod.handleStream)
+	log.Printf("Listening on %s...", host.InfoFromHost(mod.host).Addrs)
 
 	// TODO: use RandomSub or GossipSub once we're on more stable ground.
 	// TODO: consider supporting multiple router types via config.
@@ -130,28 +160,66 @@ func (mod *libp2pModule) Start() error {
 		return ErrModule("unable to create pubsub", err)
 	}
 
-	mod.topic, err = mod.pubsub.Join(DefaultTopicStr)
+	mod.topic, err = mod.pubsub.Join(protocol.DefaultTopicStr)
 	if err != nil {
 		return ErrModule("unable to join pubsub topic", err)
 	}
 
 	mod.subscription, err = mod.topic.Subscribe()
 	if err != nil {
-		return ErrModule("unable to subscribe to pubsub topic", err)
+		return ErrModule("subscribing to pubsub topic", err)
 	}
 
-	mod.network, err = stdnetwork.NewLibp2pNetwork(mod.bus, mod.host, mod.topic)
+	mod.network, err = stdnetwork.NewLibp2pNetwork(mod.bus, mod.addrBookProvider, mod.currentHeightProvider, mod.host, mod.topic)
 	if err != nil {
-		return ErrModule("unable to create network", err)
+		return ErrModule("creating network", err)
 	}
 
-	go mod.readFromSubscription(ctx)
-
+	// NB: don't handle streams or read from the subscription in client debug mode.
+	if !mod.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode {
+		mod.host.SetStreamHandler(protocol.PoktProtocolID, mod.handleStream)
+		go mod.readFromSubscription(ctx)
+	}
 	return nil
 }
 
 func (mod *libp2pModule) Stop() error {
 	return mod.host.Close()
+}
+
+func (mod *libp2pModule) Broadcast(msg *anypb.Any) error {
+	c := &messaging.PocketEnvelope{
+		Content: msg,
+	}
+	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
+	if err != nil {
+		return err
+	}
+	// TODO: conventional logging.
+	log.Print("broadcasting message to network")
+
+	return mod.network.NetworkBroadcast(data)
+}
+
+func (mod *libp2pModule) Send(addr poktCrypto.Address, msg *anypb.Any) error {
+	c := &messaging.PocketEnvelope{
+		Content: msg,
+	}
+	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
+	if err != nil {
+		return err
+	}
+
+	return mod.network.NetworkSend(data, addr)
+}
+
+func (mod *libp2pModule) GetAddress() (poktCrypto.Address, error) {
+	secretKey, err := poktCrypto.NewPrivateKey(mod.cfg.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return secretKey.Address(), nil
 }
 
 func (mod *libp2pModule) SetBus(bus modules.Bus) {
@@ -190,6 +258,8 @@ func (mod *libp2pModule) handleStream(stream network.Stream) {
 }
 
 func (mod *libp2pModule) readStream(stream network.Stream) {
+	logger.Global.Printf("libp2p/module.go:194 | *libp2pModule#readStream")
+
 	// NB: time out if no data is sent to free resources.
 	if err := stream.SetReadDeadline(NewReadStreamDeadline()); err != nil {
 		// TODO: conventional error logging.
@@ -207,6 +277,12 @@ func (mod *libp2pModule) readStream(stream network.Stream) {
 		// TODO: signal this somewhere?
 		return
 	}
+	defer func() {
+		if err := stream.Close(); err != nil {
+			// TODO: conventional error handling.
+			log.Printf("%s", ErrModule("closing stream", err))
+		}
+	}()
 
 	mod.handleNetworkData(data)
 }
