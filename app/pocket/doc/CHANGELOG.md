@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.5] - 2023-02-09
+## [0.0.0.5] - 2023-02-10
 
 - Updated to handle `bootstrap-nodes` flag that can be used to override the default bootstrap nodes
 
