@@ -36,14 +36,17 @@ type rainTreeNetwork struct {
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+	networkLogger := logger.Global.CreateLoggerForModule("network")
+	networkLogger.Info().Msg("Initializing rainTreeNetwork")
+
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Error getting addrBook")
+		networkLogger.Fatal().Err(err).Msg("Error getting addrBook")
 	}
 
 	pm, err := newPeersManager(addr, addrBook, true)
 	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
+		networkLogger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
 	}
 
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
@@ -53,6 +56,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProv
 		peersManager:     pm,
 		nonceDeduper:     mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
 		addrBookProvider: addrBookProvider,
+		logger:           networkLogger,
 	}
 	n.SetBus(bus)
 	return typesP2P.Network(n)
