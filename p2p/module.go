@@ -101,10 +101,12 @@ func (m *p2pModule) GetModuleName() string {
 }
 
 func (m *p2pModule) Start() error {
-	logger.Global.Info().Msg("Starting network module")
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
+	m.logger.Info().Msg("Starting network module")
 
 	cfg := m.GetBus().GetRuntimeMgr().GetConfig()
 
+	// TODO: pass down logger
 	if cfg.P2P.UseRainTree {
 		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), m.addrBookProvider, m.currentHeightProvider)
 	} else {

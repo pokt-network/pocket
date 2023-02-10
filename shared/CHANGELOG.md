@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.24] - 2023-02-09
+## [0.0.0.25] - 2023-02-10
 
 - Added `UnmarshalText` to `Ed25519PrivateKey`
 - Added events `ConsensusNewHeightEvent` and `StateMachineTransitionEvent`
@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `ModulesRegistry` and `StateMachineModule` accessors and interfaces
 - Introduced generic `ModuleOption` pattern to fine tune modules behaviour
 - Added `StateMachine` to the `node` initialization
+
+## [0.0.0.24] - 2023-02-09
+
+ - Add `ConsensusStateSync` interface that is implemented by the consensus module
 
 ## [0.0.0.23] - 2023-02-07
 

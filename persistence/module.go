@@ -214,7 +214,7 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	}
 	defer checkContext.Close()
 
-	blockHeight, err := checkContext.GetLatestBlockHeight()
+	blockHeight, err := checkContext.GetMaximumBlockHeight()
 	if err != nil {
 		return true, nil
 	}

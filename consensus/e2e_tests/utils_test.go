@@ -13,12 +13,15 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	mocksPer "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -58,6 +61,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 				Manual:                    false,
 				DebugTimeBetweenStepsMsec: 0,
 			},
+			ServerModeEnabled: true,
 		}
 		runtimeMgrs[i] = runtime.NewManager(config, genesisState, runtime.WithClock(clockMgr))
 	}
@@ -205,11 +209,12 @@ func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 // This is a helper for `waitForEventsInternal` that creates the `includeFilter` function based on
 // consensus specific parameters.
 // failOnExtraMessages:
-// 		This flag is useful when running the consensus unit tests. It causes the test to wait up to the
-// 		maximum delay specified in the source code and errors if additional unexpected messages are received.
-// 		For example, if the test expects to receive 5 messages within 2 seconds:
-// 			false: continue if 5 messages are received in 0.5 seconds
-// 			true: wait for another 1.5 seconds after 5 messages are received in 0.5 seconds, and fail if any additional messages are received.
+//
+//	This flag is useful when running the consensus unit tests. It causes the test to wait up to the
+//	maximum delay specified in the source code and errors if additional unexpected messages are received.
+//	For example, if the test expects to receive 5 messages within 2 seconds:
+//		false: continue if 5 messages are received in 0.5 seconds
+//		true: wait for another 1.5 seconds after 5 messages are received in 0.5 seconds, and fail if any additional messages are received.
 func WaitForNetworkConsensusEvents(
 	t *testing.T,
 	clck *clock.Mock,
@@ -234,6 +239,30 @@ func WaitForNetworkConsensusEvents(
 	return waitForEventsInternal(clck, eventsChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
+// IMPROVE: Consider unifying this function with WaitForNetworkConsensusEvents
+// This is a helper for 'waitForEventsInternal' that creates the `includeFilter` function based on state sync message specific parameters.
+func WaitForNetworkStateSyncEvents(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	errMsg string,
+	numExpectedMsgs int,
+	millis time.Duration,
+	failOnExtraMessages bool,
+) (messages []*anypb.Any, err error) {
+	includeFilter := func(anyMsg *anypb.Any) bool {
+		msg, err := codec.GetCodec().FromAny(anyMsg)
+		require.NoError(t, err)
+
+		_, ok := msg.(*typesCons.StateSyncMessage)
+		require.True(t, ok)
+
+		return true
+	}
+
+	return waitForEventsInternal(clck, eventsChannel, consensus.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+}
+
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework
 // IMPROVE: This function can be extended to testing events outside of just the consensus module.
 func waitForEventsInternal(
@@ -241,7 +270,7 @@ func waitForEventsInternal(
 	eventsChannel modules.EventsChannel,
 	eventContentType string,
 	numExpectedMsgs int,
-	maxWaitTimeMillis time.Duration, // IMPROVE(#295): Remove time specific suffixes as outlined by go-staticcheck (ST1011)
+	maxWaitTime time.Duration,
 	msgIncludeFilter func(m *anypb.Any) bool,
 	errMsg string,
 	failOnExtraMessages bool,
@@ -250,7 +279,7 @@ func waitForEventsInternal(
 	unusedEvents := make([]*messaging.PocketEnvelope, 0) // "Recycle" events back into the events channel if we're not using them
 
 	// Limit the amount of time we're waiting for the messages to be published on the events channel
-	ctx, cancel := clck.WithTimeout(context.TODO(), time.Millisecond*maxWaitTimeMillis)
+	ctx, cancel := clck.WithTimeout(context.TODO(), time.Millisecond*maxWaitTime)
 	defer cancel()
 
 	// Since the tests use a mock clock, we need to manually advance the clock to trigger the timeout
@@ -328,13 +357,43 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
+
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
+
+	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
+
+	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
+		heightInt := converters.HeightFromBytes(height)
+		if bus.GetConsensusModule().CurrentHeight() < heightInt {
+			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
+		}
+		blockWithHeight := &coreTypes.Block{
+			BlockHeader: &coreTypes.BlockHeader{
+				Height: converters.HeightFromBytes(height),
+			},
+		}
+		return codec.GetCodec().Marshal(blockWithHeight)
+	}).AnyTimes()
+
+	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
+
+	persistenceReadContextMock.EXPECT().GetMaximumBlockHeight().DoAndReturn(func() (uint64, error) {
+		height := bus.GetConsensusModule().CurrentHeight()
+		return height, nil
+	}).AnyTimes()
+
+	persistenceReadContextMock.EXPECT().GetMinimumBlockHeight().DoAndReturn(func() (uint64, error) {
+		// mock minimum block height in persistence module to 1 if current height is equal or more than 1, else return 0 as the minimum height
+		if bus.GetConsensusModule().CurrentHeight() >= 1 {
+			return 1, nil
+		}
+		return 0, nil
+	}).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
 	// of the consensus module. This one is only used when loading the initial consensus module
 	// state; hence the `-1` expectation in the call above.
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
-	persistenceReadContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()

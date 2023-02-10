@@ -127,7 +127,8 @@ type PersistenceReadContext interface {
 
 	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries
-	GetLatestBlockHeight() (uint64, error)     // Returns the height of the latest block in the persistence layer
+	GetMaximumBlockHeight() (uint64, error)    // Returns the height of the latest block in the persistence layer
+	GetMinimumBlockHeight() (uint64, error)    // Returns the min block height in the persistence layer
 	GetBlockHash(height int64) (string, error) // Returns the app hash corresponding to the height provided
 
 	// Pool Queries

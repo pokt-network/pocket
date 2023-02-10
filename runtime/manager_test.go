@@ -4189,6 +4189,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 							Manual:                    true,
 							DebugTimeBetweenStepsMsec: 1000,
 						},
+						ServerModeEnabled: true,
 					},
 					Utility: &configs.UtilityConfig{
 						MaxMempoolTransactionBytes: 1073741824,

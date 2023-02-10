@@ -7,10 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.11] - 2023-02-09
+## [0.0.0.12] - 2023-02-10
 
 - Added `not_interactive` flag to allow for non-interactive `Stake` and `Unstake` transactions (dogfooding in `cluster-manager`)
 - Updated CLI to use to source the address book and the current height from the RPC server leveraging the `rpcAddressBookProvider` and `rpcCurrentHeightProvider` respectively and the `bus` for dependency injection
+
+## [0.0.0.11] - 2023-02-09
+
+- Added debugging prompts to drive state sync requests
+- `SendMetadataRequest` to send metadata request by all nodes to all nodes
+- `SendBlockRequest` to send get block request by all nodes to all nodes
 
 ## [0.0.0.10] - 2023-02-07
 

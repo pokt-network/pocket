@@ -21,11 +21,15 @@ import (
 
 // TECHDEBT: Lowercase variables / constants that do not need to be exported.
 const (
-	PromptResetToGenesis         string = "ResetToGenesis"
-	PromptPrintNodeState         string = "PrintNodeState"
-	PromptTriggerNextView        string = "TriggerNextView"
-	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
+	PromptResetToGenesis      string = "ResetToGenesis"
+	PromptPrintNodeState      string = "PrintNodeState"
+	PromptTriggerNextView     string = "TriggerNextView"
+	PromptTogglePacemakerMode string = "TogglePacemakerMode"
+
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
+
+	PromptSendMetadataRequest string = "MetadataRequest"
+	PromptSendBlockRequest    string = "BlockRequest"
 )
 
 var (
@@ -38,6 +42,8 @@ var (
 		PromptTriggerNextView,
 		PromptTogglePacemakerMode,
 		PromptShowLatestBlockInStore,
+		PromptSendMetadataRequest,
+		PromptSendBlockRequest,
 	}
 
 	configPath  string = getEnv("CONFIG_PATH", "build/config/config1.json")
@@ -165,6 +171,18 @@ func handleSelect(cmd *cobra.Command, selection string) {
 			Message: nil,
 		}
 		sendDebugMessage(cmd, m)
+	case PromptSendMetadataRequest:
+		m := &messaging.DebugMessage{
+			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ,
+			Message: nil,
+		}
+		broadcastDebugMessage(cmd, m)
+	case PromptSendBlockRequest:
+		m := &messaging.DebugMessage{
+			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ,
+			Message: nil,
+		}
+		broadcastDebugMessage(cmd, m)
 	default:
 		logger.Global.Error().Msg("Selection not yet implemented...")
 	}
