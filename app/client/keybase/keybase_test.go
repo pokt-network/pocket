@@ -27,6 +27,10 @@ const (
 	testJSONPubString  = "408bec6320b540aa0cc86b3e633e214f2fd4dce4caa08f164fa3a9d3e577b46c"
 	testJSONPrivString = "3554119cec1c0c8c5b3845a5d3fc6346eb44ed21aab5c063ae9b6b1d38bec275408bec6320b540aa0cc86b3e633e214f2fd4dce4caa08f164fa3a9d3e577b46c"
 	testJSONString     = `{"kdf":"scrypt","salt":"197d2754445a7e5ce3e6c8d7b1d0ff6f","secparam":"12","hint":"pocket wallet","ciphertext":"B/AORJrSeQrR5ewQGel4FeCCXscoCsMUzq9gXAAxDqjXMmMxa7TedBTuemtO82JyTCoQWFHbGxRx8A7IoETNh5T5yBAjNNrr7DDkVrcfSAM3ez9lQem17DsfowCvRtmbesDlvbSZMRy8mQgClLqWRN+c6W/fPQ/lxLUy1G1A965U/uImcMXzSwbfqYrBPEux"}`
+
+	// SLIP-0010 Key
+	testSeedHex         = "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542"
+	testPrimarySlipAddr = "dbeed1c166fb8d1647559e4155eadeda2eca8c10"
 )
 
 func TestKeybase_CreateNewKey(t *testing.T) {
@@ -441,6 +445,17 @@ func TestKeybase_ExportJSON(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, privKey.Address().String(), testAddr)
 	require.Equal(t, privKey.String(), testPrivString)
+}
+
+func TestKeybase_DerivePrimarySlipKey(t *testing.T) {
+	db := initDB(t)
+	defer stopDB(t, db)
+
+	seed, err := hex.DecodeString(testSeedHex)
+	require.NoError(t, err)
+	kp, err := crypto.DeriveKeyFromPath(crypto.PoktPrimaryAccountPath, seed, testPassphrase, testHint)
+	require.NoError(t, err)
+	require.Equal(t, kp.GetAddressString(), testPrimarySlipAddr)
 }
 
 func initDB(t *testing.T) Keybase {
