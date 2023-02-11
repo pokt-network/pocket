@@ -96,18 +96,18 @@ If no changes are desired for the parameter, just enter the current param value 
 				return err
 			}
 
-			keybase, err := keybase.InitialiseKeybase(keybaseDir)
+			kb, err := keybase.InitialiseKeybase(keybaseDir)
 			if err != nil {
 				return err
 			}
 
 			pwd = readPassphrase(pwd)
 
-			pk, err := keybase.GetPrivKey(args[0], pwd)
+			pk, err := kb.GetPrivKey(args[0], pwd)
 			if err != nil {
 				return err
 			}
-			if err := keybase.Stop(); err != nil {
+			if err := kb.Stop(); err != nil {
 				return err
 			}
 
@@ -165,18 +165,18 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			keybase, err := keybase.InitialiseKeybase(keybaseDir)
+			kb, err := keybase.InitialiseKeybase(keybaseDir)
 			if err != nil {
 				return err
 			}
 
 			pwd = readPassphrase(pwd)
 
-			pk, err := keybase.GetPrivKey(args[0], pwd)
+			pk, err := kb.GetPrivKey(args[0], pwd)
 			if err != nil {
 				return err
 			}
-			if err := keybase.Stop(); err != nil {
+			if err := kb.Stop(); err != nil {
 				return err
 			}
 
@@ -231,18 +231,18 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			keybase, err := keybase.InitialiseKeybase(keybaseDir)
+			kb, err := keybase.InitialiseKeybase(keybaseDir)
 			if err != nil {
 				return err
 			}
 
 			pwd = readPassphrase(pwd)
 
-			pk, err := keybase.GetPrivKey(args[0], pwd)
+			pk, err := kb.GetPrivKey(args[0], pwd)
 			if err != nil {
 				return err
 			}
-			if err := keybase.Stop(); err != nil {
+			if err := kb.Stop(); err != nil {
 				return err
 			}
 
@@ -283,18 +283,18 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			keybase, err := keybase.InitialiseKeybase(keybaseDir)
+			kb, err := keybase.InitialiseKeybase(keybaseDir)
 			if err != nil {
 				return err
 			}
 
 			pwd = readPassphrase(pwd)
 
-			pk, err := keybase.GetPrivKey(args[0], pwd)
+			pk, err := kb.GetPrivKey(args[0], pwd)
 			if err != nil {
 				return err
 			}
-			if err := keybase.Stop(); err != nil {
+			if err := kb.Stop(); err != nil {
 				return err
 			}
 
