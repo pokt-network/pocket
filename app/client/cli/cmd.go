@@ -12,9 +12,8 @@ import (
 const cliExecutableName = "client"
 
 var (
-	remoteCLIURL         string
-	privateKeyPassphrase string
-	dataDir              string
+	remoteCLIURL string
+	dataDir      string
 )
 
 func init() {
@@ -23,7 +22,6 @@ func init() {
 		log.Fatalf("[ERROR] Cannot find user home directory: %s", err.Error())
 	}
 	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remote_cli_url", defaults.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
-	rootCmd.PersistentFlags().StringVar(&privateKeyPassphrase, "privatekey_passphrase", "", "Passphrase to decrypt the private key when being used")
 	rootCmd.PersistentFlags().StringVar(&dataDir, "data_dir", homeDir+"/.pocket", "Path to store pocket related data (keybase etc.)")
 }
 

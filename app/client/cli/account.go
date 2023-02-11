@@ -12,7 +12,6 @@ import (
 
 func init() {
 	accountCmd := NewAccountCommand()
-	accountCmd.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
 	rootCmd.AddCommand(accountCmd)
 }
 
@@ -48,7 +47,7 @@ func accountCommands() []*cobra.Command {
 					return err
 				}
 
-				pwd = readPassphrase(privateKeyPassphrase)
+				pwd = readPassphrase(pwd)
 
 				pk, err := keybase.GetPrivKey(args[0], pwd)
 				if err != nil {
@@ -85,6 +84,9 @@ func accountCommands() []*cobra.Command {
 				return nil
 			},
 		},
+	}
+	for _, cmd := range cmds {
+		cmd.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
 	}
 	return cmds
 }

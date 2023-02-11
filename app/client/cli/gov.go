@@ -50,7 +50,7 @@ func govCommands() []*cobra.Command {
 					return err
 				}
 
-				pwd = readPassphrase(privateKeyPassphrase)
+				pwd = readPassphrase(pwd)
 
 				pk, err := keybase.GetPrivKey(args[0], pwd)
 				if err != nil {
