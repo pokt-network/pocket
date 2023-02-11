@@ -1,6 +1,10 @@
 package cli
 
 import (
+	"fmt"
+	"path/filepath"
+
+	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/spf13/cobra"
 )
 
@@ -25,12 +29,32 @@ func NewKeybaseCommand() *cobra.Command {
 func keybaseCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
-			Use:     "Send <fromAddr> <to> <amount>",
-			Short:   "Send <fromAddr> <to> <amount>",
-			Long:    "Sends <amount> to address <to> from address <fromAddr>",
-			Aliases: []string{"send"},
-			Args:    cobra.ExactArgs(3),
+			Use:     "List",
+			Short:   "List all keys",
+			Long:    "List all the public hex addresses for the keys in the keybase",
+			Aliases: []string{"list"},
+			Args:    cobra.ExactArgs(0),
 			RunE: func(cmd *cobra.Command, args []string) error {
+				keybaseDir, err := filepath.Abs(dataDir + "/keys")
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.InitialiseKeybase(keybaseDir)
+				if err != nil {
+					return err
+				}
+				addresses, _, err := kb.GetAll()
+				if err != nil {
+					return err
+				}
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+				fmt.Println("Public Key Addresses:")
+				for _, addr := range addresses {
+					fmt.Println(addr)
+				}
+
 				return nil
 			},
 		},
