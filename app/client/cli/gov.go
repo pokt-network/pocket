@@ -92,5 +92,8 @@ func govCommands() []*cobra.Command {
 			},
 		},
 	}
+	for _, cmd := range cmds {
+		cmd.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
+	}
 	return cmds
 }
