@@ -11,6 +11,8 @@ import (
 
 // This file captures basic logic common across all the actors that need to stake regardless of their responsibility.
 
+// CLEANUP: Cleanup these strings. Either move them to a shared location or use them in place, but having
+// them as constants in this file only feels very incorrect.
 const (
 	httpsPrefix      = "https://"
 	httpPrefix       = "http://"

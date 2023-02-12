@@ -12,9 +12,8 @@ type utilityContext struct {
 	height int64
 
 	persistenceContext modules.PersistenceRWContext
-	// INVESTIGATE: Can we use the
-	savePointsSet  map[string]struct{}
-	savePointsList [][]byte
+	savePointsSet      map[string]struct{}
+	savePointsList     [][]byte
 
 	logger modules.Logger
 
