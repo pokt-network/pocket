@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -78,10 +79,8 @@ type yamlConfig struct {
 // FOR DEV/LOCANET PURPOSES ONLY
 func InitialiseDebugKeybase(path string) error {
 	// Get private keys from manifest file
-	yamlFile, err := filepath.Abs("./build/localnet/manifests/private-keys.yaml")
-	if err != nil {
-		return err
-	}
+	_, current, _, _ := runtime.Caller(0)
+	yamlFile := filepath.Join(current, "../../../../../build/localnet/manifests/private-keys.yaml")
 
 	if exists, err := fileExists(yamlFile); !exists || err != nil {
 		return fmt.Errorf("Unable to find YAML file: %s", yamlFile)
