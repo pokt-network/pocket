@@ -11,7 +11,7 @@ import (
 var (
 	// TECHDEBT: Re-evalute the denomination of tokens used throughout the codebase. `MillionInt` is
 	// currently used to convert POKT to uPOKT but this is not clear throughout the codebase.
-	MillionInt = big.NewFloat(1000000)
+	MillionInt = big.NewFloat(1e6)
 )
 
 // TODO(M3): Re-evaluate the implementation in this function when implementing the Application Protocol
