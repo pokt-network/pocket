@@ -5,6 +5,10 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// DOCUMENT: Some of the types through the code based (e.g. Transaction) are defined via serializable
+// files (e.g. .proto files) and add functionality defined in go on top of it (e.g. ITransaction). This
+// a very implicit design pattern that may be non-obvious to new developers.
+
 // CONSIDERATION: Use generics in place of `proto.Message` in the interface below so
 //                every caller does not need to do in place casting.
 type Codec interface {
@@ -14,8 +18,6 @@ type Codec interface {
 	FromAny(*anypb.Any) (proto.Message, error)
 	Clone(proto.Message) proto.Message
 }
-
-type ICodec proto.Message
 
 var _ Codec = &protoCodec{}
 
