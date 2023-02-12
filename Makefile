@@ -483,8 +483,7 @@ localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` +
 	kubectl delete pvc --ignore-not-found=true data-dependencies-postgresql-0
 
 .PHONY: localnet_db_cli
-## Open a CLI to the local containerized postgres instancedb_cli:
-localnet_db_cli:
+localnet_db_cli: ## Open a CLI to the local containerized postgres instancedb_cli:
 	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
 	kubectl exec -it services/dependencies-postgresql -- bash -c "psql postgresql://postgres:LocalNetPassword@localhost"
 
