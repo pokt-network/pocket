@@ -43,7 +43,8 @@ func accountCommands() []*cobra.Command {
 
 				pwd = readPassphrase(pwd)
 
-				pk, err := kb.GetPrivKey(args[0], pwd)
+				fromAddrHex := args[0]
+				pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 				if err != nil {
 					return err
 				}
