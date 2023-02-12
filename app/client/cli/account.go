@@ -2,9 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"path/filepath"
-
-	"github.com/pokt-network/pocket/app/client/keybase"
+	"github.com/pokt-network/pocket/app/client/keybase/debug"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
@@ -37,12 +35,8 @@ func accountCommands() []*cobra.Command {
 			Aliases: []string{"send"},
 			Args:    cobra.ExactArgs(3),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				keybaseDir, err := filepath.Abs(dataDir + "/keys")
-				if err != nil {
-					return err
-				}
-
-				kb, err := keybase.InitialiseKeybase(keybaseDir)
+				// Open the debug keybase at $HOME/.pocket/keys
+				kb, err := debug.NewDebugKeybase(debug.DebugKeybasePath)
 				if err != nil {
 					return err
 				}

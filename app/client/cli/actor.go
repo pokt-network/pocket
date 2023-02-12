@@ -2,12 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"github.com/pokt-network/pocket/app/client/keybase/debug"
 	"math/big"
-	"path/filepath"
 	"regexp"
 	"strings"
 
-	"github.com/pokt-network/pocket/app/client/keybase"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -91,12 +90,8 @@ If the node is currently staked at X and you submit an update with new stake Y. 
 If no changes are desired for the parameter, just enter the current param value just as before.`,
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			keybaseDir, err := filepath.Abs(dataDir + "/keys")
-			if err != nil {
-				return err
-			}
-
-			kb, err := keybase.InitialiseKeybase(keybaseDir)
+			// Open the debug keybase at $HOME/.pocket/keys
+			kb, err := debug.NewDebugKeybase(debug.DebugKeybasePath)
 			if err != nil {
 				return err
 			}
@@ -160,12 +155,8 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Stakes a new <amount> for the %s actor with address <fromAddr> for the specified <relayChainIDs> and <serviceURI>.`, cmdDef.Name),
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			keybaseDir, err := filepath.Abs(dataDir + "/keys")
-			if err != nil {
-				return err
-			}
-
-			kb, err := keybase.InitialiseKeybase(keybaseDir)
+			// Open the debug keybase at $HOME/.pocket/keys
+			kb, err := debug.NewDebugKeybase(debug.DebugKeybasePath)
 			if err != nil {
 				return err
 			}
@@ -226,12 +217,8 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Unstakes the prevously staked tokens for the %s actor with address <fromAddr>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			keybaseDir, err := filepath.Abs(dataDir + "/keys")
-			if err != nil {
-				return err
-			}
-
-			kb, err := keybase.InitialiseKeybase(keybaseDir)
+			// Open the debug keybase at $HOME/.pocket/keys
+			kb, err := debug.NewDebugKeybase(debug.DebugKeybasePath)
 			if err != nil {
 				return err
 			}
@@ -278,12 +265,8 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Unpauses the %s actor with address <fromAddr>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			keybaseDir, err := filepath.Abs(dataDir + "/keys")
-			if err != nil {
-				return err
-			}
-
-			kb, err := keybase.InitialiseKeybase(keybaseDir)
+			// Open the debug keybase at $HOME/.pocket/keys
+			kb, err := debug.NewDebugKeybase(debug.DebugKeybasePath)
 			if err != nil {
 				return err
 			}
