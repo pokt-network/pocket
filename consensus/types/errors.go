@@ -9,6 +9,7 @@ import (
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -80,6 +81,10 @@ func ElectedSelfAsNewLeader(address string, nodeId NodeId, height, round uint64)
 
 func SendingMessage(msg *HotstuffMessage, nodeId NodeId) string {
 	return fmt.Sprintf("✉️ Sending message ✉️ to %d at (height, step, round) (%d, %d, %d)", nodeId, msg.Height, msg.Step, msg.Round)
+}
+
+func SendingStateSyncMessage(nodeId cryptoPocket.Address, height uint64) string {
+	return fmt.Sprintf("🔄 Sending State sync message ✉️ to node %s at height: (%d)  🔄", nodeId, height)
 }
 
 func BroadcastingMessage(msg *HotstuffMessage) string {
@@ -165,6 +170,8 @@ const (
 	sendMessageError                            = "error sending message"
 	broadcastMessageError                       = "error broadcasting message"
 	createConsensusMessageError                 = "error creating consensus message"
+	createStateSyncMessageError                 = "error creating state sync message"
+	blockRetrievalError                         = "couldn't retrieve the block from persistence module"
 	anteValidationError                         = "discarding hotstuff message because ante validation failed"
 	nilLeaderIdError                            = "attempting to send a message to leader when LeaderId is nil"
 	newPersistenceReadContextError              = "error creating new persistence read context"
@@ -202,6 +209,8 @@ var (
 	ErrSendMessage                            = errors.New(sendMessageError)
 	ErrBroadcastMessage                       = errors.New(broadcastMessageError)
 	ErrCreateConsensusMessage                 = errors.New(createConsensusMessageError)
+	ErrCreateStateSyncMessage                 = errors.New(createStateSyncMessageError)
+	ErrBlockRetrievalMessage                  = errors.New(blockRetrievalError)
 	ErrHotstuffValidation                     = errors.New(anteValidationError)
 	ErrNilLeaderId                            = errors.New(nilLeaderIdError)
 	ErrNewPersistenceReadContext              = errors.New(newPersistenceReadContextError)
@@ -239,6 +248,10 @@ func ErrPacemakerUnexpectedMessageStepRound(err error, step HotstuffStep, round 
 
 func ErrUnknownConsensusMessageType(msg any) error {
 	return fmt.Errorf("unknown consensus message type: %v", msg)
+}
+
+func ErrUnknownStateSyncMessageType(msg interface{}) error {
+	return fmt.Errorf("unknown state sync message type: %v", msg)
 }
 
 func ErrCreateProposeMessage(step HotstuffStep) error {

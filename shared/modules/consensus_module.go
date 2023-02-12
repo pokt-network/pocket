@@ -19,17 +19,24 @@ const (
 type ConsensusModule interface {
 	Module
 	KeyholderModule
+
+	ConsensusStateSync
 	ConsensusPacemaker
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
 	// TODO(gokhan): move it into a debug module
 	HandleDebugMessage(*messaging.DebugMessage) error
+	// State Sync messages Handler
+	HandleStateSyncMessage(*anypb.Any) error
 
 	// Consensus State Accessors
 	CurrentHeight() uint64
 	CurrentRound() uint64
 	CurrentStep() uint64
+
+	// State Sync functions
+	EnableServerMode()
 }
 
 // This interface represents functions exposed by the Consensus module for Pacemaker specific business logic.
@@ -59,4 +66,12 @@ type ConsensusPacemaker interface {
 	IsPrepareQCNil() bool
 	GetPrepareQC() (*anypb.Any, error)
 	GetNodeId() uint64
+}
+
+// This interface represents functions exposed by the Consensus module for StateSync specific business logic.
+// These functions are intended to only be called by the StateSync module.
+// INVESTIGATE: This interface enable a fast implementation of state sync but look into a way of removing it in the future
+type ConsensusStateSync interface {
+	GetNodeIdFromNodeAddress(string) (uint64, error)
+	GetNodeAddress() string
 }

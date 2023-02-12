@@ -25,8 +25,12 @@ func GetBlockHashQuery(height int64) string {
 	return fmt.Sprintf(`SELECT hash FROM %s WHERE height=%d`, BlockTableName, height)
 }
 
-func GetLatestBlockHeightQuery() string {
+func GetMaximumBlockHeightQuery() string {
 	return fmt.Sprintf(`SELECT MAX(height) FROM %s`, BlockTableName)
+}
+
+func GetMinimumlockHeightQuery() string {
+	return fmt.Sprintf(`SELECT MIN(height) FROM %s`, BlockTableName)
 }
 
 func ClearAllBlocksQuery() string {

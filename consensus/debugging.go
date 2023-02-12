@@ -2,6 +2,7 @@ package consensus
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
@@ -20,6 +21,10 @@ func (m *consensusModule) HandleDebugMessage(debugMessage *messaging.DebugMessag
 		m.triggerNextView(debugMessage)
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
 		m.togglePacemakerManualMode(debugMessage)
+	case messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ:
+		m.sendGetBlockStateSyncMessage(debugMessage)
+	case messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ:
+		m.sendGetMetadataStateSyncMessage(debugMessage)
 	default:
 		m.logger.Debug().Msgf("Debug message: %s", debugMessage.Message)
 	}
@@ -94,4 +99,60 @@ func (m *consensusModule) togglePacemakerManualMode(_ *messaging.DebugMessage) {
 		m.logger.Debug().Str("pacemaker_mode", "AUTOMATIC").Msg("Toggle pacemaker to AUTOMATIC mode")
 	}
 	m.paceMaker.SetManualMode(newMode)
+}
+
+// requests current block from all validators
+func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage) {
+	currentHeight := m.CurrentHeight()
+	requestHeight := currentHeight - 1
+	peerAddress := m.GetNodeAddress()
+
+	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+		Message: &typesCons.StateSyncMessage_GetBlockReq{
+			GetBlockReq: &typesCons.GetBlockRequest{
+				PeerAddress: peerAddress,
+				Height:      requestHeight,
+			},
+		},
+	}
+
+	validators, err := m.getValidatorsAtHeight(currentHeight)
+	if err != nil {
+		m.logger.Debug().Msgf(typesCons.ErrPersistenceGetAllValidators.Error(), err)
+	}
+
+	for _, val := range validators {
+		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
+		if err := m.stateSync.SendStateSyncMessage(stateSyncGetBlockMessage, valAddress, requestHeight); err != nil {
+			m.logger.Debug().Msgf(typesCons.SendingStateSyncMessage(valAddress, requestHeight), err)
+		}
+	}
+}
+
+// requests metadata from all validators
+func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMessage) {
+	currentHeight := m.CurrentHeight()
+	requestHeight := currentHeight - 1
+	peerAddress := m.GetNodeAddress()
+
+	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
+		Message: &typesCons.StateSyncMessage_MetadataReq{
+			MetadataReq: &typesCons.StateSyncMetadataRequest{
+				PeerAddress: peerAddress,
+			},
+		},
+	}
+
+	validators, err := m.getValidatorsAtHeight(currentHeight)
+	if err != nil {
+		m.logger.Debug().Msgf(typesCons.ErrPersistenceGetAllValidators.Error(), err)
+	}
+
+	for _, val := range validators {
+		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
+		if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, valAddress, requestHeight); err != nil {
+			m.logger.Debug().Msgf(typesCons.SendingStateSyncMessage(valAddress, requestHeight), err)
+		}
+	}
+
 }
