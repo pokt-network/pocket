@@ -17,7 +17,7 @@ func SHA3Hash(bz []byte) []byte {
 	return hasher.Sum(nil)
 }
 
-// Returns hex(SHA3Hash(bytesArgument)); typically used to compute a TransactionHash
+// GetHashStringFromBytes returns hex(SHA3Hash(bytesArgument)); typically used to compute a TransactionHash
 func GetHashStringFromBytes(bytes []byte) string {
 	return hex.EncodeToString(SHA3Hash(bytes))
 }
