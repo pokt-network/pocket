@@ -108,7 +108,7 @@ If no changes are desired for the parameter, just enter the current param value 
 			chains := strings.Split(rawChains, ",")
 			serviceURI := args[3]
 
-			if !notInteractive {
+			if !nonInteractive {
 				// TODO(#484): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 				pwd = readPassphrase(pwd)
 			}
@@ -210,7 +210,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			}
 
 			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
-			if !notInteractive {
+			if !nonInteractive {
 				pwd = readPassphrase(pwd)
 			}
 			msg := &typesUtil.MessageUnstake{
