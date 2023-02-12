@@ -114,7 +114,7 @@ func (u *utilityContext) getBus() modules.Bus {
 	return u.bus
 }
 
-func (u *utilityContext) withBus(bus modules.Bus) *utilityContext {
+func (u *utilityContext) setBus(bus modules.Bus) *utilityContext {
 	u.bus = bus
 	return u
 }
