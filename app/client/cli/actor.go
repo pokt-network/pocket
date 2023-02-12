@@ -109,7 +109,7 @@ If no changes are desired for the parameter, just enter the current param value 
 			serviceURI := args[3]
 
 			if !notInteractive {
-				// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
+				// TODO(#484): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 				pwd = readPassphrase(pwd)
 			}
 			msg := &typesUtil.MessageStake{
