@@ -13,6 +13,7 @@ import (
 // defining the action driving the state transition
 type Message interface {
 	Validatable
+	codec.CodecType
 
 	GetMessageName() string
 	GetMessageRecipient() string
