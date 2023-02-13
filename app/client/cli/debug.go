@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"os"
 
 	"github.com/manifoldco/promptui"
@@ -50,6 +49,7 @@ var (
 	genesisPath string = getEnv("GENESIS_PATH", "build/config/genesis.json")
 )
 
+// NOTE: this is required by the linter, otherwise a simple string constant would have been enough
 type cliContextKey string
 
 const busCLICtxKey = "bus"
@@ -85,7 +85,8 @@ func NewDebugCommand() *cobra.Command {
 				),
 			)
 			modulesRegistry.RegisterModule(addressBookProvider)
-			cmd.SetContext(context.WithValue(cmd.Context(), busCLICtxKey, runtimeMgr.GetBus()))
+
+			setValueInCLIContext(cmd, busCLICtxKey, runtimeMgr.GetBus())
 
 			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider()
 			modulesRegistry.RegisterModule(currentHeightProvider)
@@ -238,7 +239,7 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 
 // fetchAddressBook retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
 func fetchAddressBook(cmd *cobra.Command) (types.AddrBook, error) {
-	bus, ok := cmd.Context().Value(busCLICtxKey).(modules.Bus)
+	bus, ok := getValueFromCLIContext[modules.Bus](cmd, busCLICtxKey)
 	if !ok || bus == nil {
 		logger.Global.Fatal().Msg("Unable to retrieve the bus from CLI context")
 	}
