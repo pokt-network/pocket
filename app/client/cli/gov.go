@@ -2,8 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 
-	"github.com/pokt-network/pocket/app/client/keybase/debug"
+	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -47,8 +49,13 @@ func govCommands() []*cobra.Command {
 				// TODO(deblasis): implement RPC client, route and handler
 				fmt.Printf("changing parameter %s owned by %s to %s\n", args[1], args[0], args[2])
 
-				// Open the debug keybase at $HOME/.pocket/keys
-				kb, err := debug.NewDebugKeybase()
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
 				if err != nil {
 					return err
 				}

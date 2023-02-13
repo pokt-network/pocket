@@ -2,8 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 
-	"github.com/pokt-network/pocket/app/client/keybase/debug"
+	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
@@ -43,8 +45,13 @@ func accountCommands() []*cobra.Command {
 				toAddr := crypto.AddressFromString(args[1])
 				amount := args[2]
 
-				// Open the debug keybase at $HOME/.pocket/keys
-				kb, err := debug.NewDebugKeybase()
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
 				if err != nil {
 					return err
 				}

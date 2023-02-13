@@ -55,7 +55,7 @@ func NewKeybaseInMemory() (Keybase, error) {
 
 // Return DB instance
 // FOR DEBUG PURPOSES ONLY
-func (keybase *badgerKeybase) GetDB() *badger.DB {
+func (keybase *badgerKeybase) GetBadgerDB() *badger.DB {
 	return keybase.db
 }
 

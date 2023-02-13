@@ -8,7 +8,7 @@ import (
 // Keybase interface implements the CRUD operations for the keybase
 type Keybase interface {
 	// Debug
-	GetDB() *badger.DB
+	GetBadgerDB() *badger.DB
 
 	// Close the DB connection
 	Stop() error

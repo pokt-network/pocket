@@ -3,10 +3,11 @@ package cli
 import (
 	"fmt"
 	"math/big"
+	"path/filepath"
 	"regexp"
 	"strings"
 
-	"github.com/pokt-network/pocket/app/client/keybase/debug"
+	"github.com/pokt-network/pocket/app/client/keybase"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -96,8 +97,13 @@ If no changes are desired for the parameter, just enter the current param value 
 			fromAddr := crypto.AddressFromString(args[0])
 			amount := args[1]
 
-			// Open the debug keybase at $HOME/.pocket/keys
-			kb, err := debug.NewDebugKeybase()
+			// Open the keybase at the specified directory
+			pocketDir := strings.TrimSuffix(dataDir, "/")
+			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+			if err != nil {
+				return err
+			}
+			kb, err := keybase.NewKeybase(keybasePath)
 			if err != nil {
 				return err
 			}
@@ -164,8 +170,13 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			fromAddr := crypto.AddressFromString(args[0])
 			amount := args[1]
 
-			// Open the debug keybase at $HOME/.pocket/keys
-			kb, err := debug.NewDebugKeybase()
+			// Open the keybase at the specified directory
+			pocketDir := strings.TrimSuffix(dataDir, "/")
+			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+			if err != nil {
+				return err
+			}
+			kb, err := keybase.NewKeybase(keybasePath)
 			if err != nil {
 				return err
 			}
@@ -227,8 +238,13 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			// Unpack CLI arguments
 			fromAddrHex := args[0]
 
-			// Open the debug keybase at $HOME/.pocket/keys
-			kb, err := debug.NewDebugKeybase()
+			// Open the keybase at the specified directory
+			pocketDir := strings.TrimSuffix(dataDir, "/")
+			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+			if err != nil {
+				return err
+			}
+			kb, err := keybase.NewKeybase(keybasePath)
 			if err != nil {
 				return err
 			}
@@ -278,8 +294,13 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 			// Unpack CLI arguments
 			fromAddrHex := args[0]
 
-			// Open the debug keybase at $HOME/.pocket/keys
-			kb, err := debug.NewDebugKeybase()
+			// Open the keybase at the specified directory
+			pocketDir := strings.TrimSuffix(dataDir, "/")
+			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+			if err != nil {
+				return err
+			}
+			kb, err := keybase.NewKeybase(keybasePath)
 			if err != nil {
 				return err
 			}

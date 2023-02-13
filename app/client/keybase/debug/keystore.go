@@ -3,23 +3,26 @@ package debug
 import (
 	"errors"
 	"fmt"
-	"github.com/pokt-network/pocket/app/client/keybase"
-	"github.com/pokt-network/pocket/shared/crypto"
-	"gopkg.in/yaml.v2"
 	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/pokt-network/pocket/app/client/keybase"
+	"github.com/pokt-network/pocket/shared/crypto"
+	"gopkg.in/yaml.v2"
 )
 
 const (
-	validatorNumber    = 999
-	debugKeybaseSuffix = "/.pocket/keys"
+	validatorNumber     = 999
+	debugKeybaseSuffix  = "/.pocket/keys"
+	privateKeysYamlFile = "../../../../../build/localnet/manifests/private-keys.yaml"
 )
 
 var (
-	DebugKeybasePath string
+	// TODO: Allow users to override this value via `datadir` flag
+	debugKeybasePath string
 )
 
 // Initialise the debug keybase with the 999 validator keys from the private-keys manifest file
@@ -28,19 +31,14 @@ func init() {
 	if err != nil {
 		log.Fatalf("[ERROR] Cannot find user home directory: %s", err.Error())
 	}
-	DebugKeybasePath = homeDir + debugKeybaseSuffix
+	debugKeybasePath = homeDir + debugKeybaseSuffix
 
 	if err := InitialiseDebugKeybase(); err != nil { // Initialise the debug keybase with the 999 validators
 		log.Fatalf("[ERROR] Cannot initialise the keybase with the validator keys: %s", err.Error())
 	}
 }
 
-// Creates/Opens the DB at `$HOME/.pocket/keys`
-func NewDebugKeybase() (keybase.Keybase, error) {
-	return keybase.NewKeybase(DebugKeybasePath)
-}
-
-// Struct to store the private-keys yaml file
+// Struct to process the yaml file of pre-generated private-keys
 type yamlConfig struct {
 	ApiVersion string            `yaml:"apiVersion"`
 	Kind       string            `yaml:"kind"`
@@ -49,13 +47,12 @@ type yamlConfig struct {
 	StringData map[string]string `yaml:"stringData"`
 }
 
-// Creates/Opens the DB and initialises the keys from the YAML file
-// FOR DEV/LOCANET PURPOSES ONLY
+// Creates/Opens the DB and initialises the keys from the pre-generated YAML file of private keys
 func InitialiseDebugKeybase() error {
 	// Get private keys from manifest file
 	_, current, _, _ := runtime.Caller(0)
 	//nolint:gocritic // Use path to find private-keys yaml file from being called in any location in the repo
-	yamlFile := filepath.Join(current, "../../../../../build/localnet/manifests/private-keys.yaml")
+	yamlFile := filepath.Join(current, privateKeysYamlFile)
 
 	if exists, err := fileExists(yamlFile); !exists || err != nil {
 		return fmt.Errorf("Unable to find YAML file: %s", yamlFile)
@@ -73,11 +70,11 @@ func InitialiseDebugKeybase() error {
 	}
 
 	// Create/Open the keybase at `$HOME/.pocket/keys`
-	kb, err := keybase.NewKeybase(DebugKeybasePath)
+	kb, err := keybase.NewKeybase(debugKeybasePath)
 	if err != nil {
 		return err
 	}
-	db := kb.GetDB()
+	db := kb.GetBadgerDB()
 
 	// Add the keys if the keybase contains less than 999
 	curAddr, _, err := kb.GetAll()

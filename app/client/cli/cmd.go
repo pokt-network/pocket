@@ -5,11 +5,15 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/pokt-network/pocket/app/client/keybase/debug"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/spf13/cobra"
 )
 
-const cliExecutableName = "client"
+const (
+	cliExecutableName = "client"
+	keybaseSuffix     = "/keys"
+)
 
 var (
 	remoteCLIURL string
