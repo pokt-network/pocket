@@ -12,7 +12,7 @@ func NewErrFactory(preMsg string) ErrFactory {
 			//  without msg - "LibP2P module error: <wrapped error>"
 			msgStr = fmt.Sprintf(": %s", msg)
 		}
-		// TODO: gracefully handle case(s) where msg and err is emtpy.
+		// TODO: gracefully handle case(s) where msg and err is empty.
 		return fmt.Errorf("%s%s: %w", preMsg, msgStr, err)
 	}
 }

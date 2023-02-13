@@ -38,12 +38,9 @@ func NewLibp2pNetwork(
 	bus modules.Bus,
 	addrBookProvider providers.AddrBookProvider,
 	currentHeightProvider providers.CurrentHeightProvider,
-	host host.Host,
+	host_ host.Host,
 	topic *pubsub.Topic,
 ) (types.Network, error) {
-	// TODO: receive ctx in interface methods (?)
-	//ctx := context.Background()
-
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		log.Fatalf("%s", ErrNetwork("getting staked address book", err))
@@ -51,12 +48,6 @@ func NewLibp2pNetwork(
 
 	addrBookMap := make(types.AddrBookMap)
 	for _, poktPeer := range addrBook {
-		// TODO: (?)
-		// NB: don't add self to address book.
-		//if peer.ID == host.ID() {
-		//	continue
-		//}
-
 		addrBookMap[poktPeer.Address.String()] = poktPeer
 		pubKey, err := identity.PubKeyFromPoktPeer(poktPeer)
 		if err != nil {
@@ -67,18 +58,16 @@ func NewLibp2pNetwork(
 			return nil, ErrNetwork("converting peer info", err)
 		}
 
-		host.Peerstore().AddAddrs(peer.ID, peer.Addrs, DefaultPeerTTL)
-		if err := host.Peerstore().AddPubKey(peer.ID, pubKey); err != nil {
+		host_.Peerstore().AddAddrs(peer.ID, peer.Addrs, DefaultPeerTTL)
+		if err := host_.Peerstore().AddPubKey(peer.ID, pubKey); err != nil {
 			return nil, ErrNetwork("", err)
 		}
-
-		//log.Printf("stdnetwork/libp2p.go:52 | peer: %s", peer)
 	}
 
 	return &libp2pNetwork{
 		// TODO: is it unconventional to set bus here?
 		bus:         bus,
-		host:        host,
+		host:        host_,
 		topic:       topic,
 		addrBookMap: addrBookMap,
 	}, nil
@@ -125,9 +114,7 @@ func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr poktCrypto.Addres
 
 	// TODO: add context to interface methods.
 	ctx := context.Background()
-	//log.Printf("stdnetwork/libp2p.go:99 | peer: %s", peerAddrInfo)
 	stream, err := p2pNet.host.NewStream(ctx, peerAddrInfo.ID, protocol.PoktProtocolID)
-	//log.Printf("stdnetwork/libp2p.go:103 | peerAddrInfo: %s", peerAddrInfo)
 	if err != nil {
 		return ErrNetwork(fmt.Sprintf(
 			"opening a stream (peer address %s)", poktAddr,

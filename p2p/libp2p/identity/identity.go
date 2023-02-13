@@ -73,7 +73,7 @@ func PeerAddrInfoFromPoktPeer(poktPeer *types.NetworkPeer) (peer.AddrInfo, error
 			Addrs: []multiaddr.Multiaddr{
 				peerMultiaddr,
 			},
-		}, err
+		}, nil
 	}
 
 	peerMultiaddr, err = PeerMultiAddrFromServiceURL(poktPeer.ServiceUrl)
