@@ -24,7 +24,7 @@ func main() {
 
 	options := []func(*runtime.Manager){}
 	if bootstrapNodes != nil && *bootstrapNodes != "" {
-		options = append(options, runtime.WithCustomBootstrapNodes(*bootstrapNodes))
+		options = append(options, runtime.WithBootstrapNodes(*bootstrapNodes))
 	}
 
 	runtimeMgr := runtime.NewManagerFromFiles(*configFilename, *genesisFilename, options...)

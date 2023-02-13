@@ -166,7 +166,7 @@ func WithClientDebugMode() func(*Manager) {
 	}
 }
 
-func WithCustomBootstrapNodes(bootstrapNodesCsv string) func(*Manager) {
+func WithBootstrapNodes(bootstrapNodesCsv string) func(*Manager) {
 	return func(b *Manager) {
 		b.config.P2P.BootstrapNodesCsv = bootstrapNodesCsv
 	}
