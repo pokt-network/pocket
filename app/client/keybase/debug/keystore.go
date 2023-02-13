@@ -30,7 +30,7 @@ func init() {
 	}
 	DebugKeybasePath = homeDir + debugKeybaseSuffix
 
-	if err := InitialiseDebugKeybase(DebugKeybasePath); err != nil { // Initialise the debug keybase with the 999 validators
+	if err := InitialiseDebugKeybase(); err != nil { // Initialise the debug keybase with the 999 validators
 		log.Fatalf("[ERROR] Cannot initialise the keybase with the validator keys: %s", err.Error())
 	}
 }
@@ -51,7 +51,7 @@ type yamlConfig struct {
 
 // Creates/Opens the DB and initialises the keys from the YAML file
 // FOR DEV/LOCANET PURPOSES ONLY
-func InitialiseDebugKeybase(path string) error {
+func InitialiseDebugKeybase() error {
 	// Get private keys from manifest file
 	_, current, _, _ := runtime.Caller(0)
 	//nolint:gocritic // Use path to find private-keys yaml file from being called in any location in the repo
@@ -72,8 +72,11 @@ func InitialiseDebugKeybase(path string) error {
 		return err
 	}
 
-	// Create/Open the keybase
+	// Create/Open the keybase at `$HOME/.pocket/keys`
 	kb, err := keybase.NewKeybase(DebugKeybasePath)
+	if err != nil {
+		return err
+	}
 	db := kb.GetDB()
 
 	// Add the keys if the keybase contains less than 999
