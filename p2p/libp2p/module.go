@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/libp2p/go-libp2p"
-	"github.com/libp2p/go-libp2p-pubsub"
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"google.golang.org/protobuf/proto"
@@ -151,6 +151,7 @@ func (mod *libp2pModule) Start() error {
 		return ErrModule("unable to create libp2p host", err)
 	}
 
+	// TODO: conventional logging.
 	log.Printf("Listening on %s...", host.InfoFromHost(mod.host).Addrs)
 
 	// TODO: use RandomSub or GossipSub once we're on more stable ground.
@@ -257,6 +258,9 @@ func (mod *libp2pModule) handleStream(stream network.Stream) {
 	go mod.readStream(stream)
 }
 
+// readStream is intended to be called in a goroutine. It continuously reads from
+// the given stream for handling at the network level. Used for handling "direct"
+// messages (i.e. one specific target node).
 func (mod *libp2pModule) readStream(stream network.Stream) {
 	logger.Global.Printf("libp2p/module.go:194 | *libp2pModule#readStream")
 
@@ -287,6 +291,9 @@ func (mod *libp2pModule) readStream(stream network.Stream) {
 	mod.handleNetworkData(data)
 }
 
+// readFromSubscription is intended to be called in a goroutine. It continuously
+// reads from the subscribed topic in preparation for handling at the network level.
+// Used for "broadcast" messages (i.e. no specific target node).
 func (mod *libp2pModule) readFromSubscription(ctx context.Context) {
 	for {
 		select {

@@ -21,7 +21,8 @@ var (
 	ErrIdentity = common.NewErrFactory("")
 )
 
-// PoktPeerFromStream returns a pokt peer, **without `ServiceURL**, from a libp2p stream.
+// PoktPeerFromStream builds a pokt peer from a libp2p stream.
+// (NOTE: excludes `ServiceURL`)
 func PoktPeerFromStream(stream network.Stream) (*types.NetworkPeer, error) {
 	remotePubKeyBytes, err := stream.Conn().RemotePublicKey().Raw()
 	// NB: abort handling this stream.
@@ -38,9 +39,11 @@ func PoktPeerFromStream(stream network.Stream) (*types.NetworkPeer, error) {
 		PublicKey: poktPubKey,
 		// NB: pokt analogue of libp2p peer.ID
 		Address: poktPubKey.Address(),
+		// TODO: lookup ServiceURL from somewhere?
 	}, nil
 }
 
+// PubKeyFromPoktPeer retrieves the stdlib compatible public key from a pocket peer.
 func PubKeyFromPoktPeer(poktPeer *types.NetworkPeer) (crypto.PubKey, error) {
 	pubKey, err := crypto.UnmarshalEd25519PublicKey(poktPeer.PublicKey.Bytes())
 	if err != nil {
@@ -50,6 +53,7 @@ func PubKeyFromPoktPeer(poktPeer *types.NetworkPeer) (crypto.PubKey, error) {
 	return pubKey, nil
 }
 
+// PeerAddrInfoFromPoktPeer builds a libp2p AddrInfo which maps to the passed pcket peer.
 func PeerAddrInfoFromPoktPeer(poktPeer *types.NetworkPeer) (peer.AddrInfo, error) {
 	pubKey, err := PubKeyFromPoktPeer(poktPeer)
 	if err != nil {
@@ -62,7 +66,8 @@ func PeerAddrInfoFromPoktPeer(poktPeer *types.NetworkPeer) (peer.AddrInfo, error
 	}
 
 	// NB: test if service URL hostname is an IP address or an FQDN
-	peerUrl, err := url.Parse("ip://" + poktPeer.ServiceUrl)
+	// NB: hard-code a scheme for URL parsing to work.
+	peerUrl, err := url.Parse("scheme://" + poktPeer.ServiceUrl)
 	if err != nil {
 		return peer.AddrInfo{}, ErrIdentity(fmt.Sprintf(
 			"unable to parse peer service URL: %s", poktPeer.ServiceUrl,

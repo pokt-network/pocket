@@ -7,6 +7,8 @@ import (
 	poktCrypto "github.com/pokt-network/pocket/shared/crypto"
 )
 
+// NewLibP2PPrivateKey converts a hex-encoded ed25519d key
+// string into a libp2p compatible Private Key.
 func NewLibP2PPrivateKey(hexString string) (crypto.PrivKey, error) {
 	keyBytes, err := hex.DecodeString(hexString)
 	if err != nil {

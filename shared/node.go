@@ -32,7 +32,6 @@ func CreateNode(bus modules.Bus) (modules.Module, error) {
 }
 
 func (m *Node) Create(bus modules.Bus) (modules.Module, error) {
-	// TODO: comment and replace this todo
 	p2pConfig := bus.GetRuntimeMgr().GetConfig().P2P
 	p2pCreate := p2p.Create
 	if p2pConfig.UseLibP2P {
