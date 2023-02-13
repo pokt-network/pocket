@@ -27,9 +27,9 @@ func (u *utilityModule) HandleMessage(message *anypb.Any) error {
 			return err
 		}
 
-		if transactionGossipMsg, ok := msg.(*types.TransactionGossipMessage); !ok {
+		if txGossipMsg, ok := msg.(*types.TransactionGossipMessage); !ok {
 			return fmt.Errorf("failed to cast message to UtilityMessage")
-		} else if err := u.CheckTransaction(transactionGossipMsg.Tx); err != nil {
+		} else if err := u.CheckTransaction(txGossipMsg.Tx); err != nil {
 			return err
 		}
 

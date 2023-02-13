@@ -109,11 +109,11 @@ func (tx *Transaction) Hash() (string, Error) {
 
 // The bytes of the transaction that should have been signed.
 func (tx *Transaction) SignableBytes() ([]byte, error) {
-	// This is not simply `tx.Message().GetCanonicalBytes()` because the transaction also contains
+	// This is not simply `tx.Message().GetCanonicalBytes()` because the txCopy also contains
 	// other metadata such as the nonce which has to be part signed as well.
-	transaction := codec.GetCodec().Clone(tx).(*Transaction)
-	transaction.Signature = nil
-	return codec.GetCodec().Marshal(transaction)
+	txCopy := codec.GetCodec().Clone(tx).(*Transaction)
+	txCopy.Signature = nil
+	return codec.GetCodec().Marshal(txCopy)
 }
 
 func (tx *Transaction) Bytes() ([]byte, error) {

@@ -38,10 +38,10 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 	}, nil
 }
 
-func (p *utilityContext) SetProposalBlock(blockHash string, proposerAddr []byte, transactions [][]byte) error {
+func (p *utilityContext) SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error {
 	p.proposalProposerAddr = proposerAddr
 	p.proposalStateHash = blockHash
-	p.proposalBlockTxs = transactions
+	p.proposalBlockTxs = txs
 	return nil
 }
 
@@ -96,15 +96,15 @@ func (u *utilityContext) revertLastSavePoint() typesUtil.Error {
 }
 
 //nolint:unused // TODO: This has not been tested or investigated in detail
-func (u *utilityContext) newSavePoint(transactionHash []byte) typesUtil.Error {
-	if err := u.persistenceContext.NewSavePoint(transactionHash); err != nil {
+func (u *utilityContext) newSavePoint(txHashBz []byte) typesUtil.Error {
+	if err := u.persistenceContext.NewSavePoint(txHashBz); err != nil {
 		return typesUtil.ErrNewSavePoint(err)
 	}
-	txHash := hex.EncodeToString(transactionHash)
+	txHash := hex.EncodeToString(txHashBz)
 	if _, exists := u.savePointsSet[txHash]; exists {
 		return typesUtil.ErrDuplicateSavePoint()
 	}
-	u.savePointsList = append(u.savePointsList, transactionHash)
+	u.savePointsList = append(u.savePointsList, txHashBz)
 	u.savePointsSet[txHash] = struct{}{}
 	return nil
 }

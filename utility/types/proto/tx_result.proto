@@ -8,16 +8,17 @@ import "transaction.proto";
 
 // INVESTIGATE: Look into a way of removing this type altogether or from shared interfaces.
 
-message TransactionResult {
+message TxResult {
   uint32 code = 1;
   bytes signer = 2;
   bytes recipient = 3;
   string message_type = 4;
   int64 height = 5;
   uint32 index = 6;
-  utility.Transaction transaction = 7;
+  utility.Transaction tx = 7;
 }
 
+// TECHDEBT: Re-evaluate the need for this type altogether
 message DefaultTxResult {
   bytes tx = 1;      // The bytes of the indexed transaction
   int64 height = 2;  // The block height at which the transaction was included

@@ -36,12 +36,12 @@ type UtilityContext interface {
 	// For example, both block proposers and replicas/verifiers will use it to create a
 	// context (before finalizing it) during consensus, and all verifiers will call it during state sync.
 	// TODO: Replace []byte with semantic type
-	SetProposalBlock(blockHash string, proposerAddr []byte, transactions [][]byte) error
+	SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error
 	// Reaps the mempool for transactions to be proposed in a new block, and applies them to this
 	// context.
 	// Only intended to be used by the block proposer.
 	// TODO: Replace []byte with semantic type
-	CreateAndApplyProposalBlock(proposer []byte, maxTxBytes int) (stateHash string, transactions [][]byte, err error)
+	CreateAndApplyProposalBlock(proposer []byte, maxTxBytes int) (stateHash string, txs [][]byte, err error)
 	// Applies the proposed local state (i.e. the transactions in the current context).
 	// Only intended to be used by the block verifiers (i.e. replicas).
 	ApplyBlock() (stateHash string, err error)

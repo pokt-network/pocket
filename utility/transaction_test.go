@@ -38,7 +38,7 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 
 	tx, startingBalance, amount, signer := newTestingTransaction(t, ctx)
-	txResult, err := ctx.applyTransaction(0, tx)
+	txResult, err := ctx.applyTx(0, tx)
 	require.NoError(t, err)
 	require.Equal(t, int32(0), txResult.GetResultCode())
 	require.Equal(t, "", txResult.GetError())
@@ -132,7 +132,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), "unexpected recipient balance")
 }
 
-func newTestingTransaction(t *testing.T, ctx *utilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
+func newTestingTransaction(t *testing.T, ctx *utilityContext) (tx *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
 	amountSent = new(big.Int).Set(defaultSendAmount)
 	startingBalance = new(big.Int).Set(test_artifacts.DefaultAccountAmount)
 
@@ -149,11 +149,11 @@ func newTestingTransaction(t *testing.T, ctx *utilityContext) (transaction *type
 	any, err := codec.GetCodec().ToAny(&msg)
 	require.NoError(t, err)
 
-	transaction = &typesUtil.Transaction{
+	tx = &typesUtil.Transaction{
 		Msg:   any,
 		Nonce: testNonce,
 	}
-	require.NoError(t, transaction.Sign(signer))
+	require.NoError(t, tx.Sign(signer))
 
 	return
 }

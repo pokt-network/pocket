@@ -11,20 +11,18 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-/*
-	This 'block' file contains all the lifecycle block operations.
+// This 'block' file contains all the lifecycle block operations.
 
-	The ApplyBlock function is the 'main' operation that executes a 'block' object against the state.
+// The ApplyBlock function is the 'main' operation that executes a 'block' object against the state.
 
-	Pocket Network adopt a Tendermint-like lifecycle of BeginBlock -> DeliverTx -> EndBlock in that
-	order. Like the name suggests, BeginBlock is an autonomous state operation that executes at the
-	beginning of every block DeliverTx individually applies each transaction against the state and
-	rolls it back (not yet implemented) if fails. Like BeginBlock, EndBlock is an autonomous state
-	operation that executes at the end of every block.
-*/
+// Pocket Network adopt a Tendermint-like lifecycle of BeginBlock -> DeliverTx -> EndBlock in that
+// order. Like the name suggests, BeginBlock is an autonomous state operation that executes at the
+// beginning of every block DeliverTx individually applies each transaction against the state and
+// rolls it back (not yet implemented) if fails. Like BeginBlock, EndBlock is an autonomous state
+// operation that executes at the end of every block.
 
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
-func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (stateHash string, transactions [][]byte, err error) {
+func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (stateHash string, txs [][]byte, err error) {
 	lastBlockByzantineVals, err := u.getLastBlockByzantineValidators()
 	if err != nil {
 		return "", nil, err
@@ -33,7 +31,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	if err := u.beginBlock(lastBlockByzantineVals); err != nil {
 		return "", nil, err
 	}
-	transactions = make([][]byte, 0)
+	txs = make([][]byte, 0)
 	totalTxsSizeInBytes := 0
 	txIndex := 0
 
@@ -43,21 +41,21 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		if err != nil {
 			return "", nil, err
 		}
-		transaction, err := typesUtil.TxFromBytes(txBytes)
+		tx, err := typesUtil.TxFromBytes(txBytes)
 		if err != nil {
 			return "", nil, err
 		}
 		txTxsSizeInBytes := len(txBytes)
 		totalTxsSizeInBytes += txTxsSizeInBytes
 		if totalTxsSizeInBytes >= maxTransactionBytes {
-			// Add back popped transaction to be applied in a future block
+			// Add back popped tx to be applied in a future block
 			err := mempool.AddTx(txBytes)
 			if err != nil {
 				return "", nil, err
 			}
 			break // we've reached our max
 		}
-		txResult, err := u.applyTransaction(txIndex, transaction)
+		txResult, err := u.applyTx(txIndex, tx)
 		if err != nil {
 			// TODO(#327): Properly implement 'unhappy path' for save points
 			if err := u.revertLastSavePoint(); err != nil {
@@ -70,7 +68,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			u.logger.Fatal().Err(err).Msgf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
 		}
 
-		transactions = append(transactions, txBytes)
+		txs = append(txs, txBytes)
 		txIndex++
 	}
 
@@ -84,7 +82,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	}
 	u.logger.Info().Msgf("CreateAndApplyProposalBlock - computed state hash: %s", stateHash)
 
-	return stateHash, transactions, err
+	return stateHash, txs, err
 }
 
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
@@ -101,8 +99,8 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 	}
 
 	// deliver txs lifecycle phase
-	for index, transactionProtoBytes := range u.proposalBlockTxs {
-		tx, err := typesUtil.TxFromBytes(transactionProtoBytes)
+	for index, txProtoBytes := range u.proposalBlockTxs {
+		tx, err := typesUtil.TxFromBytes(txProtoBytes)
 		if err != nil {
 			return "", err
 		}
@@ -114,7 +112,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 		//             Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 
 		// Validate and apply the transaction to the Postgres database
-		txResult, err := u.applyTransaction(index, tx)
+		txResult, err := u.applyTx(index, tx)
 		if err != nil {
 			return "", err
 		}
@@ -125,7 +123,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 
 		// TODO: if found, remove transaction from mempool.
 		// DISCUSS: What if the context is rolled back or cancelled. Do we add it back to the mempool?
-		// if err := u.Mempool.RemoveTransaction(transaction); err != nil {
+		// if err := u.Mempool.RemoveTx(tx); err != nil {
 		// 	return nil, err
 		// }
 	}

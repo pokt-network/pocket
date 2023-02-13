@@ -150,8 +150,8 @@ And minimally satisfy the following interface:
 
 ```go
 CheckTransaction(tx []byte) error
-GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)
-ApplyBlock(Height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
+GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (txs [][]byte, err error)
+ApplyBlock(Height int64, proposer []byte, txs [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
 ```
 
 ## How to build

@@ -26,13 +26,13 @@ func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	}
 
 	// Can the tx be decoded?
-	transaction := &typesUtil.Transaction{}
-	if err := codec.GetCodec().Unmarshal(txProtoBytes, transaction); err != nil {
+	tx := &typesUtil.Transaction{}
+	if err := codec.GetCodec().Unmarshal(txProtoBytes, tx); err != nil {
 		return typesUtil.ErrProtoUnmarshal(err)
 	}
 
 	// Does the tx pass basic validation?
-	if err := transaction.ValidateBasic(); err != nil {
+	if err := tx.ValidateBasic(); err != nil {
 		return err
 	}
 
@@ -40,7 +40,7 @@ func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	return u.mempool.AddTx(txProtoBytes)
 }
 
-func (u *utilityContext) applyTransaction(index int, tx *typesUtil.Transaction) (modules.TxResult, typesUtil.Error) {
+func (u *utilityContext) applyTx(index int, tx *typesUtil.Transaction) (modules.TxResult, typesUtil.Error) {
 	msg, signer, err := u.anteHandleMessage(tx)
 	if err != nil {
 		return nil, err
