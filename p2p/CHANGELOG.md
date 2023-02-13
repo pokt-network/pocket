@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.26] - 2023-02-13
+
+- Add a new libp2p-based P2P modules.Module implementation in p2p/libp2p.
+- Add a new types.Network implemenation.
+- Add a new types.Transport.
+
 ## [0.0.0.25] - 2023-02-09
 
 - Updated logging initialization and passing to the network component instead of using the global logger
