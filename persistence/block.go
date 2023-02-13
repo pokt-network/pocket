@@ -12,8 +12,6 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
-// INCOMPLETE(olshansky): Need to think through how we will handle pruned vs non-pruned txIndexers.
-// Olshansky to research and document all the details here.
 func (p *persistenceModule) TransactionExists(transactionHash string) (bool, error) {
 	hash, err := hex.DecodeString(transactionHash)
 	if err != nil {
@@ -32,7 +30,7 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 func (p *PostgresContext) GetMinimumBlockHeight() (latestHeight uint64, err error) {
 	ctx, tx := p.getCtxAndTx()
 
-	err = tx.QueryRow(ctx, types.GetMinimumlockHeightQuery()).Scan(&latestHeight)
+	err = tx.QueryRow(ctx, types.GetMinimumBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
 

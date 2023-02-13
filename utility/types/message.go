@@ -13,6 +13,9 @@ import (
 // defining the action driving the state transition
 type Message interface {
 	Validatable
+
+	// TECHDEBT: This is necessary for us to be able to apply some `proto` specific transformations
+	//           on types conforming to this interface
 	codec.CodecType
 
 	GetMessageName() string
