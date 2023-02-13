@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	prefetchSize       = 15
 	validatorNumber    = 999
 	debugKeybaseSuffix = "/.pocket/keys"
 )
