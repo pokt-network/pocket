@@ -3,7 +3,6 @@ package stdnetwork
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
@@ -19,6 +18,7 @@ import (
 )
 
 type libp2pNetwork struct {
+	log         modules.Logger
 	bus         modules.Bus
 	host        host.Host
 	topic       *pubsub.Topic
@@ -38,12 +38,13 @@ func NewLibp2pNetwork(
 	bus modules.Bus,
 	addrBookProvider providers.AddrBookProvider,
 	currentHeightProvider providers.CurrentHeightProvider,
+	log modules.Logger,
 	host_ host.Host,
 	topic *pubsub.Topic,
 ) (types.Network, error) {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		log.Fatalf("%s", ErrNetwork("getting staked address book", err))
+		log.Fatal().Err(err).Msg("getting staked address book")
 	}
 
 	addrBookMap := make(types.AddrBookMap)
@@ -65,6 +66,7 @@ func NewLibp2pNetwork(
 	}
 
 	return &libp2pNetwork{
+		log: log,
 		// TODO: is it unconventional to set bus here?
 		bus:         bus,
 		host:        host_,
@@ -128,8 +130,7 @@ func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr poktCrypto.Addres
 	}
 	defer func() {
 		if err := stream.Close(); err != nil {
-			// TODO: conventional error handling.
-			log.Printf("%v", ErrNetwork("closing stream", err))
+			p2pNet.log.Error().Err(err)
 		}
 	}()
 

@@ -8,11 +8,11 @@ func NewErrFactory(preMsg string) ErrFactory {
 	return func(msg string, err error) error {
 		msgStr := ""
 		if msg != "" {
-			// NB: with msg - "LibP2P module error: <msg>: <wrapped error>"
-			//  without msg - "LibP2P module error: <wrapped error>"
+			// NB: with msg - "<preMsg>: <msg>: <wrapped error>"
+			//  without msg - "<preMsg>: <wrapped error>"
 			msgStr = fmt.Sprintf(": %s", msg)
 		}
-		// TODO: gracefully handle case(s) where msg and err is empty.
+		// TODO: gracefully handle case(s) where preMsg, msg, and/or err are empty.
 		return fmt.Errorf("%s%s: %w", preMsg, msgStr, err)
 	}
 }
