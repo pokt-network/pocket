@@ -18,7 +18,7 @@ import (
 )
 
 type libp2pNetwork struct {
-	log         modules.Logger
+	log         *modules.Logger
 	bus         modules.Bus
 	host        host.Host
 	topic       *pubsub.Topic
@@ -38,7 +38,7 @@ func NewLibp2pNetwork(
 	bus modules.Bus,
 	addrBookProvider providers.AddrBookProvider,
 	currentHeightProvider providers.CurrentHeightProvider,
-	log modules.Logger,
+	log *modules.Logger,
 	host_ host.Host,
 	topic *pubsub.Topic,
 ) (types.Network, error) {

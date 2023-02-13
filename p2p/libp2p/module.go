@@ -32,7 +32,7 @@ import (
 var _ modules.P2PModule = &libp2pModule{}
 
 type libp2pModule struct {
-	log                   modules.Logger
+	log                   *modules.Logger
 	bus                   modules.Bus
 	cfg                   *configs.P2PConfig
 	addrBookProvider      providers.AddrBookProvider
@@ -87,6 +87,7 @@ func (mod *libp2pModule) Create(bus modules.Bus) (modules.Module, error) {
 
 func (mod *libp2pModule) CreateWithProviders(bus modules.Bus, addrBookProvider addrbook_provider.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
 	*mod = libp2pModule{
+		log:                   new(modules.Logger),
 		addrBookProvider:      addrBookProvider,
 		currentHeightProvider: currentHeightProvider,
 	}
@@ -128,7 +129,7 @@ func (mod *libp2pModule) CreateWithProviders(bus modules.Bus, addrBookProvider a
 }
 
 func (mod *libp2pModule) Start() error {
-	mod.log = logger.Global.CreateLoggerForModule("P2P")
+	*mod.log = logger.Global.CreateLoggerForModule("P2P")
 
 	// TODO: receive context in interface methods?
 	ctx := context.Background()
