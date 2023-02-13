@@ -1,9 +1,15 @@
 package keybase
 
-import "github.com/pokt-network/pocket/shared/crypto"
+import (
+	"github.com/dgraph-io/badger/v3"
+	"github.com/pokt-network/pocket/shared/crypto"
+)
 
 // Keybase interface implements the CRUD operations for the keybase
 type Keybase interface {
+	// Debug
+	GetDB() *badger.DB
+
 	// Close the DB connection
 	Stop() error
 

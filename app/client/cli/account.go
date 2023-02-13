@@ -36,7 +36,7 @@ func accountCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(3),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				// Open the debug keybase at $HOME/.pocket/keys
-				kb, err := debug.NewDebugKeybase(debug.DebugKeybasePath)
+				kb, err := debug.NewDebugKeybase()
 				if err != nil {
 					return err
 				}

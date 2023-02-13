@@ -91,7 +91,7 @@ If no changes are desired for the parameter, just enter the current param value 
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Open the debug keybase at $HOME/.pocket/keys
-			kb, err := debug.NewDebugKeybase(debug.DebugKeybasePath)
+			kb, err := debug.NewDebugKeybase()
 			if err != nil {
 				return err
 			}
@@ -157,7 +157,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Open the debug keybase at $HOME/.pocket/keys
-			kb, err := debug.NewDebugKeybase(debug.DebugKeybasePath)
+			kb, err := debug.NewDebugKeybase()
 			if err != nil {
 				return err
 			}
@@ -220,7 +220,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Open the debug keybase at $HOME/.pocket/keys
-			kb, err := debug.NewDebugKeybase(debug.DebugKeybasePath)
+			kb, err := debug.NewDebugKeybase()
 			if err != nil {
 				return err
 			}
@@ -269,7 +269,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Open the debug keybase at $HOME/.pocket/keys
-			kb, err := debug.NewDebugKeybase(debug.DebugKeybasePath)
+			kb, err := debug.NewDebugKeybase()
 			if err != nil {
 				return err
 			}

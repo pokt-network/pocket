@@ -53,6 +53,12 @@ func NewKeybaseInMemory() (Keybase, error) {
 	return &badgerKeybase{db: db}, nil
 }
 
+// Return DB instance
+// FOR DEBUG PURPOSES ONLY
+func (keybase *badgerKeybase) GetDB() *badger.DB {
+	return keybase.db
+}
+
 // Close the DB
 func (keybase *badgerKeybase) Stop() error {
 	return keybase.db.Close()

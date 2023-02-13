@@ -1,11 +1,8 @@
 package debug
 
 import (
-	"bytes"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"gopkg.in/yaml.v2"
@@ -14,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 )
 
 const (
@@ -26,11 +22,6 @@ const (
 var (
 	DebugKeybasePath string
 )
-
-// Errors
-func ErrorAddrNotFound(addr string) error {
-	return fmt.Errorf("No key found with address: %s", addr)
-}
 
 // Initialise the debug keybase with the 999 validator keys from the private-keys manifest file
 func init() {
@@ -45,25 +36,9 @@ func init() {
 	}
 }
 
-// badgerKeybase implements the KeyBase interface
-var _ keybase.Keybase = &debugBadgerKeybase{}
-
-// badgerKeybase implements the Keybase struct using the BadgerDB backend
-type debugBadgerKeybase struct {
-	db *badger.DB
-}
-
 // Creates/Opens the DB at `$HOME/.pocket/keys`
-func NewDebugKeybase(path string) (keybase.Keybase, error) {
-	pathExists, err := dirExists(path) // Creates path if it doesn't exist
-	if err != nil || !pathExists {
-		return nil, err
-	}
-	db, err := badger.Open(badgerOptions(path))
-	if err != nil {
-		return nil, err
-	}
-	return &debugBadgerKeybase{db: db}, nil
+func NewDebugKeybase() (keybase.Keybase, error) {
+	return keybase.NewKeybase(DebugKeybasePath)
 }
 
 // Struct to store the private-keys yaml file
@@ -99,15 +74,8 @@ func InitialiseDebugKeybase(path string) error {
 	}
 
 	// Create/Open the keybase
-	pathExists, err := dirExists(path) // Creates path if it doesn't exist
-	if err != nil || !pathExists {
-		return err
-	}
-	db, err := badger.Open(badgerOptions(path))
-	if err != nil {
-		return err
-	}
-	kb := &debugBadgerKeybase{db: db}
+	kb, err := keybase.NewKeybase(DebugKeybasePath)
+	db := kb.GetDB()
 
 	// Add the keys if the keybase contains less than 999
 	curAddr, _, err := kb.GetAll()
@@ -149,309 +117,6 @@ func InitialiseDebugKeybase(path string) error {
 	}
 
 	return nil
-}
-
-// Close the DB
-func (kb *debugBadgerKeybase) Stop() error {
-	return kb.db.Close()
-}
-
-// Create a new key and store the serialised KeyPair encoding in the DB
-// Using the PublicKey.Address() return value as the key for storage
-func (kb *debugBadgerKeybase) Create(passphrase, hint string) error {
-	err := kb.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.CreateNewKey(passphrase, hint)
-		if err != nil {
-			return err
-		}
-
-		// Use key address as key in DB
-		addrKey := keyPair.GetAddressBytes()
-
-		// Encode KeyPair into []byte for value
-		keypairBz, err := keyPair.Marshal()
-		if err != nil {
-			return err
-		}
-
-		return tx.Set(addrKey, keypairBz)
-	})
-
-	return err
-}
-
-// Create a new KeyPair from the private key hex string and store the serialised KeyPair encoding in the DB
-// Using the PublicKey.Address() return value as the key for storage
-func (kb *debugBadgerKeybase) ImportFromString(privKeyHex, passphrase, hint string) error {
-	err := kb.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.CreateNewKeyFromString(privKeyHex, passphrase, hint)
-		if err != nil {
-			return err
-		}
-
-		// Use key address as key in DB
-		addrKey := keyPair.GetAddressBytes()
-
-		// Encode KeyPair into []byte for value
-		keypairBz, err := keyPair.Marshal()
-		if err != nil {
-			return err
-		}
-
-		return tx.Set(addrKey, keypairBz)
-	})
-
-	return err
-}
-
-// Create a new KeyPair from the private key JSON string and store the serialised KeyPair encoding in the DB
-// Using the PublicKey.Address() return value as the key for storage
-func (kb *debugBadgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
-	err := kb.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.ImportKeyFromJSON(jsonStr, passphrase)
-		if err != nil {
-			return err
-		}
-
-		// Use key address as key in DB
-		addrKey := keyPair.GetAddressBytes()
-
-		// Encode KeyPair into []byte for value
-		keypairBz, err := keyPair.Marshal()
-		if err != nil {
-			return err
-		}
-
-		return tx.Set(addrKey, keypairBz)
-	})
-
-	return err
-}
-
-// Returns a KeyPair struct provided the address was found in the DB
-func (kb *debugBadgerKeybase) Get(address string) (crypto.KeyPair, error) {
-	kp := crypto.GetKeypair()
-	addrBz, err := hex.DecodeString(address)
-	if err != nil {
-		return nil, err
-	}
-
-	err = kb.db.View(func(tx *badger.Txn) error {
-		item, err := tx.Get(addrBz)
-		if err != nil && strings.Contains(err.Error(), "not found") {
-			return ErrorAddrNotFound(address)
-		} else if err != nil {
-			return err
-		}
-
-		value, err := item.ValueCopy(nil)
-		if err != nil {
-			return err
-		}
-
-		// Decode []byte value back into KeyPair
-		if err := kp.Unmarshal(value); err != nil {
-			return err
-		}
-
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return kp, nil
-}
-
-// Returns a PublicKey interface provided the address was found in the DB
-func (kb *debugBadgerKeybase) GetPubKey(address string) (crypto.PublicKey, error) {
-	kp, err := kb.Get(address)
-	if err != nil {
-		return nil, err
-	}
-
-	return kp.GetPublicKey(), nil
-}
-
-// Returns a PrivateKey interface provided the address was found in the DB and the passphrase was correct
-func (kb *debugBadgerKeybase) GetPrivKey(address, passphrase string) (crypto.PrivateKey, error) {
-	kp, err := kb.Get(address)
-	if err != nil {
-		return nil, err
-	}
-
-	privKey, err := kp.Unarmour(passphrase)
-	if err != nil {
-		return nil, err
-	}
-
-	return privKey, nil
-}
-
-// Get all the addresses and key pairs stored in the keybase
-// Returns addresses stored and all the KeyPair structs stored in the DB
-func (kb *debugBadgerKeybase) GetAll() (addresses []string, keyPairs []crypto.KeyPair, err error) {
-	// View executes the function provided managing a read only transaction
-	err = kb.db.View(func(tx *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchSize = prefetchSize
-		it := tx.NewIterator(opts)
-		defer it.Close()
-		for it.Rewind(); it.Valid(); it.Next() {
-			item := it.Item()
-			err := item.Value(func(val []byte) error {
-				b := make([]byte, len(val))
-				copy(b, val)
-
-				// Decode []byte value back into KeyPair
-				kp := crypto.GetKeypair()
-				if err := kp.Unmarshal(b); err != nil {
-					return err
-				}
-
-				addresses = append(addresses, kp.GetAddressString())
-				keyPairs = append(keyPairs, kp)
-				return nil
-			})
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return addresses, keyPairs, nil
-}
-
-// Check whether an address is currently stored in the DB
-func (kb *debugBadgerKeybase) Exists(address string) (bool, error) {
-	val, err := kb.Get(address)
-	if err != nil {
-		return false, err
-	}
-	return val != nil, nil
-}
-
-// Export the Private Key string of the given address
-func (kb *debugBadgerKeybase) ExportPrivString(address, passphrase string) (string, error) {
-	kp, err := kb.Get(address)
-	if err != nil {
-		return "", err
-	}
-	return kp.ExportString(passphrase)
-}
-
-// Export the Private Key of the given address as a JSON object
-func (kb *debugBadgerKeybase) ExportPrivJSON(address, passphrase string) (string, error) {
-	kp, err := kb.Get(address)
-	if err != nil {
-		return "", err
-	}
-	return kp.ExportJSON(passphrase)
-}
-
-func (kb *debugBadgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassphrase, hint string) error {
-	// Check the oldPassphrase is correct
-	privKey, err := kb.GetPrivKey(address, oldPassphrase)
-	if err != nil {
-		return err
-	}
-	privStr := privKey.String()
-
-	addrBz, err := hex.DecodeString(address)
-	if err != nil {
-		return err
-	}
-
-	err = kb.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.CreateNewKeyFromString(privStr, newPassphrase, hint)
-		if err != nil {
-			return err
-		}
-
-		// Use key address as key in DB
-		addrKey := keyPair.GetAddressBytes()
-		if !bytes.Equal(addrKey, addrBz) {
-			return fmt.Errorf("Key address does not match previous address.")
-		}
-
-		// Encode KeyPair into []byte for value
-		keypairBz, err := keyPair.Marshal()
-		if err != nil {
-			return err
-		}
-
-		return tx.Set(addrKey, keypairBz)
-	})
-
-	return err
-}
-
-// Sign a message using the key address provided
-func (kb *debugBadgerKeybase) Sign(address, passphrase string, msg []byte) ([]byte, error) {
-	privKey, err := kb.GetPrivKey(address, passphrase)
-	if err != nil {
-		return nil, err
-	}
-	return privKey.Sign(msg)
-}
-
-// Verify a message has been signed correctly
-func (kb *debugBadgerKeybase) Verify(address string, msg, sig []byte) (bool, error) {
-	kp, err := kb.Get(address)
-	if err != nil {
-		return false, err
-	}
-	pubKey := kp.GetPublicKey()
-	return pubKey.Verify(msg, sig), nil
-}
-
-// Remove a KeyPair from the DB given the address
-func (kb *debugBadgerKeybase) Delete(address, passphrase string) error {
-	if _, err := kb.GetPrivKey(address, passphrase); err != nil {
-		return err
-	}
-
-	addrBz, err := hex.DecodeString(address)
-	if err != nil {
-		return err
-	}
-
-	err = kb.db.Update(func(tx *badger.Txn) error {
-		return tx.Delete(addrBz)
-	})
-	return err
-}
-
-// Return badger.Options for the given DB path - disable logging
-func badgerOptions(path string) badger.Options {
-	opts := badger.DefaultOptions(path)
-	opts.Logger = nil // Badger logger is very noisy
-	return opts
-}
-
-// Check directory exists and creates path if it doesn't exist
-func dirExists(path string) (bool, error) {
-	stat, err := os.Stat(path)
-	if err == nil {
-		// Exists but not directory
-		if !stat.IsDir() {
-			return false, fmt.Errorf("Keybase path is not a directory: %s", path)
-		}
-		return true, nil
-	}
-	if errors.Is(err, fs.ErrNotExist) {
-		// Create directories in path recursively
-		if err := os.MkdirAll(path, os.ModePerm); err != nil {
-			return false, fmt.Errorf("Error creating directory at path: %s, (%v)", path, err.Error())
-		}
-		return true, nil
-	}
-	return false, err
 }
 
 // Check file at the given path exists

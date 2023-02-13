@@ -39,7 +39,7 @@ func govCommands() []*cobra.Command {
 				fmt.Printf("changing parameter %s owned by %s to %s\n", args[1], args[0], args[2])
 
 				// Open the debug keybase at $HOME/.pocket/keys
-				kb, err := debug.NewDebugKeybase(debug.DebugKeybasePath)
+				kb, err := debug.NewDebugKeybase()
 				if err != nil {
 					return err
 				}
