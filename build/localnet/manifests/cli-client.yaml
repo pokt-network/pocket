@@ -65,6 +65,7 @@ spec:
               value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
             - name: POCKET_PERSISTENCE_NODE_SCHEMA
               value: validator1
+              # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
             - name: RPC_HOST
               value: v1-validator001
           volumeMounts:
