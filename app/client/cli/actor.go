@@ -71,7 +71,7 @@ func newActorCommands(cmdDef actorCmdDef) []*cobra.Command {
 		newUnstakeCmd(cmdDef),
 		newUnpauseCmd(cmdDef),
 	}
-	applySubcommandOptions(cmds, cmdDef)
+	applySubcommandOptions(cmds, cmdDef.Options)
 	return cmds
 }
 

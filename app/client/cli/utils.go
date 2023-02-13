@@ -160,9 +160,9 @@ func validateStakeAmount(amount string) error {
 	return nil
 }
 
-func applySubcommandOptions(cmds []*cobra.Command, cmdDef actorCmdDef) {
+func applySubcommandOptions(cmds []*cobra.Command, cmdOptions []cmdOption) {
 	for _, cmd := range cmds {
-		for _, opt := range cmdDef.Options {
+		for _, opt := range cmdOptions {
 			opt(cmd)
 		}
 	}
