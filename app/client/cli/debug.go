@@ -50,12 +50,9 @@ var (
 	genesisPath string = getEnv("GENESIS_PATH", "build/config/genesis.json")
 )
 
-type ctxKey int
+type cliContextKey string
 
-const (
-	addrBookProviderCtxKey ctxKey = iota
-	currentHeightProviderCtxKey
-)
+const busCLICtxKey = "bus"
 
 func getEnv(key, defaultValue string) string {
 	if value, ok := os.LookupEnv(key); ok {
@@ -88,12 +85,10 @@ func NewDebugCommand() *cobra.Command {
 				),
 			)
 			modulesRegistry.RegisterModule(addressBookProvider)
-			cmd.SetContext(context.WithValue(cmd.Context(), addrBookProviderCtxKey, addressBookProvider))
+			cmd.SetContext(context.WithValue(cmd.Context(), busCLICtxKey, runtimeMgr.GetBus()))
 
 			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider()
 			modulesRegistry.RegisterModule(currentHeightProvider)
-			cmd.SetContext(context.WithValue(cmd.Context(), currentHeightProviderCtxKey, currentHeightProvider))
-
 			p2pM, err := p2p.Create(runtimeMgr.GetBus())
 			if err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
@@ -243,8 +238,19 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 
 // fetchAddressBook retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
 func fetchAddressBook(cmd *cobra.Command) (types.AddrBook, error) {
-	addrBookProvider := cmd.Context().Value(addrBookProviderCtxKey)
-	currentHeightProvider := cmd.Context().Value(currentHeightProviderCtxKey)
+	bus, ok := cmd.Context().Value(busCLICtxKey).(modules.Bus)
+	if !ok || bus == nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the bus from CLI context")
+	}
+	modulesRegistry := bus.GetModulesRegistry()
+	addrBookProvider, err := modulesRegistry.GetModule(addrbook_provider.ModuleName)
+	if err != nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the addrBookProvider")
+	}
+	currentHeightProvider, err := modulesRegistry.GetModule(current_height_provider.ModuleName)
+	if err != nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the currentHeightProvider")
+	}
 
 	height := currentHeightProvider.(current_height_provider.CurrentHeightProvider).CurrentHeight()
 	addrBook, err := addrBookProvider.(addrbook_provider.AddrBookProvider).GetStakedAddrBookAtHeight(height)
