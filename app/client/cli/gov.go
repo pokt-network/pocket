@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/pokt-network/pocket/app/client/keybase/debug"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
@@ -21,7 +22,10 @@ func NewGovernanceCommand() *cobra.Command {
 		Args:    cobra.ExactArgs(0),
 	}
 
-	cmd.AddCommand(govCommands()...)
+	cmds := govCommands()
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+
+	cmd.AddCommand(cmds...)
 
 	return cmd
 }
@@ -35,6 +39,11 @@ func govCommands() []*cobra.Command {
 			Aliases: []string{},
 			Args:    cobra.ExactArgs(3),
 			RunE: func(cmd *cobra.Command, args []string) error {
+				// Unpack CLI arguments
+				fromAddrHex := args[0]
+				key := args[1]
+				value := args[2]
+
 				// TODO(deblasis): implement RPC client, route and handler
 				fmt.Printf("changing parameter %s owned by %s to %s\n", args[1], args[0], args[2])
 
@@ -46,7 +55,6 @@ func govCommands() []*cobra.Command {
 
 				pwd = readPassphrase(pwd)
 
-				fromAddrHex := args[0]
 				pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 				if err != nil {
 					return err
@@ -54,9 +62,6 @@ func govCommands() []*cobra.Command {
 				if err := kb.Stop(); err != nil {
 					return err
 				}
-
-				key := args[1]
-				value := args[2]
 
 				pbValue, err := anypb.New(wrapperspb.String(value))
 				if err != nil {
@@ -87,6 +92,5 @@ func govCommands() []*cobra.Command {
 			},
 		},
 	}
-	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
 	return cmds
 }

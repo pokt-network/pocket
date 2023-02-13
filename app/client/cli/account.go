@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/pokt-network/pocket/app/client/keybase/debug"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility/types"
@@ -9,8 +10,7 @@ import (
 )
 
 func init() {
-	accountCmd := NewAccountCommand()
-	rootCmd.AddCommand(accountCmd)
+	rootCmd.AddCommand(NewAccountCommand())
 }
 
 func NewAccountCommand() *cobra.Command {
@@ -21,7 +21,9 @@ func NewAccountCommand() *cobra.Command {
 		Args:    cobra.ExactArgs(0),
 	}
 
-	cmd.AddCommand(accountCommands()...)
+	cmds := accountCommands()
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	cmd.AddCommand(cmds...)
 
 	return cmd
 }
@@ -35,6 +37,12 @@ func accountCommands() []*cobra.Command {
 			Aliases: []string{"send"},
 			Args:    cobra.ExactArgs(3),
 			RunE: func(cmd *cobra.Command, args []string) error {
+				// Unpack CLI arguments
+				fromAddrHex := args[0]
+				fromAddr := crypto.AddressFromString(args[0])
+				toAddr := crypto.AddressFromString(args[1])
+				amount := args[2]
+
 				// Open the debug keybase at $HOME/.pocket/keys
 				kb, err := debug.NewDebugKeybase()
 				if err != nil {
@@ -43,7 +51,6 @@ func accountCommands() []*cobra.Command {
 
 				pwd = readPassphrase(pwd)
 
-				fromAddrHex := args[0]
 				pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 				if err != nil {
 					return err
@@ -51,10 +58,6 @@ func accountCommands() []*cobra.Command {
 				if err := kb.Stop(); err != nil {
 					return err
 				}
-
-				fromAddr := crypto.AddressFromString(args[0])
-				toAddr := crypto.AddressFromString(args[1])
-				amount := args[2]
 
 				msg := &types.MessageSend{
 					FromAddress: fromAddr,
@@ -80,6 +83,5 @@ func accountCommands() []*cobra.Command {
 			},
 		},
 	}
-	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
 	return cmds
 }

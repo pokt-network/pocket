@@ -2,10 +2,11 @@ package cli
 
 import (
 	"fmt"
-	"github.com/pokt-network/pocket/app/client/keybase/debug"
 	"math/big"
 	"regexp"
 	"strings"
+
+	"github.com/pokt-network/pocket/app/client/keybase/debug"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -90,6 +91,11 @@ If the node is currently staked at X and you submit an update with new stake Y. 
 If no changes are desired for the parameter, just enter the current param value just as before.`,
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Unpack CLI arguments
+			fromAddrHex := args[0]
+			fromAddr := crypto.AddressFromString(args[0])
+			amount := args[1]
+
 			// Open the debug keybase at $HOME/.pocket/keys
 			kb, err := debug.NewDebugKeybase()
 			if err != nil {
@@ -98,7 +104,6 @@ If no changes are desired for the parameter, just enter the current param value 
 
 			pwd = readPassphrase(pwd)
 
-			fromAddrHex := args[0]
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 			if err != nil {
 				return err
@@ -107,8 +112,6 @@ If no changes are desired for the parameter, just enter the current param value 
 				return err
 			}
 
-			fromAddr := crypto.AddressFromString(args[0])
-			amount := args[1]
 			err = validateStakeAmount(amount)
 			if err != nil {
 				return err
@@ -156,6 +159,11 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Stakes a new <amount> for the %s actor with address <fromAddr> for the specified <relayChainIDs> and <serviceURI>.`, cmdDef.Name),
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Unpack CLI arguments
+			fromAddrHex := args[0]
+			fromAddr := crypto.AddressFromString(args[0])
+			amount := args[1]
+
 			// Open the debug keybase at $HOME/.pocket/keys
 			kb, err := debug.NewDebugKeybase()
 			if err != nil {
@@ -164,7 +172,6 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 
 			pwd = readPassphrase(pwd)
 
-			fromAddrHex := args[0]
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 			if err != nil {
 				return err
@@ -173,8 +180,6 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			fromAddr := crypto.AddressFromString(args[0])
-			amount := args[1]
 			err = validateStakeAmount(amount)
 			if err != nil {
 				return err
@@ -219,6 +224,9 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Unstakes the prevously staked tokens for the %s actor with address <fromAddr>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Unpack CLI arguments
+			fromAddrHex := args[0]
+
 			// Open the debug keybase at $HOME/.pocket/keys
 			kb, err := debug.NewDebugKeybase()
 			if err != nil {
@@ -227,7 +235,6 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 
 			pwd = readPassphrase(pwd)
 
-			fromAddrHex := args[0]
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 			if err != nil {
 				return err
@@ -268,6 +275,9 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Unpauses the %s actor with address <fromAddr>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Unpack CLI arguments
+			fromAddrHex := args[0]
+
 			// Open the debug keybase at $HOME/.pocket/keys
 			kb, err := debug.NewDebugKeybase()
 			if err != nil {
@@ -276,7 +286,6 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 
 			pwd = readPassphrase(pwd)
 
-			fromAddrHex := args[0]
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 			if err != nil {
 				return err
