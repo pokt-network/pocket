@@ -38,8 +38,8 @@ func PoktPeerFromStream(stream network.Stream) (*types.NetworkPeer, error) {
 		Dialer:    transport.NewLibP2PTransport(stream),
 		PublicKey: poktPubKey,
 		// NB: pokt analogue of libp2p peer.ID
-		Address: poktPubKey.Address(),
-		// TODO: lookup ServiceURL from somewhere?
+		Address:    poktPubKey.Address(),
+		ServiceUrl: stream.Conn().RemoteMultiaddr().String(),
 	}, nil
 }
 
@@ -65,12 +65,37 @@ func PeerAddrInfoFromPoktPeer(poktPeer *types.NetworkPeer) (peer.AddrInfo, error
 		return peer.AddrInfo{}, ErrIdentity("unable to retrieve ID from peer public key", err)
 	}
 
+	peerMultiaddr, err := multiaddr.NewMultiaddr(poktPeer.ServiceUrl)
+	// NB: early return if we already have a multiaddr.
+	if err == nil {
+		return peer.AddrInfo{
+			ID: peerID,
+			Addrs: []multiaddr.Multiaddr{
+				peerMultiaddr,
+			},
+		}, err
+	}
+
+	peerMultiaddr, err = PeerMultiAddrFromServiceURL(poktPeer.ServiceUrl)
+	if err != nil {
+		return peer.AddrInfo{}, err
+	}
+
+	return peer.AddrInfo{
+		ID: peerID,
+		Addrs: []multiaddr.Multiaddr{
+			peerMultiaddr,
+		},
+	}, nil
+}
+
+func PeerMultiAddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error) {
 	// NB: test if service URL hostname is an IP address or an FQDN
 	// NB: hard-code a scheme for URL parsing to work.
-	peerUrl, err := url.Parse("scheme://" + poktPeer.ServiceUrl)
+	peerUrl, err := url.Parse("scheme://" + serviceURL)
 	if err != nil {
-		return peer.AddrInfo{}, ErrIdentity(fmt.Sprintf(
-			"unable to parse peer service URL: %s", poktPeer.ServiceUrl,
+		return nil, ErrIdentity(fmt.Sprintf(
+			"unable to parse peer service URL: %s", serviceURL,
 		), err)
 	}
 
@@ -90,21 +115,11 @@ func PeerAddrInfoFromPoktPeer(poktPeer *types.NetworkPeer) (peer.AddrInfo, error
 	// (see: https://pkg.go.dev/net#ResolveIPAddr)
 	peerIP, err := net.ResolveIPAddr(peerIPVersionStr, peerUrl.Hostname())
 	if err != nil {
-		return peer.AddrInfo{}, ErrIdentity(fmt.Sprintf(
+		return nil, ErrIdentity(fmt.Sprintf(
 			"unable to resolve peer IP for hostname: %s", peerUrl.Hostname(),
 		), err)
 	}
 
 	peerMultiAddrStr := fmt.Sprintf("/%s/%s/%s/%s", peerIPVersionStr, peerIP, peerTransportStr, peerUrl.Port())
-	peerMultiaddr, err := multiaddr.NewMultiaddr(peerMultiAddrStr)
-	if err != nil {
-		return peer.AddrInfo{}, err
-	}
-
-	return peer.AddrInfo{
-		ID: peerID,
-		Addrs: []multiaddr.Multiaddr{
-			peerMultiaddr,
-		},
-	}, nil
+	return multiaddr.NewMultiaddr(peerMultiAddrStr)
 }

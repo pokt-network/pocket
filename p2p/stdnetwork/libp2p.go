@@ -173,15 +173,7 @@ func (p2pNet *libp2pNetwork) GetAddrBook() types.AddrBook {
 }
 
 func (p2pNet *libp2pNetwork) AddPeerToAddrBook(peer *types.NetworkPeer) error {
-	existingPeer, exists := p2pNet.addrBookMap[peer.Address.String()]
-
 	p2pNet.addrBookMap[peer.Address.String()] = peer
-
-	// TODO: where to look up service URL?
-	// NB: persist last known ServiceURL
-	if exists && peer.ServiceUrl == "" {
-		peer.ServiceUrl = existingPeer.ServiceUrl
-	}
 	return nil
 }
 
