@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.27] - 2023-02-15
+## [0.0.0.27] - 2023-02-14
 
 - Added a `Validatable` type for basic validation
 - Split business logic specific to certain actors (e.g. validator reward, app relays, message handling) into separate files

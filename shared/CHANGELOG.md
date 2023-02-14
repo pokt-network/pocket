@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.25] - 2023-02-15
+## [0.0.0.25] - 2023-02-14
 
 - Remove shared `ActorTypes` array and use the enum directly
 - Reduce the code footprint of the `codec` package & add some TODOs
