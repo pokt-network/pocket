@@ -44,12 +44,6 @@ type libp2pModule struct {
 	network               typesP2P.Network
 }
 
-// NewReadStreamDeadline returns a future deadline
-// based on the read stream timeout duration.
-func NewReadStreamDeadline() time.Time {
-	return time.Now().Add(readStreamTimeoutDuration)
-}
-
 var (
 	// TODO: consider security exposure of and "safe minimum" for timeout.
 	// TODO: parameterize and expose via config.
@@ -107,7 +101,7 @@ func (mod *libp2pModule) CreateWithProviders(bus modules.Bus, addrBookProvider a
 
 	// TODO(future): investigate any unnecessary
 	// key exposure / duplication in memory
-	secretKey, err := identity.NewLibP2PPrivateKey(mod.cfg.PrivateKey)
+	secretKey, err := poktCrypto.NewLibP2PPrivateKey(mod.cfg.PrivateKey)
 	if err != nil {
 		// TODO: wrap error
 		return nil, err
@@ -263,7 +257,7 @@ func (mod *libp2pModule) handleStream(stream network.Stream) {
 // messages (i.e. one specific target node).
 func (mod *libp2pModule) readStream(stream network.Stream) {
 	// NB: time out if no data is sent to free resources.
-	if err := stream.SetReadDeadline(NewReadStreamDeadline()); err != nil {
+	if err := stream.SetReadDeadline(newReadStreamDeadline()); err != nil {
 		mod.logger.Error().Err(err).Msg("setting stream read deadline")
 		// TODO: abort if we can't set a read deadline?
 	}
@@ -335,4 +329,10 @@ func (mod *libp2pModule) handleNetworkData(data []byte) {
 	}
 
 	mod.GetBus().PublishEventToBus(&event)
+}
+
+// newReadStreamDeadline returns a future deadline
+// based on the read stream timeout duration.
+func newReadStreamDeadline() time.Time {
+	return time.Now().Add(readStreamTimeoutDuration)
 }
