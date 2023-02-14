@@ -46,8 +46,8 @@ var (
 		PromptSendBlockRequest,
 	}
 
-	configPath  string = getEnv("CONFIG_PATH", "build/config/config1.json")
-	genesisPath string = getEnv("GENESIS_PATH", "build/config/genesis.json")
+	configPath  string = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
+	genesisPath string = runtime.GetEnv("GENESIS_PATH", "build/config/genesis.json")
 )
 
 type ctxKey int
@@ -56,13 +56,6 @@ const (
 	addrBookProviderCtxKey ctxKey = iota
 	currentHeightProviderCtxKey
 )
-
-func getEnv(key, defaultValue string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return defaultValue
-}
 
 func init() {
 	debugCmd := NewDebugCommand()
