@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/rpc"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
@@ -17,13 +17,12 @@ import (
 
 var (
 	_       current_height_provider.CurrentHeightProvider = &rpcCurrentHeightProvider{}
-	rpcHost string                                        = defaults.DefaultRemoteCLIURL // by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
+	rpcHost string
 )
 
 func init() {
-	if os.Getenv("RPC_HOST") != "" {
-		rpcHost = os.Getenv("RPC_HOST")
-	}
+	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
+	rpcHost = runtime.GetEnv("RPC_HOST", defaults.Validator1EndpointK8S)
 }
 
 type rpcCurrentHeightProvider struct {

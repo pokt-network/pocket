@@ -20,12 +20,12 @@ import (
 
 var (
 	validatorKeysMap = make(map[string]crypto.PrivateKey)
-	rpcHost          string
+	rpcUrl           string
 	log              = logger.Global.CreateLoggerForModule("cluster-manager")
 )
 
 func init() {
-	rpcHost = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "v1-validator001"), defaults.DefaultRPCPort)
+	rpcUrl = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "v1-validator001"), defaults.DefaultRPCPort)
 }
 
 func main() {
@@ -78,7 +78,7 @@ func stakeValidator(pk crypto.PrivateKey, amount string, chains []string, servic
 	}
 
 	//nolint:gosec // G204 Dogfooding CLI
-	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url="+rpcHost, "Validator", "Stake", pk.Address().String(), amount, strings.Join(chains, ","), serviceURL).CombinedOutput()
+	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url="+rpcUrl, "Validator", "Stake", pk.Address().String(), amount, strings.Join(chains, ","), serviceURL).CombinedOutput()
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func unstakeValidator(pk crypto.PrivateKey) error {
 	}
 
 	//nolint:gosec // G204 Dogfooding CLI
-	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url="+rpcHost, "Validator", "Unstake", pk.Address().String()).CombinedOutput()
+	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url="+rpcUrl, "Validator", "Unstake", pk.Address().String()).CombinedOutput()
 	if err != nil {
 		return err
 	}

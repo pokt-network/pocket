@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	DefaultRPCPort       = "50832"
-	DefaultBusBufferSize = 100
-	DefaultRPCHost       = "localhost"
+	DefaultRPCPort                  = "50832"
+	DefaultBusBufferSize            = 100
+	DefaultRPCHost                  = "localhost"
+	Validator1EndpointDockerCompose = "node1.consensus"
+	Validator1EndpointK8S           = "v1-validator001"
 
-	defaultRPCTimeout               = 30000
-	validator1EndpointDockerCompose = "node1.consensus"
-	validator1EndpointK8S           = "v1-validator001"
+	defaultRPCTimeout = 30000
 )
 
 var (
@@ -42,8 +42,8 @@ var (
 	// In LocalNet, the developer will have only one of the two stack online, therefore this is also a poor's man way to simulate the scenario in which a boostrap node is offline.
 	//nolint:gocritic // stringConcatSimplify TBD in code review.
 	DefaultP2PBootstrapNodesCsv = strings.Join([]string{
-		fmt.Sprintf("http://%s:%s", validator1EndpointDockerCompose, DefaultRPCPort),
-		fmt.Sprintf("http://%s:%s", validator1EndpointK8S, DefaultRPCPort),
+		fmt.Sprintf("http://%s:%s", Validator1EndpointDockerCompose, DefaultRPCPort),
+		fmt.Sprintf("http://%s:%s", Validator1EndpointK8S, DefaultRPCPort),
 	}, ",")
 
 	// telemetry
