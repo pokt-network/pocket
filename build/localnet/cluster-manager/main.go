@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -21,6 +21,7 @@ import (
 var (
 	validatorKeysMap = make(map[string]crypto.PrivateKey)
 	rpcHost          string
+	log              = logger.Global.CreateLoggerForModule("cluster-manager")
 )
 
 func init() {
@@ -81,7 +82,7 @@ func stakeValidator(pk crypto.PrivateKey, amount string, chains []string, servic
 	if err != nil {
 		return err
 	}
-	log.Println(string(out))
+	log.Printf(string(out))
 	return nil
 }
 
@@ -96,6 +97,6 @@ func unstakeValidator(pk crypto.PrivateKey) error {
 	if err != nil {
 		return err
 	}
-	log.Println(string(out))
+	log.Printf(string(out))
 	return nil
 }
