@@ -12,15 +12,13 @@ import (
 )
 
 const (
-	// PoktAccountPrefix is the prefix used for HD key derivation where 635 is the SLIP-0044 coin type
-	PoktAccountPrefix = "m/44'/635'"
-	// PoktPrimaryAccountPath is the derivation path for the primary account
-	PoktPrimaryAccountPath = "m/44'/635'/0'"
-	// PoktAccountPathFormat is to be used with fmt.Sprintf to generate child keys
-	PoktAccountPathFormat = "m/44'/635'/%d"
-	// FirstHardenedKey is the index for the first hardened key for ed25519 keys
-	FirstHardenedKey = uint32(0x80000000)
-	MaxHardenedKey   = ^uint32(0)
+	// PoktAccountPathFormat used for HD key derivation where 635 is the SLIP-0044 coin type
+	// To be used with fmt.Sprintf to generate child keys
+	PoktAccountPathFormat = "m/44'/635'/%d'"
+	// firstHardenedKey is the index for the first hardened key for ed25519 keys
+	firstHardenedKey = uint32(0x80000000)
+	maxHardenedKey   = ^uint32(0)
+	MaxChildKeyIndex = maxHardenedKey - firstHardenedKey
 	// As defined in: https://github.com/satoshilabs/slips/blob/master/slip-0010.md#master-key-generation
 	seedModifier = "ed25519 seed"
 )
@@ -37,36 +35,36 @@ type slipKey struct {
 }
 
 // Derives a key from a BIP-44 path and a seed only operating on hardened ed25519 keys
-func DeriveKeyFromPath(path string, seed []byte, passphrase, hint string) (KeyPair, error) {
+func DeriveKeyFromPath(path string, seed []byte) (KeyPair, error) {
 	segments, err := pathToSegments(path)
 	if err != nil {
 		return nil, err
 	}
 
-	key, err := NewMasterKey(seed)
+	key, err := newMasterKey(seed)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, i32 := range segments {
 		// Force hardened keys
-		if i32 >= MaxHardenedKey-FirstHardenedKey {
-			return nil, fmt.Errorf("hardened key index too large, max: %d, got: %d", MaxHardenedKey-FirstHardenedKey, i32)
+		if i32 > MaxChildKeyIndex {
+			return nil, fmt.Errorf("hardened key index too large, max: %d, got: %d", MaxChildKeyIndex, i32)
 		}
-		i := i32 + FirstHardenedKey
+		i := i32 + firstHardenedKey
 
 		// Derive the correct child until final segment
-		key, err = key.DeriveChild(i)
+		key, err = key.deriveChild(i)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return key.ConvertToKeypair(passphrase, hint)
+	return key.convertToKeypair()
 }
 
 // Reference: https://github.com/satoshilabs/slips/blob/master/slip-0010.md#master-key-generation
-func NewMasterKey(seed []byte) (*slipKey, error) {
+func newMasterKey(seed []byte) (*slipKey, error) {
 	// Create HMAC hash from curve and seed
 	hmacHash := hmac.New(sha512.New, []byte(seedModifier))
 	if _, err := hmacHash.Write(seed); err != nil {
@@ -86,9 +84,9 @@ func NewMasterKey(seed []byte) (*slipKey, error) {
 }
 
 // Reference: https://github.com/satoshilabs/slips/blob/master/slip-0010.md#private-parent-key--private-child-key
-func (k *slipKey) DeriveChild(i uint32) (*slipKey, error) {
+func (k *slipKey) deriveChild(i uint32) (*slipKey, error) {
 	// Check i>=2^31 or else no public key can be derived for the ed25519 key
-	if i < FirstHardenedKey {
+	if i < firstHardenedKey {
 		return nil, ErrNoDerivation
 	}
 
@@ -114,7 +112,7 @@ func (k *slipKey) DeriveChild(i uint32) (*slipKey, error) {
 	return child, nil
 }
 
-func (k *slipKey) ConvertToKeypair(passphrase, hint string) (KeyPair, error) {
+func (k *slipKey) convertToKeypair() (KeyPair, error) {
 	// Generate PrivateKey interface form secret key
 	reader := bytes.NewReader(k.SecretKey)
 	privKey, err := GeneratePrivateKeyWithReader(reader)
@@ -123,7 +121,7 @@ func (k *slipKey) ConvertToKeypair(passphrase, hint string) (KeyPair, error) {
 	}
 
 	// Armour and encrypt private key into JSON string
-	armouredStr, err := encryptArmourPrivKey(privKey, passphrase, hint)
+	armouredStr, err := encryptArmourPrivKey(privKey, "", "") // No passphrase or hint as they depend on the master key
 	if err != nil {
 		return nil, err
 	}
