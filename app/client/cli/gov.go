@@ -2,7 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 
+	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -21,7 +24,10 @@ func NewGovernanceCommand() *cobra.Command {
 		Args:    cobra.ExactArgs(0),
 	}
 
-	cmd.AddCommand(govCommands()...)
+	cmds := govCommands()
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+
+	cmd.AddCommand(cmds...)
 
 	return cmd
 }
@@ -35,17 +41,34 @@ func govCommands() []*cobra.Command {
 			Aliases: []string{},
 			Args:    cobra.ExactArgs(3),
 			RunE: func(cmd *cobra.Command, args []string) error {
+				// Unpack CLI arguments
+				fromAddrHex := args[0]
+				key := args[1]
+				value := args[2]
+
 				// TODO(deblasis): implement RPC client, route and handler
 				fmt.Printf("changing parameter %s owned by %s to %s\n", args[1], args[0], args[2])
 
-				// TODO(#150): update when we have keybase
-				pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
 				if err != nil {
 					return err
 				}
 
-				key := args[1]
-				value := args[2]
+				pwd = readPassphrase(pwd)
+
+				pk, err := kb.GetPrivKey(fromAddrHex, pwd)
+				if err != nil {
+					return err
+				}
+				if err := kb.Stop(); err != nil {
+					return err
+				}
 
 				pbValue, err := anypb.New(wrapperspb.String(value))
 				if err != nil {
