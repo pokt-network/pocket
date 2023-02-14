@@ -69,7 +69,11 @@ func Create(bus modules.Bus) (modules.Module, error) {
 	)
 }
 
-func CreateWithProviders(bus modules.Bus, addrBookProvider addrbook_provider.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
+func CreateWithProviders(
+	bus modules.Bus,
+	addrBookProvider addrbook_provider.AddrBookProvider,
+	currentHeightProvider providers.CurrentHeightProvider,
+) (modules.Module, error) {
 	return new(libp2pModule).CreateWithProviders(bus, addrBookProvider, currentHeightProvider)
 }
 
