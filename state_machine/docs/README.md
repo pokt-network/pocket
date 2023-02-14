@@ -1,5 +1,9 @@
 # State Machine Module <!-- omit in toc -->
 
+> ⚠️ Work in progress ⚠️ - At the time of writing this document, the architecture is still being defined.
+>
+> This is pretty much a POC at the moment.
+
 This document outlines the purpose of this module, its components and how they all interact with the other modules.
 
 ## Contents <!-- omit in toc -->
@@ -29,10 +33,6 @@ In a nutshell: The FSM guarantees that the node is always in one specific state 
 ```
 
 ## High Level Architecture
-
-⚠️ Work in progress ⚠️ - At the time of writing this document, the architecture is still being defined.
-
-This is pretty much a POC at the moment.
 
 The key things to keep in mind are:
 
