@@ -42,7 +42,7 @@ func PoktPeerFromStream(stream network.Stream) (*types.NetworkPeer, error) {
 	}, nil
 }
 
-// PubKeyFromPoktPeer retrieves the stdlib compatible public key from a pocket peer.
+// PubKeyFromPoktPeer retrieves the libp2p compatible public key from a pocket peer.
 func PubKeyFromPoktPeer(poktPeer *types.NetworkPeer) (crypto.PubKey, error) {
 	pubKey, err := crypto.UnmarshalEd25519PublicKey(poktPeer.PublicKey.Bytes())
 	if err != nil {
@@ -52,7 +52,7 @@ func PubKeyFromPoktPeer(poktPeer *types.NetworkPeer) (crypto.PubKey, error) {
 	return pubKey, nil
 }
 
-// PeerAddrInfoFromPoktPeer builds a libp2p AddrInfo which maps to the passed pcket peer.
+// PeerAddrInfoFromPoktPeer builds a libp2p AddrInfo which maps to the passed pocket peer.
 func PeerAddrInfoFromPoktPeer(poktPeer *types.NetworkPeer) (peer.AddrInfo, error) {
 	pubKey, err := PubKeyFromPoktPeer(poktPeer)
 	if err != nil {
