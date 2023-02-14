@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/crypto"
 	v1 "k8s.io/api/core/v1"
@@ -18,14 +19,13 @@ import (
 )
 
 var (
-	validatorKeysMap = make(map[string]crypto.Ed25519PrivateKey)
-	rpcHost          = "http://v1-validator001:50832"
+	validatorKeysMap = make(map[string]crypto.PrivateKey)
+	rpcHost          string
+	log              = logger.Global.CreateLoggerForModule("cluster-manager")
 )
 
 func init() {
-	if os.Getenv("RPC_HOST") != "" {
-		rpcHost = fmt.Sprintf("http://%s:%s", os.Getenv("RPC_HOST"), defaults.DefaultRPCPort)
-	}
+	rpcHost = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "v1-validator001"), defaults.DefaultRPCPort)
 }
 
 func main() {
@@ -71,7 +71,7 @@ func main() {
 	}
 }
 
-func stakeValidator(pk crypto.Ed25519PrivateKey, amount string, chains []string, serviceURL string) error {
+func stakeValidator(pk crypto.PrivateKey, amount string, chains []string, serviceURL string) error {
 	log.Printf("Staking Validator with Address: %s\n", pk.Address())
 	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0o600); err != nil {
 		return err
@@ -82,11 +82,11 @@ func stakeValidator(pk crypto.Ed25519PrivateKey, amount string, chains []string,
 	if err != nil {
 		return err
 	}
-	log.Println(string(out))
+	log.Printf(string(out))
 	return nil
 }
 
-func unstakeValidator(pk crypto.Ed25519PrivateKey) error {
+func unstakeValidator(pk crypto.PrivateKey) error {
 	log.Printf("Unstaking Validator with Address: %s\n", pk.Address())
 	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0o600); err != nil {
 		return err
@@ -97,6 +97,6 @@ func unstakeValidator(pk crypto.Ed25519PrivateKey) error {
 	if err != nil {
 		return err
 	}
-	log.Println(string(out))
+	log.Printf(string(out))
 	return nil
 }

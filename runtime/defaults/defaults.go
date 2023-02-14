@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	DefaultRPCPort                  = "50832"
+	DefaultRPCPort       = "50832"
+	DefaultBusBufferSize = 100
+
 	defaultRPCHost                  = "localhost"
 	defaultRPCTimeout               = 30000
-	DefaultBusBufferSize            = 100
 	validator1EndpointDockerCompose = "node1.consensus"
 	validator1EndpointK8S           = "v1-validator001"
 )
@@ -53,6 +54,5 @@ var (
 	DefaultLoggerLevel  = "debug"
 	DefaultLoggerFormat = "pretty"
 	// rpc
-	DefaultRpcPort    = DefaultRPCPort
-	DefaultRpcTimeout = uint64(defaultRPCTimeout)
+	DefaultRPCTimeout = uint64(defaultRPCTimeout)
 )

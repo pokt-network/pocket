@@ -2,9 +2,12 @@ package p2p
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/pokt-network/pocket/logger"
@@ -67,7 +70,9 @@ func (*p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	cfg := runtimeMgr.GetConfig()
 	p2pCfg := cfg.P2P
 
-	configureBootstrapNodes(p2pCfg, m)
+	if err := configureBootstrapNodes(p2pCfg, m); err != nil {
+		return nil, err
+	}
 
 	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
 	if err != nil {
@@ -281,12 +286,42 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 
 }
 
-func configureBootstrapNodes(p2pCfg *configs.P2PConfig, m *p2pModule) {
-	if p2pCfg.BootstrapNodesCsv == "" {
-		m.bootstrapNodes = strings.Split(defaults.DefaultP2PBootstrapNodesCsv, ",")
+func configureBootstrapNodes(p2pCfg *configs.P2PConfig, m *p2pModule) error {
+	var csvReader *csv.Reader
+	customBootstrapNodesCsv := strings.Trim(p2pCfg.BootstrapNodesCsv, " ")
+	if customBootstrapNodesCsv == "" {
+		csvReader = csv.NewReader(strings.NewReader(defaults.DefaultP2PBootstrapNodesCsv))
 	} else {
-		m.bootstrapNodes = strings.Split(p2pCfg.BootstrapNodesCsv, ",")
+		csvReader = csv.NewReader(strings.NewReader(customBootstrapNodesCsv))
 	}
+	bootStrapNodes, err := csvReader.Read()
+	if err != nil {
+		return fmt.Errorf("error parsing bootstrap nodes: %w", err)
+	}
+	for _, node := range bootStrapNodes {
+		if !isValidHostnamePort(node) {
+			return fmt.Errorf("invalid bootstrap node: %s", node)
+		}
+	}
+	m.bootstrapNodes = bootStrapNodes
+	return nil
+}
+
+func isValidHostnamePort(str string) bool {
+	pattern := regexp.MustCompile(`^(https?)://([a-zA-Z0-9.-]+):([0-9]{1,5})$`)
+	matches := pattern.FindStringSubmatch(str)
+	if len(matches) != 4 {
+		return false
+	}
+	protocol := matches[1]
+	if protocol != "http" && protocol != "https" {
+		return false
+	}
+	port, err := strconv.Atoi(matches[3])
+	if err != nil || port < 0 || port > 65535 {
+		return false
+	}
+	return true
 }
 
 func isSelfInAddrBook(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) bool {

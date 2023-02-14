@@ -20,6 +20,7 @@ services:
       context: ../..
       dockerfile: ./build/Dockerfile.client
     environment:
+      # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
       - RPC_HOST=node1.consensus
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
