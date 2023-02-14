@@ -3,19 +3,17 @@
 This document outlines the purpose of this module, its components and how they all interact with the other modules.
 
 ## Contents <!-- omit in toc -->
-- [State Machine Module](#state-machine-module)
-  - [Overview](#overview)
-  - [Code Structure](#code-structure)
-  - [High Level Architecture](#high-level-architecture)
-    - [FSM primer](#fsm-primer)
-  - [Current State Machine Definition](#current-state-machine-definition)
+- [Overview](#overview)
+- [Code Structure](#code-structure)
+- [High Level Architecture](#high-level-architecture)
+  - [FSM primer](#fsm-primer)
+- [Current State Machine Definition](#current-state-machine-definition)
 
 ## Overview
 
 The `StateMachine` module implements a FSM (Finite State Machine) that is responsible for managing the node lifecycle since its internal behaviour can be different depending on certain conditions that are used to determine the current state.
 
-TL;DR: When you are in a state, you can only transition to other states that are allowed by the fsm definition.
-Transitions happen reacting to events.
+In a nutshell: The FSM guarantees that the node is always in one specific state and verifies state transition (i.e. edges) to/from valid states (i.e. vertices).
 
 
 ## Code Structure
