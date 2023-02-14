@@ -8,7 +8,6 @@ import (
 )
 
 func main() {
-
 	stateMachine := state_machine.NewNodeFSM(nil)
 
 	mermaidStateDiagram, err := fsm.VisualizeForMermaidWithGraphType(stateMachine, fsm.StateDiagram)
