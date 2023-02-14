@@ -1,4 +1,4 @@
-package types
+package converters
 
 import (
 	"math/big"
@@ -12,7 +12,5 @@ func TestBigIntToString(t *testing.T) {
 	bigIntString := BigIntToString(bigOriginal)
 	bigIntAfter, err := StringToBigInt(bigIntString)
 	require.NoError(t, err)
-	if bigIntAfter.Cmp(bigOriginal) != 0 {
-		t.Fatal("unequal after conversion")
-	}
+	require.Zero(t, bigIntAfter.Cmp(bigOriginal), "unequal after conversion")
 }

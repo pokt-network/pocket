@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.25] - 2023-02-09
+
+- Updated logging initialization and passing to the network component instead of using the global logger
+- Fixed incorrect use of `bus.GetLoggerModule()` in `stdnetwork.go` since it's never initialized when running the debug CLI
+
 ## [0.0.0.24] - 2023-02-06
 
 - Address legacy linter errors from `golangci-lint`

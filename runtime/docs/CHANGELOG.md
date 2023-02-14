@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.17] - 2023-02-14
+
+- Move shared utils (e.g. `BitIngToString`) to the `converters` package
+- Remove `CleanupTest`
+
 ## [0.0.0.16] - 2023-02-09
 
 - Update runtime consensus config with bool server mode variable

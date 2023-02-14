@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.12] - 2023-02-14
+
+- Integrate keybase with CLI
+- Add debug module to keybase to automatically populate keybase with 999 validators
+
 ## [0.0.0.11] - 2023-02-09
 
 - Added debugging prompts to drive state sync requests
@@ -15,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.10] - 2023-02-07
 
-- Added GITHUB_WIKI tags where it was missing
+- Added GH_WIKI tags where it was missing
 
 ## [0.0.0.9] - 2023-02-06
 

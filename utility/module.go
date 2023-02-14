@@ -1,15 +1,11 @@
 package utility
 
 import (
-	"fmt"
-
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
-	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var (
@@ -21,13 +17,9 @@ type utilityModule struct {
 	bus    modules.Bus
 	config *configs.UtilityConfig
 
-	logger modules.Logger
+	logger  modules.Logger
 	mempool mempool.TXMempool
 }
-
-const (
-	TransactionGossipMessageContentType = "utility.TransactionGossipMessage"
-)
 
 func Create(bus modules.Bus) (modules.Module, error) {
 	return new(utilityModule).Create(bus)
@@ -72,27 +64,6 @@ func (u *utilityModule) GetBus() modules.Bus {
 		u.logger.Fatal().Msg("Bus is not initialized")
 	}
 	return u.bus
-}
-
-func (u *utilityModule) HandleMessage(message *anypb.Any) error {
-	switch message.MessageName() {
-	case TransactionGossipMessageContentType:
-		msg, err := codec.GetCodec().FromAny(message)
-		if err != nil {
-			return err
-		}
-		transactionGossipMsg, ok := msg.(*types.TransactionGossipMessage)
-		if !ok {
-			return fmt.Errorf("failed to cast message to UtilityMessage")
-		}
-		if err := u.CheckTransaction(transactionGossipMsg.Tx); err != nil {
-			return err
-		}
-		u.logger.Info().Str("source", "MEMPOOL").Msg("Successfully added a new message to the mempool!")
-	default:
-		return types.ErrUnknownMessageType(message.MessageName())
-	}
-	return nil
 }
 
 func (u *utilityModule) GetMempool() mempool.TXMempool {

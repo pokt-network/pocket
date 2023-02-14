@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.34] - 2023-02-14
+
+- Remove `IUnstakingActor` and use `UnstakingActor` directly; guideline for removing future unnecessary types (e.g. TxResult)
+- Typo in `GetMinimumBlockHeightQuery`
+- Reduce unnecessary `string` <-> `[]byte` conversion in a few places
+- Fix bug in `updateUnstakedHeightIfPausedBefore` that was unstaking all actors
+
 ## [0.0.0.33] - 2023-02-09
 
 - Added mock generation to the `kvstore/kvstore.go`.

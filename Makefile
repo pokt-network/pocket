@@ -89,7 +89,7 @@ go_clean_deps: ## Runs `go mod tidy` && `go mod vendor`
 
 .PHONY: go_lint
 go_lint: ## Run all linters that are triggered by the CI pipeline
-	golangci-lint run ./...
+	docker run -t --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.51.1 golangci-lint run -v
 
 .PHONY: gofmt
 gofmt: ## Format all the .go files in the project in place.
@@ -222,7 +222,7 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
 	$(eval modules_dir = "shared/modules")
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
-	
+
 	$(eval DIRS = p2p persistence)
 	for dir in $(DIRS); do \
 		echo "Processing $$dir mocks..."; \
@@ -230,7 +230,7 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
         go generate ./${dir_name}/...; \
         echo "$$dir mocks generated in $$dir/types/mocks"; \
     done
-	
+
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
 .PHONY: protogen_show
@@ -248,9 +248,10 @@ PROTOC_SHARED = $(PROTOC) -I=./shared
 .PHONY: protogen_local
 protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
 	# Shared
-	$(PROTOC) -I=./shared/core/types/proto --go_out=./shared/core/types ./shared/core/types/proto/*.proto
-	$(PROTOC) -I=./shared/messaging/proto  --go_out=./shared/messaging  ./shared/messaging/proto/*.proto
-	$(PROTOC) -I=./shared/codec/proto      --go_out=./shared/codec      ./shared/codec/proto/*.proto
+	$(PROTOC) -I=./shared/core/types/proto    --go_out=./shared/core/types          ./shared/core/types/proto/*.proto
+	$(PROTOC) -I=./shared/modules/types/proto --go_out=./shared/modules/types ./shared/modules/types/proto/*.proto
+	$(PROTOC) -I=./shared/messaging/proto     --go_out=./shared/messaging           ./shared/messaging/proto/*.proto
+	$(PROTOC) -I=./shared/codec/proto         --go_out=./shared/codec               ./shared/codec/proto/*.proto
 
 	# Runtime
 	$(PROTOC) -I=./runtime/configs/types/proto				--go_out=./runtime/configs/types	./runtime/configs/types/proto/*.proto
@@ -260,8 +261,6 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 
 	# Persistence
 	$(PROTOC_SHARED) -I=./persistence/indexer/proto 	--go_out=./persistence/indexer ./persistence/indexer/proto/*.proto
-	$(PROTOC_SHARED) -I=./persistence/proto         	--go_out=./persistence/types   ./persistence/proto/*.proto
-	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 
 	# Utility
 	$(PROTOC_SHARED) -I=./utility/types/proto --go_out=./utility/types ./utility/types/proto/*.proto
@@ -497,3 +496,7 @@ check_cross_module_imports: ## Lists cross-module imports
 	echo "-----------------------"
 	echo "runtime:\n"
 	grep ${exclude_common} --exclude-dir=runtime -r "github.com/pokt-network/pocket/runtime" || echo "✅ OK!"
+
+.PHONY: send_local_tx
+send_local_tx: ## A hardcoded send tx to make LocalNet debugging easier
+	p1 --path_to_private_key_file=build/pkeys/val1.json Account Send 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 67eb3f0a50ae459fecf666be0e93176e92441317 1000
