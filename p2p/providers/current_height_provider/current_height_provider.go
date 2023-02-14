@@ -7,7 +7,8 @@ import "github.com/pokt-network/pocket/shared/modules"
 const ModuleName = "current_height_provider"
 
 type CurrentHeightProvider interface {
-	modules.Module
+	modules.IntegratableModule
+	modules.InterruptableModule
 
 	CurrentHeight() uint64
 }

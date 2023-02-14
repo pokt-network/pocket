@@ -17,7 +17,8 @@ const ModuleName = "addrbook_provider"
 
 // AddrBookProvider is an interface that provides AddrBook accessors
 type AddrBookProvider interface {
-	modules.Module
+	modules.IntegratableModule
+	modules.InterruptableModule
 
 	GetStakedAddrBookAtHeight(height uint64) (typesP2P.AddrBook, error)
 	GetConnFactory() typesP2P.ConnectionFactory
