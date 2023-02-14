@@ -89,7 +89,6 @@ func PeerAddrInfoFromPoktPeer(poktPeer *types.NetworkPeer) (peer.AddrInfo, error
 }
 
 func PeerMultiAddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error) {
-	// TODO: handle case where a scheme is present in the ServiceURL.
 	// NB: hard-code a scheme for URL parsing to work.
 	peerUrl, err := url.Parse("scheme://" + serviceURL)
 	if err != nil {
