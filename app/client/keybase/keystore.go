@@ -274,33 +274,34 @@ func (keybase *badgerKeybase) StoreChildFromKey(masterAddrHex, masterPassphrase 
 
 			return tx.Set(addrKey, keypairBz)
 		})
-	} else {
-		// Re-encrypt child key with passphrase and hint
-		err = keybase.db.Update(func(tx *badger.Txn) error {
-			// Get the private key hex string from the child key
-			privKeyHex, err := childKey.ExportString("") // No passphrase by default
-			if err != nil {
-				return err
-			}
-
-			keyPair, err := crypto.CreateNewKeyFromString(privKeyHex, childPassphrase, childHint)
-			if err != nil {
-				return err
-			}
-
-			// Use key address as key in DB
-			addrKey := keyPair.GetAddressBytes()
-
-			// Encode KeyPair into []byte for value
-			keypairBz, err := keyPair.Marshal()
-			if err != nil {
-				return err
-			}
-
-			return tx.Set(addrKey, keypairBz)
-		})
+		return err
 	}
-	return nil
+	// Re-encrypt child key with passphrase and hint
+	err = keybase.db.Update(func(tx *badger.Txn) error {
+		// Get the private key hex string from the child key
+		privKeyHex, err := childKey.ExportString("") // No passphrase by default
+		if err != nil {
+			return err
+		}
+
+		keyPair, err := crypto.CreateNewKeyFromString(privKeyHex, childPassphrase, childHint)
+		if err != nil {
+			return err
+		}
+
+		// Use key address as key in DB
+		addrKey := keyPair.GetAddressBytes()
+
+		// Encode KeyPair into []byte for value
+		keypairBz, err := keyPair.Marshal()
+		if err != nil {
+			return err
+		}
+
+		return tx.Set(addrKey, keypairBz)
+	})
+
+	return err
 }
 
 // Deterministically generate and store the ith child from the masterAddrHex key stored in the keybase
@@ -324,33 +325,35 @@ func (keybase *badgerKeybase) StoreChildFromSeed(seed []byte, childIndex int32, 
 
 			return tx.Set(addrKey, keypairBz)
 		})
-	} else {
-		// Re-encrypt child key with passphrase and hint
-		err = keybase.db.Update(func(tx *badger.Txn) error {
-			// Get the private key hex string from the child key
-			privKeyHex, err := childKey.ExportString("") // No passphrase by default
-			if err != nil {
-				return err
-			}
-
-			keyPair, err := crypto.CreateNewKeyFromString(privKeyHex, childPassphrase, childHint)
-			if err != nil {
-				return err
-			}
-
-			// Use key address as key in DB
-			addrKey := keyPair.GetAddressBytes()
-
-			// Encode KeyPair into []byte for value
-			keypairBz, err := keyPair.Marshal()
-			if err != nil {
-				return err
-			}
-
-			return tx.Set(addrKey, keypairBz)
-		})
+		return err
 	}
-	return nil
+
+	// Re-encrypt child key with passphrase and hint
+	err = keybase.db.Update(func(tx *badger.Txn) error {
+		// Get the private key hex string from the child key
+		privKeyHex, err := childKey.ExportString("") // No passphrase by default
+		if err != nil {
+			return err
+		}
+
+		keyPair, err := crypto.CreateNewKeyFromString(privKeyHex, childPassphrase, childHint)
+		if err != nil {
+			return err
+		}
+
+		// Use key address as key in DB
+		addrKey := keyPair.GetAddressBytes()
+
+		// Encode KeyPair into []byte for value
+		keypairBz, err := keyPair.Marshal()
+		if err != nil {
+			return err
+		}
+
+		return tx.Set(addrKey, keypairBz)
+	})
+
+	return err
 }
 
 // Check whether an address is currently stored in the DB

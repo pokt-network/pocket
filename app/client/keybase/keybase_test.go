@@ -487,6 +487,7 @@ func TestKeybase_StoreChildFromKey(t *testing.T) {
 	require.NoError(t, err)
 
 	childKey, err := db.GetPrivKey(testChildAddr1, testPassphrase)
+	require.NoError(t, err)
 	require.Equal(t, childKey.Address().String(), testChildAddr1)
 }
 
@@ -507,6 +508,7 @@ func TestKeybase_StoreChildFromSeed(t *testing.T) {
 	require.NoError(t, err)
 
 	childKey, err := db.GetPrivKey(testChildAddr1, testPassphrase)
+	require.NoError(t, err)
 	require.Equal(t, childKey.Address().String(), testChildAddr1)
 }
 

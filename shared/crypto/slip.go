@@ -26,7 +26,7 @@ const (
 var (
 	ErrInvalidPath  = fmt.Errorf("invalid BIP-44 derivation path")
 	ErrNoDerivation = fmt.Errorf("no derivation for an ed25519 key is possible")
-	pathRegex       = regexp.MustCompile(`m(\/[0-9]+')+$`)
+	pathRegex       = regexp.MustCompile(`m(/\d+')+$`)
 )
 
 type slipKey struct {
@@ -91,10 +91,11 @@ func (k *slipKey) deriveChild(i uint32) (*slipKey, error) {
 	}
 
 	// i is a hardened child compute the HMAC hash of the key
+	data := []byte{0x0}
 	iBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(iBytes, i)
-	key := append([]byte{0x0}, k.SecretKey...)
-	data := append(key, iBytes...)
+	data = append(data, k.SecretKey...)
+	data = append(data, iBytes...)
 
 	hmacHash := hmac.New(sha512.New, k.ChainCode)
 	if _, err := hmacHash.Write(data); err != nil {
