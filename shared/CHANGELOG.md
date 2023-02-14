@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.25] - 2023-02-15
+
+- Remove shared `ActorTypes` array and use the enum directly
+- Reduce the code footprint of the `codec` package & add some TODOs
+- Added `UnstakingActor` proto to remove deduplication across modules; adding TECHDEBT to remove altogether one day
+- Added clarifying comments to the utility module interface
+
 ## [0.0.0.24] - 2023-02-09
 
- - Add `ConsensusStateSync` interface that is implemented by the consensus module
+- Add `ConsensusStateSync` interface that is implemented by the consensus module
 
 ## [0.0.0.23] - 2023-02-07
 
