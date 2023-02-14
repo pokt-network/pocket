@@ -30,6 +30,9 @@ type KeyPair interface {
 	ExportString(passphrase string) (string, error)
 	ExportJSON(passphrase string) (string, error)
 
+	// Seed
+	GetSeed(passphrase string) ([]byte, error)
+
 	// Marshalling
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
@@ -97,6 +100,15 @@ func (kp encKeyPair) ExportJSON(passphrase string) (string, error) {
 		return "", err
 	}
 	return kp.PrivKeyArmour, nil
+}
+
+// Return the seed of the key
+func (kp encKeyPair) GetSeed(passphrase string) ([]byte, error) {
+	privKey, err := unarmourDecryptPrivKey(kp.PrivKeyArmour, passphrase)
+	if err != nil {
+		return []byte{}, err
+	}
+	return privKey.Seed(), nil
 }
 
 // Marshal KeyPair into a []byte
