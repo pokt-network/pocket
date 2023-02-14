@@ -235,7 +235,6 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 
 		addrBook := m.network.GetAddrBook()
 		newAddrBook, err := m.addrBookProvider.GetStakedAddrBookAtHeight(consensusNewHeightEvent.Height)
-
 		if err != nil {
 			return err
 		}
