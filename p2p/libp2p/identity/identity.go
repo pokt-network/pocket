@@ -89,7 +89,7 @@ func PeerAddrInfoFromPoktPeer(poktPeer *types.NetworkPeer) (peer.AddrInfo, error
 }
 
 func PeerMultiAddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error) {
-	// NB: test if service URL hostname is an IP address or an FQDN
+	// TODO: handle case where a scheme is present in the ServiceURL.
 	// NB: hard-code a scheme for URL parsing to work.
 	peerUrl, err := url.Parse("scheme://" + serviceURL)
 	if err != nil {
@@ -99,26 +99,31 @@ func PeerMultiAddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error)
 	}
 
 	// TODO: parameterize transport.
-	peerTransportStr := "tcp"
-	peerIPVersionStr := "ip4"
-	// TODO: there's probably a more conventional way to do this.
-	// NB: check if we're dealing with IPv4 or IPv6
-	if strings.Count(peerUrl.Hostname(), ":") > 0 {
-		peerIPVersionStr = "ip6"
+	var (
+		peerTransportStr = "tcp"
+		peerHostnameStr  = peerUrl.Hostname()
+		// TODO: is there a way for us to effectively prefer IPv6 responses?
+		// NB: default to assuming an FQDN-based ServiceURL.
+		networkStr = "dns"
+	)
+
+	// NB: if ServiceURL is IP address (see: https://pkg.go.dev/net#ParseIP)
+	if peerIP := net.ParseIP(peerHostnameStr); peerIP != nil {
+		peerHostnameStr = peerIP.String()
+		networkStr = "ip4"
+		// TODO: there's probably a more conventional way to do this.
+		// NB: check if we're dealing with IPv4 or IPv6
+		if strings.Count(peerHostnameStr, ":") > 0 {
+			networkStr = "ip6"
+		}
 	}
 
-	// TODO: consider using a `/dns<4 or 6>/<hostname>`
-	// multiaddr instead of resolving with stdlib here.
-	// > The address parameter can use a host name, but this is not recommended,
-	// > because it will return at most one of the host name's IP addresses.
-	// (see: https://pkg.go.dev/net#ResolveIPAddr)
-	peerIP, err := net.ResolveIPAddr(peerIPVersionStr, peerUrl.Hostname())
-	if err != nil {
-		return nil, ErrIdentity(fmt.Sprintf(
-			"unable to resolve peer IP for hostname: %s", peerUrl.Hostname(),
-		), err)
-	}
-
-	peerMultiAddrStr := fmt.Sprintf("/%s/%s/%s/%s", peerIPVersionStr, peerIP, peerTransportStr, peerUrl.Port())
+	peerMultiAddrStr := fmt.Sprintf(
+		"/%s/%s/%s/%s",
+		networkStr,
+		peerHostnameStr,
+		peerTransportStr,
+		peerUrl.Port(),
+	)
 	return multiaddr.NewMultiaddr(peerMultiAddrStr)
 }
