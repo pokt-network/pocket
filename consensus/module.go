@@ -265,14 +265,6 @@ func (m *consensusModule) GetModuleName() string {
 	return modules.ConsensusModuleName
 }
 
-func (m *consensusModule) GetBus() modules.Bus {
-	bus := m.IntegratableModule.GetBus()
-	if bus == nil {
-		logger.Global.Fatal().Msg("PocketBus is not initialized")
-	}
-	return bus
-}
-
 func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.IntegratableModule.SetBus(pocketBus)
 	if m.paceMaker != nil {

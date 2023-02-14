@@ -100,7 +100,7 @@ func CreateTestConsensusPocketNode(
 ) *shared.Node {
 	// persistence is a dependency of consensus, so we need to create it first
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
-	(bus).RegisterModule(persistenceMock)
+	bus.RegisterModule(persistenceMock)
 
 	_, err := consensus.Create(bus)
 	require.NoError(t, err)
@@ -123,7 +123,7 @@ func CreateTestConsensusPocketNode(
 		loggerMock,
 		rpcMock,
 	} {
-		(bus).RegisterModule(module)
+		bus.RegisterModule(module)
 	}
 
 	require.NoError(t, err)
