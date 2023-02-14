@@ -17,7 +17,7 @@ import (
 )
 
 type libp2pNetwork struct {
-	log         *modules.Logger
+	logger      *modules.Logger
 	bus         modules.Bus
 	host        host.Host
 	topic       *pubsub.Topic
@@ -65,7 +65,7 @@ func NewLibp2pNetwork(
 	}
 
 	return &libp2pNetwork{
-		log: log,
+		logger: log,
 		// TODO: is it unconventional to set bus here?
 		bus:         bus,
 		host:        host_,
@@ -129,7 +129,7 @@ func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr poktCrypto.Addres
 	}
 	defer func() {
 		if err := stream.Close(); err != nil {
-			p2pNet.log.Error().Err(err)
+			p2pNet.logger.Error().Err(err)
 		}
 	}()
 

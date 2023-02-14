@@ -30,7 +30,7 @@ import (
 var _ modules.P2PModule = &libp2pModule{}
 
 type libp2pModule struct {
-	log                   *modules.Logger
+	logger                *modules.Logger
 	bus                   modules.Bus
 	cfg                   *configs.P2PConfig
 	addrBookProvider      providers.AddrBookProvider
@@ -87,7 +87,7 @@ func (mod *libp2pModule) Create(bus modules.Bus) (modules.Module, error) {
 
 func (mod *libp2pModule) CreateWithProviders(bus modules.Bus, addrBookProvider addrbook_provider.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
 	*mod = libp2pModule{
-		log:                   new(modules.Logger),
+		logger:                new(modules.Logger),
 		addrBookProvider:      addrBookProvider,
 		currentHeightProvider: currentHeightProvider,
 	}
@@ -96,7 +96,7 @@ func (mod *libp2pModule) CreateWithProviders(bus modules.Bus, addrBookProvider a
 		return nil, ErrModule("unable to register module", err)
 	}
 
-	mod.log.Print("Creating libp2p-backed network module")
+	mod.logger.Print("Creating libp2p-backed network module")
 
 	mod.cfg = bus.GetRuntimeMgr().GetConfig().P2P
 
@@ -129,7 +129,7 @@ func (mod *libp2pModule) CreateWithProviders(bus modules.Bus, addrBookProvider a
 }
 
 func (mod *libp2pModule) Start() error {
-	*mod.log = logger.Global.CreateLoggerForModule("P2P")
+	*mod.logger = logger.Global.CreateLoggerForModule("P2P")
 
 	// TODO: receive context in interface methods?
 	ctx := context.Background()
@@ -155,7 +155,7 @@ func (mod *libp2pModule) Start() error {
 		return ErrModule("unable to create libp2p host", err)
 	}
 
-	mod.log.Info().Msgf("Listening on %s...", host.InfoFromHost(mod.host).Addrs)
+	mod.logger.Info().Msgf("Listening on %s...", host.InfoFromHost(mod.host).Addrs)
 
 	// TODO: use RandomSub or GossipSub once we're on more stable ground.
 	// TODO: consider supporting multiple router types via config.
@@ -174,7 +174,7 @@ func (mod *libp2pModule) Start() error {
 		return ErrModule("subscribing to pubsub topic", err)
 	}
 
-	mod.network, err = stdnetwork.NewLibp2pNetwork(mod.bus, mod.addrBookProvider, mod.currentHeightProvider, mod.log, mod.host, mod.topic)
+	mod.network, err = stdnetwork.NewLibp2pNetwork(mod.bus, mod.addrBookProvider, mod.currentHeightProvider, mod.logger, mod.host, mod.topic)
 	if err != nil {
 		return ErrModule("creating network", err)
 	}
@@ -199,7 +199,7 @@ func (mod *libp2pModule) Broadcast(msg *anypb.Any) error {
 	if err != nil {
 		return err
 	}
-	mod.log.Info().Msg("broadcasting message to network")
+	mod.logger.Info().Msg("broadcasting message to network")
 
 	return mod.network.NetworkBroadcast(data)
 }
@@ -233,7 +233,7 @@ func (mod *libp2pModule) SetBus(bus modules.Bus) {
 
 func (mod *libp2pModule) GetBus() modules.Bus {
 	if mod.bus == nil {
-		mod.log.Warn().Msg("PocketBus is not initialized")
+		mod.logger.Warn().Msg("PocketBus is not initialized")
 		return nil
 	}
 	return mod.bus
@@ -244,15 +244,15 @@ func (mod *libp2pModule) GetBus() modules.Bus {
 func (mod *libp2pModule) handleStream(stream network.Stream) {
 	poktPeer, err := identity.PoktPeerFromStream(stream)
 	if err != nil {
-		mod.log.Error().Err(err).Msgf("parsing remote peer public key, address: %s", poktPeer.Address)
+		mod.logger.Error().Err(err).Msgf("parsing remote peer public key, address: %s", poktPeer.Address)
 
 		if err = stream.Close(); err != nil {
-			mod.log.Error().Err(err)
+			mod.logger.Error().Err(err)
 		}
 	}
 
 	if err := mod.network.AddPeerToAddrBook(poktPeer); err != nil {
-		mod.log.Error().Err(err).Msgf("adding remote peer to address book, address: %s", poktPeer.Address)
+		mod.logger.Error().Err(err).Msgf("adding remote peer to address book, address: %s", poktPeer.Address)
 	}
 
 	go mod.readStream(stream)
@@ -264,15 +264,15 @@ func (mod *libp2pModule) handleStream(stream network.Stream) {
 func (mod *libp2pModule) readStream(stream network.Stream) {
 	// NB: time out if no data is sent to free resources.
 	if err := stream.SetReadDeadline(NewReadStreamDeadline()); err != nil {
-		mod.log.Error().Err(err).Msg("setting stream read deadline")
+		mod.logger.Error().Err(err).Msg("setting stream read deadline")
 		// TODO: abort if we can't set a read deadline?
 	}
 
 	data, err := io.ReadAll(stream)
 	if err != nil {
-		mod.log.Error().Err(err).Msg("reading from stream")
+		mod.logger.Error().Err(err).Msg("reading from stream")
 		if err := stream.Close(); err != nil {
-			mod.log.Error().Err(err)
+			mod.logger.Error().Err(err)
 		}
 		// NB: abort this goroutine
 		// TODO: signal this somewhere?
@@ -280,7 +280,7 @@ func (mod *libp2pModule) readStream(stream network.Stream) {
 	}
 	defer func() {
 		if err := stream.Close(); err != nil {
-			mod.log.Error().Err(err)
+			mod.logger.Error().Err(err)
 		}
 	}()
 
@@ -298,7 +298,7 @@ func (mod *libp2pModule) readFromSubscription(ctx context.Context) {
 		default:
 			msg, err := mod.subscription.Next(ctx)
 			if err != nil {
-				mod.log.Error().Err(err).Msg("reading from subscription")
+				mod.logger.Error().Err(err).Msg("reading from subscription")
 			}
 
 			// NB: ignore messages from self
@@ -314,7 +314,7 @@ func (mod *libp2pModule) readFromSubscription(ctx context.Context) {
 func (mod *libp2pModule) handleNetworkData(data []byte) {
 	appMsgData, err := mod.network.HandleNetworkData(data)
 	if err != nil {
-		mod.log.Error().Err(err).Msg("handling network data")
+		mod.logger.Error().Err(err).Msg("handling network data")
 		return
 	}
 
@@ -326,7 +326,7 @@ func (mod *libp2pModule) handleNetworkData(data []byte) {
 
 	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
-		mod.log.Error().Err(err).Msg("Error decoding network message")
+		mod.logger.Error().Err(err).Msg("Error decoding network message")
 		return
 	}
 
