@@ -1,4 +1,4 @@
-# State Machine Module
+# State Machine Module <!-- omit in toc -->
 
 This document outlines the purpose of this module, its components and how they all interact with the other modules.
 
