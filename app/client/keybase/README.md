@@ -8,7 +8,7 @@ This document is intended to outline the current Keybase implementation used by 
   - [Keybase Code Structure](#keybase-code-structure)
 - [Makefile Testing Helper](#makefile-testing-helper)
 - [KeyPair Encryption \& Armouring](#keypair-encryption--armouring)
-- [SLIPS-0010 Child Key Generation](#slips-child-key-generation)
+- [SLIP-0010 Child Key Generation](#child-key-generation)
 - [TODO: Future Work](#todo-future-work)
 
 _TODO(#150): The current keybase has not been integrated with any CLI endpoints, and as such is only accessible through the [keybase interface](#keybase-interface)_
@@ -74,7 +74,7 @@ The [documentation in the crypto library](../../../shared/crypto/README.md) cove
 
 The primitives and functions defined there are heavily used throughout this package.
 
-## Slips Child Key Generation
+## Child Key Generation
 
 The [documentation in the crypto library](../../../shared/crypto/README.md) covers the specifics of the SLIPS-0010 implementation related to child key generation from a single master key
 

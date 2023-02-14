@@ -3,7 +3,7 @@
 - [KeyPair Interface](#keypair-interface)
   - [KeyPair Code Structure](#keypair-code-structure)
 - [Encryption and Armouring](#encryption-and-armouring)
-- [Child Key Generation](#slips-0010-hd-child-key-generation)
+- [Child Key Generation](#slip-0010-hd-child-key-generation)
 
 _DOCUMENT: Note that this README is a WIP and does not exhaustively document all the current types in this package_
 
@@ -105,9 +105,9 @@ flowchart LR
     AES-GCM-->PrivateKey
 ```
 
-## SLIPS-0010 HD Child Key Generation
+## SLIP-0010 HD Child Key Generation
 
-[SLIPS-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md) key generation from a master key or seed is supported through the file [slip.go](./slip.go)
+[SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md) key generation from a master key or seed is supported through the file [slip.go](./slip.go)
 
 The keys are generated using the BIP-44 path `m/44'/635'/%d'` where `%d` is the index of the child key - this allows for the deterministic generation of up to `2147483647` hardened ed25519 child keys per master key.
 
