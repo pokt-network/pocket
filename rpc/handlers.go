@@ -110,7 +110,7 @@ func (s *rpcServer) GetV1P2pAddressBook(ctx echo.Context, params GetV1P2pAddress
 	for _, coreActor := range coreActors {
 		actors = append(actors, Actor{
 			Address:    coreActor.Address,
-			Type:       coreActorTypeToActorTypesEnum(coreActor.ActorType),
+			Type:       protocolActorToRPCActorTypeEnum(coreActor.ActorType),
 			PublicKey:  coreActor.PublicKey,
 			ServiceUrl: coreActor.GenericParam,
 		})
@@ -124,7 +124,7 @@ func (s *rpcServer) GetV1P2pAddressBook(ctx echo.Context, params GetV1P2pAddress
 	return ctx.JSON(http.StatusOK, response)
 }
 
-func coreActorTypeToActorTypesEnum(coreActorType typesCore.ActorType) ActorTypesEnum {
+func protocolActorToRPCActorTypeEnum(coreActorType typesCore.ActorType) ActorTypesEnum {
 	switch coreActorType {
 	case typesCore.ActorType_ACTOR_TYPE_APP:
 		return Application
