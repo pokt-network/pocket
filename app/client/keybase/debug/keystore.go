@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	validatorNumber     = 999
+	// NOTE: This is the number of validators in the private-keys.yaml manifest file
+	numValidators       = 999
 	debugKeybaseSuffix  = "/.pocket/keys"
 	privateKeysYamlFile = "../../../../../build/localnet/manifests/private-keys.yaml"
 )
@@ -83,7 +84,7 @@ func InitialiseDebugKeybase() error {
 	}
 
 	// Add validator addresses if not present
-	if len(curAddr) < validatorNumber {
+	if len(curAddr) < numValidators {
 		// Use writebatch to speed up bulk insert
 		wb := db.NewWriteBatch()
 		for _, privHexString := range config.StringData {

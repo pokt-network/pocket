@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	// NOTE: Imported for debug purposes in order to populate the keybase with the pre-generated keys
 	_ "github.com/pokt-network/pocket/app/client/keybase/debug"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/spf13/cobra"
