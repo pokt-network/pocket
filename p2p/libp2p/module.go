@@ -19,7 +19,6 @@ import (
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
-	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	poktCrypto "github.com/pokt-network/pocket/shared/crypto"
@@ -168,7 +167,7 @@ func (mod *libp2pModule) Start() error {
 		return ErrModule("subscribing to pubsub topic", err)
 	}
 
-	mod.network, err = stdnetwork.NewLibp2pNetwork(mod.bus, mod.addrBookProvider, mod.currentHeightProvider, mod.logger, mod.host, mod.topic)
+	mod.network, err = NewLibp2pNetwork(mod.bus, mod.addrBookProvider, mod.currentHeightProvider, mod.logger, mod.host, mod.topic)
 	if err != nil {
 		return ErrModule("creating network", err)
 	}

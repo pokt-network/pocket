@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.26] - 2023-02-13
+## [0.0.0.26] - 2023-02-14
 
 - Add a new libp2p-based P2P modules.Module implementation in p2p/libp2p.
 - Add a new types.Network implemenation.

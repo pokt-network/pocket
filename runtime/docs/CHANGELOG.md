@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.17] - 2023-02-13
+## [0.0.0.17] - 2023-02-14
 
 - Add a new P2P config option `use_lib_p2p` to switch between the two P2P modules.
 

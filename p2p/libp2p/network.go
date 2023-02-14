@@ -1,4 +1,4 @@
-package stdnetwork
+package libp2p
 
 import (
 	"context"
