@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed raintree to use the `currentHeightProvider` instead of consensus (that was what we wanted to avoid in the first place)
 - Added `getAddrBookDelta` to calculate changes to the address book between heights and update the internal state and componentry accordingly
 - Added basic `bootstrap` nodes support
-- Reacting to `ConsensusNewHeightEventType` adn `StateMachineTransitionEventType` to update the address book and current height and determine if a bootstrap is needed
+- Reacting to `ConsensusNewHeightEventType` and `StateMachineTransitionEventType` to update the address book and current height and determine if a bootstrap is needed
 - Updated tests
 
 ## [0.0.0.25] - 2023-02-09
