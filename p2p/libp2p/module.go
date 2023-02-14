@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"time"
 
 	"github.com/libp2p/go-libp2p"
@@ -97,7 +96,7 @@ func (mod *libp2pModule) CreateWithProviders(bus modules.Bus, addrBookProvider a
 		return nil, ErrModule("unable to register module", err)
 	}
 
-	log.Println("Creating libp2p-backed network module")
+	mod.log.Print("Creating libp2p-backed network module")
 
 	mod.cfg = bus.GetRuntimeMgr().GetConfig().P2P
 
