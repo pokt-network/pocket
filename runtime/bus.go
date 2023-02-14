@@ -4,6 +4,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -66,7 +67,7 @@ func (m *bus) GetEventBus() modules.EventsChannel {
 func (m *bus) GetPersistenceModule() modules.PersistenceModule {
 	mod, err := m.modulesRegistry.GetModule(modules.PersistenceModuleName)
 	if err != nil {
-		log.Fatalf("failed to get module from modulesRegistry: %s", err)
+		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
 	}
 	return mod.(modules.PersistenceModule)
 }
@@ -74,7 +75,7 @@ func (m *bus) GetPersistenceModule() modules.PersistenceModule {
 func (m *bus) GetP2PModule() modules.P2PModule {
 	mod, err := m.modulesRegistry.GetModule(modules.P2PModuleName)
 	if err != nil {
-		log.Fatalf("failed to get module from modulesRegistry: %s", err)
+		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
 	}
 	return mod.(modules.P2PModule)
 }
@@ -82,7 +83,7 @@ func (m *bus) GetP2PModule() modules.P2PModule {
 func (m *bus) GetUtilityModule() modules.UtilityModule {
 	mod, err := m.modulesRegistry.GetModule(modules.UtilityModuleName)
 	if err != nil {
-		log.Fatalf("failed to get module from modulesRegistry: %s", err)
+		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
 	}
 	return mod.(modules.UtilityModule)
 }
@@ -90,7 +91,7 @@ func (m *bus) GetUtilityModule() modules.UtilityModule {
 func (m *bus) GetConsensusModule() modules.ConsensusModule {
 	mod, err := m.modulesRegistry.GetModule(modules.ConsensusModuleName)
 	if err != nil {
-		log.Fatalf("failed to get module from modulesRegistry: %s", err)
+		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
 	}
 	return mod.(modules.ConsensusModule)
 }
@@ -117,7 +118,7 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 func (m *bus) GetLoggerModule() modules.LoggerModule {
 	mod, err := m.modulesRegistry.GetModule(modules.LoggerModuleName)
 	if err != nil {
-		log.Fatalf("failed to get module from modulesRegistry: %s", err)
+		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
 	}
 	return mod.(modules.LoggerModule)
 }
@@ -125,7 +126,7 @@ func (m *bus) GetLoggerModule() modules.LoggerModule {
 func (m *bus) GetRPCModule() modules.RPCModule {
 	mod, err := m.modulesRegistry.GetModule(modules.RPCModuleName)
 	if err != nil {
-		log.Fatalf("failed to get module from modulesRegistry: %s", err)
+		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
 	}
 	return mod.(modules.RPCModule)
 }
@@ -133,7 +134,7 @@ func (m *bus) GetRPCModule() modules.RPCModule {
 func (m *bus) GetStateMachineModule() modules.StateMachineModule {
 	mod, err := m.modulesRegistry.GetModule(modules.StateMachineModuleName)
 	if err != nil {
-		log.Fatalf("failed to get module from modulesRegistry: %s", err)
+		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
 	}
 	return mod.(modules.StateMachineModule)
 }
