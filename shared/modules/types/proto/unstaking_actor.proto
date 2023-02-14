@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package modules;
+
+option go_package = "github.com/pokt-network/pocket/shared/modules/types";
+
+// TECHDEBT: Identify if the codebase can be simplified by removing this protobuf altogether in
+// exchange for using actor.proto. If not, move it into coreTypes.
+message UnstakingActor {
+  string address = 1;
+  string stake_amount = 2;
+  string output_address = 3;
+}

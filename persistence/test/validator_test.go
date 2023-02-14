@@ -127,13 +127,14 @@ func TestGetValidatorsReadyToUnstake(t *testing.T) {
 	unstakingValidators, err := db.GetValidatorsReadyToUnstake(0, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingValidators), "wrong number of actors ready to unstake at height 0")
-	require.Equal(t, validator.Address, hex.EncodeToString(unstakingValidators[0].GetAddress()), "unexpected validatorlication actor returned")
+
+	require.Equal(t, validator.Address, unstakingValidators[0].GetAddress(), "unexpected unstaking validator returned")
 
 	// Check unstaking validators at height 1
 	unstakingValidators, err = db.GetValidatorsReadyToUnstake(1, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingValidators), "wrong number of actors ready to unstake at height 1")
-	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingValidators[0].GetAddress(), unstakingValidators[1].GetAddress()})
+	require.ElementsMatch(t, []string{validator2.Address, validator3.Address}, []string{unstakingValidators[0].Address, unstakingValidators[1].Address})
 }
 
 func TestGetValidatorStatus(t *testing.T) {

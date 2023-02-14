@@ -29,7 +29,7 @@ func GetMaximumBlockHeightQuery() string {
 	return fmt.Sprintf(`SELECT MAX(height) FROM %s`, BlockTableName)
 }
 
-func GetMinimumlockHeightQuery() string {
+func GetMinimumBlockHeightQuery() string {
 	return fmt.Sprintf(`SELECT MIN(height) FROM %s`, BlockTableName)
 }
 

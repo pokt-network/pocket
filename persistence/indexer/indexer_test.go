@@ -34,7 +34,7 @@ func FuzzTxIndexer(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, op string) {
 		// seed random
-		rand.Seed(int64(time.Now().Nanosecond()))
+		rand.Seed(int64(time.Now().Nanosecond())) //nolint:staticcheck // G404 - Weak random source is okay here
 		// set height ordering to descending 50% of time
 		isDescending := rand.Intn(2) == 0 //nolint:gosec // G404 - Weak random source is okay in unit tests
 		// select a height 0 - 9 to index
@@ -266,7 +266,7 @@ func randomErr() (code int32, err string) {
 //nolint:gosec // G404 - Weak random source is okay in unit tests
 func randLetterBytes() []byte {
 	randBytes := make([]byte, 50)
-	rand.Read(randBytes)
+	rand.Read(randBytes) //nolint:staticcheck // G404 - Weak random source is okay here
 	return randBytes
 }
 

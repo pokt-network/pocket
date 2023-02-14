@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.27] - 2023-02-14
+
+- Added a `Validatable` type for basic validation
+- Split business logic specific to certain actors (e.g. validator reward, app relays, message handling) into separate files
+- Reduced the scope of functions and types that shouldn’t be exposed
+- Upgraded the actors tests - a lot went here to help with understanding what’s going on but it’s still just a start
+- Remove the `Context` struct; unnecessary abstraction
+- Added comments and guidance on message, transaction and signature validation
+- Added `ITransaction`, an interface for the `Transaction` protocol to help capture the functionality it adds to the core type
+- DOC: Delineate between unstaking & unbonding in a few places throughout the codebase
+- BUG: `tx.Equals` was comparing the same transaction against itself (major bug)
+- BUG: `StakingStatus` enums in utility did not reflect the same protocol as in persistence (needs to be consolidated)
+
 ## [0.0.0.26] - 2023-02-07
 
 - Documentation update

@@ -1,4 +1,4 @@
-package test
+package utility
 
 import (
 	"log"
@@ -10,12 +10,10 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/pokt-network/pocket/utility"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
@@ -25,33 +23,25 @@ const (
 	testingServiceNodeCount = 1
 	testingApplicationCount = 1
 	testingFishermenCount   = 1
-)
-
-var (
-	defaultTestingChainsEdited = []string{"0002"}
-
-	defaultUnstaking = int64(2017)
 
 	testNonce  = "defaultNonceString"
 	testSchema = "test_schema"
 )
 
-var testPersistenceMod modules.PersistenceModule // initialized in TestMain
-var testUtilityMod modules.UtilityModule         // initialized in TestMain
-
-var actorTypes = []coreTypes.ActorType{
-	coreTypes.ActorType_ACTOR_TYPE_APP,
-	coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
-	coreTypes.ActorType_ACTOR_TYPE_FISH,
-	coreTypes.ActorType_ACTOR_TYPE_VAL,
-}
+var (
+	// Initialized in TestMain
+	testPersistenceMod modules.PersistenceModule
+	testUtilityMod     modules.UtilityModule
+)
 
 func NewTestingMempool(_ *testing.T) mempool.TXMempool {
 	return utilTypes.NewTxFIFOMempool(1000000, 1000)
 }
 
 func TestMain(m *testing.M) {
+	// TODO(#261): Utility module tests should have no dependencies on a postgres container
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
+
 	runtimeCfg := newTestRuntimeConfig(dbUrl)
 	bus, err := runtime.CreateBus(runtimeCfg)
 	if err != nil {
@@ -66,7 +56,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func NewTestingUtilityContext(t *testing.T, height int64) *utility.UtilityContext {
+func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
@@ -82,16 +72,14 @@ func NewTestingUtilityContext(t *testing.T, height int64) *utility.UtilityContex
 		testUtilityMod.GetMempool().Clear()
 	})
 
-	uc := &utility.UtilityContext{
-		Height: height,
-		Context: &utility.Context{
-			PersistenceRWContext: persistenceContext,
-			SavePointsM:          make(map[string]struct{}),
-			SavePoints:           make([][]byte, 0),
-		},
+	uc := &utilityContext{
+		height:             height,
+		persistenceContext: persistenceContext,
+		savePointsSet:      make(map[string]struct{}),
+		savePointsList:     make([][]byte, 0),
 	}
 
-	return uc.WithBus(testUtilityMod.GetBus())
+	return uc.setBus(testUtilityMod.GetBus())
 }
 
 func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
@@ -124,11 +112,20 @@ func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
 }
 
 func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
-	utilityMod, err := utility.Create(bus)
+	utilityMod, err := Create(bus)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
 	return utilityMod.(modules.UtilityModule)
+}
+
+// TODO(#261): Utility module tests should have no dependencies on the persistence module
+func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
+	persistenceMod, err := persistence.Create(bus)
+	if err != nil {
+		log.Fatalf("Error creating persistence module: %s", err)
+	}
+	return persistenceMod.(modules.PersistenceModule)
 }
 
 // IMPROVE: Not part of `TestMain` because a mock requires `testing.T` to be initialized.
@@ -148,13 +145,4 @@ func mockBusInTestModules(t *testing.T) {
 	t.Cleanup(func() {
 		testPersistenceMod.SetBus(nil)
 	})
-}
-
-// TODO(#290): Mock the persistence module so the utility module is not dependant on it.
-func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
-	persistenceMod, err := persistence.Create(bus)
-	if err != nil {
-		log.Fatalf("Error creating persistence module: %s", err)
-	}
-	return persistenceMod.(modules.PersistenceModule)
 }
