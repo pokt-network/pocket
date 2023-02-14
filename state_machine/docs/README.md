@@ -34,12 +34,13 @@ In a nutshell: The FSM guarantees that the node is always in one specific state 
 
 ## High Level Architecture
 
-The key things to keep in mind are:
+High-level implementation details:
 
-- We are using the library "github.com/looplab/fsm" to implement the FSM, essentially here we are wrapping it and integrating it with the rest of the modules. This document won't cover the implementation details of the FSM library which is fairly well documented.
-- The **StateMachineModule** can be accessed via the `bus` from any other `IntegratableModule`
-- State machine transitions will emit `StateMachineTransitionEvent` events that the modules that are interested can listen to.
-- The `node` has a main eventhandler for events that can be used to fan-out the handling to the aforementioned modules that listen to transition events
+- The [github.com/looplab/fsm](https://github.com/looplab/fsm) library is used to implement the FSM
+- Pocket builds a wrapper around `looplab/fsm` to integrate with the other modules
+- The `StateMachineModule` can be accessed via the `bus` from any other `IntegratableModule`
+- State machine transitions emit `StateMachineTransitionEvent` events that subscribed pocket modules can listen to
+- The `node` has a central [event handler](../../shared/node.go) for events that fan-out event handling to the relevant modules during state transitions
 
 ### FSM primer
 
