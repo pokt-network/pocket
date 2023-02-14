@@ -8,7 +8,7 @@ import (
 
 var (
 	DefaultChains              = []string{"0001"}
-	DefaultServiceURL          = "https://localhost.com"
+	DefaultServiceURL          = ""
 	DefaultStakeAmount         = big.NewInt(1000000000000)
 	DefaultStakeAmountString   = converters.BigIntToString(DefaultStakeAmount)
 	DefaultMaxRelays           = big.NewInt(1000000)

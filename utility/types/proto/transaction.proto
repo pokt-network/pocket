@@ -6,6 +6,8 @@ option go_package = "github.com/pokt-network/pocket/utility/types";
 
 import "google/protobuf/any.proto";
 
+// `Transaction` is used to name the type for clarity & verbosity, but `tx` is used method signatures
+// and variable names to be concise. https://github.com/pokt-network/pocket/pull/503
 message Transaction {
   google.protobuf.Any msg = 1; // CONSOLIDATE: Should be a oneof {} message
   Signature signature = 2; // CONSOLIDATE: should use a shared crypto package type
