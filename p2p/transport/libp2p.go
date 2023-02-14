@@ -8,11 +8,11 @@ import (
 	"github.com/pokt-network/pocket/p2p/types"
 )
 
+var _ types.Transport = &libP2PTransport{}
+
 type libP2PTransport struct {
 	stream network.Stream
 }
-
-var _ types.Transport = &libP2PTransport{}
 
 func NewLibP2PTransport(stream network.Stream) types.Transport {
 	return &libP2PTransport{
