@@ -53,6 +53,5 @@ var (
 	DefaultLoggerLevel  = "debug"
 	DefaultLoggerFormat = "pretty"
 	// rpc
-	DefaultRpcPort    = DefaultRPCPort
-	DefaultRpcTimeout = uint64(defaultRPCTimeout)
+	DefaultRPCTimeout = uint64(defaultRPCTimeout)
 )
