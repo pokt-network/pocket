@@ -3,6 +3,7 @@
 - [KeyPair Interface](#keypair-interface)
   - [KeyPair Code Structure](#keypair-code-structure)
 - [Encryption and Armouring](#encryption-and-armouring)
+- [Child Key Generation](#slips-0010-hd-child-key-generation)
 
 _DOCUMENT: Note that this README is a WIP and does not exhaustively document all the current types in this package_
 
@@ -102,6 +103,54 @@ flowchart LR
     C--encryptedBytes-->AES-GCM
     S--Key-->AES-GCM
     AES-GCM-->PrivateKey
+```
+
+## SLIPS-0010 HD Child Key Generation
+
+[SLIPS-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md) key generation from a master key or seed is supported through the file [slip.go](./slip.go)
+
+The keys are generated using the BIP-44 path `m/44'/635'/%d'` where `%d` is the index of the child key - this allows for the deterministic generation of up to `2147483647` hardened ed25519 child keys per master key.
+
+Master key derivation is done as follows:
+```mermaid
+flowchart LR
+    subgraph HMAC
+        direction TB
+        A["hmacNew(sha512, seedModifier)"]
+        B["hmacWrite(seed)"]
+        C["convertToBytes(hmac)"]
+        A-->B-->C
+    end
+    subgraph MASTER-KEY
+        direction TB
+        D["SecretKey: hmacBytes[:32]"]
+        E["ChainCode: hmacBytes[32:]"]
+        D --> E --Secret+Chaincode--> KEY
+    end
+    HMAC--hmacBytes-->MASTER-KEY
+```
+
+Child keys are derived from their parents as follows:
+```mermaid
+flowchart LR
+    subgraph HMAC-CHILD
+        direction TB
+        C["append(0x0, parent.SecretKey, bigEndian(index))"]
+        A["hmacNew(sha512, parent.Chaincode)"]
+        B["hmacWrite(data)"]
+        D["convertToBytes(hmac)"]
+        A--hmac-->B
+        C--data-->B
+        B-->D
+    end
+    subgraph CHILD-KEY
+        direction TB
+        F["secret: hmacBytes[:32]"]
+        G["chaincode: hmacBytes[32:]"]
+        F --> G --Secret+Chaincode--> KEY
+    end
+    Parent --> HMAC-CHILD
+    HMAC-CHILD --hmacBytes--> CHILD-KEY
 ```
 
 <!-- GITHUB_WIKI: shared/crypto/readme -->
