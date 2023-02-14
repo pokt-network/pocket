@@ -63,4 +63,4 @@ If you make any changes to it, you can re-generate it via:
 make generate_node_state_machine_diagram
 ```
 
-<!-- GITHUB_WIKI: state_machine -->
+<!-- GITHUB_WIKI: state_machine/README -->
