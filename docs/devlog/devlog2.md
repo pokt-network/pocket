@@ -15,6 +15,7 @@
 ### Contents <!-- omit in toc -->
 
 - [Current Iteration 🗓️](#current-iteration-%EF%B8%8F)
+- [Demo 💻](#demo-)
 - [Upcoming Iteration 🗓️](#upcoming-iteration-%EF%B8%8F)
 - [Feedback and Open Discussion 💡](#feedback-and-open-discussion-) 
 - [Contribute to V1 🧑‍💻](#contribute-to-v1-)
