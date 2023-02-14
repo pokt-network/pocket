@@ -5,6 +5,6 @@ package modules
 type ModulesRegistry interface {
 	// RegisterModule registers a Module with the ModuleRegistry
 	RegisterModule(module Module)
-	// GetModuleByName returns a Module by name or nil if not found in the ModuleRegistry
+	// GetModule returns a Module by name or nil if not found in the ModuleRegistry
 	GetModule(moduleName string) (Module, error)
 }
