@@ -36,7 +36,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 			}
 		}
 		for _, rm := range removed {
-			if err := m.network.RemovePeerToAddrBook(rm); err != nil {
+			if err := m.network.RemovePeerFromAddrBook(rm); err != nil {
 				return err
 			}
 		}

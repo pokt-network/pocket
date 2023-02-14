@@ -224,7 +224,7 @@ func (n *rainTreeNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
 	return nil
 }
 
-func (n *rainTreeNetwork) RemovePeerToAddrBook(peer *typesP2P.NetworkPeer) error {
+func (n *rainTreeNetwork) RemovePeerFromAddrBook(peer *typesP2P.NetworkPeer) error {
 	n.peersManager.wg.Add(1)
 	n.peersManager.eventCh <- addressBookEvent{removeFromAddressBook, peer}
 	n.peersManager.wg.Wait()
