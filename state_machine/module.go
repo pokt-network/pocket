@@ -38,9 +38,9 @@ func (*stateMachineModule) Create(bus modules.Bus, options ...modules.ModuleOpti
 				Msgf("entering state %s", e.Dst)
 
 			newStateMachineTransitionEvent, err := messaging.PackMessage(&messaging.StateMachineTransitionEvent{
-				Event: e.Event,
-				Src:   e.Src,
-				Dst:   e.Dst,
+				Event:         e.Event,
+				PreviousState: e.Src,
+				NewState:      e.Dst,
 			})
 			if err != nil {
 				m.logger.Fatal().Err(err).Msg("failed to pack state machine transition event")

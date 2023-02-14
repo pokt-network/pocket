@@ -12,6 +12,6 @@ message ConsensusNewHeightEvent {
 
 message StateMachineTransitionEvent {
   string event = 1;
-  string src = 2;
-  string dst = 3;
+  string previous_state = 2;
+  string new_state = 3;
 }
