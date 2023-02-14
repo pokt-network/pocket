@@ -7,16 +7,15 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"google.golang.org/protobuf/proto"
 )
 
 // A message is a component of a transaction (excluding metadata such as the signature)
 // defining the action driving the state transition
-type Message interface {
-	Validatable
 
-	// TECHDEBT: This is necessary for us to be able to apply some `proto` specific transformations
-	//           on types conforming to this interface
-	codec.CodecType
+type Message interface {
+	proto.Message // TECHDEBT: Still making direct `proto` reference even with a central `codec` package
+	Validatable
 
 	GetMessageName() string
 	GetMessageRecipient() string
