@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"log"
 	"math/big"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -56,7 +55,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		}
 		txResult, err := u.ApplyTransaction(txIndex, transaction)
 		if err != nil {
-			log.Printf("Error in ApplyTransaction: %v\n", err)
+			u.logger.Err(err).Msg("Error in ApplyTransaction")
 			// TODO(#327): Properly implement 'unhappy path' for save points
 			if err := u.RevertLastSavePoint(); err != nil {
 				return "", nil, err
