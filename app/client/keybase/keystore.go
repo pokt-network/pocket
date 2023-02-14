@@ -3,12 +3,18 @@ package keybase
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"strings"
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/shared/crypto"
+)
+
+const (
+	prefetchSize = 15
 )
 
 // Errors
@@ -45,6 +51,12 @@ func NewKeybaseInMemory() (Keybase, error) {
 		return nil, err
 	}
 	return &badgerKeybase{db: db}, nil
+}
+
+// Return DB instance
+// FOR DEBUG PURPOSES ONLY
+func (keybase *badgerKeybase) GetBadgerDB() *badger.DB {
+	return keybase.db
 }
 
 // Close the DB
@@ -190,7 +202,7 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 	// View executes the function provided managing a read only transaction
 	err = keybase.db.View(func(tx *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
-		opts.PrefetchSize = 5
+		opts.PrefetchSize = prefetchSize
 		it := tx.NewIterator(opts)
 		defer it.Close()
 		for it.Rewind(); it.Valid(); it.Next() {
@@ -473,7 +485,7 @@ func dirExists(path string) (bool, error) {
 		}
 		return true, nil
 	}
-	if os.IsNotExist(err) {
+	if errors.Is(err, fs.ErrNotExist) {
 		// Create directories in path recursively
 		if err := os.MkdirAll(path, os.ModePerm); err != nil {
 			return false, fmt.Errorf("Error creating directory at path: %s, (%v)", path, err.Error())
