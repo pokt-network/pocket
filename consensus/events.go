@@ -1,8 +1,6 @@
 package consensus
 
 import (
-	"log"
-
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
@@ -10,7 +8,7 @@ import (
 func (m *consensusModule) publishNewHeightEvent(height uint64) {
 	newHeightEvent, err := messaging.PackMessage(&messaging.ConsensusNewHeightEvent{Height: height})
 	if err != nil {
-		log.Fatalf("Failed to pack consensus new height event: %s", err)
+		m.logger.Fatal().Err(err).Msg("Failed to pack consensus new height event")
 	}
 	m.GetBus().PublishEventToBus(newHeightEvent)
 }
