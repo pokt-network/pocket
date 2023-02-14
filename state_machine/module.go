@@ -17,6 +17,7 @@ type stateMachineModule struct {
 	base_modules.InterruptableModule
 
 	*fsm.FSM
+	logger modules.Logger
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -24,12 +25,13 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 }
 
 func (*stateMachineModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	m := &stateMachineModule{}
-	logger.Global.CreateLoggerForModule(m.GetModuleName())
+	m := &stateMachineModule{
+		logger: logger.Global.CreateLoggerForModule(modules.StateMachineModuleName),
+	}
 
 	m.FSM = NewNodeFSM(&fsm.Callbacks{
 		"enter_state": func(_ context.Context, e *fsm.Event) {
-			logger.Global.Info().
+			m.logger.Info().
 				Str("event", e.Event).
 				Str("sourceState", e.Src).
 				Msgf("entering state %s", e.Dst)
@@ -40,7 +42,7 @@ func (*stateMachineModule) Create(bus modules.Bus, options ...modules.ModuleOpti
 				Dst:   e.Dst,
 			})
 			if err != nil {
-				logger.Global.Fatal().Err(err).Msg("failed to pack state machine transition event")
+				m.logger.Fatal().Err(err).Msg("failed to pack state machine transition event")
 			}
 
 			bus.PublishEventToBus(newStateMachineTransitionEvent)
