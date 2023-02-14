@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	validatorKeysMap = make(map[string]crypto.Ed25519PrivateKey)
+	validatorKeysMap = make(map[string]crypto.PrivateKey)
 	rpcHost          = "http://v1-validator001:50832"
 )
 
@@ -71,7 +71,7 @@ func main() {
 	}
 }
 
-func stakeValidator(pk crypto.Ed25519PrivateKey, amount string, chains []string, serviceURL string) error {
+func stakeValidator(pk crypto.PrivateKey, amount string, chains []string, serviceURL string) error {
 	log.Printf("Staking Validator with Address: %s\n", pk.Address())
 	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0o600); err != nil {
 		return err
@@ -86,7 +86,7 @@ func stakeValidator(pk crypto.Ed25519PrivateKey, amount string, chains []string,
 	return nil
 }
 
-func unstakeValidator(pk crypto.Ed25519PrivateKey) error {
+func unstakeValidator(pk crypto.PrivateKey) error {
 	log.Printf("Unstaking Validator with Address: %s\n", pk.Address())
 	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0o600); err != nil {
 		return err

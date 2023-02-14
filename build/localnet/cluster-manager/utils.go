@@ -12,7 +12,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func fetchValidatorPrivateKeys(clientset *kubernetes.Clientset, validatorKeysMap map[string]crypto.Ed25519PrivateKey) {
+func fetchValidatorPrivateKeys(clientset *kubernetes.Clientset, validatorKeysMap map[string]crypto.PrivateKey) {
 	private_keys_secret, err := clientset.CoreV1().Secrets("default").Get(context.TODO(), "v1-localnet-validators-private-keys", metav1.GetOptions{})
 	if err != nil {
 		panic(err)
