@@ -240,7 +240,7 @@ func configureBootstrapNodes(p2pCfg *configs.P2PConfig, m *p2pModule) error {
 }
 
 func isValidHostnamePort(str string) bool {
-	pattern := regexp.MustCompile(`^(https?)://([a-zA-Z0-9.-]+):([0-9]{1,5})$`)
+	pattern := regexp.MustCompile(`^(https?)://([a-zA-Z0-9.-]+):(\d{1,5})$`)
 	matches := pattern.FindStringSubmatch(str)
 	if len(matches) != 4 {
 		return false
