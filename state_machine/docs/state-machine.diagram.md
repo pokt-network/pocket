@@ -4,11 +4,11 @@ The following diagram displays the various states and events that govern the fun
 
 ```mermaid
 stateDiagram-v2
-    [*] --> stopped
-    Consensus_syncMode --> Consensus_synced: Consensus_isCaughtUp
-    Consensus_unsynched --> Consensus_syncMode: Consensus_isSyncing
-    P2P_bootstrapped --> Consensus_synced: Consensus_isCaughtUp
-    P2P_bootstrapped --> Consensus_unsynched: Consensus_isUnsynched
-    P2P_bootstrapping --> P2P_bootstrapped: P2P_isBootstrapped
-    stopped --> P2P_bootstrapping: start
+    [*] --> Stopped
+    Consensus_SyncMode --> Consensus_Synced: Consensus_IsCaughtUp
+    Consensus_Unsynched --> Consensus_SyncMode: Consensus_IsSyncing
+    P2P_Bootstrapped --> Consensus_Synced: Consensus_IsCaughtUp
+    P2P_Bootstrapped --> Consensus_Unsynched: Consensus_IsUnsynched
+    P2P_Bootstrapping --> P2P_Bootstrapped: P2P_IsBootstrapped
+    Stopped --> P2P_Bootstrapping: Start
 ```

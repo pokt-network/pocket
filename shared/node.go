@@ -1,13 +1,12 @@
 package shared
 
 import (
-	"context"
-
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/rpc"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -132,7 +131,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	switch contentType {
 	case messaging.NodeStartedEventType:
 		logger.Global.Info().Msg("Received NodeStartedEvent")
-		if err := node.GetBus().GetStateMachineModule().Event(context.Background(), "start"); err != nil {
+		if err := node.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
 			return err
 		}
 	case consensus.HotstuffMessageContentType:

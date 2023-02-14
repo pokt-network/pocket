@@ -5,6 +5,7 @@ import (
 
 	"github.com/looplab/fsm"
 	"github.com/pokt-network/pocket/logger"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
@@ -60,6 +61,10 @@ func (*stateMachineModule) Create(bus modules.Bus, options ...modules.ModuleOpti
 
 func (m *stateMachineModule) GetModuleName() string {
 	return modules.StateMachineModuleName
+}
+
+func (m *stateMachineModule) SendEvent(event coreTypes.StateMachineEvent, args ...any) error {
+	return m.Event(context.TODO(), string(event), args)
 }
 
 // options

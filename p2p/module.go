@@ -25,6 +25,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -273,7 +274,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 				log.Println("Self address not found in addresbook, advertising")
 				// TODO: advertise node to network, populate internal addressbook adding self as first peer
 			}
-			if err := m.GetBus().GetStateMachineModule().Event(context.TODO(), "P2P_isBootstrapped"); err != nil {
+			if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_P2P_IsBootstrapped); err != nil {
 				return err
 			}
 		}

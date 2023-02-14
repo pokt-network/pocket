@@ -2,12 +2,14 @@ package state_machine
 
 import (
 	"github.com/looplab/fsm"
+
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 // NewNodeFSM returns a KISS Finite State Machine that is meant to mimick the various "states" of the node.
 //
-// source: consensus/doc/PROTOCOL_STATE_SYNC.md + additions for P2P
-// The initial implementation is going to be used to understand, from a P2P perspective, if the node requires bootstrapping
+// The current set of states and events captures a limited subset of state sync and P2P bootstrapping-related events.
+// More states & events in any of the modules supported should be added and documented here.
 func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 	var cb = fsm.Callbacks{}
 	if callbacks != nil {
@@ -15,13 +17,44 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 	}
 
 	stateMachine := fsm.NewFSM(
-		"stopped",
+		string(coreTypes.StateMachineState_Stopped),
 		fsm.Events{
-			{Name: "start", Src: []string{"stopped"}, Dst: "P2P_bootstrapping"},
-			{Name: "P2P_isBootstrapped", Src: []string{"P2P_bootstrapping"}, Dst: "P2P_bootstrapped"},
-			{Name: "Consensus_isUnsynched", Src: []string{"P2P_bootstrapped"}, Dst: "Consensus_unsynched"},
-			{Name: "Consensus_isSyncing", Src: []string{"Consensus_unsynched"}, Dst: "Consensus_syncMode"},
-			{Name: "Consensus_isCaughtUp", Src: []string{"P2P_bootstrapped", "Consensus_syncMode"}, Dst: "Consensus_synced"},
+			{
+				Name: string(coreTypes.StateMachineEvent_Start),
+				Src: []string{
+					string(coreTypes.StateMachineState_Stopped),
+				},
+				Dst: string(coreTypes.StateMachineState_P2P_Bootstrapping),
+			},
+			{
+				Name: string(coreTypes.StateMachineEvent_P2P_IsBootstrapped),
+				Src: []string{
+					string(coreTypes.StateMachineState_P2P_Bootstrapping),
+				},
+				Dst: string(coreTypes.StateMachineState_P2P_Bootstrapped),
+			},
+			{
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsUnsynched),
+				Src: []string{
+					string(coreTypes.StateMachineState_P2P_Bootstrapped),
+				},
+				Dst: string(coreTypes.StateMachineState_Consensus_Unsynched),
+			},
+			{
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsSyncing),
+				Src: []string{
+					string(coreTypes.StateMachineState_Consensus_Unsynched),
+				},
+				Dst: string(coreTypes.StateMachineState_Consensus_SyncMode),
+			},
+			{
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsCaughtUp),
+				Src: []string{
+					string(coreTypes.StateMachineState_P2P_Bootstrapped),
+					string(coreTypes.StateMachineState_Consensus_SyncMode),
+				},
+				Dst: string(coreTypes.StateMachineState_Consensus_Synced),
+			},
 		},
 		cb,
 	)
