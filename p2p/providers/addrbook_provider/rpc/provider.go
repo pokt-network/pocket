@@ -76,7 +76,7 @@ func (dabp *rpcAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (types
 		h         int64              = int64(height)
 		actorType rpc.ActorTypesEnum = "validator"
 	)
-	response, err := dabp.rpcClient.GetV1P2pAddressBookWithResponse(ctx, &rpc.GetV1P2pAddressBookParams{Height: &h, ActorType: &actorType})
+	response, err := dabp.rpcClient.GetV1P2pStakedActorsAddressBookWithResponse(ctx, &rpc.GetV1P2pStakedActorsAddressBookParams{Height: &h, ActorType: &actorType})
 	if err != nil {
 		return nil, err
 	}

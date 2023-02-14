@@ -69,7 +69,7 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 	return nil
 }
 
-func (s *rpcServer) GetV1P2pAddressBook(ctx echo.Context, params GetV1P2pAddressBookParams) error {
+func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params GetV1P2pStakedActorsAddressBookParams) error {
 	var height int64
 	var actors []Actor
 
