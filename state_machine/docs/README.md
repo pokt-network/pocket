@@ -15,7 +15,6 @@ The `StateMachine` module implements a FSM (Finite State Machine) that is respon
 
 In a nutshell: The FSM guarantees that the node is always in one specific state and verifies state transition (i.e. edges) to/from valid states (i.e. vertices).
 
-
 ## Code Structure
 
 ```bash
