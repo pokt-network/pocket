@@ -18,7 +18,12 @@ import (
 )
 
 func TestUtilityContext_HandleMessageStake(t *testing.T) {
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.HandleMessageStake", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 0)
 
@@ -57,7 +62,12 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.HandleMessageEditStake", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
@@ -110,7 +120,12 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 	// The gov param for each actor will be set to this value
 	numUnstakingBlocks := 5
 
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.HandleMessageUnstake", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 1)
 
@@ -156,7 +171,12 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 	// The gov param for each actor will be set to this value
 	minPauseBlocksNumber := 5
 
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.HandleMessageUnpause", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 1)
 
@@ -230,7 +250,12 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 }
 
 func TestUtilityContext_GetUnbondingHeight(t *testing.T) {
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.CalculateUnstakingHeight", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 0)
 
@@ -261,7 +286,12 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 	// The gov param for each actor will be set to this value
 	maxPausedBlocks := 5
 
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPausedActors", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 1)
 
@@ -337,7 +367,12 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 	poolInitAMount := big.NewInt(10000000000000)
 	pauseHeight := int64(2)
 
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.BeginUnstakingActorsPausedBefore", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 1)
 
@@ -444,7 +479,12 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 }
 
 func TestUtilityContext_GetExists(t *testing.T) {
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.GetExists", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 0)
 
@@ -467,7 +507,12 @@ func TestUtilityContext_GetExists(t *testing.T) {
 }
 
 func TestUtilityContext_GetOutputAddress(t *testing.T) {
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.GetOutputAddress", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 0)
 
@@ -485,7 +530,12 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 	pauseHeight := int64(100)
 
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.GetPauseHeightIfExists", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
@@ -516,7 +566,12 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 	}
 }
 func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.GetMessageEditStakeSignerCandidates", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
@@ -541,7 +596,12 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.GetMessageUnpauseSignerCandidates", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
@@ -564,7 +624,12 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		t.Run(fmt.Sprintf("%s.GetMessageUnstakeSignerCandidates", actorType.String()), func(t *testing.T) {
 			ctx := newTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)

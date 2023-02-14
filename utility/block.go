@@ -204,7 +204,12 @@ func (u *utilityContext) handleByzantineValidators(lastBlockByzantineValidators 
 func (u *utilityContext) unbondUnstakingActors() (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		var readyToUnstake []*moduleTypes.UnstakingActor
 		var poolName string
 		switch actorType {
@@ -251,7 +256,12 @@ func (u *utilityContext) unbondUnstakingActors() (err typesUtil.Error) {
 }
 
 func (u *utilityContext) beginUnstakingMaxPausedActors() (err typesUtil.Error) {
-	for _, actorType := range coreTypes.ActorTypes {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		if actorType == coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED {
 			continue
 		}
