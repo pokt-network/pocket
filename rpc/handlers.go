@@ -8,6 +8,7 @@ import (
 	"github.com/pokt-network/pocket/app"
 	"github.com/pokt-network/pocket/shared/codec"
 	typesCore "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -85,34 +86,19 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 	}
 	defer persistenceContext.Close()
 
-	var getter func(height int64) ([]*typesCore.Actor, error)
+	protocolActorGetter := getProtocolActorGetter(persistenceContext, params)
 
-	if params.ActorType == nil {
-		getter = persistenceContext.GetAllStakedActors
-	} else {
-		switch *params.ActorType {
-		case Application:
-			getter = persistenceContext.GetAllApps
-		case Fisherman:
-			getter = persistenceContext.GetAllFishermen
-		case ServiceNode:
-			getter = persistenceContext.GetAllServiceNodes
-		case Validator:
-			getter = persistenceContext.GetAllValidators
-		}
-	}
-
-	coreActors, err := getter(height)
+	protocolActors, err := protocolActorGetter(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	for _, coreActor := range coreActors {
+	for _, protocolActor := range protocolActors {
 		actors = append(actors, Actor{
-			Address:    coreActor.Address,
-			Type:       protocolActorToRPCActorTypeEnum(coreActor.ActorType),
-			PublicKey:  coreActor.PublicKey,
-			ServiceUrl: coreActor.GenericParam,
+			Address:    protocolActor.Address,
+			Type:       protocolActorToRPCActorTypeEnum(protocolActor.ActorType),
+			PublicKey:  protocolActor.PublicKey,
+			ServiceUrl: protocolActor.GenericParam,
 		})
 	}
 
@@ -124,8 +110,9 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 	return ctx.JSON(http.StatusOK, response)
 }
 
-func protocolActorToRPCActorTypeEnum(coreActorType typesCore.ActorType) ActorTypesEnum {
-	switch coreActorType {
+// protocolActorToRPCActorTypeEnum converts a protocol actor type to the rpc actor type enum
+func protocolActorToRPCActorTypeEnum(protocolActorType typesCore.ActorType) ActorTypesEnum {
+	switch protocolActorType {
 	case typesCore.ActorType_ACTOR_TYPE_APP:
 		return Application
 	case typesCore.ActorType_ACTOR_TYPE_FISH:
@@ -137,4 +124,22 @@ func protocolActorToRPCActorTypeEnum(coreActorType typesCore.ActorType) ActorTyp
 	default:
 		panic("invalid actor type")
 	}
+}
+
+// getProtocolActorGetter returns the correct protocol actor getter function based on the actor type parameter
+func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, params GetV1P2pStakedActorsAddressBookParams) func(height int64) ([]*typesCore.Actor, error) {
+	var protocolActorGetter func(height int64) ([]*typesCore.Actor, error) = persistenceContext.GetAllStakedActors
+	if params.ActorType != nil {
+		switch *params.ActorType {
+		case Application:
+			protocolActorGetter = persistenceContext.GetAllApps
+		case Fisherman:
+			protocolActorGetter = persistenceContext.GetAllFishermen
+		case ServiceNode:
+			protocolActorGetter = persistenceContext.GetAllServiceNodes
+		case Validator:
+			protocolActorGetter = persistenceContext.GetAllValidators
+		}
+	}
+	return protocolActorGetter
 }
