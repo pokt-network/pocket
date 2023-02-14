@@ -8,7 +8,6 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"
 
-	"github.com/pokt-network/pocket/p2p/common"
 	"github.com/pokt-network/pocket/p2p/libp2p/identity"
 	"github.com/pokt-network/pocket/p2p/libp2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
@@ -26,7 +25,7 @@ type libp2pNetwork struct {
 }
 
 var (
-	ErrNetwork = common.NewErrFactory("LibP2P network error")
+	ErrNetwork = types.NewErrFactory("LibP2P network error")
 	Year       = time.Hour * 24 * 365
 	// TODO: consider more carefully and parameterize.
 	DefaultPeerTTL = 2 * Year

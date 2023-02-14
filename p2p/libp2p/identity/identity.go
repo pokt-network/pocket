@@ -11,14 +11,13 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
-	"github.com/pokt-network/pocket/p2p/common"
 	"github.com/pokt-network/pocket/p2p/transport"
 	"github.com/pokt-network/pocket/p2p/types"
 	poktCrypto "github.com/pokt-network/pocket/shared/crypto"
 )
 
 var (
-	ErrIdentity = common.NewErrFactory("")
+	ErrIdentity = types.NewErrFactory("")
 )
 
 // PoktPeerFromStream builds a pokt peer from a libp2p stream.

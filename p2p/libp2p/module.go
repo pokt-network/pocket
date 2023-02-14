@@ -15,7 +15,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/p2p/common"
 	"github.com/pokt-network/pocket/p2p/libp2p/identity"
 	"github.com/pokt-network/pocket/p2p/libp2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
@@ -59,9 +58,7 @@ var (
 	// stream to complete, after which the stream is closed ("timed out").
 	readStreamTimeoutDuration = time.Second * 10
 	// ErrModule wraps errors which occur within the libp2pModule implementation.
-	ErrModule = common.NewErrFactory("LibP2P module error")
-	// ErrCloseStream wraps errors which occur when attempting to close a peer stream.
-	ErrCloseStream = common.NewErrFactory("an error occurred while closing peer stream")
+	ErrModule = typesP2P.NewErrFactory("LibP2P module error")
 )
 
 func Create(bus modules.Bus) (modules.Module, error) {
