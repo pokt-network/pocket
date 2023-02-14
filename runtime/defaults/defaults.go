@@ -10,15 +10,15 @@ import (
 const (
 	DefaultRPCPort       = "50832"
 	DefaultBusBufferSize = 100
+	DefaultRPCHost       = "localhost"
 
-	defaultRPCHost                  = "localhost"
 	defaultRPCTimeout               = 30000
 	validator1EndpointDockerCompose = "node1.consensus"
 	validator1EndpointK8S           = "v1-validator001"
 )
 
 var (
-	DefaultRemoteCLIURL = fmt.Sprintf("http://%s:%s", defaultRPCHost, DefaultRPCPort)
+	DefaultRemoteCLIURL = fmt.Sprintf("http://%s:%s", DefaultRPCHost, DefaultRPCPort)
 
 	// consensus
 	DefaultConsensusMaxMempoolBytes = uint64(500000000)

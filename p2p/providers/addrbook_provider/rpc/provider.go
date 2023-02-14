@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/core/types"
@@ -21,13 +21,12 @@ import (
 
 var (
 	_       addrbook_provider.AddrBookProvider = &rpcAddrBookProvider{}
-	rpcHost string                             = defaults.DefaultRemoteCLIURL // by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
+	rpcHost string
 )
 
 func init() {
-	if os.Getenv("RPC_HOST") != "" {
-		rpcHost = os.Getenv("RPC_HOST")
-	}
+	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
+	rpcHost = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", defaults.DefaultRPCHost), defaults.DefaultRPCPort)
 }
 
 type rpcAddrBookProvider struct {
