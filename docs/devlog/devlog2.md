@@ -12,12 +12,13 @@
 
 ---
 
-### Agenda <!-- omit in toc -->
+### Contents <!-- omit in toc -->
 
-1. [Current Iteration](#current-iteration-%EF%B8%8F)
-2. [Demo](#demo-)
-3. [Upcoming Iteration](#upcoming-iteration-%EF%B8%8F)
-4. [Feedback and Open Discussion](#feedback-and-open-discussion-)
+- [Current Iteration 🗓️](#current-iteration-%EF%B8%8F)
+- [Upcoming Iteration 🗓️](#upcoming-iteration-%EF%B8%8F)
+- [Feedback and Open Discussion 💡](#feedback-and-open-discussion-) 
+- [Contribute to V1 🧑‍💻](#contribute-to-v1-)
+- [About Pocket Network 💙](#about-pocket-network-)
 
 ---
 
