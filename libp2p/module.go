@@ -143,20 +143,19 @@ func (mod *libp2pModule) Start() error {
 
 	// TECHDEBT: metrics integration.
 	var err error
-
-	// TODO: disable services in client debug mode (?):
-	// i.e.:
 	opts := []libp2p.Option{
 		mod.identity,
 		mod.listenAddrs,
 		// TECHDEBT / INCOMPLETE: add transport security!
 	}
-	// if !mod.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode {
-	// 	opts = append(opts,
-	//   	libp2p.DisableRelay(), // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#DisableRelay)
-	//   	libp2p.Ping(false),	   // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#Ping)
-	//   )
-	// }
+
+	if !mod.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode {
+		opts = append(opts,
+			libp2p.DisableRelay(), // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#DisableRelay)
+			libp2p.Ping(false),    // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#Ping)
+		)
+	}
+
 	mod.host, err = libp2p.New(opts...)
 	if err != nil {
 		return ErrModule("unable to create libp2p host", err)
