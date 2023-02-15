@@ -9,4 +9,4 @@ Protocol Iteration Reviews are an opportunity to discuss and demo recent develop
 - Upcoming Iteration Issue Candidates Review
 - Feedback and Q&A
 
-<!-- GITHUB_WIKI: devlog/template -->
+<!-- GITHUB_WIKI: devlog/agenda -->
