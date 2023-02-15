@@ -122,6 +122,8 @@ cat ./build/config/config2.json | jq '.private_key' > /tmp/val2.json
 
 ### First Transaction
 
+_NOTE: `--path_to_private_key_file` has been deprecated since this demo was put together and a keybase has been implemented._
+
 Trigger a send transaction from validator 1 to validator 2.
 
 ```bash
