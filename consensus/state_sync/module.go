@@ -36,7 +36,7 @@ type StateSyncModule interface {
 	IsServerModEnabled() bool
 	EnableServerMode()
 
-	SendStateSyncMessage(*typesCons.StateSyncMessage, cryptoPocket.Address, uint64) error
+	SendStateSyncMessage(*typesCons.StateSyncMessage, string, cryptoPocket.Address, uint64) error
 }
 
 var (
@@ -70,6 +70,7 @@ func (*stateSync) Create(bus modules.Bus) (modules.Module, error) {
 	}
 
 	// when node is starting, it is in sync mode, as it might need to bootstrap to the latest state
+	// TODO: consider setting this thorugh event sent by state machine for consistency
 	m.currentMode = Sync
 	m.serverMode = false
 
@@ -117,13 +118,25 @@ func (m *stateSync) EnableServerMode() {
 // TODO(#352): Implement this function
 // Placeholder function
 func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-	m.logger.Debug().Msgf("Received get block response: %s", blockRes.Block.String())
+	consensusMod := m.GetBus().GetConsensusModule()
+	serverNodePeerId := consensusMod.GetNodeAddress()
+	clientPeerId := blockRes.PeerAddress
+	currentHeight := consensusMod.CurrentHeight()
+
+	m.logger.Info().Msgf("%s received get block response from: %s, for height %d. Received block is: %s \n", serverNodePeerId, clientPeerId, currentHeight, blockRes.Block.String())
+
 	return nil
 }
 
 // TODO(#352): Implement the business to handle these correctly
 // Placeholder function
 func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
-	m.logger.Debug().Msgf("Received get metadata response: %s", metaDataRes.String())
+	consensusMod := m.GetBus().GetConsensusModule()
+	serverNodePeerId := consensusMod.GetNodeAddress()
+	clientPeerId := metaDataRes.PeerAddress
+	currentHeight := consensusMod.CurrentHeight()
+
+	m.logger.Info().Msgf("%s received get metadata response from: %s, for height %d. Received metadata is: %s \n", serverNodePeerId, clientPeerId, currentHeight, metaDataRes.String())
+
 	return nil
 }

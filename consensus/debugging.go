@@ -123,8 +123,8 @@ func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage
 
 	for _, val := range validators {
 		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
-		if err := m.stateSync.SendStateSyncMessage(stateSyncGetBlockMessage, valAddress, requestHeight); err != nil {
-			m.logger.Debug().Msgf(typesCons.SendingStateSyncMessage(valAddress, requestHeight), err)
+		if err := m.stateSync.SendStateSyncMessage(stateSyncGetBlockMessage, typesCons.StateSyncGetBlockRequest, valAddress, requestHeight); err != nil {
+			m.logger.Error().Err(err).Msg("failed to send get block request state sync message")
 		}
 	}
 }
@@ -150,8 +150,8 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 
 	for _, val := range validators {
 		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
-		if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, valAddress, requestHeight); err != nil {
-			m.logger.Debug().Msgf(typesCons.SendingStateSyncMessage(valAddress, requestHeight), err)
+		if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, typesCons.StateSyncGetMetadataRequest, valAddress, requestHeight); err != nil {
+			m.logger.Error().Err(err).Msg("failed to send get metadata request state sync message")
 		}
 	}
 

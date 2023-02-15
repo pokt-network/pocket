@@ -6,12 +6,12 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, peerId cryptoPocket.Address, blockHeight uint64) error {
+func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, msgType string, peerId cryptoPocket.Address, blockHeight uint64) error {
 	anyMsg, err := anypb.New(stateSyncMsg)
 	if err != nil {
 		return err
 	}
-	m.logger.Info().Uint64("height", blockHeight).Msg(typesCons.SendingStateSyncMessage(peerId, blockHeight))
+	m.logger.Info().Uint64("height", blockHeight).Msg(typesCons.SendingStateSyncMessage(peerId, msgType, blockHeight))
 	return m.sendToPeer(anyMsg, peerId)
 }
 
