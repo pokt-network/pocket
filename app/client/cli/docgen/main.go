@@ -12,7 +12,14 @@ import (
 
 func main() {
 	workingDir, err := os.Getwd()
+	if err != nil {
+		logger.Global.Fatal().Err(err).Msg("failed to get working directory")
+	}
+
 	docsPath, err := filepath.Abs(workingDir + "/../../doc/commands")
+	if err != nil {
+		logger.Global.Fatal().Err(err).Msg("failed to get absolute path")
+	}
 
 	cmd := cli.GetRootCmd()
 	err = doc.GenMarkdownTree(cmd, docsPath)

@@ -169,6 +169,6 @@ func getRandomIntString(n int) string {
 
 func getRandomBytes(numBytes int64) []byte {
 	bz := make([]byte, numBytes)
-	rand.Read(bz) //nolint:gosec // G404 - Weak random source is okay in unit tests
+	rand.Read(bz) //nolint:staticcheck // G404 - Weak random source is okay in unit tests
 	return []byte(hex.EncodeToString(bz))
 }
