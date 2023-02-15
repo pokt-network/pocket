@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.35] - 2023-02-15
+
+- Add a few `nolint` comments to fix the code on main
+
 ## [0.0.0.34] - 2023-02-14
 
 - Remove `IUnstakingActor` and use `UnstakingActor` directly; guideline for removing future unnecessary types (e.g. TxResult)

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.13] - 2023-02-14
+
+- Fixed `docgen` to work from the root of the repository
+- Updated all the CLI docs
+
 ## [0.0.0.12] - 2023-02-14
 
 - Integrate keybase with CLI
