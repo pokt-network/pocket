@@ -499,4 +499,4 @@ check_cross_module_imports: ## Lists cross-module imports
 
 .PHONY: send_local_tx
 send_local_tx: ## A hardcoded send tx to make LocalNet debugging easier
-	p1 --path_to_private_key_file=build/pkeys/val1.json Account Send 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 67eb3f0a50ae459fecf666be0e93176e92441317 1000
+	go run app/client/*.go --path_to_private_key_file=build/pkeys/val1.json Account Send 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 67eb3f0a50ae459fecf666be0e93176e92441317 1000
