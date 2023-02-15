@@ -7,13 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.15] - 2023-02-10
+## [0.0.0.16] - 2023-02-16
 
 - Updated genesis to include accounts for all the validators that we can use in LocalNet based on the pre-generated keys in `build/localnet/manifests/private-keys.yaml`
 - Updated `docker-compose` to name the deployment as `pocket-v1` instead of `deployments` (default is the containing folder name)
 - Introduced the `cluster-manager`, which is a standalone microservice in the K8S LocalNet that takes care of (for now) automatically staking/unstaking nodes that are added/removed from the deployment
 - Updated manifests and K8S resources to reflect the new `cluster-manager` addition
 - In K8S LocalNet, the `cli-client` now waits for `v1-validator001` since its required for address book sourcing
+
+## [0.0.0.15] - 2023-02-15
+
+- Added manifests to handle `Roles`, `RoleBindings` and `ServiceAccounts` and referenced them in the `Tiltfile`
+- Updated `cli-client.yaml` to bind the `debug-client-account` `ServiceAccount` that has permissions to read the private keys from the `Secret`
 
 ## [0.0.0.14] - 2023-02-09
 

@@ -147,6 +147,9 @@ k8s_yaml(
         "manifests/cli-client.yaml",
         'manifests/cluster-manager.yaml',
         "manifests/network.yaml",
+        "manifests/roles.yaml",
+        "manifests/service-accounts.yaml",
+        "manifests/role-bindings.yaml",
         local(
             "templates/v1-validator-template.sh %s"
             % localnet_config["validators"]["count"],

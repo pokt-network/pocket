@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.26] - 2023-02-15
+## [0.0.0.27] - 2023-02-16
 
 - Added `UnmarshalText` to `Ed25519PrivateKey`
 - Added events `ConsensusNewHeightEvent` and `StateMachineTransitionEvent`
@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `ModulesRegistry` and `StateMachineModule` accessors and interfaces
 - Introduced generic `ModuleOption` pattern to fine tune modules behaviour
 - Added `StateMachine` to the `node` initialization
+
+## [0.0.0.26] - 2023-02-15
+
+- Added `FetchValidatorPrivateKeys` function since it is going to be used by the `debug-client` and also by the upcoming `cluster-manager` [#490](https://github.com/pokt-network/pocket/issues/490)
 
 ## [0.0.0.25] - 2023-02-14
 

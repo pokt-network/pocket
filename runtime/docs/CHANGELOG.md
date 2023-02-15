@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.18] - 2023-02-15
+## [0.0.0.19] - 2023-02-16
 
 - Added `bootstrap_nodes_csv` in `P2PConfig` to allow for a comma separated list of bootstrap nodes
 - Introduced `modules.ModulesRegistry` for better separation of concerns
 - Added `StateMachineModule` accessors
 - `Manager` embeds `base_modules.IntegratableModule` for DRYness
+
+## [0.0.0.18] - 2023-02-15
+
+- Added `IsProcessRunningInsideKubernetes` and centralized `GetEnv` so that it can be used across the board
 
 ## [0.0.0.17] - 2023-02-14
 
