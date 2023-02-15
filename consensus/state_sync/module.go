@@ -122,7 +122,7 @@ func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse)
 	serverNodePeerId := consensusMod.GetNodeAddress()
 	clientPeerId := blockRes.PeerAddress
 
-	m.logger.Info().Msgf("%s received get block response from: %s, for height %d. Received block's header %s,  \n", serverNodePeerId, clientPeerId, blockRes.Block.BlockHeader.Height, blockRes.Block.BlockHeader)
+	m.logger.Info().Msgf("%s received get block response from: %s, for height %d. Received block's header is: %s,  \n", serverNodePeerId, clientPeerId, blockRes.Block.BlockHeader.Height, blockRes.Block.BlockHeader)
 
 	return nil
 }

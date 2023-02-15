@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.29] - 2023-02-15
 
-- Update log messages in the state sync submodule with consistent style and add height information.
-- Add state sync message types to the types package
+- Updated log messages in the state sync submodule with consistent style and add height information
+- Added state sync message types to the types package
 
 ## [0.0.0.28] - 2023-02-14
 
