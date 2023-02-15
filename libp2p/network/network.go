@@ -166,14 +166,43 @@ func (p2pNet *libp2pNetwork) GetAddrBook() types.AddrBook {
 	return addrBook
 }
 
-func (p2pNet *libp2pNetwork) AddPeerToAddrBook(peer *types.NetworkPeer) error {
-	p2pNet.addrBookMap[peer.Address.String()] = peer
+func (p2pNet *libp2pNetwork) AddPeerToAddrBook(poktPeer *types.NetworkPeer) error {
+	p2pNet.addrBookMap[poktPeer.Address.String()] = poktPeer
+
+	pubKey, err := identity.PubKeyFromPoktPeer(poktPeer)
+	if err != nil {
+		return ErrNetwork(fmt.Sprintf(
+			"converting peer public key, pokt address: %s", poktPeer.Address,
+		), err)
+	}
+	peer, err := identity.PeerAddrInfoFromPoktPeer(poktPeer)
+	if err != nil {
+		return ErrNetwork(fmt.Sprintf(
+			"converting peer info, pokt address: %s", poktPeer.Address,
+		), err)
+	}
+
+	p2pNet.host.Peerstore().AddAddrs(peer.ID, peer.Addrs, DefaultPeerTTL)
+	if err := p2pNet.host.Peerstore().AddPubKey(peer.ID, pubKey); err != nil {
+		return ErrNetwork(fmt.Sprintf(
+			"adding peer public key, pokt address: %s", poktPeer.Address,
+		), err)
+	}
 	return nil
 }
 
 // CLEANUP: fix typo in interface (?)
-func (p2pNet *libp2pNetwork) RemovePeerToAddrBook(peer *types.NetworkPeer) error {
-	delete(p2pNet.addrBookMap, peer.Address.String())
+func (p2pNet *libp2pNetwork) RemovePeerToAddrBook(poktPeer *types.NetworkPeer) error {
+	delete(p2pNet.addrBookMap, poktPeer.Address.String())
+
+	peer, err := identity.PeerAddrInfoFromPoktPeer(poktPeer)
+	if err != nil {
+		return ErrNetwork(fmt.Sprintf(
+			"converting peer info, pokt address: %s", poktPeer.Address,
+		), err)
+	}
+
+	p2pNet.host.Peerstore().RemovePeer(peer.ID)
 	return nil
 }
 
