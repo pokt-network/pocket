@@ -4,7 +4,6 @@ package persistence
 
 import (
 	"context"
-	"log"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/indexer"
@@ -22,6 +21,8 @@ type PostgresContext struct {
 
 	stateHash string
 
+	logger modules.Logger
+
 	// TECHDEBT(#361): These three values are pointers to objects maintained by the PersistenceModule.
 	//                 Need to simply access them via the bus.
 	blockStore kvstore.KVStore
@@ -29,14 +30,14 @@ type PostgresContext struct {
 	stateTrees *stateTrees
 }
 
-func (p PostgresContext) NewSavePoint(bytes []byte) error {
-	log.Println("TODO: NewSavePoint not implemented")
+func (p *PostgresContext) NewSavePoint(bytes []byte) error {
+	p.logger.Info().Bool("TODO", true).Msg("NewSavePoint not implemented")
 	return nil
 }
 
 // TECHDEBT(#327): Guarantee atomicity betweens `prepareBlock`, `insertBlock` and `storeBlock` for save points & rollbacks.
-func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
-	log.Println("TODO: RollbackToSavePoint not fully implemented")
+func (p *PostgresContext) RollbackToSavePoint(bytes []byte) error {
+	p.logger.Info().Bool("TODO", true).Msg("RollbackToSavePoint not fully implemented")
 	return p.getTx().Rollback(context.TODO())
 }
 
@@ -52,8 +53,8 @@ func (p *PostgresContext) ComputeStateHash() (string, error) {
 }
 
 // TECHDEBT(#327): Make sure these operations are atomic
-func (p PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
-	log.Printf("About to commit block & context at height %d.\n", p.Height)
+func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
+	p.logger.Info().Int64("height", p.Height).Msg("About to commit block & context")
 
 	// Create a persistence block proto
 	block, err := p.prepareBlock(proposerAddr, quorumCert)
@@ -77,14 +78,14 @@ func (p PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 		return err
 	}
 	if err := p.conn.Close(ctx); err != nil {
-		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
+		p.logger.Error().Err(err).Bool("TODO", true).Msg("Error when closing DB connection")
 	}
 
 	return nil
 }
 
-func (p PostgresContext) Release() error {
-	log.Printf("About to release postgres context at height %d.\n", p.Height)
+func (p *PostgresContext) Release() error {
+	p.logger.Info().Int64("height", p.Height).Msg("About to release context")
 	ctx := context.TODO()
 	if err := p.getTx().Rollback(ctx); err != nil {
 		return err
@@ -95,13 +96,13 @@ func (p PostgresContext) Release() error {
 	return nil
 }
 
-func (p PostgresContext) Close() error {
-	log.Printf("About to close postgres context at height %d.\n", p.Height)
+func (p *PostgresContext) Close() error {
+	p.logger.Info().Int64("height", p.Height).Msg("About to close postgres context")
 	return p.conn.Close(context.TODO())
 }
 
 // INVESTIGATE(#361): Revisit if is used correctly in the context of the lifecycle of a persistenceContext and a utilityContext
-func (p PostgresContext) IndexTransaction(txResult modules.TxResult) error {
+func (p *PostgresContext) IndexTransaction(txResult modules.TxResult) error {
 	return p.txIndexer.Index(txResult)
 }
 

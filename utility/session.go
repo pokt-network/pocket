@@ -1,5 +1,8 @@
 package utility
 
+// IMPORTANT: The interface and implementation defined in this file are for illustrative purposes only
+// and need to be revisited before any implementation commences.
+
 import (
 	"encoding/binary"
 	"encoding/hex"
@@ -9,16 +12,6 @@ import (
 	"github.com/pokt-network/pocket/utility/types"
 )
 
-type Session interface {
-	NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application *coreTypes.Actor) (Session, types.Error)
-	GetServiceNodes() []*coreTypes.Actor // the ServiceNodes providing Web3 to the application
-	GetFishermen() []*coreTypes.Actor    // the Fishermen monitoring the serviceNodes
-	GetApplication() *coreTypes.Actor    // the Application consuming the web3 access
-	GetRelayChain() RelayChain           // the chain identifier of the web3
-	GetGeoZone() GeoZone                 // the geolocation zone where all are registered
-	GetSessionHeight() int64             // the block height when the session started
-}
-
 type RelayChain Identifier
 type GeoZone Identifier
 
@@ -26,6 +19,16 @@ type Identifier interface {
 	Name() string
 	ID() string
 	Bytes() []byte
+}
+
+type Session interface {
+	NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application *coreTypes.Actor) (Session, types.Error)
+	GetServiceNodes() []*coreTypes.Actor // the ServiceNodes providing Web3 to the application
+	GetFishermen() []*coreTypes.Actor    // the Fishermen monitoring the serviceNodes
+	GetApplication() *coreTypes.Actor    // the Application consuming the web3 access
+	GetRelayChain() RelayChain           // the chain identifier of the web3
+	GetGeoZone() GeoZone                 // the geo-location zone where all are registered
+	GetSessionHeight() int64             // the block height when the session started
 }
 
 var _ Session = &session{}
@@ -106,6 +109,7 @@ func (s *session) findClosestYFishermen() []*coreTypes.Actor {
 // Q) why do we hash to find a newKey between every actor selection?
 // A) pseudo-random selection only works if each iteration is re-randomized
 //    or it would be subject to lexicographical proximity bias attacks
+//nolint:unused // This is a demonstratable function
 func (s *session) pseudoRandomSelection(orderedListOfPublicKeys []string, numberOfActorsInSession int) []*coreTypes.Actor {
 	// IMPORTANT:
 	// THIS IS A DEMONSTRABLE FUNCTION THAT WILL NOT BE IMPLEMENTED AS SUCH

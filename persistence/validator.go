@@ -5,14 +5,15 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 )
 
-func (p PostgresContext) GetValidatorExists(address []byte, height int64) (exists bool, err error) {
+func (p *PostgresContext) GetValidatorExists(address []byte, height int64) (exists bool, err error) {
 	return p.GetExists(types.ValidatorActor, address, height)
 }
 
-func (p PostgresContext) GetValidator(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, err error) {
+//nolint:gocritic // tooManyResultsChecker This function needs to return many values
+func (p *PostgresContext) GetValidator(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, err error) {
 	actor, err := p.getActor(types.ValidatorActor, address, height)
 	operator = actor.Address
 	publicKey = actor.PublicKey
@@ -24,7 +25,7 @@ func (p PostgresContext) GetValidator(address []byte, height int64) (operator, p
 	return
 }
 
-func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, output []byte, _ bool, _ int32, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
+func (p *PostgresContext) InsertValidator(address, publicKey, output []byte, _ bool, _ int32, serviceURL, stakedTokens string, pausedHeight, unstakingHeight int64) error {
 	return p.InsertActor(types.ValidatorActor, &coreTypes.Actor{
 		ActorType:       coreTypes.ActorType_ACTOR_TYPE_VAL,
 		Address:         hex.EncodeToString(address),
@@ -37,7 +38,7 @@ func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, outpu
 	})
 }
 
-func (p PostgresContext) UpdateValidator(address []byte, serviceURL string, stakedAmount string) error {
+func (p *PostgresContext) UpdateValidator(address []byte, serviceURL, stakedAmount string) error {
 	return p.UpdateActor(types.ValidatorActor, &coreTypes.Actor{
 		ActorType:    coreTypes.ActorType_ACTOR_TYPE_VAL,
 		Address:      hex.EncodeToString(address),
@@ -46,76 +47,53 @@ func (p PostgresContext) UpdateValidator(address []byte, serviceURL string, stak
 	})
 }
 
-func (p PostgresContext) GetValidatorStakeAmount(height int64, address []byte) (string, error) {
+func (p *PostgresContext) GetValidatorStakeAmount(height int64, address []byte) (string, error) {
 	return p.getActorStakeAmount(types.ValidatorActor, address, height)
 }
 
-func (p PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount string) error {
+func (p *PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount string) error {
 	return p.setActorStakeAmount(types.ValidatorActor, address, stakeAmount)
 }
 
-func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, status int32) ([]modules.IUnstakingActor, error) {
+func (p *PostgresContext) GetValidatorsReadyToUnstake(height int64, status int32) ([]*moduleTypes.UnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.ValidatorActor, height)
 }
 
-func (p PostgresContext) GetValidatorStatus(address []byte, height int64) (int32, error) {
+func (p *PostgresContext) GetValidatorStatus(address []byte, height int64) (int32, error) {
 	return p.GetActorStatus(types.ValidatorActor, address, height)
 }
 
-func (p PostgresContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error {
+func (p *PostgresContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error {
 	return p.SetActorUnstakingHeightAndStatus(types.ValidatorActor, address, unstakingHeight)
 }
 
-func (p PostgresContext) GetValidatorPauseHeightIfExists(address []byte, height int64) (int64, error) {
+func (p *PostgresContext) GetValidatorPauseHeightIfExists(address []byte, height int64) (int64, error) {
 	return p.GetActorPauseHeightIfExists(types.ValidatorActor, address, height)
 }
 
-func (p PostgresContext) SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error {
+func (p *PostgresContext) SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error {
 	return p.SetActorStatusAndUnstakingHeightIfPausedBefore(types.ValidatorActor, pausedBeforeHeight, unstakingHeight)
 }
 
-func (p PostgresContext) SetValidatorPauseHeight(address []byte, height int64) error {
+func (p *PostgresContext) SetValidatorPauseHeight(address []byte, height int64) error {
 	return p.SetActorPauseHeight(types.ValidatorActor, address, height)
 }
 
-// TODO(team): The Get & Update operations need to be made atomic
-// TODO(team): Deprecate this functiona altogether and use UpdateValidator where applicable
-func (p PostgresContext) setValidatorStakedTokens(address []byte, tokens string) error {
-	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	operator, _, _, serviceURL, _, _, _, err := p.GetValidator(address, height)
-	if err != nil {
-		return err
-	}
-	addr, err := hex.DecodeString(operator)
-	if err != nil {
-		return err
-	}
-	return p.UpdateValidator(addr, serviceURL, tokens)
-}
-
-func (p PostgresContext) getValidatorStakedTokens(address []byte, height int64) (tokens string, err error) {
-	_, _, tokens, _, _, _, _, err = p.GetValidator(address, height)
-	return
-}
-
-func (p PostgresContext) GetValidatorOutputAddress(operator []byte, height int64) (output []byte, err error) {
+func (p *PostgresContext) GetValidatorOutputAddress(operator []byte, height int64) (output []byte, err error) {
 	return p.GetActorOutputAddress(types.ValidatorActor, operator, height)
 }
 
 // TODO: implement missed blocks
-func (p PostgresContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, pausedHeight int64, missedBlocks int) error {
+func (p *PostgresContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, pausedHeight int64, missedBlocks int) error {
 	return nil
 }
 
 // TODO: implement missed blocks
-func (p PostgresContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) error {
+func (p *PostgresContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) error {
 	return nil
 }
 
 // TODO: implement missed blocks
-func (p PostgresContext) GetValidatorMissedBlocks(address []byte, height int64) (int, error) {
+func (p *PostgresContext) GetValidatorMissedBlocks(address []byte, height int64) (int, error) {
 	return 0, nil
 }

@@ -1,9 +1,14 @@
 package types
 
+// DISCUSS(M5): Evaluate how Pocket specific errors should be managed and returned to the client
+// TECHDEBT: Remove reference to the term `Proto`; it's why we created a codec package
+
 import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
 type Error interface {
@@ -11,21 +16,23 @@ type Error interface {
 	error
 }
 
-type StdErr struct {
+var _ Error = &stdErr{}
+
+type stdErr struct {
 	CodeError Code
 	error
 }
 
-func (se StdErr) Error() string {
+func (se *stdErr) Error() string {
 	return fmt.Sprintf("CODE: %v, ERROR: %s", se.Code(), se.error.Error())
 }
 
-func (se StdErr) Code() Code {
+func (se *stdErr) Code() Code {
 	return se.CodeError
 }
 
 func NewError(code Code, msg string) Error {
-	return StdErr{
+	return &stdErr{
 		CodeError: code,
 		error:     errors.New(msg),
 	}
@@ -33,6 +40,7 @@ func NewError(code Code, msg string) Error {
 
 type Code float64
 
+//nolint:gosec // G101 - Not hard-coded credentials
 const (
 	CodeOK                               Code = 0
 	CodeEmptyTransactionError            Code = 2
@@ -93,7 +101,7 @@ const (
 	CodeAlreadyExistsError               Code = 60
 	CodeGetExistsError                   Code = 61
 	CodeGetLatestHeightError             Code = 62
-
+	// DEPRECATED                         Code = 63
 	CodeGetPauseHeightError               Code = 64
 	CodeAlreadyPausedError                Code = 65
 	CodeSetPauseHeightError               Code = 66
@@ -110,8 +118,8 @@ const (
 	CodeEqualVotesError                   Code = 77
 	CodeUnequalRoundsError                Code = 78
 	CodeMaxEvidenceAgeError               Code = 79
-	CodeGetStakedTokensError              Code = 80
-	CodeSetValidatorStakedTokensError     Code = 81
+	CodeGetStakedAmountError              Code = 80
+	CodeSetValidatorStakedAmountError     Code = 81
 	CodeSetPoolAmountError                Code = 82
 	CodeGetPoolAmountError                Code = 83
 	CodeInvalidProposerCutPercentageError Code = 84
@@ -162,9 +170,11 @@ const (
 	CodeGetHeightError                    Code = 129
 	CodeUnknownActorType                  Code = 130
 	CodeUnknownMessageType                Code = 131
+)
 
-	GetStakedTokensError              = "an error occurred getting the validator staked tokens"
-	SetValidatorStakedTokensError     = "an error occurred setting the validator staked tokens"
+const (
+	GetStakedAmountsError             = "an error occurred getting the validator's amount staked"
+	SetValidatorStakedAmountError     = "an error occurred setting the validator' amount staked"
 	EqualVotesError                   = "the votes are identical and not equivocating"
 	UnequalRoundsError                = "the round numbers are not equal"
 	UnequalVoteTypesError             = "the vote types are not equal"
@@ -257,7 +267,7 @@ const (
 	PayloadTooBigError                = "socket error: payload size is too big. "
 	SocketIOStartFailedError          = "socket error: failed to start socket reading/writing (io)"
 	EmptyTransactionError             = "the transaction is empty"
-	StringToBigIntError               = "an error occurred converting the string primitive to big.Int, the conversion was unsuccessful with base 10"
+	StringToBigIntError               = "error converting string to big int"
 	GetAllValidatorsError             = "an error occurred getting all validators from the state"
 	InvalidAmountError                = "the amount field is invalid; cannot be converted to big.Int"
 	InvalidAddressLenError            = "the length of the address is not valid"
@@ -296,23 +306,23 @@ func ErrUnknownParam(paramName string) Error {
 }
 
 func ErrUnequalPublicKeys() Error {
-	return NewError(CodeUnequalPublicKeysError, fmt.Sprintf("%s", UnequalPublicKeysError))
+	return NewError(CodeUnequalPublicKeysError, UnequalPublicKeysError)
 }
 
 func ErrEqualVotes() Error {
-	return NewError(CodeEqualVotesError, fmt.Sprintf("%s", EqualVotesError))
+	return NewError(CodeEqualVotesError, EqualVotesError)
 }
 
 func ErrUnequalVoteTypes() Error {
-	return NewError(CodeUnequalVoteTypesError, fmt.Sprintf("%s", UnequalVoteTypesError))
+	return NewError(CodeUnequalVoteTypesError, UnequalVoteTypesError)
 }
 
 func ErrUnequalHeights() Error {
-	return NewError(CodeUnequalHeightsError, fmt.Sprintf("%s", UnequalHeightsError))
+	return NewError(CodeUnequalHeightsError, UnequalHeightsError)
 }
 
 func ErrUnequalRounds() Error {
-	return NewError(CodeUnequalRoundsError, fmt.Sprintf("%s", UnequalRoundsError))
+	return NewError(CodeUnequalRoundsError, UnequalRoundsError)
 }
 
 func ErrInvalidServiceUrl(reason string) Error {
@@ -332,11 +342,11 @@ func ErrGetServiceNodeCount(chain string, height int64, err error) Error {
 }
 
 func ErrEmptyParamKey() Error {
-	return NewError(CodeEmptyParamKeyError, fmt.Sprintf("%s", EmptyParamKeyError))
+	return NewError(CodeEmptyParamKeyError, EmptyParamKeyError)
 }
 
 func ErrEmptyParamValue() Error {
-	return NewError(CodeEmptyParamValueError, fmt.Sprintf("%s", EmptyParamValueError))
+	return NewError(CodeEmptyParamValueError, EmptyParamValueError)
 }
 
 func ErrGetOutputAddress(operator []byte, err error) Error {
@@ -352,11 +362,11 @@ func ErrGetMissedBlocks(err error) Error {
 }
 
 func ErrGetStakedTokens(err error) Error {
-	return NewError(CodeGetStakedTokensError, fmt.Sprintf("%s", GetStakedTokensError))
+	return NewError(CodeGetStakedAmountError, GetStakedAmountsError)
 }
 
-func ErrSetValidatorStakedTokens(err error) Error {
-	return NewError(CodeSetValidatorStakedTokensError, fmt.Sprintf("%s", SetValidatorStakedTokensError))
+func ErrSetValidatorStakedAmount(err error) Error {
+	return NewError(CodeSetValidatorStakedAmountError, SetValidatorStakedAmountError)
 }
 
 func ErrGetExists(err error) Error {
@@ -380,31 +390,31 @@ func ErrUnmarshalTransaction(err error) Error {
 }
 
 func ErrAlreadyExists() Error {
-	return NewError(CodeAlreadyExistsError, fmt.Sprintf("%s", AlreadyExistsError))
+	return NewError(CodeAlreadyExistsError, AlreadyExistsError)
 }
 
 func ErrNotExists() Error {
-	return NewError(CodeNotExistsError, fmt.Sprintf("%s", NotExistsError))
+	return NewError(CodeNotExistsError, NotExistsError)
 }
 
 func ErrNilOutputAddress() Error {
-	return NewError(CodeNilOutputAddress, fmt.Sprintf("%s", NilOutputAddressError))
+	return NewError(CodeNilOutputAddress, NilOutputAddressError)
 }
 
 func ErrEmptyRelayChains() Error {
-	return NewError(CodeEmptyRelayChainsError, fmt.Sprintf("%s", EmptyRelayChainsError))
+	return NewError(CodeEmptyRelayChainsError, EmptyRelayChainsError)
 }
 
 func ErrInvalidRelayChainLength(got, expected int) Error {
-	return NewError(CodeInvalidRelayChainLengthError, fmt.Sprintf("%s", InvalidRelayChainLengthError))
+	return NewError(CodeInvalidRelayChainLengthError, InvalidRelayChainLengthError)
 }
 
 func ErrEmptyRelayChain() Error {
-	return NewError(CodeEmptyRelayChainError, fmt.Sprintf("%s", EmptyRelayChainError))
+	return NewError(CodeEmptyRelayChainError, EmptyRelayChainError)
 }
 
 func ErrMinimumStake() Error {
-	return NewError(CodeMinimumStakeError, fmt.Sprintf("%s", MinimumStakeError))
+	return NewError(CodeMinimumStakeError, MinimumStakeError)
 }
 
 func ErrGetParam(paramName string, err error) Error {
@@ -416,7 +426,7 @@ func ErrUnauthorizedParamChange(owner []byte) Error {
 }
 
 func ErrInvalidSigner() Error {
-	return NewError(CodeInvalidSignerError, fmt.Sprintf("%s", InvalidSignerError))
+	return NewError(CodeInvalidSignerError, InvalidSignerError)
 }
 
 func ErrMaxChains(maxChains int) Error {
@@ -424,18 +434,22 @@ func ErrMaxChains(maxChains int) Error {
 }
 
 func ErrAlreadyPaused() Error {
-	return NewError(CodeAlreadyPausedError, fmt.Sprintf("%s", AlreadyPausedError))
+	return NewError(CodeAlreadyPausedError, AlreadyPausedError)
 }
 
 func ErrNotPaused() Error {
-	return NewError(CodeNotPausedError, fmt.Sprintf("%s", NotPausedError))
+	return NewError(CodeNotPausedError, NotPausedError)
 }
 
 func ErrNotReadyToUnpause() Error {
-	return NewError(CodeNotReadyToUnpauseError, fmt.Sprintf("%s", NotReadyToUnpauseError))
+	return NewError(CodeNotReadyToUnpauseError, NotReadyToUnpauseError)
 }
 
-func ErrInvalidStatus(got, expected int32) Error {
+func ErrUnknownStatus(status int32) Error {
+	return NewError(CodeInvalidStatusError, fmt.Sprintf("%s: unknown status %d", InvalidStatusError, status))
+}
+
+func ErrInvalidStatus(got, expected StakeStatus) Error {
 	return NewError(CodeInvalidStatusError, fmt.Sprintf("%s: %d expected %d", InvalidStatusError, got, expected))
 }
 
@@ -503,7 +517,7 @@ func ErrSetAccountAmount(err error) Error {
 	return NewError(CodeSetAccountError, fmt.Sprintf("%s, %s", SetAccountError, err.Error()))
 }
 
-func ErrInterfaceConversion(got any, expected any) Error {
+func ErrInterfaceConversion(got, expected any) Error {
 	return NewError(CodeInterfaceConversionError, fmt.Sprintf("%s: %T, expected %T", InterfaceConversionError, got, expected))
 }
 
@@ -515,8 +529,8 @@ func ErrGetBlockHash(err error) Error {
 	return NewError(CodeGetBlockHashError, fmt.Sprintf("%s: %s", GetBlockHashError, err.Error()))
 }
 
-func ErrInvalidPublicKeyLen(err error) Error {
-	return NewError(CodeInvalidPublicKeyLenError, fmt.Sprintf("%s: %s", InvalidPublicKeyLenError, err.Error()))
+func ErrInvalidPublicKeyLen(pubKeyLen int) Error {
+	return NewError(CodeInvalidPublicKeyLenError, fmt.Sprintf("%s: %s", InvalidPublicKeyLenError, cryptoPocket.ErrInvalidPublicKeyLen(pubKeyLen)))
 }
 
 func ErrInvalidNonce() Error {
@@ -528,11 +542,11 @@ func ErrNewPublicKeyFromBytes(err error) Error {
 }
 
 func ErrInvalidProposerCutPercentage() Error {
-	return NewError(CodeInvalidProposerCutPercentageError, fmt.Sprintf("%s", InvalidProposerCutPercentageError))
+	return NewError(CodeInvalidProposerCutPercentageError, InvalidProposerCutPercentageError)
 }
 
 func ErrMaxEvidenceAge() Error {
-	return NewError(CodeMaxEvidenceAgeError, fmt.Sprintf("%s", MaxEvidenceAgeError))
+	return NewError(CodeMaxEvidenceAgeError, MaxEvidenceAgeError)
 }
 
 func ErrInvalidBlockHeight() Error {
@@ -576,7 +590,7 @@ func ErrSignatureVerificationFailed() Error {
 }
 
 func ErrDecodeMessage() Error {
-	return NewError(CodeDecodeMessageError, fmt.Sprintf("%s", DecodeMessageError))
+	return NewError(CodeDecodeMessageError, DecodeMessageError)
 }
 
 func ErrProtoFromAny(err error) Error {
@@ -616,15 +630,15 @@ func ErrResetContext(err error) Error {
 }
 
 func ErrDuplicateSavePoint() Error {
-	return NewError(CodeDuplicateSavePointError, fmt.Sprintf("%s", DuplicateSavePointError))
+	return NewError(CodeDuplicateSavePointError, DuplicateSavePointError)
 }
 
 func ErrEmptySavePoints() Error {
-	return NewError(CodeEmptySavePointsError, fmt.Sprintf("%s", EmptySavePointsError))
+	return NewError(CodeEmptySavePointsError, EmptySavePointsError)
 }
 
 func ErrSavePointNotFound() Error {
-	return NewError(CodeSavePointNotFoundError, fmt.Sprintf("%s", SavePointNotFoundError))
+	return NewError(CodeSavePointNotFoundError, SavePointNotFoundError)
 }
 
 func ErrCommitContext(err error) Error {
@@ -668,8 +682,8 @@ func ErrDuplicateTransaction() Error {
 	return NewError(CodeDuplicateTransactionError, DuplicateTransactionError)
 }
 
-func ErrStringToBigInt() Error {
-	return NewError(CodeStringToBigIntError, StringToBigIntError)
+func ErrStringToBigInt(err error) Error {
+	return NewError(CodeStringToBigIntError, fmt.Sprintf("%s: %s", StringToBigIntError, err.Error()))
 }
 
 func ErrInsufficientAmount(address string) Error {
@@ -677,7 +691,7 @@ func ErrInsufficientAmount(address string) Error {
 }
 
 func ErrNegativeAmountError() Error {
-	return NewError(CodeNegativeAmountError, fmt.Sprintf("%s", NegativeAmountError))
+	return NewError(CodeNegativeAmountError, NegativeAmountError)
 }
 
 func ErrGetAllValidators(err error) Error {
@@ -756,8 +770,8 @@ func ErrInvalidTransactionCount() Error {
 	return NewError(CodeInvalidTransactionCountError, InvalidTransactionCountError)
 }
 
-func ErrInvalidHashLength(err error) Error {
-	return NewError(CodeInvalidHashLengthError, fmt.Sprintf("%s: %s", InvalidHashLengthError, err.Error()))
+func ErrInvalidHashLength(hashLen int) Error {
+	return NewError(CodeInvalidHashLengthError, fmt.Sprintf("%s: %s", InvalidHashLengthError, cryptoPocket.ErrInvalidHashLen(hashLen)))
 }
 
 func ErrNilQuorumCertificate() Error {
@@ -768,6 +782,7 @@ func ErrNewAddressFromBytes(err error) Error {
 	return NewError(CodeNewAddressFromBytesError, fmt.Sprintf("%s: %s", NewAddressFromBytesError, err.Error()))
 }
 
+// CONSIDERATION: Moving this into the `codec` library could reduce some code bloat
 func ErrProtoMarshal(err error) Error {
 	return NewError(CodeProtoMarshalError, fmt.Sprintf("%s: %s", ProtoMarshalError, err.Error()))
 }

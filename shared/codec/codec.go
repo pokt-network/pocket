@@ -5,56 +5,43 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// TODO: Use generics in place of `proto.Message` in the interface below
-//       so every caller does not need to do in place casting.
-type Codec interface { // TODO (Team) move to shared. Possibly rename
+// CONSIDERATION: Use generics in place of `proto.Message` in the interface below so
+//                every caller does not need to do in place casting.
+type Codec interface {
 	Marshal(proto.Message) ([]byte, error)
 	Unmarshal([]byte, proto.Message) error
 	ToAny(proto.Message) (*anypb.Any, error)
 	FromAny(*anypb.Any) (proto.Message, error)
+	Clone(proto.Message) proto.Message
 }
 
-var _ Codec = &ProtoCodec{}
+var _ Codec = &protoCodec{}
 
-// TODO: Need to define a type like `type ProtoAny anypb.Any` so that we are
-//       mixing protobufs and a centralized codec structure throughout the codebase.
-type ProtoCodec struct{}
+// IMPROVE: Need to define a type similar to `type ProtoAny anypb.Any` so that we are
+//          referencing protobuf specific types (e.g. anypb.Any) anywhere in the codebase.
+type protoCodec struct{}
 
-func (p *ProtoCodec) Marshal(message proto.Message) ([]byte, error) {
-	bz, err := proto.MarshalOptions{Deterministic: true}.Marshal(message)
-	if err != nil {
-		return nil, err
-	}
-	return bz, nil
-}
-
-func (p *ProtoCodec) Unmarshal(bz []byte, message proto.Message) error {
-	err := proto.Unmarshal(bz, message)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *ProtoCodec) ToAny(message proto.Message) (*anypb.Any, error) {
-	any, err := anypb.New(message)
-	if err != nil {
-		return nil, err
-	}
-	return any, nil
-}
-
-func (p *ProtoCodec) FromAny(any *anypb.Any) (proto.Message, error) {
-	msg, err := anypb.UnmarshalNew(any, proto.UnmarshalOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return msg, nil
-}
-
-// DISCUSS: Retrieve this from the utility module via the application specific bus?
-// There are some parts of the code that does not have access to the bus;
-// Example: txIndexer
 func GetCodec() Codec {
-	return &ProtoCodec{}
+	return &protoCodec{}
+}
+
+// IMPROVE: If/when we move Pocket's `Error` type into a separate package, we can return `ErrProtoMarshal` here
+func (p *protoCodec) Marshal(msg proto.Message) ([]byte, error) {
+	return proto.MarshalOptions{Deterministic: true}.Marshal(msg)
+}
+
+func (p *protoCodec) Unmarshal(bz []byte, msg proto.Message) error {
+	return proto.Unmarshal(bz, msg)
+}
+
+func (p *protoCodec) ToAny(msg proto.Message) (*anypb.Any, error) {
+	return anypb.New(msg)
+}
+
+func (p *protoCodec) FromAny(any *anypb.Any) (proto.Message, error) {
+	return anypb.UnmarshalNew(any, proto.UnmarshalOptions{})
+}
+
+func (p *protoCodec) Clone(msg proto.Message) proto.Message {
+	return proto.Clone(msg)
 }

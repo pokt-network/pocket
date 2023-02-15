@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.35] - 2023-02-15
+
+- Add a few `nolint` comments to fix the code on main
+
+## [0.0.0.34] - 2023-02-14
+
+- Remove `IUnstakingActor` and use `UnstakingActor` directly; guideline for removing future unnecessary types (e.g. TxResult)
+- Typo in `GetMinimumBlockHeightQuery`
+- Reduce unnecessary `string` <-> `[]byte` conversion in a few places
+- Fix bug in `updateUnstakedHeightIfPausedBefore` that was unstaking all actors
+
+## [0.0.0.33] - 2023-02-09
+
+- Added mock generation to the `kvstore/kvstore.go`.
+
+## [0.0.0.32] - 2023-02-07
+
+- Minor documentation cleanup
+
+## [0.0.0.31] - 2023-02-06
+
+- Address legacy linter errors from `golangci-lint`
+
+## [0.0.0.30] - 2023-02-04
+
+- Changed log lines to utilize new logger module.
+
 ## [0.0.0.29] - 2023-01-31
 
 - Use hash of serialised protobufs for keys in `updateParamsTree()` and `updateFlagsTree()`
@@ -284,3 +311,5 @@ Pocket Persistence 1st Iteration (https://github.com/pokt-network/pocket/pull/73
 - Update to the Persistence module interface to enable historical height queries
 - Library / infrastructure for persistence unit fuzz testing
 - Tests triggered via `make test_persistence`
+
+<!-- GITHUB_WIKI: changelog/persistence -->

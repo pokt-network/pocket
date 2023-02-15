@@ -11,13 +11,13 @@ Algorand's own implementation of the algorithm [2].
 import (
 	crand "crypto/rand"
 	"fmt"
-	"log"
 	"math/big"
 	"strings"
 
 	"golang.org/x/exp/rand"
 
 	"github.com/pokt-network/pocket/consensus/leader_election/vrf"
+	"github.com/pokt-network/pocket/logger"
 
 	"gonum.org/v1/gonum/stat/distuv"
 )
@@ -41,7 +41,7 @@ func init() {
 	var err error
 	maxVrfOutFloat, base, err = big.ParseFloat(maxVrfOutFloatString, 0, vrfOutFloatPrecision, big.ToNearestEven)
 	if base != 16 || err != nil {
-		log.Fatal("failed to parse big float constant for sortition")
+		logger.Global.Fatal().Msg("failed to parse big float constant for sortition")
 	}
 
 	maxRandomInt = big.NewInt(^int64(0))
@@ -70,7 +70,7 @@ func Sortition(validatorStake, networkStake, numExpectedCandidates uint64, vrfOu
 	// Generate a random source using the crypto library
 	f, err := crand.Int(crand.Reader, maxRandomInt)
 	if err != nil {
-		log.Fatal("failed to generate random integer for sortition")
+		logger.Global.Fatal().Err(err).Msg("failed to generate random integer for sortition")
 	}
 	src := rand.NewSource(f.Uint64())
 
@@ -94,7 +94,7 @@ Reasoning:
 [4] github.com/pokt-network/pocket-network-protocol/tree/main/consensus
 */
 // Seed to be used for soritition when generating the vrfOut and vrfProof
-func FormatSeed(height uint64, round uint64, prevBlockHash string) []byte {
+func FormatSeed(height, round uint64, prevBlockHash string) []byte {
 	return []byte(fmt.Sprintf("%d:%d:%s", height, round, prevBlockHash))
 }
 

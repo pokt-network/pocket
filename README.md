@@ -14,7 +14,9 @@ The official implementation of the [V1 Pocket Network Protocol Specification](ht
 
 ---
 
-All the links you'll need are listed below. If you'd like to contribute to the Pocket V1 Protocol, start by:
+Some relevant links are listed below. Refer to the complete ongoing documentation at the **[Pocket GitHub Wiki](https://github.com/pokt-network/pocket/wiki)**.
+
+If you'd like to contribute to the Pocket V1 Protocol, start by:
 
 1. Get up and running by reading the [Development Guide](docs/development/README.md)
 2. Find a task by reading the [Contribution Guide](docs/contributing/README.md)
@@ -22,7 +24,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 
 <!--
   The list of documents below was created by manually curating the output of the following command:
-    $ find .. -name "*.md" | grep -v -e "vendor" -e "prototype" -e "SUMMARY.md" -e "TASTE.md"
+    find .. -name "*.md" | grep -v -e "vendor" -e "prototype" -e "SUMMARY.md" -e "TASTE.md"
 -->
 
 ### Guides
@@ -41,7 +43,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - _Coming Soon: Consensus Architecture_ // TODO(olshansky): needs a README file with proper code structure
 - [Persistence Architecture](persistence/docs/README.md)
 - [P2P Architecture](p2p/README.md)
-- [CLI Architecture](app/client/cli/doc/README.md)
+- [APP Architecture](app/client/doc/README.md)
 - [RPC Architecture](app/pocket/rpc/doc/README.md)
 - [Node binary Architecture](app/pocket/doc/README.md)
 
@@ -52,7 +54,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Consensus Changelog](consensus/doc/CHANGELOG.md)
 - [Persistence Changelog](persistence/docs/CHANGELOG.md)
 - [P2P Changelog](p2p/CHANGELOG.md)
-- [CLI Changelog](app/client/cli/doc/CHANGELOG.md)
+- [APP Changelog](app/client/doc/CHANGELOG.md)
 - [RPC Changelog](app/pocket/rpc/doc/CHANGELOG.md)
 - [Node binary Changelog](app/pocket/doc/CHANGELOG.md)
 
@@ -72,3 +74,5 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 ## License
 
 This project is licensed under the MIT License; see the [LICENSE](LICENSE) file for details.
+
+<!-- GITHUB_WIKI: home/readme -->

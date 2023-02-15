@@ -14,11 +14,17 @@ enum DebugMessageAction {
 	DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW = 3;
 	DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE = 4; // toggle between manual and automatic
 
-	DEBUG_SHOW_LATEST_BLOCK_IN_STORE = 5;
-	DEBUG_EXPORT_TO_NEO = 6; // NOTE_TO_REVIEWER: changing number does not matter at this stage in the project
+	// TODO: Replace `DEBUG_` with `DEBUG_PERSISTENCE_` below for clarity
+	DEBUG_CONSENSUS_SEND_METADATA_REQ = 5;
+	DEBUG_CONSENSUS_SEND_BLOCK_REQ = 6;
 
-	DEBUG_PERSISTENCE_CLEAR_STATE = 7;
-	DEBUG_PERSISTENCE_RESET_TO_GENESIS = 8;
+	DEBUG_SHOW_LATEST_BLOCK_IN_STORE = 7;
+
+	DEBUG_PERSISTENCE_CLEAR_STATE = 8;
+	DEBUG_PERSISTENCE_RESET_TO_GENESIS = 9;
+
+	DEBUG_EXPORT_TO_NEO = 10; // NOTE_TO_REVIEWER: changing number does not matter at this stage in the project
+
 }
 
 message DebugMessage {

@@ -2,14 +2,15 @@ package consensus
 
 import (
 	"fmt"
-	"log"
 	"sort"
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	"github.com/pokt-network/pocket/consensus/pacemaker"
+	"github.com/pokt-network/pocket/consensus/state_sync"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -57,6 +58,8 @@ type consensusModule struct {
 	leaderId *typesCons.NodeId
 	nodeId   typesCons.NodeId
 
+	nodeAddress string
+
 	// Module Dependencies
 	// IMPROVE(#283): Investigate whether the current approach to how the `utilityContext` should be
 	//                managed or changed. Also consider exposing a function that exposes the context
@@ -66,12 +69,12 @@ type consensusModule struct {
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	// DEPRECATE: Remove later when we build a shared/proper/injected logger
+	logger    modules.Logger
 	logPrefix string
 
-	// TECHDEBT: Rename this to `consensusMessagePool` or something similar
-	//           and reconsider if an in-memory map is the best approach
-	messagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
+	stateSync state_sync.StateSyncModule
+
+	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
 }
 
 // Functions exposed by the debug interface should only be used for testing puposes.
@@ -109,6 +112,23 @@ func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContex
 	m.utilityContext = utilityContext
 }
 
+// Implementations of the ConsensusStateSync interface
+
+func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error) {
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		// REFACTOR(#434): As per issue #434, once the new id is sorted out, this return statement must be changed
+		return 0, err
+	}
+
+	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
+	return uint64(valAddrToIdMap[peerId]), nil
+}
+
+func (m *consensusModule) GetNodeAddress() string {
+	return m.nodeAddress
+}
+
 // Implementations of the type PaceMakerAccessModule interface
 // SetHeight, SeetRound, SetStep are implemented for ConsensusDebugModule
 func (m *consensusModule) ClearLeaderMessagesPool() {
@@ -130,10 +150,17 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	if err != nil {
 		return nil, err
 	}
+	pm := paceMakerMod.(pacemaker.Pacemaker)
 
-	pacemaker := paceMakerMod.(pacemaker.Pacemaker)
+	stateSyncMod, err := state_sync.CreateStateSync(bus)
+	if err != nil {
+		return nil, err
+	}
+	stateSync := stateSyncMod.(state_sync.StateSyncModule)
+
 	m := &consensusModule{
-		paceMaker:         pacemaker,
+		paceMaker:         pm,
+		stateSync:         stateSync,
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
 
 		height: 0,
@@ -150,9 +177,11 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 
 		logPrefix: DefaultLogPrefix,
 
-		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
+		hotstuffMempool: make(map[typesCons.HotstuffStep]*hotstuffFIFOMempool),
 	}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 
 	runtimeMgr := bus.GetRuntimeMgr()
 
@@ -181,6 +210,13 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	m.genesisState = genesisState
 
 	m.nodeId = valAddrToIdMap[address]
+	m.nodeAddress = address
+
+	if consensusCfg.ServerModeEnabled {
+		m.stateSync.EnableServerMode()
+	}
+
+	m.initMessagesPool()
 
 	return m, nil
 }
@@ -194,11 +230,17 @@ func (m *consensusModule) Start() error {
 			consensusTelemetry.CONSENSUS_BLOCKCHAIN_HEIGHT_COUNTER_DESCRIPTION,
 		)
 
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
+
 	if err := m.loadPersistedState(); err != nil {
 		return err
 	}
 
 	if err := m.paceMaker.Start(); err != nil {
+		return err
+	}
+
+	if err := m.stateSync.Start(); err != nil {
 		return err
 	}
 
@@ -219,7 +261,7 @@ func (m *consensusModule) GetModuleName() string {
 
 func (m *consensusModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		logger.Global.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
 }
@@ -234,15 +276,15 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	}
 }
 
-func (*consensusModule) ValidateGenesis(genesis *genesis.GenesisState) error {
+func (*consensusModule) ValidateGenesis(gen *genesis.GenesisState) error {
 	// Sort the validators by their generic param (i.e. service URL)
-	vals := genesis.GetValidators()
+	vals := gen.GetValidators()
 	sort.Slice(vals, func(i, j int) bool {
 		return vals[i].GetGenericParam() < vals[j].GetGenericParam()
 	})
 
 	// Sort the validators by their address
-	vals2 := vals[:]
+	vals2 := vals[:] // nolint:gocritic // Make a copy of the slice to retain order
 	sort.Slice(vals, func(i, j int) bool {
 		return vals[i].GetAddress() < vals[j].GetAddress()
 	})
@@ -252,7 +294,7 @@ func (*consensusModule) ValidateGenesis(genesis *genesis.GenesisState) error {
 			// There is an implicit dependency because of how RainTree works and how the validator map
 			// is currently managed to make sure that the ordering of the address and the service URL
 			// are the same. This will be addressed once the # of validators will scale.
-			panic("HACK(olshansky): service url and address must be sorted the same way")
+			logger.Global.Panic().Msg("HACK(olshansky): service url and address must be sorted the same way")
 		}
 	}
 
@@ -307,7 +349,7 @@ func (m *consensusModule) loadPersistedState() error {
 	}
 	defer persistenceContext.Close()
 
-	latestHeight, err := persistenceContext.GetLatestBlockHeight()
+	latestHeight, err := persistenceContext.GetMaximumBlockHeight()
 	if err != nil || latestHeight == 0 {
 		// TODO: Proper state sync not implemented yet
 		return nil
@@ -315,7 +357,11 @@ func (m *consensusModule) loadPersistedState() error {
 
 	m.height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
 
-	m.nodeLog(fmt.Sprintf("Starting consensus module at height %d", latestHeight))
+	m.logger.Info().Uint64("height", m.height).Msg("Starting consensus module")
 
 	return nil
+}
+
+func (m *consensusModule) EnableServerMode() {
+	m.stateSync.EnableServerMode()
 }

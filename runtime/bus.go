@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"log"
+	"sync"
 
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -9,7 +10,10 @@ import (
 	"github.com/pokt-network/pocket/telemetry"
 )
 
-var _ modules.Bus = &bus{}
+var (
+	_                 modules.Bus = &bus{}
+	telemetryWarnOnce sync.Once
+)
 
 type bus struct {
 	modules.Bus
@@ -95,13 +99,17 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 			return telemetryMod.(modules.TelemetryModule)
 		}
 	}
-	log.Printf("[WARNING] telemetry module not found, make sure you call RegisterModule(), using noop telemetry module instead")
+	telemetryWarnOnce.Do(func() {
+		log.Printf("[WARNING] telemetry module not found, creating a default noop telemetry module instead")
+	})
 	// this should happen only if called from the client
 	noopModule, err := telemetry.CreateNoopTelemetryModule(m)
 	if err != nil {
 		log.Fatalf("failed to create noop telemetry module: %v", err)
 	}
-	m.RegisterModule(noopModule)
+	if err := m.RegisterModule(noopModule); err != nil {
+		log.Fatalf("[ERROR] Failed to register telemetry module: %v", err.Error())
+	}
 	return noopModule.(modules.TelemetryModule)
 }
 

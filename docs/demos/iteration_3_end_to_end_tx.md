@@ -1,6 +1,6 @@
-# Iteration 3 Demo <!-- omit in toc -->
+# Iteration 3 Demo: End-to-end LocalNet Tx POC <!-- omit in toc -->
 
-**Table of Contents**
+## Table of Contents <!-- omit in toc -->
 
 - [Goals](#goals)
   - [Features](#features)
@@ -19,7 +19,7 @@
 
 The first video of this demo can be accessed [here](https://drive.google.com/file/d/1IOrzq-XJP04BJjyqPPpPu873aSfwrnur/view?usp=sharing).
 
-<img width="842" alt="Screenshot 2022-12-05 at 9 02 28 PM" src="https://user-images.githubusercontent.com/1892194/205820691-26e801e4-ff79-4132-a7a1-358860ca2335.png">
+![Demo Goals](https://user-images.githubusercontent.com/1892194/205820691-26e801e4-ff79-4132-a7a1-358860ca2335.png)
 
 ### Features
 
@@ -91,7 +91,7 @@ select * from pool;
 
 ### Available Commands
 
-Show all the commands available in the CLI:
+Show all the commands available in the CLI by running `p1` or:
 
 ```bash
 go run app/client/*.go
@@ -106,9 +106,9 @@ For the following steps, you'll need to use the accounts of the first two valida
 1. You can just:
 
 ```bash
-echo '"6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4"' > /tmp/val1.json
+echo '"4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45"' > /tmp/val1.json
 
-echo '"5db3e9d97d04d6d70359de924bb02039c602080d6bf01a692bad31ad5ef93524c16043323c83ffd901a8bf7d73543814b8655aa4695f7bfb49d01926fc161cdb"' > /tmp/val2.json
+echo '"25b385b367a827eaafcdb1003bd17a25f2ecc0d10d41f138846f52ae1015aa941041a9c76539791fef9bee5b4fcd5bf4a1a489e0790c44cbdfa776b901e13b50"' > /tmp/val2.json
 ```
 
 2. You can use `jq` and run these commands:
@@ -122,10 +122,12 @@ cat ./build/config/config2.json | jq '.private_key' > /tmp/val2.json
 
 ### First Transaction
 
+_NOTE: `--path_to_private_key_file` has been deprecated since this demo was put together and a keybase has been implemented._
+
 Trigger a send transaction from validator 1 to validator 2.
 
 ```bash
-go run app/client/*.go --path_to_private_key_file=/tmp/val1.json Account Send 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 67eb3f0a50ae459fecf666be0e93176e92441317 1000
+go run app/client/*.go --path_to_private_key_file=/tmp/val1.json Account Send 00404a570febd061274f72b50d0a37f611dfe339 00304d0101847b37fd62e7bebfbdddecdbb7133e 1000
 ```
 
 1. Use shell #2 to `TriggerNextView` and confirm height increased via `PrintNodeState`
@@ -144,7 +146,7 @@ go run app/client/*.go --path_to_private_key_file=/tmp/val1.json Account Send 6f
 Trigger a send transaction from validator 2 to validator 1.
 
 ```bash
-go run app/client/*.go --path_to_private_key_file=/tmp/val2.json Account Send 67eb3f0a50ae459fecf666be0e93176e92441317 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 1000
+go run app/client/*.go --path_to_private_key_file=/tmp/val2.json Account Send 00304d0101847b37fd62e7bebfbdddecdbb7133e 00404a570febd061274f72b50d0a37f611dfe339 1000
 ```
 
 1. Use shell #2 to `TriggerNextView` (one or more times) and confirm height increased via `PrintNodeState`
@@ -163,3 +165,5 @@ go run app/client/*.go --path_to_private_key_file=/tmp/val2.json Account Send 67
 ```bash
 make swagger-ui
 ```
+
+<!-- GITHUB_WIKI: guides/demos/iteration_3_end_to_end_tx_poc -->

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/jackc/pgconn"
@@ -35,16 +34,12 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 	types.ValidatorActor,
 }
 
-func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx, error) {
-	return context.TODO(), pg.getTx(), nil
+func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx) {
+	return context.TODO(), pg.getTx()
 }
 
 func (pg *PostgresContext) getTx() pgx.Tx {
 	return pg.tx
-}
-
-func (pg *PostgresContext) getCtx() (context.Context, error) {
-	return context.TODO(), nil
 }
 
 func (pg *PostgresContext) ResetContext() error {
@@ -61,7 +56,7 @@ func (pg *PostgresContext) ResetContext() error {
 	}
 	if !conn.IsClosed() {
 		if err := pg.Release(); err != nil {
-			log.Println("[TODO][ERROR] Error releasing write context...", err)
+			pg.logger.Error().Err(err).Bool("TODO", true).Msg("error releasing write context")
 		}
 	}
 	pg.tx = nil

@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.27] - 2023-02-14
+
+- Added a `Validatable` type for basic validation
+- Split business logic specific to certain actors (e.g. validator reward, app relays, message handling) into separate files
+- Reduced the scope of functions and types that shouldn’t be exposed
+- Upgraded the actors tests - a lot went here to help with understanding what’s going on but it’s still just a start
+- Remove the `Context` struct; unnecessary abstraction
+- Added comments and guidance on message, transaction and signature validation
+- Added `ITransaction`, an interface for the `Transaction` protocol to help capture the functionality it adds to the core type
+- DOC: Delineate between unstaking & unbonding in a few places throughout the codebase
+- BUG: `tx.Equals` was comparing the same transaction against itself (major bug)
+- BUG: `StakingStatus` enums in utility did not reflect the same protocol as in persistence (needs to be consolidated)
+
+## [0.0.0.26] - 2023-02-07
+
+- Documentation update
+
+## [0.0.0.25] - 2023-02-06
+
+- Address legacy linter errors from `golangci-lint`
+
+## [0.0.0.24] - 2023-02-06
+
+- Changed readme to remove $ sign from code blocks
+
+## [0.0.0.23] - 2023-02-04
+
+- Changed log lines to utilize new logger module.
+
+## [0.0.0.22] - 2023-02-03
+
+- Introduced `txFIFOMempool` which extends the new `GenericFIFOSet` in order to replace the legacy logic
+- Added tests for `txFIFOMempool`
+- Accessing `TxMempool` via the `bus` in `utilityContext`
+
 ## [0.0.0.21] - 2023-01-30
 
 - Updated `TestUtilityContext_SetPoolAmount`, `TestUtilityContext_GetMessageEditStakeSignerCandidates`, `TestUtilityContext_GetMessageUnpauseSignerCandidates`, `TestUtilityContext_GetMessageUnstakeSignerCandidates`, and `TestUtilityContext_UnstakePausedBefore` to correct misplaced expected and actual values in require.Equal.
@@ -134,8 +169,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.3] - 2022-09-15
 
-### Code cleanup
-
 - Consolidated `TransactionHash` to call a single implementation in `shared/crypto/sha3`
 - Extracted function calls from places where we were using the same logic
 
@@ -151,8 +184,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.1] - 2022-07-20
 
-### Code cleanup
-
 - Removed transaction fees from the transaction structure as fees will be enforced at the state level
 - Removed actor specific messages (besides DoubleSign) and added actorType field to the struct
 - Removed pause messages and functionality as it is out of scope for the current POS iteration
@@ -160,11 +191,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Consolidated unit test functionality for actors
 - Modified pre-persistence to match persistence for Update(actor), 'amountToAdd' is now just 'amount'
 
-## [Unreleased]
-
 ## [0.0.0] - 2022-03-15
-
-### Added
 
 - Added minimal 'proof of stake' implementation with few Pocket Specific terminologies and actors
   - Structures
@@ -182,3 +209,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Unpause
     - Send
 - Added initial governance params
+
+<!-- GITHUB_WIKI: changelog/utility -->

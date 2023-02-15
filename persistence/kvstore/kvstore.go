@@ -1,5 +1,7 @@
 package kvstore
 
+//go:generate mockgen -source=$GOFILE -destination=../types/mocks/block_store_mock.go github.com/pokt-network/pocket/persistence/types KVStore
+
 import (
 	"errors"
 	"log"
@@ -17,7 +19,7 @@ type KVStore interface {
 	// Accessors
 	// TODO: Add a proper iterator interface
 	// TODO: Add pagination for `GetAll`
-	GetAll(prefixKey []byte, descending bool) (keys [][]byte, values [][]byte, err error)
+	GetAll(prefixKey []byte, descending bool) (keys, values [][]byte, err error)
 	Exists(key []byte) (bool, error)
 	ClearAll() error
 }
@@ -26,8 +28,10 @@ const (
 	BadgerKeyNotFoundError = "Key not found"
 )
 
-var _ KVStore = &badgerKVStore{}
-var _ smt.MapStore = &badgerKVStore{}
+var (
+	_ KVStore      = &badgerKVStore{}
+	_ smt.MapStore = &badgerKVStore{}
+)
 
 var (
 	ErrKVStoreExists    = errors.New("kvstore already exists")
@@ -94,7 +98,7 @@ func (store *badgerKVStore) Delete(key []byte) error {
 	return tx.Delete(key)
 }
 
-func (store *badgerKVStore) GetAll(prefix []byte, descending bool) (keys [][]byte, values [][]byte, err error) {
+func (store *badgerKVStore) GetAll(prefix []byte, descending bool) (keys, values [][]byte, err error) {
 	// INVESTIGATE: research `badger.views` for further improvements and optimizations
 	// Reference https://pkg.go.dev/github.com/dgraph-io/badger#readme-prefix-scans
 	txn := store.db.NewTransaction(false)

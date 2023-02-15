@@ -2,11 +2,9 @@
 
 This document is meant to be a placeholder to serve as a living representation of the parent 'Utility Module' codebase until the code matches the [1.0 Utility Module specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/utility).
 
-The spirit of the documentation is to continuously update and inform the reader of the general scope of the Utility Module as breaking, rapid development occurs.
-
 _This document will be archived once the implementation is synonymous with the current 1.0 Utility specification, ._
 
-# Origin Document
+## Origin Document
 
 Currently, the Utility Module minimally implements the first iteration of an account based, state machine, blockchain protocol.
 
@@ -152,9 +150,10 @@ And minimally satisfy the following interface:
 
 ```go
 CheckTransaction(tx []byte) error
-GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)
-ApplyBlock(Height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
+GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (txs [][]byte, err error)
+ApplyBlock(Height int64, proposer []byte, txs [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
 ```
+
 ## How to build
 
 Utility Module does not come with its own cmd executables.
@@ -177,7 +176,7 @@ and use `utilityMod` as desired.
 ## How to test
 
 ```
-$ make test_utility_types && make test_utility_module
+make test_utility_types && make test_utility_module
 ```
 
 ## Code Organization
@@ -203,3 +202,5 @@ utility
 │   ├── util.go
 │   ├── vote.go        # vote structure for double sign transaction
 ```
+
+<!-- GITHUB_WIKI: utility/readme -->

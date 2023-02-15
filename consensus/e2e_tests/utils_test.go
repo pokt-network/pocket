@@ -13,12 +13,15 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	mocksPer "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -58,6 +61,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 				Manual:                    false,
 				DebugTimeBetweenStepsMsec: 0,
 			},
+			ServerModeEnabled: true,
 		}
 		runtimeMgrs[i] = runtime.NewManager(config, genesisState, runtime.WithClock(clockMgr))
 	}
@@ -81,7 +85,7 @@ func CreateTestConsensusPocketNodes(
 	})
 
 	for i := range buses {
-		pocketNode := CreateTestConsensusPocketNode(t, &buses[i], eventsChannel)
+		pocketNode := CreateTestConsensusPocketNode(t, buses[i], eventsChannel)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
@@ -91,17 +95,18 @@ func CreateTestConsensusPocketNodes(
 // Creates a pocket node where all the primary modules, exception for consensus, are mocked
 func CreateTestConsensusPocketNode(
 	t *testing.T,
-	bus *modules.Bus,
+	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
 ) *shared.Node {
 	// persistence is a dependency of consensus, so we need to create it first
-	persistenceMock := basePersistenceMock(t, eventsChannel, *bus)
-	(*bus).RegisterModule(persistenceMock)
-
-	_, err := consensus.Create(*bus)
+	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
+	err := (bus).RegisterModule(persistenceMock)
 	require.NoError(t, err)
 
-	runtimeMgr := (*bus).GetRuntimeMgr()
+	_, err = consensus.Create(bus)
+	require.NoError(t, err)
+
+	runtimeMgr := (bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
 	p2pMock := baseP2PMock(t, eventsChannel)
@@ -117,7 +122,8 @@ func CreateTestConsensusPocketNode(
 		loggerMock,
 		rpcMock,
 	} {
-		(*bus).RegisterModule(module)
+		err = (bus).RegisterModule(module)
+		require.NoError(t, err)
 	}
 
 	require.NoError(t, err)
@@ -127,7 +133,7 @@ func CreateTestConsensusPocketNode(
 
 	pocketNode := shared.NewNodeWithP2PAddress(pk.Address())
 
-	pocketNode.SetBus(*bus)
+	pocketNode.SetBus(bus)
 
 	return pocketNode
 }
@@ -145,7 +151,7 @@ func GenerateBuses(t *testing.T, runtimeMgrs []*runtime.Manager) (buses []module
 // CLEANUP: Reduce package scope visibility in the consensus test module
 func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
 	for _, pocketNode := range pocketNodes {
-		go pocketNode.Start()
+		go startNode(t, pocketNode)
 		startEvent := pocketNode.GetBus().GetBusEvent()
 		require.Equal(t, startEvent.GetContentType(), messaging.NodeStartedEventType)
 	}
@@ -176,7 +182,7 @@ func TriggerNextView(t *testing.T, node *shared.Node) {
 
 func triggerDebugMessage(t *testing.T, node *shared.Node, action messaging.DebugMessageAction) {
 	debugMessage := &messaging.DebugMessage{
-		Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
+		Action:  action,
 		Message: nil,
 	}
 	anyProto, err := anypb.New(debugMessage)
@@ -203,14 +209,15 @@ func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 // This is a helper for `waitForEventsInternal` that creates the `includeFilter` function based on
 // consensus specific parameters.
 // failOnExtraMessages:
-// 		This flag is useful when running the consensus unit tests. It causes the test to wait up to the
-// 		maximum delay specified in the source code and errors if additional unexpected messages are received.
-// 		For example, if the test expects to receive 5 messages within 2 seconds:
-// 			false: continue if 5 messages are received in 0.5 seconds
-// 			true: wait for another 1.5 seconds after 5 messages are received in 0.5 seconds, and fail if any additional messages are received.
+//
+//	This flag is useful when running the consensus unit tests. It causes the test to wait up to the
+//	maximum delay specified in the source code and errors if additional unexpected messages are received.
+//	For example, if the test expects to receive 5 messages within 2 seconds:
+//		false: continue if 5 messages are received in 0.5 seconds
+//		true: wait for another 1.5 seconds after 5 messages are received in 0.5 seconds, and fail if any additional messages are received.
 func WaitForNetworkConsensusEvents(
 	t *testing.T,
-	clock *clock.Mock,
+	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
 	step typesCons.HotstuffStep,
 	msgType typesCons.HotstuffMessageType,
@@ -229,18 +236,41 @@ func WaitForNetworkConsensusEvents(
 	}
 
 	errMsg := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(msgType)])
-	return waitForEventsInternal(t, clock, eventsChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clck, eventsChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+}
+
+// IMPROVE: Consider unifying this function with WaitForNetworkConsensusEvents
+// This is a helper for 'waitForEventsInternal' that creates the `includeFilter` function based on state sync message specific parameters.
+func WaitForNetworkStateSyncEvents(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	errMsg string,
+	numExpectedMsgs int,
+	millis time.Duration,
+	failOnExtraMessages bool,
+) (messages []*anypb.Any, err error) {
+	includeFilter := func(anyMsg *anypb.Any) bool {
+		msg, err := codec.GetCodec().FromAny(anyMsg)
+		require.NoError(t, err)
+
+		_, ok := msg.(*typesCons.StateSyncMessage)
+		require.True(t, ok)
+
+		return true
+	}
+
+	return waitForEventsInternal(clck, eventsChannel, consensus.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework
 // IMPROVE: This function can be extended to testing events outside of just the consensus module.
 func waitForEventsInternal(
-	t *testing.T,
-	clock *clock.Mock,
+	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
 	eventContentType string,
 	numExpectedMsgs int,
-	maxWaitTimeMillis time.Duration, // IMPROVE(#295): Remove time specific suffixes as outlined by go-staticcheck (ST1011)
+	maxWaitTime time.Duration,
 	msgIncludeFilter func(m *anypb.Any) bool,
 	errMsg string,
 	failOnExtraMessages bool,
@@ -249,7 +279,7 @@ func waitForEventsInternal(
 	unusedEvents := make([]*messaging.PocketEnvelope, 0) // "Recycle" events back into the events channel if we're not using them
 
 	// Limit the amount of time we're waiting for the messages to be published on the events channel
-	ctx, cancel := clock.WithTimeout(context.TODO(), time.Millisecond*maxWaitTimeMillis)
+	ctx, cancel := clck.WithTimeout(context.TODO(), time.Millisecond*maxWaitTime)
 	defer cancel()
 
 	// Since the tests use a mock clock, we need to manually advance the clock to trigger the timeout
@@ -261,7 +291,7 @@ func waitForEventsInternal(
 			case <-tickerDone:
 				return
 			case <-ticker.C:
-				clock.Add(time.Millisecond)
+				clck.Add(time.Millisecond)
 			}
 		}
 	}()
@@ -327,13 +357,43 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
+
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
+
+	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
+
+	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
+		heightInt := converters.HeightFromBytes(height)
+		if bus.GetConsensusModule().CurrentHeight() < heightInt {
+			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
+		}
+		blockWithHeight := &coreTypes.Block{
+			BlockHeader: &coreTypes.BlockHeader{
+				Height: converters.HeightFromBytes(height),
+			},
+		}
+		return codec.GetCodec().Marshal(blockWithHeight)
+	}).AnyTimes()
+
+	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
+
+	persistenceReadContextMock.EXPECT().GetMaximumBlockHeight().DoAndReturn(func() (uint64, error) {
+		height := bus.GetConsensusModule().CurrentHeight()
+		return height, nil
+	}).AnyTimes()
+
+	persistenceReadContextMock.EXPECT().GetMinimumBlockHeight().DoAndReturn(func() (uint64, error) {
+		// mock minimum block height in persistence module to 1 if current height is equal or more than 1, else return 0 as the minimum height
+		if bus.GetConsensusModule().CurrentHeight() >= 1 {
+			return 1, nil
+		}
+		return 0, nil
+	}).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
 	// of the consensus module. This one is only used when loading the initial consensus module
 	// state; hence the `-1` expectation in the call above.
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
-	persistenceReadContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
@@ -459,32 +519,36 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 	return loggerMock
 }
 
-func logTime(t *testing.T, clock *clock.Mock) {
-	t.Logf("[⌚ CLOCK ⌚] the time is: %v ms from UNIX Epoch [%v]", clock.Now().UTC().UnixMilli(), clock.Now().UTC())
+func logTime(t *testing.T, clck *clock.Mock) {
+	t.Helper()
+	t.Logf("[⌚ CLOCK ⌚] the time is: %v ms from UNIX Epoch [%v]", clck.Now().UTC().UnixMilli(), clck.Now().UTC())
 }
 
 // advanceTime moves the time forward on the mock clock and logs what just happened.
-func advanceTime(t *testing.T, clock *clock.Mock, duration time.Duration) {
-	clock.Add(duration)
+func advanceTime(t *testing.T, clck *clock.Mock, duration time.Duration) {
+	t.Helper()
+	clck.Add(duration)
 	t.Logf("[⌚ CLOCK ⏩] advanced by %v", duration)
-	logTime(t, clock)
+	logTime(t, clck)
 }
 
 // sleep pauses the goroutine for the given duration on the mock clock and logs what just happened.
 //
 // Note: time has to be moved forward in a separate goroutine, see `advanceTime`.
-func sleep(t *testing.T, clock *clock.Mock, duration time.Duration) {
+func sleep(t *testing.T, clck *clock.Mock, duration time.Duration) {
+	t.Helper()
 	t.Logf("[⌚ CLOCK 💤] sleeping for %v", duration)
-	clock.Sleep(duration)
+	clck.Sleep(duration)
 }
 
 // timeReminder simply prints, at a given interval and in a separate goroutine, the current mocked time to help with events.
-func timeReminder(t *testing.T, clock *clock.Mock, frequency time.Duration) {
+// nolint:unparam // we want to keep the frequency as a parameter for clarity
+func timeReminder(t *testing.T, clck *clock.Mock, frequency time.Duration) {
 	go func() {
 		tick := time.NewTicker(frequency)
 		for {
 			<-tick.C
-			logTime(t, clock)
+			logTime(t, clck)
 		}
 	}()
 }
@@ -505,4 +569,9 @@ func assertStep(t *testing.T, nodeId typesCons.NodeId, expected, actual typesCon
 
 func assertRound(t *testing.T, nodeId typesCons.NodeId, expected, actual uint8) {
 	require.Equal(t, expected, actual, "[NODE][%v] failed assertRound", nodeId)
+}
+
+func startNode(t *testing.T, pocketNode *shared.Node) {
+	err := pocketNode.Start()
+	require.NoError(t, err)
 }

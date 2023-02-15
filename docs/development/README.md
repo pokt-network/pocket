@@ -10,8 +10,15 @@ Please note that this repository is under very active development and breaking c
   - [View Available Commands](#view-available-commands)
   - [Running Unit Tests](#running-unit-tests)
   - [Running LocalNet](#running-localnet)
+    - [\[Advanced\] Kubernetes](#advanced-kubernetes)
+    - [\[Basic\] Docker Compose](#basic-docker-compose)
+  - [TODO: Improvements to be added by the core team](#todo-improvements-to-be-added-by-the-core-team)
   - [Profiling](#profiling)
 - [Code Organization](#code-organization)
+- [Maintaining Documentation](#maintaining-documentation)
+- [Documentation Resources and Implementation](#documentation-resources-and-implementation)
+  - [Github Actions File](#github-actions-file)
+  - [Python Script](#python-script)
   - [Linters](#linters)
     - [Installation of golangci-lint](#installation-of-golangci-lint)
     - [Running linters locally](#running-linters-locally)
@@ -34,29 +41,31 @@ _Note to the reader: Please update this list if you found anything missing._
 Last tested by with:
 
 ```bash
-$ docker --version
-Docker version 20.10.14, build a224086
+docker --version
+# Docker version 20.10.14, build a224086
 
-$ protoc --version
-libprotoc 3.19.4
+protoc --version
+# libprotoc 3.19.4
 
-$ which protoc-go-inject-tag && echo "protoc-go-inject-tag Installed"
-/your$HOME/go/bin/protoc-go-inject-tag
-protoc-go-inject-tag Installed
+which protoc-go-inject-tag && echo "protoc-go-inject-tag Installed"
 
-$ go version
-go version go1.18.1 darwin/arm64
+# /your$HOME/go/bin/protoc-go-inject-tag
+# protoc-go-inject-tag Installed
 
-$ mockgen --version
-v1.6.0
+go version
+# go version go1.18.1 darwin/arm64
 
-$ system_profiler SPSoftwareDataType
-Software:
+mockgen --version
+# v1.6.0
 
-    System Software Overview:
+system_profiler SPSoftwareDataType
+# Software:
+#
+#     System Software Overview:
+#
+#       System Version: macOS 12.3.1 (21E258)
+#       Kernel Version: Darwin 21.4.0
 
-      System Version: macOS 12.3.1 (21E258)
-      Kernel Version: Darwin 21.4.0
 ```
 
 ### Prepare Local Environment
@@ -64,8 +73,8 @@ Software:
 Generate local files
 
 ```bash
-$ git clone git@github.com:pokt-network/pocket.git && cd pocket
-$ make develop_start
+git clone git@github.com:pokt-network/pocket.git && cd pocket
+make develop_start
 ```
 
 Optionally activate changelog pre-commit hook
@@ -100,6 +109,24 @@ The cli binary will be available at `bin/p1` and can be used instead of `go run 
 
 The commands available are listed [here](../../rpc/doc/README.md) or accessible via `bin/p1 --help`
 
+2.1 [OPTIONAL] Add the binary to your `.rc`
+
+_IMPORTANT: Note that this helper ONLY works with the docker-compose LocalNet setup and DOES NOT work with the k8s setup_
+_TODO: This section can be deleted once the CLI accepts a `--remoteURL` option._
+
+You can add the following function so you can run the `p1` from anywhere on your host:
+
+```bash
+function p1 {
+    EXPORT POCKET_WORKDIR="${HOME}/workspace/pocket/pocket/"
+    EXPORT CONFIG_PATH="${POCKET_WORKDIR}/build/config/config1.json"
+    EXPORT GENESIS_PATH="${POCKET_WORKDIR}/build/config/genesis_localhost.json"
+    ${POCKET_WORKDIR}/bin/p1 "$@"
+}
+```
+
+You can via a demo of it [here](https://user-images.githubusercontent.com/1892194/215901991-076734e5-bc94-4755-9f2a-3d1f3c1e4aef.mov).
+
 ### Swagger UI
 
 Swagger UI is available to help during the development process.
@@ -113,37 +140,45 @@ make swagger-ui
 ### View Available Commands
 
 ```bash
-$ make
+make
 ```
 
 ### Running Unit Tests
 
 ```bash
-$ make test_all
+make test_all
 ```
 
 Note that there are a few tests in the library that are prone to race conditions and we are working on improving them. This can be checked with `make test_race`.
 
 ### Running LocalNet
 
-![V1 Localnet Demo](./v1_localnet.gif)
+At the time of writing, we have two basic approaches to running a LocalNet. We suggest getting started with the `Docker Compose` approach outlined below before moving to the advanced Kubernetes configuration.
+
+#### [Advanced] Kubernetes
+
+The full documentation on running a LocalNet on kubernetes can be found [here](../../build/localnet/).
+
+#### [Basic] Docker Compose
+
+![V1 Localnet Demo](https://user-images.githubusercontent.com/1892194/216177846-9ec7734b-8e78-4641-9612-def6e1689fde.gif)
 
 1. Delete any previous docker state
 
 ```bash
-$ make docker_wipe
+make docker_wipe
 ```
 
 2. In one shell, run the 4 nodes setup:
 
 ```bash
-$ make compose_and_watch
+make compose_and_watch
 ```
 
 4. In another shell, run the development client:
 
 ```bash
-$ make client_start && make client_connect
+make client_start && make client_connect
 ```
 
 4. Check the state of each node:
@@ -183,6 +218,22 @@ $ make client_start && make client_connect
 ✔ TogglePacemakerMode # Check that it’s automatic now
 ✔ TriggerNextView # Let it rip!
 ```
+
+9. Send a transaction (and trigger the next view)
+
+```bash
+  make send_local_tx
+```
+
+### TODO: Improvements to be added by the core team
+
+A lot of features have been added since this doc was first added. See `docs/demo`. We should update it to:
+
+1. Show k8s LocalNet
+2. Add more details related to transactions
+3. Add details related to the keybase
+4. Add state sync tooling
+5. Add P2P tooling
 
 ### Profiling
 
@@ -232,6 +283,30 @@ Pocket
 └── Makefile                          # The source of targets used to develop, build and test
 ```
 
+## Maintaining Documentation
+
+Documentation files currently found by the following command `find . -name "*.md" | grep -v -e "vendor" -e "app"` are added to the [Github Wiki Repository](https://github.com/pokt-network/pocket/wiki). The Wiki will be improved overtime but in its current form, provides an organized overview of the Repository.
+
+To keep the Wiki organized, a comment is added at the end of each `.md` file. For example, you can find the following one at the end of this file `<!-- GITHUB_WIKI: guides/development/readme -->`. The structure of the comment indicates the category (guides), subcategory(ies) (development) and filename (readme): `<!-- GITHUB_WIKI: <category>/<subcategory 1>/.../<filename>`. You can see the example output in the [Wiki Page](https://github.com/pokt-network/pocket/wiki/Development-Readme).
+
+If you are adding a new `.md` file for documentation please included a similar comment. Use your best judgment for the category and subcategory if its a new directory. Otherwise, copy the comment from a similar file in the directory and choose a relevant filename.
+
+## Documentation Resources and Implementation
+
+### [Github Actions File](/.github/workflows/wiki_sync_process.yml)
+
+The Action is triggered when there is a change to any Markdown file on the main branch of the Repository. When triggered, environment variables are set for a Python script that updates the Github Wiki Repository based on Pocket Repository files.
+
+### [Python Script](/tools/wiki_sync.py)
+
+The script finds the relevant Markdown files in the repository and organizes them for the Wiki Repository. Currently, the find command is filtered to exclude the `./app` and `./vendor` directories. Based on the list of `.md` file paths, it maps the formatting spec from [above](##Maintaining-Documentation) to some information about the file. Using the map, it creates a Sidebar file format which Github uses as a Table of Contents for the wiki. Also, from the Pocket repo we copy over the files with titles linking to the Sidebar format.
+
+Below, you can see some of the patterns between the Sidebar format, folder of markdowns in the Wiki Repository, and final sidebar/table of contents display.
+
+| Format                                      | Folder                              | Wiki                               |
+| ------------------------------------------- | ----------------------------------- | ---------------------------------- |
+| ![format](/tools/images/sidebar_format.png) | ![Folder](/tools/images/folder.png) | ![wiki](/tools/images/sidebar.png) |
+
 ### Linters
 
 We utilize `golangci-lint` to run the linters. It is a wrapper around a number of linters and is configured to run many at once. The linters are configured to run on every commit and pull request via CI, and all code issues are populated as GitHub annotations to let developers and reviewers easily locate an issue.
@@ -278,3 +353,5 @@ Ruleguard is run via `gocritic` linter which is a part of `golangci-lint`, so if
 1. Visit http://localhost:7474/browser/
 2. Click Connect
 3. `MATCH (n) RETURN n LIMIT 100`
+
+<!-- GITHUB_WIKI: guides/development/readme -->

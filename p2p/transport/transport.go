@@ -2,9 +2,10 @@ package transport
 
 import (
 	"fmt"
-	types "github.com/pokt-network/pocket/runtime/configs/types"
-	"io/ioutil"
+	"io"
 	"net"
+
+	types "github.com/pokt-network/pocket/runtime/configs/types"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -82,7 +83,7 @@ func (c *tcpConn) Read() ([]byte, error) {
 	}
 	defer conn.Close()
 
-	data, err := ioutil.ReadAll(conn)
+	data, err := io.ReadAll(conn)
 	if err != nil {
 		return nil, fmt.Errorf("error reading from conn: %v", err)
 	}

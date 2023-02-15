@@ -3,6 +3,7 @@ package p2p
 import (
 	"log"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	persABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/raintree"
@@ -25,6 +26,8 @@ type p2pModule struct {
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
 
+	logger modules.Logger
+
 	network typesP2P.Network
 
 	injectedAddrBookProvider      providers.AddrBookProvider
@@ -39,7 +42,9 @@ func Create(bus modules.Bus) (modules.Module, error) {
 func CreateWithProviders(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
 	log.Println("Creating network module")
 	m := &p2pModule{}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
@@ -67,7 +72,9 @@ func CreateWithProviders(bus modules.Bus, addrBookProvider providers.AddrBookPro
 func (*p2pModule) Create(bus modules.Bus) (modules.Module, error) {
 	log.Println("Creating network module")
 	m := &p2pModule{}
-	bus.RegisterModule(m)
+	if err := bus.RegisterModule(m); err != nil {
+		return nil, err
+	}
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
@@ -98,7 +105,7 @@ func (m *p2pModule) SetBus(bus modules.Bus) {
 
 func (m *p2pModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Printf("[WARN]: PocketBus is not initialized")
+		m.logger.Warn().Msg("PocketBus is not initialized")
 		return nil
 	}
 	return m.bus
@@ -109,13 +116,15 @@ func (m *p2pModule) GetModuleName() string {
 }
 
 func (m *p2pModule) Start() error {
-	log.Println("Starting network module")
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
+	m.logger.Info().Msg("Starting network module")
 
 	addrbookProvider := getAddrBookProvider(m)
 	currentHeightProvider := getCurrentHeightProvider(m)
 
 	cfg := m.GetBus().GetRuntimeMgr().GetConfig()
 
+	// TODO: pass down logger
 	if cfg.P2P.UseRainTree {
 		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), addrbookProvider, currentHeightProvider)
 	} else {
@@ -138,7 +147,7 @@ func (m *p2pModule) Start() error {
 		for {
 			data, err := m.listener.Read()
 			if err != nil {
-				log.Println("Error reading data from connection: ", err)
+				m.logger.Error().Err(err).Msg("Error reading data from connection")
 				continue
 			}
 			go m.handleNetworkMessage(data)
@@ -176,7 +185,7 @@ func getCurrentHeightProvider(m *p2pModule) providers.CurrentHeightProvider {
 }
 
 func (m *p2pModule) Stop() error {
-	log.Println("Stopping network module")
+	m.logger.Info().Msg("Stopping network module")
 	if err := m.listener.Close(); err != nil {
 		return err
 	}
@@ -191,7 +200,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 	if err != nil {
 		return err
 	}
-	log.Println("broadcasting message to network")
+	m.logger.Info().Msg("broadcasting message to network")
 
 	return m.network.NetworkBroadcast(data)
 }
@@ -216,20 +225,19 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	appMsgData, err := m.network.HandleNetworkData(networkMsgData)
 	if err != nil {
-		log.Println("Error handling raw data: ", err)
+		m.logger.Error().Err(err).Msg("Error handling raw data")
 		return
 	}
 
 	// There was no error, but we don't need to forward this to the app-specific bus.
 	// For example, the message has already been handled by the application.
 	if appMsgData == nil {
-		// log.Println("[DEBUG] No app-specific message to forward from the network")
 		return
 	}
 
 	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
-		log.Println("Error decoding network message: ", err)
+		m.logger.Error().Err(err).Msg("Error decoding network message")
 		return
 	}
 

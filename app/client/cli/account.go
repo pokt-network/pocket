@@ -2,16 +2,17 @@ package cli
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 
+	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	accounCmd := NewAccountCommand()
-	accounCmd.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
-	rootCmd.AddCommand(accounCmd)
+	rootCmd.AddCommand(NewAccountCommand())
 }
 
 func NewAccountCommand() *cobra.Command {
@@ -22,7 +23,9 @@ func NewAccountCommand() *cobra.Command {
 		Args:    cobra.ExactArgs(0),
 	}
 
-	cmd.AddCommand(accountCommands()...)
+	cmds := accountCommands()
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	cmd.AddCommand(cmds...)
 
 	return cmd
 }
@@ -34,22 +37,37 @@ func accountCommands() []*cobra.Command {
 			Short:   "Send <fromAddr> <to> <amount>",
 			Long:    "Sends <amount> to address <to> from address <fromAddr>",
 			Aliases: []string{"send"},
-			Args:    cobra.ExactArgs(3), // REFACTOR(#150): <fromAddr> not being used at the moment. Update once a keybase is implemented.
+			Args:    cobra.ExactArgs(3),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				// TODO(#150): update when we have keybase
-				pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
-				if err != nil {
-					return err
-				}
-				// NOTE: since we don't have a keybase yet (tracked in #150), we are currently inferring the `fromAddr` from the PrivateKey supplied via the flag `--path_to_private_key_file`
-				// the following line is commented out to show that once we have a keybase, `fromAddr` should come from the command arguments and not the PrivateKey (pk) anymore.
-				//
-				// fromAddr := crypto.AddressFromString(args[0])
+				// Unpack CLI arguments
+				fromAddrHex := args[0]
+				fromAddr := crypto.AddressFromString(args[0])
 				toAddr := crypto.AddressFromString(args[1])
 				amount := args[2]
 
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
+				if err != nil {
+					return err
+				}
+
+				pwd = readPassphrase(pwd)
+
+				pk, err := kb.GetPrivKey(fromAddrHex, pwd)
+				if err != nil {
+					return err
+				}
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+
 				msg := &types.MessageSend{
-					FromAddress: pk.Address(),
+					FromAddress: fromAddr,
 					ToAddress:   toAddr,
 					Amount:      amount,
 				}

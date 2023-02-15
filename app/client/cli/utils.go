@@ -7,33 +7,19 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 	"math/big"
-	"math/rand"
 	"os"
 	"strings"
-	"time"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/converters"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
-
-// readEd25519PrivateKeyFromFile returns an Ed25519PrivateKey from a file where the file simply encodes it in a string (for now)
-// HACK(#150): this is a temporary hack since we don't have yet a keybase, the next step would be to read from an "ArmoredJson" like in V0
-func readEd25519PrivateKeyFromFile(pkPath string) (pk crypto.Ed25519PrivateKey, err error) {
-	pkFile, err := os.Open(pkPath)
-	if err != nil {
-		return
-	}
-	defer pkFile.Close()
-	pk, err = parseEd25519PrivateKeyFromReader(pkFile)
-	return
-}
 
 func parseEd25519PrivateKeyFromReader(reader io.Reader) (pk crypto.Ed25519PrivateKey, err error) {
 	if reader == nil {
@@ -41,7 +27,9 @@ func parseEd25519PrivateKeyFromReader(reader io.Reader) (pk crypto.Ed25519Privat
 	}
 
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(reader)
+	if _, err := buf.ReadFrom(reader); err != nil {
+		return nil, err
+	}
 
 	priv := &crypto.Ed25519PrivateKey{}
 	err = priv.UnmarshalJSON(buf.Bytes())
@@ -59,9 +47,9 @@ func credentials(pwd string) string {
 	if pwd != "" && strings.TrimSpace(pwd) != "" {
 		return strings.TrimSpace(pwd)
 	}
-	bytePassword, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+	bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
-		log.Fatalf(err.Error())
+		logger.Global.Fatal().Err(err).Msg("failed to read password")
 	}
 	return strings.TrimSpace(string(bytePassword))
 }
@@ -94,7 +82,7 @@ func confirmation(pwd string) bool {
 // prepareTxBytes wraps a Message into a Transaction and signs it with the provided pk
 //
 // returns the raw protobuf bytes of the signed transaction
-func prepareTxBytes(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
+func prepareTxBytes(msg typesUtil.Message, pk crypto.PrivateKey) ([]byte, error) {
 	var err error
 	anyMsg, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
@@ -103,10 +91,10 @@ func prepareTxBytes(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte,
 
 	tx := &typesUtil.Transaction{
 		Msg:   anyMsg,
-		Nonce: getNonce(),
+		Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
 	}
 
-	signBytes, err := tx.SignBytes()
+	signBytes, err := tx.SignableBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +117,7 @@ func prepareTxBytes(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte,
 }
 
 // postRawTx posts a signed transaction
-func postRawTx(ctx context.Context, pk crypto.Ed25519PrivateKey, j []byte) (*rpc.PostV1ClientBroadcastTxSyncResponse, error) {
+func postRawTx(ctx context.Context, pk crypto.PrivateKey, j []byte) (*rpc.PostV1ClientBroadcastTxSyncResponse, error) {
 	client, err := rpc.NewClientWithResponses(remoteCLIURL)
 	if err != nil {
 		return nil, err
@@ -144,11 +132,6 @@ func postRawTx(ctx context.Context, pk crypto.Ed25519PrivateKey, j []byte) (*rpc
 		return nil, err
 	}
 	return resp, nil
-}
-
-func getNonce() string {
-	rand.Seed(time.Now().UTC().UnixNano())
-	return fmt.Sprintf("%d", rand.Uint64())
 }
 
 func readPassphrase(currPwd string) string {
@@ -168,7 +151,7 @@ func validateStakeAmount(amount string) error {
 	}
 
 	sr := big.NewInt(stakingRecommendationAmount)
-	if typesUtil.BigIntLessThan(am, sr) {
+	if converters.BigIntLessThan(am, sr) {
 		fmt.Printf("The amount you are staking for is below the recommendation of %d POKT, would you still like to continue? y|n\n", sr.Div(sr, oneMillion).Int64())
 		if !confirmation(pwd) {
 			return fmt.Errorf("aborted")
@@ -177,9 +160,9 @@ func validateStakeAmount(amount string) error {
 	return nil
 }
 
-func applySubcommandOptions(cmds []*cobra.Command, cmdDef actorCmdDef) {
+func applySubcommandOptions(cmds []*cobra.Command, cmdOptions []cmdOption) {
 	for _, cmd := range cmds {
-		for _, opt := range cmdDef.Options {
+		for _, opt := range cmdOptions {
 			opt(cmd)
 		}
 	}

@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 func TestRainTreeNetworkCompleteOneNodes(t *testing.T) {
 	// val_1
 	originatorNode := validatorId(1)
-	var expectedCalls = TestNetworkSimulationConfig{
+	expectedCalls := TestNetworkSimulationConfig{
 		originatorNode: {0, 0}, // val_1, the originator, does 0 network reads or writes
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
@@ -47,7 +47,7 @@ func TestRainTreeNetworkCompleteTwoNodes(t *testing.T) {
 	// Per the diagram above, in the case of a 2 node network, the originator node (val_1) does a
 	// single write to another node (val_2),  also the
 	// originator node and never performs any reads or writes during a RainTree broadcast.
-	var expectedCalls = TestNetworkSimulationConfig{
+	expectedCalls := TestNetworkSimulationConfig{
 		// Attempt: I think Validator 1 is sending a message in a 2 (including self) node network
 		originatorNode: {0, 1}, // val_1 does a single network write (to val_2)
 		validatorId(2): {1, 0}, // val_2 does a single network read (from val_1)
@@ -60,7 +60,7 @@ func TestRainTreeNetworkCompleteThreeNodes(t *testing.T) {
 	// 	   ┌───────┴────┬─────────┐
 	//   val_2        val_1     val_3
 	originatorNode := validatorId(1)
-	var expectedCalls = TestNetworkSimulationConfig{
+	expectedCalls := TestNetworkSimulationConfig{
 		originatorNode: {0, 2}, // val_1 does two network writes (to val_2 and val_3)
 		validatorId(2): {1, 0}, // val_2 does a single network read (from val_1)
 		validatorId(3): {1, 0}, // val_2 does a single network read (from val_3)
@@ -76,7 +76,7 @@ func TestRainTreeNetworkCompleteFourNodes(t *testing.T) {
 	//    └───────┐            └───────┐         └───────┐
 	// 		    val_3                val_2             val_4
 	originatorNode := validatorId(1)
-	var expectedCalls = TestNetworkSimulationConfig{
+	expectedCalls := TestNetworkSimulationConfig{
 		originatorNode: {0, 3}, // val_1 does 3 network writes (two to val_2 and 1 to val_3)
 		validatorId(2): {2, 1}, // val_2 does 2 network reads (both from val_1) and 1 network write (to val_3)
 		validatorId(3): {2, 1}, // val_2 does 2 network reads (from val_1 and val_2) and 1 network write (to val_4)
@@ -92,7 +92,7 @@ func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
 	//   ┌───────┴────┬─────────┐            ┌───────┴────┬─────────┐         ┌───────┴────┬─────────┐
 	// val_6        val_4     val_8        val_3        val_1     val_5     val_9        val_7     val_2
 	originatorNode := validatorId(1)
-	var expectedCalls = TestNetworkSimulationConfig{
+	expectedCalls := TestNetworkSimulationConfig{
 		originatorNode: {0, 4},
 		validatorId(2): {1, 0},
 		validatorId(3): {1, 0},
@@ -116,7 +116,7 @@ func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
 
 func TestRainTreeCompleteTwelveNodes(t *testing.T) {
 	originatorNode := validatorId(1)
-	var expectedCalls = TestNetworkSimulationConfig{
+	expectedCalls := TestNetworkSimulationConfig{
 		originatorNode:  {1, 6},
 		validatorId(2):  {3, 2},
 		validatorId(3):  {2, 2},
@@ -142,7 +142,7 @@ func TestRainTreeNetworkCompleteEighteenNodes(t *testing.T) {
 	//    ┌────────┴─────┬───────────┐             ┌───────┴────┬──────────┐           ┌────────┴─────┬──────────┐            ┌───────┴────┬──────────┐             ┌───────┴────┬─────────┐          ┌────────┴────┬─────────┐         ┌───────┴─────┬──────────┐             ┌────────┴─────┬───────────┐          ┌───────┴────┬──────────┐
 	// val_13         val_11      val_16        val_9        val_7      val_12      val_17         val_15     val_8        val_7        val_5      val_10        val_3        val_1     val_6      val_11        val_9     val_2     val_1         val_17     val_4         val_15         val_13      val_18     val_5        val_3      val_14
 	originatorNode := validatorId(1)
-	var expectedCalls = TestNetworkSimulationConfig{
+	expectedCalls := TestNetworkSimulationConfig{
 		originatorNode:  {1, 6},
 		validatorId(2):  {1, 0},
 		validatorId(3):  {2, 2},
@@ -174,7 +174,7 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 	//   ┌────────┴─────┬───────────┐              ┌────────┴─────┬───────────┐           ┌────────┴─────┬───────────┐              ┌────────┴────┬──────────┐             ┌───────┴────┬─────────┐          ┌────────┴─────┬──────────┐         ┌───────┴─────┬──────────┐             ┌────────┴─────┬───────────┐          ┌───────┴────┬──────────┐
 	// val_20         val_16      val_24         val_14         val_10      val_18      val_26         val_22      val_12         val_11        val_7      val_15        val_5        val_1     val_9      val_17         val_13     val_3     val_2         val_25     val_6         val_23         val_19      val_27     val_8        val_4      val_21
 	originatorNode := validatorId(1)
-	var expectedCalls = TestNetworkSimulationConfig{
+	expectedCalls := TestNetworkSimulationConfig{
 		originatorNode:  {0, 6},
 		validatorId(2):  {1, 0},
 		validatorId(3):  {1, 0},
@@ -245,7 +245,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 
 		connMocks[valId] = prepareConnMock(t, valId, &wg, expectedCall.numNetworkReads)
 		persistenceMock := preparePersistenceMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
-		consensusMock := prepareConsensusMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
+		consensusMock := prepareConsensusMock(t, busMocks[count])
 		telemetryMock := prepareTelemetryMock(t, busMocks[count], valId, &wg, expectedWrites)
 
 		prepareBusMock(busMocks[count], persistenceMock, consensusMock, telemetryMock)
@@ -257,20 +257,26 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	p2pModules := createP2PModules(t, busMocks)
 	for validatorId, p2pMod := range p2pModules {
 		p2pMod.listener = connMocks[validatorId]
-		p2pMod.Start()
+		err := p2pMod.Start()
+		require.NoError(t, err)
 		for _, peer := range p2pMod.network.GetAddrBook() {
 			peer.Dialer = connMocks[peer.ServiceUrl]
 		}
-		defer p2pMod.Stop()
 	}
 
 	// Wait for completion
-	defer waitForNetworkSimulationCompletion(t, p2pModules, &wg)
+	defer waitForNetworkSimulationCompletion(t, &wg)
 
 	// Send the first message (by the originator) to trigger a RainTree broadcast
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
 	require.NoError(t, p2pMod.Broadcast(p))
+
+	// Stop all p2p modules outside of loop
+	for _, p2pMod := range p2pModules {
+		err := p2pMod.Stop()
+		require.NoError(t, err)
+	}
 }
 
 func extractNumericId(valId string) int64 {

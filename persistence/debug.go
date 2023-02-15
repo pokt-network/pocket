@@ -7,10 +7,9 @@ import (
 	"runtime/debug"
 
 	"github.com/celestiaorg/smt"
-	"github.com/mindstand/gogm/v2"
-	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
@@ -48,60 +47,12 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMess
 
 	// Not handled yet
 	default:
-		log.Printf("Debug message not handled by persistence module: %s \n", debugMessage.Message)
+		m.logger.Debug().Str("message", debugMessage.Message.String()).Msg("Debug message not handled by persistence module")
 	}
 
 	return nil
 }
 
-func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) error {
-	// TODO: Add an iterator to the `kvstore` and use that instead
-	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1
-	blockBytes, err := m.GetBlockStore().Get(heightToBytes(int64(height)))
-	if err != nil {
-		log.Printf("Error getting block %d from block store: %s \n", height, err)
-		return err
-	}
-
-	block := &coreTypes.Block{}
-	if err := codec.GetCodec().Unmarshal(blockBytes, block); err != nil {
-		log.Printf("Error decoding block %d from block store: %s \n", height, err)
-		return err
-	}
-
-	log.Printf("Block at height %d: %+v \n", height, block)
-
-	return nil
-}
-
-// func getNodeData(network p2p_types.Network) (actor []*types.ActorNeo) {
-// 	for _, networkModule := range network.GetAddrBook() {
-// 		conn, err := net.DialTCP("tcp", nil, networkModule.DebugAddr)
-// 		if err != nil {
-// 			log.Println("Error connecting to peer debug port: ", err)
-// 			continue
-// 		}
-// 		defer conn.Close()
-
-// 		data, err := ioutil.ReadAll(conn)
-// 		if err != nil {
-// 			log.Println("Error reading from conn: ", err)
-// 			return
-// 		}
-
-// 		var buff = bytes.NewBuffer(data)
-// 		dec := gob.NewDecoder(buff)
-// 		consensusNodeState := consensus_types.Actor{}
-// 		if err = dec.Decode(&consensusNodeState); err != nil {
-// 			log.Println("[ERROR] Error decoding: ", err)
-// 		}
-
-// 		node_data = append(node_data, &consensusNodeState)
-// 	}
-// 	return
-// }
-
-// A helper to clear the DB from scratch
 func dropAllNeo() {
 	driver, err := neo4j.NewDriver("bolt://neo4j:7687", neo4j.BasicAuth("root", "", ""), func(c *neo4j.Config) { c.Encrypted = false })
 	if err != nil {
@@ -235,6 +186,24 @@ func (m *persistenceModule) exportToNeo(_ *messaging.DebugMessage) error {
 	return nil
 }
 
+func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) error {
+	// TODO: Add an iterator to the `kvstore` and use that instead
+	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1
+	blockBytes, err := m.GetBlockStore().Get(converters.HeightToBytes(height))
+	if err != nil {
+		m.logger.Error().Err(err).Uint64("height", height).Msg("Error getting block from block store")
+		return err
+	}
+
+	block := &coreTypes.Block{}
+	if err := codec.GetCodec().Unmarshal(blockBytes, block); err != nil {
+		m.logger.Error().Err(err).Uint64("height", height).Msg("Error decoding block from block store")
+		return err
+	}
+
+	m.logger.Info().Uint64("height", height).Str("block", block.String()).Msg("Block from block store")
+}
+
 // TECHDEBT: Make sure this is atomic
 func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
 	ctx, err := m.NewRWContext(-1)
@@ -263,24 +232,21 @@ func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
 		return err
 	}
 
-	log.Println("Cleared all the state")
+	m.logger.Info().Msg("Cleared all the state")
 	// reclaming memory manually because the above calls deallocate and reallocate a lot of memory
 	debug.FreeOSMemory()
 	return nil
 }
 
 func (p *PostgresContext) clearAllSQLState() error {
-	ctx, clearTx, err := p.getCtxAndTx()
-	if err != nil {
-		return err
-	}
+	ctx, clearTx := p.getCtxAndTx()
 
 	for _, actor := range protocolActorSchemas {
-		if _, err = clearTx.Exec(ctx, actor.ClearAllQuery()); err != nil {
+		if _, err := clearTx.Exec(ctx, actor.ClearAllQuery()); err != nil {
 			return err
 		}
 		if actor.GetChainsTableName() != "" {
-			if _, err = clearTx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
+			if _, err := clearTx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
 				return err
 			}
 		}
@@ -292,7 +258,7 @@ func (p *PostgresContext) clearAllSQLState() error {
 		}
 	}
 
-	if err = clearTx.Commit(ctx); err != nil {
+	if err := clearTx.Commit(ctx); err != nil {
 		return err
 	}
 

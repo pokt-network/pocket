@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.14] - 2023-02-09
+
+- Updated all `config*.json` files with new `server_mode_enabled` field (for state sync)
+
+## [0.0.0.13] - 2023-02-08
+
+- Fix bug related to installing Tilt in the Docker containers
+
+## [0.0.0.12] - 2023-02-07
+
+- Code formatting by VSCode
+
+## [0.0.0.11] - 2023-02-07
+
+- Added GITHUB_WIKI tags where it was missing
+
+## [0.0.0.10] - 2023-02-06
+
+- Added `genesis_localhost.json`, a copy of `genesis.json` to be used by the localhost instead of a debug docker container
+
+## [0.0.0.9] - 2023-02-06
+
+- Address legacy linter errors from `golangci-lint`
+
+## [0.0.0.8] - 2023-02-06
+
+- Added LocalNet on Kubernetes with tilt.dev
+
+## [0.0.0.7] - 2023-02-04
+
+- Added `--decoration="none"` flag to `reflex`
+
 ## [0.0.0.6] - 2023-01-23
 
 - Added pprof feature flag guideline in docker-compose.yml
@@ -37,3 +69,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.0] - 2022-12-22
 
 - Introduced this `CHANGELOG.md`
+
+<!-- GITHUB_WIKI: changelog/build -->

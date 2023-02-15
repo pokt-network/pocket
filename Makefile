@@ -5,7 +5,7 @@ CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 # IMPROVE: Add `-shuffle=on` to the `go test` command to randomize the order in which tests are run.
 
 # An easy way to turn off verbose test output for some of the test targets. For example
-#  `$ make test_persistence` by default enables verbose testing
+#  `make test_persistence` by default enables verbose testing
 #  `VERBOSE_TEST="" make test_persistence` is an easy way to run the same tests without verbose output
 VERBOSE_TEST ?= -v
 
@@ -89,7 +89,7 @@ go_clean_deps: ## Runs `go mod tidy` && `go mod vendor`
 
 .PHONY: go_lint
 go_lint: ## Run all linters that are triggered by the CI pipeline
-	golangci-lint run ./...
+	docker run -t --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.51.1 golangci-lint run -v
 
 .PHONY: gofmt
 gofmt: ## Format all the .go files in the project in place.
@@ -101,6 +101,8 @@ install_cli_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag'
 	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
 	go install "github.com/favadi/protoc-go-inject-tag@latest"
 	go install "github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0"
+	curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
+	curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 .PHONY: develop_start
 develop_start: ## Run all of the make commands necessary to develop on the project
@@ -109,7 +111,8 @@ develop_start: ## Run all of the make commands necessary to develop on the proje
 		make protogen_clean && make protogen_local && \
 		make go_clean_deps && \
 		make mockgen && \
-		make generate_rpc_openapi
+		make generate_rpc_openapi && \
+		make build
 
 .PHONY: develop_test
 develop_test: docker_check ## Run all of the make commands necessary to develop on the project and verify the tests pass
@@ -220,11 +223,13 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
-	$(eval p2p_dir = "p2p")
-	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
-	find ${p2p_type_mocks_dir} -type f ! -name "mocks.go" -exec rm {} \;
-	go generate ./${p2p_dir}/...
-	echo "P2P mocks generated in ${p2p_type_mocks_dir}"
+	$(eval DIRS = p2p persistence)
+	for dir in $(DIRS); do \
+		echo "Processing $$dir mocks..."; \
+        find $$dir/types/mocks -type f ! -name "mocks.go" -exec rm {} \;; \
+        go generate ./${dir_name}/...; \
+        echo "$$dir mocks generated in $$dir/types/mocks"; \
+    done
 
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
@@ -243,9 +248,10 @@ PROTOC_SHARED = $(PROTOC) -I=./shared
 .PHONY: protogen_local
 protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
 	# Shared
-	$(PROTOC) -I=./shared/core/types/proto --go_out=./shared/core/types ./shared/core/types/proto/*.proto
-	$(PROTOC) -I=./shared/messaging/proto  --go_out=./shared/messaging  ./shared/messaging/proto/*.proto
-	$(PROTOC) -I=./shared/codec/proto      --go_out=./shared/codec      ./shared/codec/proto/*.proto
+	$(PROTOC) -I=./shared/core/types/proto    --go_out=./shared/core/types          ./shared/core/types/proto/*.proto
+	$(PROTOC) -I=./shared/modules/types/proto --go_out=./shared/modules/types ./shared/modules/types/proto/*.proto
+	$(PROTOC) -I=./shared/messaging/proto     --go_out=./shared/messaging           ./shared/messaging/proto/*.proto
+	$(PROTOC) -I=./shared/codec/proto         --go_out=./shared/codec               ./shared/codec/proto/*.proto
 
 	# Runtime
 	$(PROTOC) -I=./runtime/configs/types/proto				--go_out=./runtime/configs/types	./runtime/configs/types/proto/*.proto
@@ -257,8 +263,6 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 
 	# Persistence
 	$(PROTOC_SHARED) -I=./persistence/indexer/proto 	--go_out=./persistence/indexer ./persistence/indexer/proto/*.proto
-	$(PROTOC_SHARED) -I=./persistence/proto         	--go_out=./persistence/types   ./persistence/proto/*.proto
-	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 
 	# Utility
 	$(PROTOC_SHARED) -I=./utility/types/proto --go_out=./utility/types ./utility/types/proto/*.proto
@@ -313,6 +317,10 @@ test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, outp
 .PHONY: test_race
 test_race: ## Identify all unit tests that may result in race conditions
 	go test ${VERBOSE_TEST} -race ./...
+
+.PHONY: test_app
+test_app: ## Run all go app module unit tests
+	go test ${VERBOSE_TEST} -p=1 -count=1  ./app/...
 
 .PHONY: test_utility
 test_utility: ## Run all go utility module unit tests
@@ -403,9 +411,11 @@ benchmark_p2p_addrbook: ## Benchmark all P2P addr book related tests
 # ADDTEST       - Add more tests for a specific code section
 # DEPRECATE     - Code that should be removed in the future
 # RESEARCH      - A non-trivial action item that requires deep research and investigation being next steps can be taken
+# DOCUMENT		- A comment that involves the creation of a README or other documentation
+# BUG           - There is a known existing bug in this code
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH"
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH" -e "BUG"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;
@@ -444,6 +454,31 @@ gen_genesis_and_config: ## Generate the genesis and config files for LocalNet
 clear_genesis_and_config: ## Clear the genesis and config files for LocalNet
 	rm build/config/gen.*.json
 
+.PHONY: localnet_up
+localnet_up: ## Starts up a k8s LocalNet with all necessary dependencies (tl;dr `tilt up`)
+	tilt up --file=build/localnet/Tiltfile
+
+.PHONY: localnet_client_debug
+localnet_client_debug: ## Opens a `client debug` cli to interact with blockchain (e.g. change pacemaker mode, reset to genesis, etc). Though the node binary updates automatiacally on every code change (i.e. hot reloads), if client is already open you need to re-run this command to execute freshly compiled binary.
+	kubectl exec -it deploy/pocket-v1-cli-client -- client debug
+
+.PHONY: localnet_shell
+localnet_shell: ## Opens a shell in the pod that has the `client` cli available. The binary updates automatically whenever the code changes (i.e. hot reloads).
+	kubectl exec -it deploy/pocket-v1-cli-client -- /bin/bash
+
+.PHONY: localnet_logs_validators
+localnet_logs_validators: ## Outputs logs from all validators
+	kubectl logs -l v1-purpose=validator --all-containers=true --tail=-1
+
+.PHONY: localnet_logs_validators_follow
+localnet_logs_validators_follow: ## Outputs logs from all validators and follows them (i.e. tail)
+	kubectl logs -l v1-purpose=validator --all-containers=true --max-log-requests=1000 --tail=-1 -f
+
+.PHONY: localnet_down
+localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + postgres database)
+	tilt down --file=build/localnet/Tiltfile
+	kubectl delete pvc --ignore-not-found=true data-dependencies-postgresql-0
+
 .PHONY: check_cross_module_imports
 check_cross_module_imports: ## Lists cross-module imports
 	$(eval exclude_common=--exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime)
@@ -464,3 +499,7 @@ check_cross_module_imports: ## Lists cross-module imports
 	echo "-----------------------"
 	echo "runtime:\n"
 	grep ${exclude_common} --exclude-dir=runtime -r "github.com/pokt-network/pocket/runtime" || echo "✅ OK!"
+
+.PHONY: send_local_tx
+send_local_tx: ## A hardcoded send tx to make LocalNet debugging easier
+	go run app/client/*.go Account Send 00104055c00bed7c983a48aac7dc6335d7c607a7 00204737d2a165ebe4be3a7d5b0af905b0ea91d8 1000

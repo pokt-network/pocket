@@ -21,6 +21,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -42,8 +43,8 @@ var (
 	StakeToUpdate        = converters.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
 
 	DefaultStakeStatus     = int32(persistence.StakedStatus)
-	DefaultPauseHeight     = int64(-1)
-	DefaultUnstakingHeight = int64(-1)
+	DefaultPauseHeight     = int64(-1) // pauseHeight=-1 means not paused
+	DefaultUnstakingHeight = int64(-1) // pauseHeight=-1 means not unstaking
 
 	OlshanskyURL    = "https://olshansky.info"
 	OlshanskyChains = []string{"OLSH"}
@@ -62,6 +63,9 @@ var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	testPersistenceMod = newTestPersistenceModule(dbUrl)
+	if testPersistenceMod == nil {
+		log.Fatal("[ERROR] Unable to create new test persistence module")
+	}
 	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
 	os.Exit(exitCode)
@@ -115,17 +119,21 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	runtimeMgr := runtime.NewManager(cfg, genesisState)
 	bus, err := runtime.CreateBus(runtimeMgr)
 	if err != nil {
-		log.Fatalf("Error creating bus: %s", err)
+		log.Printf("Error creating bus: %s", err)
+		return nil
 	}
 
 	persistenceMod, err := persistence.Create(bus)
 	if err != nil {
-		log.Fatalf("Error creating persistence module: %s", err)
+		log.Printf("Error creating persistence module: %s", err)
+		return nil
 	}
+
 	return persistenceMod.(modules.PersistenceModule)
 }
 
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
+//nolint:gosec // G404 - Weak random source is okay in unit tests
 func fuzzSingleProtocolActor(
 	f *testing.F,
 	newTestActor func() (*coreTypes.Actor, error),
@@ -228,8 +236,8 @@ func fuzzSingleProtocolActor(
 			if originalActor.UnstakingHeight != db.Height { // Not ready to unstake
 				require.Nil(t, unstakingActors)
 			} else {
-				idx := slices.IndexFunc(unstakingActors, func(a modules.IUnstakingActor) bool {
-					return originalActor.Address == hex.EncodeToString(a.GetAddress())
+				idx := slices.IndexFunc(unstakingActors, func(a *moduleTypes.UnstakingActor) bool {
+					return originalActor.Address == a.Address
 				})
 				require.NotEqual(t, idx, -1, fmt.Sprintf("actor that is unstaking was not found %+v", originalActor))
 			}
@@ -278,8 +286,8 @@ func fuzzSingleProtocolActor(
 			newActor, err := getTestActor(db, originalActor.Address)
 			require.NoError(t, err)
 
-			if db.Height > originalActor.PausedHeight { // isPausedAndReadyToUnstake
-				require.Equal(t, newActor.UnstakingHeight, newUnstakingHeight, "setPausedToUnstaking")
+			if db.Height > originalActor.PausedHeight && originalActor.PausedHeight != DefaultPauseHeight { // isPausedAndReadyToUnstake
+				require.Equal(t, newUnstakingHeight, newActor.UnstakingHeight, "setPausedToUnstaking")
 			}
 		case "GetActorOutputAddr":
 			outputAddr, err := db.GetActorOutputAddress(protocolActorSchema, addr, db.Height)
@@ -301,6 +309,7 @@ func getRandomChains() (chains []string) {
 	numCharOptions := len(charOptions)
 
 	chainsMap := make(map[string]struct{})
+	//nolint:gosec // G404 - Weak random source is okay in unit tests
 	for i := 0; i < rand.Intn(14)+1; i++ {
 		b := make([]byte, 4)
 		for i := range b {
@@ -316,6 +325,7 @@ func getRandomChains() (chains []string) {
 	return
 }
 
+//nolint:gosec // G404 - Weak random source is okay in unit tests
 func getRandomServiceURL() string {
 	setRandomSeed()
 
@@ -331,11 +341,11 @@ func getRandomServiceURL() string {
 }
 
 func getRandomBigIntString() string {
-	return converters.BigIntToString(big.NewInt(rand.Int63()))
+	return converters.BigIntToString(big.NewInt(rand.Int63())) //nolint:gosec // G404 - Weak random source is okay in unit tests
 }
 
 func setRandomSeed() {
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano()) //nolint:staticcheck // G404 - Weak random source is okay in unit tests
 }
 
 // This is necessary for unit tests that are dependant on a baseline genesis state

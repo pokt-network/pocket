@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"log"
 
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -140,13 +139,7 @@ func (p *PostgresContext) updateMerkleTrees() (string, error) {
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
 		// Actor Merkle Trees
-		case appMerkleTree:
-			fallthrough
-		case valMerkleTree:
-			fallthrough
-		case fishMerkleTree:
-			fallthrough
-		case serviceNodeMerkleTree:
+		case appMerkleTree, valMerkleTree, fishMerkleTree, serviceNodeMerkleTree:
 			actorType, ok := merkleTreeToActorTypeName[treeType]
 			if !ok {
 				return "", fmt.Errorf("no actor type found for merkle tree: %v\n", treeType)
@@ -181,7 +174,7 @@ func (p *PostgresContext) updateMerkleTrees() (string, error) {
 
 		// Default
 		default:
-			log.Fatalf("Not handled yet in state commitment update. Merkle tree #{%v}\n", treeType)
+			p.logger.Fatal().Msgf("Not handled yet in state commitment update. Merkle tree #{%v}", treeType)
 		}
 	}
 
@@ -207,7 +200,7 @@ func (p *PostgresContext) getStateHash() string {
 
 // Returns a digest (a single hash) of all the transactions included in the block.
 // This allows separating the integrity of the transactions from their storage.
-func (p PostgresContext) getTxsHash() (txs []byte, err error) {
+func (p *PostgresContext) getTxsHash() (txs []byte, err error) {
 	txResults, err := p.txIndexer.GetByHeight(p.Height, txsOrderInBlockHashDescending)
 	if err != nil {
 		return nil, err

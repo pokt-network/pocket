@@ -7,7 +7,8 @@ option go_package = "github.com/pokt-network/pocket/runtime/configs";
 message ConsensusConfig {
   string private_key = 1;
   uint64 max_mempool_bytes = 2; // TODO(olshansky): add unit tests for this
-  PacemakerConfig pacemaker_config = 3;
+  bool server_mode_enabled = 3;
+  PacemakerConfig pacemaker_config = 4;
 }
 
 message PacemakerConfig {

@@ -13,7 +13,7 @@ import (
 
 // CONSIDERATION: Should this return an error and let the caller decide if it should log a fatal error?
 func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
-	log.Println("Populating genesis state...")
+	m.logger.Info().Msg("Populating genesis state...")
 
 	// REFACTOR: This business logic should probably live in `types/genesis.go`
 	//           and we need to add proper unit tests for it.`
@@ -32,23 +32,23 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 
 	rwContext, err := m.NewRWContext(0)
 	if err != nil {
-		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
+		m.logger.Fatal().Err(err).Msg("an error occurred creating the rwContext for the genesis state")
 	}
 
 	for _, acc := range state.GetAccounts() {
 		addrBz, err := hex.DecodeString(acc.GetAddress())
 		if err != nil {
-			log.Fatalf("an error occurred converting address to bytes %s", acc.GetAddress())
+			m.logger.Fatal().Err(err).Str("address", acc.GetAddress()).Msg("an error occurred converting address to bytes")
 		}
 		err = rwContext.SetAccountAmount(addrBz, acc.GetAmount())
 		if err != nil {
-			log.Fatalf("an error occurred inserting an acc in the genesis state: %s", err.Error())
+			m.logger.Fatal().Err(err).Str("address", acc.GetAddress()).Msg("an error occurred inserting an acc in the genesis state")
 		}
 	}
 	for _, pool := range state.GetPools() {
 		err = rwContext.InsertPool(pool.GetAddress(), pool.GetAmount()) // pool.GetAddress() returns the pool's semantic name
 		if err != nil {
-			log.Fatalf("an error occurred inserting an pool in the genesis state: %s", err.Error())
+			m.logger.Fatal().Err(err).Str("address", pool.GetAddress()).Msg("an error occurred inserting an pool in the genesis state")
 		}
 	}
 
@@ -115,20 +115,20 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	}
 
 	if err = rwContext.InitFlags(); err != nil { // TODO (Team) use flags from genesis file not hardcoded
-		log.Fatalf("an error occurred initializing flags: %s", err.Error())
+		m.logger.Fatal().Err(err).Msg("an error occurred initializing flags")
 	}
 
 	// Updates all the merkle trees
 	stateHash, err := rwContext.ComputeStateHash()
 	if err != nil {
-		log.Fatalf("an error occurred updating the app hash during genesis: %s", err.Error())
+		m.logger.Fatal().Err(err).Msg("an error occurred updating the app hash during genesis")
 	}
-	log.Println("PopulateGenesisState - computed state hash:", stateHash)
+	m.logger.Info().Str("stateHash", stateHash).Msg("PopulateGenesisState - computed state hash")
 
 	// This updates the DB, blockstore, and commits the genesis state.
 	// Note that the `quorumCert for genesis` is nil.
 	if err = rwContext.Commit(nil, nil); err != nil {
-		log.Fatalf("error committing genesis state to DB %s ", err.Error())
+		m.logger.Fatal().Err(err).Msg("an error occurred committing the genesis state to the DB")
 	}
 }
 
@@ -136,22 +136,15 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 //
 //		can easily be refactored and condensed into a single function using a generic type or a common
 //	 interface.
-func (p PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
+func (p *PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account, err error) {
+	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.Account.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
 	for rows.Next() {
 		acc := new(coreTypes.Account)
-		if err = rows.Scan(&acc.Address, &acc.Amount, &height); err != nil {
-			return nil, err
-		}
-		// acc.Address, err = address
-		if err != nil {
+		if err := rows.Scan(&acc.Address, &acc.Amount, &height); err != nil {
 			return nil, err
 		}
 		accs = append(accs, acc)
@@ -160,18 +153,15 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account
 }
 
 // CLEANUP: Consolidate with GetAllAccounts.
-func (p PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
+func (p *PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, err error) {
+	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.Pool.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
 	for rows.Next() {
 		pool := new(coreTypes.Account)
-		if err = rows.Scan(&pool.Address, &pool.Amount, &height); err != nil {
+		if err := rows.Scan(&pool.Address, &pool.Amount, &height); err != nil {
 			return nil, err
 		}
 		accs = append(accs, pool)

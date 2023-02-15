@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.25] - 2023-02-14
+
+- Remove shared `ActorTypes` array and use the enum directly
+- Reduce the code footprint of the `codec` package & add some TODOs
+- Added `UnstakingActor` proto to remove deduplication across modules; adding TECHDEBT to remove altogether one day
+- Added clarifying comments to the utility module interface
+
+## [0.0.0.24] - 2023-02-09
+
+- Add `ConsensusStateSync` interface that is implemented by the consensus module
+
+## [0.0.0.23] - 2023-02-07
+
+- Added GITHUB_WIKI tags where it was missing
+
+## [0.0.0.22] - 2023-02-06
+
+- Address legacy linter errors from `golangci-lint`
+
+## [0.0.0.21] - 2023-02-04
+
+- Changed log lines to utilize new logger module.
+- Added example to Readme how to initiate a logger using new logger module.
+
+## [0.0.0.20] - 2023-02-03
+
+- Introduced `GenericFIFOList` to handle generic FIFO mempool lists (can contain duplicates)
+- Introduced `GenericFIFOSet` to handle generic FIFO mempool sets (items are unique)
+- Updated `Utility` module interface to expose mempool access via `GetMempool()`
+
+## [0.0.0.19] - 2023-02-02
+
+- Add `KeyPair` interface
+- Add logic to create new keypairs, encrypt/armour them and decrypt/unarmour them
+
 ## [0.0.0.18] - 2023-01-31
 
 - Match naming conventions in `Param` protobuf file
@@ -126,3 +161,5 @@ Configs:
 - Shared interfaces and general 'base' configuration located here
 - Moved make client code to 'debug' to clarify that the event distribution is for the temporary local net
 - Left multiple `TODO` for remaining code in test_artifacts to think on removal of shared testing code
+
+<!-- GITHUB_WIKI: changelog/shared -->

@@ -12,7 +12,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
-	"github.com/pokt-network/pocket/utility"
 )
 
 const (
@@ -22,6 +21,7 @@ const (
 	sqlSchema        = "test_schema"
 	dialect          = "postgres"
 	connStringFormat = "postgres://%s:%s@%s/%s?sslmode=disable"
+	timeOut          = 1200
 )
 
 // DISCUSS(team) both the persistence module and the utility module share this code which is less than ideal
@@ -65,7 +65,9 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 		}
 	}()
 
-	resource.Expire(1200) // Tell docker to hard kill the container in 20 minutes
+	if err := resource.Expire(timeOut); err != nil { // Tell docker to hard kill the container in 20 minutes
+		log.Fatalf("[ERROR] Failed to set expiration on docker container: %v", err.Error())
+	}
 
 	poolRetryChan := make(chan struct{}, 1)
 	retryConnectFn := func() error {
@@ -94,6 +96,3 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 		log.Fatalf("could not purge resource: %s", err)
 	}
 }
-
-// CLEANUP: Remove this since it's no longer used or necessary but make sure remote tests are still passing
-func CleanupTest(u utility.UtilityContext) {}

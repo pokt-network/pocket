@@ -1,13 +1,14 @@
 package persistence
 
 import (
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"log"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
@@ -26,32 +27,32 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 	}
 	return true, err
 }
+func (p *PostgresContext) GetMinimumBlockHeight() (latestHeight uint64, err error) {
+	ctx, tx := p.getCtxAndTx()
 
-func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return 0, err
-	}
-
-	err = tx.QueryRow(ctx, types.GetLatestBlockHeightQuery()).Scan(&latestHeight)
+	err = tx.QueryRow(ctx, types.GetMinimumBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
 
-func (p PostgresContext) GetBlockHash(height int64) (string, error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return "", err
-	}
+func (p *PostgresContext) GetMaximumBlockHeight() (latestHeight uint64, err error) {
+	ctx, tx := p.getCtxAndTx()
+
+	err = tx.QueryRow(ctx, types.GetMaximumBlockHeightQuery()).Scan(&latestHeight)
+	return
+}
+
+func (p *PostgresContext) GetBlockHash(height int64) (string, error) {
+	ctx, tx := p.getCtxAndTx()
 
 	var blockHash string
-	if err = tx.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&blockHash); err != nil {
+	if err := tx.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&blockHash); err != nil {
 		return "", err
 	}
 
 	return blockHash, nil
 }
 
-func (p PostgresContext) GetHeight() (int64, error) {
+func (p *PostgresContext) GetHeight() (int64, error) {
 	return p.Height, nil
 }
 
@@ -93,26 +94,18 @@ func (p *PostgresContext) insertBlock(block *coreTypes.Block) error {
 	}
 	blockHeader := block.BlockHeader
 
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return err
-	}
+	ctx, tx := p.getCtxAndTx()
 
-	_, err = tx.Exec(ctx, types.InsertBlockQuery(blockHeader.Height, blockHeader.StateHash, blockHeader.ProposerAddress, blockHeader.QuorumCertificate))
+	_, err := tx.Exec(ctx, types.InsertBlockQuery(blockHeader.Height, blockHeader.StateHash, blockHeader.ProposerAddress, blockHeader.QuorumCertificate))
 	return err
 }
 
 // Stores the block in the key-value store
-func (p PostgresContext) storeBlock(block *coreTypes.Block) error {
+func (p *PostgresContext) storeBlock(block *coreTypes.Block) error {
 	blockBz, err := codec.GetCodec().Marshal(block)
 	if err != nil {
 		return err
 	}
-	return p.blockStore.Set(heightToBytes(p.Height), blockBz)
-}
-
-func heightToBytes(height int64) []byte {
-	heightBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(heightBytes, uint64(height))
-	return heightBytes
+	log.Printf("Storing block %d in block store.\n", block.BlockHeader.Height)
+	return p.blockStore.Set(converters.HeightToBytes(uint64(p.Height)), blockBz)
 }

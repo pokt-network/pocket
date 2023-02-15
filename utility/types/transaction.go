@@ -5,53 +5,76 @@ import (
 
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
-	"google.golang.org/protobuf/proto"
 )
 
-func TransactionFromBytes(transaction []byte) (*Transaction, Error) {
+func TxFromBytes(txProtoBytes []byte) (*Transaction, Error) {
 	tx := &Transaction{}
-	if err := codec.GetCodec().Unmarshal(transaction, tx); err != nil {
+	if err := codec.GetCodec().Unmarshal(txProtoBytes, tx); err != nil {
 		return nil, ErrUnmarshalTransaction(err)
 	}
 	return tx, nil
 }
 
+func TxHash(txProtoBytes []byte) string {
+	return crypto.GetHashStringFromBytes(txProtoBytes)
+}
+
+var (
+	_ Validatable  = &Transaction{}
+	_ ITransaction = &Transaction{}
+)
+
+// `ITransaction` is an interface that helps capture the functions added to the `Transaction` data structure.
+// It is unlikely for there to be multiple implementations of this interface in prod.
+type ITransaction interface {
+	GetMessage() (Message, Error)
+	Sign(privateKey crypto.PrivateKey) Error
+	Hash() (string, Error)
+	SignableBytes() ([]byte, error)
+	Bytes() ([]byte, error)
+	Equals(tx2 ITransaction) bool
+}
+
 func (tx *Transaction) ValidateBasic() Error {
+	// Nonce cannot be empty to avoid transaction replays
 	if tx.Nonce == "" {
 		return ErrEmptyNonce()
 	}
-	if _, err := codec.GetCodec().FromAny(tx.Msg); err != nil {
-		return ErrProtoFromAny(err)
-	}
-	if tx.Signature == nil || tx.Signature.Signature == nil {
+
+	// Is there a signature we can verify?
+	if tx.Signature == nil {
 		return ErrEmptySignature()
 	}
-	if tx.Signature.PublicKey == nil {
-		return ErrEmptyPublicKey()
+	if err := tx.Signature.ValidateBasic(); err != nil {
+		return err
 	}
+
+	// Does the transaction have a valid key?
 	publicKey, err := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
 	if err != nil {
 		return ErrNewPublicKeyFromBytes(err)
 	}
-	signBytes, err := tx.SignBytes()
+
+	// Is there a valid msg that can be decoded?
+	if _, err := tx.GetMessage(); err != nil {
+		return err
+	}
+
+	signBytes, err := tx.SignableBytes()
 	if err != nil {
 		return ErrProtoMarshal(err)
 	}
 	if ok := publicKey.Verify(signBytes, tx.Signature.Signature); !ok {
 		return ErrSignatureVerificationFailed()
 	}
-	if _, err := tx.Message(); err != nil {
-		return err
-	}
+
 	return nil
 }
 
-func (tx *Transaction) Message() (Message, Error) {
-	codec := codec.GetCodec()
-	msg, er := codec.FromAny(tx.Msg)
-	if er != nil {
-		return nil, ErrProtoMarshal(er)
+func (tx *Transaction) GetMessage() (Message, Error) {
+	msg, err := codec.GetCodec().FromAny(tx.Msg)
+	if err != nil {
+		return nil, ErrProtoFromAny(err)
 	}
 	message, ok := msg.(Message)
 	if !ok {
@@ -61,107 +84,44 @@ func (tx *Transaction) Message() (Message, Error) {
 }
 
 func (tx *Transaction) Sign(privateKey crypto.PrivateKey) Error {
-	publicKey := privateKey.PublicKey()
-	bz, err := tx.SignBytes()
+	txSignableBz, err := tx.SignableBytes()
 	if err != nil {
-		return err
+		return ErrProtoMarshal(err)
 	}
-	signature, er := privateKey.Sign(bz)
+	signature, er := privateKey.Sign(txSignableBz)
 	if er != nil {
 		return ErrTransactionSign(er)
 	}
 	tx.Signature = &Signature{
-		PublicKey: publicKey.Bytes(),
+		PublicKey: privateKey.PublicKey().Bytes(),
 		Signature: signature,
 	}
 	return nil
 }
 
 func (tx *Transaction) Hash() (string, Error) {
-	b, err := tx.Bytes()
+	txProtoBz, err := tx.Bytes()
 	if err != nil {
 		return "", ErrProtoMarshal(err)
 	}
-	return TransactionHash(b), nil
+	return TxHash(txProtoBz), nil
 }
 
-func (tx *Transaction) SignBytes() ([]byte, Error) {
-	// transaction := proto.Clone(tx).(*Transaction)
-	transaction := *tx
-	transaction.Signature = nil
-	bz, err := codec.GetCodec().Marshal(&transaction)
-	if err != nil {
-		return nil, ErrProtoMarshal(err)
-	}
-	return bz, nil
+// The bytes of the transaction that should have been signed.
+func (tx *Transaction) SignableBytes() ([]byte, error) {
+	// This is not simply `tx.Message().GetCanonicalBytes()` because the txCopy also contains
+	// other metadata such as the nonce which has to be part signed as well.
+	txCopy := codec.GetCodec().Clone(tx).(*Transaction)
+	txCopy.Signature = nil
+	return codec.GetCodec().Marshal(txCopy)
 }
 
-func (tx *Transaction) Bytes() ([]byte, Error) {
-	bz, err := codec.GetCodec().Marshal(tx)
-	if err != nil {
-		return nil, ErrProtoMarshal(err)
-	}
-	return bz, nil
+func (tx *Transaction) Bytes() ([]byte, error) {
+	return codec.GetCodec().Marshal(tx)
 }
 
-func (tx *Transaction) Equals(tx2 *Transaction) bool {
-	b, _ := tx2.Bytes()
-	b1, _ := tx2.Bytes()
-	return bytes.Equal(b, b1)
-}
-
-var _ modules.TxResult = &DefaultTxResult{}
-
-func (x *DefaultTxResult) Bytes() ([]byte, error) {
-	return codec.GetCodec().Marshal(x)
-}
-
-func (*DefaultTxResult) FromBytes(bz []byte) (modules.TxResult, error) {
-	result := new(DefaultTxResult)
-	if err := codec.GetCodec().Unmarshal(bz, result); err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-func (x *DefaultTxResult) Hash() ([]byte, error) {
-	bz, err := x.Bytes()
-	if err != nil {
-		return nil, err
-	}
-	return x.HashFromBytes(bz)
-}
-
-func (x *DefaultTxResult) HashFromBytes(bz []byte) ([]byte, error) {
-	return crypto.SHA3Hash(bz), nil
-}
-
-func (tx *Transaction) ToTxResult(height int64, index int, signer, recipient, msgType string, error Error) (*DefaultTxResult, Error) {
-	txBytes, err := tx.Bytes()
-	if err != nil {
-		return nil, err
-	}
-	code, errString := int32(0), ""
-	if error != nil {
-		code = int32(error.Code())
-		errString = err.Error()
-	}
-	return &DefaultTxResult{
-		Tx:            txBytes,
-		Height:        height,
-		Index:         int32(index),
-		ResultCode:    code,
-		Error:         errString,
-		SignerAddr:    signer,
-		RecipientAddr: recipient,
-		MessageType:   msgType,
-	}, nil
-}
-
-func (tx *Transaction) GetMessage() (proto.Message, error) {
-	return codec.GetCodec().FromAny(tx.Msg)
-}
-
-func TransactionHash(transactionProtoBytes []byte) string {
-	return crypto.GetHashStringFromBytes(transactionProtoBytes)
+func (tx *Transaction) Equals(tx2 ITransaction) bool {
+	b, err := tx.Bytes()
+	b2, err2 := tx2.Bytes()
+	return err != nil && err2 != nil && bytes.Equal(b, b2)
 }
