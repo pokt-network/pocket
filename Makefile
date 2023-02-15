@@ -463,11 +463,11 @@ localnet_up: ## Starts up a k8s LocalNet with all necessary dependencies (tl;dr 
 
 .PHONY: localnet_client_debug
 localnet_client_debug: ## Opens a `client debug` cli to interact with blockchain (e.g. change pacemaker mode, reset to genesis, etc). Though the node binary updates automatiacally on every code change (i.e. hot reloads), if client is already open you need to re-run this command to execute freshly compiled binary.
-	kubectl exec -it deploy/pocket-v1-cli-client -- client debug
+	kubectl exec -it deploy/pocket-v1-cli-client --container pocket -- client debug
 
 .PHONY: localnet_shell
 localnet_shell: ## Opens a shell in the pod that has the `client` cli available. The binary updates automatically whenever the code changes (i.e. hot reloads).
-	kubectl exec -it deploy/pocket-v1-cli-client -- /bin/bash
+	kubectl exec -it deploy/pocket-v1-cli-client --container pocket -- /bin/bash
 
 .PHONY: localnet_logs_validators
 localnet_logs_validators: ## Outputs logs from all validators
