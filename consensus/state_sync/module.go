@@ -121,9 +121,8 @@ func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse)
 	consensusMod := m.GetBus().GetConsensusModule()
 	serverNodePeerId := consensusMod.GetNodeAddress()
 	clientPeerId := blockRes.PeerAddress
-	currentHeight := consensusMod.CurrentHeight()
 
-	m.logger.Info().Msgf("%s received get block response from: %s, for height %d. Received block is: %s \n", serverNodePeerId, clientPeerId, currentHeight, blockRes.Block.String())
+	m.logger.Info().Msgf("%s received get block response from: %s, for height %d. Received block's header %s,  \n", serverNodePeerId, clientPeerId, blockRes.Block.BlockHeader.Height, blockRes.Block.BlockHeader)
 
 	return nil
 }
@@ -136,7 +135,7 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 	clientPeerId := metaDataRes.PeerAddress
 	currentHeight := consensusMod.CurrentHeight()
 
-	m.logger.Info().Msgf("%s received get metadata response from: %s, for height %d. Received metadata is: %s \n", serverNodePeerId, clientPeerId, currentHeight, metaDataRes.String())
+	m.logger.Info().Msgf("%s received get metadata response from: %s, current height is %d. Received metadata is: %s \n", serverNodePeerId, clientPeerId, currentHeight, metaDataRes)
 
 	return nil
 }
