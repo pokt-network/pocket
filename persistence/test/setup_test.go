@@ -345,7 +345,7 @@ func getRandomBigIntString() string {
 }
 
 func setRandomSeed() {
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano()) //nolint:staticcheck // G404 - Weak random source is okay in unit tests
 }
 
 // This is necessary for unit tests that are dependant on a baseline genesis state

@@ -50,6 +50,7 @@ type yamlConfig struct {
 
 // Creates/Opens the DB and initialises the keys from the pre-generated YAML file of private keys
 func InitialiseDebugKeybase() error {
+	// BUG: When running the CLI using the build binary (i.e. `p1`), it searched for the private-keys.yaml file in `github.com/pokt-network/pocket/build/localnet/manifests/private-keys.yaml`
 	// Get private keys from manifest file
 	_, current, _, _ := runtime.Caller(0)
 	//nolint:gocritic // Use path to find private-keys yaml file from being called in any location in the repo

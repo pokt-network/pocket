@@ -410,9 +410,10 @@ benchmark_p2p_addrbook: ## Benchmark all P2P addr book related tests
 # DEPRECATE     - Code that should be removed in the future
 # RESEARCH      - A non-trivial action item that requires deep research and investigation being next steps can be taken
 # DOCUMENT		- A comment that involves the creation of a README or other documentation
+# BUG           - There is a known existing bug in this code
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH"
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH" -e "BUG"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;
@@ -499,4 +500,4 @@ check_cross_module_imports: ## Lists cross-module imports
 
 .PHONY: send_local_tx
 send_local_tx: ## A hardcoded send tx to make LocalNet debugging easier
-	p1 --path_to_private_key_file=build/pkeys/val1.json Account Send 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 67eb3f0a50ae459fecf666be0e93176e92441317 1000
+	go run app/client/*.go Account Send 00104055c00bed7c983a48aac7dc6335d7c607a7 00204737d2a165ebe4be3a7d5b0af905b0ea91d8 1000
