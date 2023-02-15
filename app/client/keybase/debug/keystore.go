@@ -11,7 +11,6 @@ import (
 
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/k8s"
 	"gopkg.in/yaml.v2"
@@ -46,7 +45,7 @@ func init() {
 
 func initializeDebugKeybase() error {
 	var (
-		validatorKeysPairMap map[string]cryptoPocket.KeyPair
+		validatorKeysPairMap map[string]string
 		err                  error
 	)
 
@@ -74,9 +73,16 @@ func initializeDebugKeybase() error {
 
 	// Add validator addresses if not present
 	if len(curAddr) < numValidators {
+		fmt.Println("Rehydrating keybase from private-keys.yaml ...")
 		// Use writebatch to speed up bulk insert
 		wb := db.NewWriteBatch()
-		for _, keyPair := range validatorKeysPairMap {
+		for _, privHexString := range validatorKeysPairMap {
+			// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
+			keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
+			if err != nil {
+				return err
+			}
+
 			// Use key address as key in DB
 			addrKey := keyPair.GetAddressBytes()
 
@@ -102,7 +108,7 @@ func initializeDebugKeybase() error {
 	return nil
 }
 
-func fetchValidatorPrivateKeysFromK8S() (map[string]cryptoPocket.KeyPair, error) {
+func fetchValidatorPrivateKeysFromK8S() (map[string]string, error) {
 	// Initialize Kubernetes client
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -121,7 +127,7 @@ func fetchValidatorPrivateKeysFromK8S() (map[string]cryptoPocket.KeyPair, error)
 	return validatorKeysPairMap, nil
 }
 
-func fetchValidatorPrivateKeysFromFile() (map[string]cryptoPocket.KeyPair, error) {
+func fetchValidatorPrivateKeysFromFile() (map[string]string, error) {
 	// BUG: When running the CLI using the build binary (i.e. `p1`), it searched for the private-keys.yaml file in `github.com/pokt-network/pocket/build/localnet/manifests/private-keys.yaml`
 	// Get private keys from manifest file
 	_, current, _, _ := r.Caller(0)
@@ -146,15 +152,10 @@ func fetchValidatorPrivateKeysFromFile() (map[string]cryptoPocket.KeyPair, error
 	if err := yaml.Unmarshal(yamlData, &config); err != nil {
 		return nil, err
 	}
-	var validatorKeysMap = make(map[string]cryptoPocket.KeyPair)
+	var validatorKeysMap = make(map[string]string)
 
 	for id, privHexString := range config.StringData {
-		// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
-		keyPair, err := crypto.CreateNewKeyFromString(privHexString, "", "")
-		if err != nil {
-			return nil, err
-		}
-		validatorKeysMap[id] = keyPair
+		validatorKeysMap[id] = privHexString
 	}
 	return validatorKeysMap, nil
 }
