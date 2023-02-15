@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: v1-cluster-manager
+  name: pocket-v1-cluster-manager
 spec:
   initContainers:
     - name: wait-for-v1-validator001
