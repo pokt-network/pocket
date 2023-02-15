@@ -10,7 +10,9 @@ import (
 	"github.com/pokt-network/pocket/libp2p"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	debugABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/debug"
+	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	debugCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/debug"
 	"github.com/pokt-network/pocket/runtime"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -92,19 +94,11 @@ func NewDebugCommand() *cobra.Command {
 
 			// TODO(#429): refactor injecting the dependencies into the bus so that they can be consumed in an updated `P2PModule.Create()` implementation
 
-			var (
-				mod modules.Module
-				err error
-			)
-			if p2pConfig.UseLibP2P {
-				mod, err = libp2p.CreateWithProviders(runtimeMgr.GetBus(), debugAddressBookProvider, debugCurrentHeightProvider)
-			} else {
-				mod, err = p2p.CreateWithProviders(runtimeMgr.GetBus(), debugAddressBookProvider, debugCurrentHeightProvider)
-			}
+			var err error
+			p2pMod, err = getP2PModule(runtimeMgr, debugAddressBookProvider, debugCurrentHeightProvider)
 			if err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
 			}
-			p2pMod = mod.(modules.P2PModule)
 
 			if err := p2pMod.Start(); err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
@@ -238,4 +232,28 @@ func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 	if err := p2pMod.Send(validatorAddress, anyProto); err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to send debug message")
 	}
+}
+
+func getP2PModule(
+	runtimeMgr *runtime.Manager,
+	addrBookProvider addrbook_provider.AddrBookProvider,
+	currentHeightProvider current_height_provider.CurrentHeightProvider,
+) (modules.P2PModule, error) {
+	p2pConfig := runtimeMgr.GetConfig().P2P
+	bus := runtimeMgr.GetBus()
+
+	var (
+		mod modules.Module
+		err error
+	)
+	if p2pConfig.UseLibP2P {
+		mod, err = libp2p.CreateWithProviders(bus, addrBookProvider, currentHeightProvider)
+	} else {
+		mod, err = p2p.CreateWithProviders(bus, addrBookProvider, currentHeightProvider)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return mod.(modules.P2PModule), nil
 }
