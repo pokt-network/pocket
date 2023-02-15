@@ -27,11 +27,11 @@ type libp2pNetwork struct {
 var (
 	ErrNetwork = types.NewErrFactory("LibP2P network error")
 	Year       = time.Hour * 24 * 365
-	// TODO: consider more carefully and parameterize.
+	// TECHDEBT: consider more carefully and parameterize.
 	DefaultPeerTTL = 2 * Year
 )
 
-// TODO: factor out args which are common to network
+// TECHDEBT: factor out args which are common to network
 // implementations to an options or config struct.
 func NewLibp2pNetwork(
 	bus modules.Bus,
@@ -76,7 +76,7 @@ func NewLibp2pNetwork(
 
 // NetworkBroadcast uses the configured pubsub router to broadcast data to peers.
 func (p2pNet *libp2pNetwork) NetworkBroadcast(data []byte) error {
-	// TODO: receive context in interface methods?
+	// IMPROVE: receive context in interface methods?
 	ctx := context.Background()
 
 	// NB: Routed send using pubsub
@@ -133,8 +133,8 @@ func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr poktCrypto.Addres
 		}
 	}()
 
-	// TODO: find a more conventional way to send messages directly
-	// so that we don't have to close and re-open per direct message.
+	// TECHDEBT: check if there's a more conventional way to send
+	// messages directly than to close and re-open per direct message.
 	// NB: close the stream so that peer receives EOF.
 	if err := stream.Close(); err != nil {
 		return ErrNetwork(fmt.Sprintf(
