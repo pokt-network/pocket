@@ -11,6 +11,7 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/k8s"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -18,10 +19,11 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+const cliPath = "/usr/local/bin/client"
+
 var (
-	validatorKeysMap = make(map[string]crypto.PrivateKey)
-	rpcUrl           string
-	log              = logger.Global.CreateLoggerForModule("cluster-manager")
+	rpcUrl string
+	log    = logger.Global.CreateLoggerForModule("cluster-manager")
 )
 
 func init() {
@@ -38,7 +40,10 @@ func main() {
 		panic(err.Error())
 	}
 
-	fetchValidatorPrivateKeys(clientset, validatorKeysMap)
+	validatorKeysMap, err := k8s.FetchValidatorPrivateKeys(clientset)
+	if err != nil {
+		panic(err)
+	}
 
 	watcher, err := clientset.CoreV1().Services("default").Watch(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -56,15 +61,21 @@ func main() {
 		}
 
 		validatorId := extractValidatorId(service.Name)
+
+		privateKey, err := validatorKeysMap[validatorId].Unarmour("")
+		if err != nil {
+			log.Err(err).Msg("Error unarmouring private key")
+		}
+
 		switch event.Type {
 		case watch.Added:
 			log.Info().Str("validator", service.Name).Msg("Validator added to the cluster")
-			if err := stakeValidator(validatorKeysMap[validatorId], "150000000001", []string{"0001"}, fmt.Sprintf("v1-validator%s:8080", validatorId)); err != nil {
+			if err := stakeValidator(privateKey, "150000000001", []string{"0001"}, fmt.Sprintf("v1-validator%s:8080", validatorId)); err != nil {
 				log.Err(err).Msg("Error staking validator")
 			}
 		case watch.Deleted:
 			log.Info().Str("validator", service.Name).Msg("Validator deleted from the cluster")
-			if err := unstakeValidator(validatorKeysMap[validatorId]); err != nil {
+			if err := unstakeValidator(privateKey); err != nil {
 				log.Err(err).Msg("Error unstaking validator")
 			}
 		}
@@ -77,9 +88,21 @@ func stakeValidator(pk crypto.PrivateKey, amount string, chains []string, servic
 		return err
 	}
 
+	args := []string{
+		"--non_interactive=true",
+		"--remote_cli_url=" + rpcUrl,
+		"Validator",
+		"Stake",
+		pk.Address().String(),
+		amount,
+		strings.Join(chains, ","),
+		serviceURL,
+	}
+	log.Debug().Str("command", cliPath+" "+strings.Join(args, " ")).Msg("Invoking CLI")
+
 	//nolint:gosec // G204 Dogfooding CLI
-	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url="+rpcUrl, "Validator", "Stake", pk.Address().String(), amount, strings.Join(chains, ","), serviceURL).CombinedOutput()
-	log.Info().Str("output", string(out)).Msg("CLI")
+	out, err := exec.Command(cliPath, args...).CombinedOutput()
+	log.Info().Str("output", string(out)).Msg("CLI command")
 	if err != nil {
 		return err
 	}
@@ -92,9 +115,18 @@ func unstakeValidator(pk crypto.PrivateKey) error {
 		return err
 	}
 
+	args := []string{
+		"--non_interactive=true",
+		"--remote_cli_url=" + rpcUrl,
+		"Validator",
+		"Unstake",
+		pk.Address().String(),
+	}
+	log.Debug().Str("command", cliPath+" "+strings.Join(args, " ")).Msg("Invoking CLI")
+
 	//nolint:gosec // G204 Dogfooding CLI
-	out, err := exec.Command("/usr/local/bin/client", "--not_interactive=true", "--remote_cli_url="+rpcUrl, "Validator", "Unstake", pk.Address().String()).CombinedOutput()
-	log.Info().Str("output", string(out)).Msg("CLI")
+	out, err := exec.Command(cliPath, args...).CombinedOutput()
+	log.Info().Str("output", string(out)).Msg("CLI command")
 	if err != nil {
 		return err
 	}
