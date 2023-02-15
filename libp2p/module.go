@@ -10,6 +10,7 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/multiformats/go-multiaddr"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/configs/types"
 	poktCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -108,11 +110,22 @@ func (mod *libp2pModule) CreateWithProviders(bus modules.Bus, addrBookProvider a
 	}
 
 	mod.identity = libp2p.Identity(secretKey)
-	// TODO: where is the hostname specified?
-	// TODO: parameterize listening IP address
-	// TODO: utilize transport config.
-	// NB: 0.0.0.0 listens on **all interfaces**
-	mod.listenAddrs = libp2p.ListenAddrStrings(fmt.Sprintf("/ip4/0.0.0.0/tcp/%d", mod.cfg.ConsensusPort))
+
+	switch mod.cfg.ConnectionType {
+	case types.ConnectionType_TCPConnection:
+		addr, err := mod.getMultiaddr()
+		if err != nil {
+			return nil, ErrModule("parsing multiaddr fom config", err)
+		}
+		mod.listenAddrs = libp2p.ListenAddrs(addr)
+	case types.ConnectionType_EmptyConnection:
+		mod.listenAddrs = nil
+	default:
+		return nil, ErrModule("", fmt.Errorf(
+			// DISCUSS: should we refer to this as transport instead?
+			"unsupported connection type: %s", mod.cfg.ConnectionType,
+		))
+	}
 
 	if err := bus.RegisterModule(mod); err != nil {
 		// TODO: wrap error
@@ -329,6 +342,14 @@ func (mod *libp2pModule) handleNetworkData(data []byte) {
 	}
 
 	mod.GetBus().PublishEventToBus(&event)
+}
+
+func (mod *libp2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
+	// TECHDEBT: as soon as we add support for multiple transports
+	// (i.e. not just TCP), we'll need to do something else.
+	return identity.PeerMultiAddrFromServiceURL(fmt.Sprintf(
+		"%s:%d", mod.cfg.Hostname, mod.cfg.ConsensusPort,
+	))
 }
 
 // newReadStreamDeadline returns a future deadline
