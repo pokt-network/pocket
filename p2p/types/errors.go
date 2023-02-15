@@ -8,6 +8,8 @@ func ErrUnknownEventType(msg any) error {
 
 type ErrFactory func(msg string, err error) error
 
+// DISCUSS: first-principles approach to error handling;
+// understand use cases and design requirements.
 func NewErrFactory(preMsg string) ErrFactory {
 	return func(msg string, err error) error {
 		msgStr := ""
@@ -16,7 +18,7 @@ func NewErrFactory(preMsg string) ErrFactory {
 			//  without msg - "<preMsg>: <wrapped error>"
 			msgStr = fmt.Sprintf(": %s", msg)
 		}
-		// TODO: gracefully handle case(s) where preMsg, msg, and/or err are empty.
+		// TECHDEBT / ADDTEST: gracefully handle case(s) where preMsg, msg, and/or err are empty.
 		return fmt.Errorf("%s%s: %w", preMsg, msgStr, err)
 	}
 }
