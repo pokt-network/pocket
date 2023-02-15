@@ -1,36 +1,3 @@
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: watcher
-  namespace: default
-rules:
-  - apiGroups: [""]
-    resources: ["services"]
-    verbs: ["watch"]
-  - apiGroups: [""]
-    resources: ["secrets"]
-    resourceNames: ["v1-localnet-validators-private-keys"]
-    verbs: ["get"]
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: cluster-manager-account
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: watcher-binding
-  namespace: default
-subjects:
-  - kind: ServiceAccount
-    name: cluster-manager-account
-    apiGroup: ""
-roleRef:
-  kind: Role
-  name: watcher
-  apiGroup: ""
----
 apiVersion: v1
 kind: Pod
 metadata:
