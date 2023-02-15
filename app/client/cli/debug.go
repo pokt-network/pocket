@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"github.com/pokt-network/pocket/libp2p"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
-	"github.com/pokt-network/pocket/p2p/libp2p"
 	debugABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/debug"
 	debugCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/debug"
 	"github.com/pokt-network/pocket/runtime"

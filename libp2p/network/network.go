@@ -1,4 +1,4 @@
-package libp2p
+package network
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"
 
-	"github.com/pokt-network/pocket/p2p/libp2p/identity"
-	"github.com/pokt-network/pocket/p2p/libp2p/protocol"
+	"github.com/pokt-network/pocket/libp2p/identity"
+	"github.com/pokt-network/pocket/libp2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/types"
 	poktCrypto "github.com/pokt-network/pocket/shared/crypto"

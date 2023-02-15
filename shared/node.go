@@ -2,9 +2,9 @@ package shared
 
 import (
 	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/libp2p"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
-	"github.com/pokt-network/pocket/p2p/libp2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/rpc"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"

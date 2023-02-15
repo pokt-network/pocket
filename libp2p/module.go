@@ -13,9 +13,10 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"github.com/pokt-network/pocket/libp2p/identity"
+	libp2p2Network "github.com/pokt-network/pocket/libp2p/network"
+	"github.com/pokt-network/pocket/libp2p/protocol"
 	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/p2p/libp2p/identity"
-	"github.com/pokt-network/pocket/p2p/libp2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
@@ -167,7 +168,7 @@ func (mod *libp2pModule) Start() error {
 		return ErrModule("subscribing to pubsub topic", err)
 	}
 
-	mod.network, err = NewLibp2pNetwork(mod.bus, mod.addrBookProvider, mod.currentHeightProvider, mod.logger, mod.host, mod.topic)
+	mod.network, err = libp2p2Network.NewLibp2pNetwork(mod.bus, mod.addrBookProvider, mod.currentHeightProvider, mod.logger, mod.host, mod.topic)
 	if err != nil {
 		return ErrModule("creating network", err)
 	}
