@@ -7,11 +7,16 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
+	r "runtime"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/k8s"
 	"gopkg.in/yaml.v2"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 const (
@@ -34,39 +39,23 @@ func init() {
 	}
 	debugKeybasePath = homeDir + debugKeybaseSuffix
 
-	if err := InitialiseDebugKeybase(); err != nil { // Initialise the debug keybase with the 999 validators
+	if err := initializeDebugKeybase(); err != nil { // Initialise the debug keybase with the 999 validators
 		log.Fatalf("[ERROR] Cannot initialise the keybase with the validator keys: %s", err.Error())
 	}
 }
 
-// Struct to process the yaml file of pre-generated private-keys
-type yamlConfig struct {
-	ApiVersion string            `yaml:"apiVersion"`
-	Kind       string            `yaml:"kind"`
-	MetaData   map[string]string `yaml:"metadata"`
-	Type       string            `yaml:"type"`
-	StringData map[string]string `yaml:"stringData"`
-}
+func initializeDebugKeybase() error {
+	var (
+		validatorKeysPairMap map[string]cryptoPocket.KeyPair
+		err                  error
+	)
 
-// Creates/Opens the DB and initialises the keys from the pre-generated YAML file of private keys
-func InitialiseDebugKeybase() error {
-	// Get private keys from manifest file
-	_, current, _, _ := runtime.Caller(0)
-	//nolint:gocritic // Use path to find private-keys yaml file from being called in any location in the repo
-	yamlFile := filepath.Join(current, privateKeysYamlFile)
-
-	if exists, err := fileExists(yamlFile); !exists || err != nil {
-		return fmt.Errorf("Unable to find YAML file: %s", yamlFile)
+	if runtime.IsProcessRunningInsideKubernetes() {
+		validatorKeysPairMap, err = fetchValidatorPrivateKeysFromK8S()
+	} else {
+		validatorKeysPairMap, err = fetchValidatorPrivateKeysFromFile()
 	}
-
-	// Parse the YAML file and load into the yamlConfig struct
-	yamlData, err := os.ReadFile(yamlFile)
 	if err != nil {
-		return err
-	}
-
-	var config yamlConfig
-	if err := yaml.Unmarshal(yamlData, &config); err != nil {
 		return err
 	}
 
@@ -87,13 +76,7 @@ func InitialiseDebugKeybase() error {
 	if len(curAddr) < numValidators {
 		// Use writebatch to speed up bulk insert
 		wb := db.NewWriteBatch()
-		for _, privHexString := range config.StringData {
-			// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
-			keyPair, err := crypto.CreateNewKeyFromString(privHexString, "", "")
-			if err != nil {
-				return err
-			}
-
+		for _, keyPair := range validatorKeysPairMap {
 			// Use key address as key in DB
 			addrKey := keyPair.GetAddressBytes()
 
@@ -117,6 +100,63 @@ func InitialiseDebugKeybase() error {
 	}
 
 	return nil
+}
+
+func fetchValidatorPrivateKeysFromK8S() (map[string]cryptoPocket.KeyPair, error) {
+	// Initialize Kubernetes client
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Kubernetes config: %w", err)
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Kubernetes client: %w", err)
+	}
+
+	// Fetch validator private keys from Kubernetes
+	validatorKeysPairMap, err := k8s.FetchValidatorPrivateKeys(clientset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch validator private keys from Kubernetes: %w", err)
+	}
+	return validatorKeysPairMap, nil
+}
+
+func fetchValidatorPrivateKeysFromFile() (map[string]cryptoPocket.KeyPair, error) {
+	// Get private keys from manifest file
+	_, current, _, _ := r.Caller(0)
+
+	//nolint:gocritic // Use path to find private-keys yaml file from being called in any location in the repo
+	yamlFile := filepath.Join(current, privateKeysYamlFile)
+	if exists, err := fileExists(yamlFile); !exists || err != nil {
+		return nil, fmt.Errorf("unable to find YAML file: %s", yamlFile)
+	}
+
+	// Parse the YAML file and load into the config struct
+	yamlData, err := os.ReadFile(yamlFile)
+	if err != nil {
+		return nil, err
+	}
+	var config struct {
+		ApiVersion string            `yaml:"apiVersion"`
+		Kind       string            `yaml:"kind"`
+		MetaData   map[string]string `yaml:"metadata"`
+		Type       string            `yaml:"type"`
+		StringData map[string]string `yaml:"stringData"`
+	}
+	if err := yaml.Unmarshal(yamlData, &config); err != nil {
+		return nil, err
+	}
+	var validatorKeysMap = make(map[string]cryptoPocket.KeyPair)
+
+	for id, privHexString := range config.StringData {
+		// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
+		keyPair, err := crypto.CreateNewKeyFromString(privHexString, "", "")
+		if err != nil {
+			return nil, err
+		}
+		validatorKeysMap[id] = keyPair
+	}
+	return validatorKeysMap, nil
 }
 
 // Check file at the given path exists
