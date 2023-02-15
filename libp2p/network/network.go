@@ -51,16 +51,22 @@ func NewLibp2pNetwork(
 		addrBookMap[poktPeer.Address.String()] = poktPeer
 		pubKey, err := identity.PubKeyFromPoktPeer(poktPeer)
 		if err != nil {
-			return nil, ErrNetwork("converting peer public key", err)
+			return nil, ErrNetwork(fmt.Sprintf(
+				"converting peer public key, pokt address: %s", poktPeer.Address,
+			), err)
 		}
 		peer, err := identity.PeerAddrInfoFromPoktPeer(poktPeer)
 		if err != nil {
-			return nil, ErrNetwork("converting peer info", err)
+			return nil, ErrNetwork(fmt.Sprintf(
+				"converting peer info, pokt address: %s", poktPeer.Address,
+			), err)
 		}
 
 		host_.Peerstore().AddAddrs(peer.ID, peer.Addrs, DefaultPeerTTL)
 		if err := host_.Peerstore().AddPubKey(peer.ID, pubKey); err != nil {
-			return nil, ErrNetwork("", err)
+			return nil, ErrNetwork(fmt.Sprintf(
+				"adding peer public key, pokt address: %s", poktPeer.Address,
+			), err)
 		}
 	}
 
@@ -103,8 +109,8 @@ func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr poktCrypto.Addres
 	poktPeer, ok := p2pNet.addrBookMap[poktAddr.String()]
 	if !ok {
 		// NB: this should not happen.
-		return ErrNetwork("peer not found in address book", fmt.Errorf(
-			"peer address: %s", poktAddr,
+		return ErrNetwork("", fmt.Errorf(
+			"peer not found in address book, pokt address: %s", poktAddr,
 		))
 	}
 
@@ -118,7 +124,7 @@ func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr poktCrypto.Addres
 	stream, err := p2pNet.host.NewStream(ctx, peerAddrInfo.ID, protocol.PoktProtocolID)
 	if err != nil {
 		return ErrNetwork(fmt.Sprintf(
-			"opening a stream (peer address %s)", poktAddr,
+			"opening peer stream, pokt address: %s", poktAddr,
 		), err)
 	}
 
@@ -138,7 +144,7 @@ func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr poktCrypto.Addres
 	// NB: close the stream so that peer receives EOF.
 	if err := stream.Close(); err != nil {
 		return ErrNetwork(fmt.Sprintf(
-			"unable to close stream with peer with address %q", poktAddr,
+			"closing peer stream, pokt address: %s", poktAddr,
 		), err)
 	}
 	return nil

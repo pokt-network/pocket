@@ -46,7 +46,9 @@ func PoktPeerFromStream(stream network.Stream) (*types.NetworkPeer, error) {
 func PubKeyFromPoktPeer(poktPeer *types.NetworkPeer) (crypto.PubKey, error) {
 	pubKey, err := crypto.UnmarshalEd25519PublicKey(poktPeer.PublicKey.Bytes())
 	if err != nil {
-		return nil, ErrIdentity("unable to unmarshal peer ed25519 public key", err)
+		return nil, ErrIdentity(fmt.Sprintf(
+			"unmarshalling peer ed25519 public key, pokt address: %s", poktPeer.Address,
+		), err)
 	}
 
 	return pubKey, nil
@@ -61,7 +63,9 @@ func PeerAddrInfoFromPoktPeer(poktPeer *types.NetworkPeer) (peer.AddrInfo, error
 
 	peerID, err := peer.IDFromPublicKey(pubKey)
 	if err != nil {
-		return peer.AddrInfo{}, ErrIdentity("unable to retrieve ID from peer public key", err)
+		return peer.AddrInfo{}, ErrIdentity(fmt.Sprintf(
+			"retrieving ID from peer public key, pokt address: %s", poktPeer.Address,
+		), err)
 	}
 
 	peerMultiaddr, err := multiaddr.NewMultiaddr(poktPeer.ServiceUrl)
@@ -93,7 +97,7 @@ func PeerMultiAddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error)
 	peerUrl, err := url.Parse("scheme://" + serviceURL)
 	if err != nil {
 		return nil, ErrIdentity(fmt.Sprintf(
-			"unable to parse peer service URL: %s", serviceURL,
+			"parsing peer service URL: %s", serviceURL,
 		), err)
 	}
 
