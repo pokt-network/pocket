@@ -130,13 +130,13 @@ func TestGetFishermenReadyToUnstake(t *testing.T) {
 	unstakingFishermen, err := db.GetFishermenReadyToUnstake(0, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingFishermen), "wrong number of actors ready to unstake at height 0")
-	require.Equal(t, fisherman.Address, hex.EncodeToString(unstakingFishermen[0].GetAddress()), "unexpected fishermanlication actor returned")
+	require.Equal(t, fisherman.Address, unstakingFishermen[0].GetAddress(), "unexpected fishermanlication actor returned")
 
 	// Check unstaking fishermans at height 1
 	unstakingFishermen, err = db.GetFishermenReadyToUnstake(1, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingFishermen), "wrong number of actors ready to unstake at height 1")
-	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingFishermen[0].GetAddress(), unstakingFishermen[1].GetAddress()})
+	require.ElementsMatch(t, []string{fisherman2.Address, fisherman3.Address}, []string{unstakingFishermen[0].Address, unstakingFishermen[1].Address})
 }
 
 func TestGetFishermanStatus(t *testing.T) {

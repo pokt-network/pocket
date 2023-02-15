@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.28] - 2023-02-10
+## [0.0.0.29] - 2023-02-15
 
 - Modules embed `base_modules.IntegratableModule` and `base_modules.InterruptableModule` for DRYness
 - Updated modules `Create` to accept generic options
 - `resetToGenesis` clears the utility mempool as well
 - Publishing `ConsensusNewHeightEvent` on new height
+
+## [0.0.0.28] - 2023-02-14
+
+- Add a few `nolint` comments to fix the code on main
 
 ## [0.0.0.27] - 2023-02-09
 - Add `state_sync` submodule, with `state_sync` struct
@@ -22,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update `TestHotstuff4Nodes1BlockHappyPath` test to also retrieve the committed block
 
 ## [0.0.0.26] - 2023-02-06
+
 - Address legacy linter errors from `golangci-lint`
 
 ## [0.0.0.25] - 2023-02-04

@@ -1,9 +1,14 @@
 package types
 
+// DISCUSS(M5): Evaluate how Pocket specific errors should be managed and returned to the client
+// TECHDEBT: Remove reference to the term `Proto`; it's why we created a codec package
+
 import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
 type Error interface {
@@ -11,21 +16,23 @@ type Error interface {
 	error
 }
 
-type StdErr struct {
+var _ Error = &stdErr{}
+
+type stdErr struct {
 	CodeError Code
 	error
 }
 
-func (se StdErr) Error() string {
+func (se *stdErr) Error() string {
 	return fmt.Sprintf("CODE: %v, ERROR: %s", se.Code(), se.error.Error())
 }
 
-func (se StdErr) Code() Code {
+func (se *stdErr) Code() Code {
 	return se.CodeError
 }
 
 func NewError(code Code, msg string) Error {
-	return StdErr{
+	return &stdErr{
 		CodeError: code,
 		error:     errors.New(msg),
 	}
@@ -94,7 +101,7 @@ const (
 	CodeAlreadyExistsError               Code = 60
 	CodeGetExistsError                   Code = 61
 	CodeGetLatestHeightError             Code = 62
-
+	// DEPRECATED                         Code = 63
 	CodeGetPauseHeightError               Code = 64
 	CodeAlreadyPausedError                Code = 65
 	CodeSetPauseHeightError               Code = 66
@@ -111,8 +118,8 @@ const (
 	CodeEqualVotesError                   Code = 77
 	CodeUnequalRoundsError                Code = 78
 	CodeMaxEvidenceAgeError               Code = 79
-	CodeGetStakedTokensError              Code = 80
-	CodeSetValidatorStakedTokensError     Code = 81
+	CodeGetStakedAmountError              Code = 80
+	CodeSetValidatorStakedAmountError     Code = 81
 	CodeSetPoolAmountError                Code = 82
 	CodeGetPoolAmountError                Code = 83
 	CodeInvalidProposerCutPercentageError Code = 84
@@ -163,9 +170,11 @@ const (
 	CodeGetHeightError                    Code = 129
 	CodeUnknownActorType                  Code = 130
 	CodeUnknownMessageType                Code = 131
+)
 
-	GetStakedTokensError              = "an error occurred getting the validator staked tokens"
-	SetValidatorStakedTokensError     = "an error occurred setting the validator staked tokens"
+const (
+	GetStakedAmountsError             = "an error occurred getting the validator's amount staked"
+	SetValidatorStakedAmountError     = "an error occurred setting the validator' amount staked"
 	EqualVotesError                   = "the votes are identical and not equivocating"
 	UnequalRoundsError                = "the round numbers are not equal"
 	UnequalVoteTypesError             = "the vote types are not equal"
@@ -258,7 +267,7 @@ const (
 	PayloadTooBigError                = "socket error: payload size is too big. "
 	SocketIOStartFailedError          = "socket error: failed to start socket reading/writing (io)"
 	EmptyTransactionError             = "the transaction is empty"
-	StringToBigIntError               = "an error occurred converting the string primitive to big.Int, the conversion was unsuccessful with base 10"
+	StringToBigIntError               = "error converting string to big int"
 	GetAllValidatorsError             = "an error occurred getting all validators from the state"
 	InvalidAmountError                = "the amount field is invalid; cannot be converted to big.Int"
 	InvalidAddressLenError            = "the length of the address is not valid"
@@ -353,11 +362,11 @@ func ErrGetMissedBlocks(err error) Error {
 }
 
 func ErrGetStakedTokens(err error) Error {
-	return NewError(CodeGetStakedTokensError, GetStakedTokensError)
+	return NewError(CodeGetStakedAmountError, GetStakedAmountsError)
 }
 
-func ErrSetValidatorStakedTokens(err error) Error {
-	return NewError(CodeSetValidatorStakedTokensError, SetValidatorStakedTokensError)
+func ErrSetValidatorStakedAmount(err error) Error {
+	return NewError(CodeSetValidatorStakedAmountError, SetValidatorStakedAmountError)
 }
 
 func ErrGetExists(err error) Error {
@@ -436,7 +445,11 @@ func ErrNotReadyToUnpause() Error {
 	return NewError(CodeNotReadyToUnpauseError, NotReadyToUnpauseError)
 }
 
-func ErrInvalidStatus(got, expected int32) Error {
+func ErrUnknownStatus(status int32) Error {
+	return NewError(CodeInvalidStatusError, fmt.Sprintf("%s: unknown status %d", InvalidStatusError, status))
+}
+
+func ErrInvalidStatus(got, expected StakeStatus) Error {
 	return NewError(CodeInvalidStatusError, fmt.Sprintf("%s: %d expected %d", InvalidStatusError, got, expected))
 }
 
@@ -516,8 +529,8 @@ func ErrGetBlockHash(err error) Error {
 	return NewError(CodeGetBlockHashError, fmt.Sprintf("%s: %s", GetBlockHashError, err.Error()))
 }
 
-func ErrInvalidPublicKeyLen(err error) Error {
-	return NewError(CodeInvalidPublicKeyLenError, fmt.Sprintf("%s: %s", InvalidPublicKeyLenError, err.Error()))
+func ErrInvalidPublicKeyLen(pubKeyLen int) Error {
+	return NewError(CodeInvalidPublicKeyLenError, fmt.Sprintf("%s: %s", InvalidPublicKeyLenError, cryptoPocket.ErrInvalidPublicKeyLen(pubKeyLen)))
 }
 
 func ErrInvalidNonce() Error {
@@ -669,8 +682,8 @@ func ErrDuplicateTransaction() Error {
 	return NewError(CodeDuplicateTransactionError, DuplicateTransactionError)
 }
 
-func ErrStringToBigInt() Error {
-	return NewError(CodeStringToBigIntError, StringToBigIntError)
+func ErrStringToBigInt(err error) Error {
+	return NewError(CodeStringToBigIntError, fmt.Sprintf("%s: %s", StringToBigIntError, err.Error()))
 }
 
 func ErrInsufficientAmount(address string) Error {
@@ -757,8 +770,8 @@ func ErrInvalidTransactionCount() Error {
 	return NewError(CodeInvalidTransactionCountError, InvalidTransactionCountError)
 }
 
-func ErrInvalidHashLength(err error) Error {
-	return NewError(CodeInvalidHashLengthError, fmt.Sprintf("%s: %s", InvalidHashLengthError, err.Error()))
+func ErrInvalidHashLength(hashLen int) Error {
+	return NewError(CodeInvalidHashLengthError, fmt.Sprintf("%s: %s", InvalidHashLengthError, cryptoPocket.ErrInvalidHashLen(hashLen)))
 }
 
 func ErrNilQuorumCertificate() Error {
@@ -769,6 +782,7 @@ func ErrNewAddressFromBytes(err error) Error {
 	return NewError(CodeNewAddressFromBytesError, fmt.Sprintf("%s: %s", NewAddressFromBytesError, err.Error()))
 }
 
+// CONSIDERATION: Moving this into the `codec` library could reduce some code bloat
 func ErrProtoMarshal(err error) Error {
 	return NewError(CodeProtoMarshalError, fmt.Sprintf("%s: %s", ProtoMarshalError, err.Error()))
 }

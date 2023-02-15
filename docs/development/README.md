@@ -12,6 +12,7 @@ Please note that this repository is under very active development and breaking c
   - [Running LocalNet](#running-localnet)
     - [\[Advanced\] Kubernetes](#advanced-kubernetes)
     - [\[Basic\] Docker Compose](#basic-docker-compose)
+  - [TODO: Improvements to be added by the core team](#todo-improvements-to-be-added-by-the-core-team)
   - [Profiling](#profiling)
 - [Code Organization](#code-organization)
 - [Maintaining Documentation](#maintaining-documentation)
@@ -216,6 +217,22 @@ make client_start && make client_connect
 ✔ TogglePacemakerMode # Check that it’s automatic now
 ✔ TriggerNextView # Let it rip!
 ```
+
+9. Send a transaction (and trigger the next view)
+
+```bash
+  make send_local_tx
+```
+
+### TODO: Improvements to be added by the core team
+
+A lot of features have been added since this doc was first added. See `docs/demo`. We should update it to:
+
+1. Show k8s LocalNet
+2. Add more details related to transactions
+3. Add details related to the keybase
+4. Add state sync tooling
+5. Add P2P tooling
 
 ### Profiling
 

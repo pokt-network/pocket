@@ -8,12 +8,12 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 )
 
 // IMPROVE(team): Move this into a proto enum. We are not using `iota` for the time being
 // for the purpose of being explicit: https://github.com/pokt-network/pocket/pull/140#discussion_r939731342
-// TODO Cleanup with #149
+// TODO: Consolidate with proto enum in the utility module
 const (
 	UndefinedStakingStatus = int32(0)
 	UnstakingStatus        = int32(1)
@@ -174,7 +174,7 @@ func (p *PostgresContext) UpdateActor(actorSchema types.ProtocolActorSchema, act
 	return nil
 }
 
-func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema types.ProtocolActorSchema, height int64) (actors []modules.IUnstakingActor, err error) {
+func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema types.ProtocolActorSchema, height int64) (actors []*moduleTypes.UnstakingActor, err error) {
 	ctx, tx := p.getCtxAndTx()
 
 	rows, err := tx.Query(ctx, actorSchema.GetReadyToUnstakeQuery(height))
@@ -184,15 +184,11 @@ func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema types.ProtocolActo
 	defer rows.Close()
 
 	for rows.Next() {
-		unstakingActor := &types.UnstakingActor{}
-		var addr, output, stakeAmount string
-		if err = rows.Scan(&addr, &stakeAmount, &output); err != nil {
+		actor := &moduleTypes.UnstakingActor{}
+		if err = rows.Scan(&actor.Address, &actor.StakeAmount, &actor.OutputAddress); err != nil {
 			return
 		}
-		unstakingActor.SetAddress(addr)
-		unstakingActor.SetStakeAmount(stakeAmount)
-		unstakingActor.SetOutputAddress(output)
-		actors = append(actors, unstakingActor)
+		actors = append(actors, actor)
 	}
 	return
 }
@@ -244,7 +240,6 @@ func (p *PostgresContext) SetActorStatusAndUnstakingHeightIfPausedBefore(actorSc
 	if err != nil {
 		return err
 	}
-
 	_, err = tx.Exec(ctx, actorSchema.UpdateUnstakedHeightIfPausedBeforeQuery(pausedBeforeHeight, unstakingHeight, currentHeight))
 	return err
 }

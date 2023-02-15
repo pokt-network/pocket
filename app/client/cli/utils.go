@@ -94,7 +94,7 @@ func prepareTxBytes(msg typesUtil.Message, pk crypto.PrivateKey) ([]byte, error)
 		Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
 	}
 
-	signBytes, err := tx.SignBytes()
+	signBytes, err := tx.SignableBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func validateStakeAmount(amount string) error {
 	}
 
 	sr := big.NewInt(stakingRecommendationAmount)
-	if typesUtil.BigIntLessThan(am, sr) {
+	if converters.BigIntLessThan(am, sr) {
 		fmt.Printf("The amount you are staking for is below the recommendation of %d POKT, would you still like to continue? y|n\n", sr.Div(sr, oneMillion).Int64())
 		if !confirmation(pwd) {
 			return fmt.Errorf("aborted")

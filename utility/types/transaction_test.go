@@ -1,10 +1,10 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/codec"
-
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -17,32 +17,12 @@ var (
 	testingToAddr, _           = crypto.GenerateAddress()
 )
 
-func NewTestingMsg(_ *testing.T) Message {
-	return &MessageSend{
-		FromAddress: testingSenderAddr,
-		ToAddress:   testingToAddr,
-		Amount:      defaultAmount,
-	}
-}
-
-func NewUnsignedTestingTransaction(t *testing.T) Transaction {
-	msg := NewTestingMsg(t)
-
-	anyMsg, err := codec.GetCodec().ToAny(msg)
-	require.NoError(t, err)
-
-	return Transaction{
-		Msg:   anyMsg,
-		Nonce: BigIntToString(RandBigInt()),
-	}
-}
-
-func TestTransactionBytesAndFromBytes(t *testing.T) {
-	tx := NewUnsignedTestingTransaction(t)
+func TestTransaction_BytesAndFromBytes(t *testing.T) {
+	tx := newUnsignedTestingTransaction(t)
 	bz, err := tx.Bytes()
 	require.NoError(t, err)
 
-	tx2, err := TransactionFromBytes(bz)
+	tx2, err := TxFromBytes(bz)
 	require.NoError(t, err)
 
 	hash1, err := tx.Hash()
@@ -55,37 +35,37 @@ func TestTransactionBytesAndFromBytes(t *testing.T) {
 	require.Equal(t, proto.Clone(&tx), proto.Clone(tx2), "transaction mismatch")
 }
 
-func TestTransaction_Message(t *testing.T) {
-	tx := NewUnsignedTestingTransaction(t)
-	msg, err := tx.Message()
+func TestTransaction_GetMessage(t *testing.T) {
+	tx := newUnsignedTestingTransaction(t)
+	msg, err := tx.GetMessage()
 	require.NoError(t, err)
 
-	expected := NewTestingMsg(t)
+	expected := newTestingMsgSend(t)
 	require.NotEqual(t, expected, msg)
 	require.Equal(t, msg.ProtoReflect().Type(), expected.ProtoReflect().Type())
 
-	message := msg.(*MessageSend)
-	expectedMessage := expected.(*MessageSend)
-	require.Equal(t, message.Amount, expectedMessage.Amount, "unequal messages")
-	require.Equal(t, message.FromAddress, expectedMessage.FromAddress, "unequal messages")
-	require.Equal(t, message.ToAddress, expectedMessage.ToAddress, "unequal messages")
+	messageSend := msg.(*MessageSend)
+	expectedMessageSend := expected.(*MessageSend)
+	require.Equal(t, messageSend.Amount, expectedMessageSend.Amount, "unequal messages")
+	require.Equal(t, messageSend.FromAddress, expectedMessageSend.FromAddress, "unequal messages")
+	require.Equal(t, messageSend.ToAddress, expectedMessageSend.ToAddress, "unequal messages")
 }
 
 func TestTransaction_Sign(t *testing.T) {
-	tx := NewUnsignedTestingTransaction(t)
+	tx := newUnsignedTestingTransaction(t)
 
 	err := tx.Sign(testingSenderPrivateKey)
 	require.NoError(t, err)
 
-	msg, err := tx.SignBytes()
-	require.NoError(t, err)
+	msg, er := tx.SignableBytes()
+	require.NoError(t, er)
 
 	verified := testingSenderPublicKey.Verify(msg, tx.Signature.Signature)
 	require.True(t, verified, "signature should be verified")
 }
 
 func TestTransaction_ValidateBasic(t *testing.T) {
-	tx := NewUnsignedTestingTransaction(t)
+	tx := newUnsignedTestingTransaction(t)
 	err := tx.Sign(testingSenderPrivateKey)
 	require.NoError(t, err)
 
@@ -122,5 +102,24 @@ func TestTransaction_ValidateBasic(t *testing.T) {
 	txInvalidSignature.Signature.Signature = []byte("signature")
 	er = txInvalidSignature.ValidateBasic()
 	require.Equal(t, ErrSignatureVerificationFailed().Code(), er.Code())
+}
 
+func newTestingMsgSend(_ *testing.T) Message {
+	return &MessageSend{
+		FromAddress: testingSenderAddr,
+		ToAddress:   testingToAddr,
+		Amount:      defaultAmount,
+	}
+}
+
+func newUnsignedTestingTransaction(t *testing.T) Transaction {
+	msg := newTestingMsgSend(t)
+
+	anyMsg, err := codec.GetCodec().ToAny(msg)
+	require.NoError(t, err)
+
+	return Transaction{
+		Msg:   anyMsg,
+		Nonce: fmt.Sprint(crypto.GetNonce()),
+	}
 }
