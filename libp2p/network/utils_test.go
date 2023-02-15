@@ -1,0 +1,56 @@
+package network
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+
+	"github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/p2p/types/mocks"
+	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules/mocks"
+)
+
+func MockBus(ctrl *gomock.Controller) *mock_modules.MockBus {
+	busMock := mock_modules.NewMockBus(ctrl)
+	busMock.EXPECT().GetPersistenceModule().Return(nil).AnyTimes()
+	consensusMock := mock_modules.NewMockConsensusModule(ctrl)
+	consensusMock.EXPECT().CurrentHeight().Return(uint64(0)).AnyTimes()
+	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+	runtimeMgrMock := mock_modules.NewMockRuntimeMgr(ctrl)
+	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
+	runtimeMgrMock.EXPECT().GetConfig().Return(configs.NewDefaultConfig()).AnyTimes()
+	return busMock
+}
+
+func MockAddrBookProvider(ctrl *gomock.Controller, addrBook types.AddrBook) *mock_types.MockAddrBookProvider {
+	addrBookProviderMock := mock_types.NewMockAddrBookProvider(ctrl)
+	addrBookProviderMock.EXPECT().GetStakedAddrBookAtHeight(gomock.Any()).Return(addrBook, nil).AnyTimes()
+	return addrBookProviderMock
+}
+
+func MockCurrentHeightProvider(ctrl *gomock.Controller, height uint64) *mock_types.MockCurrentHeightProvider {
+	currentHeightProviderMock := mock_types.NewMockCurrentHeightProvider(ctrl)
+	currentHeightProviderMock.EXPECT().CurrentHeight().Return(height).AnyTimes()
+	return currentHeightProviderMock
+}
+
+// Generates an address book with a random set of `n` addresses
+func GetAddrBook(t *testing.T, n int) (addrBook types.AddrBook) {
+	addrBook = make([]*types.NetworkPeer, 0)
+	for i := 0; i < n; i++ {
+		pubKey, err := crypto.GeneratePublicKey()
+		if t != nil {
+			require.NoError(t, err)
+		}
+		addrBook = append(addrBook, &types.NetworkPeer{
+			PublicKey:  pubKey,
+			Address:    pubKey.Address(),
+			ServiceUrl: fmt.Sprintf("node%d.consensus:8080", i),
+		})
+	}
+	return
+}

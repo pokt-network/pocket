@@ -223,7 +223,7 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 	
-	$(eval DIRS = p2p persistence)
+	$(eval DIRS = p2p libp2p persistence)
 	for dir in $(DIRS); do \
 		echo "Processing $$dir mocks..."; \
         find $$dir/types/mocks -type f ! -name "mocks.go" -exec rm {} \;; \
