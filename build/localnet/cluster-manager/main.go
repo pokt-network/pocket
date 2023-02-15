@@ -11,7 +11,6 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/crypto"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/k8s"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,17 +61,7 @@ func main() {
 		}
 
 		validatorId := extractValidatorId(service.Name)
-
-		privHexString := validatorKeysMap[validatorId]
-		keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
-		if err != nil {
-			panic(err)
-		}
-
-		privateKey, err := keyPair.Unarmour("")
-		if err != nil {
-			log.Err(err).Msg("Error unarmouring private key")
-		}
+		privateKey := getPrivateKey(validatorKeysMap, validatorId)
 
 		switch event.Type {
 		case watch.Added:
