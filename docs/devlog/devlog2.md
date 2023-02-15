@@ -16,13 +16,13 @@
 - [External Contributions ⭐](#external-contributions-)
 - [Demo 💻](#demo-)
 - [Upcoming Iteration 🗓️](#upcoming-iteration-️)
-  - [Feedback and Open Discussion 💡](#feedback-and-open-discussion-)
-    - [Q: Can Localnet scale to 999 validators?](#q-can-localnet-scale-to-999-validators)
-    - [Q: Were there other projects that inspired how to design the testing and deployment suite?](#q-were-there-other-projects-that-inspired-how-to-design-the-testing-and-deployment-suite)
-    - [Q: Other projects, like Cosmos, allow people to configure different backends for key storage. Is it worth surveying the community to see what backends the keybase should integrate with (e.g. Leveldb or Pass)?](#q-other-projects-like-cosmos-allow-people-to-configure-different-backends-for-key-storage-is-it-worth-surveying-the-community-to-see-what-backends-the-keybase-should-integrate-with-eg-leveldb-or-pass)
-    - [Q: In V0, the Private Key is a plain text in the server but not in the Keybase. In V1, is this all inside of the Keybase or will there be plain text PKs?](#q-in-v0-the-private-key-is-a-plain-text-in-the-server-but-not-in-the-keybase-in-v1-is-this-all-inside-of-the-keybase-or-will-there-be-plain-text-pks)
+- [Feedback and Open Discussion 💡](#feedback-and-open-discussion-)
+  - [Q: Can Localnet scale to 999 validators?](#q-can-localnet-scale-to-999-validators)
+  - [Q: Were there other projects that inspired how to design the testing and deployment suite?](#q-were-there-other-projects-that-inspired-how-to-design-the-testing-and-deployment-suite)
+  - [Q: Other projects, like Cosmos, allow people to configure different backends for key storage. Is it worth surveying the community to see what backends the keybase should integrate with (e.g. Leveldb or Pass)?](#q-other-projects-like-cosmos-allow-people-to-configure-different-backends-for-key-storage-is-it-worth-surveying-the-community-to-see-what-backends-the-keybase-should-integrate-with-eg-leveldb-or-pass)
+  - [Q: In V0, the Private Key is a plain text in the server but not in the Keybase. In V1, is this all inside of the Keybase or will there be plain text PKs?](#q-in-v0-the-private-key-is-a-plain-text-in-the-server-but-not-in-the-keybase-in-v1-is-this-all-inside-of-the-keybase-or-will-there-be-plain-text-pks)
   - [Contribute to V1 🧑‍💻](#contribute-to-v1-)
-  - [About Pocket Network 💙](#about-pocket-network-)
+- [About Pocket Network 💙](#about-pocket-network-)
 
 ---
 
@@ -94,23 +94,23 @@ Try it out ➡️ [Demo Guide](https://github.com/pokt-network/pocket/blob/main/
 
 ---
 
-### Feedback and Open Discussion 💡
+## Feedback and Open Discussion 💡
 
 [Feedback and Discussion Form](https://app.sli.do/event/2LFSdaBzJ4FPYANPFcGxC7/live/questions)
 
-##### Q: Can Localnet scale to 999 validators?
+### Q: Can Localnet scale to 999 validators?
 
 A: Containers will be created but the validators will not be participating in consensus until peer discovery is in place and those validators are staked it will be a 4 node network with many unstaked validators. So, technically, yes, but good luck with the resource consumption :)
 
-##### Q: Were there other projects that inspired how to design the testing and deployment suite?
+### Q: Were there other projects that inspired how to design the testing and deployment suite?
 
 A: A lot of learning from V0 and a commitment to visibility that won't only allow us to iterate faster but all contributors (reduce dependencies on the core team to make changes to the protocol). We looked at a lot of different projects when we started but most projects don't have these tools in place. In general the Tendermint and Cosmos ecosystem is going that direction, but it's more difficult because they are dealing with legacy code rather than the greenfield of V1. One of the best projects heading this direction is Aptos. They have very mature infrastructure and test suite.
 
-##### Q: Other projects, like Cosmos, allow people to configure different backends for key storage. Is it worth surveying the community to see what backends the keybase should integrate with (e.g. Leveldb or Pass)?
+### Q: Other projects, like Cosmos, allow people to configure different backends for key storage. Is it worth surveying the community to see what backends the keybase should integrate with (e.g. Leveldb or Pass)?
 
 A: The Keybase currently users badger.db to store locally in the file system. When it comes to key management, enabling anyone to integrate their own key manager into the codebase and identifying maybe one major integration. Please keep in mind that this is not useful for localnet but will be useful once we have a remote deployment.
 
-##### Q: In V0, the Private Key is a plain text in the server but not in the Keybase. In V1, is this all inside of the Keybase or will there be plain text PKs?
+### Q: In V0, the Private Key is a plain text in the server but not in the Keybase. In V1, is this all inside of the Keybase or will there be plain text PKs?
 
 A: The Keybase contains all the PK pairs associated with wallets only. Storing in the same way as V0 (base64) to allow for complete interoperability.
 
@@ -125,7 +125,7 @@ V1 is an open source project that is open to external contributors. Find informa
 - [V1 Project Board](https://github.com/orgs/pokt-network/projects/142/views/12)
 - [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md#m1-pocket-pos-proof-of-stake)
 
-### About Pocket Network 💙
+## About Pocket Network 💙
 
 Pocket Network is a blockchain data platform, built for applications, that uses cost-efficient economics to coordinate and distribute data at scale.
 
