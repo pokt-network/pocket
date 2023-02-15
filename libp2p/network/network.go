@@ -94,6 +94,9 @@ func (p2pNet *libp2pNetwork) NetworkBroadcast(data []byte) error {
 
 // NetworkSend connects sends data directly to the specified peer.
 func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr poktCrypto.Address) error {
+	// IMPROVE: add context to interface methods.
+	ctx := context.Background()
+
 	selfPoktAddr, err := p2pNet.GetBus().GetP2PModule().GetAddress()
 	if err != nil {
 		return ErrNetwork(fmt.Sprintf(
@@ -119,8 +122,6 @@ func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr poktCrypto.Addres
 		return ErrNetwork("parsing peer multiaddr", err)
 	}
 
-	// TODO: add context to interface methods.
-	ctx := context.Background()
 	stream, err := p2pNet.host.NewStream(ctx, peerAddrInfo.ID, protocol.PoktProtocolID)
 	if err != nil {
 		return ErrNetwork(fmt.Sprintf(
@@ -170,7 +171,7 @@ func (p2pNet *libp2pNetwork) AddPeerToAddrBook(peer *types.NetworkPeer) error {
 	return nil
 }
 
-// TODO: fix typo in interface (?)
+// CLEANUP: fix typo in interface (?)
 func (p2pNet *libp2pNetwork) RemovePeerToAddrBook(peer *types.NetworkPeer) error {
 	delete(p2pNet.addrBookMap, peer.Address.String())
 	return nil

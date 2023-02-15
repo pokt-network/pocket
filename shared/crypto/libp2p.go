@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"encoding/hex"
+
 	"github.com/libp2p/go-libp2p/core/crypto"
 )
 

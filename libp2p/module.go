@@ -138,10 +138,10 @@ func (mod *libp2pModule) CreateWithProviders(bus modules.Bus, addrBookProvider a
 func (mod *libp2pModule) Start() error {
 	*mod.logger = logger.Global.CreateLoggerForModule("P2P")
 
-	// TODO: receive context in interface methods?
+	// IMPROVE: receive context in interface methods?
 	ctx := context.Background()
 
-	// TODO: metrics integration.
+	// TECHDEBT: metrics integration.
 	var err error
 
 	// TODO: disable services in client debug mode (?):
@@ -149,7 +149,7 @@ func (mod *libp2pModule) Start() error {
 	opts := []libp2p.Option{
 		mod.identity,
 		mod.listenAddrs,
-		// TODO: transport security!
+		// TECHDEBT / INCOMPLETE: add transport security!
 	}
 	// if !mod.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode {
 	// 	opts = append(opts,
@@ -164,8 +164,8 @@ func (mod *libp2pModule) Start() error {
 
 	mod.logger.Info().Msgf("Listening on %s...", host.InfoFromHost(mod.host).Addrs)
 
-	// TODO: use RandomSub or GossipSub once we're on more stable ground.
-	// TODO: consider supporting multiple router types via config.
+	// TECHDEBT: use RandomSub or GossipSub once we're on more stable ground.
+	// IMPROVE: consider supporting multiple router types via config.
 	mod.pubsub, err = pubsub.NewFloodSub(ctx, mod.host)
 	if err != nil {
 		return ErrModule("unable to create pubsub", err)

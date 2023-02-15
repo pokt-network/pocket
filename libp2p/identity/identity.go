@@ -92,6 +92,7 @@ func PeerAddrInfoFromPoktPeer(poktPeer *types.NetworkPeer) (peer.AddrInfo, error
 	}, nil
 }
 
+// TECHDEBT: this probably belongs somewhere else, it's more of a networking helper.
 func PeerMultiAddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error) {
 	// NB: hard-code a scheme for URL parsing to work.
 	peerUrl, err := url.Parse("scheme://" + serviceURL)
@@ -101,8 +102,9 @@ func PeerMultiAddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error)
 		), err)
 	}
 
-	// TODO: parameterize transport.
 	var (
+		// TECHDEBT: assuming TCP; remote peer's transport type must be knowable!
+		// (ubiquitously switching to multiaddr, instead of a URL, would resolve this)
 		peerTransportStr = "tcp"
 		peerHostnameStr  = peerUrl.Hostname()
 		// TODO: is there a way for us to effectively prefer IPv6 responses?
