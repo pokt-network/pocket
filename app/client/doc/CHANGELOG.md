@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.14] - 2023-02-16
 
-- Bugfix for `Stake` command. Address erroneously sent instead of the PublicKey.
+- Introduced logical switch to handle parsing of the debug private keys from a local file OR from Kubernetes secret (PR #517)
+- Bugfix for `Stake` command. Address erroneously sent instead of the PublicKey. (PR #518)
 
 ## [0.0.0.13] - 2023-02-14
 
