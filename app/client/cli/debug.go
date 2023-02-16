@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/manifoldco/promptui"
@@ -13,6 +14,7 @@ import (
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/spf13/cobra"
@@ -48,6 +50,7 @@ var (
 
 	configPath  string = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
 	genesisPath string = runtime.GetEnv("GENESIS_PATH", "build/config/genesis.json")
+	rpcHost     string
 )
 
 type ctxKey int
@@ -60,6 +63,14 @@ const (
 func init() {
 	debugCmd := NewDebugCommand()
 	rootCmd.AddCommand(debugCmd)
+
+	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
+	validator1Endpoint := defaults.Validator1EndpointDockerCompose
+	if runtime.IsProcessRunningInsideKubernetes() {
+		validator1Endpoint = defaults.Validator1EndpointK8S
+	}
+
+	rpcHost = runtime.GetEnv("RPC_HOST", validator1Endpoint)
 }
 
 func NewDebugCommand() *cobra.Command {
@@ -74,16 +85,21 @@ func NewDebugCommand() *cobra.Command {
 				runtime.WithRandomPK(),
 			)
 
+			rpcUrl := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
+
 			modulesRegistry := runtimeMgr.GetBus().GetModulesRegistry()
 			addressBookProvider := rpcABP.NewRPCAddrBookProvider(
 				rpcABP.WithP2PConfig(
 					runtimeMgr.GetConfig().P2P,
 				),
+				rpcABP.WithCustomRPCUrl(rpcUrl),
 			)
 			modulesRegistry.RegisterModule(addressBookProvider)
 			cmd.SetContext(context.WithValue(cmd.Context(), addrBookProviderCtxKey, addressBookProvider))
 
-			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider()
+			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
+				rpcCHP.WithCustomRPCUrl(rpcUrl),
+			)
 			modulesRegistry.RegisterModule(currentHeightProvider)
 			cmd.SetContext(context.WithValue(cmd.Context(), currentHeightProviderCtxKey, currentHeightProvider))
 
