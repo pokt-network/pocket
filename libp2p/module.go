@@ -69,7 +69,11 @@ func CreateWithProviders(
 	addrBookProvider addrbook_provider.AddrBookProvider,
 	currentHeightProvider providers.CurrentHeightProvider,
 ) (modules.Module, error) {
-	return new(libp2pModule).CreateWithProviders(bus, addrBookProvider, currentHeightProvider)
+	return new(libp2pModule).CreateWithProviders(
+		bus,
+		addrBookProvider,
+		currentHeightProvider,
+	)
 }
 
 func (mod *libp2pModule) GetModuleName() string {
@@ -81,7 +85,11 @@ func (mod *libp2pModule) Create(bus modules.Bus) (modules.Module, error) {
 	return Create(bus)
 }
 
-func (mod *libp2pModule) CreateWithProviders(bus modules.Bus, addrBookProvider addrbook_provider.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
+func (mod *libp2pModule) CreateWithProviders(
+	bus modules.Bus,
+	addrBookProvider addrbook_provider.AddrBookProvider,
+	currentHeightProvider providers.CurrentHeightProvider,
+) (modules.Module, error) {
 	*mod = libp2pModule{
 		logger:                new(modules.Logger),
 		addrBookProvider:      addrBookProvider,
