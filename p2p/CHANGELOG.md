@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.26] - 2023-02-16
 
 - Modules embed `base_modules.IntegratableModule` and `base_modules.InterruptableModule` for DRYness
+- Deprecated `debugAddressBookProvider`
+- Added `rpcAddressBookProvider` to source the address book from the RPC server
+- Leveraging `bus` for dependency injection of the `addressBookProvider` and `currentHeightProvider`
+- Deprecated `debugCurrentHeightProvider`
+- Added `rpcCurrentHeightProvider` to source the current height from the RPC server
+- Fixed raintree to use the `currentHeightProvider` instead of consensus (that was what we wanted to avoid in the first place)
+- Added `getAddrBookDelta` to calculate changes to the address book between heights and update the internal state and componentry accordingly
 - Updated tests
 
 ## [0.0.0.25] - 2023-02-09
