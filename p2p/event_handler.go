@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/pokt-network/pocket/shared/codec"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -19,7 +18,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 	case messaging.ConsensusNewHeightEventType:
 		consensusNewHeightEvent, ok := evt.(*messaging.ConsensusNewHeightEvent)
 		if !ok {
-			return m.logger.Error().Msgf("failed to cast event to ConsensusNewHeightEvent")
+			return fmt.Errorf("failed to cast event to ConsensusNewHeightEvent")
 		}
 
 		addrBook := m.network.GetAddrBook()
