@@ -14,11 +14,11 @@ type Keybase interface {
 	Stop() error
 
 	// Create new keypair entry in DB
-	Create(passphrase, hint string) error
+	Create(passphrase, hint string) (crypto.KeyPair, error)
 	// Insert a new keypair from the private key hex string provided into the DB
-	ImportFromString(privStr, passphrase, hint string) error
+	ImportFromString(privStr, passphrase, hint string) (crypto.KeyPair, error)
 	// Insert a new keypair from the JSON string of the encrypted private key into the DB
-	ImportFromJSON(jsonStr, passphrase string) error
+	ImportFromJSON(jsonStr, passphrase string) (crypto.KeyPair, error)
 
 	// Accessors
 	Get(address string) (crypto.KeyPair, error)

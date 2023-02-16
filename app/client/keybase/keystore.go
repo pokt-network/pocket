@@ -66,9 +66,10 @@ func (keybase *badgerKeybase) Stop() error {
 
 // Create a new key and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
-func (keybase *badgerKeybase) Create(passphrase, hint string) error {
-	err := keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.CreateNewKey(passphrase, hint)
+func (keybase *badgerKeybase) Create(passphrase, hint string) (crypto.KeyPair, error) {
+	var keyPair crypto.KeyPair
+	err := keybase.db.Update(func(tx *badger.Txn) (err error) {
+		keyPair, err = crypto.CreateNewKey(passphrase, hint)
 		if err != nil {
 			return err
 		}
@@ -85,14 +86,15 @@ func (keybase *badgerKeybase) Create(passphrase, hint string) error {
 		return tx.Set(addrKey, keypairBz)
 	})
 
-	return err
+	return keyPair, err
 }
 
 // Create a new KeyPair from the private key hex string and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
-func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint string) error {
-	err := keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.CreateNewKeyFromString(privKeyHex, passphrase, hint)
+func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint string) (crypto.KeyPair, error) {
+	var keyPair crypto.KeyPair
+	err := keybase.db.Update(func(tx *badger.Txn) (err error) {
+		keyPair, err = crypto.CreateNewKeyFromString(privKeyHex, passphrase, hint)
 		if err != nil {
 			return err
 		}
@@ -109,14 +111,15 @@ func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint stri
 		return tx.Set(addrKey, keypairBz)
 	})
 
-	return err
+	return keyPair, err
 }
 
 // Create a new KeyPair from the private key JSON string and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
-func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
-	err := keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.ImportKeyFromJSON(jsonStr, passphrase)
+func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) (crypto.KeyPair, error) {
+	var keyPair crypto.KeyPair
+	err := keybase.db.Update(func(tx *badger.Txn) (err error) {
+		keyPair, err = crypto.ImportKeyFromJSON(jsonStr, passphrase)
 		if err != nil {
 			return err
 		}
@@ -133,7 +136,7 @@ func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 		return tx.Set(addrKey, keypairBz)
 	})
 
-	return err
+	return keyPair, err
 }
 
 // Returns a KeyPair struct provided the address was found in the DB
