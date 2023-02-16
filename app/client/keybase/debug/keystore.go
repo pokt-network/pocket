@@ -152,7 +152,7 @@ func fetchValidatorPrivateKeysFromFile() (map[string]string, error) {
 	if err := yaml.Unmarshal(yamlData, &config); err != nil {
 		return nil, err
 	}
-	var validatorKeysMap = make(map[string]string)
+	validatorKeysMap := make(map[string]string)
 
 	for id, privHexString := range config.StringData {
 		validatorKeysMap[id] = privHexString
