@@ -14,23 +14,23 @@ import (
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	telemetry "github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
 )
 
-var (
-	_ typesP2P.Network           = &rainTreeNetwork{}
-	_ modules.IntegratableModule = &rainTreeNetwork{}
-)
+var _ typesP2P.Network = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
-	bus modules.Bus
+	base_modules.IntegratableModule
 
 	selfAddr         cryptoPocket.Address
 	addrBookProvider addrbook_provider.AddrBookProvider
 
 	peersManager *peersManager
 	nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]
+
+	currentHeightProvider providers.CurrentHeightProvider
 
 	logger modules.Logger
 }
@@ -52,11 +52,12 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProv
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
 
 	n := &rainTreeNetwork{
-		selfAddr:         addr,
-		peersManager:     pm,
-		nonceDeduper:     mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
-		addrBookProvider: addrBookProvider,
-		logger:           networkLogger,
+		selfAddr:              addr,
+		peersManager:          pm,
+		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
+		addrBookProvider:      addrBookProvider,
+		currentHeightProvider: currentHeightProvider,
+		logger:                networkLogger,
 	}
 	n.SetBus(bus)
 	return typesP2P.Network(n)
@@ -223,19 +224,11 @@ func (n *rainTreeNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
 	return nil
 }
 
-func (n *rainTreeNetwork) RemovePeerToAddrBook(peer *typesP2P.NetworkPeer) error {
+func (n *rainTreeNetwork) RemovePeerFromAddrBook(peer *typesP2P.NetworkPeer) error {
 	n.peersManager.wg.Add(1)
 	n.peersManager.eventCh <- addressBookEvent{removeFromAddressBook, peer}
 	n.peersManager.wg.Wait()
 	return nil
-}
-
-func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
-	n.bus = bus
-}
-
-func (n *rainTreeNetwork) GetBus() modules.Bus {
-	return n.bus
 }
 
 func shouldSendToTarget(target target) bool {

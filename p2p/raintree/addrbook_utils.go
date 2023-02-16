@@ -17,7 +17,7 @@ func (n *rainTreeNetwork) getAddrBookLength(level uint32, height uint64) int {
 	peersManagerStateView := n.peersManager.getNetworkView()
 
 	// if we are propagating a message from a previous height, we need to instantiate an ephemeral peersManager (without add/remove)
-	if height < n.GetBus().GetConsensusModule().CurrentHeight() {
+	if height < n.currentHeightProvider.CurrentHeight() {
 		peersManagerWithAddrBookProvider, err := newPeersManagerWithAddrBookProvider(n.selfAddr, n.addrBookProvider, height)
 		if err != nil {
 			n.logger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManagerWithAddrBookProvider")
@@ -31,7 +31,7 @@ func (n *rainTreeNetwork) getAddrBookLength(level uint32, height uint64) int {
 
 // getTargetsAtLevel returns the targets for a given level
 func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
-	height := n.GetBus().GetConsensusModule().CurrentHeight()
+	height := n.currentHeightProvider.CurrentHeight()
 	addrBookLengthAtHeight := n.getAddrBookLength(level, height)
 	firstTarget := n.getTarget(firstMsgTargetPercentage, addrBookLengthAtHeight, level)
 	secondTarget := n.getTarget(secondMsgTargetPercentage, addrBookLengthAtHeight, level)
