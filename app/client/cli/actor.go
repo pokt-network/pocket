@@ -94,7 +94,6 @@ If no changes are desired for the parameter, just enter the current param value 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Unpack CLI arguments
 			fromAddrHex := args[0]
-			fromAddr := crypto.AddressFromString(args[0])
 			amount := args[1]
 
 			// Open the keybase at the specified directory
@@ -131,7 +130,7 @@ If no changes are desired for the parameter, just enter the current param value 
 			serviceURI := args[3]
 
 			msg := &typesUtil.MessageStake{
-				PublicKey:     fromAddr,
+				PublicKey:     pk.PublicKey().Bytes(),
 				Chains:        chains,
 				Amount:        amount,
 				ServiceUrl:    serviceURI,
