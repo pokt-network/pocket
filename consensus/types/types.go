@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	StateSyncGetBlockRequest     = "get block request"
+	StateSyncGetBlockRequest     = "`GetBlockRequest`"
 	StateSyncGetMetadataRequest  = "get metadata request"
 	StateSyncGetBlockResponse    = "get block response"
 	StateSyncGetMetadataResponse = "get metadata response"
