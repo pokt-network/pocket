@@ -93,6 +93,7 @@ func (mod *libp2pModule) CreateWithProviders(
 	*mod = libp2pModule{
 		addrBookProvider:      addrBookProvider,
 		currentHeightProvider: currentHeightProvider,
+		cfg:                   bus.GetRuntimeMgr().GetConfig().P2P,
 	}
 
 	if err := bus.RegisterModule(mod); err != nil {
@@ -100,8 +101,6 @@ func (mod *libp2pModule) CreateWithProviders(
 	}
 
 	logger.Global.Print("Creating libp2p-backed network module")
-
-	mod.cfg = bus.GetRuntimeMgr().GetConfig().P2P
 
 	// INCOMPLETE: support RainTree network
 	if mod.cfg.UseRainTree {
