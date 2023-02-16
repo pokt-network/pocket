@@ -144,6 +144,16 @@ func readPassphrase(currPwd string) string {
 	return credentials(currPwd)
 }
 
+func readPassphraseMessage(currPwd, prompt string) string {
+	if strings.TrimSpace(currPwd) == "" {
+		fmt.Println(prompt)
+	} else {
+		fmt.Println("Using Passphrase provided via flag")
+	}
+
+	return credentials(currPwd)
+}
+
 func validateStakeAmount(amount string) error {
 	am, err := converters.StringToBigInt(amount)
 	if err != nil {
@@ -171,6 +181,12 @@ func applySubcommandOptions(cmds []*cobra.Command, cmdOptions []cmdOption) {
 func attachPwdFlagToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
 		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
+	}}
+}
+
+func attachNewPwdFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&pwd, "new_pwd", "", "new passphrase for key, non empty usage bypass interactive prompt")
 	}}
 }
 
@@ -249,7 +265,6 @@ func readInput(inputFilePath string) (string, error) {
 	return string(rawBz), nil
 }
 
-// Check that a file exists at the given path
 func fileExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/hex"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -15,6 +16,7 @@ var (
 	exportAs   string
 	importAs   string
 	hint       string
+	newPwd     string
 )
 
 func init() {
@@ -30,13 +32,24 @@ func NewKeysCommand() *cobra.Command {
 	}
 
 	createCmds := keysCreateCommands()
+	deleteCmds := keysDeleteCommands()
+	updateCmds := keysUpdateCommands()
 	getCmds := keysGetCommands()
 	exportCmds := keysExportCommands()
 	importCmds := keysImportCommands()
+	signCmds := keysSignCommands()
 
 	// Add --pwd and --hint flags
 	applySubcommandOptions(createCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(createCmds, attachHintFlagToSubcommands())
+
+	// Add --pwd flag
+	applySubcommandOptions(deleteCmds, attachPwdFlagToSubcommands())
+
+	// Add --pwd and --hint flags
+	applySubcommandOptions(updateCmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(updateCmds, attachNewPwdFlagToSubcommands())
+	applySubcommandOptions(updateCmds, attachHintFlagToSubcommands())
 
 	// Add --pwd, --output_file and --export_format flags
 	applySubcommandOptions(exportCmds, attachPwdFlagToSubcommands())
@@ -49,10 +62,15 @@ func NewKeysCommand() *cobra.Command {
 	applySubcommandOptions(importCmds, attachInputFlagToSubcommands())
 	applySubcommandOptions(importCmds, attachImportFlagToSubcommands())
 
+	// Add --pwd flag
+	applySubcommandOptions(signCmds, attachPwdFlagToSubcommands())
+
 	cmd.AddCommand(createCmds...)
+	cmd.AddCommand(deleteCmds...)
 	cmd.AddCommand(getCmds...)
 	cmd.AddCommand(exportCmds...)
 	cmd.AddCommand(importCmds...)
+	cmd.AddCommand(signCmds...)
 
 	return cmd
 }
@@ -61,7 +79,7 @@ func keysCreateCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
 			Use:     "Create",
-			Short:   "Create",
+			Short:   "Create new key",
 			Long:    "Creates a new key and stores it in the keybase",
 			Aliases: []string{"create"},
 			Args:    cobra.ExactArgs(0),
@@ -93,11 +111,91 @@ func keysCreateCommands() []*cobra.Command {
 	return cmds
 }
 
+func keysUpdateCommands() []*cobra.Command {
+	cmds := []*cobra.Command{
+		{
+			Use:     "Update <addrHex>",
+			Short:   "Update <addrHex>",
+			Long:    "Updates the passphrase of <addrHex> in the keybase",
+			Aliases: []string{"update"},
+			Args:    cobra.ExactArgs(1),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				// Unpack CLI args
+				addrHex := args[0]
+
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
+				if err != nil {
+					return err
+				}
+
+				pwd = readPassphrase(pwd)
+
+				newPwd = readPassphraseMessage(newPwd, "New passphrase: ")
+
+				err = kb.UpdatePassphrase(addrHex, pwd, newPwd, hint)
+				if err != nil {
+					return err
+				}
+
+				fmt.Printf("Updated key: %s\n", addrHex)
+
+				return kb.Stop()
+			},
+		},
+	}
+	return cmds
+}
+
+func keysDeleteCommands() []*cobra.Command {
+	cmds := []*cobra.Command{
+		{
+			Use:     "Delete <addrHex>",
+			Short:   "Delete <addrHex>",
+			Long:    "Deletes <addrHex> from the keybase",
+			Aliases: []string{"delete"},
+			Args:    cobra.ExactArgs(1),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				// Unpack CLI args
+				addrHex := args[0]
+
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
+				if err != nil {
+					return err
+				}
+
+				pwd = readPassphrase(pwd)
+
+				err = kb.Delete(addrHex, pwd)
+				if err != nil {
+					return err
+				}
+
+				fmt.Printf("Key deleted: %s\n", addrHex)
+
+				return kb.Stop()
+			},
+		},
+	}
+	return cmds
+}
+
 func keysGetCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
 			Use:     "List",
-			Short:   "List",
+			Short:   "List all keys",
 			Long:    "List all of the hex addresses of the keys stored in the keybase",
 			Aliases: []string{"list"},
 			Args:    cobra.ExactArgs(0),
@@ -121,6 +219,37 @@ func keysGetCommands() []*cobra.Command {
 				for _, addr := range addresses {
 					fmt.Println(addr)
 				}
+
+				return kb.Stop()
+			},
+		},
+		{
+			Use:     "Get <addrHex>",
+			Short:   "Get <addrHex>",
+			Long:    "Get the keypair <addrHex> from the keybase",
+			Aliases: []string{"get"},
+			Args:    cobra.ExactArgs(1),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				// Unpack CLI args
+				addrHex := args[0]
+
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
+				if err != nil {
+					return err
+				}
+
+				kp, err := kb.Get(addrHex)
+				if err != nil {
+					return err
+				}
+
+				fmt.Printf("Address: %s\nPublic Key: %s\n", addrHex, kp.GetPublicKey().String())
 
 				return kb.Stop()
 			},
@@ -240,6 +369,93 @@ func keysImportCommands() []*cobra.Command {
 				} else {
 					return fmt.Errorf("invalid import format: got %s, want [raw]/[json]", exportAs)
 				}
+
+				return kb.Stop()
+			},
+		},
+	}
+	return cmds
+}
+
+func keysSignCommands() []*cobra.Command {
+	cmds := []*cobra.Command{
+		{
+			Use:     "Sign <addrHex> <messageHex>",
+			Short:   "Sign <addrHex> <messageHex>",
+			Long:    "Signs <messageHex> with <addrHex> from the keybase, returning the signature",
+			Aliases: []string{"sign"},
+			Args:    cobra.ExactArgs(2),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				// Unpack CLI args
+				addrHex := args[0]
+				msgHex := args[1]
+				msgBz, err := hex.DecodeString(msgHex)
+				if err != nil {
+					return err
+				}
+
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
+				if err != nil {
+					return err
+				}
+
+				pwd = readPassphrase(pwd)
+
+				sigBz, err := kb.Sign(addrHex, pwd, msgBz)
+				if err != nil {
+					return err
+				}
+
+				sigHex := hex.EncodeToString(sigBz)
+
+				fmt.Printf("Signature: %s\n", sigHex)
+
+				return kb.Stop()
+			},
+		},
+		{
+			Use:     "Verify <addrHex> <messageHex> <signatureHex>",
+			Short:   "Verify <addrHex> <messageHex> <signatureHex>",
+			Long:    "Verify that <signatureHex> is a valid signature of <messageHex> signed by <addrHex>",
+			Aliases: []string{"sign"},
+			Args:    cobra.ExactArgs(3),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				// Unpack CLI args
+				addrHex := args[0]
+				msgHex := args[1]
+				msgBz, err := hex.DecodeString(msgHex)
+				if err != nil {
+					return err
+				}
+				sigHex := args[2]
+				sigBz, err := hex.DecodeString(sigHex)
+				if err != nil {
+					return err
+				}
+
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
+				if err != nil {
+					return err
+				}
+
+				valid, err := kb.Verify(addrHex, msgBz, sigBz)
+				if err != nil {
+					return err
+				}
+
+				fmt.Printf("Valid signature: %v", valid)
 
 				return kb.Stop()
 			},
