@@ -131,14 +131,6 @@ func (m *bus) GetRPCModule() modules.RPCModule {
 	return mod.(modules.RPCModule)
 }
 
-func (m *bus) GetStateMachineModule() modules.StateMachineModule {
-	mod, err := m.modulesRegistry.GetModule(modules.StateMachineModuleName)
-	if err != nil {
-		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
-	}
-	return mod.(modules.StateMachineModule)
-}
-
 func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {
 	return m.runtimeMgr
 }
