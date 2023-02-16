@@ -7,12 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.29] - 2023-02-15
+
+- Modules embed `base_modules.IntegratableModule` and `base_modules.InterruptableModule` for DRYness
+- Updated modules `Create` to accept generic options
+- `resetToGenesis` clears the utility mempool as well
+- Publishing `ConsensusNewHeightEvent` on new height
+
 ## [0.0.0.28] - 2023-02-14
 
 - Add a few `nolint` comments to fix the code on main
 
 ## [0.0.0.27] - 2023-02-09
-
 - Add `state_sync` submodule, with `state_sync` struct
 - Implement state sync server to advertise blocks and metadata
 - Create new `state_sync_handler.go` source file that handles `StateSyncMessage`s sent to the `Consensus` module
