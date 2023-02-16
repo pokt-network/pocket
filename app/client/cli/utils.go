@@ -174,6 +174,36 @@ func attachPwdFlagToSubcommands() []cmdOption {
 	}}
 }
 
+func attachOutputFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&outputFile, "output_file", "", "output file to write results to")
+	}}
+}
+
+func attachInputFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&inputFile, "input_file", "", "input file to read data from")
+	}}
+}
+
+func attachExportFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&exportAs, "export_format", "json", "export the private key in the specified format")
+	}}
+}
+
+func attachImportFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&importAs, "import_format", "raw", "import the private key from the specified format")
+	}}
+}
+
+func attachHintFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&hint, "hint", "", "hint for the passphrase of the private key")
+	}}
+}
+
 func unableToConnectToRpc(err error) error {
 	fmt.Printf("❌ Unable to connect to the RPC @ %s\n\nError: %s", boldText(remoteCLIURL), err)
 	return nil
@@ -186,4 +216,47 @@ func rpcResponseCodeUnhealthy(statusCode int, response []byte) error {
 
 func boldText[T string | []byte](s T) string {
 	return fmt.Sprintf("\033[1m%s\033[0m", s)
+}
+
+func writeOutput(msg, outputFilePath string) error {
+	if outputFile == "" {
+		fmt.Printf(msg)
+		return nil
+	}
+	file, err := os.OpenFile(outputFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	defer file.Close()
+	_, err = file.WriteString(msg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func readInput(inputFilePath string) (string, error) {
+	exists, err := fileExists(inputFilePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error checking input file: %v\n", err)
+		os.Exit(1)
+	}
+	if !exists {
+		fmt.Fprintf(os.Stderr, "Input file not found: %v\n", inputFilePath)
+		os.Exit(1)
+	}
+	rawBz, err := os.ReadFile(inputFilePath)
+	if err != nil {
+		panic(err)
+	}
+	return string(rawBz), nil
+}
+
+// Check that a file exists at the given path
+func fileExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
 }
