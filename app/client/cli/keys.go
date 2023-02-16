@@ -29,26 +29,68 @@ func NewKeysCommand() *cobra.Command {
 		Args:    cobra.ExactArgs(0),
 	}
 
+	createCmds := keysCreateCommands()
 	getCmds := keysGetCommands()
 	exportCmds := keysExportCommands()
 	importCmds := keysImportCommands()
 
-	// Add --pwd, --output_file and --export_as flags
+	// Add --pwd and --hint flags
+	applySubcommandOptions(createCmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(createCmds, attachHintFlagToSubcommands())
+
+	// Add --pwd, --output_file and --export_format flags
 	applySubcommandOptions(exportCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(exportCmds, attachOutputFlagToSubcommands())
 	applySubcommandOptions(exportCmds, attachExportFlagToSubcommands())
 
-	// Add --pwd, --hint, --input_file and --import_as flags
+	// Add --pwd, --hint, --input_file and --import_format flags
 	applySubcommandOptions(importCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(importCmds, attachHintFlagToSubcommands())
 	applySubcommandOptions(importCmds, attachInputFlagToSubcommands())
 	applySubcommandOptions(importCmds, attachImportFlagToSubcommands())
 
+	cmd.AddCommand(createCmds...)
 	cmd.AddCommand(getCmds...)
 	cmd.AddCommand(exportCmds...)
 	cmd.AddCommand(importCmds...)
 
 	return cmd
+}
+
+func keysCreateCommands() []*cobra.Command {
+	cmds := []*cobra.Command{
+		{
+			Use:     "Create",
+			Short:   "Create",
+			Long:    "Creates a new key and stores it in the keybase",
+			Aliases: []string{"create"},
+			Args:    cobra.ExactArgs(0),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
+				if err != nil {
+					return err
+				}
+
+				pwd = readPassphrase(pwd)
+
+				kp, err := kb.Create(pwd, hint)
+				if err != nil {
+					return err
+				}
+
+				fmt.Printf("Key created: %s\n", kp.GetAddressString())
+
+				return kb.Stop()
+			},
+		},
+	}
+	return cmds
 }
 
 func keysGetCommands() []*cobra.Command {
@@ -110,11 +152,11 @@ func keysExportCommands() []*cobra.Command {
 					return err
 				}
 
-				pwd := readPassphrase(pwd)
+				pwd = readPassphrase(pwd)
 
 				// Determine correct way to export private key
 				var exportString string
-				exportAs := strings.ToLower(exportAs)
+				exportAs = strings.ToLower(exportAs)
 				if exportAs == "json" {
 					exportString, err = kb.ExportPrivJSON(addrHex, pwd)
 					if err != nil {
@@ -179,20 +221,22 @@ func keysImportCommands() []*cobra.Command {
 					return err
 				}
 
-				pwd := readPassphrase(pwd)
+				pwd = readPassphrase(pwd)
 
 				// Determine correct way to import the private key
-				importAs := strings.ToLower(importAs)
+				importAs = strings.ToLower(importAs)
 				if importAs == "json" {
-					err := kb.ImportFromJSON(privateKeyString, pwd)
+					kp, err := kb.ImportFromJSON(privateKeyString, pwd)
 					if err != nil {
 						return err
 					}
+					fmt.Printf("Key imported: %s\n", kp.GetAddressString())
 				} else if importAs == "raw" {
-					err := kb.ImportFromString(privateKeyString, pwd, hint)
+					kp, err := kb.ImportFromString(privateKeyString, pwd, hint)
 					if err != nil {
 						return err
 					}
+					fmt.Printf("Key imported: %s\n", kp.GetAddressString())
 				} else {
 					return fmt.Errorf("invalid import format: got %s, want [raw]/[json]", exportAs)
 				}
