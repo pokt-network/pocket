@@ -49,16 +49,9 @@ var (
 	// HACK(#416): This is a temporary solution that guarantees backward compatibility while we implement peer discovery
 	validators []*coreTypes.Actor
 
-	configPath  string = getEnv("CONFIG_PATH", "build/config/config1.json")
-	genesisPath string = getEnv("GENESIS_PATH", "build/config/genesis.json")
+	configPath  string = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
+	genesisPath string = runtime.GetEnv("GENESIS_PATH", "build/config/genesis.json")
 )
-
-func getEnv(key, defaultValue string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return defaultValue
-}
 
 func init() {
 	debugCmd := NewDebugCommand()
