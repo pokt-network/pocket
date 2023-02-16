@@ -7,6 +7,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+//nolint:gosec // G101 Not a credential
 const privateKeysSecretResourceName = "v1-localnet-validators-private-keys"
 
 func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
