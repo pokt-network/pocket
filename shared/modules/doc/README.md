@@ -43,7 +43,10 @@ TODO(#235): Update once runtime configs are implemented
 
 #### Create the module
 
-Module creation uses a typical constructor pattern signature `Create(bus modules.Bus) (modules.Module, error)`
+Module creation uses a typical constructor pattern signature `Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error)`
+
+Where `options ...modules.ModuleOption` is an optional variadic argument that allows for the passing of options to the module.
+This is useful to configure the module at creation time and it's usually used during prototyping and in "sub-modules" that don't have a specific configuration file and where adding it would add unnecessary complexity and overhead. If a module has a lot of `ModuleOption`s, at that point a configuration file might be advisable.
 
 Currently, module creation is not embedded or enforced in the interface to prevent the initializer from having to use
 clunky creation syntax -> `modPackage.new(module).Create(bus modules.Bus)` rather `modPackage.Create(bus modules.Bus)`
