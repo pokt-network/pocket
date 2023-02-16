@@ -29,7 +29,6 @@ type Manager struct {
 	genesisState *genesis.GenesisState
 
 	clock clock.Clock
-	bus   modules.Bus
 }
 
 func NewManager(config *configs.Config, gen *genesis.GenesisState, options ...func(*Manager)) *Manager {
