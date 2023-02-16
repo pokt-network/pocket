@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.36] - 2023-02-15
+
+- Module now embeds `base_modules.IntegratableModule` for DRYness
+
 ## [0.0.0.35] - 2023-02-15
 
 - Add a few `nolint` comments to fix the code on main
@@ -32,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.30] - 2023-02-04
 
-- Changed log lines to utilize new logger module.
+- Changed log lines to utilize new logger module
 
 ## [0.0.0.29] - 2023-01-31
 
