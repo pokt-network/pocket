@@ -1,6 +1,7 @@
 package test
 
 import (
+	crand "crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -169,6 +170,9 @@ func getRandomIntString(n int) string {
 
 func getRandomBytes(numBytes int64) []byte {
 	bz := make([]byte, numBytes)
-	rand.Read(bz) //nolint:gosec // G404 - Weak random source is okay in unit tests
+	_, err := crand.Read(bz)
+	if err != nil {
+		panic(err)
+	}
 	return []byte(hex.EncodeToString(bz))
 }

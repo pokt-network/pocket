@@ -542,6 +542,7 @@ func sleep(t *testing.T, clck *clock.Mock, duration time.Duration) {
 }
 
 // timeReminder simply prints, at a given interval and in a separate goroutine, the current mocked time to help with events.
+// nolint:unparam // we want to keep the frequency as a parameter for clarity
 func timeReminder(t *testing.T, clck *clock.Mock, frequency time.Duration) {
 	go func() {
 		tick := time.NewTicker(frequency)

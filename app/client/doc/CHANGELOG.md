@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.14] - 2023-02-16
+
+- Introduced logical switch to handle parsing of the debug private keys from a local file OR from Kubernetes secret (PR #517)
+- Bugfix for `Stake` command. Address erroneously sent instead of the PublicKey. (PR #518)
+
+## [0.0.0.13] - 2023-02-14
+
+- Fixed `docgen` to work from the root of the repository
+- Updated all the CLI docs
+
 ## [0.0.0.12] - 2023-02-14
 
 - Integrate keybase with CLI
@@ -20,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.10] - 2023-02-07
 
-- Added GITHUB_WIKI tags where it was missing
+- Added GH_WIKI tags where it was missing
 
 ## [0.0.0.9] - 2023-02-06
 

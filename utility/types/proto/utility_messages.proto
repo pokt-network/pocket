@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package utility;
+
+option go_package = "github.com/pokt-network/pocket/utility/types";
+
+// Messages that are sent between nodes (e.g. Evidence) for node specific business logic but are
+// not intended to be stored on the blockchain or drive state transitions.
+
+message TransactionGossipMessage {
+  bytes tx = 1;
+}
