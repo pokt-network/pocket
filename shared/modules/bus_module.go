@@ -19,7 +19,9 @@ type Bus interface {
 	GetBusEvent() *messaging.PocketEnvelope
 	GetEventBus() EventsChannel
 
-	RegisterModule(module Module) error
+	// Dependency Injection / Service Discovery
+	GetModulesRegistry() ModulesRegistry
+	RegisterModule(module Module)
 
 	// Pocket modules
 	GetPersistenceModule() PersistenceModule
