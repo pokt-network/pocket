@@ -31,6 +31,7 @@ type Bus interface {
 	GetTelemetryModule() TelemetryModule
 	GetLoggerModule() LoggerModule
 	GetRPCModule() RPCModule
+	GetStateMachineModule() StateMachineModule
 
 	// Runtime
 	GetRuntimeMgr() RuntimeMgr
