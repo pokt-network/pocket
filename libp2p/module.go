@@ -49,7 +49,7 @@ type libp2pModule struct {
 var (
 	// TODO: consider security exposure of and "safe minimum" for timeout.
 	// TODO: parameterize and expose via config.
-	// ReadStreamTimeout is the duration to wait for a read operation on a
+	// readStreamTimeout is the duration to wait for a read operation on a
 	// stream to complete, after which the stream is closed ("timed out").
 	readStreamTimeoutDuration = time.Second * 10
 	// ErrModule wraps errors which occur within the libp2pModule implementation.
@@ -104,16 +104,15 @@ func (mod *libp2pModule) CreateWithProviders(
 
 	mod.cfg = bus.GetRuntimeMgr().GetConfig().P2P
 
-	// TODO: support RainTree network
+	// INCOMPLETE: support RainTree network
 	if mod.cfg.UseRainTree {
 		return nil, ErrModule("raintree is not yet compatible with libp2p", nil)
 	}
 
-	// TODO(future): investigate any unnecessary
+	// TECHDEBT: investigate any unnecessary
 	// key exposure / duplication in memory
 	secretKey, err := poktCrypto.NewLibP2PPrivateKey(mod.cfg.PrivateKey)
 	if err != nil {
-		// TODO: wrap error
 		return nil, err
 	}
 
@@ -136,14 +135,14 @@ func (mod *libp2pModule) CreateWithProviders(
 	}
 
 	if err := bus.RegisterModule(mod); err != nil {
-		// TODO: wrap error
 		return nil, ErrModule("registering module", err)
 	}
-
 	return mod, nil
 }
 
 func (mod *libp2pModule) Start() error {
+	// DISCUSS / CONSIDERATION: the linter fails with `hugeParam` when using
+	// a value instead of a pointer. Do we want to change this everywhere?
 	*mod.logger = logger.Global.CreateLoggerForModule("P2P")
 
 	// IMPROVE: receive context in interface methods?
@@ -157,10 +156,13 @@ func (mod *libp2pModule) Start() error {
 		// TECHDEBT / INCOMPLETE: add transport security!
 	}
 
+	// NB: disable unused libp2p relay and ping services in client debug mode.
+	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#DisableRelay
+	// and https://pkg.go.dev/github.com/libp2p/go-libp2p#Ping)
 	if !mod.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode {
 		opts = append(opts,
-			libp2p.DisableRelay(), // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#DisableRelay)
-			libp2p.Ping(false),    // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#Ping)
+			libp2p.DisableRelay(),
+			libp2p.Ping(false),
 		)
 	}
 
@@ -178,11 +180,13 @@ func (mod *libp2pModule) Start() error {
 		return ErrModule("unable to create pubsub", err)
 	}
 
+	// Topic is used to `#Publish` messages.
 	mod.topic, err = mod.pubsub.Join(protocol.DefaultTopicStr)
 	if err != nil {
 		return ErrModule("unable to join pubsub topic", err)
 	}
 
+	// Subscription is notified when a new message is received on the topic.
 	mod.subscription, err = mod.topic.Subscribe()
 	if err != nil {
 		return ErrModule("subscribing to pubsub topic", err)
@@ -303,7 +307,7 @@ func (mod *libp2pModule) readStream(stream network.Stream) {
 
 // readFromSubscription is intended to be called in a goroutine. It continuously
 // reads from the subscribed topic in preparation for handling at the network level.
-// Used for "broadcast" messages (i.e. no specific target node).
+// Used for handling "broadcast" messages (i.e. no specific target node).
 func (mod *libp2pModule) readFromSubscription(ctx context.Context) {
 	for {
 		select {

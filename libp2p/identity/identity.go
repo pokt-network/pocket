@@ -1,3 +1,5 @@
+// CONSIDERATION: Consider moving this into `shared` if the libp2p identity
+// ends up consolidating with the node's identity.
 package identity
 
 import (
@@ -20,8 +22,9 @@ var (
 	ErrIdentity = types.NewErrFactory("")
 )
 
-// PoktPeerFromStream builds a pokt peer from a libp2p stream.
-// (NOTE: excludes `ServiceURL`)
+// PoktPeerFromStream builds a network peer using peer info available
+// from the given libp2p stream. **The returned `ServiceUrl` is a libp2p
+// multiaddr string as opposed to a proper URL.**
 func PoktPeerFromStream(stream network.Stream) (*types.NetworkPeer, error) {
 	remotePubKeyBytes, err := stream.Conn().RemotePublicKey().Raw()
 	// NB: abort handling this stream.
@@ -33,6 +36,7 @@ func PoktPeerFromStream(stream network.Stream) (*types.NetworkPeer, error) {
 		return nil, err
 	}
 
+	// TECHDEBT: currently returning libp2p multiaddr version of ServiceUrl.
 	return &types.NetworkPeer{
 		Dialer:    transport.NewLibP2PTransport(stream),
 		PublicKey: poktPubKey,
@@ -92,6 +96,8 @@ func PeerAddrInfoFromPoktPeer(poktPeer *types.NetworkPeer) (peer.AddrInfo, error
 	}, nil
 }
 
+// Libp2pMultiaddrFromServiceUrl transforms a URL into its libp2p muleiaddr equivalent.
+// (see: https://github.com/libp2p/specs/blob/master/addressing/README.md#multiaddr-basics)
 // TECHDEBT: this probably belongs somewhere else, it's more of a networking helper.
 func PeerMultiAddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error) {
 	// NB: hard-code a scheme for URL parsing to work.
@@ -107,7 +113,7 @@ func PeerMultiAddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error)
 		// (ubiquitously switching to multiaddr, instead of a URL, would resolve this)
 		peerTransportStr = "tcp"
 		peerHostnameStr  = peerUrl.Hostname()
-		// TODO: is there a way for us to effectively prefer IPv6 responses?
+		// TECHDEBT: is there a way for us to effectively prefer IPv6 responses?
 		// NB: default to assuming an FQDN-based ServiceURL.
 		networkStr = "dns"
 	)
