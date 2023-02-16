@@ -114,7 +114,7 @@ func (mod *libp2pModule) CreateWithProviders(
 		return nil, ErrModule("loading private key", err)
 	}
 
-	mod.identity = libp2p.Identity(secretKey)
+	mod.identity = libp2p.Identity(privateKey)
 
 	switch mod.cfg.ConnectionType {
 	case types.ConnectionType_TCPConnection:
@@ -239,7 +239,7 @@ func (mod *libp2pModule) GetAddress() (crypto.Address, error) {
 		return nil, err
 	}
 
-	return secretKey.Address(), nil
+	return privateKey.Address(), nil
 }
 
 func (mod *libp2pModule) SetBus(bus modules.Bus) {
