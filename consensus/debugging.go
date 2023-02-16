@@ -124,7 +124,7 @@ func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage
 	for _, val := range validators {
 		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
 		if err := m.stateSync.SendStateSyncMessage(stateSyncGetBlockMessage, valAddress, requestHeight); err != nil {
-			m.logger.Error().Err(err).Msg("failed to send StateSyncMessage")
+			m.logger.Error().Err(err).Str("proto_type", "GetBlockRequest").Msg("failed to send StateSyncMessage")
 		}
 	}
 }
@@ -151,7 +151,7 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 	for _, val := range validators {
 		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
 		if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, valAddress, requestHeight); err != nil {
-			m.logger.Error().Err(err).Msg("failed to send get metadata request state sync message")
+			m.logger.Error().Err(err).Str("proto_type", "GetMetaDataRequest").Msg("failed to send StateSyncMessage")
 		}
 	}
 

@@ -123,9 +123,9 @@ func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse)
 	clientPeerId := blockRes.PeerAddress
 
 	fields := map[string]interface{}{
-		"current height": blockRes.Block.BlockHeader.Height,
-		"sender":         serverNodePeerId,
-		"receiver":       clientPeerId,
+		"currentHeight": blockRes.Block.BlockHeader.Height,
+		"sender":        serverNodePeerId,
+		"receiver":      clientPeerId,
 	}
 
 	m.logger.Info().Fields(fields).Msgf("Received get block response: %s", blockRes)
@@ -142,9 +142,9 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 	currentHeight := consensusMod.CurrentHeight()
 
 	fields := map[string]interface{}{
-		"current height": currentHeight,
-		"sender":         serverNodePeerId,
-		"receiver":       clientPeerId,
+		"currentHeight": currentHeight,
+		"sender":        serverNodePeerId,
+		"receiver":      clientPeerId,
 	}
 
 	m.logger.Info().Fields(fields).Msgf("Received get metadata response: %s", metaDataRes)

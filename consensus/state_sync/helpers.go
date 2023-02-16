@@ -11,7 +11,14 @@ func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessag
 	if err != nil {
 		return err
 	}
-	m.logger.Info().Uint64("height", height).Msg(typesCons.SendingStateSyncMessage(peerId, getMessageType(stateSyncMsg), height))
+
+	fields := map[string]interface{}{
+		"height":     height,
+		"peerId":     peerId,
+		"proto_type": getMessageType(stateSyncMsg),
+	}
+
+	m.logger.Info().Fields(fields).Msg("Sending StateSync Message")
 	return m.sendToPeer(anyMsg, peerId)
 }
 
@@ -25,6 +32,16 @@ func (m *stateSync) sendToPeer(msg *anypb.Any, peerId cryptoPocket.Address) erro
 }
 
 func getMessageType(msg *typesCons.StateSyncMessage) string {
-	//return string(msg.ProtoReflect().WhichOneof(msg.ProtoReflect().Descriptor().Oneofs()).FullName())
-	return string(msg.ProtoReflect().Descriptor().Name())
+	switch msg.Message.(type) {
+	case *typesCons.StateSyncMessage_MetadataReq:
+		return "MetadataRequest"
+	case *typesCons.StateSyncMessage_MetadataRes:
+		return "MetadataResponse"
+	case *typesCons.StateSyncMessage_GetBlockReq:
+		return "GetBlockRequest"
+	case *typesCons.StateSyncMessage_GetBlockRes:
+		return "GetBlockResponse"
+	default:
+		return "Unknown"
+	}
 }

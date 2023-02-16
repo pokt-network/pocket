@@ -5,13 +5,6 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
-const (
-	StateSyncGetBlockRequest     = "`GetBlockRequest`"
-	StateSyncGetMetadataRequest  = "get metadata request"
-	StateSyncGetBlockResponse    = "get block response"
-	StateSyncGetMetadataResponse = "get metadata response"
-)
-
 type NodeId uint64
 
 type (
