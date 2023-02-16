@@ -13,6 +13,7 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -21,7 +22,7 @@ import (
 var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
-	bus modules.Bus
+	base_modules.IntegratableModule
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
@@ -34,8 +35,8 @@ type p2pModule struct {
 	injectedCurrentHeightProvider providers.CurrentHeightProvider
 }
 
-func Create(bus modules.Bus) (modules.Module, error) {
-	return new(p2pModule).Create(bus)
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(p2pModule).Create(bus, options...)
 }
 
 // TODO(#429): need to define a better pattern for dependency injection. Currently we are probably limiting ourselves by having a common constructor `Create(bus modules.Bus) (modules.Module, error)` for all modules.
@@ -69,12 +70,15 @@ func CreateWithProviders(bus modules.Bus, addrBookProvider providers.AddrBookPro
 	return m, nil
 }
 
-func (*p2pModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	log.Println("Creating network module")
 	m := &p2pModule{}
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
+
+	for _, option := range options {
+		option(m)
 	}
+
+	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
