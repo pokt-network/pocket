@@ -84,7 +84,7 @@ func SendingMessage(msg *HotstuffMessage, nodeId NodeId) string {
 }
 
 func SendingStateSyncMessage(nodeId cryptoPocket.Address, msgType string, height uint64) string {
-	return fmt.Sprintf("🔄 Sending %s state sync message ✉️ to node %s at height: (%d)  🔄", msgType, nodeId, height)
+	return fmt.Sprintf("✉️ Sending %s ✉️ to node %s at height: (%d)  🔄", msgType, nodeId, height)
 }
 
 func BroadcastingMessage(msg *HotstuffMessage) string {

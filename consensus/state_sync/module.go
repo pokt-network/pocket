@@ -36,7 +36,7 @@ type StateSyncModule interface {
 	IsServerModEnabled() bool
 	EnableServerMode()
 
-	SendStateSyncMessage(*typesCons.StateSyncMessage, string, cryptoPocket.Address, uint64) error
+	SendStateSyncMessage(msg *typesCons.StateSyncMessage, nodeAddress cryptoPocket.Address, height uint64) error
 }
 
 var (
@@ -122,7 +122,13 @@ func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse)
 	serverNodePeerId := consensusMod.GetNodeAddress()
 	clientPeerId := blockRes.PeerAddress
 
-	m.logger.Info().Msgf("%s received get block response from: %s, for height %d. Received block's header is: %s,  \n", serverNodePeerId, clientPeerId, blockRes.Block.BlockHeader.Height, blockRes.Block.BlockHeader)
+	fields := map[string]interface{}{
+		"current height": blockRes.Block.BlockHeader.Height,
+		"sender":         serverNodePeerId,
+		"receiver":       clientPeerId,
+	}
+
+	m.logger.Info().Fields(fields).Msgf("Received get block response: %s", blockRes)
 
 	return nil
 }
@@ -135,7 +141,13 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 	clientPeerId := metaDataRes.PeerAddress
 	currentHeight := consensusMod.CurrentHeight()
 
-	m.logger.Info().Msgf("%s received get metadata response from: %s, current height is %d. Received metadata is: %s \n", serverNodePeerId, clientPeerId, currentHeight, metaDataRes)
+	fields := map[string]interface{}{
+		"current height": currentHeight,
+		"sender":         serverNodePeerId,
+		"receiver":       clientPeerId,
+	}
+
+	m.logger.Info().Fields(fields).Msgf("Received get metadata response: %s", metaDataRes)
 
 	return nil
 }

@@ -6,12 +6,12 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, msgType string, peerId cryptoPocket.Address, blockHeight uint64) error {
+func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, peerId cryptoPocket.Address, height uint64) error {
 	anyMsg, err := anypb.New(stateSyncMsg)
 	if err != nil {
 		return err
 	}
-	m.logger.Info().Uint64("height", blockHeight).Msg(typesCons.SendingStateSyncMessage(peerId, msgType, blockHeight))
+	m.logger.Info().Uint64("height", height).Msg(typesCons.SendingStateSyncMessage(peerId, getMessageType(stateSyncMsg), height))
 	return m.sendToPeer(anyMsg, peerId)
 }
 
@@ -22,4 +22,9 @@ func (m *stateSync) sendToPeer(msg *anypb.Any, peerId cryptoPocket.Address) erro
 		return err
 	}
 	return nil
+}
+
+func getMessageType(msg *typesCons.StateSyncMessage) string {
+	//return string(msg.ProtoReflect().WhichOneof(msg.ProtoReflect().Descriptor().Oneofs()).FullName())
+	return string(msg.ProtoReflect().Descriptor().Name())
 }
