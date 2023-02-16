@@ -100,10 +100,9 @@ func CreateTestConsensusPocketNode(
 ) *shared.Node {
 	// persistence is a dependency of consensus, so we need to create it first
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
-	err := (bus).RegisterModule(persistenceMock)
-	require.NoError(t, err)
+	bus.RegisterModule(persistenceMock)
 
-	_, err = consensus.Create(bus)
+	_, err := consensus.Create(bus)
 	require.NoError(t, err)
 
 	runtimeMgr := (bus).GetRuntimeMgr()
@@ -114,16 +113,17 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
+	stateMachineMock := baseStateMachineMock(t, eventsChannel)
 
 	for _, module := range []modules.Module{
+		stateMachineMock,
 		p2pMock,
 		utilityMock,
 		telemetryMock,
 		loggerMock,
 		rpcMock,
 	} {
-		err = (bus).RegisterModule(module)
-		require.NoError(t, err)
+		bus.RegisterModule(module)
 	}
 
 	require.NoError(t, err)
@@ -424,6 +424,8 @@ func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *mockModules
 		AnyTimes()
 	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()
 
+	p2pMock.EXPECT().HandleEvent(gomock.Any()).Return(nil).AnyTimes()
+
 	return p2pMock
 }
 
@@ -492,6 +494,16 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 	rpcMock.EXPECT().GetModuleName().Return(modules.RPCModuleName).AnyTimes()
 
 	return rpcMock
+}
+
+func baseStateMachineMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockStateMachineModule {
+	ctrl := gomock.NewController(t)
+	stateMachineMock := mockModules.NewMockStateMachineModule(ctrl)
+	stateMachineMock.EXPECT().Start().Return(nil).AnyTimes()
+	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
+
+	return stateMachineMock
 }
 
 func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAgent {
