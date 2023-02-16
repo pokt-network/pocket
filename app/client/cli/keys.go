@@ -3,54 +3,56 @@ package cli
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	keybaseCmd := NewAccountCommand()
-	rootCmd.AddCommand(keybaseCmd)
+	rootCmd.AddCommand(NewKeysCommand())
 }
 
-func NewKeybaseCommand() *cobra.Command {
+func NewKeysCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "Keys",
-		Short:   "Keybase specific commands",
+		Short:   "Key specific commands",
 		Aliases: []string{"keys"},
 		Args:    cobra.ExactArgs(0),
 	}
 
-	cmd.AddCommand(keybaseCommands()...)
+	cmds := keysCommands()
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	cmd.AddCommand(cmds...)
 
 	return cmd
 }
 
-func keybaseCommands() []*cobra.Command {
+func keysCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
 			Use:     "List",
-			Short:   "List all keys",
-			Long:    "List all the public hex addresses for the keys in the keybase",
+			Short:   "List all keys in the keybase",
+			Long:    "List all of the hex addresses of the keys stored in the keybase",
 			Aliases: []string{"list"},
 			Args:    cobra.ExactArgs(0),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				keybaseDir, err := filepath.Abs(dataDir + "/keys")
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
 				if err != nil {
 					return err
 				}
-				kb, err := keybase.InitialiseKeybase(keybaseDir)
+				kb, err := keybase.NewKeybase(keybasePath)
 				if err != nil {
 					return err
 				}
+
 				addresses, _, err := kb.GetAll()
 				if err != nil {
 					return err
 				}
-				if err := kb.Stop(); err != nil {
-					return err
-				}
-				fmt.Println("Public Key Addresses:")
+
 				for _, addr := range addresses {
 					fmt.Println(addr)
 				}
@@ -58,9 +60,6 @@ func keybaseCommands() []*cobra.Command {
 				return nil
 			},
 		},
-	}
-	for _, cmd := range cmds {
-		cmd.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
 	}
 	return cmds
 }

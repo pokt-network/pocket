@@ -25,7 +25,6 @@ type Keybase interface {
 	GetPubKey(address string) (crypto.PublicKey, error)
 	GetPrivKey(address, passphrase string) (crypto.PrivateKey, error)
 	GetAll() (addresses []string, keyPairs []crypto.KeyPair, err error)
-	Exists(address string) (bool, error)
 
 	// Exporters
 	ExportPrivString(address, passphrase string) (string, error)

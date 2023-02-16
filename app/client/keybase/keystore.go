@@ -235,15 +235,6 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 	return addresses, keyPairs, nil
 }
 
-// Check whether an address is currently stored in the DB
-func (keybase *badgerKeybase) Exists(address string) (bool, error) {
-	val, err := keybase.Get(address)
-	if err != nil {
-		return false, err
-	}
-	return val != nil, nil
-}
-
 // Export the Private Key string of the given address
 func (keybase *badgerKeybase) ExportPrivString(address, passphrase string) (string, error) {
 	kp, err := keybase.Get(address)
