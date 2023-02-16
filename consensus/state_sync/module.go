@@ -70,7 +70,7 @@ func (*stateSync) Create(bus modules.Bus) (modules.Module, error) {
 	}
 
 	// when node is starting, it is in sync mode, as it might need to bootstrap to the latest state
-	// TODO: consider setting this thorugh event sent by state machine for consistency
+	// TODO: change this to to reflect the state in the fsm once merged
 	m.currentMode = Sync
 	m.serverMode = false
 
