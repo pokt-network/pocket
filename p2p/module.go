@@ -43,9 +43,7 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 func CreateWithProviders(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
 	log.Println("Creating network module")
 	m := &p2pModule{}
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
-	}
+	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
@@ -99,20 +97,6 @@ func (*p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	}
 
 	return m, nil
-}
-
-func (m *p2pModule) SetBus(bus modules.Bus) {
-	// INVESTIGATE: Can the code flow be modified to set the bus here?
-	// m.network.SetBus(m.GetBus())
-	m.bus = bus
-}
-
-func (m *p2pModule) GetBus() modules.Bus {
-	if m.bus == nil {
-		m.logger.Warn().Msg("PocketBus is not initialized")
-		return nil
-	}
-	return m.bus
 }
 
 func (m *p2pModule) GetModuleName() string {
