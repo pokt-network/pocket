@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.18] - 2023-02-15
+## [0.0.0.18] - 2023-02-16
 
 - Added `IsProcessRunningInsideKubernetes` and centralized `GetEnv` so that it can be used across the board
 

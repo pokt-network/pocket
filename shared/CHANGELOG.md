@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.26] - 2023-02-15
+## [0.0.0.26] - 2023-02-16
 
 - Added `FetchValidatorPrivateKeys` function since it is going to be used by the `debug-client` and also by the upcoming `cluster-manager` [#490](https://github.com/pokt-network/pocket/issues/490)
 
