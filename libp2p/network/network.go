@@ -25,7 +25,7 @@ type libp2pNetwork struct {
 }
 
 var (
-	ErrNetwork = types.NewErrFactory("LibP2P network error")
+	ErrNetwork = types.NewErrFactory("libp2p network error")
 	Year       = time.Hour * 24 * 365
 	// TECHDEBT: consider more carefully and parameterize.
 	DefaultPeerTTL = 2 * Year

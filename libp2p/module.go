@@ -53,7 +53,7 @@ var (
 	// stream to complete, after which the stream is closed ("timed out").
 	readStreamTimeoutDuration = time.Second * 10
 	// ErrModule wraps errors which occur within the libp2pModule implementation.
-	ErrModule = typesP2P.NewErrFactory("LibP2P module error")
+	ErrModule = typesP2P.NewErrFactory("libp2p module error")
 )
 
 func Create(bus modules.Bus) (modules.Module, error) {
@@ -111,7 +111,7 @@ func (mod *libp2pModule) CreateWithProviders(
 	// key exposure / duplication in memory
 	secretKey, err := poktCrypto.NewLibP2PPrivateKey(mod.cfg.PrivateKey)
 	if err != nil {
-		return nil, err
+		return nil, ErrModule("loading private key", err)
 	}
 
 	mod.identity = libp2p.Identity(secretKey)

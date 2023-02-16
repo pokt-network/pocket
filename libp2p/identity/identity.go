@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	ErrIdentity = types.NewErrFactory("")
+	ErrIdentity = types.NewErrFactory("identity error")
 )
 
 // PoktPeerFromStream builds a network peer using peer info available
