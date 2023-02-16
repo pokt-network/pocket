@@ -24,17 +24,17 @@ func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {
 	require.Len(t, p2pNet.addrBookMap, 1)
 
 	var (
-		existingAddrStr  string
-		existingPoktPeer *types.NetworkPeer
+		existingAddrStr string
+		existingPeer    *types.NetworkPeer
 	)
 	for addr, peer := range p2pNet.addrBookMap {
 		existingAddrStr = addr
-		existingPoktPeer = peer
+		existingPeer = peer
 	}
 	require.NotEmpty(t, existingAddrStr)
-	require.NotNil(t, existingPoktPeer)
+	require.NotNil(t, existingPeer)
 
-	existingPeerInfo, err := identity.PeerAddrInfoFromPoktPeer(existingPoktPeer)
+	existingPeerInfo, err := identity.Libp2pAddrInfoFromPeer(existingPeer)
 	require.NoError(t, err)
 
 	existingPeerstoreAddrs := peerstore.Addrs(existingPeerInfo.ID)
@@ -42,7 +42,7 @@ func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {
 
 	// TECHDEBT: currently, the internal addrbook is storing multiaddrs
 	// in the serviceUrl field as opposed to transforming them (back and forth).
-	existingPeerMultiaddr, err := identity.PeerMultiAddrFromServiceURL(existingPoktPeer.ServiceUrl)
+	existingPeerMultiaddr, err := identity.Libp2pMultiaddrFromServiceUrl(existingPeer.ServiceUrl)
 	require.NoError(t, err)
 	require.Equal(t, existingPeerstoreAddrs[0].String(), existingPeerMultiaddr.String())
 
@@ -50,22 +50,22 @@ func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {
 	newPoktAddr := newPublicKey.Address()
 	require.NoError(t, err)
 
-	newPoktPeer := &types.NetworkPeer{
+	newPeer := &types.NetworkPeer{
 		PublicKey:  newPublicKey,
 		Address:    newPoktAddr,
 		ServiceUrl: "node999.consensus:8080",
 	}
-	newPeerInfo, err := identity.PeerAddrInfoFromPoktPeer(newPoktPeer)
+	newPeerInfo, err := identity.Libp2pAddrInfoFromPeer(newPeer)
 	require.NoError(t, err)
 	newPeerMultiaddr := newPeerInfo.Addrs[0]
 
 	// NB: add to address book
-	err = p2pNet.AddPeerToAddrBook(newPoktPeer)
+	err = p2pNet.AddPeerToAddrBook(newPeer)
 	require.NoError(t, err)
 
 	require.Len(t, p2pNet.addrBookMap, 2)
-	require.Equal(t, p2pNet.addrBookMap[existingAddrStr], existingPoktPeer)
-	require.Equal(t, p2pNet.addrBookMap[newPoktPeer.Address.String()], newPoktPeer)
+	require.Equal(t, p2pNet.addrBookMap[existingAddrStr], existingPeer)
+	require.Equal(t, p2pNet.addrBookMap[newPeer.Address.String()], newPeer)
 
 	existingPeerstoreAddrs = peerstore.Addrs(existingPeerInfo.ID)
 	//newPeerstoreAddrs := host.Peerstore().Addrs(newPeerInfo.ID)
@@ -87,17 +87,17 @@ func TestLibp2pNetwork_RemovePeerToAddrBook(t *testing.T) {
 	require.Len(t, p2pNet.addrBookMap, 1)
 
 	var (
-		existingAddrStr  string
-		existingPoktPeer *types.NetworkPeer
+		existingAddrStr string
+		existingPeer    *types.NetworkPeer
 	)
 	for addr, peer := range p2pNet.addrBookMap {
 		existingAddrStr = addr
-		existingPoktPeer = peer
+		existingPeer = peer
 	}
 	require.NotEmpty(t, existingAddrStr)
-	require.NotNil(t, existingPoktPeer)
+	require.NotNil(t, existingPeer)
 
-	existingPeerInfo, err := identity.PeerAddrInfoFromPoktPeer(existingPoktPeer)
+	existingPeerInfo, err := identity.Libp2pAddrInfoFromPeer(existingPeer)
 	require.NoError(t, err)
 
 	existingPeerstoreAddrs := peerstore.Addrs(existingPeerInfo.ID)
@@ -105,11 +105,11 @@ func TestLibp2pNetwork_RemovePeerToAddrBook(t *testing.T) {
 
 	// TECHDEBT: currently, the internal addrbook is storing multiaddrs
 	// in the serviceUrl field as opposed to transforming them (back and forth).
-	existingPeerMultiaddr, err := identity.PeerMultiAddrFromServiceURL(existingPoktPeer.ServiceUrl)
+	existingPeerMultiaddr, err := identity.Libp2pMultiaddrFromServiceUrl(existingPeer.ServiceUrl)
 	require.NoError(t, err)
 	require.Equal(t, existingPeerstoreAddrs[0].String(), existingPeerMultiaddr.String())
 
-	err = p2pNet.RemovePeerToAddrBook(existingPoktPeer)
+	err = p2pNet.RemovePeerToAddrBook(existingPeer)
 	require.NoError(t, err)
 
 	require.Len(t, p2pNet.addrBookMap, 0)

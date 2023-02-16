@@ -9,13 +9,13 @@ import (
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"
-	"github.com/libp2p/go-libp2p/core/network"
+	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pokt-network/pocket/libp2p/identity"
-	libp2p2Network "github.com/pokt-network/pocket/libp2p/network"
+	"github.com/pokt-network/pocket/libp2p/network"
 	"github.com/pokt-network/pocket/libp2p/protocol"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
@@ -24,7 +24,7 @@ import (
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
-	poktCrypto "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -109,7 +109,7 @@ func (mod *libp2pModule) CreateWithProviders(
 
 	// TECHDEBT: investigate any unnecessary
 	// key exposure / duplication in memory
-	secretKey, err := poktCrypto.NewLibP2PPrivateKey(mod.cfg.PrivateKey)
+	privateKey, err := crypto.NewLibP2PPrivateKey(mod.cfg.PrivateKey)
 	if err != nil {
 		return nil, ErrModule("loading private key", err)
 	}
@@ -191,7 +191,7 @@ func (mod *libp2pModule) Start() error {
 		return ErrModule("subscribing to pubsub topic", err)
 	}
 
-	mod.network, err = libp2p2Network.NewLibp2pNetwork(mod.bus, mod.addrBookProvider, mod.currentHeightProvider, mod.logger, mod.host, mod.topic)
+	mod.network, err = network.NewLibp2pNetwork(mod.bus, mod.addrBookProvider, mod.currentHeightProvider, mod.logger, mod.host, mod.topic)
 	if err != nil {
 		return ErrModule("creating network", err)
 	}
@@ -221,7 +221,7 @@ func (mod *libp2pModule) Broadcast(msg *anypb.Any) error {
 	return mod.network.NetworkBroadcast(data)
 }
 
-func (mod *libp2pModule) Send(addr poktCrypto.Address, msg *anypb.Any) error {
+func (mod *libp2pModule) Send(addr crypto.Address, msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
 	}
@@ -233,8 +233,8 @@ func (mod *libp2pModule) Send(addr poktCrypto.Address, msg *anypb.Any) error {
 	return mod.network.NetworkSend(data, addr)
 }
 
-func (mod *libp2pModule) GetAddress() (poktCrypto.Address, error) {
-	secretKey, err := poktCrypto.NewPrivateKey(mod.cfg.PrivateKey)
+func (mod *libp2pModule) GetAddress() (crypto.Address, error) {
+	privateKey, err := crypto.NewPrivateKey(mod.cfg.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -258,18 +258,18 @@ func (mod *libp2pModule) GetBus() modules.Bus {
 
 // handleStream is called each time a peer establishes a new stream with this
 // module's libp2p `host.Host`.
-func (mod *libp2pModule) handleStream(stream network.Stream) {
-	poktPeer, err := identity.PoktPeerFromStream(stream)
+func (mod *libp2pModule) handleStream(stream libp2pNetwork.Stream) {
+	peer, err := identity.PeerFromLibp2pStream(stream)
 	if err != nil {
-		mod.logger.Error().Err(err).Msgf("parsing remote peer public key, address: %s", poktPeer.Address)
+		mod.logger.Error().Err(err).Msgf("parsing remote peer public key, address: %s", peer.Address)
 
 		if err = stream.Close(); err != nil {
 			mod.logger.Error().Err(err)
 		}
 	}
 
-	if err := mod.network.AddPeerToAddrBook(poktPeer); err != nil {
-		mod.logger.Error().Err(err).Msgf("adding remote peer to address book, address: %s", poktPeer.Address)
+	if err := mod.network.AddPeerToAddrBook(peer); err != nil {
+		mod.logger.Error().Err(err).Msgf("adding remote peer to address book, address: %s", peer.Address)
 	}
 
 	go mod.readStream(stream)
@@ -278,7 +278,7 @@ func (mod *libp2pModule) handleStream(stream network.Stream) {
 // readStream is intended to be called in a goroutine. It continuously reads from
 // the given stream for handling at the network level. Used for handling "direct"
 // messages (i.e. one specific target node).
-func (mod *libp2pModule) readStream(stream network.Stream) {
+func (mod *libp2pModule) readStream(stream libp2pNetwork.Stream) {
 	// NB: time out if no data is sent to free resources.
 	if err := stream.SetReadDeadline(newReadStreamDeadline()); err != nil {
 		mod.logger.Error().Err(err).Msg("setting stream read deadline")
@@ -357,7 +357,7 @@ func (mod *libp2pModule) handleNetworkData(data []byte) {
 func (mod *libp2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
 	// TECHDEBT: as soon as we add support for multiple transports
 	// (i.e. not just TCP), we'll need to do something else.
-	return identity.PeerMultiAddrFromServiceURL(fmt.Sprintf(
+	return identity.Libp2pMultiaddrFromServiceUrl(fmt.Sprintf(
 		"%s:%d", mod.cfg.Hostname, mod.cfg.ConsensusPort,
 	))
 }

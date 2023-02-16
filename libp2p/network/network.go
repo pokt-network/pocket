@@ -6,20 +6,20 @@ import (
 	"time"
 
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
-	"github.com/libp2p/go-libp2p/core/host"
+	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 
 	"github.com/pokt-network/pocket/libp2p/identity"
 	"github.com/pokt-network/pocket/libp2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/types"
-	poktCrypto "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
 type libp2pNetwork struct {
 	logger      *modules.Logger
 	bus         modules.Bus
-	host        host.Host
+	host        libp2pHost.Host
 	topic       *pubsub.Topic
 	addrBookMap types.AddrBookMap
 }
@@ -38,7 +38,7 @@ func NewLibp2pNetwork(
 	addrBookProvider providers.AddrBookProvider,
 	currentHeightProvider providers.CurrentHeightProvider,
 	logger *modules.Logger,
-	host_ host.Host,
+	host libp2pHost.Host,
 	topic *pubsub.Topic,
 ) (types.Network, error) {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
@@ -47,25 +47,25 @@ func NewLibp2pNetwork(
 	}
 
 	addrBookMap := make(types.AddrBookMap)
-	for _, poktPeer := range addrBook {
-		addrBookMap[poktPeer.Address.String()] = poktPeer
-		pubKey, err := identity.PubKeyFromPoktPeer(poktPeer)
+	for _, peer := range addrBook {
+		addrBookMap[peer.Address.String()] = peer
+		pubKey, err := identity.Libp2pPublicKeyFromPeer(peer)
 		if err != nil {
 			return nil, ErrNetwork(fmt.Sprintf(
-				"converting peer public key, pokt address: %s", poktPeer.Address,
+				"converting peer public key, pokt address: %s", peer.Address,
 			), err)
 		}
-		peer, err := identity.PeerAddrInfoFromPoktPeer(poktPeer)
+		libp2pPeer, err := identity.Libp2pAddrInfoFromPeer(peer)
 		if err != nil {
 			return nil, ErrNetwork(fmt.Sprintf(
-				"converting peer info, pokt address: %s", poktPeer.Address,
+				"converting peer info, pokt address: %s", peer.Address,
 			), err)
 		}
 
-		host_.Peerstore().AddAddrs(peer.ID, peer.Addrs, DefaultPeerTTL)
-		if err := host_.Peerstore().AddPubKey(peer.ID, pubKey); err != nil {
+		host.Peerstore().AddAddrs(libp2pPeer.ID, libp2pPeer.Addrs, DefaultPeerTTL)
+		if err := host.Peerstore().AddPubKey(libp2pPeer.ID, pubKey); err != nil {
 			return nil, ErrNetwork(fmt.Sprintf(
-				"adding peer public key, pokt address: %s", poktPeer.Address,
+				"adding peer public key, pokt address: %s", peer.Address,
 			), err)
 		}
 	}
@@ -74,7 +74,7 @@ func NewLibp2pNetwork(
 		logger: logger,
 		// TODO: is it unconventional to set bus here?
 		bus:         bus,
-		host:        host_,
+		host:        host,
 		topic:       topic,
 		addrBookMap: addrBookMap,
 	}, nil
@@ -93,7 +93,7 @@ func (p2pNet *libp2pNetwork) NetworkBroadcast(data []byte) error {
 }
 
 // NetworkSend connects sends data directly to the specified peer.
-func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr poktCrypto.Address) error {
+func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr crypto.Address) error {
 	// IMPROVE: add context to interface methods.
 	ctx := context.Background()
 
@@ -109,7 +109,7 @@ func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr poktCrypto.Addres
 		return nil
 	}
 
-	poktPeer, ok := p2pNet.addrBookMap[poktAddr.String()]
+	peer, ok := p2pNet.addrBookMap[poktAddr.String()]
 	if !ok {
 		// NB: this should not happen.
 		return ErrNetwork("", fmt.Errorf(
@@ -117,7 +117,7 @@ func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr poktCrypto.Addres
 		))
 	}
 
-	peerAddrInfo, err := identity.PeerAddrInfoFromPoktPeer(poktPeer)
+	peerAddrInfo, err := identity.Libp2pAddrInfoFromPeer(peer)
 	if err != nil {
 		return ErrNetwork("parsing peer multiaddr", err)
 	}
@@ -160,49 +160,49 @@ func (p2pNet *libp2pNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 func (p2pNet *libp2pNetwork) GetAddrBook() types.AddrBook {
 	addrBook := make(types.AddrBook, 0)
-	for _, poktPeer := range p2pNet.addrBookMap {
-		addrBook = append(addrBook, poktPeer)
+	for _, peer := range p2pNet.addrBookMap {
+		addrBook = append(addrBook, peer)
 	}
 	return addrBook
 }
 
-func (p2pNet *libp2pNetwork) AddPeerToAddrBook(poktPeer *types.NetworkPeer) error {
-	p2pNet.addrBookMap[poktPeer.Address.String()] = poktPeer
+func (p2pNet *libp2pNetwork) AddPeerToAddrBook(peer *types.NetworkPeer) error {
+	p2pNet.addrBookMap[peer.Address.String()] = peer
 
-	pubKey, err := identity.PubKeyFromPoktPeer(poktPeer)
+	pubKey, err := identity.Libp2pPublicKeyFromPeer(peer)
 	if err != nil {
 		return ErrNetwork(fmt.Sprintf(
-			"converting peer public key, pokt address: %s", poktPeer.Address,
+			"converting peer public key, pokt address: %s", peer.Address,
 		), err)
 	}
-	peer, err := identity.PeerAddrInfoFromPoktPeer(poktPeer)
+	libp2pPeer, err := identity.Libp2pAddrInfoFromPeer(peer)
 	if err != nil {
 		return ErrNetwork(fmt.Sprintf(
-			"converting peer info, pokt address: %s", poktPeer.Address,
+			"converting peer info, pokt address: %s", peer.Address,
 		), err)
 	}
 
-	p2pNet.host.Peerstore().AddAddrs(peer.ID, peer.Addrs, DefaultPeerTTL)
-	if err := p2pNet.host.Peerstore().AddPubKey(peer.ID, pubKey); err != nil {
+	p2pNet.host.Peerstore().AddAddrs(libp2pPeer.ID, libp2pPeer.Addrs, DefaultPeerTTL)
+	if err := p2pNet.host.Peerstore().AddPubKey(libp2pPeer.ID, pubKey); err != nil {
 		return ErrNetwork(fmt.Sprintf(
-			"adding peer public key, pokt address: %s", poktPeer.Address,
+			"adding peer public key, pokt address: %s", peer.Address,
 		), err)
 	}
 	return nil
 }
 
 // CLEANUP: fix typo in interface (?)
-func (p2pNet *libp2pNetwork) RemovePeerToAddrBook(poktPeer *types.NetworkPeer) error {
-	delete(p2pNet.addrBookMap, poktPeer.Address.String())
+func (p2pNet *libp2pNetwork) RemovePeerToAddrBook(peer *types.NetworkPeer) error {
+	delete(p2pNet.addrBookMap, peer.Address.String())
 
-	peer, err := identity.PeerAddrInfoFromPoktPeer(poktPeer)
+	libp2pPeer, err := identity.Libp2pAddrInfoFromPeer(peer)
 	if err != nil {
 		return ErrNetwork(fmt.Sprintf(
-			"converting peer info, pokt address: %s", poktPeer.Address,
+			"converting peer info, pokt address: %s", peer.Address,
 		), err)
 	}
 
-	p2pNet.host.Peerstore().RemovePeer(peer.ID)
+	p2pNet.host.Peerstore().RemovePeer(libp2pPeer.ID)
 	return nil
 }
 

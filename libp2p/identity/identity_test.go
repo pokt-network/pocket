@@ -10,7 +10,7 @@ import (
 func TestPeerMultiAddrFromServiceURL_success(t *testing.T) {
 	testCases := []struct {
 		name                string
-		serviceURL          string
+		serviceUrl          string
 		expetedMultiaddrStr string
 	}{
 		{
@@ -32,7 +32,7 @@ func TestPeerMultiAddrFromServiceURL_success(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actualMultiaddr, err := PeerMultiAddrFromServiceURL(testCase.serviceURL)
+			actualMultiaddr, err := Libp2pMultiaddrFromServiceUrl(testCase.serviceUrl)
 			require.NoError(t, err)
 			require.NotNil(t, actualMultiaddr)
 			require.Equal(t, testCase.expetedMultiaddrStr, actualMultiaddr.String())
@@ -55,7 +55,7 @@ func TestPeerMultiAddrFromServiceURL_error(t *testing.T) {
 
 	testCases := []struct {
 		name             string
-		serviceURLFormat string
+		serviceUrlFormat string
 		// TODO: assert specific errors?
 		// expectedError string
 	}{
@@ -87,8 +87,8 @@ func TestPeerMultiAddrFromServiceURL_error(t *testing.T) {
 		for hostType, hostname := range hostnames {
 			testName := fmt.Sprintf("%s/%s", testCase.name, hostType)
 			t.Run(testName, func(t *testing.T) {
-				serviceURL := fmt.Sprintf(testCase.serviceURLFormat, hostname)
-				actualMultiaddr, err := PeerMultiAddrFromServiceURL(serviceURL)
+				serviceURL := fmt.Sprintf(testCase.serviceUrlFormat, hostname)
+				actualMultiaddr, err := Libp2pMultiaddrFromServiceUrl(serviceURL)
 				// TODO: assert specific errors?
 				if !assert.NoError(t, err) {
 					t.Fatalf("actualMultiaddr: %s", actualMultiaddr)
