@@ -7,10 +7,11 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 type rpcServer struct {
-	bus modules.Bus
+	base_modules.IntegratableModule
 
 	logger modules.Logger
 }
@@ -65,12 +66,4 @@ func (s *rpcServer) StartRPC(port string, timeout uint64, logger *modules.Logger
 	if err := e.Start(":" + port); err != http.ErrServerClosed {
 		s.logger.Fatal().Err(err).Msg("RPC server failed to start")
 	}
-}
-
-func (s *rpcServer) SetBus(bus modules.Bus) {
-	s.bus = bus
-}
-
-func (s *rpcServer) GetBus() modules.Bus {
-	return s.bus
 }
