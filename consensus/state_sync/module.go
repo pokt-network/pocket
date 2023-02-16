@@ -55,19 +55,20 @@ type stateSync struct {
 	logPrefix string
 }
 
-func CreateStateSync(bus modules.Bus) (modules.Module, error) {
-	var m stateSync
-	return m.Create(bus)
+func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(stateSync).Create(bus, options...)
 }
 
-func (*stateSync) Create(bus modules.Bus) (modules.Module, error) {
+func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &stateSync{
 		logPrefix: DefaultLogPrefix,
 	}
 
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
+	for _, option := range options {
+		option(m)
 	}
+
+	bus.RegisterModule(m)
 
 	// when node is starting, it is in sync mode, as it might need to bootstrap to the latest state
 	m.currentMode = Sync
