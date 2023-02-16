@@ -7,9 +7,6 @@ subjects:
   - kind: ServiceAccount
     name: debug-client-account
     apiGroup: ""
-  - kind: ServiceAccount
-    name: cluster-manager-account
-    apiGroup: ""
 roleRef:
   kind: Role
   name: private-keys-viewer

@@ -58,7 +58,7 @@ go_staticcheck: ## Run `go staticcheck` on all files in the current project
 go_doc:
 	{ \
 	if command -v godoc >/dev/null; then \
-		echo "Visit http://localhost:6060/pocket"; \
+		echo "Visit http://localhost:6060/pkg/github.com/pokt-network/pocket"; \
 		godoc -http=localhost:6060  -goroot=${PWD}/..; \
 	else \
 		echo "Install with 'go install golang.org/x/tools/cmd/godoc@latest'"; \
