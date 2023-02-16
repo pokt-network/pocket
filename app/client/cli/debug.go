@@ -53,12 +53,10 @@ var (
 	rpcHost     string
 )
 
-type ctxKey int
+// NOTE: this is required by the linter, otherwise a simple string constant would have been enough
+type cliContextKey string
 
-const (
-	addrBookProviderCtxKey ctxKey = iota
-	currentHeightProviderCtxKey
-)
+const busCLICtxKey = "bus"
 
 func init() {
 	debugCmd := NewDebugCommand()
@@ -85,9 +83,11 @@ func NewDebugCommand() *cobra.Command {
 				runtime.WithRandomPK(),
 			)
 
+			bus := runtimeMgr.GetBus()
+			modulesRegistry := bus.GetModulesRegistry()
+
 			rpcUrl := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
 
-			modulesRegistry := runtimeMgr.GetBus().GetModulesRegistry()
 			addressBookProvider := rpcABP.NewRPCAddrBookProvider(
 				rpcABP.WithP2PConfig(
 					runtimeMgr.GetConfig().P2P,
@@ -95,15 +95,14 @@ func NewDebugCommand() *cobra.Command {
 				rpcABP.WithCustomRPCUrl(rpcUrl),
 			)
 			modulesRegistry.RegisterModule(addressBookProvider)
-			cmd.SetContext(context.WithValue(cmd.Context(), addrBookProviderCtxKey, addressBookProvider))
 
 			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
 				rpcCHP.WithCustomRPCUrl(rpcUrl),
 			)
 			modulesRegistry.RegisterModule(currentHeightProvider)
-			cmd.SetContext(context.WithValue(cmd.Context(), currentHeightProviderCtxKey, currentHeightProvider))
 
-			p2pM, err := p2p.Create(runtimeMgr.GetBus())
+			setValueInCLIContext(cmd, busCLICtxKey, bus)
+			p2pM, err := p2p.Create(bus)
 			if err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
 			}
@@ -252,8 +251,19 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 
 // fetchAddressBook retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
 func fetchAddressBook(cmd *cobra.Command) (types.AddrBook, error) {
-	addrBookProvider := cmd.Context().Value(addrBookProviderCtxKey)
-	currentHeightProvider := cmd.Context().Value(currentHeightProviderCtxKey)
+	bus, ok := getValueFromCLIContext[modules.Bus](cmd, busCLICtxKey)
+	if !ok || bus == nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the bus from CLI context")
+	}
+	modulesRegistry := bus.GetModulesRegistry()
+	addrBookProvider, err := modulesRegistry.GetModule(addrbook_provider.ModuleName)
+	if err != nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the addrBookProvider")
+	}
+	currentHeightProvider, err := modulesRegistry.GetModule(current_height_provider.ModuleName)
+	if err != nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the currentHeightProvider")
+	}
 
 	height := currentHeightProvider.(current_height_provider.CurrentHeightProvider).CurrentHeight()
 	addrBook, err := addrBookProvider.(addrbook_provider.AddrBookProvider).GetStakedAddrBookAtHeight(height)
