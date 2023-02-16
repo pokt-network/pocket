@@ -8,7 +8,7 @@ func ErrUnknownEventType(msg any) error {
 
 type ErrFactory func(msg string, err error) error
 
-// DISCUSS: first-principles approach to error handling;
+// DISCUSS(#519): first-principles approach to error handling;
 // understand use cases and design requirements.
 func NewErrFactory(preMsg string) ErrFactory {
 	return func(msg string, err error) error {
