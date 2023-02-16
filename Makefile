@@ -463,11 +463,11 @@ localnet_up: ## Starts up a k8s LocalNet with all necessary dependencies (tl;dr 
 
 .PHONY: localnet_client_debug
 localnet_client_debug: ## Opens a `client debug` cli to interact with blockchain (e.g. change pacemaker mode, reset to genesis, etc). Though the node binary updates automatiacally on every code change (i.e. hot reloads), if client is already open you need to re-run this command to execute freshly compiled binary.
-	kubectl exec -it deploy/pocket-v1-cli-client -- client debug
+	kubectl exec -it deploy/pocket-v1-cli-client --container pocket -- client debug
 
 .PHONY: localnet_shell
 localnet_shell: ## Opens a shell in the pod that has the `client` cli available. The binary updates automatically whenever the code changes (i.e. hot reloads).
-	kubectl exec -it deploy/pocket-v1-cli-client -- /bin/bash
+	kubectl exec -it deploy/pocket-v1-cli-client --container pocket -- /bin/bash
 
 .PHONY: localnet_logs_validators
 localnet_logs_validators: ## Outputs logs from all validators
@@ -481,6 +481,11 @@ localnet_logs_validators_follow: ## Outputs logs from all validators and follows
 localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + postgres database)
 	tilt down --file=build/localnet/Tiltfile
 	kubectl delete pvc --ignore-not-found=true data-dependencies-postgresql-0
+
+.PHONY: localnet_db_cli
+localnet_db_cli: ## Open a CLI to the local containerized postgres instancedb_cli:
+	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
+	kubectl exec -it services/dependencies-postgresql -- bash -c "psql postgresql://postgres:LocalNetPassword@localhost"
 
 .PHONY: check_cross_module_imports
 check_cross_module_imports: ## Lists cross-module imports
