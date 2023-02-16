@@ -20,9 +20,10 @@ type InterruptableModule interface {
 	Stop() error
 }
 
+type ModuleOption func(InitializableModule)
 type InitializableModule interface {
 	GetModuleName() string
-	Create(bus Bus) (Module, error)
+	Create(bus Bus, options ...ModuleOption) (Module, error)
 }
 
 type KeyholderModule interface {
