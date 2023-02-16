@@ -3,7 +3,6 @@ package utility
 import (
 	"encoding/hex"
 	"fmt"
-	"log"
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/codec"
@@ -32,9 +31,7 @@ func (u *utilityModule) HandleMessage(message *anypb.Any) error {
 		} else if err := u.CheckTransaction(txGossipMsg.Tx); err != nil {
 			return err
 		}
-
-		log.Println("MEMPOOL: Successfully added a new message to the mempool!")
-
+		u.logger.Info().Str("source", "MEMPOOL").Msg("Successfully added a new message to the mempool!")
 	default:
 		return types.ErrUnknownMessageType(message.MessageName())
 	}
