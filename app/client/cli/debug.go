@@ -76,13 +76,11 @@ func NewDebugCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			runtimeMgr := runtime.NewManagerFromFiles(configPath, genesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
-			p2pConfig := runtimeMgr.GetConfig().P2P
-
 			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
 			validators = runtimeMgr.GetGenesis().Validators
 
 			debugAddressBookProvider := debugABP.NewDebugAddrBookProvider(
-				p2pConfig,
+				runtimeMgr.GetConfig().P2P,
 				debugABP.WithActorsByHeight(
 					map[int64][]*coreTypes.Actor{
 						debugABP.ANY_HEIGHT: validators,
@@ -94,8 +92,7 @@ func NewDebugCommand() *cobra.Command {
 
 			// TODO(#429): refactor injecting the dependencies into the bus so that they can be consumed in an updated `P2PModule.Create()` implementation
 
-			var err error
-			p2pMod, err = getP2PModule(runtimeMgr, debugAddressBookProvider, debugCurrentHeightProvider)
+			p2pMod, err := getP2PModule(runtimeMgr, debugAddressBookProvider, debugCurrentHeightProvider)
 			if err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
 			}
@@ -238,15 +235,10 @@ func getP2PModule(
 	runtimeMgr *runtime.Manager,
 	addrBookProvider addrbook_provider.AddrBookProvider,
 	currentHeightProvider current_height_provider.CurrentHeightProvider,
-) (modules.P2PModule, error) {
-	p2pConfig := runtimeMgr.GetConfig().P2P
+) (mod modules.Module, err error) {
 	bus := runtimeMgr.GetBus()
 
-	var (
-		mod modules.Module
-		err error
-	)
-	if p2pConfig.UseLibP2P {
+	if runtimeMgr.GetConfig().UseLibP2P {
 		mod, err = libp2p.CreateWithProviders(bus, addrBookProvider, currentHeightProvider)
 	} else {
 		mod, err = p2p.CreateWithProviders(bus, addrBookProvider, currentHeightProvider)
@@ -255,5 +247,5 @@ func getP2PModule(
 		return nil, err
 	}
 
-	return mod.(modules.P2PModule), nil
+	return mod, nil
 }
