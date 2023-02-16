@@ -91,7 +91,6 @@ func (mod *libp2pModule) CreateWithProviders(
 	currentHeightProvider providers.CurrentHeightProvider,
 ) (modules.Module, error) {
 	*mod = libp2pModule{
-		logger:                new(modules.Logger),
 		addrBookProvider:      addrBookProvider,
 		currentHeightProvider: currentHeightProvider,
 	}
@@ -100,7 +99,7 @@ func (mod *libp2pModule) CreateWithProviders(
 		return nil, ErrModule("unable to register module", err)
 	}
 
-	mod.logger.Print("Creating libp2p-backed network module")
+	logger.Global.Print("Creating libp2p-backed network module")
 
 	mod.cfg = bus.GetRuntimeMgr().GetConfig().P2P
 
@@ -143,7 +142,8 @@ func (mod *libp2pModule) CreateWithProviders(
 func (mod *libp2pModule) Start() error {
 	// DISCUSS / CONSIDERATION: the linter fails with `hugeParam` when using
 	// a value instead of a pointer. Do we want to change this everywhere?
-	*mod.logger = logger.Global.CreateLoggerForModule("P2P")
+	mod.logger = new(modules.Logger)
+	*mod.logger = logger.Global.CreateLoggerForModule(mod.GetModuleName())
 
 	// IMPROVE: receive context in interface methods?
 	ctx := context.Background()

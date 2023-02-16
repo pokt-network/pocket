@@ -37,13 +37,13 @@ func NewLibp2pNetwork(
 	bus modules.Bus,
 	addrBookProvider providers.AddrBookProvider,
 	currentHeightProvider providers.CurrentHeightProvider,
-	log *modules.Logger,
+	logger *modules.Logger,
 	host_ host.Host,
 	topic *pubsub.Topic,
 ) (types.Network, error) {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		log.Fatal().Err(err).Msg("getting staked address book")
+		logger.Fatal().Err(err).Msg("getting staked address book")
 	}
 
 	addrBookMap := make(types.AddrBookMap)
@@ -71,7 +71,7 @@ func NewLibp2pNetwork(
 	}
 
 	return &libp2pNetwork{
-		logger: log,
+		logger: logger,
 		// TODO: is it unconventional to set bus here?
 		bus:         bus,
 		host:        host_,
