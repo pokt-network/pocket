@@ -135,19 +135,13 @@ func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr crypto.Address) e
 		), err)
 	}
 	defer func() {
+		// NB: close the stream so that peer receives EOF.
 		if err := stream.Close(); err != nil {
-			p2pNet.logger.Error().Err(err)
+			p2pNet.logger.Error().Err(err).Msg(fmt.Sprintf(
+				"closing peer stream, pokt address: %s", poktAddr,
+			))
 		}
 	}()
-
-	// TECHDEBT: check if there's a more conventional way to send
-	// messages directly than to close and re-open per direct message.
-	// NB: close the stream so that peer receives EOF.
-	if err := stream.Close(); err != nil {
-		return ErrNetwork(fmt.Sprintf(
-			"closing peer stream, pokt address: %s", poktAddr,
-		), err)
-	}
 	return nil
 }
 
