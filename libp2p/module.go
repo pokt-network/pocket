@@ -90,10 +90,20 @@ func (mod *libp2pModule) CreateWithProviders(
 	addrBookProvider addrbook_provider.AddrBookProvider,
 	currentHeightProvider providers.CurrentHeightProvider,
 ) (modules.Module, error) {
+	p2pConfig := bus.GetRuntimeMgr().GetConfig().P2P
+
+	// TECHDEBT: investigate any unnecessary
+	// key exposure / duplication in memory
+	privateKey, err := crypto.NewLibP2PPrivateKey(p2pConfig.PrivateKey)
+	if err != nil {
+		return nil, ErrModule("loading private key", err)
+	}
+
 	*mod = libp2pModule{
 		addrBookProvider:      addrBookProvider,
 		currentHeightProvider: currentHeightProvider,
-		cfg:                   bus.GetRuntimeMgr().GetConfig().P2P,
+		cfg:                   p2pConfig,
+		identity:              libp2p.Identity(privateKey),
 	}
 
 	if err := bus.RegisterModule(mod); err != nil {
@@ -106,15 +116,6 @@ func (mod *libp2pModule) CreateWithProviders(
 	if mod.cfg.UseRainTree {
 		return nil, ErrModule("raintree is not yet compatible with libp2p", nil)
 	}
-
-	// TECHDEBT: investigate any unnecessary
-	// key exposure / duplication in memory
-	privateKey, err := crypto.NewLibP2PPrivateKey(mod.cfg.PrivateKey)
-	if err != nil {
-		return nil, ErrModule("loading private key", err)
-	}
-
-	mod.identity = libp2p.Identity(privateKey)
 
 	switch mod.cfg.ConnectionType {
 	case types.ConnectionType_TCPConnection:
