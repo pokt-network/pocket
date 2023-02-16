@@ -5,7 +5,9 @@ import (
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	persABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
+	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	"github.com/pokt-network/pocket/p2p/transport"
