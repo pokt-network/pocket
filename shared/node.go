@@ -32,9 +32,9 @@ func CreateNode(bus modules.Bus) (modules.Module, error) {
 }
 
 func (m *Node) Create(bus modules.Bus) (modules.Module, error) {
-	p2pConfig := bus.GetRuntimeMgr().GetConfig().P2P
+	useLibP2P := bus.GetRuntimeMgr().GetConfig().UseLibP2P
 	p2pCreate := p2p.Create
-	if p2pConfig.UseLibP2P {
+	if useLibP2P {
 		p2pCreate = libp2p.Create
 	}
 

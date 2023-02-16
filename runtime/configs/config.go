@@ -6,6 +6,7 @@ type Config struct {
 	RootDirectory   string `json:"root_directory"`
 	PrivateKey      string `json:"private_key"` // INVESTIGATE(#150): better architecture for key management (keybase, keyfiles, etc.)
 	ClientDebugMode bool   `json:"client_debug_mode"`
+	UseLibP2P       bool   `json:"use_lib_p2p"`
 
 	Consensus   *ConsensusConfig   `json:"consensus"`
 	Utility     *UtilityConfig     `json:"utility"`
@@ -19,6 +20,7 @@ type Config struct {
 func NewDefaultConfig(options ...func(*Config)) *Config {
 	cfg := &Config{
 		RootDirectory: "/go/src/github.com/pocket-network",
+		UseLibP2P:     defaults.DefaultUseLibp2p,
 		Consensus: &ConsensusConfig{
 			MaxMempoolBytes: defaults.DefaultConsensusMaxMempoolBytes,
 			PacemakerConfig: &PacemakerConfig{
@@ -38,7 +40,6 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 		P2P: &P2PConfig{
 			ConsensusPort:   defaults.DefaultP2PConsensusPort,
 			UseRainTree:     defaults.DefaultP2PUseRainTree,
-			UseLibP2P:       defaults.DefaultP2PUseLibP2P,
 			ConnectionType:  defaults.DefaultP2PConnectionType,
 			MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
 		},
