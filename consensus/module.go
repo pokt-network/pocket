@@ -92,6 +92,7 @@ type ConsensusDebugModule interface {
 
 func (m *consensusModule) SetHeight(height uint64) {
 	m.height = height
+	m.publishNewHeightEvent(height)
 }
 
 func (m *consensusModule) SetRound(round uint64) {
