@@ -85,8 +85,11 @@ func (keybase *badgerKeybase) Create(passphrase, hint string) (crypto.KeyPair, e
 
 		return tx.Set(addrKey, keypairBz)
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return keyPair, err
+	return keyPair, nil
 }
 
 // Create a new KeyPair from the private key hex string and store the serialised KeyPair encoding in the DB
@@ -110,8 +113,11 @@ func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint stri
 
 		return tx.Set(addrKey, keypairBz)
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return keyPair, err
+	return keyPair, nil
 }
 
 // Create a new KeyPair from the private key JSON string and store the serialised KeyPair encoding in the DB
@@ -135,8 +141,11 @@ func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) (crypto
 
 		return tx.Set(addrKey, keypairBz)
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return keyPair, err
+	return keyPair, nil
 }
 
 // Returns a KeyPair struct provided the address was found in the DB
