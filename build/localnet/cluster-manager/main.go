@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/pokt-network/pocket/logger"
+	pocketLogger "github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -23,7 +23,7 @@ const cliPath = "/usr/local/bin/client"
 
 var (
 	rpcUrl string
-	log    = logger.Global.CreateLoggerForModule("cluster-manager")
+	logger = pocketLogger.Global.CreateLoggerForModule("cluster-manager")
 )
 
 func init() {
@@ -65,21 +65,21 @@ func main() {
 
 		switch event.Type {
 		case watch.Added:
-			log.Info().Str("validator", service.Name).Msg("Validator added to the cluster")
+			logger.Info().Str("validator", service.Name).Msg("Validator added to the cluster")
 			if err := stakeValidator(privateKey, "150000000001", []string{"0001"}, fmt.Sprintf("v1-validator%s:8080", validatorId)); err != nil {
-				log.Err(err).Msg("Error staking validator")
+				logger.Err(err).Msg("Error staking validator")
 			}
 		case watch.Deleted:
-			log.Info().Str("validator", service.Name).Msg("Validator deleted from the cluster")
+			logger.Info().Str("validator", service.Name).Msg("Validator deleted from the cluster")
 			if err := unstakeValidator(privateKey); err != nil {
-				log.Err(err).Msg("Error unstaking validator")
+				logger.Err(err).Msg("Error unstaking validator")
 			}
 		}
 	}
 }
 
 func stakeValidator(pk crypto.PrivateKey, amount string, chains []string, serviceURL string) error {
-	log.Info().Str("address", pk.Address().String()).Msg("Staking Validator")
+	logger.Info().Str("address", pk.Address().String()).Msg("Staking Validator")
 	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0o600); err != nil {
 		return err
 	}
@@ -94,11 +94,11 @@ func stakeValidator(pk crypto.PrivateKey, amount string, chains []string, servic
 		strings.Join(chains, ","),
 		serviceURL,
 	}
-	log.Debug().Str("command", cliPath+" "+strings.Join(args, " ")).Msg("Invoking CLI")
+	logger.Debug().Str("command", cliPath+" "+strings.Join(args, " ")).Msg("Invoking CLI")
 
 	//nolint:gosec // G204 Dogfooding CLI
 	out, err := exec.Command(cliPath, args...).CombinedOutput()
-	log.Info().Str("output", string(out)).Msg("CLI command")
+	logger.Info().Str("output", string(out)).Msg("CLI command")
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func stakeValidator(pk crypto.PrivateKey, amount string, chains []string, servic
 }
 
 func unstakeValidator(pk crypto.PrivateKey) error {
-	log.Info().Str("address", pk.Address().String()).Msg("Unstaking Validator")
+	logger.Info().Str("address", pk.Address().String()).Msg("Unstaking Validator")
 	if err := os.WriteFile("./pk.json", []byte("\""+pk.String()+"\""), 0o600); err != nil {
 		return err
 	}
@@ -118,11 +118,11 @@ func unstakeValidator(pk crypto.PrivateKey) error {
 		"Unstake",
 		pk.Address().String(),
 	}
-	log.Debug().Str("command", cliPath+" "+strings.Join(args, " ")).Msg("Invoking CLI")
+	logger.Debug().Str("command", cliPath+" "+strings.Join(args, " ")).Msg("Invoking CLI")
 
 	//nolint:gosec // G204 Dogfooding CLI
 	out, err := exec.Command(cliPath, args...).CombinedOutput()
-	log.Info().Str("output", string(out)).Msg("CLI command")
+	logger.Info().Str("output", string(out)).Msg("CLI command")
 	if err != nil {
 		return err
 	}

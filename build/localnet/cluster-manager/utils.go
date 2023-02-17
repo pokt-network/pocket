@@ -25,7 +25,7 @@ func getPrivateKey(validatorKeysMap map[string]string, validatorId string) crypt
 
 	privateKey, err := keyPair.Unarmour("")
 	if err != nil {
-		log.Err(err).Msg("Error unarmouring private key")
+		logger.Err(err).Msg("Error unarmouring private key")
 	}
 	return privateKey
 }
