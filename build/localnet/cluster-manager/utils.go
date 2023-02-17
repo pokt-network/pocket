@@ -9,6 +9,9 @@ func isValidator(service *v1.Service) bool {
 	return service.Labels["v1-purpose"] == "validator"
 }
 
+// extractValidatorId extracts the validator id from the validator name (e.g. v1-validator001 -> 001)
+//
+// it follows the pattern defined in the v1-validator template (/build/localnet/templates/v1-validator-template.yaml.tpl)
 func extractValidatorId(validatorName string) string {
 	if len(validatorName) >= 3 {
 		return validatorName[len(validatorName)-3:]
