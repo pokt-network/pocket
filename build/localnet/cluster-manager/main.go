@@ -66,6 +66,7 @@ func main() {
 		switch event.Type {
 		case watch.Added:
 			logger.Info().Str("validator", service.Name).Msg("Validator added to the cluster")
+			// TODO: consolidate args into constants
 			if err := stakeValidator(privateKey, "150000000001", []string{"0001"}, fmt.Sprintf("v1-validator%s:8080", validatorId)); err != nil {
 				logger.Err(err).Msg("Error staking validator")
 			}
