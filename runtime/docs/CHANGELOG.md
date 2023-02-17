@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.19] - 2023-02-16
+## [0.0.0.19] - 2023-02-17
 
 - Introduced `modules.ModulesRegistry` for better separation of concerns
 - Added `StateMachineModule` accessors
