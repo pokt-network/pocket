@@ -12,7 +12,7 @@ func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessag
 		return err
 	}
 
-	fields := map[string]interface{}{
+	fields := map[string]any{
 		"height":     height,
 		"peerId":     peerId,
 		"proto_type": getMessageType(stateSyncMsg),
