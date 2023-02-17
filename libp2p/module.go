@@ -152,7 +152,6 @@ func (mod *libp2pModule) Start() error {
 	var err error
 	opts := []libp2p.Option{
 		mod.identity,
-		mod.listenAddrs,
 		// TECHDEBT / INCOMPLETE: add transport security!
 	}
 
@@ -164,6 +163,8 @@ func (mod *libp2pModule) Start() error {
 			libp2p.DisableRelay(),
 			libp2p.Ping(false),
 		)
+	} else {
+		opts = append(opts, mod.listenAddrs)
 	}
 
 	mod.host, err = libp2p.New(opts...)
