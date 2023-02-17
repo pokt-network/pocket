@@ -42,7 +42,7 @@ type rpcAddrBookProvider struct {
 
 func NewRPCAddrBookProvider(options ...modules.ModuleOption) *rpcAddrBookProvider {
 	dabp := &rpcAddrBookProvider{
-		rpcUrl:      fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort),
+		rpcUrl:      fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
 		connFactory: transport.CreateDialer, // default connection factory, overridable with WithConnectionFactory()
 	}
 
