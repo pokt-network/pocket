@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated RPC to expose the node's address book via GET `/v1/p2p/staked_actors_address_book`
 
-## [0.0.0.11] - 2023-02-16
+## [0.0.0.11] - 2023-02-17
 
 - Updated modules to embed `base_modules.IntegratableModule` and `base_modules.InterruptableModule` for DRYness
 

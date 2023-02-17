@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `UnmarshalText` to `Ed25519PrivateKey`
 - Fan-ing out `ConsensusNewHeightEventType` events
 
-## [0.0.0.27] - 2023-02-16
+## [0.0.0.27] - 2023-02-17
 
 - Added events `ConsensusNewHeightEvent` and `StateMachineTransitionEvent`
 - Introduced `BaseInterruptableModule` and `IntegratableModule` to reduce repetition and boilerpate code (DRYness)

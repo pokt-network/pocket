@@ -43,6 +43,8 @@ TODO(#235): Update once runtime configs are implemented
 
 #### Create the module
 
+TODO(#509): Add more detail and examples to this documentation.
+
 Module creation uses a typical constructor pattern signature `Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error)`
 
 Where `options ...modules.ModuleOption` is an optional variadic argument that allows for the passing of options to the module.
