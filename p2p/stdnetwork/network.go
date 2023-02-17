@@ -84,7 +84,7 @@ func (n *network) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
 	return nil
 }
 
-func (n *network) RemovePeerToAddrBook(peer *typesP2P.NetworkPeer) error {
+func (n *network) RemovePeerFromAddrBook(peer *typesP2P.NetworkPeer) error {
 	delete(n.addrBookMap, peer.Address.String())
 	return nil
 }

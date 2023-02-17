@@ -46,7 +46,7 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	require.Equal(t, peer, stateView.addrBookMap[peerAddr.String()], "addrBookMap does not contain peer")
 }
 
-func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
+func TestRainTreeNetwork_RemovePeerFromAddrBook(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	// starting with an address book having only self and an arbitrary number of peers `numAddressesInAddressBook``
@@ -67,7 +67,7 @@ func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 
 	// removing a peer
 	peer := addrBook[1]
-	err = network.RemovePeerToAddrBook(peer)
+	err = network.RemovePeerFromAddrBook(peer)
 	require.NoError(t, err)
 
 	stateView = network.peersManager.getNetworkView()
