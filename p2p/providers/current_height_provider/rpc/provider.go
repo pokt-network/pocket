@@ -46,10 +46,10 @@ func (*rpcCurrentHeightProvider) GetModuleName() string {
 	return current_height_provider.ModuleName
 }
 
-func (dchp *rpcCurrentHeightProvider) CurrentHeight() uint64 {
+func (rchp *rpcCurrentHeightProvider) CurrentHeight() uint64 {
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 
-	response, err := dchp.rpcClient.GetV1ConsensusStateWithResponse(ctx)
+	response, err := rchp.rpcClient.GetV1ConsensusStateWithResponse(ctx)
 	if err != nil {
 		cancel()
 		log.Fatalf("could not get consensus state from RPC: %v", err)
@@ -64,25 +64,25 @@ func (dchp *rpcCurrentHeightProvider) CurrentHeight() uint64 {
 }
 
 func NewRPCCurrentHeightProvider(options ...modules.ModuleOption) *rpcCurrentHeightProvider {
-	dabp := &rpcCurrentHeightProvider{
+	rchp := &rpcCurrentHeightProvider{
 		rpcUrl: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort),
 	}
 
 	for _, o := range options {
-		o(dabp)
+		o(rchp)
 	}
 
-	initRPCClient(dabp)
+	rchp.initRPCClient()
 
-	return dabp
+	return rchp
 }
 
-func initRPCClient(dabp *rpcCurrentHeightProvider) {
-	rpcClient, err := rpc.NewClientWithResponses(dabp.rpcUrl)
+func (rchp *rpcCurrentHeightProvider) initRPCClient() {
+	rpcClient, err := rpc.NewClientWithResponses(rchp.rpcUrl)
 	if err != nil {
 		log.Fatalf("could not create RPC client: %v", err)
 	}
-	dabp.rpcClient = rpcClient
+	rchp.rpcClient = rpcClient
 }
 
 // options

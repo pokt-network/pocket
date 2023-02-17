@@ -41,18 +41,18 @@ type rpcAddrBookProvider struct {
 }
 
 func NewRPCAddrBookProvider(options ...modules.ModuleOption) *rpcAddrBookProvider {
-	dabp := &rpcAddrBookProvider{
-		rpcUrl:      fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort),
-		connFactory: transport.CreateDialer, // default connection factory, overridable with WithConnectionFactory()
+	rabp := &rpcAddrBookProvider{
+		rpcUrl:      fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
+		connFactory: transport.CreateDialer,                                        // default connection factory, overridable with WithConnectionFactory()
 	}
 
 	for _, o := range options {
-		o(dabp)
+		o(rabp)
 	}
 
-	initRPCClient(dabp)
+	rabp.initRPCClient()
 
-	return dabp
+	return rabp
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -67,7 +67,7 @@ func (*rpcAddrBookProvider) GetModuleName() string {
 	return addrbook_provider.ModuleName
 }
 
-func (dabp *rpcAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (typesP2P.AddrBook, error) {
+func (rabp *rpcAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (typesP2P.AddrBook, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
 
@@ -75,7 +75,7 @@ func (dabp *rpcAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (types
 		h         int64              = int64(height)
 		actorType rpc.ActorTypesEnum = "validator"
 	)
-	response, err := dabp.rpcClient.GetV1P2pStakedActorsAddressBookWithResponse(ctx, &rpc.GetV1P2pStakedActorsAddressBookParams{Height: &h, ActorType: &actorType})
+	response, err := rabp.rpcClient.GetV1P2pStakedActorsAddressBookWithResponse(ctx, &rpc.GetV1P2pStakedActorsAddressBookParams{Height: &h, ActorType: &actorType})
 	if err != nil {
 		return nil, err
 	}
@@ -95,30 +95,30 @@ func (dabp *rpcAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (types
 		})
 	}
 
-	return addrbook_provider.ActorsToAddrBook(dabp, coreActors)
+	return addrbook_provider.ActorsToAddrBook(rabp, coreActors)
 }
 
-func (dabp *rpcAddrBookProvider) GetConnFactory() typesP2P.ConnectionFactory {
-	return dabp.connFactory
+func (rabp *rpcAddrBookProvider) GetConnFactory() typesP2P.ConnectionFactory {
+	return rabp.connFactory
 }
 
-func (dabp *rpcAddrBookProvider) GetP2PConfig() *configs.P2PConfig {
-	if dabp.p2pCfg == nil {
-		return dabp.GetBus().GetRuntimeMgr().GetConfig().P2P
+func (rabp *rpcAddrBookProvider) GetP2PConfig() *configs.P2PConfig {
+	if rabp.p2pCfg == nil {
+		return rabp.GetBus().GetRuntimeMgr().GetConfig().P2P
 	}
-	return dabp.p2pCfg
+	return rabp.p2pCfg
 }
 
-func (dabp *rpcAddrBookProvider) SetConnectionFactory(connFactory typesP2P.ConnectionFactory) {
-	dabp.connFactory = connFactory
+func (rabp *rpcAddrBookProvider) SetConnectionFactory(connFactory typesP2P.ConnectionFactory) {
+	rabp.connFactory = connFactory
 }
 
-func initRPCClient(dabp *rpcAddrBookProvider) {
-	rpcClient, err := rpc.NewClientWithResponses(dabp.rpcUrl)
+func (rabp *rpcAddrBookProvider) initRPCClient() {
+	rpcClient, err := rpc.NewClientWithResponses(rabp.rpcUrl)
 	if err != nil {
 		log.Fatalf("could not create RPC client: %v", err)
 	}
-	dabp.rpcClient = rpcClient
+	rabp.rpcClient = rpcClient
 }
 
 // options
