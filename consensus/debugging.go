@@ -153,10 +153,11 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 
 	for _, val := range validators {
 		if m.GetNodeAddress() != val.GetAddress() {
-			valAddress := cryptoPocket.AddressFromString(val.GetAddress())
-			if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, valAddress, requestHeight); err != nil {
-				m.logger.Error().Err(err).Str("proto_type", "GetMetaDataRequest").Msg("failed to send StateSyncMessage")
-			}
+			continue
+		}
+		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
+		if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, valAddress, requestHeight); err != nil {
+			m.logger.Error().Err(err).Str("proto_type", "GetMetaDataRequest").Msg("failed to send StateSyncMessage")
 		}
 	}
 
