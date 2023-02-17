@@ -100,10 +100,9 @@ func CreateTestConsensusPocketNode(
 ) *shared.Node {
 	// persistence is a dependency of consensus, so we need to create it first
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
-	err := (bus).RegisterModule(persistenceMock)
-	require.NoError(t, err)
+	bus.RegisterModule(persistenceMock)
 
-	_, err = consensus.Create(bus)
+	_, err := consensus.Create(bus)
 	require.NoError(t, err)
 
 	runtimeMgr := (bus).GetRuntimeMgr()
@@ -114,16 +113,17 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
+	stateMachineMock := baseStateMachineMock(t, eventsChannel)
 
 	for _, module := range []modules.Module{
+		stateMachineMock,
 		p2pMock,
 		utilityMock,
 		telemetryMock,
 		loggerMock,
 		rpcMock,
 	} {
-		err = (bus).RegisterModule(module)
-		require.NoError(t, err)
+		bus.RegisterModule(module)
 	}
 
 	require.NoError(t, err)
@@ -423,6 +423,7 @@ func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *mockModules
 		}).
 		AnyTimes()
 	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()
+	p2pMock.EXPECT().HandleEvent(gomock.Any()).Return(nil).AnyTimes()
 
 	return p2pMock
 }
@@ -494,6 +495,16 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 	return rpcMock
 }
 
+func baseStateMachineMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockStateMachineModule {
+	ctrl := gomock.NewController(t)
+	stateMachineMock := mockModules.NewMockStateMachineModule(ctrl)
+	stateMachineMock.EXPECT().Start().Return(nil).AnyTimes()
+	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
+
+	return stateMachineMock
+}
+
 func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAgent {
 	ctrl := gomock.NewController(t)
 	timeSeriesAgentMock := mockModules.NewMockTimeSeriesAgent(ctrl)
@@ -521,6 +532,14 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 
 func logTime(t *testing.T, clck *clock.Mock) {
 	t.Helper()
+	defer func() {
+		// this is to recover from a panic that could happen if the goroutine tries to log after the test has finished
+		// cause of the panic: https://github.com/golang/go/blob/135c470b2277e1c9514ba8a5478408fea0dee8a2/src/testing/testing.go#L1003
+		//
+		// spotted for the first time in our CI: https://github.com/pokt-network/pocket/actions/runs/4198025819/jobs/7281103860#step:8:1118
+		//nolint:errcheck // ignoring completely
+		recover()
+	}()
 	t.Logf("[⌚ CLOCK ⌚] the time is: %v ms from UNIX Epoch [%v]", clck.Now().UTC().UnixMilli(), clck.Now().UTC())
 }
 

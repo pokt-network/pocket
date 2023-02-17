@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.15] - 2023-02-16
+## [0.0.0.15] - 2023-02-17
 
 - Added manifests to handle `Roles`, `RoleBindings` and `ServiceAccounts` and referenced them in the `Tiltfile`
 - Updated `cli-client.yaml` to bind the `debug-client-account` `ServiceAccount` that has permissions to read the private keys from the `Secret`
