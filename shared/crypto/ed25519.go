@@ -119,6 +119,11 @@ func (priv *Ed25519PrivateKey) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	return priv.UnmarshalText([]byte(privateKey))
+}
+
+func (priv *Ed25519PrivateKey) UnmarshalText(data []byte) error {
+	privateKey := string(data)
 	keyBytes, err := hex.DecodeString(privateKey)
 	if err != nil {
 		return err

@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.14] - 2023-02-17
+## [0.0.0.15] - 2023-02-17
+
+- Updated CLI to use to source the address book and the current height from the RPC server leveraging the `rpcAddressBookProvider` and `rpcCurrentHeightProvider` respectively and the `bus` for dependency injection
+
+## [0.0.0.14] - 2023-02-15
 
 - Introduced logical switch to handle parsing of the debug private keys from a local file OR from Kubernetes secret (PR #517)
 - Bugfix for `Stake` command. Address erroneously sent instead of the PublicKey. (PR #518)
