@@ -5,8 +5,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"math/big"
 	"os"
 	"strings"
@@ -236,13 +238,17 @@ func boldText[T string | []byte](s T) string {
 
 func writeOutput(msg, outputFilePath string) error {
 	if outputFile == "" {
-		fmt.Printf(msg)
+		fmt.Println(msg)
 		return nil
 	}
-	file, err := os.OpenFile(outputFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	defer file.Close()
-	_, err = file.WriteString(msg)
+	file, err := os.OpenFile(outputFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
+		return err
+	}
+	if _, err := file.WriteString(msg); err != nil {
+		return err
+	}
+	if err := file.Close(); err != nil {
 		return err
 	}
 	return nil
@@ -251,16 +257,14 @@ func writeOutput(msg, outputFilePath string) error {
 func readInput(inputFilePath string) (string, error) {
 	exists, err := fileExists(inputFilePath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error checking input file: %v\n", err)
-		os.Exit(1)
+		return "", fmt.Errorf("Error checking input file: %v\n", err)
 	}
 	if !exists {
-		fmt.Fprintf(os.Stderr, "Input file not found: %v\n", inputFilePath)
-		os.Exit(1)
+		return "", fmt.Errorf("Input file not found: %v\n", inputFilePath)
 	}
 	rawBz, err := os.ReadFile(inputFilePath)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	return string(rawBz), nil
 }
@@ -270,7 +274,7 @@ func fileExists(path string) (bool, error) {
 	if err == nil {
 		return true, nil
 	}
-	if os.IsNotExist(err) {
+	if errors.Is(err, fs.ErrNotExist) {
 		return false, nil
 	}
 	return false, err

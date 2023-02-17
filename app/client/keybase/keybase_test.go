@@ -393,12 +393,6 @@ func createTestKeys(t *testing.T, n int) []crypto.PrivateKey {
 	return pks
 }
 
-func createTestKeyFromString(t *testing.T, str string) crypto.PrivateKey {
-	privKey, err := crypto.NewPrivateKey(str)
-	require.NoError(t, err)
-	return privKey
-}
-
 func stopDB(t *testing.T, db Keybase) {
 	err := db.Stop()
 	require.NoError(t, err)
