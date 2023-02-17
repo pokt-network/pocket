@@ -122,11 +122,12 @@ func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage
 	}
 
 	for _, val := range validators {
-		if m.GetNodeAddress() != val.GetAddress() {
-			valAddress := cryptoPocket.AddressFromString(val.GetAddress())
-			if err := m.stateSync.SendStateSyncMessage(stateSyncGetBlockMessage, valAddress, requestHeight); err != nil {
-				m.logger.Error().Err(err).Str("proto_type", "GetBlockRequest").Msg("failed to send StateSyncMessage")
-			}
+		if m.GetNodeAddress() == val.GetAddress() {
+			continue
+		}
+		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
+		if err := m.stateSync.SendStateSyncMessage(stateSyncGetBlockMessage, valAddress, requestHeight); err != nil {
+			m.logger.Error().Err(err).Str("proto_type", "GetBlockRequest").Msg("failed to send StateSyncMessage")
 		}
 	}
 }
