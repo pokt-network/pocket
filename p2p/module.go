@@ -1,17 +1,29 @@
 package p2p
 
 import (
+	"context"
+	"encoding/csv"
+	"fmt"
 	"log"
+	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	persABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
+	rpcABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/rpc"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
+	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/rpc"
+	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -35,6 +47,8 @@ type p2pModule struct {
 
 	addrBookProvider      providers.AddrBookProvider
 	currentHeightProvider providers.CurrentHeightProvider
+
+	bootstrapNodes []string
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -54,6 +68,10 @@ func (*p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 	p2pCfg := cfg.P2P
+
+	if err := configureBootstrapNodes(p2pCfg, m); err != nil {
+		return nil, err
+	}
 
 	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
 	if err != nil {
@@ -198,4 +216,100 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	}
 
 	m.GetBus().PublishEventToBus(&event)
+}
+
+func configureBootstrapNodes(p2pCfg *configs.P2PConfig, m *p2pModule) error {
+	var csvReader *csv.Reader
+	customBootstrapNodesCsv := strings.Trim(p2pCfg.BootstrapNodesCsv, " ")
+	if customBootstrapNodesCsv == "" {
+		csvReader = csv.NewReader(strings.NewReader(defaults.DefaultP2PBootstrapNodesCsv))
+	} else {
+		csvReader = csv.NewReader(strings.NewReader(customBootstrapNodesCsv))
+	}
+	bootStrapNodes, err := csvReader.Read()
+	if err != nil {
+		return fmt.Errorf("error parsing bootstrap nodes: %w", err)
+	}
+	for _, node := range bootStrapNodes {
+		if !isValidHostnamePort(node) {
+			return fmt.Errorf("invalid bootstrap node: %s", node)
+		}
+	}
+	m.bootstrapNodes = bootStrapNodes
+	return nil
+}
+
+func isValidHostnamePort(str string) bool {
+	pattern := regexp.MustCompile(`^(https?)://([a-zA-Z0-9.-]+):(\d{1,5})$`)
+	matches := pattern.FindStringSubmatch(str)
+	if len(matches) != 4 {
+		return false
+	}
+	protocol := matches[1]
+	if protocol != "http" && protocol != "https" {
+		return false
+	}
+	port, err := strconv.Atoi(matches[3])
+	if err != nil || port < 0 || port > 65535 {
+		return false
+	}
+	return true
+}
+
+func isSelfInAddrBook(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) bool {
+	for _, peer := range addrBook {
+		if peer.Address.Equals(selfAddr) {
+			return true
+		}
+	}
+	return false
+}
+
+func bootstrap(m *p2pModule) error {
+	var (
+		addrBook typesP2P.AddrBook
+	)
+
+	for _, bootstrapNode := range m.bootstrapNodes {
+		m.logger.Info().Str("endpoint", bootstrapNode).Msg("Attempting to bootstrap from bootstrap node") // TODO: deblasis - fix this. For some reason it's not logging
+		log.Println("Attempting to bootstrap from bootstrap node: " + bootstrapNode)
+
+		client, err := rpc.NewClientWithResponses(bootstrapNode)
+		if err != nil {
+			continue
+		}
+		healthCheck, err := client.GetV1Health(context.TODO())
+		if err != nil || healthCheck == nil || healthCheck.StatusCode != http.StatusOK {
+			log.Println("Error getting a green health check from bootstrap node: " + bootstrapNode)
+			continue
+		}
+
+		addressBookProvider := rpcABP.NewRPCAddrBookProvider(
+			rpcABP.WithP2PConfig(
+				m.GetBus().GetRuntimeMgr().GetConfig().P2P,
+			),
+			rpcABP.WithCustomRPCUrl(bootstrapNode),
+		)
+
+		currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(rpcCHP.WithCustomRPCUrl(bootstrapNode))
+
+		addrBook, err = addressBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
+		if err != nil {
+			m.logger.Warn().Err(err).Str("endpoint", bootstrapNode).Msg("Error getting address book from bootstrap node") // TODO: deblasis - fix this. For some reason it's not logging
+			log.Println("Error getting address book from bootstrap node: " + bootstrapNode)
+			continue
+		}
+	}
+
+	if len(addrBook) == 0 {
+		return fmt.Errorf("bootstrap failed")
+	}
+
+	for _, peer := range addrBook {
+		log.Println("Adding peer to addrBook: " + peer.Address.String())
+		if err := m.network.AddPeerToAddrBook(peer); err != nil {
+			return err
+		}
+	}
+	return nil
 }
