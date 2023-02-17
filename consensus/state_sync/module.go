@@ -128,7 +128,7 @@ func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse)
 		"receiver":      clientPeerId,
 	}
 
-	m.logger.Info().Fields(fields).Msgf("Received get block response: %s", blockRes)
+	m.logger.Info().Fields(fields).Msgf("Received StateSync GetBlockResponse: %s", blockRes)
 
 	return nil
 }
