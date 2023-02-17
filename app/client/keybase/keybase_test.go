@@ -91,9 +91,9 @@ func TestKeybase_ImportKeyFromStringNoPassphrase(t *testing.T) {
 	require.Equal(t, getKey.GetAddressString(), testJSONAddr)
 	require.Equal(t, getKey.GetPublicKey().String(), testJSONPubString)
 
-	privKey, err := kp.Unarmour("")
+	privKey, err := kp.Unarmour(testPassphrase)
 	require.NoError(t, err)
-	require.Equal(t, privKey.String(), testPrivString)
+	require.Equal(t, privKey.String(), testJSONPrivString)
 }
 
 // TODO: Improve this test/create functions to check string validity
