@@ -304,6 +304,11 @@ generate_cli_commands_docs: ## (Re)generates the CLI commands docs (this is mean
 	cd app/client/cli/docgen && go run .
 	echo "CLI commands docs generated in ${cli_docs_dir}"
 
+.PHONY: generate_node_state_machine_diagram
+generate_node_state_machine_diagram: ## (Re)generates the Node State Machine diagram
+	go run ./state_machine/visualizer/main.go
+	echo "Node State Machine diagram generated in state_machine/docs/state-machine.diagram.md"
+
 .PHONY: test_all
 test_all: ## Run all go unit tests
 	go test -p 1 -count=1 ./...

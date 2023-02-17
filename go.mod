@@ -25,6 +25,7 @@ require (
 	github.com/jackc/pgconn v1.13.0
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
 	github.com/labstack/echo/v4 v4.9.1
+	github.com/looplab/fsm v1.0.1
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/quasilyte/go-ruleguard/dsl v0.3.21

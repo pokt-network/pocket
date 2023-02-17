@@ -21,6 +21,9 @@ type P2PModule interface {
 	// A direct asynchronous
 	Send(addr cryptoPocket.Address, msg *anypb.Any) error
 
+	// HandleEvent is used to react to events that occur inside the application
+	HandleEvent(*anypb.Any) error
+
 	// CONSIDERATION: The P2P module currently does implement a synchronous "request-response" pattern
 	//                for core business logic between nodes. Rather, all communication is done
 	//                asynchronously via a "fire-and-forget" pattern using `Send` and `Broadcast`.

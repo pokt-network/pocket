@@ -2,8 +2,8 @@ package leader_election
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 type LeaderElectionModule interface {
@@ -14,43 +14,27 @@ type LeaderElectionModule interface {
 var _ LeaderElectionModule = &leaderElectionModule{}
 
 type leaderElectionModule struct {
-	bus modules.Bus
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
 }
 
 func Create(bus modules.Bus) (modules.Module, error) {
 	return new(leaderElectionModule).Create(bus)
 }
 
-func (*leaderElectionModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*leaderElectionModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &leaderElectionModule{}
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
+
+	for _, option := range options {
+		option(m)
 	}
+
+	bus.RegisterModule(m)
 	return m, nil
-}
-
-func (m *leaderElectionModule) Start() error {
-	// TODO(olshansky): Use persistence to create leader election module.
-	return nil
-}
-
-func (m *leaderElectionModule) Stop() error {
-	return nil
 }
 
 func (m *leaderElectionModule) GetModuleName() string {
 	return modules.LeaderElectionModuleName
-}
-
-func (m *leaderElectionModule) SetBus(pocketBus modules.Bus) {
-	m.bus = pocketBus
-}
-
-func (m *leaderElectionModule) GetBus() modules.Bus {
-	if m.bus == nil {
-		logger.Global.Fatal().Msg("PocketBus is not initialized")
-	}
-	return m.bus
 }
 
 func (m *leaderElectionModule) ElectNextLeader(message *typesCons.HotstuffMessage) (typesCons.NodeId, error) {
