@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.21] - 2023-02-17
+
+- Added validator accounts from the genesis file to the `manager_test.go`
+
 ## [0.0.0.20] - 2023-02-17
 
 - Nits: variables visibility, comments
