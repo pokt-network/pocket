@@ -121,11 +121,12 @@ func (mod *libp2pModule) CreateWithProviders(
 	case types.ConnectionType_TCPConnection:
 		addr, err := mod.getMultiaddr()
 		if err != nil {
-			return nil, ErrModule("parsing multiaddr fom config", err)
+			return nil, ErrModule("parsing multiaddr from config", err)
 		}
 		mod.listenAddrs = libp2p.ListenAddrs(addr)
+		logger.Global.Printf("listenAddrs: %s", addr)
 	case types.ConnectionType_EmptyConnection:
-		mod.listenAddrs = nil
+		mod.listenAddrs = libp2p.NoListenAddrs
 	default:
 		return nil, ErrModule("", fmt.Errorf(
 			// DISCUSS: should we refer to this as transport instead?
@@ -158,10 +159,11 @@ func (mod *libp2pModule) Start() error {
 	// NB: disable unused libp2p relay and ping services in client debug mode.
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#DisableRelay
 	// and https://pkg.go.dev/github.com/libp2p/go-libp2p#Ping)
-	if !mod.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode {
+	if mod.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode {
 		opts = append(opts,
 			libp2p.DisableRelay(),
 			libp2p.Ping(false),
+			libp2p.NoListenAddrs,
 		)
 	} else {
 		opts = append(opts, mod.listenAddrs)

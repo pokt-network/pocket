@@ -92,7 +92,8 @@ func NewDebugCommand() *cobra.Command {
 
 			// TODO(#429): refactor injecting the dependencies into the bus so that they can be consumed in an updated `P2PModule.Create()` implementation
 
-			p2pMod, err := getP2PModule(runtimeMgr, debugAddressBookProvider, debugCurrentHeightProvider)
+			var err error
+			p2pMod, err = getP2PModule(runtimeMgr, debugAddressBookProvider, debugCurrentHeightProvider)
 			if err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
 			}
@@ -235,9 +236,10 @@ func getP2PModule(
 	runtimeMgr *runtime.Manager,
 	addrBookProvider addrbook_provider.AddrBookProvider,
 	currentHeightProvider current_height_provider.CurrentHeightProvider,
-) (mod modules.Module, err error) {
+) (p2pModule modules.P2PModule, err error) {
 	bus := runtimeMgr.GetBus()
 
+	var mod modules.Module
 	if runtimeMgr.GetConfig().UseLibP2P {
 		mod, err = libp2p.CreateWithProviders(bus, addrBookProvider, currentHeightProvider)
 	} else {
@@ -247,5 +249,5 @@ func getP2PModule(
 		return nil, err
 	}
 
-	return mod, nil
+	return mod.(modules.P2PModule), nil
 }
