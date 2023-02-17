@@ -77,7 +77,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 		"receiver": clientPeerAddress,
 	}
 
-	m.logger.Info().Fields(fields).Msgf("Received state sync get block request: %s", blockReq)
+	m.logger.Info().Fields(fields).Msgf("Received StateSync GetBlockRequest: %s", blockReq)
 
 	if lastPersistedBlockHeight < blockReq.Height {
 		return fmt.Errorf("requested block height: %d is higher than current persisted block height: %d", blockReq.Height, lastPersistedBlockHeight)
