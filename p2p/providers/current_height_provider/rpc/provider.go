@@ -46,10 +46,10 @@ func (*rpcCurrentHeightProvider) GetModuleName() string {
 	return current_height_provider.ModuleName
 }
 
-func (dchp *rpcCurrentHeightProvider) CurrentHeight() uint64 {
+func (rchp *rpcCurrentHeightProvider) CurrentHeight() uint64 {
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 
-	response, err := dchp.rpcClient.GetV1ConsensusStateWithResponse(ctx)
+	response, err := rchp.rpcClient.GetV1ConsensusStateWithResponse(ctx)
 	if err != nil {
 		cancel()
 		log.Fatalf("could not get consensus state from RPC: %v", err)
