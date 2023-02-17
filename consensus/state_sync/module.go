@@ -147,7 +147,7 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 		"receiver":      clientPeerId,
 	}
 
-	m.logger.Info().Fields(fields).Msgf("Received get metadata response: %s", metaDataRes)
+	m.logger.Info().Fields(fields).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
 
 	return nil
 }
