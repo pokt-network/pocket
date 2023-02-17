@@ -27,7 +27,6 @@ var (
 // multiaddr string as opposed to a proper URL.**
 func PeerFromLibp2pStream(stream network.Stream) (*types.NetworkPeer, error) {
 	publicKeyBz, err := stream.Conn().RemotePublicKey().Raw()
-	// NB: abort handling this stream.
 	if err != nil {
 		return nil, err
 	}
