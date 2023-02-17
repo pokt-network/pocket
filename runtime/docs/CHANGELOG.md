@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.20] - 2023-02-17
 
 - Nits: variables visibility, comments
+- Added `bootstrap_nodes_csv` in `P2PConfig` to allow for a comma separated list of bootstrap nodes
 
 ## [0.0.0.19] - 2023-02-16
 
