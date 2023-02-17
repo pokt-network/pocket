@@ -112,27 +112,36 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 		// TECHDEBT: assuming TCP; remote peer's transport type must be knowable!
 		// (ubiquitously switching to multiaddr, instead of a URL, would resolve this)
 		peerTransportStr = "tcp"
-		peerHostnameStr  = peerUrl.Hostname()
-		// TECHDEBT: is there a way for us to effectively prefer IPv6 responses?
-		// NB: default to assuming an FQDN-based ServiceURL.
-		networkStr = "dns"
+		peerIPVersionStr = "ip4"
 	)
 
-	// NB: if ServiceURL is IP address (see: https://pkg.go.dev/net#ParseIP)
-	if peerIP := net.ParseIP(peerHostnameStr); peerIP != nil {
-		peerHostnameStr = peerIP.String()
-		networkStr = "ip4"
-		// TODO: there's probably a more conventional way to do this.
-		// NB: check if we're dealing with IPv4 or IPv6
-		if strings.Count(peerHostnameStr, ":") > 0 {
-			networkStr = "ip6"
-		}
+	// TECHDEBT: there's probably a more conventional way to do this.
+	// NB: check if we're dealing with IPv4 or IPv6
+	if strings.Count(peerUrl.Hostname(), ":") > 0 {
+		peerIPVersionStr = "ip6"
+	}
+
+	/* CONSIDER: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
+	 * I attempted using `/dns4/.../tcp/...` and go this error:
+	 * > failed to listen on any addresses: [can only dial TCP over IPv4 or IPv6]
+	 *
+	 * TECHDEBT: is there a way for us to effectively prefer IPv6 responses when resolving DNS?
+	 * TECHDEBT: resolving DNS this way has limitations:
+	 * > The address parameter can use a host name, but this is not recommended,
+	 * > because it will return at most one of the host name's IP addresses.
+	 * (see: https://pkg.go.dev/net#ResolveIPAddr)
+	 */
+	peerIP, err := net.ResolveIPAddr(peerIPVersionStr, peerUrl.Hostname())
+	if err != nil {
+		return nil, ErrIdentity(fmt.Sprintf(
+			"unable to resolve peer IP for hostname: %s", peerUrl.Hostname(),
+		), err)
 	}
 
 	peerMultiAddrStr := fmt.Sprintf(
 		"/%s/%s/%s/%s",
-		networkStr,
-		peerHostnameStr,
+		peerIPVersionStr,
+		peerIP,
 		peerTransportStr,
 		peerUrl.Port(),
 	)
