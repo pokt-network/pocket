@@ -43,14 +43,14 @@ type rpcAddrBookProvider struct {
 func NewRPCAddrBookProvider(options ...modules.ModuleOption) *rpcAddrBookProvider {
 	dabp := &rpcAddrBookProvider{
 		rpcUrl:      fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
-		connFactory: transport.CreateDialer, // default connection factory, overridable with WithConnectionFactory()
+		connFactory: transport.CreateDialer,                                        // default connection factory, overridable with WithConnectionFactory()
 	}
 
 	for _, o := range options {
 		o(dabp)
 	}
 
-	initRPCClient(dabp)
+	dabp.initRPCClient()
 
 	return dabp
 }
@@ -113,7 +113,7 @@ func (dabp *rpcAddrBookProvider) SetConnectionFactory(connFactory typesP2P.Conne
 	dabp.connFactory = connFactory
 }
 
-func initRPCClient(dabp *rpcAddrBookProvider) {
+func (dabp *rpcAddrBookProvider) initRPCClient() {
 	rpcClient, err := rpc.NewClientWithResponses(dabp.rpcUrl)
 	if err != nil {
 		log.Fatalf("could not create RPC client: %v", err)
