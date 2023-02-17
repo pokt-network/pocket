@@ -279,3 +279,12 @@ func fileExists(path string) (bool, error) {
 	}
 	return false, err
 }
+
+func setValueInCLIContext(cmd *cobra.Command, key cliContextKey, value any) {
+	cmd.SetContext(context.WithValue(cmd.Context(), key, value))
+}
+
+func getValueFromCLIContext[T any](cmd *cobra.Command, key cliContextKey) (T, bool) {
+	value, ok := cmd.Context().Value(key).(T)
+	return value, ok
+}

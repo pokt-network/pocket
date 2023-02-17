@@ -51,8 +51,8 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			Format: defaults.DefaultLoggerFormat,
 		},
 		RPC: &RPCConfig{
-			Timeout: defaults.DefaultRpcTimeout,
-			Port:    defaults.DefaultRpcPort,
+			Timeout: defaults.DefaultRPCTimeout,
+			Port:    defaults.DefaultRPCPort,
 		},
 	}
 
