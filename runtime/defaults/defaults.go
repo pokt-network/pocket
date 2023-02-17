@@ -2,6 +2,7 @@ package defaults
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pokt-network/pocket/runtime/configs/types"
 )
@@ -36,6 +37,15 @@ var (
 	DefaultP2PUseRainTree     = true
 	DefaultP2PConnectionType  = types.ConnectionType_TCPConnection
 	DefaultP2PMaxMempoolCount = uint64(1e5)
+	// DefaultP2PBootstrapNodesCsv is a list of nodes to bootstrap the network with. By convention, for now, the first validator will provide bootstrapping facilities.
+	//
+	// In LocalNet, the developer will have only one of the two stack online, therefore this is also a poor's man way to simulate the scenario in which a boostrap node is offline.
+	//nolint:gocritic // stringConcatSimplify TBD in code review.
+	DefaultP2PBootstrapNodesCsv = strings.Join([]string{
+		fmt.Sprintf("http://%s:%s", Validator1EndpointDockerCompose, DefaultRPCPort),
+		fmt.Sprintf("http://%s:%s", Validator1EndpointK8S, DefaultRPCPort),
+	}, ",")
+
 	// telemetry
 	DefaultTelemetryEnabled  = true
 	DefaultTelemetryAddress  = "0.0.0.0:9000"
