@@ -15,6 +15,7 @@ spec:
       labels:
         app: v1-cli-client
     spec:
+      serviceAccountName: debug-client-account
       containers:
         - name: pocket
           image: client-image
