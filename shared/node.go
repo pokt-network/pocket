@@ -6,9 +6,11 @@ import (
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/rpc"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/state_machine"
 	"github.com/pokt-network/pocket/telemetry"
 	"github.com/pokt-network/pocket/utility"
 )
@@ -26,12 +28,13 @@ func NewNodeWithP2PAddress(address cryptoPocket.Address) *Node {
 	return &Node{p2pAddress: address}
 }
 
-func CreateNode(bus modules.Bus) (modules.Module, error) {
-	return new(Node).Create(bus)
+func CreateNode(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(Node).Create(bus, options...)
 }
 
-func (m *Node) Create(bus modules.Bus) (modules.Module, error) {
-	for _, mod := range []func(modules.Bus) (modules.Module, error){
+func (m *Node) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	for _, mod := range []func(modules.Bus, ...modules.ModuleOption) (modules.Module, error){
+		state_machine.Create,
 		persistence.Create,
 		utility.Create,
 		consensus.Create,
@@ -60,6 +63,10 @@ func (node *Node) Start() error {
 	logger.Global.Info().Msg("About to start pocket node modules...")
 
 	// IMPORTANT: Order of module startup here matters
+
+	if err := node.GetBus().GetStateMachineModule().Start(); err != nil {
+		return err
+	}
 
 	if err := node.GetBus().GetTelemetryModule().Start(); err != nil {
 		return err
@@ -124,6 +131,9 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	switch contentType {
 	case messaging.NodeStartedEventType:
 		logger.Global.Info().Msg("Received NodeStartedEvent")
+		if err := node.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
+			return err
+		}
 	case consensus.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 	case consensus.StateSyncMessageContentType:

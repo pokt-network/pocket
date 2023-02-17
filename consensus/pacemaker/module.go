@@ -11,6 +11,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -44,7 +45,9 @@ type Pacemaker interface {
 }
 
 type pacemaker struct {
-	bus            modules.Bus
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
+
 	pacemakerCfg   *configs.PacemakerConfig
 	stepCancelFunc context.CancelFunc
 
@@ -56,19 +59,20 @@ type pacemaker struct {
 	logPrefix string
 }
 
-func CreatePacemaker(bus modules.Bus) (modules.Module, error) {
-	var m pacemaker
-	return m.Create(bus)
+func CreatePacemaker(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(pacemaker).Create(bus, options...)
 }
 
-func (*pacemaker) Create(bus modules.Bus) (modules.Module, error) {
+func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &pacemaker{
 		logPrefix: defaultLogPrefix,
 	}
 
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
+	for _, option := range options {
+		option(m)
 	}
+
+	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
@@ -88,23 +92,9 @@ func (m *pacemaker) Start() error {
 	m.RestartTimer()
 	return nil
 }
-func (*pacemaker) Stop() error {
-	return nil
-}
 
 func (*pacemaker) GetModuleName() string {
 	return pacemakerModuleName
-}
-
-func (m *pacemaker) SetBus(pocketBus modules.Bus) {
-	m.bus = pocketBus
-}
-
-func (m *pacemaker) GetBus() modules.Bus {
-	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
-	}
-	return m.bus
 }
 
 func (m *pacemaker) SetLogPrefix(logPrefix string) {

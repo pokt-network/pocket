@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.26] - 2023-02-17
+
+- Modules embed `base_modules.IntegratableModule` and `base_modules.InterruptableModule` for DRYness
+- Updated tests
+
 ## [0.0.0.25] - 2023-02-09
 
 - Updated logging initialization and passing to the network component instead of using the global logger

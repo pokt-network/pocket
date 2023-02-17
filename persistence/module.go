@@ -11,6 +11,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 var (
@@ -23,7 +24,8 @@ var (
 // TODO: convert address and public key to string not bytes in all account and actor functions
 // TODO: remove address parameter from all pool operations
 type persistenceModule struct {
-	bus          modules.Bus
+	base_modules.IntegratableModule
+
 	config       *configs.PersistenceConfig
 	genesisState *genesis.GenesisState
 
@@ -37,17 +39,20 @@ type persistenceModule struct {
 	writeContext *PostgresContext // only one write context is allowed at a time
 }
 
-func Create(bus modules.Bus) (modules.Module, error) {
-	return new(persistenceModule).Create(bus)
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(persistenceModule).Create(bus, options...)
 }
 
-func (*persistenceModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &persistenceModule{
 		writeContext: nil,
 	}
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
+
+	for _, option := range options {
+		option(m)
 	}
+
+	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 
@@ -115,17 +120,6 @@ func (m *persistenceModule) Stop() error {
 
 func (m *persistenceModule) GetModuleName() string {
 	return modules.PersistenceModuleName
-}
-
-func (m *persistenceModule) SetBus(bus modules.Bus) {
-	m.bus = bus
-}
-
-func (m *persistenceModule) GetBus() modules.Bus {
-	if m.bus == nil {
-		logger.Global.Fatal().Msg("PocketBus is not initialized")
-	}
-	return m.bus
 }
 
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
