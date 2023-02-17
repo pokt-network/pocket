@@ -16,6 +16,15 @@ spec:
         app: v1-cli-client
     spec:
       serviceAccountName: debug-client-account
+      initContainers:
+        - name: wait-for-v1-validator001
+          image: busybox
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z v1-validator001 8080; do echo waiting for v1-validator001...; sleep 2; done;",
+            ]
       containers:
         - name: pocket
           image: client-image
@@ -57,6 +66,9 @@ spec:
               value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
             - name: POCKET_PERSISTENCE_NODE_SCHEMA
               value: validator1
+              # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
+            - name: RPC_HOST
+              value: v1-validator001
           volumeMounts:
             - mountPath: /var/pocket/config
               name: config-volume

@@ -12,7 +12,7 @@ import (
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/runtime"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/k8s"
+	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
 	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -120,7 +120,7 @@ func fetchValidatorPrivateKeysFromK8S() (map[string]string, error) {
 	}
 
 	// Fetch validator private keys from Kubernetes
-	validatorKeysPairMap, err := k8s.FetchValidatorPrivateKeys(clientset)
+	validatorKeysPairMap, err := pocketk8s.FetchValidatorPrivateKeys(clientset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch validator private keys from Kubernetes: %w", err)
 	}
