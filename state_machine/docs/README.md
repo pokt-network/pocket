@@ -50,7 +50,7 @@ These are the main building blocks:
 
 - **Event**: An event is a string that represents an action that can trigger a transition. For example, the event `start` can be used to trigger a transition from the `stopped` state to the `starting` state.
 - **State**: A state is a string that represents a state that the FSM can be in. For example, the state `stopped` can be used to represent a state where the node is not running.
-- **Callback**: A callback is a function that is called when a transition occurs. For example, a callback can be used to log the transition or to perform some other action. (there are various types of callbacks that essentially drive the WHEN they are called and help building more complex behaviours like transition cancelling, etc. but we won't cover them here, please read the FSM library documentation for more details)
+- **Callback**: A callback is a function that is called when a transition occurs. For example, a callback can be used to log the transition or to perform some other action. Various types of callbacks essentially drive behaviour **WHEN** they are called and help build more complex behaviours like transition cancelling, etc. See the core FSM library documentation for more details.
 
 ## Current State Machine Definition
 
