@@ -19,6 +19,7 @@ func extractValidatorId(validatorName string) string {
 	return validatorName
 }
 
+// TODO: Create a type for `validatorKeyMap` and document what the expected key-value types contain
 func getPrivateKey(validatorKeysMap map[string]string, validatorId string) cryptoPocket.PrivateKey {
 	privHexString := validatorKeysMap[validatorId]
 	keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
