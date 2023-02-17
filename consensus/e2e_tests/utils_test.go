@@ -425,8 +425,6 @@ func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *mockModules
 	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()
 	p2pMock.EXPECT().HandleEvent(gomock.Any()).Return(nil).AnyTimes()
 
-	p2pMock.EXPECT().HandleEvent(gomock.Any()).Return(nil).AnyTimes()
-
 	return p2pMock
 }
 
