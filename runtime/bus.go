@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"log"
 	"sync"
 
 	"github.com/pokt-network/pocket/logger"
@@ -64,36 +63,24 @@ func (m *bus) GetEventBus() modules.EventsChannel {
 	return m.channel
 }
 
+func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {
+	return m.runtimeMgr
+}
+
 func (m *bus) GetPersistenceModule() modules.PersistenceModule {
-	mod, err := m.modulesRegistry.GetModule(modules.PersistenceModuleName)
-	if err != nil {
-		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
-	}
-	return mod.(modules.PersistenceModule)
+	return getModuleFromRegistry[modules.PersistenceModule](m, modules.PersistenceModuleName)
 }
 
 func (m *bus) GetP2PModule() modules.P2PModule {
-	mod, err := m.modulesRegistry.GetModule(modules.P2PModuleName)
-	if err != nil {
-		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
-	}
-	return mod.(modules.P2PModule)
+	return getModuleFromRegistry[modules.P2PModule](m, modules.P2PModuleName)
 }
 
 func (m *bus) GetUtilityModule() modules.UtilityModule {
-	mod, err := m.modulesRegistry.GetModule(modules.UtilityModuleName)
-	if err != nil {
-		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
-	}
-	return mod.(modules.UtilityModule)
+	return getModuleFromRegistry[modules.UtilityModule](m, modules.UtilityModuleName)
 }
 
 func (m *bus) GetConsensusModule() modules.ConsensusModule {
-	mod, err := m.modulesRegistry.GetModule(modules.ConsensusModuleName)
-	if err != nil {
-		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
-	}
-	return mod.(modules.ConsensusModule)
+	return getModuleFromRegistry[modules.ConsensusModule](m, modules.ConsensusModuleName)
 }
 
 func (m *bus) GetTelemetryModule() modules.TelemetryModule {
@@ -104,41 +91,42 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 		}
 	}
 	telemetryWarnOnce.Do(func() {
-		log.Printf("[WARNING] telemetry module not found, creating a default noop telemetry module instead")
+		logger.Global.Logger.Warn().
+			Str("module", modules.TelemetryModuleName).
+			Msg("module not found, creating a default noop module instead")
 	})
 	// this should happen only if called from the client
 	noopModule, err := telemetry.CreateNoopTelemetryModule(m)
 	if err != nil {
-		log.Fatalf("failed to create noop telemetry module: %v", err)
+		logger.Global.Logger.Fatal().
+			Err(err).
+			Str("module", modules.TelemetryModuleName).
+			Msg("failed to create noop telemetry module")
 	}
 	m.RegisterModule(noopModule)
 	return noopModule.(modules.TelemetryModule)
 }
 
 func (m *bus) GetLoggerModule() modules.LoggerModule {
-	mod, err := m.modulesRegistry.GetModule(modules.LoggerModuleName)
-	if err != nil {
-		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
-	}
-	return mod.(modules.LoggerModule)
+	return getModuleFromRegistry[modules.LoggerModule](m, modules.LoggerModuleName)
 }
 
 func (m *bus) GetRPCModule() modules.RPCModule {
-	mod, err := m.modulesRegistry.GetModule(modules.RPCModuleName)
-	if err != nil {
-		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
-	}
-	return mod.(modules.RPCModule)
-}
-
-func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {
-	return m.runtimeMgr
+	return getModuleFromRegistry[modules.RPCModule](m, modules.RPCModuleName)
 }
 
 func (m *bus) GetStateMachineModule() modules.StateMachineModule {
-	mod, err := m.modulesRegistry.GetModule(modules.StateMachineModuleName)
+	return getModuleFromRegistry[modules.StateMachineModule](m, modules.StateMachineModuleName)
+}
+
+// getModuleFromRegistry is a helper function to get a module from the registry that handles errors and casting via generics
+func getModuleFromRegistry[T modules.Module](m *bus, moduleName string) T {
+	mod, err := m.modulesRegistry.GetModule(moduleName)
 	if err != nil {
-		logger.Global.Logger.Fatal().Err(err).Msg("failed to get module from modulesRegistry")
+		logger.Global.Logger.Fatal().
+			Err(err).
+			Str("module", moduleName).
+			Msg("failed to get module from modulesRegistry")
 	}
-	return mod.(modules.StateMachineModule)
+	return mod.(T)
 }
