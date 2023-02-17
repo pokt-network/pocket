@@ -193,6 +193,5 @@ func setValueInCLIContext(cmd *cobra.Command, key cliContextKey, value any) {
 }
 
 func getValueFromCLIContext[T any](cmd *cobra.Command, key cliContextKey) (T, bool) {
-	value, ok := cmd.Context().Value(key).(T)
-	return value, ok
+	return cmd.Context().Value(key).(T)
 }
