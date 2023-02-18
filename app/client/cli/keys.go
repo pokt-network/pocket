@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/pokt-network/pocket/shared"
 	"path/filepath"
 	"strings"
 
@@ -285,18 +286,20 @@ func keysExportCommands() []*cobra.Command {
 
 				// Determine correct way to export private key
 				var exportString string
-				exportAs = strings.ToLower(exportAs)
-				if exportAs == "json" {
+				switch strings.ToLower(exportAs) {
+				case "json":
 					exportString, err = kb.ExportPrivJSON(addrHex, pwd)
 					if err != nil {
 						return err
 					}
-				} else if exportAs == "raw" {
+					break
+				case "raw":
 					exportString, err = kb.ExportPrivString(addrHex, pwd)
 					if err != nil {
 						return err
 					}
-				} else {
+					break
+				default:
 					return fmt.Errorf("invalid export format: got %s, want [raw]/[json]", exportAs)
 				}
 
@@ -310,7 +313,7 @@ func keysExportCommands() []*cobra.Command {
 					return nil
 				}
 
-				return writeOutput(exportString, outputFile)
+				return shared.WriteOutput(exportString, outputFile)
 			},
 		},
 	}
@@ -331,7 +334,7 @@ func keysImportCommands() []*cobra.Command {
 				if len(args) == 1 {
 					privateKeyString = args[0]
 				} else if inputFile != "" {
-					privateKeyString, err = readInput(inputFile)
+					privateKeyString, err = shared.ReadInput(inputFile)
 					if err != nil {
 						return err
 					}
@@ -353,20 +356,22 @@ func keysImportCommands() []*cobra.Command {
 				pwd = readPassphrase(pwd)
 
 				// Determine correct way to import the private key
-				importAs = strings.ToLower(importAs)
-				if importAs == "json" {
+				switch strings.ToLower(importAs) {
+				case "json":
 					kp, err := kb.ImportFromJSON(privateKeyString, pwd)
 					if err != nil {
 						return err
 					}
 					fmt.Printf("Key imported: %s\n", kp.GetAddressString())
-				} else if importAs == "raw" {
+					break
+				case "raw":
 					kp, err := kb.ImportFromString(privateKeyString, pwd, hint)
 					if err != nil {
 						return err
 					}
 					fmt.Printf("Key imported: %s\n", kp.GetAddressString())
-				} else {
+					break
+				default:
 					return fmt.Errorf("invalid import format: got %s, want [raw]/[json]", exportAs)
 				}
 
