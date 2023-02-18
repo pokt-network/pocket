@@ -48,7 +48,7 @@ func NewKeysCommand() *cobra.Command {
 	// Add --pwd flag
 	applySubcommandOptions(deleteCmds, attachPwdFlagToSubcommands())
 
-	// Add --pwd and --hint flags
+	// Add --pwd, --new_pwd and --hint flags
 	applySubcommandOptions(updateCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(updateCmds, attachNewPwdFlagToSubcommands())
 	applySubcommandOptions(updateCmds, attachHintFlagToSubcommands())
@@ -116,9 +116,9 @@ func keysCreateCommands() []*cobra.Command {
 func keysUpdateCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
-			Use:     "Update <addrHex>",
-			Short:   "Update <addrHex>",
-			Long:    "Updates the passphrase of <addrHex> in the keybase",
+			Use:     "Update <addrHex> [--pwd] [--new_pwd] [--hint]",
+			Short:   "Updates <addrHex> to the [--new_pwd] and [--hint] values",
+			Long:    "Updates the passphrase and hint of <addrHex> in the keybase, using either the values from the flags provided or from the CLI prompts",
 			Aliases: []string{"update"},
 			Args:    cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -158,7 +158,7 @@ func keysDeleteCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
 			Use:     "Delete <addrHex>",
-			Short:   "Delete <addrHex>",
+			Short:   "Deletes <addrHex>",
 			Long:    "Deletes <addrHex> from the keybase",
 			Aliases: []string{"delete"},
 			Args:    cobra.ExactArgs(1),
@@ -227,8 +227,8 @@ func keysGetCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Get <addrHex>",
-			Short:   "Get <addrHex>",
-			Long:    "Get the keypair <addrHex> from the keybase",
+			Short:   "Get the address and public key of <addrHex>",
+			Long:    "Get the address and public key of <addrHex> from the keybase, provided it is stored",
 			Aliases: []string{"get"},
 			Args:    cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -263,9 +263,9 @@ func keysGetCommands() []*cobra.Command {
 func keysExportCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
-			Use:     "Export <addrHex>",
-			Short:   "Export <addrHex>",
-			Long:    "Exports the private key of <addrHex> as a raw or JSON encoded string",
+			Use:     "Export <addrHex> [--export_format] [--output_file]",
+			Short:   "Exports <addrHex> in [--export_format] to either STDOUT or to [--output_file]",
+			Long:    "Exports the private key of <addrHex> as a raw or JSON encoded string depending on [--output_format], written to STDOUT or [--output_file]",
 			Aliases: []string{"export"},
 			Args:    cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -324,9 +324,9 @@ func keysExportCommands() []*cobra.Command {
 func keysImportCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
-			Use:     "Import <privateKeyString>",
-			Short:   "Import <privateKeyString>",
-			Long:    "Imports <privateKeyString> into the keybase",
+			Use:     "Import [privateKeyString] [--input_file] [--import_format]",
+			Short:   "Imports [privateKeyString] or from [--input_file] into the keybase",
+			Long:    "Imports [privateKeyString] or from [--input_file] into the keybase, provided it is in the form of [--import_format]",
 			Aliases: []string{"import"},
 			Args:    cobra.MaximumNArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -387,7 +387,7 @@ func keysSignCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
 			Use:     "Sign <addrHex> <messageHex>",
-			Short:   "Sign <addrHex> <messageHex>",
+			Short:   "Signs <messageHex> using the key <addrHex>",
 			Long:    "Signs <messageHex> with <addrHex> from the keybase, returning the signature",
 			Aliases: []string{"sign"},
 			Args:    cobra.ExactArgs(2),
@@ -427,7 +427,7 @@ func keysSignCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Verify <addrHex> <messageHex> <signatureHex>",
-			Short:   "Verify <addrHex> <messageHex> <signatureHex>",
+			Short:   "Verifies the <signatureHex> is valid from the <addrHex>",
 			Long:    "Verify that <signatureHex> is a valid signature of <messageHex> signed by <addrHex>",
 			Aliases: []string{"sign"},
 			Args:    cobra.ExactArgs(3),
