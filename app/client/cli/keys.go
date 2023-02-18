@@ -300,13 +300,11 @@ func keysExportCommands() []*cobra.Command {
 					if err != nil {
 						return err
 					}
-					break
 				case "raw":
 					exportString, err = kb.ExportPrivString(addrHex, pwd)
 					if err != nil {
 						return err
 					}
-					break
 				default:
 					return fmt.Errorf("invalid export format: got %s, want [raw]/[json]", exportAs)
 				}
@@ -373,14 +371,12 @@ func keysImportCommands() []*cobra.Command {
 						return err
 					}
 					logger.Global.Info().Str("address", kp.GetAddressString()).Msg("Key imported")
-					break
 				case "raw":
 					kp, err := kb.ImportFromString(privateKeyString, pwd, hint)
 					if err != nil {
 						return err
 					}
 					logger.Global.Info().Str("address", kp.GetAddressString()).Msg("Key imported")
-					break
 				default:
 					return fmt.Errorf("invalid import format: got %s, want [raw]/[json]", exportAs)
 				}
