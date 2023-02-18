@@ -3,10 +3,8 @@ package keybase
 import (
 	"bytes"
 	"encoding/hex"
-	"errors"
 	"fmt"
-	"io/fs"
-	"os"
+	"github.com/pokt-network/pocket/shared"
 	"strings"
 
 	"github.com/dgraph-io/badger/v3"
@@ -32,7 +30,7 @@ type badgerKeybase struct {
 
 // Creates/Opens the DB at the specified path
 func NewKeybase(path string) (Keybase, error) {
-	pathExists, err := dirExists(path) // Creates path if it doesn't exist
+	pathExists, err := shared.DirExists(path) // Creates path if it doesn't exist
 	if err != nil || !pathExists {
 		return nil, err
 	}
@@ -343,24 +341,4 @@ func badgerOptions(path string) badger.Options {
 	opts := badger.DefaultOptions(path)
 	opts.Logger = nil // Badger logger is very noisy
 	return opts
-}
-
-// Check directory exists and creates path if it doesn't exist
-func dirExists(path string) (bool, error) {
-	stat, err := os.Stat(path)
-	if err == nil {
-		// Exists but not directory
-		if !stat.IsDir() {
-			return false, fmt.Errorf("Keybase path is not a directory: %s", path)
-		}
-		return true, nil
-	}
-	if errors.Is(err, fs.ErrNotExist) {
-		// Create directories in path recursively
-		if err := os.MkdirAll(path, os.ModePerm); err != nil {
-			return false, fmt.Errorf("Error creating directory at path: %s, (%v)", path, err.Error())
-		}
-		return true, nil
-	}
-	return false, err
 }

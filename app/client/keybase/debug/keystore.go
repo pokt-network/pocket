@@ -1,9 +1,8 @@
 package debug
 
 import (
-	"errors"
 	"fmt"
-	"io/fs"
+	"github.com/pokt-network/pocket/shared"
 	"log"
 	"os"
 	"path/filepath"
@@ -133,7 +132,7 @@ func fetchValidatorPrivateKeysFromFile() (map[string]string, error) {
 	_, current, _, _ := r.Caller(0)
 	//nolint:gocritic // Use path to find private-keys yaml file from being called in any location in the repo
 	yamlFile := filepath.Join(current, privateKeysYamlFile)
-	if exists, err := fileExists(yamlFile); !exists || err != nil {
+	if exists, err := shared.FileExists(yamlFile); !exists || err != nil {
 		return nil, fmt.Errorf("unable to find YAML file: %s", yamlFile)
 	}
 
@@ -158,16 +157,4 @@ func fetchValidatorPrivateKeysFromFile() (map[string]string, error) {
 		validatorKeysMap[id] = privHexString
 	}
 	return validatorKeysMap, nil
-}
-
-// Check file at the given path exists
-func fileExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-	if errors.Is(err, fs.ErrNotExist) {
-		return false, nil
-	}
-	return false, err
 }

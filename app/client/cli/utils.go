@@ -5,10 +5,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"math/big"
 	"os"
 	"strings"
@@ -234,50 +232,6 @@ func rpcResponseCodeUnhealthy(statusCode int, response []byte) error {
 
 func boldText[T string | []byte](s T) string {
 	return fmt.Sprintf("\033[1m%s\033[0m", s)
-}
-
-func writeOutput(msg, outputFilePath string) error {
-	if outputFile == "" {
-		fmt.Println(msg)
-		return nil
-	}
-	file, err := os.OpenFile(outputFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		return err
-	}
-	if _, err := file.WriteString(msg); err != nil {
-		return err
-	}
-	if err := file.Close(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func readInput(inputFilePath string) (string, error) {
-	exists, err := fileExists(inputFilePath)
-	if err != nil {
-		return "", fmt.Errorf("Error checking input file: %v\n", err)
-	}
-	if !exists {
-		return "", fmt.Errorf("Input file not found: %v\n", inputFilePath)
-	}
-	rawBz, err := os.ReadFile(inputFilePath)
-	if err != nil {
-		return "", err
-	}
-	return string(rawBz), nil
-}
-
-func fileExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-	if errors.Is(err, fs.ErrNotExist) {
-		return false, nil
-	}
-	return false, err
 }
 
 func setValueInCLIContext(cmd *cobra.Command, key cliContextKey, value any) {
