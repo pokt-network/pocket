@@ -49,8 +49,7 @@ func TestSortition(t *testing.T) {
 // provided network configuration, and check if the validator was selected some number of times,
 // within a predefined error threshold.
 // EXAMPLE: If a single validator has 10% of the total stake in the network, and there are 1000 view
-//
-//	changes, we expect that validator to be selected as a leader 100±5 times.
+// changes, we expect that validator to be selected as a leader 100±5 times.
 func SingleSortitionTest(t *testing.T, uPOKTValidatorStake, uPOKTNetworkStake, numViewChanges, numCandidates uint64) {
 	selectCount := SortitionResult(0)
 	for i := uint64(0); i < numViewChanges; i++ {

@@ -42,8 +42,7 @@ func (p *PostgresContext) RollbackToSavePoint(bytes []byte) error {
 }
 
 // IMPROVE(#361): Guarantee the integrity of the state
-//
-//	Full details in the thread from the PR review: https://github.com/pokt-network/pocket/pull/285#discussion_r1018471719
+// Full details in the thread from the PR review: https://github.com/pokt-network/pocket/pull/285#discussion_r1018471719
 func (p *PostgresContext) ComputeStateHash() (string, error) {
 	stateHash, err := p.updateMerkleTrees()
 	if err != nil {
