@@ -2,7 +2,7 @@ package cli
 
 import (
 	"context"
-	"log"
+	"github.com/pokt-network/pocket/logger"
 	"os"
 
 	// NOTE: Imported for debug purposes in order to populate the keybase with the pre-generated keys
@@ -24,7 +24,7 @@ var (
 func init() {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("[ERROR] Cannot find user home directory: %s", err.Error())
+		logger.Global.Fatal().Err(err).Msg("Cannot find user home directory")
 	}
 	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remote_cli_url", defaults.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
 	rootCmd.PersistentFlags().StringVar(&dataDir, "data_dir", homeDir+"/.pocket", "Path to store pocket related data (keybase etc.)")

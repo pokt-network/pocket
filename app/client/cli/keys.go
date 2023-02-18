@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared"
 	"path/filepath"
 	"strings"
@@ -103,7 +104,7 @@ func keysCreateCommands() []*cobra.Command {
 					return err
 				}
 
-				fmt.Printf("Key created: %s\n", kp.GetAddressString())
+				logger.Global.Info().Str("address", kp.GetAddressString()).Msg("New Key Created")
 
 				return kb.Stop()
 			},
@@ -144,7 +145,7 @@ func keysUpdateCommands() []*cobra.Command {
 					return err
 				}
 
-				fmt.Printf("Updated key: %s\n", addrHex)
+				logger.Global.Info().Str("address", addrHex).Msg("Key updated")
 
 				return kb.Stop()
 			},
@@ -183,7 +184,7 @@ func keysDeleteCommands() []*cobra.Command {
 					return err
 				}
 
-				fmt.Printf("Key deleted: %s\n", addrHex)
+				logger.Global.Info().Str("address", addrHex).Msg("Key deleted")
 
 				return kb.Stop()
 			},
@@ -250,7 +251,7 @@ func keysGetCommands() []*cobra.Command {
 					return err
 				}
 
-				fmt.Printf("Address: %s\nPublic Key: %s\n", addrHex, kp.GetPublicKey().String())
+				logger.Global.Info().Str("address", addrHex).Str("public_key", kp.GetPublicKey().String()).Msg("Found key")
 
 				return kb.Stop()
 			},
@@ -309,7 +310,7 @@ func keysExportCommands() []*cobra.Command {
 
 				// Write to stdout or file
 				if outputFile == "" {
-					fmt.Println(exportString)
+					logger.Global.Info().Str("private_key", exportString).Msg("Key exported")
 					return nil
 				}
 
@@ -362,14 +363,14 @@ func keysImportCommands() []*cobra.Command {
 					if err != nil {
 						return err
 					}
-					fmt.Printf("Key imported: %s\n", kp.GetAddressString())
+					logger.Global.Info().Str("address", kp.GetAddressString()).Msg("Key imported")
 					break
 				case "raw":
 					kp, err := kb.ImportFromString(privateKeyString, pwd, hint)
 					if err != nil {
 						return err
 					}
-					fmt.Printf("Key imported: %s\n", kp.GetAddressString())
+					logger.Global.Info().Str("address", kp.GetAddressString()).Msg("Key imported")
 					break
 				default:
 					return fmt.Errorf("invalid import format: got %s, want [raw]/[json]", exportAs)
@@ -419,7 +420,7 @@ func keysSignCommands() []*cobra.Command {
 
 				sigHex := hex.EncodeToString(sigBz)
 
-				fmt.Printf("Signature: %s\n", sigHex)
+				logger.Global.Info().Str("signature", sigHex).Str("address", addrHex).Msg("Message signed")
 
 				return kb.Stop()
 			},
@@ -460,7 +461,7 @@ func keysSignCommands() []*cobra.Command {
 					return err
 				}
 
-				fmt.Printf("Valid signature: %v", valid)
+				logger.Global.Info().Str("address", addrHex).Bool("valid", valid).Msg("Signature verified")
 
 				return kb.Stop()
 			},
