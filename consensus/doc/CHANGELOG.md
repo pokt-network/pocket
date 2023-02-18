@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.30] - 2023-02-17
+
+- Updated log messages in the state sync submodule with consistent style and add height information
+- Added state sync message types to the types package
+
 ## [0.0.0.29] - 2023-02-17
 
 - Modules embed `base_modules.IntegratableModule` and `base_modules.InterruptableModule` for DRYness

@@ -17,8 +17,9 @@ const (
 )
 
 var (
-	remoteCLIURL string
-	dataDir      string
+	remoteCLIURL   string
+	dataDir        string
+	nonInteractive bool
 )
 
 func init() {
@@ -27,6 +28,7 @@ func init() {
 		logger.Global.Fatal().Err(err).Msg("Cannot find user home directory")
 	}
 	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remote_cli_url", defaults.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
+	rootCmd.PersistentFlags().BoolVar(&nonInteractive, "non_interactive", false, "if true skips the interactive prompts wherever possible (useful for scripting & automation)")
 	rootCmd.PersistentFlags().StringVar(&dataDir, "data_dir", homeDir+"/.pocket", "Path to store pocket related data (keybase etc.)")
 }
 

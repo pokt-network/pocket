@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.5] - 2023-02-17
+
+- Removed unnecessary server mode enabling call via `EnableServerMode()` function
+
 ## [0.0.0.4] - 2023-02-07
 
 - Added GITHUB_WIKI tags where it was missing

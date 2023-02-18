@@ -107,7 +107,9 @@ If no changes are desired for the parameter, just enter the current param value 
 				return err
 			}
 
-			pwd = readPassphrase(pwd)
+			if !nonInteractive {
+				pwd = readPassphrase(pwd)
+			}
 
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 			if err != nil {
@@ -248,8 +250,9 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			pwd = readPassphrase(pwd)
-
+			if !nonInteractive {
+				pwd = readPassphrase(pwd)
+			}
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 			if err != nil {
 				return err

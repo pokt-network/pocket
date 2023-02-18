@@ -8,3 +8,13 @@ rules:
     resources: ["secrets"]
     resourceNames: ["v1-localnet-validators-private-keys"]
     verbs: ["get"]
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: services-watcher
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["watch"]
