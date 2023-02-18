@@ -97,7 +97,9 @@ func keysCreateCommands() []*cobra.Command {
 					return err
 				}
 
-				pwd = readPassphrase(pwd)
+				if !nonInteractive {
+					pwd = readPassphrase(pwd)
+				}
 
 				kp, err := kb.Create(pwd, hint)
 				if err != nil {
@@ -136,9 +138,10 @@ func keysUpdateCommands() []*cobra.Command {
 					return err
 				}
 
-				pwd = readPassphrase(pwd)
-
-				newPwd = readPassphraseMessage(newPwd, "New passphrase: ")
+				if !nonInteractive {
+					pwd = readPassphrase(pwd)
+					newPwd = readPassphraseMessage(newPwd, "New passphrase: ")
+				}
 
 				err = kb.UpdatePassphrase(addrHex, pwd, newPwd, hint)
 				if err != nil {
@@ -177,7 +180,9 @@ func keysDeleteCommands() []*cobra.Command {
 					return err
 				}
 
-				pwd = readPassphrase(pwd)
+				if !nonInteractive {
+					pwd = readPassphrase(pwd)
+				}
 
 				err = kb.Delete(addrHex, pwd)
 				if err != nil {
@@ -283,7 +288,9 @@ func keysExportCommands() []*cobra.Command {
 					return err
 				}
 
-				pwd = readPassphrase(pwd)
+				if !nonInteractive {
+					pwd = readPassphrase(pwd)
+				}
 
 				// Determine correct way to export private key
 				var exportString string
@@ -354,7 +361,9 @@ func keysImportCommands() []*cobra.Command {
 					return err
 				}
 
-				pwd = readPassphrase(pwd)
+				if !nonInteractive {
+					pwd = readPassphrase(pwd)
+				}
 
 				// Determine correct way to import the private key
 				switch strings.ToLower(importAs) {
@@ -411,7 +420,9 @@ func keysSignCommands() []*cobra.Command {
 					return err
 				}
 
-				pwd = readPassphrase(pwd)
+				if !nonInteractive {
+					pwd = readPassphrase(pwd)
+				}
 
 				sigBz, err := kb.Sign(addrHex, pwd, msgBz)
 				if err != nil {
