@@ -61,16 +61,16 @@ func (p *PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Acto
 	return
 }
 
-func (p *PostgresContext) GetAllServiceNodes(height int64) (sn []*coreTypes.Actor, err error) {
+func (p *PostgresContext) GetAllServicers(height int64) (sn []*coreTypes.Actor, err error) {
 	ctx, tx := p.getCtxAndTx()
-	rows, err := tx.Query(ctx, types.ServiceNodeActor.GetAllQuery(height))
+	rows, err := tx.Query(ctx, types.ServicerActor.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
 	var actors []*coreTypes.Actor
 	for rows.Next() {
 		var actor *coreTypes.Actor
-		actor, height, err = p.getActorFromRow(types.ServiceNodeActor.GetActorType(), rows)
+		actor, height, err = p.getActorFromRow(types.ServicerActor.GetActorType(), rows)
 		if err != nil {
 			return
 		}
@@ -78,7 +78,7 @@ func (p *PostgresContext) GetAllServiceNodes(height int64) (sn []*coreTypes.Acto
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actor, err = p.getChainsForActor(ctx, tx, types.ServiceNodeActor, actor, height)
+		actor, err = p.getChainsForActor(ctx, tx, types.ServicerActor, actor, height)
 		if err != nil {
 			return
 		}
@@ -116,7 +116,7 @@ func (p *PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, e
 // IMPROVE: This is a proof of concept. Ideally we should have a single query that returns all actors.
 func (p *PostgresContext) GetAllStakedActors(height int64) (allActors []*coreTypes.Actor, err error) {
 	type actorGetter func(height int64) ([]*coreTypes.Actor, error)
-	actorGetters := []actorGetter{p.GetAllValidators, p.GetAllServiceNodes, p.GetAllFishermen, p.GetAllApps}
+	actorGetters := []actorGetter{p.GetAllValidators, p.GetAllServicers, p.GetAllFishermen, p.GetAllApps}
 	for _, actorGetter := range actorGetters {
 		var actors []*coreTypes.Actor
 		actors, err = actorGetter(height)

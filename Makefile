@@ -449,13 +449,13 @@ todo_this_commit: ## List all the TODOs needed to be done in this commit
 
 # Default values for gen_genesis_and_config
 numValidators ?= 4
-numServiceNodes ?= 1
+numServicers ?= 1
 numApplications ?= 1
 numFishermen ?= 1
 
 .PHONY: gen_genesis_and_config
 gen_genesis_and_config: ## Generate the genesis and config files for LocalNet
-	go run ./build/config/main.go --genPrefix="gen." --numValidators=${numValidators} --numServiceNodes=${numServiceNodes} --numApplications=${numApplications} --numFishermen=${numFishermen}
+	go run ./build/config/main.go --genPrefix="gen." --numValidators=${numValidators} --numServicers=${numServicers} --numApplications=${numApplications} --numFishermen=${numFishermen}
 
 .PHONY: gen_genesis_and_config
 clear_genesis_and_config: ## Clear the genesis and config files for LocalNet

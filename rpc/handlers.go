@@ -117,8 +117,8 @@ func protocolActorToRPCActorTypeEnum(protocolActorType typesCore.ActorType) Acto
 		return Application
 	case typesCore.ActorType_ACTOR_TYPE_FISH:
 		return Fisherman
-	case typesCore.ActorType_ACTOR_TYPE_SERVICENODE:
-		return ServiceNode
+	case typesCore.ActorType_ACTOR_TYPE_SERVICER:
+		return Servicer
 	case typesCore.ActorType_ACTOR_TYPE_VAL:
 		return Validator
 	default:
@@ -137,8 +137,8 @@ func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, p
 		protocolActorGetter = persistenceContext.GetAllApps
 	case Fisherman:
 		protocolActorGetter = persistenceContext.GetAllFishermen
-	case ServiceNode:
-		protocolActorGetter = persistenceContext.GetAllServiceNodes
+	case Servicer:
+		protocolActorGetter = persistenceContext.GetAllServicers
 	case Validator:
 		protocolActorGetter = persistenceContext.GetAllValidators
 	}

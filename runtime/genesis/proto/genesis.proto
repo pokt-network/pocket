@@ -16,7 +16,7 @@ message GenesisState {
   repeated core.Account accounts = 5;
   repeated core.Actor applications = 6;
   repeated core.Actor validators = 7;
-  repeated core.Actor service_nodes = 8;
+  repeated core.Actor servicers = 8;
   repeated core.Actor fishermen = 9;
   Params params = 10;
 }
@@ -40,17 +40,17 @@ message Params {
   //@gotags: pokt:"val_type=BIGINT"
   int32 app_max_pause_blocks = 8;
   //@gotags: pokt:"val_type=STRING"
-  string service_node_minimum_stake = 9;
+  string servicer_minimum_stake = 9;
   //@gotags: pokt:"val_type=SMALLINT"
-  int32 service_node_max_chains = 10;
+  int32 servicer_max_chains = 10;
   //@gotags: pokt:"val_type=BIGINT"
-  int32 service_node_unstaking_blocks = 11;
+  int32 servicer_unstaking_blocks = 11;
   //@gotags: pokt:"val_type=SMALLINT"
-  int32 service_node_minimum_pause_blocks = 12;
+  int32 servicer_minimum_pause_blocks = 12;
   //@gotags: pokt:"val_type=BIGINT"
-  int32 service_node_max_pause_blocks = 13;
+  int32 servicer_max_pause_blocks = 13;
   //@gotags: pokt:"val_type=SMALLINT"
-  int32 service_nodes_per_session = 14;
+  int32 servicers_per_session = 14;
 
   //@gotags: pokt:"val_type=STRING"
   string fisherman_minimum_stake = 15;
@@ -98,7 +98,7 @@ message Params {
   //@gotags: pokt:"val_type=STRING"
   string message_unpause_fisherman_fee = 35;
   //@gotags: pokt:"val_type=STRING"
-  string message_fisherman_pause_service_node_fee = 36;
+  string message_fisherman_pause_servicer_fee = 36;
   //@gotags: pokt:"val_type=STRING"
   string message_test_score_fee = 37;
   //@gotags: pokt:"val_type=STRING"
@@ -124,15 +124,15 @@ message Params {
   //@gotags: pokt:"val_type=STRING"
   string message_unpause_validator_fee = 48;
   //@gotags: pokt:"val_type=STRING"
-  string message_stake_service_node_fee = 49;
+  string message_stake_servicer_fee = 49;
   //@gotags: pokt:"val_type=STRING"
-  string message_edit_stake_service_node_fee = 50;
+  string message_edit_stake_servicer_fee = 50;
   //@gotags: pokt:"val_type=STRING"
-  string message_unstake_service_node_fee = 51;
+  string message_unstake_servicer_fee = 51;
   //@gotags: pokt:"val_type=STRING"
-  string message_pause_service_node_fee = 52;
+  string message_pause_servicer_fee = 52;
   //@gotags: pokt:"val_type=STRING"
-  string message_unpause_service_node_fee = 53;
+  string message_unpause_servicer_fee = 53;
   //@gotags: pokt:"val_type=STRING"
   string message_change_parameter_fee = 54;
 
@@ -155,17 +155,17 @@ message Params {
   //@gotags: pokt:"val_type=STRING"
   string app_max_paused_blocks_owner = 63;
   //@gotags: pokt:"val_type=STRING"
-  string service_node_minimum_stake_owner = 64;
+  string servicer_minimum_stake_owner = 64;
   //@gotags: pokt:"val_type=STRING"
-  string service_node_max_chains_owner = 65;
+  string servicer_max_chains_owner = 65;
   //@gotags: pokt:"val_type=STRING"
-  string service_node_unstaking_blocks_owner = 66;
+  string servicer_unstaking_blocks_owner = 66;
   //@gotags: pokt:"val_type=STRING"
-  string service_node_minimum_pause_blocks_owner = 67;
+  string servicer_minimum_pause_blocks_owner = 67;
   //@gotags: pokt:"val_type=STRING"
-  string service_node_max_paused_blocks_owner = 68;
+  string servicer_max_paused_blocks_owner = 68;
   //@gotags: pokt:"val_type=STRING"
-  string service_nodes_per_session_owner = 69;
+  string servicers_per_session_owner = 69;
   //@gotags: pokt:"val_type=STRING"
   string fisherman_minimum_stake_owner = 70;
   //@gotags: pokt:"val_type=STRING"
@@ -209,7 +209,7 @@ message Params {
   //@gotags: pokt:"val_type=STRING"
   string message_unpause_fisherman_fee_owner = 90;
   //@gotags: pokt:"val_type=STRING"
-  string message_fisherman_pause_service_node_fee_owner = 91;
+  string message_fisherman_pause_servicer_fee_owner = 91;
   //@gotags: pokt:"val_type=STRING"
   string message_test_score_fee_owner = 92;
   //@gotags: pokt:"val_type=STRING"
@@ -235,15 +235,15 @@ message Params {
   //@gotags: pokt:"val_type=STRING"
   string message_unpause_validator_fee_owner = 103;
   //@gotags: pokt:"val_type=STRING"
-  string message_stake_service_node_fee_owner = 104;
+  string message_stake_servicer_fee_owner = 104;
   //@gotags: pokt:"val_type=STRING"
-  string message_edit_stake_service_node_fee_owner = 105;
+  string message_edit_stake_servicer_fee_owner = 105;
   //@gotags: pokt:"val_type=STRING"
-  string message_unstake_service_node_fee_owner = 106;
+  string message_unstake_servicer_fee_owner = 106;
   //@gotags: pokt:"val_type=STRING"
-  string message_pause_service_node_fee_owner = 107;
+  string message_pause_servicer_fee_owner = 107;
   //@gotags: pokt:"val_type=STRING"
-  string message_unpause_service_node_fee_owner = 108;
+  string message_unpause_servicer_fee_owner = 108;
   //@gotags: pokt:"val_type=STRING"
   string message_change_parameter_fee_owner = 109;
 }

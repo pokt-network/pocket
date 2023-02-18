@@ -13,66 +13,66 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func FuzzServiceNode(f *testing.F) {
+func FuzzServicer(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		newTestGenericActor(types.ServiceNodeActor, newTestServiceNode),
-		getGenericActor(types.ServiceNodeActor, getTestServiceNode),
-		types.ServiceNodeActor)
+		newTestGenericActor(types.ServicerActor, newTestServicer),
+		getGenericActor(types.ServicerActor, getTestServicer),
+		types.ServicerActor)
 }
 
-func TestGetSetServiceNodeStakeAmount(t *testing.T) {
+func TestGetSetServicerStakeAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 1)
-	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestServiceNode, db.GetServiceNodeStakeAmount, db.SetServiceNodeStakeAmount, 1)
+	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestServicer, db.GetServicerStakeAmount, db.SetServicerStakeAmount, 1)
 }
 
-func TestGetServiceNodeUpdatedAtHeight(t *testing.T) {
-	getServiceNodeUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*coreTypes.Actor, error) {
-		return db.GetActorsUpdated(types.ServiceNodeActor, height)
+func TestGetServicerUpdatedAtHeight(t *testing.T) {
+	getServicerUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*coreTypes.Actor, error) {
+		return db.GetActorsUpdated(types.ServicerActor, height)
 	}
-	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestServiceNode, getServiceNodeUpdatedFunc, 1)
+	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestServicer, getServicerUpdatedFunc, 1)
 }
 
-func TestInsertServiceNodeAndExists(t *testing.T) {
+func TestInsertServicerAndExists(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
-	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
+	servicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
 	db.Height = 1
 
-	serviceNode2, err := createAndInsertDefaultTestServiceNode(db)
+	servicer2, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	addrBz, err := hex.DecodeString(serviceNode.Address)
+	addrBz, err := hex.DecodeString(servicer.Address)
 	require.NoError(t, err)
-	addrBz2, err := hex.DecodeString(serviceNode2.Address)
+	addrBz2, err := hex.DecodeString(servicer2.Address)
 	require.NoError(t, err)
 
-	exists, err := db.GetServiceNodeExists(addrBz, 0)
+	exists, err := db.GetServicerExists(addrBz, 0)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at previous height does not")
-	exists, err = db.GetServiceNodeExists(addrBz, 1)
+	exists, err = db.GetServicerExists(addrBz, 1)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at current height does not")
 
-	exists, err = db.GetServiceNodeExists(addrBz2, 0)
+	exists, err = db.GetServicerExists(addrBz2, 0)
 	require.NoError(t, err)
-	require.False(t, exists, "actor that should not exist at previous height serviceNodeears to")
-	exists, err = db.GetServiceNodeExists(addrBz2, 1)
+	require.False(t, exists, "actor that should not exist at previous height servicerears to")
+	exists, err = db.GetServicerExists(addrBz2, 1)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at current height does not")
 }
 
-func TestUpdateServiceNode(t *testing.T) {
+func TestUpdateServicer(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
-	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
+	servicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	addrBz, err := hex.DecodeString(serviceNode.Address)
+	addrBz, err := hex.DecodeString(servicer.Address)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, chains, err := db.GetServiceNode(addrBz, 0)
+	_, _, stakedTokens, _, _, _, _, chains, err := db.GetServicer(addrBz, 0)
 	require.NoError(t, err)
 	require.Equal(t, DefaultChains, chains, "default chains incorrect for current height")
 	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for current height")
@@ -81,146 +81,146 @@ func TestUpdateServiceNode(t *testing.T) {
 
 	require.NotEqual(t, DefaultStake, StakeToUpdate)   // sanity check to make sure the tests are correct
 	require.NotEqual(t, DefaultChains, ChainsToUpdate) // sanity check to make sure the tests are correct
-	err = db.UpdateServiceNode(addrBz, serviceNode.GenericParam, StakeToUpdate, ChainsToUpdate)
+	err = db.UpdateServicer(addrBz, servicer.GenericParam, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, chains, err = db.GetServiceNode(addrBz, 0)
+	_, _, stakedTokens, _, _, _, _, chains, err = db.GetServicer(addrBz, 0)
 	require.NoError(t, err)
 	require.Equal(t, DefaultChains, chains, "default chains incorrect for previous height")
 	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for previous height")
 
-	_, _, stakedTokens, _, _, _, _, chains, err = db.GetServiceNode(addrBz, 1)
+	_, _, stakedTokens, _, _, _, _, chains, err = db.GetServicer(addrBz, 1)
 	require.NoError(t, err)
 	require.Equal(t, ChainsToUpdate, chains, "chains not updated for current height")
 	require.Equal(t, StakeToUpdate, stakedTokens, "stake not updated for current height")
 }
 
-func TestGetServiceNodesReadyToUnstake(t *testing.T) {
+func TestGetServicersReadyToUnstake(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
-	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
+	servicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	serviceNode2, err := createAndInsertDefaultTestServiceNode(db)
+	servicer2, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	serviceNode3, err := createAndInsertDefaultTestServiceNode(db)
+	servicer3, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	addrBz, err := hex.DecodeString(serviceNode.Address)
+	addrBz, err := hex.DecodeString(servicer.Address)
 	require.NoError(t, err)
 
-	addrBz2, err := hex.DecodeString(serviceNode2.Address)
+	addrBz2, err := hex.DecodeString(servicer2.Address)
 	require.NoError(t, err)
 
-	addrBz3, err := hex.DecodeString(serviceNode3.Address)
+	addrBz3, err := hex.DecodeString(servicer3.Address)
 	require.NoError(t, err)
 
-	// Unstake serviceNode at height 0
-	err = db.SetServiceNodeUnstakingHeightAndStatus(addrBz, 0, persistence.UnstakingStatus)
+	// Unstake servicer at height 0
+	err = db.SetServicerUnstakingHeightAndStatus(addrBz, 0, persistence.UnstakingStatus)
 	require.NoError(t, err)
 
-	// Unstake serviceNode2 and serviceNode3 at height 1
-	err = db.SetServiceNodeUnstakingHeightAndStatus(addrBz2, 1, persistence.UnstakingStatus)
+	// Unstake servicer2 and servicer3 at height 1
+	err = db.SetServicerUnstakingHeightAndStatus(addrBz2, 1, persistence.UnstakingStatus)
 	require.NoError(t, err)
-	err = db.SetServiceNodeUnstakingHeightAndStatus(addrBz3, 1, persistence.UnstakingStatus)
+	err = db.SetServicerUnstakingHeightAndStatus(addrBz3, 1, persistence.UnstakingStatus)
 	require.NoError(t, err)
 
-	// Check unstaking serviceNodes at height 0
-	unstakingServiceNodes, err := db.GetServiceNodesReadyToUnstake(0, persistence.UnstakingStatus)
+	// Check unstaking servicers at height 0
+	unstakingServicers, err := db.GetServicersReadyToUnstake(0, persistence.UnstakingStatus)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(unstakingServiceNodes), "wrong number of actors ready to unstake at height 0")
-	require.Equal(t, serviceNode.Address, unstakingServiceNodes[0].Address, "unexpected serviceNodelication actor returned")
+	require.Equal(t, 1, len(unstakingServicers), "wrong number of actors ready to unstake at height 0")
+	require.Equal(t, servicer.Address, unstakingServicers[0].Address, "unexpected servicerlication actor returned")
 
-	// Check unstaking serviceNodes at height 1
-	unstakingServiceNodes, err = db.GetServiceNodesReadyToUnstake(1, persistence.UnstakingStatus)
+	// Check unstaking servicers at height 1
+	unstakingServicers, err = db.GetServicersReadyToUnstake(1, persistence.UnstakingStatus)
 	require.NoError(t, err)
-	require.Equal(t, 2, len(unstakingServiceNodes), "wrong number of actors ready to unstake at height 1")
-	require.ElementsMatch(t, []string{serviceNode2.Address, serviceNode3.Address}, []string{unstakingServiceNodes[0].Address, unstakingServiceNodes[1].Address})
+	require.Equal(t, 2, len(unstakingServicers), "wrong number of actors ready to unstake at height 1")
+	require.ElementsMatch(t, []string{servicer2.Address, servicer3.Address}, []string{unstakingServicers[0].Address, unstakingServicers[1].Address})
 }
 
-func TestGetServiceNodeStatus(t *testing.T) {
+func TestGetServicerStatus(t *testing.T) {
 	db := NewTestPostgresContext(t, 1)
 
-	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
+	servicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	addrBz, err := hex.DecodeString(serviceNode.Address)
+	addrBz, err := hex.DecodeString(servicer.Address)
 	require.NoError(t, err)
 
-	// Check status before the serviceNode exists
-	status, err := db.GetServiceNodeStatus(addrBz, 0)
+	// Check status before the servicer exists
+	status, err := db.GetServicerStatus(addrBz, 0)
 	require.Error(t, err)
 	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
 
-	// Check status after the serviceNode exists
-	status, err = db.GetServiceNodeStatus(addrBz, 1)
+	// Check status after the servicer exists
+	status, err = db.GetServicerStatus(addrBz, 1)
 	require.NoError(t, err)
 	require.Equal(t, DefaultStakeStatus, status, "unexpected status")
 }
 
-func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
+func TestGetServicerPauseHeightIfExists(t *testing.T) {
 	db := NewTestPostgresContext(t, 1)
 
-	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
+	servicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	addrBz, err := hex.DecodeString(serviceNode.Address)
+	addrBz, err := hex.DecodeString(servicer.Address)
 	require.NoError(t, err)
 
-	// Check pause height when serviceNode does not exist
-	pauseHeight, err := db.GetServiceNodePauseHeightIfExists(addrBz, 0)
+	// Check pause height when servicer does not exist
+	pauseHeight, err := db.GetServicerPauseHeightIfExists(addrBz, 0)
 	require.Error(t, err)
 	require.Equal(t, DefaultPauseHeight, pauseHeight, "unexpected pause height")
 
-	// Check pause height when serviceNode does not exist
-	pauseHeight, err = db.GetServiceNodePauseHeightIfExists(addrBz, 1)
+	// Check pause height when servicer does not exist
+	pauseHeight, err = db.GetServicerPauseHeightIfExists(addrBz, 1)
 	require.NoError(t, err)
 	require.Equal(t, DefaultPauseHeight, pauseHeight, "unexpected pause height")
 }
 
-func TestSetServiceNodePauseHeightAndUnstakeLater(t *testing.T) {
+func TestSetServicerPauseHeightAndUnstakeLater(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
-	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
+	servicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
 	pauseHeight := int64(1)
 	unstakingHeight := pauseHeight + 10
 
-	addrBz, err := hex.DecodeString(serviceNode.Address)
+	addrBz, err := hex.DecodeString(servicer.Address)
 	require.NoError(t, err)
 
-	err = db.SetServiceNodePauseHeight(addrBz, pauseHeight)
+	err = db.SetServicerPauseHeight(addrBz, pauseHeight)
 	require.NoError(t, err)
 
-	_, _, _, _, _, serviceNodePausedHeight, _, _, err := db.GetServiceNode(addrBz, db.Height)
+	_, _, _, _, _, servicerPausedHeight, _, _, err := db.GetServicer(addrBz, db.Height)
 	require.NoError(t, err)
-	require.Equal(t, pauseHeight, serviceNodePausedHeight, "pause height not updated")
+	require.Equal(t, pauseHeight, servicerPausedHeight, "pause height not updated")
 
-	err = db.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pauseHeight+1, unstakingHeight, -1 /*unused*/)
+	err = db.SetServicerStatusAndUnstakingHeightIfPausedBefore(pauseHeight+1, unstakingHeight, -1 /*unused*/)
 	require.NoError(t, err)
 
-	_, _, _, _, _, _, serviceNodeUnstakingHeight, _, err := db.GetServiceNode(addrBz, db.Height)
+	_, _, _, _, _, _, servicerUnstakingHeight, _, err := db.GetServicer(addrBz, db.Height)
 	require.NoError(t, err)
-	require.Equal(t, unstakingHeight, serviceNodeUnstakingHeight, "unstaking height was not set correctly")
+	require.Equal(t, unstakingHeight, servicerUnstakingHeight, "unstaking height was not set correctly")
 }
 
-func TestGetServiceNodeOutputAddress(t *testing.T) {
+func TestGetServicerOutputAddress(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
-	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
+	servicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	addrBz, err := hex.DecodeString(serviceNode.Address)
+	addrBz, err := hex.DecodeString(servicer.Address)
 	require.NoError(t, err)
 
-	output, err := db.GetServiceNodeOutputAddress(addrBz, 0)
+	output, err := db.GetServicerOutputAddress(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, serviceNode.Output, hex.EncodeToString(output), "unexpected output address")
+	require.Equal(t, servicer.Output, hex.EncodeToString(output), "unexpected output address")
 }
 
-func newTestServiceNode() (*coreTypes.Actor, error) {
+func newTestServicer() (*coreTypes.Actor, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -243,24 +243,24 @@ func newTestServiceNode() (*coreTypes.Actor, error) {
 	}, nil
 }
 
-func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*coreTypes.Actor, error) {
-	serviceNode, err := newTestServiceNode()
+func createAndInsertDefaultTestServicer(db *persistence.PostgresContext) (*coreTypes.Actor, error) {
+	servicer, err := newTestServicer()
 	if err != nil {
 		return nil, err
 	}
-	addrBz, err := hex.DecodeString(serviceNode.Address)
+	addrBz, err := hex.DecodeString(servicer.Address)
 	if err != nil {
-		log.Fatalf("an error occurred converting address to bytes %s", serviceNode.Address)
+		log.Fatalf("an error occurred converting address to bytes %s", servicer.Address)
 	}
-	pubKeyBz, err := hex.DecodeString(serviceNode.PublicKey)
+	pubKeyBz, err := hex.DecodeString(servicer.PublicKey)
 	if err != nil {
-		log.Fatalf("an error occurred converting pubKey to bytes %s", serviceNode.PublicKey)
+		log.Fatalf("an error occurred converting pubKey to bytes %s", servicer.PublicKey)
 	}
-	outputBz, err := hex.DecodeString(serviceNode.Output)
+	outputBz, err := hex.DecodeString(servicer.Output)
 	if err != nil {
-		log.Fatalf("an error occurred converting output to bytes %s", serviceNode.Output)
+		log.Fatalf("an error occurred converting output to bytes %s", servicer.Output)
 	}
-	return serviceNode, db.InsertServiceNode(
+	return servicer, db.InsertServicer(
 		addrBz,
 		pubKeyBz,
 		outputBz,
@@ -273,8 +273,8 @@ func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*co
 		DefaultUnstakingHeight)
 }
 
-func getTestServiceNode(db *persistence.PostgresContext, address []byte) (*coreTypes.Actor, error) {
-	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetServiceNode(address, db.Height)
+func getTestServicer(db *persistence.PostgresContext, address []byte) (*coreTypes.Actor, error) {
+	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetServicer(address, db.Height)
 	if err != nil {
 		return nil, err
 	}

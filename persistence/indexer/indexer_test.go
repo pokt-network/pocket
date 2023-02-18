@@ -263,6 +263,7 @@ func randomErr() (code int32, err string) {
 }
 
 // Generates a random alphanumeric sequence of exactly 50 characters
+//
 //nolint:gosec // G404 - Weak random source is okay in unit tests
 func randLetterBytes() []byte {
 	randBytes := make([]byte, 50)

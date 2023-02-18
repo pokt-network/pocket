@@ -2,29 +2,29 @@ package types
 
 import coreTypes "github.com/pokt-network/pocket/shared/core/types"
 
-var _ ProtocolActorSchema = &ServiceNodeSchema{}
+var _ ProtocolActorSchema = &ServicerSchema{}
 
-type ServiceNodeSchema struct {
+type ServicerSchema struct {
 	BaseProtocolActorSchema
 }
 
 const (
-	ServiceNodeTableName            = "service_node"
-	ServiceNodeChainsTableName      = "service_node_chains"
-	ServiceNodeHeightConstraintName = "service_node_height"
-	ServiceNodeChainsConstraintName = "service_node_chain_height"
+	ServicerTableName            = "servicer"
+	ServicerChainsTableName      = "servicer_chains"
+	ServicerHeightConstraintName = "servicer_height"
+	ServicerChainsConstraintName = "servicer_chain_height"
 )
 
-var ServiceNodeActor ProtocolActorSchema = &ServiceNodeSchema{
+var ServicerActor ProtocolActorSchema = &ServicerSchema{
 	BaseProtocolActorSchema: BaseProtocolActorSchema{
-		actorType: coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
+		actorType: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
 
-		tableName:       ServiceNodeTableName,
-		chainsTableName: ServiceNodeChainsTableName,
+		tableName:       ServicerTableName,
+		chainsTableName: ServicerChainsTableName,
 
 		actorSpecificColName: ServiceURLCol,
 
-		heightConstraintName:       ServiceNodeHeightConstraintName,
-		chainsHeightConstraintName: ServiceNodeChainsConstraintName,
+		heightConstraintName:       ServicerHeightConstraintName,
+		chainsHeightConstraintName: ServicerChainsConstraintName,
 	},
 }

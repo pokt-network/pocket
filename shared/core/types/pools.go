@@ -9,7 +9,7 @@ func init() {
 		Pools_POOLS_FEE_COLLECTOR:      "FeeCollector",
 		Pools_POOLS_APP_STAKE:          "AppStakePool",
 		Pools_POOLS_VALIDATOR_STAKE:    "ValidatorStakePool",
-		Pools_POOLS_SERVICE_NODE_STAKE: "ServiceNodeStakePool",
+		Pools_POOLS_SERVICE_NODE_STAKE: "ServicerStakePool",
 	}
 }
 

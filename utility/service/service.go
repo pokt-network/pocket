@@ -125,7 +125,7 @@ func (r *relay) ReportVolumeMetrics(fishermanServiceURL string, volumeRelays []R
 	// a proper verification of the volume completed. Send volumeRelays to fishermanServiceURL
 	// through http.
 
-	// NOTE: an alternative design is a 2 step, claim - proof lifecycle where the individual service nodes
+	// NOTE: an alternative design is a 2 step, claim - proof lifecycle where the individual servicers
 	// build a merkle sum index tree from all the relays, submits a root and subsequent merkle proof to the
 	// network.
 	//

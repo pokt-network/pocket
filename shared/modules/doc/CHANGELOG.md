@@ -73,7 +73,7 @@ UtilityModule
 - Added accounts and pools to utility_genesis_state
 - Added validators to utility_genesis_state
 - Added applications to utility_genesis_state
-- Added service_nodes to utility_genesis_state
+- Added servicers to utility_genesis_state
 - Added fishermen to utility_genesis_state
 - Deprecated shared/config/
 - Added new shared config proto3 structure

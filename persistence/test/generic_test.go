@@ -98,7 +98,7 @@ func getAllActorsTest[T any](
 	require.NoError(t, err)
 	require.Len(t, actors, initialCount+3)
 
-	// Update the service nodes at different heights and confirm that count does not change
+	// Update the servicers at different heights and confirm that count does not change
 	for _, actor := range actors {
 		db.Height++
 		err = updateActor(db, actor)

@@ -135,8 +135,8 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 				paramName = typesUtil.AppUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
 				paramName = typesUtil.FishermanUnstakingBlocksParamName
-			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				paramName = typesUtil.ServiceNodeUnstakingBlocksParamName
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+				paramName = typesUtil.ServicerUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
 				paramName = typesUtil.ValidatorUnstakingBlocksParamName
 			default:
@@ -186,8 +186,8 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 				paramName = typesUtil.AppMinimumPauseBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
 				paramName = typesUtil.FishermanMinimumPauseBlocksParamName
-			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				paramName = typesUtil.ServiceNodeMinimumPauseBlocksParamName
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+				paramName = typesUtil.ServicerMinimumPauseBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
 				paramName = typesUtil.ValidatorMinimumPauseBlocksParamName
 			default:
@@ -266,8 +266,8 @@ func TestUtilityContext_GetUnbondingHeight(t *testing.T) {
 				unstakingBlocks, err = ctx.getAppUnstakingBlocks()
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
 				unstakingBlocks, err = ctx.getFishermanUnstakingBlocks()
-			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				unstakingBlocks, err = ctx.getServiceNodeUnstakingBlocks()
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+				unstakingBlocks, err = ctx.getServicerUnstakingBlocks()
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
 				unstakingBlocks, err = ctx.getValidatorUnstakingBlocks()
 			default:
@@ -301,8 +301,8 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 				paramName = typesUtil.AppMaxPauseBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
 				paramName = typesUtil.FishermanMaxPauseBlocksParamName
-			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				paramName = typesUtil.ServiceNodeMaxPauseBlocksParamName
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+				paramName = typesUtil.ServicerMaxPauseBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
 				paramName = typesUtil.ValidatorMaxPausedBlocksParamName
 			default:
@@ -388,10 +388,10 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 				poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
 				paramName1 = typesUtil.FishermanMaxPauseBlocksParamName
 				paramName2 = typesUtil.FishermanUnstakingBlocksParamName
-			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 				poolName = coreTypes.Pools_POOLS_SERVICE_NODE_STAKE.FriendlyName()
-				paramName1 = typesUtil.ServiceNodeMaxPauseBlocksParamName
-				paramName2 = typesUtil.ServiceNodeUnstakingBlocksParamName
+				paramName1 = typesUtil.ServicerMaxPauseBlocksParamName
+				paramName2 = typesUtil.ServicerUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
 				poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()
 				paramName1 = typesUtil.ValidatorMaxPausedBlocksParamName
@@ -662,7 +662,7 @@ func getAllTestingActors(t *testing.T, ctx *utilityContext, actorType coreTypes.
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		fish := getAllTestingFish(t, ctx)
 		actors = append(actors, fish...)
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		nodes := getAllTestingServicers(t, ctx)
 		actors = append(actors, nodes...)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -707,7 +707,7 @@ func getAllTestingFish(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
 }
 
 func getAllTestingServicers(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.persistenceContext).GetAllServiceNodes(ctx.height)
+	actors, err := (ctx.persistenceContext).GetAllServicers(ctx.height)
 	require.NoError(t, err)
 	return actors
 }

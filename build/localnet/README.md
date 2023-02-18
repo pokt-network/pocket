@@ -125,7 +125,7 @@ For example:
 
 - `420043b854e78f2d5f03895bba9ef16972913320` is a validator #420.
 - `66603bc4082281b7de23001ffd237da62c66a839` is a fisherperson #666.
-- `0010297b55fc9278e4be4f1bcfe52bf9bd0443f8` is a service node (a servicer) #001.
+- `0010297b55fc9278e4be4f1bcfe52bf9bd0443f8` is a servicer (a servicer) #001.
 - `314019dbb7faf8390c1f0cf4976ef1215c90b7e4` is an application #314.
 
 ## How to change configuration files

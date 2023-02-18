@@ -52,7 +52,7 @@ var (
 	testSchema = "test_schema"
 
 	genesisStateNumValidators   = 5
-	genesisStateNumServiceNodes = 1
+	genesisStateNumServicers    = 1
 	genesisStateNumApplications = 1
 	genesisStateNumFishermen    = 1
 )
@@ -112,9 +112,9 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 
 	genesisState, _ := test_artifacts.NewGenesisState(
 		genesisStateNumValidators,
-		genesisStateNumServiceNodes,
+		genesisStateNumServicers,
 		genesisStateNumApplications,
-		genesisStateNumServiceNodes,
+		genesisStateNumServicers,
 	)
 	runtimeMgr := runtime.NewManager(cfg, genesisState)
 	bus, err := runtime.CreateBus(runtimeMgr)
@@ -133,6 +133,7 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 }
 
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
+//
 //nolint:gosec // G404 - Weak random source is okay in unit tests
 func fuzzSingleProtocolActor(
 	f *testing.F,

@@ -138,8 +138,8 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		er = store.InsertServiceNode(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		er = store.InsertServicer(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	}
@@ -200,8 +200,8 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 		er = store.UpdateApp(message.Address, maxRelays, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		er = store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		er = store.UpdateServiceNode(message.Address, message.ServiceUrl, message.Amount, message.Chains)
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		er = store.UpdateServicer(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		er = store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
 	}
