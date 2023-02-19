@@ -2,11 +2,12 @@ package debug
 
 import (
 	"fmt"
-	"github.com/pokt-network/pocket/shared"
-	"log"
 	"os"
 	"path/filepath"
 	r "runtime"
+
+	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/shared"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/runtime"
@@ -33,12 +34,13 @@ var (
 func init() {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("[ERROR] Cannot find user home directory: %s", err.Error())
+		logger.Global.Fatal().Err(err).Msg("Cannot find user home directory")
 	}
 	debugKeybasePath = homeDir + debugKeybaseSuffix
 
-	if err := initializeDebugKeybase(); err != nil { // Initialise the debug keybase with the 999 validators
-		log.Fatalf("[ERROR] Cannot initialise the keybase with the validator keys: %s", err.Error())
+	// Initialise the debug keybase with the 999 validators
+	if err := initializeDebugKeybase(); err != nil {
+		logger.Global.Fatal().Err(err).Msg("Cannot initialise the keybase with the validator keys")
 	}
 }
 
