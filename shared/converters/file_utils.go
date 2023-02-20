@@ -1,4 +1,4 @@
-package shared
+package converters
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ func DirExists(path string) (bool, error) {
 	if err == nil {
 		// Exists but not directory
 		if !stat.IsDir() {
-			return false, fmt.Errorf("Keybase path is not a directory: %s", path)
+			return false, fmt.Errorf("Path exists but is not a directory: %s", path)
 		}
 		return true, nil
 	}
@@ -51,10 +51,7 @@ func WriteOutput(msg, outputFile string) error {
 	if _, err := file.WriteString(msg); err != nil {
 		return err
 	}
-	if err := file.Close(); err != nil {
-		return err
-	}
-	return nil
+	return file.Close()
 }
 
 func ReadInput(inputFile string) (string, error) {
