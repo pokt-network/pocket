@@ -27,6 +27,27 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 				Dst: string(coreTypes.StateMachineState_P2P_Bootstrapping),
 			},
 			{
+				Name: string(coreTypes.StateMachineEvent_Start),
+				Src: []string{
+					string(coreTypes.StateMachineState_Stopped),
+				},
+				Dst: string(coreTypes.StateMachineState_Consensus_Server_Disabled),
+			},
+			{
+				Name: string(coreTypes.StateMachineEvent_Consensus_EnableServerMode),
+				Src: []string{
+					string(coreTypes.StateMachineState_Consensus_Server_Enabled),
+				},
+				Dst: string(coreTypes.StateMachineState_Consensus_Server_Disabled),
+			},
+			{
+				Name: string(coreTypes.StateMachineEvent_Consensus_DisableServerMode),
+				Src: []string{
+					string(coreTypes.StateMachineState_Consensus_Server_Disabled),
+				},
+				Dst: string(coreTypes.StateMachineState_Consensus_Server_Enabled),
+			},
+			{
 				Name: string(coreTypes.StateMachineEvent_P2P_IsBootstrapped),
 				Src: []string{
 					string(coreTypes.StateMachineState_P2P_Bootstrapping),
@@ -41,6 +62,13 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 				Dst: string(coreTypes.StateMachineState_Consensus_Unsynched),
 			},
 			{
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsUnsynched),
+				Src: []string{
+					string(coreTypes.StateMachineState_Consensus_Synced),
+				},
+				Dst: string(coreTypes.StateMachineState_Consensus_Unsynched),
+			},
+			{
 				Name: string(coreTypes.StateMachineEvent_Consensus_IsSyncing),
 				Src: []string{
 					string(coreTypes.StateMachineState_Consensus_Unsynched),
@@ -48,12 +76,19 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 				Dst: string(coreTypes.StateMachineState_Consensus_SyncMode),
 			},
 			{
-				Name: string(coreTypes.StateMachineEvent_Consensus_IsCaughtUp),
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsCaughtUpNonValidator),
 				Src: []string{
 					string(coreTypes.StateMachineState_P2P_Bootstrapped),
 					string(coreTypes.StateMachineState_Consensus_SyncMode),
 				},
 				Dst: string(coreTypes.StateMachineState_Consensus_Synced),
+			},
+			{
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsCaughtUpValidator),
+				Src: []string{
+					string(coreTypes.StateMachineState_Consensus_SyncMode),
+				},
+				Dst: string(coreTypes.StateMachineState_Consensus_Pacemaker),
 			},
 		},
 		cb,
