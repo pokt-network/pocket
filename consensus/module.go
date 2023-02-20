@@ -16,6 +16,7 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -220,6 +221,10 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 
 	if consensusCfg.ServerModeEnabled {
 		m.stateSync.EnableServerMode()
+		//transition existing server_mode_disabled state to enabled
+		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_EnableServerMode); err != nil {
+			return nil, err
+		}
 	}
 
 	m.initMessagesPool()
@@ -321,6 +326,19 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
 			return err
 		}
+	case StateMachineTransitionEventType:
+		msg, err := codec.GetCodec().FromAny(message)
+		if err != nil {
+			return err
+		}
+		stateMachineTransitionEvent, ok := msg.(*messaging.StateMachineTransitionEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast message to StateMachineTransitionEvent")
+		}
+		if err := m.handleStateMachineTransitionEvent(stateMachineTransitionEvent); err != nil {
+			return err
+		}
+
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}
@@ -361,6 +379,19 @@ func (m *consensusModule) loadPersistedState() error {
 	return nil
 }
 
-func (m *consensusModule) EnableServerMode() {
-	m.stateSync.EnableServerMode()
+func (m *consensusModule) EnableServerMode() error {
+	return m.stateSync.EnableServerMode()
+}
+
+func (m *consensusModule) DisableServerMode() error {
+	return m.stateSync.DisableServerMode()
+}
+
+// TODO! Implement this, placeholder function
+func (m *consensusModule) IsValidator() bool {
+	return true
+}
+
+func (m *consensusModule) IsOutOfSync() bool {
+	return m.stateSync.IsOutOfSync()
 }
