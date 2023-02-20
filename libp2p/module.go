@@ -56,7 +56,7 @@ var (
 	ErrModule = typesP2P.NewErrFactory("libp2p module error")
 )
 
-func Create(bus modules.Bus) (modules.Module, error) {
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return CreateWithProviders(
 		bus,
 		persistence.NewPersistenceAddrBookProvider(bus),
@@ -81,7 +81,7 @@ func (mod *libp2pModule) GetModuleName() string {
 	return modules.P2PModuleName
 }
 
-func (mod *libp2pModule) Create(bus modules.Bus) (modules.Module, error) {
+func (mod *libp2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return Create(bus)
 }
 
@@ -90,25 +90,20 @@ func (mod *libp2pModule) CreateWithProviders(
 	addrBookProvider addrbook_provider.AddrBookProvider,
 	currentHeightProvider providers.CurrentHeightProvider,
 ) (modules.Module, error) {
-	p2pConfig := bus.GetRuntimeMgr().GetConfig().P2P
+	*mod = libp2pModule{
+		addrBookProvider:      addrBookProvider,
+		currentHeightProvider: currentHeightProvider,
+		cfg:                   bus.GetRuntimeMgr().GetConfig().P2P,
+	}
 
 	// TECHDEBT: investigate any unnecessary
 	// key exposure / duplication in memory
-	privateKey, err := crypto.NewLibP2PPrivateKey(p2pConfig.PrivateKey)
+	privateKey, err := crypto.NewLibP2PPrivateKey(mod.cfg.PrivateKey)
 	if err != nil {
 		return nil, ErrModule("loading private key", err)
 	}
 
-	*mod = libp2pModule{
-		addrBookProvider:      addrBookProvider,
-		currentHeightProvider: currentHeightProvider,
-		cfg:                   p2pConfig,
-		identity:              libp2p.Identity(privateKey),
-	}
-
-	if err := bus.RegisterModule(mod); err != nil {
-		return nil, ErrModule("unable to register module", err)
-	}
+	mod.identity = libp2p.Identity(privateKey)
 
 	logger.Global.Print("Creating libp2p-backed network module")
 
@@ -134,9 +129,7 @@ func (mod *libp2pModule) CreateWithProviders(
 		))
 	}
 
-	if err := bus.RegisterModule(mod); err != nil {
-		return nil, ErrModule("registering module", err)
-	}
+	bus.RegisterModule(mod)
 	return mod, nil
 }
 
@@ -370,4 +363,8 @@ func (mod *libp2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
 // based on the read stream timeout duration.
 func newReadStreamDeadline() time.Time {
 	return time.Now().Add(readStreamTimeoutDuration)
+}
+
+func (mod *libp2pModule) HandleEvent(msg *anypb.Any) error {
+	return nil
 }

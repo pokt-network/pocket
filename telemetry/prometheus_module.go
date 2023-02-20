@@ -8,6 +8,7 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -23,7 +24,9 @@ var (
 // DISCUSS(team): Should the warning logs in this module be handled differently?
 
 type PrometheusTelemetryModule struct {
-	bus    modules.Bus
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
+
 	config *configs.TelemetryConfig
 
 	logger modules.Logger
@@ -33,16 +36,18 @@ type PrometheusTelemetryModule struct {
 	gaugeVectors map[string]prometheus.GaugeVec
 }
 
-func CreatePrometheusTelemetryModule(bus modules.Bus) (modules.Module, error) {
-	var m PrometheusTelemetryModule
-	return m.Create(bus)
+func CreatePrometheusTelemetryModule(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(PrometheusTelemetryModule).Create(bus, options...)
 }
 
-func (*PrometheusTelemetryModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*PrometheusTelemetryModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &PrometheusTelemetryModule{}
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
+
+	for _, option := range options {
+		option(m)
 	}
+
+	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
@@ -79,23 +84,8 @@ func (m *PrometheusTelemetryModule) Start() error {
 	return nil
 }
 
-func (m *PrometheusTelemetryModule) Stop() error {
-	return nil
-}
-
-func (m *PrometheusTelemetryModule) SetBus(bus modules.Bus) {
-	m.bus = bus
-}
-
 func (m *PrometheusTelemetryModule) GetModuleName() string {
 	return fmt.Sprintf("%s_prometheus", modules.TelemetryModuleName)
-}
-
-func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
-	if m.bus == nil {
-		m.logger.Fatal().Msg("PocketBus is not initialized")
-	}
-	return m.bus
 }
 
 // EventMetricsAgent interface implementation

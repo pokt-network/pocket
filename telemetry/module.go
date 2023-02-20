@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 var (
@@ -12,14 +13,17 @@ var (
 	}
 )
 
-type telemetryModule struct{}
+type telemetryModule struct {
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
+}
 
-func Create(bus modules.Bus) (modules.Module, error) {
-	return new(telemetryModule).Create(bus)
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(telemetryModule).Create(bus, options...)
 }
 
 // TODO(pocket/issues/99): Add a switch statement and configuration variable when support for other telemetry modules is added.
-func (*telemetryModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*telemetryModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 
@@ -32,8 +36,4 @@ func (*telemetryModule) Create(bus modules.Bus) (modules.Module, error) {
 	}
 }
 
-func (t *telemetryModule) GetModuleName() string  { return modules.TelemetryModuleName }
-func (t *telemetryModule) SetBus(bus modules.Bus) {}
-func (t *telemetryModule) GetBus() modules.Bus    { return nil }
-func (t *telemetryModule) Start() error           { return nil }
-func (t *telemetryModule) Stop() error            { return nil }
+func (t *telemetryModule) GetModuleName() string { return modules.TelemetryModuleName }

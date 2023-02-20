@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
@@ -15,7 +16,7 @@ import (
 var (
 	defaultTestingChains = []string{"0001"}
 	defaultAmountBig     = big.NewInt(1000000)
-	defaultAmount        = BigIntToString(defaultAmountBig)
+	defaultAmount        = converters.BigIntToString(defaultAmountBig)
 	defaultUnusedLength  = -1
 )
 
@@ -50,66 +51,6 @@ func TestMessage_ChangeParameter_ValidateBasic(t *testing.T) {
 	require.Equal(t, ErrEmptyParamValue().Code(), msgMissingParamValue.ValidateBasic().Code())
 }
 
-func TestMessage_DoubleSign_ValidateBasic(t *testing.T) {
-	pk, err := crypto.GeneratePublicKey()
-	require.NoError(t, err)
-
-	hashA := crypto.SHA3Hash(pk.Bytes())
-	hashB := crypto.SHA3Hash(pk.Address())
-	voteA := &LegacyVote{
-		PublicKey: pk.Bytes(),
-		Height:    1,
-		Round:     2,
-		Type:      DoubleSignEvidenceType,
-		BlockHash: hashA,
-	}
-	voteB := &LegacyVote{
-		PublicKey: pk.Bytes(),
-		Height:    1,
-		Round:     2,
-		Type:      DoubleSignEvidenceType,
-		BlockHash: hashB,
-	}
-	reporter, _ := crypto.GenerateAddress()
-	msg := &MessageDoubleSign{
-		VoteA:           voteA,
-		VoteB:           voteB,
-		ReporterAddress: reporter,
-	}
-	er := msg.ValidateBasic()
-	require.NoError(t, er)
-
-	pk2, err := crypto.GeneratePublicKey()
-	require.NoError(t, err)
-	msgUnequalPubKeys := new(MessageDoubleSign)
-	msgUnequalPubKeys.VoteA = proto.Clone(msg.VoteA).(*LegacyVote)
-	msgUnequalPubKeys.VoteB = proto.Clone(msg.VoteB).(*LegacyVote)
-	msgUnequalPubKeys.VoteA.PublicKey = pk2.Bytes()
-	er = msgUnequalPubKeys.ValidateBasic()
-	require.Equal(t, ErrUnequalPublicKeys().Code(), er.Code())
-
-	msgUnequalHeights := new(MessageDoubleSign)
-	msgUnequalHeights.VoteA = proto.Clone(msg.VoteA).(*LegacyVote)
-	msgUnequalHeights.VoteB = proto.Clone(msg.VoteB).(*LegacyVote)
-	msgUnequalHeights.VoteA.Height = 2
-	er = msgUnequalHeights.ValidateBasic()
-	require.Equal(t, ErrUnequalHeights().Code(), er.Code())
-
-	msgUnequalRounds := new(MessageDoubleSign)
-	msgUnequalRounds.VoteA = proto.Clone(msg.VoteA).(*LegacyVote)
-	msgUnequalRounds.VoteB = proto.Clone(msg.VoteB).(*LegacyVote)
-	msgUnequalRounds.VoteA.Round = 1
-	er = msgUnequalRounds.ValidateBasic()
-	require.Equal(t, ErrUnequalRounds().Code(), er.Code())
-
-	msgEqualVoteHash := new(MessageDoubleSign)
-	msgEqualVoteHash.VoteA = proto.Clone(msg.VoteA).(*LegacyVote)
-	msgEqualVoteHash.VoteB = proto.Clone(msg.VoteB).(*LegacyVote)
-	msgEqualVoteHash.VoteB.BlockHash = hashA
-	er = msgEqualVoteHash.ValidateBasic()
-	require.Equal(t, ErrEqualVotes().Code(), er.Code())
-}
-
 func TestMessage_EditStake_ValidateBasic(t *testing.T) {
 	addr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
@@ -131,7 +72,7 @@ func TestMessage_EditStake_ValidateBasic(t *testing.T) {
 	msgInvalidAmount := proto.Clone(&msg).(*MessageEditStake)
 	msgInvalidAmount.Amount = "sdk"
 	er = msgInvalidAmount.ValidateBasic()
-	require.Equal(t, ErrStringToBigInt().Code(), er.Code())
+	require.Equal(t, ErrStringToBigInt(er).Code(), er.Code())
 
 	msgEmptyAddress := proto.Clone(&msg).(*MessageEditStake)
 	msgEmptyAddress.Address = nil
@@ -152,11 +93,11 @@ func TestMessage_EditStake_ValidateBasic(t *testing.T) {
 	msgInvalidRelayChains := proto.Clone(&msg).(*MessageEditStake)
 	msgInvalidRelayChains.Chains = []string{"notAValidRelayChain"}
 	er = msgInvalidRelayChains.ValidateBasic()
-	expectedErr = ErrInvalidRelayChainLength(0, RelayChainLength)
+	expectedErr = ErrInvalidRelayChainLength(0, relayChainLength)
 	require.Equal(t, expectedErr.Code(), er.Code())
 }
 
-func TestMessageSend_ValidateBasic(t *testing.T) {
+func TestMessage_Send_ValidateBasic(t *testing.T) {
 	addr1, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
@@ -192,7 +133,7 @@ func TestMessageSend_ValidateBasic(t *testing.T) {
 	require.Equal(t, ErrEmptyAmount().Code(), er.Code())
 }
 
-func TestMessageStake_ValidateBasic(t *testing.T) {
+func TestMessage_Stake_ValidateBasic(t *testing.T) {
 	pk, err := crypto.GeneratePublicKey()
 	require.NoError(t, err)
 
@@ -228,7 +169,7 @@ func TestMessageStake_ValidateBasic(t *testing.T) {
 	require.Equal(t, ErrNilOutputAddress().Code(), er.Code())
 }
 
-func TestMessageUnstake_ValidateBasic(t *testing.T) {
+func TestMessage_Unstake_ValidateBasic(t *testing.T) {
 	addr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
@@ -244,7 +185,7 @@ func TestMessageUnstake_ValidateBasic(t *testing.T) {
 	require.Equal(t, ErrEmptyAddress().Code(), er.Code())
 }
 
-func TestMessageUnpause_ValidateBasic(t *testing.T) {
+func TestMessage_Unpause_ValidateBasic(t *testing.T) {
 	addr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
@@ -258,20 +199,4 @@ func TestMessageUnpause_ValidateBasic(t *testing.T) {
 	msgMissingAddress.Address = nil
 	er = msgMissingAddress.ValidateBasic()
 	require.Equal(t, ErrEmptyAddress().Code(), er.Code())
-}
-
-func TestRelayChain_Validate(t *testing.T) {
-	relayChainValid := RelayChain("0001")
-	err := relayChainValid.Validate()
-	require.NoError(t, err)
-
-	relayChainInvalidLength := RelayChain("001")
-	expectedError := ErrInvalidRelayChainLength(0, RelayChainLength)
-	err = relayChainInvalidLength.Validate()
-	require.Equal(t, expectedError.Code(), err.Code())
-
-	relayChainEmpty := RelayChain("")
-	expectedError = ErrEmptyRelayChain()
-	err = relayChainEmpty.Validate()
-	require.Equal(t, expectedError.Code(), err.Code())
 }

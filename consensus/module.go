@@ -17,6 +17,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -30,7 +31,8 @@ var (
 )
 
 type consensusModule struct {
-	bus        modules.Bus
+	base_modules.IntegratableModule
+
 	privateKey cryptoPocket.Ed25519PrivateKey
 
 	consCfg      *configs.ConsensusConfig
@@ -90,6 +92,7 @@ type ConsensusDebugModule interface {
 
 func (m *consensusModule) SetHeight(height uint64) {
 	m.height = height
+	m.publishNewHeightEvent(height)
 }
 
 func (m *consensusModule) SetRound(round uint64) {
@@ -136,11 +139,11 @@ func (m *consensusModule) ClearLeaderMessagesPool() {
 	m.clearMessagesPool()
 }
 
-func Create(bus modules.Bus) (modules.Module, error) {
-	return new(consensusModule).Create(bus)
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(consensusModule).Create(bus, options...)
 }
 
-func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	leaderElectionMod, err := leader_election.Create(bus)
 	if err != nil {
 		return nil, err
@@ -179,9 +182,12 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 
 		hotstuffMempool: make(map[typesCons.HotstuffStep]*hotstuffFIFOMempool),
 	}
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
+
+	for _, option := range options {
+		option(m)
 	}
+
+	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 
@@ -259,15 +265,8 @@ func (m *consensusModule) GetModuleName() string {
 	return modules.ConsensusModuleName
 }
 
-func (m *consensusModule) GetBus() modules.Bus {
-	if m.bus == nil {
-		logger.Global.Fatal().Msg("PocketBus is not initialized")
-	}
-	return m.bus
-}
-
 func (m *consensusModule) SetBus(pocketBus modules.Bus) {
-	m.bus = pocketBus
+	m.IntegratableModule.SetBus(pocketBus)
 	if m.paceMaker != nil {
 		m.paceMaker.SetBus(pocketBus)
 	}

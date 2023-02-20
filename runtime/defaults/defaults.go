@@ -3,18 +3,21 @@ package defaults
 import (
 	"fmt"
 
-	types "github.com/pokt-network/pocket/runtime/configs/types"
+	"github.com/pokt-network/pocket/runtime/configs/types"
 )
 
 const (
-	defaultRPCPort       = "50832"
-	defaultRPCHost       = "localhost"
-	defaultRPCTimeout    = 30000
-	DefaultBusBufferSize = 100
+	DefaultRPCPort                  = "50832"
+	DefaultBusBufferSize            = 100
+	DefaultRPCHost                  = "localhost"
+	Validator1EndpointDockerCompose = "node1.consensus"
+	Validator1EndpointK8S           = "v1-validator001"
+
+	defaultRPCTimeout = 30000
 )
 
 var (
-	DefaultRemoteCLIURL = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
+	DefaultRemoteCLIURL = fmt.Sprintf("http://%s:%s", DefaultRPCHost, DefaultRPCPort)
 	DefaultUseLibp2p    = false
 
 	// consensus
@@ -42,6 +45,5 @@ var (
 	DefaultLoggerLevel  = "debug"
 	DefaultLoggerFormat = "pretty"
 	// rpc
-	DefaultRpcPort    = defaultRPCPort
-	DefaultRpcTimeout = uint64(defaultRPCTimeout)
+	DefaultRPCTimeout = uint64(defaultRPCTimeout)
 )

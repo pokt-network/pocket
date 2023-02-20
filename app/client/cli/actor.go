@@ -3,10 +3,14 @@ package cli
 import (
 	"fmt"
 	"math/big"
+	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/pokt-network/pocket/app/client/keybase"
+
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 )
@@ -69,7 +73,7 @@ func newActorCommands(cmdDef actorCmdDef) []*cobra.Command {
 		newUnstakeCmd(cmdDef),
 		newUnpauseCmd(cmdDef),
 	}
-	applySubcommandOptions(cmds, cmdDef)
+	applySubcommandOptions(cmds, cmdDef.Options)
 	return cmds
 }
 
@@ -86,18 +90,35 @@ A node can update relayChainIDs, serviceURI, and raise the stake amount with thi
 If the node is currently staked at X and you submit an update with new stake Y. Only Y-X will be subtracted from an account.
 
 If no changes are desired for the parameter, just enter the current param value just as before.`,
-		Args: cobra.ExactArgs(4), // REFACTOR(#150): <fromAddr> not being used at the moment. Update once a keybase is implemented.
+		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(#150): update when we have keybase
-			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
+			// Unpack CLI arguments
+			fromAddrHex := args[0]
+			amount := args[1]
+
+			// Open the keybase at the specified directory
+			pocketDir := strings.TrimSuffix(dataDir, "/")
+			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
 			if err != nil {
 				return err
 			}
-			// NOTE: since we don't have a keybase yet (tracked in #150), we are currently inferring the `fromAddr` from the PrivateKey supplied via the flag `--path_to_private_key_file`
-			// the following line is commented out to show that once we have a keybase, `fromAddr` should come from the command arguments and not the PrivateKey (pk) anymore.
-			//
-			// fromAddr := crypto.AddressFromString(args[0])
-			amount := args[1]
+			kb, err := keybase.NewKeybase(keybasePath)
+			if err != nil {
+				return err
+			}
+
+			if !nonInteractive {
+				pwd = readPassphrase(pwd)
+			}
+
+			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
+			if err != nil {
+				return err
+			}
+			if err := kb.Stop(); err != nil {
+				return err
+			}
+
 			err = validateStakeAmount(amount)
 			if err != nil {
 				return err
@@ -107,9 +128,6 @@ If no changes are desired for the parameter, just enter the current param value 
 			rawChains := rawChainCleanupRegex.ReplaceAllString(args[2], "")
 			chains := strings.Split(rawChains, ",")
 			serviceURI := args[3]
-
-			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
-			pwd = readPassphrase(pwd)
 
 			msg := &typesUtil.MessageStake{
 				PublicKey:     pk.PublicKey().Bytes(),
@@ -146,15 +164,34 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Use:   "EditStake <fromAddr> <amount> <relayChainIDs> <serviceURI>",
 		Short: "EditStake <fromAddr> <amount> <relayChainIDs> <serviceURI>",
 		Long:  fmt.Sprintf(`Stakes a new <amount> for the %s actor with address <fromAddr> for the specified <relayChainIDs> and <serviceURI>.`, cmdDef.Name),
-		Args:  cobra.ExactArgs(4), // REFACTOR(#150): <fromAddr> not being used at the moment. Update once a keybase is implemented.
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(#150): update when we have keybase
-			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
+			// Unpack CLI arguments
+			fromAddrHex := args[0]
+			fromAddr := crypto.AddressFromString(args[0])
+			amount := args[1]
+
+			// Open the keybase at the specified directory
+			pocketDir := strings.TrimSuffix(dataDir, "/")
+			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+			if err != nil {
+				return err
+			}
+			kb, err := keybase.NewKeybase(keybasePath)
 			if err != nil {
 				return err
 			}
 
-			amount := args[1]
+			pwd = readPassphrase(pwd)
+
+			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
+			if err != nil {
+				return err
+			}
+			if err := kb.Stop(); err != nil {
+				return err
+			}
+
 			err = validateStakeAmount(amount)
 			if err != nil {
 				return err
@@ -164,11 +201,8 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			chains := strings.Split(rawChains, ",")
 			serviceURI := args[3]
 
-			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
-			pwd = readPassphrase(pwd)
-
 			msg := &typesUtil.MessageEditStake{
-				Address:    pk.Address(),
+				Address:    fromAddr,
 				Chains:     chains,
 				Amount:     amount,
 				ServiceUrl: serviceURI,
@@ -200,16 +234,32 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Use:   "Unstake <fromAddr>",
 		Short: "Unstake <fromAddr>",
 		Long:  fmt.Sprintf(`Unstakes the prevously staked tokens for the %s actor with address <fromAddr>`, cmdDef.Name),
-		Args:  cobra.ExactArgs(1), // REFACTOR(#150): <fromAddr> not being used at the moment. Update once a keybase is implemented.
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(#150): update when we have keybase
-			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
+			// Unpack CLI arguments
+			fromAddrHex := args[0]
+
+			// Open the keybase at the specified directory
+			pocketDir := strings.TrimSuffix(dataDir, "/")
+			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+			if err != nil {
+				return err
+			}
+			kb, err := keybase.NewKeybase(keybasePath)
 			if err != nil {
 				return err
 			}
 
-			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
-			pwd = readPassphrase(pwd)
+			if !nonInteractive {
+				pwd = readPassphrase(pwd)
+			}
+			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
+			if err != nil {
+				return err
+			}
+			if err := kb.Stop(); err != nil {
+				return err
+			}
 
 			msg := &typesUtil.MessageUnstake{
 				Address:   pk.Address(),
@@ -241,16 +291,31 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 		Use:   "Unpause <fromAddr>",
 		Short: "Unpause <fromAddr>",
 		Long:  fmt.Sprintf(`Unpauses the %s actor with address <fromAddr>`, cmdDef.Name),
-		Args:  cobra.ExactArgs(1), // REFACTOR(#150): Not being used at the moment. Update once a keybase is implemented.
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(#150): update when we have keybase
-			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
+			// Unpack CLI arguments
+			fromAddrHex := args[0]
+
+			// Open the keybase at the specified directory
+			pocketDir := strings.TrimSuffix(dataDir, "/")
+			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+			if err != nil {
+				return err
+			}
+			kb, err := keybase.NewKeybase(keybasePath)
 			if err != nil {
 				return err
 			}
 
-			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 			pwd = readPassphrase(pwd)
+
+			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
+			if err != nil {
+				return err
+			}
+			if err := kb.Stop(); err != nil {
+				return err
+			}
 
 			msg := &typesUtil.MessageUnpause{
 				Address:   pk.Address(),

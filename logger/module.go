@@ -7,12 +7,16 @@ import (
 
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/rs/zerolog"
 )
 
 var _ modules.Module = &loggerModule{}
 
 type loggerModule struct {
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
+
 	zerolog.Logger
 	bus    modules.Bus
 	config *configs.LoggerConfig
@@ -49,23 +53,26 @@ func init() {
 	}
 }
 
-func Create(bus modules.Bus) (modules.Module, error) {
-	return new(loggerModule).Create(bus)
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(loggerModule).Create(bus, options...)
 }
 
 func (*loggerModule) CreateLoggerForModule(moduleName string) modules.Logger {
 	return Global.Logger.With().Str("module", moduleName).Logger()
 }
 
-func (*loggerModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*loggerModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 	m := &loggerModule{
 		config: cfg.Logger,
 	}
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
+
+	for _, option := range options {
+		option(m)
 	}
+
+	bus.RegisterModule(m)
 
 	Global.config = m.config
 	Global.CreateLoggerForModule("global")
@@ -95,23 +102,8 @@ func (m *loggerModule) Start() error {
 	return nil
 }
 
-func (m *loggerModule) Stop() error {
-	return nil
-}
-
 func (m *loggerModule) GetModuleName() string {
 	return modules.LoggerModuleName
-}
-
-func (m *loggerModule) SetBus(bus modules.Bus) {
-	m.bus = bus
-}
-
-func (m *loggerModule) GetBus() modules.Bus {
-	if m.bus == nil {
-		m.Logger.Fatal().Msg("Bus is not initialized")
-	}
-	return m.bus
 }
 
 func (m *loggerModule) GetLogger() modules.Logger {

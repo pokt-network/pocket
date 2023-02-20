@@ -1,104 +1,107 @@
 package utility
 
 import (
+	"encoding/hex"
+	"fmt"
 	"math/big"
 
+	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-/*
-	This 'block' file contains all the lifecycle block operations.
+// This 'block' file contains all the lifecycle block operations.
 
-	The ApplyBlock function is the 'main' operation that executes a 'block' object against the state.
+// The ApplyBlock function is the 'main' operation that executes a 'block' object against the state.
 
-	Pocket Network adopt a Tendermint-like lifecycle of BeginBlock -> DeliverTx -> EndBlock in that
-	order. Like the name suggests, BeginBlock is an autonomous state operation that executes at the
-	beginning of every block DeliverTx individually applies each transaction against the state and
-	rolls it back (not yet implemented) if fails. Like BeginBlock, EndBlock is an autonomous state
-	operation that executes at the end of every block.
-*/
+// Pocket Network adopt a Tendermint-like lifecycle of BeginBlock -> DeliverTx -> EndBlock in that
+// order. Like the name suggests, BeginBlock is an autonomous state operation that executes at the
+// beginning of every block DeliverTx individually applies each transaction against the state and
+// rolls it back (not yet implemented) if fails. Like BeginBlock, EndBlock is an autonomous state
+// operation that executes at the end of every block.
 
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
-func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (stateHash string, transactions [][]byte, err error) {
-	lastBlockByzantineVals, err := u.GetLastBlockByzantineValidators()
+func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (stateHash string, txs [][]byte, err error) {
+	lastBlockByzantineVals, err := u.getLastBlockByzantineValidators()
 	if err != nil {
 		return "", nil, err
 	}
 	// begin block lifecycle phase
-	if err := u.BeginBlock(lastBlockByzantineVals); err != nil {
+	if err := u.beginBlock(lastBlockByzantineVals); err != nil {
 		return "", nil, err
 	}
-	transactions = make([][]byte, 0)
+	txs = make([][]byte, 0)
 	totalTxsSizeInBytes := 0
 	txIndex := 0
-	mempool := u.GetBus().GetUtilityModule().GetMempool()
+
+	mempool := u.getBus().GetUtilityModule().GetMempool()
 	for !mempool.IsEmpty() {
 		txBytes, err := mempool.PopTx()
 		if err != nil {
 			return "", nil, err
 		}
-		transaction, err := typesUtil.TransactionFromBytes(txBytes)
+		tx, err := typesUtil.TxFromBytes(txBytes)
 		if err != nil {
 			return "", nil, err
 		}
 		txTxsSizeInBytes := len(txBytes)
 		totalTxsSizeInBytes += txTxsSizeInBytes
 		if totalTxsSizeInBytes >= maxTransactionBytes {
-			// Add back popped transaction to be applied in a future block
+			// Add back popped tx to be applied in a future block
 			err := mempool.AddTx(txBytes)
 			if err != nil {
 				return "", nil, err
 			}
 			break // we've reached our max
 		}
-		txResult, err := u.ApplyTransaction(txIndex, transaction)
+		txResult, err := u.applyTx(txIndex, tx)
 		if err != nil {
+			u.logger.Err(err).Msg("Error in ApplyTransaction")
 			// TODO(#327): Properly implement 'unhappy path' for save points
-			if err := u.RevertLastSavePoint(); err != nil {
+			if err := u.revertLastSavePoint(); err != nil {
 				return "", nil, err
 			}
 			totalTxsSizeInBytes -= txTxsSizeInBytes
 			continue
 		}
-		if err := u.Context.IndexTransaction(txResult); err != nil {
-			u.logger.Fatal().Err(err).Msg("TODO(#327): We can apply the transaction but not index it. Crash the process for now")
+		if err := u.persistenceContext.IndexTransaction(txResult); err != nil {
+			u.logger.Fatal().Err(err).Msgf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
 		}
 
-		transactions = append(transactions, txBytes)
+		txs = append(txs, txBytes)
 		txIndex++
 	}
 
-	if err := u.EndBlock(proposer); err != nil {
+	if err := u.endBlock(proposer); err != nil {
 		return "", nil, err
 	}
 	// return the app hash (consensus module will get the validator set directly)
-	stateHash, err = u.Context.ComputeStateHash()
+	stateHash, err = u.persistenceContext.ComputeStateHash()
 	if err != nil {
 		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 	}
 	u.logger.Info().Msgf("CreateAndApplyProposalBlock - computed state hash: %s", stateHash)
 
-	return stateHash, transactions, err
+	return stateHash, txs, err
 }
 
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
-func (u *UtilityContext) ApplyBlock() (string, error) {
-	lastByzantineValidators, err := u.GetLastBlockByzantineValidators()
+func (u *utilityContext) ApplyBlock() (string, error) {
+	lastByzantineValidators, err := u.getLastBlockByzantineValidators()
 	if err != nil {
 		return "", err
 	}
 
 	// begin block lifecycle phase
-	if err := u.BeginBlock(lastByzantineValidators); err != nil {
+	if err := u.beginBlock(lastByzantineValidators); err != nil {
 		return "", err
 	}
 
 	// deliver txs lifecycle phase
-	for index, transactionProtoBytes := range u.proposalBlockTxs {
-		tx, err := typesUtil.TransactionFromBytes(transactionProtoBytes)
+	for index, txProtoBytes := range u.proposalBlockTxs {
+		tx, err := typesUtil.TxFromBytes(txProtoBytes)
 		if err != nil {
 			return "", err
 		}
@@ -110,28 +113,28 @@ func (u *UtilityContext) ApplyBlock() (string, error) {
 		//             Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 
 		// Validate and apply the transaction to the Postgres database
-		txResult, err := u.ApplyTransaction(index, tx)
+		txResult, err := u.applyTx(index, tx)
 		if err != nil {
 			return "", err
 		}
 
-		if err := u.Context.IndexTransaction(txResult); err != nil {
-			u.logger.Fatal().Err(err).Msg("TODO(#327): We can apply the transaction but not index it. Crash the process for now")
+		if err := u.persistenceContext.IndexTransaction(txResult); err != nil {
+			u.logger.Fatal().Err(err).Msgf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
 		}
 
 		// TODO: if found, remove transaction from mempool.
 		// DISCUSS: What if the context is rolled back or cancelled. Do we add it back to the mempool?
-		// if err := u.Mempool.RemoveTransaction(transaction); err != nil {
+		// if err := u.Mempool.RemoveTx(tx); err != nil {
 		// 	return nil, err
 		// }
 	}
 
 	// end block lifecycle phase
-	if err := u.EndBlock(u.proposalProposerAddr); err != nil {
+	if err := u.endBlock(u.proposalProposerAddr); err != nil {
 		return "", err
 	}
 	// return the app hash (consensus module will get the validator set directly)
-	stateHash, err := u.Context.ComputeStateHash()
+	stateHash, err := u.persistenceContext.ComputeStateHash()
 	if err != nil {
 		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return "", typesUtil.ErrAppHash(err)
@@ -142,41 +145,37 @@ func (u *UtilityContext) ApplyBlock() (string, error) {
 	return stateHash, nil
 }
 
-func (u *UtilityContext) BeginBlock(previousBlockByzantineValidators [][]byte) typesUtil.Error {
-	if err := u.HandleByzantineValidators(previousBlockByzantineValidators); err != nil {
+func (u *utilityContext) beginBlock(previousBlockByzantineValidators [][]byte) typesUtil.Error {
+	if err := u.handleByzantineValidators(previousBlockByzantineValidators); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
+func (u *utilityContext) endBlock(proposer []byte) typesUtil.Error {
 	// reward the block proposer
-	if err := u.HandleProposalRewards(proposer); err != nil {
+	if err := u.handleProposerRewards(proposer); err != nil {
 		return err
 	}
 	// unstake actors that have been 'unstaking' for the <Actor>UnstakingBlocks
-	if err := u.UnstakeActorsThatAreReady(); err != nil {
+	if err := u.unbondUnstakingActors(); err != nil {
 		return err
 	}
 	// begin unstaking the actors who have been paused for MaxPauseBlocks
-	if err := u.BeginUnstakingMaxPaused(); err != nil {
+	if err := u.beginUnstakingMaxPausedActors(); err != nil {
 		return err
 	}
 	return nil
 }
 
-// HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
-func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
-	latestBlockHeight, err := u.GetLatestBlockHeight()
-	if err != nil {
-		return err
-	}
-	maxMissedBlocks, err := u.GetValidatorMaxMissedBlocks()
+// handleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
+func (u *utilityContext) handleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
+	maxMissedBlocks, err := u.getValidatorMaxMissedBlocks()
 	if err != nil {
 		return err
 	}
 	for _, address := range lastBlockByzantineValidators {
-		numberOfMissedBlocks, err := u.GetValidatorMissedBlocks(address)
+		numberOfMissedBlocks, err := u.getValidatorMissedBlocks(address)
 		if err != nil {
 			return err
 		}
@@ -185,47 +184,47 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 		// handle if over the threshold
 		if numberOfMissedBlocks >= maxMissedBlocks {
 			// pause the validator and reset missed blocks
-			if err := u.PauseValidatorAndSetMissedBlocks(address, latestBlockHeight, int(typesUtil.HeightNotUsed)); err != nil {
+			if err := u.pauseValidatorAndSetMissedBlocks(address, u.height, int(typesUtil.HeightNotUsed)); err != nil {
 				return err
 			}
 			// burn validator for missing blocks
-			burnPercentage, err := u.GetMissedBlocksBurnPercentage()
+			burnPercentage, err := u.getMissedBlocksBurnPercentage()
 			if err != nil {
 				return err
 			}
-			if err := u.BurnActor(coreTypes.ActorType_ACTOR_TYPE_VAL, burnPercentage, address); err != nil {
+			if err := u.burnValidator(burnPercentage, address); err != nil {
 				return err
 			}
-		} else if err := u.SetValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
+		} else if err := u.setValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
+func (u *utilityContext) unbondUnstakingActors() (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	latestHeight, err := u.GetLatestBlockHeight()
-	if err != nil {
-		return err
-	}
-	for _, actorTypeInt32 := range coreTypes.ActorType_value {
-		var readyToUnstake []modules.IUnstakingActor
-		actorType := coreTypes.ActorType(actorTypeInt32)
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
+		var readyToUnstake []*moduleTypes.UnstakingActor
 		var poolName string
 		switch actorType {
 		case coreTypes.ActorType_ACTOR_TYPE_APP:
-			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
+			readyToUnstake, er = store.GetAppsReadyToUnstake(u.height, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_APP_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
-			readyToUnstake, er = store.GetFishermenReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
+			readyToUnstake, er = store.GetFishermenReadyToUnstake(u.height, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
+			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(u.height, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_SERVICE_NODE_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
-			readyToUnstake, er = store.GetValidatorsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
+			readyToUnstake, er = store.GetValidatorsReadyToUnstake(u.height, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED:
 			continue
@@ -234,10 +233,22 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 			return typesUtil.ErrGetReadyToUnstake(er)
 		}
 		for _, actor := range readyToUnstake {
-			if err := u.SubPoolAmount(poolName, actor.GetStakeAmount()); err != nil {
+			if poolName == coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName() {
+				fmt.Println("unstaking validator", actor.StakeAmount)
+			}
+			stakeAmount, er := converters.StringToBigInt(actor.StakeAmount)
+			if er != nil {
+				return typesUtil.ErrStringToBigInt(er)
+			}
+			outputAddrBz, er := hex.DecodeString(actor.OutputAddress)
+			if er != nil {
+				return typesUtil.ErrHexDecodeFromString(er)
+			}
+
+			if err := u.subPoolAmount(poolName, stakeAmount); err != nil {
 				return err
 			}
-			if err := u.AddAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
+			if err := u.addAccountAmount(outputAddrBz, stakeAmount); err != nil {
 				return err
 			}
 		}
@@ -245,48 +256,47 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	return nil
 }
 
-func (u *UtilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
-	latestHeight, err := u.GetLatestBlockHeight()
-	if err != nil {
-		return err
-	}
-	for _, actorTypeInt32 := range coreTypes.ActorType_value {
-		actorType := coreTypes.ActorType(actorTypeInt32)
+func (u *utilityContext) beginUnstakingMaxPausedActors() (err typesUtil.Error) {
+	for actorTypeNum := range coreTypes.ActorType_name {
+		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
+			continue
+		}
+		actorType := coreTypes.ActorType(actorTypeNum)
+
 		if actorType == coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED {
 			continue
 		}
-		maxPausedBlocks, err := u.GetMaxPausedBlocks(actorType)
+		maxPausedBlocks, err := u.getMaxAllowedPausedBlocks(actorType)
 		if err != nil {
 			return err
 		}
-		beforeHeight := latestHeight - int64(maxPausedBlocks)
-		// genesis edge case
-		if beforeHeight < 0 {
-			beforeHeight = 0
+		maxPauseHeight := u.height - int64(maxPausedBlocks)
+		if maxPauseHeight < 0 { // genesis edge case
+			maxPauseHeight = 0
 		}
-		if err := u.UnstakeActorPausedBefore(beforeHeight, actorType); err != nil {
+		if err := u.beginUnstakingActorsPausedBefore(maxPauseHeight, actorType); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, actorType coreTypes.ActorType) (err typesUtil.Error) {
+func (u *utilityContext) beginUnstakingActorsPausedBefore(pausedBeforeHeight int64, actorType coreTypes.ActorType) (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	unstakingHeight, err := u.GetUnstakingHeight(actorType)
+	unbondingHeight, err := u.getUnbondingHeight(actorType)
 	if err != nil {
 		return err
 	}
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		er = store.SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
+		er = store.SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(typesUtil.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = store.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
+		er = store.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(typesUtil.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		er = store.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
+		er = store.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(typesUtil.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		er = store.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
+		er = store.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(typesUtil.StakeStatus_Unstaking))
 	}
 	if er != nil {
 		return typesUtil.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
@@ -294,16 +304,16 @@ func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, acto
 	return nil
 }
 
-func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error {
+func (u *utilityContext) handleProposerRewards(proposer []byte) typesUtil.Error {
 	feePoolName := coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName()
-	feesAndRewardsCollected, err := u.GetPoolAmount(feePoolName)
+	feesAndRewardsCollected, err := u.getPoolAmount(feePoolName)
 	if err != nil {
 		return err
 	}
-	if err := u.SetPoolAmount(feePoolName, big.NewInt(0)); err != nil {
+	if err := u.setPoolAmount(feePoolName, big.NewInt(0)); err != nil {
 		return err
 	}
-	proposerCutPercentage, err := u.GetProposerPercentageOfFees()
+	proposerCutPercentage, err := u.getProposerPercentageOfFees()
 	if err != nil {
 		return err
 	}
@@ -316,20 +326,20 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 	amountToProposerFloat.Quo(amountToProposerFloat, big.NewFloat(100))
 	amountToProposer, _ := amountToProposerFloat.Int(nil)
 	amountToDAO := feesAndRewardsCollected.Sub(feesAndRewardsCollected, amountToProposer)
-	if err := u.AddAccountAmount(proposer, amountToProposer); err != nil {
+	if err := u.addAccountAmount(proposer, amountToProposer); err != nil {
 		return err
 	}
-	if err := u.AddPoolAmount(coreTypes.Pools_POOLS_DAO.FriendlyName(), amountToDAO); err != nil {
+	if err := u.addPoolAmount(coreTypes.Pools_POOLS_DAO.FriendlyName(), amountToDAO); err != nil {
 		return err
 	}
 	return nil
 }
 
-// GetValidatorMissedBlocks gets the total blocks that a validator has not signed a certain window of time denominated by blocks
-func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
-	store, height, err := u.GetStoreAndHeight()
+// TODO: Need to design & document this business logic.
+func (u *utilityContext) getValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
+	store, height, err := u.getStoreAndHeight()
 	if err != nil {
-		return 0, err
+		return 0, typesUtil.ErrGetHeight(err)
 	}
 	missedBlocks, er := store.GetValidatorMissedBlocks(address, height)
 	if er != nil {
@@ -338,7 +348,8 @@ func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (int, typesUti
 	return missedBlocks, nil
 }
 
-func (u *UtilityContext) PauseValidatorAndSetMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) typesUtil.Error {
+// TODO: Need to design & document this business logic.
+func (u *utilityContext) pauseValidatorAndSetMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) typesUtil.Error {
 	store := u.Store()
 	if err := store.SetValidatorPauseHeightAndMissedBlocks(address, pauseHeight, missedBlocks); err != nil {
 		return typesUtil.ErrSetPauseHeight(err)
@@ -346,11 +357,17 @@ func (u *UtilityContext) PauseValidatorAndSetMissedBlocks(address []byte, pauseH
 	return nil
 }
 
-func (u *UtilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) typesUtil.Error {
+// TODO: Need to design & document this business logic.
+func (u *utilityContext) setValidatorMissedBlocks(address []byte, missedBlocks int) typesUtil.Error {
 	store := u.Store()
 	er := store.SetValidatorMissedBlocks(address, missedBlocks)
 	if er != nil {
 		return typesUtil.ErrSetMissedBlocks(er)
 	}
 	return nil
+}
+
+// TODO: Need to design & document this business logic.
+func (u *utilityContext) getLastBlockByzantineValidators() ([][]byte, error) {
+	return nil, nil
 }

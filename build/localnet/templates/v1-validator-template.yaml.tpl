@@ -103,6 +103,7 @@ metadata:
   namespace: default
   labels:
     app: v1-validator${VALIDATOR_NUMBER}
+    v1-purpose: validator
 spec:
   ports:
     - port: 8080

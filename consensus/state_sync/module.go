@@ -36,7 +36,7 @@ type StateSyncModule interface {
 	IsServerModEnabled() bool
 	EnableServerMode()
 
-	SendStateSyncMessage(*typesCons.StateSyncMessage, cryptoPocket.Address, uint64) error
+	SendStateSyncMessage(msg *typesCons.StateSyncMessage, nodeAddress cryptoPocket.Address, height uint64) error
 }
 
 var (
@@ -55,21 +55,23 @@ type stateSync struct {
 	logPrefix string
 }
 
-func CreateStateSync(bus modules.Bus) (modules.Module, error) {
-	var m stateSync
-	return m.Create(bus)
+func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(stateSync).Create(bus, options...)
 }
 
-func (*stateSync) Create(bus modules.Bus) (modules.Module, error) {
+func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &stateSync{
 		logPrefix: DefaultLogPrefix,
 	}
 
-	if err := bus.RegisterModule(m); err != nil {
-		return nil, err
+	for _, option := range options {
+		option(m)
 	}
 
+	bus.RegisterModule(m)
+
 	// when node is starting, it is in sync mode, as it might need to bootstrap to the latest state
+	// TODO: change this to to reflect the state in the fsm once merged
 	m.currentMode = Sync
 	m.serverMode = false
 
@@ -117,13 +119,36 @@ func (m *stateSync) EnableServerMode() {
 // TODO(#352): Implement this function
 // Placeholder function
 func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-	m.logger.Debug().Msgf("Received get block response: %s", blockRes.Block.String())
+	consensusMod := m.GetBus().GetConsensusModule()
+	serverNodePeerId := consensusMod.GetNodeAddress()
+	clientPeerId := blockRes.PeerAddress
+
+	fields := map[string]any{
+		"currentHeight": blockRes.Block.BlockHeader.Height,
+		"sender":        serverNodePeerId,
+		"receiver":      clientPeerId,
+	}
+
+	m.logger.Info().Fields(fields).Msgf("Received StateSync GetBlockResponse: %s", blockRes)
+
 	return nil
 }
 
 // TODO(#352): Implement the business to handle these correctly
 // Placeholder function
 func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
-	m.logger.Debug().Msgf("Received get metadata response: %s", metaDataRes.String())
+	consensusMod := m.GetBus().GetConsensusModule()
+	serverNodePeerId := consensusMod.GetNodeAddress()
+	clientPeerId := metaDataRes.PeerAddress
+	currentHeight := consensusMod.CurrentHeight()
+
+	fields := map[string]any{
+		"currentHeight": currentHeight,
+		"sender":        serverNodePeerId,
+		"receiver":      clientPeerId,
+	}
+
+	m.logger.Info().Fields(fields).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
+
 	return nil
 }

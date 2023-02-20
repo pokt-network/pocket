@@ -7,11 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.26] - 2023-02-14
+## [0.0.0.27] - 2023-02-17
 
-- Add a new libp2p-based P2P modules.Module implementation in p2p/libp2p.
-- Add a new types.Network implemenation.
-- Add a new types.Transport.
+- Deprecated `debugAddressBookProvider`
+- Added `rpcAddressBookProvider` to source the address book from the RPC server
+- Leveraging `bus` for dependency injection of the `addressBookProvider` and `currentHeightProvider`
+- Deprecated `debugCurrentHeightProvider`
+- Added `rpcCurrentHeightProvider` to source the current height from the RPC server
+- Fixed raintree to use the `currentHeightProvider` instead of consensus (that was what we wanted to avoid in the first place)
+- Added `getAddrBookDelta` to calculate changes to the address book between heights and update the internal state and componentry accordingly
+
+## [0.0.0.26] - 2023-02-17
+
+- Modules embed `base_modules.IntegratableModule` and `base_modules.InterruptableModule` for DRYness
+- Updated tests
 
 ## [0.0.0.25] - 2023-02-09
 

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/manifoldco/promptui"
@@ -11,12 +12,12 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
-	debugABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/debug"
+	rpcABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/rpc"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
-	debugCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/debug"
+	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
+	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -48,25 +49,27 @@ var (
 		PromptSendBlockRequest,
 	}
 
-	// validators holds the list of the validators at genesis time so that we can use it to create a debug address book provider.
-	// Its purpose is to allow the CLI to "discover" the nodes in the network. Since currently we don't have churn and we run nodes only in LocalNet, we can rely on the genesis state.
-	// HACK(#416): This is a temporary solution that guarantees backward compatibility while we implement peer discovery
-	validators []*coreTypes.Actor
-
-	configPath  string = getEnv("CONFIG_PATH", "build/config/config1.json")
-	genesisPath string = getEnv("GENESIS_PATH", "build/config/genesis.json")
+	configPath  string = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
+	genesisPath string = runtime.GetEnv("GENESIS_PATH", "build/config/genesis.json")
+	rpcHost     string
 )
 
-func getEnv(key, defaultValue string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return defaultValue
-}
+// NOTE: this is required by the linter, otherwise a simple string constant would have been enough
+type cliContextKey string
+
+const busCLICtxKey = "bus"
 
 func init() {
 	debugCmd := NewDebugCommand()
 	rootCmd.AddCommand(debugCmd)
+
+	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
+	validator1Endpoint := defaults.Validator1EndpointDockerCompose
+	if runtime.IsProcessRunningInsideKubernetes() {
+		validator1Endpoint = defaults.Validator1EndpointK8S
+	}
+
+	rpcHost = runtime.GetEnv("RPC_HOST", validator1Endpoint)
 }
 
 func NewDebugCommand() *cobra.Command {
@@ -75,25 +78,34 @@ func NewDebugCommand() *cobra.Command {
 		Short: "Debug utility for rapid development",
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			runtimeMgr := runtime.NewManagerFromFiles(configPath, genesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
-			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
-			validators = runtimeMgr.GetGenesis().Validators
-
-			debugAddressBookProvider := debugABP.NewDebugAddrBookProvider(
-				runtimeMgr.GetConfig().P2P,
-				debugABP.WithActorsByHeight(
-					map[int64][]*coreTypes.Actor{
-						debugABP.ANY_HEIGHT: validators,
-					},
-				),
+			runtimeMgr := runtime.NewManagerFromFiles(
+				configPath, genesisPath,
+				runtime.WithClientDebugMode(),
+				runtime.WithRandomPK(),
 			)
 
-			debugCurrentHeightProvider := debugCHP.NewDebugCurrentHeightProvider(0)
+			bus := runtimeMgr.GetBus()
+			modulesRegistry := bus.GetModulesRegistry()
 
-			// TODO(#429): refactor injecting the dependencies into the bus so that they can be consumed in an updated `P2PModule.Create()` implementation
+			rpcUrl := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
+
+			addressBookProvider := rpcABP.NewRPCAddrBookProvider(
+				rpcABP.WithP2PConfig(
+					runtimeMgr.GetConfig().P2P,
+				),
+				rpcABP.WithCustomRPCUrl(rpcUrl),
+			)
+			modulesRegistry.RegisterModule(addressBookProvider)
+
+			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
+				rpcCHP.WithCustomRPCUrl(rpcUrl),
+			)
+			modulesRegistry.RegisterModule(currentHeightProvider)
+
+			setValueInCLIContext(cmd, busCLICtxKey, bus)
 
 			var err error
-			p2pMod, err = getP2PModule(runtimeMgr, debugAddressBookProvider, debugCurrentHeightProvider)
+			p2pMod, err = getP2PModule(runtimeMgr)
 			if err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
 			}
@@ -109,7 +121,7 @@ func NewDebugCommand() *cobra.Command {
 func runDebug(cmd *cobra.Command, args []string) (err error) {
 	for {
 		if selection, err := promptGetInput(); err == nil {
-			handleSelect(selection)
+			handleSelect(cmd, selection)
 		} else {
 			return err
 		}
@@ -137,57 +149,57 @@ func promptGetInput() (string, error) {
 	return result, nil
 }
 
-func handleSelect(selection string) {
+func handleSelect(cmd *cobra.Command, selection string) {
 	switch selection {
 	case PromptResetToGenesis:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
 			Message: nil,
 		}
-		broadcastDebugMessage(m)
+		broadcastDebugMessage(cmd, m)
 	case PromptPrintNodeState:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
 			Message: nil,
 		}
-		broadcastDebugMessage(m)
+		broadcastDebugMessage(cmd, m)
 	case PromptTriggerNextView:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
 			Message: nil,
 		}
-		broadcastDebugMessage(m)
+		broadcastDebugMessage(cmd, m)
 	case PromptTogglePacemakerMode:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
 			Message: nil,
 		}
-		broadcastDebugMessage(m)
+		broadcastDebugMessage(cmd, m)
 	case PromptShowLatestBlockInStore:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
 			Message: nil,
 		}
-		sendDebugMessage(m)
+		sendDebugMessage(cmd, m)
 	case PromptSendMetadataRequest:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ,
 			Message: nil,
 		}
-		broadcastDebugMessage(m)
+		broadcastDebugMessage(cmd, m)
 	case PromptSendBlockRequest:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ,
 			Message: nil,
 		}
-		broadcastDebugMessage(m)
+		broadcastDebugMessage(cmd, m)
 	default:
 		logger.Global.Error().Msg("Selection not yet implemented...")
 	}
 }
 
 // Broadcast to the entire validator set
-func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
+func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to create Any proto")
@@ -196,10 +208,11 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
 	// broadcast. The reason it cannot be done right now is because this client is not in the
 	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
-	// p2pMod.Broadcast(anyProto, messaging.PocketTopic_DEBUG_TOPIC)
+	// p2pMod.Broadcast(anyProto)
 
-	for _, valAddr := range validators {
-		addr, err := pocketCrypto.NewAddress(valAddr.GetAddress())
+	addrBook, err := fetchAddressBook(cmd)
+	for _, val := range addrBook {
+		addr := val.Address
 		if err != nil {
 			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 		}
@@ -207,22 +220,28 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 			logger.Global.Fatal().Err(err).Msg("Failed to send debug message")
 		}
 	}
+
 }
 
 // Send to just a single (i.e. first) validator in the set
-func sendDebugMessage(debugMsg *messaging.DebugMessage) {
+func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
 		logger.Global.Error().Err(err).Msg("Failed to create Any proto")
 	}
 
+	addrBook, err := fetchAddressBook(cmd)
+	if err != nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the addrBook")
+	}
+
 	var validatorAddress []byte
-	if len(validators) == 0 {
+	if len(addrBook) == 0 {
 		logger.Global.Fatal().Msg("No validators found")
 	}
 
 	// if the message needs to be broadcast, it'll be handled by the business logic of the message handler
-	validatorAddress, err = pocketCrypto.NewAddress(validators[0].GetAddress())
+	validatorAddress = addrBook[0].Address
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 	}
@@ -232,18 +251,38 @@ func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 	}
 }
 
-func getP2PModule(
-	runtimeMgr *runtime.Manager,
-	addrBookProvider addrbook_provider.AddrBookProvider,
-	currentHeightProvider current_height_provider.CurrentHeightProvider,
-) (p2pModule modules.P2PModule, err error) {
+// fetchAddressBook retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
+func fetchAddressBook(cmd *cobra.Command) (types.AddrBook, error) {
+	bus, ok := getValueFromCLIContext[modules.Bus](cmd, busCLICtxKey)
+	if !ok || bus == nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the bus from CLI context")
+	}
+	modulesRegistry := bus.GetModulesRegistry()
+	addrBookProvider, err := modulesRegistry.GetModule(addrbook_provider.ModuleName)
+	if err != nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the addrBookProvider")
+	}
+	currentHeightProvider, err := modulesRegistry.GetModule(current_height_provider.ModuleName)
+	if err != nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the currentHeightProvider")
+	}
+
+	height := currentHeightProvider.(current_height_provider.CurrentHeightProvider).CurrentHeight()
+	addrBook, err := addrBookProvider.(addrbook_provider.AddrBookProvider).GetStakedAddrBookAtHeight(height)
+	if err != nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the addrBook")
+	}
+	return addrBook, err
+}
+
+func getP2PModule(runtimeMgr *runtime.Manager) (p2pModule modules.P2PModule, err error) {
 	bus := runtimeMgr.GetBus()
 
 	var mod modules.Module
 	if runtimeMgr.GetConfig().UseLibP2P {
-		mod, err = libp2p.CreateWithProviders(bus, addrBookProvider, currentHeightProvider)
+		mod, err = libp2p.Create(bus)
 	} else {
-		mod, err = p2p.CreateWithProviders(bus, addrBookProvider, currentHeightProvider)
+		mod, err = p2p.Create(bus)
 	}
 	if err != nil {
 		return nil, err

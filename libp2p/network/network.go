@@ -185,8 +185,7 @@ func (p2pNet *libp2pNetwork) AddPeerToAddrBook(peer *types.NetworkPeer) error {
 	return nil
 }
 
-// CLEANUP: fix typo in interface (?)
-func (p2pNet *libp2pNetwork) RemovePeerToAddrBook(peer *types.NetworkPeer) error {
+func (p2pNet *libp2pNetwork) RemovePeerFromAddrBook(peer *types.NetworkPeer) error {
 	delete(p2pNet.addrBookMap, peer.Address.String())
 
 	libp2pPeer, err := identity.Libp2pAddrInfoFromPeer(peer)

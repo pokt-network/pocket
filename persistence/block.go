@@ -30,7 +30,7 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 func (p *PostgresContext) GetMinimumBlockHeight() (latestHeight uint64, err error) {
 	ctx, tx := p.getCtxAndTx()
 
-	err = tx.QueryRow(ctx, types.GetMinimumlockHeightQuery()).Scan(&latestHeight)
+	err = tx.QueryRow(ctx, types.GetMinimumBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
 
