@@ -19,19 +19,18 @@ import (
 // configureBootstrapNodes parses the bootstrap nodes from the config and validates them
 func (m *p2pModule) configureBootstrapNodes() error {
 	p2pCfg := m.GetBus().GetRuntimeMgr().GetConfig().P2P
-	var csvReader *csv.Reader
-	customBootstrapNodesCsv := strings.Trim(p2pCfg.BootstrapNodesCsv, " ")
-	if customBootstrapNodesCsv == "" {
-		csvReader = csv.NewReader(strings.NewReader(defaults.DefaultP2PBootstrapNodesCsv))
-	} else {
-		csvReader = csv.NewReader(strings.NewReader(customBootstrapNodesCsv))
+
+	bootstrapNodesCsv := strings.Trim(p2pCfg.BootstrapNodesCsv, " ")
+	if bootstrapNodesCsv == "" {
+		bootstrapNodesCsv = defaults.DefaultP2PBootstrapNodesCsv
 	}
+	csvReader := csv.NewReader(strings.NewReader(bootstrapNodesCsv))
 	bootStrapNodes, err := csvReader.Read()
 	if err != nil {
 		return fmt.Errorf("error parsing bootstrap nodes: %w", err)
 	}
-	// validate the bootstrap nodes
 
+	// validate the bootstrap nodes
 	for i, node := range bootStrapNodes {
 		bootStrapNodes[i] = strings.Trim(node, " ")
 		if !isValidHostnamePort(bootStrapNodes[i]) {

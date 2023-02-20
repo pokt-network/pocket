@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
@@ -14,7 +15,7 @@ import (
 
 func Test_Create_configureBootstrapNodes(t *testing.T) {
 	defaultBootstrapNodes := strings.Split(defaults.DefaultP2PBootstrapNodesCsv, ",")
-	key := generateKey(t, 1)
+	key := cryptoPocket.GetPrivKeySeed(1)
 
 	type args struct {
 		initialBootstrapNodesCsv string

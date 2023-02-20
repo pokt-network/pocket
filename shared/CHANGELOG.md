@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.29] - 2023-02-20
 
 - Fan-ing out `StateMachineTransitionEventType` event to the `P2P` module to handle bootstrapping logic
+- Refactored single key generation from seed (used in tests) into `GetPrivKeySeed`
 
 ## [0.0.0.28] - 2023-02-17
 
