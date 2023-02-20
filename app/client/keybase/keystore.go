@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/shared"
+	"github.com/pokt-network/pocket/shared/converters"
 	"strings"
 
 	"github.com/dgraph-io/badger/v3"
@@ -30,7 +30,7 @@ type badgerKeybase struct {
 
 // Creates/Opens the DB at the specified path
 func NewKeybase(path string) (Keybase, error) {
-	pathExists, err := shared.DirExists(path) // Creates path if it doesn't exist
+	pathExists, err := converters.DirExists(path) // Creates path if it doesn't exist
 	if err != nil || !pathExists {
 		return nil, err
 	}
@@ -64,9 +64,8 @@ func (keybase *badgerKeybase) Stop() error {
 
 // Create a new key and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
-func (keybase *badgerKeybase) Create(passphrase, hint string) (crypto.KeyPair, error) {
-	var keyPair crypto.KeyPair
-	err := keybase.db.Update(func(tx *badger.Txn) (err error) {
+func (keybase *badgerKeybase) Create(passphrase, hint string) (keyPair crypto.KeyPair, err error) {
+	err = keybase.db.Update(func(tx *badger.Txn) (err error) {
 		keyPair, err = crypto.CreateNewKey(passphrase, hint)
 		if err != nil {
 			return err
@@ -92,9 +91,8 @@ func (keybase *badgerKeybase) Create(passphrase, hint string) (crypto.KeyPair, e
 
 // Create a new KeyPair from the private key hex string and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
-func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint string) (crypto.KeyPair, error) {
-	var keyPair crypto.KeyPair
-	err := keybase.db.Update(func(tx *badger.Txn) (err error) {
+func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint string) (keyPair crypto.KeyPair, err error) {
+	err = keybase.db.Update(func(tx *badger.Txn) (err error) {
 		keyPair, err = crypto.CreateNewKeyFromString(privKeyHex, passphrase, hint)
 		if err != nil {
 			return err
@@ -120,9 +118,8 @@ func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint stri
 
 // Create a new KeyPair from the private key JSON string and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
-func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) (crypto.KeyPair, error) {
-	var keyPair crypto.KeyPair
-	err := keybase.db.Update(func(tx *badger.Txn) (err error) {
+func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) (keyPair crypto.KeyPair, err error) {
+	err = keybase.db.Update(func(tx *badger.Txn) (err error) {
 		keyPair, err = crypto.ImportKeyFromJSON(jsonStr, passphrase)
 		if err != nil {
 			return err
