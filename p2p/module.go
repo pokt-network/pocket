@@ -269,7 +269,7 @@ func (m *p2pModule) bootstrap() error {
 	var addrBook typesP2P.AddrBook
 
 	for _, bootstrapNode := range m.bootstrapNodes {
-		m.logger.Info().Str("endpoint", bootstrapNode).Msg("Attempting to bootstrap from bootstrap node") // TODO: deblasis - fix this. For some reason it's not logging
+		m.logger.Info().Str("endpoint", bootstrapNode).Msg("Attempting to bootstrap from bootstrap node")
 
 		client, err := rpc.NewClientWithResponses(bootstrapNode)
 		if err != nil {
@@ -292,8 +292,7 @@ func (m *p2pModule) bootstrap() error {
 
 		addrBook, err = addressBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 		if err != nil {
-			m.logger.Warn().Err(err).Str("endpoint", bootstrapNode).Msg("Error getting address book from bootstrap node") // TODO: deblasis - fix this. For some reason it's not logging
-			log.Println("Error getting address book from bootstrap node: " + bootstrapNode)
+			m.logger.Warn().Err(err).Str("endpoint", bootstrapNode).Msg("Error getting address book from bootstrap node")
 			continue
 		}
 	}
@@ -303,7 +302,7 @@ func (m *p2pModule) bootstrap() error {
 	}
 
 	for _, peer := range addrBook {
-		log.Println("Adding peer to addrBook: " + peer.Address.String())
+		m.logger.Debug().Str("address", peer.Address.String()).Msg("Adding peer to addrBook")
 		if err := m.network.AddPeerToAddrBook(peer); err != nil {
 			return err
 		}

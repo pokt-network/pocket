@@ -52,7 +52,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 			if len(addrBook) == 0 {
 				m.logger.Warn().Msg("No peers in addrbook, bootstrapping")
 
-				if err := bootstrap(m); err != nil {
+				if err := m.bootstrap(); err != nil {
 					return err
 				}
 			}
