@@ -104,6 +104,7 @@ func NewDebugCommand() *cobra.Command {
 
 			setValueInCLIContext(cmd, busCLICtxKey, bus)
 
+			// TECHDEBT: simplify after P2P module consolidation.
 			var err error
 			p2pMod, err = getP2PModule(runtimeMgr)
 			if err != nil {

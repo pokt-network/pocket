@@ -34,6 +34,7 @@ func CreateNode(bus modules.Bus, options ...modules.ModuleOption) (modules.Modul
 }
 
 func (m *Node) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	// TECHDEBT: simplify after P2P module consolidation.
 	useLibP2P := bus.GetRuntimeMgr().GetConfig().UseLibP2P
 	p2pCreate := p2p.Create
 	if useLibP2P {
