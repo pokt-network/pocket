@@ -49,7 +49,7 @@ func govCommands() []*cobra.Command {
 				// TODO(deblasis): implement RPC client, route and handler
 				fmt.Printf("changing parameter %s owned by %s to %s\n", args[1], args[0], args[2])
 
-				// Open the debug keybase at the specified path
+				// Open the keybase at the specified path
 				pocketDir := strings.TrimSuffix(dataDir, "/")
 				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
 				if err != nil {
