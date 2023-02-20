@@ -129,17 +129,18 @@ func protocolActorToRPCActorTypeEnum(protocolActorType typesCore.ActorType) Acto
 // getProtocolActorGetter returns the correct protocol actor getter function based on the actor type parameter
 func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, params GetV1P2pStakedActorsAddressBookParams) func(height int64) ([]*typesCore.Actor, error) {
 	var protocolActorGetter func(height int64) ([]*typesCore.Actor, error) = persistenceContext.GetAllStakedActors
-	if params.ActorType != nil {
-		switch *params.ActorType {
-		case Application:
-			protocolActorGetter = persistenceContext.GetAllApps
-		case Fisherman:
-			protocolActorGetter = persistenceContext.GetAllFishermen
-		case ServiceNode:
-			protocolActorGetter = persistenceContext.GetAllServiceNodes
-		case Validator:
-			protocolActorGetter = persistenceContext.GetAllValidators
-		}
+	if params.ActorType == nil {
+		return persistenceContext.GetAllStakedActors
+	}
+	switch *params.ActorType {
+	case Application:
+		protocolActorGetter = persistenceContext.GetAllApps
+	case Fisherman:
+		protocolActorGetter = persistenceContext.GetAllFishermen
+	case ServiceNode:
+		protocolActorGetter = persistenceContext.GetAllServiceNodes
+	case Validator:
+		protocolActorGetter = persistenceContext.GetAllValidators
 	}
 	return protocolActorGetter
 }

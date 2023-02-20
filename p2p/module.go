@@ -22,7 +22,6 @@ import (
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
-	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -69,7 +68,7 @@ func (*p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	cfg := runtimeMgr.GetConfig()
 	p2pCfg := cfg.P2P
 
-	if err := configureBootstrapNodes(p2pCfg, m); err != nil {
+	if err := m.configureBootstrapNodes(); err != nil {
 		return nil, err
 	}
 
@@ -218,7 +217,8 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	m.GetBus().PublishEventToBus(&event)
 }
 
-func configureBootstrapNodes(p2pCfg *configs.P2PConfig, m *p2pModule) error {
+func (m *p2pModule) configureBootstrapNodes() error {
+	p2pCfg := m.GetBus().GetRuntimeMgr().GetConfig().P2P
 	var csvReader *csv.Reader
 	customBootstrapNodesCsv := strings.Trim(p2pCfg.BootstrapNodesCsv, " ")
 	if customBootstrapNodesCsv == "" {
@@ -265,14 +265,11 @@ func isSelfInAddrBook(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook)
 	return false
 }
 
-func bootstrap(m *p2pModule) error {
-	var (
-		addrBook typesP2P.AddrBook
-	)
+func (m *p2pModule) bootstrap() error {
+	var addrBook typesP2P.AddrBook
 
 	for _, bootstrapNode := range m.bootstrapNodes {
 		m.logger.Info().Str("endpoint", bootstrapNode).Msg("Attempting to bootstrap from bootstrap node") // TODO: deblasis - fix this. For some reason it's not logging
-		log.Println("Attempting to bootstrap from bootstrap node: " + bootstrapNode)
 
 		client, err := rpc.NewClientWithResponses(bootstrapNode)
 		if err != nil {
@@ -280,7 +277,7 @@ func bootstrap(m *p2pModule) error {
 		}
 		healthCheck, err := client.GetV1Health(context.TODO())
 		if err != nil || healthCheck == nil || healthCheck.StatusCode != http.StatusOK {
-			log.Println("Error getting a green health check from bootstrap node: " + bootstrapNode)
+			m.logger.Warn().Str("bootstrapNode", bootstrapNode).Msg("Error getting a green health check from bootstrap node")
 			continue
 		}
 

@@ -11,8 +11,8 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/k8s"
-	v1 "k8s.io/api/core/v1"
+	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
+	k8s "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
@@ -40,7 +40,7 @@ func main() {
 		panic(err.Error())
 	}
 
-	validatorKeysMap, err := k8s.FetchValidatorPrivateKeys(clientset)
+	validatorKeysMap, err := pocketk8s.FetchValidatorPrivateKeys(clientset)
 	if err != nil {
 		panic(err)
 	}
@@ -51,7 +51,7 @@ func main() {
 	}
 
 	for event := range watcher.ResultChan() {
-		service, ok := event.Object.(*v1.Service)
+		service, ok := event.Object.(*k8s.Service)
 		if !ok {
 			continue
 		}

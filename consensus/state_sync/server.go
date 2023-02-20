@@ -22,13 +22,20 @@ type StateSyncServerModule interface {
 
 func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) error {
 	consensusMod := m.GetBus().GetConsensusModule()
-	serverNodePeerId := m.GetBus().GetConsensusModule().GetNodeAddress()
-
+	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := metadataReq.PeerAddress
-	m.logger.Info().Msgf("%s received state sync metadata request from: %s", serverNodePeerId, clientPeerAddress)
+	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
+	lastPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
-	// last finalized block
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(consensusMod.CurrentHeight()) - 1)
+	fields := map[string]any{
+		"height":   lastPersistedBlockHeight,
+		"sender":   serverNodePeerAddress,
+		"receiver": clientPeerAddress,
+	}
+
+	m.logger.Info().Fields(fields).Msgf("Received StateSync Metadata %s", metadataReq)
+
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
 	if err != nil {
 		return nil
 	}
@@ -47,7 +54,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	stateSyncMessage := typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_MetadataRes{
 			MetadataRes: &typesCons.StateSyncMetadataResponse{
-				PeerAddress: serverNodePeerId,
+				PeerAddress: serverNodePeerAddress,
 				MinHeight:   minHeight,
 				MaxHeight:   uint64(maxHeight),
 			},
@@ -60,14 +67,20 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
 	consensusMod := m.GetBus().GetConsensusModule()
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
-
 	clientPeerAddress := blockReq.PeerAddress
-	m.logger.Info().Msgf("%s received state sync Get Block Req from: %s", serverNodePeerAddress, clientPeerAddress)
+	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
+	lastPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
-	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+	fields := map[string]any{
+		"height":   lastPersistedBlockHeight,
+		"sender":   serverNodePeerAddress,
+		"receiver": clientPeerAddress,
+	}
 
-	if currentHeight < blockReq.Height {
-		return fmt.Errorf("requested block height: %d is higher than node's block height: %d", blockReq.Height, consensusMod.CurrentHeight())
+	m.logger.Info().Fields(fields).Msgf("Received StateSync GetBlockRequest: %s", blockReq)
+
+	if lastPersistedBlockHeight < blockReq.Height {
+		return fmt.Errorf("requested block height: %d is higher than current persisted block height: %d", blockReq.Height, lastPersistedBlockHeight)
 	}
 
 	// get block from the persistence module
