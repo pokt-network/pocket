@@ -14,6 +14,8 @@ import (
 
 func Test_Create_configureBootstrapNodes(t *testing.T) {
 	defaultBootstrapNodes := strings.Split(defaults.DefaultP2PBootstrapNodesCsv, ",")
+	key := generateKey(t, 1)
+
 	type args struct {
 		initialBootstrapNodesCsv string
 	}
@@ -46,12 +48,12 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 			wantBootstrapNodes: defaultBootstrapNodes,
 		},
 		{
-			name: "untrimmed string boostrap nodes should yield no error and return DefaultP2PBootstrapNodes",
+			name: "untrimmed string boostrap nodes should yield no error and return the trimmed urls",
 			args: args{
-				initialBootstrapNodesCsv: "     http://somenode:50832  ",
+				initialBootstrapNodesCsv: "     http://somenode:50832  ,  http://someothernode:50832  ",
 			},
 			wantErr:            false,
-			wantBootstrapNodes: []string{"http://somenode:50832"},
+			wantBootstrapNodes: []string{"http://somenode:50832", "http://someothernode:50832"},
 		},
 		{
 			name: "custom bootstrap nodes should yield no error and return the custom bootstrap node",
@@ -70,16 +72,30 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 			wantErr:            true,
 		},
 		{
-			name: "invalid hostname:port pattern for bootstrap nodes string should yield an error and return nil",
+			name: "port number too high yields an error and empty list of bootstrap nodes",
 			args: args{
 				initialBootstrapNodesCsv: "http://somenode:99999",
 			},
 			wantBootstrapNodes: []string(nil),
 			wantErr:            true,
 		},
+		{
+			name: "negative port number yields an error and empty list of bootstrap nodes",
+			args: args{
+				initialBootstrapNodesCsv: "udp://somenode:-8080",
+			},
+			wantBootstrapNodes: []string(nil),
+			wantErr:            true,
+		},
+		{
+			name: "wrong protocol yields an error and empty list of bootstrap nodes",
+			args: args{
+				initialBootstrapNodesCsv: "udp://somenode:58884",
+			},
+			wantBootstrapNodes: []string(nil),
+			wantErr:            true,
+		},
 	}
-
-	keys := generateKeys(t, 1)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -89,10 +105,10 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 			mockConsensusModule := mockModules.NewMockConsensusModule(ctrl)
 			mockBus.EXPECT().GetConsensusModule().Return(mockConsensusModule).AnyTimes()
 			mockRuntimeMgr.EXPECT().GetConfig().Return(&configs.Config{
-				PrivateKey: keys[0].String(),
+				PrivateKey: key.String(),
 				P2P: &configs.P2PConfig{
 					BootstrapNodesCsv: tt.args.initialBootstrapNodesCsv,
-					PrivateKey:        keys[0].String(),
+					PrivateKey:        key.String(),
 				},
 			}).AnyTimes()
 			mockBus.EXPECT().GetRuntimeMgr().Return(mockRuntimeMgr).AnyTimes()
@@ -107,7 +123,6 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 				actualBootstrapNodes := p2pMod.(*p2pModule).bootstrapNodes
 				require.EqualValues(t, tt.wantBootstrapNodes, actualBootstrapNodes)
 			}
-
 		})
 	}
 }
