@@ -222,7 +222,7 @@ func (u *utilityContext) unbondUnstakingActors() (err typesUtil.Error) {
 			poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 			readyToUnstake, er = store.GetServicersReadyToUnstake(u.height, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = coreTypes.Pools_POOLS_SERVICE_NODE_STAKE.FriendlyName()
+			poolName = coreTypes.Pools_POOLS_SERVICER_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			readyToUnstake, er = store.GetValidatorsReadyToUnstake(u.height, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()

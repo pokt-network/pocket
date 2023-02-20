@@ -389,7 +389,7 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 				paramName1 = typesUtil.FishermanMaxPauseBlocksParamName
 				paramName2 = typesUtil.FishermanUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-				poolName = coreTypes.Pools_POOLS_SERVICE_NODE_STAKE.FriendlyName()
+				poolName = coreTypes.Pools_POOLS_SERVICER_STAKE.FriendlyName()
 				paramName1 = typesUtil.ServicerMaxPauseBlocksParamName
 				paramName2 = typesUtil.ServicerUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:

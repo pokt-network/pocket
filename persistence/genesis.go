@@ -68,7 +68,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			Name:     "servicer",
 			Getter:   state.GetServicers,
 			InsertFn: rwContext.InsertServicer,
-			Pool:     coreTypes.Pools_POOLS_SERVICE_NODE_STAKE,
+			Pool:     coreTypes.Pools_POOLS_SERVICER_STAKE,
 		},
 		{
 			Name:     "fisherman",
