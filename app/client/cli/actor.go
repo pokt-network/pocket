@@ -47,7 +47,7 @@ type (
 func NewActorCommands(cmdOptions []cmdOption) []*cobra.Command {
 	actorCmdDefs := []actorCmdDef{
 		{"Application", coreTypes.ActorType_ACTOR_TYPE_APP, cmdOptions},
-		{"Node", coreTypes.ActorType_ACTOR_TYPE_SERVICER, cmdOptions},
+		{"Servicer", coreTypes.ActorType_ACTOR_TYPE_SERVICER, cmdOptions},
 		{"Fisherman", coreTypes.ActorType_ACTOR_TYPE_FISH, cmdOptions},
 		{"Validator", coreTypes.ActorType_ACTOR_TYPE_VAL, cmdOptions},
 	}
@@ -78,19 +78,21 @@ func newActorCommands(cmdDef actorCmdDef) []*cobra.Command {
 }
 
 func newStakeCmd(cmdDef actorCmdDef) *cobra.Command {
+	short := fmt.Sprintf("Stake a %s in the network. Custodial stake uses the same address as operator/output for rewards/return of staked funds.", cmdDef.Name)
+	long := fmt.Sprintf(`Stake the %s into the network, making it available for service.
+
+Will prompt the user for the *fromAddr* account passphrase. If the %s is already staked, this transaction acts as an *update* transaction.
+
+A %s can update relayChainIDs, serviceURI, and raise the stake amount with this transaction.
+
+If the %s is currently staked at X and you submit an update with new stake Y. Only Y-X will be subtracted from an account.
+
+If no changes are desired for the parameter, just enter the current param value just as before.`, cmdDef.Name, cmdDef.Name, cmdDef.Name, cmdDef.Name)
 	stakeCmd := &cobra.Command{
 		Use:   "Stake <fromAddr> <amount> <relayChainIDs> <serviceURI>",
-		Short: "Stake a node in the network. Custodial stake uses the same address as operator/output for rewards/return of staked funds.",
-		Long: `Stake the node into the network, making it available for service.
-
-Will prompt the user for the *fromAddr* account passphrase. If the node is already staked, this transaction acts as an *update* transaction.
-
-A node can update relayChainIDs, serviceURI, and raise the stake amount with this transaction.
-
-If the node is currently staked at X and you submit an update with new stake Y. Only Y-X will be subtracted from an account.
-
-If no changes are desired for the parameter, just enter the current param value just as before.`,
-		Args: cobra.ExactArgs(4),
+		Short: short,
+		Long:  long,
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Unpack CLI arguments
 			fromAddrHex := args[0]
@@ -233,7 +235,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 	unstakeCmd := &cobra.Command{
 		Use:   "Unstake <fromAddr>",
 		Short: "Unstake <fromAddr>",
-		Long:  fmt.Sprintf(`Unstakes the prevously staked tokens for the %s actor with address <fromAddr>`, cmdDef.Name),
+		Long:  fmt.Sprintf(`Unstakes the previously staked tokens for the %s actor with address <fromAddr>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Unpack CLI arguments
