@@ -2,14 +2,13 @@ package debug
 
 import (
 	"fmt"
+	"github.com/pokt-network/pocket/shared/converters"
 	"os"
 	"path/filepath"
 	r "runtime"
 
-	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/shared"
-
 	"github.com/pokt-network/pocket/app/client/keybase"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
@@ -134,7 +133,7 @@ func fetchValidatorPrivateKeysFromFile() (map[string]string, error) {
 	_, current, _, _ := r.Caller(0)
 	//nolint:gocritic // Use path to find private-keys yaml file from being called in any location in the repo
 	yamlFile := filepath.Join(current, privateKeysYamlFile)
-	if exists, err := shared.FileExists(yamlFile); !exists || err != nil {
+	if exists, err := converters.FileExists(yamlFile); !exists || err != nil {
 		return nil, fmt.Errorf("unable to find YAML file: %s", yamlFile)
 	}
 

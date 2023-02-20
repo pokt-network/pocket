@@ -107,9 +107,13 @@ func keysCreateCommands() []*cobra.Command {
 					return err
 				}
 
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+
 				logger.Global.Info().Str("address", kp.GetAddressString()).Msg("New Key Created")
 
-				return kb.Stop()
+				return nil
 			},
 		},
 	}
@@ -149,9 +153,13 @@ func keysUpdateCommands() []*cobra.Command {
 					return err
 				}
 
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+
 				logger.Global.Info().Str("address", addrHex).Msg("Key updated")
 
-				return kb.Stop()
+				return nil
 			},
 		},
 	}
@@ -190,9 +198,13 @@ func keysDeleteCommands() []*cobra.Command {
 					return err
 				}
 
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+
 				logger.Global.Info().Str("address", addrHex).Msg("Key deleted")
 
-				return kb.Stop()
+				return nil
 			},
 		},
 	}
@@ -224,11 +236,15 @@ func keysGetCommands() []*cobra.Command {
 					return err
 				}
 
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+
 				for _, addr := range addresses {
 					fmt.Println(addr)
 				}
 
-				return kb.Stop()
+				return nil
 			},
 		},
 		{
@@ -257,9 +273,13 @@ func keysGetCommands() []*cobra.Command {
 					return err
 				}
 
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+
 				logger.Global.Info().Str("address", addrHex).Str("public_key", kp.GetPublicKey().String()).Msg("Found key")
 
-				return kb.Stop()
+				return nil
 			},
 		},
 	}
@@ -382,7 +402,11 @@ func keysImportCommands() []*cobra.Command {
 					return fmt.Errorf("invalid import format: got %s, want [raw]/[json]", exportAs)
 				}
 
-				return kb.Stop()
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+
+				return nil
 			},
 		},
 	}
@@ -429,11 +453,15 @@ func keysSignCommands() []*cobra.Command {
 					return err
 				}
 
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+
 				sigHex := hex.EncodeToString(sigBz)
 
 				logger.Global.Info().Str("signature", sigHex).Str("address", addrHex).Msg("Message signed")
 
-				return kb.Stop()
+				return nil
 			},
 		},
 		{
@@ -472,9 +500,13 @@ func keysSignCommands() []*cobra.Command {
 					return err
 				}
 
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+
 				logger.Global.Info().Str("address", addrHex).Bool("valid", valid).Msg("Signature verified")
 
-				return kb.Stop()
+				return nil
 			},
 		},
 	}
