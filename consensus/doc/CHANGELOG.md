@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.31] - 2023-02-20
+
+- Rename ServiceNode Actor Type Name to Servicer
+
 ## [0.0.0.30] - 2023-02-17
 
 - Updated log messages in the state sync submodule with consistent style and add height information
@@ -24,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a few `nolint` comments to fix the code on main
 
 ## [0.0.0.27] - 2023-02-09
+
 - Add `state_sync` submodule, with `state_sync` struct
 - Implement state sync server to advertise blocks and metadata
 - Create new `state_sync_handler.go` source file that handles `StateSyncMessage`s sent to the `Consensus` module
