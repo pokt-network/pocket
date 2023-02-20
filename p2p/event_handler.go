@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -36,6 +37,27 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		}
 		for _, rm := range removed {
 			if err := m.network.RemovePeerFromAddrBook(rm); err != nil {
+				return err
+			}
+		}
+
+	case messaging.StateMachineTransitionEventType:
+		stateMachineTransitionEvent, ok := evt.(*messaging.StateMachineTransitionEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast event to StateMachineTransitionEvent")
+		}
+
+		if stateMachineTransitionEvent.NewState == string(coreTypes.StateMachineState_P2P_Bootstrapping) {
+			addrBook := m.network.GetAddrBook()
+			if len(addrBook) == 0 {
+				m.logger.Warn().Msg("No peers in addrbook, bootstrapping")
+
+				if err := m.bootstrap(); err != nil {
+					return err
+				}
+			}
+			m.logger.Info().Bool("TODO", true).Msg("Advertise self to network")
+			if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_P2P_IsBootstrapped); err != nil {
 				return err
 			}
 		}

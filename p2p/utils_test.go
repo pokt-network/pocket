@@ -1,8 +1,6 @@
 package p2p
 
 import (
-	"crypto/ed25519"
-	"encoding/binary"
 	"fmt"
 	"log"
 	"sort"
@@ -50,13 +48,7 @@ func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
 
 	for i := range keys {
 		seedInt := genesisConfigSeedStart + i
-		seed := make([]byte, ed25519.PrivateKeySize)
-		binary.LittleEndian.PutUint32(seed, uint32(seedInt))
-		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
-		if err != nil {
-			panic(err)
-		}
-		keys[i] = pk
+		keys[i] = cryptoPocket.GetPrivKeySeed(seedInt)
 	}
 	sort.Slice(keys, func(i, j int) bool {
 		return keys[i].Address().String() < keys[j].Address().String()
