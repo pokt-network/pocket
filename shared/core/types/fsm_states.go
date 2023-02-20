@@ -11,4 +11,9 @@ const (
 	StateMachineState_Consensus_Unsynched StateMachineState = "Consensus_Unsynched"
 	StateMachineState_Consensus_SyncMode  StateMachineState = "Consensus_SyncMode"
 	StateMachineState_Consensus_Synced    StateMachineState = "Consensus_Synced"
+
+	StateMachineState_Consensus_Server_Enabled  StateMachineState = "Consensus_Server_Enabled"
+	StateMachineState_Consensus_Server_Disabled StateMachineState = "Consensus_Server_Disabled"
+
+	StateMachineState_Consensus_Pacemaker StateMachineState = "Consensus_Pacemaker"
 )

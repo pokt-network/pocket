@@ -36,7 +36,8 @@ type ConsensusModule interface {
 	CurrentStep() uint64
 
 	// State Sync functions
-	EnableServerMode()
+	EnableServerMode() error
+	DisableServerMode() error
 }
 
 // This interface represents functions exposed by the Consensus module for Pacemaker specific business logic.
@@ -74,4 +75,5 @@ type ConsensusPacemaker interface {
 type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
+	IsOutOfSync() bool
 }

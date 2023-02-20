@@ -134,7 +134,11 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		if err := node.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
 			return err
 		}
-	case consensus.HotstuffMessageContentType:
+	// TODO: StateMachineEvent_P2P_IsBootstrapped -> needs to be handled by the P2PModule
+	// TODO: Currently only start event goes to the consensus module
+	//Check if all StateMachineTransitionEventTypes must be handled by the consensus module
+	// TODO: May P2PModule need to handle some of other events?
+	case consensus.HotstuffMessageContentType, messaging.StateMachineTransitionEventType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 	case consensus.StateSyncMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)

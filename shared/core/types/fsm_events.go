@@ -7,7 +7,11 @@ const (
 
 	StateMachineEvent_P2P_IsBootstrapped StateMachineEvent = "P2P_IsBootstrapped"
 
-	StateMachineEvent_Consensus_IsUnsynched StateMachineEvent = "Consensus_IsUnsynched"
-	StateMachineEvent_Consensus_IsSyncing   StateMachineEvent = "Consensus_IsSyncing"
-	StateMachineEvent_Consensus_IsCaughtUp  StateMachineEvent = "Consensus_IsCaughtUp"
+	StateMachineEvent_Consensus_EnableServerMode  StateMachineEvent = "Consensus_EnableServerMode"
+	StateMachineEvent_Consensus_DisableServerMode StateMachineEvent = "Consensus_DisableServerMode"
+
+	StateMachineEvent_Consensus_IsUnsynched            StateMachineEvent = "Consensus_IsUnsynched"
+	StateMachineEvent_Consensus_IsSyncing              StateMachineEvent = "Consensus_IsSyncing"
+	StateMachineEvent_Consensus_IsCaughtUpValidator    StateMachineEvent = "Consensus_IsCaughtUpValidator"
+	StateMachineEvent_Consensus_IsCaughtUpNonValidator StateMachineEvent = "Consensus_IsCaughtUpNonValidator"
 )
