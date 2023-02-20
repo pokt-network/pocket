@@ -14,7 +14,6 @@ import (
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime/defaults"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
 // configureBootstrapNodes parses the bootstrap nodes from the config and validates them
@@ -104,13 +103,4 @@ func isValidHostnamePort(str string) bool {
 		return false
 	}
 	return true
-}
-
-func isSelfInAddrBook(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) bool {
-	for _, peer := range addrBook {
-		if peer.Address.Equals(selfAddr) {
-			return true
-		}
-	}
-	return false
 }

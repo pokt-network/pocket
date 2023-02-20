@@ -56,10 +56,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 					return err
 				}
 			}
-			if !isSelfInAddrBook(m.address, addrBook) {
-				m.logger.Warn().Msg("Self address not found in addresbook, advertising")
-				// TODO: (link libp2p issue) advertise node to network, populate internal addressbook adding self as first peer
-			}
+			m.logger.Info().Bool("TODO", true).Msg("Advertise self to network")
 			if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_P2P_IsBootstrapped); err != nil {
 				return err
 			}
