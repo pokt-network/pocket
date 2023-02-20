@@ -64,6 +64,10 @@ func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionE
 
 // CONSIDER: there are similarities between sync mode and pacemaker modes' transition to unsync mode, consider consolidating
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
+	// wait for syncing to finish
+	// if the node is validator move to pacemaker state
+	// else move the synced state
+	// m.GetBus().GetConsensusModule().StartSnycing()
 
 	m.stateSync.AggregateMetadataResponses()
 	err, synced := m.stateSync.Snyc()
@@ -87,23 +91,17 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	} else {
 		m.logger.Debug().Msg("Syncing is not complete")
 	}
-
-	// wait for syncing to finish
-	// if the node is validator move to pacemaker state
-	// else move the synced state
-	// m.GetBus().GetConsensusModule().StartSnycing()
-
 	return nil
 }
 
-// Synced mode may change to unsync mode if
+// Synced mode may change to unsync mode if node is out of sync
 func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
-
-	// cehck every X seconds if the node is out of sync
+	// check every X seconds if the node is out of sync
 	// if so move to unsynched mode
 	return nil
 }
 
+// Pacemaker mode may change to unsync mode if node is out of sync
 func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionEvent) error {
 	// cehck every X seconds if the node is out of sync
 	// if so move to unsynched mode
