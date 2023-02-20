@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/shared"
+	"github.com/pokt-network/pocket/shared/converters"
 	"path/filepath"
 	"strings"
 
@@ -34,8 +34,8 @@ func NewKeysCommand() *cobra.Command {
 	}
 
 	createCmds := keysCreateCommands()
-	deleteCmds := keysDeleteCommands()
 	updateCmds := keysUpdateCommands()
+	deleteCmds := keysDeleteCommands()
 	getCmds := keysGetCommands()
 	exportCmds := keysExportCommands()
 	importCmds := keysImportCommands()
@@ -45,13 +45,13 @@ func NewKeysCommand() *cobra.Command {
 	applySubcommandOptions(createCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(createCmds, attachHintFlagToSubcommands())
 
-	// Add --pwd flag
-	applySubcommandOptions(deleteCmds, attachPwdFlagToSubcommands())
-
 	// Add --pwd, --new_pwd and --hint flags
 	applySubcommandOptions(updateCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(updateCmds, attachNewPwdFlagToSubcommands())
 	applySubcommandOptions(updateCmds, attachHintFlagToSubcommands())
+
+	// Add --pwd flag
+	applySubcommandOptions(deleteCmds, attachPwdFlagToSubcommands())
 
 	// Add --pwd, --output_file and --export_format flags
 	applySubcommandOptions(exportCmds, attachPwdFlagToSubcommands())
@@ -68,6 +68,7 @@ func NewKeysCommand() *cobra.Command {
 	applySubcommandOptions(signCmds, attachPwdFlagToSubcommands())
 
 	cmd.AddCommand(createCmds...)
+	cmd.AddCommand(updateCmds...)
 	cmd.AddCommand(deleteCmds...)
 	cmd.AddCommand(getCmds...)
 	cmd.AddCommand(exportCmds...)
@@ -292,7 +293,7 @@ func keysExportCommands() []*cobra.Command {
 					pwd = readPassphrase(pwd)
 				}
 
-				// Determine correct way to export private key
+				// Select the correct format to export private key
 				var exportString string
 				switch strings.ToLower(exportAs) {
 				case "json":
@@ -319,7 +320,7 @@ func keysExportCommands() []*cobra.Command {
 					return nil
 				}
 
-				return shared.WriteOutput(exportString, outputFile)
+				return converters.WriteOutput(exportString, outputFile)
 			},
 		},
 	}
@@ -340,7 +341,7 @@ func keysImportCommands() []*cobra.Command {
 				if len(args) == 1 {
 					privateKeyString = args[0]
 				} else if inputFile != "" {
-					privateKeyString, err = shared.ReadInput(inputFile)
+					privateKeyString, err = converters.ReadInput(inputFile)
 					if err != nil {
 						return err
 					}
@@ -388,6 +389,9 @@ func keysImportCommands() []*cobra.Command {
 	return cmds
 }
 
+// TODO: Add the following key signature commands
+//  1. Read an encoded unsigned transaction from `--input_file` and write the signed transaction to `--output_file`
+//  2. Verify the signature of a transaction provided by `--input_file`
 func keysSignCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{

@@ -186,7 +186,7 @@ func attachPwdFlagToSubcommands() []cmdOption {
 
 func attachNewPwdFlagToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
-		c.Flags().StringVar(&pwd, "new_pwd", "", "new passphrase for key, non empty usage bypass interactive prompt")
+		c.Flags().StringVar(&pwd, "new_pwd", "", "new passphrase for private key, non empty usage bypass interactive prompt")
 	}}
 }
 
