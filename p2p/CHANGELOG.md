@@ -7,14 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.28] - 2023-02-17
+## [0.0.0.28] - 2023-02-20
 
 - Added basic `bootstrap` nodes support
 - Reacting to `ConsensusNewHeightEventType` and `StateMachineTransitionEventType` to update the address book and current height and determine if a bootstrap is needed
 
-## [0.0.0.27] - 2023-02-16
+## [0.0.0.27] - 2023-02-17
 
-- Modules embed `base_modules.IntegratableModule` and `base_modules.InterruptableModule` for DRYness
 - Deprecated `debugAddressBookProvider`
 - Added `rpcAddressBookProvider` to source the address book from the RPC server
 - Leveraging `bus` for dependency injection of the `addressBookProvider` and `currentHeightProvider`
