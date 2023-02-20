@@ -1,3 +1,22 @@
+/*
+	TECHDEBT: This module currnetly imports types  from the "legacy" P2P module.
+
+/* Migration path:
+  - 1. Redefine P2P concrete types in terms of interfaces
+  - - PeersManager (raintree/peersManager)
+  - - Peer (p2p/types/NetworkPeer)
+  - - AddrBook (p2p/types/AddrBook)
+  - - AddrBookMap (p2p/types/NetworkPeer)
+  - - rainTreeNetwork doesn't depend on any concrete p2p types
+  - 2. Simplify libp2p module implementation
+  - - Network interface can be simplified
+  - - Consider renaming as it functions more like a "router"
+  - (NB: could be replaced in future iterations with a "raintree pubsub router")
+  - - Transport likely reduces to nothing
+  - 3. Remove "legacy" P2P module & rename libp2p module directory (possibly object names as well)
+  - - P2PModule interface can be simplified
+  - - Clean up TECHDEBT introduced in debug CLI and node startup
+*/
 package libp2p
 
 import (
