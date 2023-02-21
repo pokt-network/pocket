@@ -20,7 +20,6 @@ require (
 require (
 	github.com/benbjohnson/clock v1.3.0
 	github.com/celestiaorg/smt v0.2.1-0.20220414134126-dba215ccb884
-	github.com/deepmap/oapi-codegen v1.12.4
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/getkin/kin-openapi v0.107.0
 	github.com/jackc/pgconn v1.13.0
@@ -65,9 +64,7 @@ require (
 )
 
 require (
-	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jackc/puddle/v2 v2.1.2 // indirect
