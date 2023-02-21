@@ -27,9 +27,6 @@ const (
 	testJSONPubString  = "408bec6320b540aa0cc86b3e633e214f2fd4dce4caa08f164fa3a9d3e577b46c"
 	testJSONPrivString = "3554119cec1c0c8c5b3845a5d3fc6346eb44ed21aab5c063ae9b6b1d38bec275408bec6320b540aa0cc86b3e633e214f2fd4dce4caa08f164fa3a9d3e577b46c"
 	testJSONString     = `{"kdf":"scrypt","salt":"197d2754445a7e5ce3e6c8d7b1d0ff6f","secparam":"12","hint":"pocket wallet","ciphertext":"B/AORJrSeQrR5ewQGel4FeCCXscoCsMUzq9gXAAxDqjXMmMxa7TedBTuemtO82JyTCoQWFHbGxRx8A7IoETNh5T5yBAjNNrr7DDkVrcfSAM3ez9lQem17DsfowCvRtmbesDlvbSZMRy8mQgClLqWRN+c6W/fPQ/lxLUy1G1A965U/uImcMXzSwbfqYrBPEux"}`
-
-	// SLIPS-0010
-	testChildAddrIdx1 = "11c4bf38bf5de98dd39fdf935da0165c2f0fd408"
 )
 
 func TestKeybase_CreateNewKey(t *testing.T) {
@@ -444,72 +441,6 @@ func TestKeybase_ExportJSON(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, privKey.Address().String(), testAddr)
 	require.Equal(t, privKey.String(), testPrivString)
-}
-
-func TestKeybase_DeriveChildFromKey(t *testing.T) {
-	db := initDB(t)
-	defer stopDB(t, db)
-
-	err := db.ImportFromString(testPrivString, testPassphrase, testHint)
-	require.NoError(t, err)
-
-	childKey, err := db.DeriveChildFromKey(testAddr, testPassphrase, 1)
-	require.NoError(t, err)
-	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
-}
-
-func TestKeybase_DeriveChildFromSeed(t *testing.T) {
-	db := initDB(t)
-	defer stopDB(t, db)
-
-	err := db.ImportFromString(testPrivString, testPassphrase, testHint)
-	require.NoError(t, err)
-
-	kp, err := db.Get(testAddr)
-	require.NoError(t, err)
-
-	seed, err := kp.GetSeed(testPassphrase)
-	require.NoError(t, err)
-
-	childKey, err := db.DeriveChildFromSeed(seed, 1)
-	require.NoError(t, err)
-	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
-}
-
-func TestKeybase_StoreChildFromKey(t *testing.T) {
-	db := initDB(t)
-	defer stopDB(t, db)
-
-	err := db.ImportFromString(testPrivString, testPassphrase, testHint)
-	require.NoError(t, err)
-
-	err = db.StoreChildFromKey(testAddr, testPassphrase, 1, testPassphrase, testHint)
-	require.NoError(t, err)
-
-	childKey, err := db.GetPrivKey(testChildAddrIdx1, testPassphrase)
-	require.NoError(t, err)
-	require.Equal(t, childKey.Address().String(), testChildAddrIdx1)
-}
-
-func TestKeybase_StoreChildFromSeed(t *testing.T) {
-	db := initDB(t)
-	defer stopDB(t, db)
-
-	err := db.ImportFromString(testPrivString, testPassphrase, testHint)
-	require.NoError(t, err)
-
-	kp, err := db.Get(testAddr)
-	require.NoError(t, err)
-
-	seed, err := kp.GetSeed(testPassphrase)
-	require.NoError(t, err)
-
-	err = db.StoreChildFromSeed(seed, 1, testPassphrase, testHint)
-	require.NoError(t, err)
-
-	childKey, err := db.GetPrivKey(testChildAddrIdx1, testPassphrase)
-	require.NoError(t, err)
-	require.Equal(t, childKey.Address().String(), testChildAddrIdx1)
 }
 
 func initDB(t *testing.T) Keybase {
