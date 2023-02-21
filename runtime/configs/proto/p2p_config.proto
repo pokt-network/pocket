@@ -14,4 +14,5 @@ message P2PConfig {
   conn.ConnectionType connection_type = 5;
   uint64 max_mempool_count = 6; // this is used to limit the number of nonces that can be stored in the mempool, after which a FIFO mechanism is used to remove the oldest nonces and make space for the new ones
   bool is_client_only = 7;
+  string bootstrap_nodes_csv = 8; // string in the format "http://somenode:50832,http://someothernode:50832". Refer to `p2p/module_test.go` for additional details.
 }

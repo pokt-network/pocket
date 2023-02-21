@@ -150,7 +150,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		return node.GetBus().GetUtilityModule().HandleMessage(message.Content)
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
-	case messaging.ConsensusNewHeightEventType:
+	case messaging.ConsensusNewHeightEventType, messaging.StateMachineTransitionEventType:
 		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
 	default:
 		logger.Global.Warn().Msgf("Unsupported message content type: %s", contentType)
