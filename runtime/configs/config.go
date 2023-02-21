@@ -6,7 +6,7 @@ type Config struct {
 	RootDirectory   string `json:"root_directory"`
 	PrivateKey      string `json:"private_key"` // INVESTIGATE(#150): better architecture for key management (keybase, keyfiles, etc.)
 	ClientDebugMode bool   `json:"client_debug_mode"`
-	UseLibP2P       bool   `json:"use_lib_p2p"`
+	UseLibP2P       bool   `json:"use_lib_p2p"` // Determines if `root/libp2p` or `root/p2p` should be used as the p2p module
 
 	Consensus   *ConsensusConfig   `json:"consensus"`
 	Utility     *UtilityConfig     `json:"utility"`

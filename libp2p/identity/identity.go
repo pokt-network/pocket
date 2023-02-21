@@ -73,7 +73,7 @@ func Libp2pAddrInfoFromPeer(peer *typesP2P.NetworkPeer) (libp2pPeer.AddrInfo, er
 	}
 
 	peerMultiaddr, err := multiaddr.NewMultiaddr(peer.ServiceUrl)
-	// NB: early return if we already have a multiaddr.
+	// Return early if peer.ServiceUrl already have a multiaddr instead of a ServiceURL.
 	if err == nil {
 		return libp2pPeer.AddrInfo{
 			ID: peerID,
@@ -96,7 +96,7 @@ func Libp2pAddrInfoFromPeer(peer *typesP2P.NetworkPeer) (libp2pPeer.AddrInfo, er
 	}, nil
 }
 
-// Libp2pMultiaddrFromServiceUrl transforms a URL into its libp2p muleiaddr equivalent.
+// Libp2pMultiaddrFromServiceUrl transforms a URL into its libp2p multiaddr equivalent.
 // (see: https://github.com/libp2p/specs/blob/master/addressing/README.md#multiaddr-basics)
 // TECHDEBT: this probably belongs somewhere else, it's more of a networking helper.
 func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, error) {
