@@ -109,8 +109,7 @@ flowchart LR
 
 [SLIP-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md) key generation from a master key or seed is supported through the file [slip.go](./slip.go)
 
-The child keys are generated from an index, modified to force using hardened keys - this allows for the deterministic generation of up to `2147483647` hardened ed25519 child keys per master key.
-
+The keys are generated using the BIP-44 path `m/44'/635'/%d'` where `%d` is the index of the child key - this allows for the deterministic generation of up to `2147483647` hardened ed25519 child keys per master key.
 Master key derivation is done as follows:
 ```mermaid
 flowchart LR

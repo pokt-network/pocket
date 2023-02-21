@@ -24,7 +24,7 @@ type Keybase interface {
 	// Deterministically generate and return the derived child key
 	DeriveChildFromKey(masterAddrHex, passphrase string, childIndex uint32) (crypto.KeyPair, error)
 	DeriveChildFromSeed(seed []byte, childIndex uint32) (crypto.KeyPair, error)
-	// Store the derived child key in the keybase
+	// Deterministically generate and store the derived child key in the keybase
 	StoreChildFromKey(masterAddrHex, masterPassphrase string, childIndex uint32, childPassphrase, childHint string) error
 	StoreChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string) error
 

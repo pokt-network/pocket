@@ -237,7 +237,8 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 
 // Deterministically generate and return the ith child from the seed provided
 func (keybase *badgerKeybase) DeriveChildFromSeed(seed []byte, childIndex uint32) (crypto.KeyPair, error) {
-	childKey, err := crypto.DeriveChild(childIndex, seed)
+	path := fmt.Sprintf(crypto.PoktAccountPathFormat, childIndex)
+	childKey, err := crypto.DeriveChild(path, seed)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +257,8 @@ func (keybase *badgerKeybase) DeriveChildFromKey(masterAddrHex, passphrase strin
 
 // Deterministically generate and store the ith child from the masterAddrHex key stored in the keybase
 func (keybase *badgerKeybase) StoreChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string) error {
-	childKey, err := crypto.DeriveChild(childIndex, seed)
+	path := fmt.Sprintf(crypto.PoktAccountPathFormat, childIndex)
+	childKey, err := crypto.DeriveChild(path, seed)
 	if err != nil {
 		return err
 	}

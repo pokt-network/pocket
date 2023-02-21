@@ -6,19 +6,28 @@ import (
 	"crypto/sha512"
 	"encoding/binary"
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 const (
+	// PoktAccountPathFormat used for HD key derivation where 635 is the SLIP-0044 coin type
+	// To be used with fmt.Sprintf to generate child keys
+	// Ref: https://github.com/satoshilabs/slips/blob/master/slip-0044.md
+	PoktAccountPathFormat = "m/44'/635'/%d'" // m/purpose'/coin_type'/account_idx'
 	// As defined in: https://github.com/satoshilabs/slips/blob/master/slip-0010.md#master-key-generation
 	seedModifier = "ed25519 seed"
 	// Hardened key values, as defined in: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#extended-keys
-	firstHardenedKeyIndex = uint32(2147483648) // 2^31
-	maxHardenedKeyIndex   = ^uint32(0)         // 2^32-1
+	firstHardenedKeyIndex = uint32(1 << 31) // 2^31
+	maxHardenedKeyIndex   = ^uint32(0)      // 2^32-1
 	maxChildKeyIndex      = maxHardenedKeyIndex - firstHardenedKeyIndex
 )
 
 var (
-	ErrNoDerivation = fmt.Errorf("no derivation for an ed25519 key is possible")
+	ErrNoDerivation = fmt.Errorf("no derivation for a hardened ed25519 key is possible")
+	ErrInvalidPath  = fmt.Errorf("invalid BIP-44 derivation path")
+	pathRegex       = regexp.MustCompile(`m(/\d+')+$`)
 )
 
 type slipKey struct {
@@ -27,26 +36,35 @@ type slipKey struct {
 }
 
 // Derives a master key from the seed provided and returns the child at the correct index
-func DeriveChild(index uint32, seed []byte) (KeyPair, error) {
-	masterKey, err := newMasterKey(seed)
+func DeriveChild(path string, seed []byte) (KeyPair, error) {
+	// Break down path into uint32 segments
+	segments, err := pathToSegments(path)
 	if err != nil {
 		return nil, err
 	}
 
-	// Allow index usage from 0 while using hardened keys
-	if index > maxChildKeyIndex {
-		return nil, fmt.Errorf("child index is greater than max hardened ed25519 key index: got %d, max %d", index, maxChildKeyIndex)
-	}
-
-	// Force hardened keys
-	index += firstHardenedKeyIndex
-
-	childKey, err := masterKey.deriveChild(index)
+	// Initialise a master key from seed to start child generation
+	key, err := newMasterKey(seed)
 	if err != nil {
 		return nil, err
 	}
 
-	return childKey.convertToKeypair()
+	// Iterate over segments in path regenerating the child key until correct
+	for _, i32 := range segments {
+		// Force hardened keys
+		if i32 > maxChildKeyIndex {
+			return nil, fmt.Errorf("hardened key index too large, max: %d, got: %d", maxChildKeyIndex, i32)
+		}
+		i := i32 + firstHardenedKeyIndex
+
+		// Derive the correct child until final segment
+		key, err = key.deriveChild(i)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return key.convertToKeypair()
 }
 
 // Reference: https://github.com/satoshilabs/slips/blob/master/slip-0010.md#master-key-generation
@@ -117,4 +135,30 @@ func (k *slipKey) convertToKeypair() (KeyPair, error) {
 		PublicKey:     privKey.PublicKey(),
 		PrivKeyArmour: armouredStr,
 	}, nil
+}
+
+// Check the BIP-44 path provided is valid and return the []uint32 segments it contains
+func pathToSegments(path string) ([]uint32, error) {
+	// Master path exception
+	if path == "m" {
+		return []uint32{}, nil
+	}
+
+	// Check whether the path is valid
+	if !pathRegex.MatchString(path) {
+		return nil, ErrInvalidPath
+	}
+
+	// Split into segments and check for valid uint32 types
+	segments := make([]uint32, 0)
+	segs := strings.Split(path, "/")
+	for _, seg := range segs[1:] {
+		ui64, err := strconv.ParseUint(strings.TrimRight(seg, "'"), 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		segments = append(segments, uint32(ui64))
+	}
+
+	return segments, nil
 }
