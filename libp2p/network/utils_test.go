@@ -14,6 +14,10 @@ import (
 	"github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
+var (
+	testServiceUrl = "10.0.0.%d:8080"
+)
+
 func MockBus(ctrl *gomock.Controller) *mock_modules.MockBus {
 	busMock := mock_modules.NewMockBus(ctrl)
 	busMock.EXPECT().GetPersistenceModule().Return(nil).AnyTimes()
@@ -53,7 +57,7 @@ func GetAddrBook(t *testing.T, n int) (addrBook types.AddrBook) {
 		addrBook = append(addrBook, &types.NetworkPeer{
 			PublicKey:  pubKey,
 			Address:    pubKey.Address(),
-			ServiceUrl: fmt.Sprintf("10.0.0.%d:8080", i),
+			ServiceUrl: fmt.Sprintf(testServiceUrl, i),
 		})
 	}
 	return

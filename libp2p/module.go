@@ -1,5 +1,5 @@
 /*
-TECHDEBT: This module currnetly imports types  from the "legacy" P2P module.
+TECHDEBT: This module currently imports types  from the "legacy" P2P module.
 
 Migration path:
  1. Redefine P2P concrete types in terms of interfaces
@@ -170,6 +170,9 @@ func (mod *libp2pModule) Start() error {
 		opts = append(opts, mod.listenAddrs)
 	}
 
+	// Represents a libp2p network node, `libp2p.New` configures
+	// and starts listening according to options.
+	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	mod.host, err = libp2p.New(opts...)
 	if err != nil {
 		return ErrModule("unable to create libp2p host", err)
