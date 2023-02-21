@@ -19,14 +19,17 @@ var (
 )
 
 func MockBus(ctrl *gomock.Controller) *mock_modules.MockBus {
-	busMock := mock_modules.NewMockBus(ctrl)
-	busMock.EXPECT().GetPersistenceModule().Return(nil).AnyTimes()
 	consensusMock := mock_modules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(0)).AnyTimes()
-	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+
 	runtimeMgrMock := mock_modules.NewMockRuntimeMgr(ctrl)
-	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
 	runtimeMgrMock.EXPECT().GetConfig().Return(configs.NewDefaultConfig()).AnyTimes()
+
+	busMock := mock_modules.NewMockBus(ctrl)
+	busMock.EXPECT().GetPersistenceModule().Return(nil).AnyTimes()
+	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
+
 	return busMock
 }
 
