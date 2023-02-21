@@ -20,14 +20,13 @@ type Keybase interface {
 	// Insert a new keypair from the JSON string of the encrypted private key into the DB
 	ImportFromJSON(jsonStr, passphrase string) error
 
-	// DISCUSSION: Is there a more appropriate way to handle the HD interactions?
 	// SLIPS-0010 Key Derivation
-	// Deterministically generate and return the child key
-	DeriveChildFromKey(masterAddrHex, passphrase string, childIndex int32) (crypto.KeyPair, error)
-	DeriveChildFromSeed(seed []byte, childIndex int32) (crypto.KeyPair, error)
+	// Deterministically generate and return the derived child key
+	DeriveChildFromKey(masterAddrHex, passphrase string, childIndex uint32) (crypto.KeyPair, error)
+	DeriveChildFromSeed(seed []byte, childIndex uint32) (crypto.KeyPair, error)
 	// Store the derived child key in the keybase
-	StoreChildFromKey(masterAddrHex, masterPassphrase string, childIndex int32, childPassphrase, childHint string) error
-	StoreChildFromSeed(seed []byte, childIndex int32, childPassphrase, childHint string) error
+	StoreChildFromKey(masterAddrHex, masterPassphrase string, childIndex uint32, childPassphrase, childHint string) error
+	StoreChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string) error
 
 	// Accessors
 	Get(address string) (crypto.KeyPair, error)
