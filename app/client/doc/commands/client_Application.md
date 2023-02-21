@@ -20,7 +20,7 @@ Application actor specific commands
 
 * [client](client.md)	 - Pocket Network Command Line Interface (CLI)
 * [client Application EditStake](client_Application_EditStake.md)	 - EditStake <fromAddr> <amount> <relayChainIDs> <serviceURI>
-* [client Application Stake](client_Application_Stake.md)	 - Stake a node in the network. Custodial stake uses the same address as operator/output for rewards/return of staked funds.
+* [client Application Stake](client_Application_Stake.md)	 - Stake a Application in the network. Custodial stake uses the same address as operator/output for rewards/return of staked funds.
 * [client Application Unpause](client_Application_Unpause.md)	 - Unpause <fromAddr>
 * [client Application Unstake](client_Application_Unstake.md)	 - Unstake <fromAddr>
 

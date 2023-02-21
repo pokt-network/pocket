@@ -14,10 +14,10 @@ import (
 )
 
 // IMPROVE: Generate a proper genesis suite in the future.
-func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
+func NewGenesisState(numValidators, numServicers, numApplications, numFisherman int) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
 	apps, appsPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications)
 	vals, validatorPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_VAL, numValidators)
-	serviceNodes, snPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICENODE, numServiceNodes)
+	servicers, snPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicers)
 	fish, fishPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFisherman)
 
 	genesisState = &genesis.GenesisState{
@@ -25,10 +25,10 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 		ChainId:       DefaultChainID,
 		MaxBlockBytes: DefaultMaxBlockBytes,
 		Pools:         NewPools(),
-		Accounts:      NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...), // TODO(olshansky): clean this up
+		Accounts:      NewAccounts(numValidators+numServicers+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...), // TODO(olshansky): clean this up
 		Applications:  apps,
 		Validators:    vals,
-		ServiceNodes:  serviceNodes,
+		Servicers:     servicers,
 		Fishermen:     fish,
 		Params:        DefaultParams(),
 	}

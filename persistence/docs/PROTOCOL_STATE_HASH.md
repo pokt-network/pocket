@@ -47,7 +47,7 @@ Note that the order in which the trees are defined (found in `persistence/state.
 - Applications
 - Validators
 - Fisherman
-- ServiceNodes
+- Servicers
 
 **Account Merkle Trees**:
 

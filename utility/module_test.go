@@ -20,7 +20,7 @@ import (
 
 const (
 	testingValidatorCount   = 5
-	testingServiceNodeCount = 1
+	testingServicerCount    = 1
 	testingApplicationCount = 1
 	testingFishermenCount   = 1
 
@@ -103,7 +103,7 @@ func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(
 		testingValidatorCount,
-		testingServiceNodeCount,
+		testingServicerCount,
 		testingApplicationCount,
 		testingFishermenCount,
 	)

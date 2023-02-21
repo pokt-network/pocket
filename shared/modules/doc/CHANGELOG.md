@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.8] - 2023-02-21
+
+- Rename ServiceNode Actor Type Name to Servicer
+
 ## [0.0.0.7] - 2023-01-11
 
 - Added comments to the functions exposed by `P2PModule`
@@ -73,7 +77,7 @@ UtilityModule
 - Added accounts and pools to utility_genesis_state
 - Added validators to utility_genesis_state
 - Added applications to utility_genesis_state
-- Added service_nodes to utility_genesis_state
+- Added servicers to utility_genesis_state
 - Added fishermen to utility_genesis_state
 - Deprecated shared/config/
 - Added new shared config proto3 structure

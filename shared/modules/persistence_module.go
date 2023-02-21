@@ -86,13 +86,13 @@ type PersistenceWriteContext interface {
 	SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
 	SetAppPauseHeight(address []byte, height int64) error
 
-	// ServiceNode Operations
-	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateServiceNode(address []byte, serviceURL string, amount string, chains []string) error
-	SetServiceNodeStakeAmount(address []byte, stakeAmount string) error
-	SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
-	SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
-	SetServiceNodePauseHeight(address []byte, height int64) error
+	// Servicer Operations
+	InsertServicer(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateServicer(address []byte, serviceURL string, amount string, chains []string) error
+	SetServicerStakeAmount(address []byte, stakeAmount string) error
+	SetServicerUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
+	SetServicerStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
+	SetServicerPauseHeight(address []byte, height int64) error
 
 	// Fisherman Operations
 	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
@@ -154,15 +154,15 @@ type PersistenceReadContext interface {
 	GetAppPauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetAppOutputAddress(operator []byte, height int64) (output []byte, err error)
 
-	// ServiceNode Queries
-	GetAllServiceNodes(height int64) ([]*coreTypes.Actor, error)
-	GetServiceNodeExists(address []byte, height int64) (exists bool, err error)
-	GetServiceNodeStakeAmount(height int64, address []byte) (string, error)
-	GetServiceNodesReadyToUnstake(height int64, status int32) (serviceNodes []*moduleTypes.UnstakingActor, err error)
-	GetServiceNodeStatus(address []byte, height int64) (status int32, err error)
-	GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error)
-	GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error)
-	GetServiceNodeCount(chain string, height int64) (int, error)
+	// Servicer Queries
+	GetAllServicers(height int64) ([]*coreTypes.Actor, error)
+	GetServicerExists(address []byte, height int64) (exists bool, err error)
+	GetServicerStakeAmount(height int64, address []byte) (string, error)
+	GetServicersReadyToUnstake(height int64, status int32) (servicers []*moduleTypes.UnstakingActor, err error)
+	GetServicerStatus(address []byte, height int64) (status int32, err error)
+	GetServicerPauseHeightIfExists(address []byte, height int64) (int64, error)
+	GetServicerOutputAddress(operator []byte, height int64) (output []byte, err error)
+	GetServicerCount(chain string, height int64) (int, error)
 
 	// Fisherman Queries
 	GetAllFishermen(height int64) ([]*coreTypes.Actor, error)

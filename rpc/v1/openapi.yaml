@@ -198,7 +198,7 @@ components:
       type: string
       enum:
         - validator
-        - service_node
+        - servicer
         - fisherman
         - application
 

@@ -1,7 +1,9 @@
 package crypto
 
 import (
+	"crypto/ed25519"
 	crand "crypto/rand"
+	"encoding/binary"
 	"math/big"
 	"math/rand"
 	"time"
@@ -20,4 +22,15 @@ func GetNonce() uint64 {
 		return rand.Uint64()                   //nolint:gosec // G404 - Weak source of random here is fallback
 	}
 	return bigNonce.Uint64()
+}
+
+// GetPrivKeySeed returns a private key from a seed
+func GetPrivKeySeed(seed int) PrivateKey {
+	seedBytes := make([]byte, ed25519.PrivateKeySize)
+	binary.LittleEndian.PutUint32(seedBytes, uint32(seed))
+	pk, err := NewPrivateKeyFromSeed(seedBytes)
+	if err != nil {
+		panic(err)
+	}
+	return pk
 }

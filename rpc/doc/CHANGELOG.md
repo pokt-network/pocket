@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.13] - 2023-02-21
+
+- Rename ServiceNode Actor Type Name to Servicer
+
 ## [0.0.0.12] - 2023-02-17
 
 - Updated RPC to expose the node's address book via GET `/v1/p2p/staked_actors_address_book`

@@ -15,8 +15,8 @@ import (
 
 // TODO : Deprecate these two constants when we change the persistenceRWContext interface to pass the `paramName`
 const (
-	BlocksPerSessionParamName       = "blocks_per_session"
-	ServiceNodesPerSessionParamName = "service_nodes_per_session"
+	BlocksPerSessionParamName    = "blocks_per_session"
+	ServicersPerSessionParamName = "servicers_per_session"
 )
 
 // Mapping of parameter names and their stringified type names

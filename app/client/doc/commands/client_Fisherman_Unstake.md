@@ -4,7 +4,7 @@ Unstake <fromAddr>
 
 ### Synopsis
 
-Unstakes the prevously staked tokens for the Fisherman actor with address <fromAddr>
+Unstakes the previously staked tokens for the Fisherman actor with address <fromAddr>
 
 ```
 client Fisherman Unstake <fromAddr> [flags]

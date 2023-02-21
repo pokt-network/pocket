@@ -23,7 +23,7 @@ The CLI is meant to be an user but also a machine friendly way for interacting w
 * [client Fisherman](client_Fisherman.md)	 - Fisherman actor specific commands
 * [client Governance](client_Governance.md)	 - Governance specific commands
 * [client Keys](client_Keys.md)	 - Key specific commands
-* [client Node](client_Node.md)	 - Node actor specific commands
+* [client Servicer](client_Servicer.md)	 - Servicer actor specific commands
 * [client System](client_System.md)	 - Commands related to health and troubleshooting of the node instance
 * [client Validator](client_Validator.md)	 - Validator actor specific commands
 * [client debug](client_debug.md)	 - Debug utility for rapid development

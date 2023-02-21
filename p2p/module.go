@@ -35,6 +35,8 @@ type p2pModule struct {
 
 	addrBookProvider      providers.AddrBookProvider
 	currentHeightProvider providers.CurrentHeightProvider
+
+	bootstrapNodes []string
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -54,6 +56,10 @@ func (*p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 	p2pCfg := cfg.P2P
+
+	if err := m.configureBootstrapNodes(); err != nil {
+		return nil, err
+	}
 
 	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
 	if err != nil {

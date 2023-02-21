@@ -35,7 +35,7 @@ const (
 	appMerkleTree merkleTree = iota
 	valMerkleTree
 	fishMerkleTree
-	serviceNodeMerkleTree
+	servicerMerkleTree
 
 	// Account Merkle Trees
 	accountMerkleTree
@@ -57,10 +57,10 @@ const (
 )
 
 var merkleTreeToString = map[merkleTree]string{
-	appMerkleTree:         "app",
-	valMerkleTree:         "val",
-	fishMerkleTree:        "fish",
-	serviceNodeMerkleTree: "serviceNode",
+	appMerkleTree:      "app",
+	valMerkleTree:      "val",
+	fishMerkleTree:     "fish",
+	servicerMerkleTree: "servicer",
 
 	accountMerkleTree: "account",
 	poolMerkleTree:    "pool",
@@ -71,24 +71,24 @@ var merkleTreeToString = map[merkleTree]string{
 }
 
 var actorTypeToMerkleTreeName = map[coreTypes.ActorType]merkleTree{
-	coreTypes.ActorType_ACTOR_TYPE_APP:         appMerkleTree,
-	coreTypes.ActorType_ACTOR_TYPE_VAL:         valMerkleTree,
-	coreTypes.ActorType_ACTOR_TYPE_FISH:        fishMerkleTree,
-	coreTypes.ActorType_ACTOR_TYPE_SERVICENODE: serviceNodeMerkleTree,
+	coreTypes.ActorType_ACTOR_TYPE_APP:      appMerkleTree,
+	coreTypes.ActorType_ACTOR_TYPE_VAL:      valMerkleTree,
+	coreTypes.ActorType_ACTOR_TYPE_FISH:     fishMerkleTree,
+	coreTypes.ActorType_ACTOR_TYPE_SERVICER: servicerMerkleTree,
 }
 
 var actorTypeToSchemaName = map[coreTypes.ActorType]types.ProtocolActorSchema{
-	coreTypes.ActorType_ACTOR_TYPE_APP:         types.ApplicationActor,
-	coreTypes.ActorType_ACTOR_TYPE_VAL:         types.ValidatorActor,
-	coreTypes.ActorType_ACTOR_TYPE_FISH:        types.FishermanActor,
-	coreTypes.ActorType_ACTOR_TYPE_SERVICENODE: types.ServiceNodeActor,
+	coreTypes.ActorType_ACTOR_TYPE_APP:      types.ApplicationActor,
+	coreTypes.ActorType_ACTOR_TYPE_VAL:      types.ValidatorActor,
+	coreTypes.ActorType_ACTOR_TYPE_FISH:     types.FishermanActor,
+	coreTypes.ActorType_ACTOR_TYPE_SERVICER: types.ServicerActor,
 }
 
 var merkleTreeToActorTypeName = map[merkleTree]coreTypes.ActorType{
-	appMerkleTree:         coreTypes.ActorType_ACTOR_TYPE_APP,
-	valMerkleTree:         coreTypes.ActorType_ACTOR_TYPE_VAL,
-	fishMerkleTree:        coreTypes.ActorType_ACTOR_TYPE_FISH,
-	serviceNodeMerkleTree: coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
+	appMerkleTree:      coreTypes.ActorType_ACTOR_TYPE_APP,
+	valMerkleTree:      coreTypes.ActorType_ACTOR_TYPE_VAL,
+	fishMerkleTree:     coreTypes.ActorType_ACTOR_TYPE_FISH,
+	servicerMerkleTree: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
 }
 
 func newStateTrees(treesStoreDir string) (*stateTrees, error) {
@@ -139,7 +139,7 @@ func (p *PostgresContext) updateMerkleTrees() (string, error) {
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
 		// Actor Merkle Trees
-		case appMerkleTree, valMerkleTree, fishMerkleTree, serviceNodeMerkleTree:
+		case appMerkleTree, valMerkleTree, fishMerkleTree, servicerMerkleTree:
 			actorType, ok := merkleTreeToActorTypeName[treeType]
 			if !ok {
 				return "", fmt.Errorf("no actor type found for merkle tree: %v\n", treeType)

@@ -86,6 +86,7 @@ func BenchmarkStateHash(b *testing.B) {
 }
 
 // Calls a random database modifier function on the given persistence context
+//
 //nolint:gosec // G404 - Weak random source is okay in unit tests
 func callRandomDatabaseModifierFunc(
 	p *persistence.PostgresContext,
