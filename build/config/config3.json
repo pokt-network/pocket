@@ -30,7 +30,7 @@
   },
   "p2p": {
     "hostname": "node3.consensus",
-    "consensus_port": 8080,
+    "port": 42069,
     "use_rain_tree": true,
     "is_empty_connection_type": false,
     "private_key": "25b385b367a827eaafcdb1003bd17a25f2ecc0d10d41f138846f52ae1015aa941041a9c76539791fef9bee5b4fcd5bf4a1a489e0790c44cbdfa776b901e13b50",
