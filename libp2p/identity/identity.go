@@ -13,8 +13,8 @@ import (
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
+	"github.com/pokt-network/pocket/libp2p/transport"
 	typesLibp2p "github.com/pokt-network/pocket/libp2p/types"
-	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
