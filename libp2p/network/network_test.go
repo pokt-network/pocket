@@ -55,7 +55,7 @@ func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {
 		Address:   newPoktAddr,
 		// Exercises DNS resolution.
 		// IMPROVE: this test will be flakey in the presence of DNS interruptions.
-		ServiceUrl: "www.google.com:8080",
+		ServiceUrl: "www.google.com:42069",
 	}
 	newPeerInfo, err := identity.Libp2pAddrInfoFromPeer(newPeer)
 	require.NoError(t, err)
