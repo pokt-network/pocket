@@ -1,5 +1,7 @@
 package messaging
 
 const (
-	NodeStartedEventType = "pocket.NodeStartedEvent"
+	NodeStartedEventType            = "pocket.NodeStartedEvent"
+	ConsensusNewHeightEventType     = "pocket.ConsensusNewHeightEvent"
+	StateMachineTransitionEventType = "pocket.StateMachineTransitionEvent"
 )

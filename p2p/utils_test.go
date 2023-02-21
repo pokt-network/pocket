@@ -1,8 +1,6 @@
 package p2p
 
 import (
-	"crypto/ed25519"
-	"encoding/binary"
 	"fmt"
 	"log"
 	"sort"
@@ -10,12 +8,14 @@ import (
 	"testing"
 	"time"
 
-	types "github.com/pokt-network/pocket/runtime/configs/types"
-
 	"github.com/golang/mock/gomock"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
+	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
+	types "github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -48,13 +48,7 @@ func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
 
 	for i := range keys {
 		seedInt := genesisConfigSeedStart + i
-		seed := make([]byte, ed25519.PrivateKeySize)
-		binary.LittleEndian.PutUint32(seed, uint32(seedInt))
-		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
-		if err != nil {
-			panic(err)
-		}
-		keys[i] = pk
+		keys[i] = cryptoPocket.GetPrivKeySeed(seedInt)
 	}
 	sort.Slice(keys, func(i, j int) bool {
 		return keys[i].Address().String() < keys[j].Address().String()
@@ -150,10 +144,13 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.Moc
 	ctrl := gomock.NewController(t)
 	mockBus := mockModules.NewMockBus(ctrl)
 	mockBus.EXPECT().GetRuntimeMgr().Return(runtimeMgr).AnyTimes()
-	mockBus.EXPECT().RegisterModule(gomock.Any()).DoAndReturn(func(m modules.Module) error {
+	mockBus.EXPECT().RegisterModule(gomock.Any()).DoAndReturn(func(m modules.Module) {
 		m.SetBus(mockBus)
-		return nil
 	}).AnyTimes()
+	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
+	mockModulesRegistry.EXPECT().GetModule(addrbook_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(addrbook_provider.ModuleName)).AnyTimes()
+	mockModulesRegistry.EXPECT().GetModule(current_height_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(current_height_provider.ModuleName)).AnyTimes()
+	mockBus.EXPECT().GetModulesRegistry().Return(mockModulesRegistry).AnyTimes()
 	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
 	return mockBus
 }
@@ -201,8 +198,7 @@ func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus) *mockModul
 	consensusMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	consensusMock.EXPECT().SetBus(busMock).AnyTimes()
 	consensusMock.EXPECT().GetModuleName().Return(modules.ConsensusModuleName).AnyTimes()
-	err := busMock.RegisterModule(consensusMock)
-	require.NoError(t, err)
+	busMock.RegisterModule(consensusMock)
 
 	return consensusMock
 }
@@ -221,8 +217,7 @@ func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisS
 	persistenceMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	persistenceMock.EXPECT().SetBus(busMock).AnyTimes()
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
-	err := busMock.RegisterModule(persistenceMock)
-	require.NoError(t, err)
+	busMock.RegisterModule(persistenceMock)
 
 	return persistenceMock
 }
@@ -241,8 +236,7 @@ func prepareTelemetryMock(t *testing.T, busMock *mockModules.MockBus, valId stri
 	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
 	telemetryMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	telemetryMock.EXPECT().SetBus(busMock).AnyTimes()
-	err := busMock.RegisterModule(telemetryMock)
-	require.NoError(t, err)
+	busMock.RegisterModule(telemetryMock)
 
 	return telemetryMock
 }

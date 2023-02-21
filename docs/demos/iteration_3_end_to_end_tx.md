@@ -19,7 +19,7 @@
 
 The first video of this demo can be accessed [here](https://drive.google.com/file/d/1IOrzq-XJP04BJjyqPPpPu873aSfwrnur/view?usp=sharing).
 
-<img width="842" alt="Screenshot 2022-12-05 at 9 02 28 PM" src="https://user-images.githubusercontent.com/1892194/205820691-26e801e4-ff79-4132-a7a1-358860ca2335.png">
+![Demo Goals](https://user-images.githubusercontent.com/1892194/205820691-26e801e4-ff79-4132-a7a1-358860ca2335.png)
 
 ### Features
 
@@ -91,7 +91,7 @@ select * from pool;
 
 ### Available Commands
 
-Show all the commands available in the CLI:
+Show all the commands available in the CLI by running `p1` or:
 
 ```bash
 go run app/client/*.go
@@ -121,6 +121,8 @@ cat ./build/config/config2.json | jq '.private_key' > /tmp/val2.json
 3. You can manually copy-paste the private keys from the config files into the `/tmp/val1.json` and `/tmp/val2.json` files. Remember to keep the double quotes around the private keys ("private_key" field in the JSON).
 
 ### First Transaction
+
+_NOTE: `--path_to_private_key_file` has been deprecated since this demo was put together and a keybase has been implemented._
 
 Trigger a send transaction from validator 1 to validator 2.
 
@@ -164,4 +166,4 @@ go run app/client/*.go --path_to_private_key_file=/tmp/val2.json Account Send 00
 make swagger-ui
 ```
 
-<!-- GITHUB_WIKI: guides/demos/iteration_three_end_to_end -->
+<!-- GITHUB_WIKI: guides/demos/iteration_3_end_to_end_tx_poc -->

@@ -58,7 +58,7 @@ go_staticcheck: ## Run `go staticcheck` on all files in the current project
 go_doc:
 	{ \
 	if command -v godoc >/dev/null; then \
-		echo "Visit http://localhost:6060/pocket"; \
+		echo "Visit http://localhost:6060/pkg/github.com/pokt-network/pocket"; \
 		godoc -http=localhost:6060  -goroot=${PWD}/..; \
 	else \
 		echo "Install with 'go install golang.org/x/tools/cmd/godoc@latest'"; \
@@ -89,7 +89,7 @@ go_clean_deps: ## Runs `go mod tidy` && `go mod vendor`
 
 .PHONY: go_lint
 go_lint: ## Run all linters that are triggered by the CI pipeline
-	golangci-lint run ./...
+	docker run -t --rm -v $(shell pwd):/app -w /app golangci/golangci-lint:v1.51.1 golangci-lint run -v --timeout 2m
 
 .PHONY: gofmt
 gofmt: ## Format all the .go files in the project in place.
@@ -222,7 +222,7 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
 	$(eval modules_dir = "shared/modules")
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
-	
+
 	$(eval DIRS = p2p persistence)
 	for dir in $(DIRS); do \
 		echo "Processing $$dir mocks..."; \
@@ -230,7 +230,7 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
         go generate ./${dir_name}/...; \
         echo "$$dir mocks generated in $$dir/types/mocks"; \
     done
-	
+
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
 .PHONY: protogen_show
@@ -248,9 +248,10 @@ PROTOC_SHARED = $(PROTOC) -I=./shared
 .PHONY: protogen_local
 protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
 	# Shared
-	$(PROTOC) -I=./shared/core/types/proto --go_out=./shared/core/types ./shared/core/types/proto/*.proto
-	$(PROTOC) -I=./shared/messaging/proto  --go_out=./shared/messaging  ./shared/messaging/proto/*.proto
-	$(PROTOC) -I=./shared/codec/proto      --go_out=./shared/codec      ./shared/codec/proto/*.proto
+	$(PROTOC) -I=./shared/core/types/proto    --go_out=./shared/core/types          ./shared/core/types/proto/*.proto
+	$(PROTOC) -I=./shared/modules/types/proto --go_out=./shared/modules/types ./shared/modules/types/proto/*.proto
+	$(PROTOC) -I=./shared/messaging/proto     --go_out=./shared/messaging           ./shared/messaging/proto/*.proto
+	$(PROTOC) -I=./shared/codec/proto         --go_out=./shared/codec               ./shared/codec/proto/*.proto
 
 	# Runtime
 	$(PROTOC) -I=./runtime/configs/types/proto				--go_out=./runtime/configs/types	./runtime/configs/types/proto/*.proto
@@ -260,8 +261,6 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 
 	# Persistence
 	$(PROTOC_SHARED) -I=./persistence/indexer/proto 	--go_out=./persistence/indexer ./persistence/indexer/proto/*.proto
-	$(PROTOC_SHARED) -I=./persistence/proto         	--go_out=./persistence/types   ./persistence/proto/*.proto
-	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 
 	# Utility
 	$(PROTOC_SHARED) -I=./utility/types/proto --go_out=./utility/types ./utility/types/proto/*.proto
@@ -304,6 +303,11 @@ generate_cli_commands_docs: ## (Re)generates the CLI commands docs (this is mean
 	rm ${cli_docs_dir}/*.md >/dev/null 2>&1 || true
 	cd app/client/cli/docgen && go run .
 	echo "CLI commands docs generated in ${cli_docs_dir}"
+
+.PHONY: generate_node_state_machine_diagram
+generate_node_state_machine_diagram: ## (Re)generates the Node State Machine diagram
+	go run ./state_machine/visualizer/main.go
+	echo "Node State Machine diagram generated in state_machine/docs/state-machine.diagram.md"
 
 .PHONY: test_all
 test_all: ## Run all go unit tests
@@ -411,9 +415,10 @@ benchmark_p2p_addrbook: ## Benchmark all P2P addr book related tests
 # DEPRECATE     - Code that should be removed in the future
 # RESEARCH      - A non-trivial action item that requires deep research and investigation being next steps can be taken
 # DOCUMENT		- A comment that involves the creation of a README or other documentation
+# BUG           - There is a known existing bug in this code
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH"
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH" -e "BUG"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;
@@ -458,11 +463,11 @@ localnet_up: ## Starts up a k8s LocalNet with all necessary dependencies (tl;dr 
 
 .PHONY: localnet_client_debug
 localnet_client_debug: ## Opens a `client debug` cli to interact with blockchain (e.g. change pacemaker mode, reset to genesis, etc). Though the node binary updates automatiacally on every code change (i.e. hot reloads), if client is already open you need to re-run this command to execute freshly compiled binary.
-	kubectl exec -it deploy/pocket-v1-cli-client -- client debug
+	kubectl exec -it deploy/pocket-v1-cli-client --container pocket -- client debug
 
 .PHONY: localnet_shell
 localnet_shell: ## Opens a shell in the pod that has the `client` cli available. The binary updates automatically whenever the code changes (i.e. hot reloads).
-	kubectl exec -it deploy/pocket-v1-cli-client -- /bin/bash
+	kubectl exec -it deploy/pocket-v1-cli-client --container pocket -- /bin/bash
 
 .PHONY: localnet_logs_validators
 localnet_logs_validators: ## Outputs logs from all validators
@@ -476,6 +481,11 @@ localnet_logs_validators_follow: ## Outputs logs from all validators and follows
 localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + postgres database)
 	tilt down --file=build/localnet/Tiltfile
 	kubectl delete pvc --ignore-not-found=true data-dependencies-postgresql-0
+
+.PHONY: localnet_db_cli
+localnet_db_cli: ## Open a CLI to the local containerized postgres instancedb_cli:
+	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
+	kubectl exec -it services/dependencies-postgresql -- bash -c "psql postgresql://postgres:LocalNetPassword@localhost"
 
 .PHONY: check_cross_module_imports
 check_cross_module_imports: ## Lists cross-module imports
@@ -497,3 +507,7 @@ check_cross_module_imports: ## Lists cross-module imports
 	echo "-----------------------"
 	echo "runtime:\n"
 	grep ${exclude_common} --exclude-dir=runtime -r "github.com/pokt-network/pocket/runtime" || echo "✅ OK!"
+
+.PHONY: send_local_tx
+send_local_tx: ## A hardcoded send tx to make LocalNet debugging easier
+	go run app/client/*.go Account Send 00104055c00bed7c983a48aac7dc6335d7c607a7 00204737d2a165ebe4be3a7d5b0af905b0ea91d8 1000

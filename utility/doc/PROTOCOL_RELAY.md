@@ -1,10 +1,10 @@
 # Relay Protocol
 
-### Background
+## Background
 
 The Relay Protocol is a fundamental sequence that makes up the building blocks of Pocket Network's Utility.
 
-In Pocket Network, a Relay is a Read or Write API request operation to a 3rd party `RelayChain`.
+In Pocket Network, a `Relay` is a Read / Write API request operation to a 3rd party `RelayChain`.
 
 The Relay Protocol is the servicing lifecycle that poises staked ServiceNodes to be able to complete
 Relays on behalf of the network.
@@ -19,27 +19,26 @@ The foundational lifecycle of the Relay Protocol is:
 
 ```mermaid
 sequenceDiagram
-	    title Steps 1 to 3
-	    autonumber
-	    actor App
-	    actor Client
-	    actor Service Node
-        participant Internal State
-        participant Internal Storage
-        participant External Relay Chain
-	    App->>Client: Provision(AppAuthToken)
-	    loop Repeats Throughout Session Duration
-            Client->>Client: Sign(Relay)
-	        Client->>Service Node: Send(Relay)
-	        Service Node->>Internal State: Validate(Relay)
-            Internal State->>Service Node: IsValid(Relay)
-	        Service Node->>Internal Storage: IfValid(Relay) -> Persist(Relay)
-	        Service Node->>External Relay Chain: Execute(Relay, RelayChainURL)
-            External Relay Chain->>Service Node: RelayResponse = GetResponse(RelayChain)
-            Service Node->>Service Node: Sign(RelayResponse)
-            Service Node ->> Client: Send(RelayResponse)
-
-	    end
+    title Steps 1 to 3
+    autonumber
+    actor App
+    actor Client
+    actor Service Node
+    participant Internal State
+    participant Internal Storage
+    participant External Relay Chain
+    App->>Client: Provision(AppAuthToken)
+    loop Repeats Throughout Session Duration
+        Client->>Client: Sign(Relay)
+        Client->>Service Node: Send(Relay)
+        Service Node->>Internal State: Validate(Relay)
+        Internal State->>Service Node: IsValid(Relay)
+        Service Node->>Internal Storage: IfValid(Relay) -> Persist(Relay)
+        Service Node->>External Relay Chain: Execute(Relay, RelayChainURL)
+        External Relay Chain->>Service Node: RelayResponse = GetResponse(RelayChain)
+        Service Node->>Service Node: Sign(RelayResponse)
+        Service Node ->> Client: Send(RelayResponse)
+    end
 ```
 
 4. Wait for `Session` end / secret key to be revealed
@@ -172,10 +171,10 @@ This algorithm is not yet documented anywhere, so the following links can act as
 - Twitter Thread: https://twitter.com/o_rourke/status/1263847357122326530
 - Plasma core Merkle Sum Tree: https://plasma-core.readthedocs.io/en/latest/specs/sum-tree.html
 
-**Source code references:**
+**V0 Source Code References:**
 
-- Merkle: https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/types/merkle.go
-- Claim: https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/claim.go
-- Proof: https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/proof.go
+- Merkle: [pocketcore/types/merkle.go](https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/types/merkle.go)
+- Claim: [pocketcore/keeper/claim.go](https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/claim.go)
+- Proof: [pocketcore/keeper/proof.go](https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/proof.go)
 
 <!-- GITHUB_WIKI: utility/relay_protocol -->

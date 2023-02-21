@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pocket-v1-cluster-manager
+spec:
+  initContainers:
+    - name: wait-for-v1-validator001
+      image: busybox
+      command:
+        [
+          "sh",
+          "-c",
+          "until nc -z v1-validator001 8080; do echo waiting for v1-validator001...; sleep 2; done;",
+        ]
+  containers:
+    - name: cluster-manager
+      image: cluster-manager-image
+      imagePullPolicy: IfNotPresent
+      args:
+        - cluster-manager
+  serviceAccountName: cluster-manager-account

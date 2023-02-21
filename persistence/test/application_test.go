@@ -122,13 +122,13 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 	unstakingApps, err := db.GetAppsReadyToUnstake(0, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingApps), "wrong number of actors ready to unstake at height 0")
-	require.Equal(t, app.Address, hex.EncodeToString(unstakingApps[0].GetAddress()), "unexpected application actor returned")
+	require.Equal(t, app.Address, unstakingApps[0].GetAddress(), "unexpected application actor returned")
 
 	// Check unstaking apps at height 1
 	unstakingApps, err = db.GetAppsReadyToUnstake(1, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingApps), "wrong number of actors ready to unstake at height 1")
-	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingApps[0].GetAddress(), unstakingApps[1].GetAddress()})
+	require.ElementsMatch(t, []string{app2.Address, app3.Address}, []string{unstakingApps[0].Address, unstakingApps[1].Address})
 }
 
 func TestGetAppStatus(t *testing.T) {

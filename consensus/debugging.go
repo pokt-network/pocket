@@ -49,10 +49,12 @@ func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 
 func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
 	m.logger.Debug().Msg(typesCons.DebugResetToGenesis)
-	m.height = 0
+
+	m.SetHeight(0)
 	m.ResetForNewHeight()
 	m.clearLeader()
 	m.clearMessagesPool()
+	m.GetBus().GetUtilityModule().GetMempool().Clear()
 	if err := m.GetBus().GetPersistenceModule().HandleDebugMessage(&messaging.DebugMessage{
 		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 		Message: nil,
@@ -122,9 +124,12 @@ func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage
 	}
 
 	for _, val := range validators {
+		if m.GetNodeAddress() == val.GetAddress() {
+			continue
+		}
 		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
 		if err := m.stateSync.SendStateSyncMessage(stateSyncGetBlockMessage, valAddress, requestHeight); err != nil {
-			m.logger.Debug().Msgf(typesCons.SendingStateSyncMessage(valAddress, requestHeight), err)
+			m.logger.Error().Err(err).Str("proto_type", "GetBlockRequest").Msg("failed to send StateSyncMessage")
 		}
 	}
 }
@@ -149,9 +154,12 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 	}
 
 	for _, val := range validators {
+		if m.GetNodeAddress() != val.GetAddress() {
+			continue
+		}
 		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
 		if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, valAddress, requestHeight); err != nil {
-			m.logger.Debug().Msgf(typesCons.SendingStateSyncMessage(valAddress, requestHeight), err)
+			m.logger.Error().Err(err).Str("proto_type", "GetMetaDataRequest").Msg("failed to send StateSyncMessage")
 		}
 	}
 

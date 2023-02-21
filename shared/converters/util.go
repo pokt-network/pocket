@@ -7,12 +7,12 @@ import (
 )
 
 const (
-	DefaultDenomination = 10
+	defaultDenomination = 10
 )
 
 func StringToBigInt(s string) (*big.Int, error) {
 	b := big.Int{}
-	i, ok := b.SetString(s, DefaultDenomination)
+	i, ok := b.SetString(s, defaultDenomination)
 	if !ok {
 		return nil, fmt.Errorf("unable to SetString() with base 10")
 	}
@@ -20,7 +20,11 @@ func StringToBigInt(s string) (*big.Int, error) {
 }
 
 func BigIntToString(b *big.Int) string {
-	return b.Text(DefaultDenomination)
+	return b.Text(defaultDenomination)
+}
+
+func BigIntLessThan(a, b *big.Int) bool {
+	return a.Cmp(b) == -1
 }
 
 func HeightFromBytes(heightBz []byte) uint64 {

@@ -97,3 +97,5 @@ make localnet_client_debug
 2. Automate validator staking when scaling
 3. Discover peers (nodes or actors) when connected to the network
 4. Sync new nodes to the latest height
+
+<!-- GITHUB_WIKI: guides/demos/iteration_9_k8s_localnet_and_logging -->

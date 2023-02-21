@@ -5,7 +5,7 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 )
 
 func (p *PostgresContext) GetValidatorExists(address []byte, height int64) (exists bool, err error) {
@@ -55,7 +55,7 @@ func (p *PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount st
 	return p.setActorStakeAmount(types.ValidatorActor, address, stakeAmount)
 }
 
-func (p *PostgresContext) GetValidatorsReadyToUnstake(height int64, status int32) ([]modules.IUnstakingActor, error) {
+func (p *PostgresContext) GetValidatorsReadyToUnstake(height int64, status int32) ([]*moduleTypes.UnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.ValidatorActor, height)
 }
 

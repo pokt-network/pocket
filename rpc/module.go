@@ -9,35 +9,41 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 var _ modules.RPCModule = &rpcModule{}
 
 type rpcModule struct {
-	bus    modules.Bus
+	base_modules.IntegratableModule
+	base_modules.InterruptableModule
+
 	logger modules.Logger
 	config *configs.RPCConfig
 }
 
-func Create(bus modules.Bus) (modules.Module, error) {
-	return new(rpcModule).Create(bus)
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(rpcModule).Create(bus, options...)
 }
 
-func (*rpcModule) Create(bus modules.Bus) (modules.Module, error) {
+func (*rpcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 	rpcCfg := cfg.RPC
-	rpcMod := modules.RPCModule(&rpcModule{
+	m := modules.RPCModule(&rpcModule{
 		config: rpcCfg,
 	})
 	if !rpcCfg.Enabled {
-		rpcMod = &noopRpcModule{}
-	}
-	if err := bus.RegisterModule(rpcMod); err != nil {
-		return nil, err
+		m = &noopRpcModule{}
 	}
 
-	return rpcMod, nil
+	for _, option := range options {
+		option(m)
+	}
+
+	bus.RegisterModule(m)
+
+	return m, nil
 }
 
 func (u *rpcModule) Start() error {
@@ -46,21 +52,6 @@ func (u *rpcModule) Start() error {
 	return nil
 }
 
-func (u *rpcModule) Stop() error {
-	return nil
-}
-
 func (u *rpcModule) GetModuleName() string {
 	return modules.RPCModuleName
-}
-
-func (u *rpcModule) SetBus(bus modules.Bus) {
-	u.bus = bus
-}
-
-func (u *rpcModule) GetBus() modules.Bus {
-	if u.bus == nil {
-		u.logger.Fatal().Msg("Bus is not initialized")
-	}
-	return u.bus
 }
