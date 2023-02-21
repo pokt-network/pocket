@@ -17,7 +17,6 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -37,10 +36,10 @@ var (
 	DefaultStakeBig     = big.NewInt(1000000000000000)
 	DefaultMaxRelaysBig = big.NewInt(1000000)
 
-	DefaultAccountAmount = converters.BigIntToString(DefaultAccountBig)
-	DefaultStake         = converters.BigIntToString(DefaultStakeBig)
-	DefaultMaxRelays     = converters.BigIntToString(DefaultMaxRelaysBig)
-	StakeToUpdate        = converters.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
+	DefaultAccountAmount = utils.BigIntToString(DefaultAccountBig)
+	DefaultStake         = utils.BigIntToString(DefaultStakeBig)
+	DefaultMaxRelays     = utils.BigIntToString(DefaultMaxRelaysBig)
+	StakeToUpdate        = utils.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
 
 	DefaultStakeStatus     = int32(persistence.StakedStatus)
 	DefaultPauseHeight     = int64(-1) // pauseHeight=-1 means not paused
@@ -342,7 +341,7 @@ func getRandomServiceURL() string {
 }
 
 func getRandomBigIntString() string {
-	return converters.BigIntToString(big.NewInt(rand.Int63())) //nolint:gosec // G404 - Weak random source is okay in unit tests
+	return utils.BigIntToString(big.NewInt(rand.Int63())) //nolint:gosec // G404 - Weak random source is okay in unit tests
 }
 
 func setRandomSeed() {

@@ -9,9 +9,9 @@ import (
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -100,7 +100,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 
 			// Edit the staked amount
 			amountEdited := test_artifacts.DefaultAccountAmount.Add(test_artifacts.DefaultAccountAmount, big.NewInt(1))
-			amountEditedString := converters.BigIntToString(amountEdited)
+			amountEditedString := utils.BigIntToString(amountEdited)
 
 			msgAmountEdited := codec.GetCodec().Clone(msg).(*typesUtil.MessageEditStake)
 			msgAmountEdited.Amount = amountEditedString
@@ -465,7 +465,7 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 			amount, err = ctx.getPoolAmount(poolName)
 			require.NoError(t, err)
 
-			stakedAmount, err := converters.StringToBigInt(actor.StakedAmount)
+			stakedAmount, err := utils.StringToBigInt(actor.StakedAmount)
 			require.NoError(t, err)
 			expectedAmount := big.NewInt(0).Sub(poolInitAMount, stakedAmount)
 			require.Equalf(t, expectedAmount, amount, "pool amount should be unchanged for %s", poolName)

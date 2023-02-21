@@ -1,18 +1,21 @@
 package utility
 
+// Internal business logic for functionality shared across all `Actors`.
+//
+// An Actor is any protocol level actor that likely has something-at-stake and interacts with the
+// protocol through some sort of on-chain state transitions.
+
 import (
 	"math/big"
 
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-//	`Actor` is the consolidated term for common functionality among the following network actors: application, fisherman, servicer, validator, etc.
-
 func (u *utilityContext) setActorStakeAmount(actorType coreTypes.ActorType, addr []byte, amount *big.Int) typesUtil.Error {
 	store := u.Store()
-	amountStr := converters.BigIntToString(amount)
+	amountStr := utils.BigIntToString(amount)
 
 	var err error
 	switch actorType {
@@ -105,7 +108,7 @@ func (u *utilityContext) getActorStakeAmount(actorType coreTypes.ActorType, addr
 		return nil, typesUtil.ErrGetStakeAmount(err)
 	}
 
-	amount, err := converters.StringToBigInt(stakeAmount)
+	amount, err := utils.StringToBigInt(stakeAmount)
 	if err != nil {
 		return nil, typesUtil.ErrStringToBigInt(err)
 	}
@@ -251,7 +254,7 @@ func (u *utilityContext) getMinRequiredStakeAmount(actorType coreTypes.ActorType
 		return nil, typesUtil.ErrGetParam(paramName, er)
 	}
 
-	amount, err := converters.StringToBigInt(minStake)
+	amount, err := utils.StringToBigInt(minStake)
 	if err != nil {
 		return nil, typesUtil.ErrStringToBigInt(err)
 	}

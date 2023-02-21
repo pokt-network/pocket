@@ -9,9 +9,9 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,7 +55,7 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	for i := 0; i < len(stateHashes); i++ {
 		// Get the context at the new height and retrieve one of the apps
 		height := int64(i + 1)
-		heightBz := converters.HeightToBytes(uint64(height))
+		heightBz := utils.HeightToBytes(uint64(height))
 		expectedStateHash := stateHashes[i]
 
 		db := NewTestPostgresContext(t, height)

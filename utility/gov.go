@@ -3,8 +3,8 @@ package utility
 import (
 	"math/big"
 
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -561,7 +561,7 @@ func (u *utilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.E
 		u.logger.Err(err)
 		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
-	amount, err := converters.StringToBigInt(value)
+	amount, err := utils.StringToBigInt(value)
 	if err != nil {
 		return nil, typesUtil.ErrStringToBigInt(err)
 	}

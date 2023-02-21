@@ -6,9 +6,9 @@ import (
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/pocket/utility/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -60,7 +60,7 @@ func (u *utilityContext) handleMessage(msg typesUtil.Message) (err typesUtil.Err
 
 func (u *utilityContext) handleMessageSend(message *typesUtil.MessageSend) typesUtil.Error {
 	// convert the amount to big.Int
-	amount, er := converters.StringToBigInt(message.Amount)
+	amount, er := utils.StringToBigInt(message.Amount)
 	if er != nil {
 		return typesUtil.ErrStringToBigInt(er)
 	}
@@ -161,7 +161,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 	if err != nil {
 		return err
 	}
-	amount, er := converters.StringToBigInt(message.Amount)
+	amount, er := utils.StringToBigInt(message.Amount)
 	if er != nil {
 		return typesUtil.ErrStringToBigInt(err)
 	}
@@ -340,11 +340,11 @@ func (u *utilityContext) checkAboveMinStake(actorType coreTypes.ActorType, amoun
 	if err != nil {
 		return nil, err
 	}
-	amount, er := converters.StringToBigInt(amountStr)
+	amount, er := utils.StringToBigInt(amountStr)
 	if er != nil {
 		return nil, typesUtil.ErrStringToBigInt(err)
 	}
-	if converters.BigIntLessThan(amount, minStake) {
+	if utils.BigIntLessThan(amount, minStake) {
 		return nil, typesUtil.ErrMinimumStake()
 	}
 	return amount, nil

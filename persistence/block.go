@@ -8,8 +8,8 @@ import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/utils"
 )
 
 func (p *persistenceModule) TransactionExists(transactionHash string) (bool, error) {
@@ -107,5 +107,5 @@ func (p *PostgresContext) storeBlock(block *coreTypes.Block) error {
 		return err
 	}
 	log.Printf("Storing block %d in block store.\n", block.BlockHeader.Height)
-	return p.blockStore.Set(converters.HeightToBytes(uint64(p.Height)), blockBz)
+	return p.blockStore.Set(utils.HeightToBytes(uint64(p.Height)), blockBz)
 }

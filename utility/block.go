@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
+	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -236,7 +236,7 @@ func (u *utilityContext) unbondUnstakingActors() (err typesUtil.Error) {
 			if poolName == coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName() {
 				fmt.Println("unstaking validator", actor.StakeAmount)
 			}
-			stakeAmount, er := converters.StringToBigInt(actor.StakeAmount)
+			stakeAmount, er := utils.StringToBigInt(actor.StakeAmount)
 			if er != nil {
 				return typesUtil.ErrStringToBigInt(er)
 			}

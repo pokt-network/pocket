@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/utils"
 )
 
 // This file captures basic logic common across all the actors that need to stake regardless of their responsibility.
@@ -58,7 +58,7 @@ func validateAmount(amount string) Error {
 	if amount == "" {
 		return ErrEmptyAmount()
 	}
-	if _, err := converters.StringToBigInt(amount); err != nil {
+	if _, err := utils.StringToBigInt(amount); err != nil {
 		return ErrStringToBigInt(err)
 	}
 	return nil

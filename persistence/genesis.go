@@ -7,8 +7,8 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/utils"
 )
 
 // CONSIDERATION: Should this return an error and let the caller decide if it should log a fatal error?
@@ -19,7 +19,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	//           and we need to add proper unit tests for it.`
 	poolValues := make(map[string]*big.Int, 0)
 	addValueToPool := func(poolName string, valueToAdd string) error {
-		value, err := converters.StringToBigInt(valueToAdd)
+		value, err := utils.StringToBigInt(valueToAdd)
 		if err != nil {
 			return err
 		}

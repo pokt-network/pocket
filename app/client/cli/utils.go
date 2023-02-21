@@ -14,8 +14,8 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
@@ -145,13 +145,13 @@ func readPassphrase(currPwd string) string {
 }
 
 func validateStakeAmount(amount string) error {
-	am, err := converters.StringToBigInt(amount)
+	am, err := utils.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}
 
 	sr := big.NewInt(stakingRecommendationAmount)
-	if converters.BigIntLessThan(am, sr) {
+	if utils.BigIntLessThan(am, sr) {
 		fmt.Printf("The amount you are staking for is below the recommendation of %d POKT, would you still like to continue? y|n\n", sr.Div(sr, oneMillion).Int64())
 		if !confirmation(pwd) {
 			return fmt.Errorf("aborted")

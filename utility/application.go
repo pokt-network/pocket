@@ -4,7 +4,7 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/pokt-network/pocket/shared/converters"
+	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -17,7 +17,7 @@ var (
 // TODO(M3): Re-evaluate the implementation in this function when implementing the Application Protocol
 // and rate limiting
 func (u *utilityContext) calculateMaxAppRelays(appStakeStr string) (string, typesUtil.Error) {
-	appStakeBigInt, er := converters.StringToBigInt(appStakeStr)
+	appStakeBigInt, er := utils.StringToBigInt(appStakeStr)
 	if er != nil {
 		return typesUtil.EmptyString, typesUtil.ErrStringToBigInt(er)
 	}
@@ -57,5 +57,5 @@ func (u *utilityContext) calculateMaxAppRelays(appStakeStr string) (string, type
 		result = max
 	}
 
-	return converters.BigIntToString(result), nil
+	return utils.BigIntToString(result), nil
 }
