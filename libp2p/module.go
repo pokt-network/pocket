@@ -39,7 +39,8 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
+	persABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
+	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
@@ -76,23 +77,7 @@ var (
 )
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return CreateWithProviders(
-		bus,
-		persistence.NewPersistenceAddrBookProvider(bus),
-		bus.GetConsensusModule(),
-	)
-}
-
-func CreateWithProviders(
-	bus modules.Bus,
-	addrBookProvider addrbook_provider.AddrBookProvider,
-	currentHeightProvider providers.CurrentHeightProvider,
-) (modules.Module, error) {
-	return new(libp2pModule).CreateWithProviders(
-		bus,
-		addrBookProvider,
-		currentHeightProvider,
-	)
+	return new(libp2pModule).Create(bus, options...)
 }
 
 func (mod *libp2pModule) GetModuleName() string {
@@ -101,18 +86,21 @@ func (mod *libp2pModule) GetModuleName() string {
 }
 
 func (mod *libp2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return Create(bus)
-}
+	logger.Global.Print("Creating libp2p-backed network module")
 
-func (mod *libp2pModule) CreateWithProviders(
-	bus modules.Bus,
-	addrBookProvider addrbook_provider.AddrBookProvider,
-	currentHeightProvider providers.CurrentHeightProvider,
-) (modules.Module, error) {
 	*mod = libp2pModule{
-		addrBookProvider:      addrBookProvider,
-		currentHeightProvider: currentHeightProvider,
-		cfg:                   bus.GetRuntimeMgr().GetConfig().P2P,
+		cfg: bus.GetRuntimeMgr().GetConfig().P2P,
+	}
+
+	// MUST call before setupDependencies to ensure GetBus() != nil.
+	bus.RegisterModule(mod)
+
+	// SHOULD before applying options in case options override
+	// fields set in setupDependencies.
+	mod.setupDependencies()
+
+	for _, option := range options {
+		option(mod)
 	}
 
 	// TECHDEBT: investigate any unnecessary
@@ -123,8 +111,6 @@ func (mod *libp2pModule) CreateWithProviders(
 	}
 
 	mod.identity = libp2p.Identity(privateKey)
-
-	logger.Global.Print("Creating libp2p-backed network module")
 
 	// INCOMPLETE: support RainTree network
 	if mod.cfg.UseRainTree {
@@ -148,7 +134,6 @@ func (mod *libp2pModule) CreateWithProviders(
 		))
 	}
 
-	bus.RegisterModule(mod)
 	return mod, nil
 }
 
@@ -270,6 +255,21 @@ func (mod *libp2pModule) GetBus() modules.Bus {
 		return nil
 	}
 	return mod.bus
+}
+
+// setupDependencies initializes addrBookProvider and currentHeightProvider fom the bus.
+func (mod *libp2pModule) setupDependencies() {
+	addrBookProvider, err := mod.GetBus().GetModulesRegistry().GetModule(addrbook_provider.ModuleName)
+	if err != nil {
+		addrBookProvider = persABP.NewPersistenceAddrBookProvider(mod.GetBus())
+	}
+	mod.addrBookProvider = addrBookProvider.(providers.AddrBookProvider)
+
+	currentHeightProvider, err := mod.GetBus().GetModulesRegistry().GetModule(current_height_provider.ModuleName)
+	if err != nil {
+		currentHeightProvider = mod.GetBus().GetConsensusModule()
+	}
+	mod.currentHeightProvider = currentHeightProvider.(providers.CurrentHeightProvider)
 }
 
 // handleStream is called each time a peer establishes a new stream with this
