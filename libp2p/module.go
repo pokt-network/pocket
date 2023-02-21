@@ -52,7 +52,8 @@ var _ modules.P2PModule = &libp2pModule{}
 type libp2pModule struct {
 	base_modules.IntegratableModule
 
-	logger       *modules.Logger
+	logger *modules.Logger
+	//nolint:unused
 	bus          modules.Bus
 	cfg          *configs.P2PConfig
 	identity     libp2p.Option

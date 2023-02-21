@@ -81,10 +81,10 @@ func TestPeerMultiAddrFromServiceURL_error(t *testing.T) {
 		// TODO: this case is tricky to detect as IPv6 addresses
 		// can omit hextet delimiters and still be valid.
 		// (see: Address_representation)
-		//{
-		//	"missing port number and delimiter",
-		//	"%s",
-		//},
+		// {
+		// 	"missing port number and delimiter",
+		// 	"%s",
+		// },
 	}
 
 	for _, testCase := range testCases {
