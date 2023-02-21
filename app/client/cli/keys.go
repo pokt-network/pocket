@@ -1,10 +1,13 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/converters"
+	"github.com/pokt-network/pocket/utility/types"
 	"path/filepath"
 	"strings"
 
@@ -368,7 +371,8 @@ func keysImportCommands() []*cobra.Command {
 				if len(args) == 1 {
 					privateKeyString = args[0]
 				} else if inputFile != "" {
-					privateKeyString, err = converters.ReadInput(inputFile)
+					privateKeyBz, err := converters.ReadInput(inputFile)
+					privateKeyString = string(privateKeyBz)
 					if err != nil {
 						return err
 					}
@@ -508,7 +512,7 @@ func keysSignMsgCommands() []*cobra.Command {
 					return err
 				}
 
-				logger.Global.Info().Str("address", addrHex).Bool("valid", valid).Msg("Signature verified")
+				logger.Global.Info().Str("address", addrHex).Bool("valid", valid).Msg("Signature checked")
 
 				return nil
 			},
@@ -520,14 +524,20 @@ func keysSignMsgCommands() []*cobra.Command {
 func keysSignTxCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
-			Use:     "Sign <addrHex> [--input_file] [--output_file]",
+			Use:     "SignTx <addrHex> [--input_file] [--output_file]",
 			Short:   "Signs a transaction using the key provided",
-			Long:    "Signs [--input_file] with <addrHex> from the keybase, writing the signature to [--output_file]",
+			Long:    "Signs [--input_file] with <addrHex> from the keybase, writing the signed transaction to [--output_file]",
 			Aliases: []string{"signtx"},
 			Args:    cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				// Unpack CLI args
 				addrHex := args[0]
+
+				if inputFile == "" {
+					return fmt.Errorf("no input file provided")
+				} else if outputFile == "" {
+					return fmt.Errorf("no output file provided")
+				}
 
 				// Open the debug keybase at the specified path
 				pocketDir := strings.TrimSuffix(dataDir, "/")
@@ -544,11 +554,51 @@ func keysSignTxCommands() []*cobra.Command {
 					pwd = readPassphrase(pwd)
 				}
 
+				privKey, err := kb.GetPrivKey(addrHex, pwd)
+				if err != nil {
+					return err
+				}
+
 				if err := kb.Stop(); err != nil {
 					return err
 				}
 
-				logger.Global.Info().Str("signature", "").Str("address", addrHex).Msg("Message signed")
+				// Unmarshal Tx from input file
+				txBz, err := converters.ReadInput(inputFile)
+				if err != nil {
+					return err
+				}
+				txProto := new(types.Transaction)
+				if err := codec.GetCodec().Unmarshal(txBz, txProto); err != nil {
+					return err
+				}
+
+				// Sign the serialised transaction
+				txSigBz, err := txProto.SignableBytes()
+				if err != nil {
+					return err
+				}
+				sigBz, err := privKey.Sign(txSigBz)
+				if err != nil {
+					return err
+				}
+
+				sig := new(types.Signature)
+				sig.PublicKey = privKey.PublicKey().Bytes()
+				sig.Signature = sigBz
+				txProto.Signature = sig
+
+				// Re-serealise the transaction and write to output_file
+				txBz, err = codec.GetCodec().Marshal(txProto)
+				if err != nil {
+					return err
+				}
+
+				if err := converters.WriteOutput(txBz, outputFile); err != nil {
+					return err
+				}
+
+				logger.Global.Info().Str("signed_transaction_file", outputFile).Str("address", addrHex).Msg("Message signed")
 
 				return nil
 			},
@@ -558,10 +608,14 @@ func keysSignTxCommands() []*cobra.Command {
 			Short:   "Verifies the transaction's signature is valid from the signer",
 			Long:    "Verify that [--input_file] contains a valid signature for the transaction in the file signed by <addrHex>",
 			Aliases: []string{"verifytx"},
-			Args:    cobra.ExactArgs(3),
+			Args:    cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				// Unpack CLI args
 				addrHex := args[0]
+
+				if inputFile == "" {
+					return fmt.Errorf("no input file provided")
+				}
 
 				// Open the debug keybase at the specified path
 				pocketDir := strings.TrimSuffix(dataDir, "/")
@@ -574,11 +628,46 @@ func keysSignTxCommands() []*cobra.Command {
 					return err
 				}
 
+				pubKey, err := kb.GetPubKey(addrHex)
+				if err != nil {
+					return err
+				}
+
+				// Unmarshal Tx from input file
+				txBz, err := converters.ReadInput(inputFile)
+				if err != nil {
+					return err
+				}
+				txProto := new(types.Transaction)
+				if err := codec.GetCodec().Unmarshal(txBz, txProto); err != nil {
+					return err
+				}
+
+				// Extract signature and begin verification
+				var valid bool
+				sigBz := txProto.Signature.Signature
+				sigPub := txProto.Signature.PublicKey
+
+				// First check public keys are the same
+				if !bytes.Equal(sigPub, pubKey.Bytes()) {
+					valid = false
+				} else {
+					txSigBz, err := txProto.SignableBytes()
+					if err != nil {
+						return err
+					}
+
+					valid, err = kb.Verify(addrHex, txSigBz, sigBz)
+					if err != nil {
+						return err
+					}
+				}
+
 				if err := kb.Stop(); err != nil {
 					return err
 				}
 
-				logger.Global.Info().Str("address", addrHex).Bool("valid", true).Msg("Signature verified")
+				logger.Global.Info().Str("address", addrHex).Bool("valid", valid).Msg("Signature checked")
 
 				return nil
 			},

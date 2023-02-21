@@ -41,7 +41,7 @@ func FileExists(path string) (bool, error) {
 	return false, err
 }
 
-func WriteOutput(msg, outputFile string) error {
+func WriteOutput(msg any, outputFile string) error {
 	if outputFile == "" {
 		fmt.Println(msg)
 		return nil
@@ -50,23 +50,30 @@ func WriteOutput(msg, outputFile string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := file.WriteString(msg); err != nil {
-		return err
+	switch msg.(type) {
+	case string:
+		if _, err := file.WriteString(msg.(string)); err != nil {
+			return err
+		}
+	case []byte:
+		if _, err := file.Write(msg.([]byte)); err != nil {
+			return err
+		}
 	}
 	return file.Close()
 }
 
-func ReadInput(inputFile string) (string, error) {
+func ReadInput(inputFile string) ([]byte, error) {
 	exists, err := FileExists(inputFile)
 	if err != nil {
-		return "", fmt.Errorf("Error checking input file: %v\n", err)
+		return []byte{}, fmt.Errorf("Error checking input file: %v\n", err)
 	}
 	if !exists {
-		return "", fmt.Errorf("Input file not found: %v\n", inputFile)
+		return []byte{}, fmt.Errorf("Input file not found: %v\n", inputFile)
 	}
 	rawBz, err := os.ReadFile(inputFile)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
-	return string(rawBz), nil
+	return rawBz, nil
 }
