@@ -25,6 +25,7 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -362,13 +363,13 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
 
 	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
-		heightInt := utilsHeightFromBytes(height)
+		heightInt := utils.HeightFromBytes(height)
 		if bus.GetConsensusModule().CurrentHeight() < heightInt {
 			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
 		}
 		blockWithHeight := &coreTypes.Block{
 			BlockHeader: &coreTypes.BlockHeader{
-				Height: utilsHeightFromBytes(height),
+				Height: utils.HeightFromBytes(height),
 			},
 		}
 		return codec.GetCodec().Marshal(blockWithHeight)

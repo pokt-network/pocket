@@ -32,7 +32,7 @@ message Params {
   //@gotags: pokt:"val_type=BIGINT"
   int32 app_baseline_stake_rate = 4;
   //@gotags: pokt:"val_type=BIGINT"
-  int32 app_staking_adjustment = 5;
+  int32 app_stake_to_session_quota_multiplier = 5;
   //@gotags: pokt:"val_type=BIGINT"
   int32 app_unstaking_blocks = 6;
   //@gotags: pokt:"val_type=SMALLINT"
@@ -147,7 +147,7 @@ message Params {
   //@gotags: pokt:"val_type=STRING"
   string app_baseline_stake_rate_owner = 59;
   //@gotags: pokt:"val_type=STRING"
-  string app_staking_adjustment_owner = 60;
+  string app_stake_to_session_quota_multiplier_owner = 60;
   //@gotags: pokt:"val_type=STRING"
   string app_unstaking_blocks_owner = 61;
   //@gotags: pokt:"val_type=STRING"

@@ -27,7 +27,7 @@ func TestInsertParams(t *testing.T) {
 				"('app_minimum_stake', -1, 'STRING', '15000000000')," +
 				"('app_max_chains', -1, 'SMALLINT', 15)," +
 				"('app_baseline_stake_rate', -1, 'BIGINT', 100)," +
-				"('app_staking_adjustment', -1, 'BIGINT', 0)," +
+				"('app_stake_to_session_quota_multiplier', -1, 'BIGINT', 0)," +
 				"('app_unstaking_blocks', -1, 'BIGINT', 2016)," +
 				"('app_minimum_pause_blocks', -1, 'SMALLINT', 4)," +
 				"('app_max_pause_blocks', -1, 'BIGINT', 672)," +
@@ -82,7 +82,7 @@ func TestInsertParams(t *testing.T) {
 				"('app_minimum_stake_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('app_max_chains_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('app_baseline_stake_rate_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('app_staking_adjustment_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('app_stake_to_session_quota_multiplier_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('app_unstaking_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('app_minimum_pause_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('app_max_paused_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +

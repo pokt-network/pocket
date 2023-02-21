@@ -13,6 +13,8 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
+// Actor setters
+
 func (u *utilityContext) setActorStakeAmount(actorType coreTypes.ActorType, addr []byte, amount *big.Int) typesUtil.Error {
 	store := u.Store()
 	amountStr := utils.BigIntToString(amount)
@@ -83,6 +85,8 @@ func (u *utilityContext) setActorPausedHeight(actorType coreTypes.ActorType, add
 	}
 	return nil
 }
+
+// Actor getters
 
 func (u *utilityContext) getActorStakeAmount(actorType coreTypes.ActorType, addr []byte) (*big.Int, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()

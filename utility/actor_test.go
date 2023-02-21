@@ -478,7 +478,7 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 	}
 }
 
-func TestUtilityContext_GetExists(t *testing.T) {
+func TestUtilityContext_GetActorExists(t *testing.T) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue

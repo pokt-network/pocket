@@ -38,6 +38,8 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
+// NextCode: 133
+// CONSIDERATION: Should these be a proto enum or
 type Code float64
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -79,6 +81,7 @@ const (
 	CodeInterfaceConversionError         Code = 38
 	CodeGetAccountAmountError            Code = 39
 	CodeStringToBigIntError              Code = 40
+	CodeStringToBigFloatError            Code = 132
 	CodeInsufficientAmountError          Code = 41
 	CodeAddAccountAmountError            Code = 42
 	CodeSetAccountError                  Code = 43
@@ -268,6 +271,7 @@ const (
 	SocketIOStartFailedError          = "socket error: failed to start socket reading/writing (io)"
 	EmptyTransactionError             = "the transaction is empty"
 	StringToBigIntError               = "error converting string to big int"
+	StringToBigFloatError             = "error converting string to big float"
 	GetAllValidatorsError             = "an error occurred getting all validators from the state"
 	InvalidAmountError                = "the amount field is invalid; cannot be converted to big.Int"
 	InvalidAddressLenError            = "the length of the address is not valid"
@@ -684,6 +688,10 @@ func ErrDuplicateTransaction() Error {
 
 func ErrStringToBigInt(err error) Error {
 	return NewError(CodeStringToBigIntError, fmt.Sprintf("%s: %s", StringToBigIntError, err.Error()))
+}
+
+func ErrStringToBigFloat(err error) Error {
+	return NewError(CodeStringToBigFloatError, fmt.Sprintf("%s: %s", StringToBigFloatError, err.Error()))
 }
 
 func ErrInsufficientAmount(address string) Error {

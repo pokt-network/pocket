@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -476,7 +477,7 @@ func TestUtilityContext_GetStakingAdjustment(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetAppStakingAdjustment())
-	gotParam, err := ctx.getStabilityAdjustment()
+	gotParam, err := ctx.getAppStakeToSessionQuotaMultiplier()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 }

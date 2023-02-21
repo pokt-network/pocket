@@ -50,8 +50,8 @@ func (u *utilityContext) getBaselineAppStakeRate() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppBaselineStakeRateParamName)
 }
 
-func (u *utilityContext) getStabilityAdjustment() (int, typesUtil.Error) {
-	return u.getIntParam(typesUtil.AppStakingAdjustmentParamName)
+func (u *utilityContext) getAppStakeToSessionQuotaMultiplier() (int, typesUtil.Error) {
+	return u.getIntParam(typesUtil.AppStakeToSessionQuotaMultiplierParamName)
 }
 
 func (u *utilityContext) getAppUnstakingBlocks() (int64, typesUtil.Error) {
@@ -269,7 +269,7 @@ func (u *utilityContext) getParamOwner(paramName string) ([]byte, error) {
 		return store.GetBytesParam(typesUtil.AppMinimumStakeOwner, height)
 	case typesUtil.AppBaselineStakeRateParamName:
 		return store.GetBytesParam(typesUtil.AppBaselineStakeRateOwner, height)
-	case typesUtil.AppStakingAdjustmentParamName:
+	case typesUtil.AppStakeToSessionQuotaMultiplierParamName:
 		return store.GetBytesParam(typesUtil.AppStakingAdjustmentOwner, height)
 	case typesUtil.AppUnstakingBlocksParamName:
 		return store.GetBytesParam(typesUtil.AppUnstakingBlocksOwner, height)
