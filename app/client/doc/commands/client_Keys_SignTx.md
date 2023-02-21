@@ -1,19 +1,22 @@
-## client Keys Get
+## client Keys SignTx
 
-Get the address and public key from the keybase
+Signs a transaction using the key provided
 
 ### Synopsis
 
-Get the address and public key of <addrHex> from the keybase, provided it is stored
+Signs [--input_file] with <addrHex> from the keybase, writing the signed transaction to [--output_file]
 
 ```
-client Keys Get <addrHex> [flags]
+client Keys SignTx <addrHex> [--input_file] [--output_file] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for Get
+  -h, --help                 help for SignTx
+      --input_file string    input file to read data from
+      --output_file string   output file to write results to
+      --pwd string           passphrase used by the cmd, non empty usage bypass interactive prompt
 ```
 
 ### Options inherited from parent commands

@@ -1,19 +1,22 @@
-## client Keys Get
+## client Keys Update
 
-Get the address and public key from the keybase
+Updates the key to have a new passphrase and hint
 
 ### Synopsis
 
-Get the address and public key of <addrHex> from the keybase, provided it is stored
+Updates the passphrase and hint of <addrHex> in the keybase, using either the values from the flags provided or from the CLI prompts.
 
 ```
-client Keys Get <addrHex> [flags]
+client Keys Update <addrHex> [--pwd] [--new_pwd] [--hint] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for Get
+  -h, --help             help for Update
+      --hint string      hint for the passphrase of the private key
+      --new_pwd string   new passphrase for private key, non empty usage bypass interactive prompt
+      --pwd string       passphrase used by the cmd, non empty usage bypass interactive prompt
 ```
 
 ### Options inherited from parent commands

@@ -1,19 +1,22 @@
-## client Keys Get
+## client Keys VerifyTx
 
-Get the address and public key from the keybase
+Verifies the transaction's signature is valid from the signer
 
 ### Synopsis
 
-Get the address and public key of <addrHex> from the keybase, provided it is stored
+Verify that [--input_file] contains a valid signature for the transaction in the file signed by <addrHex>
 
 ```
-client Keys Get <addrHex> [flags]
+client Keys VerifyTx <addrHex> [--input_file] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for Get
+  -h, --help                 help for VerifyTx
+      --input_file string    input file to read data from
+      --output_file string   output file to write results to
+      --pwd string           passphrase used by the cmd, non empty usage bypass interactive prompt
 ```
 
 ### Options inherited from parent commands
