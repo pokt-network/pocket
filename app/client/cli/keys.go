@@ -39,7 +39,8 @@ func NewKeysCommand() *cobra.Command {
 	getCmds := keysGetCommands()
 	exportCmds := keysExportCommands()
 	importCmds := keysImportCommands()
-	signCmds := keysSignCommands()
+	signMsgCmds := keysSignMsgCommands()
+	signTxCmds := keysSignTxCommands()
 
 	// Add --pwd and --hint flags
 	applySubcommandOptions(createCmds, attachPwdFlagToSubcommands())
@@ -65,7 +66,12 @@ func NewKeysCommand() *cobra.Command {
 	applySubcommandOptions(importCmds, attachImportFlagToSubcommands())
 
 	// Add --pwd flag
-	applySubcommandOptions(signCmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(signMsgCmds, attachPwdFlagToSubcommands())
+
+	// Add --pwd, --input_file and --output_file flags
+	applySubcommandOptions(signTxCmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(signTxCmds, attachInputFlagToSubcommands())
+	applySubcommandOptions(signTxCmds, attachOutputFlagToSubcommands())
 
 	cmd.AddCommand(createCmds...)
 	cmd.AddCommand(updateCmds...)
@@ -73,7 +79,8 @@ func NewKeysCommand() *cobra.Command {
 	cmd.AddCommand(getCmds...)
 	cmd.AddCommand(exportCmds...)
 	cmd.AddCommand(importCmds...)
-	cmd.AddCommand(signCmds...)
+	cmd.AddCommand(signMsgCmds...)
+	cmd.AddCommand(signTxCmds...)
 
 	return cmd
 }
@@ -413,10 +420,7 @@ func keysImportCommands() []*cobra.Command {
 	return cmds
 }
 
-// TODO: Add the following key signature commands
-//  1. Read an encoded unsigned transaction from `--input_file` and write the signed transaction to `--output_file`
-//  2. Verify the signature of a transaction provided by `--input_file`
-func keysSignCommands() []*cobra.Command {
+func keysSignMsgCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
 			Use:     "Sign <addrHex> <messageHex>",
@@ -468,7 +472,7 @@ func keysSignCommands() []*cobra.Command {
 			Use:     "Verify <addrHex> <messageHex> <signatureHex>",
 			Short:   "Verifies the signature is valid from the signer",
 			Long:    "Verify that <signatureHex> is a valid signature of <messageHex> signed by <addrHex>",
-			Aliases: []string{"sign"},
+			Aliases: []string{"verify"},
 			Args:    cobra.ExactArgs(3),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				// Unpack CLI args
@@ -505,6 +509,76 @@ func keysSignCommands() []*cobra.Command {
 				}
 
 				logger.Global.Info().Str("address", addrHex).Bool("valid", valid).Msg("Signature verified")
+
+				return nil
+			},
+		},
+	}
+	return cmds
+}
+
+func keysSignTxCommands() []*cobra.Command {
+	cmds := []*cobra.Command{
+		{
+			Use:     "Sign <addrHex> [--input_file] [--output_file]",
+			Short:   "Signs a transaction using the key provided",
+			Long:    "Signs [--input_file] with <addrHex> from the keybase, writing the signature to [--output_file]",
+			Aliases: []string{"signtx"},
+			Args:    cobra.ExactArgs(1),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				// Unpack CLI args
+				addrHex := args[0]
+
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
+				if err != nil {
+					return err
+				}
+
+				if !nonInteractive {
+					pwd = readPassphrase(pwd)
+				}
+
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+
+				logger.Global.Info().Str("signature", "").Str("address", addrHex).Msg("Message signed")
+
+				return nil
+			},
+		},
+		{
+			Use:     "VerifyTx <addrHex> [--input_file]",
+			Short:   "Verifies the transaction's signature is valid from the signer",
+			Long:    "Verify that [--input_file] contains a valid signature for the transaction in the file signed by <addrHex>",
+			Aliases: []string{"verifytx"},
+			Args:    cobra.ExactArgs(3),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				// Unpack CLI args
+				addrHex := args[0]
+
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
+				if err != nil {
+					return err
+				}
+
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+
+				logger.Global.Info().Str("address", addrHex).Bool("valid", true).Msg("Signature verified")
 
 				return nil
 			},
