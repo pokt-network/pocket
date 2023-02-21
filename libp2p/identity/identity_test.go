@@ -2,9 +2,10 @@ package identity
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"regexp"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestPeerMultiAddrFromServiceURL_success(t *testing.T) {

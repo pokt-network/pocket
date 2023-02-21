@@ -38,10 +38,6 @@ import (
 	"github.com/pokt-network/pocket/libp2p/protocol"
 	typesLibp2p "github.com/pokt-network/pocket/libp2p/types"
 	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/p2p/providers"
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
-	persABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
-	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
@@ -56,18 +52,16 @@ var _ modules.P2PModule = &libp2pModule{}
 type libp2pModule struct {
 	base_modules.IntegratableModule
 
-	logger                *modules.Logger
-	bus                   modules.Bus
-	cfg                   *configs.P2PConfig
-	addrBookProvider      providers.AddrBookProvider
-	currentHeightProvider providers.CurrentHeightProvider
-	identity              libp2p.Option
-	listenAddrs           libp2p.Option
-	host                  host.Host
-	pubsub                *pubsub.PubSub
-	topic                 *pubsub.Topic
-	subscription          *pubsub.Subscription
-	network               typesP2P.Network
+	logger       *modules.Logger
+	bus          modules.Bus
+	cfg          *configs.P2PConfig
+	identity     libp2p.Option
+	listenAddrs  libp2p.Option
+	host         host.Host
+	pubsub       *pubsub.PubSub
+	topic        *pubsub.Topic
+	subscription *pubsub.Subscription
+	network      typesP2P.Network
 }
 
 var (
@@ -96,12 +90,8 @@ func (mod *libp2pModule) Create(bus modules.Bus, options ...modules.ModuleOption
 		cfg: bus.GetRuntimeMgr().GetConfig().P2P,
 	}
 
-	// MUST call before setupDependencies to ensure GetBus() != nil.
+	// MUST call before referencing mod.bus to ensure != nil.
 	bus.RegisterModule(mod)
-
-	// SHOULD before applying options in case options override
-	// fields set in setupDependencies.
-	mod.setupDependencies()
 
 	for _, option := range options {
 		option(mod)
@@ -199,7 +189,7 @@ func (mod *libp2pModule) Start() error {
 		return ErrModule("subscribing to pubsub topic", err)
 	}
 
-	mod.network, err = network.NewLibp2pNetwork(mod.bus, mod.addrBookProvider, mod.currentHeightProvider, mod.logger, mod.host, mod.topic)
+	mod.network, err = network.NewLibp2pNetwork(mod.GetBus(), mod.logger, mod.host, mod.topic)
 	if err != nil {
 		return ErrModule("creating network", err)
 	}
@@ -248,21 +238,6 @@ func (mod *libp2pModule) GetAddress() (crypto.Address, error) {
 	}
 
 	return privateKey.Address(), nil
-}
-
-// setupDependencies initializes addrBookProvider and currentHeightProvider fom the bus.
-func (mod *libp2pModule) setupDependencies() {
-	addrBookProvider, err := mod.GetBus().GetModulesRegistry().GetModule(addrbook_provider.ModuleName)
-	if err != nil {
-		addrBookProvider = persABP.NewPersistenceAddrBookProvider(mod.GetBus())
-	}
-	mod.addrBookProvider = addrBookProvider.(providers.AddrBookProvider)
-
-	currentHeightProvider, err := mod.GetBus().GetModulesRegistry().GetModule(current_height_provider.ModuleName)
-	if err != nil {
-		currentHeightProvider = mod.GetBus().GetConsensusModule()
-	}
-	mod.currentHeightProvider = currentHeightProvider.(providers.CurrentHeightProvider)
 }
 
 // handleStream is called each time a peer establishes a new stream with this

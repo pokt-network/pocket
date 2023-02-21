@@ -12,6 +12,9 @@ import (
 	"github.com/pokt-network/pocket/libp2p/protocol"
 	typesLibp2p "github.com/pokt-network/pocket/libp2p/types"
 	"github.com/pokt-network/pocket/p2p/providers"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
+	persABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
+	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -21,11 +24,13 @@ import (
 type libp2pNetwork struct {
 	base_modules.IntegratableModule
 
-	logger      *modules.Logger
-	bus         modules.Bus
-	host        libp2pHost.Host
-	topic       *pubsub.Topic
-	addrBookMap typesP2P.AddrBookMap
+	logger                *modules.Logger
+	bus                   modules.Bus
+	host                  libp2pHost.Host
+	topic                 *pubsub.Topic
+	addrBookMap           typesP2P.AddrBookMap
+	addrBookProvider      providers.AddrBookProvider
+	currentHeightProvider providers.CurrentHeightProvider
 }
 
 var (
@@ -39,49 +44,22 @@ var (
 // implementations to an options or config struct.
 func NewLibp2pNetwork(
 	bus modules.Bus,
-	addrBookProvider providers.AddrBookProvider,
-	currentHeightProvider providers.CurrentHeightProvider,
 	logger *modules.Logger,
 	host libp2pHost.Host,
 	topic *pubsub.Topic,
 ) (typesP2P.Network, error) {
-	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
-	if err != nil {
-		logger.Fatal().Err(err).Msg("getting staked address book")
-	}
-
-	addrBookMap := make(typesP2P.AddrBookMap)
-	for _, peer := range addrBook {
-		addrBookMap[peer.Address.String()] = peer
-		pubKey, err := identity.Libp2pPublicKeyFromPeer(peer)
-		if err != nil {
-			return nil, ErrNetwork(fmt.Sprintf(
-				"converting peer public key, pokt address: %s", peer.Address,
-			), err)
-		}
-		libp2pPeer, err := identity.Libp2pAddrInfoFromPeer(peer)
-		if err != nil {
-			return nil, ErrNetwork(fmt.Sprintf(
-				"converting peer info, pokt address: %s", peer.Address,
-			), err)
-		}
-
-		host.Peerstore().AddAddrs(libp2pPeer.ID, libp2pPeer.Addrs, DefaultPeerTTL)
-		if err := host.Peerstore().AddPubKey(libp2pPeer.ID, pubKey); err != nil {
-			return nil, ErrNetwork(fmt.Sprintf(
-				"adding peer public key, pokt address: %s", peer.Address,
-			), err)
-		}
-	}
-
-	return &libp2pNetwork{
+	p2pNet := &libp2pNetwork{
 		logger: logger,
-		// TODO: is it unconventional to set bus here?
-		bus:         bus,
-		host:        host,
-		topic:       topic,
-		addrBookMap: addrBookMap,
-	}, nil
+		host:   host,
+		topic:  topic,
+	}
+
+	p2pNet.SetBus(bus)
+	if err := p2pNet.setupAddrBookMap(); err != nil {
+		return nil, err
+	}
+
+	return p2pNet, nil
 }
 
 // NetworkBroadcast uses the configured pubsub router to broadcast data to peers.
@@ -205,4 +183,54 @@ func (p2pNet *libp2pNetwork) RemovePeerFromAddrBook(peer *typesP2P.NetworkPeer) 
 
 func (p2pNet *libp2pNetwork) Close() error {
 	return p2pNet.host.Close()
+}
+
+// setupAddrBookMap initializes p2pNet.addrBookMap using the
+// addrBookProvider and currentHeightProvider registered on the bus.
+func (p2pNet *libp2pNetwork) setupAddrBookMap() error {
+	addrBookProviderModule, err := p2pNet.GetBus().GetModulesRegistry().GetModule(addrbook_provider.ModuleName)
+	if err != nil {
+		addrBookProviderModule = persABP.NewPersistenceAddrBookProvider(p2pNet.GetBus())
+	}
+	addrBookProvider := addrBookProviderModule.(providers.AddrBookProvider)
+
+	currentHeightProviderModule, err := p2pNet.GetBus().GetModulesRegistry().GetModule(current_height_provider.ModuleName)
+	if err != nil {
+		currentHeightProviderModule = p2pNet.GetBus().GetConsensusModule()
+	}
+	currentHeightProvider := currentHeightProviderModule.(providers.CurrentHeightProvider)
+
+	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
+	if err != nil {
+		p2pNet.logger.Fatal().Err(err).Msg("getting staked address book")
+		return err
+	}
+
+	addrBookMap := make(typesP2P.AddrBookMap)
+	for _, peer := range addrBook {
+		addrBookMap[peer.Address.String()] = peer
+		pubKey, err := identity.Libp2pPublicKeyFromPeer(peer)
+		if err != nil {
+			return ErrNetwork(fmt.Sprintf(
+				"converting peer public key, pokt address: %s", peer.Address,
+			), err)
+		}
+		libp2pPeer, err := identity.Libp2pAddrInfoFromPeer(peer)
+		if err != nil {
+			return ErrNetwork(fmt.Sprintf(
+				"converting peer info, pokt address: %s", peer.Address,
+			), err)
+		}
+
+		p2pNet.host.Peerstore().AddAddrs(libp2pPeer.ID, libp2pPeer.Addrs, DefaultPeerTTL)
+		if err := p2pNet.host.Peerstore().AddPubKey(libp2pPeer.ID, pubKey); err != nil {
+			return ErrNetwork(fmt.Sprintf(
+				"adding peer public key, pokt address: %s", peer.Address,
+			), err)
+		}
+	}
+	p2pNet.addrBookMap = addrBookMap
+	p2pNet.logger.Error().Msgf("addrBookMap: %s", addrBookMap)
+
+	return nil
 }
