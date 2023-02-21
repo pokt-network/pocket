@@ -76,7 +76,7 @@ The primitives and functions defined there are heavily used throughout this pack
 
 ## Child Key Generation
 
-The [documentation in the crypto library](../../../shared/crypto/README.md) covers the specifics of the SLIPS-0010 implementation related to child key generation from a single master key
+The [documentation in the crypto library](../../../shared/crypto/README.md) covers the specifics of the [SLIPS-0010](https://github.com/satoshilabs/slips/blob/master/slip-0010.md) implementation related to child key generation from a single master key
 
 ## TODO: Future Work
 
