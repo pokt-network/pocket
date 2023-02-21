@@ -10,9 +10,9 @@ import (
 
 // TODO(#230): Remove these testing_artifacts when we nail down a design for parameter name sharing / owning
 const (
-	AppMaxChainsParamName            = "app_max_chains"
-	ServiceNodeMinimumStakeParamName = "service_node_minimum_stake"
-	ServiceNodeUnstakingBlocksOwner  = "service_node_unstaking_blocks_owner"
+	AppMaxChainsParamName         = "app_max_chains"
+	ServicerMinimumStakeParamName = "servicer_minimum_stake"
+	ServicerUnstakingBlocksOwner  = "servicer_unstaking_blocks_owner"
 )
 
 func TestInitGenesisParams(t *testing.T) {
@@ -47,18 +47,18 @@ func TestGetSetStringParam(t *testing.T) {
 	err := db.InitGenesisParams(test_artifacts.DefaultParams())
 	require.NoError(t, err)
 
-	newServiceNodeMinimumStake := "99999999"
+	newServicerMinimumStake := "99999999"
 
-	err = db.SetParam(ServiceNodeMinimumStakeParamName, newServiceNodeMinimumStake)
+	err = db.SetParam(ServicerMinimumStakeParamName, newServicerMinimumStake)
 	require.NoError(t, err)
 
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	serviceNodeMinimumStake, err := db.GetParameter(ServiceNodeMinimumStakeParamName, height)
+	servicerMinimumStake, err := db.GetParameter(ServicerMinimumStakeParamName, height)
 	require.NoError(t, err)
 
-	require.Equal(t, newServiceNodeMinimumStake, serviceNodeMinimumStake)
+	require.Equal(t, newServicerMinimumStake, servicerMinimumStake)
 }
 
 func TestGetSetByteArrayParam(t *testing.T) {
@@ -70,13 +70,13 @@ func TestGetSetByteArrayParam(t *testing.T) {
 	newOwner, err := hex.DecodeString("63585955783252764a6e576a5631647542486168426c63774e4655345a57617468545532637a6330516e4d5978575977674553537857644e4a6b4c7734575335416a65616c6d57494a47535364555933686d565a706e57564a6d6143526c54594248626864465a72646c624f646c59704a45536a6c6c52794d32527849545733566c6557464763745a465377466a57324a316157314562554a6c564b6c325470394753696c58544846474e786331567a70554d534a6c5335566d4c356f305157684663726c6b4e4a4e305931496c624a4e58537035554d4a7058564a705561506c3259484a47614b6c585a")
 	require.NoError(t, err)
 
-	err = db.SetParam(ServiceNodeUnstakingBlocksOwner, newOwner)
+	err = db.SetParam(ServicerUnstakingBlocksOwner, newOwner)
 	require.NoError(t, err)
 
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	owner, err := db.GetBytesParam(ServiceNodeUnstakingBlocksOwner, height)
+	owner, err := db.GetBytesParam(ServicerUnstakingBlocksOwner, height)
 	require.NoError(t, err)
 
 	require.Equal(t, newOwner, owner)
@@ -125,32 +125,32 @@ func TestGetSetToggleStringFlag(t *testing.T) {
 	err := db.InitGenesisParams(test_artifacts.DefaultParams())
 	require.NoError(t, err)
 
-	newServiceNodeMinimumStake := "99999999"
+	newServicerMinimumStake := "99999999"
 
 	// insert with false
-	err = db.SetFlag(ServiceNodeMinimumStakeParamName, newServiceNodeMinimumStake, false)
+	err = db.SetFlag(ServicerMinimumStakeParamName, newServicerMinimumStake, false)
 	require.NoError(t, err)
 
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	serviceNodeMinimumStake, enabled, err := db.GetStringFlag(ServiceNodeMinimumStakeParamName, height)
+	servicerMinimumStake, enabled, err := db.GetStringFlag(ServicerMinimumStakeParamName, height)
 	require.NoError(t, err)
 
-	require.Equal(t, newServiceNodeMinimumStake, serviceNodeMinimumStake)
+	require.Equal(t, newServicerMinimumStake, servicerMinimumStake)
 	require.Equal(t, false, enabled)
 
 	// toggle to true
-	err = db.SetFlag(ServiceNodeMinimumStakeParamName, newServiceNodeMinimumStake, true)
+	err = db.SetFlag(ServicerMinimumStakeParamName, newServicerMinimumStake, true)
 	require.NoError(t, err)
 
 	height, err = db.GetHeight()
 	require.NoError(t, err)
 
-	serviceNodeMinimumStake, enabled, err = db.GetStringFlag(ServiceNodeMinimumStakeParamName, height)
+	servicerMinimumStake, enabled, err = db.GetStringFlag(ServicerMinimumStakeParamName, height)
 	require.NoError(t, err)
 
-	require.Equal(t, newServiceNodeMinimumStake, serviceNodeMinimumStake)
+	require.Equal(t, newServicerMinimumStake, servicerMinimumStake)
 	require.Equal(t, true, enabled)
 
 }
@@ -165,26 +165,26 @@ func TestGetSetToggleByteArrayFlag(t *testing.T) {
 	require.NoError(t, err)
 
 	// insert with false
-	err = db.SetFlag(ServiceNodeUnstakingBlocksOwner, newOwner, false)
+	err = db.SetFlag(ServicerUnstakingBlocksOwner, newOwner, false)
 	require.NoError(t, err)
 
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	owner, enabled, err := db.GetBytesFlag(ServiceNodeUnstakingBlocksOwner, height)
+	owner, enabled, err := db.GetBytesFlag(ServicerUnstakingBlocksOwner, height)
 	require.NoError(t, err)
 
 	require.Equal(t, newOwner, owner)
 	require.Equal(t, false, enabled)
 
 	// toggle to true
-	err = db.SetFlag(ServiceNodeUnstakingBlocksOwner, newOwner, true)
+	err = db.SetFlag(ServicerUnstakingBlocksOwner, newOwner, true)
 	require.NoError(t, err)
 
 	height, err = db.GetHeight()
 	require.NoError(t, err)
 
-	owner, enabled, err = db.GetBytesFlag(ServiceNodeUnstakingBlocksOwner, height)
+	owner, enabled, err = db.GetBytesFlag(ServicerUnstakingBlocksOwner, height)
 	require.NoError(t, err)
 
 	require.Equal(t, newOwner, owner)

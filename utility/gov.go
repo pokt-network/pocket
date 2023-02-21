@@ -66,24 +66,24 @@ func (u *utilityContext) getAppMaxPausedBlocks() (maxPausedBlocks int, err types
 	return u.getIntParam(typesUtil.AppMaxPauseBlocksParamName)
 }
 
-func (u *utilityContext) getServiceNodeMinimumStake() (*big.Int, typesUtil.Error) {
-	return u.getBigIntParam(typesUtil.ServiceNodeMinimumStakeParamName)
+func (u *utilityContext) getServicerMinimumStake() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(typesUtil.ServicerMinimumStakeParamName)
 }
 
-func (u *utilityContext) getServiceNodeMaxChains() (int, typesUtil.Error) {
-	return u.getIntParam(typesUtil.ServiceNodeMaxChainsParamName)
+func (u *utilityContext) getServicerMaxChains() (int, typesUtil.Error) {
+	return u.getIntParam(typesUtil.ServicerMaxChainsParamName)
 }
 
-func (u *utilityContext) getServiceNodeUnstakingBlocks() (int64, typesUtil.Error) {
-	return u.getInt64Param(typesUtil.ServiceNodeUnstakingBlocksParamName)
+func (u *utilityContext) getServicerUnstakingBlocks() (int64, typesUtil.Error) {
+	return u.getInt64Param(typesUtil.ServicerUnstakingBlocksParamName)
 }
 
-func (u *utilityContext) getServiceNodeMinimumPauseBlocks() (int, typesUtil.Error) {
-	return u.getIntParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName)
+func (u *utilityContext) getServicerMinimumPauseBlocks() (int, typesUtil.Error) {
+	return u.getIntParam(typesUtil.ServicerMinimumPauseBlocksParamName)
 }
 
-func (u *utilityContext) getServiceNodeMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
-	return u.getIntParam(typesUtil.ServiceNodeMaxPauseBlocksParamName)
+func (u *utilityContext) getServicerMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
+	return u.getIntParam(typesUtil.ServicerMaxPauseBlocksParamName)
 }
 
 func (u *utilityContext) getValidatorMinimumStake() (*big.Int, typesUtil.Error) {
@@ -170,8 +170,8 @@ func (u *utilityContext) getMessageUnpauseFishermanFee() (*big.Int, typesUtil.Er
 	return u.getBigIntParam(typesUtil.MessageUnpauseFishermanFee)
 }
 
-func (u *utilityContext) getMessageFishermanPauseServiceNodeFee() (*big.Int, typesUtil.Error) {
-	return u.getBigIntParam(typesUtil.MessageFishermanPauseServiceNodeFee)
+func (u *utilityContext) getMessageFishermanPauseServicerFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(typesUtil.MessageFishermanPauseServicerFee)
 }
 
 func (u *utilityContext) getMessageTestScoreFee() (*big.Int, typesUtil.Error) {
@@ -222,24 +222,24 @@ func (u *utilityContext) getMessageUnpauseValidatorFee() (*big.Int, typesUtil.Er
 	return u.getBigIntParam(typesUtil.MessageUnpauseValidatorFee)
 }
 
-func (u *utilityContext) getMessageStakeServiceNodeFee() (*big.Int, typesUtil.Error) {
-	return u.getBigIntParam(typesUtil.MessageStakeServiceNodeFee)
+func (u *utilityContext) getMessageStakeServicerFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(typesUtil.MessageStakeServicerFee)
 }
 
-func (u *utilityContext) getMessageEditStakeServiceNodeFee() (*big.Int, typesUtil.Error) {
-	return u.getBigIntParam(typesUtil.MessageEditStakeServiceNodeFee)
+func (u *utilityContext) getMessageEditStakeServicerFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(typesUtil.MessageEditStakeServicerFee)
 }
 
-func (u *utilityContext) getMessageUnstakeServiceNodeFee() (*big.Int, typesUtil.Error) {
-	return u.getBigIntParam(typesUtil.MessageUnstakeServiceNodeFee)
+func (u *utilityContext) getMessageUnstakeServicerFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(typesUtil.MessageUnstakeServicerFee)
 }
 
-func (u *utilityContext) getMessagePauseServiceNodeFee() (*big.Int, typesUtil.Error) {
-	return u.getBigIntParam(typesUtil.MessagePauseServiceNodeFee)
+func (u *utilityContext) getMessagePauseServicerFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(typesUtil.MessagePauseServicerFee)
 }
 
-func (u *utilityContext) getMessageUnpauseServiceNodeFee() (*big.Int, typesUtil.Error) {
-	return u.getBigIntParam(typesUtil.MessageUnpauseServiceNodeFee)
+func (u *utilityContext) getMessageUnpauseServicerFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(typesUtil.MessageUnpauseServicerFee)
 }
 
 func (u *utilityContext) getMessageChangeParameterFee() (*big.Int, typesUtil.Error) {
@@ -277,18 +277,18 @@ func (u *utilityContext) getParamOwner(paramName string) ([]byte, error) {
 		return store.GetBytesParam(typesUtil.AppMinimumPauseBlocksOwner, height)
 	case typesUtil.AppMaxPauseBlocksParamName:
 		return store.GetBytesParam(typesUtil.AppMaxPausedBlocksOwner, height)
-	case typesUtil.ServiceNodesPerSessionParamName:
-		return store.GetBytesParam(typesUtil.ServiceNodesPerSessionOwner, height)
-	case typesUtil.ServiceNodeMinimumStakeParamName:
-		return store.GetBytesParam(typesUtil.ServiceNodeMinimumStakeOwner, height)
-	case typesUtil.ServiceNodeMaxChainsParamName:
-		return store.GetBytesParam(typesUtil.ServiceNodeMaxChainsOwner, height)
-	case typesUtil.ServiceNodeUnstakingBlocksParamName:
-		return store.GetBytesParam(typesUtil.ServiceNodeUnstakingBlocksOwner, height)
-	case typesUtil.ServiceNodeMinimumPauseBlocksParamName:
-		return store.GetBytesParam(typesUtil.ServiceNodeMinimumPauseBlocksOwner, height)
-	case typesUtil.ServiceNodeMaxPauseBlocksParamName:
-		return store.GetBytesParam(typesUtil.ServiceNodeMaxPausedBlocksOwner, height)
+	case typesUtil.ServicersPerSessionParamName:
+		return store.GetBytesParam(typesUtil.ServicersPerSessionOwner, height)
+	case typesUtil.ServicerMinimumStakeParamName:
+		return store.GetBytesParam(typesUtil.ServicerMinimumStakeOwner, height)
+	case typesUtil.ServicerMaxChainsParamName:
+		return store.GetBytesParam(typesUtil.ServicerMaxChainsOwner, height)
+	case typesUtil.ServicerUnstakingBlocksParamName:
+		return store.GetBytesParam(typesUtil.ServicerUnstakingBlocksOwner, height)
+	case typesUtil.ServicerMinimumPauseBlocksParamName:
+		return store.GetBytesParam(typesUtil.ServicerMinimumPauseBlocksOwner, height)
+	case typesUtil.ServicerMaxPauseBlocksParamName:
+		return store.GetBytesParam(typesUtil.ServicerMaxPausedBlocksOwner, height)
 	case typesUtil.FishermanMinimumStakeParamName:
 		return store.GetBytesParam(typesUtil.FishermanMinimumStakeOwner, height)
 	case typesUtil.FishermanMaxChainsParamName:
@@ -331,8 +331,8 @@ func (u *utilityContext) getParamOwner(paramName string) ([]byte, error) {
 		return store.GetBytesParam(typesUtil.MessagePauseFishermanFeeOwner, height)
 	case typesUtil.MessageUnpauseFishermanFee:
 		return store.GetBytesParam(typesUtil.MessageUnpauseFishermanFeeOwner, height)
-	case typesUtil.MessageFishermanPauseServiceNodeFee:
-		return store.GetBytesParam(typesUtil.MessageFishermanPauseServiceNodeFeeOwner, height)
+	case typesUtil.MessageFishermanPauseServicerFee:
+		return store.GetBytesParam(typesUtil.MessageFishermanPauseServicerFeeOwner, height)
 	case typesUtil.MessageTestScoreFee:
 		return store.GetBytesParam(typesUtil.MessageTestScoreFeeOwner, height)
 	case typesUtil.MessageProveTestScoreFee:
@@ -357,16 +357,16 @@ func (u *utilityContext) getParamOwner(paramName string) ([]byte, error) {
 		return store.GetBytesParam(typesUtil.MessagePauseValidatorFeeOwner, height)
 	case typesUtil.MessageUnpauseValidatorFee:
 		return store.GetBytesParam(typesUtil.MessageUnpauseValidatorFeeOwner, height)
-	case typesUtil.MessageStakeServiceNodeFee:
-		return store.GetBytesParam(typesUtil.MessageStakeServiceNodeFeeOwner, height)
-	case typesUtil.MessageEditStakeServiceNodeFee:
-		return store.GetBytesParam(typesUtil.MessageEditStakeServiceNodeFeeOwner, height)
-	case typesUtil.MessageUnstakeServiceNodeFee:
-		return store.GetBytesParam(typesUtil.MessageUnstakeServiceNodeFeeOwner, height)
-	case typesUtil.MessagePauseServiceNodeFee:
-		return store.GetBytesParam(typesUtil.MessagePauseServiceNodeFeeOwner, height)
-	case typesUtil.MessageUnpauseServiceNodeFee:
-		return store.GetBytesParam(typesUtil.MessageUnpauseServiceNodeFeeOwner, height)
+	case typesUtil.MessageStakeServicerFee:
+		return store.GetBytesParam(typesUtil.MessageStakeServicerFeeOwner, height)
+	case typesUtil.MessageEditStakeServicerFee:
+		return store.GetBytesParam(typesUtil.MessageEditStakeServicerFeeOwner, height)
+	case typesUtil.MessageUnstakeServicerFee:
+		return store.GetBytesParam(typesUtil.MessageUnstakeServicerFeeOwner, height)
+	case typesUtil.MessagePauseServicerFee:
+		return store.GetBytesParam(typesUtil.MessagePauseServicerFeeOwner, height)
+	case typesUtil.MessageUnpauseServicerFee:
+		return store.GetBytesParam(typesUtil.MessageUnpauseServicerFeeOwner, height)
 	case typesUtil.MessageChangeParameterFee:
 		return store.GetBytesParam(typesUtil.MessageChangeParameterFeeOwner, height)
 	case typesUtil.BlocksPerSessionOwner:
@@ -385,17 +385,17 @@ func (u *utilityContext) getParamOwner(paramName string) ([]byte, error) {
 		return store.GetBytesParam(typesUtil.AclOwner, height)
 	case typesUtil.AppMaxPausedBlocksOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
-	case typesUtil.ServiceNodeMinimumStakeOwner:
+	case typesUtil.ServicerMinimumStakeOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
-	case typesUtil.ServiceNodeMaxChainsOwner:
+	case typesUtil.ServicerMaxChainsOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
-	case typesUtil.ServiceNodeUnstakingBlocksOwner:
+	case typesUtil.ServicerUnstakingBlocksOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
-	case typesUtil.ServiceNodeMinimumPauseBlocksOwner:
+	case typesUtil.ServicerMinimumPauseBlocksOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
-	case typesUtil.ServiceNodeMaxPausedBlocksOwner:
+	case typesUtil.ServicerMaxPausedBlocksOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
-	case typesUtil.ServiceNodesPerSessionOwner:
+	case typesUtil.ServicersPerSessionOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
 	case typesUtil.FishermanMinimumStakeOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
@@ -437,7 +437,7 @@ func (u *utilityContext) getParamOwner(paramName string) ([]byte, error) {
 		return store.GetBytesParam(typesUtil.AclOwner, height)
 	case typesUtil.MessageUnpauseFishermanFeeOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
-	case typesUtil.MessageFishermanPauseServiceNodeFeeOwner:
+	case typesUtil.MessageFishermanPauseServicerFeeOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
 	case typesUtil.MessageTestScoreFeeOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
@@ -463,15 +463,15 @@ func (u *utilityContext) getParamOwner(paramName string) ([]byte, error) {
 		return store.GetBytesParam(typesUtil.AclOwner, height)
 	case typesUtil.MessageUnpauseValidatorFeeOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
-	case typesUtil.MessageStakeServiceNodeFeeOwner:
+	case typesUtil.MessageStakeServicerFeeOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
-	case typesUtil.MessageEditStakeServiceNodeFeeOwner:
+	case typesUtil.MessageEditStakeServicerFeeOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
-	case typesUtil.MessageUnstakeServiceNodeFeeOwner:
+	case typesUtil.MessageUnstakeServicerFeeOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
-	case typesUtil.MessagePauseServiceNodeFeeOwner:
+	case typesUtil.MessagePauseServicerFeeOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
-	case typesUtil.MessageUnpauseServiceNodeFeeOwner:
+	case typesUtil.MessageUnpauseServicerFeeOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
 	case typesUtil.MessageChangeParameterFeeOwner:
 		return store.GetBytesParam(typesUtil.AclOwner, height)
@@ -490,8 +490,8 @@ func (u *utilityContext) getFee(msg typesUtil.Message, actorType coreTypes.Actor
 			return u.getMessageStakeAppFee()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			return u.getMessageStakeFishermanFee()
-		case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-			return u.getMessageStakeServiceNodeFee()
+		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+			return u.getMessageStakeServicerFee()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			return u.getMessageStakeValidatorFee()
 		default:
@@ -503,8 +503,8 @@ func (u *utilityContext) getFee(msg typesUtil.Message, actorType coreTypes.Actor
 			return u.getMessageEditStakeAppFee()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			return u.getMessageEditStakeFishermanFee()
-		case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-			return u.getMessageEditStakeServiceNodeFee()
+		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+			return u.getMessageEditStakeServicerFee()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			return u.getMessageEditStakeValidatorFee()
 		default:
@@ -516,8 +516,8 @@ func (u *utilityContext) getFee(msg typesUtil.Message, actorType coreTypes.Actor
 			return u.getMessageUnstakeAppFee()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			return u.getMessageUnstakeFishermanFee()
-		case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-			return u.getMessageUnstakeServiceNodeFee()
+		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+			return u.getMessageUnstakeServicerFee()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			return u.getMessageUnstakeValidatorFee()
 		default:
@@ -529,8 +529,8 @@ func (u *utilityContext) getFee(msg typesUtil.Message, actorType coreTypes.Actor
 			return u.getMessageUnpauseAppFee()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			return u.getMessageUnpauseFishermanFee()
-		case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-			return u.getMessageUnpauseServiceNodeFee()
+		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+			return u.getMessageUnpauseServicerFee()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			return u.getMessageUnpauseValidatorFee()
 		default:

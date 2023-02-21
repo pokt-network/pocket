@@ -142,7 +142,8 @@ func validateOutputAddress(address []byte) Error {
 }
 
 // CONSIDERATION: If the protobufs contain semantic types, we could potentially leverage
-//                a shared `address.ValidateBasic()` throughout the codebase.s
+//
+//	a shared `address.ValidateBasic()` throughout the codebase.s
 func validatePublicKey(publicKey []byte) Error {
 	if publicKey == nil {
 		return ErrEmptyPublicKey()

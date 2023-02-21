@@ -29,13 +29,13 @@ go run ./build/config/main.go --numFishermen=1
 ### Using Make Target
 
 ```bash
-make numValidators=5 numServiceNodes=1 gen_genesis_and_config
+make numValidators=5 numServicers=1 gen_genesis_and_config
 ```
 
 ### Parameters
 
 - `numValidators` is an int flag that sets the number of validators that will be in the network; this affects the contents of the genesis file as well as the number of config files
-- `numServiceNodes` is an int flag that set the number of service nodes that will be in the network's genesis file
+- `numServicers` is an int flag that set the number of servicers that will be in the network's genesis file
 - `numApplications` is an int flag that set the number of applications that will be in the network's genesis file
 - `numFishermen` is an int flag that set the number of fishermen that will be in the network's genesis file
 - `genPrefix` is a string flag that adds a prefix to the generated files; is an empty string by default

@@ -6,7 +6,8 @@ import (
 )
 
 // CONSIDERATION: Use generics in place of `proto.Message` in the interface below so
-//                every caller does not need to do in place casting.
+//
+//	every caller does not need to do in place casting.
 type Codec interface {
 	Marshal(proto.Message) ([]byte, error)
 	Unmarshal([]byte, proto.Message) error
@@ -18,7 +19,8 @@ type Codec interface {
 var _ Codec = &protoCodec{}
 
 // IMPROVE: Need to define a type similar to `type ProtoAny anypb.Any` so that we are
-//          referencing protobuf specific types (e.g. anypb.Any) anywhere in the codebase.
+//
+//	referencing protobuf specific types (e.g. anypb.Any) anywhere in the codebase.
 type protoCodec struct{}
 
 func GetCodec() Codec {
