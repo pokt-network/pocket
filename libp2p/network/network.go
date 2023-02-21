@@ -15,9 +15,12 @@ import (
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 type libp2pNetwork struct {
+	base_modules.IntegratableModule
+
 	logger      *modules.Logger
 	bus         modules.Bus
 	host        libp2pHost.Host
@@ -198,14 +201,6 @@ func (p2pNet *libp2pNetwork) RemovePeerFromAddrBook(peer *typesP2P.NetworkPeer) 
 
 	p2pNet.host.Peerstore().RemovePeer(libp2pPeer.ID)
 	return nil
-}
-
-func (p2pNet *libp2pNetwork) GetBus() modules.Bus {
-	return p2pNet.bus
-}
-
-func (p2pNet *libp2pNetwork) SetBus(bus modules.Bus) {
-	p2pNet.bus = bus
 }
 
 func (p2pNet *libp2pNetwork) Close() error {

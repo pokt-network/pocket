@@ -48,11 +48,14 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
 var _ modules.P2PModule = &libp2pModule{}
 
 type libp2pModule struct {
+	base_modules.IntegratableModule
+
 	logger                *modules.Logger
 	bus                   modules.Bus
 	cfg                   *configs.P2PConfig
@@ -242,20 +245,6 @@ func (mod *libp2pModule) GetAddress() (crypto.Address, error) {
 	}
 
 	return privateKey.Address(), nil
-}
-
-func (mod *libp2pModule) SetBus(bus modules.Bus) {
-	// INVESTIGATE: Can the code flow be modified to set the bus here?
-	// m.network.SetBus(m.GetBus())
-	mod.bus = bus
-}
-
-func (mod *libp2pModule) GetBus() modules.Bus {
-	if mod.bus == nil {
-		mod.logger.Warn().Msg("PocketBus is not initialized")
-		return nil
-	}
-	return mod.bus
 }
 
 // setupDependencies initializes addrBookProvider and currentHeightProvider fom the bus.
