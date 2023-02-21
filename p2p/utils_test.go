@@ -28,7 +28,7 @@ import (
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
 
 const (
-	serviceUrlFormat  = "node%d.consensus:42069"
+	serviceUrlFormat  = "node%d.consensus:8080"
 	eventsChannelSize = 10000
 	// Since we simulate up to a 27 node network, we will pre-generate a n >= 27 number of keys to avoid generation
 	// every time. The genesis config seed start is set for deterministic key generation and 42 was chosen arbitrarily.
@@ -118,7 +118,7 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 			PrivateKey:    valKeys[i].String(),
 			P2P: &configs.P2PConfig{
 				PrivateKey:     valKeys[i].String(),
-				Port:           42069,
+				Port:           8080,
 				UseRainTree:    true,
 				ConnectionType: types.ConnectionType_EmptyConnection,
 			},

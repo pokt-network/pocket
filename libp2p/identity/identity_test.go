@@ -15,18 +15,18 @@ func TestPeerMultiAddrFromServiceURL_success(t *testing.T) {
 	}{
 		{
 			"FQDN",
-			"www.google.com:42069",
-			`/ip4/(\d{1,3}\.){3}\d{1,3}/tcp/42069`,
+			"www.google.com:8080",
+			`/ip4/(\d{1,3}\.){3}\d{1,3}/tcp/8080`,
 		},
 		{
 			"IPv4",
-			"142.250.181.196:42069",
-			"/ip4/142.250.181.196/tcp/42069",
+			"142.250.181.196:8080",
+			"/ip4/142.250.181.196/tcp/8080",
 		},
 		{
 			"IPv6",
-			"2a00:1450:4005:802::2004:42069",
-			"/ip6/2a00:1450:4005:802::2004/tcp/42069",
+			"2a00:1450:4005:802::2004:8080",
+			"/ip6/2a00:1450:4005:802::2004/tcp/8080",
 		},
 	}
 
@@ -62,7 +62,7 @@ func TestPeerMultiAddrFromServiceURL_error(t *testing.T) {
 		// NB: usage of scheme is invalid.
 		{
 			"FQDN with scheme",
-			"tcp://%s:42069",
+			"tcp://%s:8080",
 			"no such host",
 		},
 

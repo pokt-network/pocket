@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	testServiceUrl = "10.0.0.%d:42069"
+	testServiceUrl = "10.0.0.%d:8080"
 )
 
 func MockBus(ctrl *gomock.Controller) *mock_modules.MockBus {
