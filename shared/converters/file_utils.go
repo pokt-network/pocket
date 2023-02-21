@@ -50,13 +50,13 @@ func WriteOutput(msg any, outputFile string) error {
 	if err != nil {
 		return err
 	}
-	switch msg.(type) {
+	switch m := msg.(type) {
 	case string:
-		if _, err := file.WriteString(msg.(string)); err != nil {
+		if _, err := file.WriteString(m); err != nil {
 			return err
 		}
 	case []byte:
-		if _, err := file.Write(msg.([]byte)); err != nil {
+		if _, err := file.Write(m); err != nil {
 			return err
 		}
 	}
