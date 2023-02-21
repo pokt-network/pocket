@@ -126,7 +126,7 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 			PrivateKey:    valKeys[i].String(),
 			P2P: &configs.P2PConfig{
 				PrivateKey:     valKeys[i].String(),
-				ConsensusPort:  8080,
+				Port:           8080,
 				UseRainTree:    true,
 				ConnectionType: types.ConnectionType_EmptyConnection,
 			},

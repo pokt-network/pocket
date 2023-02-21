@@ -4181,6 +4181,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 				config: &configs.Config{
 					RootDirectory: "/go/src/github.com/pocket-network",
 					PrivateKey:    "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
+					UseLibP2P:     false,
 					Consensus: &configs.ConsensusConfig{
 						PrivateKey:      "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 						MaxMempoolBytes: 500000000,
@@ -4209,9 +4210,8 @@ func TestNewManagerFromReaders(t *testing.T) {
 					},
 					P2P: &configs.P2PConfig{
 						PrivateKey:      "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
-						ConsensusPort:   8080,
+						Port:            8080,
 						UseRainTree:     true,
-						UseLibP2P:       false,
 						ConnectionType:  configTypes.ConnectionType_TCPConnection,
 						MaxMempoolCount: 1e5,
 					},
@@ -4256,7 +4256,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 				config: &configs.Config{
 					P2P: &configs.P2PConfig{
 						PrivateKey:      "4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
-						ConsensusPort:   8080,
+						Port:            8080,
 						UseRainTree:     true,
 						ConnectionType:  configTypes.ConnectionType_TCPConnection,
 						MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
