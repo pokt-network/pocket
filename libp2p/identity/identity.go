@@ -13,19 +13,20 @@ import (
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
+	typesLibp2p "github.com/pokt-network/pocket/libp2p/types"
 	"github.com/pokt-network/pocket/p2p/transport"
-	"github.com/pokt-network/pocket/p2p/types"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 var (
-	ErrIdentity = types.NewErrFactory("identity error")
+	ErrIdentity = typesLibp2p.NewErrFactory("identity error")
 )
 
 // PeerFromLibp2pStream builds a network peer using peer info available
 // from the given libp2p stream. **The returned `ServiceUrl` is a libp2p
 // multiaddr string as opposed to a proper URL.**
-func PeerFromLibp2pStream(stream network.Stream) (*types.NetworkPeer, error) {
+func PeerFromLibp2pStream(stream network.Stream) (*typesP2P.NetworkPeer, error) {
 	publicKeyBz, err := stream.Conn().RemotePublicKey().Raw()
 	if err != nil {
 		return nil, err
@@ -36,7 +37,7 @@ func PeerFromLibp2pStream(stream network.Stream) (*types.NetworkPeer, error) {
 	}
 
 	// TECHDEBT: currently returning libp2p multiaddr version of ServiceUrl.
-	return &types.NetworkPeer{
+	return &typesP2P.NetworkPeer{
 		Dialer:    transport.NewLibP2PTransport(stream),
 		PublicKey: publicKey,
 		// NB: pokt analogue of libp2p peer.ID
@@ -46,7 +47,7 @@ func PeerFromLibp2pStream(stream network.Stream) (*types.NetworkPeer, error) {
 }
 
 // Libp2pPublicKeyFromPeer retrieves the libp2p compatible public key from a pocket peer.
-func Libp2pPublicKeyFromPeer(peer *types.NetworkPeer) (libp2pCrypto.PubKey, error) {
+func Libp2pPublicKeyFromPeer(peer *typesP2P.NetworkPeer) (libp2pCrypto.PubKey, error) {
 	publicKey, err := libp2pCrypto.UnmarshalEd25519PublicKey(peer.PublicKey.Bytes())
 	if err != nil {
 		return nil, ErrIdentity(fmt.Sprintf(
@@ -58,7 +59,7 @@ func Libp2pPublicKeyFromPeer(peer *types.NetworkPeer) (libp2pCrypto.PubKey, erro
 }
 
 // Libp2pAddrInfoFromPeer builds a libp2p AddrInfo which maps to the passed pocket peer.
-func Libp2pAddrInfoFromPeer(peer *types.NetworkPeer) (libp2pPeer.AddrInfo, error) {
+func Libp2pAddrInfoFromPeer(peer *typesP2P.NetworkPeer) (libp2pPeer.AddrInfo, error) {
 	publicKey, err := Libp2pPublicKeyFromPeer(peer)
 	if err != nil {
 		return libp2pPeer.AddrInfo{}, err

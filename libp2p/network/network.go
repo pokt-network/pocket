@@ -10,8 +10,9 @@ import (
 
 	"github.com/pokt-network/pocket/libp2p/identity"
 	"github.com/pokt-network/pocket/libp2p/protocol"
+	typesLibp2p "github.com/pokt-network/pocket/libp2p/types"
 	"github.com/pokt-network/pocket/p2p/providers"
-	"github.com/pokt-network/pocket/p2p/types"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -21,11 +22,11 @@ type libp2pNetwork struct {
 	bus         modules.Bus
 	host        libp2pHost.Host
 	topic       *pubsub.Topic
-	addrBookMap types.AddrBookMap
+	addrBookMap typesP2P.AddrBookMap
 }
 
 var (
-	ErrNetwork = types.NewErrFactory("libp2p network error")
+	ErrNetwork = typesLibp2p.NewErrFactory("libp2p network error")
 	Year       = time.Hour * 24 * 365
 	// TECHDEBT: consider more carefully and parameterize.
 	DefaultPeerTTL = 2 * Year
@@ -40,13 +41,13 @@ func NewLibp2pNetwork(
 	logger *modules.Logger,
 	host libp2pHost.Host,
 	topic *pubsub.Topic,
-) (types.Network, error) {
+) (typesP2P.Network, error) {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		logger.Fatal().Err(err).Msg("getting staked address book")
 	}
 
-	addrBookMap := make(types.AddrBookMap)
+	addrBookMap := make(typesP2P.AddrBookMap)
 	for _, peer := range addrBook {
 		addrBookMap[peer.Address.String()] = peer
 		pubKey, err := identity.Libp2pPublicKeyFromPeer(peer)
@@ -152,15 +153,15 @@ func (p2pNet *libp2pNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	return data, nil
 }
 
-func (p2pNet *libp2pNetwork) GetAddrBook() types.AddrBook {
-	addrBook := make(types.AddrBook, 0)
+func (p2pNet *libp2pNetwork) GetAddrBook() typesP2P.AddrBook {
+	addrBook := make(typesP2P.AddrBook, 0)
 	for _, peer := range p2pNet.addrBookMap {
 		addrBook = append(addrBook, peer)
 	}
 	return addrBook
 }
 
-func (p2pNet *libp2pNetwork) AddPeerToAddrBook(peer *types.NetworkPeer) error {
+func (p2pNet *libp2pNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
 	p2pNet.addrBookMap[peer.Address.String()] = peer
 
 	pubKey, err := identity.Libp2pPublicKeyFromPeer(peer)
@@ -185,7 +186,7 @@ func (p2pNet *libp2pNetwork) AddPeerToAddrBook(peer *types.NetworkPeer) error {
 	return nil
 }
 
-func (p2pNet *libp2pNetwork) RemovePeerFromAddrBook(peer *types.NetworkPeer) error {
+func (p2pNet *libp2pNetwork) RemovePeerFromAddrBook(peer *typesP2P.NetworkPeer) error {
 	delete(p2pNet.addrBookMap, peer.Address.String())
 
 	libp2pPeer, err := identity.Libp2pAddrInfoFromPeer(peer)
