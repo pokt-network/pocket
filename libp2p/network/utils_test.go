@@ -40,6 +40,10 @@ func MockCurrentHeightProvider(ctrl *gomock.Controller, height uint64) *mock_typ
 
 // Generates an address book with a random set of `n` addresses
 func GetAddrBook(t *testing.T, n int) (addrBook types.AddrBook) {
+	if n > 254 {
+		panic("requires refactor to produce valid IPv4 addresses for n > 254")
+	}
+
 	addrBook = make([]*types.NetworkPeer, 0)
 	for i := 0; i < n; i++ {
 		pubKey, err := crypto.GeneratePublicKey()
@@ -49,7 +53,7 @@ func GetAddrBook(t *testing.T, n int) (addrBook types.AddrBook) {
 		addrBook = append(addrBook, &types.NetworkPeer{
 			PublicKey:  pubKey,
 			Address:    pubKey.Address(),
-			ServiceUrl: fmt.Sprintf("node%d.consensus:8080", i),
+			ServiceUrl: fmt.Sprintf("10.0.0.%d:8080", i),
 		})
 	}
 	return

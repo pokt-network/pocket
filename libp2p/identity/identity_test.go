@@ -2,21 +2,21 @@ package identity
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"regexp"
 	"testing"
 )
 
 func TestPeerMultiAddrFromServiceURL_success(t *testing.T) {
 	testCases := []struct {
-		name                string
-		serviceUrl          string
-		expetedMultiaddrStr string
+		name                  string
+		serviceUrl            string
+		expetedMultiaddrRegex string
 	}{
 		{
 			"FQDN",
-			"node1.consensus:8080",
-			"/dns/node1.consensus/tcp/8080",
+			"www.google.com:8080",
+			`/ip4/(\d{1,3}\.){3}\d{1,3}/tcp/8080`,
 		},
 		{
 			"IPv4",
@@ -35,7 +35,7 @@ func TestPeerMultiAddrFromServiceURL_success(t *testing.T) {
 			actualMultiaddr, err := Libp2pMultiaddrFromServiceUrl(testCase.serviceUrl)
 			require.NoError(t, err)
 			require.NotNil(t, actualMultiaddr)
-			require.Equal(t, testCase.expetedMultiaddrStr, actualMultiaddr.String())
+			require.Regexp(t, regexp.MustCompile(testCase.expetedMultiaddrRegex), actualMultiaddr.String())
 		})
 	}
 }
@@ -48,7 +48,7 @@ const (
 
 func TestPeerMultiAddrFromServiceURL_error(t *testing.T) {
 	hostnames := map[string]string{
-		FQDN: "node1.consensus",
+		FQDN: "www.google.com",
 		IP4:  "142.250.181.196",
 		IP6:  "2a00:1450:4005:802::2004",
 	}
@@ -56,23 +56,26 @@ func TestPeerMultiAddrFromServiceURL_error(t *testing.T) {
 	testCases := []struct {
 		name             string
 		serviceUrlFormat string
-		// TODO: assert specific errors?
-		// expectedError string
+		// TECHDEBT: assert specific errors.
+		expectedErrorStr string
 	}{
 		// NB: usage of scheme is invalid.
 		{
 			"FQDN with scheme",
 			"tcp://%s:8080",
+			"no such host",
 		},
 
 		// NB: port **number** is required
 		{
 			"invalid port number",
 			"%s:abc",
+			"invalid port",
 		},
 		{
 			"missing port number",
 			"%s:",
+			"unexpected end of multiaddr",
 		},
 		// TODO: this case is tricky to detect as IPv6 addresses
 		// can omit hextet delimiters and still be valid.
@@ -89,10 +92,9 @@ func TestPeerMultiAddrFromServiceURL_error(t *testing.T) {
 			t.Run(testName, func(t *testing.T) {
 				serviceURL := fmt.Sprintf(testCase.serviceUrlFormat, hostname)
 				actualMultiaddr, err := Libp2pMultiaddrFromServiceUrl(serviceURL)
-				// TODO: assert specific errors?
-				if !assert.NoError(t, err) {
-					t.Fatalf("actualMultiaddr: %s", actualMultiaddr)
-				}
+				// TECHDEBT: assert specific errors
+				// Print resulting multiaddr to understand why no error.
+				require.ErrorContains(t, err, testCase.expectedErrorStr, fmt.Sprintf("actualMultiaddr: %s", actualMultiaddr))
 			})
 		}
 	}

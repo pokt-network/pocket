@@ -51,9 +51,11 @@ func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {
 	require.NoError(t, err)
 
 	newPeer := &types.NetworkPeer{
-		PublicKey:  newPublicKey,
-		Address:    newPoktAddr,
-		ServiceUrl: "node999.consensus:8080",
+		PublicKey: newPublicKey,
+		Address:   newPoktAddr,
+		// Exercises DNS resolution.
+		// IMPROVE: this test will be flakey in the presence of DNS interruptions.
+		ServiceUrl: "www.google.com:8080",
 	}
 	newPeerInfo, err := identity.Libp2pAddrInfoFromPeer(newPeer)
 	require.NoError(t, err)
@@ -109,7 +111,7 @@ func TestLibp2pNetwork_RemovePeerToAddrBook(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, existingPeerstoreAddrs[0].String(), existingPeerMultiaddr.String())
 
-	err = p2pNet.RemovePeerToAddrBook(existingPeer)
+	err = p2pNet.RemovePeerFromAddrBook(existingPeer)
 	require.NoError(t, err)
 
 	require.Len(t, p2pNet.addrBookMap, 0)

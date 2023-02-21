@@ -134,7 +134,7 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 	peerIP, err := net.ResolveIPAddr(peerIPVersionStr, peerUrl.Hostname())
 	if err != nil {
 		return nil, ErrIdentity(fmt.Sprintf(
-			"unable to resolve peer IP for hostname: %s", peerUrl.Hostname(),
+			"resolving peer IP for hostname: %s", peerUrl.Hostname(),
 		), err)
 	}
 
