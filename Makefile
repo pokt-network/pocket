@@ -191,6 +191,10 @@ docker_wipe: docker_check warn_destructive prompt_user ## [WARNING] Remove all t
 	docker images -q | xargs -r -I {} docker rmi {}
 	docker volume ls -q | xargs -r -I {} docker volume rm {}
 
+.PHONY: docker_wipe_volumes
+docker_wipe_volumes: docker_check prompt_user ## [WARNING] Remove all pocket volumes
+	docker volume rm $(docker)
+
 .PHONY: docker_wipe_nodes
 docker_wipe_nodes: docker_check prompt_user db_drop ## [WARNING] Remove all the node containers
 	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker stop {}
