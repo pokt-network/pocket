@@ -285,6 +285,12 @@ func (mod *libp2pModule) handleStream(stream libp2pNetwork.Stream) {
 // the given stream for handling at the network level. Used for handling "direct"
 // messages (i.e. one specific target node).
 func (mod *libp2pModule) readStream(stream libp2pNetwork.Stream) {
+	closeStream := func() {
+		if err := stream.Close(); err != nil {
+			mod.logger.Error().Err(err)
+		}
+	}
+
 	// NB: time out if no data is sent to free resources.
 	if err := stream.SetReadDeadline(newReadStreamDeadline()); err != nil {
 		mod.logger.Error().Err(err).Msg("setting stream read deadline")
@@ -294,18 +300,12 @@ func (mod *libp2pModule) readStream(stream libp2pNetwork.Stream) {
 	data, err := io.ReadAll(stream)
 	if err != nil {
 		mod.logger.Error().Err(err).Msg("reading from stream")
-		if err := stream.Close(); err != nil {
-			mod.logger.Error().Err(err)
-		}
+		closeStream()
 		// NB: abort this goroutine
 		// TODO: signal this somewhere?
 		return
 	}
-	defer func() {
-		if err := stream.Close(); err != nil {
-			mod.logger.Error().Err(err)
-		}
-	}()
+	defer closeStream()
 
 	mod.handleNetworkData(data)
 }
