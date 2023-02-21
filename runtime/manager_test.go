@@ -4244,6 +4244,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 			args: args{
 				configReader: strings.NewReader(string(`{
 					"p2p": {
+					  "hostname": "node1.consensus"
 					  "port": 42069,
 					  "use_rain_tree": true,
 					  "is_empty_connection_type": false,
@@ -4256,6 +4257,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 				config: &configs.Config{
 					P2P: &configs.P2PConfig{
 						PrivateKey:      "4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
+						Hostname:        "node1.consensus",
 						Port:            42069,
 						UseRainTree:     true,
 						ConnectionType:  configTypes.ConnectionType_TCPConnection,
