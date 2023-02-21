@@ -37,13 +37,13 @@ services:
       dockerfile: ./build/Dockerfile.localdev
     expose:
       - "7080" # dlv debug
-      - "8080"
       - "9080"
       - "9000"
+      - "42069"
       - "50832"
     ports:
       - "7081:7081"
-      - "8081:8080"
+      - "42070:42069"
       - "9081:9080"
       - "50832:50832"
     volumes:
@@ -68,13 +68,13 @@ services:
       dockerfile: ./build/Dockerfile.localdev
     expose:
       - "7082" # dlv debug
-      - "8080"
+      - "42069"
       - "9080"
       - "9000"
       - "50832"
     ports:
       - "7082:7082"
-      - "8082:8080"
+      - "42071:42069"
       - "9082:9080"
       - "50833:50832"
     volumes:
@@ -96,13 +96,13 @@ services:
       dockerfile: ./build/Dockerfile.localdev
     expose:
       - "7083" # dlv debug
-      - "8080"
+      - "42069"
       - "9080"
       - "9000"
       - "50832"
     ports:
       - "7083:7083"
-      - "8083:8080"
+      - "42072:42069"
       - "9083:9080"
       - "50834:50832"
     volumes:
@@ -124,13 +124,13 @@ services:
       dockerfile: ./build/Dockerfile.localdev
     expose:
       - "7084" # dlv debug
-      - "8080"
+      - "42069"
       - "9080"
       - "9000"
       - "50832"
     ports:
       - "7084:7084"
-      - "8084:8080"
+      - "42073:42069"
       - "9084:9080"
       - "50835:50832"
     volumes:
