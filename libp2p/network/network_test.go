@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/stretchr/testify/assert"
@@ -123,13 +122,16 @@ func TestLibp2pNetwork_RemovePeerToAddrBook(t *testing.T) {
 
 func newTestLibp2pNetwork(t *testing.T) *libp2pNetwork {
 	ctx := context.Background()
-	ctrl := gomock.NewController(t)
 
-	addrBook := GetAddrBook(t, 1)
+	// INCOMPLETE (SOON OBSOLETE): Only testing pocket address book <-> libp2p
+	// peerstore integration. No need to mock an entire network, just a
+	// starting pocket address book.
+	runtimeConfigs := createMockRuntimeMgrs(t, 1)
+	busMock := createMockBus(t, runtimeConfigs[0], 1)
+	consensusMock := prepareConsensusMock(t, busMock)
 
-	busMock := MockBus(ctrl)
-	addrBookProviderMock := MockAddrBookProvider(ctrl, addrBook)
-	currentHeightProviderMock := MockCurrentHeightProvider(ctrl, 0)
+	prepareBusMock(busMock, consensusMock)
+
 	logger_ := logger.Global.CreateLoggerForModule("test_module")
 
 	// NB: will bind to a random, available port for the duration of this test.
@@ -137,16 +139,14 @@ func newTestLibp2pNetwork(t *testing.T) *libp2pNetwork {
 	require.NoError(t, err)
 	defer host.Close()
 
-	pubsub, err := pubsub.NewFloodSub(ctx, host)
+	pubsub_, err := pubsub.NewFloodSub(ctx, host)
 	require.NoError(t, err)
 
-	topic, err := pubsub.Join("test_protocol")
+	topic, err := pubsub_.Join("test_protocol")
 	require.NoError(t, err)
 
 	p2pNetwork, err := NewLibp2pNetwork(
 		busMock,
-		addrBookProviderMock,
-		currentHeightProviderMock,
 		&logger_,
 		host,
 		topic,

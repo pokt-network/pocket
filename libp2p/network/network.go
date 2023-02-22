@@ -230,7 +230,6 @@ func (p2pNet *libp2pNetwork) setupAddrBookMap() error {
 		}
 	}
 	p2pNet.addrBookMap = addrBookMap
-	p2pNet.logger.Error().Msgf("addrBookMap: %s", addrBookMap)
 
 	return nil
 }

@@ -17,6 +17,7 @@ const ModuleName = "addrbook_provider"
 
 // AddrBookProvider is an interface that provides AddrBook accessors
 type AddrBookProvider interface {
+	modules.InitializableModule
 	modules.IntegratableModule
 	modules.InterruptableModule
 
