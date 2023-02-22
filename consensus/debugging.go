@@ -2,9 +2,43 @@ package consensus
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
+	"github.com/pokt-network/pocket/shared/modules"
 )
+
+const (
+	_ modules.ConsensusDebugModule = &consensusModule{}
+)
+
+// Implementation of ConsensusDebugModuleFunctions exposed by the debug interface should only be used for testing purposes.
+
+func (m *consensusModule) SetHeight(height uint64) {
+	m.height = height
+	m.publishNewHeightEvent(height)
+}
+
+func (m *consensusModule) SetRound(round uint64) {
+	m.round = round
+}
+
+func (m *consensusModule) SetStep(step uint8) {
+	m.step = typesCons.HotstuffStep(step)
+}
+
+func (m *consensusModule) SetBlock(block *coreTypes.Block) {
+	m.block = block
+}
+
+func (m *consensusModule) SetLeaderId(leaderId uint64) {
+	nodeId := typesCons.NodeId(leaderId)
+	m.leaderId = &nodeId
+}
+
+func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
+	m.utilityContext = utilityContext
+}
 
 func (m *consensusModule) HandleDebugMessage(debugMessage *messaging.DebugMessage) error {
 	m.m.Lock()
@@ -163,4 +197,12 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 		}
 	}
 
+}
+
+// Implementations of the type PaceMakerAccessModule interface
+//
+//	SetHeight, SetRound, SetStep are implemented for ConsensusDebugModule
+func (m *consensusModule) ClearLeaderMessagesPool() {
+	m.clearLeader()
+	m.clearMessagesPool()
 }
