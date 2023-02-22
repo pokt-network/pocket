@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.19] - 2023-02-24
+
+- replace `consensus_port` with `port` in P2P config
+- update default P2P config `port` to from `8080` to `42069`
+- add `use_libp2p` field to base config
+- add `hostname` field to P2P config
+
 ## [0.0.0.18] - 2023-02-21
 
 - Rename ServiceNode Actor Type Name to Servicer

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.30] - 2023-02-24
+
+- replace `consensus_port` with `port` in P2P config
+- update default P2P config `port` to from `8080` to `42069`
+
 ## [0.0.0.29] - 2023-02-24
 
 - Update logger value references with pointers
