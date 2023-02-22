@@ -72,6 +72,7 @@ var (
 	// stream to complete, after which the stream is closed ("timed out").
 	readStreamTimeoutDuration = time.Second * 10
 	// ErrModule wraps errors which occur within the libp2pModule implementation.
+	// Exported for testing purposes.
 	ErrModule = typesLibp2p.NewErrFactory("libp2p module error")
 )
 
@@ -80,7 +81,6 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 }
 
 func (mod *libp2pModule) GetModuleName() string {
-	// TODO: double check if this should change.
 	return modules.P2PModuleName
 }
 

@@ -34,6 +34,8 @@ type libp2pNetwork struct {
 }
 
 var (
+	// ErrNetwork wraps errors which occur within the libp2pNetwork implementation
+	// Exported for testing purposes.
 	ErrNetwork = typesLibp2p.NewErrFactory("libp2p network error")
 	Year       = time.Hour * 24 * 365
 	// TECHDEBT: consider more carefully and parameterize.
