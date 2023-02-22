@@ -26,12 +26,10 @@ type libp2pNetwork struct {
 
 	logger *modules.Logger
 	//nolint:unused // bus is used by embedded base module(s)
-	bus                   modules.Bus
-	host                  libp2pHost.Host
-	topic                 *pubsub.Topic
-	addrBookMap           typesP2P.AddrBookMap
-	addrBookProvider      providers.AddrBookProvider
-	currentHeightProvider providers.CurrentHeightProvider
+	bus         modules.Bus
+	host        libp2pHost.Host
+	topic       *pubsub.Topic
+	addrBookMap typesP2P.AddrBookMap
 }
 
 const (

@@ -69,7 +69,6 @@ func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {
 	require.Equal(t, p2pNet.addrBookMap[newPeer.Address.String()], newPeer)
 
 	existingPeerstoreAddrs = peerstore.Addrs(existingPeerInfo.ID)
-	//newPeerstoreAddrs := host.Peerstore().Addrs(newPeerInfo.ID)
 	newPeerstoreAddrs := peerstore.Addrs(newPeerInfo.ID)
 
 	require.Len(t, existingPeerstoreAddrs, 1)
@@ -115,9 +114,13 @@ func TestLibp2pNetwork_RemovePeerToAddrBook(t *testing.T) {
 
 	require.Len(t, p2pNet.addrBookMap, 0)
 
-	// TECHDEBT: double-check that this shouldn't be expected (i.e. doesn't hold).
-	//existingPeerstoreAddrs = peerstore.Addrs(existingPeerInfo.ID)
-	//require.Len(t, existingPeerstoreAddrs, 0)
+	// NB: peerstore implementations seem to only remove peer keys and
+	// metadata but not the embedded AddrBook entry.
+	// (see: https://github.com/libp2p/go-libp2p/blob/v0.25.1/p2p/host/peerstore/pstoremem/peerstore.go#L108)
+	// (see: https://github.com/libp2p/go-libp2p/blob/v0.25.1/p2p/host/peerstore/pstoreds/peerstore.go#L187)
+
+	existingPeerstoreAddrs = peerstore.Addrs(existingPeerInfo.ID)
+	require.Len(t, existingPeerstoreAddrs, 1)
 }
 
 func newTestLibp2pNetwork(t *testing.T) *libp2pNetwork {
