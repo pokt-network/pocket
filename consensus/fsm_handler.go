@@ -74,12 +74,12 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 
 	if synced {
 		if m.IsValidator() {
-			m.logger.Debug().Msg("Valdiator node syned to the latest state with the rest of the peers")
+			m.logger.Debug().Msg("Valdiator node synced to the latest state with the rest of the peers")
 			if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsCaughtUpValidator); err != nil {
 				return err
 			}
 		} else {
-			m.logger.Debug().Msg("Non-valdiator node syned to the latest state with the rest of the peers")
+			m.logger.Debug().Msg("Node synced to the latest state with the rest of the peers")
 			if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsCaughtUpNonValidator); err != nil {
 				return err
 			}
@@ -105,7 +105,7 @@ func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEven
 
 // Pacemaker mode may change to unsync mode if node is out of sync
 func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Debug().Msg("In HandlePacemakerMode")
+	m.logger.Debug().Msg("Validator is synced and in HandlePacemaker mode. It will stay in this mode until it receives a new block proposal that has a higher height than the current block height")
 	// node starts and it is a validator.
 	// node syncs,
 	// and node is now in Synced state

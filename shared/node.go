@@ -134,19 +134,18 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		if err := node.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
 			return err
 		}
-	// TODO: StateMachineEvent_P2P_IsBootstrapped -> needs to be handled by the P2PModule
-	// TODO: Currently only start event goes to the consensus module
-	//Check if all StateMachineTransitionEventTypes must be handled by the consensus module
-	// TODO: May P2PModule need to handle some of other events?
-	case consensus.HotstuffMessageContentType, messaging.StateMachineTransitionEventType:
-		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 	case consensus.StateSyncMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
 	case utility.TransactionGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleMessage(message.Content)
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
-	case messaging.ConsensusNewHeightEventType, messaging.StateMachineTransitionEventType:
+	case messaging.ConsensusNewHeightEventType:
+		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
+	case messaging.StateMachineTransitionEventType:
+		if err := node.GetBus().GetConsensusModule().HandleMessage(message.Content); err != nil {
+			return err
+		}
 		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
 	default:
 		logger.Global.Warn().Msgf("Unsupported message content type: %s", contentType)
