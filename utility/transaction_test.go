@@ -53,8 +53,6 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 }
 
 func TestUtilityContext_CheckTransaction(t *testing.T) {
-	mockBusInTestModules(t)
-
 	ctx := newTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
@@ -87,8 +85,6 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
-	mockBusInTestModules(t)
-
 	ctx := newTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 

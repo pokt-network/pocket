@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -13,7 +12,6 @@ import (
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +29,7 @@ const (
 var (
 	testUtilityMod modules.UtilityModule
 
-	// TODO(#261): Utility module tests should have no dependencies on a postgres container
+	// TODO(#261): Utility module tests should have no dependencies on the persistence module (which instantiates a postgres container)
 	testPersistenceMod modules.PersistenceModule
 )
 
@@ -82,6 +80,22 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 	return uc.setBus(testUtilityMod.GetBus())
 }
 
+func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
+	utilityMod, err := Create(bus)
+	if err != nil {
+		log.Fatalf("Error creating persistence module: %s", err)
+	}
+	return utilityMod.(modules.UtilityModule)
+}
+
+func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
+	persistenceMod, err := persistence.Create(bus)
+	if err != nil {
+		log.Fatalf("Error creating persistence module: %s", err)
+	}
+	return persistenceMod.(modules.PersistenceModule)
+}
+
 func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
 	cfg := &configs.Config{
 		Utility: &configs.UtilityConfig{
@@ -109,39 +123,4 @@ func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
 	)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
 	return runtimeCfg
-}
-
-func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
-	utilityMod, err := Create(bus)
-	if err != nil {
-		log.Fatalf("Error creating persistence module: %s", err)
-	}
-	return utilityMod.(modules.UtilityModule)
-}
-
-func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
-	persistenceMod, err := persistence.Create(bus)
-	if err != nil {
-		log.Fatalf("Error creating persistence module: %s", err)
-	}
-	return persistenceMod.(modules.PersistenceModule)
-}
-
-// IMPROVE: Not part of `TestMain` because a mock requires `testing.T` to be initialized.
-// We are trying to only initialize one `testPersistenceModule` in all the tests, so when the
-// utility module tests are no longer dependant on the persistence module explicitly, this
-// can be improved.
-func mockBusInTestModules(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
-	busMock := mockModules.NewMockBus(ctrl)
-	busMock.EXPECT().GetPersistenceModule().Return(testPersistenceMod).AnyTimes()
-	busMock.EXPECT().GetUtilityModule().Return(testUtilityMod).AnyTimes()
-
-	testPersistenceMod.SetBus(busMock)
-	testUtilityMod.SetBus(busMock)
-
-	t.Cleanup(func() {
-		testPersistenceMod.SetBus(nil)
-	})
 }
