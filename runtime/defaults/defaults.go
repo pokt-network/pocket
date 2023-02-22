@@ -18,6 +18,7 @@ const (
 
 var (
 	DefaultRemoteCLIURL = fmt.Sprintf("http://%s:%s", DefaultRPCHost, DefaultRPCPort)
+	DefaultUseLibp2p    = false
 
 	// consensus
 	DefaultConsensusMaxMempoolBytes = uint64(500000000)
