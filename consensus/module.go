@@ -222,7 +222,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	if consensusCfg.ServerModeEnabled {
 		m.stateSync.EnableServerMode()
 		//transition existing server_mode_disabled state to enabled
-		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_EnableServerMode); err != nil {
+		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsEnableServerMode); err != nil {
 			return nil, err
 		}
 	}

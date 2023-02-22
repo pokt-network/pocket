@@ -20,6 +20,9 @@ func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.State
 	}).Msg("Received state machine transition msg")
 
 	switch fsm_state {
+	case string(coreTypes.StateMachineState_P2P_Bootstrapped):
+		return m.HandleBootstrapped(msg)
+
 	case string(coreTypes.StateMachineState_Consensus_Unsynched):
 		return m.HandleUnsynched(msg)
 
@@ -34,6 +37,17 @@ func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.State
 
 	case string(coreTypes.StateMachineState_Consensus_Server_Enabled), string(coreTypes.StateMachineState_Consensus_Server_Disabled):
 		return m.HandleServerMode(msg)
+	}
+
+	return nil
+}
+
+// Bootrstapped mode is when the node (validator or non-valdiator) is out of sync with the rest of the network
+// This mode is a transition mode from node bootstrappin to node being out-of-sync.
+func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
+	m.logger.Debug().Msg("Node bootstrapped, so it is out of sync, and  transitions to unsynched mode")
+	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched); err != nil {
+		return err
 	}
 
 	return nil
@@ -98,7 +112,7 @@ func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionE
 // Server mode runs mutually exclusive to the rest of the modes, thus its state changes doesn't affect the other modes
 // Server mode changes only happen through the node config and EnableServerMode() and DisableServerMode() functions
 func (m *consensusModule) HandleServerMode(msg *messaging.StateMachineTransitionEvent) error {
-	if msg.Event == string(coreTypes.StateMachineEvent_Consensus_DisableServerMode) {
+	if msg.Event == string(coreTypes.StateMachineEvent_Consensus_IsDisableServerMode) {
 		return m.DisableServerMode()
 	}
 	return m.EnableServerMode()
