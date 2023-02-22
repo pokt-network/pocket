@@ -9,6 +9,7 @@ import (
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -171,6 +172,7 @@ const (
 	nilLeaderIdError                            = "attempting to send a message to leader when LeaderId is nil"
 	newPersistenceReadContextError              = "error creating new persistence read context"
 	persistenceGetAllValidatorsError            = "error getting all validators from persistence"
+	stateTransitionEventSendingError            = "error sending state transition message"
 )
 
 var (
@@ -210,6 +212,7 @@ var (
 	ErrNilLeaderId                            = errors.New(nilLeaderIdError)
 	ErrNewPersistenceReadContext              = errors.New(newPersistenceReadContextError)
 	ErrPersistenceGetAllValidators            = errors.New(persistenceGetAllValidatorsError)
+	ErrSendingStateTransition                 = errors.New(stateTransitionEventSendingError)
 )
 
 func ErrInvalidBlockSize(blockSize, maxSize uint64) error {
@@ -222,6 +225,10 @@ func ErrInvalidAppHash(blockHeaderHash, appHash string) error {
 
 func ErrByzantineThresholdCheck(n int, threshold float64) error {
 	return fmt.Errorf("%s: (%d > %.2f?)", byzantineOptimisticThresholdError, n, threshold)
+}
+
+func ErrSendingStateTransitionEvent(event coreTypes.StateMachineEvent) error {
+	return fmt.Errorf("%s for event: %s ", ErrSendingStateTransition, event)
 }
 
 func ErrMissingValidator(address string, nodeId NodeId) error {

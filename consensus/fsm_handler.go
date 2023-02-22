@@ -48,16 +48,11 @@ func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.State
 	return nil
 }
 
-// TODO! implement this function
 func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionEvent) error {
-
-	//	if m.stateSync.IsOutOfSync() {
-	m.logger.Debug().Msg("Node is out of sync, sending syncmode event to start syncing")
+	m.logger.Debug().Msg("In HandleUnsyched, as node is out of sync, sending syncmode event to start syncing")
 	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing); err != nil {
 		return err
 	}
-
-	//	}
 
 	return nil
 }
@@ -69,8 +64,10 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	// else move the synced state
 	// m.GetBus().GetConsensusModule().StartSnycing()
 
+	m.logger.Debug().Msg("In HandleSyncMode, starting syning")
+
 	m.stateSync.AggregateMetadataResponses()
-	err, synced := m.stateSync.Snyc()
+	err, synced := m.stateSync.Sync()
 	if err != nil {
 		return err
 	}
@@ -87,24 +84,35 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 				return err
 			}
 		}
-
 	} else {
-		m.logger.Debug().Msg("Syncing is not complete")
+		m.logger.Debug().Msg("Syncing is not complete, no state transition")
 	}
 	return nil
 }
 
 // Synced mode may change to unsync mode if node is out of sync
 func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
-	// check every X seconds if the node is out of sync
-	// if so move to unsynched mode
+	m.logger.Debug().Msg("In HandleSyncedMode")
+	// node starts and it is not validator.
+	// node syncs,
+	// and node is now in Synced state
+	// node receives a new block and
+	// whenever a new block is received if its height is greater than current block height
+	// node transitions to unsycnhed state
+
 	return nil
 }
 
 // Pacemaker mode may change to unsync mode if node is out of sync
 func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionEvent) error {
-	// cehck every X seconds if the node is out of sync
-	// if so move to unsynched mode
+	m.logger.Debug().Msg("In HandlePacemakerMode")
+	// node starts and it is a validator.
+	// node syncs,
+	// and node is now in Synced state
+	// node receives a new block proposal, and it understands that it doesn't have block
+	// node transitions to unsycnhed state
+
+	//CONSIDER: maybe we can consider transitioning the unsynced node along with the received block height
 	return nil
 }
 

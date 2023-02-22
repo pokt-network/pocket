@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -114,10 +115,21 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		return false, nil
 	}
 
-	// TODO: Need to restart state sync or be in state sync mode right now
-	// Current node is out of sync
+	// If this case happens, there are two possibilities:
+	// 1. The node is behind and needs to catch up, so state sync should start
+	// 2. The leader is sending a malicious proposal, node needs to reject the proposal.
+	// For both cases, nodes needs to ask peers for the metadata, and:
+	// if the node is behind, he should start state sync.
+	// else node should reject the block proposal.
 	if msg.Height > currentHeight {
-		m.logger.Info().Msgf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
+		m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
+		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsCaughtUpNonValidator); err != nil {
+			typesCons.ErrSendingStateTransitionEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
+			return false, err
+		}
+
+		//now node must be catched up, i.e. it first moves to unsynched state, then syncmode, and then
+
 		return false, nil
 	}
 

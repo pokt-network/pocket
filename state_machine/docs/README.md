@@ -61,4 +61,13 @@ If you make any changes to it, you can re-generate it via:
 make generate_node_state_machine_diagram
 ```
 
+
+
+## State Machine Lifecycle
+A node can be in one of the modes at a given time: p2p_bootstrapping, unsyched, syncmode, unsynched. And mutually exclusive to that in server mode. Please refer to the consensus/doc/PROTOCOL_STATE_SYNC.md. 
+
+A node starts in the ...... 
+Node proceeds to state X if .....
+An unsynched node transitions to the snyc mode, through  
+
 <!-- GITHUB_WIKI: state_machine/README -->

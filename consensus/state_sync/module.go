@@ -41,9 +41,9 @@ type StateSyncModule interface {
 
 	SendStateSyncMessage(msg *typesCons.StateSyncMessage, nodeAddress cryptoPocket.Address, height uint64) error
 	IsOutOfSync() bool
-	Snyc() (error, bool)
 	AggregateMetadataResponses() error
 	GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse
+	Sync() (error, bool)
 }
 
 var (
