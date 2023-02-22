@@ -28,6 +28,7 @@
     "health_check_period": "5m"
   },
   "p2p": {
+    "hostname": "node4.consensus",
     "consensus_port": 8080,
     "use_rain_tree": true,
     "is_empty_connection_type": false,
