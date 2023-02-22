@@ -135,13 +135,13 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 		if err != nil {
 			return err
 		}
-		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-		er = store.InsertServicer(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = store.InsertServicer(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	}
 	if er != nil {
 		return typesUtil.ErrInsert(er)
@@ -212,9 +212,9 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 }
 
 func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake) typesUtil.Error {
-	if status, err := u.getActorStatus(message.ActorType, message.Address); err != nil || status != typesUtil.StakeStatus_Staked {
-		if status != typesUtil.StakeStatus_Staked {
-			return typesUtil.ErrInvalidStatus(status, typesUtil.StakeStatus_Staked)
+	if status, err := u.getActorStatus(message.ActorType, message.Address); err != nil || status != coreTypes.StakeStatus_Staked {
+		if status != coreTypes.StakeStatus_Staked {
+			return typesUtil.ErrInvalidStatus(status, coreTypes.StakeStatus_Staked)
 		}
 		return err
 	}

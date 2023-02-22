@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
@@ -453,7 +454,7 @@ func ErrUnknownStatus(status int32) Error {
 	return NewError(CodeInvalidStatusError, fmt.Sprintf("%s: unknown status %d", InvalidStatusError, status))
 }
 
-func ErrInvalidStatus(got, expected StakeStatus) Error {
+func ErrInvalidStatus(got, expected coreTypes.StakeStatus) Error {
 	return NewError(CodeInvalidStatusError, fmt.Sprintf("%s: %d expected %d", InvalidStatusError, got, expected))
 }
 

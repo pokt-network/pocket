@@ -327,7 +327,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			// Verify that the actor is still staked
 			status, err := ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Staked, status, "actor should be staked")
+			require.Equal(t, coreTypes.StakeStatus_Staked, status, "actor should be staked")
 
 			// Start a new context when the actor still shouldn't be unstaked
 			require.NoError(t, ctx.Commit([]byte("empty qc")))
@@ -341,7 +341,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			// Verify that the actor is still staked
 			status, err = ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Staked, status, "actor should be staked")
+			require.Equal(t, coreTypes.StakeStatus_Staked, status, "actor should be staked")
 
 			// Start a new context when the actor should be unstaked
 			require.NoError(t, ctx.Release())
@@ -354,7 +354,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			// Verify that the actor is still staked
 			status, err = ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be staked")
+			require.Equal(t, coreTypes.StakeStatus_Unstaking, status, "actor should be staked")
 		})
 	}
 }
@@ -439,7 +439,7 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 
 			status, err := ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be unstaking")
+			require.Equal(t, coreTypes.StakeStatus_Unstaking, status, "actor should be unstaking")
 
 			// Commit the context and start a new one while the actor is still unstaking
 			require.NoError(t, ctx.Commit([]byte("empty QC")))
@@ -447,7 +447,7 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 
 			status, err = ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be unstaking")
+			require.Equal(t, coreTypes.StakeStatus_Unstaking, status, "actor should be unstaking")
 
 			// Release the context since there's nothing to commit and start a new one where the actors can be unbound
 			require.NoError(t, ctx.Release())
@@ -473,7 +473,7 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 			// Status should be changed from Unstaking to Unstaked
 			status, err = ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Unstaked, status, "actor should be unstaking")
+			require.Equal(t, coreTypes.StakeStatus_Unstaked, status, "actor should be unstaking")
 		})
 	}
 }

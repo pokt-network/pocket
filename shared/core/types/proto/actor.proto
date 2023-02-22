@@ -12,6 +12,13 @@ enum ActorType {
   ACTOR_TYPE_VAL = 4;
 }
 
+enum StakeStatus {
+  UnknownStatus = 0;
+  Unstaking = 1;
+  Staked = 2;
+  Unstaked = 3;
+}
+
 message Actor {
   ActorType actor_type = 1;
   string address = 2;

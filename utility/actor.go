@@ -41,7 +41,7 @@ func (u *utilityContext) setActorStakeAmount(actorType coreTypes.ActorType, addr
 
 func (u *utilityContext) setActorUnstakingHeight(actorType coreTypes.ActorType, addr []byte, height int64) typesUtil.Error {
 	store := u.Store()
-	unstakingStatus := int32(typesUtil.StakeStatus_Unstaking)
+	unstakingStatus := int32(coreTypes.StakeStatus_Unstaking)
 
 	var err error
 	switch actorType {
@@ -202,7 +202,7 @@ func (u *utilityContext) getPausedHeightIfExists(actorType coreTypes.ActorType, 
 	return pauseHeight, nil
 }
 
-func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, addr []byte) (typesUtil.StakeStatus, typesUtil.Error) {
+func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, addr []byte) (coreTypes.StakeStatus, typesUtil.Error) {
 	store, height, err := u.getStoreAndHeight()
 	if err != nil {
 		return 0, typesUtil.ErrGetHeight(err)
@@ -226,11 +226,11 @@ func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, addr []by
 		return typesUtil.ZeroInt, typesUtil.ErrGetStatus(err)
 	}
 
-	if _, ok := typesUtil.StakeStatus_name[status]; !ok {
+	if _, ok := coreTypes.StakeStatus_name[status]; !ok {
 		return typesUtil.ZeroInt, typesUtil.ErrUnknownStatus(status)
 	}
 
-	return typesUtil.StakeStatus(status), nil
+	return coreTypes.StakeStatus(status), nil
 }
 
 func (u *utilityContext) getMinRequiredStakeAmount(actorType coreTypes.ActorType) (*big.Int, typesUtil.Error) {

@@ -17,7 +17,7 @@ const (
 	// The Application's usage quota during each session is determined by its stake. The session
 	// is rate limited using the "Token Bucket" algorithm, where the number of tokens in the beginning
 	// of each session is determined by this parameter.
-	AppSessionQuotaMultiplierParamName = "app_stake_to_session_quota_multiplier"
+	AppSessionQuotaMultiplierParamName = "app_session_quota_multiplier"
 
 	// Servicer actor gov params
 	ServicerMinimumStakeParamName       = "servicer_minimum_stake"

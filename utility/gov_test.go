@@ -476,8 +476,8 @@ func TestUtilityContext_GetServicerUnstakingBlocks(t *testing.T) {
 func TestUtilityContext_GetSessionQuotaMultiplier(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := int(defaultParams.GetAppStakeToSessionQuotaMultiplier())
-	gotParam, err := ctx.getAppStakeToSessionQuotaMultiplier()
+	defaultParam := int(defaultParams.GetAppSessionQuotaMultiplier())
+	gotParam, err := ctx.getAppSessionQuotaMultiplier()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 }
@@ -576,7 +576,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	gotParam, err = ctx.getParamOwner(typesUtil.AppBaselineStakeRateParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetAppSessionQuotaMultiplier()
+	defaultParam = defaultParams.GetAppSessionQuotaMultiplierOwner()
 	gotParam, err = ctx.getParamOwner(typesUtil.AppSessionQuotaMultiplierOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))

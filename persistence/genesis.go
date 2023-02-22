@@ -100,7 +100,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			if err != nil {
 				log.Fatalf("an error occurred converting output to bytes %s", act.GetOutput())
 			}
-			err = saic.InsertFn(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GetGenericParam(), act.GetStakedAmount(), act.GetChains(), act.GetPausedHeight(), act.GetUnstakingHeight())
+			err = saic.InsertFn(addrBz, pubKeyBz, outputBz, false, int32(coreTypes.StakeStatus_Staked), act.GetGenericParam(), act.GetStakedAmount(), act.GetChains(), act.GetPausedHeight(), act.GetUnstakingHeight())
 			if err != nil {
 				log.Fatalf("an error occurred inserting an %s in the genesis state: %s", saic.Name, err.Error())
 			}
