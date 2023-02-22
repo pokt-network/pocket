@@ -4040,7 +4040,7 @@
       "address": "00104055c00bed7c983a48aac7dc6335d7c607a7",
       "public_key": "dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
       "chains": null,
-      "generic_param": "node1.consensus:8080",
+      "generic_param": "node1.consensus:42069",
       "staked_amount": "1000000000000",
       "paused_height": -1,
       "unstaking_height": -1,
@@ -4051,7 +4051,7 @@
       "address": "00204737d2a165ebe4be3a7d5b0af905b0ea91d8",
       "public_key": "eb2c78364525a210d994a83e02d18b4287ab81f6670cf4510ab6c9f51e296d91",
       "chains": null,
-      "generic_param": "node2.consensus:8080",
+      "generic_param": "node2.consensus:42069",
       "staked_amount": "1000000000000",
       "paused_height": -1,
       "unstaking_height": -1,
@@ -4062,7 +4062,7 @@
       "address": "00304d0101847b37fd62e7bebfbdddecdbb7133e",
       "public_key": "1041a9c76539791fef9bee5b4fcd5bf4a1a489e0790c44cbdfa776b901e13b50",
       "chains": null,
-      "generic_param": "node3.consensus:8080",
+      "generic_param": "node3.consensus:42069",
       "staked_amount": "1000000000000",
       "paused_height": -1,
       "unstaking_height": -1,
@@ -4073,7 +4073,7 @@
       "address": "00404a570febd061274f72b50d0a37f611dfe339",
       "public_key": "d6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
       "chains": null,
-      "generic_param": "node4.consensus:8080",
+      "generic_param": "node4.consensus:42069",
       "staked_amount": "1000000000000",
       "paused_height": -1,
       "unstaking_height": -1,
@@ -4103,7 +4103,7 @@
       "chains": [
         "0001"
       ],
-      "generic_param": "node1.consensus:8080",
+      "generic_param": "node1.consensus:42069",
       "staked_amount": "1000000000000",
       "paused_height": -1,
       "unstaking_height": -1,
@@ -4118,7 +4118,7 @@
       "chains": [
         "0001"
       ],
-      "generic_param": "node1.consensus:8080",
+      "generic_param": "node1.consensus:42069",
       "staked_amount": "1000000000000",
       "paused_height": -1,
       "unstaking_height": -1,
