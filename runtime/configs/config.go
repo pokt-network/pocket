@@ -36,7 +36,7 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			BlockStorePath: defaults.DefaultPersistenceBlockStorePath,
 		},
 		P2P: &P2PConfig{
-			ConsensusPort:   defaults.DefaultP2PConsensusPort,
+			Port:            defaults.DefaultP2PPort,
 			UseRainTree:     defaults.DefaultP2PUseRainTree,
 			ConnectionType:  defaults.DefaultP2PConnectionType,
 			MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
