@@ -5,14 +5,6 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
-// type FSMConsensusEventsHandler interface {
-// 	HandleUnsynched(*messaging.StateMachineTransitionEvent)
-// 	HandleSyncMode(*messaging.StateMachineTransitionEvent)
-// 	HandleSynced(*messaging.StateMachineTransitionEvent)
-// 	HandlePacemaker(*messaging.StateMachineTransitionEvent)
-// 	HandleServerMode(*messaging.StateMachineTransitionEvent)
-// }
-
 // State machine transition event comes to consensus module
 // onsensus moduel reacts upon the new changed state
 // consensus module's reply is a new state machine transition event, which is sent to the state machine module
