@@ -6,7 +6,7 @@ The Relay Protocol is a fundamental sequence that makes up the building blocks o
 
 In Pocket Network, a `Relay` is a Read / Write API request operation to a 3rd party `RelayChain`.
 
-The Relay Protocol is the servicing lifecycle that poises staked ServiceNodes to be able to complete
+The Relay Protocol is the servicing lifecycle that poises staked Servicers to be able to complete
 Relays on behalf of the network.
 
 ### Lifecycle
@@ -23,21 +23,21 @@ sequenceDiagram
     autonumber
     actor App
     actor Client
-    actor Service Node
+    actor Servicer
     participant Internal State
     participant Internal Storage
     participant External Relay Chain
     App->>Client: Provision(AppAuthToken)
     loop Repeats Throughout Session Duration
         Client->>Client: Sign(Relay)
-        Client->>Service Node: Send(Relay)
-        Service Node->>Internal State: Validate(Relay)
-        Internal State->>Service Node: IsValid(Relay)
-        Service Node->>Internal Storage: IfValid(Relay) -> Persist(Relay)
-        Service Node->>External Relay Chain: Execute(Relay, RelayChainURL)
-        External Relay Chain->>Service Node: RelayResponse = GetResponse(RelayChain)
-        Service Node->>Service Node: Sign(RelayResponse)
-        Service Node ->> Client: Send(RelayResponse)
+        Client->>Servicer: Send(Relay)
+        Servicer->>Internal State: Validate(Relay)
+        Internal State->>Servicer: IsValid(Relay)
+        Servicer->>Internal Storage: IfValid(Relay) -> Persist(Relay)
+        Servicer->>External Relay Chain: Execute(Relay, RelayChainURL)
+        External Relay Chain->>Servicer: RelayResponse = GetResponse(RelayChain)
+        Servicer->>Servicer: Sign(RelayResponse)
+        Servicer ->> Client: Send(RelayResponse)
     end
 ```
 
@@ -49,16 +49,16 @@ sequenceDiagram
 sequenceDiagram
 	    title Steps 4-6
 	    autonumber
-	    actor Service Node
+	    actor Servicer
         participant Internal State
         participant Internal Storage
         actor Fisherman
 	    loop Repeats Every Session End
-	        Service Node->>Internal State: GetSecretKey(sessionHeader)
-            Internal State->>Service Node: HashCollision = SecretKey(govParams)
-	        Service Node->>Internal Storage: RelaysThatEndWith(HashCollision)
-            Internal Storage->>Service Node: VolumeApplicableRelays
-            Service Node->>Fisherman: Send(VolumeApplicableRelays)
+	        Servicer->>Internal State: GetSecretKey(sessionHeader)
+            Internal State->>Servicer: HashCollision = SecretKey(govParams)
+	        Servicer->>Internal Storage: RelaysThatEndWith(HashCollision)
+            Internal Storage->>Servicer: VolumeApplicableRelays
+            Servicer->>Fisherman: Send(VolumeApplicableRelays)
 	    end
 ```
 
@@ -68,7 +68,7 @@ A multi-step validation process to validate a submitted relay by a client before
 
 1. Validate payload, look for empty or 'bad' request data
 2. Validate the metadata, look for empty or 'bad' metadata
-3. Ensure the `RelayChain` is supported locally (in the service node's configuration files)
+3. Ensure the `RelayChain` is supported locally (in the servicer's configuration files)
 4. Ensure session block height is current
 5. Get the `sessionContext` to access values and parameters from world state at that height
 6. Get the application object from the `request.AAT()` (using `sessionContext`)
@@ -118,9 +118,9 @@ graph TD
 
 Execute a submitted `Relay` against the `RelayChain` by a client after validation
 
-1. Retrieve the `RelayChain` url from the service node configuration files
+1. Retrieve the `RelayChain` url from the servicer configuration files
 2. Execute http request with the `Relay Payload`
-3. Format and digitally sign the response using the service node's private key
+3. Format and digitally sign the response using the servicer's private key
 4. Send back to client
 
 ##### Wait for Session to end / secret key to be revealed
@@ -155,7 +155,7 @@ graph TD
 
 ### Claim-Proof Lifecycle
 
-An alternative design is a 2-step, claim-proof lifecycle where the individual service nodes
+An alternative design is a 2-step, claim-proof lifecycle where the individual servicers
 build a Merkle sum index tree from all the relays, submits a root and subsequent Merkle proof to the
 network via a commit+reveal schema.
 

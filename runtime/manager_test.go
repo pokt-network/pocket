@@ -42,7 +42,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "ServiceNodeStakePool",
+			Address: "ServicerStakePool",
 			Amount:  "100000000000000",
 		},
 		{
@@ -4119,9 +4119,9 @@ var expectedGenesis = &genesis.GenesisState{
 			Output:          "00404a570febd061274f72b50d0a37f611dfe339",
 		},
 	},
-	ServiceNodes: []*types.Actor{
+	Servicers: []*types.Actor{
 		{
-			ActorType:       types.ActorType_ACTOR_TYPE_SERVICENODE,
+			ActorType:       types.ActorType_ACTOR_TYPE_SERVICER,
 			Address:         "43d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
 			PublicKey:       "16cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d75a998b",
 			Chains:          []string{"0001"},

@@ -16,7 +16,7 @@ The current implementation does add the fundamental Pocket Network 1.0 actors:
 - Validators
 - Fishermen
 - Applications
-- Service Nodes
+- Servicers
 
 And implement the basic transaction functionality:
 
@@ -39,12 +39,12 @@ Added governance params:
 - AppMinimumPauseBlocksParamName
 - AppMaxPauseBlocksParamName
 
-- ServiceNodeMinimumStakeParamName
-- ServiceNodeMaxChainsParamName
-- ServiceNodeUnstakingBlocksParamName
-- ServiceNodeMinimumPauseBlocksParamName
-- ServiceNodeMaxPauseBlocksParamName
-- ServiceNodesPerSessionParamName
+- ServicerMinimumStakeParamName
+- ServicerMaxChainsParamName
+- ServicerUnstakingBlocksParamName
+- ServicerMinimumPauseBlocksParamName
+- ServicerMaxPauseBlocksParamName
+- ServicersPerSessionParamName
 
 - FishermanMinimumStakeParamName
 - FishermanMaxChainsParamName
@@ -70,7 +70,7 @@ Added governance params:
 - MessageUnstakeFishermanFee
 - MessagePauseFishermanFee
 - MessageUnpauseFishermanFee
-- MessageFishermanPauseServiceNodeFee
+- MessageFishermanPauseServicerFee
 - MessageTestScoreFee
 - MessageProveTestScoreFee
 - MessageStakeAppFee
@@ -83,11 +83,11 @@ Added governance params:
 - MessageUnstakeValidatorFee
 - MessagePauseValidatorFee
 - MessageUnpauseValidatorFee
-- MessageStakeServiceNodeFee
-- MessageEditStakeServiceNodeFee
-- MessageUnstakeServiceNodeFee
-- MessagePauseServiceNodeFee
-- MessageUnpauseServiceNodeFee
+- MessageStakeServicerFee
+- MessageEditStakeServicerFee
+- MessageUnstakeServicerFee
+- MessagePauseServicerFee
+- MessageUnpauseServicerFee
 - MessageChangeParameterFee
 
 - AclOwner
@@ -99,12 +99,12 @@ Added governance params:
 - AppUnstakingBlocksOwner
 - AppMinimumPauseBlocksOwner
 - AppMaxPausedBlocksOwner
-- ServiceNodeMinimumStakeOwner
-- ServiceNodeMaxChainsOwner
-- ServiceNodeUnstakingBlocksOwner
-- ServiceNodeMinimumPauseBlocksOwner
-- ServiceNodeMaxPausedBlocksOwner
-- ServiceNodesPerSessionOwner
+- ServicerMinimumStakeOwner
+- ServicerMaxChainsOwner
+- ServicerUnstakingBlocksOwner
+- ServicerMinimumPauseBlocksOwner
+- ServicerMaxPausedBlocksOwner
+- ServicersPerSessionOwner
 - FishermanMinimumStakeOwner
 - FishermanMaxChainsOwner
 - FishermanUnstakingBlocksOwner
@@ -126,7 +126,7 @@ Added governance params:
 - MessageUnstakeFishermanFeeOwner
 - MessagePauseFishermanFeeOwner
 - MessageUnpauseFishermanFeeOwner
-- MessageFishermanPauseServiceNodeFeeOwner
+- MessageFishermanPauseServicerFeeOwner
 - MessageTestScoreFeeOwner
 - MessageProveTestScoreFeeOwner
 - MessageStakeAppFeeOwner
@@ -139,11 +139,11 @@ Added governance params:
 - MessageUnstakeValidatorFeeOwner
 - MessagePauseValidatorFeeOwner
 - MessageUnpauseValidatorFeeOwner
-- MessageStakeServiceNodeFeeOwner
-- MessageEditStakeServiceNodeFeeOwner
-- MessageUnstakeServiceNodeFeeOwner
-- MessagePauseServiceNodeFeeOwner
-- MessageUnpauseServiceNodeFeeOwner
+- MessageStakeServicerFeeOwner
+- MessageEditStakeServicerFeeOwner
+- MessageUnstakeServicerFeeOwner
+- MessagePauseServicerFeeOwner
+- MessageUnpauseServicerFeeOwner
 - MessageChangeParameterFeeOwner
 
 And minimally satisfy the following interface:

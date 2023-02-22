@@ -208,11 +208,11 @@ func TestUtilityContext_GetMessageEditStakeFishermanFee(t *testing.T) {
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageEditStakeServiceNodeFee(t *testing.T) {
+func TestUtilityContext_GetMessageEditStakeServicerFee(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := defaultParams.GetMessageEditStakeServiceNodeFee()
-	gotParam, err := ctx.getMessageEditStakeServiceNodeFee()
+	defaultParam := defaultParams.GetMessageEditStakeServicerFee()
+	gotParam, err := ctx.getMessageEditStakeServicerFee()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
@@ -226,11 +226,11 @@ func TestUtilityContext_GetMessageEditStakeValidatorFee(t *testing.T) {
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageFishermanPauseServiceNodeFee(t *testing.T) {
+func TestUtilityContext_GetMessageFishermanPauseServicerFee(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := defaultParams.GetMessageFishermanPauseServiceNodeFee()
-	gotParam, err := ctx.getMessageFishermanPauseServiceNodeFee()
+	defaultParam := defaultParams.GetMessageFishermanPauseServicerFee()
+	gotParam, err := ctx.getMessageFishermanPauseServicerFee()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
@@ -253,11 +253,11 @@ func TestUtilityContext_GetMessagePauseFishermanFee(t *testing.T) {
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessagePauseServiceNodeFee(t *testing.T) {
+func TestUtilityContext_GetMessagePauseServicerFee(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := defaultParams.GetMessagePauseServiceNodeFee()
-	gotParam, err := ctx.getMessagePauseServiceNodeFee()
+	defaultParam := defaultParams.GetMessagePauseServicerFee()
+	gotParam, err := ctx.getMessagePauseServicerFee()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
@@ -309,11 +309,11 @@ func TestUtilityContext_GetMessageStakeFishermanFee(t *testing.T) {
 
 }
 
-func TestUtilityContext_GetMessageStakeServiceNodeFee(t *testing.T) {
+func TestUtilityContext_GetMessageStakeServicerFee(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := defaultParams.GetMessageStakeServiceNodeFee()
-	gotParam, err := ctx.getMessageStakeServiceNodeFee()
+	defaultParam := defaultParams.GetMessageStakeServicerFee()
+	gotParam, err := ctx.getMessageStakeServicerFee()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
@@ -354,11 +354,11 @@ func TestUtilityContext_GetMessageUnpauseFishermanFee(t *testing.T) {
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageUnpauseServiceNodeFee(t *testing.T) {
+func TestUtilityContext_GetMessageUnpauseServicerFee(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := defaultParams.GetMessageUnpauseServiceNodeFee()
-	gotParam, err := ctx.getMessageUnpauseServiceNodeFee()
+	defaultParam := defaultParams.GetMessageUnpauseServicerFee()
+	gotParam, err := ctx.getMessageUnpauseServicerFee()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
@@ -392,11 +392,11 @@ func TestUtilityContext_GetMessageUnstakeFishermanFee(t *testing.T) {
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageUnstakeServiceNodeFee(t *testing.T) {
+func TestUtilityContext_GetMessageUnstakeServicerFee(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := defaultParams.GetMessageUnstakeServiceNodeFee()
-	gotParam, err := ctx.getMessageUnstakeServiceNodeFee()
+	defaultParam := defaultParams.GetMessageUnstakeServicerFee()
+	gotParam, err := ctx.getMessageUnstakeServicerFee()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
@@ -428,47 +428,47 @@ func TestUtilityContext_GetProposerPercentageOfFees(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetServiceNodeMaxChains(t *testing.T) {
+func TestUtilityContext_GetServicerMaxChains(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := int(defaultParams.GetServiceNodeMaxChains())
-	gotParam, err := ctx.getServiceNodeMaxChains()
+	defaultParam := int(defaultParams.GetServicerMaxChains())
+	gotParam, err := ctx.getServicerMaxChains()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetServiceNodeMaxPausedBlocks(t *testing.T) {
+func TestUtilityContext_GetServicerMaxPausedBlocks(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := int(defaultParams.GetServiceNodeMaxPauseBlocks())
-	gotParam, err := ctx.getServiceNodeMaxPausedBlocks()
+	defaultParam := int(defaultParams.GetServicerMaxPauseBlocks())
+	gotParam, err := ctx.getServicerMaxPausedBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetServiceNodeMinimumPauseBlocks(t *testing.T) {
+func TestUtilityContext_GetServicerMinimumPauseBlocks(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := int(defaultParams.GetServiceNodeMinimumPauseBlocks())
-	gotParam, err := ctx.getServiceNodeMinimumPauseBlocks()
+	defaultParam := int(defaultParams.GetServicerMinimumPauseBlocks())
+	gotParam, err := ctx.getServicerMinimumPauseBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetServiceNodeMinimumStake(t *testing.T) {
+func TestUtilityContext_GetServicerMinimumStake(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := defaultParams.GetServiceNodeMinimumStake()
-	gotParam, err := ctx.getServiceNodeMinimumStake()
+	defaultParam := defaultParams.GetServicerMinimumStake()
+	gotParam, err := ctx.getServicerMinimumStake()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, converters.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetServiceNodeUnstakingBlocks(t *testing.T) {
+func TestUtilityContext_GetServicerUnstakingBlocks(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := int64(defaultParams.GetServiceNodeUnstakingBlocks())
-	gotParam, err := ctx.getServiceNodeUnstakingBlocks()
+	defaultParam := int64(defaultParams.GetServicerUnstakingBlocks())
+	gotParam, err := ctx.getServicerUnstakingBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 }
@@ -592,36 +592,36 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	gotParam, err = ctx.getParamOwner(typesUtil.AppMaxPauseBlocksParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetServiceNodesPerSessionOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodesPerSessionParamName)
+	defaultParam = defaultParams.GetServicersPerSessionOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicersPerSessionParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetServiceNodeMinimumStakeOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodeMinimumStakeParamName)
+	defaultParam = defaultParams.GetServicerMinimumStakeOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicerMinimumStakeParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetServiceNodeMaxChainsOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodeMaxChainsParamName)
+	defaultParam = defaultParams.GetServicerMaxChainsOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicerMaxChainsParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetServiceNodeUnstakingBlocksOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodeUnstakingBlocksParamName)
+	defaultParam = defaultParams.GetServicerUnstakingBlocksOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicerUnstakingBlocksParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetServiceNodeMinimumPauseBlocksOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodeMinimumPauseBlocksParamName)
+	defaultParam = defaultParams.GetServicerMinimumPauseBlocksOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicerMinimumPauseBlocksParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetServiceNodeMaxPausedBlocksOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodeMaxPauseBlocksParamName)
+	defaultParam = defaultParams.GetServicerMaxPausedBlocksOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicerMaxPauseBlocksParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetFishermanMinimumStakeOwner()
 	gotParam, err = ctx.getParamOwner(typesUtil.FishermanMinimumStakeParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetServiceNodeMaxChainsOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodeMaxPauseBlocksParamName)
+	defaultParam = defaultParams.GetServicerMaxChainsOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicerMaxPauseBlocksParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetFishermanUnstakingBlocksOwner()
@@ -704,8 +704,8 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	gotParam, err = ctx.getParamOwner(typesUtil.MessageTestScoreFee)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetMessageFishermanPauseServiceNodeFeeOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.MessageFishermanPauseServiceNodeFee)
+	defaultParam = defaultParams.GetMessageFishermanPauseServicerFeeOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.MessageFishermanPauseServicerFee)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetMessageProveTestScoreFeeOwner()
@@ -752,24 +752,24 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	gotParam, err = ctx.getParamOwner(typesUtil.MessageUnpauseValidatorFee)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetMessageStakeServiceNodeFeeOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.MessageStakeServiceNodeFee)
+	defaultParam = defaultParams.GetMessageStakeServicerFeeOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.MessageStakeServicerFee)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetMessageEditStakeServiceNodeFeeOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.MessageEditStakeServiceNodeFee)
+	defaultParam = defaultParams.GetMessageEditStakeServicerFeeOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.MessageEditStakeServicerFee)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetMessageUnstakeServiceNodeFeeOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.MessageUnstakeServiceNodeFee)
+	defaultParam = defaultParams.GetMessageUnstakeServicerFeeOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.MessageUnstakeServicerFee)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetMessagePauseServiceNodeFeeOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.MessagePauseServiceNodeFee)
+	defaultParam = defaultParams.GetMessagePauseServicerFeeOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.MessagePauseServicerFee)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetMessageUnpauseServiceNodeFeeOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.MessageUnpauseServiceNodeFee)
+	defaultParam = defaultParams.GetMessageUnpauseServicerFeeOwner()
+	gotParam, err = ctx.getParamOwner(typesUtil.MessageUnpauseServicerFee)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetMessageChangeParameterFeeOwner()
@@ -810,27 +810,27 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodeMinimumPauseBlocksOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicerMinimumPauseBlocksOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodeMaxChainsOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicerMaxChainsOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodeUnstakingBlocksOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicerUnstakingBlocksOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodeMinimumStakeOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicerMinimumStakeOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodeMaxPausedBlocksOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicerMaxPausedBlocksOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.ServiceNodesPerSessionOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.ServicersPerSessionOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
@@ -914,7 +914,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.MessageFishermanPauseServiceNodeFeeOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.MessageFishermanPauseServicerFeeOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
@@ -966,23 +966,23 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.MessageStakeServiceNodeFeeOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.MessageStakeServicerFeeOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.MessageEditStakeServiceNodeFeeOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.MessageEditStakeServicerFeeOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.MessageUnstakeServiceNodeFeeOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.MessageUnstakeServicerFeeOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.MessagePauseServiceNodeFeeOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.MessagePauseServicerFeeOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.MessageUnpauseServiceNodeFeeOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.MessageUnpauseServicerFeeOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
