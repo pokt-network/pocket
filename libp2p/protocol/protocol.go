@@ -2,7 +2,7 @@ package protocol
 
 import "github.com/libp2p/go-libp2p/core/protocol"
 
-var (
+const (
 	// PoktProtocolID is the libp2p protocol ID used when opening a new stream
 	// to a remote peer and setting the stream handler for the local peer.
 	// Libp2p APIs use this to distinguish which multiplexed protocols/streams to consider.

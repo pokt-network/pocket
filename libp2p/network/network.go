@@ -33,13 +33,16 @@ type libp2pNetwork struct {
 	currentHeightProvider providers.CurrentHeightProvider
 }
 
+const (
+	year = time.Hour * 24 * 365
+	// TECHDEBT: consider more carefully and parameterize.
+	defaultPeerTTL = 2 * year
+)
+
 var (
 	// ErrNetwork wraps errors which occur within the libp2pNetwork implementation
 	// Exported for testing purposes.
 	ErrNetwork = typesLibp2p.NewErrFactory("libp2p network error")
-	Year       = time.Hour * 24 * 365
-	// TECHDEBT: consider more carefully and parameterize.
-	DefaultPeerTTL = 2 * Year
 )
 
 // TECHDEBT: factor out args which are common to network
@@ -160,7 +163,7 @@ func (p2pNet *libp2pNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error
 		), err)
 	}
 
-	p2pNet.host.Peerstore().AddAddrs(libp2pPeer.ID, libp2pPeer.Addrs, DefaultPeerTTL)
+	p2pNet.host.Peerstore().AddAddrs(libp2pPeer.ID, libp2pPeer.Addrs, defaultPeerTTL)
 	if err := p2pNet.host.Peerstore().AddPubKey(libp2pPeer.ID, pubKey); err != nil {
 		return ErrNetwork(fmt.Sprintf(
 			"adding peer public key, pokt address: %s", peer.Address,
@@ -224,7 +227,7 @@ func (p2pNet *libp2pNetwork) setupAddrBookMap() error {
 			), err)
 		}
 
-		p2pNet.host.Peerstore().AddAddrs(libp2pPeer.ID, libp2pPeer.Addrs, DefaultPeerTTL)
+		p2pNet.host.Peerstore().AddAddrs(libp2pPeer.ID, libp2pPeer.Addrs, defaultPeerTTL)
 		if err := p2pNet.host.Peerstore().AddPubKey(libp2pPeer.ID, pubKey); err != nil {
 			return ErrNetwork(fmt.Sprintf(
 				"adding peer public key, pokt address: %s", peer.Address,
