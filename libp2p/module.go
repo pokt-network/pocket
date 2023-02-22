@@ -119,7 +119,6 @@ func (mod *libp2pModule) Create(bus modules.Bus, options ...modules.ModuleOption
 			return nil, ErrModule("parsing multiaddr from config", err)
 		}
 		mod.listenAddrs = libp2p.ListenAddrs(addr)
-		logger.Global.Printf("listenAddrs: %s", addr)
 	case types.ConnectionType_EmptyConnection:
 		mod.listenAddrs = libp2p.NoListenAddrs
 	default:
@@ -169,7 +168,11 @@ func (mod *libp2pModule) Start() error {
 		return ErrModule("unable to create libp2p host", err)
 	}
 
-	mod.logger.Info().Msgf("Listening on %s...", host.InfoFromHost(mod.host).Addrs)
+	listenAddrLogEvent := mod.logger.Info()
+	for i, addr := range host.InfoFromHost(mod.host).Addrs {
+		listenAddrLogEvent.Str(fmt.Sprintf("listen_addr_%d", i), addr.String())
+	}
+	listenAddrLogEvent.Msg("Listening for incoming connections...")
 
 	// TECHDEBT: use RandomSub or GossipSub once we're on more stable ground.
 	// IMPROVE: consider supporting multiple router types via config.
@@ -246,7 +249,9 @@ func (mod *libp2pModule) GetAddress() (crypto.Address, error) {
 func (mod *libp2pModule) handleStream(stream libp2pNetwork.Stream) {
 	peer, err := identity.PeerFromLibp2pStream(stream)
 	if err != nil {
-		mod.logger.Error().Err(err).Msgf("parsing remote peer public key, address: %s", peer.Address)
+		mod.logger.Error().Err(err).
+			Str("address", peer.Address.String()).
+			Msg("parsing remote peer public key")
 
 		if err = stream.Close(); err != nil {
 			mod.logger.Error().Err(err)
@@ -254,7 +259,9 @@ func (mod *libp2pModule) handleStream(stream libp2pNetwork.Stream) {
 	}
 
 	if err := mod.network.AddPeerToAddrBook(peer); err != nil {
-		mod.logger.Error().Err(err).Msgf("adding remote peer to address book, address: %s", peer.Address)
+		mod.logger.Error().Err(err).
+			Str("address", peer.Address.String()).
+			Msg("adding remote peer to address book")
 	}
 
 	go mod.readStream(stream)
