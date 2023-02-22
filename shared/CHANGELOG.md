@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.30] - 2023-02-21
+
+- Rename ServiceNode Actor Type Name to Servicer
+
+## [0.0.0.29] - 2023-02-20
+
+- Fan-ing out `StateMachineTransitionEventType` event to the `P2P` module to handle bootstrapping logic
+- Refactored single key generation from seed (used in tests) into `GetPrivKeySeed`
+
 ## [0.0.0.28] - 2023-02-17
 
 - Added `UnmarshalText` to `Ed25519PrivateKey`
@@ -85,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.12] - 2023-01-11
 
-- Deprecated `GetBlocksPerSession()` and `GetServiceNodesPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
+- Deprecated `GetBlocksPerSession()` and `GetServicersPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
 
 ## [0.0.0.11] - 2023-01-11
 

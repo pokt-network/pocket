@@ -65,7 +65,7 @@ func (rchp *rpcCurrentHeightProvider) CurrentHeight() uint64 {
 
 func NewRPCCurrentHeightProvider(options ...modules.ModuleOption) *rpcCurrentHeightProvider {
 	rchp := &rpcCurrentHeightProvider{
-		rpcUrl: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort),
+		rpcUrl: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
 	}
 
 	for _, o := range options {

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.7] - 2023-02-21
+
+- Rename ServiceNode Actor Type Name to Servicer
+
+## [0.0.0.6] - 2023-02-20
+
+- Added the ability to override the default `BootstrapNodes` via flag
+
 ## [0.0.0.5] - 2023-02-17
 
 - Removed unnecessary server mode enabling call via `EnableServerMode()` function

@@ -42,10 +42,10 @@ services:
       - "9000"
       - "50832"
     ports:
-      - "7081:7081"
-      - "8081:8080"
-      - "9081:9080"
-      - "50832:50832"
+      - "${NODE1_PORT_7081:-0.0.0.0:7081}:7081"
+      - "${NODE1_PORT_8081:-0.0.0.0:8081}:8080"
+      - "${NODE1_PORT_9081:-0.0.0.0:9081}:9080"
+      - "${NODE1_PORT_50832:-0.0.0.0:50832}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging
@@ -73,10 +73,10 @@ services:
       - "9000"
       - "50832"
     ports:
-      - "7082:7082"
-      - "8082:8080"
-      - "9082:9080"
-      - "50833:50832"
+      - "${NODE2_PORT_7081:-0.0.0.0:7082}:7081"
+      - "${NODE2_PORT_8081:-0.0.0.0:8082}:8080"
+      - "${NODE2_PORT_9081:-0.0.0.0:9082}:9080"
+      - "${NODE2_PORT_50832:-0.0.0.0:50833}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging
@@ -101,10 +101,10 @@ services:
       - "9000"
       - "50832"
     ports:
-      - "7083:7083"
-      - "8083:8080"
-      - "9083:9080"
-      - "50834:50832"
+      - "${NODE3_PORT_7081:-0.0.0.0:7083}:7081"
+      - "${NODE3_PORT_8081:-0.0.0.0:8083}:8080"
+      - "${NODE3_PORT_9081:-0.0.0.0:9083}:9080"
+      - "${NODE3_PORT_50832:-0.0.0.0:50834}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging
@@ -129,10 +129,10 @@ services:
       - "9000"
       - "50832"
     ports:
-      - "7084:7084"
-      - "8084:8080"
-      - "9084:9080"
-      - "50835:50832"
+      - "${NODE4_PORT_7081:-0.0.0.0:7084}:7081"
+      - "${NODE4_PORT_8081:-0.0.0.0:8084}:8080"
+      - "${NODE4_PORT_9081:-0.0.0.0:9084}:9080"
+      - "${NODE4_PORT_50832:-0.0.0.0:50835}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging
