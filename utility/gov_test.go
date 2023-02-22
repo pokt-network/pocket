@@ -473,10 +473,10 @@ func TestUtilityContext_GetServicerUnstakingBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetStakingAdjustment(t *testing.T) {
+func TestUtilityContext_GetSessionQuotaMultiplier(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
-	defaultParam := int(defaultParams.GetAppStakingAdjustment())
+	defaultParam := int(defaultParams.GetAppStakeToSessionQuotaMultiplier())
 	gotParam, err := ctx.getAppStakeToSessionQuotaMultiplier()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
@@ -576,8 +576,8 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	gotParam, err = ctx.getParamOwner(typesUtil.AppBaselineStakeRateParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetAppStakingAdjustmentOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.AppStakingAdjustmentOwner)
+	defaultParam = defaultParams.GetAppSessionQuotaMultiplier()
+	gotParam, err = ctx.getParamOwner(typesUtil.AppSessionQuotaMultiplierOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAppUnstakingBlocksOwner()
@@ -794,7 +794,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.AppStakingAdjustmentOwner)
+	gotParam, err = ctx.getParamOwner(typesUtil.AppSessionQuotaMultiplierOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()

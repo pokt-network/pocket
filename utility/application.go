@@ -20,7 +20,7 @@ func (u *utilityContext) calculateMaxAppRelays(appStakeStr string) (string, type
 		return typesUtil.EmptyString, typesUtil.ErrStringToBigInt(er)
 	}
 
-	stakeToSessionQuotaMultiplier, err := u.getAppStakeToSessionQuotaMultiplier()
+	stakeToSessionQuotaMultiplier, err := u.getAppSessionQuotaMultiplier()
 	if err != nil {
 		return typesUtil.EmptyString, err
 	}

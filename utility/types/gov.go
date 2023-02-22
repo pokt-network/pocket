@@ -17,7 +17,7 @@ const (
 	// The Application's usage quota during each session is determined by its stake. The session
 	// is rate limited using the "Token Bucket" algorithm, where the number of tokens in the beginning
 	// of each session is determined by this parameter.
-	AppStakeToSessionQuotaMultiplierParamName = "app_stake_to_session_quota_multiplier"
+	AppSessionQuotaMultiplierParamName = "app_stake_to_session_quota_multiplier"
 
 	// Servicer actor gov params
 	ServicerMinimumStakeParamName       = "servicer_minimum_stake"
@@ -93,13 +93,13 @@ const (
 
 	BlocksPerSessionOwner = "blocks_per_session_owner"
 
-	AppMinimumStakeOwner       = "app_minimum_stake_owner"
-	AppMaxChainsOwner          = "app_max_chains_owner"
-	AppBaselineStakeRateOwner  = "app_baseline_stake_rate_owner"
-	AppStakingAdjustmentOwner  = "app_stake_to_session_quota_multiplier_owner"
-	AppUnstakingBlocksOwner    = "app_unstaking_blocks_owner"
-	AppMinimumPauseBlocksOwner = "app_minimum_pause_blocks_owner"
-	AppMaxPausedBlocksOwner    = "app_max_paused_blocks_owner"
+	AppMinimumStakeOwner           = "app_minimum_stake_owner"
+	AppMaxChainsOwner              = "app_max_chains_owner"
+	AppBaselineStakeRateOwner      = "app_baseline_stake_rate_owner"
+	AppSessionQuotaMultiplierOwner = "app_session_quota_multiplier_owner"
+	AppUnstakingBlocksOwner        = "app_unstaking_blocks_owner"
+	AppMinimumPauseBlocksOwner     = "app_minimum_pause_blocks_owner"
+	AppMaxPausedBlocksOwner        = "app_max_paused_blocks_owner"
 
 	ServicerMinimumStakeOwner       = "servicer_minimum_stake_owner"
 	ServicerMaxChainsOwner          = "servicer_max_chains_owner"
