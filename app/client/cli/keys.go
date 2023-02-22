@@ -578,11 +578,13 @@ func keysSignTxCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
+
 				sigBz, err := privKey.Sign(txSigBz)
 				if err != nil {
 					return err
 				}
 
+				// Add signature to the transaction
 				sig := new(types.Signature)
 				sig.PublicKey = privKey.PublicKey().Bytes()
 				sig.Signature = sigBz
@@ -652,6 +654,7 @@ func keysSignTxCommands() []*cobra.Command {
 				if !bytes.Equal(sigPub, pubKey.Bytes()) {
 					valid = false
 				} else {
+					// Verify the signable bytes of the transaction
 					txSigBz, err := txProto.SignableBytes()
 					if err != nil {
 						return err
