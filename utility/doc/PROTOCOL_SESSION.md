@@ -7,8 +7,8 @@
 ```golang
 type Session interface {
     NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application *coreTypes.Actor) (Session, types.Error)
-    GetServiceNodes() []*coreTypes.Actor // the ServiceNodes providing Web3 access to the Application
-    GetFishermen() []*coreTypes.Actor    // the Fishermen monitoring the Service Nodes
+    GetServicers() []*coreTypes.Actor // the Servicers providing Web3 access to the Application
+    GetFishermen() []*coreTypes.Actor    // the Fishermen monitoring the Servicers
     GetApplication() *coreTypes.Actor    // the Application consuming Web3 access
     GetRelayChain() RelayChain        // the identifier of the web3 Relay Chain
     GetGeoZone() GeoZone              // the geolocation zone where the Application is registered
@@ -21,13 +21,13 @@ type Session interface {
 1. Create a session object from the seed data (see #2)
 2. Create a key concatenating and hashing the seed data
    - `key = Hash(sessionHeight + blockHash + geoZone + relayChain + appPublicKey)`
-3. Get an ordered list of the public keys of serviceNodes who are:
+3. Get an ordered list of the public keys of servicers who are:
    - actively staked
    - staked within geo-zone
    - staked for relay-chain
 4. Pseudo-insert the session `key` string into the list and find the first actor directly below on the list
 5. Determine a new seedKey with the following formula: ` key = Hash( key + actor1PublicKey )` where `actor1PublicKey` is the key determined in step 4
-6. Repeat steps 4 and 5 until all N serviceNodes are found
+6. Repeat steps 4 and 5 until all N servicers are found
 7. Do steps 3 - 6 for Fishermen as well
 
 ### FAQ
@@ -59,7 +59,7 @@ sequenceDiagram
     Querier->>WorldState: Who are my sessionNodes and sessionFish for [app], [relayChain], and [geoZone]
     WorldState->>Session: seedData = height, blockHash, [geoZone], [relayChain], [app]
     Session->>Session: sessionKey = hash(concat(seedData))
-    WorldState->>Session: nodeList = Ordered list of public keys of applicable serviceNodes
+    WorldState->>Session: nodeList = Ordered list of public keys of applicable servicers
     Session->>Session: sessionNodes = pseudorandomSelect(sessionKey, nodeList, max)
     WorldState->>Session: fishList = Ordered list of public keys of applicable fishermen
     Session->>Session: sessionFish = pseudorandomSelect(sessionKey, fishList, max)

@@ -127,16 +127,16 @@ const (
 	CodeUnauthorizedParamChangeError      Code = 86
 	CodeInvalidParamValueError            Code = 87
 	CodeUpdateParamError                  Code = 88
-	CodeGetServiceNodesPerSessionAtError  Code = 89
+	CodeGetServicersPerSessionAtError     Code = 89
 	CodeGetBlockHashError                 Code = 90
-	CodeGetServiceNodeCountError          Code = 91
+	CodeGetServicerCountError             Code = 91
 	CodeEmptyParamKeyError                Code = 92
 	CodeEmptyParamValueError              Code = 93
 	CodeGetOutputAddressError             Code = 94
 	CodeTransactionAlreadyCommittedError  Code = 95
 	CodeInitGenesisParamsError            Code = 96
 	CodeGetAllFishermenError              Code = 97
-	CodeGetAllServiceNodesError           Code = 98
+	CodeGetAllServicersError              Code = 98
 	CodeGetAllAppsError                   Code = 99
 	CodeNewPersistenceContextError        Code = 100
 	CodeGetAppHashError                   Code = 101
@@ -237,8 +237,8 @@ const (
 	UnauthorizedParamChangeError      = "unauthorized param change, the signer must be address: "
 	InvalidParamValueError            = "the param value is not the expected type"
 	GetBlockHashError                 = "an error occurred getting the block hash"
-	GetServiceNodesPerSessionAtError  = "an error occurred getting the service nodes per session for height"
-	GetServiceNodeCountError          = "an error occurred getting the service node count"
+	GetServicersPerSessionAtError     = "an error occurred getting the servicers per session for height"
+	GetServicerCountError             = "an error occurred getting the servicer count"
 	EmptyParamKeyError                = "the parameter key is empty"
 	EmptyParamValueError              = "the parameter value is empty"
 	GetOutputAddressError             = "an error occurred getting the output address using operator"
@@ -290,7 +290,7 @@ const (
 	InitGenesisParamError             = "an error occurred initializing the params in genesis"
 	GetAllFishermenError              = "an error occurred getting all of the fishermen¬"
 	GetAllAppsError                   = "an error occurred getting all of the apps"
-	GetAllServiceNodesError           = "an error occurred getting all of the service nodes"
+	GetAllServicersError              = "an error occurred getting all of the servicers"
 	GetAllPoolsError                  = "an error occurred getting all of the pools"
 	GetAllAccountsError               = "an error occurred getting all of the accounts"
 	GetAllParamsError                 = "an error occurred getting all of the params"
@@ -333,12 +333,12 @@ func ErrSetPauseHeight(err error) Error {
 	return NewError(CodeSetPauseHeightError, fmt.Sprintf("%s: %s", SetPauseHeightError, err.Error()))
 }
 
-func ErrGetServiceNodesPerSessionAt(height int64, err error) Error {
-	return NewError(CodeGetServiceNodesPerSessionAtError, fmt.Sprintf("%s: %d; %s", GetServiceNodesPerSessionAtError, height, err.Error()))
+func ErrGetServicersPerSessionAt(height int64, err error) Error {
+	return NewError(CodeGetServicersPerSessionAtError, fmt.Sprintf("%s: %d; %s", GetServicersPerSessionAtError, height, err.Error()))
 }
 
-func ErrGetServiceNodeCount(chain string, height int64, err error) Error {
-	return NewError(CodeGetServiceNodeCountError, fmt.Sprintf("%s: %s/%d %s", GetServiceNodeCountError, chain, height, err.Error()))
+func ErrGetServicerCount(chain string, height int64, err error) Error {
+	return NewError(CodeGetServicerCountError, fmt.Sprintf("%s: %s/%d %s", GetServicerCountError, chain, height, err.Error()))
 }
 
 func ErrEmptyParamKey() Error {
@@ -706,8 +706,8 @@ func ErrGetAllApps(err error) Error {
 	return NewError(CodeGetAllAppsError, fmt.Sprintf("%s: %s", GetAllAppsError, err.Error()))
 }
 
-func ErrGetAllServiceNodes(err error) Error {
-	return NewError(CodeGetAllServiceNodesError, fmt.Sprintf("%s: %s", GetAllServiceNodesError, err.Error()))
+func ErrGetAllServicers(err error) Error {
+	return NewError(CodeGetAllServicersError, fmt.Sprintf("%s: %s", GetAllServicersError, err.Error()))
 }
 
 func ErrGetAllPools(err error) Error {

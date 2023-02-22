@@ -21,12 +21,12 @@ const (
 	AppStakingAdjustmentParamName = "app_staking_adjustment" // IMPROVE: Document & explain the purpose of this parameter in more detail.
 
 	// Servicer actor gov params
-	ServiceNodeMinimumStakeParamName       = "service_node_minimum_stake"
-	ServiceNodeMaxChainsParamName          = "service_node_max_chains"
-	ServiceNodeUnstakingBlocksParamName    = "service_node_unstaking_blocks"
-	ServiceNodeMinimumPauseBlocksParamName = "service_node_minimum_pause_blocks"
-	ServiceNodeMaxPauseBlocksParamName     = "service_node_max_pause_blocks"
-	ServiceNodesPerSessionParamName        = "service_nodes_per_session"
+	ServicerMinimumStakeParamName       = "servicer_minimum_stake"
+	ServicerMaxChainsParamName          = "servicer_max_chains"
+	ServicerUnstakingBlocksParamName    = "servicer_unstaking_blocks"
+	ServicerMinimumPauseBlocksParamName = "servicer_minimum_pause_blocks"
+	ServicerMaxPauseBlocksParamName     = "servicer_max_pause_blocks"
+	ServicersPerSessionParamName        = "servicers_per_session"
 
 	// Fisherman actor gov params
 	FishermanMinimumStakeParamName       = "fisherman_minimum_stake"
@@ -49,14 +49,14 @@ const (
 	DoubleSignBurnPercentageParamName        = "double_sign_burn_percentage"
 
 	// Pocket specific message gov params
-	MessageStakeFishermanFee            = "message_stake_fisherman_fee"
-	MessageEditStakeFishermanFee        = "message_edit_stake_fisherman_fee"
-	MessageUnstakeFishermanFee          = "message_unstake_fisherman_fee"
-	MessagePauseFishermanFee            = "message_pause_fisherman_fee"
-	MessageUnpauseFishermanFee          = "message_unpause_fisherman_fee"
-	MessageFishermanPauseServiceNodeFee = "message_fisherman_pause_service_node_fee"
-	MessageTestScoreFee                 = "message_test_score_fee"
-	MessageProveTestScoreFee            = "message_prove_test_score_fee"
+	MessageStakeFishermanFee         = "message_stake_fisherman_fee"
+	MessageEditStakeFishermanFee     = "message_edit_stake_fisherman_fee"
+	MessageUnstakeFishermanFee       = "message_unstake_fisherman_fee"
+	MessagePauseFishermanFee         = "message_pause_fisherman_fee"
+	MessageUnpauseFishermanFee       = "message_unpause_fisherman_fee"
+	MessageFishermanPauseServicerFee = "message_fisherman_pause_servicer_fee"
+	MessageTestScoreFee              = "message_test_score_fee"
+	MessageProveTestScoreFee         = "message_prove_test_score_fee"
 
 	// Proof-of-stake message gov params
 	MessageDoubleSignFee   = "message_double_sign_fee"
@@ -75,19 +75,20 @@ const (
 	MessageUnpauseValidatorFee   = "message_unpause_validator_fee"
 
 	// Servicer message gov params
-	MessageStakeServiceNodeFee     = "message_stake_service_node_fee"
-	MessageEditStakeServiceNodeFee = "message_edit_stake_service_node_fee"
-	MessageUnstakeServiceNodeFee   = "message_unstake_service_node_fee"
-	MessagePauseServiceNodeFee     = "message_pause_service_node_fee"
-	MessageUnpauseServiceNodeFee   = "message_unpause_service_node_fee"
+	MessageStakeServicerFee     = "message_stake_servicer_fee"
+	MessageEditStakeServicerFee = "message_edit_stake_servicer_fee"
+	MessageUnstakeServicerFee   = "message_unstake_servicer_fee"
+	MessagePauseServicerFee     = "message_pause_servicer_fee"
+	MessageUnpauseServicerFee   = "message_unpause_servicer_fee"
 
 	// Parameter / flags gov params
 	MessageChangeParameterFee = "message_change_parameter_fee"
 )
 
 // TECHDEBT: The parameters below are equivalent to the list above with the suffix `_owner`. There
-//           is likely a clean way to better organize this code. This will also involve finding
-//           discrepancies between the two lists from missing / duplicate types or owners.
+//
+//	is likely a clean way to better organize this code. This will also involve finding
+//	discrepancies between the two lists from missing / duplicate types or owners.
 const (
 	AclOwner = "acl_owner"
 
@@ -101,12 +102,12 @@ const (
 	AppMinimumPauseBlocksOwner = "app_minimum_pause_blocks_owner"
 	AppMaxPausedBlocksOwner    = "app_max_paused_blocks_owner"
 
-	ServiceNodeMinimumStakeOwner       = "service_node_minimum_stake_owner"
-	ServiceNodeMaxChainsOwner          = "service_node_max_chains_owner"
-	ServiceNodeUnstakingBlocksOwner    = "service_node_unstaking_blocks_owner"
-	ServiceNodeMinimumPauseBlocksOwner = "service_node_minimum_pause_blocks_owner"
-	ServiceNodeMaxPausedBlocksOwner    = "service_node_max_paused_blocks_owner"
-	ServiceNodesPerSessionOwner        = "service_nodes_per_session_owner"
+	ServicerMinimumStakeOwner       = "servicer_minimum_stake_owner"
+	ServicerMaxChainsOwner          = "servicer_max_chains_owner"
+	ServicerUnstakingBlocksOwner    = "servicer_unstaking_blocks_owner"
+	ServicerMinimumPauseBlocksOwner = "servicer_minimum_pause_blocks_owner"
+	ServicerMaxPausedBlocksOwner    = "servicer_max_paused_blocks_owner"
+	ServicersPerSessionOwner        = "servicers_per_session_owner"
 
 	FishermanMinimumStakeOwner       = "fisherman_minimum_stake_owner"
 	FishermanMaxChainsOwner          = "fisherman_max_chains_owner"
@@ -127,29 +128,29 @@ const (
 	MessageDoubleSignFeeOwner       = "message_double_sign_fee_owner"
 	MessageSendFeeOwner             = "message_send_fee_owner"
 
-	MessageStakeFishermanFeeOwner            = "message_stake_fisherman_fee_owner"
-	MessageEditStakeFishermanFeeOwner        = "message_edit_stake_fisherman_fee_owner"
-	MessageUnstakeFishermanFeeOwner          = "message_unstake_fisherman_fee_owner"
-	MessagePauseFishermanFeeOwner            = "message_pause_fisherman_fee_owner"
-	MessageUnpauseFishermanFeeOwner          = "message_unpause_fisherman_fee_owner"
-	MessageFishermanPauseServiceNodeFeeOwner = "message_fisherman_pause_service_node_fee_owner"
-	MessageTestScoreFeeOwner                 = "message_test_score_fee_owner"
-	MessageProveTestScoreFeeOwner            = "message_prove_test_score_fee_owner"
-	MessageStakeAppFeeOwner                  = "message_stake_app_fee_owner"
-	MessageEditStakeAppFeeOwner              = "message_edit_stake_app_fee_owner"
-	MessageUnstakeAppFeeOwner                = "message_unstake_app_fee_owner"
-	MessagePauseAppFeeOwner                  = "message_pause_app_fee_owner"
-	MessageUnpauseAppFeeOwner                = "message_unpause_app_fee_owner"
-	MessageStakeValidatorFeeOwner            = "message_stake_validator_fee_owner"
-	MessageEditStakeValidatorFeeOwner        = "message_edit_stake_validator_fee_owner"
-	MessageUnstakeValidatorFeeOwner          = "message_unstake_validator_fee_owner"
-	MessagePauseValidatorFeeOwner            = "message_pause_validator_fee_owner"
-	MessageUnpauseValidatorFeeOwner          = "message_unpause_validator_fee_owner"
-	MessageStakeServiceNodeFeeOwner          = "message_stake_service_node_fee_owner"
-	MessageEditStakeServiceNodeFeeOwner      = "message_edit_stake_service_node_fee_owner"
-	MessageUnstakeServiceNodeFeeOwner        = "message_unstake_service_node_fee_owner"
-	MessagePauseServiceNodeFeeOwner          = "message_pause_service_node_fee_owner"
-	MessageUnpauseServiceNodeFeeOwner        = "message_unpause_service_node_fee_owner"
+	MessageStakeFishermanFeeOwner         = "message_stake_fisherman_fee_owner"
+	MessageEditStakeFishermanFeeOwner     = "message_edit_stake_fisherman_fee_owner"
+	MessageUnstakeFishermanFeeOwner       = "message_unstake_fisherman_fee_owner"
+	MessagePauseFishermanFeeOwner         = "message_pause_fisherman_fee_owner"
+	MessageUnpauseFishermanFeeOwner       = "message_unpause_fisherman_fee_owner"
+	MessageFishermanPauseServicerFeeOwner = "message_fisherman_pause_servicer_fee_owner"
+	MessageTestScoreFeeOwner              = "message_test_score_fee_owner"
+	MessageProveTestScoreFeeOwner         = "message_prove_test_score_fee_owner"
+	MessageStakeAppFeeOwner               = "message_stake_app_fee_owner"
+	MessageEditStakeAppFeeOwner           = "message_edit_stake_app_fee_owner"
+	MessageUnstakeAppFeeOwner             = "message_unstake_app_fee_owner"
+	MessagePauseAppFeeOwner               = "message_pause_app_fee_owner"
+	MessageUnpauseAppFeeOwner             = "message_unpause_app_fee_owner"
+	MessageStakeValidatorFeeOwner         = "message_stake_validator_fee_owner"
+	MessageEditStakeValidatorFeeOwner     = "message_edit_stake_validator_fee_owner"
+	MessageUnstakeValidatorFeeOwner       = "message_unstake_validator_fee_owner"
+	MessagePauseValidatorFeeOwner         = "message_pause_validator_fee_owner"
+	MessageUnpauseValidatorFeeOwner       = "message_unpause_validator_fee_owner"
+	MessageStakeServicerFeeOwner          = "message_stake_servicer_fee_owner"
+	MessageEditStakeServicerFeeOwner      = "message_edit_stake_servicer_fee_owner"
+	MessageUnstakeServicerFeeOwner        = "message_unstake_servicer_fee_owner"
+	MessagePauseServicerFeeOwner          = "message_pause_servicer_fee_owner"
+	MessageUnpauseServicerFeeOwner        = "message_unpause_servicer_fee_owner"
 
 	MessageChangeParameterFeeOwner = "message_change_parameter_fee_owner"
 )

@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.37] - 2023-02-22
+## [0.0.0.38] - 2023-02-22
 
 - Added `SAVEPOINTS_ROLLBACKS.md` design document
+
+## [0.0.0.37] - 2023-02-21
+
+- Rename ServiceNode Actor Type Name to Servicer
 
 ## [0.0.0.36] - 2023-02-17
 
@@ -48,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.28] - 2023-01-30
 
-- Fix unit tests - `TestGetAppPauseHeightIfExists`, `TestGetAppOutputAddress`, `TestGetFishermanStatus`, `TestGetFishermanPauseHeightIfExists`, `TestGetFishermanOutputAddress`, `TestPersistenceContextParallelReadWrite`, `TestGetServiceNodePauseHeightIfExists`, `TestGetServiceNodeOutputAddress`, `fuzzSingleProtocolActor`, `TestGetValidatorPauseHeightIfExists`, and `TestGetValidatorOutputAddress` for misplaced expected and actual values in `require.Equal`.
+- Fix unit tests - `TestGetAppPauseHeightIfExists`, `TestGetAppOutputAddress`, `TestGetFishermanStatus`, `TestGetFishermanPauseHeightIfExists`, `TestGetFishermanOutputAddress`, `TestPersistenceContextParallelReadWrite`, `TestGetServicerPauseHeightIfExists`, `TestGetServicerOutputAddress`, `fuzzSingleProtocolActor`, `TestGetValidatorPauseHeightIfExists`, and `TestGetValidatorOutputAddress` for misplaced expected and actual values in `require.Equal`.
 
 ## [0.0.0.27] - 2023-01-27
 
@@ -80,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.21] - 2023-01-11
 
 - Add `init()` function to `gov.go` to build a map of parameter names and their types
-- Deprecated `GetBlocksPerSession()` and `GetServiceNodesPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
+- Deprecated `GetBlocksPerSession()` and `GetServicersPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
 - Update unit tests replacing `GetIntParam()` and `GetStringParam()` calls with `GetParameter()`
 
 ## [0.0.0.20] - 2023-01-11
@@ -309,7 +313,7 @@ Pocket Persistence 1st Iteration (https://github.com/pokt-network/pocket/pull/73
 
 # Added
 
-- Base persistence module implementation for the following actors: `Account`, `Pool`, `Validator`, `Fisherman`, `ServiceNode`, `Application`
+- Base persistence module implementation for the following actors: `Account`, `Pool`, `Validator`, `Fisherman`, `Servicer`, `Application`
 - Generalization of common protocol actor behvaiours via the `ProtocolActor` and `BaseActor` interface and implementation
 - A PostgreSQL based implementation of the persistence middleware including:
   - SQL query implementation for each actor

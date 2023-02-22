@@ -23,18 +23,18 @@ type Identifier interface {
 
 type Session interface {
 	NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application *coreTypes.Actor) (Session, types.Error)
-	GetServiceNodes() []*coreTypes.Actor // the ServiceNodes providing Web3 to the application
-	GetFishermen() []*coreTypes.Actor    // the Fishermen monitoring the serviceNodes
-	GetApplication() *coreTypes.Actor    // the Application consuming the web3 access
-	GetRelayChain() RelayChain           // the chain identifier of the web3
-	GetGeoZone() GeoZone                 // the geo-location zone where all are registered
-	GetSessionHeight() int64             // the block height when the session started
+	GetServicers() []*coreTypes.Actor // the Servicers providing Web3 to the application
+	GetFishermen() []*coreTypes.Actor // the Fishermen monitoring the servicers
+	GetApplication() *coreTypes.Actor // the Application consuming the web3 access
+	GetRelayChain() RelayChain        // the chain identifier of the web3
+	GetGeoZone() GeoZone              // the geo-location zone where all are registered
+	GetSessionHeight() int64          // the block height when the session started
 }
 
 var _ Session = &session{}
 
 type session struct {
-	serviceNodes  []*coreTypes.Actor
+	servicers     []*coreTypes.Actor
 	fishermen     []*coreTypes.Actor
 	application   *coreTypes.Actor
 	relayChain    RelayChain
@@ -54,7 +54,7 @@ func (s *session) NewSession(sessionHeight int64, blockHash string, geoZone GeoZ
 	if err != nil {
 		return
 	}
-	s.serviceNodes = s.findClosestXServiceNodes()
+	s.servicers = s.findClosestXServicers()
 	s.fishermen = s.findClosestYFishermen()
 	return s, nil
 }
@@ -75,13 +75,14 @@ func (s *session) sessionKey() ([]byte, types.Error) {
 	return concat(sessionHeightBytes, blockHashBz, s.geoZone.Bytes(), s.relayChain.Bytes(), appPubKey.Bytes()), nil
 }
 
-// uses the current 'world state' to determine the service nodes in the session
-// 1) get an ordered list of the public keys of service nodes who are:
-//    - actively staked
-//    - staked within geo-zone
-//    - staked for relay-chain
-// 2) calls `pseudoRandomSelection(serviceNodes, numberOfNodesPerSession)`
-func (s *session) findClosestXServiceNodes() []*coreTypes.Actor {
+// uses the current 'world state' to determine the servicers in the session
+// 1) get an ordered list of the public keys of servicers who are:
+//   - actively staked
+//   - staked within geo-zone
+//   - staked for relay-chain
+//
+// 2) calls `pseudoRandomSelection(servicers, numberOfNodesPerSession)`
+func (s *session) findClosestXServicers() []*coreTypes.Actor {
 	// IMPORTANT:
 	// THIS IS A DEMONSTRABLE FUNCTION THAT WILL NOT BE IMPLEMENTED AS SUCH
 	// IT EXISTS IN THIS COMMIT PURELY TO COMMUNICATE THE EXPECTED BEHAVIOR
@@ -90,9 +91,10 @@ func (s *session) findClosestXServiceNodes() []*coreTypes.Actor {
 
 // uses the current 'world state' to determine the fishermen in the session
 // 1) get an ordered list of the public keys of fishermen who are:
-//    - actively staked
-//    - staked within geo-zone
-//    - staked for relay-chain
+//   - actively staked
+//   - staked within geo-zone
+//   - staked for relay-chain
+//
 // 2) calls `pseudoRandomSelection(fishermen, numberOfFishPerSession)`
 func (s *session) findClosestYFishermen() []*coreTypes.Actor {
 	// IMPORTANT:
@@ -108,7 +110,9 @@ func (s *session) findClosestYFishermen() []*coreTypes.Actor {
 // FAQ:
 // Q) why do we hash to find a newKey between every actor selection?
 // A) pseudo-random selection only works if each iteration is re-randomized
-//    or it would be subject to lexicographical proximity bias attacks
+//
+//	or it would be subject to lexicographical proximity bias attacks
+//
 //nolint:unused // This is a demonstratable function
 func (s *session) pseudoRandomSelection(orderedListOfPublicKeys []string, numberOfActorsInSession int) []*coreTypes.Actor {
 	// IMPORTANT:
@@ -117,8 +121,8 @@ func (s *session) pseudoRandomSelection(orderedListOfPublicKeys []string, number
 	return nil
 }
 
-func (s *session) GetServiceNodes() []*coreTypes.Actor {
-	return s.serviceNodes
+func (s *session) GetServicers() []*coreTypes.Actor {
+	return s.servicers
 }
 
 func (s *session) GetFishermen() []*coreTypes.Actor {
