@@ -53,7 +53,7 @@ type libp2pModule struct {
 	base_modules.IntegratableModule
 
 	logger *modules.Logger
-	//nolint:unused
+	//nolint:unused // bus is used by embedded base module(s)
 	bus          modules.Bus
 	cfg          *configs.P2PConfig
 	identity     libp2p.Option

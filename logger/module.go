@@ -18,6 +18,7 @@ type loggerModule struct {
 	base_modules.InterruptableModule
 
 	zerolog.Logger
+	//nolint:unused // bus is used by embedded base module(s)
 	bus    modules.Bus
 	config *configs.LoggerConfig
 }

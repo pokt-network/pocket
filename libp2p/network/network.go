@@ -24,7 +24,8 @@ import (
 type libp2pNetwork struct {
 	base_modules.IntegratableModule
 
-	logger                *modules.Logger
+	logger *modules.Logger
+	//nolint:unused // bus is used by embedded base module(s)
 	bus                   modules.Bus
 	host                  libp2pHost.Host
 	topic                 *pubsub.Topic
