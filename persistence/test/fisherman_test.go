@@ -117,23 +117,23 @@ func TestGetFishermenReadyToUnstake(t *testing.T) {
 	require.NoError(t, err)
 
 	// Unstake fisherman at height 0
-	err = db.SetFishermanUnstakingHeightAndStatus(addrBz, 0, persistence.UnstakingStatus)
+	err = db.SetFishermanUnstakingHeightAndStatus(addrBz, 0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 
 	// Unstake fisherman2 and fisherman3 at height 1
-	err = db.SetFishermanUnstakingHeightAndStatus(addrBz2, 1, persistence.UnstakingStatus)
+	err = db.SetFishermanUnstakingHeightAndStatus(addrBz2, 1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
-	err = db.SetFishermanUnstakingHeightAndStatus(addrBz3, 1, persistence.UnstakingStatus)
+	err = db.SetFishermanUnstakingHeightAndStatus(addrBz3, 1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 
 	// Check unstaking fishermans at height 0
-	unstakingFishermen, err := db.GetFishermenReadyToUnstake(0, persistence.UnstakingStatus)
+	unstakingFishermen, err := db.GetFishermenReadyToUnstake(0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingFishermen), "wrong number of actors ready to unstake at height 0")
 	require.Equal(t, fisherman.Address, unstakingFishermen[0].GetAddress(), "unexpected fishermanlication actor returned")
 
 	// Check unstaking fishermans at height 1
-	unstakingFishermen, err = db.GetFishermenReadyToUnstake(1, persistence.UnstakingStatus)
+	unstakingFishermen, err = db.GetFishermenReadyToUnstake(1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingFishermen), "wrong number of actors ready to unstake at height 1")
 	require.ElementsMatch(t, []string{fisherman2.Address, fisherman3.Address}, []string{unstakingFishermen[0].Address, unstakingFishermen[1].Address})
@@ -151,7 +151,7 @@ func TestGetFishermanStatus(t *testing.T) {
 	// Check status before the fisherman exists
 	status, err := db.GetFishermanStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
+	require.Equal(t, int32(coreTypes.StakeStatus_UnknownStatus), status, "unexpected status")
 
 	// Check status after the fisherman exists
 	status, err = db.GetFishermanStatus(addrBz, 1)

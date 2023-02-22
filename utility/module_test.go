@@ -29,9 +29,10 @@ const (
 )
 
 var (
-	// Initialized in TestMain
+	testUtilityMod modules.UtilityModule
+
+	// TODO(#261): Utility module tests should have no dependencies on a postgres container
 	testPersistenceMod modules.PersistenceModule
-	testUtilityMod     modules.UtilityModule
 )
 
 func NewTestingMempool(_ *testing.T) mempool.TXMempool {
@@ -39,7 +40,6 @@ func NewTestingMempool(_ *testing.T) mempool.TXMempool {
 }
 
 func TestMain(m *testing.M) {
-	// TODO(#261): Utility module tests should have no dependencies on a postgres container
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 
 	runtimeCfg := newTestRuntimeConfig(dbUrl)
@@ -84,21 +84,21 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 
 func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
 	cfg := &configs.Config{
+		Utility: &configs.UtilityConfig{
+			MaxMempoolTransactionBytes: 1000000,
+			MaxMempoolTransactions:     1000,
+		},
 		Persistence: &configs.PersistenceConfig{
 			PostgresUrl:       databaseUrl,
 			NodeSchema:        testSchema,
-			BlockStorePath:    "",
-			TxIndexerPath:     "",
-			TreesStoreDir:     "",
+			BlockStorePath:    "", // in memory
+			TxIndexerPath:     "", // in memory
+			TreesStoreDir:     "", // in memory
 			MaxConnsCount:     4,
 			MinConnsCount:     0,
 			MaxConnLifetime:   "1h",
 			MaxConnIdleTime:   "30m",
 			HealthCheckPeriod: "5m",
-		},
-		Utility: &configs.UtilityConfig{
-			MaxMempoolTransactionBytes: 1000000,
-			MaxMempoolTransactions:     1000,
 		},
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(
@@ -119,7 +119,6 @@ func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
 	return utilityMod.(modules.UtilityModule)
 }
 
-// TODO(#261): Utility module tests should have no dependencies on the persistence module
 func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
 	persistenceMod, err := persistence.Create(bus)
 	if err != nil {

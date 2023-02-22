@@ -109,23 +109,23 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 	require.NoError(t, err)
 
 	// Unstake app at height 0
-	err = db.SetAppUnstakingHeightAndStatus(addrBz, 0, persistence.UnstakingStatus)
+	err = db.SetAppUnstakingHeightAndStatus(addrBz, 0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 
 	// Unstake app2 and app3 at height 1
-	err = db.SetAppUnstakingHeightAndStatus(addrBz2, 1, persistence.UnstakingStatus)
+	err = db.SetAppUnstakingHeightAndStatus(addrBz2, 1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
-	err = db.SetAppUnstakingHeightAndStatus(addrBz3, 1, persistence.UnstakingStatus)
+	err = db.SetAppUnstakingHeightAndStatus(addrBz3, 1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 
 	// Check unstaking apps at height 0
-	unstakingApps, err := db.GetAppsReadyToUnstake(0, persistence.UnstakingStatus)
+	unstakingApps, err := db.GetAppsReadyToUnstake(0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingApps), "wrong number of actors ready to unstake at height 0")
 	require.Equal(t, app.Address, unstakingApps[0].GetAddress(), "unexpected application actor returned")
 
 	// Check unstaking apps at height 1
-	unstakingApps, err = db.GetAppsReadyToUnstake(1, persistence.UnstakingStatus)
+	unstakingApps, err = db.GetAppsReadyToUnstake(1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingApps), "wrong number of actors ready to unstake at height 1")
 	require.ElementsMatch(t, []string{app2.Address, app3.Address}, []string{unstakingApps[0].Address, unstakingApps[1].Address})
@@ -142,7 +142,7 @@ func TestGetAppStatus(t *testing.T) {
 	// Check status before the app exists
 	status, err := db.GetAppStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
+	require.Equal(t, int32(coreTypes.StakeStatus_UnknownStatus), status, "unexpected status")
 
 	// Check status after the app exists
 	status, err = db.GetAppStatus(addrBz, 1)

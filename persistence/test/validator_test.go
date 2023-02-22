@@ -114,24 +114,24 @@ func TestGetValidatorsReadyToUnstake(t *testing.T) {
 	require.NoError(t, err)
 
 	// Unstake validator at height 0
-	err = db.SetValidatorUnstakingHeightAndStatus(addrBz, 0, persistence.UnstakingStatus)
+	err = db.SetValidatorUnstakingHeightAndStatus(addrBz, 0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 
 	// Unstake validator2 and validator3 at height 1
-	err = db.SetValidatorUnstakingHeightAndStatus(addrBz2, 1, persistence.UnstakingStatus)
+	err = db.SetValidatorUnstakingHeightAndStatus(addrBz2, 1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
-	err = db.SetValidatorUnstakingHeightAndStatus(addrBz3, 1, persistence.UnstakingStatus)
+	err = db.SetValidatorUnstakingHeightAndStatus(addrBz3, 1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 
 	// Check unstaking validators at height 0
-	unstakingValidators, err := db.GetValidatorsReadyToUnstake(0, persistence.UnstakingStatus)
+	unstakingValidators, err := db.GetValidatorsReadyToUnstake(0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingValidators), "wrong number of actors ready to unstake at height 0")
 
 	require.Equal(t, validator.Address, unstakingValidators[0].GetAddress(), "unexpected unstaking validator returned")
 
 	// Check unstaking validators at height 1
-	unstakingValidators, err = db.GetValidatorsReadyToUnstake(1, persistence.UnstakingStatus)
+	unstakingValidators, err = db.GetValidatorsReadyToUnstake(1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingValidators), "wrong number of actors ready to unstake at height 1")
 	require.ElementsMatch(t, []string{validator2.Address, validator3.Address}, []string{unstakingValidators[0].Address, unstakingValidators[1].Address})
@@ -149,7 +149,7 @@ func TestGetValidatorStatus(t *testing.T) {
 	// Check status before the validator exists
 	status, err := db.GetValidatorStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
+	require.Equal(t, int32(coreTypes.StakeStatus_UnknownStatus), status, "unexpected status")
 
 	// Check status after the validator exists
 	status, err = db.GetValidatorStatus(addrBz, 1)

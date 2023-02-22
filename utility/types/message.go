@@ -180,6 +180,7 @@ func validateRelayChains(chains []string) Error {
 }
 
 func getMessageType(msg Message) string {
+	// GetMessageName() is a method on the Message interface, so we can't use it here.
 	return string(msg.ProtoReflect().Descriptor().Name())
 }
 

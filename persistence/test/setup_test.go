@@ -42,7 +42,7 @@ var (
 	DefaultMaxRelays     = utils.BigIntToString(DefaultMaxRelaysBig)
 	StakeToUpdate        = utils.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
 
-	DefaultStakeStatus     = int32(persistence.StakedStatus)
+	DefaultStakeStatus     = int32(coreTypes.StakeStatus_Staked)
 	DefaultPauseHeight     = int64(-1) // pauseHeight=-1 means not paused
 	DefaultUnstakingHeight = int64(-1) // pauseHeight=-1 means not unstaking
 
@@ -248,11 +248,11 @@ func fuzzSingleProtocolActor(
 
 			switch {
 			case originalActor.UnstakingHeight == DefaultUnstakingHeight:
-				require.Equal(t, persistence.StakedStatus, status, "actor status should be staked")
+				require.Equal(t, int32(coreTypes.StakeStatus_Staked), status, "actor status should be staked")
 			case originalActor.UnstakingHeight > db.Height:
-				require.Equal(t, persistence.UnstakingStatus, status, "actor status should be unstaking")
+				require.Equal(t, int32(coreTypes.StakeStatus_Unstaking), status, "actor status should be unstaking")
 			default:
-				require.Equal(t, persistence.UnstakedStatus, status, "actor status should be unstaked")
+				require.Equal(t, int32(coreTypes.StakeStatus_Unstaked), status, "actor status should be unstaked")
 			}
 		case "GetActorPauseHeight":
 			pauseHeight, err := db.GetActorPauseHeightIfExists(protocolActorSchema, addr, db.Height)
