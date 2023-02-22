@@ -12,8 +12,8 @@ const (
 	testChildAddrIdx1 = "8b83d7057df7ac1d20a2f0aa0edadf206eb6764d"
 )
 
+// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-1-for-ed25519
 func TestSlip_DeriveChild_Vector1(t *testing.T) {
-	// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-1-for-ed25519
 	seed, err := hex.DecodeString("000102030405060708090a0b0c0d0e0f")
 	require.NoError(t, err)
 
@@ -118,6 +118,7 @@ func TestSlip_DeriveChild_Vector1(t *testing.T) {
 			}
 
 			// Slip-0010 private keys in test vector are only the seed of the full private key
+			// This is equivalent to the SecretKey of the HMAC key used to generate the ed25519 key
 			privSeed, err := childKey.GetSeed("")
 			require.NoError(t, err)
 			privHex := hex.EncodeToString(privSeed)
@@ -130,8 +131,8 @@ func TestSlip_DeriveChild_Vector1(t *testing.T) {
 	}
 }
 
+// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-2-for-ed25519
 func TestSlip_DeriveChild_Vector2(t *testing.T) {
-	// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-2-for-ed25519
 	seed, err := hex.DecodeString("fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542")
 	require.NoError(t, err)
 
@@ -227,6 +228,7 @@ func TestSlip_DeriveChild_Vector2(t *testing.T) {
 			}
 
 			// Slip-0010 private keys in test vector are only the seed of the full private key
+			// This is equivalent to the SecretKey of the HMAC key used to generate the ed25519 key
 			privSeed, err := childKey.GetSeed("")
 			require.NoError(t, err)
 			privHex := hex.EncodeToString(privSeed)
