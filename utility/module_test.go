@@ -70,14 +70,15 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 		testUtilityMod.GetMempool().Clear()
 	})
 
-	uc := &utilityContext{
-		height:             height,
-		persistenceContext: persistenceContext,
-		savePointsSet:      make(map[string]struct{}),
-		savePointsList:     make([][]byte, 0),
+	ctx := &utilityContext{
+		height:         height,
+		store:          persistenceContext,
+		savePointsSet:  make(map[string]struct{}),
+		savePointsList: make([][]byte, 0),
 	}
+	ctx.IntegratableModule.SetBus(testUtilityMod.GetBus())
 
-	return uc.setBus(testUtilityMod.GetBus())
+	return ctx
 }
 
 func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {

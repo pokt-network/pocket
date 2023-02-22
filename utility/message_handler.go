@@ -127,7 +127,6 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 
-	store := u.Store()
 	// insert actor
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -135,13 +134,13 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 		if err != nil {
 			return err
 		}
-		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-		er = store.InsertServicer(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.store.InsertServicer(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	}
 	if er != nil {
 		return typesUtil.ErrInsert(er)
@@ -190,20 +189,19 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 	if err := u.addPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
 		return err
 	}
-	store := u.Store()
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		maxRelays, err := u.calculateMaxAppRelays(message.Amount)
 		if err != nil {
 			return err
 		}
-		er = store.UpdateApp(message.Address, maxRelays, message.Amount, message.Chains)
+		er = u.store.UpdateApp(message.Address, maxRelays, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
+		er = u.store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-		er = store.UpdateServicer(message.Address, message.ServiceUrl, message.Amount, message.Chains)
+		er = u.store.UpdateServicer(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		er = store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
+		er = u.store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
 	}
 	if er != nil {
 		return typesUtil.ErrInsert(er)

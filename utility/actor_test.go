@@ -142,7 +142,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			err := ctx.persistenceContext.SetParam(paramName, numUnstakingBlocks)
+			err := ctx.store.SetParam(paramName, numUnstakingBlocks)
 			require.NoError(t, err, "error setting minimum pause blocks")
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -193,7 +193,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			err := ctx.persistenceContext.SetParam(paramName, minPauseBlocksNumber)
+			err := ctx.store.SetParam(paramName, minPauseBlocksNumber)
 			require.NoError(t, err, "error setting minimum pause blocks")
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -308,7 +308,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			err := ctx.persistenceContext.SetParam(paramName, maxPausedBlocks)
+			err := ctx.store.SetParam(paramName, maxPausedBlocks)
 			require.NoError(t, err)
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -400,9 +400,9 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
 
-			er := ctx.persistenceContext.SetParam(paramName1, maxPausedBlocks)
+			er := ctx.store.SetParam(paramName1, maxPausedBlocks)
 			require.NoError(t, er, "error setting max paused blocks")
-			er = ctx.persistenceContext.SetParam(paramName2, unstakingBlocks)
+			er = ctx.store.SetParam(paramName2, unstakingBlocks)
 			require.NoError(t, er, "error setting max paused blocks")
 			er = ctx.setPoolAmount(poolName, poolInitAMount)
 			require.NoError(t, er)
@@ -686,13 +686,13 @@ func getActorByAddr(t *testing.T, ctx *utilityContext, actorType coreTypes.Actor
 }
 
 func getAllTestingApps(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.persistenceContext).GetAllApps(ctx.height)
+	actors, err := ctx.store.GetAllApps(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
 
 func getAllTestingValidators(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.persistenceContext).GetAllValidators(ctx.height)
+	actors, err := ctx.store.GetAllValidators(ctx.height)
 	require.NoError(t, err)
 	sort.Slice(actors, func(i, j int) bool {
 		return actors[i].GetAddress() < actors[j].GetAddress()
@@ -701,13 +701,13 @@ func getAllTestingValidators(t *testing.T, ctx *utilityContext) []*coreTypes.Act
 }
 
 func getAllTestingFish(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.persistenceContext).GetAllFishermen(ctx.height)
+	actors, err := ctx.store.GetAllFishermen(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
 
 func getAllTestingServicers(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.persistenceContext).GetAllServicers(ctx.height)
+	actors, err := ctx.store.GetAllServicers(ctx.height)
 	require.NoError(t, err)
 	return actors
 }

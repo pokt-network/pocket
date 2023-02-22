@@ -395,7 +395,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	// state; hence the `-1` expectation in the call above.
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
-
+	persistenceReadContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
 	return persistenceMock
@@ -463,7 +463,6 @@ func baseUtilityContextMock(t *testing.T, genesisState *genesis.GenesisState) *m
 	utilityContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Release().Return(nil).AnyTimes()
-	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
 
 	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
 

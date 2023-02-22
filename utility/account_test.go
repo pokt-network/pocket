@@ -130,7 +130,7 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 }
 
 func getAllTestingAccounts(t *testing.T, ctx *utilityContext) []*coreTypes.Account {
-	accs, err := (ctx.persistenceContext).GetAllAccounts(0)
+	accs, err := ctx.store.GetAllAccounts(0)
 	require.NoError(t, err)
 
 	sort.Slice(accs, func(i, j int) bool {
@@ -144,7 +144,7 @@ func getFirstTestingAccount(t *testing.T, ctx *utilityContext) *coreTypes.Accoun
 }
 
 func getAllTestingPools(t *testing.T, ctx *utilityContext) []*coreTypes.Account {
-	pools, err := (ctx.persistenceContext).GetAllPools(0)
+	pools, err := ctx.store.GetAllPools(0)
 	require.NoError(t, err)
 
 	sort.Slice(pools, func(i, j int) bool {

@@ -35,7 +35,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	totalTxsSizeInBytes := 0
 	txIndex := 0
 
-	mempool := u.getBus().GetUtilityModule().GetMempool()
+	mempool := u.GetBus().GetUtilityModule().GetMempool()
 	for !mempool.IsEmpty() {
 		txBytes, err := mempool.PopTx()
 		if err != nil {
@@ -65,7 +65,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			totalTxsSizeInBytes -= txTxsSizeInBytes
 			continue
 		}
-		if err := u.persistenceContext.IndexTransaction(txResult); err != nil {
+		if err := u.store.IndexTransaction(txResult); err != nil {
 			u.logger.Fatal().Err(err).Msgf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
 		}
 
@@ -77,7 +77,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		return "", nil, err
 	}
 	// return the app hash (consensus module will get the validator set directly)
-	stateHash, err = u.persistenceContext.ComputeStateHash()
+	stateHash, err = u.store.ComputeStateHash()
 	if err != nil {
 		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 	}
@@ -118,7 +118,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 			return "", err
 		}
 
-		if err := u.persistenceContext.IndexTransaction(txResult); err != nil {
+		if err := u.store.IndexTransaction(txResult); err != nil {
 			u.logger.Fatal().Err(err).Msgf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
 		}
 
@@ -134,7 +134,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 		return "", err
 	}
 	// return the app hash (consensus module will get the validator set directly)
-	stateHash, err := u.persistenceContext.ComputeStateHash()
+	stateHash, err := u.store.ComputeStateHash()
 	if err != nil {
 		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return "", typesUtil.ErrAppHash(err)
@@ -203,8 +203,6 @@ func (u *utilityContext) handleByzantineValidators(lastBlockByzantineValidators 
 }
 
 func (u *utilityContext) unbondUnstakingActors() (err typesUtil.Error) {
-	var er error
-	store := u.Store()
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -213,18 +211,20 @@ func (u *utilityContext) unbondUnstakingActors() (err typesUtil.Error) {
 
 		var readyToUnstake []*moduleTypes.UnstakingActor
 		var poolName string
+		var er error
+
 		switch actorType {
 		case coreTypes.ActorType_ACTOR_TYPE_APP:
-			readyToUnstake, er = store.GetAppsReadyToUnstake(u.height, int32(coreTypes.StakeStatus_Unstaking))
+			readyToUnstake, er = u.store.GetAppsReadyToUnstake(u.height, int32(coreTypes.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_APP_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
-			readyToUnstake, er = store.GetFishermenReadyToUnstake(u.height, int32(coreTypes.StakeStatus_Unstaking))
+			readyToUnstake, er = u.store.GetFishermenReadyToUnstake(u.height, int32(coreTypes.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-			readyToUnstake, er = store.GetServicersReadyToUnstake(u.height, int32(coreTypes.StakeStatus_Unstaking))
+			readyToUnstake, er = u.store.GetServicersReadyToUnstake(u.height, int32(coreTypes.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_SERVICER_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
-			readyToUnstake, er = store.GetValidatorsReadyToUnstake(u.height, int32(coreTypes.StakeStatus_Unstaking))
+			readyToUnstake, er = u.store.GetValidatorsReadyToUnstake(u.height, int32(coreTypes.StakeStatus_Unstaking))
 			poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED:
 			continue
@@ -282,21 +282,21 @@ func (u *utilityContext) beginUnstakingMaxPausedActors() (err typesUtil.Error) {
 }
 
 func (u *utilityContext) beginUnstakingActorsPausedBefore(pausedBeforeHeight int64, actorType coreTypes.ActorType) (err typesUtil.Error) {
-	var er error
-	store := u.Store()
 	unbondingHeight, err := u.getUnbondingHeight(actorType)
 	if err != nil {
 		return err
 	}
+
+	var er error
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		er = store.SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
+		er = u.store.SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = store.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
+		er = u.store.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-		er = store.SetServicerStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
+		er = u.store.SetServicerStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		er = store.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
+		er = u.store.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
 	}
 	if er != nil {
 		return typesUtil.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
@@ -337,11 +337,7 @@ func (u *utilityContext) handleProposerRewards(proposer []byte) typesUtil.Error 
 
 // TODO: Need to design & document this business logic.
 func (u *utilityContext) getValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
-	store, height, err := u.getStoreAndHeight()
-	if err != nil {
-		return 0, typesUtil.ErrGetHeight(err)
-	}
-	missedBlocks, er := store.GetValidatorMissedBlocks(address, height)
+	missedBlocks, er := u.store.GetValidatorMissedBlocks(address, u.height)
 	if er != nil {
 		return typesUtil.ZeroInt, typesUtil.ErrGetMissedBlocks(er)
 	}
@@ -350,8 +346,7 @@ func (u *utilityContext) getValidatorMissedBlocks(address []byte) (int, typesUti
 
 // TODO: Need to design & document this business logic.
 func (u *utilityContext) pauseValidatorAndSetMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) typesUtil.Error {
-	store := u.Store()
-	if err := store.SetValidatorPauseHeightAndMissedBlocks(address, pauseHeight, missedBlocks); err != nil {
+	if err := u.store.SetValidatorPauseHeightAndMissedBlocks(address, pauseHeight, missedBlocks); err != nil {
 		return typesUtil.ErrSetPauseHeight(err)
 	}
 	return nil
@@ -359,8 +354,7 @@ func (u *utilityContext) pauseValidatorAndSetMissedBlocks(address []byte, pauseH
 
 // TODO: Need to design & document this business logic.
 func (u *utilityContext) setValidatorMissedBlocks(address []byte, missedBlocks int) typesUtil.Error {
-	store := u.Store()
-	er := store.SetValidatorMissedBlocks(address, missedBlocks)
+	er := u.store.SetValidatorMissedBlocks(address, missedBlocks)
 	if er != nil {
 		return typesUtil.ErrSetMissedBlocks(er)
 	}

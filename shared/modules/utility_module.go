@@ -52,8 +52,6 @@ type UtilityContext interface {
 	Release() error
 	// Commit the current utility context (along with its underlying persistence context) to disk
 	Commit(quorumCert []byte) error
-	// Returns the read-write persistence context initialized by this utility context
-	GetPersistenceContext() PersistenceRWContext
 }
 
 // TECHDEBT: Remove this interface from `shared/modules`
