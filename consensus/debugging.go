@@ -12,7 +12,8 @@ var (
 	_ modules.ConsensusDebugModule = &consensusModule{}
 )
 
-// Implementation of ConsensusDebugModuleFunctions exposed by the debug interface should only be used for testing purposes.
+// Implementation of ConsensusDebugModule functions (i.e. SetHeight(), SetRound(), SetStep(), SetLeaderId(), SetUtilityContext())
+// exposed by the debug interface should only be used for testing purposes.
 
 func (m *consensusModule) SetHeight(height uint64) {
 	m.height = height
