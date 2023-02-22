@@ -36,13 +36,18 @@ func PeerFromLibp2pStream(stream network.Stream) (*typesP2P.NetworkPeer, error) 
 		return nil, err
 	}
 
-	// TECHDEBT: currently returning libp2p multiaddr version of ServiceUrl.
+	peerMultiaddr := stream.Conn().RemoteMultiaddr()
+	peerServiceUrl, err := ServiceUrlFromLibp2pMultiaddr(peerMultiaddr)
+	if err != nil {
+		return nil, ErrIdentity("converting multiaddr to service URL", err)
+	}
+
 	return &typesP2P.NetworkPeer{
 		Dialer:    transport.NewLibP2PTransport(stream),
 		PublicKey: publicKey,
 		// NB: pokt analogue of libp2p peer.ID
 		Address:    publicKey.Address(),
-		ServiceUrl: stream.Conn().RemoteMultiaddr().String(),
+		ServiceUrl: peerServiceUrl,
 	}, nil
 }
 
@@ -72,18 +77,7 @@ func Libp2pAddrInfoFromPeer(peer *typesP2P.NetworkPeer) (libp2pPeer.AddrInfo, er
 		), err)
 	}
 
-	peerMultiaddr, err := multiaddr.NewMultiaddr(peer.ServiceUrl)
-	// Return early if peer.ServiceUrl already have a multiaddr instead of a ServiceURL.
-	if err == nil {
-		return libp2pPeer.AddrInfo{
-			ID: peerID,
-			Addrs: []multiaddr.Multiaddr{
-				peerMultiaddr,
-			},
-		}, nil
-	}
-
-	peerMultiaddr, err = Libp2pMultiaddrFromServiceUrl(peer.ServiceUrl)
+	peerMultiaddr, err := Libp2pMultiaddrFromServiceUrl(peer.ServiceUrl)
 	if err != nil {
 		return libp2pPeer.AddrInfo{}, err
 	}
@@ -146,4 +140,41 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 		peerUrl.Port(),
 	)
 	return multiaddr.NewMultiaddr(peerMultiAddrStr)
+}
+
+// ServiceUrlFromLibp2pMultiaddr converts a multiaddr into a URL string.
+// TECHDEBT: this probably belongs somewhere else, it's more of a networking helper.
+func ServiceUrlFromLibp2pMultiaddr(addr multiaddr.Multiaddr) (string, error) {
+	protos := addr.Protocols()
+	if len(protos) < 2 {
+		return "", fmt.Errorf(
+			"unsupported multiaddr: %s; expected at least 2 protocols, got: %d",
+			addr, len(protos),
+		)
+	}
+
+	networkProto := protos[0]
+	// e.g. IP address: "/ip4/10.0.0.1" --> "10.0.0.1"
+	networkValue, err := addr.ValueForProtocol(networkProto.Code)
+	if err != nil {
+		return "", err
+	}
+
+	transportProto := protos[1]
+	// e.g. Port: "/tcp/42069" --> "42069"
+	transportValue, err := addr.ValueForProtocol(transportProto.Code)
+	if err != nil {
+		return "", err
+	}
+
+	// Top level proto must be a network protocol (e.g. ip4, ip6).
+	switch networkProto.Code {
+	case multiaddr.P_IP4, multiaddr.P_IP6:
+		return fmt.Sprintf("%s:%s", networkValue, transportValue), nil
+	}
+
+	return "", fmt.Errorf(
+		"unsupported network protocol, %s",
+		networkProto.Name,
+	)
 }
