@@ -8,7 +8,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-const (
+var (
 	_ modules.ConsensusDebugModule = &consensusModule{}
 )
 

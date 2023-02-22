@@ -23,6 +23,7 @@ type ConsensusModule interface {
 
 	ConsensusStateSync
 	ConsensusPacemaker
+	ConsensusDebugModule
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
