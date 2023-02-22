@@ -5,17 +5,16 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
-// Currently only here for clarity, might not be needed
-type FSMMessageHandler interface {
-	HandleUnsynched(*consensusModule, *messaging.StateMachineTransitionEvent)
-	HandleSyncMode(*consensusModule, *messaging.StateMachineTransitionEvent)
-	HandleSynced(*consensusModule, *messaging.StateMachineTransitionEvent)
-	HandlePacemaker(*consensusModule, *messaging.StateMachineTransitionEvent)
-	HandleServerMode(*consensusModule, *messaging.StateMachineTransitionEvent)
-}
+// type FSMConsensusEventsHandler interface {
+// 	HandleUnsynched(*messaging.StateMachineTransitionEvent)
+// 	HandleSyncMode(*messaging.StateMachineTransitionEvent)
+// 	HandleSynced(*messaging.StateMachineTransitionEvent)
+// 	HandlePacemaker(*messaging.StateMachineTransitionEvent)
+// 	HandleServerMode(*messaging.StateMachineTransitionEvent)
+// }
 
 // State machine transition event comes to consensus module
-// consensus moduel reacts upon the new changed state
+// onsensus moduel reacts upon the new changed state
 // consensus module's reply is a new state machine transition event, which is sent to the state machine module
 func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
 	m.m.Lock()
@@ -33,7 +32,7 @@ func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.State
 		return m.HandleUnsynched(msg)
 
 	case string(coreTypes.StateMachineState_Consensus_SyncMode):
-		return m.HandleSyncMode(msg)
+		return m.HandleSync(msg)
 
 	case string(coreTypes.StateMachineState_Consensus_Synced):
 		return m.HandleSynced(msg)
@@ -48,6 +47,9 @@ func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.State
 	return nil
 }
 
+// Unsynched mode is when the node (validator or non-valdiator) is out of sync with the rest of the network
+// This mode is a transition mode from node being up-to-date (i.e. Pacemaker mode, Synched mode) to the latest state to node being out-of-sync
+// As soon as node transitions to this mode, it will transition to the sync mode.
 func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("In HandleUnsyched, as node is out of sync, sending syncmode event to start syncing")
 	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing); err != nil {
@@ -57,13 +59,8 @@ func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionE
 	return nil
 }
 
-// CONSIDER: there are similarities between sync mode and pacemaker modes' transition to unsync mode, consider consolidating
-func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
-	// wait for syncing to finish
-	// if the node is validator move to pacemaker state
-	// else move the synced state
-	// m.GetBus().GetConsensusModule().StartSnycing()
-
+// Sync mode is when the node (validator or non-valdiator) is syncing with the rest of the network
+func (m *consensusModule) HandleSync(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("In HandleSyncMode, starting syning")
 
 	m.stateSync.AggregateMetadataResponses()
@@ -90,32 +87,24 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	return nil
 }
 
-// Synced mode may change to unsync mode if node is out of sync
+// Currently we never transition to this state.
+// Basically, a non-validator node always stays in syncmode.
+// CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state
 func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Debug().Msg("In HandleSyncedMode")
-	// node starts and it is not validator.
-	// node syncs,
-	// and node is now in Synced state
-	// node receives a new block and
-	// whenever a new block is received if its height is greater than current block height
-	// node transitions to unsycnhed state
-
+	m.logger.Debug().Msg("Non-validator node is in Synced mode")
 	return nil
 }
 
-// Pacemaker mode may change to unsync mode if node is out of sync
+// Pacemaker mode is when the validator is synced and it is waiting for a new block proposal to come in
 func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Debug().Msg("Validator is synced and in HandlePacemaker mode. It will stay in this mode until it receives a new block proposal that has a higher height than the current block height")
-	// node starts and it is a validator.
-	// node syncs,
-	// and node is now in Synced state
-	// node receives a new block proposal, and it understands that it doesn't have block
-	// node transitions to unsycnhed state
-
-	//CONSIDER: maybe we can consider transitioning the unsynced node along with the received block height
+	m.logger.Debug().Msg("Validator is synced and in Pacemaker mode. It will stay in this mode until it receives a new block proposal that has a higher height than the current block height")
+	// validator receives a new block proposal, and it understands that it doesn't have block and it transitions to unsycnhed state
+	// transitioning out of this state happens when a new block proposal is received by the hotstuff_replica
 	return nil
 }
 
+// Server mode runs mutually exclusive to the rest of the modes, thus its state changes doesn't affect the other modes
+// Server mode changes only happen through the node config and EnableServerMode() and DisableServerMode() functions
 func (m *consensusModule) HandleServerMode(msg *messaging.StateMachineTransitionEvent) error {
 	if msg.Event == string(coreTypes.StateMachineEvent_Consensus_DisableServerMode) {
 		return m.DisableServerMode()

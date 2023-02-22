@@ -22,6 +22,7 @@ type ConsensusModule interface {
 
 	ConsensusStateSync
 	ConsensusPacemaker
+	FSMConsensusEvents
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
@@ -76,4 +77,12 @@ type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
 	IsOutOfSync() bool
+}
+
+type FSMConsensusEvents interface {
+	HandleUnsynched(*messaging.StateMachineTransitionEvent) error
+	HandleSync(*messaging.StateMachineTransitionEvent) error
+	HandleSynced(*messaging.StateMachineTransitionEvent) error
+	HandlePacemaker(*messaging.StateMachineTransitionEvent) error
+	HandleServerMode(*messaging.StateMachineTransitionEvent) error
 }
