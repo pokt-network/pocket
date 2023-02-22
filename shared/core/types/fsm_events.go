@@ -7,8 +7,8 @@ const (
 
 	StateMachineEvent_P2P_IsBootstrapped StateMachineEvent = "P2P_IsBootstrapped"
 
-	StateMachineEvent_Consensus_EnableServerMode  StateMachineEvent = "Consensus_EnableServerMode"
-	StateMachineEvent_Consensus_DisableServerMode StateMachineEvent = "Consensus_DisableServerMode"
+	StateMachineEvent_Consensus_IsEnableServerMode  StateMachineEvent = "Consensus_EnableServerMode"
+	StateMachineEvent_Consensus_IsDisableServerMode StateMachineEvent = "Consensus_DisableServerMode"
 
 	StateMachineEvent_Consensus_IsUnsynched            StateMachineEvent = "Consensus_IsUnsynched"
 	StateMachineEvent_Consensus_IsSyncing              StateMachineEvent = "Consensus_IsSyncing"
