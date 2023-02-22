@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.32] - 2023-02-22
 
-- Move funcitons exposed by ConsensusDebugModule to debugging.go
+- Move functions exposed by ConsensusDebugModule to debugging.go
 
 ## [0.0.0.31] - 2023-02-21
 
