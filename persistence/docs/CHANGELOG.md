@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.37] - 2023-02-22
+
+- Added `SAVEPOINTS_ROLLBACKS.md` design document
+
 ## [0.0.0.36] - 2023-02-17
 
 - Module now embeds `base_modules.IntegratableModule` for DRYness
