@@ -66,8 +66,6 @@ make generate_node_state_machine_diagram
 ## State Machine Lifecycle
 A node can be in one of the modes at a given time: p2p_bootstrapping, unsyched, syncmode, unsynched. And mutually exclusive to that in server mode. Please refer to the consensus/doc/PROTOCOL_STATE_SYNC.md. 
 
-A node starts in the ...... 
-Node proceeds to state X if .....
-An unsynched node transitions to the snyc mode, through  
+Node FSM starts from stopped state, and transitions to the bootstapping state, which is handled by the P2P module. In bootstrapping state, the node fills its address book, and upon completing mode transitions to unsynched state. Node's FSM moves to sync mode to start requesting block metadata and receive the blocks it is missing. Upon completing state sync in sync mode; if the node is a validator FSM transitions to pacemaker state and starts participating in the consensus state, else if the node is non-validator, FSM moves to the synced state. However, it is important to node that the non-validator node practically always stays in the snyc mode to keep getting blocks from the peers. The node may transition to unsynched state if it stays behind, i.e. in pacemaker mode if the node receives a block proposal which is higher than it's current height.
 
 <!-- GITHUB_WIKI: state_machine/README -->
