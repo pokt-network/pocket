@@ -8,13 +8,13 @@ import (
 
 // NewLibP2PPrivateKey converts a hex-encoded ed25519d key
 // string into a libp2p compatible Private Key.
-func NewLibP2PPrivateKey(hexString string) (crypto.PrivKey, error) {
-	keyBytes, err := hex.DecodeString(hexString)
+func NewLibP2PPrivateKey(privateKeyHex string) (crypto.PrivKey, error) {
+	privateKeyBz, err := hex.DecodeString(privateKeyHex)
 	if err != nil {
 		return nil, ErrCreatePrivateKey(err)
 	}
 
-	privateKey, err := crypto.PrivKeyUnmarshallers[crypto.Ed25519](keyBytes)
+	privateKey, err := crypto.PrivKeyUnmarshallers[crypto.Ed25519](privateKeyBz)
 	if err != nil {
 		return nil, ErrCreatePublicKey(err)
 	}
