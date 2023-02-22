@@ -167,25 +167,6 @@ func prepareConsensusMock(t *testing.T, busMock *mock_modules.MockBus) *mock_mod
 	return consensusMock
 }
 
-// Persistence mock - only needed for validatorMap access
-//func preparePersistenceMock(t *testing.T, busMock *mock_modules.MockBus, genesisState *genesis.GenesisState) *mock_modules.MockPersistenceModule {
-//	ctrl := gomock.NewController(t)
-//
-//	persistenceMock := mock_modules.NewMockPersistenceModule(ctrl)
-//	readContextMock := mock_modules.NewMockPersistenceReadContext(ctrl)
-//
-//	readContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
-//	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(readContextMock, nil).AnyTimes()
-//	readContextMock.EXPECT().Close().Return(nil).AnyTimes()
-//
-//	persistenceMock.EXPECT().GetBus().Return(busMock).AnyTimes()
-//	persistenceMock.EXPECT().SetBus(busMock).AnyTimes()
-//	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
-//	busMock.RegisterModule(persistenceMock)
-//
-//	return persistenceMock
-//}
-
 func MockBus(ctrl *gomock.Controller) *mock_modules.MockBus {
 	consensusMock := mock_modules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(0)).AnyTimes()
