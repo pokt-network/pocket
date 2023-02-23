@@ -21,6 +21,7 @@ Key specific commands
 * [client](client.md)	 - Pocket Network Command Line Interface (CLI)
 * [client Keys Create](client_Keys_Create.md)	 - Create new key
 * [client Keys Delete](client_Keys_Delete.md)	 - Deletes the key from the keybase
+* [client Keys DeriveChild](client_Keys_DeriveChild.md)	 - Derive the child key at the given index from a parent key
 * [client Keys Export](client_Keys_Export.md)	 - Exports the private key as a raw string or JSON to either STDOUT or to a file
 * [client Keys Get](client_Keys_Get.md)	 - Get the address and public key from the keybase
 * [client Keys Import](client_Keys_Import.md)	 - Imports a key from a string or from a file
