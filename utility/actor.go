@@ -20,8 +20,8 @@ func (u *utilityContext) setActorStakeAmount(actorType coreTypes.ActorType, addr
 		err = store.SetAppStakeAmount(addr, amountStr)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		err = store.SetFishermanStakeAmount(addr, amountStr)
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		err = store.SetServiceNodeStakeAmount(addr, amountStr)
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		err = store.SetServicerStakeAmount(addr, amountStr)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		err = store.SetValidatorStakeAmount(addr, amountStr)
 	default:
@@ -44,8 +44,8 @@ func (u *utilityContext) setActorUnstakingHeight(actorType coreTypes.ActorType, 
 		err = store.SetAppUnstakingHeightAndStatus(addr, height, unstakingStatus)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		err = store.SetFishermanUnstakingHeightAndStatus(addr, height, unstakingStatus)
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		err = store.SetServiceNodeUnstakingHeightAndStatus(addr, height, unstakingStatus)
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		err = store.SetServicerUnstakingHeightAndStatus(addr, height, unstakingStatus)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		err = store.SetValidatorUnstakingHeightAndStatus(addr, height, unstakingStatus)
 	default:
@@ -67,8 +67,8 @@ func (u *utilityContext) setActorPausedHeight(actorType coreTypes.ActorType, add
 		err = store.SetAppPauseHeight(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		err = store.SetFishermanPauseHeight(addr, height)
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		err = store.SetServiceNodePauseHeight(addr, height)
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		err = store.SetServicerPauseHeight(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		err = store.SetValidatorPauseHeight(addr, height)
 	default:
@@ -93,8 +93,8 @@ func (u *utilityContext) getActorStakeAmount(actorType coreTypes.ActorType, addr
 		stakeAmount, err = store.GetAppStakeAmount(height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		stakeAmount, err = store.GetFishermanStakeAmount(height, addr)
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		stakeAmount, err = store.GetServiceNodeStakeAmount(height, addr)
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		stakeAmount, err = store.GetServicerStakeAmount(height, addr)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		stakeAmount, err = store.GetValidatorStakeAmount(height, addr)
 	default:
@@ -125,8 +125,8 @@ func (u *utilityContext) getMaxAllowedPausedBlocks(actorType coreTypes.ActorType
 		paramName = typesUtil.AppMaxPauseBlocksParamName
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		paramName = typesUtil.FishermanMaxPauseBlocksParamName
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		paramName = typesUtil.ServiceNodeMaxPauseBlocksParamName
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		paramName = typesUtil.ServicerMaxPauseBlocksParamName
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		paramName = typesUtil.ValidatorMaxPausedBlocksParamName
 	default:
@@ -153,8 +153,8 @@ func (u *utilityContext) getMinRequiredPausedBlocks(actorType coreTypes.ActorTyp
 		paramName = typesUtil.AppMinimumPauseBlocksParamName
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		paramName = typesUtil.FishermanMinimumPauseBlocksParamName
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		paramName = typesUtil.ServiceNodeMinimumPauseBlocksParamName
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		paramName = typesUtil.ServicerMinimumPauseBlocksParamName
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		paramName = typesUtil.ValidatorMinimumPauseBlocksParamName
 	default:
@@ -180,8 +180,8 @@ func (u *utilityContext) getPausedHeightIfExists(actorType coreTypes.ActorType, 
 		pauseHeight, err = store.GetAppPauseHeightIfExists(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		pauseHeight, err = store.GetFishermanPauseHeightIfExists(addr, height)
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		pauseHeight, err = store.GetServiceNodePauseHeightIfExists(addr, height)
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		pauseHeight, err = store.GetServicerPauseHeightIfExists(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		pauseHeight, err = store.GetValidatorPauseHeightIfExists(addr, height)
 	default:
@@ -207,8 +207,8 @@ func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, addr []by
 		status, err = store.GetAppStatus(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		status, err = store.GetFishermanStatus(addr, height)
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		status, err = store.GetServiceNodeStatus(addr, height)
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		status, err = store.GetServicerStatus(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		status, err = store.GetValidatorStatus(addr, height)
 	default:
@@ -238,8 +238,8 @@ func (u *utilityContext) getMinRequiredStakeAmount(actorType coreTypes.ActorType
 		paramName = typesUtil.AppMinimumStakeParamName
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		paramName = typesUtil.FishermanMinimumStakeParamName
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		paramName = typesUtil.ServiceNodeMinimumStakeParamName
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		paramName = typesUtil.ServicerMinimumStakeParamName
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		paramName = typesUtil.ValidatorMinimumStakeParamName
 	default:
@@ -271,8 +271,8 @@ func (u *utilityContext) getUnbondingHeight(actorType coreTypes.ActorType) (int6
 		paramName = typesUtil.AppUnstakingBlocksParamName
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		paramName = typesUtil.FishermanUnstakingBlocksParamName
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		paramName = typesUtil.ServiceNodeUnstakingBlocksParamName
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		paramName = typesUtil.ServicerUnstakingBlocksParamName
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		paramName = typesUtil.ValidatorUnstakingBlocksParamName
 	default:
@@ -299,8 +299,8 @@ func (u *utilityContext) getMaxAllowedChains(actorType coreTypes.ActorType) (int
 		paramName = typesUtil.AppMaxChainsParamName
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		paramName = typesUtil.FishermanMaxChainsParamName
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		paramName = typesUtil.ServiceNodeMaxChainsParamName
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		paramName = typesUtil.ServicerMaxChainsParamName
 	default:
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -325,8 +325,8 @@ func (u *utilityContext) getActorExists(actorType coreTypes.ActorType, addr []by
 		exists, err = store.GetAppExists(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		exists, err = store.GetFishermanExists(addr, height)
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		exists, err = store.GetServiceNodeExists(addr, height)
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		exists, err = store.GetServicerExists(addr, height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		exists, err = store.GetValidatorExists(addr, height)
 	default:
@@ -354,8 +354,8 @@ func (u *utilityContext) getActorOutputAddress(actorType coreTypes.ActorType, op
 		outputAddr, err = store.GetAppOutputAddress(operator, height)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		outputAddr, err = store.GetFishermanOutputAddress(operator, height)
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-		outputAddr, err = store.GetServiceNodeOutputAddress(operator, height)
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		outputAddr, err = store.GetServicerOutputAddress(operator, height)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		outputAddr, err = store.GetValidatorOutputAddress(operator, height)
 	default:

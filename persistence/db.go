@@ -30,7 +30,7 @@ const (
 var protocolActorSchemas = []types.ProtocolActorSchema{
 	types.ApplicationActor,
 	types.FishermanActor,
-	types.ServiceNodeActor,
+	types.ServicerActor,
 	types.ValidatorActor,
 }
 

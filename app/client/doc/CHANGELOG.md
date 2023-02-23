@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.17] - 2023-02-23
+
+- Add CLI endpoints to interact with the keybase
+
+## [0.0.0.16] - 2023-02-21
+
+- Rename ServiceNode Actor Type Name to Servicer
+
 ## [0.0.0.15] - 2023-02-17
 
 - Added `non_interactive` flag to allow for non-interactive `Stake` and `Unstake` transactions (dogfooding in `cluster-manager`)

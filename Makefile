@@ -1,5 +1,9 @@
 include build.mk
 
+# For simplicity's sake, we will use the same docker-compose file for all docker-compose commands.
+docker-compose := $(shell command -v docker-compose 2> /dev/null || echo "docker compose") \
+	-f build/deployments/docker-compose.yaml
+
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
 # IMPROVE: Add `-shuffle=on` to the `go test` command to randomize the order in which tests are run.
@@ -24,7 +28,7 @@ help:
 # Internal helper target - check if docker is installed
 docker_check:
 	{ \
-	if ( ! ( command -v docker >/dev/null && command -v docker-compose >/dev/null )); then \
+	if ( ! ( command -v docker >/dev/null && (docker compose version >/dev/null || command -v docker-compose >/dev/null) )); then \
 		echo "Seems like you don't have Docker or docker-compose installed. Make sure you review docs/development/README.md before continuing"; \
 		exit 1; \
 	fi; \
@@ -121,11 +125,11 @@ develop_test: docker_check ## Run all of the make commands necessary to develop 
 
 .PHONY: client_start
 client_start: docker_check ## Run a client daemon which is only used for debugging purposes
-	docker-compose -f build/deployments/docker-compose.yaml up -d client
+	${docker-compose} up -d client
 
 .PHONY: rebuild_client_start
 rebuild_client_start: docker_check ## Rebuild and run a client daemon which is only used for debugging purposes
-	docker-compose -f build/deployments/docker-compose.yaml up -d --build client
+	${docker-compose} up -d --build client
 
 .PHONY: client_connect
 client_connect: docker_check ## Connect to the running client debugging daemon
@@ -138,15 +142,15 @@ build_and_watch: ## Continous build Pocket's main entrypoint as files change
 # TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
 .PHONY: compose_and_watch
 compose_and_watch: docker_check db_start monitoring_start ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+	${docker-compose} up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: rebuild_and_compose_and_watch
 rebuild_and_compose_and_watch: docker_check db_start monitoring_start ## Rebuilds the container from scratch and launches compose_and_watch
-	docker-compose -f build/deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+	${docker-compose} up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: db_start
 db_start: docker_check ## Start a detached local postgres and admin instance; compose_and_watch is responsible for instantiating the actual schemas
-	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db pgadmin
+	${docker-compose} up --no-recreate -d db pgadmin
 
 .PHONY: db_cli
 db_cli: ## Open a CLI to the local containerized postgres instance
@@ -182,7 +186,7 @@ db_admin: ## Helper to access to postgres admin GUI interface
 
 .PHONY: docker_kill_all
 docker_kill_all: docker_check ## Kill all containers started by the docker-compose file
-	docker-compose -f build/deployments/docker-compose.yaml down
+	${docker-compose} down
 
 .PHONY: docker_wipe
 docker_wipe: docker_check warn_destructive prompt_user ## [WARNING] Remove all the docker containers, images and volumes.
@@ -191,6 +195,10 @@ docker_wipe: docker_check warn_destructive prompt_user ## [WARNING] Remove all t
 	docker images -q | xargs -r -I {} docker rmi {}
 	docker volume ls -q | xargs -r -I {} docker volume rm {}
 
+.PHONY: docker_wipe_volumes
+docker_wipe_volumes: docker_check prompt_user ## [WARNING] Remove all pocket volumes
+	docker volume rm $$(docker volume ls -q | grep pocket-v1)
+
 .PHONY: docker_wipe_nodes
 docker_wipe_nodes: docker_check prompt_user db_drop ## [WARNING] Remove all the node containers
 	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker stop {}
@@ -198,7 +206,7 @@ docker_wipe_nodes: docker_check prompt_user db_drop ## [WARNING] Remove all the 
 
 .PHONY: monitoring_start
 monitoring_start: docker_check ## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
-	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d grafana loki vm
+	${docker-compose} up --no-recreate -d grafana loki vm
 
 .PHONY: docker_loki_install
 docker_loki_install: docker_check ## Installs the loki docker driver
@@ -445,13 +453,13 @@ todo_this_commit: ## List all the TODOs needed to be done in this commit
 
 # Default values for gen_genesis_and_config
 numValidators ?= 4
-numServiceNodes ?= 1
+numServicers ?= 1
 numApplications ?= 1
 numFishermen ?= 1
 
 .PHONY: gen_genesis_and_config
 gen_genesis_and_config: ## Generate the genesis and config files for LocalNet
-	go run ./build/config/main.go --genPrefix="gen." --numValidators=${numValidators} --numServiceNodes=${numServiceNodes} --numApplications=${numApplications} --numFishermen=${numFishermen}
+	go run ./build/config/main.go --genPrefix="gen." --numValidators=${numValidators} --numServicers=${numServicers} --numApplications=${numApplications} --numFishermen=${numFishermen}
 
 .PHONY: gen_genesis_and_config
 clear_genesis_and_config: ## Clear the genesis and config files for LocalNet
