@@ -11,6 +11,7 @@ import (
 func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
+	m.logger.Info().Msg("I received a state sync message")
 
 	switch stateSyncMessageAny.MessageName() {
 	case StateSyncMessageContentType:
@@ -24,6 +25,8 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 			return fmt.Errorf("failed to cast message to StateSyncMessage")
 		}
 
+		//m.logger.Info().Msg("I received a state sync message")
+
 		return m.handleStateSyncMessage(stateSyncMessage)
 	default:
 		return typesCons.ErrUnknownStateSyncMessageType(stateSyncMessageAny.MessageName())
@@ -33,6 +36,7 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.StateSyncMessage) error {
 	switch stateSyncMessage.Message.(type) {
 	case *typesCons.StateSyncMessage_MetadataReq:
+		m.logger.Info().Msg("OH StateSyncMessage_MetadataReq")
 		if !m.stateSync.IsServerModEnabled() {
 			return fmt.Errorf("server module is not enabled")
 		}
@@ -40,6 +44,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 	case *typesCons.StateSyncMessage_MetadataRes:
 		return m.stateSync.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
 	case *typesCons.StateSyncMessage_GetBlockReq:
+		m.logger.Info().Msg("OH StateSyncMessage_GetBlockReq")
 		if !m.stateSync.IsServerModEnabled() {
 			return fmt.Errorf("server module is not enabled")
 		}

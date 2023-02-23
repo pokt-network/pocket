@@ -34,9 +34,9 @@ func (m *stateSync) sendToPeer(msg *anypb.Any, peerId cryptoPocket.Address) erro
 func getMessageType(msg *typesCons.StateSyncMessage) string {
 	switch msg.Message.(type) {
 	case *typesCons.StateSyncMessage_MetadataReq:
-		return "MetadataRequest"
+		return "StateSyncMetadataRequest"
 	case *typesCons.StateSyncMessage_MetadataRes:
-		return "MetadataResponse"
+		return "StateSyncMetadataResponse"
 	case *typesCons.StateSyncMessage_GetBlockReq:
 		return "GetBlockRequest"
 	case *typesCons.StateSyncMessage_GetBlockRes:

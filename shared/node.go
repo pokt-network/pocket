@@ -128,6 +128,7 @@ func (m *Node) GetBus() modules.Bus {
 
 func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	contentType := message.GetContentType()
+	logger.Global.Logger.Info().Msgf("NODE RECEIVED A MESSAGE MESSAGE CONTENT: %s", contentType)
 	switch contentType {
 	case messaging.NodeStartedEventType:
 		logger.Global.Info().Msg("Received NodeStartedEvent")
