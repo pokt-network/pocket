@@ -2,9 +2,10 @@ package keybase
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 const (
@@ -245,7 +246,7 @@ func TestKeybase_DeriveChildFromKey(t *testing.T) {
 	db := initDB(t)
 	defer stopDB(t, db)
 
-	err := db.ImportFromString(testPrivString, testPassphrase, testHint)
+	_, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
 	require.NoError(t, err)
 
 	childKey, err := db.DeriveChildFromKey(testAddr, testPassphrase, 1)
@@ -257,10 +258,7 @@ func TestKeybase_DeriveChildFromSeed(t *testing.T) {
 	db := initDB(t)
 	defer stopDB(t, db)
 
-	err := db.ImportFromString(testPrivString, testPassphrase, testHint)
-	require.NoError(t, err)
-
-	kp, err := db.Get(testAddr)
+	kp, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
 	require.NoError(t, err)
 
 	seed, err := kp.GetSeed(testPassphrase)
@@ -275,7 +273,7 @@ func TestKeybase_StoreChildFromKey(t *testing.T) {
 	db := initDB(t)
 	defer stopDB(t, db)
 
-	err := db.ImportFromString(testPrivString, testPassphrase, testHint)
+	_, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
 	require.NoError(t, err)
 
 	err = db.StoreChildFromKey(testAddr, testPassphrase, 1, testPassphrase, testHint)
@@ -290,10 +288,7 @@ func TestKeybase_StoreChildFromSeed(t *testing.T) {
 	db := initDB(t)
 	defer stopDB(t, db)
 
-	err := db.ImportFromString(testPrivString, testPassphrase, testHint)
-	require.NoError(t, err)
-
-	kp, err := db.Get(testAddr)
+	kp, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
 	require.NoError(t, err)
 
 	seed, err := kp.GetSeed(testPassphrase)
