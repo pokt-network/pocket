@@ -33,7 +33,7 @@ type persistenceModule struct {
 	txIndexer  indexer.TxIndexer
 	stateTrees *stateTrees
 
-	logger modules.Logger
+	logger *modules.Logger
 
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time

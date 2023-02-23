@@ -32,7 +32,7 @@ type rainTreeNetwork struct {
 
 	currentHeightProvider providers.CurrentHeightProvider
 
-	logger modules.Logger
+	logger *modules.Logger
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {

@@ -15,7 +15,7 @@ type utilityContext struct {
 	savePointsSet      map[string]struct{}
 	savePointsList     [][]byte
 
-	logger modules.Logger
+	logger *modules.Logger
 
 	// TECHDEBT: Consolidate all these types with the shared Protobuf struct and create a `proposalBlock`
 	proposalProposerAddr []byte

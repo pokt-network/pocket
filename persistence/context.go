@@ -21,7 +21,7 @@ type PostgresContext struct {
 
 	stateHash string
 
-	logger modules.Logger
+	logger *modules.Logger
 
 	// TECHDEBT(#361): These three values are pointers to objects maintained by the PersistenceModule.
 	//                 Need to simply access them via the bus.
