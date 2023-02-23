@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.32] - 2023-02-22
+
+- Move functions exposed by ConsensusDebugModule to debugging.go
+
 ## [0.0.0.31] - 2023-02-21
 
 - Rename ServiceNode Actor Type Name to Servicer
