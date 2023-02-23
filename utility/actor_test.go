@@ -40,7 +40,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 				PublicKey:     pubKey.Bytes(),
 				Chains:        test_artifacts.DefaultChains,
 				Amount:        test_artifacts.DefaultStakeAmountString,
-				ServiceUrl:    test_artifacts.DefaultServiceURL,
+				ServiceUrl:    test_artifacts.DefaultServiceUrl,
 				OutputAddress: outputAddress,
 				Signer:        outputAddress,
 				ActorType:     actorType,

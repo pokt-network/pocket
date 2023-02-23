@@ -8,5 +8,5 @@ message Validator {
   string address = 1;
   string public_key = 2;
   string staked_amount = 3;
-  string generic_param = 4; // TODO/DISCUSS re-evaluate naming covention
+  string service_url = 4; // TODO/DISCUSS re-evaluate naming covention
 }

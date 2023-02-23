@@ -266,7 +266,7 @@ func (p *PostgresContext) getActorsUpdatedAtHeight(actorType coreTypes.ActorType
 			Address:         schemaActor.Address,
 			PublicKey:       schemaActor.PublicKey,
 			Chains:          schemaActor.Chains,
-			GenericParam:    schemaActor.GenericParam,
+			ServiceUrl:      schemaActor.ServiceUrl,
 			StakedAmount:    schemaActor.StakedAmount,
 			PausedHeight:    schemaActor.PausedHeight,
 			UnstakingHeight: schemaActor.UnstakingHeight,

@@ -80,7 +80,7 @@ func TestUpdateValidator(t *testing.T) {
 	db.Height = 1
 
 	require.NotEqual(t, DefaultStake, StakeToUpdate) // sanity check to make sure the tests are correct
-	err = db.UpdateValidator(addrBz, validator.GenericParam, StakeToUpdate)
+	err = db.UpdateValidator(addrBz, validator.ServiceUrl, StakeToUpdate)
 	require.NoError(t, err)
 
 	_, _, stakedTokens, _, _, _, _, err = db.GetValidator(addrBz, 0)
@@ -233,7 +233,7 @@ func newTestValidator() (*coreTypes.Actor, error) {
 	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
-		GenericParam:    DefaultServiceUrl,
+		ServiceUrl:      DefaultServiceUrl,
 		StakedAmount:    DefaultStake,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
@@ -294,7 +294,7 @@ func getTestValidator(db *persistence.PostgresContext, address []byte) (*coreTyp
 	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
-		GenericParam:    serviceURL,
+		ServiceUrl:      serviceURL,
 		StakedAmount:    stakedTokens,
 		PausedHeight:    pauseHeight,
 		UnstakingHeight: unstakingHeight,

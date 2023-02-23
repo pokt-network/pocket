@@ -119,10 +119,10 @@ func (r *relay) ReapStoreForHashCollision(sessionBlockHeight int64, hashEndWith 
 }
 
 // Report volume metric applicable relays to Fisherman
-func (r *relay) ReportVolumeMetrics(fishermanServiceURL string, volumeRelays []Relay) types.Error {
+func (r *relay) ReportVolumeMetrics(fishermanServiceUrl string, volumeRelays []Relay) types.Error {
 
 	// Send all volume applicable relays to the assigned trusted Fisherman for
-	// a proper verification of the volume completed. Send volumeRelays to fishermanServiceURL
+	// a proper verification of the volume completed. Send volumeRelays to fishermanServiceUrl
 	// through http.
 
 	// NOTE: an alternative design is a 2 step, claim - proof lifecycle where the individual servicers

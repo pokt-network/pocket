@@ -75,7 +75,7 @@ func TestUpdateApp(t *testing.T) {
 
 	require.NotEqual(t, DefaultStake, StakeToUpdate)   // sanity check to make sure the tests are correct
 	require.NotEqual(t, DefaultChains, ChainsToUpdate) // sanity check to make sure the tests are correct
-	err = db.UpdateApp(addrBz, app.GenericParam, StakeToUpdate, ChainsToUpdate)
+	err = db.UpdateApp(addrBz, app.ServiceUrl, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
 
 	_, _, stakedTokens, _, _, _, _, chains, err = db.GetApp(addrBz, 0)
@@ -222,7 +222,7 @@ func newTestApp() (*coreTypes.Actor, error) {
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
-		GenericParam:    DefaultMaxRelays,
+		ServiceUrl:      DefaultMaxRelays,
 		StakedAmount:    DefaultStake,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
@@ -295,7 +295,7 @@ func getTestApp(db *persistence.PostgresContext, address []byte) (*coreTypes.Act
 		Address:         operator,
 		PublicKey:       publicKey,
 		Chains:          chains,
-		GenericParam:    maxRelays,
+		ServiceUrl:      maxRelays,
 		StakedAmount:    stakedTokens,
 		PausedHeight:    pauseHeight,
 		UnstakingHeight: unstakingHeight,

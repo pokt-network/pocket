@@ -81,7 +81,7 @@ func TestUpdateServicer(t *testing.T) {
 
 	require.NotEqual(t, DefaultStake, StakeToUpdate)   // sanity check to make sure the tests are correct
 	require.NotEqual(t, DefaultChains, ChainsToUpdate) // sanity check to make sure the tests are correct
-	err = db.UpdateServicer(addrBz, servicer.GenericParam, StakeToUpdate, ChainsToUpdate)
+	err = db.UpdateServicer(addrBz, servicer.ServiceUrl, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
 
 	_, _, stakedTokens, _, _, _, _, chains, err = db.GetServicer(addrBz, 0)
@@ -235,7 +235,7 @@ func newTestServicer() (*coreTypes.Actor, error) {
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
-		GenericParam:    DefaultServiceUrl,
+		ServiceUrl:      DefaultServiceUrl,
 		StakedAmount:    DefaultStake,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
@@ -298,7 +298,7 @@ func getTestServicer(db *persistence.PostgresContext, address []byte) (*coreType
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
 		Chains:          chains,
-		GenericParam:    serviceURL,
+		ServiceUrl:      serviceURL,
 		StakedAmount:    stakedTokens,
 		PausedHeight:    pauseHeight,
 		UnstakingHeight: unstakingHeight,

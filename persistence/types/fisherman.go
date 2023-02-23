@@ -22,7 +22,7 @@ var FishermanActor ProtocolActorSchema = &FishermanSchema{
 		tableName:       FishermanTableName,
 		chainsTableName: FishermanChainsTableName,
 
-		actorSpecificColName: ServiceURLCol,
+		actorSpecificColName: ServiceUrlCol,
 
 		heightConstraintName:       FishermanHeightConstraintName,
 		chainsHeightConstraintName: FishermanChainsConstraintName,

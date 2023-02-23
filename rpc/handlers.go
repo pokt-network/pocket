@@ -98,7 +98,7 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 			Address:    protocolActor.Address,
 			Type:       protocolActorToRPCActorTypeEnum(protocolActor.ActorType),
 			PublicKey:  protocolActor.PublicKey,
-			ServiceUrl: protocolActor.GenericParam,
+			ServiceUrl: protocolActor.ServiceUrl,
 		})
 	}
 

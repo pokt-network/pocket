@@ -21,7 +21,7 @@ func (p *PostgresContext) GetApp(address []byte, height int64) (operator, public
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedAmount
-	maxRelays = actor.GenericParam
+	maxRelays = actor.ServiceUrl
 	outputAddress = actor.Output
 	pauseHeight = actor.PausedHeight
 	unstakingHeight = actor.UnstakingHeight
@@ -35,7 +35,7 @@ func (p *PostgresContext) InsertApp(address, publicKey, output []byte, _ bool, _
 		Address:         hex.EncodeToString(address),
 		PublicKey:       hex.EncodeToString(publicKey),
 		Chains:          chains,
-		GenericParam:    maxRelays,
+		ServiceUrl:      maxRelays,
 		StakedAmount:    stakedTokens,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
@@ -48,7 +48,7 @@ func (p *PostgresContext) UpdateApp(address []byte, maxRelays, stakedAmount stri
 		ActorType:    coreTypes.ActorType_ACTOR_TYPE_APP,
 		Address:      hex.EncodeToString(address),
 		Chains:       chains,
-		GenericParam: maxRelays,
+		ServiceUrl:   maxRelays,
 		StakedAmount: stakedAmount,
 	})
 }

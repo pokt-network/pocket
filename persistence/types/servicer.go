@@ -22,7 +22,7 @@ var ServicerActor ProtocolActorSchema = &ServicerSchema{
 		tableName:       ServicerTableName,
 		chainsTableName: ServicerChainsTableName,
 
-		actorSpecificColName: ServiceURLCol,
+		actorSpecificColName: ServiceUrlCol,
 
 		heightConstraintName:       ServicerHeightConstraintName,
 		chainsHeightConstraintName: ServicerChainsConstraintName,

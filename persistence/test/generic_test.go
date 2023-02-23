@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO(andrew): Be consistent with `GenericParam` and `ActorSpecificParam` throughout the codebase; preferably the latter.
+// TODO(andrew): Be consistent with `ServiceUrl` and `ActorSpecificParam` throughout the codebase; preferably the latter.
 
 func getGenericActor[T any](
 	protocolActorSchema types.ProtocolActorSchema,
@@ -214,7 +214,7 @@ func getActorValues(_ types.ProtocolActorSchema, actorValue reflect.Value) *core
 		Address:         actorValue.FieldByName("Address").String(),
 		PublicKey:       actorValue.FieldByName("PublicKey").String(),
 		StakedAmount:    actorValue.FieldByName("StakedAmount").String(),
-		GenericParam:    actorValue.FieldByName("GenericParam").String(),
+		ServiceUrl:      actorValue.FieldByName("ServiceUrl").String(),
 		Output:          actorValue.FieldByName("Output").String(),
 		PausedHeight:    actorValue.FieldByName("PausedHeight").Int(),
 		UnstakingHeight: actorValue.FieldByName("UnstakingHeight").Int(),

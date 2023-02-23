@@ -18,7 +18,7 @@ func (p *PostgresContext) GetValidator(address []byte, height int64) (operator, 
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedAmount
-	serviceURL = actor.GenericParam
+	serviceURL = actor.ServiceUrl
 	outputAddress = actor.Output
 	pausedHeight = actor.PausedHeight
 	unstakingHeight = actor.UnstakingHeight
@@ -31,7 +31,7 @@ func (p *PostgresContext) InsertValidator(address, publicKey, output []byte, _ b
 		Address:         hex.EncodeToString(address),
 		PublicKey:       hex.EncodeToString(publicKey),
 		StakedAmount:    stakedTokens,
-		GenericParam:    serviceURL,
+		ServiceUrl:      serviceURL,
 		Output:          hex.EncodeToString(output),
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
@@ -43,7 +43,7 @@ func (p *PostgresContext) UpdateValidator(address []byte, serviceURL, stakedAmou
 		ActorType:    coreTypes.ActorType_ACTOR_TYPE_VAL,
 		Address:      hex.EncodeToString(address),
 		StakedAmount: stakedAmount,
-		GenericParam: serviceURL,
+		ServiceUrl:   serviceURL,
 	})
 }
 

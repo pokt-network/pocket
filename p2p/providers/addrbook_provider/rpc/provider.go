@@ -88,10 +88,10 @@ func (rabp *rpcAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (types
 	var coreActors []*types.Actor
 	for _, rpcActor := range rpcActors {
 		coreActors = append(coreActors, &types.Actor{
-			Address:      rpcActor.Address,
-			PublicKey:    rpcActor.PublicKey,
-			GenericParam: rpcActor.ServiceUrl,
-			ActorType:    types.ActorType_ACTOR_TYPE_VAL,
+			Address:    rpcActor.Address,
+			PublicKey:  rpcActor.PublicKey,
+			ServiceUrl: rpcActor.ServiceUrl,
+			ActorType:  types.ActorType_ACTOR_TYPE_VAL,
 		})
 	}
 

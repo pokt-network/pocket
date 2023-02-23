@@ -22,7 +22,7 @@ var ValidatorActor ProtocolActorSchema = &ValidatorSchema{
 		tableName:       ValidatorTableName,
 		chainsTableName: NullString,
 
-		actorSpecificColName: ServiceURLCol,
+		actorSpecificColName: ServiceUrlCol,
 
 		heightConstraintName:       ValidatorHeightConstraint,
 		chainsHeightConstraintName: NullString,

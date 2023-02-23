@@ -83,7 +83,7 @@ func TestUpdateFisherman(t *testing.T) {
 
 	require.NotEqual(t, DefaultStake, StakeToUpdate)   // sanity check to make sure the tests are correct
 	require.NotEqual(t, DefaultChains, ChainsToUpdate) // sanity check to make sure the tests are correct
-	err = db.UpdateFisherman(addrBz, fisherman.GenericParam, StakeToUpdate, ChainsToUpdate)
+	err = db.UpdateFisherman(addrBz, fisherman.ServiceUrl, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
 
 	_, _, stakedTokens, _, _, _, _, chains, err = db.GetFisherman(addrBz, 0)
@@ -235,7 +235,7 @@ func newTestFisherman() (*coreTypes.Actor, error) {
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
-		GenericParam:    DefaultServiceUrl,
+		ServiceUrl:      DefaultServiceUrl,
 		StakedAmount:    DefaultStake,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
@@ -298,7 +298,7 @@ func getTestFisherman(db *persistence.PostgresContext, address []byte) (*coreTyp
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
 		Chains:          chains,
-		GenericParam:    serviceURL,
+		ServiceUrl:      serviceURL,
 		StakedAmount:    stakedTokens,
 		PausedHeight:    pauseHeight,
 		UnstakingHeight: unstakingHeight,

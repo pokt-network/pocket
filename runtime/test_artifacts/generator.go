@@ -113,7 +113,7 @@ func NewDefaultActor(actorType int32, genericParam string) (actor *coreTypes.Act
 		Address:         addr,
 		PublicKey:       pubKey,
 		Chains:          chains,
-		GenericParam:    genericParam,
+		ServiceUrl:      genericParam,
 		StakedAmount:    DefaultStakeAmountString,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,

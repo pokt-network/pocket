@@ -184,7 +184,7 @@ func fuzzSingleProtocolActor(
 			numParamUpdatesSupported := 3
 			newStakedTokens := originalActor.StakedAmount
 			newChains := originalActor.Chains
-			newActorSpecificParam := originalActor.GenericParam
+			newActorSpecificParam := originalActor.ServiceUrl
 
 			iterations := rand.Intn(2)
 			for i := 0; i < iterations; i++ {
@@ -193,8 +193,8 @@ func fuzzSingleProtocolActor(
 					newStakedTokens = getRandomBigIntString()
 				case 1:
 					switch protocolActorSchema.GetActorSpecificColName() {
-					case types.ServiceURLCol:
-						newActorSpecificParam = getRandomServiceURL()
+					case types.ServiceUrlCol:
+						newActorSpecificParam = getRandomServiceUrl()
 					case types.MaxRelaysCol:
 						newActorSpecificParam = getRandomBigIntString()
 					default:
@@ -210,7 +210,7 @@ func fuzzSingleProtocolActor(
 				Address:         originalActor.Address,
 				PublicKey:       originalActor.PublicKey,
 				StakedAmount:    newStakedTokens,
-				GenericParam:    newActorSpecificParam,
+				ServiceUrl:      newActorSpecificParam,
 				Output:          originalActor.Output,
 				PausedHeight:    originalActor.PausedHeight,
 				UnstakingHeight: originalActor.UnstakingHeight,
@@ -229,7 +229,7 @@ func fuzzSingleProtocolActor(
 				log.Println("")
 			}
 			require.Equal(t, newStakedTokens, newActor.StakedAmount, "staked tokens not updated")
-			require.Equal(t, newActorSpecificParam, newActor.GenericParam, "actor specific param not updated")
+			require.Equal(t, newActorSpecificParam, newActor.ServiceUrl, "actor specific param not updated")
 		case "GetActorsReadyToUnstake":
 			unstakingActors, err := db.GetActorsReadyToUnstake(protocolActorSchema, db.Height)
 			require.NoError(t, err)
@@ -327,7 +327,7 @@ func getRandomChains() (chains []string) {
 }
 
 //nolint:gosec // G404 - Weak random source is okay in unit tests
-func getRandomServiceURL() string {
+func getRandomServiceUrl() string {
 	setRandomSeed()
 
 	charOptions := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"

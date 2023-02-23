@@ -12,5 +12,5 @@ func TestUtilityContext_CalculateMaxAppRelays(t *testing.T) {
 	actor := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_APP)
 	newMaxRelays, err := ctx.calculateMaxAppRelays(actor.GetStakedAmount())
 	require.NoError(t, err)
-	require.Equal(t, actor.GetGenericParam(), newMaxRelays)
+	require.Equal(t, actor.GetServiceUrl(), newMaxRelays)
 }

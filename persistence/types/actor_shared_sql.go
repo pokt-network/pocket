@@ -25,7 +25,7 @@ const (
 	PublicKeyCol       = "public_key"
 	NameCol            = "name"
 	StakedTokensCol    = "staked_tokens"
-	ServiceURLCol      = "service_url"
+	ServiceUrlCol      = "service_url"
 	OutputAddressCol   = "output_address"
 	UnstakingHeightCol = "unstaking_height"
 	PausedHeightCol    = "paused_height"

@@ -73,7 +73,7 @@ func (p *PostgresContext) getActorFromRow(actorType coreTypes.ActorType, row pgx
 		&actor.Address,
 		&actor.PublicKey,
 		&actor.StakedAmount,
-		&actor.GenericParam,
+		&actor.ServiceUrl,
 		&actor.Output,
 		&actor.PausedHeight,
 		&actor.UnstakingHeight,
@@ -122,7 +122,7 @@ func (p *PostgresContext) InsertActor(actorSchema types.ProtocolActorSchema, act
 	}
 
 	_, err = tx.Exec(ctx, actorSchema.InsertQuery(
-		actor.Address, actor.PublicKey, actor.StakedAmount, actor.GenericParam,
+		actor.Address, actor.PublicKey, actor.StakedAmount, actor.ServiceUrl,
 		actor.Output, actor.PausedHeight, actor.UnstakingHeight, actor.Chains,
 		height))
 	return err
@@ -136,7 +136,7 @@ func (p *PostgresContext) UpdateActor(actorSchema types.ProtocolActorSchema, act
 		return err
 	}
 
-	if _, err = tx.Exec(ctx, actorSchema.UpdateQuery(actor.Address, actor.StakedAmount, actor.GenericParam, height)); err != nil {
+	if _, err = tx.Exec(ctx, actorSchema.UpdateQuery(actor.Address, actor.StakedAmount, actor.ServiceUrl, height)); err != nil {
 		return err
 	}
 

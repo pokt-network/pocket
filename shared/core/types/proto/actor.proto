@@ -24,7 +24,7 @@ message Actor {
   string address = 2;
   string public_key = 3;
   repeated string chains = 4;
-  string generic_param = 5; // TODO(#313): Generalize `GenericParam` to a different name
+  string service_url = 5;
   string staked_amount = 6;
   int64 paused_height = 7;
   int64 unstaking_height = 8;
