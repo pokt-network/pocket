@@ -113,43 +113,48 @@ The keys are generated using the BIP-44 path `m/44'/635'/%d'` where `%d` is the 
 Master key derivation is done as follows:
 ```mermaid
 flowchart LR
-    subgraph HMAC
+    subgraph HCHILD["HMAC-CHILD"]
         direction TB
-        A["hmacNew(sha512, seedModifier)"]
-        B["hmacWrite(seed)"]
-        C["convertToBytes(hmac)"]
-        A-->B-->C
+        C["append(0x0, parent.SecretKey, bigEndian(index))"]
+        A["hmacNew(sha512, parent.Chaincode)"]
+        B["hmac.Write(data)"]
+        D["convertToBytes(hmac)"]
+        A--hmac-->B
+        C--data-->B
+        B--hmac-->D
     end
-    subgraph MASTER-KEY
-        direction TB
-        D["SecretKey: hmacBytes[:32]"]
-        E["ChainCode: hmacBytes[32:]"]
-        D --> E --Secret+Chaincode--> KEY
+    subgraph CKEY[CHILD-KEY]
+        direction LR
+        F["SecretKey: hmacBytes[:32]"]
+        G["ChainCode: hmacBytes[32:]"]
+        F --> KEY
+        G --> KEY
     end
-    HMAC--hmacBytes-->MASTER-KEY
+    Index-->HCHILD
+    Parent-->HCHILD
+    HCHILD--hmacBytes-->CKEY
 ```
 
 Child keys are derived from their parents as follows:
 ```mermaid
 flowchart LR
-    subgraph HMAC-CHILD
+    subgraph HMAC
         direction TB
-        C["append(0x0, parent.SecretKey, bigEndian(index))"]
-        A["hmacNew(sha512, parent.Chaincode)"]
-        B["hmacWrite(data)"]
-        D["convertToBytes(hmac)"]
-        A--hmac-->B
-        C--data-->B
-        B-->D
+        A["hmac = hmacNew(sha512, seedModifier)"]
+        B["hmac.Write(seed)"]
+        C["convertToBytes(hmac)"]
+        A-->B
+        B--hmac-->C
     end
-    subgraph CHILD-KEY
-        direction TB
-        F["secret: hmacBytes[:32]"]
-        G["chaincode: hmacBytes[32:]"]
-        F --> G --Secret+Chaincode--> KEY
+    subgraph MASTER-KEY
+        direction LR
+        D["SecretKey: hmacBytes[:32]"]
+        E["ChainCode: hmacBytes[32:]"]
+        D --> KEY
+        E --> KEY
     end
-    Parent --> HMAC-CHILD
-    HMAC-CHILD --hmacBytes--> CHILD-KEY
+    seed-->HMAC
+    HMAC--hmacBytes-->MASTER-KEY
 ```
 
 <!-- GITHUB_WIKI: shared/crypto/readme -->
