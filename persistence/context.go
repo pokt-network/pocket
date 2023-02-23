@@ -97,7 +97,6 @@ func (p *PostgresContext) Release() error {
 }
 
 func (p *PostgresContext) Close() error {
-	p.logger.Info().Int64("height", p.Height).Msg("About to close postgres context")
 	return p.conn.Close(context.TODO())
 }
 

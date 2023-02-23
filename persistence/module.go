@@ -109,7 +109,6 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 }
 
 func (m *persistenceModule) Start() error {
-	m.logger.Info().Msg("Starting module...")
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 	return nil
 }
