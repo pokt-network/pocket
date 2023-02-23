@@ -19,7 +19,7 @@ const (
 	// As defined in: https://github.com/satoshilabs/slips/blob/master/slip-0010.md#master-key-generation
 	seedModifier = "ed25519 seed"
 	// Hardened key values, as defined in: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#extended-keys
-	firstHardenedKeyIndex = uint32(1 << 31) // 2^31
+	firstHardenedKeyIndex = uint32(1 << 31) // 2^31; [0, 2^31) are non-hardened keys which are not supported for ed25519
 	maxHardenedKeyIndex   = ^uint32(0)      // 2^32-1
 	maxChildKeyIndex      = maxHardenedKeyIndex - firstHardenedKeyIndex
 )
@@ -55,10 +55,10 @@ func DeriveChild(path string, seed []byte) (KeyPair, error) {
 		if i32 > maxChildKeyIndex {
 			return nil, fmt.Errorf("hardened key index too large, max: %d, got: %d", maxChildKeyIndex, i32)
 		}
-		i := i32 + firstHardenedKeyIndex
+		keyIdx := i32 + firstHardenedKeyIndex
 
 		// Derive the correct child until final segment
-		key, err = key.deriveChild(i)
+		key, err = key.deriveChild(keyIdx)
 		if err != nil {
 			return nil, err
 		}
