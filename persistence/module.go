@@ -48,6 +48,12 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		writeContext: nil,
 	}
 
+	// TECHDEBT: move to `persistenceModule#Start` as per documentation.
+	// Temporarily moving this here as long as there are references to
+	// the logger in methods which are called by `#Create` (i.e.
+	// `persistenceModule#populateGenesisState`, `postgresContext#Commit`)
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
+
 	for _, option := range options {
 		option(m)
 	}
@@ -109,7 +115,6 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 }
 
 func (m *persistenceModule) Start() error {
-	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 	return nil
 }
 
