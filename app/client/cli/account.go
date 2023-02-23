@@ -45,7 +45,7 @@ func accountCommands() []*cobra.Command {
 				toAddr := crypto.AddressFromString(args[1])
 				amount := args[2]
 
-				// Open the debug keybase at the specified path
+				// Open the keybase at the specified path
 				pocketDir := strings.TrimSuffix(dataDir, "/")
 				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
 				if err != nil {
