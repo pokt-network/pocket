@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/gob"
+	"fmt"
 )
 
 // Encoding is used to serialise the data to store the KeyPairs in the database
@@ -32,6 +33,9 @@ type KeyPair interface {
 
 	// Seed
 	GetSeed(passphrase string) ([]byte, error)
+
+	// SLIP-0010 Child derivation
+	DeriveChild(passphrase string, index uint32) (KeyPair, error)
 
 	// Marshalling
 	Marshal() ([]byte, error)
@@ -109,6 +113,16 @@ func (kp encKeyPair) GetSeed(passphrase string) ([]byte, error) {
 		return []byte{}, err
 	}
 	return privKey.Seed(), nil
+}
+
+// Derives a new child key using the key as the master
+func (kp encKeyPair) DeriveChild(passphrase string, index uint32) (KeyPair, error) {
+	seed, err := kp.GetSeed(passphrase)
+	if err != nil {
+		return nil, err
+	}
+	path := fmt.Sprintf(PoktAccountPathFormat, index)
+	return DeriveChild(path, seed)
 }
 
 // Marshal KeyPair into a []byte
