@@ -57,8 +57,13 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 	return new(loggerModule).Create(bus, options...)
 }
 
-func (*loggerModule) CreateLoggerForModule(moduleName string) modules.Logger {
-	return Global.Logger.With().Str("module", moduleName).Logger()
+// CreateLoggerForModule returns the logger with additional context (e.g. module name)
+// (see: https://github.com/rs/zerolog#sub-loggers-let-you-chain-loggers-with-additional-context)
+// NB: returns a pointer to mitigate `hugParam` linter error.
+// (see: https://golangci-lint.run/usage/linters/#gocritic)
+func (*loggerModule) CreateLoggerForModule(moduleName string) *modules.Logger {
+	logger := Global.Logger.With().Str("module", moduleName).Logger()
+	return &logger
 }
 
 func (*loggerModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -98,7 +103,7 @@ func (*loggerModule) Create(bus modules.Bus, options ...modules.ModuleOption) (m
 }
 
 func (m *loggerModule) Start() error {
-	Global.Logger = m.CreateLoggerForModule("global")
+	Global.Logger = *m.CreateLoggerForModule("global")
 	return nil
 }
 
