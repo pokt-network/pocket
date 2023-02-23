@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
-	"github.com/pokt-network/pocket/shared/crypto"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"path/filepath"
 	"strings"
+
+	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/utils"
+	utilTypes "github.com/pokt-network/pocket/utility/types"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/spf13/cobra"
@@ -351,7 +352,7 @@ func keysExportCommands() []*cobra.Command {
 
 				logger.Global.Info().Str("output_file", outputFile).Msg("Exporting private key string to file...")
 
-				return converters.WriteOutput(exportString, outputFile)
+				return utils.WriteOutput(exportString, outputFile)
 			},
 		},
 	}
@@ -372,7 +373,7 @@ func keysImportCommands() []*cobra.Command {
 				if len(args) == 1 {
 					privateKeyString = args[0]
 				} else if inputFile != "" {
-					privateKeyBz, err := converters.ReadInput(inputFile)
+					privateKeyBz, err := utils.ReadInput(inputFile)
 					privateKeyString = string(privateKeyBz)
 					if err != nil {
 						return err
@@ -566,7 +567,7 @@ func keysSignTxCommands() []*cobra.Command {
 				}
 
 				// Unmarshal Tx from input file
-				txBz, err := converters.ReadInput(inputFile)
+				txBz, err := utils.ReadInput(inputFile)
 				if err != nil {
 					return err
 				}
@@ -598,7 +599,7 @@ func keysSignTxCommands() []*cobra.Command {
 					return err
 				}
 
-				if err := converters.WriteOutput(txBz, outputFile); err != nil {
+				if err := utils.WriteOutput(txBz, outputFile); err != nil {
 					return err
 				}
 
@@ -638,7 +639,7 @@ func keysSignTxCommands() []*cobra.Command {
 				}
 
 				// Unmarshal Tx from input file
-				txBz, err := converters.ReadInput(inputFile)
+				txBz, err := utils.ReadInput(inputFile)
 				if err != nil {
 					return err
 				}

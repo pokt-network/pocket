@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/converters"
 	"strings"
+
+	"github.com/pokt-network/pocket/shared/utils"
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -30,7 +31,7 @@ type badgerKeybase struct {
 
 // Creates/Opens the DB at the specified path
 func NewKeybase(path string) (Keybase, error) {
-	pathExists, err := converters.DirExists(path) // Creates path if it doesn't exist
+	pathExists, err := utils.DirExists(path) // Creates path if it doesn't exist
 	if err != nil || !pathExists {
 		return nil, err
 	}
