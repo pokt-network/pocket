@@ -93,8 +93,7 @@ func (m *consensusModule) HandleSync(msg *messaging.StateMachineTransitionEvent)
 	return nil
 }
 
-// Currently we never transition to this state.
-// Basically, a non-validator node always stays in syncmode.
+// Currently, FSM never transition to this state and a non-validator node always stays in syncmode.
 // CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state
 func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Non-validator node is in Synced mode")
@@ -112,7 +111,7 @@ func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionE
 // Server mode runs mutually exclusive to the rest of the modes, thus its state changes doesn't affect the other modes
 // Server mode changes only happen through the node config and EnableServerMode() and DisableServerMode() functions
 func (m *consensusModule) HandleServerMode(msg *messaging.StateMachineTransitionEvent) error {
-	if msg.Event == string(coreTypes.StateMachineEvent_Consensus_IsDisableServerMode) {
+	if msg.Event == string(coreTypes.StateMachineEvent_Consensus_IsDisableServer) {
 		return m.DisableServerMode()
 	}
 	return m.EnableServerMode()

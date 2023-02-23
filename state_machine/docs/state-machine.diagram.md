@@ -12,8 +12,8 @@ stateDiagram-v2
     Consensus_Unsynched --> Consensus_SyncMode: Consensus_IsSyncing
     P2P_Bootstrapped --> Consensus_Unsynched: Consensus_IsUnsynched
     P2P_Bootstrapping --> P2P_Bootstrapped: P2P_IsBootstrapped
-    Consensus_Server_Enabled --> Consensus_Server_Disabled: Consensus_DisableServer
-    Consensus_Server_Disabled --> Consensus_Server_Enabled: Consensus_IsServerEnabled
+    Consensus_Server_Enabled --> Consensus_Server_Disabled: Consensus_IsDisableServer
+    Consensus_Server_Disabled --> Consensus_Server_Enabled: Consensus_IsEnableServer
     Stopped --> Consensus_Server_Disabled: Start
     Stopped --> P2P_Bootstrapping: Start
 ```
