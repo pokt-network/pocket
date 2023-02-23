@@ -263,12 +263,10 @@ func TestKeybase_StoreChildFromKey(t *testing.T) {
 	_, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
 	require.NoError(t, err)
 
-	err = db.StoreChildFromKey(testAddr, testPassphrase, 1, testPassphrase, testHint)
+	childKey, err := db.StoreChildFromKey(testAddr, testPassphrase, 1, testPassphrase, testHint)
 	require.NoError(t, err)
-
-	childKey, err := db.GetPrivKey(testChildAddrIdx1, testPassphrase)
-	require.NoError(t, err)
-	require.Equal(t, childKey.Address().String(), testChildAddrIdx1)
+	require.NotNil(t, childKey)
+	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
 }
 
 func TestKeybase_StoreChildFromSeed(t *testing.T) {
@@ -281,10 +279,8 @@ func TestKeybase_StoreChildFromSeed(t *testing.T) {
 	seed, err := kp.GetSeed(testPassphrase)
 	require.NoError(t, err)
 
-	err = db.StoreChildFromSeed(seed, 1, testPassphrase, testHint)
+	childKey, err := db.StoreChildFromSeed(seed, 1, testPassphrase, testHint)
 	require.NoError(t, err)
-
-	childKey, err := db.GetPrivKey(testChildAddrIdx1, testPassphrase)
-	require.NoError(t, err)
-	require.Equal(t, childKey.Address().String(), testChildAddrIdx1)
+	require.NotNil(t, childKey)
+	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
 }
