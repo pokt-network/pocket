@@ -7,8 +7,6 @@ import (
 	"os"
 )
 
-// TODO: Consolidate with converters
-
 // Check directory exists and creates path if it doesn't exist
 func DirExists(path string) (bool, error) {
 	stat, err := os.Stat(path)

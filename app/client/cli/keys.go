@@ -7,7 +7,8 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/converters"
-	"github.com/pokt-network/pocket/utility/types"
+	"github.com/pokt-network/pocket/shared/crypto"
+	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"path/filepath"
 	"strings"
 
@@ -250,9 +251,7 @@ func keysGetCommands() []*cobra.Command {
 					return err
 				}
 
-				for _, addr := range addresses {
-					fmt.Println(addr)
-				}
+				logger.Global.Info().Strs("addresses", addresses).Msg("Get all keys")
 
 				return nil
 			},
@@ -350,6 +349,8 @@ func keysExportCommands() []*cobra.Command {
 					return nil
 				}
 
+				logger.Global.Info().Str("output_file", outputFile).Msg("Exporting private key string to file...")
+
 				return converters.WriteOutput(exportString, outputFile)
 			},
 		},
@@ -377,7 +378,7 @@ func keysImportCommands() []*cobra.Command {
 						return err
 					}
 				} else {
-					return fmt.Errorf("no input file provided")
+					return fmt.Errorf("no input file or argument provided")
 				}
 
 				// Open the debug keybase at the specified path
@@ -396,19 +397,18 @@ func keysImportCommands() []*cobra.Command {
 				}
 
 				// Determine correct way to import the private key
+				var kp crypto.KeyPair
 				switch strings.ToLower(importAs) {
 				case "json":
-					kp, err := kb.ImportFromJSON(privateKeyString, pwd)
+					kp, err = kb.ImportFromJSON(privateKeyString, pwd)
 					if err != nil {
 						return err
 					}
-					logger.Global.Info().Str("address", kp.GetAddressString()).Msg("Key imported")
 				case "raw":
-					kp, err := kb.ImportFromString(privateKeyString, pwd, hint)
+					kp, err = kb.ImportFromString(privateKeyString, pwd, hint)
 					if err != nil {
 						return err
 					}
-					logger.Global.Info().Str("address", kp.GetAddressString()).Msg("Key imported")
 				default:
 					return fmt.Errorf("invalid import format: got %s, want [raw]/[json]", exportAs)
 				}
@@ -416,6 +416,8 @@ func keysImportCommands() []*cobra.Command {
 				if err := kb.Stop(); err != nil {
 					return err
 				}
+
+				logger.Global.Info().Str("address", kp.GetAddressString()).Msg("Key imported")
 
 				return nil
 			},
@@ -568,7 +570,7 @@ func keysSignTxCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
-				txProto := new(types.Transaction)
+				txProto := new(utilTypes.Transaction)
 				if err := codec.GetCodec().Unmarshal(txBz, txProto); err != nil {
 					return err
 				}
@@ -585,7 +587,7 @@ func keysSignTxCommands() []*cobra.Command {
 				}
 
 				// Add signature to the transaction
-				sig := new(types.Signature)
+				sig := new(utilTypes.Signature)
 				sig.PublicKey = privKey.PublicKey().Bytes()
 				sig.Signature = sigBz
 				txProto.Signature = sig
@@ -640,7 +642,7 @@ func keysSignTxCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
-				txProto := new(types.Transaction)
+				txProto := new(utilTypes.Transaction)
 				if err := codec.GetCodec().Unmarshal(txBz, txProto); err != nil {
 					return err
 				}
