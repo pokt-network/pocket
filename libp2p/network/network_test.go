@@ -97,8 +97,6 @@ func TestLibp2pNetwork_RemovePeerToAddrBook(t *testing.T) {
 	existingPeerstoreAddrs := peerstore.Addrs(existingPeerInfo.ID)
 	require.Len(t, existingPeerstoreAddrs, 1)
 
-	// TECHDEBT: currently, the internal addrbook is storing multiaddrs
-	// in the serviceUrl field as opposed to transforming them (back and forth).
 	existingPeerMultiaddr, err := Libp2pMultiaddrFromServiceUrl(existingPeer.ServiceUrl)
 	require.NoError(t, err)
 	require.Equal(t, existingPeerstoreAddrs[0].String(), existingPeerMultiaddr.String())
@@ -131,7 +129,8 @@ func newTestLibp2pNetwork(t *testing.T) *libp2pNetwork {
 
 	logger_ := logger.Global.CreateLoggerForModule("test_module")
 
-	// NB: will bind to a random, available port for the duration of this test.
+	// NB: will bind to a random, available port on the loopback interface
+	// for the duration of this test.
 	host, err := libp2p.New(libp2p.ListenAddrStrings("/ip4/127.0.0.1/tcp/0"))
 	require.NoError(t, err)
 	defer host.Close()
