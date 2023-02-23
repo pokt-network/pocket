@@ -264,11 +264,11 @@ func (keybase *badgerKeybase) DeriveChildFromKey(masterAddrHex, passphrase strin
 }
 
 // Deterministically generate and store the ith child from the masterAddrHex key stored in the keybase
-func (keybase *badgerKeybase) StoreChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string) error {
+func (keybase *badgerKeybase) StoreChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string) (childKey crypto.KeyPair, err error) {
 	path := fmt.Sprintf(crypto.PoktAccountPathFormat, childIndex)
-	childKey, err := crypto.DeriveChild(path, seed)
+	childKey, err = crypto.DeriveChild(path, seed)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// No need to re-encrypt with provided passphrase
 	if childPassphrase == "" && childHint == "" {
@@ -284,40 +284,47 @@ func (keybase *badgerKeybase) StoreChildFromSeed(seed []byte, childIndex uint32,
 
 			return tx.Set(addrKey, keypairBz)
 		})
-		return err
+
+		return childKey, err
+	} else {
+		// Re-encrypt child key with passphrase and hint
+		err = keybase.db.Update(func(tx *badger.Txn) error {
+			// Get the private key hex string from the child key
+			privKeyHex, err := childKey.ExportString("") // No passphrase by default
+			if err != nil {
+				return err
+			}
+
+			keyPair, err := crypto.CreateNewKeyFromString(privKeyHex, childPassphrase, childHint)
+			if err != nil {
+				return err
+			}
+
+			// Use key address as key in DB
+			addrKey := keyPair.GetAddressBytes()
+
+			// Encode KeyPair into []byte for value
+			keypairBz, err := keyPair.Marshal()
+			if err != nil {
+				return err
+			}
+
+			return tx.Set(addrKey, keypairBz)
+		})
 	}
 
-	// Re-encrypt child key with passphrase and hint
-	return keybase.db.Update(func(tx *badger.Txn) error {
-		// Get the private key hex string from the child key
-		privKeyHex, err := childKey.ExportString("") // No passphrase by default
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return nil, err
+	}
 
-		keyPair, err := crypto.CreateNewKeyFromString(privKeyHex, childPassphrase, childHint)
-		if err != nil {
-			return err
-		}
-
-		// Use key address as key in DB
-		addrKey := keyPair.GetAddressBytes()
-
-		// Encode KeyPair into []byte for value
-		keypairBz, err := keyPair.Marshal()
-		if err != nil {
-			return err
-		}
-
-		return tx.Set(addrKey, keypairBz)
-	})
+	return childKey, nil
 }
 
 // Deterministically generate and store the ith child from the masterAddrHex key stored in the keybase
-func (keybase *badgerKeybase) StoreChildFromKey(masterAddrHex, masterPassphrase string, childIndex uint32, childPassphrase, childHint string) error {
+func (keybase *badgerKeybase) StoreChildFromKey(masterAddrHex, masterPassphrase string, childIndex uint32, childPassphrase, childHint string) (crypto.KeyPair, error) {
 	masterPrivKey, err := keybase.GetPrivKey(masterAddrHex, masterPassphrase)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	seed := masterPrivKey.Seed()
 	return keybase.StoreChildFromSeed(seed, childIndex, childPassphrase, childHint)
