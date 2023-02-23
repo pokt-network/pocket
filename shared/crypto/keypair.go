@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/gob"
+	"encoding/json"
 )
 
 // Gob Encoding is used to serialise the data to store the KeyPairs in the BadgerDB database
 func init() {
 	gob.Register(Ed25519PublicKey{})
 	gob.Register(ed25519.PublicKey{})
-	gob.Register(encKeyPair{})
+	gob.Register(EncKeyPair{})
 }
 
 // KeyPair interface exposes functions relating to public and encrypted private key pairs
@@ -38,18 +39,45 @@ type KeyPair interface {
 	Unmarshal([]byte) error
 }
 
-var _ KeyPair = &encKeyPair{}
+var _ KeyPair = &EncKeyPair{}
 
-// encKeyPair struct stores the public key and the passphrase encrypted private key
+// EncKeyPair struct stores the public key and the passphrase encrypted private key
 // The encrypted private key is stored as a JSON string with the fields needed to decrypt the key
-type encKeyPair struct {
+type EncKeyPair struct {
 	PublicKey     PublicKey
 	PrivKeyArmour string
 }
 
-// newKeyPair Generates a new KeyPair interface given the public key and armoured private key
+func (ekp *EncKeyPair) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		PublicKey     string `json:"PublicKey"`
+		PrivKeyArmour string `json:"PrivKeyArmour"`
+	}{
+		PublicKey:     ekp.PublicKey.String(),
+		PrivKeyArmour: ekp.PrivKeyArmour,
+	})
+}
+
+func (ekp *EncKeyPair) UnmarshalJSON(data []byte) error {
+	var tmp struct {
+		PublicKey     string `json:"PublicKey"`
+		PrivKeyArmour string `json:"PrivKeyArmour"`
+	}
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	publicKey, err := NewPublicKey(tmp.PublicKey)
+	if err != nil {
+		return err
+	}
+	ekp.PublicKey = publicKey
+	ekp.PrivKeyArmour = tmp.PrivKeyArmour
+	return nil
+}
+
+// Generate a new KeyPair struct given the public key and armoured private key
 func newKeyPair(pub PublicKey, priv string) KeyPair {
-	return &encKeyPair{
+	return &EncKeyPair{
 		PublicKey:     pub,
 		PrivKeyArmour: priv,
 	}
@@ -57,36 +85,36 @@ func newKeyPair(pub PublicKey, priv string) KeyPair {
 
 // GetKeypair Returns an empty KeyPair interface
 func GetKeypair() KeyPair {
-	return &encKeyPair{}
+	return &EncKeyPair{}
 }
 
 // GetPublicKey Returns the public key
-func (kp encKeyPair) GetPublicKey() PublicKey {
+func (kp EncKeyPair) GetPublicKey() PublicKey {
 	return kp.PublicKey
 }
 
 // GetPrivArmour Returns private key armoured string
-func (kp encKeyPair) GetPrivArmour() string {
+func (kp EncKeyPair) GetPrivArmour() string {
 	return kp.PrivKeyArmour
 }
 
 // GetAddressBytes Returns the byte slice address of the public key
-func (kp encKeyPair) GetAddressBytes() []byte {
+func (kp EncKeyPair) GetAddressBytes() []byte {
 	return kp.PublicKey.Address().Bytes()
 }
 
 // GetAddressString Returns the string address of the public key
-func (kp encKeyPair) GetAddressString() string {
+func (kp EncKeyPair) GetAddressString() string {
 	return kp.PublicKey.Address().String()
 }
 
 // Unarmour the private key with the passphrase provided
-func (kp encKeyPair) Unarmour(passphrase string) (PrivateKey, error) {
+func (kp EncKeyPair) Unarmour(passphrase string) (PrivateKey, error) {
 	return unarmourDecryptPrivKey(kp.PrivKeyArmour, passphrase)
 }
 
 // ExportString Exports the private key as a raw string
-func (kp encKeyPair) ExportString(passphrase string) (string, error) {
+func (kp EncKeyPair) ExportString(passphrase string) (string, error) {
 	privKey, err := unarmourDecryptPrivKey(kp.PrivKeyArmour, passphrase)
 	if err != nil {
 		return "", err
@@ -95,7 +123,7 @@ func (kp encKeyPair) ExportString(passphrase string) (string, error) {
 }
 
 // ExportJSON Exports the private key as an armoured JSON string with fields to decrypt
-func (kp encKeyPair) ExportJSON(passphrase string) (string, error) {
+func (kp EncKeyPair) ExportJSON(passphrase string) (string, error) {
 	_, err := unarmourDecryptPrivKey(kp.PrivKeyArmour, passphrase)
 	if err != nil {
 		return "", err
@@ -113,7 +141,7 @@ func (kp encKeyPair) GetSeed(passphrase string) ([]byte, error) {
 }
 
 // Marshal Marshals the KeyPair into a []byte
-func (kp encKeyPair) Marshal() ([]byte, error) {
+func (kp EncKeyPair) Marshal() ([]byte, error) {
 	buf := new(bytes.Buffer)
 	enc := gob.NewEncoder(buf)
 	if err := enc.Encode(kp); err != nil {
@@ -123,8 +151,8 @@ func (kp encKeyPair) Marshal() ([]byte, error) {
 }
 
 // Unmarshal Unmarshals a []byte into an encKeyPair struct
-func (kp *encKeyPair) Unmarshal(bz []byte) error {
-	var keyPair encKeyPair
+func (kp *EncKeyPair) Unmarshal(bz []byte) error {
+	var keyPair EncKeyPair
 	keypairBz := new(bytes.Buffer)
 	keypairBz.Write(bz)
 	dec := gob.NewDecoder(keypairBz)
