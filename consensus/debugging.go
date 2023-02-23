@@ -12,7 +12,7 @@ var (
 	_ modules.ConsensusDebugModule = &consensusModule{}
 )
 
-// Implementation of ConsensusDebugModule functions (i.e. SetHeight(), SetRound(), SetStep(), SetLeaderId(), SetUtilityContext())
+// Implementation of ConsensusDebugModule functions (i.e. SetHeight(), SetRound(), SetStep(), SetUtilityContext())
 // exposed by the debug interface should only be used for testing purposes.
 
 func (m *consensusModule) SetHeight(height uint64) {
@@ -30,11 +30,6 @@ func (m *consensusModule) SetStep(step uint8) {
 
 func (m *consensusModule) SetBlock(block *coreTypes.Block) {
 	m.block = block
-}
-
-func (m *consensusModule) SetLeaderId(leaderId uint64) {
-	nodeId := typesCons.NodeId(leaderId)
-	m.leaderId = &nodeId
 }
 
 func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
