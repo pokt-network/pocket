@@ -49,8 +49,8 @@ func (u *utilityContext) getBaselineAppStakeRate() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppBaselineStakeRateParamName)
 }
 
-func (u *utilityContext) getAppSessionQuotaMultiplier() (int, typesUtil.Error) {
-	return u.getIntParam(typesUtil.AppSessionQuotaMultiplierParamName)
+func (u *utilityContext) getAppSessionTokensMultiplier() (int, typesUtil.Error) {
+	return u.getIntParam(typesUtil.AppSessionTokensMultiplierParamName)
 }
 
 func (u *utilityContext) getAppUnstakingBlocks() (int64, typesUtil.Error) {
@@ -264,8 +264,8 @@ func (u *utilityContext) getParamOwner(paramName string) ([]byte, error) {
 		return u.store.GetBytesParam(typesUtil.AppMinimumStakeOwner, u.height)
 	case typesUtil.AppBaselineStakeRateParamName:
 		return u.store.GetBytesParam(typesUtil.AppBaselineStakeRateOwner, u.height)
-	case typesUtil.AppSessionQuotaMultiplierParamName:
-		return u.store.GetBytesParam(typesUtil.AppSessionQuotaMultiplierOwner, u.height)
+	case typesUtil.AppSessionTokensMultiplierParamName:
+		return u.store.GetBytesParam(typesUtil.AppSessionTokensMultiplierOwner, u.height)
 	case typesUtil.AppUnstakingBlocksParamName:
 		return u.store.GetBytesParam(typesUtil.AppUnstakingBlocksOwner, u.height)
 	case typesUtil.AppMinimumPauseBlocksParamName:
@@ -372,7 +372,7 @@ func (u *utilityContext) getParamOwner(paramName string) ([]byte, error) {
 		return u.store.GetBytesParam(typesUtil.AclOwner, u.height)
 	case typesUtil.AppBaselineStakeRateOwner:
 		return u.store.GetBytesParam(typesUtil.AclOwner, u.height)
-	case typesUtil.AppSessionQuotaMultiplierOwner:
+	case typesUtil.AppSessionTokensMultiplierOwner:
 		return u.store.GetBytesParam(typesUtil.AclOwner, u.height)
 	case typesUtil.AppUnstakingBlocksOwner:
 		return u.store.GetBytesParam(typesUtil.AclOwner, u.height)

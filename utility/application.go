@@ -2,7 +2,7 @@ package utility
 
 // Internal business logic for the `Application` protocol actor.
 //
-// An Application stakes POKT in exchange for quota to access Web3 access provided by the servicers.
+// An Application stakes POKT in exchange for tokens to access Web3 access provided by the servicers.
 
 import (
 	"math"
@@ -12,15 +12,15 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-// TODO(M3): Re-evaluate the implementation in this function when implementing the Application Protocol
-// and rate limiting
+// TODO(M3): This is not actively being used in any real business logic and must be re-evaluate when
+// the `Application` protocol actor is implemented.
 func (u *utilityContext) calculateMaxAppRelays(appStakeStr string) (string, typesUtil.Error) {
 	appStake, er := utils.StringToBigFloat(appStakeStr)
 	if er != nil {
-		return typesUtil.EmptyString, typesUtil.ErrStringToBigInt(er)
+		return typesUtil.EmptyString, typesUtil.ErrStringToBigFloat(er)
 	}
 
-	stakeToSessionQuotaMultiplier, err := u.getAppSessionQuotaMultiplier()
+	stakeToSessionTokensMultiplier, err := u.getAppSessionTokensMultiplier()
 	if err != nil {
 		return typesUtil.EmptyString, err
 	}
@@ -41,7 +41,7 @@ func (u *utilityContext) calculateMaxAppRelays(appStakeStr string) (string, type
 	baselineThroughput.Quo(baselineThroughput, typesUtil.POKTDenomination)
 
 	// add staking adjustment; can be -ve
-	adjusted := baselineThroughput.Add(baselineThroughput, big.NewFloat(float64(stakeToSessionQuotaMultiplier)))
+	adjusted := baselineThroughput.Add(baselineThroughput, big.NewFloat(float64(stakeToSessionTokensMultiplier)))
 
 	// truncate the integer
 	result, _ := adjusted.Int(nil)

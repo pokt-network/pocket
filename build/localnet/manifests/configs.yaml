@@ -4241,7 +4241,7 @@ data:
         "app_minimum_stake_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
         "app_max_chains_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
         "app_baseline_stake_rate_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
-        "app_session_quota_multiplier_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
+        "app_session_tokens_multiplier_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
         "app_unstaking_blocks_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
         "app_minimum_pause_blocks_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
         "app_max_paused_blocks_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
