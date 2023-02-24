@@ -59,11 +59,14 @@ func initializeDebugKeybase() error {
 	}
 
 	// Create/Open the keybase at `$HOME/.pocket/keys`
-	kb, err := keybase.NewKeybase(debugKeybasePath)
+	kb, err := keybase.NewBadgerKeybase(debugKeybasePath)
 	if err != nil {
 		return err
 	}
-	db := kb.GetBadgerDB()
+	db, err := kb.GetBadgerDB()
+	if err != nil {
+		return err
+	}
 
 	// Add the keys if the keybase contains less than 999
 	curAddr, _, err := kb.GetAll()

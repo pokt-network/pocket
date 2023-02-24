@@ -1,6 +1,9 @@
 package keybase
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
@@ -8,7 +11,7 @@ import (
 // Keybase interface implements the CRUD operations for the keybase
 type Keybase interface {
 	// Debug
-	GetBadgerDB() *badger.DB
+	GetBadgerDB() (*badger.DB, error)
 
 	// Close the DB connection
 	Stop() error
@@ -44,4 +47,49 @@ type Keybase interface {
 
 	// Removals
 	Delete(address, passphrase string) error
+}
+
+type KeybaseType int
+
+const (
+	KeybaseTypeFile KeybaseType = iota
+	KeybaseTypeVault
+)
+
+type KeybaseOptions struct {
+	// Path to the keybase file
+	KeybasePath string
+
+	// Address of the keybase server
+	VaultAddr string
+
+	// Token for the keybase server
+	VaultToken string
+
+	// Mount path for the keybase server
+	VaultMountPath string
+}
+
+// NewKeybase creates a new keybase based on the type and customized with the options provided
+func NewKeybase(keybaseType KeybaseType, opts *KeybaseOptions) (Keybase, error) {
+	switch keybaseType {
+	case KeybaseTypeFile:
+		// Open the file-based keybase at the specified path
+		if opts == nil || opts.KeybasePath == "" {
+			return nil, errors.New("keybase path is required for file-based keybase")
+		}
+		return NewBadgerKeybase(opts.KeybasePath)
+	case KeybaseTypeVault:
+		// Open the vault-based keybase
+		if opts == nil || opts.VaultAddr == "" || opts.VaultToken == "" || opts.VaultMountPath == "" {
+			return nil, errors.New("vault address, Token, and Mount are required for vault-based keybase")
+		}
+		return NewVaultKeybase(vaultKeybaseConfig{
+			Address: opts.VaultAddr,
+			Token:   opts.VaultToken,
+			Mount:   opts.VaultMountPath,
+		})
+	default:
+		return nil, fmt.Errorf("invalid keybase type: %d", keybaseType)
+	}
 }

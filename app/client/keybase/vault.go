@@ -1,3 +1,4 @@
+// Keybase using HashiCorp vault
 package keybase
 
 import (
@@ -6,37 +7,69 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/dgraph-io/badger/v3"
 	"github.com/hashicorp/vault/api"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
-// vaultKeybase implements the Keybase interface using HashiCorp vault
+// vaultKeybase implements the Keybase interface using HashiCorp Vault.
 type vaultKeybase struct {
 	client *api.Client
 	mount  string
 }
 
-// NewVaultKeybase returns a new instance of vaultKeybase
-func NewVaultKeybase(client *api.Client, mount string) *vaultKeybase {
-	return &vaultKeybase{
-		client: client,
-		mount:  mount,
-	}
+// vaultKeybaseConfig contains the configuration parameters for the VaultKeybase.
+type vaultKeybaseConfig struct {
+	Address string
+	Token   string
+	Mount   string
 }
 
-// writeVaultKeyPair writes a keypair to vault
-func writeVaultKeyPair(vk *vaultKeybase, address string, kp crypto.KeyPair, hint string) error {
-	dataBz, err := kp.MarshalJSON()
-	if err != nil {
-		return err
+// NewVaultKeybase returns a new instance of vaultKeybase.
+func NewVaultKeybase(config vaultKeybaseConfig) (*vaultKeybase, error) {
+	apiConfig := api.DefaultConfig()
+
+	// Set default values for the configuration parameters
+	if config.Address == "" {
+		config.Address = apiConfig.Address
 	}
 
-	_, err = vk.client.KVv2(vk.mount).Put(context.TODO(), address, map[string]interface{}{
-		"key_pair": string(dataBz),
-		"hint":     hint,
-	})
+	// Set the default mount path for the secret engine
+	if config.Mount == "" {
+		config.Mount = "secret"
+	}
 
-	return err
+	// Create a new vault API client
+	client, err := api.NewClient(&api.Config{
+		Address: config.Address,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the root token for the client if provided
+	if config.Token != "" {
+		client.SetToken(config.Token)
+	}
+
+	// Create a new VaultKeybase instance
+	vk := &vaultKeybase{
+		client: client,
+		mount:  config.Mount,
+	}
+
+	return vk, nil
+}
+
+// GetBadgerDB TODO: Drop this once we have a proper keybase abstraction
+func (vk *vaultKeybase) GetBadgerDB() (*badger.DB, error) {
+	return nil, errors.New("not implemented")
+}
+
+// Stop the vault client by clearing the token
+func (vk *vaultKeybase) Stop() error {
+	vk.client.ClearToken()
+	return nil
 }
 
 // Create new keypair entry in vault
@@ -256,4 +289,19 @@ func (vk *vaultKeybase) MarshalJSON() ([]byte, error) {
 
 func (vk *vaultKeybase) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &vk)
+}
+
+// writeVaultKeyPair writes a keypair to vault
+func writeVaultKeyPair(vk *vaultKeybase, address string, kp crypto.KeyPair, hint string) error {
+	dataBz, err := kp.MarshalJSON()
+	if err != nil {
+		return err
+	}
+
+	_, err = vk.client.KVv2(vk.mount).Put(context.TODO(), address, map[string]interface{}{
+		"key_pair": string(dataBz),
+		"hint":     hint,
+	})
+
+	return err
 }

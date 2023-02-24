@@ -9,8 +9,10 @@ import (
 	"io"
 	"math/big"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -236,6 +238,51 @@ func attachChildPwdFlagToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
 		c.Flags().StringVar(&childPwd, "child_pwd", "", "passphrase for the derived child's private key")
 	}}
+}
+
+func attachKeybaseFlagsToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&keybaseTypeFromCLI, "keybase", "file", "keybase type used by the cmd, options are: file, vault")
+	}}
+}
+
+func keyBaseStringToType(kb string) (keybase.KeybaseType, error) {
+	switch kb {
+	case "file":
+		return keybase.KeybaseTypeFile, nil
+	case "vault":
+		return keybase.KeybaseTypeVault, nil
+	default:
+		return -1, fmt.Errorf("invalid keybase type: %s", kb)
+	}
+}
+
+func keybaseForCli() (keybase.Keybase, error) {
+	keybaseType := keybase.KeybaseTypeFile
+	keybaseOptions := keybase.KeybaseOptions{}
+
+	if keybaseTypeFromCLI != "" {
+		switch keybaseTypeFromCLI {
+		case "file":
+			keybaseType = keybase.KeybaseTypeFile
+			// Open the keybase at the specified directory
+			pocketDir := strings.TrimSuffix(dataDir, "/")
+			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+			if err != nil {
+				return nil, err
+			}
+			keybaseOptions.KeybasePath = keybasePath
+		case "vault":
+			keybaseType = keybase.KeybaseTypeVault
+			keybaseOptions.VaultAddr = keybaseVaultAddrFromCLI
+			keybaseOptions.VaultToken = keybaseVaultTokenFromCLI
+			keybaseOptions.VaultMountPath = keybaseVaultMountPathFromCLI
+		default:
+			fmt.Printf("❌ Invalid keybase type: %s\n", keybaseTypeFromCLI)
+			os.Exit(1)
+		}
+	}
+	return keybase.NewKeybase(keybaseType, &keybaseOptions)
 }
 
 func unableToConnectToRpc(err error) error {

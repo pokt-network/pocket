@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	vault "github.com/hashicorp/vault/api"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -18,22 +17,11 @@ var (
 )
 
 func setupTestVaultKeybase(address string) (*vaultKeybase, error) {
-
-	config := vault.DefaultConfig()
-	config.Address = address
-	// Create a new vault API client
-	client, err := vault.NewClient(config)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set the root token for the client
-	client.SetToken("dev-only-token")
-
-	// Create a new VaultKeybase instance
-	vk := NewVaultKeybase(client, "secret")
-
-	return vk, nil
+	return NewVaultKeybase(vaultKeybaseConfig{
+		Address: address,
+		Token:   "dev-only-token",
+		Mount:   "secret",
+	})
 }
 
 func TestMain(m *testing.M) {
@@ -43,7 +31,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not construct pool: %s", err)
 	}
 
-	pool.MaxWait = 5 // ain't nobody got time for that
+	// pool.MaxWait = 20 // ain't nobody got time for that
 
 	// uses pool to try to connect to Docker
 	err = pool.Client.Ping()

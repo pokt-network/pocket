@@ -3,9 +3,13 @@ package keybase
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/crypto/slip"
 	"strings"
+
+	"strings"
+
+	"github.com/pokt-network/pocket/shared/crypto/slip"
 
 	"github.com/pokt-network/pocket/shared/converters"
 
@@ -19,7 +23,7 @@ const (
 
 // Errors
 func ErrorAddrNotFound(addr string) error {
-	return fmt.Errorf("No key found with address: %s", addr)
+	return fmt.Errorf("no key found with address: %s", addr)
 }
 
 // badgerKeybase implements the KeyBase interface
@@ -31,7 +35,7 @@ type badgerKeybase struct {
 }
 
 // NewKeybase creates/Opens the DB at the specified path creating the path if it doesn't exist
-func NewKeybase(path string) (Keybase, error) {
+func NewBadgerKeybase(path string) (Keybase, error) {
 	pathExists, err := converters.DirExists(path) // Creates path if it doesn't exist
 	if err != nil || !pathExists {
 		return nil, err
@@ -55,8 +59,11 @@ func NewKeybaseInMemory() (Keybase, error) {
 
 // GetBadgerDB returns the DB instance
 // FOR DEBUG PURPOSES ONLY
-func (keybase *badgerKeybase) GetBadgerDB() *badger.DB {
-	return keybase.db
+func (keybase *badgerKeybase) GetBadgerDB() (*badger.DB, error) {
+	if keybase.db == nil {
+		return nil, errors.New("DB not initialized")
+	}
+	return keybase.db, nil
 }
 
 // Stop closes the DB connection
@@ -64,7 +71,7 @@ func (keybase *badgerKeybase) Stop() error {
 	return keybase.db.Close()
 }
 
-// Create creates a new key and store the serialised KeyPair encoding in the DB
+// Create creates a new key and store the serialized KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
 // Returns the KeyPair created and any error
 func (keybase *badgerKeybase) Create(passphrase, hint string) (keyPair crypto.KeyPair, err error) {
@@ -92,7 +99,7 @@ func (keybase *badgerKeybase) Create(passphrase, hint string) (keyPair crypto.Ke
 	return keyPair, nil
 }
 
-// ImportFromString creates a new KeyPair from the private key hex string and store the serialised KeyPair encoding in the DB
+// ImportFromString creates a new KeyPair from the private key hex string and store the serialized KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
 // Returns the KeyPair created and any error
 func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint string) (keyPair crypto.KeyPair, err error) {
@@ -120,7 +127,7 @@ func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint stri
 	return keyPair, nil
 }
 
-// ImportFromJSON creates a new KeyPair from the private key JSON string and store the serialised KeyPair encoding in the DB
+// ImportFromJSON creates a new KeyPair from the private key JSON string and store the serialized KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
 // Returns the KeyPair created and any error
 func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) (keyPair crypto.KeyPair, err error) {
@@ -347,7 +354,7 @@ func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassph
 		// Use key address as key in DB
 		addrKey := keyPair.GetAddressBytes()
 		if !bytes.Equal(addrKey, addrBz) {
-			return fmt.Errorf("Key address does not match previous address.")
+			return fmt.Errorf("key address does not match previous address")
 		}
 
 		// Encode KeyPair into []byte for value
