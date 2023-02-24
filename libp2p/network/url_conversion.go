@@ -71,36 +71,36 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 
 // ServiceUrlFromLibp2pMultiaddr converts a multiaddr into a URL string.
 func ServiceUrlFromLibp2pMultiaddr(addr multiaddr.Multiaddr) (string, error) {
-	protos := addr.Protocols()
-	if len(protos) < 2 {
+	protocols := addr.Protocols()
+	if len(protocols) < 2 {
 		return "", fmt.Errorf(
 			"unsupported multiaddr: %s; expected at least 2 protocols, got: %d",
-			addr, len(protos),
+			addr, len(protocols),
 		)
 	}
 
-	networkProto := protos[0]
+	networkProtocol := protocols[0]
 	// e.g. IP address: "/ip4/10.0.0.1" --> "10.0.0.1"
-	networkValue, err := addr.ValueForProtocol(networkProto.Code)
+	networkValue, err := addr.ValueForProtocol(networkProtocol.Code)
 	if err != nil {
 		return "", err
 	}
 
-	transportProto := protos[1]
+	transportProtocol := protocols[1]
 	// e.g. Port: "/tcp/42069" --> "42069"
-	transportValue, err := addr.ValueForProtocol(transportProto.Code)
+	transportValue, err := addr.ValueForProtocol(transportProtocol.Code)
 	if err != nil {
 		return "", err
 	}
 
-	// Top level proto must be a network protocol (e.g. ip4, ip6).
-	switch networkProto.Code {
+	// Top level protocol must be a network protocol (e.g. ip4, ip6).
+	switch networkProtocol.Code {
 	case multiaddr.P_IP4, multiaddr.P_IP6:
 		return fmt.Sprintf("%s:%s", networkValue, transportValue), nil
 	}
 
 	return "", fmt.Errorf(
 		"unsupported network protocol, %s",
-		networkProto.Name,
+		networkProtocol.Name,
 	)
 }
