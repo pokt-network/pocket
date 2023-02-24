@@ -100,7 +100,9 @@ func NewKeysCommand() *cobra.Command {
 	cmd.AddCommand(slipCmds...)
 
 	// Bind the store_child flag
-	viper.BindPFlag("storeChild", cmd.Flags().Lookup("store_child"))
+	if err := viper.BindPFlag("storeChild", cmd.Flags().Lookup("store_child")); err != nil {
+		logger.Global.Fatal().Err(err).Msg("Unable to bind store_child flag to viper")
+	}
 	viper.SetDefault("storeChild", true)
 
 	return cmd
