@@ -133,7 +133,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	tx, err := conn.BeginTx(context.TODO(), pgx.TxOptions{
 		IsoLevel:       pgx.ReadUncommitted,
 		AccessMode:     pgx.ReadWrite,
-		DeferrableMode: pgx.Deferrable, // TODO(andrew): Research if this should be `Deferrable`
+		DeferrableMode: pgx.Deferrable, // INVESTIGATE: Research if this should be `Deferrable`
 	})
 	if err != nil {
 		return nil, err
@@ -164,7 +164,7 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	tx, err := conn.BeginTx(context.TODO(), pgx.TxOptions{
 		IsoLevel:       pgx.ReadCommitted,
 		AccessMode:     pgx.ReadOnly,
-		DeferrableMode: pgx.NotDeferrable, // TODO(andrew): Research if this should be `Deferrable`
+		DeferrableMode: pgx.NotDeferrable, // INVESTIGATE: Research if this should be `Deferrable`
 	})
 	if err != nil {
 		return nil, err

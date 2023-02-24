@@ -4148,7 +4148,6 @@ data:
           "address": "88a792b7aca673620132ef01f50e62caa58eca83",
           "public_key": "5f78658599943dc3e623539ce0b3c9fe4e192034a1e3fef308bc9f96915754e0",
           "chains": ["0001"],
-          "service_url": "1000000",
           "staked_amount": "1000000000000",
           "paused_height": -1,
           "unstaking_height": -1,

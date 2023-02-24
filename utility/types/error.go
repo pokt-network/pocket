@@ -330,7 +330,7 @@ func ErrUnequalRounds() Error {
 	return NewError(CodeUnequalRoundsError, UnequalRoundsError)
 }
 
-func ErrInvalidServiceUrl(reason string) Error {
+func ErrInvalidServiceURL(reason string) Error {
 	return NewError(CodeInvalidServiceUrlError, fmt.Sprintf("%s: %s", InvalidServiceUrlError, reason))
 }
 

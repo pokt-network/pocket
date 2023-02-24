@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO(andrew): Be consistent with `ServiceUrl` and `ActorSpecificParam` throughout the codebase; preferably the latter.
-
 func getGenericActor[T any](
 	protocolActorSchema types.ProtocolActorSchema,
 	getActor func(*persistence.PostgresContext, []byte) (T, error),

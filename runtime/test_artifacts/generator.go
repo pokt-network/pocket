@@ -7,7 +7,7 @@ import (
 
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
-	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
+	keygen "github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -67,7 +67,7 @@ func NewPools() (pools []*coreTypes.Account) {
 
 func NewAccounts(n int, privateKeys ...string) (accounts []*coreTypes.Account) {
 	for i := 0; i < n; i++ {
-		_, _, addr := keygenerator.GetInstance().Next()
+		_, _, addr := keygen.GetInstance().Next()
 		if privateKeys != nil {
 			pk, _ := crypto.NewPrivateKey(privateKeys[i])
 			addr = pk.Address().String()
@@ -85,11 +85,8 @@ func NewAccounts(n int, privateKeys ...string) (accounts []*coreTypes.Account) {
 //	types of actors which needs to be fixed.
 func NewActors(actorType coreTypes.ActorType, n int) (actors []*coreTypes.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
-		genericParam := getServiceUrl(i + 1)
-		if int32(actorType) == int32(coreTypes.ActorType_ACTOR_TYPE_APP) {
-			genericParam = DefaultMaxRelaysString
-		}
-		actor, pk := NewDefaultActor(int32(actorType), genericParam)
+		serviceUrl := getServiceURL(i + 1)
+		actor, pk := NewDefaultActor(int32(actorType), serviceUrl)
 		actors = append(actors, actor)
 		privateKeys = append(privateKeys, pk)
 	}
@@ -97,23 +94,21 @@ func NewActors(actorType coreTypes.ActorType, n int) (actors []*coreTypes.Actor,
 	return
 }
 
-func getServiceUrl(n int) string {
+func getServiceURL(n int) string {
 	return fmt.Sprintf(ServiceUrlFormat, n)
 }
 
-func NewDefaultActor(actorType int32, genericParam string) (actor *coreTypes.Actor, privateKey string) {
-	privKey, pubKey, addr := keygenerator.GetInstance().Next()
+func NewDefaultActor(actorType int32, serviceURL string) (actor *coreTypes.Actor, privateKey string) {
+	privKey, pubKey, addr := keygen.GetInstance().Next()
 	chains := DefaultChains
 	if actorType == int32(coreTypes.ActorType_ACTOR_TYPE_VAL) {
 		chains = nil
-	} else if actorType == int32(coreTypes.ActorType_ACTOR_TYPE_APP) {
-		genericParam = DefaultMaxRelaysString
 	}
 	return &coreTypes.Actor{
 		Address:         addr,
 		PublicKey:       pubKey,
 		Chains:          chains,
-		ServiceUrl:      genericParam,
+		ServiceUrl:      serviceURL,
 		StakedAmount:    DefaultStakeAmountString,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,

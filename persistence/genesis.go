@@ -59,10 +59,12 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 		Pool     coreTypes.Pools
 	}{
 		{
-			Name:     "app",
-			Getter:   state.GetApplications,
-			InsertFn: rwContext.InsertApp,
-			Pool:     coreTypes.Pools_POOLS_APP_STAKE,
+			Name:   "app",
+			Getter: state.GetApplications,
+			InsertFn: func(address, publicKey, output []byte, paused bool, status int32, serviceURL, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error {
+				return rwContext.InsertApp(address, publicKey, output, paused, status, stakedTokens, chains, pausedHeight, unstakingHeight)
+			},
+			Pool: coreTypes.Pools_POOLS_APP_STAKE,
 		},
 		{
 			Name:     "servicer",

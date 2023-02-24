@@ -66,7 +66,7 @@ func TestUpdateApp(t *testing.T) {
 	addrBz, err := hex.DecodeString(app.Address)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, chains, err := db.GetApp(addrBz, 0)
+	_, _, stakedTokens, _, _, _, chains, err := db.GetApp(addrBz, 0)
 	require.NoError(t, err)
 	require.Equal(t, DefaultChains, chains, "default chains incorrect for current height")
 	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for current height")
@@ -75,15 +75,15 @@ func TestUpdateApp(t *testing.T) {
 
 	require.NotEqual(t, DefaultStake, StakeToUpdate)   // sanity check to make sure the tests are correct
 	require.NotEqual(t, DefaultChains, ChainsToUpdate) // sanity check to make sure the tests are correct
-	err = db.UpdateApp(addrBz, app.ServiceUrl, StakeToUpdate, ChainsToUpdate)
+	err = db.UpdateApp(addrBz, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, chains, err = db.GetApp(addrBz, 0)
+	_, _, stakedTokens, _, _, _, chains, err = db.GetApp(addrBz, 0)
 	require.NoError(t, err)
 	require.Equal(t, DefaultChains, chains, "default chains incorrect for previous height")
 	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for previous height")
 
-	_, _, stakedTokens, _, _, _, _, chains, err = db.GetApp(addrBz, 1)
+	_, _, stakedTokens, _, _, _, chains, err = db.GetApp(addrBz, 1)
 	require.NoError(t, err)
 	require.Equal(t, ChainsToUpdate, chains, "chains not updated for current height")
 	require.Equal(t, StakeToUpdate, stakedTokens, "stake not updated for current height")
@@ -183,14 +183,14 @@ func TestSetAppPauseHeightAndUnstakeLater(t *testing.T) {
 	err = db.SetAppPauseHeight(addrBz, pauseHeight)
 	require.NoError(t, err)
 
-	_, _, _, _, _, appPausedHeight, _, _, err := db.GetApp(addrBz, db.Height)
+	_, _, _, _, appPausedHeight, _, _, err := db.GetApp(addrBz, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, pauseHeight, appPausedHeight, "pause height not updated")
 
 	err = db.SetAppStatusAndUnstakingHeightIfPausedBefore(pauseHeight+1, unstakingHeight, -1 /*unused*/)
 	require.NoError(t, err)
 
-	_, _, _, _, _, _, appUnstakingHeight, _, err := db.GetApp(addrBz, db.Height)
+	_, _, _, _, _, appUnstakingHeight, _, err := db.GetApp(addrBz, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, unstakingHeight, appUnstakingHeight, "unstaking height was not set correctly")
 }
@@ -222,7 +222,6 @@ func newTestApp() (*coreTypes.Actor, error) {
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
-		ServiceUrl:      DefaultMaxRelays,
 		StakedAmount:    DefaultStake,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
@@ -278,7 +277,6 @@ func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*coreTypes.
 		outputBz,
 		false,
 		DefaultStakeStatus,
-		DefaultMaxRelays,
 		DefaultStake,
 		DefaultChains,
 		DefaultPauseHeight,
@@ -286,7 +284,7 @@ func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*coreTypes.
 }
 
 func getTestApp(db *persistence.PostgresContext, address []byte) (*coreTypes.Actor, error) {
-	operator, publicKey, stakedTokens, maxRelays, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetApp(address, db.Height)
+	operator, publicKey, stakedTokens, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetApp(address, db.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +293,6 @@ func getTestApp(db *persistence.PostgresContext, address []byte) (*coreTypes.Act
 		Address:         operator,
 		PublicKey:       publicKey,
 		Chains:          chains,
-		ServiceUrl:      maxRelays,
 		StakedAmount:    stakedTokens,
 		PausedHeight:    pauseHeight,
 		UnstakingHeight: unstakingHeight,

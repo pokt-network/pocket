@@ -44,7 +44,7 @@ func validateStaker(msg stakingMessage) Error {
 	if err := validateRelayChains(msg.GetChains()); err != nil {
 		return err
 	}
-	return validateServiceUrl(msg.GetActorType(), msg.GetServiceUrl())
+	return validateServiceURL(msg.GetActorType(), msg.GetServiceUrl())
 }
 
 func validateActorType(actorType coreTypes.ActorType) Error {
@@ -64,7 +64,7 @@ func validateAmount(amount string) Error {
 	return nil
 }
 
-func validateServiceUrl(actorType coreTypes.ActorType, uri string) Error {
+func validateServiceURL(actorType coreTypes.ActorType, uri string) Error {
 	if actorType == coreTypes.ActorType_ACTOR_TYPE_APP {
 		return nil
 	}
@@ -72,25 +72,25 @@ func validateServiceUrl(actorType coreTypes.ActorType, uri string) Error {
 	uri = strings.ToLower(uri)
 	_, err := url.ParseRequestURI(uri)
 	if err != nil {
-		return ErrInvalidServiceUrl(err.Error())
+		return ErrInvalidServiceURL(err.Error())
 	}
 	if !(uri[:8] == httpsPrefix || uri[:7] == httpPrefix) {
-		return ErrInvalidServiceUrl(invalidURLPrefix)
+		return ErrInvalidServiceURL(invalidURLPrefix)
 	}
 
 	urlParts := strings.Split(uri, colon)
 	if len(urlParts) != 3 { // protocol:host:port
-		return ErrInvalidServiceUrl(portRequired)
+		return ErrInvalidServiceURL(portRequired)
 	}
 	port, err := strconv.Atoi(urlParts[2])
 	if err != nil {
-		return ErrInvalidServiceUrl(nonNumberPort)
+		return ErrInvalidServiceURL(nonNumberPort)
 	}
 	if port > maxPort || port < 0 {
-		return ErrInvalidServiceUrl(portOutOfRange)
+		return ErrInvalidServiceURL(portOutOfRange)
 	}
 	if !strings.Contains(uri, period) {
-		return ErrInvalidServiceUrl(noPeriod)
+		return ErrInvalidServiceURL(noPeriod)
 	}
 	return nil
 }

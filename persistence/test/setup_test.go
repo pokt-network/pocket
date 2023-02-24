@@ -16,7 +16,7 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
-	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
+	keygen "github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -32,14 +32,12 @@ var (
 	DefaultServiceUrl = "https://foo.bar"
 	DefaultPoolName   = "TESTING_POOL"
 
-	DefaultDeltaBig     = big.NewInt(100)
-	DefaultAccountBig   = big.NewInt(1000000)
-	DefaultStakeBig     = big.NewInt(1000000000000000)
-	DefaultMaxRelaysBig = big.NewInt(1000000)
+	DefaultDeltaBig   = big.NewInt(100)
+	DefaultAccountBig = big.NewInt(1000000)
+	DefaultStakeBig   = big.NewInt(1000000000000000)
 
 	DefaultAccountAmount = utils.BigIntToString(DefaultAccountBig)
 	DefaultStake         = utils.BigIntToString(DefaultStakeBig)
-	DefaultMaxRelays     = utils.BigIntToString(DefaultMaxRelaysBig)
 	StakeToUpdate        = utils.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
 
 	DefaultStakeStatus     = int32(coreTypes.StakeStatus_Staked)
@@ -92,7 +90,7 @@ func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresCon
 
 // TODO(olshansky): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
-	teardownDeterministicKeygen := keygenerator.GetInstance().SetSeed(42)
+	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
 	defer teardownDeterministicKeygen()
 
 	cfg := &configs.Config{
@@ -184,7 +182,7 @@ func fuzzSingleProtocolActor(
 			numParamUpdatesSupported := 3
 			newStakedTokens := originalActor.StakedAmount
 			newChains := originalActor.Chains
-			newActorSpecificParam := originalActor.ServiceUrl
+			serviceUrl := originalActor.ServiceUrl
 
 			iterations := rand.Intn(2)
 			for i := 0; i < iterations; i++ {
@@ -193,10 +191,10 @@ func fuzzSingleProtocolActor(
 					newStakedTokens = getRandomBigIntString()
 				case 1:
 					switch protocolActorSchema.GetActorSpecificColName() {
-					case types.ServiceUrlCol:
-						newActorSpecificParam = getRandomServiceUrl()
-					case types.MaxRelaysCol:
-						newActorSpecificParam = getRandomBigIntString()
+					case types.ServiceURLCol:
+						serviceUrl = getRandomServiceURL()
+					case types.UnusedCol:
+						serviceUrl = ""
 					default:
 						t.Error("Unexpected actor specific column name")
 					}
@@ -210,7 +208,7 @@ func fuzzSingleProtocolActor(
 				Address:         originalActor.Address,
 				PublicKey:       originalActor.PublicKey,
 				StakedAmount:    newStakedTokens,
-				ServiceUrl:      newActorSpecificParam,
+				ServiceUrl:      serviceUrl,
 				Output:          originalActor.Output,
 				PausedHeight:    originalActor.PausedHeight,
 				UnstakingHeight: originalActor.UnstakingHeight,
@@ -229,7 +227,7 @@ func fuzzSingleProtocolActor(
 				log.Println("")
 			}
 			require.Equal(t, newStakedTokens, newActor.StakedAmount, "staked tokens not updated")
-			require.Equal(t, newActorSpecificParam, newActor.ServiceUrl, "actor specific param not updated")
+			require.Equal(t, serviceUrl, newActor.ServiceUrl, "actor specific param not updated")
 		case "GetActorsReadyToUnstake":
 			unstakingActors, err := db.GetActorsReadyToUnstake(protocolActorSchema, db.Height)
 			require.NoError(t, err)
@@ -327,7 +325,7 @@ func getRandomChains() (chains []string) {
 }
 
 //nolint:gosec // G404 - Weak random source is okay in unit tests
-func getRandomServiceUrl() string {
+func getRandomServiceURL() string {
 	setRandomSeed()
 
 	charOptions := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"

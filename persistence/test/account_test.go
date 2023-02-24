@@ -15,8 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO(andrew): Find all places where we import twice and update the imports appropriately.
-
 func FuzzAccountAmount(f *testing.F) {
 	db := NewTestPostgresContext(f, 0)
 	operations := []string{

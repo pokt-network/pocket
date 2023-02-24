@@ -21,7 +21,8 @@ message GenesisState {
   Params params = 10;
 }
 
-// DISCUSS(drewskey): Explore a more general purpose "feature flag" like approach for this.
+// TECHDEBT: Explore a more general purpose "feature flag" approach that makes it easy to add/remove
+// parametesr and add activation heights for them as well.
 message Params {
   //@gotags: pokt:"val_type=BIGINT"
   int32 blocks_per_session = 1;

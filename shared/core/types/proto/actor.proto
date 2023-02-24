@@ -23,8 +23,8 @@ message Actor {
   ActorType actor_type = 1;
   string address = 2;
   string public_key = 3;
-  repeated string chains = 4;
-  string service_url = 5;
+  repeated string chains = 4; // Not applicable to `Validator` actors
+  string service_url = 5; // Not applicable to `Application` actors
   string staked_amount = 6;
   int64 paused_height = 7;
   int64 unstaking_height = 8;

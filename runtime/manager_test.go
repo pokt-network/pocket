@@ -4066,7 +4066,6 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "88a792b7aca673620132ef01f50e62caa58eca83",
 			PublicKey:       "5f78658599943dc3e623539ce0b3c9fe4e192034a1e3fef308bc9f96915754e0",
 			Chains:          []string{"0001"},
-			ServiceUrl:      "1000000",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,

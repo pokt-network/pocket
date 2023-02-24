@@ -22,23 +22,24 @@ var ValidatorActor ProtocolActorSchema = &ValidatorSchema{
 		tableName:       ValidatorTableName,
 		chainsTableName: NullString,
 
-		actorSpecificColName: ServiceUrlCol,
+		actorSpecificColName: ServiceURLCol,
 
 		heightConstraintName:       ValidatorHeightConstraint,
 		chainsHeightConstraintName: NullString,
 	},
 }
 
-func (actor *ValidatorSchema) InsertQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, _ []string, height int64) string {
+func (actor *ValidatorSchema) InsertQuery(address, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, _ []string, height int64) string {
 	return Insert(&coreTypes.Actor{
 		Address:         address,
 		PublicKey:       publicKey,
+		ServiceUrl:      serviceURL,
 		StakedAmount:    stakedTokens,
 		Output:          outputAddress,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 	},
-		actor.actorSpecificColName, maxRelays,
+		actor.actorSpecificColName, serviceURL,
 		actor.heightConstraintName, NullString,
 		actor.tableName, NullString,
 		height)

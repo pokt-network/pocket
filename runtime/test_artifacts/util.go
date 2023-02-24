@@ -89,7 +89,7 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 	return pool, resource, databaseUrl
 }
 
-// TODO(drewsky): Currently exposed only for testing purposes.
+// TECHDEBT: Only exposed for test purposes because the utility module is dependant on the implementation of the persistence module
 func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *dockertest.Resource) {
 	// You can't defer this because `os.Exit`` doesn't care for defer
 	if err := pool.Purge(resource); err != nil {

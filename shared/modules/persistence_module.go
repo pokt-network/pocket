@@ -79,8 +79,8 @@ type PersistenceWriteContext interface {
 	SetAccountAmount(address []byte, amount string) error // NOTE: same as (insert)
 
 	// App Operations
-	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int32, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateApp(address []byte, maxRelaysToAdd string, amount string, chainsToUpdate []string) error
+	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int32, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateApp(address []byte, amount string, chainsToUpdate []string) error
 	SetAppStakeAmount(address []byte, stakeAmount string) error
 	SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
 	SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error

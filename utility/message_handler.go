@@ -130,11 +130,7 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 	// insert actor
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		maxRelays, err := u.calculateMaxAppRelays(message.Amount)
-		if err != nil {
-			return err
-		}
-		er = u.store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		er = u.store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
@@ -191,11 +187,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 	}
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		maxRelays, err := u.calculateMaxAppRelays(message.Amount)
-		if err != nil {
-			return err
-		}
-		er = u.store.UpdateApp(message.Address, maxRelays, message.Amount, message.Chains)
+		er = u.store.UpdateApp(message.Address, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		er = u.store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
