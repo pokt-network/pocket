@@ -5,6 +5,10 @@ import (
 	"os"
 
 	"github.com/manifoldco/promptui"
+	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/pokt-network/pocket/libp2p"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
@@ -16,8 +20,6 @@ import (
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // TECHDEBT: Lowercase variables / constants that do not need to be exported.
@@ -101,11 +103,13 @@ func NewDebugCommand() *cobra.Command {
 			modulesRegistry.RegisterModule(currentHeightProvider)
 
 			setValueInCLIContext(cmd, busCLICtxKey, bus)
-			p2pM, err := p2p.Create(bus)
+
+			// TECHDEBT: simplify after P2P module consolidation.
+			var err error
+			p2pMod, err = getP2PModule(runtimeMgr)
 			if err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
 			}
-			p2pMod = p2pM.(modules.P2PModule)
 
 			if err := p2pMod.Start(); err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
@@ -270,4 +274,20 @@ func fetchAddressBook(cmd *cobra.Command) (types.AddrBook, error) {
 		logger.Global.Fatal().Msg("Unable to retrieve the addrBook")
 	}
 	return addrBook, err
+}
+
+func getP2PModule(runtimeMgr *runtime.Manager) (p2pModule modules.P2PModule, err error) {
+	bus := runtimeMgr.GetBus()
+
+	var mod modules.Module
+	if runtimeMgr.GetConfig().UseLibP2P {
+		mod, err = libp2p.Create(bus)
+	} else {
+		mod, err = p2p.Create(bus)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return mod.(modules.P2PModule), nil
 }
