@@ -4123,7 +4123,7 @@
     "blocks_per_session": 4,
     "app_minimum_stake": "15000000000",
     "app_max_chains": 15,
-    "app_session_tokens_multiplier": 0,
+    "app_session_tokens_multiplier": 100,
     "app_unstaking_blocks": 2016,
     "app_minimum_pause_blocks": 4,
     "app_max_pause_blocks": 672,

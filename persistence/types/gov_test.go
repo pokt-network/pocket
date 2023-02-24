@@ -26,7 +26,7 @@ func TestInsertParams(t *testing.T) {
 			want: "INSERT INTO params VALUES ('blocks_per_session', -1, 'BIGINT', 4)," +
 				"('app_minimum_stake', -1, 'STRING', '15000000000')," +
 				"('app_max_chains', -1, 'SMALLINT', 15)," +
-				"('app_session_tokens_multiplier', -1, 'BIGINT', 0)," +
+				"('app_session_tokens_multiplier', -1, 'BIGINT', 100)," +
 				"('app_unstaking_blocks', -1, 'BIGINT', 2016)," +
 				"('app_minimum_pause_blocks', -1, 'SMALLINT', 4)," +
 				"('app_max_pause_blocks', -1, 'BIGINT', 672)," +

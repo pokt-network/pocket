@@ -18,7 +18,7 @@ func DefaultParams() *genesis.Params {
 		BlocksPerSession:                      4,
 		AppMinimumStake:                       utils.BigIntToString(big.NewInt(15000000000)),
 		AppMaxChains:                          15,
-		AppSessionTokensMultiplier:            0,
+		AppSessionTokensMultiplier:            100,
 		AppUnstakingBlocks:                    2016,
 		AppMinimumPauseBlocks:                 4,
 		AppMaxPauseBlocks:                     672,
