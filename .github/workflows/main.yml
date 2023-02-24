@@ -30,9 +30,10 @@ jobs:
     steps:
       - run: |
           cat /etc/resolv.conf
-          echo "nameserver 8.8.8.8" | sudo tee  /etc/resolv.conf.DNSoverride
-          echo "nameserver 1.1.1.1" | sudo tee  /etc/resolv.conf.DNSoverride
-          sudo ln -sf /etc/resolv.conf.DNSoverride /etc/resolv.conf
+          sudo sed -i 's/#DNS=/DNS=8.8.8.8 1.1.1.1/g' /etc/systemd/resolved.conf
+          sudo systemctl daemon-reload
+          sudo systemctl restart systemd-networkd
+          sudo systemctl restart systemd-resolved
           cat /etc/resolv.conf
       - uses: actions/checkout@v3
       - name: Setup go
