@@ -21,7 +21,6 @@ type StateSyncServerModule interface {
 }
 
 func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) error {
-	fmt.Println("HandleStateSyncMetadataRequest is Called")
 	consensusMod := m.GetBus().GetConsensusModule()
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := metadataReq.PeerAddress
