@@ -21,7 +21,7 @@ func setupTestVaultKeybase(address string) (*vaultKeybase, error) {
 
 	config := vault.DefaultConfig()
 	config.Address = address
-	// Create a new Vault API client
+	// Create a new vault API client
 	client, err := vault.NewClient(config)
 	if err != nil {
 		return nil, err
