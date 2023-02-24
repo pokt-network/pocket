@@ -29,7 +29,7 @@ spec:
             - -config=/configs/config.json
             - -genesis=/genesis.json
           ports:
-            - containerPort: 8080
+            - containerPort: 42069
               name: consensus
             - containerPort: 50832
               name: rpc
@@ -106,7 +106,7 @@ metadata:
     v1-purpose: validator
 spec:
   ports:
-    - port: 8080
+    - port: 42069
       name: consensus
     - port: 50832
       name: rpc
