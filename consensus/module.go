@@ -70,7 +70,7 @@ type consensusModule struct {
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	logger    modules.Logger
+	logger    *modules.Logger
 	logPrefix string
 
 	stateSync state_sync.StateSyncModule

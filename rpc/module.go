@@ -18,7 +18,7 @@ type rpcModule struct {
 	base_modules.IntegratableModule
 	base_modules.InterruptableModule
 
-	logger modules.Logger
+	logger *modules.Logger
 	config *configs.RPCConfig
 }
 
@@ -48,7 +48,7 @@ func (*rpcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 
 func (u *rpcModule) Start() error {
 	u.logger = logger.Global.CreateLoggerForModule(u.GetModuleName())
-	go NewRPCServer(u.GetBus()).StartRPC(u.config.Port, u.config.Timeout, &u.logger)
+	go NewRPCServer(u.GetBus()).StartRPC(u.config.Port, u.config.Timeout, u.logger)
 	return nil
 }
 
