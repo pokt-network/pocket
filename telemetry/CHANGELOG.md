@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.9] - 2023-02-24
+
+- Update logger value references with pointers
+
 ## [0.0.0.8] - 2023-02-17
 
 - Modules embed `base_modules.IntegratableModule` and `base_modules.InterruptableModule` for DRYness

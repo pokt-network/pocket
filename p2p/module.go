@@ -29,7 +29,7 @@ type p2pModule struct {
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
 
-	logger modules.Logger
+	logger *modules.Logger
 
 	network typesP2P.Network
 
