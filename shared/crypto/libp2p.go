@@ -11,12 +11,12 @@ import (
 func NewLibP2PPrivateKey(privateKeyHex string) (crypto.PrivKey, error) {
 	privateKeyBz, err := hex.DecodeString(privateKeyHex)
 	if err != nil {
-		return nil, ErrCreatePrivateKey(err)
+		return nil, errDecodePrivateKey(err)
 	}
 
 	privateKey, err := crypto.PrivKeyUnmarshallers[crypto.Ed25519](privateKeyBz)
 	if err != nil {
-		return nil, ErrCreatePublicKey(err)
+		return nil, errDecodePrivateKey(err)
 	}
 
 	return privateKey, nil
