@@ -28,6 +28,12 @@ jobs:
       fail-fast: false
     name: Go ${{ matrix.go }} test
     steps:
+      - run: |
+          cat /etc/resolv.conf
+          echo "nameserver 8.8.8.8" | sudo tee  /etc/resolv.conf.DNSoverride
+          echo "nameserver 1.1.1.1" | sudo tee  /etc/resolv.conf.DNSoverride
+          sudo ln -sf /etc/resolv.conf.DNSoverride /etc/resolv.conf
+          cat /etc/resolv.conf
       - uses: actions/checkout@v3
       - name: Setup go
         uses: actions/setup-go@v3
