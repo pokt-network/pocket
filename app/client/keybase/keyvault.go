@@ -10,22 +10,22 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
-// VaultKeybase implements the Keybase interface using HashiCorp Vault
-type VaultKeybase struct {
+// vaultKeybase implements the Keybase interface using HashiCorp Vault
+type vaultKeybase struct {
 	client *api.Client
 	mount  string
 }
 
-// NewVaultKeybase returns a new instance of VaultKeybase
-func NewVaultKeybase(client *api.Client, mount string) *VaultKeybase {
-	return &VaultKeybase{
+// NewVaultKeybase returns a new instance of vaultKeybase
+func NewVaultKeybase(client *api.Client, mount string) *vaultKeybase {
+	return &vaultKeybase{
 		client: client,
 		mount:  mount,
 	}
 }
 
 // Create new keypair entry in Vault
-func (vk *VaultKeybase) Create(passphrase, hint string) error {
+func (vk *vaultKeybase) Create(passphrase, hint string) error {
 	keyPair, err := crypto.CreateNewKey(passphrase, hint)
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func (vk *VaultKeybase) Create(passphrase, hint string) error {
 }
 
 // Import a new keypair from the private key hex string provided into Vault
-func (vk *VaultKeybase) ImportFromString(privStr, passphrase, hint string) error {
+func (vk *vaultKeybase) ImportFromString(privStr, passphrase, hint string) error {
 	keyPair, err := crypto.CreateNewKeyFromString(privStr, passphrase, hint)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (vk *VaultKeybase) ImportFromString(privStr, passphrase, hint string) error
 }
 
 // Import a new keypair from the JSON string of the encrypted private key into Vault
-func (vk *VaultKeybase) ImportFromJSON(jsonStr, passphrase string) error {
+func (vk *vaultKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 	keyPair, err := crypto.ImportKeyFromJSON(jsonStr, passphrase)
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func (vk *VaultKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 }
 
 // Get a keypair from Vault
-func (vk *VaultKeybase) Get(address string) (crypto.KeyPair, error) {
+func (vk *vaultKeybase) Get(address string) (crypto.KeyPair, error) {
 	data, err := vk.client.KVv2(vk.mount).Get(context.TODO(), address)
 	if err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func (vk *VaultKeybase) Get(address string) (crypto.KeyPair, error) {
 }
 
 // Get a public key from Vault
-func (vk *VaultKeybase) GetPubKey(address string) (crypto.PublicKey, error) {
+func (vk *vaultKeybase) GetPubKey(address string) (crypto.PublicKey, error) {
 	keyPair, err := vk.Get(address)
 	if err != nil {
 		return nil, err
@@ -134,7 +134,7 @@ func (vk *VaultKeybase) GetPubKey(address string) (crypto.PublicKey, error) {
 }
 
 // Get a private key from Vault
-func (vk *VaultKeybase) GetPrivKey(address, passphrase string) (crypto.PrivateKey, error) {
+func (vk *vaultKeybase) GetPrivKey(address, passphrase string) (crypto.PrivateKey, error) {
 	keyPair, err := vk.Get(address)
 	if err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ func (vk *VaultKeybase) GetPrivKey(address, passphrase string) (crypto.PrivateKe
 }
 
 // Get all keypairs from Vault
-func (vk *VaultKeybase) GetAll() ([]string, []crypto.KeyPair, error) {
+func (vk *vaultKeybase) GetAll() ([]string, []crypto.KeyPair, error) {
 	data, err := vk.client.Logical().List(fmt.Sprintf("%s/metadata", vk.mount))
 
 	if err != nil {
@@ -176,7 +176,7 @@ func (vk *VaultKeybase) GetAll() ([]string, []crypto.KeyPair, error) {
 }
 
 // Check if a key exists in Vault
-func (vk *VaultKeybase) Exists(address string) (bool, error) {
+func (vk *vaultKeybase) Exists(address string) (bool, error) {
 	_, err := vk.Get(address)
 	if err != nil {
 		if errors.Is(err, errors.New("key not found")) {
@@ -189,7 +189,7 @@ func (vk *VaultKeybase) Exists(address string) (bool, error) {
 }
 
 // Export a private key as a hex string
-func (vk *VaultKeybase) ExportPrivString(address, passphrase string) (string, error) {
+func (vk *vaultKeybase) ExportPrivString(address, passphrase string) (string, error) {
 	privKey, err := vk.Get(address)
 	if err != nil {
 		return "", err
@@ -204,7 +204,7 @@ func (vk *VaultKeybase) ExportPrivString(address, passphrase string) (string, er
 }
 
 // Export a private key as a JSON string
-func (vk *VaultKeybase) ExportPrivJSON(address, passphrase string) (string, error) {
+func (vk *vaultKeybase) ExportPrivJSON(address, passphrase string) (string, error) {
 	privKey, err := vk.Get(address)
 	if err != nil {
 		return "", err
@@ -219,7 +219,7 @@ func (vk *VaultKeybase) ExportPrivJSON(address, passphrase string) (string, erro
 }
 
 // Update the passphrase of a key
-func (vk *VaultKeybase) UpdatePassphrase(address, oldPassphrase, newPassphrase, hint string) error {
+func (vk *vaultKeybase) UpdatePassphrase(address, oldPassphrase, newPassphrase, hint string) error {
 	privKey, err := vk.GetPrivKey(address, oldPassphrase)
 	if err != nil {
 		return err
@@ -245,7 +245,7 @@ func (vk *VaultKeybase) UpdatePassphrase(address, oldPassphrase, newPassphrase, 
 }
 
 // Sign a message using a private key
-func (vk *VaultKeybase) Sign(address, passphrase string, msg []byte) ([]byte, error) {
+func (vk *vaultKeybase) Sign(address, passphrase string, msg []byte) ([]byte, error) {
 	privKey, err := vk.GetPrivKey(address, passphrase)
 	if err != nil {
 		return nil, err
@@ -260,7 +260,7 @@ func (vk *VaultKeybase) Sign(address, passphrase string, msg []byte) ([]byte, er
 }
 
 // Verify a message signature using a public key
-func (vk *VaultKeybase) Verify(address string, msg, sig []byte) (bool, error) {
+func (vk *vaultKeybase) Verify(address string, msg, sig []byte) (bool, error) {
 	pubKey, err := vk.GetPubKey(address)
 	if err != nil {
 		return false, err
@@ -270,7 +270,7 @@ func (vk *VaultKeybase) Verify(address string, msg, sig []byte) (bool, error) {
 }
 
 // Delete a keypair from Vault
-func (vk *VaultKeybase) Delete(address, passphrase string) error {
+func (vk *vaultKeybase) Delete(address, passphrase string) error {
 
 	_, err := vk.GetPrivKey(address, passphrase)
 	if err != nil {

@@ -12,7 +12,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-func setupTestVaultKeybase(address string) (*vault.Client, *VaultKeybase, error) {
+func setupTestVaultKeybase(address string) (*vault.Client, *vaultKeybase, error) {
 	config := vault.DefaultConfig()
 
 	config.Address = address
