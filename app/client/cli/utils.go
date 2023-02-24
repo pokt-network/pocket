@@ -14,6 +14,7 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -89,7 +90,7 @@ func prepareTxBytes(msg typesUtil.Message, pk crypto.PrivateKey) ([]byte, error)
 		return nil, err
 	}
 
-	tx := &typesUtil.Transaction{
+	tx := &coreTypes.Transaction{
 		Msg:   anyMsg,
 		Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
 	}
@@ -104,7 +105,7 @@ func prepareTxBytes(msg typesUtil.Message, pk crypto.PrivateKey) ([]byte, error)
 		return nil, err
 	}
 
-	tx.Signature = &typesUtil.Signature{
+	tx.Signature = &coreTypes.Signature{
 		Signature: signature,
 		PublicKey: pk.PublicKey().Bytes(),
 	}

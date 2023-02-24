@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -34,7 +35,7 @@ func (txr *DefaultTxResult) HashFromBytes(bz []byte) ([]byte, error) {
 	return crypto.SHA3Hash(bz), nil
 }
 
-func (tx *Transaction) ToTxResult(height int64, index int, signer, recipient, msgType string, err Error) (*DefaultTxResult, Error) {
+func TxToTxResult(tx *coreTypes.Transaction, height int64, index int, signer, recipient, msgType string, err Error) (*DefaultTxResult, Error) {
 	txBytes, er := tx.Bytes()
 	if er != nil {
 		return nil, ErrProtoMarshal(er)

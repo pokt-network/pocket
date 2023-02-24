@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/shared/core/types";
+
+import "google/protobuf/any.proto";
+
+// `Transaction` is used to name the type for clarity & verbosity, but `tx` is used method signatures
+// and variable names to be concise. https://github.com/pokt-network/pocket/pull/503
+message Transaction {
+
+  // The message to be signed is intentionally an `Any` type, since it is up to the module to
+  // define the exact message type, its contents and validation protocol.
+  google.protobuf.Any msg = 1;
+
+  // A one-time nonce to avoid replay previous transaction.
+  string nonce = 2;
+
+  // The signature must sign the `Transaction` protobuf containing both the `msg` and `nonce` with
+  // a nil signature.
+  Signature signature = 3; // The signature
+}
+
+// CONSOLIDATE: Consolidate with other signature types throughout the codebase
+message Signature {
+  bytes public_key = 1;
+  bytes signature = 2;
+}

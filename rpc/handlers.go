@@ -7,7 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
 	"github.com/pokt-network/pocket/shared/codec"
-	typesCore "github.com/pokt-network/pocket/shared/core/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
@@ -111,15 +111,15 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 }
 
 // protocolActorToRPCActorTypeEnum converts a protocol actor type to the rpc actor type enum
-func protocolActorToRPCActorTypeEnum(protocolActorType typesCore.ActorType) ActorTypesEnum {
+func protocolActorToRPCActorTypeEnum(protocolActorType coreTypes.ActorType) ActorTypesEnum {
 	switch protocolActorType {
-	case typesCore.ActorType_ACTOR_TYPE_APP:
+	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		return Application
-	case typesCore.ActorType_ACTOR_TYPE_FISH:
+	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		return Fisherman
-	case typesCore.ActorType_ACTOR_TYPE_SERVICER:
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		return Servicer
-	case typesCore.ActorType_ACTOR_TYPE_VAL:
+	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		return Validator
 	default:
 		panic("invalid actor type")
@@ -127,8 +127,8 @@ func protocolActorToRPCActorTypeEnum(protocolActorType typesCore.ActorType) Acto
 }
 
 // getProtocolActorGetter returns the correct protocol actor getter function based on the actor type parameter
-func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, params GetV1P2pStakedActorsAddressBookParams) func(height int64) ([]*typesCore.Actor, error) {
-	var protocolActorGetter func(height int64) ([]*typesCore.Actor, error) = persistenceContext.GetAllStakedActors
+func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, params GetV1P2pStakedActorsAddressBookParams) func(height int64) ([]*coreTypes.Actor, error) {
+	var protocolActorGetter func(height int64) ([]*coreTypes.Actor, error) = persistenceContext.GetAllStakedActors
 	if params.ActorType == nil {
 		return persistenceContext.GetAllStakedActors
 	}

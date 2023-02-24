@@ -41,7 +41,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		if err != nil {
 			return "", nil, err
 		}
-		tx, err := typesUtil.TxFromBytes(txBytes)
+		tx, err := coreTypes.TxFromBytes(txBytes)
 		if err != nil {
 			return "", nil, err
 		}
@@ -101,7 +101,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 
 	// deliver txs lifecycle phase
 	for index, txProtoBytes := range u.proposalBlockTxs {
-		tx, err := typesUtil.TxFromBytes(txProtoBytes)
+		tx, err := coreTypes.TxFromBytes(txProtoBytes)
 		if err != nil {
 			return "", err
 		}

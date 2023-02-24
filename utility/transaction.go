@@ -13,7 +13,7 @@ import (
 
 func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	// Is the tx already in the mempool (in memory)?
-	txHash := typesUtil.TxHash(txProtoBytes)
+	txHash := coreTypes.TxHash(txProtoBytes)
 	if u.mempool.Contains(txHash) {
 		return typesUtil.ErrDuplicateTransaction()
 	}
@@ -26,7 +26,7 @@ func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	}
 
 	// Can the tx be decoded?
-	tx := &typesUtil.Transaction{}
+	tx := &coreTypes.Transaction{}
 	if err := codec.GetCodec().Unmarshal(txProtoBytes, tx); err != nil {
 		return typesUtil.ErrProtoUnmarshal(err)
 	}
@@ -40,19 +40,24 @@ func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	return u.mempool.AddTx(txProtoBytes)
 }
 
-func (u *utilityContext) applyTx(index int, tx *typesUtil.Transaction) (modules.TxResult, typesUtil.Error) {
+func (u *utilityContext) applyTx(index int, tx *coreTypes.Transaction) (modules.TxResult, typesUtil.Error) {
 	msg, signer, err := u.anteHandleMessage(tx)
 	if err != nil {
 		return nil, err
 	}
-	return tx.ToTxResult(u.height, index, signer, msg.GetMessageRecipient(), msg.GetMessageName(), u.handleMessage(msg))
+	return typesUtil.TxToTxResult(tx, u.height, index, signer, msg.GetMessageRecipient(), msg.GetMessageName(), u.handleMessage(msg))
 }
 
-func (u *utilityContext) anteHandleMessage(tx *typesUtil.Transaction) (msg typesUtil.Message, signer string, err typesUtil.Error) {
-	msg, err = tx.GetMessage()
+func (u *utilityContext) anteHandleMessage(tx *coreTypes.Transaction) (msg typesUtil.Message, signer string, err typesUtil.Error) {
+	anyMsg, er := tx.GetMessage()
 	if err != nil {
-		return nil, "", err
+		return nil, "", typesUtil.ErrDecodeMessage()
 	}
+	msg, ok := anyMsg.(typesUtil.Message)
+	if !ok {
+		return nil, "", typesUtil.ErrDecodeMessage()
+	}
+
 	fee, err := u.getFee(msg, msg.GetActorType())
 	if err != nil {
 		return nil, "", err

@@ -9,9 +9,9 @@ import (
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/spf13/cobra"
@@ -571,7 +571,7 @@ func keysSignTxCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
-				txProto := new(utilTypes.Transaction)
+				txProto := new(coreTypes.Transaction)
 				if err := codec.GetCodec().Unmarshal(txBz, txProto); err != nil {
 					return err
 				}
@@ -588,7 +588,7 @@ func keysSignTxCommands() []*cobra.Command {
 				}
 
 				// Add signature to the transaction
-				sig := new(utilTypes.Signature)
+				sig := new(coreTypes.Signature)
 				sig.PublicKey = privKey.PublicKey().Bytes()
 				sig.Signature = sigBz
 				txProto.Signature = sig
@@ -643,7 +643,7 @@ func keysSignTxCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
-				txProto := new(utilTypes.Transaction)
+				txProto := new(coreTypes.Transaction)
 				if err := codec.GetCodec().Unmarshal(txBz, txProto); err != nil {
 					return err
 				}

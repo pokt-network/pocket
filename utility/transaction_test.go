@@ -7,6 +7,7 @@ import (
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/core/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
@@ -88,7 +89,7 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
-	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
+	proposer := getFirstActor(t, ctx, types.ActorType_ACTOR_TYPE_VAL)
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
 	require.NoError(t, testUtilityMod.CheckTransaction(txBz))
@@ -128,7 +129,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), "unexpected recipient balance")
 }
 
-func newTestingTransaction(t *testing.T, ctx *utilityContext) (tx *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
+func newTestingTransaction(t *testing.T, ctx *utilityContext) (tx *coreTypes.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
 	amountSent = new(big.Int).Set(defaultSendAmount)
 	startingBalance = new(big.Int).Set(test_artifacts.DefaultAccountAmount)
 
@@ -145,7 +146,7 @@ func newTestingTransaction(t *testing.T, ctx *utilityContext) (tx *typesUtil.Tra
 	any, err := codec.GetCodec().ToAny(&msg)
 	require.NoError(t, err)
 
-	tx = &typesUtil.Transaction{
+	tx = &coreTypes.Transaction{
 		Msg:   any,
 		Nonce: testNonce,
 	}

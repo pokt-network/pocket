@@ -15,8 +15,8 @@ import (
 
 type Message interface {
 	proto.Message // TECHDEBT: Still making direct `proto` reference even with a central `codec` package
-	Validatable
 
+	ValidateBasic() Error
 	GetMessageName() string
 	GetMessageRecipient() string
 	SetSigner(signer []byte)
