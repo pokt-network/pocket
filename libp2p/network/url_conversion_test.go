@@ -65,7 +65,7 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 		// Usage of scheme is invalid.
 		{
 			"fully qualified domain name with scheme",
-			"%s:8080",
+			"tcp://%s:8080",
 			"no such host",
 		},
 
