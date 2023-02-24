@@ -16,7 +16,7 @@ func TestPeerMultiAddrFromServiceURL_Success(t *testing.T) {
 		expetedMultiaddrRegex string
 	}{
 		{
-			"FQDN",
+			"fqdn",
 			"www.google.com:8080",
 			`/ip4/(\d{1,3}\.){3}\d{1,3}/tcp/8080`,
 		},
@@ -43,16 +43,17 @@ func TestPeerMultiAddrFromServiceURL_Success(t *testing.T) {
 }
 
 const (
-	FQDN = "fqdn"
-	IP4  = "ip4"
-	IP6  = "ip6"
+	// (see: https://en.wikipedia.org/wiki/Fully_qualified_domain_name)
+	fqdn = "fqdn"
+	ip4  = "ip4"
+	ip6  = "ip6"
 )
 
 func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 	hostnames := map[string]string{
-		FQDN: "www.google.com",
-		IP4:  "142.250.181.196",
-		IP6:  "2a00:1450:4005:802::2004",
+		fqdn: "www.google.com",
+		ip4:  "142.250.181.196",
+		ip6:  "2a00:1450:4005:802::2004",
 	}
 
 	testCases := []struct {
@@ -63,7 +64,7 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 	}{
 		// Usage of scheme is invalid.
 		{
-			"FQDN with scheme",
+			"fully qualified domain name with scheme",
 			"tcp://%s:8080",
 			"no such host",
 		},
@@ -140,7 +141,7 @@ func TestServiceUrlFromLibp2pMultiaddr_Error(t *testing.T) {
 		expectedErrContains string
 	}{
 		{
-			"FQDN",
+			"fqdn",
 			"/dns/www.google.com/tcp/8080",
 			"unsupported network protocol",
 		},
