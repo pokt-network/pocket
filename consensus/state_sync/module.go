@@ -51,7 +51,7 @@ type stateSync struct {
 	currentMode SyncMode
 	serverMode  bool
 
-	logger    modules.Logger
+	logger    *modules.Logger
 	logPrefix string
 }
 
