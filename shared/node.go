@@ -1,6 +1,8 @@
 package shared
 
 import (
+	"fmt"
+
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
@@ -13,6 +15,7 @@ import (
 	"github.com/pokt-network/pocket/state_machine"
 	"github.com/pokt-network/pocket/telemetry"
 	"github.com/pokt-network/pocket/utility"
+	"go.uber.org/multierr"
 )
 
 const (
@@ -143,10 +146,10 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.ConsensusNewHeightEventType:
 		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
 	case messaging.StateMachineTransitionEventType:
-		if err := node.GetBus().GetConsensusModule().HandleMessage(message.Content); err != nil {
-			return err
-		}
-		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
+		fmt.Println("FSM Gokhan event")
+		err_consensus := node.GetBus().GetConsensusModule().HandleMessage(message.Content)
+		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
+		return multierr.Combine(err_consensus, err_p2p)
 	default:
 		logger.Global.Warn().Msgf("Unsupported message content type: %s", contentType)
 	}

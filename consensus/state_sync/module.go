@@ -43,7 +43,7 @@ type StateSyncModule interface {
 	IsOutOfSync() bool
 	AggregateMetadataResponses() error
 	GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse
-	Sync() (error, bool)
+	Sync() error
 }
 
 var (
@@ -128,8 +128,6 @@ func (m *stateSync) SetLogPrefix(logPrefix string) {
 }
 
 func (m *stateSync) EnableServerMode() error {
-	// TODO Check if we need to have the "modes" inside state_sync?
-	//m.currentMode = Server
 	m.serverMode = true
 	return nil
 }
@@ -211,8 +209,8 @@ func (m *stateSync) IsOutOfSync() bool {
 }
 
 // TODO! implement this function, placeholder
-func (m *stateSync) Sync() (error, bool) {
+func (m *stateSync) Sync() error {
 	// request blocks one by one from peers thorughusing p2p module request
 	// if there is an error return error, false
-	return nil, true
+	return nil
 }
