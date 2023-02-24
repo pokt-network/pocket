@@ -20,7 +20,7 @@ var (
 type network struct {
 	addrBookMap typesP2P.AddrBookMap
 
-	logger modules.Logger
+	logger *modules.Logger
 }
 
 func NewNetwork(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {

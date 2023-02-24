@@ -29,7 +29,7 @@ type PrometheusTelemetryModule struct {
 
 	config *configs.TelemetryConfig
 
-	logger modules.Logger
+	logger *modules.Logger
 
 	counters     map[string]prometheus.Counter
 	gauges       map[string]prometheus.Gauge
