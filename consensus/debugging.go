@@ -135,6 +135,7 @@ func (m *consensusModule) togglePacemakerManualMode(_ *messaging.DebugMessage) {
 
 // requests current block from all validators
 func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage) {
+	m.logger.Info().Msg("Now in sendGetBlockStateSyncMessage")
 	currentHeight := m.CurrentHeight()
 	requestHeight := currentHeight - 1
 	peerAddress := m.GetNodeAddress()
@@ -161,11 +162,14 @@ func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage
 		if err := m.stateSync.SendStateSyncMessage(stateSyncGetBlockMessage, valAddress, requestHeight); err != nil {
 			m.logger.Error().Err(err).Str("proto_type", "GetBlockRequest").Msg("failed to send StateSyncMessage")
 		}
+		m.logger.Info().Msgf("No error on sending stateSyncGetBlockRequestMessage to %s", val.GetAddress())
+
 	}
 }
 
 // requests metadata from all validators
 func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMessage) {
+	m.logger.Info().Msg("Now in sendGetMetadataStateSyncMessage")
 	currentHeight := m.CurrentHeight()
 	requestHeight := currentHeight - 1
 	peerAddress := m.GetNodeAddress()
@@ -188,9 +192,11 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 			continue
 		}
 		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
+
 		if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, valAddress, requestHeight); err != nil {
-			m.logger.Error().Err(err).Str("proto_type", "GetMetaDataRequest").Msg("failed to send StateSyncMessage")
+			m.logger.Error().Err(err).Str("proto_type", "StateSyncMetadataRequest").Msg("failed to send StateSyncMessage")
 		}
+		m.logger.Info().Msgf("No error on sending stateSyncMetaDataMessage to %s", val.GetAddress())
 	}
 
 }

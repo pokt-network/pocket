@@ -21,6 +21,7 @@ type StateSyncServerModule interface {
 }
 
 func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) error {
+	fmt.Println("HandleStateSyncMetadataRequest is Called")
 	consensusMod := m.GetBus().GetConsensusModule()
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := metadataReq.PeerAddress
@@ -33,7 +34,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 		"receiver": clientPeerAddress,
 	}
 
-	m.logger.Info().Fields(fields).Msgf("Received StateSync Metadata %s", metadataReq)
+	m.logger.Info().Fields(fields).Msgf("Received StateSync MetadataRequest %s", metadataReq)
 
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
 	if err != nil {
