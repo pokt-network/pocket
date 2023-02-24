@@ -1,11 +1,10 @@
-package keybase
+package slip
 
 import (
 	"encoding/hex"
 	"fmt"
 	"testing"
 
-	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,8 +14,7 @@ const (
 	testVector2SeedHex = "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542"
 
 	// SLIPS-0010
-	testSeedHex       = "045e8380086abc6f6e941d6fe47ca93b86723bc246ec8c4beee411b410028675"
-	testChildAddrIdx1 = "8b83d7057df7ac1d20a2f0aa0edadf206eb6764d"
+	testSeedHex = "045e8380086abc6f6e941d6fe47ca93b86723bc246ec8c4beee411b410028675"
 )
 
 func TestSlip_DeriveChild_TestVectors(t *testing.T) {
@@ -161,7 +159,7 @@ func TestSlip_DeriveChild_TestVectors(t *testing.T) {
 		},
 		{
 			name:        "PoktTestVector Child key derivation is deterministic for index `0` (first child)",
-			path:        fmt.Sprintf(crypto.PoktAccountPathFormat, 0),
+			path:        fmt.Sprintf(PoktAccountPathFormat, 0),
 			seed:        testSeedHex,
 			wantPrivHex: "e7e0f734311bdf2f446821a464b490ae8c005f6af92a26f42a39067103726346",
 			wantPubHex:  "000848875b5836bc71fecb10f563b84b9b8a63b6d7a1b16b1e88eeaca6a7ad5852",
@@ -169,7 +167,7 @@ func TestSlip_DeriveChild_TestVectors(t *testing.T) {
 		},
 		{
 			name:        "PoktTestVector Child key derivation is deterministic for index `1000000`",
-			path:        fmt.Sprintf(crypto.PoktAccountPathFormat, 1000000),
+			path:        fmt.Sprintf(PoktAccountPathFormat, 1000000),
 			seed:        testSeedHex,
 			wantPrivHex: "f208bf7d7afa1a12a0b74e8fbbf1bb15bdfcaa3d03507ec338d7ecd77331e964",
 			wantPubHex:  "00e7d8f01dfbc0eb1638d9853b95cdec650ad47d72fac1d2d1c97c8f935d2cbf90",
@@ -177,7 +175,7 @@ func TestSlip_DeriveChild_TestVectors(t *testing.T) {
 		},
 		{
 			name:        "PoktTestVector Child key derivation is deterministic for index `2147483647` (last child)",
-			path:        fmt.Sprintf(crypto.PoktAccountPathFormat, 2147483647),
+			path:        fmt.Sprintf(PoktAccountPathFormat, 2147483647),
 			seed:        testSeedHex,
 			wantPrivHex: "20e061dcfae5cc90cba8ee374afc2d67d518b5f542f3217b8c830293c3dbb7e6",
 			wantPubHex:  "0008a399a3cdc1ee9a50c922d018daa98b5069bfea37944fde14a73d83ca3ec08c",
@@ -185,7 +183,7 @@ func TestSlip_DeriveChild_TestVectors(t *testing.T) {
 		},
 		{
 			name:        "PoktTestVector Child index is too large to derive ed25519 key for index `2147483648` ",
-			path:        fmt.Sprintf(crypto.PoktAccountPathFormat, 2147483648),
+			path:        fmt.Sprintf(PoktAccountPathFormat, 2147483648),
 			seed:        testSeedHex,
 			wantPrivHex: "",
 			wantPubHex:  "",
@@ -193,7 +191,7 @@ func TestSlip_DeriveChild_TestVectors(t *testing.T) {
 		},
 		{
 			name:        "PoktTestVector Child index is too large to derive ed25519 key for index `4294967295` ",
-			path:        fmt.Sprintf(crypto.PoktAccountPathFormat, ^uint32(0)),
+			path:        fmt.Sprintf(PoktAccountPathFormat, ^uint32(0)),
 			seed:        testSeedHex,
 			wantPrivHex: "",
 			wantPubHex:  "",
@@ -204,7 +202,7 @@ func TestSlip_DeriveChild_TestVectors(t *testing.T) {
 		t.Run(tv.name, func(t *testing.T) {
 			seed, err := hex.DecodeString(tv.seed)
 			require.NoError(t, err)
-			childKey, err := crypto.DeriveChild(tv.path, seed)
+			childKey, err := DeriveChild(tv.path, seed)
 			if tv.wantErr {
 				require.Error(t, err)
 			} else {
@@ -227,60 +225,4 @@ func TestSlip_DeriveChild_TestVectors(t *testing.T) {
 			require.Equal(t, "00"+pubHex, tv.wantPubHex)
 		})
 	}
-}
-
-func TestKeybase_DeriveChildFromKey(t *testing.T) {
-	db := initDB(t)
-	defer stopDB(t, db)
-
-	_, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
-	require.NoError(t, err)
-
-	childKey, err := db.DeriveChildFromKey(testAddr, testPassphrase, 1)
-	require.NoError(t, err)
-	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
-}
-
-func TestKeybase_DeriveChildFromSeed(t *testing.T) {
-	db := initDB(t)
-	defer stopDB(t, db)
-
-	kp, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
-	require.NoError(t, err)
-
-	seed, err := kp.GetSeed(testPassphrase)
-	require.NoError(t, err)
-
-	childKey, err := db.DeriveChildFromSeed(seed, 1)
-	require.NoError(t, err)
-	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
-}
-
-func TestKeybase_StoreChildFromKey(t *testing.T) {
-	db := initDB(t)
-	defer stopDB(t, db)
-
-	_, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
-	require.NoError(t, err)
-
-	childKey, err := db.StoreChildFromKey(testAddr, testPassphrase, 1, testPassphrase, testHint)
-	require.NoError(t, err)
-	require.NotNil(t, childKey)
-	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
-}
-
-func TestKeybase_StoreChildFromSeed(t *testing.T) {
-	db := initDB(t)
-	defer stopDB(t, db)
-
-	kp, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
-	require.NoError(t, err)
-
-	seed, err := kp.GetSeed(testPassphrase)
-	require.NoError(t, err)
-
-	childKey, err := db.StoreChildFromSeed(seed, 1, testPassphrase, testHint)
-	require.NoError(t, err)
-	require.NotNil(t, childKey)
-	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
 }

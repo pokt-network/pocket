@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/pokt-network/pocket/shared/crypto/slip"
+	"github.com/spf13/viper"
 	"strings"
 
 	"github.com/pokt-network/pocket/shared/converters"
@@ -243,50 +245,32 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 	return addresses, keyPairs, nil
 }
 
-// Deterministically generate and return the ith child from the seed provided
-func (keybase *badgerKeybase) DeriveChildFromSeed(seed []byte, childIndex uint32) (crypto.KeyPair, error) {
-	path := fmt.Sprintf(crypto.PoktAccountPathFormat, childIndex)
-	childKey, err := crypto.DeriveChild(path, seed)
+// Deterministically generate and return the ith child from the seed provided - storing it in the keybase by default
+func (keybase *badgerKeybase) DeriveChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string) (crypto.KeyPair, error) {
+	path := fmt.Sprintf(slip.PoktAccountPathFormat, childIndex)
+	childKey, err := slip.DeriveChild(path, seed)
 	if err != nil {
 		return nil, err
 	}
-	return childKey, nil
-}
 
-// Deterministically generate and return the ith child key from the masterAddrHex key stored in the keybase
-func (keybase *badgerKeybase) DeriveChildFromKey(masterAddrHex, passphrase string, childIndex uint32) (crypto.KeyPair, error) {
-	privKey, err := keybase.GetPrivKey(masterAddrHex, passphrase)
-	if err != nil {
-		return nil, err
-	}
-	seed := privKey.Seed()
-	return keybase.DeriveChildFromSeed(seed, childIndex)
-}
+	if viper.GetBool("storeChild") {
+		// No need to re-encrypt with provided passphrase
+		if childPassphrase == "" && childHint == "" {
+			err = keybase.db.Update(func(tx *badger.Txn) error {
+				// Use key address as key in DB
+				addrKey := childKey.GetAddressBytes()
 
-// Deterministically generate and store the ith child from the masterAddrHex key stored in the keybase
-func (keybase *badgerKeybase) StoreChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string) (childKey crypto.KeyPair, err error) {
-	path := fmt.Sprintf(crypto.PoktAccountPathFormat, childIndex)
-	childKey, err = crypto.DeriveChild(path, seed)
-	if err != nil {
-		return nil, err
-	}
-	// No need to re-encrypt with provided passphrase
-	if childPassphrase == "" && childHint == "" {
-		err = keybase.db.Update(func(tx *badger.Txn) error {
-			// Use key address as key in DB
-			addrKey := childKey.GetAddressBytes()
+				// Encode KeyPair into []byte for value
+				keypairBz, err := childKey.Marshal()
+				if err != nil {
+					return err
+				}
 
-			// Encode KeyPair into []byte for value
-			keypairBz, err := childKey.Marshal()
-			if err != nil {
-				return err
-			}
+				return tx.Set(addrKey, keypairBz)
+			})
 
-			return tx.Set(addrKey, keypairBz)
-		})
-
-		return childKey, err
-	} else {
+			return childKey, err
+		}
 		// Re-encrypt child key with passphrase and hint
 		err = keybase.db.Update(func(tx *badger.Txn) error {
 			// Get the private key hex string from the child key
@@ -311,23 +295,23 @@ func (keybase *badgerKeybase) StoreChildFromSeed(seed []byte, childIndex uint32,
 
 			return tx.Set(addrKey, keypairBz)
 		})
-	}
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return childKey, nil
 }
 
-// Deterministically generate and store the ith child from the masterAddrHex key stored in the keybase
-func (keybase *badgerKeybase) StoreChildFromKey(masterAddrHex, masterPassphrase string, childIndex uint32, childPassphrase, childHint string) (crypto.KeyPair, error) {
-	masterPrivKey, err := keybase.GetPrivKey(masterAddrHex, masterPassphrase)
+// Deterministically generate and return the ith child key from the masterAddrHex key stored in the keybase
+func (keybase *badgerKeybase) DeriveChildFromKey(masterAddrHex, passphrase string, childIndex uint32, childPassphrase, childHint string) (crypto.KeyPair, error) {
+	privKey, err := keybase.GetPrivKey(masterAddrHex, passphrase)
 	if err != nil {
 		return nil, err
 	}
-	seed := masterPrivKey.Seed()
-	return keybase.StoreChildFromSeed(seed, childIndex, childPassphrase, childHint)
+	seed := privKey.Seed()
+	return keybase.DeriveChildFromSeed(seed, childIndex, childPassphrase, childHint)
 }
 
 // Check whether an address is currently stored in the DB

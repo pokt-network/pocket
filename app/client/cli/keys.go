@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/shared/converters"
 	"github.com/pokt-network/pocket/shared/crypto"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
+	"github.com/spf13/viper"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -97,6 +98,10 @@ func NewKeysCommand() *cobra.Command {
 	cmd.AddCommand(signMsgCmds...)
 	cmd.AddCommand(signTxCmds...)
 	cmd.AddCommand(slipCmds...)
+
+	// Bind the store_child flag
+	viper.BindPFlag("storeChild", cmd.Flags().Lookup("store_child"))
+	viper.SetDefault("storeChild", true)
 
 	return cmd
 }
@@ -725,24 +730,16 @@ func keysSlipCommands() []*cobra.Command {
 					pwd = readPassphrase(pwd)
 				}
 
-				var kp crypto.KeyPair
-				if storeChild {
-					kp, err = kb.StoreChildFromKey(parentAddr, pwd, index, childPwd, childHint)
-					if err != nil {
-						return err
-					}
-					logger.Global.Info().Str("address", kp.GetAddressString()).Str("parent", parentAddr).Uint32("index", index).Msg("Child key stored in keybase")
-				} else {
-					kp, err = kb.DeriveChildFromKey(parentAddr, pwd, index)
-					if err != nil {
-						return err
-					}
-					logger.Global.Info().Str("address", kp.GetAddressString()).Str("parent", parentAddr).Uint32("index", index).Msg("Child key derived")
+				kp, err := kb.DeriveChildFromKey(parentAddr, pwd, index, childPwd, childHint)
+				if err != nil {
+					return err
 				}
 
 				if err := kb.Stop(); err != nil {
 					return err
 				}
+
+				logger.Global.Info().Str("address", kp.GetAddressString()).Str("parent", parentAddr).Uint32("index", index).Bool("stored", storeChild).Msg("Child key derived")
 
 				return nil
 			},

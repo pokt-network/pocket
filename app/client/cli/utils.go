@@ -222,7 +222,7 @@ func attachHintFlagToSubcommands() []cmdOption {
 
 func attachStoreChildFlagToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
-		c.Flags().BoolVar(&storeChild, "store_child", false, "store the derived child key in the keybase")
+		c.Flags().BoolVar(&storeChild, "store_child", true, "store the derived child key in the keybase")
 	}}
 }
 

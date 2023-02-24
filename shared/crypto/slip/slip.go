@@ -1,11 +1,11 @@
-package crypto
+package slip
 
 import (
-	"bytes"
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/binary"
 	"fmt"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"regexp"
 	"strconv"
 	"strings"
@@ -36,7 +36,7 @@ type slipKey struct {
 }
 
 // Derives a master key from the seed provided and returns the child at the correct index
-func DeriveChild(path string, seed []byte) (KeyPair, error) {
+func DeriveChild(path string, seed []byte) (crypto.KeyPair, error) {
 	// Break down path into uint32 segments
 	segments, err := pathToSegments(path)
 	if err != nil {
@@ -116,25 +116,8 @@ func (k *slipKey) deriveChild(i uint32) (*slipKey, error) {
 	return child, nil
 }
 
-func (k *slipKey) convertToKeypair() (KeyPair, error) {
-	// Generate PrivateKey interface form secret key
-	reader := bytes.NewReader(k.SecretKey)
-	privKey, err := GeneratePrivateKeyWithReader(reader)
-	if err != nil {
-		return nil, err
-	}
-
-	// Armour and encrypt private key into JSON string
-	armouredStr, err := encryptArmourPrivKey(privKey, "", "") // No passphrase or hint as they depend on the master key
-	if err != nil {
-		return nil, err
-	}
-
-	// Return KeyPair interface
-	return &encKeyPair{
-		PublicKey:     privKey.PublicKey(),
-		PrivKeyArmour: armouredStr,
-	}, nil
+func (k *slipKey) convertToKeypair() (crypto.KeyPair, error) {
+	return crypto.CreateNewKeyFromSeed(k.SecretKey, "", "")
 }
 
 // Check the BIP-44 path provided is valid and return the []uint32 segments it contains

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/gob"
-	"fmt"
 )
 
 // Encoding is used to serialise the data to store the KeyPairs in the database
@@ -33,9 +32,6 @@ type KeyPair interface {
 
 	// Seed
 	GetSeed(passphrase string) ([]byte, error)
-
-	// SLIP-0010 Child derivation
-	DeriveChild(passphrase string, index uint32) (KeyPair, error)
 
 	// Marshalling
 	Marshal() ([]byte, error)
@@ -115,16 +111,6 @@ func (kp encKeyPair) GetSeed(passphrase string) ([]byte, error) {
 	return privKey.Seed(), nil
 }
 
-// Derives a new child key using the key as the master
-func (kp encKeyPair) DeriveChild(passphrase string, index uint32) (KeyPair, error) {
-	seed, err := kp.GetSeed(passphrase)
-	if err != nil {
-		return nil, err
-	}
-	path := fmt.Sprintf(PoktAccountPathFormat, index)
-	return DeriveChild(path, seed)
-}
-
 // Marshal KeyPair into a []byte
 func (kp encKeyPair) Marshal() ([]byte, error) {
 	buf := new(bytes.Buffer)
@@ -183,6 +169,28 @@ func CreateNewKeyFromString(privStrHex, passphrase, hint string) (KeyPair, error
 	kp := newKeyPair(pubKey, privArmour)
 
 	return kp, nil
+}
+
+// Generate a new KeyPair from the seed provided
+func CreateNewKeyFromSeed(seed []byte, passphrase, hint string) (KeyPair, error) {
+	// Generate PrivateKey interface form secret key
+	reader := bytes.NewReader(seed)
+	privKey, err := GeneratePrivateKeyWithReader(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	// Armour and encrypt private key into JSON string
+	armouredStr, err := encryptArmourPrivKey(privKey, passphrase, hint) // No passphrase or hint as they depend on the master key
+	if err != nil {
+		return nil, err
+	}
+
+	// Return KeyPair interface
+	return &encKeyPair{
+		PublicKey:     privKey.PublicKey(),
+		PrivKeyArmour: armouredStr,
+	}, nil
 }
 
 // Create new KeyPair from the JSON encoded privStr
