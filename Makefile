@@ -385,6 +385,10 @@ test_persistence_state_hash: ## Run all go unit tests in the Persistence module 
 test_p2p: ## Run all p2p related tests
 	go test ${VERBOSE_TEST} -count=1 ./p2p/...
 
+.PHONY: test_libp2p
+test_libp2p: ## Run all p2p related tests
+	go test ${VERBOSE_TEST} -count=1 ./libp2p/...
+
 .PHONY: test_p2p_raintree
 test_p2p_raintree: ## Run all p2p raintree related tests
 	go test ${VERBOSE_TEST} -run RainTreeNetwork -count=1 ./p2p/...

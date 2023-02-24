@@ -37,7 +37,7 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 		)
 	}
 
-	logger.Global.Info().Str("peer_url", peerUrl.String()).Msg("parsed peer url")
+	logger.Global.Info().Str("peer_url", peerUrl.String()).Str("serviceUrl", serviceUrl).Msg("parsed peer url")
 
 	/* CONSIDER: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
 	 * I attempted using `/dns4/.../tcp/...` and go this error:

@@ -9,6 +9,7 @@ import (
 	"github.com/multiformats/go-multiaddr"
 
 	"github.com/pokt-network/pocket/libp2p/transport"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
@@ -69,6 +70,7 @@ func Libp2pAddrInfoFromPeer(peer *types.NetworkPeer) (libp2pPeer.AddrInfo, error
 		)
 	}
 
+	logger.Global.Info().Str("serviceUrl", peer.ServiceUrl).Msg("requesting peerMultiaddr in peer_conversion.go")
 	peerMultiaddr, err := Libp2pMultiaddrFromServiceUrl(peer.ServiceUrl)
 	if err != nil {
 		return libp2pPeer.AddrInfo{}, err
