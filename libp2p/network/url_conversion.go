@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/multiformats/go-multiaddr"
+	"github.com/pokt-network/pocket/logger"
 )
 
 const (
@@ -27,12 +28,16 @@ var (
 func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, error) {
 	peerUrl, err := url.Parse(anyScheme + serviceUrl)
 	if err != nil {
+		logger.Global.Error().Err(err).Str("serviceUrl", serviceUrl).Msg("tried to parse peer service URL")
+
 		return nil, fmt.Errorf(
 			"parsing peer service URL: %s: %w",
 			serviceUrl,
 			err,
 		)
 	}
+
+	logger.Global.Info().Str("peer_url", peerUrl.String()).Msg("parsed peer url")
 
 	/* CONSIDER: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
 	 * I attempted using `/dns4/.../tcp/...` and go this error:
@@ -46,6 +51,7 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 	 */
 	peerIP, err := net.ResolveIPAddr(peerIPVersionStr, peerUrl.Hostname())
 	if err != nil {
+		logger.Global.Error().Str("peer_url", peerUrl.String()).Str("peerIPVersionStr", peerIPVersionStr).Str("hostname", peerUrl.Hostname()).Err(err).Msg("tried to resolve IP addr")
 		return nil, fmt.Errorf(
 			"resolving peer IP for hostname: %s: %w",
 			peerUrl.Hostname(),
@@ -53,11 +59,15 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 		)
 	}
 
+	logger.Global.Info().Str("peer_ip", peerIP.String()).Msg("resolved IP address")
+
 	// Test for IP version.
 	// (see: https://pkg.go.dev/net#IP.To4)
 	if peerIP.IP.To4() == nil {
 		peerIPVersionStr = "ip6"
 	}
+
+	logger.Global.Info().Str("peerIPVersionStr", peerIPVersionStr).Msg("checked IP version")
 
 	peerMultiAddrStr := fmt.Sprintf(
 		"/%s/%s/%s/%s",
@@ -66,7 +76,17 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 		peerTransportStr,
 		peerUrl.Port(),
 	)
-	return multiaddr.NewMultiaddr(peerMultiAddrStr)
+
+	logger.Global.Info().Str("peerMultiAddrStr", peerMultiAddrStr).Msg("composed peerMultiAddrStr")
+
+	ma, err := multiaddr.NewMultiaddr(peerMultiAddrStr)
+	if err != nil {
+		logger.Global.Error().Err(err).Msg("tried to create NewMultiaddr")
+		return nil, err
+	}
+
+	logger.Global.Info().Str("Multiaddr", ma.String()).Msg("created new Multiaddr")
+	return ma, err
 }
 
 // ServiceUrlFromLibp2pMultiaddr converts a multiaddr into a URL string.

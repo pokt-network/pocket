@@ -30,11 +30,16 @@ jobs:
     steps:
       - run: |
           cat /etc/resolv.conf
+          dig A www.google.com
+          dig AAAA www.google.com
           sudo sed -i 's/#DNS=/DNS=8.8.8.8 1.1.1.1/g' /etc/systemd/resolved.conf
           sudo systemctl daemon-reload
           sudo systemctl restart systemd-networkd
           sudo systemctl restart systemd-resolved
+          sudo resolvectl status
           cat /etc/resolv.conf
+          dig A www.google.com
+          dig AAAA www.google.com
       - uses: actions/checkout@v3
       - name: Setup go
         uses: actions/setup-go@v3
