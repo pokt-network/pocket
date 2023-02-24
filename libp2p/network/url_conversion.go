@@ -15,6 +15,13 @@ const (
 	anyScheme = "scheme://"
 )
 
+var (
+	// TECHDEBT: assuming TCP; remote peer's transport type must be knowable!
+	// (ubiquitously switching to multiaddr, instead of a URL, would resolve this)
+	peerTransportStr = "tcp"
+	peerIPVersionStr = "ip4"
+)
+
 // Libp2pMultiaddrFromServiceUrl transforms a URL into its libp2p multiaddr equivalent.
 // (see: https://github.com/libp2p/specs/blob/master/addressing/README.md#multiaddr-basics)
 func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, error) {
@@ -26,13 +33,6 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 			err,
 		)
 	}
-
-	var (
-		// TECHDEBT: assuming TCP; remote peer's transport type must be knowable!
-		// (ubiquitously switching to multiaddr, instead of a URL, would resolve this)
-		peerTransportStr = "tcp"
-		peerIPVersionStr = "ip4"
-	)
 
 	/* CONSIDER: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
 	 * I attempted using `/dns4/.../tcp/...` and go this error:
