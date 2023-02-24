@@ -1,16 +1,15 @@
 package modules
 
-// The result of executing a transaction against the blockchain state so that it is included in the block
-
+// TxResult is an indexed transaction. It is the result of successfully executing a `Transaction` against the blockchain state.
 type TxResult interface {
-	GetTx() []byte                        // the transaction object primitive
+	GetTx() []byte                        // a serialized `Transaction` proto
 	GetHeight() int64                     // the height at which the tx was applied
 	GetIndex() int32                      // the transaction's index within the block (i.e. ordered by when the proposer received it in the mempool)
-	GetResultCode() int32                 // 0 is no error, otherwise corresponds to error object code; // IMPROVE: Add a specific type fot he result code
-	GetError() string                     // can be empty; IMPROVE: Add a specific type fot he error code
-	GetSignerAddr() string                // get the address of who signed (i.e. sent) the transaction
-	GetRecipientAddr() string             // get the address of who received the transaction; may be empty
-	GetMessageType() string               // corresponds to type of message (validator-stake, app-unjail, node-stake, etc) // IMPROVE: Add an enum for message types
+	GetResultCode() int32                 // 0 is no error, otherwise corresponds to error object code; // IMPROVE: Consider using enums for the result codes
+	GetError() string                     // description of the error if the result code is non-zero; IMPROVE: Add a specific type fot he error code
+	GetSignerAddr() string                // the address of the signer (i.e. sender) of the transaction
+	GetRecipientAddr() string             // the address of the receiver of the transaction if applicable
+	GetMessageType() string               // the message type contained in the transaction; must correspond to a proto that the node can can process (e.g. Stake, Unstake, Send, etc...) // IMPROVE: How do we document all the types?
 	Hash() ([]byte, error)                // the hash of the tx bytes
 	HashFromBytes([]byte) ([]byte, error) // same operation as `Hash`, but avoid re-serializing the tx
 	Bytes() ([]byte, error)               // returns the serialized transaction bytes

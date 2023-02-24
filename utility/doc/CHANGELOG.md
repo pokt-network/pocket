@@ -126,7 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added session interfaces and diagrams
 - Moved `TxIndexer` package to persistence module
-- Added new proto structure `DefaultTxResult`
+- Added new proto structure `TxResult`
 - Integrated the `TxIndexer` into the lifecycle
   - Captured `TxResult` from each played transaction
   - Moved the storage of transactions to the Consensus Module

@@ -8,23 +8,13 @@ import "core/types/proto/transaction.proto";
 
 // INVESTIGATE: Look into a way of removing this type altogether or from shared interfaces.
 
-message TxResult {
-  uint32 code = 1;
-  bytes signer = 2;
-  bytes recipient = 3;
-  string message_type = 4;
-  int64 height = 5;
-  uint32 index = 6;
-  core.Transaction tx = 7;
-}
-
 // TECHDEBT: Re-evaluate the need for this type altogether
-message DefaultTxResult {
+message TxResult {
   bytes tx = 1;      // The bytes of the indexed transaction
   int64 height = 2;  // The block height at which the transaction was included
   int32 index = 3;   // The order (i.e. position within a block) where the proposer included the transaction
   int32 result_code = 4; // CONSIDERATION: look into having a `utility.Code` enum for this
-  string error = 5; // CONSIDERATION: look into having a `utility.Error` enum for this
+  string error = 5;       // CONSIDERATION: look into having a `utility.Error` enum for this
   string signer_addr = 6;
   string recipient_addr = 7;
   string message_type = 8; // CONSOLIDATE(M4): Once the message types are well defined and stable, consolidate them into an enum
