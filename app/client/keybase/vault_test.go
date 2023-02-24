@@ -31,8 +31,6 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not construct pool: %s", err)
 	}
 
-	// pool.MaxWait = 20 // ain't nobody got time for that
-
 	// uses pool to try to connect to Docker
 	err = pool.Client.Ping()
 	if err != nil {
@@ -108,7 +106,7 @@ func TestVaultKeybase(t *testing.T) {
 	}
 
 	// Test Create
-	err := vk.Create("passphrase", "hint")
+	_, err := vk.Create("passphrase", "hint")
 	if err != nil {
 		t.Fatalf("error creating keypair: %s", err)
 	}
@@ -120,7 +118,7 @@ func TestVaultKeybase(t *testing.T) {
 	}
 
 	// Test ImportFromString
-	err = vk.ImportFromString(privKey.String(), "passphrase", "hint")
+	_, err = vk.ImportFromString(privKey.String(), "passphrase", "hint")
 	if err != nil {
 		t.Fatalf("error importing keypair: %s", err)
 	}
@@ -143,7 +141,7 @@ func TestVaultKeybase(t *testing.T) {
 		t.Fatalf("error marshaling key pair: %s", err)
 	}
 
-	err = vk.ImportFromJSON(string(keyPairBytes), "passphrase2")
+	_, err = vk.ImportFromJSON(string(keyPairBytes), "passphrase2")
 	if err != nil {
 		t.Fatalf("error importing keypair: %s", err)
 	}

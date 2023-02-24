@@ -22,7 +22,7 @@ func NewGovernanceCommand() *cobra.Command {
 	}
 
 	cmds := govCommands()
-	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 
 	cmd.AddCommand(cmds...)
 

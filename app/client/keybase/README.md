@@ -52,21 +52,32 @@ Keys can be created without a password by specifying an empty (`""`) passphrase.
 
 ### Keybase Code Structure
 
-```bash
-app
-└── client
-    └── keybase
-          ├── README.md
-          ├── keybase.go
-          ├── keybase_test.go
-          └── keystore.go
+```sh
+$ tree app/client/keybase/
+app/client/keybase/
+├── debug
+│   └── keystore.go
+├── keybase.go
+├── keybase_test.go
+├── keystore.go
+├── README.md
+├── vault.go
+└── vault_test.go
 ```
 
-The interface is found in [keybase.go](./keybase.go) whereas its implementation can be found in [keystore.go](./keystore.go)
+The interface is found in [keybase.go](./keybase.go) whereas its implementations can be found in:
+
+- [keystore.go](./keystore.go) A keybase implementation that uses a filesystem badger database as its backend
+- [vault.go](./vault.go) A keybase implementation that uses a Hashicorp vault as its backend
 
 ## Makefile Testing Helper
 
-The unit tests for the keybase are defined in [keybase_test.go](./keybase_test.go) and can therefore be executed alongside other application specific tests by running `make test_app`.
+The unit tests the keybase are defined in:
+
+- [keybase_test.go](./keybase_test.go)
+- [vault_test.go](./vault_test.go)
+
+They can be executed application specific tests by running `make test_app`.
 
 ## KeyPair Encryption & Armouring
 

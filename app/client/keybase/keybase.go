@@ -80,10 +80,6 @@ func NewKeybase(keybaseType KeybaseType, opts *KeybaseOptions) (Keybase, error) 
 		}
 		return NewBadgerKeybase(opts.KeybasePath)
 	case KeybaseTypeVault:
-		// Open the vault-based keybase
-		if opts == nil || opts.VaultAddr == "" || opts.VaultToken == "" || opts.VaultMountPath == "" {
-			return nil, errors.New("vault address, Token, and Mount are required for vault-based keybase")
-		}
 		return NewVaultKeybase(vaultKeybaseConfig{
 			Address: opts.VaultAddr,
 			Token:   opts.VaultToken,

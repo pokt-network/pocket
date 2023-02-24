@@ -21,7 +21,6 @@ func NewAccountCommand() *cobra.Command {
 	}
 
 	cmds := accountCommands()
-	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 	cmd.AddCommand(cmds...)
 

@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(NewActorCommands(attachPwdFlagToSubcommands())...)
+	rootCmd.AddCommand(NewActorCommands(attachKeybaseFlagsToSubcommands())...)
 
 	rawChainCleanupRegex = regexp.MustCompile(rawChainCleanupExpr)
 

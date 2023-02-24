@@ -180,12 +180,6 @@ func applySubcommandOptions(cmds []*cobra.Command, cmdOptions []cmdOption) {
 	}
 }
 
-func attachPwdFlagToSubcommands() []cmdOption {
-	return []cmdOption{func(c *cobra.Command) {
-		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
-	}}
-}
-
 func attachNewPwdFlagToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
 		c.Flags().StringVar(&pwd, "new_pwd", "", "new passphrase for private key, non empty usage bypass interactive prompt")
@@ -242,19 +236,12 @@ func attachChildPwdFlagToSubcommands() []cmdOption {
 
 func attachKeybaseFlagsToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
 		c.Flags().StringVar(&keybaseTypeFromCLI, "keybase", "file", "keybase type used by the cmd, options are: file, vault")
+		c.Flags().StringVar(&keybaseVaultAddrFromCLI, "vault-addr", "", "Vault address used by the cmd. Defaults to http://127.0.0.1:8200 or VAULT_ADDR env var")
+		c.Flags().StringVar(&keybaseVaultTokenFromCLI, "vault-token", "", "Vault token used by the cmd. Defaults to VAULT_TOKEN env var")
+		c.Flags().StringVar(&keybaseVaultMountPathFromCLI, "vault-mount", "", "Vault mount path used by the cmd. Defaults to secret")
 	}}
-}
-
-func keyBaseStringToType(kb string) (keybase.KeybaseType, error) {
-	switch kb {
-	case "file":
-		return keybase.KeybaseTypeFile, nil
-	case "vault":
-		return keybase.KeybaseTypeVault, nil
-	default:
-		return -1, fmt.Errorf("invalid keybase type: %s", kb)
-	}
 }
 
 func keybaseForCli() (keybase.Keybase, error) {

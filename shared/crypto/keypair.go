@@ -49,21 +49,20 @@ type encKeyPair struct {
 	PrivKeyArmour string    `json:"priv_key_armour"`
 }
 
+type simpleEncKeyPair struct {
+	PublicKey     string `json:"public_key"`
+	PrivKeyArmour string `json:"priv_key_armour"`
+}
+
 func (ekp *encKeyPair) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		PublicKey     string `json:"PublicKey"`
-		PrivKeyArmour string `json:"PrivKeyArmour"`
-	}{
+	return json.Marshal(&simpleEncKeyPair{
 		PublicKey:     ekp.PublicKey.String(),
 		PrivKeyArmour: ekp.PrivKeyArmour,
 	})
 }
 
 func (ekp *encKeyPair) UnmarshalJSON(data []byte) error {
-	var tmp struct {
-		PublicKey     string `json:"PublicKey"`
-		PrivKeyArmour string `json:"PrivKeyArmour"`
-	}
+	var tmp simpleEncKeyPair
 	if err := json.Unmarshal(data, &tmp); err != nil {
 		return err
 	}

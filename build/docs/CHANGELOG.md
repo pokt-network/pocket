@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.19] - 2023-02-24
+
+- Introduces private key yaml file go:embed for debug keybase
+
 ## [0.0.0.18] - 2023-02-21
 
 - Rename ServiceNode Actor Type Name to Servicer

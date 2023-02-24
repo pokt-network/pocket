@@ -132,7 +132,7 @@ function p1 {
     export POCKET_WORKDIR="$(pwd)"
     export CONFIG_PATH="${POCKET_WORKDIR}/build/config/config1.json"
     export GENESIS_PATH="${POCKET_WORKDIR}/build/config/genesis_localhost.json"
-    ${POCKET_WORKDIR}/bin/p1 "$@"
+    ${POCKET_WORKDIR}/bin/p1 "\$@"
 }
 FUNC
 ```

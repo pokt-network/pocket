@@ -73,32 +73,42 @@ func (vk *vaultKeybase) Stop() error {
 }
 
 // Create new keypair entry in vault
-func (vk *vaultKeybase) Create(passphrase, hint string) error {
+func (vk *vaultKeybase) Create(passphrase, hint string) (crypto.KeyPair, error) {
 	keyPair, err := crypto.CreateNewKey(passphrase, hint)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return writeVaultKeyPair(vk, keyPair.GetAddressString(), keyPair, hint)
+	err = writeVaultKeyPair(vk, keyPair.GetAddressString(), keyPair, hint)
+	if err != nil {
+		return nil, err
+	}
+	return keyPair, nil
 }
 
 // ImportFromString a new keypair from the private key hex string provided into vault
-func (vk *vaultKeybase) ImportFromString(privStr, passphrase, hint string) error {
+func (vk *vaultKeybase) ImportFromString(privStr, passphrase, hint string) (crypto.KeyPair, error) {
 	keyPair, err := crypto.CreateNewKeyFromString(privStr, passphrase, hint)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	return writeVaultKeyPair(vk, keyPair.GetAddressString(), keyPair, hint)
+	err = writeVaultKeyPair(vk, keyPair.GetAddressString(), keyPair, hint)
+	if err != nil {
+		return nil, err
+	}
+	return keyPair, nil
 }
 
 // ImportFromJSON Import a new keypair from the JSON string of the encrypted private key into vault
-func (vk *vaultKeybase) ImportFromJSON(jsonStr, passphrase string) error {
+func (vk *vaultKeybase) ImportFromJSON(jsonStr, passphrase string) (crypto.KeyPair, error) {
 	keyPair, err := crypto.ImportKeyFromJSON(jsonStr, passphrase)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	return writeVaultKeyPair(vk, keyPair.GetAddressString(), keyPair, "")
+	err = writeVaultKeyPair(vk, keyPair.GetAddressString(), keyPair, "")
+	if err != nil {
+		return nil, err
+	}
+	return keyPair, nil
 }
 
 // Get a keypair from vault
