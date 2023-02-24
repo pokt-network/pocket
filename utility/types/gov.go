@@ -10,13 +10,13 @@ const (
 	// Application actor gov params
 	AppMinimumStakeParamName       = "app_minimum_stake"
 	AppMaxChainsParamName          = "app_max_chains"
-	AppBaselineStakeRateParamName  = "app_baseline_stake_rate"
 	AppUnstakingBlocksParamName    = "app_unstaking_blocks"
 	AppMinimumPauseBlocksParamName = "app_minimum_pause_blocks"
 	AppMaxPauseBlocksParamName     = "app_max_pause_blocks"
 	// The Application's usage tokens during each session is determined by its stake. The session
 	// is rate limited using the "Token Bucket" algorithm, where the number of tokens in the beginning
 	// of each session is determined by this parameter.
+	//nolint:gosec // G101 - Not a hardcoded credential
 	AppSessionTokensMultiplierParamName = "app_session_tokens_multiplier"
 
 	// Servicer actor gov params
@@ -93,9 +93,9 @@ const (
 
 	BlocksPerSessionOwner = "blocks_per_session_owner"
 
-	AppMinimumStakeOwner            = "app_minimum_stake_owner"
-	AppMaxChainsOwner               = "app_max_chains_owner"
-	AppBaselineStakeRateOwner       = "app_baseline_stake_rate_owner"
+	AppMinimumStakeOwner = "app_minimum_stake_owner"
+	AppMaxChainsOwner    = "app_max_chains_owner"
+	//nolint:gosec // G101 - Not a hardcoded credential
 	AppSessionTokensMultiplierOwner = "app_session_tokens_multiplier_owner"
 	AppUnstakingBlocksOwner         = "app_unstaking_blocks_owner"
 	AppMinimumPauseBlocksOwner      = "app_minimum_pause_blocks_owner"

@@ -33,7 +33,7 @@ func (u *utilityContext) updateParam(paramName string, value any) typesUtil.Erro
 	return typesUtil.ErrUnknownParam(paramName)
 }
 
-func (u *utilityContext) getParameter(paramName string, height int64) (any, error) {
+func (u *utilityContext) getParameter(paramName string) (any, error) {
 	return u.store.GetParameter(paramName, u.height)
 }
 
@@ -43,10 +43,6 @@ func (u *utilityContext) getAppMinimumStake() (*big.Int, typesUtil.Error) {
 
 func (u *utilityContext) getAppMaxChains() (int, typesUtil.Error) {
 	return u.getIntParam(typesUtil.AppMaxChainsParamName)
-}
-
-func (u *utilityContext) getBaselineAppStakeRate() (int, typesUtil.Error) {
-	return u.getIntParam(typesUtil.AppBaselineStakeRateParamName)
 }
 
 func (u *utilityContext) getAppSessionTokensMultiplier() (int, typesUtil.Error) {
@@ -262,8 +258,6 @@ func (u *utilityContext) getParamOwner(paramName string) ([]byte, error) {
 		return u.store.GetBytesParam(typesUtil.AppMaxChainsOwner, u.height)
 	case typesUtil.AppMinimumStakeParamName:
 		return u.store.GetBytesParam(typesUtil.AppMinimumStakeOwner, u.height)
-	case typesUtil.AppBaselineStakeRateParamName:
-		return u.store.GetBytesParam(typesUtil.AppBaselineStakeRateOwner, u.height)
 	case typesUtil.AppSessionTokensMultiplierParamName:
 		return u.store.GetBytesParam(typesUtil.AppSessionTokensMultiplierOwner, u.height)
 	case typesUtil.AppUnstakingBlocksParamName:
@@ -369,8 +363,6 @@ func (u *utilityContext) getParamOwner(paramName string) ([]byte, error) {
 	case typesUtil.AppMaxChainsOwner:
 		return u.store.GetBytesParam(typesUtil.AclOwner, u.height)
 	case typesUtil.AppMinimumStakeOwner:
-		return u.store.GetBytesParam(typesUtil.AclOwner, u.height)
-	case typesUtil.AppBaselineStakeRateOwner:
 		return u.store.GetBytesParam(typesUtil.AclOwner, u.height)
 	case typesUtil.AppSessionTokensMultiplierOwner:
 		return u.store.GetBytesParam(typesUtil.AclOwner, u.height)

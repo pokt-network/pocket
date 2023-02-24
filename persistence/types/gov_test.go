@@ -26,7 +26,6 @@ func TestInsertParams(t *testing.T) {
 			want: "INSERT INTO params VALUES ('blocks_per_session', -1, 'BIGINT', 4)," +
 				"('app_minimum_stake', -1, 'STRING', '15000000000')," +
 				"('app_max_chains', -1, 'SMALLINT', 15)," +
-				"('app_baseline_stake_rate', -1, 'BIGINT', 100)," +
 				"('app_session_tokens_multiplier', -1, 'BIGINT', 0)," +
 				"('app_unstaking_blocks', -1, 'BIGINT', 2016)," +
 				"('app_minimum_pause_blocks', -1, 'SMALLINT', 4)," +
@@ -81,7 +80,6 @@ func TestInsertParams(t *testing.T) {
 				"('blocks_per_session_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('app_minimum_stake_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('app_max_chains_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
-				"('app_baseline_stake_rate_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('app_session_tokens_multiplier_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('app_unstaking_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('app_minimum_pause_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +

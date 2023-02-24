@@ -24,14 +24,13 @@ message GenesisState {
 // TECHDEBT: Explore a more general purpose "feature flag" approach that makes it easy to add/remove
 // parametesr and add activation heights for them as well.
 message Params {
+  reserved 4, 59; // Deprecated
   //@gotags: pokt:"val_type=BIGINT"
   int32 blocks_per_session = 1;
   //@gotags: pokt:"val_type=STRING"
   string app_minimum_stake = 2;
   //@gotags: pokt:"val_type=SMALLINT"
   int32 app_max_chains = 3;
-  //@gotags: pokt:"val_type=BIGINT"
-  int32 app_baseline_stake_rate = 4;
   //@gotags: pokt:"val_type=BIGINT"
   int32 app_session_tokens_multiplier = 5;
   //@gotags: pokt:"val_type=BIGINT"
@@ -145,8 +144,6 @@ message Params {
   string app_minimum_stake_owner = 57;
   //@gotags: pokt:"val_type=STRING"
   string app_max_chains_owner = 58;
-  //@gotags: pokt:"val_type=STRING"
-  string app_baseline_stake_rate_owner = 59;
   //@gotags: pokt:"val_type=STRING"
   string app_session_tokens_multiplier_owner = 60;
   //@gotags: pokt:"val_type=STRING"

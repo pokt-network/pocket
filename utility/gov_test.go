@@ -43,7 +43,6 @@ func TestUtilityContext_GetAppMinimumPauseBlocks(t *testing.T) {
 	gotParam, err := ctx.getAppMinimumPauseBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
-
 }
 
 func TestUtilityContext_GetAppMinimumStake(t *testing.T) {
@@ -53,7 +52,6 @@ func TestUtilityContext_GetAppMinimumStake(t *testing.T) {
 	gotParam, err := ctx.getAppMinimumStake()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
-
 }
 
 func TestUtilityContext_GetAppUnstakingBlocks(t *testing.T) {
@@ -63,27 +61,15 @@ func TestUtilityContext_GetAppUnstakingBlocks(t *testing.T) {
 	gotParam, err := ctx.getAppUnstakingBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
-
-}
-
-func TestUtilityContext_GetBaselineAppStakeRate(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
-	defaultParams := DefaultTestingParams(t)
-	defaultParam := int(defaultParams.GetAppBaselineStakeRate())
-	gotParam, err := ctx.getBaselineAppStakeRate()
-	require.NoError(t, err)
-	require.Equal(t, defaultParam, gotParam)
-
 }
 
 func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetBlocksPerSession())
-	gotParam, err := ctx.getParameter(typesUtil.BlocksPerSessionParamName, 0)
+	gotParam, err := ctx.getParameter(typesUtil.BlocksPerSessionParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
-
 }
 
 func TestUtilityContext_GetDoubleSignBurnPercentage(t *testing.T) {
@@ -93,7 +79,6 @@ func TestUtilityContext_GetDoubleSignBurnPercentage(t *testing.T) {
 	gotParam, err := ctx.getDoubleSignBurnPercentage()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
-
 }
 
 func TestUtilityContext_GetDoubleSignFeeOwner(t *testing.T) {
@@ -107,7 +92,6 @@ func TestUtilityContext_GetDoubleSignFeeOwner(t *testing.T) {
 	require.NoError(t, er)
 
 	require.Equal(t, defaultParamTx, gotParam)
-
 }
 
 func TestUtilityContext_GetFishermanMaxChains(t *testing.T) {
@@ -117,7 +101,6 @@ func TestUtilityContext_GetFishermanMaxChains(t *testing.T) {
 	gotParam, err := ctx.getFishermanMaxChains()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
-
 }
 
 func TestUtilityContext_GetFishermanMaxPausedBlocks(t *testing.T) {
@@ -127,7 +110,6 @@ func TestUtilityContext_GetFishermanMaxPausedBlocks(t *testing.T) {
 	gotParam, err := ctx.getFishermanMaxPausedBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
-
 }
 
 func TestUtilityContext_GetFishermanMinimumPauseBlocks(t *testing.T) {
@@ -137,7 +119,6 @@ func TestUtilityContext_GetFishermanMinimumPauseBlocks(t *testing.T) {
 	gotParam, err := ctx.getFishermanMinimumPauseBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
-
 }
 
 func TestUtilityContext_GetFishermanMinimumStake(t *testing.T) {
@@ -147,7 +128,6 @@ func TestUtilityContext_GetFishermanMinimumStake(t *testing.T) {
 	gotParam, err := ctx.getFishermanMinimumStake()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
-
 }
 
 func TestUtilityContext_GetFishermanUnstakingBlocks(t *testing.T) {
@@ -157,7 +137,6 @@ func TestUtilityContext_GetFishermanUnstakingBlocks(t *testing.T) {
 	gotParam, err := ctx.getFishermanUnstakingBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
-
 }
 
 func TestUtilityContext_GetMaxEvidenceAgeInBlocks(t *testing.T) {
@@ -167,7 +146,6 @@ func TestUtilityContext_GetMaxEvidenceAgeInBlocks(t *testing.T) {
 	gotParam, err := ctx.getMaxEvidenceAgeInBlocks()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
-
 }
 
 func TestUtilityContext_GetMessageChangeParameterFee(t *testing.T) {
@@ -177,7 +155,6 @@ func TestUtilityContext_GetMessageChangeParameterFee(t *testing.T) {
 	gotParam, err := ctx.getMessageChangeParameterFee()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
-
 }
 
 func TestUtilityContext_GetMessageDoubleSignFee(t *testing.T) {
@@ -187,7 +164,6 @@ func TestUtilityContext_GetMessageDoubleSignFee(t *testing.T) {
 	gotParam, err := ctx.getMessageDoubleSignFee()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
-
 }
 
 func TestUtilityContext_GetMessageEditStakeAppFee(t *testing.T) {
@@ -278,7 +254,6 @@ func TestUtilityContext_GetMessageProveTestScoreFee(t *testing.T) {
 	gotParam, err := ctx.getMessageProveTestScoreFee()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
-
 }
 
 func TestUtilityContext_GetMessageSendFee(t *testing.T) {
@@ -306,7 +281,6 @@ func TestUtilityContext_GetMessageStakeFishermanFee(t *testing.T) {
 	gotParam, err := ctx.getMessageStakeFishermanFee()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
-
 }
 
 func TestUtilityContext_GetMessageStakeServicerFee(t *testing.T) {
@@ -370,7 +344,6 @@ func TestUtilityContext_GetMessageUnpauseValidatorFee(t *testing.T) {
 	gotParam, err := ctx.getMessageUnpauseValidatorFee()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
-
 }
 
 func TestUtilityContext_GetMessageUnstakeAppFee(t *testing.T) {
@@ -380,7 +353,6 @@ func TestUtilityContext_GetMessageUnstakeAppFee(t *testing.T) {
 	gotParam, err := ctx.getMessageUnstakeAppFee()
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
-
 }
 
 func TestUtilityContext_GetMessageUnstakeFishermanFee(t *testing.T) {
@@ -550,7 +522,6 @@ func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
 	gotParam, err = ctx.getMissedBlocksBurnPercentage()
 	require.NoError(t, err)
 	require.Equal(t, int(newParamValue), gotParam)
-
 }
 
 func TestUtilityContext_GetParamOwner(t *testing.T) {
@@ -570,10 +541,6 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAppMinimumStakeOwner()
 	gotParam, err = ctx.getParamOwner(typesUtil.AppMinimumStakeParamName)
-	require.NoError(t, err)
-	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
-	defaultParam = defaultParams.GetAppBaselineStakeRateOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.AppBaselineStakeRateParamName)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAppSessionTokensMultiplierOwner()
@@ -790,7 +757,6 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
-	gotParam, err = ctx.getParamOwner(typesUtil.AppBaselineStakeRateOwner)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, hex.EncodeToString(gotParam))
 	defaultParam = defaultParams.GetAclOwner()
