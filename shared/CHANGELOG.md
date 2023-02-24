@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.34] - 2023-02-25
+## [0.0.0.34] - 2023-02-24
 
 - Remove SetLeaderId() method from ConsensusDebugModule interface
 
