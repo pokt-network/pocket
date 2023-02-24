@@ -43,8 +43,8 @@ services:
       - "50832"
     ports:
       - "${NODE1_PORT_7081:-0.0.0.0:7081}:7081"
-      - "${NODE1_PORT_8081:-0.0.0.0:42070}:42069"
       - "${NODE1_PORT_9081:-0.0.0.0:9081}:9080"
+      - "${NODE1_PORT_42070:-0.0.0.0:42070}:42069"
       - "${NODE1_PORT_50832:-0.0.0.0:50832}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
@@ -74,8 +74,8 @@ services:
       - "50832"
     ports:
       - "${NODE2_PORT_7081:-0.0.0.0:7082}:7081"
-      - "${NODE2_PORT_8081:-0.0.0.0:42071}:42069"
       - "${NODE2_PORT_9081:-0.0.0.0:9082}:9080"
+      - "${NODE2_PORT_42070:-0.0.0.0:42071}:42069"
       - "${NODE2_PORT_50832:-0.0.0.0:50833}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
@@ -102,8 +102,8 @@ services:
       - "50832"
     ports:
       - "${NODE3_PORT_7081:-0.0.0.0:7083}:7081"
-      - "${NODE3_PORT_8081:-0.0.0.0:42072}:42069"
       - "${NODE3_PORT_9081:-0.0.0.0:9083}:9080"
+      - "${NODE3_PORT_42070:-0.0.0.0:42072}:42069"
       - "${NODE3_PORT_50832:-0.0.0.0:50834}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
@@ -130,8 +130,8 @@ services:
       - "50832"
     ports:
       - "${NODE4_PORT_7081:-0.0.0.0:7084}:7081"
-      - "${NODE4_PORT_8081:-0.0.0.0:42073}:42069"
       - "${NODE4_PORT_9081:-0.0.0.0:9084}:9080"
+      - "${NODE4_PORT_42070:-0.0.0.0:42073}:42069"
       - "${NODE4_PORT_50832:-0.0.0.0:50835}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
