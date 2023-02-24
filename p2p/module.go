@@ -171,7 +171,6 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 	if err != nil {
 		return err
 	}
-	m.logger.Info().Msg("sending from p2p module")
 
 	return m.network.NetworkSend(data, addr)
 }

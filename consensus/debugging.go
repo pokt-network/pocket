@@ -188,7 +188,6 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 			continue
 		}
 		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
-
 		if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, valAddress, requestHeight); err != nil {
 			m.logger.Error().Err(err).Str("proto_type", "StateSyncMetadataRequest").Msg("failed to send StateSyncMessage")
 		}
