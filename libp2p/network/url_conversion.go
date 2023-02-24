@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"strings"
 
 	"github.com/multiformats/go-multiaddr"
 )
@@ -35,12 +34,6 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 		peerIPVersionStr = "ip4"
 	)
 
-	// TECHDEBT: there's probably a more conventional way to do this.
-	// Check if we're dealing with IPv4 or IPv6
-	if strings.Count(peerUrl.Hostname(), ":") > 0 {
-		peerIPVersionStr = "ip6"
-	}
-
 	/* CONSIDER: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
 	 * I attempted using `/dns4/.../tcp/...` and go this error:
 	 * > failed to listen on any addresses: [can only dial TCP over IPv4 or IPv6]
@@ -58,6 +51,12 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 			peerUrl.Hostname(),
 			err,
 		)
+	}
+
+	// Test for IP version.
+	// (see: https://pkg.go.dev/net#IP.To4)
+	if peerIP.IP.To4() == nil {
+		peerIPVersionStr = "ip6"
 	}
 
 	peerMultiAddrStr := fmt.Sprintf(
