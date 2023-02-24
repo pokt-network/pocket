@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPeerMultiAddrFromServiceURL_success(t *testing.T) {
+func TestPeerMultiAddrFromServiceURL_Success(t *testing.T) {
 	testCases := []struct {
 		name                  string
 		serviceUrl            string
@@ -48,7 +48,7 @@ const (
 	IP6  = "ip6"
 )
 
-func TestPeerMultiAddrFromServiceURL_error(t *testing.T) {
+func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 	hostnames := map[string]string{
 		FQDN: "www.google.com",
 		IP4:  "142.250.181.196",
@@ -102,7 +102,7 @@ func TestPeerMultiAddrFromServiceURL_error(t *testing.T) {
 	}
 }
 
-func TestServiceUrlFromLibp2pMultiaddr_success(t *testing.T) {
+func TestServiceUrlFromLibp2pMultiaddr_Success(t *testing.T) {
 	testCases := []struct {
 		name         string
 		multiaddrStr string
@@ -133,7 +133,7 @@ func TestServiceUrlFromLibp2pMultiaddr_success(t *testing.T) {
 	}
 }
 
-func TestServiceUrlFromLibp2pMultiaddr_error(t *testing.T) {
+func TestServiceUrlFromLibp2pMultiaddr_Error(t *testing.T) {
 	testCases := []struct {
 		name                string
 		multiaddrStr        string
