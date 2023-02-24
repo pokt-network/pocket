@@ -31,7 +31,7 @@ type badgerKeybase struct {
 	db *badger.DB
 }
 
-// Creates/Opens the DB at the specified path
+// NewKeybase Creates/Opens the DB at the specified path creating the path if it doesn't exist
 func NewKeybase(path string) (Keybase, error) {
 	pathExists, err := converters.DirExists(path) // Creates path if it doesn't exist
 	if err != nil || !pathExists {
@@ -44,7 +44,7 @@ func NewKeybase(path string) (Keybase, error) {
 	return &badgerKeybase{db: db}, nil
 }
 
-// Creates/Opens the DB in Memory
+// NewKeybaseInMemory Creates/Opens the DB in Memory
 // FOR TESTING PURPOSES ONLY
 func NewKeybaseInMemory() (Keybase, error) {
 	db, err := badger.Open(badgerOptions("").WithInMemory(true))
@@ -54,19 +54,20 @@ func NewKeybaseInMemory() (Keybase, error) {
 	return &badgerKeybase{db: db}, nil
 }
 
-// Return DB instance
+// GetBadgerDB Returns the DB instance
 // FOR DEBUG PURPOSES ONLY
 func (keybase *badgerKeybase) GetBadgerDB() *badger.DB {
 	return keybase.db
 }
 
-// Close the DB
+// Stop Closes the DB connection
 func (keybase *badgerKeybase) Stop() error {
 	return keybase.db.Close()
 }
 
-// Create a new key and store the serialised KeyPair encoding in the DB
+// Create Creates a new key and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
+// Returns the KeyPair created and any error
 func (keybase *badgerKeybase) Create(passphrase, hint string) (keyPair crypto.KeyPair, err error) {
 	err = keybase.db.Update(func(tx *badger.Txn) (err error) {
 		keyPair, err = crypto.CreateNewKey(passphrase, hint)
@@ -92,8 +93,9 @@ func (keybase *badgerKeybase) Create(passphrase, hint string) (keyPair crypto.Ke
 	return keyPair, nil
 }
 
-// Create a new KeyPair from the private key hex string and store the serialised KeyPair encoding in the DB
+// ImportFromString Creates a new KeyPair from the private key hex string and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
+// Returns the KeyPair created and any error
 func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint string) (keyPair crypto.KeyPair, err error) {
 	err = keybase.db.Update(func(tx *badger.Txn) (err error) {
 		keyPair, err = crypto.CreateNewKeyFromString(privKeyHex, passphrase, hint)
@@ -119,8 +121,9 @@ func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint stri
 	return keyPair, nil
 }
 
-// Create a new KeyPair from the private key JSON string and store the serialised KeyPair encoding in the DB
+// ImportFromJSON Creates a new KeyPair from the private key JSON string and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
+// Returns the KeyPair created and any error
 func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) (keyPair crypto.KeyPair, err error) {
 	err = keybase.db.Update(func(tx *badger.Txn) (err error) {
 		keyPair, err = crypto.ImportKeyFromJSON(jsonStr, passphrase)
@@ -146,7 +149,7 @@ func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) (keyPai
 	return keyPair, nil
 }
 
-// Returns a KeyPair struct provided the address was found in the DB
+// Get Returns a KeyPair struct provided the address was found in the DB
 func (keybase *badgerKeybase) Get(address string) (crypto.KeyPair, error) {
 	kp := crypto.GetKeypair()
 	addrBz, err := hex.DecodeString(address)
@@ -181,7 +184,7 @@ func (keybase *badgerKeybase) Get(address string) (crypto.KeyPair, error) {
 	return kp, nil
 }
 
-// Returns a PublicKey interface provided the address was found in the DB
+// GetPubKey Returns a PublicKey interface provided the address was found in the DB
 func (keybase *badgerKeybase) GetPubKey(address string) (crypto.PublicKey, error) {
 	kp, err := keybase.Get(address)
 	if err != nil {
@@ -191,7 +194,7 @@ func (keybase *badgerKeybase) GetPubKey(address string) (crypto.PublicKey, error
 	return kp.GetPublicKey(), nil
 }
 
-// Returns a PrivateKey interface provided the address was found in the DB and the passphrase was correct
+// GetPrivKey Returns a PrivateKey interface provided the address was found in the DB and the passphrase was correct
 func (keybase *badgerKeybase) GetPrivKey(address, passphrase string) (crypto.PrivateKey, error) {
 	kp, err := keybase.Get(address)
 	if err != nil {
@@ -206,8 +209,8 @@ func (keybase *badgerKeybase) GetPrivKey(address, passphrase string) (crypto.Pri
 	return privKey, nil
 }
 
-// Get all the addresses and key pairs stored in the keybase
-// Returns addresses stored and all the KeyPair structs stored in the DB
+// GetAll Returns the addresses and key pairs stored in the keybase
+// Returns the hex addresses stored and all the KeyPair structs stored in the DB
 func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.KeyPair, err error) {
 	// View executes the function provided managing a read only transaction
 	err = keybase.db.View(func(tx *badger.Txn) error {
@@ -245,7 +248,8 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 	return addresses, keyPairs, nil
 }
 
-// Deterministically generate and return the ith child from the seed provided - storing it in the keybase by default
+// DeriveChildFromSeed Deterministically generates and return the child at the given index from the seed provided
+// By default this stores the key in the keybase and returns the KeyPair interface and any error
 func (keybase *badgerKeybase) DeriveChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string) (crypto.KeyPair, error) {
 	path := fmt.Sprintf(slip.PoktAccountPathFormat, childIndex)
 	childKey, err := slip.DeriveChild(path, seed)
@@ -304,7 +308,8 @@ func (keybase *badgerKeybase) DeriveChildFromSeed(seed []byte, childIndex uint32
 	return childKey, nil
 }
 
-// Deterministically generate and return the ith child key from the masterAddrHex key stored in the keybase
+// DeriveChildFromKey Deterministically generates and return the child at the given index from the parent key provided
+// By default this stores the key in the keybase and returns the KeyPair interface and any error
 func (keybase *badgerKeybase) DeriveChildFromKey(masterAddrHex, passphrase string, childIndex uint32, childPassphrase, childHint string) (crypto.KeyPair, error) {
 	privKey, err := keybase.GetPrivKey(masterAddrHex, passphrase)
 	if err != nil {
@@ -314,16 +319,7 @@ func (keybase *badgerKeybase) DeriveChildFromKey(masterAddrHex, passphrase strin
 	return keybase.DeriveChildFromSeed(seed, childIndex, childPassphrase, childHint)
 }
 
-// Check whether an address is currently stored in the DB
-func (keybase *badgerKeybase) Exists(address string) (bool, error) {
-	val, err := keybase.Get(address)
-	if err != nil {
-		return false, err
-	}
-	return val != nil, nil
-}
-
-// Export the Private Key string of the given address
+// ExportPrivString Exports the raw private key string of the given address
 func (keybase *badgerKeybase) ExportPrivString(address, passphrase string) (string, error) {
 	kp, err := keybase.Get(address)
 	if err != nil {
@@ -332,7 +328,7 @@ func (keybase *badgerKeybase) ExportPrivString(address, passphrase string) (stri
 	return kp.ExportString(passphrase)
 }
 
-// Export the Private Key of the given address as a JSON object
+// ExportPrivJSON Exports the private key of the given address as a JSON string
 func (keybase *badgerKeybase) ExportPrivJSON(address, passphrase string) (string, error) {
 	kp, err := keybase.Get(address)
 	if err != nil {
@@ -341,6 +337,7 @@ func (keybase *badgerKeybase) ExportPrivJSON(address, passphrase string) (string
 	return kp.ExportJSON(passphrase)
 }
 
+// UpdatePassphrase Updates the passphrase of the key with the matching address to use the new one provided and updates the hint in the JSON encrypted private key
 func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassphrase, hint string) error {
 	// Check the oldPassphrase is correct
 	privKey, err := keybase.GetPrivKey(address, oldPassphrase)
@@ -378,7 +375,7 @@ func (keybase *badgerKeybase) UpdatePassphrase(address, oldPassphrase, newPassph
 	return err
 }
 
-// Sign a message using the key address provided
+// Sign Signs a message using the key address provided
 func (keybase *badgerKeybase) Sign(address, passphrase string, msg []byte) ([]byte, error) {
 	privKey, err := keybase.GetPrivKey(address, passphrase)
 	if err != nil {
@@ -387,7 +384,7 @@ func (keybase *badgerKeybase) Sign(address, passphrase string, msg []byte) ([]by
 	return privKey.Sign(msg)
 }
 
-// Verify a message has been signed correctly
+// Verify Verifies a message has been signed correctly
 func (keybase *badgerKeybase) Verify(address string, msg, sig []byte) (bool, error) {
 	kp, err := keybase.Get(address)
 	if err != nil {
@@ -397,7 +394,7 @@ func (keybase *badgerKeybase) Verify(address string, msg, sig []byte) (bool, err
 	return pubKey.Verify(msg, sig), nil
 }
 
-// Remove a KeyPair from the DB given the address
+// Delete Removes a KeyPair from the DB given the address
 func (keybase *badgerKeybase) Delete(address, passphrase string) error {
 	if _, err := keybase.GetPrivKey(address, passphrase); err != nil {
 		return err
@@ -414,7 +411,7 @@ func (keybase *badgerKeybase) Delete(address, passphrase string) error {
 	return err
 }
 
-// Return badger.Options for the given DB path - disable logging
+// badgerOptions Returns a badger.Options struct for the given DB path - disable logging
 func badgerOptions(path string) badger.Options {
 	opts := badger.DefaultOptions(path)
 	opts.Logger = nil // Badger logger is very noisy
