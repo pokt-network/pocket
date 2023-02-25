@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.35] - 2023-02-28
+## [0.0.0.36] - 2023-02-28
 
 - Implement SLIP-0010 specification for HD child key derivation
 - Cover both Test Vectors 1 and 2 from the specification
+
+## [0.0.0.35] - 2023-02-24
+
+- Add MarshalJSON and UnmarshalJSON to KeyPair interface
 
 ## [0.0.0.34] - 2023-02-24
 
@@ -26,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.31] - 2023-02-22
 
--  Export consensus module's ConsensusDebugModule interface.
+- Export consensus module's ConsensusDebugModule interface.
 
 ## [0.0.0.30] - 2023-02-21
 
