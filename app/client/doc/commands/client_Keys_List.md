@@ -15,7 +15,7 @@ client Keys List [flags]
 ```
   -h, --help                 help for List
       --keybase string       keybase type used by the cmd, options are: file, vault (default "file")
-      --vault-addr string    Vault address used by the cmd. Defaults to http://127.0.0.1:8200 or VAULT_ADDR env var
+      --vault-addr string    Vault address used by the cmd. Defaults to https://127.0.0.1:8200 or VAULT_ADDR env var
       --vault-mount string   Vault mount path used by the cmd. Defaults to secret
       --vault-token string   Vault token used by the cmd. Defaults to VAULT_TOKEN env var
 ```
