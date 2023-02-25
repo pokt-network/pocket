@@ -140,11 +140,11 @@ func TestVaultKeybase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error marshaling key pair: %s", err)
 	}
-
-	_, err = vk.ImportFromJSON(string(keyPairBytes), "passphrase2")
+	importedKp, err := vk.ImportFromJSON(string(keyPairBytes), "passphrase2")
 	if err != nil {
 		t.Fatalf("error importing keypair: %s", err)
 	}
+	assert.Equal(t, keyPair, importedKp)
 
 	// Test Get
 	keyPair2, err := vk.Get(keyPair.GetAddressString())

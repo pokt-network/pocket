@@ -19,7 +19,7 @@ client System Health [flags]
 ### Options inherited from parent commands
 
 ```
-      --data_dir string         Path to store pocket related data (keybase etc.) (default "/home/harry/.pocket")
+      --data_dir string         Path to store pocket related data (keybase etc.) (default "/home/bigboss/.pocket")
       --non_interactive         if true skips the interactive prompts wherever possible (useful for scripting & automation)
       --remote_cli_url string   takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port) (default "http://localhost:50832")
 ```

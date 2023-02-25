@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -180,6 +181,12 @@ func applySubcommandOptions(cmds []*cobra.Command, cmdOptions []cmdOption) {
 	}
 }
 
+func attachPwdFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
+	}}
+}
+
 func attachNewPwdFlagToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
 		c.Flags().StringVar(&pwd, "new_pwd", "", "new passphrase for private key, non empty usage bypass interactive prompt")
@@ -236,7 +243,6 @@ func attachChildPwdFlagToSubcommands() []cmdOption {
 
 func attachKeybaseFlagsToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
-		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
 		c.Flags().StringVar(&keybaseTypeFromCLI, "keybase", "file", "keybase type used by the cmd, options are: file, vault")
 		c.Flags().StringVar(&keybaseVaultAddrFromCLI, "vault-addr", "", "Vault address used by the cmd. Defaults to http://127.0.0.1:8200 or VAULT_ADDR env var")
 		c.Flags().StringVar(&keybaseVaultTokenFromCLI, "vault-token", "", "Vault token used by the cmd. Defaults to VAULT_TOKEN env var")
@@ -293,4 +299,11 @@ func setValueInCLIContext(cmd *cobra.Command, key cliContextKey, value any) {
 func getValueFromCLIContext[T any](cmd *cobra.Command, key cliContextKey) (T, bool) {
 	value, ok := cmd.Context().Value(key).(T)
 	return value, ok
+}
+
+func confirmPassphrase(currPwd string) {
+	confirm := readPassphraseMessage("", "Confirm passphrase: ")
+	if currPwd != confirm {
+		log.Fatalf("❌ Passphrases do not match")
+	}
 }

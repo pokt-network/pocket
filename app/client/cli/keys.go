@@ -54,32 +54,39 @@ func NewKeysCommand() *cobra.Command {
 	slipCmds := keysSlipCommands()
 
 	// Add --pwd and --hint flags
+	applySubcommandOptions(createCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(createCmds, attachKeybaseFlagsToSubcommands())
 	applySubcommandOptions(createCmds, attachHintFlagToSubcommands())
 
 	// Add --pwd, --new_pwd and --hint flags
+	applySubcommandOptions(updateCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(updateCmds, attachKeybaseFlagsToSubcommands())
 	applySubcommandOptions(updateCmds, attachNewPwdFlagToSubcommands())
 	applySubcommandOptions(updateCmds, attachHintFlagToSubcommands())
 
 	// Add --pwd flag
+	applySubcommandOptions(deleteCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(deleteCmds, attachKeybaseFlagsToSubcommands())
 
 	// Add --pwd, --output_file and --export_format flags
+	applySubcommandOptions(exportCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(exportCmds, attachKeybaseFlagsToSubcommands())
 	applySubcommandOptions(exportCmds, attachOutputFlagToSubcommands())
 	applySubcommandOptions(exportCmds, attachExportFlagToSubcommands())
 
 	// Add --pwd, --hint, --input_file and --import_format flags
+	applySubcommandOptions(importCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(importCmds, attachKeybaseFlagsToSubcommands())
 	applySubcommandOptions(importCmds, attachHintFlagToSubcommands())
 	applySubcommandOptions(importCmds, attachInputFlagToSubcommands())
 	applySubcommandOptions(importCmds, attachImportFlagToSubcommands())
 
 	// Add --pwd flag
+	applySubcommandOptions(signMsgCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(signMsgCmds, attachKeybaseFlagsToSubcommands())
 
 	// Add --pwd, --input_file and --output_file flags
+	applySubcommandOptions(signTxCmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(signTxCmds, attachKeybaseFlagsToSubcommands())
 	applySubcommandOptions(signTxCmds, attachInputFlagToSubcommands())
 	applySubcommandOptions(signTxCmds, attachOutputFlagToSubcommands())
@@ -119,6 +126,7 @@ func keysCreateCommands() []*cobra.Command {
 
 				if !nonInteractive {
 					pwd = readPassphrase(pwd)
+					confirmPassphrase(pwd)
 				}
 
 				kp, err := kb.Create(pwd, hint)
@@ -159,6 +167,7 @@ func keysUpdateCommands() []*cobra.Command {
 				if !nonInteractive {
 					pwd = readPassphrase(pwd)
 					newPwd = readPassphraseMessage(newPwd, "New passphrase: ")
+					confirmPassphrase(newPwd)
 				}
 
 				err = kb.UpdatePassphrase(addrHex, pwd, newPwd, hint)
@@ -276,6 +285,9 @@ func keysGetCommands() []*cobra.Command {
 			},
 		},
 	}
+
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
+
 	return cmds
 }
 
@@ -377,6 +389,10 @@ func keysImportCommands() []*cobra.Command {
 						return err
 					}
 				case "raw":
+					// it is unarmoured so we need to confirm the passphrase
+					if !nonInteractive {
+						confirmPassphrase(pwd)
+					}
 					kp, err = kb.ImportFromString(privateKeyString, pwd, hint)
 					if err != nil {
 						return err

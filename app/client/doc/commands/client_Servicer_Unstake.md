@@ -13,14 +13,18 @@ client Servicer Unstake <fromAddr> [flags]
 ### Options
 
 ```
-  -h, --help         help for Unstake
-      --pwd string   passphrase used by the cmd, non empty usage bypass interactive prompt
+  -h, --help                 help for Unstake
+      --keybase string       keybase type used by the cmd, options are: file, vault (default "file")
+      --pwd string           passphrase used by the cmd, non empty usage bypass interactive prompt
+      --vault-addr string    Vault address used by the cmd. Defaults to http://127.0.0.1:8200 or VAULT_ADDR env var
+      --vault-mount string   Vault mount path used by the cmd. Defaults to secret
+      --vault-token string   Vault token used by the cmd. Defaults to VAULT_TOKEN env var
 ```
 
 ### Options inherited from parent commands
 
 ```
-      --data_dir string         Path to store pocket related data (keybase etc.) (default "/home/harry/.pocket")
+      --data_dir string         Path to store pocket related data (keybase etc.) (default "/home/bigboss/.pocket")
       --non_interactive         if true skips the interactive prompts wherever possible (useful for scripting & automation)
       --remote_cli_url string   takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port) (default "http://localhost:50832")
 ```

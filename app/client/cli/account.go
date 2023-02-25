@@ -22,6 +22,7 @@ func NewAccountCommand() *cobra.Command {
 
 	cmds := accountCommands()
 	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
 	cmd.AddCommand(cmds...)
 
 	return cmd
