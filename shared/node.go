@@ -1,8 +1,6 @@
 package shared
 
 import (
-	"fmt"
-
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
@@ -145,8 +143,10 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		return node.GetBus().GetUtilityModule().HandleMessage(message.Content)
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
+	case messaging.ConsensusNewHeightEventType:
+		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
 	case messaging.StateMachineTransitionEventType:
-		fmt.Println("FSM Gokhan event")
+		logger.Global.Warn().Msgf("FSM Gokhan event: ", message.Content)
 		err_consensus := node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
 		return multierr.Combine(err_consensus, err_p2p)

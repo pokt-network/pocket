@@ -3,6 +3,7 @@ package e2e_tests
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"reflect"
 	"sort"
@@ -507,7 +508,17 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 	stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
 		switch event {
 		case coreTypes.StateMachineEvent_Consensus_IsEnableServer:
+			log.Println("Enable Server mode")
 			bus.GetConsensusModule().EnableServerMode()
+		case coreTypes.StateMachineEvent_Consensus_IsDisableServer:
+			bus.GetConsensusModule().DisableServerMode()
+		//case coreTypes.StateMachineEvent_Consensus_IsUnsynched:
+		//
+
+		//case coreTypes.StateMachineEvent_Consensus_IsSyncing:
+
+		default:
+			log.Println("asdads")
 		}
 		return nil
 

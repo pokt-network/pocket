@@ -28,7 +28,7 @@ const (
 
 	HotstuffMessageContentType      = "consensus.HotstuffMessage"
 	StateSyncMessageContentType     = "consensus.StateSyncMessage"
-	StateMachineTransitionEventType = "messaging.StateMachineTransitionEventType"
+	StateMachineTransitionEventType = "pocket.StateMachineTransitionEvent"
 )
 
 var HotstuffSteps = [...]typesCons.HotstuffStep{NewRound, Prepare, PreCommit, Commit, Decide}

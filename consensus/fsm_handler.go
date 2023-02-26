@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"fmt"
+	"log"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -43,7 +44,7 @@ func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.State
 		return m.HandlePacemaker(msg)
 
 	case string(coreTypes.StateMachineState_Consensus_Server_Enabled), string(coreTypes.StateMachineState_Consensus_Server_Disabled):
-		fmt.Println("FSM is in Server event")
+		log.Println("FSM is in Server event")
 		return m.HandleServerMode(msg)
 	}
 

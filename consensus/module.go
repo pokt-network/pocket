@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"sync"
 
@@ -175,16 +176,6 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	m.nodeId = valAddrToIdMap[address]
 	m.nodeAddress = address
 
-	if consensusCfg.ServerModeEnabled {
-		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsEnableServer); err != nil {
-			return nil, err
-		}
-	} else {
-		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsDisableServer); err != nil {
-			return nil, err
-		}
-	}
-
 	m.initMessagesPool()
 
 	return m, nil
@@ -216,6 +207,17 @@ func (m *consensusModule) Start() error {
 	if err := m.leaderElectionMod.Start(); err != nil {
 		return err
 	}
+
+	// if m.consCfg.ServerModeEnabled {
+	// 	log.Println("SINCE CONSENSUS SERVER MODE ENABLED")
+	// 	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsEnableServer); err != nil {
+	// 		return nil
+	// 	}
+	// } else {
+	// 	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsDisableServer); err != nil {
+	// 		return nil
+	// 	}
+	// }
 
 	return nil
 }
@@ -338,6 +340,7 @@ func (m *consensusModule) loadPersistedState() error {
 }
 
 func (m *consensusModule) EnableServerMode() error {
+	log.Println("Enabling server mode GOKHAN")
 	return m.stateSync.EnableServerMode()
 }
 
