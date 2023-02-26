@@ -38,19 +38,17 @@ func (u *utilityContext) setActorStakeAmount(actorType coreTypes.ActorType, addr
 	return nil
 }
 
-func (u *utilityContext) setActorUnstakingHeight(actorType coreTypes.ActorType, addr []byte, height int64) typesUtil.Error {
-	unstakingStatus := int32(coreTypes.StakeStatus_Unstaking)
-
+func (u *utilityContext) setActorUnbondingHeight(actorType coreTypes.ActorType, addr []byte, height int64) typesUtil.Error {
 	var err error
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		err = u.store.SetAppUnstakingHeightAndStatus(addr, height, unstakingStatus)
+		err = u.store.SetAppUnstakingHeightAndStatus(addr, height, int32(coreTypes.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		err = u.store.SetFishermanUnstakingHeightAndStatus(addr, height, unstakingStatus)
+		err = u.store.SetFishermanUnstakingHeightAndStatus(addr, height, int32(coreTypes.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-		err = u.store.SetServicerUnstakingHeightAndStatus(addr, height, unstakingStatus)
+		err = u.store.SetServicerUnstakingHeightAndStatus(addr, height, int32(coreTypes.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		err = u.store.SetValidatorUnstakingHeightAndStatus(addr, height, unstakingStatus)
+		err = u.store.SetValidatorUnstakingHeightAndStatus(addr, height, int32(coreTypes.StakeStatus_Unstaking))
 	default:
 		err = typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -130,7 +128,7 @@ func (u *utilityContext) getMaxAllowedPausedBlocks(actorType coreTypes.ActorType
 
 	maxPausedBlocks, err := u.store.GetIntParam(paramName, u.height)
 	if err != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
+		return 0, typesUtil.ErrGetParam(paramName, err)
 	}
 
 	return maxPausedBlocks, nil
@@ -153,7 +151,7 @@ func (u *utilityContext) getMinRequiredPausedBlocks(actorType coreTypes.ActorTyp
 
 	minPausedBlocks, er := u.store.GetIntParam(paramName, u.height)
 	if er != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
+		return 0, typesUtil.ErrGetParam(paramName, er)
 	}
 	return minPausedBlocks, nil
 }
@@ -176,7 +174,7 @@ func (u *utilityContext) getPausedHeightIfExists(actorType coreTypes.ActorType, 
 	}
 
 	if err != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetPauseHeight(err)
+		return 0, typesUtil.ErrGetPauseHeight(err)
 	}
 
 	return pauseHeight, nil
@@ -200,11 +198,11 @@ func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, addr []by
 	}
 
 	if err != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetStatus(err)
+		return coreTypes.StakeStatus_UnknownStatus, typesUtil.ErrGetStatus(err)
 	}
 
 	if _, ok := coreTypes.StakeStatus_name[status]; !ok {
-		return typesUtil.ZeroInt, typesUtil.ErrUnknownStatus(status)
+		return coreTypes.StakeStatus_UnknownStatus, typesUtil.ErrUnknownStatus(status)
 	}
 
 	return coreTypes.StakeStatus(status), nil
@@ -256,7 +254,7 @@ func (u *utilityContext) getUnbondingHeight(actorType coreTypes.ActorType) (int6
 
 	unstakingBlocksPeriod, err := u.store.GetIntParam(paramName, u.height)
 	if err != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
+		return 0, typesUtil.ErrGetParam(paramName, err)
 	}
 
 	return u.height + int64(unstakingBlocksPeriod), nil

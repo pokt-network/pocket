@@ -50,6 +50,8 @@ func (u *utilityContext) setAccountAmount(address []byte, amount *big.Int) types
 
 // Pools specific functionality
 
+// IMPROVE: Pool function should accept the actual pool types rather than the `FriendlyName` string
+
 func (u *utilityContext) insertPool(name string, amount *big.Int) types.Error {
 	if err := u.store.InsertPool(name, utils.BigIntToString(amount)); err != nil {
 		return types.ErrSetPool(name, err)

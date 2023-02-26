@@ -84,11 +84,6 @@ func (p *PostgresContext) GetValidatorOutputAddress(operator []byte, height int6
 }
 
 // TODO: implement missed blocks
-func (p *PostgresContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, pausedHeight int64, missedBlocks int) error {
-	return nil
-}
-
-// TODO: implement missed blocks
 func (p *PostgresContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) error {
 	return nil
 }

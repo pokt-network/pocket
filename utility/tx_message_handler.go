@@ -184,7 +184,7 @@ func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake)
 	if err != nil {
 		return err
 	}
-	if err := u.setActorUnstakingHeight(message.ActorType, message.Address, unbondingHeight); err != nil {
+	if err := u.setActorUnbondingHeight(message.ActorType, message.Address, unbondingHeight); err != nil {
 		return err
 	}
 	return nil

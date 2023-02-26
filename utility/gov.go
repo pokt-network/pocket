@@ -554,7 +554,7 @@ func (u *utilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.E
 func (u *utilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
 	value, err := u.store.GetIntParam(paramName, u.height)
 	if err != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
+		return 0, typesUtil.ErrGetParam(paramName, err)
 	}
 	return value, nil
 }
@@ -562,7 +562,7 @@ func (u *utilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
 func (u *utilityContext) getInt64Param(paramName string) (int64, typesUtil.Error) {
 	value, err := u.store.GetIntParam(paramName, u.height)
 	if err != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
+		return 0, typesUtil.ErrGetParam(paramName, err)
 	}
 	return int64(value), nil
 }

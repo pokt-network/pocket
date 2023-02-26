@@ -50,8 +50,12 @@ type PersistenceRWContext interface {
 // - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_, ...)`
 // - Reference: https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces
 
-// TECHDEBT: convert address and public key to string from bytes
-// NOTE: There's not really a use case for a write only interface, but it abstracts and contrasts nicely against the read only context
+// TECHDEBT:
+//   - Decouple functions that can be split into two or more independent behaviours (e.g. `SetAppStatusAndUnstakingHeightIfPausedBefore`)
+//   - Rename `Unstaking` to `Unbonding` where appropriate
+//   - convert address and public key to string from bytes
+
+// PersistenceWriteContext has no use-case independent of `PersistenceRWContext`, but is a useful abstraction
 type PersistenceWriteContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error
@@ -106,11 +110,9 @@ type PersistenceWriteContext interface {
 	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
 	UpdateValidator(address []byte, serviceURL string, amount string) error
 	SetValidatorStakeAmount(address []byte, stakeAmount string) error
-	// IMPROVE: Decouple and/or rename these functions
 	SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
 	SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
 	SetValidatorPauseHeight(address []byte, height int64) error
-	SetValidatorPauseHeightAndMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) error
 	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
 
 	// Param Operations

@@ -1,5 +1,7 @@
 package utility
 
+// Internal business logic containing the lifecycle of Block-related operations
+
 import (
 	"encoding/hex"
 	"fmt"
@@ -11,10 +13,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-// This 'block' file contains all the lifecycle block operations.
-
 // The ApplyBlock function is the 'main' operation that executes a 'block' object against the state.
-
 // Pocket Network adopt a Tendermint-like lifecycle of BeginBlock -> DeliverTx -> EndBlock in that
 // order. Like the name suggests, BeginBlock is an autonomous state operation that executes at the
 // beginning of every block DeliverTx individually applies each transaction against the state and
@@ -168,40 +167,6 @@ func (u *utilityContext) endBlock(proposer []byte) typesUtil.Error {
 	return nil
 }
 
-// handleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
-func (u *utilityContext) handleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
-	maxMissedBlocks, err := u.getValidatorMaxMissedBlocks()
-	if err != nil {
-		return err
-	}
-	for _, address := range lastBlockByzantineValidators {
-		numberOfMissedBlocks, err := u.getValidatorMissedBlocks(address)
-		if err != nil {
-			return err
-		}
-		// increment missed blocks
-		numberOfMissedBlocks++
-		// handle if over the threshold
-		if numberOfMissedBlocks >= maxMissedBlocks {
-			// pause the validator and reset missed blocks
-			if err := u.pauseValidatorAndSetMissedBlocks(address, u.height, int(typesUtil.HeightNotUsed)); err != nil {
-				return err
-			}
-			// burn validator for missing blocks
-			burnPercentage, err := u.getMissedBlocksBurnPercentage()
-			if err != nil {
-				return err
-			}
-			if err := u.burnValidator(burnPercentage, address); err != nil {
-				return err
-			}
-		} else if err := u.setValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (u *utilityContext) unbondUnstakingActors() (err typesUtil.Error) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
@@ -331,32 +296,6 @@ func (u *utilityContext) handleProposerRewards(proposer []byte) typesUtil.Error 
 	}
 	if err := u.addPoolAmount(coreTypes.Pools_POOLS_DAO.FriendlyName(), amountToDAO); err != nil {
 		return err
-	}
-	return nil
-}
-
-// TODO: Need to design & document this business logic.
-func (u *utilityContext) getValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
-	missedBlocks, er := u.store.GetValidatorMissedBlocks(address, u.height)
-	if er != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetMissedBlocks(er)
-	}
-	return missedBlocks, nil
-}
-
-// TODO: Need to design & document this business logic.
-func (u *utilityContext) pauseValidatorAndSetMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) typesUtil.Error {
-	if err := u.store.SetValidatorPauseHeightAndMissedBlocks(address, pauseHeight, missedBlocks); err != nil {
-		return typesUtil.ErrSetPauseHeight(err)
-	}
-	return nil
-}
-
-// TODO: Need to design & document this business logic.
-func (u *utilityContext) setValidatorMissedBlocks(address []byte, missedBlocks int) typesUtil.Error {
-	er := u.store.SetValidatorMissedBlocks(address, missedBlocks)
-	if er != nil {
-		return typesUtil.ErrSetMissedBlocks(er)
 	}
 	return nil
 }

@@ -75,7 +75,7 @@ func (u *utilityContext) Release() error {
 
 // TODO: This has not been tested or investigated in detail
 func (u *utilityContext) revertLastSavePoint() typesUtil.Error {
-	if len(u.savePointsSet) == typesUtil.ZeroInt {
+	if len(u.savePointsSet) == 0 {
 		return typesUtil.ErrEmptySavePoints()
 	}
 	var key []byte
