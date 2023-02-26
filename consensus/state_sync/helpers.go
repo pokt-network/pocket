@@ -70,9 +70,9 @@ func getMessageType(msg *typesCons.StateSyncMessage) string {
 	case *typesCons.StateSyncMessage_MetadataRes:
 		return "StateSyncMetadataResponse"
 	case *typesCons.StateSyncMessage_GetBlockReq:
-		return "GetBlockRequest"
+		return "PeerGetBlockRequest"
 	case *typesCons.StateSyncMessage_GetBlockRes:
-		return "GetBlockResponse"
+		return "PeerGetBlockResponse"
 	default:
 		return "Unknown"
 	}
