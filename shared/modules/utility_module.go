@@ -7,22 +7,24 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const UtilityModuleName = "utility"
+const (
+	UtilityModuleName = "utility"
+)
 
 type UtilityModule interface {
 	Module
 
-	// General purpose handler of utility specific messages that are not externalized in shared directories
-	HandleMessage(*anypb.Any) error
-
 	// Creates a `utilityContext` with an underlying read-write `persistenceContext`; only 1 of which can exist at a time
 	NewContext(height int64) (UtilityContext, error)
 
-	// Basic Transaction validation.
-	// SIDE EFFECT: Transaction is added to the utility's module mempool if valid to be repeated in the future; not obvious from the functional name.
-	CheckTransaction(tx []byte) error
+	// Basic Transaction validation & addition to the utility's module mempool upon successful validation
+	HandleTransaction(tx []byte) error
 
+	// Returns the utility module's mempool of transactions gossiped throughout the network
 	GetMempool() mempool.TXMempool
+
+	// General purpose handler of utility specific messages used for utility specific business logic
+	HandleUtilityMessage(*anypb.Any) error
 }
 
 // TECHDEBT: `CreateAndApplyProposalBlock` and `ApplyBlock` should be be refactored into a

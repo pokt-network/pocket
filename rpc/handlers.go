@@ -6,10 +6,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
-	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	typesUtil "github.com/pokt-network/pocket/utility/types"
+	"github.com/pokt-network/pocket/utility"
 )
 
 func (s *rpcServer) GetV1Health(ctx echo.Context) error {
@@ -31,7 +30,7 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "cannot decode tx bytes")
 	}
 
-	if err = s.GetBus().GetUtilityModule().CheckTransaction(txBz); err != nil {
+	if err = s.GetBus().GetUtilityModule().HandleTransaction(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -53,20 +52,17 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 
 // Broadcast to the entire validator set
 func (s *rpcServer) broadcastMessage(msgBz []byte) error {
-	utilMsg := &typesUtil.TransactionGossipMessage{
-		Tx: msgBz,
-	}
-
-	anyUtilityMessage, err := codec.GetCodec().ToAny(utilMsg)
+	utilityMsg, err := utility.PrepareTxGossipMessage(msgBz)
 	if err != nil {
-		s.logger.Error().Err(err).Msg("Failed to create Any proto from transaction gossip")
+		s.logger.Error().Err(err).Msg("Failed to prepare transaction gossip message")
 		return err
 	}
 
-	if err := s.GetBus().GetP2PModule().Broadcast(anyUtilityMessage); err != nil {
+	if err := s.GetBus().GetP2PModule().Broadcast(utilityMsg); err != nil {
 		s.logger.Error().Err(err).Msg("Failed to broadcast utility message")
 		return err
 	}
+
 	return nil
 }
 

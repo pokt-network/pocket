@@ -7,6 +7,6 @@ option go_package = "github.com/pokt-network/pocket/utility/types";
 // Messages that are sent between nodes for utility specific purposes but are not intended to be store
 // on-chain to derive state transitions.
 
-message TransactionGossipMessage {
+message TxGossipMessage {
   bytes tx = 1;
 }

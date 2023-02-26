@@ -21,7 +21,7 @@ import (
 // rolls it back (not yet implemented) if fails. Like BeginBlock, EndBlock is an autonomous state
 // operation that executes at the end of every block.
 
-// TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
+// TODO: Make sure to call `utility.HandleTransaction`, which calls `persistence.TransactionExists`
 func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (stateHash string, txs [][]byte, err error) {
 	lastBlockByzantineVals, err := u.getLastBlockByzantineValidators()
 	if err != nil {
@@ -86,7 +86,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	return stateHash, txs, err
 }
 
-// TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
+// TODO: Make sure to call `utility.HandleTransaction`, which calls `persistence.TransactionExists`
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
 func (u *utilityContext) ApplyBlock() (string, error) {
 	lastByzantineValidators, err := u.getLastBlockByzantineValidators()

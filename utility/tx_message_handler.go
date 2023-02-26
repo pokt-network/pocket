@@ -2,42 +2,14 @@ package utility
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
-	"github.com/pokt-network/pocket/utility/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	"google.golang.org/protobuf/types/known/anypb"
 )
-
-const (
-	TransactionGossipMessageContentType = "utility.TransactionGossipMessage"
-)
-
-func (u *utilityModule) HandleMessage(message *anypb.Any) error {
-	switch message.MessageName() {
-	case TransactionGossipMessageContentType:
-		msg, err := codec.GetCodec().FromAny(message)
-		if err != nil {
-			return err
-		}
-
-		if txGossipMsg, ok := msg.(*types.TransactionGossipMessage); !ok {
-			return fmt.Errorf("failed to cast message to UtilityMessage")
-		} else if err := u.CheckTransaction(txGossipMsg.Tx); err != nil {
-			return err
-		}
-		u.logger.Info().Str("source", "MEMPOOL").Msg("Successfully added a new message to the mempool!")
-	default:
-		return types.ErrUnknownMessageType(message.MessageName())
-	}
-
-	return nil
-}
 
 func (u *utilityContext) handleMessage(msg typesUtil.Message) (err typesUtil.Error) {
 	switch x := msg.(type) {

@@ -31,8 +31,8 @@ func TestPocketEnvelope_GetContentType(t *testing.T) {
 			wantContentType: consensus.HotstuffMessageContentType,
 		},
 		{
-			msg:             &typesUtil.TransactionGossipMessage{},
-			wantContentType: utility.TransactionGossipMessageContentType,
+			msg:             &typesUtil.TxGossipMessage{},
+			wantContentType: utility.TxGossipMessageContentType,
 		},
 	}
 

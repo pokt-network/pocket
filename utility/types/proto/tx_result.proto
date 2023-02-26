@@ -4,11 +4,7 @@ package utility;
 
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
-import "core/types/proto/transaction.proto";
-
-// INVESTIGATE: Look into a way of removing this type altogether or from shared interfaces.
-
-// TECHDEBT: Re-evaluate the need for this type altogether
+// TxResult is the result of an indexed `Transaction` proto after it has been applied to the state.
 message TxResult {
   bytes tx = 1;      // The bytes of the indexed transaction
   int64 height = 2;  // The block height at which the transaction was included

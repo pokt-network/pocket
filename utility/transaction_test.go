@@ -53,18 +53,18 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 }
 
-func TestUtilityContext_CheckTransaction(t *testing.T) {
+func TestUtilityContext_HandleTransaction(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
-	require.NoError(t, testUtilityMod.CheckTransaction(txBz))
+	require.NoError(t, testUtilityMod.HandleTransaction(txBz))
 
 	hash, err := tx.Hash()
 	require.NoError(t, err)
 	require.True(t, testUtilityMod.GetMempool().Contains(hash))
-	require.Equal(t, testUtilityMod.CheckTransaction(txBz).Error(), typesUtil.ErrDuplicateTransaction().Error())
+	require.Equal(t, testUtilityMod.HandleTransaction(txBz).Error(), typesUtil.ErrDuplicateTransaction().Error())
 }
 
 func TestUtilityContext_GetSignerCandidates(t *testing.T) {
@@ -92,7 +92,7 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	proposer := getFirstActor(t, ctx, types.ActorType_ACTOR_TYPE_VAL)
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
-	require.NoError(t, testUtilityMod.CheckTransaction(txBz))
+	require.NoError(t, testUtilityMod.HandleTransaction(txBz))
 
 	appHash, txs, er := ctx.CreateAndApplyProposalBlock([]byte(proposer.GetAddress()), 10000)
 	require.NoError(t, er)

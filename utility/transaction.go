@@ -11,7 +11,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
+func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
 	// Is the tx already in the mempool (in memory)?
 	txHash := coreTypes.TxHash(txProtoBytes)
 	if u.mempool.Contains(txHash) {
