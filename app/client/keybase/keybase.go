@@ -22,8 +22,8 @@ type Keybase interface {
 
 	// SLIPS-0010 Key Derivation
 	// Deterministically generate, store and return the derived child key
-	DeriveChildFromKey(masterAddrHex, passphrase string, childIndex uint32, childPassphrase, childHint string) (crypto.KeyPair, error)
-	DeriveChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string) (crypto.KeyPair, error)
+	DeriveChildFromKey(masterAddrHex, passphrase string, childIndex uint32, childPassphrase, childHint string, shouldStore bool) (crypto.KeyPair, error)
+	DeriveChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string, shouldStore bool) (crypto.KeyPair, error)
 
 	// Accessors
 	Get(address string) (crypto.KeyPair, error)

@@ -9,7 +9,6 @@ import (
 	"github.com/pokt-network/pocket/shared/converters"
 	"github.com/pokt-network/pocket/shared/crypto"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
-	"github.com/spf13/viper"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -98,12 +97,6 @@ func NewKeysCommand() *cobra.Command {
 	cmd.AddCommand(signMsgCmds...)
 	cmd.AddCommand(signTxCmds...)
 	cmd.AddCommand(slipCmds...)
-
-	// Bind the store_child flag
-	if err := viper.BindPFlag("storeChild", cmd.Flags().Lookup("store_child")); err != nil {
-		logger.Global.Fatal().Err(err).Msg("Unable to bind store_child flag to viper")
-	}
-	viper.SetDefault("storeChild", true)
 
 	return cmd
 }
@@ -732,7 +725,7 @@ func keysSlipCommands() []*cobra.Command {
 					pwd = readPassphrase(pwd)
 				}
 
-				kp, err := kb.DeriveChildFromKey(parentAddr, pwd, index, childPwd, childHint)
+				kp, err := kb.DeriveChildFromKey(parentAddr, pwd, index, childPwd, childHint, storeChild)
 				if err != nil {
 					return err
 				}

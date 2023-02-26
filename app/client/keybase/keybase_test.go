@@ -2,7 +2,6 @@ package keybase
 
 import (
 	"encoding/hex"
-	"github.com/spf13/viper"
 	"testing"
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
@@ -384,8 +383,7 @@ func TestKeybase_DeriveChildFromKey(t *testing.T) {
 	_, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
 	require.NoError(t, err)
 
-	viper.Set("storeChild", false)
-	childKey, err := db.DeriveChildFromKey(testAddr, testPassphrase, 1, "", "")
+	childKey, err := db.DeriveChildFromKey(testAddr, testPassphrase, 1, "", "", false)
 	require.NoError(t, err)
 	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
 }
@@ -400,8 +398,7 @@ func TestKeybase_DeriveChildFromSeed(t *testing.T) {
 	seed, err := kp.GetSeed(testPassphrase)
 	require.NoError(t, err)
 
-	viper.Set("storeChild", false)
-	childKey, err := db.DeriveChildFromSeed(seed, 1, "", "")
+	childKey, err := db.DeriveChildFromSeed(seed, 1, "", "", false)
 	require.NoError(t, err)
 	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
 }
@@ -413,7 +410,7 @@ func TestKeybase_StoreChildFromKey(t *testing.T) {
 	_, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
 	require.NoError(t, err)
 
-	childKey, err := db.DeriveChildFromKey(testAddr, testPassphrase, 1, testPassphrase, testHint)
+	childKey, err := db.DeriveChildFromKey(testAddr, testPassphrase, 1, testPassphrase, testHint, true)
 	require.NoError(t, err)
 	require.NotNil(t, childKey)
 	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
@@ -429,7 +426,7 @@ func TestKeybase_StoreChildFromSeed(t *testing.T) {
 	seed, err := kp.GetSeed(testPassphrase)
 	require.NoError(t, err)
 
-	childKey, err := db.DeriveChildFromSeed(seed, 1, testPassphrase, testHint)
+	childKey, err := db.DeriveChildFromSeed(seed, 1, testPassphrase, testHint, true)
 	require.NoError(t, err)
 	require.NotNil(t, childKey)
 	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)

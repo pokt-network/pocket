@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/pokt-network/pocket/shared/crypto/slip"
-	"github.com/spf13/viper"
 	"strings"
 
 	"github.com/pokt-network/pocket/shared/converters"
@@ -250,14 +249,14 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 
 // DeriveChildFromSeed Deterministically generates and return the child at the given index from the seed provided
 // By default this stores the key in the keybase and returns the KeyPair interface and any error
-func (keybase *badgerKeybase) DeriveChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string) (crypto.KeyPair, error) {
+func (keybase *badgerKeybase) DeriveChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string, shouldStore bool) (crypto.KeyPair, error) {
 	path := fmt.Sprintf(slip.PoktAccountPathFormat, childIndex)
 	childKey, err := slip.DeriveChild(path, seed)
 	if err != nil {
 		return nil, err
 	}
 
-	if viper.GetBool("storeChild") {
+	if shouldStore {
 		// No need to re-encrypt with provided passphrase
 		if childPassphrase == "" && childHint == "" {
 			err = keybase.db.Update(func(tx *badger.Txn) error {
@@ -310,13 +309,13 @@ func (keybase *badgerKeybase) DeriveChildFromSeed(seed []byte, childIndex uint32
 
 // DeriveChildFromKey Deterministically generates and return the child at the given index from the parent key provided
 // By default this stores the key in the keybase and returns the KeyPair interface and any error
-func (keybase *badgerKeybase) DeriveChildFromKey(masterAddrHex, passphrase string, childIndex uint32, childPassphrase, childHint string) (crypto.KeyPair, error) {
+func (keybase *badgerKeybase) DeriveChildFromKey(masterAddrHex, passphrase string, childIndex uint32, childPassphrase, childHint string, shouldStore bool) (crypto.KeyPair, error) {
 	privKey, err := keybase.GetPrivKey(masterAddrHex, passphrase)
 	if err != nil {
 		return nil, err
 	}
 	seed := privKey.Seed()
-	return keybase.DeriveChildFromSeed(seed, childIndex, childPassphrase, childHint)
+	return keybase.DeriveChildFromSeed(seed, childIndex, childPassphrase, childHint, shouldStore)
 }
 
 // ExportPrivString Exports the raw private key string of the given address
