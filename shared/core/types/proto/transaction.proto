@@ -6,6 +6,7 @@ option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
 import "google/protobuf/any.proto";
 
+//
 // `Transaction` is used to name the type for clarity & verbosity, but `tx` is used method signatures
 // and variable names to be concise. https://github.com/pokt-network/pocket/pull/503
 message Transaction {
@@ -22,7 +23,7 @@ message Transaction {
   Signature signature = 3; // The signature
 }
 
-// CONSOLIDATE: Consolidate with other signature types throughout the codebase
+// CONSOLIDATE: Consolidate with other signature types throughout the codebase (e.g. consensus)
 message Signature {
   bytes public_key = 1;
   bytes signature = 2;
