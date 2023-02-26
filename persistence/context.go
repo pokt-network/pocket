@@ -21,7 +21,7 @@ type PostgresContext struct {
 
 	stateHash string
 
-	logger modules.Logger
+	logger *modules.Logger
 
 	// TECHDEBT(#361): These three values are pointers to objects maintained by the PersistenceModule.
 	//                 Need to simply access them via the bus.
@@ -97,7 +97,6 @@ func (p *PostgresContext) Release() error {
 }
 
 func (p *PostgresContext) Close() error {
-	p.logger.Info().Int64("height", p.Height).Msg("About to close postgres context")
 	return p.conn.Close(context.TODO())
 }
 

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -73,6 +74,7 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 	})
 
 	uc := &utilityContext{
+		logger:             logger.Global.CreateLoggerForModule(modules.UtilityModuleName),
 		height:             height,
 		persistenceContext: persistenceContext,
 		savePointsSet:      make(map[string]struct{}),

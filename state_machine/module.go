@@ -18,7 +18,7 @@ type stateMachineModule struct {
 	base_modules.InterruptableModule
 
 	*fsm.FSM
-	logger modules.Logger
+	logger *modules.Logger
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {

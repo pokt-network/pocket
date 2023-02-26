@@ -33,7 +33,7 @@ type persistenceModule struct {
 	txIndexer  indexer.TxIndexer
 	stateTrees *stateTrees
 
-	logger modules.Logger
+	logger *modules.Logger
 
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time
@@ -47,6 +47,12 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 	m := &persistenceModule{
 		writeContext: nil,
 	}
+
+	// TECHDEBT: move to `persistenceModule#Start` as per documentation.
+	// Temporarily moving this here as long as there are references to
+	// the logger in methods which are called by `#Create` (i.e.
+	// `persistenceModule#populateGenesisState`, `postgresContext#Commit`)
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
 	for _, option := range options {
 		option(m)
@@ -109,8 +115,6 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 }
 
 func (m *persistenceModule) Start() error {
-	m.logger.Info().Msg("Starting module...")
-	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 	return nil
 }
 

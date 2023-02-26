@@ -3,6 +3,7 @@ package modules
 //go:generate mockgen -source=$GOFILE -destination=./mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 import (
+	"github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -23,11 +24,10 @@ type ConsensusModule interface {
 	ConsensusStateSync
 	ConsensusPacemaker
 	FSMConsensusEvents
+	ConsensusDebugModule
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
-	// TODO(gokhan): move it into a debug module
-	HandleDebugMessage(*messaging.DebugMessage) error
 	// State Sync messages Handler
 	HandleStateSyncMessage(*anypb.Any) error
 
@@ -85,4 +85,15 @@ type FSMConsensusEvents interface {
 	HandleSynced(*messaging.StateMachineTransitionEvent) error
 	HandlePacemaker(*messaging.StateMachineTransitionEvent) error
 	HandleServerMode(*messaging.StateMachineTransitionEvent) error
+}
+
+type ConsensusDebugModule interface {
+	HandleDebugMessage(*messaging.DebugMessage) error
+
+	SetHeight(uint64)
+	SetRound(uint64)
+	// REFACTOR: This should accept typesCons.HotstuffStep.
+	SetStep(uint8)
+	SetBlock(*types.Block)
+	SetUtilityContext(UtilityContext)
 }

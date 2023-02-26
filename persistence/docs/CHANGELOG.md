@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.38] - 2023-02-24
+
+- Update logger value references with pointers
+- Remove unnecessary (and problematic) logger calls
+
 ## [0.0.0.37] - 2023-02-21
 
 - Rename ServiceNode Actor Type Name to Servicer

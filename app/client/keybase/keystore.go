@@ -3,10 +3,8 @@ package keybase
 import (
 	"bytes"
 	"encoding/hex"
-	"errors"
 	"fmt"
-	"io/fs"
-	"os"
+	"github.com/pokt-network/pocket/shared/converters"
 	"strings"
 
 	"github.com/dgraph-io/badger/v3"
@@ -32,7 +30,7 @@ type badgerKeybase struct {
 
 // Creates/Opens the DB at the specified path
 func NewKeybase(path string) (Keybase, error) {
-	pathExists, err := dirExists(path) // Creates path if it doesn't exist
+	pathExists, err := converters.DirExists(path) // Creates path if it doesn't exist
 	if err != nil || !pathExists {
 		return nil, err
 	}
@@ -66,9 +64,9 @@ func (keybase *badgerKeybase) Stop() error {
 
 // Create a new key and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
-func (keybase *badgerKeybase) Create(passphrase, hint string) error {
-	err := keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.CreateNewKey(passphrase, hint)
+func (keybase *badgerKeybase) Create(passphrase, hint string) (keyPair crypto.KeyPair, err error) {
+	err = keybase.db.Update(func(tx *badger.Txn) (err error) {
+		keyPair, err = crypto.CreateNewKey(passphrase, hint)
 		if err != nil {
 			return err
 		}
@@ -84,15 +82,18 @@ func (keybase *badgerKeybase) Create(passphrase, hint string) error {
 
 		return tx.Set(addrKey, keypairBz)
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return err
+	return keyPair, nil
 }
 
 // Create a new KeyPair from the private key hex string and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
-func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint string) error {
-	err := keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.CreateNewKeyFromString(privKeyHex, passphrase, hint)
+func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint string) (keyPair crypto.KeyPair, err error) {
+	err = keybase.db.Update(func(tx *badger.Txn) (err error) {
+		keyPair, err = crypto.CreateNewKeyFromString(privKeyHex, passphrase, hint)
 		if err != nil {
 			return err
 		}
@@ -108,15 +109,18 @@ func (keybase *badgerKeybase) ImportFromString(privKeyHex, passphrase, hint stri
 
 		return tx.Set(addrKey, keypairBz)
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return err
+	return keyPair, nil
 }
 
 // Create a new KeyPair from the private key JSON string and store the serialised KeyPair encoding in the DB
 // Using the PublicKey.Address() return value as the key for storage
-func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
-	err := keybase.db.Update(func(tx *badger.Txn) error {
-		keyPair, err := crypto.ImportKeyFromJSON(jsonStr, passphrase)
+func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) (keyPair crypto.KeyPair, err error) {
+	err = keybase.db.Update(func(tx *badger.Txn) (err error) {
+		keyPair, err = crypto.ImportKeyFromJSON(jsonStr, passphrase)
 		if err != nil {
 			return err
 		}
@@ -132,8 +136,11 @@ func (keybase *badgerKeybase) ImportFromJSON(jsonStr, passphrase string) error {
 
 		return tx.Set(addrKey, keypairBz)
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return err
+	return keyPair, nil
 }
 
 // Returns a KeyPair struct provided the address was found in the DB
@@ -235,15 +242,6 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 	return addresses, keyPairs, nil
 }
 
-// Check whether an address is currently stored in the DB
-func (keybase *badgerKeybase) Exists(address string) (bool, error) {
-	val, err := keybase.Get(address)
-	if err != nil {
-		return false, err
-	}
-	return val != nil, nil
-}
-
 // Export the Private Key string of the given address
 func (keybase *badgerKeybase) ExportPrivString(address, passphrase string) (string, error) {
 	kp, err := keybase.Get(address)
@@ -340,24 +338,4 @@ func badgerOptions(path string) badger.Options {
 	opts := badger.DefaultOptions(path)
 	opts.Logger = nil // Badger logger is very noisy
 	return opts
-}
-
-// Check directory exists and creates path if it doesn't exist
-func dirExists(path string) (bool, error) {
-	stat, err := os.Stat(path)
-	if err == nil {
-		// Exists but not directory
-		if !stat.IsDir() {
-			return false, fmt.Errorf("Keybase path is not a directory: %s", path)
-		}
-		return true, nil
-	}
-	if errors.Is(err, fs.ErrNotExist) {
-		// Create directories in path recursively
-		if err := os.MkdirAll(path, os.ModePerm); err != nil {
-			return false, fmt.Errorf("Error creating directory at path: %s, (%v)", path, err.Error())
-		}
-		return true, nil
-	}
-	return false, err
 }

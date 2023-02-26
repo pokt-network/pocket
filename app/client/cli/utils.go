@@ -144,6 +144,16 @@ func readPassphrase(currPwd string) string {
 	return credentials(currPwd)
 }
 
+func readPassphraseMessage(currPwd, prompt string) string {
+	if strings.TrimSpace(currPwd) == "" {
+		fmt.Println(prompt)
+	} else {
+		fmt.Println("Using Passphrase provided via flag")
+	}
+
+	return credentials(currPwd)
+}
+
 func validateStakeAmount(amount string) error {
 	am, err := converters.StringToBigInt(amount)
 	if err != nil {
@@ -171,6 +181,42 @@ func applySubcommandOptions(cmds []*cobra.Command, cmdOptions []cmdOption) {
 func attachPwdFlagToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
 		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
+	}}
+}
+
+func attachNewPwdFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&pwd, "new_pwd", "", "new passphrase for private key, non empty usage bypass interactive prompt")
+	}}
+}
+
+func attachOutputFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&outputFile, "output_file", "", "output file to write results to")
+	}}
+}
+
+func attachInputFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&inputFile, "input_file", "", "input file to read data from")
+	}}
+}
+
+func attachExportFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&exportAs, "export_format", "json", "export the private key in the specified format")
+	}}
+}
+
+func attachImportFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&importAs, "import_format", "raw", "import the private key from the specified format")
+	}}
+}
+
+func attachHintFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&hint, "hint", "", "hint for the passphrase of the private key")
 	}}
 }
 
