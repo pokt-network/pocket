@@ -137,14 +137,14 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		if err := node.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
 			return err
 		}
+	case consensus.HotstuffMessageContentType:
+		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 	case consensus.StateSyncMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
 	case utility.TransactionGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleMessage(message.Content)
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
-	case messaging.ConsensusNewHeightEventType:
-		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
 	case messaging.StateMachineTransitionEventType:
 		fmt.Println("FSM Gokhan event")
 		err_consensus := node.GetBus().GetConsensusModule().HandleMessage(message.Content)
