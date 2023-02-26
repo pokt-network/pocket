@@ -11,6 +11,8 @@ const (
 	UtilityModuleName = "utility"
 )
 
+// TECHDEBT: Replace []byte with semantic type (addresses, transactions, etc...)
+
 type UtilityModule interface {
 	Module
 
@@ -34,25 +36,20 @@ type UtilityModule interface {
 
 // The context within which the node can operate with the utility layer.
 type UtilityContext interface {
-	// Block operations
-
-	// This function is intended to be called by any type of node during state transitions.
-	// For example, both block proposers and replicas/verifiers will use it to create a
-	// context (before finalizing it) during consensus, and all verifiers will call it during state sync.
-	// TODO: Replace []byte with semantic type
+	// SetProposalBlock updates the utility context with the proposed state transition.
+	// It does not apply, validate or commit the changes.
+	// For example, it can be use during state sync to set a proposed state transition before validation.
+	// TODO: Investigate a way to potentially simplify the interface by removing this function.
 	SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error
 
-	// Reaps the mempool for transactions to be proposed in a new block, and applies them to this
-	// context.
+	// CreateAndApplyProposalBlock reaps the mempool for txs to be proposed in a new block, and
+	// applies them to this context after validation.
 	// Only intended to be used by the block proposer.
-	// TODO: Replace []byte with semantic type
 	CreateAndApplyProposalBlock(proposer []byte, maxTxBytes int) (stateHash string, txs [][]byte, err error)
 
 	// ApplyBlock applies the context's in-memory proposed state (i.e. the txs in this context).
 	// Only intended to be used by the block verifiers (i.e. replicas).
 	ApplyBlock() (stateHash string, err error)
-
-	// Context operations
 
 	// Release releases this utility context and any underlying contexts it references
 	Release() error
