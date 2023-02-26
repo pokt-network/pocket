@@ -13,8 +13,6 @@ import (
 
 // CONSIDERATION: Should this return an error and let the caller decide if it should log a fatal error?
 func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
-	m.logger.Info().Msg("Populating genesis state...")
-
 	// REFACTOR: This business logic should probably live in `types/genesis.go`
 	//           and we need to add proper unit tests for it.`
 	poolValues := make(map[string]*big.Int, 0)

@@ -51,7 +51,7 @@ type stateSync struct {
 	currentMode SyncMode
 	serverMode  bool
 
-	logger    modules.Logger
+	logger    *modules.Logger
 	logPrefix string
 }
 
@@ -129,7 +129,7 @@ func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse)
 		"receiver":      clientPeerId,
 	}
 
-	m.logger.Info().Fields(fields).Msgf("Received StateSync GetBlockResponse: %s", blockRes)
+	m.logger.Info().Fields(fields).Msgf("Received GetBlockResponse: %s", blockRes)
 
 	return nil
 }
@@ -148,7 +148,7 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 		"receiver":      clientPeerId,
 	}
 
-	m.logger.Info().Fields(fields).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
+	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataResponse: %s", metaDataRes)
 
 	return nil
 }

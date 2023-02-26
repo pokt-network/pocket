@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -71,6 +72,7 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 	})
 
 	ctx := &utilityContext{
+		logger:         logger.Global.CreateLoggerForModule(modules.UtilityModuleName),
 		height:         height,
 		store:          persistenceContext,
 		savePointsSet:  make(map[string]struct{}),

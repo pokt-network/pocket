@@ -16,7 +16,7 @@ var (
 type utilityContext struct {
 	base_modules.IntegratableModule
 
-	logger modules.Logger
+	logger *modules.Logger
 	height int64
 
 	store          modules.PersistenceRWContext

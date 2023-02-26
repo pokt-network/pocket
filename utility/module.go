@@ -20,7 +20,7 @@ type utilityModule struct {
 
 	config *configs.UtilityConfig
 
-	logger  modules.Logger
+	logger  *modules.Logger
 	mempool mempool.TXMempool
 }
 

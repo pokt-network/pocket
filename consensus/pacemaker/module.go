@@ -54,7 +54,7 @@ type pacemaker struct {
 	// Only used for development and debugging.
 	debug pacemakerDebug
 
-	logger modules.Logger
+	logger *modules.Logger
 	// REFACTOR: logPrefix should be removed in exchange for setting a namespace directly with the logger
 	logPrefix string
 }
