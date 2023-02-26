@@ -21,6 +21,8 @@ type Identifier interface {
 	Bytes() []byte
 }
 
+// When implementing please review if block height tolerance (+,-1) is included in the session protocol: pokt-network/pocket-core#1464 CC @Olshansk
+
 type Session interface {
 	NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application *coreTypes.Actor) (Session, types.Error)
 	GetServicers() []*coreTypes.Actor // the Servicers providing Web3 to the application
