@@ -11,8 +11,8 @@ import (
 
 // handleByzantineValidators identifies & handles byzantine or faulty validators.
 // This includes validators who double signed, didn't sign at all or disagree with 2/3+ majority.
-// TODO: handleByzantineValidators is a WIP and needs to be fully designed, implemented, tested and documented.
 // IMPROVE: Need to add more logging to this function.
+// INCOMPLETE: handleByzantineValidators is a WIP and needs to be fully designed, implemented, tested and documented
 func (u *utilityContext) handleByzantineValidators(prevBlockByzantineValidators [][]byte) typesUtil.Error {
 	maxMissedBlocks, err := u.getValidatorMaxMissedBlocks()
 	if err != nil {
