@@ -8,7 +8,7 @@ import (
 
 var (
 	DefaultChains              = []string{"0001"}
-	DefaultServiceUrl          = ""
+	DefaultServiceURL          = ""
 	DefaultStakeAmount         = big.NewInt(1000000000000)
 	DefaultStakeAmountString   = utils.BigIntToString(DefaultStakeAmount)
 	DefaultAccountAmount       = big.NewInt(100000000000000)
@@ -16,6 +16,6 @@ var (
 	DefaultPauseHeight         = int64(-1)
 	DefaultUnstakingHeight     = int64(-1)
 	DefaultChainID             = "testnet"
-	ServiceUrlFormat           = "node%d.consensus:8080"
+	ServiceURLFormat           = "node%d.consensus:8080"
 	DefaultMaxBlockBytes       = uint64(4000000)
 )

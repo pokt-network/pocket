@@ -28,7 +28,7 @@ import (
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
 
 const (
-	serviceUrlFormat  = "node%d.consensus:8080"
+	serviceURLFormat  = "node%d.consensus:8080"
 	eventsChannelSize = 10000
 	// Since we simulate up to a 27 node network, we will pre-generate a n >= 27 number of keys to avoid generation
 	// every time. The genesis config seed start is set for deterministic key generation and 42 was chosen arbitrarily.
@@ -70,7 +70,7 @@ type TestNetworkSimulationConfig map[string]struct {
 
 // CLEANUP: This could (should?) be a codebase-wide shared test helper
 func validatorId(i int) string {
-	return fmt.Sprintf(serviceUrlFormat, i)
+	return fmt.Sprintf(serviceURLFormat, i)
 }
 
 func waitForNetworkSimulationCompletion(t *testing.T, wg *sync.WaitGroup) {

@@ -39,9 +39,9 @@ func NewTestingMempool(_ *testing.T) mempool.TXMempool {
 }
 
 func TestMain(m *testing.M) {
-	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
+	pool, resource, dbURL := test_artifacts.SetupPostgresDocker()
 
-	runtimeCfg := newTestRuntimeConfig(dbUrl)
+	runtimeCfg := newTestRuntimeConfig(dbURL)
 	bus, err := runtime.CreateBus(runtimeCfg)
 	if err != nil {
 		log.Fatalf("Error creating bus: %s", err)
@@ -99,14 +99,14 @@ func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
 	return persistenceMod.(modules.PersistenceModule)
 }
 
-func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
+func newTestRuntimeConfig(databaseURL string) *runtime.Manager {
 	cfg := &configs.Config{
 		Utility: &configs.UtilityConfig{
 			MaxMempoolTransactionBytes: 1000000,
 			MaxMempoolTransactions:     1000,
 		},
 		Persistence: &configs.PersistenceConfig{
-			PostgresUrl:       databaseUrl,
+			PostgresUrl:       databaseURL,
 			NodeSchema:        testSchema,
 			BlockStorePath:    "", // in memory
 			TxIndexerPath:     "", // in memory

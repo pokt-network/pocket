@@ -24,6 +24,8 @@ message Actor {
   string address = 2;
   string public_key = 3;
   repeated string chains = 4; // Not applicable to `Validator` actors
+  // proto-gen-c does not support `go_name` at the time of writing resulting
+  // in the output go field being snakeCase: ServiceUrl (https://github.com/golang/protobuf/issues/555)
   string service_url = 5; // Not applicable to `Application` actors
   string staked_amount = 6;
   int64 paused_height = 7;

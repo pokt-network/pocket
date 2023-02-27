@@ -232,7 +232,7 @@ func newTestValidator() (*coreTypes.Actor, error) {
 	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
-		ServiceUrl:      DefaultServiceUrl,
+		ServiceUrl:      DefaultServiceURL,
 		StakedAmount:    DefaultStake,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
@@ -263,7 +263,7 @@ func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*core
 		outputBz,
 		false,
 		DefaultStakeStatus,
-		DefaultServiceUrl,
+		DefaultServiceURL,
 		DefaultStake,
 		DefaultPauseHeight,
 		DefaultUnstakingHeight)

@@ -29,7 +29,7 @@ import (
 var (
 	DefaultChains     = []string{"0001"}
 	ChainsToUpdate    = []string{"0002"}
-	DefaultServiceUrl = "https://foo.bar"
+	DefaultServiceURL = "https://foo.bar"
 	DefaultPoolName   = "TESTING_POOL"
 
 	DefaultDeltaBig   = big.NewInt(100)

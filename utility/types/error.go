@@ -112,7 +112,7 @@ const (
 	CodeNotPausedError                    Code = 67
 	CodeNotReadyToUnpauseError            Code = 68
 	CodeSetStatusPausedBeforeError        Code = 69
-	CodeInvalidServiceUrlError            Code = 70
+	CodeInvalidServiceURLError            Code = 70
 	CodeNotExistsError                    Code = 71
 	CodeGetMissedBlocksError              Code = 72
 	CodeEmptyHashError                    Code = 73
@@ -186,7 +186,7 @@ const (
 	GetMissedBlocksError              = "an error occurred getting the missed blocks field"
 	DecodeMessageError                = "unable to decode the message"
 	NotExistsError                    = "the actor does not exist in the state"
-	InvalidServiceUrlError            = "the service url is not valid"
+	InvalidServiceURLError            = "the service url is not valid"
 	NotReadyToUnpauseError            = "the actor isn't ready to unpause as the minimum number of blocks hasn't passed since pausing"
 	NotPausedError                    = "the actor is not paused"
 	SetPauseHeightError               = "an error occurred setting the pause height"
@@ -331,7 +331,7 @@ func ErrUnequalRounds() Error {
 }
 
 func ErrInvalidServiceURL(reason string) Error {
-	return NewError(CodeInvalidServiceUrlError, fmt.Sprintf("%s: %s", InvalidServiceUrlError, reason))
+	return NewError(CodeInvalidServiceURLError, fmt.Sprintf("%s: %s", InvalidServiceURLError, reason))
 }
 
 func ErrSetPauseHeight(err error) Error {

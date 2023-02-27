@@ -85,8 +85,8 @@ func NewAccounts(n int, privateKeys ...string) (accounts []*coreTypes.Account) {
 //	types of actors which needs to be fixed.
 func NewActors(actorType coreTypes.ActorType, n int) (actors []*coreTypes.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
-		serviceUrl := getServiceURL(i + 1)
-		actor, pk := NewDefaultActor(int32(actorType), serviceUrl)
+		serviceURL := getServiceURL(i + 1)
+		actor, pk := NewDefaultActor(int32(actorType), serviceURL)
 		actors = append(actors, actor)
 		privateKeys = append(privateKeys, pk)
 	}
@@ -95,7 +95,7 @@ func NewActors(actorType coreTypes.ActorType, n int) (actors []*coreTypes.Actor,
 }
 
 func getServiceURL(n int) string {
-	return fmt.Sprintf(ServiceUrlFormat, n)
+	return fmt.Sprintf(ServiceURLFormat, n)
 }
 
 func NewDefaultActor(actorType int32, serviceURL string) (actor *coreTypes.Actor, privateKey string) {

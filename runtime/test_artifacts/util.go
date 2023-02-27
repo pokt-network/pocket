@@ -50,9 +50,9 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 		log.Fatalf("***Make sure your docker daemon is running!!*** Could not start resource: %s\n", err.Error())
 	}
 	hostAndPort := resource.GetHostPort("5432/tcp")
-	databaseUrl := fmt.Sprintf(connStringFormat, user, password, hostAndPort, db)
+	databaseURL := fmt.Sprintf(connStringFormat, user, password, hostAndPort, db)
 
-	log.Println("Connecting to database on url: ", databaseUrl)
+	log.Println("Connecting to database on url: ", databaseURL)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -71,7 +71,7 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 
 	poolRetryChan := make(chan struct{}, 1)
 	retryConnectFn := func() error {
-		_, err := pgx.Connect(context.Background(), databaseUrl)
+		_, err := pgx.Connect(context.Background(), databaseURL)
 		if err != nil {
 			return fmt.Errorf("unable to connect to database: %v", err)
 		}
@@ -86,7 +86,7 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 	// Wait for a successful DB connection
 	<-poolRetryChan
 
-	return pool, resource, databaseUrl
+	return pool, resource, databaseURL
 }
 
 // TECHDEBT: Only exposed for test purposes because the utility module is dependant on the implementation of the persistence module
