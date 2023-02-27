@@ -15,7 +15,6 @@ var (
 	testingSenderPublicKey     = testingSenderPrivateKey.PublicKey()
 	testingSenderAddr          = testingSenderPublicKey.Address()
 	testingToAddr, _           = crypto.GenerateAddress()
-	testingAmount              = "1000"
 )
 
 func TestTransaction_BytesAndFromBytes(t *testing.T) {

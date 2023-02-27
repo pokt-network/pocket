@@ -5,7 +5,6 @@ package utility
 // An Application stakes POKT in exchange for tokens to access Web3 access provided by the servicers.
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/utils"
@@ -26,10 +25,8 @@ func (u *utilityContext) calculateAppSessionTokens(appStakeStr string) (string, 
 	if err != nil {
 		return typesUtil.EmptyString, err
 	}
+
 	stakeToSessionTokens := big.NewInt(int64(stakeToSessionTokensMultiplier))
-
-	fmt.Println(appStake, stakeToSessionTokens)
 	sessionTokens := appStake.Mul(appStake, stakeToSessionTokens)
-
 	return sessionTokens.String(), nil
 }

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.35] - 2023-02-27
+
+- Move `StakeStatus` into `actor.proto`
+- Rename `generic_param` into `service_url`
+- Remove unused params from `BlockHeader`
+- Document `transaction.proto` and move it from the `utility` module to `shared`
+- Moved `signature.go` from the `utility` module to `shared`
+- Added documentation to important functions in the `Persistence` and `Utility` shared modules
+- Added documentation on how/why `UnstakingActor` should be removed
+
 ## [0.0.0.34] - 2023-02-24
 
 - Remove SetLeaderId() method from ConsensusDebugModule interface
@@ -21,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.31] - 2023-02-22
 
--  Export consensus module's ConsensusDebugModule interface.
+- Export consensus module's ConsensusDebugModule interface.
 
 ## [0.0.0.30] - 2023-02-21
 

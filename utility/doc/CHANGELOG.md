@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.30] - 2023-02-27
+
+- Added thorough documentation in different parts of the codebase
+- Replace the `Store()` function with a `.store` accessor
+- Removed the unnecessary `getStoreAndHeight()` function
+- Simplified `calculateMaxAppRelays` to a temporary `calculateAppSessionTokens` implementation
+- Improved the readability of the `Block` lifecycle and `Message` validation
+- Simplified the testing utilities used
+- Updated the `session` interface
+- Renamed `applyTx` to `hydrateTx` and added documentation on its functionality
+- Removed `DefaultTxResult` and added documentation to `TxResult` result
+- 
+
 ## [0.0.0.30] - 2023-02-24
 
 - Update logger value references with pointers
@@ -102,11 +115,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.12] - 2022-12-06
 
 - Introduce a general purpose `HandleMessage` method at the utility level
-- Move the scope of `HandleTransaction` from the context to the module level
+- Move the scope of `CheckTransaction` from the context to the module level
 - Add an `IsEmpty` function to the `Mempool`
 - Rename `DeleteTransaction` to `RemoveTransaction` in the mempool
 - Rename `LatestHeight` to `Height` in the `utilityContext`
-- Add comments inside `HandleTransaction` so its functionality is clearer
+- Add comments inside `CheckTransaction` so its functionality is clearer
 - Add comments and cleanup the code in `mempool.go`
 
 ## [0.0.0.11] - 2022-11-30
@@ -131,7 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added session interfaces and diagrams
 - Moved `TxIndexer` package to persistence module
-- Added new proto structure `TxResult`
+- Added new proto structure `DefaultTxResult`
 - Integrated the `TxIndexer` into the lifecycle
   - Captured `TxResult` from each played transaction
   - Moved the storage of transactions to the Consensus Module
