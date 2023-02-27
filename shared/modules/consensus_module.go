@@ -84,7 +84,7 @@ type FSMConsensusEvents interface {
 	HandleSync(*messaging.StateMachineTransitionEvent) error
 	HandleSynced(*messaging.StateMachineTransitionEvent) error
 	HandlePacemaker(*messaging.StateMachineTransitionEvent) error
-	HandleServerMode(*messaging.StateMachineTransitionEvent) error
+	//HandleServerMode(*messaging.StateMachineTransitionEvent) error
 }
 
 type ConsensusDebugModule interface {

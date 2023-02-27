@@ -2,7 +2,6 @@ package consensus
 
 import (
 	"fmt"
-	"log"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -26,15 +25,15 @@ func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.State
 
 	switch fsm_state {
 	case string(coreTypes.StateMachineState_P2P_Bootstrapped):
-		fmt.Println("FSM is in Bootstrapped")
+		fmt.Println("GOKHAN FSM is in Bootstrapped")
 		return m.HandleBootstrapped(msg)
 
 	case string(coreTypes.StateMachineState_Consensus_Unsynched):
-		fmt.Println("FSM is in Unsynched")
+		fmt.Println("GOKHAN FSM is in Unsynched")
 		return m.HandleUnsynched(msg)
 
 	case string(coreTypes.StateMachineState_Consensus_SyncMode):
-		fmt.Println("FSM is in Sync Mode")
+		fmt.Println("GOKHAN FSM is in Sync Mode")
 		return m.HandleSync(msg)
 
 	case string(coreTypes.StateMachineState_Consensus_Synced):
@@ -42,12 +41,8 @@ func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.State
 		return m.HandleSynced(msg)
 
 	case string(coreTypes.StateMachineState_Consensus_Pacemaker):
-		fmt.Println("FSM is in Pacemaker event")
+		fmt.Println("GOKHAN FSM is in Pacemaker")
 		return m.HandlePacemaker(msg)
-
-	case string(coreTypes.StateMachineState_Consensus_Server_Enabled), string(coreTypes.StateMachineState_Consensus_Server_Disabled):
-		log.Println("FSM is in Server event")
-		return m.HandleServerMode(msg)
 	}
 
 	return nil
@@ -117,25 +112,4 @@ func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionE
 	// validator receives a new block proposal, and it understands that it doesn't have block and it transitions to unsycnhed state
 	// transitioning out of this state happens when a new block proposal is received by the hotstuff_replica
 	return nil
-}
-
-// Server mode runs mutually exclusive to the rest of the modes, thus its state changes doesn't affect the other modes
-// Server mode changes only happen through the node config
-// ToDo add state transitions for invocations of the EnableServerMode() and DisableServerMode() functions
-func (m *consensusModule) HandleServerMode(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Debug().Msgf("FSM is Handling server Mode:", msg.Event)
-
-	if msg.Event == string(coreTypes.StateMachineEvent_Start) {
-		if m.consCfg.ServerModeEnabled {
-			return m.EnableServerMode()
-		}
-		return m.DisableServerMode()
-
-	} else if msg.Event == string(coreTypes.StateMachineEvent_Consensus_IsDisableServer) {
-		return m.DisableServerMode()
-
-	}
-	//msg.Event == string(coreTypes.StateMachineEvent_Consensus_IsEnableServer)
-	return m.EnableServerMode()
-
 }

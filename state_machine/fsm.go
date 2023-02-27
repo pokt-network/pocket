@@ -26,27 +26,27 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 				},
 				Dst: string(coreTypes.StateMachineState_P2P_Bootstrapping),
 			},
-			{
-				Name: string(coreTypes.StateMachineEvent_Start),
-				Src: []string{
-					string(coreTypes.StateMachineState_Stopped),
-				},
-				Dst: string(coreTypes.StateMachineState_Consensus_Server_Disabled),
-			},
-			{
-				Name: string(coreTypes.StateMachineEvent_Consensus_IsEnableServer),
-				Src: []string{
-					string(coreTypes.StateMachineState_Consensus_Server_Disabled),
-				},
-				Dst: string(coreTypes.StateMachineState_Consensus_Server_Enabled),
-			},
-			{
-				Name: string(coreTypes.StateMachineEvent_Consensus_IsDisableServer),
-				Src: []string{
-					string(coreTypes.StateMachineState_Consensus_Server_Enabled),
-				},
-				Dst: string(coreTypes.StateMachineState_Consensus_Server_Disabled),
-			},
+			// {
+			// 	Name: string(coreTypes.StateMachineEvent_Start),
+			// 	Src: []string{
+			// 		string(coreTypes.StateMachineState_Stopped),
+			// 	},
+			// 	Dst: string(coreTypes.StateMachineState_Consensus_Server_Disabled),
+			// },
+			// {
+			// 	Name: string(coreTypes.StateMachineEvent_Consensus_IsEnableServer),
+			// 	Src: []string{
+			// 		string(coreTypes.StateMachineState_Consensus_Server_Disabled),
+			// 	},
+			// 	Dst: string(coreTypes.StateMachineState_Consensus_Server_Enabled),
+			// },
+			// {
+			// 	Name: string(coreTypes.StateMachineEvent_Consensus_IsDisableServer),
+			// 	Src: []string{
+			// 		string(coreTypes.StateMachineState_Consensus_Server_Enabled),
+			// 	},
+			// 	Dst: string(coreTypes.StateMachineState_Consensus_Server_Disabled),
+			// },
 			{
 				Name: string(coreTypes.StateMachineEvent_P2P_IsBootstrapped),
 				Src: []string{

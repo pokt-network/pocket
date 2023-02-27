@@ -151,6 +151,10 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 
 	consensusCfg := runtimeMgr.GetConfig().Consensus
 
+	if consensusCfg.ServerModeEnabled {
+		m.EnableServerMode()
+	}
+
 	genesisState := runtimeMgr.GetGenesis()
 	if err := m.ValidateGenesis(genesisState); err != nil {
 		return nil, fmt.Errorf("genesis validation failed: %w", err)
@@ -207,16 +211,6 @@ func (m *consensusModule) Start() error {
 	if err := m.leaderElectionMod.Start(); err != nil {
 		return err
 	}
-
-	// if m.consCfg.ServerModeEnabled {
-	// 	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsEnableServer); err != nil {
-	// 		return nil
-	// 	}
-	// } else {
-	// 	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsDisableServer); err != nil {
-	// 		return nil
-	// 	}
-	// }
 
 	return nil
 }
