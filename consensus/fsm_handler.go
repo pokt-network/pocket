@@ -5,9 +5,6 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
-// State machine transition event comes to consensus module
-// onsensus moduel reacts upon the new changed state
-// consensus module's reply is a new state machine transition event, which is sent to the state machine module
 func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Info().Msgf("I am starting to handle  handleStateMachineTransitionEvent: %s", msg)
 

@@ -98,7 +98,7 @@ func CreateTestConsensusPocketNode(
 	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
 ) *shared.Node {
-	stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
+	stateMachineMock := baseStateMachineMock(t, eventsChannel)
 	bus.RegisterModule(stateMachineMock)
 	// persistence is a dependency of consensus, so we need to create it first
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
@@ -115,7 +115,6 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
-	//stateMachineMock := baseStateMachineMock(t, eventsChannel)
 
 	for _, module := range []modules.Module{
 		stateMachineMock,
@@ -497,22 +496,12 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 	return rpcMock
 }
 
-func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *mockModules.MockStateMachineModule {
+func baseStateMachineMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockStateMachineModule {
 	ctrl := gomock.NewController(t)
 	stateMachineMock := mockModules.NewMockStateMachineModule(ctrl)
 	stateMachineMock.EXPECT().Start().Return(nil).AnyTimes()
 	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
-	//stateMachineMock.EXPECT().SendEvent(gomock.Any()).Return(nil).AnyTimes()
-	// stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
-	// 	switch event {
-
-	// 	default:
-	// 		log.Println("asdads")
-	// 	}
-	// 	return nil
-
-	// }).AnyTimes()
 
 	return stateMachineMock
 }

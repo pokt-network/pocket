@@ -1,8 +1,6 @@
 package state_sync
 
 import (
-	"sync"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -13,15 +11,6 @@ const (
 	DefaultLogPrefix    = "NODE"
 	stateSyncModuleName = "stateSyncModule"
 )
-
-// type SyncMode string
-
-// const (
-// 	Sync      SyncMode = "sync"
-// 	Synched   SyncMode = "synched"
-// 	Pacemaker SyncMode = "pacemaker"
-// 	Server    SyncMode = "server"
-// )
 
 type StateSyncModule interface {
 	modules.Module
@@ -53,20 +42,11 @@ var (
 )
 
 type stateSync struct {
-	bus modules.Bus
+	bus    modules.Bus
+	logger *modules.Logger
 
-	//currentMode SyncMode
+	logPrefix  string
 	serverMode bool
-
-	logger    *modules.Logger
-	logPrefix string
-
-	// m is a mutex used to control synchronization when multiple goroutines are accessing the struct and its fields / properties.
-	//
-	// The idea is that you want to acquire a Lock when you are writing values and a RLock when you want to make sure that no other goroutine is changing the values you are trying to read concurrently.
-	//
-	// Locking context should be the smallest possible but not smaller than a single "unit of work".
-	m sync.RWMutex
 
 	aggregatedSyncMetadata *typesCons.StateSyncMetadataResponse
 }
@@ -86,9 +66,6 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 
 	bus.RegisterModule(m)
 
-	// when node is starting, it is in sync mode, as it might need to bootstrap to the latest state
-	// TODO: change this to to reflect the state in the fsm once merged
-	//m.currentMode = Sync
 	m.serverMode = false
 
 	return m, nil
@@ -179,16 +156,10 @@ func (m *stateSync) GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResp
 }
 
 // TODO! implement this function, placeholder
-// Returns max block height metadainfo received from all peers
+// Returns max block height metadainfo received from all peers.
+// This function requests blocks one by one from peers thorughusing p2p module request, aggregates responses
 func (m *stateSync) AggregateMetadataResponses() error {
-
-	// broadcast getmetada request to all peers
-	//metadataResponses := []*typesCons.StateSyncMetadataResponse{}
-	// wait for responses
-	// aggregate responses
 	metadataResponse := &typesCons.StateSyncMetadataResponse{}
-	// if there is an error return error, nil
-	// else return nil, aggregated responses
 	m.aggregatedSyncMetadata = metadataResponse
 
 	return nil
@@ -196,8 +167,6 @@ func (m *stateSync) AggregateMetadataResponses() error {
 
 // TODO! implement this function, placeholder
 func (m *stateSync) IsOutOfSync() bool {
-	//get current height from persistence
-	//agregate metadata from all peers via aggregateMetadata()
 	err := m.AggregateMetadataResponses()
 	if err != nil {
 		// TODO: correct error handling
@@ -209,8 +178,8 @@ func (m *stateSync) IsOutOfSync() bool {
 }
 
 // TODO! implement this function, placeholder
+// This function requests blocks one by one from peers thorughusing p2p module request
 func (m *stateSync) Sync() error {
-	// request blocks one by one from peers thorughusing p2p module request
-	// if there is an error return error, false
+
 	return nil
 }

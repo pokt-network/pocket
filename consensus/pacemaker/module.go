@@ -127,9 +127,12 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 			return false, err
 		}
 
-		//now node must be catched up, i.e. it first moves to unsynched state, then syncmode, and then
+		// at this point node is synched. Therefore, the block height should not be higher than node's current height
+		// if not node must reject the proposal since it must be a malicious proposal
+		if msg.Height > currentHeight {
+			return false, nil
+		}
 
-		return false, nil
 	}
 
 	// TODO(olshansky): This code branch is a result of the optimization in the leader

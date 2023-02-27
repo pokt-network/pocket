@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.35] - 2023-02-27
 
 - Add FSMConsensusEvents() interface to handle state transition events in consensus module
+- Update FSM events and states
 
 ## [0.0.0.34] - 2023-02-24
 

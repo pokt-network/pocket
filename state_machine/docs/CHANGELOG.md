@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.3] - 2023-02-24
+
+- Update state machine states, introduced new state transitions
+
 ## [0.0.0.2] - 2023-02-24
 
 - Update logger value references with pointers
