@@ -44,7 +44,7 @@ func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
 
 // hydrateTx converts a Transaction into a TxResult after doing basic validation and extracting
 // the relevant data from the embedded signed Message.
-func (u *utilityContext) hydrateTx(index int, tx *coreTypes.Transaction) (modules.TxResult, typesUtil.Error) {
+func (u *utilityContext) hydrateTx(tx *coreTypes.Transaction, index int) (modules.TxResult, typesUtil.Error) {
 	msg, err := u.anteHandleMessage(tx)
 	if err != nil {
 		return nil, err

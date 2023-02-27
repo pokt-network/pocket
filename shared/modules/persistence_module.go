@@ -71,7 +71,8 @@ type PersistenceWriteContext interface {
 	// if the context is committed.
 	ComputeStateHash() (string, error)
 
-	//
+	// Indexes the transaction using several different keys (for lookup purposes) in the key-value store
+	// that backs the transaction merkle tree.
 	IndexTransaction(txResult TxResult) error
 
 	// Pool Operations

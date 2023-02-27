@@ -25,7 +25,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	}
 	txs = make([][]byte, 0)
 	txsTotalBz := 0
-	txIndex := 0
+	txIdx := 0
 
 	mempool := u.GetBus().GetUtilityModule().GetMempool()
 	for !mempool.IsEmpty() {
@@ -53,7 +53,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			break // we've reached our max
 		}
 
-		txResult, err := u.hydrateTx(txIndex, tx)
+		txResult, err := u.hydrateTx(tx, txIdx)
 		if err != nil {
 			u.logger.Err(err).Msg("Error in ApplyTransaction")
 			// TODO(#327): Properly implement 'unhappy path' for save points
@@ -64,29 +64,29 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			continue
 		}
 
+		// Index the transaction
 		if err := u.store.IndexTransaction(txResult); err != nil {
-			u.logger.Fatal().Err(err).Msgf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
+			u.logger.Fatal().Err(err).Msgf("TODO(#327): The transaction can by hydrated but not indexed. Crash the process for now: %v\n", err)
 		}
 
 		txs = append(txs, txBz)
-		txIndex++
+		txIdx++
 	}
 
 	if err := u.endBlock(proposer); err != nil {
 		return "", nil, err
 	}
 
-	// return the app hash (consensus module will get the validator set directly)
+	// Compute & return the new state hash
 	stateHash, err = u.store.ComputeStateHash()
 	if err != nil {
 		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 	}
-	u.logger.Info().Msgf("CreateAndApplyProposalBlock - computed state hash: %s", stateHash)
+	u.logger.Info().Str("state_hash", stateHash).Msgf("CreateAndApplyProposalBlock finished successfully")
 
 	return stateHash, txs, err
 }
 
-// TODO: Make sure to call `utility.HandleTransaction`, which calls `persistence.TransactionExists`
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
 func (u *utilityContext) ApplyBlock() (string, error) {
 	lastByzantineValidators, err := u.prevBlockByzantineValidators()
@@ -115,7 +115,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 		//             Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 
 		// Validate and apply the transaction to the Postgres database
-		txResult, err := u.hydrateTx(index, tx)
+		txResult, err := u.hydrateTx(tx, index)
 		if err != nil {
 			return "", err
 		}

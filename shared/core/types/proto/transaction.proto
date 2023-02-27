@@ -6,7 +6,7 @@ option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
 import "google/protobuf/any.proto";
 
-//
+// Transaction is the fundamental building block of any signed state transitions (i.e. messages)
 // `Transaction` is used to name the type for clarity & verbosity, but `tx` is used method signatures
 // and variable names to be concise. https://github.com/pokt-network/pocket/pull/503
 message Transaction {

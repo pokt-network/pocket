@@ -8,5 +8,5 @@ option go_package = "github.com/pokt-network/pocket/utility/types";
 // on-chain to derive state transitions.
 
 message TxGossipMessage {
-  bytes tx = 1;
+  bytes tx = 1; // TECHDEBT: Make this an explicit `Transaction` proto type
 }
