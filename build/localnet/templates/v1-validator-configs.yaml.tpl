@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: v1-validator-default-config
+  name: v1-validator-${VALIDATOR_NUMBER}-config
   namespace: default
 data:
   config.json: |
