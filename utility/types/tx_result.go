@@ -22,12 +22,18 @@ func TxToTxResult(
 	if err != nil {
 		return nil, ErrProtoMarshal(err)
 	}
+	resultCode := int32(0)
+	errorMsg := ""
+	if msgHandlingResult != nil {
+		resultCode = int32(msgHandlingResult.Code())
+		errorMsg = msgHandlingResult.Error()
+	}
 	return &TxResult{
 		Tx:            txBz,
 		Height:        height,
 		Index:         int32(index),
-		ResultCode:    int32(msgHandlingResult.Code()), // TECHDEBT: Remove or update this appropriately.
-		Error:         msgHandlingResult.Error(),       // TECHDEBT: Remove or update this appropriately.
+		ResultCode:    resultCode, // TECHDEBT: Remove or update this appropriately.
+		Error:         errorMsg,   // TECHDEBT: Remove or update this appropriately.
 		SignerAddr:    hex.EncodeToString(msg.GetSigner()),
 		RecipientAddr: msg.GetMessageRecipient(),
 		MessageType:   msg.GetMessageName(),
