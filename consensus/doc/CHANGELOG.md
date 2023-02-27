@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.36] - 2023-02-27
+
+- Add `fsm_handler.go` to handle FSM transition events in consensus module
+- 
+- Update State Machine mock in `utils_test.go`
+
 ## [0.0.0.35] - 2023-02-25
 
 - Fixed bug in `sendGetMetadataStateSyncMessage`

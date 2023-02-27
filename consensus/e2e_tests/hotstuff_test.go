@@ -62,7 +62,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 
 	// 2. Prepare
 	prepareProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 250, true)
-	//require.NoError(t, err)
+	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, nodeId,

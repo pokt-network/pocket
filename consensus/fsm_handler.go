@@ -1,8 +1,6 @@
 package consensus
 
 import (
-	"fmt"
-
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
@@ -11,10 +9,7 @@ import (
 // onsensus moduel reacts upon the new changed state
 // consensus module's reply is a new state machine transition event, which is sent to the state machine module
 func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Msgf("I am starting to handle  handleStateMachineTransitionEvent: ", msg)
-
-	//m.m.Lock()
-	//defer m.m.Unlock()
+	m.logger.Info().Msgf("I am starting to handle  handleStateMachineTransitionEvent: %s", msg)
 
 	fsm_state := msg.NewState
 	m.logger.Debug().Fields(map[string]any{
@@ -25,23 +20,18 @@ func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.State
 
 	switch fsm_state {
 	case string(coreTypes.StateMachineState_P2P_Bootstrapped):
-		fmt.Println("GOKHAN FSM is in Bootstrapped")
 		return m.HandleBootstrapped(msg)
 
 	case string(coreTypes.StateMachineState_Consensus_Unsynched):
-		fmt.Println("GOKHAN FSM is in Unsynched")
 		return m.HandleUnsynched(msg)
 
 	case string(coreTypes.StateMachineState_Consensus_SyncMode):
-		fmt.Println("GOKHAN FSM is in Sync Mode")
 		return m.HandleSync(msg)
 
 	case string(coreTypes.StateMachineState_Consensus_Synced):
-		fmt.Println("FSM is in Synched")
 		return m.HandleSynced(msg)
 
 	case string(coreTypes.StateMachineState_Consensus_Pacemaker):
-		fmt.Println("GOKHAN FSM is in Pacemaker")
 		return m.HandlePacemaker(msg)
 	}
 

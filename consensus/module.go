@@ -266,7 +266,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 
-	m.logger.Info().Msgf("I received a message: ", message.MessageName())
+	//m.logger.Info().Msgf("I received a message: ", message.MessageName())
 
 	switch message.MessageName() {
 	case HotstuffMessageContentType:
@@ -282,7 +282,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 			return err
 		}
 	case StateMachineTransitionEventType:
-		m.logger.Info().Msgf("I received a state transifition message: ", message.MessageName())
+		m.logger.Info().Msgf("I received a state transifition message: %s", message.MessageName())
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
 			return err
@@ -291,7 +291,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if !ok {
 			return fmt.Errorf("failed to cast message to StateMachineTransitionEvent")
 		}
-		m.logger.Info().Msgf("I am going to handle a state transifition message: ", message.MessageName())
+		m.logger.Info().Msgf("I am going to handle a state transifition message: %s", message.MessageName())
 
 		if err := m.handleStateMachineTransitionEvent(stateMachineTransitionEvent); err != nil {
 			return err
