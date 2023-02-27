@@ -12,8 +12,10 @@ import (
 // onsensus moduel reacts upon the new changed state
 // consensus module's reply is a new state machine transition event, which is sent to the state machine module
 func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
-	m.m.Lock()
-	defer m.m.Unlock()
+	m.logger.Info().Msgf("I am starting to handle  handleStateMachineTransitionEvent: ", msg)
+
+	//m.m.Lock()
+	//defer m.m.Unlock()
 
 	fsm_state := msg.NewState
 	m.logger.Debug().Fields(map[string]any{

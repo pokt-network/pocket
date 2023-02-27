@@ -150,6 +150,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		err_consensus := node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
 		return multierr.Combine(err_consensus, err_p2p)
+		//return err_p2p
 	default:
 		logger.Global.Warn().Msgf("Unsupported message content type: %s", contentType)
 	}

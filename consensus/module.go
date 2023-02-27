@@ -208,16 +208,15 @@ func (m *consensusModule) Start() error {
 		return err
 	}
 
-	// if m.consCfg.ServerModeEnabled {
-	// 	log.Println("SINCE CONSENSUS SERVER MODE ENABLED")
-	// 	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsEnableServer); err != nil {
-	// 		return nil
-	// 	}
-	// } else {
-	// 	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsDisableServer); err != nil {
-	// 		return nil
-	// 	}
-	// }
+	if m.consCfg.ServerModeEnabled {
+		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsEnableServer); err != nil {
+			return nil
+		}
+	} else {
+		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsDisableServer); err != nil {
+			return nil
+		}
+	}
 
 	return nil
 }
@@ -273,6 +272,8 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 
+	m.logger.Info().Msgf("I received a message: ", message.MessageName())
+
 	switch message.MessageName() {
 	case HotstuffMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
@@ -287,6 +288,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 			return err
 		}
 	case StateMachineTransitionEventType:
+		m.logger.Info().Msgf("I received a state transifition message: ", message.MessageName())
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
 			return err
@@ -295,6 +297,8 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if !ok {
 			return fmt.Errorf("failed to cast message to StateMachineTransitionEvent")
 		}
+		m.logger.Info().Msgf("I am going to handle a state transifition message: ", message.MessageName())
+
 		if err := m.handleStateMachineTransitionEvent(stateMachineTransitionEvent); err != nil {
 			return err
 		}
