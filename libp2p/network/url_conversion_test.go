@@ -66,7 +66,7 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 		{
 			"fully qualified domain name with scheme",
 			"tcp://%s:8080",
-			"no such host",
+			"resolving peer IP for hostname",
 		},
 
 		// Port **number** is required
@@ -81,8 +81,8 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 			"unexpected end of multiaddr",
 		},
 		// TODO: this case is tricky to detect as IPv6 addresses
-		// can omit hextet delimiters and still be valid.
-		// (see: Address_representation)
+		// can omit multiple "hextet" delimiters and still be valid.
+		// (see: https://en.wikipedia.org/wiki/IPv6#Address_representation)
 		// {
 		// 	"missing port number and delimiter",
 		// 	"%s",
@@ -115,9 +115,20 @@ func TestServiceUrlFromLibp2pMultiaddr_Success(t *testing.T) {
 			"142.250.181.196:8080",
 		},
 		{
-			"IPv6",
+			"IPv6 full",
+			"/ip6/2a00:1450:4005:0802:0000:0000:0000:2004/tcp/8080",
+			"2a00:1450:4005:802::2004:8080",
+		},
+		{
+			"IPv6 short",
 			"/ip6/2a00:1450:4005:802::2004/tcp/8080",
 			"2a00:1450:4005:802::2004:8080",
+		},
+		{
+			"IPv6 shorter",
+			// NB: this address is not equivalent to those above.
+			"/ip6/2a00::2004/tcp/8080",
+			"2a00::2004:8080",
 		},
 	}
 
@@ -141,7 +152,7 @@ func TestServiceUrlFromLibp2pMultiaddr_Error(t *testing.T) {
 		expectedErrContains string
 	}{
 		{
-			"fqdn",
+			"`dns` network protocol",
 			"/dns/www.google.com/tcp/8080",
 			"unsupported network protocol",
 		},
@@ -153,7 +164,7 @@ func TestServiceUrlFromLibp2pMultiaddr_Error(t *testing.T) {
 			require.NoError(t, err)
 
 			_, err = ServiceUrlFromLibp2pMultiaddr(addr)
-			// DISCUSS: asserting specific errors instead.
+			// DISCUSS: improved error assertion methodology
 			require.ErrorContains(t, err, testCase.expectedErrContains)
 		})
 	}

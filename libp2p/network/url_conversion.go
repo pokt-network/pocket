@@ -9,22 +9,28 @@ import (
 )
 
 const (
+	transportTypeTCP = "tcp"
+	ipVersion4       = "ip4"
+	ipVersion6       = "ip6"
+
 	// anyScheme is a string which fills the "scheme" degree of freedom for
 	// a URL. Used to pad URLs without schemes such that they can be parsed
 	// via stdlib URL parser.
-	anyScheme = "scheme://"
-)
-
-var (
-	// TECHDEBT: assuming TCP; remote peer's transport type must be knowable!
-	// (ubiquitously switching to multiaddr, instead of a URL, would resolve this)
-	peerTransportStr = "tcp"
-	peerIPVersionStr = "ip4"
+	anyScheme           = "scheme://"
+	errResolvePeerIPMsg = "resolving peer IP for hostname: %s: %w"
 )
 
 // Libp2pMultiaddrFromServiceUrl transforms a URL into its libp2p multiaddr equivalent.
 // (see: https://github.com/libp2p/specs/blob/master/addressing/README.md#multiaddr-basics)
 func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, error) {
+	var (
+		// TECHDEBT: assuming TCP; remote peer's transport type must be knowable!
+		// (ubiquitously switching to multiaddr, instead of a URL, would resolve this)
+		peerTransportStr = transportTypeTCP
+		// Default to IPv4; updated via subsequent checks.
+		peerIPVersionStr = ipVersion4
+	)
+
 	peerUrl, err := url.Parse(anyScheme + serviceUrl)
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -34,28 +40,13 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 		)
 	}
 
-	/* CONSIDER: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
-	 * I attempted using `/dns4/.../tcp/...` and go this error:
-	 * > failed to listen on any addresses: [can only dial TCP over IPv4 or IPv6]
-	 *
-	 * TECHDEBT: is there a way for us to effectively prefer IPv6 responses when resolving DNS?
-	 * TECHDEBT: resolving DNS this way has limitations:
-	 * > The address parameter can use a host name, but this is not recommended,
-	 * > because it will return at most one of the host name's IP addresses.
-	 * (see: https://pkg.go.dev/net#ResolveIPAddr)
-	 */
-	peerIP, err := net.ResolveIPAddr(peerIPVersionStr, peerUrl.Hostname())
+	peerIP, err := getPeerIP(peerUrl.Hostname())
 	if err != nil {
-		return nil, fmt.Errorf(
-			"resolving peer IP for hostname: %s: %w",
-			peerUrl.Hostname(),
-			err,
-		)
+		return nil, err
 	}
 
-	// Test for IP version.
-	// (see: https://pkg.go.dev/net#IP.To4)
-	if peerIP.IP.To4() == nil {
+	// Check IP version.
+	if peerIP.To4() == nil {
 		peerIPVersionStr = "ip6"
 	}
 
@@ -103,4 +94,40 @@ func ServiceUrlFromLibp2pMultiaddr(addr multiaddr.Multiaddr) (string, error) {
 		"unsupported network protocol, %s",
 		networkProtocol.Name,
 	)
+}
+
+func newResolvePeerIPErr(hostname string, err error) error {
+	return fmt.Errorf(errResolvePeerIPMsg, hostname, err)
+}
+
+func getPeerIP(hostname string) (net.IP, error) {
+	// Attempt to parse peer hostname as an IP address.
+	// (see: https://pkg.go.dev/net#ParseIP)
+	peerIP := net.ParseIP(hostname)
+	if peerIP != nil {
+		return peerIP, nil
+	}
+
+	/* CONSIDER: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
+	 * I attempted using `/dns4/.../tcp/...` and go this error:
+	 * > failed to listen on any addresses: [can only dial TCP over IPv4 or IPv6]
+	 *
+	 */
+	addrs, err := net.LookupHost(hostname)
+	if err != nil {
+		return nil, newResolvePeerIPErr(hostname, err)
+	}
+
+	// CONSIDER: which address(es) should we use when multiple
+	// are provided in a DNS response?
+	// CONSIDER: preferring IPv6 responses when resolving DNS.
+	// Return first address which is a parsable IP address.
+	for _, addr := range addrs {
+		peerIP = net.ParseIP(addr)
+		if peerIP == nil {
+			continue
+		}
+		return peerIP, nil
+	}
+	return nil, newResolvePeerIPErr(hostname, err)
 }
