@@ -1,4 +1,4 @@
-package keygenerator
+package keygen
 
 import (
 	"bytes"

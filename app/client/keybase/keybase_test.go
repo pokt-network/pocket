@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	keygen "github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
