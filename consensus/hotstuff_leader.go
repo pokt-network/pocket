@@ -398,7 +398,6 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 		return nil, err
 	}
 
-	// IMPROVE: This data can be read via an ephemeral read context - no need to use the utility's persistence context
 	prevBlockHash, err := readCtx.GetBlockHash(prevHeight)
 	if err != nil {
 		return nil, err

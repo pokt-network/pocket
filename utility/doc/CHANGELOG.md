@@ -18,7 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated the `session` interface
 - Renamed `applyTx` to `hydrateTx` and added documentation on its functionality
 - Removed `DefaultTxResult` and added documentation to `TxResult` result
-- 
 
 ## [0.0.0.30] - 2023-02-24
 

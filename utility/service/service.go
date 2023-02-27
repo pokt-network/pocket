@@ -129,7 +129,7 @@ func (r *relay) ReportVolumeMetrics(fishermanServiceUrl string, volumeRelays []R
 	// build a merkle sum index tree from all the relays, submits a root and subsequent merkle proof to the
 	// network.
 	//
-	// Pros:cs directly to the Can report volume metri chain in a trustless fashion
+	// Pros: Can report volume metrics directly to the chain in a trustless fashion
 	// Cons: Large chain bloat, non-trivial compute requirement for creation of claim/proof transactions and trees,
 	//       non-trivial compute requirement to process claim / proofs during ApplyBlock()
 

@@ -78,7 +78,7 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 		savePointsSet:  make(map[string]struct{}),
 		savePointsList: make([][]byte, 0),
 	}
-	ctx.IntegratableModule.SetBus(testUtilityMod.GetBus())
+	ctx.SetBus(testUtilityMod.GetBus())
 
 	return ctx
 }
