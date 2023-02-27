@@ -31,8 +31,8 @@ var (
 )
 
 type slipKey struct {
-	SecretKey []byte
-	ChainCode []byte
+	secretKey []byte
+	chainCode []byte
 }
 
 // Derives a master key from the seed provided and returns the child at the correct index
@@ -50,6 +50,7 @@ func DeriveChild(path string, seed []byte) (crypto.KeyPair, error) {
 	}
 
 	// Iterate over segments in path regenerating the child key until correct
+	// Enforce that both the purpose and coin type paths are using hardened keys
 	for _, i32 := range segments {
 		// Force hardened keys
 		if i32 > maxChildKeyIndex {
@@ -80,8 +81,8 @@ func newMasterKey(seed []byte) (*slipKey, error) {
 
 	// Create SLIP-0010 Master key
 	key := &slipKey{
-		SecretKey: sum[:32],
-		ChainCode: sum[32:],
+		secretKey: sum[:32],
+		chainCode: sum[32:],
 	}
 
 	return key, nil
@@ -97,10 +98,10 @@ func (k *slipKey) deriveChild(i uint32) (*slipKey, error) {
 	data := []byte{0x0}
 	iBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(iBytes, i)
-	data = append(data, k.SecretKey...)
+	data = append(data, k.secretKey...)
 	data = append(data, iBytes...)
 
-	hmacHash := hmac.New(sha512.New, k.ChainCode)
+	hmacHash := hmac.New(sha512.New, k.chainCode)
 	if _, err := hmacHash.Write(data); err != nil {
 		return nil, err
 	}
@@ -110,14 +111,14 @@ func (k *slipKey) deriveChild(i uint32) (*slipKey, error) {
 
 	// Create SLIP-0010 Child key
 	child := &slipKey{
-		SecretKey: sum[:32],
-		ChainCode: sum[32:],
+		secretKey: sum[:32],
+		chainCode: sum[32:],
 	}
 	return child, nil
 }
 
 func (k *slipKey) convertToKeypair() (crypto.KeyPair, error) {
-	return crypto.CreateNewKeyFromSeed(k.SecretKey, "", "")
+	return crypto.CreateNewKeyFromSeed(k.secretKey, "", "")
 }
 
 // Check the BIP-44 path provided is valid and return the []uint32 segments it contains

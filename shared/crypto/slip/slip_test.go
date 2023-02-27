@@ -218,7 +218,7 @@ func TestSlip_DeriveChild_TestVectors(t *testing.T) {
 			privSeed, err := childKey.GetSeed("")
 			require.NoError(t, err)
 			privHex := hex.EncodeToString(privSeed)
-			require.Equal(t, privHex, tv.wantPrivHex)
+			require.Equal(t, tv.wantPrivHex, privHex)
 
 			// Slip-0010 keys are prefixed with "00" in the test vectors
 			pubHex := childKey.GetPublicKey().String()
