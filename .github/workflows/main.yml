@@ -55,7 +55,7 @@ jobs:
         # Not utilizing makefile target here to make use of pipefail bash feature.
         run: |
           set -euo pipefail
-          GODEBUG=netdns=cgo go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out 2>&1 | tee test_results.json
+          go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out 2>&1 | tee test_results.json
       - name: Sanitize test results
         # We're utilizing `tee` above which can capture non-json stdout output so we need to remove non-json lines before additional parsing and submitting it to the external github action.
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
