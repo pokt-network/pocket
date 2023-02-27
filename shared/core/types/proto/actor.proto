@@ -19,6 +19,7 @@ enum StakeStatus {
   Unstaked = 3;
 }
 
+// TODO(#555): Investigate ways of having actor specific params that are not part of the shared struct.
 message Actor {
   ActorType actor_type = 1;
   string address = 2;
