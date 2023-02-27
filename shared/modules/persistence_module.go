@@ -67,9 +67,12 @@ type PersistenceWriteContext interface {
 
 	// Indexer Operations
 
-	// Block Operations
-	ComputeStateHash() (string, error)        // Update the merkle trees, computes the new state hash, and returns it
-	IndexTransaction(txResult TxResult) error // TODO(#361): Look into an approach to remove `TxResult` from shared interfaces
+	// ComputeStateHash updates the merkle trees, computes the new state hash (i.e. state commitment)
+	// if the context is committed.
+	ComputeStateHash() (string, error)
+
+	//
+	IndexTransaction(txResult TxResult) error
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error

@@ -430,8 +430,8 @@ func ErrUnauthorizedParamChange(owner []byte) Error {
 	return NewError(CodeUnauthorizedParamChangeError, fmt.Sprintf("%s: %s", UnauthorizedParamChangeError, hex.EncodeToString(owner)))
 }
 
-func ErrInvalidSigner() Error {
-	return NewError(CodeInvalidSignerError, InvalidSignerError)
+func ErrInvalidSigner(address string) Error {
+	return NewError(CodeInvalidSignerError, fmt.Sprintf("%s: %s", InvalidSignerError, address))
 }
 
 func ErrMaxChains(maxChains int) Error {
@@ -594,8 +594,8 @@ func ErrSignatureVerificationFailed() Error {
 	return NewError(CodeSignatureVerificationFailedError, SignatureVerificationFailedError)
 }
 
-func ErrDecodeMessage() Error {
-	return NewError(CodeDecodeMessageError, DecodeMessageError)
+func ErrDecodeMessage(err error) Error {
+	return NewError(CodeDecodeMessageError, fmt.Sprintf("%s: %s", DecodeMessageError, err.Error()))
 }
 
 func ErrProtoFromAny(err error) Error {

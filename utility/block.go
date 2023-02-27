@@ -12,15 +12,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-// The ApplyBlock function is the 'main' operation that executes a 'block' object against the state.
-// Pocket Network adopt a Tendermint-like lifecycle of BeginBlock -> DeliverTx -> EndBlock in that
-// order. Like the name suggests, BeginBlock is an autonomous state operation that executes at the
-// beginning of every block DeliverTx individually applies each transaction against the state and
-// rolls it back (not yet implemented) if fails. Like BeginBlock, EndBlock is an autonomous state
-// operation that executes at the end of every block.
-
 // CreateAndApplyProposalBlock implements the exposed functionality of the shared UtilityContext interface.
-// TODO: Make sure to call `utility.HandleTransaction`, which calls `persistence.TransactionExists`
 func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (stateHash string, txs [][]byte, err error) {
 	prevBlockByzantineVals, err := u.prevBlockByzantineValidators()
 	if err != nil {
@@ -37,6 +29,8 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 
 	mempool := u.GetBus().GetUtilityModule().GetMempool()
 	for !mempool.IsEmpty() {
+		// NB: In order for transactions to have entered the mempool, `HandleTransaction` must have
+		// been called which handles basic checks & validation.
 		txBz, err := mempool.PopTx()
 		if err != nil {
 			return "", nil, err
@@ -59,7 +53,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			break // we've reached our max
 		}
 
-		txResult, err := u.applyTx(txIndex, tx)
+		txResult, err := u.hydrateTx(txIndex, tx)
 		if err != nil {
 			u.logger.Err(err).Msg("Error in ApplyTransaction")
 			// TODO(#327): Properly implement 'unhappy path' for save points
@@ -121,7 +115,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 		//             Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 
 		// Validate and apply the transaction to the Postgres database
-		txResult, err := u.applyTx(index, tx)
+		txResult, err := u.hydrateTx(index, tx)
 		if err != nil {
 			return "", err
 		}

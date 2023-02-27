@@ -26,17 +26,25 @@ var (
 type persistenceModule struct {
 	base_modules.IntegratableModule
 
+	logger *modules.Logger
+
 	config       *configs.PersistenceConfig
 	genesisState *genesis.GenesisState
 
+	// A key-value store mapping heights to blocks. Needed for block synchronization.
 	blockStore kvstore.KVStore
-	txIndexer  indexer.TxIndexer
+
+	// A tx indexer (i.e. key-value store) mapping transaction hashes to transactions. Needed for
+	// avoiding tx replays attacks, and is also used as the backing database for the transaction
+	// tx merkle tree.
+	txIndexer indexer.TxIndexer
+
+	// A list of all the merkle trees maintained by the persistence module that roll up into the state commitment.
 	stateTrees *stateTrees
 
-	logger *modules.Logger
-
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
-	writeContext *PostgresContext // only one write context is allowed at a time
+	// only one write context is allowed at a time
+	writeContext *PostgresContext
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {

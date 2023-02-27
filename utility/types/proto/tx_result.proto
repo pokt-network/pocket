@@ -4,14 +4,14 @@ package utility;
 
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
-// TxResult is the result of an indexed `Transaction` proto after it has been applied to the state.
+// TxResult is a hydrated (i.e. blown up) version of the `Transaction` proto.
 message TxResult {
-  bytes tx = 1;      // The bytes of the indexed transaction
-  int64 height = 2;  // The block height at which the transaction was included
-  int32 index = 3;   // The order (i.e. position within a block) where the proposer included the transaction
-  int32 result_code = 4; // CONSIDERATION: look into having a `utility.Code` enum for this
-  string error = 5;       // CONSIDERATION: look into having a `utility.Error` enum for this
-  string signer_addr = 6;
-  string recipient_addr = 7;
-  string message_type = 8; // CONSOLIDATE(M4): Once the message types are well defined and stable, consolidate them into an enum
+  bytes tx = 1; // a serialized `Transaction` proto
+  int64 height = 2; // the block height at which the transaction was included
+  int32 index = 3; // the transaction's index within the block (i.e. ordered by when the proposer received it in the mempool)
+  int32 result_code = 4; // 0 is no error, otherwise corresponds to error object code; // IMPROVE: Consider using enums for the result codes
+  string error = 5; // description of the error if the result code is non-zero; IMPROVE: Add a specific type fot he error code
+  string signer_addr = 6; // the address of the signer (e.g. sender) of the transaction
+  string recipient_addr = 7; // Optional: the address of the recipient of the transaction (if applicable)
+  string message_type = 8; // the message type contained in the transaction; must correspond to a proto that the node can can process (e.g. Stake, Unstake, Send, etc...) // IMPROVE: How do we document all the types?
 }

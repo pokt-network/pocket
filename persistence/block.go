@@ -67,18 +67,12 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 		}
 	}
 
-	txsHash, err := p.getTxsHash()
-	if err != nil {
-		return nil, err
-	}
-
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            uint64(p.Height),
 		StateHash:         p.stateHash,
 		PrevStateHash:     prevBlockHash,
 		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,
-		TransactionsHash:  txsHash,
 	}
 	block := &coreTypes.Block{
 		BlockHeader: blockHeader,

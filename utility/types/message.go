@@ -17,9 +17,12 @@ type Message interface {
 	proto.Message // TECHDEBT: Still making direct `proto` reference even with a central `codec` package
 
 	ValidateBasic() Error
+
+	SetSigner(signerAddr []byte) // TECHDEBT: Convert to string or `crypto.Address` type
+
 	GetMessageName() string
 	GetMessageRecipient() string
-	SetSigner(signer []byte)
+	GetSigner() []byte // TECHDEBT: Convert to string or `crypto.Address` type
 	GetActorType() coreTypes.ActorType
 	GetCanonicalBytes() []byte
 }
@@ -79,6 +82,13 @@ func (msg *MessageChangeParameter) ValidateBasic() Error {
 	return nil
 }
 
+func (msg *MessageSend) SetSigner(signer []byte)            { /* no-op */ }
+func (msg *MessageStake) SetSigner(signer []byte)           { msg.Signer = signer }
+func (msg *MessageEditStake) SetSigner(signer []byte)       { msg.Signer = signer }
+func (msg *MessageUnstake) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageUnpause) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageChangeParameter) SetSigner(signer []byte) { msg.Signer = signer }
+
 func (msg *MessageSend) GetMessageName() string            { return getMessageType(msg) }
 func (msg *MessageStake) GetMessageName() string           { return getMessageType(msg) }
 func (msg *MessageEditStake) GetMessageName() string       { return getMessageType(msg) }
@@ -93,12 +103,7 @@ func (msg *MessageUnstake) GetMessageRecipient() string         { return "" }
 func (msg *MessageUnpause) GetMessageRecipient() string         { return "" }
 func (msg *MessageChangeParameter) GetMessageRecipient() string { return "" }
 
-func (msg *MessageSend) SetSigner(signer []byte)            { /*no op*/ }
-func (msg *MessageStake) SetSigner(signer []byte)           { msg.Signer = signer }
-func (msg *MessageEditStake) SetSigner(signer []byte)       { msg.Signer = signer }
-func (msg *MessageUnstake) SetSigner(signer []byte)         { msg.Signer = signer }
-func (msg *MessageUnpause) SetSigner(signer []byte)         { msg.Signer = signer }
-func (msg *MessageChangeParameter) SetSigner(signer []byte) { msg.Signer = signer }
+func (msg *MessageSend) GetSigner() []byte { return msg.FromAddress }
 
 func (msg *MessageSend) GetActorType() coreTypes.ActorType {
 	return coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED // there's no actor type for message send, so return zero to allow fee retrieval

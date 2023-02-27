@@ -2,7 +2,7 @@ package utility
 
 import (
 	"bytes"
-	"encoding/hex"
+	"fmt"
 
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -11,9 +11,11 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
+// HandleTransaction implements the exposed functionality of the shared utilityModule interface.
 func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
-	// Is the tx already in the mempool (in memory)?
 	txHash := coreTypes.TxHash(txProtoBytes)
+
+	// Is the tx already in the mempool (in memory)?
 	if u.mempool.Contains(txHash) {
 		return typesUtil.ErrDuplicateTransaction()
 	}
@@ -40,62 +42,78 @@ func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
 	return u.mempool.AddTx(txProtoBytes)
 }
 
-func (u *utilityContext) applyTx(index int, tx *coreTypes.Transaction) (modules.TxResult, typesUtil.Error) {
-	msg, signer, err := u.anteHandleMessage(tx)
+// hydrateTx converts a Transaction into a TxResult after doing basic validation and extracting
+// the relevant data from the embedded signed Message.
+func (u *utilityContext) hydrateTx(index int, tx *coreTypes.Transaction) (modules.TxResult, typesUtil.Error) {
+	msg, err := u.anteHandleMessage(tx)
 	if err != nil {
 		return nil, err
 	}
-	return typesUtil.TxToTxResult(tx, u.height, index, signer, msg.GetMessageRecipient(), msg.GetMessageName(), u.handleMessage(msg))
+	msgHandlingResult := u.handleMessage(msg)
+	// INCOMPLETE:
+	return typesUtil.TxToTxResult(tx, u.height, index, msg, msgHandlingResult)
 }
 
-func (u *utilityContext) anteHandleMessage(tx *coreTypes.Transaction) (msg typesUtil.Message, signer string, err typesUtil.Error) {
+// anteHandleMessage handles basic validation of the message in the Transaction before it is processed
+// REFACTOR: Splitting this into a `feeValidation`, `signerValidation`, and `messageValidation` etc
+// would make it more modular and readable.
+func (u *utilityContext) anteHandleMessage(tx *coreTypes.Transaction) (typesUtil.Message, typesUtil.Error) {
+	// Check if the transaction has a valid message
 	anyMsg, er := tx.GetMessage()
-	if err != nil {
-		return nil, "", typesUtil.ErrDecodeMessage()
+	if er != nil {
+		return nil, typesUtil.ErrDecodeMessage(er)
 	}
 	msg, ok := anyMsg.(typesUtil.Message)
 	if !ok {
-		return nil, "", typesUtil.ErrDecodeMessage()
+		return nil, typesUtil.ErrDecodeMessage(fmt.Errorf("not a supported message type"))
 	}
 
-	fee, err := u.getFee(msg, msg.GetActorType())
-	if err != nil {
-		return nil, "", err
-	}
+	// Get the address of the transaction signer
 	pubKey, er := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
 	if er != nil {
-		return nil, "", typesUtil.ErrNewPublicKeyFromBytes(er)
+		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
 	}
 	address := pubKey.Address()
+	addressHex := address.ToString()
+
+	// Validate that the signer has enough funds to pay the fee of the message signed
+	fee, err := u.getFee(msg, msg.GetActorType())
+	if err != nil {
+		return nil, err
+	}
 	accountAmount, err := u.getAccountAmount(address)
 	if err != nil {
-		return nil, "", typesUtil.ErrGetAccountAmount(err)
+		return nil, typesUtil.ErrGetAccountAmount(err)
 	}
 	accountAmount.Sub(accountAmount, fee)
 	if accountAmount.Sign() == -1 {
-		return nil, "", typesUtil.ErrInsufficientAmount(address.String())
+		return nil, typesUtil.ErrInsufficientAmount(addressHex)
 	}
+
+	// Validate that the signer has a valid signature
+	var isValidSigner bool
 	signerCandidates, err := u.getSignerCandidates(msg)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	var isValidSigner bool
 	for _, candidate := range signerCandidates {
 		if bytes.Equal(candidate, address) {
 			isValidSigner = true
-			signer = hex.EncodeToString(candidate)
+			msg.SetSigner(address)
 			break
 		}
 	}
 	if !isValidSigner {
-		return nil, signer, typesUtil.ErrInvalidSigner()
+		return nil, typesUtil.ErrInvalidSigner(addressHex)
 	}
+
+	// Remove the fee from the signer's account and add it to the fee collector pool
 	if err := u.setAccountAmount(address, accountAmount); err != nil {
-		return nil, signer, err
+		return nil, err
 	}
 	if err := u.addPoolAmount(coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName(), fee); err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	msg.SetSigner(address)
-	return msg, signer, nil
+
+	return msg, nil
 }

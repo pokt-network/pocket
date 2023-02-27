@@ -414,7 +414,6 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 		Height:            m.height,
 		StateHash:         stateHash,
 		PrevStateHash:     prevBlockHash,
-		NumTxs:            uint32(len(txs)),
 		ProposerAddress:   m.privateKey.Address().Bytes(),
 		QuorumCertificate: qcBytes,
 	}
