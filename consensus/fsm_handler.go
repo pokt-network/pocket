@@ -120,11 +120,22 @@ func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionE
 }
 
 // Server mode runs mutually exclusive to the rest of the modes, thus its state changes doesn't affect the other modes
-// Server mode changes only happen through the node config and EnableServerMode() and DisableServerMode() functions
+// Server mode changes only happen through the node config
+// ToDo add state transitions for invocations of the EnableServerMode() and DisableServerMode() functions
 func (m *consensusModule) HandleServerMode(msg *messaging.StateMachineTransitionEvent) error {
-	if msg.Event == string(coreTypes.StateMachineEvent_Consensus_IsDisableServer) {
+	m.logger.Debug().Msgf("FSM is Handling server Mode:", msg.Event)
+
+	if msg.Event == string(coreTypes.StateMachineEvent_Start) {
+		if m.consCfg.ServerModeEnabled {
+			return m.EnableServerMode()
+		}
 		return m.DisableServerMode()
+
+	} else if msg.Event == string(coreTypes.StateMachineEvent_Consensus_IsDisableServer) {
+		return m.DisableServerMode()
+
 	}
+	//msg.Event == string(coreTypes.StateMachineEvent_Consensus_IsEnableServer)
 	return m.EnableServerMode()
 
 }

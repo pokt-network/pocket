@@ -208,15 +208,15 @@ func (m *consensusModule) Start() error {
 		return err
 	}
 
-	if m.consCfg.ServerModeEnabled {
-		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsEnableServer); err != nil {
-			return nil
-		}
-	} else {
-		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsDisableServer); err != nil {
-			return nil
-		}
-	}
+	// if m.consCfg.ServerModeEnabled {
+	// 	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsEnableServer); err != nil {
+	// 		return nil
+	// 	}
+	// } else {
+	// 	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsDisableServer); err != nil {
+	// 		return nil
+	// 	}
+	// }
 
 	return nil
 }
