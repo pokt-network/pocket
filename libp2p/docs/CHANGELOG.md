@@ -5,7 +5,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.0] - 2023-02-24
+## [0.0.0.0] - 2023-02-27
 
 - prepare pocket repo new libp2p module
 - add pocket / libp2p identity helpers
