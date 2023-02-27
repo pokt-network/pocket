@@ -35,6 +35,7 @@ data:
         "health_check_period": "5m"
       },
       "p2p": {
+        "hostname": "v1-validator${VALIDATOR_NUMBER}",
         "port": 42069,
         "use_rain_tree": true,
         "is_empty_connection_type": false,
