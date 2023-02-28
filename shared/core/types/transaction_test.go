@@ -13,8 +13,6 @@ import (
 var (
 	testingSenderPrivateKey, _ = crypto.GeneratePrivateKey()
 	testingSenderPublicKey     = testingSenderPrivateKey.PublicKey()
-	testingSenderAddr          = testingSenderPublicKey.Address()
-	testingToAddr, _           = crypto.GenerateAddress()
 )
 
 func TestTransaction_BytesAndFromBytes(t *testing.T) {
@@ -41,8 +39,8 @@ func TestTransaction_Sign(t *testing.T) {
 	err := tx.Sign(testingSenderPrivateKey)
 	require.NoError(t, err)
 
-	msg, er := tx.SignableBytes()
-	require.NoError(t, er)
+	msg, err := tx.SignableBytes()
+	require.NoError(t, err)
 
 	verified := testingSenderPublicKey.Verify(msg, tx.Signature.Signature)
 	require.True(t, verified, "signature should be verified")
@@ -53,39 +51,39 @@ func TestTransaction_ValidateBasic(t *testing.T) {
 	err := tx.Sign(testingSenderPrivateKey)
 	require.NoError(t, err)
 
-	er := tx.ValidateBasic()
-	require.NoError(t, er)
+	err = tx.ValidateBasic()
+	require.NoError(t, err)
 
 	txNoNonce := proto.Clone(&tx).(*Transaction)
 	txNoNonce.Nonce = ""
-	er = txNoNonce.ValidateBasic()
-	require.Error(t, er)
+	err = txNoNonce.ValidateBasic()
+	require.Error(t, err)
 
 	txInvalidMessageAny := proto.Clone(&tx).(*Transaction)
 	txInvalidMessageAny.Msg = nil
-	er = txInvalidMessageAny.ValidateBasic()
-	require.Error(t, er)
+	err = txInvalidMessageAny.ValidateBasic()
+	require.Error(t, err)
 
 	txEmptySig := proto.Clone(&tx).(*Transaction)
 	txEmptySig.Signature = nil
-	er = txEmptySig.ValidateBasic()
-	require.Error(t, er)
+	err = txEmptySig.ValidateBasic()
+	require.Error(t, err)
 
 	txEmptyPublicKey := proto.Clone(&tx).(*Transaction)
 	txEmptyPublicKey.Signature.PublicKey = nil
-	er = txEmptyPublicKey.ValidateBasic()
-	require.Error(t, er)
+	err = txEmptyPublicKey.ValidateBasic()
+	require.Error(t, err)
 
 	txInvalidPublicKey := proto.Clone(&tx).(*Transaction)
 	txInvalidPublicKey.Signature.PublicKey = []byte("publickey")
 	err = txInvalidPublicKey.ValidateBasic()
-	require.Error(t, er)
+	require.Error(t, err)
 
 	txInvalidSignature := proto.Clone(&tx).(*Transaction)
 	tx.Signature.PublicKey = testingSenderPublicKey.Bytes()
 	txInvalidSignature.Signature.Signature = []byte("signature2")
-	er = txInvalidSignature.ValidateBasic()
-	require.Error(t, er)
+	err = txInvalidSignature.ValidateBasic()
+	require.Error(t, err)
 }
 
 func newUnsignedTestingTransaction(t *testing.T) Transaction {

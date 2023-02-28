@@ -99,6 +99,8 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 		return "", err
 	}
 
+	mempool := u.GetBus().GetUtilityModule().GetMempool()
+
 	// deliver txs lifecycle phase
 	for index, txProtoBytes := range u.proposalBlockTxs {
 		tx, err := coreTypes.TxFromBytes(txProtoBytes)
@@ -118,15 +120,24 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 			return "", err
 		}
 
+		txHash, err := tx.Hash()
+		if err != nil {
+			return "", err
+		}
+
+		// TODO: Need to properly add transactions back on rollbacks
+		if mempool.Contains(txHash) {
+			if err := mempool.RemoveTx(txProtoBytes); err != nil {
+				return "", err
+			}
+			u.logger.Info().Str("tx_hash", txHash).Msg("Applying tx that WAS in the local mempool")
+		} else {
+			u.logger.Info().Str("tx_hash", txHash).Msg("Applying tx that WAS NOT in the local mempool")
+		}
+
 		if err := u.store.IndexTransaction(txResult); err != nil {
 			u.logger.Fatal().Err(err).Msgf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
 		}
-
-		// TODO: if found, remove transaction from mempool.
-		// DISCUSS: What if the context is rolled back or cancelled. Do we add it back to the mempool?
-		// if err := u.GetBus().GetUtilityModule().GetMempool().RemoveTx(tx.Bytes()); err != nil {
-		// 	return nil, err
-		// }
 	}
 
 	// end block lifecycle phase
