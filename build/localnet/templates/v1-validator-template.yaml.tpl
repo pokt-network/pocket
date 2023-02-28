@@ -63,6 +63,8 @@ spec:
               value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
             - name: POCKET_PERSISTENCE_NODE_SCHEMA
               value: validator${VALIDATOR_NUMBER}
+            - name: POCKET_P2P_HOSTNAME
+              value: "v1-validator${VALIDATOR_NUMBER}"
           volumeMounts:
             - name: config-volume
               mountPath: /configs
