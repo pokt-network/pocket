@@ -219,7 +219,10 @@ func (vk *vaultKeybase) DeriveChildFromSeed(seed []byte, childIndex uint32, chil
 	// Use key address as key in DB
 	addrKey := keyPair.GetAddressString()
 
-	writeVaultKeyPair(vk, addrKey, keyPair, childHint)
+	err = writeVaultKeyPair(vk, addrKey, keyPair, childHint)
+	if err != nil {
+		return nil, err
+	}
 
 	return childKey, nil
 }
