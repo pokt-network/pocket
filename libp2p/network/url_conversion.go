@@ -6,6 +6,8 @@ import (
 	"net/url"
 
 	"github.com/multiformats/go-multiaddr"
+	"github.com/pokt-network/pocket/logger"
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -125,7 +127,28 @@ func getPeerIP(hostname string) (net.IP, error) {
 		if peerIP == nil {
 			continue
 		}
+		// TECHDEBT: remove this log line once direction is clearer
+		// on supporting multiple network addresses per peer.
+		logger.Global.Warn().
+			Array("resolved", newStringLogArrayMarshaler(addrs)).
+			IPAddr("using", peerIP)
 		return peerIP, nil
 	}
 	return nil, newResolvePeerIPErr(hostname, err)
+}
+
+type stringLogArrayMarshaler struct {
+	strs []string
+}
+
+func (marshaler stringLogArrayMarshaler) MarshalZerologArray(arr *zerolog.Array) {
+	for _, str := range marshaler.strs {
+		arr.Str(str)
+	}
+}
+
+func newStringLogArrayMarshaler(strs []string) zerolog.LogArrayMarshaler {
+	return stringLogArrayMarshaler{
+		strs: strs,
+	}
 }
