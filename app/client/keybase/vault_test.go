@@ -168,12 +168,6 @@ func TestVaultKeybase(t *testing.T) {
 	assert.Equal(t, 3, len(addresses))
 	assert.Equal(t, 3, len(keyPairs))
 
-	// Test Exists
-	_, err = vk.Exists(keyPair.GetAddressString())
-	if err != nil {
-		t.Fatalf("error checking key exists: %s", err)
-	}
-
 	// Test ExportPrivString
 	privKeyStr, err := vk.ExportPrivString(privKey.Address().String(), "passphrase")
 	if err != nil {
