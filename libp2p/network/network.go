@@ -29,7 +29,7 @@ type libp2pNetwork struct {
 }
 
 const (
-	week = time.Hour * 24 * 14
+	week = time.Hour * 24 * 7
 	// TECHDEBT: consider more carefully and parameterize.
 	defaultPeerTTL = 2 * week
 )
