@@ -47,7 +47,7 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 
 	// Check IP version.
 	if peerIP.To4() == nil {
-		peerIPVersionStr = "ip6"
+		peerIPVersionStr = ipVersion6
 	}
 
 	peerMultiAddrStr := fmt.Sprintf(
