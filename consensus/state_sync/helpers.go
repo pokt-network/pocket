@@ -38,9 +38,9 @@ func getMessageType(msg *typesCons.StateSyncMessage) string {
 	case *typesCons.StateSyncMessage_MetadataRes:
 		return "StateSyncMetadataResponse"
 	case *typesCons.StateSyncMessage_GetBlockReq:
-		return "PeerGetBlockRequest"
+		return "GetBlockRequest"
 	case *typesCons.StateSyncMessage_GetBlockRes:
-		return "PeerGetBlockResponse"
+		return "GetBlockResponse"
 	default:
 		return "Unknown"
 	}
