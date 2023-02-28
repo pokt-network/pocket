@@ -3,7 +3,6 @@ package keybase
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -189,19 +188,6 @@ func (vk *vaultKeybase) GetAll() ([]string, []crypto.KeyPair, error) {
 	return addresses, keyPairs, nil
 }
 
-// Exists checks if a key exists in vault
-func (vk *vaultKeybase) Exists(address string) (bool, error) {
-	_, err := vk.Get(address)
-	if err != nil {
-		if errors.Is(err, errors.New("key not found")) {
-			return false, nil
-		}
-		return false, err
-	}
-
-	return true, nil
-}
-
 // DeriveChildFromSeed deterministically generates and return the child at the given index from the seed provided
 // By default this stores the key in the keybase and returns the KeyPair interface and any error
 func (vk *vaultKeybase) DeriveChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string, shouldStore bool) (crypto.KeyPair, error) {
@@ -339,14 +325,6 @@ func (vk *vaultKeybase) Delete(address, passphrase string) error {
 	}
 
 	return vk.client.KVv2(vk.mount).Destroy(context.TODO(), address, versions)
-}
-
-func (vk *vaultKeybase) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&vk)
-}
-
-func (vk *vaultKeybase) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &vk)
 }
 
 // writeVaultKeyPair writes a keypair to vault
