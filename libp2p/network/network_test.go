@@ -127,7 +127,7 @@ func newTestLibp2pNetwork(t *testing.T) *libp2pNetwork {
 
 	prepareBusMock(busMock, consensusMock)
 
-	logger_ := logger.Global.CreateLoggerForModule("test_module")
+	networkLogger := logger.Global.CreateLoggerForModule("test_module")
 
 	// NB: will bind to a random, available port on the loopback interface
 	// for the duration of this test.
@@ -143,7 +143,7 @@ func newTestLibp2pNetwork(t *testing.T) *libp2pNetwork {
 
 	p2pNetwork, err := NewLibp2pNetwork(
 		busMock,
-		logger_,
+		networkLogger,
 		host,
 		topic,
 	)
