@@ -10,10 +10,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const (
-	TxGossipMessageContentType = "utility.TxGossipMessage"
-)
-
 func PrepareTxGossipMessage(txBz []byte) (*anypb.Any, error) {
 	txGossipMessage := &typesUtil.TxGossipMessage{
 		Tx: txBz,
@@ -34,7 +30,7 @@ func PrepareTxGossipMessage(txBz []byte) (*anypb.Any, error) {
 
 func (u *utilityModule) HandleUtilityMessage(message *anypb.Any) error {
 	switch message.MessageName() {
-	case TxGossipMessageContentType:
+	case messaging.TxGossipMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
 			return err
