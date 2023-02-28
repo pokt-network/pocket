@@ -29,9 +29,9 @@ type libp2pNetwork struct {
 }
 
 const (
-	year = time.Hour * 24 * 365
+	week = time.Hour * 24 * 14
 	// TECHDEBT: consider more carefully and parameterize.
-	defaultPeerTTL = 2 * year
+	defaultPeerTTL = 2 * week
 )
 
 func NewLibp2pNetwork(
