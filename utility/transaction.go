@@ -42,15 +42,18 @@ func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
 	return u.mempool.AddTx(txProtoBytes)
 }
 
-// hydrateTx converts a Transaction into a TxResult after doing basic validation and extracting
-// the relevant data from the embedded signed Message.
-func (u *utilityContext) hydrateTx(tx *coreTypes.Transaction, index int) (modules.TxResult, typesUtil.Error) {
+// hydrateTxResult converts a `Transaction` proto into a `TxResult` struct` after doing basic validation
+// and extracting the relevant data from the embedded signed Message. `index` is the intended location
+// of its index (i.e. the transaction number) in the block where it is included.
+//
+// IMPROVE: hydration should accept and return the same type (i.e. TxResult) so there may be opportunity
+// to refactor this in the future.
+func (u *utilityContext) hydrateTxResult(tx *coreTypes.Transaction, index int) (modules.TxResult, typesUtil.Error) {
 	msg, err := u.anteHandleMessage(tx)
 	if err != nil {
 		return nil, err
 	}
 	msgHandlingResult := u.handleMessage(msg)
-	// INCOMPLETE:
 	return typesUtil.TxToTxResult(tx, u.height, index, msg, msgHandlingResult)
 }
 

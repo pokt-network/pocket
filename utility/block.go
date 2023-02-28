@@ -53,7 +53,7 @@ func (u *utilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			break // we've reached our max
 		}
 
-		txResult, err := u.hydrateTx(tx, txIdx)
+		txResult, err := u.hydrateTxResult(tx, txIdx)
 		if err != nil {
 			u.logger.Err(err).Msg("Error in ApplyTransaction")
 			// TODO(#327): Properly implement 'unhappy path' for save points
@@ -115,7 +115,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 		//             Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 
 		// Validate and apply the transaction to the Postgres database
-		txResult, err := u.hydrateTx(tx, index)
+		txResult, err := u.hydrateTxResult(tx, index)
 		if err != nil {
 			return "", err
 		}

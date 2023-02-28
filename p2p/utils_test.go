@@ -17,6 +17,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	types "github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -166,7 +167,7 @@ func createMockGenesisState(valKeys []cryptoPocket.PrivateKey) *genesis.GenesisS
 			Address:         addr,
 			PublicKey:       valKey.PublicKey().String(),
 			ServiceUrl:      validatorId(i + 1),
-			StakedAmount:    "1000000000000000",
+			StakedAmount:    test_artifacts.DefaultStakeAmountString,
 			PausedHeight:    int64(0),
 			UnstakingHeight: int64(0),
 			Output:          addr,

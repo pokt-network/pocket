@@ -39,7 +39,7 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 
 	tx, startingBalance, amount, signer := newTestingTransaction(t, ctx)
-	txResult, err := ctx.hydrateTx(tx, 0)
+	txResult, err := ctx.hydrateTxResult(tx, 0)
 	require.NoError(t, err)
 	require.Equal(t, int32(0), txResult.GetResultCode())
 	require.Equal(t, "", txResult.GetError())

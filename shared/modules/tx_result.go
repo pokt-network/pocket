@@ -1,8 +1,14 @@
 package modules
 
-// TxResult is a hydrated/blown-up Transaction.
+// TxResult is a hydrated/blown-up version of a `Transaction` proto`.
+//
 // It is the result of a transaction on which basic validation has been applied, and from which the
 // embedded Message, and its contents, were deserialized and extracted.
+//
+// `TxResult` is not a `coreTypes` since it does not directly affect the state hash, but is used for
+// cross-module (i.e. shared) communication. It can be seen as a convenience struct that avoids the
+// needs to query the BlockStore or deserialize Transaction protos every time a single piece of metadata
+// of an applied transaction is needed.
 type TxResult interface {
 	GetTx() []byte                        // a serialized `Transaction` proto
 	GetHeight() int64                     // the block height at which the transaction was included
