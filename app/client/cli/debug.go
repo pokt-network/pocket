@@ -85,18 +85,18 @@ func NewDebugCommand() *cobra.Command {
 			bus := runtimeMgr.GetBus()
 			modulesRegistry := bus.GetModulesRegistry()
 
-			rpcUrl := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
+			rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
 
 			addressBookProvider := rpcABP.NewRPCAddrBookProvider(
 				rpcABP.WithP2PConfig(
 					runtimeMgr.GetConfig().P2P,
 				),
-				rpcABP.WithCustomRPCUrl(rpcUrl),
+				rpcABP.WithCustomRPCURL(rpcURL),
 			)
 			modulesRegistry.RegisterModule(addressBookProvider)
 
 			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
-				rpcCHP.WithCustomRPCUrl(rpcUrl),
+				rpcCHP.WithCustomRPCURL(rpcURL),
 			)
 			modulesRegistry.RegisterModule(currentHeightProvider)
 

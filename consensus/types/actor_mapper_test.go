@@ -13,7 +13,7 @@ func makeTestValidatorWithAddress(address string) *coreTypes.Actor {
 		Address:         address,
 		PublicKey:       "",
 		Chains:          []string{},
-		GenericParam:    "",
+		ServiceUrl:      "",
 		StakedAmount:    "",
 		PausedHeight:    0,
 		UnstakingHeight: 0,

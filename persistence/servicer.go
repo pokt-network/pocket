@@ -18,7 +18,7 @@ func (p *PostgresContext) GetServicer(address []byte, height int64) (operator, p
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedAmount
-	serviceURL = actor.GenericParam
+	serviceURL = actor.ServiceUrl
 	outputAddress = actor.Output
 	pausedHeight = actor.PausedHeight
 	unstakingHeight = actor.UnstakingHeight
@@ -32,7 +32,7 @@ func (p *PostgresContext) InsertServicer(address, publicKey, output []byte, _ bo
 		Address:         hex.EncodeToString(address),
 		PublicKey:       hex.EncodeToString(publicKey),
 		StakedAmount:    stakedTokens,
-		GenericParam:    serviceURL,
+		ServiceUrl:      serviceURL,
 		Output:          hex.EncodeToString(output),
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
@@ -45,7 +45,7 @@ func (p *PostgresContext) UpdateServicer(address []byte, serviceURL, stakedAmoun
 		ActorType:    coreTypes.ActorType_ACTOR_TYPE_SERVICER,
 		Address:      hex.EncodeToString(address),
 		StakedAmount: stakedAmount,
-		GenericParam: serviceURL,
+		ServiceUrl:   serviceURL,
 		Chains:       chains,
 	})
 }

@@ -1,9 +1,9 @@
 package types
 
-// CLEANUP: Consider moving these into a shared location or eliminating altogether
+// CLEANUP: Consider moving these into a shared location or seeing if they can be eliminated altogether
 const (
-	ZeroInt = 0
-	// IMPROVE: -1 is returned when retrieving the paused height of an unpaused actor. Consider a more user friendly and semantic way of managing this.
+	EmptyString = ""
+	// IMPROVE: -1 is used for defining unused heights (e.g. unpaused actor has pausedHeight=-1).
+	// Consider a more user friendly and semantic way of managing this.
 	HeightNotUsed = int64(-1)
-	EmptyString   = ""
 )

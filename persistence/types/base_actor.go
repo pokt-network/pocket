@@ -20,7 +20,9 @@ type BaseProtocolActorSchema struct {
 	chainsTableName string
 
 	// SQL Columns
-	actorSpecificColName string // CONSIDERATION: If actor specific behaviour expands, this will need to be refactored to be a list.
+	// TECHDEBT: This is currently used to store the ServiceURL for each actor, but may need to be
+	// extended to lists of different types in the future.
+	actorSpecificColName string
 
 	// SQL Constraints
 	heightConstraintName       string

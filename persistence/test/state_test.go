@@ -9,9 +9,9 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -46,16 +46,16 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	// logic changes, these hashes will need to be updated based on the test output.
 	// TODO: Add an explicit updateSnapshots flag to the test to make this more clear.
 	stateHashes := []string{
-		"4e781020ad767db9bedc9d64bb30c69a5f1d94a57049c74a6f6e26d8ff3046bc",
-		"01786ad7ebd82641b5fa040798edf9eaebc07ac34bdcbd7e089c75ef09f730ee",
-		"fa3682d967de200686d0567ff2ab3568372decd91a7a94112d0c1ce493eee2c0",
+		"3c2ed817d9311d95f083ae8422ead660cf2dd56505cfd332bb0b56449791d3dc",
+		"b8d57c4c41eb37862673f6203a6fe87dd17d4036f5d87b8f34dca921f8a05e9a",
+		"4e6cee965c48678acc30ac714c317bac5f1ce8f876a97dc32d7673b7ccf105f0",
 	}
 
 	stakeAmount := initialStakeAmount
 	for i := 0; i < len(stateHashes); i++ {
 		// Get the context at the new height and retrieve one of the apps
 		height := int64(i + 1)
-		heightBz := converters.HeightToBytes(uint64(height))
+		heightBz := utils.HeightToBytes(uint64(height))
 		expectedStateHash := stateHashes[i]
 
 		db := NewTestPostgresContext(t, height)

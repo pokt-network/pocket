@@ -13,7 +13,7 @@ func (p *PostgresContext) GetAppExists(address []byte, height int64) (exists boo
 }
 
 //nolint:gocritic // tooManyResultsChecker This function needs to return many values
-func (p *PostgresContext) GetApp(address []byte, height int64) (operator, publicKey, stakedTokens, maxRelays, outputAddress string, pauseHeight, unstakingHeight int64, chains []string, err error) {
+func (p *PostgresContext) GetApp(address []byte, height int64) (operator, publicKey, stakedTokens, outputAddress string, pauseHeight, unstakingHeight int64, chains []string, err error) {
 	actor, err := p.getActor(types.ApplicationActor, address, height)
 	if err != nil {
 		return
@@ -21,7 +21,6 @@ func (p *PostgresContext) GetApp(address []byte, height int64) (operator, public
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedAmount
-	maxRelays = actor.GenericParam
 	outputAddress = actor.Output
 	pauseHeight = actor.PausedHeight
 	unstakingHeight = actor.UnstakingHeight
@@ -29,13 +28,12 @@ func (p *PostgresContext) GetApp(address []byte, height int64) (operator, public
 	return
 }
 
-func (p *PostgresContext) InsertApp(address, publicKey, output []byte, _ bool, _ int32, maxRelays, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error {
+func (p *PostgresContext) InsertApp(address, publicKey, output []byte, _ bool, _ int32, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error {
 	return p.InsertActor(types.ApplicationActor, &coreTypes.Actor{
 		ActorType:       coreTypes.ActorType_ACTOR_TYPE_APP,
 		Address:         hex.EncodeToString(address),
 		PublicKey:       hex.EncodeToString(publicKey),
 		Chains:          chains,
-		GenericParam:    maxRelays,
 		StakedAmount:    stakedTokens,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
@@ -43,12 +41,11 @@ func (p *PostgresContext) InsertApp(address, publicKey, output []byte, _ bool, _
 	})
 }
 
-func (p *PostgresContext) UpdateApp(address []byte, maxRelays, stakedAmount string, chains []string) error {
+func (p *PostgresContext) UpdateApp(address []byte, stakedAmount string, chains []string) error {
 	return p.UpdateActor(types.ApplicationActor, &coreTypes.Actor{
 		ActorType:    coreTypes.ActorType_ACTOR_TYPE_APP,
 		Address:      hex.EncodeToString(address),
 		Chains:       chains,
-		GenericParam: maxRelays,
 		StakedAmount: stakedAmount,
 	})
 }

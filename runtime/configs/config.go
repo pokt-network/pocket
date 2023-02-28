@@ -32,7 +32,7 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			MaxMempoolTransactions:     defaults.DefaultUtilityMaxMempoolTransactions,
 		},
 		Persistence: &PersistenceConfig{
-			PostgresUrl:    defaults.DefaultPersistencePostgresUrl,
+			PostgresUrl:    defaults.DefaultPersistencePostgresURL,
 			BlockStorePath: defaults.DefaultPersistenceBlockStorePath,
 		},
 		P2P: &P2PConfig{

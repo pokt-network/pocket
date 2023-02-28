@@ -175,7 +175,7 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 	return m.network.NetworkSend(data, addr)
 }
 
-// TECHDEBT(drewsky): Discuss how to best expose/access `Address` throughout the codebase.
+// TECHDEBT: Define what the node identity is throughout the codebase
 func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }
