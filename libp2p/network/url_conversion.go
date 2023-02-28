@@ -129,9 +129,11 @@ func getPeerIP(hostname string) (net.IP, error) {
 		}
 		// TECHDEBT: remove this log line once direction is clearer
 		// on supporting multiple network addresses per peer.
-		logger.Global.Warn().
-			Array("resolved", newStringLogArrayMarshaler(addrs)).
-			IPAddr("using", peerIP)
+		if len(addrs) > 1 {
+			logger.Global.Warn().
+				Array("resolved", newStringLogArrayMarshaler(addrs)).
+				IPAddr("using", peerIP)
+		}
 		return peerIP, nil
 	}
 	return nil, newResolvePeerIPErr(hostname, err)
