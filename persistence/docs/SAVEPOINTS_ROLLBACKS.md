@@ -22,7 +22,7 @@ The entry points will be in the `Persistence` module but there are going to be p
 At the time of writing, it seems that we identified the points within the codebase in which we should take some action to support savepoints and rollbacks.
 This means that we probably know the **WHEN**s and **WHERE**s, the scope of this document is to identify the **WHAT**s and **HOW**s.
 
-It might sound simple, but the ability to recover from a failure that would prevent the node from committing a block deterministically is a critical feature and it's probably a non-trivial problem to solve.
+It might sound simple, but the ability to recover from a failure that would prevent the node from committing a block deterministically is a critical feature, and it's a non-trivial problem to solve.
 
 As it stands we use multiple data stores (please refer to [PROTOCOL_STATE_HASH.md](../PROTOCOL_STATE_HASH.md) for additional information about their designs):
 
@@ -33,19 +33,19 @@ As it stands we use multiple data stores (please refer to [PROTOCOL_STATE_HASH.m
 | Block Store           | Key Value Store                       | BadgerDB                          |
 | Merkle Trees          | Merkle Trie backed by Key-Value Store | BadgerDB                          |
 
-Something worth mentioning specifically about `Merkle Trees` is the fact that we store separate trees for the individual `Actor` types (i.e. `App`, `Validator`, `Fisherman`, etc.), for the `Accounts`/`Pools` and for the data types such as `Transactions`, `Params` and `Flags`.
+Something worth mentioning specifically about `Merkle Trees` is the fact that we store a separate tree for each `Actor` type (i.e. `App`, `Validator`, `Fisherman`, etc.), for `Accounts` & `Pools` and for the data types such as `Transactions`, `Params` and `Flags`.
 
-This means that technically each one of these trees is a separate data store.
+This means that each tree is a separate data store.
 
 ### Data Consistency (the "C" in CAP Theorem)
 
-We cannot really make the assumption, especially in this day and age, but in the simplest case, we could very much have a monolytic setup where the node is running on the same machine as the `PostgresSQL` database and the `BadgerDB` key-value stores but that would not change the fact that we are dealing with a distributed system since each one of these components is a separate process that could fail independently.
+We cannot make the assumption, especially in this day and age, but in the simplest case, we could very much have a monolithic setup where the node is running on the same machine as the `PostgresSQL` database and the `BadgerDB` key-value stores, but that would not change the fact that we are dealing with a distributed system since each one of these components is a separate process that could fail independently.
 
 Imagine a scenario in which the state is committed to the `PostgresSQL` database but one/some of the `BadgerDB` key-value stores fails due to storage issues. What would happen next? That's **non-deterministic**.
 
 Even a single node is a small distributed system because it has multiple separate components that are communicating with each other (on the same machine or via unreliable networks).
 
-Since a node is part of a distributed network of nodes that are all trying to reach consensus on the "state of the world", we have to make sure that the data that we are storing is consistent internally in the first place.
+Since a node is part of a distributed network of nodes that are all trying to reach consensus on the "World State", we have to make sure that the data that we are storing is consistent internally in the first place.
 
 In the event of a failure at any level during this process, we cannot commit state non-atomically. That would make the node inconsistent and put it in a non-deterministic state that is not recoverable unless we have a way to rollback to a previous, clean, state with all the implications that this would have on the network. (social coordination comes to mind)
 
@@ -63,14 +63,13 @@ flowchart TD
     ShouldCommit --> |No| NewBlock
     ReceivedOKFromDatastores -->|Yes| Committed[Committed successfully] --> |Repeat with\nthe new Block| NewBlock
     ReceivedOKFromDatastores -->|No, we have at least one failure| Rollback[Rollback] --> |Repeat with\nthe rolled back Block | NewBlock
-
 ```
 
 ## Definitions
 
 ### Savepoints
 
-A savepoint (also referred as checkpoints/snapshots depending on the implementation) is either the beginning of database transaction (or distributed transaction) or some sort of artifact that was created right after a successful commit happened that allows to recreate a perfect copy of the state at the time it was created.
+A savepoint (also called checkpoints/snapshots, depending on the implementation) is either the beginning of a database transaction (or distributed transaction) or some artifact created right after a successful commit happened that allows recreating a perfect copy of the state at the time it was created.
 
 ### Rollbacks
 
