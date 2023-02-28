@@ -57,7 +57,7 @@ type ConsensusPacemaker interface {
 	SetStep(uint8) // CONSIDERATION: Change to `typesCons.HotstuffStep; causes an import cycle.
 
 	// Communicators
-	BroadcastMessageToValidators(*anypb.Any) error
+	BroadcastMessageToValidators(*anypb.Any)
 
 	// Leader helpers
 	IsLeader() bool

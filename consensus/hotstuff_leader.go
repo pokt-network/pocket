@@ -89,7 +89,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		m.paceMaker.InterruptRound("failed to create propose message")
 		return
 	}
-	m.broadcastToValidators(prepareProposeMessage)
+	m.BroadcastMessageToValidators(m.convertToAny(prepareProposeMessage))
 
 	// Leader also acts like a replica
 	prepareVoteMessage, err := CreateVoteMessage(m.height, m.round, Prepare, m.block, m.privateKey)
@@ -140,7 +140,8 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		m.paceMaker.InterruptRound("failed to create propose message")
 		return
 	}
-	m.broadcastToValidators(preCommitProposeMessage)
+	//m.broadcastToValidators(preCommitProposeMessage)
+	m.BroadcastMessageToValidators(m.convertToAny(preCommitProposeMessage))
 
 	// Leader also acts like a replica
 	precommitVoteMessage, err := CreateVoteMessage(m.height, m.round, PreCommit, m.block, m.privateKey)
@@ -191,7 +192,8 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		m.paceMaker.InterruptRound("failed to create propose message")
 		return
 	}
-	m.broadcastToValidators(commitProposeMessage)
+	//m.broadcastToValidators(commitProposeMessage)
+	m.BroadcastMessageToValidators(m.convertToAny(commitProposeMessage))
 
 	// Leader also acts like a replica
 	commitVoteMessage, err := CreateVoteMessage(m.height, m.round, Commit, m.block, m.privateKey)
@@ -241,7 +243,8 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		m.paceMaker.InterruptRound("failed to create propose message")
 		return
 	}
-	m.broadcastToValidators(decideProposeMessage)
+	//m.broadcastToValidators(decideProposeMessage)
+	m.BroadcastMessageToValidators(m.convertToAny(decideProposeMessage))
 
 	if err := m.commitBlock(m.block); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrCommitBlock.Error())

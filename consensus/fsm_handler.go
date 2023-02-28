@@ -64,7 +64,7 @@ func (m *consensusModule) HandleSync(msg *messaging.StateMachineTransitionEvent)
 
 	m.stateSync.AggregateMetadataResponses()
 
-	// try sycing until node is synced
+	// try syncing until node is synced
 	// CONSIDER: consider putting a limit on number of tries, or timeout
 	err := m.stateSync.Sync()
 	for err != nil {

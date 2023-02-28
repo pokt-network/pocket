@@ -2,14 +2,20 @@ package state_sync
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// TODO! Implement, a placeholder function
-func (m *stateSync) BroadCastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, height uint64) error {
+func (m *stateSync) BroadCastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, height uint64) {
 
-	return nil
+	anyMessage, err := codec.GetCodec().ToAny(stateSyncMsg)
+	if err != nil {
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
+		return
+	}
+	m.GetBus().GetConsensusModule().BroadcastMessageToValidators(anyMessage)
+
 }
 
 func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, peerId cryptoPocket.Address, height uint64) error {

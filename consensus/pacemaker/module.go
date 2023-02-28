@@ -290,10 +290,8 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 		log.Println("[WARN] NewHeight: Failed to convert pacemaker message to proto: ", err)
 		return
 	}
-	if err := consensusMod.BroadcastMessageToValidators(anyProto); err != nil {
-		log.Println("[WARN] NewHeight: Failed to broadcast message to validators: ", err)
-		return
-	}
+
+	consensusMod.BroadcastMessageToValidators(anyProto)
 }
 
 // TODO: Increase timeout using exponential backoff.
