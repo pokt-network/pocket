@@ -42,7 +42,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 	case *typesCons.StateSyncMessage_MetadataRes:
 		return m.stateSync.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
 	case *typesCons.StateSyncMessage_GetBlockReq:
-		m.logger.Info().Msg("It is a StateSyncMessage_GetBlockReq")
+		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage MetadataReq")
 		if !m.stateSync.IsServerModEnabled() {
 			return fmt.Errorf("server module is not enabled")
 		}
