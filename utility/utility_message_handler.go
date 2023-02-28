@@ -15,12 +15,13 @@ func PrepareTxGossipMessage(txBz []byte) (*anypb.Any, error) {
 		Tx: txBz,
 	}
 
-	pocketEnvelope, err := messaging.PackMessage(txGossipMessage)
-	if err != nil {
-		return nil, err
-	}
+	// nolint:gocritic // TODO: keeping commented out code in place because this is how it should work in the future
+	// pocketEnvelope, err := messaging.PackMessage(txGossipMessage)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	anyMessage, err := codec.GetCodec().ToAny(pocketEnvelope)
+	anyMessage, err := codec.GetCodec().ToAny(txGossipMessage)
 	if err != nil {
 		return nil, err
 	}

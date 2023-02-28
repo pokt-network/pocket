@@ -19,21 +19,21 @@ var (
 	defaultSendAmount = big.NewInt(10000)
 )
 
-func TestUtilityContext_AnteHandleMessage(t *testing.T) {
-	// ctx := newTestingUtilityContext(t, 0)
+// func TestUtilityContext_AnteHandleMessage(t *testing.T) {
+// 	ctx := newTestingUtilityContext(t, 0)
 
-	// tx, startingBalance, _, signer := newTestingTransaction(t, ctx)
-	// msg, err := ctx.anteHandleMessage(tx)
-	// require.NoError(t, err)
-	// require.Equal(t, []byte(signer.Address().String()), msg.GetSigner())
-	// feeBig, err := ctx.getMessageSendFee()
-	// require.NoError(t, err)
+// 	tx, startingBalance, _, signer := newTestingTransaction(t, ctx)
+// 	msg, err := ctx.anteHandleMessage(tx)
+// 	require.NoError(t, err)
+// 	require.Equal(t, []byte(signer.Address().String()), msg.GetSigner())
+// 	feeBig, err := ctx.getMessageSendFee()
+// 	require.NoError(t, err)
 
-	// expectedAfterBalance := big.NewInt(0).Sub(startingBalance, feeBig)
-	// amount, err := ctx.getAccountAmount(signer.Address())
-	// require.NoError(t, err)
-	// require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
-}
+// 	expectedAfterBalance := big.NewInt(0).Sub(startingBalance, feeBig)
+// 	amount, err := ctx.getAccountAmount(signer.Address())
+// 	require.NoError(t, err)
+// 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
+// }
 
 func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)

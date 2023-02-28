@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.30] - 2023-02-28
 
+- Fixed bug where we were not removing txs from the mempool of replicas
 - Added thorough documentation in different parts of the codebase
 - Replace the `Store()` function with a `.store` accessor
 - Removed the unnecessary `getStoreAndHeight()` function

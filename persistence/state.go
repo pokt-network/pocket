@@ -50,12 +50,6 @@ const (
 	numMerkleTrees
 )
 
-const (
-	// IMPORTANT: The order, ascending, is critical since it defines the integrity of `transactionsHash`.
-	// If this changes, the `transactionsHash`` in the block will differ, rendering it invalid.
-	txsOrderInBlockHashDescending = false
-)
-
 var merkleTreeToString = map[merkleTree]string{
 	appMerkleTree:      "app",
 	valMerkleTree:      "val",
@@ -194,27 +188,6 @@ func (p *PostgresContext) getStateHash() string {
 
 	// Convert the array to a slice and return it
 	return hex.EncodeToString(stateHash[:])
-}
-
-// Transactions Hash Helpers
-
-// Returns a digest (a single hash) of all the transactions included in the block.
-// This allows separating the integrity of the transactions from their storage.
-func (p *PostgresContext) getTxsHash() (txs []byte, err error) {
-	txResults, err := p.txIndexer.GetByHeight(p.Height, txsOrderInBlockHashDescending)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, txResult := range txResults {
-		txHash, err := txResult.Hash()
-		if err != nil {
-			return nil, err
-		}
-		txs = append(txs, txHash...)
-	}
-
-	return crypto.SHA3Hash(txs), nil
 }
 
 // Actor Tree Helpers

@@ -518,4 +518,4 @@ check_cross_module_imports: ## Lists cross-module imports
 
 .PHONY: send_local_tx
 send_local_tx: ## A hardcoded send tx to make LocalNet debugging easier
-	go run app/client/*.go Account Send --non-interactive 00104055c00bed7c983a48aac7dc6335d7c607a7 00204737d2a165ebe4be3a7d5b0af905b0ea91d8 1000
+	go run app/client/*.go Account Send --non_interactive 00104055c00bed7c983a48aac7dc6335d7c607a7 00204737d2a165ebe4be3a7d5b0af905b0ea91d8 1000

@@ -71,7 +71,7 @@ func (u *utilityContext) burnValidator(addr []byte) typesUtil.Error {
 		return err
 	}
 
-	// burnAmount = currentStake * burnPercent / 100
+	// currentStake * burnPercent / 100
 	burnAmount := new(big.Float).SetInt(stakeAmount)
 	burnAmount.Mul(burnAmount, big.NewFloat(float64(burnPercent)))
 	burnAmount.Quo(burnAmount, big.NewFloat(100))
