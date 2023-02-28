@@ -99,8 +99,6 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 		return "", err
 	}
 
-	// mempool := u.GetBus().GetUtilityModule().GetMempool()
-
 	// deliver txs lifecycle phase
 	for index, txProtoBytes := range u.proposalBlockTxs {
 		tx, err := coreTypes.TxFromBytes(txProtoBytes)
