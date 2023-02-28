@@ -321,6 +321,10 @@ generate_node_state_machine_diagram: ## (Re)generates the Node State Machine dia
 test_all: ## Run all go unit tests
 	go test -p 1 -count=1 ./...
 
+.PHONY: test_e2e
+test_e2e:
+	go test -v ./e2e/tests/steps_init_test.go
+
 .PHONY: test_all_with_json_coverage
 test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, output results & coverage into json & coverage files
 	go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out | tee test_results.json | jq
