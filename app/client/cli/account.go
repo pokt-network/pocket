@@ -43,7 +43,7 @@ func accountCommands() []*cobra.Command {
 				toAddr := crypto.AddressFromString(args[1])
 				amount := args[2]
 
-				kb, err := keybaseForCli()
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}

@@ -24,6 +24,13 @@ import (
 	"golang.org/x/term"
 )
 
+var (
+	keybaseTypeFromCLI           string
+	keybaseVaultAddrFromCLI      string
+	keybaseVaultTokenFromCLI     string
+	keybaseVaultMountPathFromCLI string
+)
+
 func parseEd25519PrivateKeyFromReader(reader io.Reader) (pk crypto.Ed25519PrivateKey, err error) {
 	if reader == nil {
 		return nil, fmt.Errorf("cannot read from reader %v", reader)
@@ -250,7 +257,7 @@ func attachKeybaseFlagsToSubcommands() []cmdOption {
 	}}
 }
 
-func keybaseForCli() (keybase.Keybase, error) {
+func keybaseForCLI() (keybase.Keybase, error) {
 	keybaseType := keybase.KeybaseTypeFile
 	keybaseOptions := keybase.KeybaseOptions{}
 

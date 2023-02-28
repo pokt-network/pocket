@@ -27,13 +27,9 @@ const (
 )
 
 var (
-	pwd                          string
-	rawChainCleanupRegex         *regexp.Regexp
-	oneMillion                   *big.Int
-	keybaseTypeFromCLI           string
-	keybaseVaultAddrFromCLI      string
-	keybaseVaultTokenFromCLI     string
-	keybaseVaultMountPathFromCLI string
+	pwd                  string
+	rawChainCleanupRegex *regexp.Regexp
+	oneMillion           *big.Int
 )
 
 type (
@@ -99,7 +95,7 @@ If no changes are desired for the parameter, just enter the current param value 
 			fromAddrHex := args[0]
 			amount := args[1]
 
-			kb, err := keybaseForCli()
+			kb, err := keybaseForCLI()
 			if err != nil {
 				return err
 			}
@@ -168,7 +164,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			fromAddr := crypto.AddressFromString(args[0])
 			amount := args[1]
 
-			kb, err := keybaseForCli()
+			kb, err := keybaseForCLI()
 			if err != nil {
 				return err
 			}
@@ -230,7 +226,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			// Unpack CLI arguments
 			fromAddrHex := args[0]
 
-			kb, err := keybaseForCli()
+			kb, err := keybaseForCLI()
 			if err != nil {
 				return err
 			}
@@ -281,7 +277,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 			// Unpack CLI arguments
 			fromAddrHex := args[0]
 
-			kb, err := keybaseForCli()
+			kb, err := keybaseForCLI()
 			if err != nil {
 				return err
 			}

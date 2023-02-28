@@ -47,7 +47,7 @@ func govCommands() []*cobra.Command {
 				// TODO(deblasis): implement RPC client, route and handler
 				fmt.Printf("changing parameter %s owned by %s to %s\n", args[1], args[0], args[2])
 
-				kb, err := keybaseForCli()
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
