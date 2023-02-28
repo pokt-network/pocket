@@ -108,11 +108,9 @@ func getPeerIP(hostname string) (net.IP, error) {
 		return peerIP, nil
 	}
 
-	/* CONSIDER: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
-	 * I attempted using `/dns4/.../tcp/...` and go this error:
-	 * > failed to listen on any addresses: [can only dial TCP over IPv4 or IPv6]
-	 *
-	 */
+	// CONSIDER: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
+	// I attempted using `/dns4/.../tcp/...` and go this error:
+	// > failed to listen on any addresses: [can only dial TCP over IPv4 or IPv6]
 	addrs, err := net.LookupHost(hostname)
 	if err != nil {
 		return nil, newResolvePeerIPErr(hostname, err)
