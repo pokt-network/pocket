@@ -62,6 +62,9 @@ p1 Keys Verify --keybase vault addr_goes_here abcd signature_goes_here
 
 p1 Keys Update --keybase vault addr_goes_here
 
+p1 Keys DeriveChild addr_goes_here 0 --keybase vault
+# {"level":"info","address":"new_addr_goes_here","parent":"addr_goes_here","index":0,"stored":true,"time":"2023-02-28T09:26:11-04:00","message":"Child key derived"}
+
 p1 Keys Delete --keybase vault addr_goes_here
 
 ## TODO: add SignTx and VerifyTx
@@ -128,6 +131,13 @@ p1 Keys Update --keybase vault \
     --vault-addr http://127.0.0.1:8200/ \
     addr_goes_here
 
+
+p1 Keys Keys DeriveChild addr_goes_here 0 --keybase vault \
+    --vault-token dev-only-token \
+    --vault-addr http://127.0.0.1:8200/ \
+    addr_goes_here
+
+# {"level":"info","address":"new_addr_goes_here","parent":"addr_goes_here","index":0,"stored":true,"time":"2023-02-28T09:26:11-04:00","message":"Child key derived"}
 
 p1 Keys Delete --keybase vault \
     --vault-token dev-only-token \

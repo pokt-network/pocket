@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"strings"
-
 	"github.com/pokt-network/pocket/shared/crypto/slip"
 
 	"github.com/pokt-network/pocket/shared/converters"

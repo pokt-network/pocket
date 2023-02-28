@@ -10,6 +10,7 @@ import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/hashicorp/vault/api"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/crypto/slip"
 )
 
 // vaultKeybase implements the Keybase interface using HashiCorp Vault.
@@ -199,6 +200,53 @@ func (vk *vaultKeybase) Exists(address string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// DeriveChildFromSeed deterministically generates and return the child at the given index from the seed provided
+// By default this stores the key in the keybase and returns the KeyPair interface and any error
+func (vk *vaultKeybase) DeriveChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string, shouldStore bool) (crypto.KeyPair, error) {
+	path := fmt.Sprintf(slip.PoktAccountPathFormat, childIndex)
+	childKey, err := slip.DeriveChild(path, seed)
+	if err != nil {
+		return nil, err
+	}
+
+	if !shouldStore {
+		return childKey, nil
+	}
+
+	keyPair := childKey
+	// Re-encrypt child key with passphrase and hint
+	if childPassphrase != "" && childHint != "" {
+		// Get the private key hex string from the child key
+		privKeyHex, err := childKey.ExportString("") // No passphrase by default
+		if err != nil {
+			return nil, err
+		}
+
+		keyPair, err = crypto.CreateNewKeyFromString(privKeyHex, childPassphrase, childHint)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Use key address as key in DB
+	addrKey := keyPair.GetAddressString()
+
+	writeVaultKeyPair(vk, addrKey, keyPair, childHint)
+
+	return childKey, nil
+}
+
+// DeriveChildFromKey deterministically generates and return the child at the given index from the parent key provided
+// By default this stores the key in the keybase and returns the KeyPair interface and any error
+func (vk *vaultKeybase) DeriveChildFromKey(masterAddrHex, passphrase string, childIndex uint32, childPassphrase, childHint string, shouldStore bool) (crypto.KeyPair, error) {
+	privKey, err := vk.GetPrivKey(masterAddrHex, passphrase)
+	if err != nil {
+		return nil, err
+	}
+	seed := privKey.Seed()
+	return vk.DeriveChildFromSeed(seed, childIndex, childPassphrase, childHint, shouldStore)
 }
 
 // ExportPrivString exports a private key as a hex string
