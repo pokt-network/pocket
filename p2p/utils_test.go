@@ -9,20 +9,22 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
-	types "github.com/pokt-network/pocket/runtime/configs/types"
+	"github.com/pokt-network/pocket/runtime/configs/types"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/telemetry"
-	"github.com/stretchr/testify/require"
 )
 
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
@@ -118,7 +120,7 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 			PrivateKey:    valKeys[i].String(),
 			P2P: &configs.P2PConfig{
 				PrivateKey:     valKeys[i].String(),
-				Port:           42069,
+				Port:           defaults.DefaultP2PPort,
 				UseRainTree:    true,
 				ConnectionType: types.ConnectionType_EmptyConnection,
 			},
