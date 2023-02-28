@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
@@ -23,6 +24,9 @@ var (
 	importAs   string
 	hint       string
 	newPwd     string
+	storeChild bool
+	childPwd   string
+	childHint  string
 )
 
 func init() {
@@ -45,6 +49,7 @@ func NewKeysCommand() *cobra.Command {
 	importCmds := keysImportCommands()
 	signMsgCmds := keysSignMsgCommands()
 	signTxCmds := keysSignTxCommands()
+	slipCmds := keysSlipCommands()
 
 	// Add --pwd and --hint flags
 	applySubcommandOptions(createCmds, attachPwdFlagToSubcommands())
@@ -77,6 +82,12 @@ func NewKeysCommand() *cobra.Command {
 	applySubcommandOptions(signTxCmds, attachInputFlagToSubcommands())
 	applySubcommandOptions(signTxCmds, attachOutputFlagToSubcommands())
 
+	// Add --pwd, --store_child, --child_pwd, --child_hint flags
+	applySubcommandOptions(slipCmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(slipCmds, attachStoreChildFlagToSubcommands())
+	applySubcommandOptions(slipCmds, attachChildPwdFlagToSubcommands())
+	applySubcommandOptions(slipCmds, attachChildHintFlagToSubcommands())
+
 	cmd.AddCommand(createCmds...)
 	cmd.AddCommand(updateCmds...)
 	cmd.AddCommand(deleteCmds...)
@@ -85,6 +96,7 @@ func NewKeysCommand() *cobra.Command {
 	cmd.AddCommand(importCmds...)
 	cmd.AddCommand(signMsgCmds...)
 	cmd.AddCommand(signTxCmds...)
+	cmd.AddCommand(slipCmds...)
 
 	return cmd
 }
@@ -673,6 +685,56 @@ func keysSignTxCommands() []*cobra.Command {
 				}
 
 				logger.Global.Info().Str("address", addrHex).Bool("valid", valid).Msg("Signature checked")
+
+				return nil
+			},
+		},
+	}
+	return cmds
+}
+
+func keysSlipCommands() []*cobra.Command {
+	cmds := []*cobra.Command{
+		{
+			Use:     "DeriveChild <parentAddrHex> <index>",
+			Short:   "Derive the child key at the given index from a parent key",
+			Long:    "Derive the child key at <index> from the parent key provided optionally store it in the keybase with [--store_child]",
+			Aliases: []string{"derivechild"},
+			Args:    cobra.ExactArgs(2),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				// Unpack CLI args
+				parentAddr := args[0]
+				idx64, err := strconv.ParseUint(args[1], 10, 32)
+				if err != nil {
+					return err
+				}
+				index := uint32(idx64)
+
+				// Open the debug keybase at the specified path
+				pocketDir := strings.TrimSuffix(dataDir, "/")
+				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+				if err != nil {
+					return err
+				}
+				kb, err := keybase.NewKeybase(keybasePath)
+				if err != nil {
+					return err
+				}
+
+				if !nonInteractive {
+					pwd = readPassphrase(pwd)
+				}
+
+				kp, err := kb.DeriveChildFromKey(parentAddr, pwd, index, childPwd, childHint, storeChild)
+				if err != nil {
+					return err
+				}
+
+				if err := kb.Stop(); err != nil {
+					return err
+				}
+
+				logger.Global.Info().Str("address", kp.GetAddressString()).Str("parent", parentAddr).Uint32("index", index).Bool("stored", storeChild).Msg("Child key derived")
 
 				return nil
 			},
