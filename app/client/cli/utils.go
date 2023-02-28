@@ -221,6 +221,24 @@ func attachHintFlagToSubcommands() []cmdOption {
 	}}
 }
 
+func attachStoreChildFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().BoolVar(&storeChild, "store_child", true, "store the derived child key in the keybase")
+	}}
+}
+
+func attachChildHintFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&childHint, "child_hint", "", "hint for the passphrase of the derived child's private key")
+	}}
+}
+
+func attachChildPwdFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&childPwd, "child_pwd", "", "passphrase for the derived child's private key")
+	}}
+}
+
 func unableToConnectToRpc(err error) error {
 	fmt.Printf("❌ Unable to connect to the RPC @ %s\n\nError: %s", boldText(remoteCLIURL), err)
 	return nil

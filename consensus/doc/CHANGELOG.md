@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.35] - 2023-02-28
+## [0.0.0.36] - 2023-02-28
 
 - Creating a persistence read context when needing to accessing stateless (i.e. block hash) data
 - Renamed package names and parameters to reflect changes in the rest of the codebase
 - Removed the unused `validator.proto`
+
+## [0.0.0.35] - 2023-02-28
+
+- Fixed bug in `sendGetMetadataStateSyncMessage`
 
 ## [0.0.0.34] - 2023-02-24
 
