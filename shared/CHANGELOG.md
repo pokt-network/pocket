@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.35] - 2023-02-28
+
+- Implement SLIP-0010 specification for HD child key derivation
+- Cover both Test Vectors 1 and 2 from the specification
+
 ## [0.0.0.34] - 2023-02-24
 
 - Remove SetLeaderId() method from ConsensusDebugModule interface
