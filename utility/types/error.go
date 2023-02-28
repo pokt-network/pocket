@@ -12,6 +12,7 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
+// TODO(#556): Move this to a shared package so it can be used throughout the entire codebase
 type Error interface {
 	Code() Code
 	error
@@ -40,8 +41,7 @@ func NewError(code Code, msg string) Error {
 }
 
 // NextCode: 133
-// CONSIDERATION: Should these be a proto enum or
-type Code float64
+type Code float64 // CONSIDERATION: Should these be a proto enum or
 
 //nolint:gosec // G101 - Not hard-coded credentials
 const (
