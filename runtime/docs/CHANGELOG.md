@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.24] - 2023-02-27
+## [0.0.0.24] - 2023-02-28
 
 - Rename `app_staking_adjustment` to `app_session_tokens_multiplier`
 - Remove `app_baseline_stake_rate`

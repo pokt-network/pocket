@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.30] - 2023-02-27
+## [0.0.0.30] - 2023-02-28
 
 - Added thorough documentation in different parts of the codebase
 - Replace the `Store()` function with a `.store` accessor

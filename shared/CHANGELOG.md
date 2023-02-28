@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.35] - 2023-02-27
+## [0.0.0.35] - 2023-02-28
 
 - Move `StakeStatus` into `actor.proto`
 - Rename `generic_param` into `service_url`
