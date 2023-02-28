@@ -28,7 +28,7 @@ func TestSlip_DeriveChild_TestVectors(t *testing.T) {
 		wantErr bool
 	}{
 		// https://github.com/satoshilabs/slips/blob/master/slip-0010.md#test-vector-1-for-ed25519
-		// Note that ed25519 public keys normaly don't have a "00" prefix, but we are reflecting the
+		// Note that ed25519 public keys normally don't have a "00" prefix, but we are reflecting the
 		// test vectors from the spec which do
 		{
 			name:        "TestVector1 Key derivation is deterministic for path `m` (master key)",
