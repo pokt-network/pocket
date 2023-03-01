@@ -26,7 +26,7 @@ func PeerFromLibp2pStream(stream network.Stream) (*types.NetworkPeer, error) {
 	}
 
 	peerMultiaddr := stream.Conn().RemoteMultiaddr()
-	peerServiceUrl, err := ServiceUrlFromLibp2pMultiaddr(peerMultiaddr)
+	peerServiceURL, err := ServiceURLFromLibp2pMultiaddr(peerMultiaddr)
 	if err != nil {
 		return nil, fmt.Errorf("converting multiaddr to service URL: %w", err)
 	}
@@ -36,7 +36,7 @@ func PeerFromLibp2pStream(stream network.Stream) (*types.NetworkPeer, error) {
 		PublicKey:  publicKey,
 		Address:    publicKey.Address(),
 		Multiaddr:  peerMultiaddr,
-		ServiceUrl: peerServiceUrl,
+		ServiceURL: peerServiceURL,
 	}, nil
 }
 
@@ -69,7 +69,7 @@ func Libp2pAddrInfoFromPeer(peer *types.NetworkPeer) (libp2pPeer.AddrInfo, error
 		)
 	}
 
-	peerMultiaddr, err := Libp2pMultiaddrFromServiceUrl(peer.ServiceUrl)
+	peerMultiaddr, err := Libp2pMultiaddrFromServiceURL(peer.ServiceURL)
 	if err != nil {
 		return libp2pPeer.AddrInfo{}, err
 	}

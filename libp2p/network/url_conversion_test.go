@@ -12,7 +12,7 @@ import (
 func TestPeerMultiAddrFromServiceURL_Success(t *testing.T) {
 	testCases := []struct {
 		name                  string
-		serviceUrl            string
+		serviceURL            string
 		expetedMultiaddrRegex string
 	}{
 		{
@@ -34,7 +34,7 @@ func TestPeerMultiAddrFromServiceURL_Success(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actualMultiaddr, err := Libp2pMultiaddrFromServiceUrl(testCase.serviceUrl)
+			actualMultiaddr, err := Libp2pMultiaddrFromServiceURL(testCase.serviceURL)
 			require.NoError(t, err)
 			require.NotNil(t, actualMultiaddr)
 			require.Regexp(t, regexp.MustCompile(testCase.expetedMultiaddrRegex), actualMultiaddr.String())
@@ -58,7 +58,7 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 
 	testCases := []struct {
 		name             string
-		serviceUrlFormat string
+		serviceURLFormat string
 		// TECHDEBT: assert specific errors.
 		expectedErrContains string
 	}{
@@ -93,8 +93,8 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 		for hostType, hostname := range hostnames {
 			testName := fmt.Sprintf("%s/%s", testCase.name, hostType)
 			t.Run(testName, func(t *testing.T) {
-				serviceURL := fmt.Sprintf(testCase.serviceUrlFormat, hostname)
-				actualMultiaddr, err := Libp2pMultiaddrFromServiceUrl(serviceURL)
+				serviceURL := fmt.Sprintf(testCase.serviceURLFormat, hostname)
+				actualMultiaddr, err := Libp2pMultiaddrFromServiceURL(serviceURL)
 				// TECHDEBT: assert specific errors
 				// Print resulting multiaddr to understand why no error.
 				require.ErrorContainsf(t, err, testCase.expectedErrContains, fmt.Sprintf("actualMultiaddr: %s", actualMultiaddr))
@@ -103,7 +103,7 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 	}
 }
 
-func TestServiceUrlFromLibp2pMultiaddr_Success(t *testing.T) {
+func TestServiceURLFromLibp2pMultiaddr_Success(t *testing.T) {
 	testCases := []struct {
 		name         string
 		multiaddrStr string
@@ -137,7 +137,7 @@ func TestServiceUrlFromLibp2pMultiaddr_Success(t *testing.T) {
 			addr, err := multiaddr.NewMultiaddr(testCase.multiaddrStr)
 			require.NoError(t, err)
 
-			actualUrl, err := ServiceUrlFromLibp2pMultiaddr(addr)
+			actualUrl, err := ServiceURLFromLibp2pMultiaddr(addr)
 			require.NoError(t, err)
 			require.NotNil(t, actualUrl)
 			require.Equal(t, testCase.expectedUrl, actualUrl)
@@ -145,7 +145,7 @@ func TestServiceUrlFromLibp2pMultiaddr_Success(t *testing.T) {
 	}
 }
 
-func TestServiceUrlFromLibp2pMultiaddr_Error(t *testing.T) {
+func TestServiceURLFromLibp2pMultiaddr_Error(t *testing.T) {
 	testCases := []struct {
 		name                string
 		multiaddrStr        string
@@ -163,7 +163,7 @@ func TestServiceUrlFromLibp2pMultiaddr_Error(t *testing.T) {
 			addr, err := multiaddr.NewMultiaddr(testCase.multiaddrStr)
 			require.NoError(t, err)
 
-			_, err = ServiceUrlFromLibp2pMultiaddr(addr)
+			_, err = ServiceURLFromLibp2pMultiaddr(addr)
 			// DISCUSS: improved error assertion methodology
 			require.ErrorContains(t, err, testCase.expectedErrContains)
 		})

@@ -23,9 +23,9 @@ const (
 	errResolvePeerIPMsg = "resolving peer IP for hostname"
 )
 
-// Libp2pMultiaddrFromServiceUrl transforms a URL into its libp2p multiaddr equivalent.
+// Libp2pMultiaddrFromServiceURL transforms a URL into its libp2p multiaddr equivalent.
 // (see: https://github.com/libp2p/specs/blob/master/addressing/README.md#multiaddr-basics)
-func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, error) {
+func Libp2pMultiaddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error) {
 	var (
 		// TECHDEBT: assuming TCP; remote peer's transport type must be knowable!
 		// (ubiquitously switching to multiaddr, instead of a URL, would resolve this)
@@ -34,11 +34,11 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 		peerIPVersionStr = ipVersion4
 	)
 
-	peerUrl, err := url.Parse(anyScheme + serviceUrl)
+	peerUrl, err := url.Parse(anyScheme + serviceURL)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"parsing peer service URL: %s: %w",
-			serviceUrl,
+			serviceURL,
 			err,
 		)
 	}
@@ -63,8 +63,8 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 	return multiaddr.NewMultiaddr(peerMultiAddrStr)
 }
 
-// ServiceUrlFromLibp2pMultiaddr converts a multiaddr into a URL string.
-func ServiceUrlFromLibp2pMultiaddr(addr multiaddr.Multiaddr) (string, error) {
+// ServiceURLFromLibp2pMultiaddr converts a multiaddr into a URL string.
+func ServiceURLFromLibp2pMultiaddr(addr multiaddr.Multiaddr) (string, error) {
 	protocols := addr.Protocols()
 	if len(protocols) < 2 {
 		return "", fmt.Errorf(
