@@ -2,42 +2,14 @@ package utility
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/utility/types"
+	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	"google.golang.org/protobuf/types/known/anypb"
 )
-
-const (
-	TransactionGossipMessageContentType = "utility.TransactionGossipMessage"
-)
-
-func (u *utilityModule) HandleMessage(message *anypb.Any) error {
-	switch message.MessageName() {
-	case TransactionGossipMessageContentType:
-		msg, err := codec.GetCodec().FromAny(message)
-		if err != nil {
-			return err
-		}
-
-		if txGossipMsg, ok := msg.(*types.TransactionGossipMessage); !ok {
-			return fmt.Errorf("failed to cast message to UtilityMessage")
-		} else if err := u.CheckTransaction(txGossipMsg.Tx); err != nil {
-			return err
-		}
-		u.logger.Info().Str("source", "MEMPOOL").Msg("Successfully added a new message to the mempool!")
-	default:
-		return types.ErrUnknownMessageType(message.MessageName())
-	}
-
-	return nil
-}
 
 func (u *utilityContext) handleMessage(msg typesUtil.Message) (err typesUtil.Error) {
 	switch x := msg.(type) {
@@ -60,7 +32,7 @@ func (u *utilityContext) handleMessage(msg typesUtil.Message) (err typesUtil.Err
 
 func (u *utilityContext) handleMessageSend(message *typesUtil.MessageSend) typesUtil.Error {
 	// convert the amount to big.Int
-	amount, er := converters.StringToBigInt(message.Amount)
+	amount, er := utils.StringToBigInt(message.Amount)
 	if er != nil {
 		return typesUtil.ErrStringToBigInt(er)
 	}
@@ -127,21 +99,16 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 
-	store := u.Store()
 	// insert actor
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		maxRelays, err := u.calculateMaxAppRelays(message.Amount)
-		if err != nil {
-			return err
-		}
-		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-		er = store.InsertServicer(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.store.InsertServicer(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	}
 	if er != nil {
 		return typesUtil.ErrInsert(er)
@@ -161,7 +128,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 	if err != nil {
 		return err
 	}
-	amount, er := converters.StringToBigInt(message.Amount)
+	amount, er := utils.StringToBigInt(message.Amount)
 	if er != nil {
 		return typesUtil.ErrStringToBigInt(err)
 	}
@@ -190,20 +157,15 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 	if err := u.addPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
 		return err
 	}
-	store := u.Store()
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		maxRelays, err := u.calculateMaxAppRelays(message.Amount)
-		if err != nil {
-			return err
-		}
-		er = store.UpdateApp(message.Address, maxRelays, message.Amount, message.Chains)
+		er = u.store.UpdateApp(message.Address, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
+		er = u.store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-		er = store.UpdateServicer(message.Address, message.ServiceUrl, message.Amount, message.Chains)
+		er = u.store.UpdateServicer(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		er = store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
+		er = u.store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
 	}
 	if er != nil {
 		return typesUtil.ErrInsert(er)
@@ -212,9 +174,9 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 }
 
 func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake) typesUtil.Error {
-	if status, err := u.getActorStatus(message.ActorType, message.Address); err != nil || status != typesUtil.StakeStatus_Staked {
-		if status != typesUtil.StakeStatus_Staked {
-			return typesUtil.ErrInvalidStatus(status, typesUtil.StakeStatus_Staked)
+	if status, err := u.getActorStatus(message.ActorType, message.Address); err != nil || status != coreTypes.StakeStatus_Staked {
+		if status != coreTypes.StakeStatus_Staked {
+			return typesUtil.ErrInvalidStatus(status, coreTypes.StakeStatus_Staked)
 		}
 		return err
 	}
@@ -222,7 +184,7 @@ func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake)
 	if err != nil {
 		return err
 	}
-	if err := u.setActorUnstakingHeight(message.ActorType, message.Address, unbondingHeight); err != nil {
+	if err := u.setActorUnbondingHeight(message.ActorType, message.Address, unbondingHeight); err != nil {
 		return err
 	}
 	return nil
@@ -340,11 +302,11 @@ func (u *utilityContext) checkAboveMinStake(actorType coreTypes.ActorType, amoun
 	if err != nil {
 		return nil, err
 	}
-	amount, er := converters.StringToBigInt(amountStr)
+	amount, er := utils.StringToBigInt(amountStr)
 	if er != nil {
 		return nil, typesUtil.ErrStringToBigInt(err)
 	}
-	if converters.BigIntLessThan(amount, minStake) {
+	if utils.BigIntLessThan(amount, minStake) {
 		return nil, typesUtil.ErrMinimumStake()
 	}
 	return amount, nil

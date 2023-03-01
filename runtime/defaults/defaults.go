@@ -30,7 +30,7 @@ var (
 	DefaultUtilityMaxMempoolTransactionBytes = uint64(1024 ^ 3) // 1GB V0 defaults
 	DefaultUtilityMaxMempoolTransactions     = uint32(9000)
 	// persistence
-	DefaultPersistencePostgresUrl    = "postgres://postgres:postgres@pocket-db:5432/postgres"
+	DefaultPersistencePostgresURL    = "postgres://postgres:postgres@pocket-db:5432/postgres"
 	DefaultPersistenceBlockStorePath = "/var/blockstore"
 	// p2p
 	DefaultP2PPort            = uint32(42069)

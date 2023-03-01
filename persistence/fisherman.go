@@ -18,7 +18,7 @@ func (p *PostgresContext) GetFisherman(address []byte, height int64) (operator, 
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedAmount
-	serviceURL = actor.GenericParam
+	serviceURL = actor.ServiceUrl
 	outputAddress = actor.Output
 	pausedHeight = actor.PausedHeight
 	unstakingHeight = actor.UnstakingHeight
@@ -32,7 +32,7 @@ func (p *PostgresContext) InsertFisherman(address, publicKey, output []byte, _ b
 		Address:         hex.EncodeToString(address),
 		PublicKey:       hex.EncodeToString(publicKey),
 		Chains:          chains,
-		GenericParam:    serviceURL,
+		ServiceUrl:      serviceURL,
 		StakedAmount:    stakedTokens,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
@@ -45,7 +45,7 @@ func (p *PostgresContext) UpdateFisherman(address []byte, serviceURL, stakedAmou
 		ActorType:    coreTypes.ActorType_ACTOR_TYPE_FISH,
 		Address:      hex.EncodeToString(address),
 		StakedAmount: stakedAmount,
-		GenericParam: serviceURL,
+		ServiceUrl:   serviceURL,
 		Chains:       chains,
 	})
 }

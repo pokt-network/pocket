@@ -20,6 +20,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/genesis"
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -30,7 +31,7 @@ import (
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
 
 const (
-	serviceUrlFormat  = "node%d.consensus:42069"
+	serviceURLFormat  = "node%d.consensus:42069"
 	eventsChannelSize = 10000
 	// Since we simulate up to a 27 node network, we will pre-generate a n >= 27 number of keys to avoid generation
 	// every time. The genesis config seed start is set for deterministic key generation and 42 was chosen arbitrarily.
@@ -72,7 +73,7 @@ type TestNetworkSimulationConfig map[string]struct {
 
 // CLEANUP: This could (should?) be a codebase-wide shared test helper
 func validatorId(i int) string {
-	return fmt.Sprintf(serviceUrlFormat, i)
+	return fmt.Sprintf(serviceURLFormat, i)
 }
 
 func waitForNetworkSimulationCompletion(t *testing.T, wg *sync.WaitGroup) {
@@ -167,8 +168,8 @@ func createMockGenesisState(valKeys []cryptoPocket.PrivateKey) *genesis.GenesisS
 			ActorType:       coreTypes.ActorType_ACTOR_TYPE_VAL,
 			Address:         addr,
 			PublicKey:       valKey.PublicKey().String(),
-			GenericParam:    validatorId(i + 1),
-			StakedAmount:    "1000000000000000",
+			ServiceUrl:      validatorId(i + 1),
+			StakedAmount:    test_artifacts.DefaultStakeAmountString,
 			PausedHeight:    int64(0),
 			UnstakingHeight: int64(0),
 			Output:          addr,

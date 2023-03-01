@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/pokt-network/pocket/shared/converters"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
@@ -15,11 +15,11 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 	accs := getAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
-	sendAmountString := converters.BigIntToString(sendAmount)
-	senderBalanceBefore, err := converters.StringToBigInt(accs[0].GetAmount())
+	sendAmountString := utils.BigIntToString(sendAmount)
+	senderBalanceBefore, err := utils.StringToBigInt(accs[0].GetAmount())
 	require.NoError(t, err)
 
-	recipientBalanceBefore, err := converters.StringToBigInt(accs[1].GetAmount())
+	recipientBalanceBefore, err := utils.StringToBigInt(accs[1].GetAmount())
 	require.NoError(t, err)
 
 	addrBz, er := hex.DecodeString(accs[0].GetAddress())
@@ -33,10 +33,10 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 	require.NoError(t, err, "handle message send")
 
 	accs = getAllTestingAccounts(t, ctx)
-	senderBalanceAfter, err := converters.StringToBigInt(accs[0].GetAmount())
+	senderBalanceAfter, err := utils.StringToBigInt(accs[0].GetAmount())
 	require.NoError(t, err)
 
-	recipientBalanceAfter, err := converters.StringToBigInt(accs[1].GetAmount())
+	recipientBalanceAfter, err := utils.StringToBigInt(accs[1].GetAmount())
 	require.NoError(t, err)
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter))
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore))
@@ -47,7 +47,7 @@ func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 	accs := getAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
-	sendAmountString := converters.BigIntToString(sendAmount)
+	sendAmountString := utils.BigIntToString(sendAmount)
 
 	addrBz, er := hex.DecodeString(accs[0].GetAddress())
 	require.NoError(t, er)

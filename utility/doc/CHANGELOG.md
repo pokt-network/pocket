@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.31] - 2023-02-28
+
+- Fixed bug where we were not removing txs from the mempool of replicas
+- Added thorough documentation in different parts of the codebase
+- Replace the `Store()` function with a `.store` accessor
+- Removed the unnecessary `getStoreAndHeight()` function
+- Simplified `calculateMaxAppRelays` to a temporary `calculateAppSessionTokens` implementation
+- Improved the readability of the `Block` lifecycle and `Message` validation
+- Simplified the testing utilities used
+- Updated the `session` interface
+- Renamed `applyTx` to `hydrateTx` and added documentation on its functionality
+- Removed `DefaultTxResult` and added documentation to `TxResult` result
+
 ## [0.0.0.30] - 2023-02-24
 
 - Update logger value references with pointers

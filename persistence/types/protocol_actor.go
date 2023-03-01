@@ -32,7 +32,6 @@ type ProtocolActorSchema interface {
 	// Returns a query to retrieve data associated with all the apps ready to unstake.
 	GetReadyToUnstakeQuery(unstakingHeight int64) string
 	// Returns a query to retrieve the output address of an Actor given its operator address.
-	// DISCUSS(drewsky): Why/how we even need this. What is an output & operator for an app?
 	GetOutputAddressQuery(operatorAddress string, height int64) string
 	// Returns a query to retrieve the stake amount of an actor
 	GetStakeAmountQuery(address string, height int64) string
@@ -47,11 +46,11 @@ type ProtocolActorSchema interface {
 	/*** Create/Insert Queries ***/
 
 	// Returns a query to create a new Actor with all of the necessary data.
-	InsertQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string
+	InsertQuery(address, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string
 
 	/*** Update Queries ***/
 	// Returns a query to update an Actor's stake and/or max relays.
-	UpdateQuery(address, stakedTokens, maxRelays string, height int64) string
+	UpdateQuery(address, stakedTokens, serviceURL string, height int64) string
 	// Returns a query to update the chains an Actor is staked for.
 	UpdateChainsQuery(address string, chains []string, height int64) string
 	// Returns a query to update the height at which an Actor is unstaking.

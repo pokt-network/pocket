@@ -5,8 +5,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/utils"
 )
 
 const (
@@ -37,18 +37,18 @@ func (p *PostgresContext) operationAccountAmount(
 	if err != nil {
 		return err
 	}
-	originalAmountBig, err := converters.StringToBigInt(originalAmount)
+	originalAmountBig, err := utils.StringToBigInt(originalAmount)
 	if err != nil {
 		return err
 	}
-	amountBig, err := converters.StringToBigInt(amount)
+	amountBig, err := utils.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}
 	if err := op(originalAmountBig, amountBig); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, accountSchema.InsertAccountQuery(identifier, converters.BigIntToString(originalAmountBig), height)); err != nil {
+	if _, err = tx.Exec(ctx, accountSchema.InsertAccountQuery(identifier, utils.BigIntToString(originalAmountBig), height)); err != nil {
 		return err
 	}
 	return nil

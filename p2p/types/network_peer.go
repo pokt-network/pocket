@@ -10,5 +10,5 @@ type NetworkPeer struct {
 	Address   cryptoPocket.Address
 
 	// This is only included because it's a more human-friendly differentiator between peers
-	ServiceUrl string
+	ServiceURL string
 }
