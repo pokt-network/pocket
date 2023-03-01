@@ -318,3 +318,18 @@ func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Act
 
 	return persistenceReadContext.GetAllValidators(int64(height))
 }
+
+func (m *consensusModule) IsValidator() (bool, error) {
+	validators, err := m.getValidatorsAtHeight(m.prepareQC.Height)
+	if err != nil {
+		return false, err
+	}
+
+	for _, actor := range validators {
+		if actor.Address == m.nodeAddress {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}

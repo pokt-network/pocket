@@ -336,11 +336,6 @@ func (m *consensusModule) DisableServerMode() error {
 	return m.stateSync.DisableServerMode()
 }
 
-// TODO! Implement this, placeholder function
-func (m *consensusModule) IsValidator() bool {
-	return true
-}
-
 func (m *consensusModule) IsOutOfSync() bool {
 	return m.stateSync.IsOutOfSync()
 }

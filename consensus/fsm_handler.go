@@ -73,8 +73,11 @@ func (m *consensusModule) HandleSync(msg *messaging.StateMachineTransitionEvent)
 	for err != nil {
 		err = m.stateSync.Sync()
 	}
-
-	if m.IsValidator() {
+	isValidator, err := m.IsValidator()
+	if err != nil {
+		return err
+	}
+	if isValidator {
 		m.logger.Debug().Msg("Validator node synced to the latest state with the rest of the peers")
 		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsCaughtUpValidator); err != nil {
 			return err
