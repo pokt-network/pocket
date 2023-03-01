@@ -128,7 +128,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 			return false, err
 		}
 
-		// at this point node is synched. Therefore, the block height should not be higher than node's current height
+		// at this point node is synched. Therefore, the block proposal height should not be higher than the node's current height
 		// if not node must reject the proposal since it must be a malicious proposal
 		if msg.Height > currentHeight {
 			return false, nil
