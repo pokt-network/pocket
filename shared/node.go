@@ -135,9 +135,9 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		if err := node.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
 			return err
 		}
-	case consensus.HotstuffMessageContentType:
+	case messaging.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
-	case consensus.StateSyncMessageContentType:
+	case messaging.StateSyncMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
 	case utility.TransactionGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleMessage(message.Content)

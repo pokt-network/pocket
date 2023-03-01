@@ -26,9 +26,9 @@ const (
 
 	ByzantineThreshold = float64(2) / float64(3)
 
-	HotstuffMessageContentType      = "consensus.HotstuffMessage"
-	StateSyncMessageContentType     = "consensus.StateSyncMessage"
-	StateMachineTransitionEventType = "pocket.StateMachineTransitionEvent"
+	// HotstuffMessageContentType      = "consensus.HotstuffMessage"
+	// StateSyncMessageContentType     = "consensus.StateSyncMessage"
+	// StateMachineTransitionEventType = "pocket.StateMachineTransitionEvent"
 )
 
 var HotstuffSteps = [...]typesCons.HotstuffStep{NewRound, Prepare, PreCommit, Commit, Decide}

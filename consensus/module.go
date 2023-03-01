@@ -266,7 +266,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	defer m.m.Unlock()
 
 	switch message.MessageName() {
-	case HotstuffMessageContentType:
+	case messaging.HotstuffMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
 			return err
@@ -278,7 +278,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
 			return err
 		}
-	case StateMachineTransitionEventType:
+	case messaging.StateMachineTransitionEventType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
 			return err

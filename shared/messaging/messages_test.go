@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pokt-network/pocket/consensus"
+	//"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/utility"
@@ -28,7 +28,7 @@ func TestPocketEnvelope_GetContentType(t *testing.T) {
 		},
 		{
 			msg:             &typesCons.HotstuffMessage{},
-			wantContentType: consensus.HotstuffMessageContentType,
+			wantContentType: messaging.HotstuffMessageContentType,
 		},
 		{
 			msg:             &typesUtil.TransactionGossipMessage{},

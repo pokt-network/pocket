@@ -5,6 +5,7 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -14,7 +15,7 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 	m.logger.Info().Msg("Received a state sync message")
 
 	switch stateSyncMessageAny.MessageName() {
-	case StateSyncMessageContentType:
+	case messaging.StateSyncMessageContentType:
 		msg, err := codec.GetCodec().FromAny(stateSyncMessageAny)
 		if err != nil {
 			return err
