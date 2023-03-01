@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.36] - 2023-02-28
 
+- Move `StakeStatus` into `actor.proto`
+- Rename `generic_param` into `service_url`
+- Remove unused params from `BlockHeader`
+- Document `transaction.proto` and move it from the `utility` module to `shared`
+- Moved `signature.go` from the `utility` module to `shared`
+- Added documentation to important functions in the `Persistence` and `Utility` shared modules
+- Added documentation on how/why `UnstakingActor` should be removed
+
+## [0.0.0.36] - 2023-02-28
+
 - Implement SLIP-0010 specification for HD child key derivation
 - Cover both Test Vectors 1 and 2 from the specification
 

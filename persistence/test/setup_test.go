@@ -16,12 +16,12 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
-	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
-	"github.com/pokt-network/pocket/shared/converters"
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -29,20 +29,18 @@ import (
 var (
 	DefaultChains     = []string{"0001"}
 	ChainsToUpdate    = []string{"0002"}
-	DefaultServiceUrl = "https://foo.bar"
+	DefaultServiceURL = "https://foo.bar"
 	DefaultPoolName   = "TESTING_POOL"
 
-	DefaultDeltaBig     = big.NewInt(100)
-	DefaultAccountBig   = big.NewInt(1000000)
-	DefaultStakeBig     = big.NewInt(1000000000000000)
-	DefaultMaxRelaysBig = big.NewInt(1000000)
+	DefaultDeltaBig   = big.NewInt(100)
+	DefaultAccountBig = big.NewInt(1000000)
+	DefaultStakeBig   = big.NewInt(1000000000000000)
 
-	DefaultAccountAmount = converters.BigIntToString(DefaultAccountBig)
-	DefaultStake         = converters.BigIntToString(DefaultStakeBig)
-	DefaultMaxRelays     = converters.BigIntToString(DefaultMaxRelaysBig)
-	StakeToUpdate        = converters.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
+	DefaultAccountAmount = utils.BigIntToString(DefaultAccountBig)
+	DefaultStake         = utils.BigIntToString(DefaultStakeBig)
+	StakeToUpdate        = utils.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
 
-	DefaultStakeStatus     = int32(persistence.StakedStatus)
+	DefaultStakeStatus     = int32(coreTypes.StakeStatus_Staked)
 	DefaultPauseHeight     = int64(-1) // pauseHeight=-1 means not paused
 	DefaultUnstakingHeight = int64(-1) // pauseHeight=-1 means not unstaking
 
@@ -92,7 +90,7 @@ func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresCon
 
 // TODO(olshansky): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
-	teardownDeterministicKeygen := keygenerator.GetInstance().SetSeed(42)
+	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
 	defer teardownDeterministicKeygen()
 
 	cfg := &configs.Config{
@@ -184,7 +182,7 @@ func fuzzSingleProtocolActor(
 			numParamUpdatesSupported := 3
 			newStakedTokens := originalActor.StakedAmount
 			newChains := originalActor.Chains
-			newActorSpecificParam := originalActor.GenericParam
+			serviceUrl := originalActor.ServiceUrl
 
 			iterations := rand.Intn(2)
 			for i := 0; i < iterations; i++ {
@@ -194,9 +192,9 @@ func fuzzSingleProtocolActor(
 				case 1:
 					switch protocolActorSchema.GetActorSpecificColName() {
 					case types.ServiceURLCol:
-						newActorSpecificParam = getRandomServiceURL()
-					case types.MaxRelaysCol:
-						newActorSpecificParam = getRandomBigIntString()
+						serviceUrl = getRandomServiceURL()
+					case types.UnusedCol:
+						serviceUrl = ""
 					default:
 						t.Error("Unexpected actor specific column name")
 					}
@@ -210,7 +208,7 @@ func fuzzSingleProtocolActor(
 				Address:         originalActor.Address,
 				PublicKey:       originalActor.PublicKey,
 				StakedAmount:    newStakedTokens,
-				GenericParam:    newActorSpecificParam,
+				ServiceUrl:      serviceUrl,
 				Output:          originalActor.Output,
 				PausedHeight:    originalActor.PausedHeight,
 				UnstakingHeight: originalActor.UnstakingHeight,
@@ -229,7 +227,7 @@ func fuzzSingleProtocolActor(
 				log.Println("")
 			}
 			require.Equal(t, newStakedTokens, newActor.StakedAmount, "staked tokens not updated")
-			require.Equal(t, newActorSpecificParam, newActor.GenericParam, "actor specific param not updated")
+			require.Equal(t, serviceUrl, newActor.ServiceUrl, "actor specific param not updated")
 		case "GetActorsReadyToUnstake":
 			unstakingActors, err := db.GetActorsReadyToUnstake(protocolActorSchema, db.Height)
 			require.NoError(t, err)
@@ -248,11 +246,11 @@ func fuzzSingleProtocolActor(
 
 			switch {
 			case originalActor.UnstakingHeight == DefaultUnstakingHeight:
-				require.Equal(t, persistence.StakedStatus, status, "actor status should be staked")
+				require.Equal(t, int32(coreTypes.StakeStatus_Staked), status, "actor status should be staked")
 			case originalActor.UnstakingHeight > db.Height:
-				require.Equal(t, persistence.UnstakingStatus, status, "actor status should be unstaking")
+				require.Equal(t, int32(coreTypes.StakeStatus_Unstaking), status, "actor status should be unstaking")
 			default:
-				require.Equal(t, persistence.UnstakedStatus, status, "actor status should be unstaked")
+				require.Equal(t, int32(coreTypes.StakeStatus_Unstaked), status, "actor status should be unstaked")
 			}
 		case "GetActorPauseHeight":
 			pauseHeight, err := db.GetActorPauseHeightIfExists(protocolActorSchema, addr, db.Height)
@@ -342,7 +340,7 @@ func getRandomServiceURL() string {
 }
 
 func getRandomBigIntString() string {
-	return converters.BigIntToString(big.NewInt(rand.Int63())) //nolint:gosec // G404 - Weak random source is okay in unit tests
+	return utils.BigIntToString(big.NewInt(rand.Int63())) //nolint:gosec // G404 - Weak random source is okay in unit tests
 }
 
 func setRandomSeed() {

@@ -184,7 +184,7 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 	}
 
 	for _, val := range validators {
-		if m.GetNodeAddress() != val.GetAddress() {
+		if m.GetNodeAddress() == val.GetAddress() {
 			continue
 		}
 		valAddress := cryptoPocket.AddressFromString(val.GetAddress())

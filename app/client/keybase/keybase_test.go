@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
@@ -441,7 +441,7 @@ func initDB(t *testing.T) Keybase {
 func createTestKeys(t *testing.T, n int) []crypto.PrivateKey {
 	pks := make([]crypto.PrivateKey, 0)
 	for i := 0; i < n; i++ {
-		privKeyString, _, _ := keygenerator.GetInstance().Next()
+		privKeyString, _, _ := keygen.GetInstance().Next()
 		privKey, err := crypto.NewPrivateKey(privKeyString)
 		require.NoError(t, err)
 		pks = append(pks, privKey)

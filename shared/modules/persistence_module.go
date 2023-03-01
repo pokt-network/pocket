@@ -47,11 +47,15 @@ type PersistenceRWContext interface {
 
 // REFACTOR: Simplify the interface
 // - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
-// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
+// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_, ...)`
 // - Reference: https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces
 
-// TECHDEBT: convert address and public key to string from bytes
-// NOTE: There's not really a use case for a write only interface, but it abstracts and contrasts nicely against the read only context
+// TECHDEBT:
+//   - Decouple functions that can be split into two or more independent behaviours (e.g. `SetAppStatusAndUnstakingHeightIfPausedBefore`)
+//   - Rename `Unstaking` to `Unbonding` where appropriate
+//   - convert address and public key to string from bytes
+
+// PersistenceWriteContext has no use-case independent of `PersistenceRWContext`, but is a useful abstraction
 type PersistenceWriteContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error
@@ -63,9 +67,13 @@ type PersistenceWriteContext interface {
 
 	// Indexer Operations
 
-	// Block Operations
-	ComputeStateHash() (string, error)        // Update the merkle trees, computes the new state hash, and returns it
-	IndexTransaction(txResult TxResult) error // TODO(#361): Look into an approach to remove `TxResult` from shared interfaces
+	// ComputeStateHash updates the merkle trees, computes the new state hash (i.e. state commitment)
+	// if the context is committed.
+	ComputeStateHash() (string, error)
+
+	// Indexes the transaction using several different keys (for lookup purposes) in the key-value store
+	// that backs the transaction merkle tree.
+	IndexTransaction(txResult TxResult) error
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
@@ -79,8 +87,8 @@ type PersistenceWriteContext interface {
 	SetAccountAmount(address []byte, amount string) error // NOTE: same as (insert)
 
 	// App Operations
-	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int32, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateApp(address []byte, maxRelaysToAdd string, amount string, chainsToUpdate []string) error
+	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int32, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateApp(address []byte, amount string, chainsToUpdate []string) error
 	SetAppStakeAmount(address []byte, stakeAmount string) error
 	SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
 	SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
@@ -106,11 +114,9 @@ type PersistenceWriteContext interface {
 	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
 	UpdateValidator(address []byte, serviceURL string, amount string) error
 	SetValidatorStakeAmount(address []byte, stakeAmount string) error
-	// IMPROVE: Decouple and/or rename these functions
 	SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
 	SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
 	SetValidatorPauseHeight(address []byte, height int64) error
-	SetValidatorPauseHeightAndMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) error
 	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
 
 	// Param Operations

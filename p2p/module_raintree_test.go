@@ -260,7 +260,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		err := p2pMod.Start()
 		require.NoError(t, err)
 		for _, peer := range p2pMod.network.GetAddrBook() {
-			peer.Dialer = connMocks[peer.ServiceUrl]
+			peer.Dialer = connMocks[peer.ServiceURL]
 		}
 	}
 

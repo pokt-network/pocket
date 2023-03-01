@@ -4,15 +4,14 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"strings"
-
 	"strconv"
+	"strings"
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
+	"github.com/pokt-network/pocket/shared/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -300,7 +299,7 @@ func keysExportCommands() []*cobra.Command {
 
 				logger.Global.Info().Str("output_file", outputFile).Msg("Exporting private key string to file...")
 
-				return converters.WriteOutput(exportString, outputFile)
+				return utils.WriteOutput(exportString, outputFile)
 			},
 		},
 	}
@@ -327,7 +326,7 @@ func keysImportCommands() []*cobra.Command {
 				if len(args) == 1 {
 					privateKeyString = args[0]
 				} else if inputFile != "" {
-					privateKeyBz, err := converters.ReadInput(inputFile)
+					privateKeyBz, err := utils.ReadInput(inputFile)
 					privateKeyString = string(privateKeyBz)
 					if err != nil {
 						return err
@@ -512,11 +511,11 @@ func keysSignTxCommands() []*cobra.Command {
 				}
 
 				// Unmarshal Tx from input file
-				txBz, err := converters.ReadInput(inputFile)
+				txBz, err := utils.ReadInput(inputFile)
 				if err != nil {
 					return err
 				}
-				txProto := new(utilTypes.Transaction)
+				txProto := new(coreTypes.Transaction)
 				if err := codec.GetCodec().Unmarshal(txBz, txProto); err != nil {
 					return err
 				}
@@ -533,7 +532,7 @@ func keysSignTxCommands() []*cobra.Command {
 				}
 
 				// Add signature to the transaction
-				sig := new(utilTypes.Signature)
+				sig := new(coreTypes.Signature)
 				sig.PublicKey = privKey.PublicKey().Bytes()
 				sig.Signature = sigBz
 				txProto.Signature = sig
@@ -544,7 +543,7 @@ func keysSignTxCommands() []*cobra.Command {
 					return err
 				}
 
-				if err := converters.WriteOutput(txBz, outputFile); err != nil {
+				if err := utils.WriteOutput(txBz, outputFile); err != nil {
 					return err
 				}
 
@@ -578,11 +577,11 @@ func keysSignTxCommands() []*cobra.Command {
 				}
 
 				// Unmarshal Tx from input file
-				txBz, err := converters.ReadInput(inputFile)
+				txBz, err := utils.ReadInput(inputFile)
 				if err != nil {
 					return err
 				}
-				txProto := new(utilTypes.Transaction)
+				txProto := new(coreTypes.Transaction)
 				if err := codec.GetCodec().Unmarshal(txBz, txProto); err != nil {
 					return err
 				}

@@ -126,6 +126,8 @@ func (m *Node) GetBus() modules.Bus {
 	return m.bus
 }
 
+// TECHDEBT: The `shared` package has dependencies on types in the individual modules.
+// TODO: Move all message types this is dependant on to the `messaging` package
 func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	contentType := message.GetContentType()
 	switch contentType {
@@ -138,8 +140,8 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 	case consensus.StateSyncMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
-	case utility.TransactionGossipMessageContentType:
-		return node.GetBus().GetUtilityModule().HandleMessage(message.Content)
+	case messaging.TxGossipMessageContentType:
+		return node.GetBus().GetUtilityModule().HandleUtilityMessage(message.Content)
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
 	case messaging.ConsensusNewHeightEventType, messaging.StateMachineTransitionEventType:

@@ -120,13 +120,13 @@ If no changes are desired for the parameter, just enter the current param value 
 			// removing all invalid characters from rawChains argument
 			rawChains := rawChainCleanupRegex.ReplaceAllString(args[2], "")
 			chains := strings.Split(rawChains, ",")
-			serviceURI := args[3]
+			serviceURL := args[3]
 
 			msg := &typesUtil.MessageStake{
 				PublicKey:     pk.PublicKey().Bytes(),
 				Chains:        chains,
 				Amount:        amount,
-				ServiceUrl:    serviceURI,
+				ServiceUrl:    serviceURL,
 				OutputAddress: pk.Address(),
 				Signer:        pk.Address(),
 				ActorType:     cmdDef.ActorType,
@@ -186,13 +186,13 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			// removing all invalid characters from rawChains argument
 			rawChains := rawChainCleanupRegex.ReplaceAllString(args[2], "")
 			chains := strings.Split(rawChains, ",")
-			serviceURI := args[3]
+			serviceURL := args[3]
 
 			msg := &typesUtil.MessageEditStake{
 				Address:    fromAddr,
 				Chains:     chains,
 				Amount:     amount,
-				ServiceUrl: serviceURI,
+				ServiceUrl: serviceURL,
 				Signer:     pk.Address(),
 				ActorType:  cmdDef.ActorType,
 			}

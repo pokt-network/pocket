@@ -28,7 +28,7 @@ type rpcCurrentHeightProvider struct {
 	base_modules.IntegratableModule
 	base_modules.InterruptableModule
 
-	rpcUrl    string
+	rpcURL    string
 	rpcClient *rpc.ClientWithResponses
 }
 
@@ -65,7 +65,7 @@ func (rchp *rpcCurrentHeightProvider) CurrentHeight() uint64 {
 
 func NewRPCCurrentHeightProvider(options ...modules.ModuleOption) *rpcCurrentHeightProvider {
 	rchp := &rpcCurrentHeightProvider{
-		rpcUrl: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
+		rpcURL: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
 	}
 
 	for _, o := range options {
@@ -78,7 +78,7 @@ func NewRPCCurrentHeightProvider(options ...modules.ModuleOption) *rpcCurrentHei
 }
 
 func (rchp *rpcCurrentHeightProvider) initRPCClient() {
-	rpcClient, err := rpc.NewClientWithResponses(rchp.rpcUrl)
+	rpcClient, err := rpc.NewClientWithResponses(rchp.rpcURL)
 	if err != nil {
 		log.Fatalf("could not create RPC client: %v", err)
 	}
@@ -87,9 +87,9 @@ func (rchp *rpcCurrentHeightProvider) initRPCClient() {
 
 // options
 
-// WithCustomRPCUrl allows to specify a custom RPC URL
-func WithCustomRPCUrl(rpcUrl string) modules.ModuleOption {
+// WithCustomRPCURL allows to specify a custom RPC URL
+func WithCustomRPCURL(rpcURL string) modules.ModuleOption {
 	return func(rabp modules.InitializableModule) {
-		rabp.(*rpcCurrentHeightProvider).rpcUrl = rpcUrl
+		rabp.(*rpcCurrentHeightProvider).rpcURL = rpcURL
 	}
 }

@@ -1,4 +1,4 @@
-package converters
+package utils
 
 import (
 	"errors"

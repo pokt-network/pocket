@@ -1,6 +1,7 @@
 package types
 
 // CLEANUP: Move SQL specific business logic into a `sql` package under `persistence`
+// TECHDEBT: Be consistent with `ServiceUrl` and `ActorSpecificParam` throughout the codebase; preferably the latter.
 
 import (
 	"bytes"
@@ -26,11 +27,11 @@ const (
 	NameCol            = "name"
 	StakedTokensCol    = "staked_tokens"
 	ServiceURLCol      = "service_url"
+	UnusedCol          = "unused" // TECHDEBT: Unused column name from legacy behaviour
 	OutputAddressCol   = "output_address"
 	UnstakingHeightCol = "unstaking_height"
 	PausedHeightCol    = "paused_height"
 	ChainIDCol         = "chain_id"
-	MaxRelaysCol       = "max_relays"
 	HeightCol          = "height"
 )
 

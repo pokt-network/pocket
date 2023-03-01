@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.19] - 2023-02-28
+## [0.0.0.20] - 2023-03-01
 
 - Introduces vault keybase to allow for the use of a vault server to store the private keys
 - Fixes bug where private keys were not being properly parsed from the debug keybase
+
+## [0.0.0.19] - 2023-02-28
+
+- Renamed the package names for some basic helpers
 
 ## [0.0.0.18] - 2023-02-28
 
