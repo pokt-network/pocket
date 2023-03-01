@@ -146,7 +146,7 @@ func (mod *libp2pModule) Start() error {
 	// Disable unused libp2p relay and ping services in client debug mode.
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#DisableRelay
 	// and https://pkg.go.dev/github.com/libp2p/go-libp2p#Ping)
-	if mod.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode {
+	if mod.isClientDebugMode() {
 		opts = append(opts,
 			libp2p.DisableRelay(),
 			libp2p.Ping(false),
@@ -195,7 +195,7 @@ func (mod *libp2pModule) Start() error {
 	}
 
 	// Don't handle streams or read from the subscription in client debug mode.
-	if !mod.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode {
+	if !mod.isClientDebugMode() {
 		mod.host.SetStreamHandler(protocol.PoktProtocolID, mod.handleStream)
 		go mod.readFromSubscription(ctx)
 	}
@@ -245,6 +245,10 @@ func (mod *libp2pModule) GetAddress() (crypto.Address, error) {
 // HandleEvent implements the respective `modules.Module` interface method.
 func (mod *libp2pModule) HandleEvent(msg *anypb.Any) error {
 	return nil
+}
+
+func (mod *libp2pModule) isClientDebugMode() bool {
+	return mod.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode
 }
 
 // handleStream is called each time a peer establishes a new stream with this
