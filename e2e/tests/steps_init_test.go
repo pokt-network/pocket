@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/cucumber/godog"
+	"github.com/testcontainers/testcontainers-go"
 )
 
 var (
@@ -63,4 +64,54 @@ func TestFeatures(t *testing.T) {
 	if suite.Run() != 0 {
 		t.Fatal("non-zero status returned, failed to run feature tests")
 	}
+}
+
+// buildDockerTestContainer builds a pocket node test container
+func buildDockerTestContainer(ctx context.Context) (testcontainers.Container, error) {
+	req := testcontainers.ContainerRequest{
+		FromDockerfile: testcontainers.FromDockerfile{
+			Context:    "../../",
+			Dockerfile: "../../build/Dockerfile.m1.proto",
+		},
+	}
+	node, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get container node: %w", err)
+	}
+
+	// node can accept commands
+	// code, result, err := node.Exec(ctx, "pocket help", nil)
+
+	return node, nil
+}
+
+// What if CreateNetwork just created a docker-compose start command and used that?
+func createNetwork(ctx context.Context, conf networkConfig) (*Network, error) {
+	network := &Network{
+		nodes: make([]testcontainers.Container, 0),
+	}
+
+	// TODO: start docker containers according to networkConfig and add it to our Network
+	node, err := buildDockerTestContainer(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build test container")
+	}
+	network.nodes = append(network.nodes, node)
+	return network, nil
+}
+
+// Cleanup cleans up all Network nodes.
+func (n *Network) Cleanup(ctx context.Context) error {
+	for _, node := range n.nodes {
+		// terminate all nodes and report errors
+		err := node.Terminate(ctx)
+		if err != nil {
+			log.Printf("cleanup failed %v", err) // TODO: what to do with this error on cleanup?
+		}
+	}
+	// TODO: collect errors maybe
+	return nil
 }
