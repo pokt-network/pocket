@@ -48,14 +48,14 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 				Dst: string(coreTypes.StateMachineState_Consensus_SyncMode),
 			},
 			{
-				Name: string(coreTypes.StateMachineEvent_Consensus_IsCaughtUpValidator),
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator),
 				Src: []string{
 					string(coreTypes.StateMachineState_Consensus_SyncMode),
 				},
 				Dst: string(coreTypes.StateMachineState_Consensus_Pacemaker),
 			},
 			{
-				Name: string(coreTypes.StateMachineEvent_Consensus_IsCaughtUpNonValidator),
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator),
 				Src: []string{
 					string(coreTypes.StateMachineState_Consensus_SyncMode),
 				},
