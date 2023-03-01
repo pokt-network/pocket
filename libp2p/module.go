@@ -310,7 +310,9 @@ func (mod *libp2pModule) readFromSubscription(ctx context.Context) {
 		default:
 			msg, err := mod.subscription.Next(ctx)
 			if err != nil {
-				mod.logger.Error().Err(err).Msg("reading from subscription")
+				mod.logger.Error().Err(err).
+					Bool("TODO", true).
+					Msg("reading from subscription")
 			}
 
 			// NB: ignore messages from self
@@ -338,7 +340,9 @@ func (mod *libp2pModule) handleNetworkData(data []byte) {
 
 	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
-		mod.logger.Error().Err(err).Msg("Error decoding network message")
+		mod.logger.Error().Err(err).
+			Bool("TODO", true).
+			Msg("Error decoding network message")
 		return
 	}
 
