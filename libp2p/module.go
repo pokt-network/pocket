@@ -83,11 +83,11 @@ func (mod *libp2pModule) GetModuleName() string {
 	return modules.P2PModuleName
 }
 
-func (mod *libp2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	logger.Global.Print("Creating libp2p-backed network module")
-
-	*mod = libp2pModule{
-		cfg: bus.GetRuntimeMgr().GetConfig().P2P,
+func (_ *libp2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	logger.Global.Debug().Msg("Creating libp2p-backed network module")
+	mod := &libp2pModule{
+		cfg:    bus.GetRuntimeMgr().GetConfig().P2P,
+		logger: logger.Global.CreateLoggerForModule(modules.P2PModuleName),
 	}
 
 	// MUST call before referencing mod.bus to ensure != nil.
@@ -133,8 +133,6 @@ func (mod *libp2pModule) Create(bus modules.Bus, options ...modules.ModuleOption
 }
 
 func (mod *libp2pModule) Start() error {
-	mod.logger = logger.Global.CreateLoggerForModule(mod.GetModuleName())
-
 	// IMPROVE: receive context in interface methods.
 	ctx := context.Background()
 
