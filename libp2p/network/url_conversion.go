@@ -143,10 +143,9 @@ func getPeerIP(hostname string) (net.IP, error) {
 	// Select a pseudorandom, valid IP address.
 	peerIP = validIPs[randIndex]
 
-	// TECHDEBT: remove this log line once direction is clearer
+	// TECHDEBT(#557): remove this log line once direction is clearer
 	// on supporting multiple network addresses per peer.
-	// TODO _THIS_COMMIT: replace issue number
-	logger.Global.Warn().Msg("resolved multiple addresses but only using one. See ticket #XXX for more details")
+	logger.Global.Warn().Msg("resolved multiple addresses but only using one. See ticket #557 for more details")
 	logger.Global.Warn().
 		Str("hostname", hostname).
 		Array("resolved", stringLogArrayMarshaler{strs: addrs}).
