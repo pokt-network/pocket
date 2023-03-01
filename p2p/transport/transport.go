@@ -45,7 +45,7 @@ type tcpConn struct {
 }
 
 func createTCPListener(cfg *configs.P2PConfig) (*tcpConn, error) {
-	addr, err := net.ResolveTCPAddr(TCPNetworkLayerProtocol, fmt.Sprintf(":%d", cfg.ConsensusPort))
+	addr, err := net.ResolveTCPAddr(TCPNetworkLayerProtocol, fmt.Sprintf(":%d", cfg.Port))
 	if err != nil {
 		return nil, err
 	}

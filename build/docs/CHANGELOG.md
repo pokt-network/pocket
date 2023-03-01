@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.20] - 2023-03-01
+
+- replace `consensus_port` with `port` in P2P config
+- update default P2P config `port` to from `8080` to `42069`
+- add `use_libp2p` field to base config
+- add `hostname` field to P2P config
+
 ## [0.0.0.19] - 2023-02-28
 
 - Renamed `generic_param` to `service_url` in the config files

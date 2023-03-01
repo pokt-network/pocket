@@ -4078,7 +4078,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "00104055c00bed7c983a48aac7dc6335d7c607a7",
 			PublicKey:       "dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 			Chains:          nil,
-			ServiceUrl:      "node1.consensus:8080",
+			ServiceUrl:      "node1.consensus:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4089,7 +4089,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "00204737d2a165ebe4be3a7d5b0af905b0ea91d8",
 			PublicKey:       "eb2c78364525a210d994a83e02d18b4287ab81f6670cf4510ab6c9f51e296d91",
 			Chains:          nil,
-			ServiceUrl:      "node2.consensus:8080",
+			ServiceUrl:      "node2.consensus:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4100,7 +4100,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "00304d0101847b37fd62e7bebfbdddecdbb7133e",
 			PublicKey:       "1041a9c76539791fef9bee5b4fcd5bf4a1a489e0790c44cbdfa776b901e13b50",
 			Chains:          nil,
-			ServiceUrl:      "node3.consensus:8080",
+			ServiceUrl:      "node3.consensus:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4111,7 +4111,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "00404a570febd061274f72b50d0a37f611dfe339",
 			PublicKey:       "d6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
 			Chains:          nil,
-			ServiceUrl:      "node4.consensus:8080",
+			ServiceUrl:      "node4.consensus:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4124,7 +4124,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "43d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
 			PublicKey:       "16cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d75a998b",
 			Chains:          []string{"0001"},
-			ServiceUrl:      "node1.consensus:8080",
+			ServiceUrl:      "node1.consensus:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4137,7 +4137,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "9ba047197ec043665ad3f81278ab1f5d3eaf6b8b",
 			PublicKey:       "68efd26af01692fcd77dc135ca1de69ede464e8243e6832bd6c37f282db8c9cb",
 			Chains:          []string{"0001"},
-			ServiceUrl:      "node1.consensus:8080",
+			ServiceUrl:      "node1.consensus:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4180,6 +4180,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 				config: &configs.Config{
 					RootDirectory: "/go/src/github.com/pocket-network",
 					PrivateKey:    "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
+					UseLibP2P:     false,
 					Consensus: &configs.ConsensusConfig{
 						PrivateKey:      "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 						MaxMempoolBytes: 500000000,
@@ -4208,7 +4209,8 @@ func TestNewManagerFromReaders(t *testing.T) {
 					},
 					P2P: &configs.P2PConfig{
 						PrivateKey:      "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
-						ConsensusPort:   8080,
+						Hostname:        "node1.consensus",
+						Port:            defaults.DefaultP2PPort,
 						UseRainTree:     true,
 						ConnectionType:  configTypes.ConnectionType_TCPConnection,
 						MaxMempoolCount: 1e5,
@@ -4242,7 +4244,8 @@ func TestNewManagerFromReaders(t *testing.T) {
 			args: args{
 				configReader: strings.NewReader(string(`{
 					"p2p": {
-					  "consensus_port": 8080,
+					  "hostname": "node1.consensus",
+					  "port": 42069,
 					  "use_rain_tree": true,
 					  "is_empty_connection_type": false,
 					  "private_key": "4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45"
@@ -4254,7 +4257,8 @@ func TestNewManagerFromReaders(t *testing.T) {
 				config: &configs.Config{
 					P2P: &configs.P2PConfig{
 						PrivateKey:      "4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
-						ConsensusPort:   8080,
+						Hostname:        "node1.consensus",
+						Port:            42069,
 						UseRainTree:     true,
 						ConnectionType:  configTypes.ConnectionType_TCPConnection,
 						MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,

@@ -1,6 +1,7 @@
 {
   "root_directory": "/go/src/github.com/pocket-network",
   "private_key": "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
+  "use_lib_p2p": false,
   "consensus": {
     "max_mempool_bytes": 500000000,
     "pacemaker_config": {
@@ -28,7 +29,8 @@
     "health_check_period": "5m"
   },
   "p2p": {
-    "consensus_port": 8080,
+    "hostname": "node1.consensus",
+    "port": 42069,
     "use_rain_tree": true,
     "is_empty_connection_type": false,
     "private_key": "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
