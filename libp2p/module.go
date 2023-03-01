@@ -240,6 +240,11 @@ func (mod *libp2pModule) GetAddress() (crypto.Address, error) {
 	return privateKey.Address(), nil
 }
 
+// HandleEvent implements the respective `modules.Module` interface method.
+func (mod *libp2pModule) HandleEvent(msg *anypb.Any) error {
+	return nil
+}
+
 // handleStream is called each time a peer establishes a new stream with this
 // module's libp2p `host.Host`.
 func (mod *libp2pModule) handleStream(stream libp2pNetwork.Stream) {
@@ -356,8 +361,4 @@ func (mod *libp2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
 // based on the read stream timeout duration.
 func newReadStreamDeadline() time.Time {
 	return time.Now().Add(readStreamTimeoutDuration)
-}
-
-func (mod *libp2pModule) HandleEvent(msg *anypb.Any) error {
-	return nil
 }
