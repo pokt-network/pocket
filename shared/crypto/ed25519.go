@@ -149,7 +149,7 @@ func NewPublicKey(hexString string) (PublicKey, error) {
 func NewPublicKeyFromBytes(bz []byte) (PublicKey, error) {
 	bzLen := len(bz)
 	if bzLen != ed25519.PublicKeySize {
-		return nil, ErrInvalidPublicKeyLen(bzLen) 
+		return nil, ErrInvalidPublicKeyLen(bzLen)
 	}
 	return Ed25519PublicKey(bz), nil
 }
