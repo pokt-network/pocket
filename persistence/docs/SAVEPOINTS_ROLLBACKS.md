@@ -41,7 +41,7 @@ This means that each tree is a separate data store.
 
 We cannot make the assumption, especially in this day and age, but in the simplest case, we could very much have a monolithic setup where the node is running on the same machine as the `PostgresSQL` database and the `BadgerDB` key-value stores, but that would not change the fact that we are dealing with a distributed system since each one of these components is a separate process that could fail independently.
 
-Imagine a scenario in which the state is committed to the `PostgresSQL` database but one/some of the `BadgerDB` key-value stores fails due to storage issues. What would happen next? That's **non-deterministic**.
+Imagine a scenario in which the state is persisted durably (what happens after an sql `COMMIT` statement) to the `PostgresSQL` database but one/some of the `BadgerDB` key-value stores fails due to storage issues. What would happen next? That's **non-deterministic**.
 
 Even a single node is a small distributed system because it has multiple separate components that are communicating with each other (on the same machine or via unreliable networks).
 
