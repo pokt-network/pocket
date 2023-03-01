@@ -345,6 +345,6 @@ func (m *consensusModule) IsValidator() bool {
 	return true
 }
 
-func (m *consensusModule) IsOutOfSync() bool {
-	return m.stateSync.IsOutOfSync()
-}
+// func (m *consensusModule) IsOutOfSync() bool {
+// 	return m.stateSync.IsOutOfSync()
+// }

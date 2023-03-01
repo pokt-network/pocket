@@ -29,7 +29,7 @@ type StateSyncModule interface {
 	DisableServerMode() error
 
 	SendStateSyncMessage(msg *typesCons.StateSyncMessage, nodeAddress cryptoPocket.Address, height uint64) error
-	IsOutOfSync() bool
+	//IsOutOfSync() bool
 	AggregateMetadataResponses() error
 	GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse
 	Sync() error
@@ -165,17 +165,17 @@ func (m *stateSync) AggregateMetadataResponses() error {
 	return nil
 }
 
-// TODO! implement this function, placeholder
-func (m *stateSync) IsOutOfSync() bool {
-	err := m.AggregateMetadataResponses()
-	if err != nil {
-		// TODO: correct error handling
-		m.logger.Error().Err(err)
-		return false
-	}
+// // TODO! implement this function, placeholder
+// func (m *stateSync) IsOutOfSync() bool {
+// 	err := m.AggregateMetadataResponses()
+// 	if err != nil {
+// 		// TODO: correct error handling
+// 		m.logger.Error().Err(err)
+// 		return false
+// 	}
 
-	return m.GetBus().GetConsensusModule().CurrentHeight()-1 < m.aggregatedSyncMetadata.MaxHeight-1
-}
+// 	return m.GetBus().GetConsensusModule().CurrentHeight()-1 < m.aggregatedSyncMetadata.MaxHeight-1
+// }
 
 // TODO! implement this function, placeholder
 // This function requests blocks one by one from peers thorughusing p2p module request

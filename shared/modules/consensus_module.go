@@ -76,7 +76,7 @@ type ConsensusPacemaker interface {
 type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
-	IsOutOfSync() bool
+	//IsOutOfSync() bool
 }
 
 type FSMConsensusEvents interface {
