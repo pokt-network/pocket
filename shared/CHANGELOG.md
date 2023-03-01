@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.36] - 2023-02-28
+## [0.0.0.37] - 2023-03-01
 
 - add pokt --> libp2p crypto helpers
+
+## [0.0.0.36] - 2023-02-28
+
+- Move `StakeStatus` into `actor.proto`
+- Rename `generic_param` into `service_url`
+- Remove unused params from `BlockHeader`
+- Document `transaction.proto` and move it from the `utility` module to `shared`
+- Moved `signature.go` from the `utility` module to `shared`
+- Added documentation to important functions in the `Persistence` and `Utility` shared modules
+- Added documentation on how/why `UnstakingActor` should be removed
 
 ## [0.0.0.35] - 2023-02-28
 
@@ -30,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.31] - 2023-02-22
 
--  Export consensus module's ConsensusDebugModule interface.
+- Export consensus module's ConsensusDebugModule interface.
 
 ## [0.0.0.30] - 2023-02-21
 

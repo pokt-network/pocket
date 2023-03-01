@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.19] - 2023-02-28
+
+- Renamed the package names for some basic helpers
+
 ## [0.0.0.18] - 2023-02-28
 
 - Implement SLIP-0010 HD child key derivation with the keybase

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.19] - 2023-02-28
+
+- Renamed `generic_param` to `service_url` in the config files
+- Renamed a few governance parameters to make self explanatory
+
 ## [0.0.0.18] - 2023-02-21
 
 - Rename ServiceNode Actor Type Name to Servicer

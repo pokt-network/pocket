@@ -13,8 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO(andrew): Rename `addrBz` to `fishAddrBz` so tests are easier to read and understand. Ditto in all other locations.
-
 func FuzzFisherman(f *testing.F) {
 	fuzzSingleProtocolActor(f,
 		newTestGenericActor(types.FishermanActor, newTestFisherman),
@@ -83,7 +81,7 @@ func TestUpdateFisherman(t *testing.T) {
 
 	require.NotEqual(t, DefaultStake, StakeToUpdate)   // sanity check to make sure the tests are correct
 	require.NotEqual(t, DefaultChains, ChainsToUpdate) // sanity check to make sure the tests are correct
-	err = db.UpdateFisherman(addrBz, fisherman.GenericParam, StakeToUpdate, ChainsToUpdate)
+	err = db.UpdateFisherman(addrBz, fisherman.ServiceUrl, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
 
 	_, _, stakedTokens, _, _, _, _, chains, err = db.GetFisherman(addrBz, 0)
@@ -117,23 +115,23 @@ func TestGetFishermenReadyToUnstake(t *testing.T) {
 	require.NoError(t, err)
 
 	// Unstake fisherman at height 0
-	err = db.SetFishermanUnstakingHeightAndStatus(addrBz, 0, persistence.UnstakingStatus)
+	err = db.SetFishermanUnstakingHeightAndStatus(addrBz, 0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 
 	// Unstake fisherman2 and fisherman3 at height 1
-	err = db.SetFishermanUnstakingHeightAndStatus(addrBz2, 1, persistence.UnstakingStatus)
+	err = db.SetFishermanUnstakingHeightAndStatus(addrBz2, 1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
-	err = db.SetFishermanUnstakingHeightAndStatus(addrBz3, 1, persistence.UnstakingStatus)
+	err = db.SetFishermanUnstakingHeightAndStatus(addrBz3, 1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 
 	// Check unstaking fishermans at height 0
-	unstakingFishermen, err := db.GetFishermenReadyToUnstake(0, persistence.UnstakingStatus)
+	unstakingFishermen, err := db.GetFishermenReadyToUnstake(0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingFishermen), "wrong number of actors ready to unstake at height 0")
 	require.Equal(t, fisherman.Address, unstakingFishermen[0].GetAddress(), "unexpected fishermanlication actor returned")
 
 	// Check unstaking fishermans at height 1
-	unstakingFishermen, err = db.GetFishermenReadyToUnstake(1, persistence.UnstakingStatus)
+	unstakingFishermen, err = db.GetFishermenReadyToUnstake(1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingFishermen), "wrong number of actors ready to unstake at height 1")
 	require.ElementsMatch(t, []string{fisherman2.Address, fisherman3.Address}, []string{unstakingFishermen[0].Address, unstakingFishermen[1].Address})
@@ -151,7 +149,7 @@ func TestGetFishermanStatus(t *testing.T) {
 	// Check status before the fisherman exists
 	status, err := db.GetFishermanStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
+	require.Equal(t, int32(coreTypes.StakeStatus_UnknownStatus), status, "unexpected status")
 
 	// Check status after the fisherman exists
 	status, err = db.GetFishermanStatus(addrBz, 1)
@@ -235,7 +233,7 @@ func newTestFisherman() (*coreTypes.Actor, error) {
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
-		GenericParam:    DefaultServiceUrl,
+		ServiceUrl:      DefaultServiceURL,
 		StakedAmount:    DefaultStake,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
@@ -266,7 +264,7 @@ func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*core
 		outputBz,
 		false,
 		DefaultStakeStatus,
-		DefaultServiceUrl,
+		DefaultServiceURL,
 		DefaultStake,
 		DefaultChains,
 		DefaultPauseHeight,
@@ -298,7 +296,7 @@ func getTestFisherman(db *persistence.PostgresContext, address []byte) (*coreTyp
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
 		Chains:          chains,
-		GenericParam:    serviceURL,
+		ServiceUrl:      serviceURL,
 		StakedAmount:    stakedTokens,
 		PausedHeight:    pauseHeight,
 		UnstakingHeight: unstakingHeight,

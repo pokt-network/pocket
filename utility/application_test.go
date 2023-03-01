@@ -7,10 +7,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	DefaultAppSessionTokens = "100000000000000"
+)
+
 func TestUtilityContext_CalculateMaxAppRelays(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 1)
 	actor := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_APP)
-	newMaxRelays, err := ctx.calculateMaxAppRelays(actor.GetStakedAmount())
+	appSessionTokens, err := ctx.calculateAppSessionTokens(actor.StakedAmount)
 	require.NoError(t, err)
-	require.Equal(t, actor.GetGenericParam(), newMaxRelays)
+	// TODO: These are hardcoded values based on params from the genesis file. Expand on tests
+	// when implementing the Application protocol.
+	require.Equal(t, DefaultAppSessionTokens, appSessionTokens)
 }

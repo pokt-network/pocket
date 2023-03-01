@@ -80,7 +80,7 @@ func TestUpdateValidator(t *testing.T) {
 	db.Height = 1
 
 	require.NotEqual(t, DefaultStake, StakeToUpdate) // sanity check to make sure the tests are correct
-	err = db.UpdateValidator(addrBz, validator.GenericParam, StakeToUpdate)
+	err = db.UpdateValidator(addrBz, validator.ServiceUrl, StakeToUpdate)
 	require.NoError(t, err)
 
 	_, _, stakedTokens, _, _, _, _, err = db.GetValidator(addrBz, 0)
@@ -114,24 +114,24 @@ func TestGetValidatorsReadyToUnstake(t *testing.T) {
 	require.NoError(t, err)
 
 	// Unstake validator at height 0
-	err = db.SetValidatorUnstakingHeightAndStatus(addrBz, 0, persistence.UnstakingStatus)
+	err = db.SetValidatorUnstakingHeightAndStatus(addrBz, 0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 
 	// Unstake validator2 and validator3 at height 1
-	err = db.SetValidatorUnstakingHeightAndStatus(addrBz2, 1, persistence.UnstakingStatus)
+	err = db.SetValidatorUnstakingHeightAndStatus(addrBz2, 1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
-	err = db.SetValidatorUnstakingHeightAndStatus(addrBz3, 1, persistence.UnstakingStatus)
+	err = db.SetValidatorUnstakingHeightAndStatus(addrBz3, 1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 
 	// Check unstaking validators at height 0
-	unstakingValidators, err := db.GetValidatorsReadyToUnstake(0, persistence.UnstakingStatus)
+	unstakingValidators, err := db.GetValidatorsReadyToUnstake(0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingValidators), "wrong number of actors ready to unstake at height 0")
 
 	require.Equal(t, validator.Address, unstakingValidators[0].GetAddress(), "unexpected unstaking validator returned")
 
 	// Check unstaking validators at height 1
-	unstakingValidators, err = db.GetValidatorsReadyToUnstake(1, persistence.UnstakingStatus)
+	unstakingValidators, err = db.GetValidatorsReadyToUnstake(1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingValidators), "wrong number of actors ready to unstake at height 1")
 	require.ElementsMatch(t, []string{validator2.Address, validator3.Address}, []string{unstakingValidators[0].Address, unstakingValidators[1].Address})
@@ -149,7 +149,7 @@ func TestGetValidatorStatus(t *testing.T) {
 	// Check status before the validator exists
 	status, err := db.GetValidatorStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
+	require.Equal(t, int32(coreTypes.StakeStatus_UnknownStatus), status, "unexpected status")
 
 	// Check status after the validator exists
 	status, err = db.GetValidatorStatus(addrBz, 1)
@@ -163,7 +163,6 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
 
-	// TODO(andrew): In order to make the tests clearer (here and elsewhere), use `validatorAddrBz` instead of `addrBz`
 	addrBz, err := hex.DecodeString(validator.Address)
 	require.NoError(t, err)
 
@@ -233,7 +232,7 @@ func newTestValidator() (*coreTypes.Actor, error) {
 	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
-		GenericParam:    DefaultServiceUrl,
+		ServiceUrl:      DefaultServiceURL,
 		StakedAmount:    DefaultStake,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
@@ -264,7 +263,7 @@ func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*core
 		outputBz,
 		false,
 		DefaultStakeStatus,
-		DefaultServiceUrl,
+		DefaultServiceURL,
 		DefaultStake,
 		DefaultPauseHeight,
 		DefaultUnstakingHeight)
@@ -294,7 +293,7 @@ func getTestValidator(db *persistence.PostgresContext, address []byte) (*coreTyp
 	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
-		GenericParam:    serviceURL,
+		ServiceUrl:      serviceURL,
 		StakedAmount:    stakedTokens,
 		PausedHeight:    pauseHeight,
 		UnstakingHeight: unstakingHeight,

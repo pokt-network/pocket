@@ -9,9 +9,9 @@ import (
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -100,7 +100,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 
 			// Edit the staked amount
 			amountEdited := test_artifacts.DefaultAccountAmount.Add(test_artifacts.DefaultAccountAmount, big.NewInt(1))
-			amountEditedString := converters.BigIntToString(amountEdited)
+			amountEditedString := utils.BigIntToString(amountEdited)
 
 			msgAmountEdited := codec.GetCodec().Clone(msg).(*typesUtil.MessageEditStake)
 			msgAmountEdited.Amount = amountEditedString
@@ -142,7 +142,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			err := ctx.persistenceContext.SetParam(paramName, numUnstakingBlocks)
+			err := ctx.store.SetParam(paramName, numUnstakingBlocks)
 			require.NoError(t, err, "error setting minimum pause blocks")
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -193,7 +193,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			err := ctx.persistenceContext.SetParam(paramName, minPauseBlocksNumber)
+			err := ctx.store.SetParam(paramName, minPauseBlocksNumber)
 			require.NoError(t, err, "error setting minimum pause blocks")
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -308,7 +308,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			err := ctx.persistenceContext.SetParam(paramName, maxPausedBlocks)
+			err := ctx.store.SetParam(paramName, maxPausedBlocks)
 			require.NoError(t, err)
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -327,7 +327,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			// Verify that the actor is still staked
 			status, err := ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Staked, status, "actor should be staked")
+			require.Equal(t, coreTypes.StakeStatus_Staked, status, "actor should be staked")
 
 			// Start a new context when the actor still shouldn't be unstaked
 			require.NoError(t, ctx.Commit([]byte("empty qc")))
@@ -341,7 +341,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			// Verify that the actor is still staked
 			status, err = ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Staked, status, "actor should be staked")
+			require.Equal(t, coreTypes.StakeStatus_Staked, status, "actor should be staked")
 
 			// Start a new context when the actor should be unstaked
 			require.NoError(t, ctx.Release())
@@ -354,7 +354,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			// Verify that the actor is still staked
 			status, err = ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be staked")
+			require.Equal(t, coreTypes.StakeStatus_Unstaking, status, "actor should be staked")
 		})
 	}
 }
@@ -400,9 +400,9 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
 
-			er := ctx.persistenceContext.SetParam(paramName1, maxPausedBlocks)
+			er := ctx.store.SetParam(paramName1, maxPausedBlocks)
 			require.NoError(t, er, "error setting max paused blocks")
-			er = ctx.persistenceContext.SetParam(paramName2, unstakingBlocks)
+			er = ctx.store.SetParam(paramName2, unstakingBlocks)
 			require.NoError(t, er, "error setting max paused blocks")
 			er = ctx.setPoolAmount(poolName, poolInitAMount)
 			require.NoError(t, er)
@@ -439,7 +439,7 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 
 			status, err := ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be unstaking")
+			require.Equal(t, coreTypes.StakeStatus_Unstaking, status, "actor should be unstaking")
 
 			// Commit the context and start a new one while the actor is still unstaking
 			require.NoError(t, ctx.Commit([]byte("empty QC")))
@@ -447,7 +447,7 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 
 			status, err = ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Unstaking, status, "actor should be unstaking")
+			require.Equal(t, coreTypes.StakeStatus_Unstaking, status, "actor should be unstaking")
 
 			// Release the context since there's nothing to commit and start a new one where the actors can be unbound
 			require.NoError(t, ctx.Release())
@@ -465,7 +465,7 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 			amount, err = ctx.getPoolAmount(poolName)
 			require.NoError(t, err)
 
-			stakedAmount, err := converters.StringToBigInt(actor.StakedAmount)
+			stakedAmount, err := utils.StringToBigInt(actor.StakedAmount)
 			require.NoError(t, err)
 			expectedAmount := big.NewInt(0).Sub(poolInitAMount, stakedAmount)
 			require.Equalf(t, expectedAmount, amount, "pool amount should be unchanged for %s", poolName)
@@ -473,12 +473,12 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 			// Status should be changed from Unstaking to Unstaked
 			status, err = ctx.getActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.StakeStatus_Unstaked, status, "actor should be unstaking")
+			require.Equal(t, coreTypes.StakeStatus_Unstaked, status, "actor should be unstaking")
 		})
 	}
 }
 
-func TestUtilityContext_GetExists(t *testing.T) {
+func TestUtilityContext_GetActorExists(t *testing.T) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -686,13 +686,13 @@ func getActorByAddr(t *testing.T, ctx *utilityContext, actorType coreTypes.Actor
 }
 
 func getAllTestingApps(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.persistenceContext).GetAllApps(ctx.height)
+	actors, err := ctx.store.GetAllApps(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
 
 func getAllTestingValidators(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.persistenceContext).GetAllValidators(ctx.height)
+	actors, err := ctx.store.GetAllValidators(ctx.height)
 	require.NoError(t, err)
 	sort.Slice(actors, func(i, j int) bool {
 		return actors[i].GetAddress() < actors[j].GetAddress()
@@ -701,13 +701,13 @@ func getAllTestingValidators(t *testing.T, ctx *utilityContext) []*coreTypes.Act
 }
 
 func getAllTestingFish(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.persistenceContext).GetAllFishermen(ctx.height)
+	actors, err := ctx.store.GetAllFishermen(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
 
 func getAllTestingServicers(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := (ctx.persistenceContext).GetAllServicers(ctx.height)
+	actors, err := ctx.store.GetAllServicers(ctx.height)
 	require.NoError(t, err)
 	return actors
 }

@@ -8,9 +8,11 @@ import (
 	"errors"
 	"fmt"
 
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
+// TODO(#556): Move this to a shared package so it can be used throughout the entire codebase
 type Error interface {
 	Code() Code
 	error
@@ -38,7 +40,8 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-type Code float64
+// NextCode: 133
+type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
 const (
@@ -79,6 +82,7 @@ const (
 	CodeInterfaceConversionError         Code = 38
 	CodeGetAccountAmountError            Code = 39
 	CodeStringToBigIntError              Code = 40
+	CodeStringToBigFloatError            Code = 132
 	CodeInsufficientAmountError          Code = 41
 	CodeAddAccountAmountError            Code = 42
 	CodeSetAccountError                  Code = 43
@@ -108,7 +112,7 @@ const (
 	CodeNotPausedError                    Code = 67
 	CodeNotReadyToUnpauseError            Code = 68
 	CodeSetStatusPausedBeforeError        Code = 69
-	CodeInvalidServiceUrlError            Code = 70
+	CodeInvalidServiceURLError            Code = 70
 	CodeNotExistsError                    Code = 71
 	CodeGetMissedBlocksError              Code = 72
 	CodeEmptyHashError                    Code = 73
@@ -182,7 +186,7 @@ const (
 	GetMissedBlocksError              = "an error occurred getting the missed blocks field"
 	DecodeMessageError                = "unable to decode the message"
 	NotExistsError                    = "the actor does not exist in the state"
-	InvalidServiceUrlError            = "the service url is not valid"
+	InvalidServiceURLError            = "the service url is not valid"
 	NotReadyToUnpauseError            = "the actor isn't ready to unpause as the minimum number of blocks hasn't passed since pausing"
 	NotPausedError                    = "the actor is not paused"
 	SetPauseHeightError               = "an error occurred setting the pause height"
@@ -268,6 +272,7 @@ const (
 	SocketIOStartFailedError          = "socket error: failed to start socket reading/writing (io)"
 	EmptyTransactionError             = "the transaction is empty"
 	StringToBigIntError               = "error converting string to big int"
+	StringToBigFloatError             = "error converting string to big float"
 	GetAllValidatorsError             = "an error occurred getting all validators from the state"
 	InvalidAmountError                = "the amount field is invalid; cannot be converted to big.Int"
 	InvalidAddressLenError            = "the length of the address is not valid"
@@ -325,8 +330,8 @@ func ErrUnequalRounds() Error {
 	return NewError(CodeUnequalRoundsError, UnequalRoundsError)
 }
 
-func ErrInvalidServiceUrl(reason string) Error {
-	return NewError(CodeInvalidServiceUrlError, fmt.Sprintf("%s: %s", InvalidServiceUrlError, reason))
+func ErrInvalidServiceURL(reason string) Error {
+	return NewError(CodeInvalidServiceURLError, fmt.Sprintf("%s: %s", InvalidServiceURLError, reason))
 }
 
 func ErrSetPauseHeight(err error) Error {
@@ -425,8 +430,8 @@ func ErrUnauthorizedParamChange(owner []byte) Error {
 	return NewError(CodeUnauthorizedParamChangeError, fmt.Sprintf("%s: %s", UnauthorizedParamChangeError, hex.EncodeToString(owner)))
 }
 
-func ErrInvalidSigner() Error {
-	return NewError(CodeInvalidSignerError, InvalidSignerError)
+func ErrInvalidSigner(address string) Error {
+	return NewError(CodeInvalidSignerError, fmt.Sprintf("%s: %s", InvalidSignerError, address))
 }
 
 func ErrMaxChains(maxChains int) Error {
@@ -449,7 +454,7 @@ func ErrUnknownStatus(status int32) Error {
 	return NewError(CodeInvalidStatusError, fmt.Sprintf("%s: unknown status %d", InvalidStatusError, status))
 }
 
-func ErrInvalidStatus(got, expected StakeStatus) Error {
+func ErrInvalidStatus(got, expected coreTypes.StakeStatus) Error {
 	return NewError(CodeInvalidStatusError, fmt.Sprintf("%s: %d expected %d", InvalidStatusError, got, expected))
 }
 
@@ -589,8 +594,8 @@ func ErrSignatureVerificationFailed() Error {
 	return NewError(CodeSignatureVerificationFailedError, SignatureVerificationFailedError)
 }
 
-func ErrDecodeMessage() Error {
-	return NewError(CodeDecodeMessageError, DecodeMessageError)
+func ErrDecodeMessage(err error) Error {
+	return NewError(CodeDecodeMessageError, fmt.Sprintf("%s: %s", DecodeMessageError, err.Error()))
 }
 
 func ErrProtoFromAny(err error) Error {
@@ -684,6 +689,10 @@ func ErrDuplicateTransaction() Error {
 
 func ErrStringToBigInt(err error) Error {
 	return NewError(CodeStringToBigIntError, fmt.Sprintf("%s: %s", StringToBigIntError, err.Error()))
+}
+
+func ErrStringToBigFloat(err error) Error {
+	return NewError(CodeStringToBigFloatError, fmt.Sprintf("%s: %s", StringToBigFloatError, err.Error()))
 }
 
 func ErrInsufficientAmount(address string) Error {
