@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.37] - 2023-03-01
+## [0.0.0.37] - 2023-02-28
 
 - Add MarshalJSON and UnmarshalJSON to KeyPair interface
 
