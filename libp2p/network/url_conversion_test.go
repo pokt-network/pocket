@@ -176,6 +176,7 @@ func TestServiceURLFromLibp2pMultiaddr_Error(t *testing.T) {
 func TestGetPeerIP_Success(t *testing.T) {
 	t.Skip("TODO: replace `net.DefaultResolver` with one which has a `Dial` function that returns a mocked `net.Conn` (see: https://pkg.go.dev/net#Resolver)")
 
+	//nolint:gocritic // commentedOutCode - Outlines the minimum requirements for disproving regression.
 	// testCases := []struct {
 	// 	name       string
 	// 	hostname   string
