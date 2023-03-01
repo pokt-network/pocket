@@ -266,6 +266,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	defer m.m.Unlock()
 
 	switch message.MessageName() {
+
 	case messaging.HotstuffMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
@@ -275,9 +276,8 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if !ok {
 			return fmt.Errorf("failed to cast message to HotstuffMessage")
 		}
-		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
-			return err
-		}
+		return m.handleHotstuffMessage(hotstuffMessage)
+
 	case messaging.StateMachineTransitionEventType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
@@ -288,15 +288,11 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 			return fmt.Errorf("failed to cast message to StateMachineTransitionEvent")
 		}
 
-		if err := m.handleStateMachineTransitionEvent(stateMachineTransitionEvent); err != nil {
-			return err
-		}
+		return m.handleStateMachineTransitionEvent(stateMachineTransitionEvent)
 
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}
-
-	return nil
 }
 
 func (m *consensusModule) CurrentHeight() uint64 {
