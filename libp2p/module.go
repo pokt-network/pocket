@@ -210,6 +210,7 @@ func (mod *libp2pModule) Broadcast(msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
 	}
+	//TECHDEBT: use shared/codec for marshalling
 	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
 	if err != nil {
 		return err
@@ -223,6 +224,7 @@ func (mod *libp2pModule) Send(addr crypto.Address, msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
 	}
+	//TECHDEBT: use shared/codec for marshalling
 	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
 	if err != nil {
 		return err
