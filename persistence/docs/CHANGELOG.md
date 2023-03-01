@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.40] - 2023-03-01
+
+- Update state hash test after modifying genesis (updated port numbers)
+
 ## [0.0.0.39] - 2023-02-28
 
 - Renamed package names and parameters to reflect changes in the rest of the codebase

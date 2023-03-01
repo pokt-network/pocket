@@ -10,7 +10,7 @@ spec:
         [
           "sh",
           "-c",
-          "until nc -z v1-validator001 8080; do echo waiting for v1-validator001...; sleep 2; done;",
+          "until nc -z v1-validator001 42069; do echo waiting for v1-validator001...; sleep 2; done;",
         ]
   containers:
     - name: cluster-manager
