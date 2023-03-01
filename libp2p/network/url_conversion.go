@@ -123,21 +123,36 @@ func getPeerIP(hostname string) (net.IP, error) {
 	// are provided in a DNS response?
 	// CONSIDER: preferring IPv6 responses when resolving DNS.
 	// Return first address which is a parsable IP address.
+	var validIPs []net.IP
 	for _, addr := range addrs {
-		peerIP = net.ParseIP(addr)
-		if peerIP == nil {
+		ip := net.ParseIP(addr)
+		if ip == nil {
 			continue
 		}
-		// TECHDEBT: remove this log line once direction is clearer
-		// on supporting multiple network addresses per peer.
-		if len(addrs) > 1 {
-			logger.Global.Warn().
-				Array("resolved", newStringLogArrayMarshaler(addrs)).
-				IPAddr("using", peerIP)
-		}
-		return peerIP, nil
+		validIPs = append(validIPs, ip)
 	}
-	return nil, newResolvePeerIPErr(hostname, err)
+
+	switch len(validIPs) {
+	case 0:
+		return nil, newResolvePeerIPErr(hostname, err)
+	case 1:
+		return validIPs[0], nil
+	}
+
+	randIndex := rand.Intn(len(validIPs))
+	// Select a pseudorandom, valid IP address.
+	peerIP = validIPs[randIndex]
+
+	// TECHDEBT: remove this log line once direction is clearer
+	// on supporting multiple network addresses per peer.
+	// TODO _THIS_COMMIT: replace issue number
+	logger.Global.Warn().Msg("resolved multiple addresses but only using one. See ticket #XXX for more details")
+	logger.Global.Warn().
+		Str("hostname", hostname).
+		Array("resolved", stringLogArrayMarshaler{strs: addrs}).
+		IPAddr("using", peerIP)
+
+	return peerIP, nil
 }
 
 // stringLogArrayMarshaler implements the `zerolog.LogArrayMarshaler` interface
@@ -151,11 +166,5 @@ type stringLogArrayMarshaler struct {
 func (marshaler stringLogArrayMarshaler) MarshalZerologArray(arr *zerolog.Array) {
 	for _, str := range marshaler.strs {
 		arr.Str(str)
-	}
-}
-
-func newStringLogArrayMarshaler(strs []string) zerolog.LogArrayMarshaler {
-	return stringLogArrayMarshaler{
-		strs: strs,
 	}
 }
