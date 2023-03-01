@@ -6,7 +6,7 @@ import (
 )
 
 func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Msgf("I am starting to handle  handleStateMachineTransitionEvent: %s", msg)
+	m.logger.Info().Msgf("Begin handling StateMachineTransitionEvent: %s", msg)
 
 	fsm_state := msg.NewState
 	m.logger.Debug().Fields(map[string]any{
