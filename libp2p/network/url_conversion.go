@@ -1,8 +1,9 @@
 package network
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"net"
 	"net/url"
 
@@ -123,7 +124,10 @@ func getPeerIP(hostname string) (net.IP, error) {
 	// are provided in a DNS response?
 	// CONSIDER: preferring IPv6 responses when resolving DNS.
 	// Return first address which is a parsable IP address.
-	var validIPs []net.IP
+	var (
+		validIPs    []net.IP
+		randomIndex int
+	)
 	for _, addr := range addrs {
 		ip := net.ParseIP(addr)
 		if ip == nil {
@@ -139,9 +143,15 @@ func getPeerIP(hostname string) (net.IP, error) {
 		return validIPs[0], nil
 	}
 
-	randIndex := rand.Intn(len(validIPs))
+	bigRandIndex, randErr := rand.Int(rand.Reader, big.NewInt(int64(len(validIPs))))
+	if randErr == nil {
+		randomIndex = int(bigRandIndex.Int64())
+	}
+
 	// Select a pseudorandom, valid IP address.
-	peerIP = validIPs[randIndex]
+	// Because `randomIndex` defaults to 0, selection will fall back to first
+	// valid IP if `randErr != nil`.
+	peerIP = validIPs[randomIndex]
 
 	// TECHDEBT(#557): remove this log line once direction is clearer
 	// on supporting multiple network addresses per peer.
