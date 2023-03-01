@@ -275,9 +275,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if !ok {
 			return fmt.Errorf("failed to cast message to HotstuffMessage")
 		}
-		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
-			return err
-		}
+		return m.handleHotstuffMessage(hotstuffMessage)
 	case messaging.StateMachineTransitionEventType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
