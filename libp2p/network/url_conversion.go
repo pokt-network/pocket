@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
 	"net/url"
 
@@ -139,10 +140,14 @@ func getPeerIP(hostname string) (net.IP, error) {
 	return nil, newResolvePeerIPErr(hostname, err)
 }
 
+// stringLogArrayMarshaler implements the `zerolog.LogArrayMarshaler` interface
+// to marshal an array of strings for use with zerolog.
 type stringLogArrayMarshaler struct {
 	strs []string
 }
 
+// MarshalZerologArray implements the respective `zerolog.LogArrayMarshaler`
+// interface member.
 func (marshaler stringLogArrayMarshaler) MarshalZerologArray(arr *zerolog.Array) {
 	for _, str := range marshaler.strs {
 		arr.Str(str)
