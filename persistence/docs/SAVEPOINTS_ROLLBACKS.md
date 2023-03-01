@@ -93,6 +93,8 @@ After having examined the `Persistence` and `Utility` modules, I have identified
 
 - [**Extensive testing**] We need to make sure that we have a good test coverage for all the above scenarios and that we can simulate failures in a controlled environment.
 
+- [**Tooling**] The CLI should provide ways to create savepoints and rollbacks. i.e.: `p1 persistence rollback --num_blocks=5`
+
 ### Improvements over MVP (Ideas)
 
 Apart from internal failures that should resolve themselves automatically whenever possible, nodes might require a way to save their state and restore it later, not necessarily at the previous block height. This could be useful for a number of reasons:
