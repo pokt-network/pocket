@@ -151,7 +151,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	consensusCfg := runtimeMgr.GetConfig().Consensus
 
 	if consensusCfg.ServerModeEnabled {
-		m.EnableServerMode()
+		m.stateSync.EnableServerMode()
 	}
 
 	genesisState := runtimeMgr.GetGenesis()
@@ -314,14 +314,6 @@ func (m *consensusModule) loadPersistedState() error {
 	m.logger.Info().Uint64("height", m.height).Msg("Starting consensus module")
 
 	return nil
-}
-
-func (m *consensusModule) EnableServerMode() error {
-	return m.stateSync.EnableServerMode()
-}
-
-func (m *consensusModule) DisableServerMode() error {
-	return m.stateSync.DisableServerMode()
 }
 
 func (m *consensusModule) IsOutOfSync() bool {

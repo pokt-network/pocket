@@ -30,17 +30,13 @@ type ConsensusModule interface {
 	HandleMessage(*anypb.Any) error
 	// State Sync messages Handler
 	HandleStateSyncMessage(*anypb.Any) error
-
+	// FSM transition events handler
 	HandleStateTransitionEvent(transitionMessageAny *anypb.Any) error
 
 	// Consensus State Accessors
 	CurrentHeight() uint64
 	CurrentRound() uint64
 	CurrentStep() uint64
-
-	// State Sync functions
-	EnableServerMode() error
-	DisableServerMode() error
 }
 
 // This interface represents functions exposed by the Consensus module for Pacemaker specific business logic.

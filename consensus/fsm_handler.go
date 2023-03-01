@@ -11,9 +11,9 @@ import (
 )
 
 func (m *consensusModule) HandleStateTransitionEvent(transitionMessageAny *anypb.Any) error {
-	//m.m.Lock()
-	//defer m.m.Unlock()
-	m.logger.Info().Msgf("Received a state transition message: ", transitionMessageAny)
+	m.m.Lock()
+	defer m.m.Unlock()
+	m.logger.Info().Msgf("Received a state transition message: %s", transitionMessageAny)
 
 	switch transitionMessageAny.MessageName() {
 	case messaging.StateMachineTransitionEventType:
