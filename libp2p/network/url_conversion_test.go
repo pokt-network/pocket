@@ -18,7 +18,8 @@ func TestPeerMultiAddrFromServiceURL_Success(t *testing.T) {
 		{
 			"fqdn",
 			"www.google.com:8080",
-			`/ip4/(\d{1,3}\.){3}\d{1,3}/tcp/8080`,
+			// These regexes match a superset of valid IPv4/6 address space; simplified for convenience.
+			`(/ip4/(\d{1,3}\.){3}\d{1,3}/tcp/8080)|(/ip6/([0-9a-f]{1,4}::?){1,7}[0-9a-f]{1,4}/tcp/8080)`,
 		},
 		{
 			"IPv4",
