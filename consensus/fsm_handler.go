@@ -15,20 +15,20 @@ func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.State
 		"new_state":      fsm_state,
 	}).Msg("Received state machine transition msg")
 
-	switch fsm_state {
-	case string(coreTypes.StateMachineState_P2P_Bootstrapped):
+	switch coreTypes.StateMachineState(fsm_state) {
+	case coreTypes.StateMachineState_P2P_Bootstrapped:
 		return m.HandleBootstrapped(msg)
 
-	case string(coreTypes.StateMachineState_Consensus_Unsynched):
+	case coreTypes.StateMachineState_Consensus_Unsynched:
 		return m.HandleUnsynched(msg)
 
-	case string(coreTypes.StateMachineState_Consensus_SyncMode):
+	case coreTypes.StateMachineState_Consensus_SyncMode:
 		return m.HandleSync(msg)
 
-	case string(coreTypes.StateMachineState_Consensus_Synced):
+	case coreTypes.StateMachineState_Consensus_Synced:
 		return m.HandleSynced(msg)
 
-	case string(coreTypes.StateMachineState_Consensus_Pacemaker):
+	case coreTypes.StateMachineState_Consensus_Pacemaker:
 		return m.HandlePacemaker(msg)
 	}
 
