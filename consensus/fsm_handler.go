@@ -78,7 +78,7 @@ func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransiti
 }
 
 // Unsynched mode is when the node (validator or non-valdiator) is out of sync with the rest of the network
-// This mode is a transition mode from node being up-to-date (i.e. Pacemaker mode, Synched mode) to the latest state to node being out-of-sync
+// This mode is a transition mode from the node being up-to-date (i.e. Pacemaker mode, Synched mode) with the latest network height to being out-of-sync
 // As soon as node transitions to this mode, it will transition to the sync mode.
 func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM is in Unsyched state, as node is out of sync sending syncmode event to start syncing")
