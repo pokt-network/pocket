@@ -3,7 +3,6 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -34,22 +33,19 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the user should be able to see standard output containing "([^"]*)"$`, theUserShouldBeAbleToSeeStandardOutputContaining)
 }
 
-// Network is a collection of docker container pocket nodes
-type Network struct {
+// Realm is a collection of docker container pocket nodes
+type Realm struct {
 	nodes []testcontainers.Container
 }
 
-type networkConfig struct{}
+type networkConfig struct{} // a placeholder for networkConfig info
 
 // TestFeatures runs the e2e tests specifiedin any .features files in this directory.
-// It loops over networkConfigs and runs the entire cucumebr suite against it.
-// This allows support for multiple seed network configurations in the future without
-// having to worry about it right now.
+// * loops over networkConfigs and runs the entire cucumebr suite against that network instance.
+// * allows support for multiple seed network configurations in the future.
 func TestFeatures(t *testing.T) {
 	// TODO: seed with a basic network config. // REFERENCE: /build/config/ has the files that we should need here
-	networkConfigs := []networkConfig{
-		{},
-	}
+	networkConfigs := []networkConfig{{}} // NOTE: force with empty placeholder once to make test run and fail
 	for _, v := range networkConfigs {
 		// make a new context for each network
 		ctx := context.Background()
@@ -83,52 +79,16 @@ func TestFeatures(t *testing.T) {
 	}
 }
 
-// buildDockerTestContainer builds a pocket node test container
-func buildDockerTestContainer(ctx context.Context) (testcontainers.Container, error) {
-	req := testcontainers.ContainerRequest{
-		FromDockerfile: testcontainers.FromDockerfile{
-			Context:    "../../",
-			Dockerfile: "../../build/Dockerfile.m1.proto",
-		},
-	}
-	node, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to get container node: %w", err)
-	}
-
-	// node can accept commands
-	// code, result, err := node.Exec(ctx, "pocket help", nil)
-
-	return node, nil
-}
-
-// What if CreateNetwork just created a docker-compose start command and used that?
-func createNetwork(ctx context.Context, conf networkConfig) (*Network, error) {
-	network := &Network{
+func createNetwork(ctx context.Context, conf networkConfig) (*Realm, error) {
+	network := &Realm{
 		nodes: make([]testcontainers.Container, 0),
 	}
 
-	// TODO: start docker containers according to networkConfig and add it to our Network
-	node, err := buildDockerTestContainer(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to build test container")
-	}
-	network.nodes = append(network.nodes, node)
-	return network, nil
+	// TODO: create and return a docker-compose network here and add them to the Network
+
+	return network, fmt.Errorf("not impl")
 }
 
-// Cleanup cleans up all Network nodes.
-func (n *Network) Cleanup(ctx context.Context) error {
-	for _, node := range n.nodes {
-		// terminate all nodes and report errors
-		err := node.Terminate(ctx)
-		if err != nil {
-			log.Printf("cleanup failed %v", err) // TODO: what to do with this error on cleanup?
-		}
-	}
-	// TODO: collect errors maybe
-	return nil
+func (n *Realm) Cleanup(ctx context.Context) error {
+	return fmt.Errorf("not impl")
 }
