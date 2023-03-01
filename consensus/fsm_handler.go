@@ -1,11 +1,39 @@
 package consensus
 
 import (
+	"fmt"
+
+	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (m *consensusModule) handleStateMachineTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
+func (m *consensusModule) HandleStateTransitionEvent(transitionMessageAny *anypb.Any) error {
+	//m.m.Lock()
+	//defer m.m.Unlock()
+	m.logger.Info().Msgf("Received a state transition message: ", transitionMessageAny)
+
+	switch transitionMessageAny.MessageName() {
+	case messaging.StateMachineTransitionEventType:
+		msg, err := codec.GetCodec().FromAny(transitionMessageAny)
+		if err != nil {
+			return err
+		}
+
+		stateTransitionMessage, ok := msg.(*messaging.StateMachineTransitionEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast message to StateSyncMessage")
+		}
+
+		return m.handleStateTransitionEvent(stateTransitionMessage)
+	default:
+		return typesCons.ErrUnknownStateSyncMessageType(transitionMessageAny.MessageName())
+	}
+}
+
+func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Info().Msgf("Begin handling StateMachineTransitionEvent: %s", msg)
 
 	fsm_state := msg.NewState

@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.35] - 2023-02-27
 
-- Add FSMConsensusEvents() interface to handle state transition events in consensus module
-- Update FSM events and states
+- Add `ConsensusFSMHandlers` interface to handle state transition events in consensus module
+- Update FSM events `Consensus_IsSynchedValidator`, `Consensus_IsSynchedNonValidator` and state `Consensus_Pacemaker`. 
 
 ## [0.0.0.34] - 2023-02-24
 

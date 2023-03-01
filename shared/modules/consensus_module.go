@@ -23,13 +23,15 @@ type ConsensusModule interface {
 
 	ConsensusStateSync
 	ConsensusPacemaker
-	FSMConsensusEvents
+	//ConsensusFSMHandlers
 	ConsensusDebugModule
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
 	// State Sync messages Handler
 	HandleStateSyncMessage(*anypb.Any) error
+
+	HandleStateTransitionEvent(transitionMessageAny *anypb.Any) error
 
 	// Consensus State Accessors
 	CurrentHeight() uint64
@@ -77,13 +79,6 @@ type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
 	IsOutOfSync() bool
-}
-
-type FSMConsensusEvents interface {
-	HandleUnsynched(*messaging.StateMachineTransitionEvent) error
-	HandleSync(*messaging.StateMachineTransitionEvent) error
-	HandleSynced(*messaging.StateMachineTransitionEvent) error
-	HandlePacemaker(*messaging.StateMachineTransitionEvent) error
 }
 
 type ConsensusDebugModule interface {

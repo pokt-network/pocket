@@ -278,18 +278,6 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		}
 		return m.handleHotstuffMessage(hotstuffMessage)
 
-	case messaging.StateMachineTransitionEventType:
-		msg, err := codec.GetCodec().FromAny(message)
-		if err != nil {
-			return err
-		}
-		stateMachineTransitionEvent, ok := msg.(*messaging.StateMachineTransitionEvent)
-		if !ok {
-			return fmt.Errorf("failed to cast message to StateMachineTransitionEvent")
-		}
-
-		return m.handleStateMachineTransitionEvent(stateMachineTransitionEvent)
-
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}

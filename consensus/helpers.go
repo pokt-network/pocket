@@ -320,7 +320,7 @@ func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Act
 }
 
 func (m *consensusModule) IsValidator() (bool, error) {
-	validators, err := m.getValidatorsAtHeight(m.prepareQC.Height)
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return false, err
 	}
