@@ -169,3 +169,44 @@ func TestServiceUrlFromLibp2pMultiaddr_Error(t *testing.T) {
 		})
 	}
 }
+
+// TECHDEBT: add helpers for crating and/or using a "test resolver" which can
+// be switched with `net.DefaultResolver` and can return mocked responses.
+func TestGetPeerIP_Success(t *testing.T) {
+	t.Skip("TODO: replace `net.DefaultResolver` with one which has a `Dial` function that returns a mocked `net.Conn` (see: https://pkg.go.dev/net#Resolver)")
+
+	//testCases := []struct {
+	//	name       string
+	//	hostname   string
+	//	// TECHDEBT: seed math/rand for predictable selection within mocked response.
+	//	expectedIP net.IP
+	//}{
+	//	{
+	//		"single A record",
+	//		"single.A.example",
+	//	},
+	//	{
+	//		"single AAAA record",
+	//		"single.AAAA.example",
+	//	},
+	//	{
+	//		"multiple A records",
+	//		"multi.A.example",
+	//	},
+	//	{
+	//		"multiple AAAA records",
+	//		"multi.AAAA.example",
+	//	},
+	//}
+}
+
+func TestGetPeerIP_Error(t *testing.T) {
+	// `example` top-level domains should not resolve by default and therefore
+	// should reliably fail to resolve under normal, real-world conditions.
+	// (see: https://en.wikipedia.org/wiki/.example)
+
+	hostname := "nonexistent.example"
+	_, err := getPeerIP(hostname)
+	require.ErrorContains(t, err, errResolvePeerIPMsg)
+	require.ErrorContains(t, err, hostname)
+}

@@ -20,7 +20,7 @@ const (
 	// a URL. Used to pad URLs without schemes such that they can be parsed
 	// via stdlib URL parser.
 	anyScheme           = "scheme://"
-	errResolvePeerIPMsg = "resolving peer IP for hostname: %s: %w"
+	errResolvePeerIPMsg = "resolving peer IP for hostname"
 )
 
 // Libp2pMultiaddrFromServiceUrl transforms a URL into its libp2p multiaddr equivalent.
@@ -100,7 +100,7 @@ func ServiceUrlFromLibp2pMultiaddr(addr multiaddr.Multiaddr) (string, error) {
 }
 
 func newResolvePeerIPErr(hostname string, err error) error {
-	return fmt.Errorf(errResolvePeerIPMsg, hostname, err)
+	return fmt.Errorf("%s: %s, %w", errResolvePeerIPMsg, hostname, err)
 }
 
 func getPeerIP(hostname string) (net.IP, error) {
