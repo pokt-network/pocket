@@ -50,9 +50,7 @@ var _ modules.P2PModule = &libp2pModule{}
 type libp2pModule struct {
 	base_modules.IntegratableModule
 
-	logger *modules.Logger
-	//nolint:unused // bus is used by embedded base module(s)
-	bus         modules.Bus
+	logger      *modules.Logger
 	cfg         *configs.P2PConfig
 	identity    libp2p.Option
 	listenAddrs libp2p.Option
