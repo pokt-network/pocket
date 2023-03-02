@@ -51,7 +51,7 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 		return m.HandleUnsynched(msg)
 
 	case coreTypes.StateMachineState_Consensus_SyncMode:
-		return m.HandleSync(msg)
+		return m.HandleSyncMode(msg)
 
 	case coreTypes.StateMachineState_Consensus_Synced:
 		return m.HandleSynced(msg)
@@ -66,6 +66,7 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 	return nil
 }
 
+// HandleBootstrapped handles FSM event P2P_IsBootstrapped, and P2P_Bootstrapped is the destination state.
 // Bootrstapped mode is when the node (validator or non-validator) is first coming online.
 // This is a transition mode from node bootstrapping to a node being out-of-sync.
 func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
@@ -73,20 +74,19 @@ func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransiti
 	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
 }
 
-// Unsynched mode is when the node (validator or non-valdiator) is out of sync with the rest of the network
-// This mode is a transition mode from the node being up-to-date (i.e. Pacemaker mode, Synched mode) with the latest network height to being out-of-sync
+// HandleUnsynched handles FSM event Consensus_IsUnsynched, and Unsynched is the destination state.
+// In Unsynched mode node (validator or non-validator) is out of sync with the rest of the network.
+// This mode is a transition mode from the node being up-to-date (i.e. Pacemaker mode, Synched mode) with the latest network height to being out-of-sync.
 // As soon as node transitions to this mode, it will transition to the sync mode.
 func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM is in Unsyched state, as node is out of sync sending syncmode event to start syncing")
-	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing); err != nil {
-		return err
-	}
 
-	return nil
+	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
 }
 
-// Sync mode is when the node (validator or non-valdiator) is syncing with the rest of the network
-func (m *consensusModule) HandleSync(msg *messaging.StateMachineTransitionEvent) error {
+// HandleSyncMode handles FSM event Consensus_IsSyncing, and SyncMode is the destination state.
+// In Sync mode node (validator or non-validator) syncs with the rest of the network.
+func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM is in Sync Mode, starting syncing")
 
 	m.stateSync.AggregateMetadataResponses()
@@ -112,14 +112,18 @@ func (m *consensusModule) HandleSync(msg *messaging.StateMachineTransitionEvent)
 
 }
 
+// HandleSynced handles FSM event IsSynchedNonValidator, and Synced is the destination state.
 // Currently, FSM never transition to this state and a non-validator node always stays in syncmode.
-// CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state
+// CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state.
+// TODO: Add check that this never happens when IsValidator() is false, i.e. node is not validator.
 func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM of non-validator node is in Synced mode")
 	return nil
 }
 
-// Pacemaker mode is when the validator is synced and it is waiting for a new block proposal to come in
+// HandlePacemaker handles FSM event IsSynchedValidator, and Pacemaker is the destination state.
+// Execution of this state means the validator node is synced.
+// TODO:
 func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM of validator node is synced and in Pacemaker mode. It will stay in this mode until it receives a new block proposal that has a higher height than the current block height")
 	// validator receives a new block proposal, and it understands that it doesn't have block and it transitions to unsycnhed state
