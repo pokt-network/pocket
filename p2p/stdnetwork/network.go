@@ -4,6 +4,7 @@ package stdnetwork
 
 import (
 	"fmt"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
@@ -18,7 +19,7 @@ var (
 )
 
 type network struct {
-	addrBookMap typesP2P.AddrBookMap
+	pstore sharedP2P.Peerstore
 
 	logger *modules.Logger
 }
@@ -32,20 +33,16 @@ func NewNetwork(bus modules.Bus, addrBookProvider providers.AddrBookProvider, cu
 		networkLogger.Fatal().Err(err).Msg("Error getting addrBook")
 	}
 
-	addrBookMap := make(typesP2P.AddrBookMap)
-	for _, peer := range addrBook {
-		addrBookMap[peer.Address.String()] = peer
-	}
 	return &network{
-		logger:      networkLogger,
-		addrBookMap: addrBookMap,
+		logger: networkLogger,
+		pstore: addrBook,
 	}
 }
 
 // TODO(olshansky): How do we avoid self-broadcasts given that `AddrBook` may contain self in the current p2p implementation?
 func (n *network) NetworkBroadcast(data []byte) error {
-	for _, peer := range n.addrBookMap {
-		if err := peer.Transport.Write(data); err != nil {
+	for _, peer := range n.pstore.GetAllPeers() {
+		if _, err := peer.GetStream().Write(data); err != nil {
 			n.logger.Error().Err(err).Msg("Error writing to one of the peers during broadcast")
 			continue
 		}
@@ -54,16 +51,15 @@ func (n *network) NetworkBroadcast(data []byte) error {
 }
 
 func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) error {
-	peer, ok := n.addrBookMap[address.String()]
-	if !ok {
-		return fmt.Errorf("peer with address %v not in addrBookMap", peer)
+	peer := n.pstore.GetPeer(address)
+	if peer == nil {
+		return fmt.Errorf("peer with address %s not in peerstore", address)
 	}
 
-	if err := peer.Transport.Write(data); err != nil {
+	if _, err := peer.GetStream().Write(data); err != nil {
 		n.logger.Error().Err(err).Msg("Error writing to peer during send")
 		return err
 	}
-
 	return nil
 }
 
@@ -71,22 +67,16 @@ func (n *network) HandleNetworkData(data []byte) ([]byte, error) {
 	return data, nil // intentional passthrough
 }
 
-func (n *network) GetAddrBook() typesP2P.AddrBook {
-	addrBook := make(typesP2P.AddrBook, 0)
-	for _, p := range n.addrBookMap {
-		addrBook = append(addrBook, p)
-	}
-	return addrBook
+func (n *network) GetPeerList() sharedP2P.PeerList {
+	return n.pstore.GetAllPeers()
 }
 
-func (n *network) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
-	n.addrBookMap[peer.Address.String()] = peer
-	return nil
+func (n *network) AddPeer(peer sharedP2P.Peer) error {
+	return n.pstore.AddPeer(peer)
 }
 
-func (n *network) RemovePeerFromAddrBook(peer *typesP2P.NetworkPeer) error {
-	delete(n.addrBookMap, peer.Address.String())
-	return nil
+func (n *network) RemovePeer(peer sharedP2P.Peer) error {
+	return n.pstore.RemovePeer(peer.GetAddress())
 }
 
 func (n *network) GetBus() modules.Bus  { return nil }
