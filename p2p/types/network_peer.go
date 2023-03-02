@@ -12,7 +12,7 @@ import (
 var _ sharedP2P.Peer = &NetworkPeer{}
 
 type NetworkPeer struct {
-	Dialer    Transport
+	Transport Transport
 	PublicKey crypto.PublicKey
 	Address   crypto.Address
 	Multiaddr multiaddr.Multiaddr
@@ -26,7 +26,7 @@ func (peer *NetworkPeer) GetAddress() crypto.Address {
 }
 
 func (peer *NetworkPeer) GetStream() io.ReadWriteCloser {
-	return peer.Dialer
+	return peer.Transport
 }
 
 func (peer *NetworkPeer) GetPublicKey() crypto.PublicKey {

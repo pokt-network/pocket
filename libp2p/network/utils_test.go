@@ -92,7 +92,7 @@ func newTestAddrBookProvider(t *testing.T, ctrl *gomock.Controller, numPeers int
 
 	for i := range addrBook {
 		addrBook[i] = &typesP2P.NetworkPeer{
-			Dialer:     transport,
+			Transport:     transport,
 			PublicKey:  publicKey,
 			Address:    publicKey.Address(),
 			ServiceURL: fmt.Sprintf(testServiceUrlFormat, i),

@@ -45,7 +45,7 @@ func NewNetwork(bus modules.Bus, addrBookProvider providers.AddrBookProvider, cu
 // TODO(olshansky): How do we avoid self-broadcasts given that `AddrBook` may contain self in the current p2p implementation?
 func (n *network) NetworkBroadcast(data []byte) error {
 	for _, peer := range n.addrBookMap {
-		if err := peer.Dialer.Write(data); err != nil {
+		if err := peer.Transport.Write(data); err != nil {
 			n.logger.Error().Err(err).Msg("Error writing to one of the peers during broadcast")
 			continue
 		}
@@ -59,7 +59,7 @@ func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) error {
 		return fmt.Errorf("peer with address %v not in addrBookMap", peer)
 	}
 
-	if err := peer.Dialer.Write(data); err != nil {
+	if err := peer.Transport.Write(data); err != nil {
 		n.logger.Error().Err(err).Msg("Error writing to peer during send")
 		return err
 	}

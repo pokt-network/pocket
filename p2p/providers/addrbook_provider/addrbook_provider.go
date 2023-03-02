@@ -50,7 +50,7 @@ func ActorToNetworkPeer(abp AddrBookProvider, actor *coreTypes.Actor) (*typesP2P
 	}
 
 	peer := &typesP2P.NetworkPeer{
-		Dialer:     conn,
+		Transport:  conn,
 		PublicKey:  pubKey,
 		Address:    pubKey.Address(),
 		ServiceURL: actor.GetServiceUrl(), // service url

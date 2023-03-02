@@ -32,7 +32,7 @@ func PeerFromLibp2pStream(stream network.Stream) (*types.NetworkPeer, error) {
 	}
 
 	return &types.NetworkPeer{
-		Dialer:     transport.NewLibP2PTransport(stream),
+		Transport:  transport.NewLibP2PTransport(stream),
 		PublicKey:  publicKey,
 		Address:    publicKey.Address(),
 		Multiaddr:  peerMultiaddr,

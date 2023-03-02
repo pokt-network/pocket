@@ -132,7 +132,7 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		n.logger.Error().Str("address", address.String()).Msg("address not found in addrBookMap")
 	}
 
-	if err := peer.Dialer.Write(data); err != nil {
+	if err := peer.Transport.Write(data); err != nil {
 		n.logger.Error().Err(err).Msg("Error writing to peer during send")
 		return err
 	}
