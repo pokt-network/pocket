@@ -316,6 +316,28 @@ func (m *consensusModule) loadPersistedState() error {
 	return nil
 }
 
-func (m *consensusModule) IsOutOfSync() bool {
-	return m.stateSync.IsSynched()
+func (m *consensusModule) IsSynched() (bool, error) {
+	lastPersistedBlockHeight := m.GetBus().GetConsensusModule().CurrentHeight() - 1
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
+	if err != nil {
+		return false, err
+	}
+	defer persistenceContext.Close()
+
+	maxHeight, err := persistenceContext.GetMaximumBlockHeight()
+	if err != nil {
+		return false, err
+	}
+
+	if maxHeight == m.stateSync.GetAggregatedSyncMetadata().MaxHeight {
+		return true, nil
+	}
+
+	// if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched); err != nil {
+	// 	typesCons.ErrSendingStateTransitionEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
+	// 	return false, err
+	// }
+	// return false, nil
+
+	return false, nil // m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
 }

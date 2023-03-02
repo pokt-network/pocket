@@ -29,9 +29,9 @@ type StateSyncModule interface {
 	DisableServerMode() error
 
 	SendStateSyncMessage(msg *typesCons.StateSyncMessage, nodeAddress cryptoPocket.Address, height uint64) error
-	IsSynched() bool
+	//IsSynched() bool
 	//AggregateMetadataResponses() error
-	//GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse
+	GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse
 	StartSnyching() error
 }
 
@@ -158,23 +158,11 @@ func (m *stateSync) GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResp
 // TODO! implement this function, placeholder
 // Returns max block height metadainfo received from all peers.
 // This function requests blocks one by one from peers thorughusing p2p module request, aggregates responses
-func (m *stateSync) AggregateMetadataResponses() error {
+func (m *stateSync) aggregateMetadataResponses() error {
 	metadataResponse := &typesCons.StateSyncMetadataResponse{}
 	m.aggregatedSyncMetadata = metadataResponse
 
 	return nil
-}
-
-// TODO! implement this function, placeholder
-func (m *stateSync) IsSynched() bool {
-	err := m.AggregateMetadataResponses()
-	if err != nil {
-		// TODO: correct error handling
-		m.logger.Error().Err(err)
-		return false
-	}
-
-	return m.GetBus().GetConsensusModule().CurrentHeight()-1 < m.aggregatedSyncMetadata.MaxHeight-1
 }
 
 // TODO! implement this function, placeholder

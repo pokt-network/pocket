@@ -116,23 +116,26 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	}
 
 	// If this case happens, there are two possibilities:
-	// 1. The node is behind and needs to catch up, so state sync should start
-	// 2. The leader is sending a malicious proposal, node needs to reject the proposal.
-	// For both cases, the node needs to do two things:
-	// 1. Ask peers for the metadata
-	// 2. Either start state sync or reject the block proposal
+	// 1. The node is behind and needs to catch up, node must start syncing,
+	// 2. The leader is sending a malicious proposal.
+	// There, for both cases, node rejects the proposal, because:
+	// 1. If node is out of sync, node can't verify the block proposal, so rejects it. But node will eventually sync and add the block.
+	// 2. If node is synched, node must reject the proposal because proposal is not valid.
 	if msg.Height > currentHeight {
 		m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
-		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched); err != nil {
-			typesCons.ErrSendingStateTransitionEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
+		isSynched, err := m.GetBus().GetConsensusModule().IsSynched()
+		if err != nil {
 			return false, err
 		}
 
-		// at this point node is synched. Therefore, the block proposal height should not be higher than the node's current height
-		// if not node must reject the proposal since it must be a malicious proposal
-		if msg.Height > currentHeight {
-			return false, nil
+		if !isSynched {
+			err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
+			if err != nil {
+				return false, err
+			}
 		}
+
+		return false, nil
 
 	}
 
