@@ -2,7 +2,7 @@ package cli
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 
@@ -15,7 +15,7 @@ import (
 func TestKeysCreateCommands(t *testing.T) {
 
 	// boilerplate that should be in a setup function for all tests
-	dir, err := ioutil.TempDir("", "example")
+	dir, err := os.MkdirTemp("", "keys_test")
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
 
@@ -41,7 +41,7 @@ func TestKeysCreateCommands(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify the output
-	output, err := ioutil.ReadAll(buf)
+	output, err := io.ReadAll(buf)
 	require.NoError(t, err)
 	assert.Contains(t, string(output), expectedOutput)
 
