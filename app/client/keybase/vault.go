@@ -78,8 +78,7 @@ func (vk *vaultKeybase) Create(passphrase, hint string) (crypto.KeyPair, error) 
 	if err != nil {
 		return nil, err
 	}
-	err = writeVaultKeyPair(vk, keyPair.GetAddressString(), keyPair, hint)
-	if err != nil {
+	if err := writeVaultKeyPair(vk, keyPair.GetAddressString(), keyPair, hint); err != nil {
 		return nil, err
 	}
 	return keyPair, nil
@@ -91,8 +90,7 @@ func (vk *vaultKeybase) ImportFromString(privStr, passphrase, hint string) (cryp
 	if err != nil {
 		return nil, err
 	}
-	err = writeVaultKeyPair(vk, keyPair.GetAddressString(), keyPair, hint)
-	if err != nil {
+	if err := writeVaultKeyPair(vk, keyPair.GetAddressString(), keyPair, hint); err != nil {
 		return nil, err
 	}
 	return keyPair, nil

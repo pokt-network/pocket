@@ -52,8 +52,7 @@ Keys can be created without a password by specifying an empty (`""`) passphrase.
 
 ### Keybase Code Structure
 
-```sh
-$ tree app/client/keybase/
+```
 app/client/keybase/
 ├── debug
 │   └── keystore.go

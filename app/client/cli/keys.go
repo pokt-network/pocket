@@ -83,6 +83,8 @@ func keysCreateCommands() []*cobra.Command {
 
 				logger.Global.Info().Str("address", kp.GetAddressString()).Msg("New Key Created")
 
+				cmd.Println("New Key Created")
+
 				return nil
 			},
 		},
