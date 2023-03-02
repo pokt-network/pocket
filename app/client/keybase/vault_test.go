@@ -10,6 +10,7 @@ import (
 	"github.com/ory/dockertest/docker"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -102,110 +103,78 @@ func TestMain(m *testing.M) {
 func TestVaultKeybase(t *testing.T) {
 
 	if vk == nil {
-		t.Fatalf("vk is nil")
+		require.NoErrorf(t, fmt.Errorf("vault keybase is nil"), "vault keybase is nil")
 	}
 
 	// Test Create
 	_, err := vk.Create("passphrase", "hint")
-	if err != nil {
-		t.Fatalf("error creating keypair: %s", err)
-	}
+	require.NoErrorf(t, err, "error creating keypair: %s", err)
 
 	// Generate a new key pair
 	privKey, err := crypto.GeneratePrivateKey()
-	if err != nil {
-		t.Fatalf("error generating key pair: %s", err)
-	}
+	require.NoErrorf(t, err, "error generating key pair: %s", err)
 
 	// Test ImportFromString
 	_, err = vk.ImportFromString(privKey.String(), "passphrase", "hint")
-	if err != nil {
-		t.Fatalf("error importing keypair: %s", err)
-	}
+	require.NoErrorf(t, err, "error importing keypair: %s")
 
 	// Test GetPrivKey
 	origPrivKey := privKey.String()
 	privKey, err = vk.GetPrivKey(privKey.Address().String(), "passphrase")
-	if err != nil {
-		t.Fatalf("error getting private key: %s", err)
-	}
+	require.NoErrorf(t, err, "error getting private key: %s")
 	assert.Equal(t, origPrivKey, privKey.String())
 
 	// Test ImportFromJSON
 	keyPair, err := crypto.CreateNewKey("passphrase2", "hint")
-	if err != nil {
-		t.Fatalf("error creating key pair: %s", err)
-	}
+	require.NoErrorf(t, err, "error creating key pair: %s")
 	keyPairBytes, err := keyPair.ExportJSON("passphrase2")
-	if err != nil {
-		t.Fatalf("error marshaling key pair: %s", err)
-	}
+	require.NoErrorf(t, err, "error marshaling key pair: %s")
 	importedKp, err := vk.ImportFromJSON(string(keyPairBytes), "passphrase2")
-	if err != nil {
-		t.Fatalf("error importing keypair: %s", err)
-	}
+	require.NoErrorf(t, err, "error importing keypair: %s")
 	assert.Equal(t, keyPair, importedKp)
 
 	// Test Get
 	keyPair2, err := vk.Get(keyPair.GetAddressString())
-	if err != nil {
-		t.Fatalf("error getting keypair: %s", err)
-	}
+	require.NoErrorf(t, err, "error getting keypair: %s")
 	assert.Equal(t, keyPair, keyPair2)
 
 	// Test GetPubKey
 	pubKey, err := vk.GetPubKey(keyPair.GetAddressString())
-	if err != nil {
-		t.Fatalf("error getting public key: %s", err)
-	}
+	require.NoErrorf(t, err, "error getting public key: %s")
 	assert.Equal(t, keyPair.GetPublicKey(), pubKey)
 
 	// Test GetAll
 	addresses, keyPairs, err := vk.GetAll()
-	if err != nil {
-		t.Fatalf("error getting all keypairs: %s", err)
-	}
+	require.NoErrorf(t, err, "error getting all keypairs: %s")
 	assert.Equal(t, 3, len(addresses))
 	assert.Equal(t, 3, len(keyPairs))
 
 	// Test ExportPrivString
 	privKeyStr, err := vk.ExportPrivString(privKey.Address().String(), "passphrase")
-	if err != nil {
-		t.Fatalf("error exporting private key: %s", err)
-	}
+	require.NoErrorf(t, err, "error exporting private key: %s")
 	assert.Equal(t, privKey.String(), privKeyStr)
 
 	// Test ExportPrivJSON
 	_, err = vk.ExportPrivJSON(keyPair.GetAddressString(), "passphrase2")
-	if err != nil {
-		t.Fatalf("error exporting private key: %s", err)
-	}
+	require.NoErrorf(t, err, "error exporting private key: %s")
 
 	// Test UpdatePassphrase
 	err = vk.UpdatePassphrase(keyPair.GetAddressString(), "passphrase2", "new-passphrase", "hint")
-	if err != nil {
-		t.Fatalf("error updating passphrase: %s", err)
-	}
+	require.NoErrorf(t, err, "error updating passphrase: %s")
 
 	// // Test Sign
 	msg := []byte("hello world")
 	sig, err := vk.Sign(keyPair.GetAddressString(), "new-passphrase", msg)
-	if err != nil {
-		t.Fatalf("error signing message: %s", err)
-	}
+	require.NoErrorf(t, err, "error signing message: %s")
 
 	// Test Verify
 	verified, err := vk.Verify(keyPair.GetAddressString(), msg, sig)
-	if err != nil {
-		t.Fatalf("error verifying signature: %s", err)
-	}
+	require.NoErrorf(t, err, "error verifying signature: %s")
 
 	if !verified {
-		t.Fatalf("signature verification failed")
+		require.NoErrorf(t, fmt.Errorf("signature not verified"), "signature not verified")
 	}
 
 	err = vk.Delete(keyPair.GetAddressString(), "new-passphrase")
-	if err != nil {
-		t.Fatalf("error deleting keypair: %s", err)
-	}
+	require.NoErrorf(t, err, "error deleting keypair: %s")
 }
