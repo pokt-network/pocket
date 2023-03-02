@@ -123,7 +123,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// 2. Either start state sync or reject the block proposal
 	if msg.Height > currentHeight {
 		m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
-		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator); err != nil {
+		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched); err != nil {
 			typesCons.ErrSendingStateTransitionEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
 			return false, err
 		}
