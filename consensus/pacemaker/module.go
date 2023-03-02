@@ -118,8 +118,9 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// If this case happens, there are two possibilities:
 	// 1. The node is behind and needs to catch up, so state sync should start
 	// 2. The leader is sending a malicious proposal, node needs to reject the proposal.
-	// For both cases, nodes needs to ask peers for the metadata, and:
-	// if the node is behind, he should start state sync, else node should reject the block proposal.
+	// For both cases, the node needs to do two things:
+	// 1. Ask peers for the metadata
+	// 2. Either start state sync or reject the block proposal
 	if msg.Height > currentHeight {
 		m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
 		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator); err != nil {
@@ -127,7 +128,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 			return false, err
 		}
 
-		// at this point node is synched. Therefore, the block height should not be higher than node's current height
+		// at this point node is synched. Therefore, the block proposal height should not be higher than the node's current height
 		// if not node must reject the proposal since it must be a malicious proposal
 		if msg.Height > currentHeight {
 			return false, nil

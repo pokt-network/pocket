@@ -66,8 +66,8 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 	return nil
 }
 
-// Bootrstapped mode is when the node (validator or non-valdiator) is out of sync with the rest of the network
-// This mode is a transition mode from node bootstrappin to node being out-of-sync.
+// Bootrstapped mode is when the node (validator or non-validator) is first coming online.
+// This is a transition mode from node bootstrapping to a node being out-of-sync.
 func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM is in bootstrapped state, so it is out of sync, and transitions to unsynched mode")
 	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched); err != nil {
@@ -78,7 +78,7 @@ func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransiti
 }
 
 // Unsynched mode is when the node (validator or non-valdiator) is out of sync with the rest of the network
-// This mode is a transition mode from node being up-to-date (i.e. Pacemaker mode, Synched mode) to the latest state to node being out-of-sync
+// This mode is a transition mode from the node being up-to-date (i.e. Pacemaker mode, Synched mode) with the latest network height to being out-of-sync
 // As soon as node transitions to this mode, it will transition to the sync mode.
 func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM is in Unsyched state, as node is out of sync sending syncmode event to start syncing")
