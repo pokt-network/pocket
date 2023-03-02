@@ -125,7 +125,7 @@ func (m *p2pModule) Start() error {
 
 	go func() {
 		for {
-			data, err := m.listener.Read()
+			data, err := m.listener.ReadAll()
 			if err != nil {
 				m.logger.Error().Err(err).Msg("Error reading data from connection")
 				continue

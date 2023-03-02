@@ -277,16 +277,16 @@ func prepareConnMock(t *testing.T, valId string, wg *sync.WaitGroup, expectedNum
 	ctrl := gomock.NewController(t)
 	connMock := mocksP2P.NewMockTransport(ctrl)
 
-	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
+	connMock.EXPECT().ReadAll().DoAndReturn(func() ([]byte, error) {
 		wg.Done()
-		log.Printf("[valId: %s] Read\n", valId)
+		log.Printf("[valId: %s] ReadAll\n", valId)
 		data := <-eventsChannel
 		return data, nil
 	}).Times(expectedNumNetworkReads + 1) // +1 is necessary because there is one extra read of empty data by every channel when it starts
 
-	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
+	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) (int, error) {
 		eventsChannel <- data
-		return nil
+		return len(data), nil
 	}).Times(expectedNumNetworkReads)
 
 	connMock.EXPECT().Close().Return(nil).Times(1)
