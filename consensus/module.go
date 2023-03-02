@@ -317,5 +317,5 @@ func (m *consensusModule) loadPersistedState() error {
 }
 
 func (m *consensusModule) IsOutOfSync() bool {
-	return m.stateSync.IsOutOfSync()
+	return m.stateSync.IsSynched()
 }

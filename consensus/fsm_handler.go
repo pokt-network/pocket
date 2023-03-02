@@ -85,30 +85,11 @@ func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionE
 }
 
 // HandleSyncMode handles FSM event Consensus_IsSyncing, and SyncMode is the destination state.
-// In Sync mode node (validator or non-validator) syncs with the rest of the network.
+// In Sync mode node (validator or non-validator) starts syncing with the rest of the network.
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM is in Sync Mode, starting syncing...")
 
-	m.stateSync.AggregateMetadataResponses()
-
-	// try sycing until node is synced
-	// CONSIDER: consider putting a limit on number of tries, or timeout
-	err := m.stateSync.Sync()
-	for err != nil {
-		err = m.stateSync.Sync()
-	}
-	isValidator, err := m.IsValidator()
-	if err != nil {
-		return err
-	}
-
-	if isValidator {
-		m.logger.Debug().Msg("Validator node synced to the latest state with the rest of the peers")
-		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
-	}
-
-	m.logger.Debug().Msg("Non-Validator synced to the latest state with the rest of the peers")
-	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator)
+	return m.stateSync.StartSnyching()
 
 }
 
