@@ -1,7 +1,7 @@
 package persistence
 
 import (
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -10,17 +10,17 @@ import (
 	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
-var _ addrbook_provider.AddrBookProvider = &persistenceAddrBookProvider{}
+var _ peerstore_provider.PeerstoreProvider = &persistencePeerstoreProvider{}
 
-type persistenceAddrBookProvider struct {
+type persistencePeerstoreProvider struct {
 	base_modules.IntegratableModule
 	base_modules.InterruptableModule
 
 	connFactory typesP2P.ConnectionFactory
 }
 
-func NewPersistenceAddrBookProvider(bus modules.Bus, options ...func(*persistenceAddrBookProvider)) *persistenceAddrBookProvider {
-	pabp := &persistenceAddrBookProvider{
+func NewPersistencePeerstoreProvider(bus modules.Bus, options ...func(*persistencePeerstoreProvider)) *persistencePeerstoreProvider {
+	pabp := &persistencePeerstoreProvider{
 		IntegratableModule: *base_modules.NewIntegratableModule(bus),
 		connFactory:        transport.CreateDialer, // default connection factory, overridable with WithConnectionFactory()
 	}
@@ -33,18 +33,18 @@ func NewPersistenceAddrBookProvider(bus modules.Bus, options ...func(*persistenc
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return new(persistenceAddrBookProvider).Create(bus, options...)
+	return new(persistencePeerstoreProvider).Create(bus, options...)
 }
 
-func (*persistenceAddrBookProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return NewPersistenceAddrBookProvider(bus), nil
+func (*persistencePeerstoreProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return NewPersistencePeerstoreProvider(bus), nil
 }
 
-func (*persistenceAddrBookProvider) GetModuleName() string {
-	return addrbook_provider.ModuleName
+func (*persistencePeerstoreProvider) GetModuleName() string {
+	return peerstore_provider.ModuleName
 }
 
-func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (sharedP2P.Peerstore, error) {
+func (pabp *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (sharedP2P.Peerstore, error) {
 	persistenceReadContext, err := pabp.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err
@@ -55,17 +55,17 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	if err != nil {
 		return nil, err
 	}
-	return addrbook_provider.ActorsToPeerstore(pabp, validators)
+	return peerstore_provider.ActorsToPeerstore(pabp, validators)
 }
 
-func (pabp *persistenceAddrBookProvider) GetConnFactory() typesP2P.ConnectionFactory {
+func (pabp *persistencePeerstoreProvider) GetConnFactory() typesP2P.ConnectionFactory {
 	return pabp.connFactory
 }
 
-func (pabp *persistenceAddrBookProvider) GetP2PConfig() *configs.P2PConfig {
+func (pabp *persistencePeerstoreProvider) GetP2PConfig() *configs.P2PConfig {
 	return pabp.GetBus().GetRuntimeMgr().GetConfig().P2P
 }
 
-func (pabp *persistenceAddrBookProvider) SetConnectionFactory(connFactory typesP2P.ConnectionFactory) {
+func (pabp *persistencePeerstoreProvider) SetConnectionFactory(connFactory typesP2P.ConnectionFactory) {
 	pabp.connFactory = connFactory
 }

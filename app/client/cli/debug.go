@@ -11,10 +11,10 @@ import (
 	"github.com/pokt-network/pocket/libp2p"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
-	rpcABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/rpc"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
+	rpcABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -89,7 +89,7 @@ func NewDebugCommand() *cobra.Command {
 
 			rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
 
-			addressBookProvider := rpcABP.NewRPCAddrBookProvider(
+			addressBookProvider := rpcABP.NewRPCPeerstoreProvider(
 				rpcABP.WithP2PConfig(
 					runtimeMgr.GetConfig().P2P,
 				),
@@ -260,9 +260,15 @@ func fetchPeerstore(cmd *cobra.Command) (sharedP2P.Peerstore, error) {
 		logger.Global.Fatal().Msg("Unable to retrieve the bus from CLI context")
 	}
 	modulesRegistry := bus.GetModulesRegistry()
-	addrBookProvider, err := modulesRegistry.GetModule(addrbook_provider.ModuleName)
+	pstoreProvider, err := modulesRegistry.GetModule(peerstore_provider.ModuleName)
 	if err != nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the addrBookProvider")
+		// CONSIDER: preferring to return errors instead of using the logger's
+		// fatal method. `#Fatal()` calls `os.Exit()`, which is a rather violent
+		// way to terminate the program as it does not allow for cleanup or handling.
+		// Any cleanup which happens in `defer`s won't be executed, e.g.: closing
+		// IO connections with databases or remote peers.
+		// (see: https://pkg.go.dev/os#Exit)
+		logger.Global.Fatal().Msg("Unable to retrieve the peerstore provider")
 	}
 	currentHeightProvider, err := modulesRegistry.GetModule(current_height_provider.ModuleName)
 	if err != nil {
@@ -270,11 +276,11 @@ func fetchPeerstore(cmd *cobra.Command) (sharedP2P.Peerstore, error) {
 	}
 
 	height := currentHeightProvider.(current_height_provider.CurrentHeightProvider).CurrentHeight()
-	addrBook, err := addrBookProvider.(addrbook_provider.AddrBookProvider).GetStakedAddrBookAtHeight(height)
+	pstore, err := pstoreProvider.(peerstore_provider.PeerstoreProvider).GetStakedPeerstoreAtHeight(height)
 	if err != nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the addrBook")
+		logger.Global.Fatal().Msg("Unable to retrieve the peerstore")
 	}
-	return addrBook, err
+	return pstore, err
 }
 
 func getP2PModule(runtimeMgr *runtime.Manager) (p2pModule modules.P2PModule, err error) {

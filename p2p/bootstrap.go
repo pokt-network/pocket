@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	rpcABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/rpc"
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
+	rpcABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
@@ -58,7 +58,7 @@ func (m *p2pModule) bootstrap() error {
 			continue
 		}
 
-		addressBookProvider := rpcABP.NewRPCAddrBookProvider(
+		pstoreProvider := rpcABP.NewRPCPeerstoreProvider(
 			rpcABP.WithP2PConfig(
 				m.GetBus().GetRuntimeMgr().GetConfig().P2P,
 			),
@@ -67,7 +67,7 @@ func (m *p2pModule) bootstrap() error {
 
 		currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(rpcCHP.WithCustomRPCURL(bootstrapNode))
 
-		pstore, err = addressBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
+		pstore, err = pstoreProvider.GetStakedPeerstoreAtHeight(currentHeightProvider.CurrentHeight())
 		if err != nil {
 			m.logger.Warn().Err(err).Str("endpoint", bootstrapNode).Msg("Error getting address book from bootstrap node")
 			continue

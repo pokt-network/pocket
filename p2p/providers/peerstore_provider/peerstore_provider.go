@@ -1,6 +1,6 @@
-package addrbook_provider
+package peerstore_provider
 
-//go:generate mockgen -source=$GOFILE -destination=../../types/mocks/addrbook_provider_mock.go -package=mock_types github.com/pokt-network/pocket/p2p/types AddrBookProvider
+//go:generate mockgen -source=$GOFILE -destination=../../types/mocks/peerstore_provider_mock.go -package=mock_types github.com/pokt-network/pocket/p2p/types PeerstoreProvider
 
 import (
 	"fmt"
@@ -15,21 +15,19 @@ import (
 	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
-const ModuleName = "addrbook_provider"
+const ModuleName = "peerstore_provider"
 
-// AddrBookProvider is an interface that provides Peerstore accessors
-// TECHDEBT: rename `AddrBookProvider` to `PeerstoreProvider` to disambiguate
-// the meaning of the word "address" (identity vs network).
-type AddrBookProvider interface {
+// PeerstoreProvider is an interface that provides Peerstore accessors
+type PeerstoreProvider interface {
 	modules.Module
 
-	GetStakedAddrBookAtHeight(height uint64) (sharedP2P.Peerstore, error)
+	GetStakedPeerstoreAtHeight(height uint64) (sharedP2P.Peerstore, error)
 	GetConnFactory() typesP2P.ConnectionFactory
 	GetP2PConfig() *configs.P2PConfig
 	SetConnectionFactory(typesP2P.ConnectionFactory)
 }
 
-func ActorsToPeerstore(abp AddrBookProvider, actors []*coreTypes.Actor) (sharedP2P.Peerstore, error) {
+func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (sharedP2P.Peerstore, error) {
 	// TECHDEBT: consider using a multi-error pkg or upgrading to go 1.20.
 	// (see: https://go.dev/doc/go1.20#errors)
 	var errs []string
@@ -62,7 +60,7 @@ func ActorsToPeerstore(abp AddrBookProvider, actors []*coreTypes.Actor) (sharedP
 	return pstore, nil
 }
 
-func ActorToPeer(abp AddrBookProvider, actor *coreTypes.Actor) (sharedP2P.Peer, error) {
+func ActorToPeer(abp PeerstoreProvider, actor *coreTypes.Actor) (sharedP2P.Peer, error) {
 	// TECHDEBT: this should be the responsibility of some new `ConnManager` interface.
 	// Peerstore (identity / address mapping) is a separate concern from managing
 	// connections to/from peers.
@@ -87,8 +85,8 @@ func ActorToPeer(abp AddrBookProvider, actor *coreTypes.Actor) (sharedP2P.Peer, 
 }
 
 // WithConnectionFactory allows the user to specify a custom connection factory
-func WithConnectionFactory(connFactory typesP2P.ConnectionFactory) func(AddrBookProvider) {
-	return func(ap AddrBookProvider) {
+func WithConnectionFactory(connFactory typesP2P.ConnectionFactory) func(PeerstoreProvider) {
+	return func(ap PeerstoreProvider) {
 		ap.SetConnectionFactory(connFactory)
 	}
 }

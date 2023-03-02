@@ -18,7 +18,7 @@ func (n *rainTreeNetwork) getAddrBookLength(level uint32, height uint64) int {
 
 	// if we are propagating a message from a previous height, we need to instantiate an ephemeral rainTreePeersManager (without add/remove)
 	if height < n.currentHeightProvider.CurrentHeight() {
-		peersMgr, err := newPeersManagerWithAddrBookProvider(n.selfAddr, n.addrBookProvider, height)
+		peersMgr, err := newPeersManagerWithPeerstoreProvider(n.selfAddr, n.pstoreProvider, height)
 		if err != nil {
 			n.logger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork rainTreePeersManager")
 		}

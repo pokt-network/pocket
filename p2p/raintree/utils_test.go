@@ -20,8 +20,8 @@ func mockBus(ctrl *gomock.Controller) *mockModules.MockBus {
 	return busMock
 }
 
-func mockAddrBookProvider(ctrl *gomock.Controller, addrBook typesP2P.AddrBook) *mocksP2P.MockAddrBookProvider {
-	addrBookProviderMock := mocksP2P.NewMockAddrBookProvider(ctrl)
+func mockAddrBookProvider(ctrl *gomock.Controller, addrBook typesP2P.AddrBook) *mocksP2P.MockPeerstoreProvider {
+	addrBookProviderMock := mocksP2P.NewMockPeerstoreProvider(ctrl)
 	addrBookProviderMock.EXPECT().GetStakedAddrBookAtHeight(gomock.Any()).Return(addrBook, nil).AnyTimes()
 	return addrBookProviderMock
 }

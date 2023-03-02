@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	_       addrbook_provider.AddrBookProvider = &rpcAddrBookProvider{}
+	_       peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
 	rpcHost string
 )
 
@@ -30,7 +30,7 @@ func init() {
 	rpcHost = runtime.GetEnv("RPC_HOST", defaults.DefaultRPCHost)
 }
 
-type rpcAddrBookProvider struct {
+type rpcPeerstoreProvider struct {
 	base_modules.IntegratableModule
 	base_modules.InterruptableModule
 
@@ -41,8 +41,8 @@ type rpcAddrBookProvider struct {
 	connFactory typesP2P.ConnectionFactory
 }
 
-func NewRPCAddrBookProvider(options ...modules.ModuleOption) *rpcAddrBookProvider {
-	rabp := &rpcAddrBookProvider{
+func NewRPCPeerstoreProvider(options ...modules.ModuleOption) *rpcPeerstoreProvider {
+	rabp := &rpcPeerstoreProvider{
 		rpcURL:      fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
 		connFactory: transport.CreateDialer,                                        // default connection factory, overridable with WithConnectionFactory()
 	}
@@ -57,18 +57,18 @@ func NewRPCAddrBookProvider(options ...modules.ModuleOption) *rpcAddrBookProvide
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return new(rpcAddrBookProvider).Create(bus, options...)
+	return new(rpcPeerstoreProvider).Create(bus, options...)
 }
 
-func (*rpcAddrBookProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return NewRPCAddrBookProvider(options...), nil
+func (*rpcPeerstoreProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return NewRPCPeerstoreProvider(options...), nil
 }
 
-func (*rpcAddrBookProvider) GetModuleName() string {
-	return addrbook_provider.ModuleName
+func (*rpcPeerstoreProvider) GetModuleName() string {
+	return peerstore_provider.ModuleName
 }
 
-func (rabp *rpcAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (sharedP2P.Peerstore, error) {
+func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (sharedP2P.Peerstore, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
 
@@ -96,25 +96,25 @@ func (rabp *rpcAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (share
 		})
 	}
 
-	return addrbook_provider.ActorsToPeerstore(rabp, coreActors)
+	return peerstore_provider.ActorsToPeerstore(rabp, coreActors)
 }
 
-func (rabp *rpcAddrBookProvider) GetConnFactory() typesP2P.ConnectionFactory {
+func (rabp *rpcPeerstoreProvider) GetConnFactory() typesP2P.ConnectionFactory {
 	return rabp.connFactory
 }
 
-func (rabp *rpcAddrBookProvider) GetP2PConfig() *configs.P2PConfig {
+func (rabp *rpcPeerstoreProvider) GetP2PConfig() *configs.P2PConfig {
 	if rabp.p2pCfg == nil {
 		return rabp.GetBus().GetRuntimeMgr().GetConfig().P2P
 	}
 	return rabp.p2pCfg
 }
 
-func (rabp *rpcAddrBookProvider) SetConnectionFactory(connFactory typesP2P.ConnectionFactory) {
+func (rabp *rpcPeerstoreProvider) SetConnectionFactory(connFactory typesP2P.ConnectionFactory) {
 	rabp.connFactory = connFactory
 }
 
-func (rabp *rpcAddrBookProvider) initRPCClient() {
+func (rabp *rpcPeerstoreProvider) initRPCClient() {
 	rpcClient, err := rpc.NewClientWithResponses(rabp.rpcURL)
 	if err != nil {
 		log.Fatalf("could not create RPC client: %v", err)
@@ -127,13 +127,13 @@ func (rabp *rpcAddrBookProvider) initRPCClient() {
 // WithP2PConfig allows to specify a custom P2P config
 func WithP2PConfig(p2pCfg *configs.P2PConfig) modules.ModuleOption {
 	return func(rabp modules.InitializableModule) {
-		rabp.(*rpcAddrBookProvider).p2pCfg = p2pCfg
+		rabp.(*rpcPeerstoreProvider).p2pCfg = p2pCfg
 	}
 }
 
 // WithCustomRPCURL allows to specify a custom RPC URL
 func WithCustomRPCURL(rpcURL string) modules.ModuleOption {
 	return func(rabp modules.InitializableModule) {
-		rabp.(*rpcAddrBookProvider).rpcURL = rpcURL
+		rabp.(*rpcPeerstoreProvider).rpcURL = rpcURL
 	}
 }

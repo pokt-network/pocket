@@ -5,9 +5,9 @@ import (
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
-	persABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
+	persABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	"github.com/pokt-network/pocket/p2p/transport"
@@ -33,7 +33,7 @@ type p2pModule struct {
 
 	network typesP2P.Network
 
-	addrBookProvider      providers.AddrBookProvider
+	peerstoreProvider     providers.PeerstoreProvider
 	currentHeightProvider providers.CurrentHeightProvider
 
 	bootstrapNodes []string
@@ -81,11 +81,11 @@ func (*p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 }
 
 func (m *p2pModule) setupDependencies() {
-	addrBookProvider, err := m.GetBus().GetModulesRegistry().GetModule(addrbook_provider.ModuleName)
+	pstoreProvider, err := m.GetBus().GetModulesRegistry().GetModule(peerstore_provider.ModuleName)
 	if err != nil {
-		addrBookProvider = persABP.NewPersistenceAddrBookProvider(m.GetBus())
+		pstoreProvider = persABP.NewPersistencePeerstoreProvider(m.GetBus())
 	}
-	m.addrBookProvider = addrBookProvider.(providers.AddrBookProvider)
+	m.peerstoreProvider = pstoreProvider.(providers.PeerstoreProvider)
 
 	currentHeightProvider, err := m.GetBus().GetModulesRegistry().GetModule(current_height_provider.ModuleName)
 	if err != nil {
@@ -106,9 +106,9 @@ func (m *p2pModule) Start() error {
 
 	// TODO: pass down logger
 	if cfg.P2P.UseRainTree {
-		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), m.addrBookProvider, m.currentHeightProvider)
+		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), m.peerstoreProvider, m.currentHeightProvider)
 	} else {
-		m.network = stdnetwork.NewNetwork(m.GetBus(), m.addrBookProvider, m.currentHeightProvider)
+		m.network = stdnetwork.NewNetwork(m.GetBus(), m.peerstoreProvider, m.currentHeightProvider)
 	}
 
 	if cfg.ClientDebugMode {

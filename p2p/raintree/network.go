@@ -6,7 +6,7 @@ import (
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -25,8 +25,8 @@ var _ typesP2P.Network = &rainTreeNetwork{}
 type rainTreeNetwork struct {
 	base_modules.IntegratableModule
 
-	selfAddr         cryptoPocket.Address
-	addrBookProvider addrbook_provider.AddrBookProvider
+	selfAddr       cryptoPocket.Address
+	pstoreProvider peerstore_provider.PeerstoreProvider
 
 	peersManager *rainTreePeersManager
 	nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]
@@ -36,11 +36,11 @@ type rainTreeNetwork struct {
 	logger *modules.Logger
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, pstoreProvider providers.PeerstoreProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
 	networkLogger := logger.Global.CreateLoggerForModule("network")
 	networkLogger.Info().Msg("Initializing rainTreeNetwork")
 
-	pstore, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
+	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		networkLogger.Fatal().Err(err).Msg("Error getting pstore")
 	}
@@ -56,7 +56,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProv
 		selfAddr:              addr,
 		peersManager:          pm,
 		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
-		addrBookProvider:      addrBookProvider,
+		pstoreProvider:        pstoreProvider,
 		currentHeightProvider: currentHeightProvider,
 		logger:                networkLogger,
 	}

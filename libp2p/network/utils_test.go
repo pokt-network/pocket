@@ -5,11 +5,11 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/golang/mock/gomock"
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mock_typesP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
@@ -20,6 +20,7 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/mocks"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 const (
@@ -83,25 +84,26 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 	return mockRuntimeMgrs
 }
 
-func newTestAddrBookProvider(t *testing.T, ctrl *gomock.Controller, numPeers int) addrbook_provider.AddrBookProvider {
-	addrBook := make(typesP2P.AddrBook, numPeers)
+func newTestPeerstoreProvider(t *testing.T, ctrl *gomock.Controller, numPeers int) peerstore_provider.PeerstoreProvider {
+	pstore := make(sharedP2P.PeerAddrMap)
 	// No expectations, transport is not used in current network test.
 	transport := mock_typesP2P.NewMockTransport(ctrl)
 	publicKey, err := cryptoPocket.GeneratePublicKey()
 	require.NoError(t, err)
 
-	for i := range addrBook {
-		addrBook[i] = &typesP2P.NetworkPeer{
-			Transport:     transport,
+	for i := 0; i < numPeers; i++ {
+		err = pstore.AddPeer(&typesP2P.NetworkPeer{
+			Transport:  transport,
 			PublicKey:  publicKey,
 			Address:    publicKey.Address(),
 			ServiceURL: fmt.Sprintf(testServiceUrlFormat, i),
-		}
+		})
+		require.NoError(t, err)
 	}
 
-	mockAddrBookProvider := mock_typesP2P.NewMockAddrBookProvider(ctrl)
-	mockAddrBookProvider.EXPECT().GetStakedAddrBookAtHeight(gomock.Any()).Return(addrBook, nil)
-	return mockAddrBookProvider
+	pstoreProviderMock := mock_typesP2P.NewMockPeerstoreProvider(ctrl)
+	pstoreProviderMock.EXPECT().GetStakedPeerstoreAtHeight(gomock.Any()).Return(pstore, nil)
+	return pstoreProviderMock
 }
 
 func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr, numPeers int) *mock_modules.MockBus {
@@ -113,10 +115,10 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr, numPeers int) *m
 		m.SetBus(mockBus)
 	}).AnyTimes()
 
-	mockAddrBookProvider := newTestAddrBookProvider(t, ctrl, numPeers)
+	pstoreProviderMock := newTestPeerstoreProvider(t, ctrl, numPeers)
 
 	mockModulesRegistry := mock_modules.NewMockModulesRegistry(ctrl)
-	mockModulesRegistry.EXPECT().GetModule(addrbook_provider.ModuleName).Return(mockAddrBookProvider.(modules.Module), nil).AnyTimes()
+	mockModulesRegistry.EXPECT().GetModule(peerstore_provider.ModuleName).Return(pstoreProviderMock.(modules.Module), nil).AnyTimes()
 	mockModulesRegistry.EXPECT().GetModule(current_height_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(current_height_provider.ModuleName)).AnyTimes()
 	mockBus.EXPECT().GetModulesRegistry().Return(mockModulesRegistry).AnyTimes()
 	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()

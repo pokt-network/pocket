@@ -24,18 +24,18 @@ type network struct {
 	logger *modules.Logger
 }
 
-func NewNetwork(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
+func NewNetwork(bus modules.Bus, addrBookProvider providers.PeerstoreProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
 	networkLogger := logger.Global.CreateLoggerForModule("network")
 	networkLogger.Info().Msg("Initializing stdnetwork")
 
-	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
+	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		networkLogger.Fatal().Err(err).Msg("Error getting addrBook")
+		networkLogger.Fatal().Err(err).Msg("Error getting peerstore")
 	}
 
 	return &network{
 		logger: networkLogger,
-		pstore: addrBook,
+		pstore: pstore,
 	}
 }
 

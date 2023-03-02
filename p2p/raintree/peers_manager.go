@@ -5,7 +5,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
@@ -20,13 +20,13 @@ type rainTreePeersManager struct {
 	maxNumLevels   uint32
 }
 
-func newPeersManagerWithAddrBookProvider(selfAddr cryptoPocket.Address, addrBookProvider addrbook_provider.AddrBookProvider, height uint64) (*rainTreePeersManager, error) {
-	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(height)
+func newPeersManagerWithPeerstoreProvider(selfAddr cryptoPocket.Address, pstoreProvider peerstore_provider.PeerstoreProvider, height uint64) (*rainTreePeersManager, error) {
+	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(height)
 	if err != nil {
 		return nil, err
 	}
 
-	return newPeersManager(selfAddr, addrBook, false)
+	return newPeersManager(selfAddr, pstore, false)
 }
 
 // newPeersManager creates a new rainTreePeersManager instance, it is in charge of handling operations on peers (like adding/removing them) within an Peerstore
