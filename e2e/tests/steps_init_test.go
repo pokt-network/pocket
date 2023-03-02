@@ -3,16 +3,22 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/cucumber/godog"
-	"github.com/testcontainers/testcontainers-go"
+	"github.com/pokt-network/pocket/e2e/tests/runner"
+)
+
+var (
+	// TODO: how could we not use global state here?
+	// we could consider something like badger?
+	realm *Realm
 )
 
 func thePocketClientShouldHaveExitedWithoutError() error {
 	return godog.ErrPending
 }
-
 func theUserHasAPocketClient() error {
 	return godog.ErrPending
 }
@@ -35,7 +41,12 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 // Realm is a collection of docker container pocket nodes
 type Realm struct {
-	nodes []testcontainers.Container
+	// nodes holds the list of booted containers in this realm. They fulfill
+	// the PocketClient interface and the Realm may only interact with them
+	// through that interface.
+	nodes []runner.PocketClient
+	// suite is the test suite for this realm
+	suite godog.TestSuite
 }
 
 type networkConfig struct{} // a placeholder for networkConfig info
@@ -44,51 +55,46 @@ type networkConfig struct{} // a placeholder for networkConfig info
 // * loops over networkConfigs and runs the entire cucumebr suite against that network instance.
 // * allows support for multiple seed network configurations in the future.
 func TestFeatures(t *testing.T) {
-	// TODO: seed with a basic network config. // REFERENCE: /build/config/ has the files that we should need here
-	networkConfigs := []networkConfig{{}} // NOTE: force with empty placeholder once to make test run and fail
-	for _, v := range networkConfigs {
-		// make a new context for each network
-		ctx := context.Background()
-
-		// make a new network with the current config
-		network, err := createNetwork(ctx, v)
-		if err != nil {
-			t.Errorf("failed to start create test network %+v", err)
-		}
-
-		// we have network and suite here now, run the cucumber test suite.
-		suite := godog.TestSuite{
-			ScenarioInitializer: InitializeScenario,
-			Options: &godog.Options{
-				Format:   "pretty",
-				Paths:    []string{"./"},
-				TestingT: t,
-			},
-		}
-
-		t.Logf("network: %v\n", network)
-		t.Logf("suite: %v\n", suite)
-
-		if suite.Run() != 0 {
-			t.Fatal("non-zero status returned, failed to run feature tests")
-		}
-
-		defer func(ctx context.Context) {
-			network.Cleanup(ctx)
-		}(ctx)
-	}
-}
-
-func createNetwork(ctx context.Context, conf networkConfig) (*Realm, error) {
-	network := &Realm{
-		nodes: make([]testcontainers.Container, 0),
+	ctx := context.Background()
+	suite := godog.TestSuite{
+		ScenarioInitializer: InitializeScenario,
+		Options: &godog.Options{
+			Format:   "pretty",
+			Paths:    []string{"./"},
+			TestingT: t,
+		},
 	}
 
-	// TODO: create and return a docker-compose network here and add them to the Network
+	realm = &Realm{
+		nodes: make([]runner.PocketClient, 0),
+		suite: suite,
+	}
 
-	return network, fmt.Errorf("not impl")
+	realm.Start(ctx)
+
+	t.Logf("suite: %+v", suite)
+
+	if suite.Run() != 0 {
+		t.Fatal("non-zero status returned, failed to run feature tests")
+	}
 }
 
 func (n *Realm) Cleanup(ctx context.Context) error {
 	return fmt.Errorf("not impl")
+}
+
+// Start will start its network of nodes.
+func (r *Realm) Start(ctx context.Context) {
+	// TODO: initialize containers for testing here
+	// - docker-compose
+	// - individual containers manually wired together
+	// TODO: wrap testcontainers.Container with dockerClient to fulfill RunCommand / PocketClinet interface
+	for _, n := range r.nodes {
+		log.Printf("node: %+v", n)
+		result, err := n.RunCommand("echo 'hello world'")
+		if err != nil {
+			log.Fatalf("RunCommand() failed: %+v", err)
+		}
+		fmt.Printf("result: %v\n", result)
+	}
 }
