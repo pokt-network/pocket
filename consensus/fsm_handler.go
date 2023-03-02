@@ -105,19 +105,15 @@ func (m *consensusModule) HandleSync(msg *messaging.StateMachineTransitionEvent)
 	if err != nil {
 		return err
 	}
+
 	if isValidator {
 		m.logger.Debug().Msg("Validator node synced to the latest state with the rest of the peers")
-		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator); err != nil {
-			return err
-		}
-	} else {
-		m.logger.Debug().Msg("Non-Validator synced to the latest state with the rest of the peers")
-		if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator); err != nil {
-			return err
-		}
+		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
 	}
 
-	return nil
+	m.logger.Debug().Msg("Non-Validator synced to the latest state with the rest of the peers")
+	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator)
+
 }
 
 // Currently, FSM never transition to this state and a non-validator node always stays in syncmode.
