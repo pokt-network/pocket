@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.34] - 2023-03-08
+
+- Refactored P2P module to use new P2P interfaces
+- Moved `typesP2P.AddrBookMap` to `sharedP2P.PeerAddrMap` and refactor to implement the new `Peerstore` interface
+- Factored `SortedPeerManager` out of `raintree.peersManager` and add `peerManager` interface
+- Refactored `raintree.peersManager` to use `SortedPeerManager` and implement `PeerManager` interface
+- Refactored `stdnetwork.Network` implementation to use P2P interfaces
+- Refactored `getAddrBookDelta` to be a member of `PeerList`
+- Refactored `AddrBookProvider` to use new P2P interfaces
+- Renamed `AddrBookProvider` to `PeerstoreProvider`
+- Refactored `typesP2P.Network` to use new P2P interfaces
+- Refactored `typesP2P.Transport` to embed `io.ReadWriteCloser`
+- Renamed `NetworkPeer#Dialer` to `NetworkPeer#Transport`for readability and consistency
+- Refactored `typesP2P.NetworkPeer` to implement the new `Peer` interface
+
 ## [0.0.0.33] - 2023-03-03
 
 - Add TECHDEBT comments

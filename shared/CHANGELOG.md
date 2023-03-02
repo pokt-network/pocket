@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.39] - 2023-03-08
+
+- Added *temporary* `shared/p2p` package to hold P2P interfaces common to both legacy and libp2p modules
+- Added `Peerstore` interface
+- Added `Peer` and `PeerList` and interfaces
+- Moved `typesP2P.AddrBookMap` to `sharedP2P.PeerAddrMap` and refactor to implement the new `Peerstore` interface
+- Refactored `getAddrBookDelta` to be a member of `PeerList`
+- Factored `SortedPeerManager` out of `raintree.peersManager` and add `PeerManager` interface
+- Refactored getAddrBookDelta to be a member of PeerList
+
 ## [0.0.0.38] - 2023-03-03
 
 - Support libp2p module in node
