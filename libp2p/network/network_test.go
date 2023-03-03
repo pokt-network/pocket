@@ -14,6 +14,8 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
+const testIP6ServiceURL = "2a00:1450:4005:802::2004:8080"
+
 func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {
 	p2pNet := newTestLibp2pNetwork(t)
 	peerstore := p2pNet.host.Peerstore()
@@ -47,11 +49,9 @@ func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {
 	require.NoError(t, err)
 
 	newPeer := &types.NetworkPeer{
-		PublicKey: newPublicKey,
-		Address:   newPoktAddr,
-		// Exercises DNS resolution.
-		// IMPROVE: this test will be flakey in the presence of DNS interruptions.
-		ServiceURL: "www.google.com:8080",
+		PublicKey:  newPublicKey,
+		Address:    newPoktAddr,
+		ServiceURL: testIP6ServiceURL,
 	}
 	newPeerInfo, err := Libp2pAddrInfoFromPeer(newPeer)
 	require.NoError(t, err)
