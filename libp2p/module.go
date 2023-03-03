@@ -362,7 +362,7 @@ func (mod *libp2pModule) handleNetworkData(data []byte) {
 func (mod *libp2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
 	// TECHDEBT: as soon as we add support for multiple transports
 	// (i.e. not just TCP), we'll need to do something else.
-	return network.Libp2pMultiaddrFromServiceUrl(fmt.Sprintf(
+	return network.Libp2pMultiaddrFromServiceURL(fmt.Sprintf(
 		"%s:%d", mod.cfg.Hostname, mod.cfg.Port,
 	))
 }
