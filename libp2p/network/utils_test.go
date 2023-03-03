@@ -95,7 +95,7 @@ func newTestAddrBookProvider(t *testing.T, ctrl *gomock.Controller, numPeers int
 			Dialer:     transport,
 			PublicKey:  publicKey,
 			Address:    publicKey.Address(),
-			ServiceUrl: fmt.Sprintf(testServiceUrlFormat, i),
+			ServiceURL: fmt.Sprintf(testServiceUrlFormat, i),
 		}
 	}
 
@@ -133,7 +133,7 @@ func createMockGenesisState(valKeys []cryptoPocket.PrivateKey) *genesis.GenesisS
 			ActorType:       coreTypes.ActorType_ACTOR_TYPE_VAL,
 			Address:         addr,
 			PublicKey:       valKey.PublicKey().String(),
-			GenericParam:    validatorId(i + 1),
+			ServiceUrl:      validatorId(i + 1),
 			StakedAmount:    "1000000000000000",
 			PausedHeight:    int64(0),
 			UnstakingHeight: int64(0),

@@ -12,13 +12,14 @@ import (
 func TestPeerMultiAddrFromServiceURL_Success(t *testing.T) {
 	testCases := []struct {
 		name                  string
-		serviceUrl            string
+		serviceURL            string
 		expetedMultiaddrRegex string
 	}{
 		{
 			"fqdn",
 			"www.google.com:8080",
-			`/ip4/(\d{1,3}\.){3}\d{1,3}/tcp/8080`,
+			// These regexes match a superset of valid IPv4/6 address space; simplified for convenience.
+			`(/ip4/(\d{1,3}\.){3}\d{1,3}/tcp/8080)|(/ip6/([0-9a-f]{1,4}::?){1,7}[0-9a-f]{1,4}/tcp/8080)`,
 		},
 		{
 			"IPv4",
@@ -34,7 +35,7 @@ func TestPeerMultiAddrFromServiceURL_Success(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actualMultiaddr, err := Libp2pMultiaddrFromServiceUrl(testCase.serviceUrl)
+			actualMultiaddr, err := Libp2pMultiaddrFromServiceURL(testCase.serviceURL)
 			require.NoError(t, err)
 			require.NotNil(t, actualMultiaddr)
 			require.Regexp(t, regexp.MustCompile(testCase.expetedMultiaddrRegex), actualMultiaddr.String())
@@ -58,7 +59,7 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 
 	testCases := []struct {
 		name             string
-		serviceUrlFormat string
+		serviceURLFormat string
 		// TECHDEBT: assert specific errors.
 		expectedErrContains string
 	}{
@@ -93,8 +94,8 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 		for hostType, hostname := range hostnames {
 			testName := fmt.Sprintf("%s/%s", testCase.name, hostType)
 			t.Run(testName, func(t *testing.T) {
-				serviceURL := fmt.Sprintf(testCase.serviceUrlFormat, hostname)
-				actualMultiaddr, err := Libp2pMultiaddrFromServiceUrl(serviceURL)
+				serviceURL := fmt.Sprintf(testCase.serviceURLFormat, hostname)
+				actualMultiaddr, err := Libp2pMultiaddrFromServiceURL(serviceURL)
 				// TECHDEBT: assert specific errors
 				// Print resulting multiaddr to understand why no error.
 				require.ErrorContainsf(t, err, testCase.expectedErrContains, fmt.Sprintf("actualMultiaddr: %s", actualMultiaddr))
@@ -103,7 +104,7 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 	}
 }
 
-func TestServiceUrlFromLibp2pMultiaddr_Success(t *testing.T) {
+func TestServiceURLFromLibp2pMultiaddr_Success(t *testing.T) {
 	testCases := []struct {
 		name         string
 		multiaddrStr string
@@ -137,7 +138,7 @@ func TestServiceUrlFromLibp2pMultiaddr_Success(t *testing.T) {
 			addr, err := multiaddr.NewMultiaddr(testCase.multiaddrStr)
 			require.NoError(t, err)
 
-			actualUrl, err := ServiceUrlFromLibp2pMultiaddr(addr)
+			actualUrl, err := ServiceURLFromLibp2pMultiaddr(addr)
 			require.NoError(t, err)
 			require.NotNil(t, actualUrl)
 			require.Equal(t, testCase.expectedUrl, actualUrl)
@@ -145,7 +146,7 @@ func TestServiceUrlFromLibp2pMultiaddr_Success(t *testing.T) {
 	}
 }
 
-func TestServiceUrlFromLibp2pMultiaddr_Error(t *testing.T) {
+func TestServiceURLFromLibp2pMultiaddr_Error(t *testing.T) {
 	testCases := []struct {
 		name                string
 		multiaddrStr        string
@@ -163,9 +164,51 @@ func TestServiceUrlFromLibp2pMultiaddr_Error(t *testing.T) {
 			addr, err := multiaddr.NewMultiaddr(testCase.multiaddrStr)
 			require.NoError(t, err)
 
-			_, err = ServiceUrlFromLibp2pMultiaddr(addr)
+			_, err = ServiceURLFromLibp2pMultiaddr(addr)
 			// DISCUSS: improved error assertion methodology
 			require.ErrorContains(t, err, testCase.expectedErrContains)
 		})
 	}
+}
+
+// TECHDEBT: add helpers for crating and/or using a "test resolver" which can
+// be switched with `net.DefaultResolver` and can return mocked responses.
+func TestGetPeerIP_Success(t *testing.T) {
+	t.Skip("TODO: replace `net.DefaultResolver` with one which has a `Dial` function that returns a mocked `net.Conn` (see: https://pkg.go.dev/net#Resolver)")
+
+	//nolint:gocritic // commentedOutCode - Outlines the minimum requirements for disproving regression.
+	// testCases := []struct {
+	// 	name       string
+	// 	hostname   string
+	// 	// TECHDEBT: seed math/rand for predictable selection within mocked response.
+	// 	expectedIP net.IP
+	// }{
+	// 	{
+	// 		"single A record",
+	// 		"single.A.example",
+	// 	},
+	// 	{
+	// 		"single AAAA record",
+	// 		"single.AAAA.example",
+	// 	},
+	// 	{
+	// 		"multiple A records",
+	// 		"multi.A.example",
+	// 	},
+	// 	{
+	// 		"multiple AAAA records",
+	// 		"multi.AAAA.example",
+	// 	},
+	// }
+}
+
+func TestGetPeerIP_Error(t *testing.T) {
+	// `example` top-level domains should not resolve by default and therefore
+	// should reliably fail to resolve under normal, real-world conditions.
+	// (see: https://en.wikipedia.org/wiki/.example)
+
+	hostname := "nonexistent.example"
+	_, err := getPeerIP(hostname)
+	require.ErrorContains(t, err, errResolvePeerIPMsg)
+	require.ErrorContains(t, err, hostname)
 }

@@ -2,6 +2,10 @@ package types
 
 import coreTypes "github.com/pokt-network/pocket/shared/core/types"
 
+// TECHDEBT: s/ApplicationSchema/applicationSchema
+// TECHDEBT: s/ApplicationActor/ApplicationActorSchema
+// TECHDEBT: Ditto for all other actor types
+// TECHDEBT: Should we use an ORM?
 var _ ProtocolActorSchema = &ApplicationSchema{}
 
 type ApplicationSchema struct {
@@ -22,7 +26,7 @@ var ApplicationActor ProtocolActorSchema = &ApplicationSchema{
 		tableName:       AppTableName,
 		chainsTableName: AppChainsTableName,
 
-		actorSpecificColName: MaxRelaysCol,
+		actorSpecificColName: UnusedCol,
 
 		heightConstraintName:       AppHeightConstraintName,
 		chainsHeightConstraintName: AppChainsConstraintName,

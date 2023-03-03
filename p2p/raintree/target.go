@@ -9,7 +9,7 @@ import (
 
 type target struct {
 	address    cryptoPocket.Address
-	serviceUrl string
+	serviceURL string
 
 	level                  uint32  // the level of the node in the RainTree tree (inverse of height in traditional computer science)
 	percentage             float64 // the target percentage within the peer list used to select this as a target
@@ -25,16 +25,16 @@ func (t target) DebugString(n *rainTreeNetwork) string {
 	selfAddr := n.selfAddr.String()
 	for i := 0; i < t.addrBookLengthAtHeight; i++ {
 		addr := peersManagerStateView.addrList[i]
-		serviceUrl := peersManagerStateView.addrBookMap[addr].ServiceUrl
+		serviceURL := peersManagerStateView.addrBookMap[addr].ServiceURL
 		switch {
 		case i == t.index && t.isSelf:
-			fmt.Fprintf(&s, " (**%s**) ", serviceUrl)
+			fmt.Fprintf(&s, " (**%s**) ", serviceURL)
 		case i == t.index:
-			fmt.Fprintf(&s, " **%s** ", serviceUrl)
+			fmt.Fprintf(&s, " **%s** ", serviceURL)
 		case addr == selfAddr:
-			fmt.Fprintf(&s, " (%s) ", serviceUrl)
+			fmt.Fprintf(&s, " (%s) ", serviceURL)
 		default:
-			fmt.Fprintf(&s, " %s ", serviceUrl)
+			fmt.Fprintf(&s, " %s ", serviceURL)
 
 		}
 	}

@@ -6,9 +6,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +16,7 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	acc := getFirstTestingAccount(t, ctx)
 
-	initialAmount, err := converters.StringToBigInt(acc.GetAmount())
+	initialAmount, err := utils.StringToBigInt(acc.GetAmount())
 	require.NoError(t, err)
 
 	addAmount := big.NewInt(1)
@@ -35,7 +35,7 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	acc := getFirstTestingAccount(t, ctx)
 
-	beforeAmount, err := converters.StringToBigInt(acc.GetAmount())
+	beforeAmount, err := utils.StringToBigInt(acc.GetAmount())
 	require.NoError(t, err)
 
 	subAmount := big.NewInt(100)
@@ -69,7 +69,7 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	pool := getFirstTestingPool(t, ctx)
 
-	initialAmount, err := converters.StringToBigInt(pool.GetAmount())
+	initialAmount, err := utils.StringToBigInt(pool.GetAmount())
 	require.NoError(t, err)
 
 	addAmount := big.NewInt(1)
@@ -99,7 +99,7 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 	ctx := newTestingUtilityContext(t, 0)
 	pool := getFirstTestingPool(t, ctx)
 
-	beforeAmount, err := converters.StringToBigInt(pool.GetAmount())
+	beforeAmount, err := utils.StringToBigInt(pool.GetAmount())
 	require.NoError(t, err)
 
 	expectedAfterAmount := big.NewInt(100)
@@ -130,7 +130,7 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 }
 
 func getAllTestingAccounts(t *testing.T, ctx *utilityContext) []*coreTypes.Account {
-	accs, err := (ctx.persistenceContext).GetAllAccounts(0)
+	accs, err := ctx.store.GetAllAccounts(0)
 	require.NoError(t, err)
 
 	sort.Slice(accs, func(i, j int) bool {
@@ -144,7 +144,7 @@ func getFirstTestingAccount(t *testing.T, ctx *utilityContext) *coreTypes.Accoun
 }
 
 func getAllTestingPools(t *testing.T, ctx *utilityContext) []*coreTypes.Account {
-	pools, err := (ctx.persistenceContext).GetAllPools(0)
+	pools, err := ctx.store.GetAllPools(0)
 	require.NoError(t, err)
 
 	sort.Slice(pools, func(i, j int) bool {

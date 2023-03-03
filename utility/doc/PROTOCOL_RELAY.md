@@ -140,7 +140,7 @@ _See the [Session Protocol](https://github.com/pokt-network/pocket/blob/main/uti
 ### Report volume metric applicable relays to `Fisherman`
 
 1. All volume applicable relays need to be sent to the assigned trusted `Fisherman` (selected by the [Session Protocol](https://github.com/pokt-network/pocket/blob/main/utility/doc/PROTOCOLS.md)) for a proper verification of the volume completed.
-2. Send `volumeRelays` to `fishermanServiceURL` through http.
+2. Send `volumeRelays` to `fishermanServiceUrl` through http.
 
 ```mermaid
 graph TD

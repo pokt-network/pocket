@@ -38,7 +38,7 @@ func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {
 	existingPeerstoreAddrs := peerstore.Addrs(existingPeerInfo.ID)
 	require.Len(t, existingPeerstoreAddrs, 1)
 
-	existingPeerMultiaddr, err := Libp2pMultiaddrFromServiceUrl(existingPeer.ServiceUrl)
+	existingPeerMultiaddr, err := Libp2pMultiaddrFromServiceURL(existingPeer.ServiceURL)
 	require.NoError(t, err)
 	require.Equal(t, existingPeerstoreAddrs[0].String(), existingPeerMultiaddr.String())
 
@@ -51,7 +51,7 @@ func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {
 		Address:   newPoktAddr,
 		// Exercises DNS resolution.
 		// IMPROVE: this test will be flakey in the presence of DNS interruptions.
-		ServiceUrl: "www.google.com:8080",
+		ServiceURL: "www.google.com:8080",
 	}
 	newPeerInfo, err := Libp2pAddrInfoFromPeer(newPeer)
 	require.NoError(t, err)
@@ -97,7 +97,7 @@ func TestLibp2pNetwork_RemovePeerToAddrBook(t *testing.T) {
 	existingPeerstoreAddrs := peerstore.Addrs(existingPeerInfo.ID)
 	require.Len(t, existingPeerstoreAddrs, 1)
 
-	existingPeerMultiaddr, err := Libp2pMultiaddrFromServiceUrl(existingPeer.ServiceUrl)
+	existingPeerMultiaddr, err := Libp2pMultiaddrFromServiceURL(existingPeer.ServiceURL)
 	require.NoError(t, err)
 	require.Equal(t, existingPeerstoreAddrs[0].String(), existingPeerMultiaddr.String())
 

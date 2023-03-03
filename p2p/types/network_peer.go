@@ -13,5 +13,5 @@ type NetworkPeer struct {
 	Multiaddr multiaddr.Multiaddr
 
 	// This is only included because it's a more human-friendly differentiator between peers
-	ServiceUrl string
+	ServiceURL string
 }

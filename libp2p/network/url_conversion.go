@@ -1,11 +1,15 @@
 package network
 
 import (
+	"crypto/rand"
 	"fmt"
+	"math/big"
 	"net"
 	"net/url"
 
 	"github.com/multiformats/go-multiaddr"
+	"github.com/pokt-network/pocket/logger"
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -17,12 +21,12 @@ const (
 	// a URL. Used to pad URLs without schemes such that they can be parsed
 	// via stdlib URL parser.
 	anyScheme           = "scheme://"
-	errResolvePeerIPMsg = "resolving peer IP for hostname: %s: %w"
+	errResolvePeerIPMsg = "resolving peer IP for hostname"
 )
 
-// Libp2pMultiaddrFromServiceUrl transforms a URL into its libp2p multiaddr equivalent.
+// Libp2pMultiaddrFromServiceURL transforms a URL into its libp2p multiaddr equivalent.
 // (see: https://github.com/libp2p/specs/blob/master/addressing/README.md#multiaddr-basics)
-func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, error) {
+func Libp2pMultiaddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error) {
 	var (
 		// TECHDEBT: assuming TCP; remote peer's transport type must be knowable!
 		// (ubiquitously switching to multiaddr, instead of a URL, would resolve this)
@@ -31,11 +35,11 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 		peerIPVersionStr = ipVersion4
 	)
 
-	peerUrl, err := url.Parse(anyScheme + serviceUrl)
+	peerUrl, err := url.Parse(anyScheme + serviceURL)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"parsing peer service URL: %s: %w",
-			serviceUrl,
+			serviceURL,
 			err,
 		)
 	}
@@ -47,7 +51,7 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 
 	// Check IP version.
 	if peerIP.To4() == nil {
-		peerIPVersionStr = "ip6"
+		peerIPVersionStr = ipVersion6
 	}
 
 	peerMultiAddrStr := fmt.Sprintf(
@@ -60,8 +64,8 @@ func Libp2pMultiaddrFromServiceUrl(serviceUrl string) (multiaddr.Multiaddr, erro
 	return multiaddr.NewMultiaddr(peerMultiAddrStr)
 }
 
-// ServiceUrlFromLibp2pMultiaddr converts a multiaddr into a URL string.
-func ServiceUrlFromLibp2pMultiaddr(addr multiaddr.Multiaddr) (string, error) {
+// ServiceURLFromLibp2pMultiaddr converts a multiaddr into a URL string.
+func ServiceURLFromLibp2pMultiaddr(addr multiaddr.Multiaddr) (string, error) {
 	protocols := addr.Protocols()
 	if len(protocols) < 2 {
 		return "", fmt.Errorf(
@@ -97,7 +101,7 @@ func ServiceUrlFromLibp2pMultiaddr(addr multiaddr.Multiaddr) (string, error) {
 }
 
 func newResolvePeerIPErr(hostname string, err error) error {
-	return fmt.Errorf(errResolvePeerIPMsg, hostname, err)
+	return fmt.Errorf("%s: %s, %w", errResolvePeerIPMsg, hostname, err)
 }
 
 func getPeerIP(hostname string) (net.IP, error) {
@@ -108,11 +112,9 @@ func getPeerIP(hostname string) (net.IP, error) {
 		return peerIP, nil
 	}
 
-	/* CONSIDER: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
-	 * I attempted using `/dns4/.../tcp/...` and go this error:
-	 * > failed to listen on any addresses: [can only dial TCP over IPv4 or IPv6]
-	 *
-	 */
+	// CONSIDER: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
+	// I attempted using `/dns4/.../tcp/...` and go this error:
+	// > failed to listen on any addresses: [can only dial TCP over IPv4 or IPv6]
 	addrs, err := net.LookupHost(hostname)
 	if err != nil {
 		return nil, newResolvePeerIPErr(hostname, err)
@@ -122,12 +124,56 @@ func getPeerIP(hostname string) (net.IP, error) {
 	// are provided in a DNS response?
 	// CONSIDER: preferring IPv6 responses when resolving DNS.
 	// Return first address which is a parsable IP address.
+	var (
+		validIPs    []net.IP
+		randomIndex int
+	)
 	for _, addr := range addrs {
-		peerIP = net.ParseIP(addr)
-		if peerIP == nil {
+		ip := net.ParseIP(addr)
+		if ip == nil {
 			continue
 		}
-		return peerIP, nil
+		validIPs = append(validIPs, ip)
 	}
-	return nil, newResolvePeerIPErr(hostname, err)
+
+	switch len(validIPs) {
+	case 0:
+		return nil, newResolvePeerIPErr(hostname, err)
+	case 1:
+		return validIPs[0], nil
+	}
+
+	bigRandIndex, randErr := rand.Int(rand.Reader, big.NewInt(int64(len(validIPs))))
+	if randErr == nil {
+		randomIndex = int(bigRandIndex.Int64())
+	}
+
+	// Select a pseudorandom, valid IP address.
+	// Because `randomIndex` defaults to 0, selection will fall back to first
+	// valid IP if `randErr != nil`.
+	peerIP = validIPs[randomIndex]
+
+	// TECHDEBT(#557): remove this log line once direction is clearer
+	// on supporting multiple network addresses per peer.
+	logger.Global.Warn().Msg("resolved multiple addresses but only using one. See ticket #557 for more details")
+	logger.Global.Warn().
+		Str("hostname", hostname).
+		Array("resolved", stringLogArrayMarshaler{strs: addrs}).
+		IPAddr("using", peerIP)
+
+	return peerIP, nil
+}
+
+// stringLogArrayMarshaler implements the `zerolog.LogArrayMarshaler` interface
+// to marshal an array of strings for use with zerolog.
+type stringLogArrayMarshaler struct {
+	strs []string
+}
+
+// MarshalZerologArray implements the respective `zerolog.LogArrayMarshaler`
+// interface member.
+func (marshaler stringLogArrayMarshaler) MarshalZerologArray(arr *zerolog.Array) {
+	for _, str := range marshaler.strs {
+		arr.Str(str)
+	}
 }

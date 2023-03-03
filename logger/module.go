@@ -18,7 +18,6 @@ type loggerModule struct {
 	base_modules.InterruptableModule
 
 	zerolog.Logger
-	bus    modules.Bus
 	config *configs.LoggerConfig
 }
 

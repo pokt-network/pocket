@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -16,7 +16,7 @@ import (
 var (
 	defaultTestingChains = []string{"0001"}
 	defaultAmountBig     = big.NewInt(1000000)
-	defaultAmount        = converters.BigIntToString(defaultAmountBig)
+	defaultAmount        = utils.BigIntToString(defaultAmountBig)
 	defaultUnusedLength  = -1
 )
 

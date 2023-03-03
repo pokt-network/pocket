@@ -5,9 +5,9 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/utils"
 )
 
 // This module is responsible for handling requests and business logic that advertises and shares
@@ -104,7 +104,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 // Get a block from persistence module given block height
 func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, error) {
 	blockStore := m.GetBus().GetPersistenceModule().GetBlockStore()
-	heightBytes := converters.HeightToBytes(blockHeight)
+	heightBytes := utils.HeightToBytes(blockHeight)
 
 	blockBytes, err := blockStore.Get(heightBytes)
 	if err != nil {
