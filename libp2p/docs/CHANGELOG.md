@@ -5,6 +5,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.1] - 2023-03-03
+
+- Added a new `typesP2P.Network` implementation to the `libp2p` module directory
+- Added `PoktProtocolID` for use within the libp2p module or by public API consumers
+
 ## [0.0.0.0] - 2023-03-01
 
 - prepare pocket repo new libp2p module
