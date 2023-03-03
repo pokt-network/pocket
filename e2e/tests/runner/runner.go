@@ -24,12 +24,10 @@ func (dc *dockerClient) RunCommand(commandAndArgs ...string) (*CommandResult, er
 	return nil, fmt.Errorf("not impl")
 }
 
+// PocketClient is a single function interface for interacting with a node.
+// We could consider upgrading it to a io.Reader interface but for now string is plenty flexible.
 type PocketClient interface {
 	RunCommand(...string) (*CommandResult, error)
-}
-
-func NewDockerClient(container interface{}) PocketClient {
-	panic("not impl")
 }
 
 func NewPocketClient(executablePath string, verbose bool) PocketClient {

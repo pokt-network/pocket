@@ -8,6 +8,9 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/pokt-network/pocket/e2e/tests/runner"
+	"github.com/stretchr/testify/assert"
+
+	tc "github.com/testcontainers/testcontainers-go/modules/compose"
 )
 
 var (
@@ -55,7 +58,6 @@ type networkConfig struct{} // a placeholder for networkConfig info
 // * loops over networkConfigs and runs the entire cucumebr suite against that network instance.
 // * allows support for multiple seed network configurations in the future.
 func TestFeatures(t *testing.T) {
-	ctx := context.Background()
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeScenario,
 		Options: &godog.Options{
@@ -70,31 +72,39 @@ func TestFeatures(t *testing.T) {
 		suite: suite,
 	}
 
-	realm.Start(ctx)
-
-	t.Logf("suite: %+v", suite)
-
-	if suite.Run() != 0 {
-		t.Fatal("non-zero status returned, failed to run feature tests")
-	}
-}
-
-func (n *Realm) Cleanup(ctx context.Context) error {
-	return fmt.Errorf("not impl")
-}
-
-// Start will start its network of nodes.
-func (r *Realm) Start(ctx context.Context) {
 	// TODO: initialize containers for testing here
 	// - docker-compose
 	// - individual containers manually wired together
 	// TODO: wrap testcontainers.Container with dockerClient to fulfill RunCommand / PocketClinet interface
-	for _, n := range r.nodes {
+
+	compose, err := tc.NewDockerCompose("../../build/deployments/docker-compose.yaml")
+	assert.NoError(t, err, "NewDockerComposeAPI()")
+
+	t.Cleanup(func() {
+		err := compose.Down(context.Background(), tc.RemoveOrphans(true), tc.RemoveImagesLocal)
+		if err != nil {
+			t.Errorf("failed to tear down compose instance: %+v", err)
+		}
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	// Okay, so we get to here - progress.
+	assert.NoError(t, compose.Up(ctx, tc.Wait(true)), "compose.Up()")
+
+	// do some testing here
+
+	for _, n := range realm.nodes {
 		log.Printf("node: %+v", n)
 		result, err := n.RunCommand("echo 'hello world'")
 		if err != nil {
 			log.Fatalf("RunCommand() failed: %+v", err)
 		}
 		fmt.Printf("result: %v\n", result)
+	}
+
+	if suite.Run() != 0 {
+		t.Fatal("non-zero status returned, failed to run feature tests")
 	}
 }
