@@ -1,6 +1,8 @@
 package state_sync
 
 import (
+	"sync"
+
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -45,10 +47,13 @@ type stateSync struct {
 	bus    modules.Bus
 	logger *modules.Logger
 
+	m sync.RWMutex
+
 	logPrefix  string
 	serverMode bool
 
 	aggregatedSyncMetadata *typesCons.StateSyncMetadataResponse
+	syncMetadataBuffer     []*typesCons.StateSyncMetadataResponse
 }
 
 func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -76,7 +81,7 @@ func (m *stateSync) Start() error {
 
 	// node will be periodically checking if its up to date.
 	// and it will be updating the AggregatedSynchMetaData.
-	go m.periodicSynchCheck()
+	go m.periodicSynch()
 
 	return nil
 }
@@ -152,6 +157,11 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 
 	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataResponse: %s", metaDataRes)
 
+	m.m.Lock()
+	defer m.m.Unlock()
+
+	m.syncMetadataBuffer = append(m.syncMetadataBuffer, metaDataRes)
+
 	return nil
 }
 
@@ -160,29 +170,75 @@ func (m *stateSync) GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResp
 }
 
 // TODO! implement this function, placeholder
-// This function requests blocks one by one from peers thorughusing p2p module request
+// This function requests blocks one by one from peers thorugh using p2p module request
 func (m *stateSync) StartSynching() error {
+	// add context timer
+
+	current_height := m.GetBus().GetConsensusModule().CurrentHeight()
+	lastPersistedBlockHeight := current_height - 1
+
+	for i := lastPersistedBlockHeight; i < m.aggregatedSyncMetadata.MaxHeight; i++ {
+		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+			Message: &typesCons.StateSyncMessage_GetBlockReq{
+				GetBlockReq: &typesCons.GetBlockRequest{
+					PeerAddress: m.GetBus().GetConsensusModule().GetNodeAddress(),
+					Height:      1,
+				},
+			},
+		}
+
+		m.broadCastStateSyncMessage(stateSyncGetBlockMessage, current_height)
+	}
 
 	return nil
 }
 
-// TODO! implement this function, placeholder
 // Returns max block height metadainfo received from all peers.
 // This function requests blocks one by one from peers thorughusing p2p module request, aggregates responses.
 // It requests blocks one by one from peers thorughusing p2p module request
-func (m *stateSync) aggregateMetadataResponses() error {
-	metadataResponse := &typesCons.StateSyncMetadataResponse{}
-	m.aggregatedSyncMetadata = metadataResponse
+func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataResponse {
+	m.m.Lock()
+	defer m.m.Unlock()
 
-	return nil
+	metadataResponse := &typesCons.StateSyncMetadataResponse{}
+
+	//aggregate metadataResponses by setting the metadataResponse
+	for _, m := range m.syncMetadataBuffer {
+		if m.MaxHeight > metadataResponse.MaxHeight {
+			metadataResponse.MaxHeight = m.MaxHeight
+		}
+
+		if m.MinHeight < metadataResponse.MinHeight {
+			metadataResponse.MinHeight = m.MinHeight
+		}
+	}
+	return metadataResponse
 }
 
-// TODO! implement this function, placeholder
 // This function periodically checks if node is up to date with the network by sending metadata requests to peers.
 // It updates the aggregatedSyncMetadata field.
 // This update frequency can be tuned accordingly to the state. Currently, it has a default  behaviour.
-func (m *stateSync) periodicSynchCheck() error {
+func (m *stateSync) periodicSynch() error {
+
+	// form a metaData request
+	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
+		Message: &typesCons.StateSyncMessage_MetadataReq{
+			MetadataReq: &typesCons.StateSyncMetadataRequest{
+				PeerAddress: m.GetBus().GetConsensusModule().GetNodeAddress(),
+			},
+		},
+	}
+
+	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+
 	//broadcast metadata request to all peers
+	err := m.broadCastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
+	if err != nil {
+		return err
+	}
+
+	//aggregate responses
+	m.aggregatedSyncMetadata = m.aggregateMetadataResponses()
 
 	return nil
 }

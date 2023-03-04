@@ -185,7 +185,6 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 }
 
 func (m *pacemaker) RestartTimer() {
-	// NOTE: Not deferring a cancel call because this function is asynchronous.
 	if m.stepCancelFunc != nil {
 		m.stepCancelFunc()
 	}
