@@ -119,7 +119,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// 1. The node is behind and needs to catch up, node must start syncing,
 	// 2. The leader is sending a malicious proposal.
 	// There, for both cases, node rejects the proposal, because:
-	// 1. If node is out of sync, node can't verify the block proposal, so rejects it. But node will eventually sync and add the block.
+	// 1. If node is out of sync, node can't verify the block proposal, so rejects it. But node will eventually sync with the rest of the network and add the block.
 	// 2. If node is synched, node must reject the proposal because proposal is not valid.
 	if msg.Height > currentHeight {
 		m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)

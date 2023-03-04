@@ -32,7 +32,7 @@ type StateSyncModule interface {
 	//IsSynched() bool
 	//AggregateMetadataResponses() error
 	GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse
-	StartSnyching() error
+	StartSynching() error
 }
 
 var (
@@ -73,6 +73,10 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 
 func (m *stateSync) Start() error {
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
+
+	// node will be periodically checking if its up to date.
+	// and it will be updating the AggregatedSynchMetaData.
+	go m.periodicSynchCheck()
 
 	return nil
 }
@@ -156,8 +160,16 @@ func (m *stateSync) GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResp
 }
 
 // TODO! implement this function, placeholder
+// This function requests blocks one by one from peers thorughusing p2p module request
+func (m *stateSync) StartSynching() error {
+
+	return nil
+}
+
+// TODO! implement this function, placeholder
 // Returns max block height metadainfo received from all peers.
-// This function requests blocks one by one from peers thorughusing p2p module request, aggregates responses
+// This function requests blocks one by one from peers thorughusing p2p module request, aggregates responses.
+// It requests blocks one by one from peers thorughusing p2p module request
 func (m *stateSync) aggregateMetadataResponses() error {
 	metadataResponse := &typesCons.StateSyncMetadataResponse{}
 	m.aggregatedSyncMetadata = metadataResponse
@@ -166,8 +178,11 @@ func (m *stateSync) aggregateMetadataResponses() error {
 }
 
 // TODO! implement this function, placeholder
-// This function requests blocks one by one from peers thorughusing p2p module request
-func (m *stateSync) StartSnyching() error {
+// This function periodically checks if node is up to date with the network by sending metadata requests to peers.
+// It updates the aggregatedSyncMetadata field.
+// This update frequency can be tuned accordingly to the state. Currently, it has a default  behaviour.
+func (m *stateSync) periodicSynchCheck() error {
+	//broadcast metadata request to all peers
 
 	return nil
 }
