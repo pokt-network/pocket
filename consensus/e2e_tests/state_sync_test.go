@@ -179,3 +179,6 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
 	require.Error(t, err)
 }
+
+// func TestStateSync_Catchup_Success(t *testing.T) {
+// }

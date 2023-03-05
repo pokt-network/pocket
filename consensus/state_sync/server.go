@@ -33,7 +33,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 		"receiver": clientPeerAddress,
 	}
 
-	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataRequest %s", metadataReq)
+	m.logger.Info().Fields(fields).Msgf("Received StateSync MetadataRequest %s", metadataReq)
 
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
 	if err != nil {

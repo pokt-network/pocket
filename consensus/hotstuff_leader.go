@@ -333,7 +333,7 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 
 	address := partialSig.GetAddress()
 
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}

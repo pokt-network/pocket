@@ -2,6 +2,7 @@ package state_sync
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -13,6 +14,39 @@ import (
 //		requesting for metadata, via the periodicSynchCheck() function
 //	 	requesting for blocks, via the StartSynching() function
 func (m *stateSync) broadCastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, height uint64) error {
+	m.logger.Debug().Msg("Broadcasting StateSync Message GOKHAN")
+
+	m.logger.Info().Fields(
+		map[string]any{
+			"height": height,
+			"nodeId": m.GetBus().GetConsensusModule().GetNodeId(),
+		},
+	).Msg("📣 Broadcasting state sync message 📣")
+
+	anyConsensusMessage, err := codec.GetCodec().ToAny(stateSyncMsg)
+	if err != nil {
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
+		return err
+	}
+
+	validators, err := m.GetBus().GetConsensusModule().GetValidatorsAtHeight(height)
+	if err != nil {
+		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
+	}
+
+	// for _, val := range validators {
+	// 	m.logger.Debug().Msgf("VAL: %s", val.Address)
+	// 	if err := m.SendStateSyncMessage(stateSyncMsg, cryptoPocket.Address(val.Address), height); err != nil {
+	// 		m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
+	// 		return err
+	// 	}
+	// }
+
+	for _, val := range validators {
+		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
+			m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
+		}
+	}
 
 	return nil
 }

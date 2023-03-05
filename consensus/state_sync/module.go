@@ -1,7 +1,9 @@
 package state_sync
 
 import (
+	"context"
 	"sync"
+	"time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
@@ -72,6 +74,10 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	bus.RegisterModule(m)
 
 	m.serverMode = false
+
+	m.aggregatedSyncMetadata = &typesCons.StateSyncMetadataResponse{}
+
+	m.syncMetadataBuffer = make([]*typesCons.StateSyncMetadataResponse, 0)
 
 	return m, nil
 }
@@ -166,23 +172,28 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 }
 
 func (m *stateSync) GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse {
+	//aggregate responses
+	m.aggregatedSyncMetadata = m.aggregateMetadataResponses()
 	return m.aggregatedSyncMetadata
 }
 
 // TODO! implement this function, placeholder
-// This function requests blocks one by one from peers thorugh using p2p module request
+// This function requests blocks one by one from peers
 func (m *stateSync) StartSynching() error {
-	// add context timer
+	m.logger.Debug().Msgf("StartSynching() called GOKHAN")
 
 	current_height := m.GetBus().GetConsensusModule().CurrentHeight()
-	lastPersistedBlockHeight := current_height - 1
+	m.logger.Debug().Msgf("StartSynching() Current height: %d", current_height)
+	lastPersistedBlockHeight := current_height
+	m.logger.Debug().Msgf("Last persisted block %d", lastPersistedBlockHeight)
 
 	for i := lastPersistedBlockHeight; i < m.aggregatedSyncMetadata.MaxHeight; i++ {
+		m.logger.Debug().Msgf("StartSynching() Requesting block %d", i)
 		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 			Message: &typesCons.StateSyncMessage_GetBlockReq{
 				GetBlockReq: &typesCons.GetBlockRequest{
 					PeerAddress: m.GetBus().GetConsensusModule().GetNodeAddress(),
-					Height:      1,
+					Height:      i,
 				},
 			},
 		}
@@ -197,6 +208,7 @@ func (m *stateSync) StartSynching() error {
 // This function requests blocks one by one from peers thorughusing p2p module request, aggregates responses.
 // It requests blocks one by one from peers thorughusing p2p module request
 func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataResponse {
+	m.logger.Debug().Msgf("aggregateMetadataResponses() called GOKHAN")
 	m.m.Lock()
 	defer m.m.Unlock()
 
@@ -212,6 +224,10 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 			metadataResponse.MinHeight = m.MinHeight
 		}
 	}
+
+	//clear the buffer
+	m.syncMetadataBuffer = make([]*typesCons.StateSyncMetadataResponse, 0)
+
 	return metadataResponse
 }
 
@@ -219,6 +235,11 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 // It updates the aggregatedSyncMetadata field.
 // This update frequency can be tuned accordingly to the state. Currently, it has a default  behaviour.
 func (m *stateSync) periodicSynch() error {
+	m.logger.Debug().Msgf("periodicSynch() called GOKHAN")
+
+	//add timer channel with context to cancel the timer
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// form a metaData request
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
@@ -229,16 +250,25 @@ func (m *stateSync) periodicSynch() error {
 		},
 	}
 
-	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+	//
+	ticker := time.NewTicker(20 * time.Second)
+	defer ticker.Stop()
 
-	//broadcast metadata request to all peers
-	err := m.broadCastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
-	if err != nil {
-		return err
+	for {
+		select {
+		case <-ticker.C:
+			m.logger.Info().Msg("Periodic metadata synch is triggered")
+			currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+
+			//broadcast metadata request to all peers
+			err := m.broadCastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
+			if err != nil {
+				return err
+			}
+
+		case <-ctx.Done():
+			return nil
+
+		}
 	}
-
-	//aggregate responses
-	m.aggregatedSyncMetadata = m.aggregateMetadataResponses()
-
-	return nil
 }

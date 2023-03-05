@@ -148,7 +148,7 @@ func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage
 		},
 	}
 
-	validators, err := m.getValidatorsAtHeight(currentHeight)
+	validators, err := m.GetValidatorsAtHeight(currentHeight)
 	if err != nil {
 		m.logger.Debug().Msgf(typesCons.ErrPersistenceGetAllValidators.Error(), err)
 	}
@@ -178,7 +178,7 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 		},
 	}
 
-	validators, err := m.getValidatorsAtHeight(currentHeight)
+	validators, err := m.GetValidatorsAtHeight(currentHeight)
 	if err != nil {
 		m.logger.Debug().Msgf(typesCons.ErrPersistenceGetAllValidators.Error(), err)
 	}

@@ -82,7 +82,7 @@ type consensusModule struct {
 // Implementations of the ConsensusStateSync interface
 
 func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error) {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		// REFACTOR(#434): As per issue #434, once the new id is sorted out, this return statement must be changed
 		return 0, err
@@ -165,7 +165,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	}
 	address := privateKey.Address().String()
 
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return nil, err
 	}
@@ -317,9 +317,11 @@ func (m *consensusModule) loadPersistedState() error {
 }
 
 func (m *consensusModule) IsSynched() (bool, error) {
+	m.logger.Debug().Msg("IsSynched called, checking if consensus module is synched GOKHAN")
 	lastPersistedBlockHeight := m.GetBus().GetConsensusModule().CurrentHeight() - 1
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
 	if err != nil {
+		m.logger.Debug().Msg("IsSynched called, couldn't receive persistence module GOKHAN 2")
 		return false, err
 	}
 	defer persistenceContext.Close()
@@ -333,11 +335,5 @@ func (m *consensusModule) IsSynched() (bool, error) {
 		return true, nil
 	}
 
-	// if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched); err != nil {
-	// 	typesCons.ErrSendingStateTransitionEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
-	// 	return false, err
-	// }
-	// return false, nil
-
-	return false, nil // m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
+	return false, nil
 }

@@ -240,7 +240,124 @@ func forcePacemakerTimeout(t *testing.T, clockMock *clock.Mock, paceMakerTimeout
 // TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
 
 func TestPacemakerDifferentHeightsCatchup(t *testing.T) {
-	t.Skip()
+	// Test preparation
+	clockMock := clock.NewMock()
+	timeReminder(t, clockMock, time.Second)
+
+	runtimeConfigs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	buses := GenerateBuses(t, runtimeConfigs)
+
+	// Create & start test pocket nodes
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+	StartAllTestPocketNodes(t, pocketNodes)
+
+	// Starting point
+	testHeight := uint64(3)
+	testStep := uint8(consensus.NewRound)
+
+	// UnitTestNet configs
+	paceMakerTimeoutMsec := uint64(500) // Set a small pacemaker timeout
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	for _, runtimeConfig := range runtimeMgrs {
+		runtimeConfig.GetConfig().Consensus.PacemakerConfig.TimeoutMsec = paceMakerTimeoutMsec
+	}
+
+	// Prepare leader info
+	leaderId := typesCons.NodeId(3)
+	require.Equal(t, uint64(leaderId), testHeight%numValidators) // Uses our deterministic round robin leader election
+	leaderRound := uint64(6)
+	leader := pocketNodes[leaderId]
+	consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
+	require.NoError(t, err)
+
+	// Prepare unsynched node info
+	unsynchedNodeId := typesCons.NodeId(2)
+	unSynchedNodeRound := uint64(1)
+	//unsynchedNode := pocketNodes[unsynchedNodeId]
+	unsynchedNodeHeight := uint64(1)
+
+	// Placeholder block
+	blockHeader := &coreTypes.BlockHeader{
+		Height:            testHeight,
+		StateHash:         stateHash,
+		PrevStateHash:     "",
+		NumTxs:            0,
+		ProposerAddress:   consensusPK.Address(),
+		QuorumCertificate: nil,
+	}
+	block := &coreTypes.Block{
+		BlockHeader:  blockHeader,
+		Transactions: make([][]byte, 0),
+	}
+
+	leaderConsensusModImpl := GetConsensusModImpl(leader)
+	leaderConsensusModImpl.MethodByName("SetBlock").Call([]reflect.Value{reflect.ValueOf(block)})
+
+	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS
+	for id, pocketNode := range pocketNodes {
+		consensusModImpl := GetConsensusModImpl(pocketNode)
+		// we skip the node because it is already set
+		if id == unsynchedNodeId {
+			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(unsynchedNodeHeight)})
+			consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
+			consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(unSynchedNodeRound)})
+
+			utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(1))
+			require.NoError(t, err)
+			consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
+
+		} else {
+			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
+			consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
+			consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(leaderRound)})
+
+			// utilityContext is only set on new rounds, which is skipped in this test
+			utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
+			require.NoError(t, err)
+			consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
+
+		}
+		// Update height, step, leaderId, and utility context via setters exposed with the debug interface
+
+	}
+
+	prepareProposal := &typesCons.HotstuffMessage{
+		Type:          consensus.Propose,
+		Height:        testHeight,
+		Step:          consensus.Prepare, // typesCons.HotstuffStep(testStep),
+		Round:         leaderRound,
+		Block:         block,
+		Justification: nil,
+	}
+	anyMsg, err := anypb.New(prepareProposal)
+	require.NoError(t, err)
+
+	P2PBroadcast(t, pocketNodes, anyMsg)
+
+	// -2 because one of the messages is a self proposal, and also unsynched node will not accept the proposal
+	numExpectedMsgs := numValidators - 2
+	msgTimeout := paceMakerTimeoutMsec / 2 // /2 because we do not want the pacemaker to trigger a new timeout
+	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Vote, numExpectedMsgs, time.Duration(msgTimeout), true)
+	require.NoError(t, err)
+
+	// Check that all the nodes caught up to the leader's (i.e. the latest) round
+	for nodeId, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		if nodeId == unsynchedNodeId {
+			require.Equal(t, uint64(1), nodeState.Height)
+		} else {
+			if nodeId == leaderId {
+				require.Equal(t, consensus.Prepare.String(), typesCons.HotstuffStep(nodeState.Step).String())
+			} else {
+				require.Equal(t, consensus.PreCommit.String(), typesCons.HotstuffStep(nodeState.Step).String())
+			}
+			require.Equal(t, uint64(3), nodeState.Height)
+			require.Equal(t, uint8(6), nodeState.Round)
+			require.Equal(t, leaderId, nodeState.LeaderId)
+		}
+	}
+
 }
 
 func TestPacemakerDifferentStepsCatchup(t *testing.T) {

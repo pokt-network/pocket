@@ -75,6 +75,7 @@ type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
 	IsSynched() (bool, error)
+	GetValidatorsAtHeight(uint64) ([]*types.Actor, error)
 }
 
 type ConsensusDebugModule interface {
