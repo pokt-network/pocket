@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"fmt"
 	"log"
 	"os/exec"
 	"strings"
@@ -14,15 +13,6 @@ type CommandResult struct {
 }
 
 var _ PocketClient = &pocketClient{}
-var _ PocketClient = &dockerClient{}
-
-type dockerClient struct {
-	// TODO: wrap a docker compose around this
-}
-
-func (dc *dockerClient) RunCommand(commandAndArgs ...string) (*CommandResult, error) {
-	return nil, fmt.Errorf("not impl")
-}
 
 // PocketClient is a single function interface for interacting with a node.
 // We could consider upgrading it to a io.Reader interface but for now string is plenty flexible.
