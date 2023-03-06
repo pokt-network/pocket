@@ -15,11 +15,11 @@ import (
 	rpcABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/rpc"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
-	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 // TECHDEBT: Lowercase variables / constants that do not need to be exported.
@@ -211,9 +211,9 @@ func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage)
 	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
 	// p2pMod.Broadcast(anyProto)
 
-	addrBook, err := fetchAddressBook(cmd)
-	for _, val := range addrBook {
-		addr := val.Address
+	pstore, err := fetchPeerstore(cmd)
+	for _, val := range pstore.GetAllPeers() {
+		addr := val.GetAddress()
 		if err != nil {
 			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 		}
@@ -231,18 +231,19 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 		logger.Global.Error().Err(err).Msg("Failed to create Any proto")
 	}
 
-	addrBook, err := fetchAddressBook(cmd)
+	pstore, err := fetchPeerstore(cmd)
 	if err != nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the addrBook")
+		logger.Global.Fatal().Msg("Unable to retrieve the pstore")
 	}
 
 	var validatorAddress []byte
-	if len(addrBook) == 0 {
+	if pstore.Size() == 0 {
 		logger.Global.Fatal().Msg("No validators found")
 	}
 
+	// DISCUSS_IN_THIS_COMMIT: what does the following comment mean?
 	// if the message needs to be broadcast, it'll be handled by the business logic of the message handler
-	validatorAddress = addrBook[0].Address
+	validatorAddress = pstore.GetAllPeers()[0].GetAddress()
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 	}
@@ -252,8 +253,8 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 	}
 }
 
-// fetchAddressBook retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
-func fetchAddressBook(cmd *cobra.Command) (types.AddrBook, error) {
+// fetchPeerstore retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
+func fetchPeerstore(cmd *cobra.Command) (sharedP2P.Peerstore, error) {
 	bus, ok := getValueFromCLIContext[modules.Bus](cmd, busCLICtxKey)
 	if !ok || bus == nil {
 		logger.Global.Fatal().Msg("Unable to retrieve the bus from CLI context")
