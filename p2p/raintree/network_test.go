@@ -11,69 +11,121 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
+func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	// starting with an empty address book and only self
+	// Start with a peerstore containing self.
 	selfAddr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
 	selfPeer := &typesP2P.NetworkPeer{Address: selfAddr}
 
-	addrBook := getAddrBook(nil, 0)
-	addrBook = append(addrBook, &typesP2P.NetworkPeer{Address: selfAddr})
+	expectedPStoreSize := 0
+	pstore := getPeerstore(nil, expectedPStoreSize)
+
+	// Add self to peerstore.
+	err = pstore.AddPeer(&typesP2P.NetworkPeer{Address: selfAddr})
+	require.NoError(t, err)
+	expectedPStoreSize++
 
 	busMock := mockBus(ctrl)
-	addrBookProviderMock := mockAddrBookProvider(ctrl, addrBook)
+	peerstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-	network := NewRainTreeNetwork(selfAddr, busMock, addrBookProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
+	network := NewRainTreeNetwork(selfAddr, busMock, peerstoreProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
 
 	peerAddr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
+	peerToAdd := &typesP2P.NetworkPeer{Address: peerAddr}
 
-	peer := &typesP2P.NetworkPeer{Address: peerAddr}
-
-	// adding a peer
-	err = network.AddPeerToAddrBook(peer)
+	// Add peerToAdd.
+	err = network.AddPeer(peerToAdd)
 	require.NoError(t, err)
+	expectedPStoreSize++
 
-	stateView := network.peersManager.GetPeersView()
-	require.Equal(t, 2, len(stateView.GetAddrs()))
-	require.ElementsMatch(t, []string{selfAddr.String(), peerAddr.String()}, stateView.GetAddrs(), "addrList does not match")
-	require.ElementsMatch(t, []*typesP2P.NetworkPeer{selfPeer, peer}, stateView.GetPeers(), "addrBook does not match")
+	peersView, peerAddrs, peers := getPeersViewParts(network.peersManager)
 
-	require.Equal(t, selfPeer, stateView.GetPeerstore().GetPeer(selfAddr), "Peerstore does not contain self")
-	require.Equal(t, peer, stateView.GetPeerstore().GetPeer(peerAddr), "Peerstore does not contain peer")
+	// Ensure size / lengths are consistent.
+	require.Equal(t, expectedPStoreSize, peersView.GetPeerstore().Size())
+	require.Equal(t, expectedPStoreSize, len(peerAddrs))
+	require.Equal(t, expectedPStoreSize, len(peers))
+
+	require.ElementsMatch(t, []string{selfAddr.String(), peerAddr.String()}, peerAddrs, "addresses do not match")
+	require.ElementsMatch(t, []*typesP2P.NetworkPeer{selfPeer, peerToAdd}, peers, "peers do not match")
+
+	require.Equal(t, selfPeer, peersView.GetPeerstore().GetPeer(selfAddr), "Peerstore does not contain self")
+	require.Equal(t, peerToAdd, peersView.GetPeerstore().GetPeer(peerAddr), "Peerstore does not contain added peer")
 }
 
-func TestRainTreeNetwork_RemovePeerFromAddrBook(t *testing.T) {
+func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	// starting with an address book having only self and an arbitrary number of peers `numAddressesInAddressBook``
-	numAddressesInAddressBook := 3
-	addrBook := getAddrBook(nil, numAddressesInAddressBook)
+	// Start with a peerstore which contains self and some number of peers: the
+	// initial value of `expectedPStoreSize`.
+	expectedPStoreSize := 3
+	pstore := getPeerstore(nil, expectedPStoreSize)
+
 	selfAddr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
 	selfPeer := &typesP2P.NetworkPeer{Address: selfAddr}
-	addrBook = append(addrBook, &typesP2P.NetworkPeer{Address: selfAddr})
+
+	// TODO _THIS_COMMIT: finish comment
+	// Add self to peerstore because ... it's expected by something
+	err = pstore.AddPeer(&typesP2P.NetworkPeer{Address: selfAddr})
+	require.NoError(t, err)
+	expectedPStoreSize++
 
 	busMock := mockBus(ctrl)
-	addrBookProviderMock := mockAddrBookProvider(ctrl, addrBook)
+	peerstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-	network := NewRainTreeNetwork(selfAddr, busMock, addrBookProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
-	stateView := network.peersManager.GetPeersView()
-	require.Equal(t, numAddressesInAddressBook+1, len(stateView.GetAddrs())) // +1 to account for self in the addrBook as well
+	network := NewRainTreeNetwork(selfAddr, busMock, peerstoreProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
 
-	// removing a peer
-	peer := addrBook[1]
-	err = network.RemovePeerFromAddrBook(peer)
+	// Ensure expected starting size / lengths are consistent.
+	peersView, peerAddrs, peers := getPeersViewParts(network.peersManager)
+	require.Equal(t, expectedPStoreSize, pstore.Size())
+	require.Equal(t, expectedPStoreSize, len(peerAddrs))
+	require.Equal(t, expectedPStoreSize, len(peers))
+
+	var peerToRemove sharedP2P.Peer
+	// Ensure we don't remove selfPeer. `Peerstore` interface isn't aware
+	// of the concept of "self" so we have to find it.
+	for _, peer := range pstore.GetAllPeers() {
+		if peer.GetAddress().Equals(selfAddr) {
+			continue
+		}
+		peerToRemove = peer
+		break
+	}
+	require.NotNil(t, peerToRemove, "did not find selfAddr in peerstore")
+
+	// Remove peerToRemove
+	err = network.RemovePeer(peerToRemove)
 	require.NoError(t, err)
+	expectedPStoreSize--
 
-	stateView = network.peersManager.GetPeersView()
-	require.Equal(t, numAddressesInAddressBook+1-1, len(stateView.GetAddrs())) // +1 to account for self and the peer removed
+	peersView, peerAddrs, peers = getPeersViewParts(network.peersManager)
+	removedAddr := peerToRemove.GetAddress()
+	getPeer := func(addr cryptoPocket.Address) sharedP2P.Peer {
+		return peersView.GetPeerstore().GetPeer(addr)
+	}
 
-	require.Contains(t, stateView.GetPeerstore(), selfAddr.String(), "Peerstore does not contain self key")
-	require.Equal(t, selfPeer, stateView.GetPeerstore().GetPeer(selfAddr), "Peerstore contains self")
-	require.NotContains(t, stateView.GetPeerstore(), peerToRemove.GetAddress().String(), "Peerstore contains removed peer key")
+	// Ensure updated size / lengths are consistent.
+	require.Equal(t, expectedPStoreSize, pstore.Size())
+	require.Equal(t, expectedPStoreSize, len(peerAddrs))
+	require.Equal(t, expectedPStoreSize, len(peers))
+
+	require.Equal(t, selfPeer, getPeer(selfAddr), "Peerstore does not contain self")
+	require.Nil(t, getPeer(removedAddr), "Peerstore contains removed peer")
+}
+
+func getPeersViewParts(pm sharedP2P.PeerManager) (
+	view sharedP2P.PeersView,
+	addrs []string,
+	peers sharedP2P.PeerList) {
+
+	view = pm.GetPeersView()
+	addrs = view.GetAddrs()
+	peers = view.GetPeers()
+
+	return view, addrs, peers
 }

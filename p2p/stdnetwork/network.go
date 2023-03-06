@@ -24,7 +24,7 @@ type network struct {
 	logger *modules.Logger
 }
 
-func NewNetwork(bus modules.Bus, addrBookProvider providers.PeerstoreProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
+func NewNetwork(bus modules.Bus, pstoreProvider providers.PeerstoreProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
 	networkLogger := logger.Global.CreateLoggerForModule("network")
 	networkLogger.Info().Msg("Initializing stdnetwork")
 
@@ -67,8 +67,8 @@ func (n *network) HandleNetworkData(data []byte) ([]byte, error) {
 	return data, nil // intentional passthrough
 }
 
-func (n *network) GetPeerList() sharedP2P.PeerList {
-	return n.pstore.GetAllPeers()
+func (n *network) GetPeerstore() sharedP2P.Peerstore {
+	return n.pstore
 }
 
 func (n *network) AddPeer(peer sharedP2P.Peer) error {

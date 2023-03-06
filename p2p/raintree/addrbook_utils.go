@@ -13,7 +13,7 @@ const (
 	floatPrecision            = float64(0.0000001)
 )
 
-func (n *rainTreeNetwork) getAddrBookLength(level uint32, height uint64) int {
+func (n *rainTreeNetwork) getPeerstoreSize(level uint32, height uint64) int {
 	peersView, maxNumLevels := n.peersManager.getPeersViewWithLevels()
 
 	// if we are propagating a message from a previous height, we need to instantiate an ephemeral rainTreePeersManager (without add/remove)
@@ -32,9 +32,9 @@ func (n *rainTreeNetwork) getAddrBookLength(level uint32, height uint64) int {
 // getTargetsAtLevel returns the targets for a given level
 func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 	height := n.currentHeightProvider.CurrentHeight()
-	addrBookLengthAtHeight := n.getAddrBookLength(level, height)
-	firstTarget := n.getTarget(firstMsgTargetPercentage, addrBookLengthAtHeight, level)
-	secondTarget := n.getTarget(secondMsgTargetPercentage, addrBookLengthAtHeight, level)
+	pstoreSizeAtHeight := n.getPeerstoreSize(level, height)
+	firstTarget := n.getTarget(firstMsgTargetPercentage, pstoreSizeAtHeight, level)
+	secondTarget := n.getTarget(secondMsgTargetPercentage, pstoreSizeAtHeight, level)
 
 	n.logger.Debug().Fields(
 		map[string]any{
@@ -47,19 +47,19 @@ func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 	return []target{firstTarget, secondTarget}
 }
 
-func (n *rainTreeNetwork) getTarget(targetPercentage float64, addrBookLen int, level uint32) target {
-	i := int(targetPercentage * float64(addrBookLen))
+func (n *rainTreeNetwork) getTarget(targetPercentage float64, pstoreSize int, level uint32) target {
+	i := int(targetPercentage * float64(pstoreSize))
 
 	peersView := n.peersManager.GetPeersView()
 
 	serviceURL := peersView.GetPeers()[i].GetServiceURL()
 
 	target := target{
-		serviceURL:             serviceURL,
-		percentage:             targetPercentage,
-		level:                  level,
-		addrBookLengthAtHeight: addrBookLen,
-		index:                  i,
+		serviceURL:            serviceURL,
+		percentage:            targetPercentage,
+		level:                 level,
+		peerstoreSizeAtHeight: pstoreSize,
+		index:                 i,
 	}
 
 	// If the target is 0, it is a reference to self, which is a `Demote` in RainTree terms.

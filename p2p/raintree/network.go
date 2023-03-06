@@ -216,8 +216,8 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	return rainTreeMsg.Data, nil
 }
 
-func (n *rainTreeNetwork) GetPeerList() sharedP2P.PeerList {
-	return n.peersManager.GetPeersView().GetPeers()
+func (n *rainTreeNetwork) GetPeerstore() sharedP2P.Peerstore {
+	return n.peersManager.GetPeersView().GetPeerstore()
 }
 
 func (n *rainTreeNetwork) AddPeer(peer sharedP2P.Peer) error {
