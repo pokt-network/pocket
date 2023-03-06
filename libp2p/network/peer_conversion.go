@@ -11,11 +11,12 @@ import (
 	"github.com/pokt-network/pocket/libp2p/transport"
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 // PeerFromLibp2pStream builds a network peer using peer info available
 // from the given libp2p stream.
-func PeerFromLibp2pStream(stream network.Stream) (*types.NetworkPeer, error) {
+func PeerFromLibp2pStream(stream network.Stream) (sharedP2P.Peer, error) {
 	publicKeyBz, err := stream.Conn().RemotePublicKey().Raw()
 	if err != nil {
 		return nil, err
@@ -41,12 +42,12 @@ func PeerFromLibp2pStream(stream network.Stream) (*types.NetworkPeer, error) {
 }
 
 // Libp2pPublicKeyFromPeer retrieves the libp2p compatible public key from a pocket peer.
-func Libp2pPublicKeyFromPeer(peer *types.NetworkPeer) (libp2pCrypto.PubKey, error) {
-	publicKey, err := libp2pCrypto.UnmarshalEd25519PublicKey(peer.PublicKey.Bytes())
+func Libp2pPublicKeyFromPeer(peer sharedP2P.Peer) (libp2pCrypto.PubKey, error) {
+	publicKey, err := libp2pCrypto.UnmarshalEd25519PublicKey(peer.GetPublicKey().Bytes())
 	if err != nil {
 		return nil, fmt.Errorf(
 			"unmarshalling peer ed25519 public key, pokt address: %s: %w",
-			peer.Address,
+			peer.GetAddress(),
 			err,
 		)
 	}
@@ -54,7 +55,7 @@ func Libp2pPublicKeyFromPeer(peer *types.NetworkPeer) (libp2pCrypto.PubKey, erro
 }
 
 // Libp2pAddrInfoFromPeer builds a libp2p AddrInfo which maps to the passed pocket peer.
-func Libp2pAddrInfoFromPeer(peer *types.NetworkPeer) (libp2pPeer.AddrInfo, error) {
+func Libp2pAddrInfoFromPeer(peer sharedP2P.Peer) (libp2pPeer.AddrInfo, error) {
 	publicKey, err := Libp2pPublicKeyFromPeer(peer)
 	if err != nil {
 		return libp2pPeer.AddrInfo{}, err
@@ -64,12 +65,12 @@ func Libp2pAddrInfoFromPeer(peer *types.NetworkPeer) (libp2pPeer.AddrInfo, error
 	if err != nil {
 		return libp2pPeer.AddrInfo{}, fmt.Errorf(
 			"retrieving ID from peer public key, pokt address: %s: %w",
-			peer.Address,
+			peer.GetAddress(),
 			err,
 		)
 	}
 
-	peerMultiaddr, err := Libp2pMultiaddrFromServiceURL(peer.ServiceURL)
+	peerMultiaddr, err := Libp2pMultiaddrFromServiceURL(peer.GetServiceURL())
 	if err != nil {
 		return libp2pPeer.AddrInfo{}, err
 	}
