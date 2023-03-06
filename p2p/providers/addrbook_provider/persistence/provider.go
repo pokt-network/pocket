@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 var _ addrbook_provider.AddrBookProvider = &persistenceAddrBookProvider{}
@@ -43,7 +44,7 @@ func (*persistenceAddrBookProvider) GetModuleName() string {
 	return addrbook_provider.ModuleName
 }
 
-func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (typesP2P.AddrBook, error) {
+func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (sharedP2P.Peerstore, error) {
 	persistenceReadContext, err := pabp.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err
@@ -54,7 +55,7 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	if err != nil {
 		return nil, err
 	}
-	return addrbook_provider.ActorsToAddrBook(pabp, validators)
+	return addrbook_provider.ActorsToPeerstore(pabp, validators)
 }
 
 func (pabp *persistenceAddrBookProvider) GetConnFactory() typesP2P.ConnectionFactory {

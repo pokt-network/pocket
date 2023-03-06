@@ -4,41 +4,68 @@ package addrbook_provider
 
 import (
 	"fmt"
-	"log"
+	"strings"
 
+	"github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 const ModuleName = "addrbook_provider"
 
-// AddrBookProvider is an interface that provides AddrBook accessors
+// AddrBookProvider is an interface that provides Peerstore accessors
+// TECHDEBT: rename `AddrBookProvider` to `PeerstoreProvider` to disambiguate
+// the meaning of the word "address" (identity vs network).
 type AddrBookProvider interface {
 	modules.Module
 
-	GetStakedAddrBookAtHeight(height uint64) (typesP2P.AddrBook, error)
+	GetStakedAddrBookAtHeight(height uint64) (sharedP2P.Peerstore, error)
 	GetConnFactory() typesP2P.ConnectionFactory
 	GetP2PConfig() *configs.P2PConfig
 	SetConnectionFactory(typesP2P.ConnectionFactory)
 }
 
-func ActorsToAddrBook(abp AddrBookProvider, actors []*coreTypes.Actor) (typesP2P.AddrBook, error) {
-	book := make(typesP2P.AddrBook, 0)
+func ActorsToPeerstore(abp AddrBookProvider, actors []*coreTypes.Actor) (sharedP2P.Peerstore, error) {
+	// TECHDEBT: consider using a multi-error pkg or upgrading to go 1.20.
+	// (see: https://go.dev/doc/go1.20#errors)
+	var errs []string
+	appendErr := func(err error) {
+		errs = append(errs, err.Error())
+	}
+	joinErrs := func() string {
+		return strings.Join(errs, "; ")
+	}
+
+	pstore := make(sharedP2P.PeerAddrMap)
 	for _, a := range actors {
-		networkPeer, err := ActorToNetworkPeer(abp, a)
+		networkPeer, err := ActorToPeer(abp, a)
 		if err != nil {
-			log.Println("[WARN] Error connecting to validator: ", err)
+			appendErr(err)
 			continue
 		}
-		book = append(book, networkPeer)
+
+		if err = pstore.AddPeer(networkPeer); err != nil {
+			appendErr(err)
+		}
+
+		// TECHDEBT: consider using a multi-error and returning instead of logging.
+		if len(errs) > 0 {
+			logger.Global.Warn().
+				Bool("TODO", true).
+				Msgf("building peerstore from actors list: %s", joinErrs())
+		}
 	}
-	return book, nil
+	return pstore, nil
 }
 
-func ActorToNetworkPeer(abp AddrBookProvider, actor *coreTypes.Actor) (*typesP2P.NetworkPeer, error) {
+func ActorToPeer(abp AddrBookProvider, actor *coreTypes.Actor) (sharedP2P.Peer, error) {
+	// TECHDEBT: this should be the responsibility of some new `ConnManager` interface.
+	// Peerstore (identity / address mapping) is a separate concern from managing
+	// connections to/from peers.
 	conn, err := abp.GetConnFactory()(abp.GetP2PConfig(), actor.GetServiceUrl()) // generic param is service url
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)
