@@ -90,7 +90,6 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	m.logger.Debug().Msg("FSM is in Sync Mode, starting syncing...")
 
 	return m.stateSync.StartSynching()
-
 }
 
 // HandleSynced handles FSM event IsSynchedNonValidator, and Synced is the destination state.

@@ -87,4 +87,6 @@ type ConsensusDebugModule interface {
 	SetStep(uint8)
 	SetBlock(*types.Block)
 	SetUtilityContext(UtilityContext)
+
+	SetAggregatedMetadata(uint64, uint64, string)
 }

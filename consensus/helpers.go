@@ -148,6 +148,7 @@ func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.Hotstuff
 }
 
 func (m *consensusModule) isOptimisticThresholdMet(numSignatures int, validators []*coreTypes.Actor) error {
+	m.logger.Info().Msgf("THRESHOLD CHECK, no of signatures %d , no of validators %d", numSignatures, len(validators))
 	numValidators := len(validators)
 	if !(float64(numSignatures) > ByzantineThreshold*float64(numValidators)) {
 		return typesCons.ErrByzantineThresholdCheck(numSignatures, ByzantineThreshold*float64(numValidators))
