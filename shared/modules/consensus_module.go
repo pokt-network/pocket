@@ -23,7 +23,6 @@ type ConsensusModule interface {
 
 	ConsensusStateSync
 	ConsensusPacemaker
-	//ConsensusFSMHandlers
 	ConsensusDebugModule
 
 	// Consensus Engine Handlers

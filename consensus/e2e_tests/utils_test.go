@@ -518,21 +518,19 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 	consensusModImpl := reflect.ValueOf(bus.GetConsensusModule())
 
 	stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
-		t.Logf("RECEIVED GOKHAN EVENT: %s \n", event)
 		switch coreTypes.StateMachineEvent(event) {
 		case coreTypes.StateMachineEvent_Consensus_IsUnsynched:
-			t.Logf("TEST GOKHAN RECEIVED: %s,  setting height: %d", event, stateSyncHelper.maxheight)
-
+			t.Logf("Node is unsynched")
 			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(stateSyncHelper.maxheight)})
 			bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
 			return nil
 		case coreTypes.StateMachineEvent_Consensus_IsSynchedValidator:
-			t.Logf("NODE IS NOW SYNCHED")
+			t.Logf("Validator is synched")
 
 			return nil
 
 		default:
-			log.Printf("ASD ASD module not handling this event: %s", event)
+			log.Printf("Not handling this event: %s", event)
 			return nil
 
 		}

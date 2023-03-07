@@ -139,54 +139,6 @@ func (m *stateSync) DisableServerMode() error {
 	return nil
 }
 
-// TODO(#352): Implement this function
-// Placeholder function
-//func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-// consensusMod := m.GetBus().GetConsensusModule()
-// serverNodePeerId := consensusMod.GetNodeAddress()
-// clientPeerId := blockRes.PeerAddress
-
-// fields := map[string]any{
-// 	"currentHeight": blockRes.Block.BlockHeader.Height,
-// 	"sender":        serverNodePeerId,
-// 	"receiver":      clientPeerId,
-// }
-
-// m.logger.Info().Fields(fields).Msgf("Received GetBlockResponse: %s", blockRes)
-
-// valid, err := m.validateBlock(blockRes.Block)
-// if err != nil {
-// 	m.logger.Err().Er
-// 	return err
-// }
-
-//return nil
-//}
-
-// // TODO(#352): Implement the business to handle these correctly
-// // Placeholder function
-// func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
-// 	consensusMod := m.GetBus().GetConsensusModule()
-// 	serverNodePeerId := consensusMod.GetNodeAddress()
-// 	clientPeerId := metaDataRes.PeerAddress
-// 	currentHeight := consensusMod.CurrentHeight()
-
-// 	fields := map[string]any{
-// 		"currentHeight": currentHeight,
-// 		"sender":        serverNodePeerId,
-// 		"receiver":      clientPeerId,
-// 	}
-
-// 	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataResponse: %s", metaDataRes)
-
-// 	m.m.Lock()
-// 	defer m.m.Unlock()
-
-// 	m.syncMetadataBuffer = append(m.syncMetadataBuffer, metaDataRes)
-
-// 	return nil
-// }
-
 func (m *stateSync) GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse {
 	m.aggregatedSyncMetadata = m.aggregateMetadataResponses()
 	m.logger.Debug().Msgf("GETTING AGGREGATED SYNC METADATA TO: %s, nodeId: %d", m.aggregatedSyncMetadata, m.GetBus().GetConsensusModule().GetNodeId())
@@ -305,21 +257,3 @@ func (m *stateSync) periodicMetaDataSynch() error {
 		}
 	}
 }
-
-// synch metadata
-// func (m *stateSync) synch(currentHeight uint64) error {
-// 	// form a metaData request
-// 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
-// 		Message: &typesCons.StateSyncMessage_MetadataReq{
-// 			MetadataReq: &typesCons.StateSyncMetadataRequest{
-// 				PeerAddress: m.GetBus().GetConsensusModule().GetNodeAddress(),
-// 			},
-// 		},
-// 	}
-// 	err := m.broadCastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }

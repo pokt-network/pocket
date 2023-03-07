@@ -337,12 +337,3 @@ func (m *consensusModule) IsSynched() (bool, error) {
 
 	return false, nil
 }
-
-// func (m *consensusModule) StartSynching() error {
-// 	m.logger.Debug().Msg("StartSyncing called, starting state sync GOKHAN")
-// 	if err := m.stateSync.Synch(); err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }

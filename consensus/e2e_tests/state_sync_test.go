@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -178,4 +180,134 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	errMsg := "StateSync Get Block Request Message"
 	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
 	require.Error(t, err)
+}
+
+func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
+	// Test preparation
+	clockMock := clock.NewMock()
+	timeReminder(t, clockMock, time.Second)
+
+	numberOfValidators := 6
+	testHeight := uint64(3)
+	testStep := uint8(consensus.NewRound)
+
+	runtimeConfigs := GenerateNodeRuntimeMgrs(t, numberOfValidators, clockMock)
+
+	buses := GenerateBuses(t, runtimeConfigs)
+
+	// Create & start test pocket nodes
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+	StartAllTestPocketNodes(t, pocketNodes)
+
+	// UnitTestNet configs
+	paceMakerTimeoutMsec := uint64(500) // Set a small pacemaker timeout
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numberOfValidators, clockMock)
+	for _, runtimeConfig := range runtimeMgrs {
+		runtimeConfig.GetConfig().Consensus.PacemakerConfig.TimeoutMsec = paceMakerTimeoutMsec
+	}
+
+	// Prepare leader info
+	leaderId := typesCons.NodeId(3)
+	require.Equal(t, uint64(leaderId), testHeight%uint64(numberOfValidators)) // Uses our deterministic round robin leader election
+	testRound := uint64(6)
+	leader := pocketNodes[leaderId]
+	consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
+	require.NoError(t, err)
+
+	// Prepare unsynched node info
+	unsynchedNodeId := typesCons.NodeId(2)
+	//unSynchedNodeRound := uint64(1)
+	unsynchedNodeHeight := uint64(2)
+
+	// Placeholder block
+	blockHeader := &coreTypes.BlockHeader{
+		Height:            testHeight,
+		StateHash:         stateHash,
+		PrevStateHash:     "",
+		NumTxs:            0,
+		ProposerAddress:   consensusPK.Address(),
+		QuorumCertificate: nil,
+	}
+	block := &coreTypes.Block{
+		BlockHeader:  blockHeader,
+		Transactions: make([][]byte, 0),
+	}
+
+	leaderConsensusModImpl := GetConsensusModImpl(leader)
+	leaderConsensusModImpl.MethodByName("SetBlock").Call([]reflect.Value{reflect.ValueOf(block)})
+
+	// Set the unsynched node to height (1) and round (1)
+	// Set rest of the nodes to the same height (3) and round (6)
+	for id, pocketNode := range pocketNodes {
+		consensusModImpl := GetConsensusModImpl(pocketNode)
+		if id == unsynchedNodeId {
+			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(unsynchedNodeHeight)})
+			//consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(unSynchedNodeRound)})
+		} else {
+			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
+		}
+		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
+		consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(testRound)})
+		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
+		require.NoError(t, err)
+		consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
+	}
+
+	// Debug message to start consensus by triggering first view change
+	for _, pocketNode := range pocketNodes {
+		TriggerNextView(t, pocketNode)
+	}
+	advanceTime(t, clockMock, 10*time.Millisecond)
+
+	// Assert that unsynched node has a seperate view of the network than the rest of the nodes
+	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 250, true)
+	require.NoError(t, err)
+	for nodeId, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		if nodeId == unsynchedNodeId {
+			assertNodeConsensusView(t, nodeId,
+				typesCons.ConsensusNodeState{
+					Height: unsynchedNodeHeight,
+					Step:   testStep,
+					Round:  uint8(testRound + 1),
+				},
+				nodeState)
+		} else {
+			assertNodeConsensusView(t, nodeId,
+				typesCons.ConsensusNodeState{
+					Height: testHeight,
+					Step:   testStep,
+					Round:  uint8(testRound + 1),
+				},
+				nodeState)
+		}
+		require.Equal(t, false, nodeState.IsLeader)
+		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
+	}
+
+	// Mock the unsynched node's periodic metadata sync, which is ()
+	MockPeriodicMetaDataSynch(testHeight, 1)
+
+	for _, message := range newRoundMessages {
+		P2PBroadcast(t, pocketNodes, message)
+	}
+	advanceTime(t, clockMock, 10*time.Millisecond)
+
+	// 2. Propose
+	numExpectedMsgs := numberOfValidators
+	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numExpectedMsgs, 250, true)
+	require.NoError(t, err)
+
+	for nodeId, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+
+		assertNodeConsensusView(t, nodeId,
+			typesCons.ConsensusNodeState{
+				Height: testHeight,
+				Step:   uint8(consensus.Prepare),
+				Round:  uint8(testRound + 1),
+			},
+			nodeState)
+	}
 }
