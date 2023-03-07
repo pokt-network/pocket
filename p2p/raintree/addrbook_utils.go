@@ -53,7 +53,7 @@ func (n *rainTreeNetwork) getTarget(targetPercentage float64, addrBookLen int, l
 	peersManagerStateView := n.peersManager.getNetworkView()
 
 	target := target{
-		serviceUrl:             peersManagerStateView.addrBookMap[peersManagerStateView.addrList[i]].ServiceUrl,
+		serviceURL:             peersManagerStateView.addrBookMap[peersManagerStateView.addrList[i]].ServiceURL,
 		percentage:             targetPercentage,
 		level:                  level,
 		addrBookLengthAtHeight: addrBookLen,

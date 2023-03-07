@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.20] - 2023-03-03
+
+- Support libp2p module in debug CLI
+
+## [0.0.0.19] - 2023-02-28
+
+- Renamed the package names for some basic helpers
+
+## [0.0.0.18] - 2023-02-28
+
+- Implement SLIP-0010 HD child key derivation with the keybase
+- Add CLI endpoints to derive child keys by index
+
 ## [0.0.0.17] - 2023-02-23
 
 - Add CLI endpoints to interact with the keybase

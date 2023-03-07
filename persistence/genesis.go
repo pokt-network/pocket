@@ -7,8 +7,8 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/utils"
 )
 
 // CONSIDERATION: Should this return an error and let the caller decide if it should log a fatal error?
@@ -17,7 +17,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	//           and we need to add proper unit tests for it.`
 	poolValues := make(map[string]*big.Int, 0)
 	addValueToPool := func(poolName string, valueToAdd string) error {
-		value, err := converters.StringToBigInt(valueToAdd)
+		value, err := utils.StringToBigInt(valueToAdd)
 		if err != nil {
 			return err
 		}
@@ -57,10 +57,12 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 		Pool     coreTypes.Pools
 	}{
 		{
-			Name:     "app",
-			Getter:   state.GetApplications,
-			InsertFn: rwContext.InsertApp,
-			Pool:     coreTypes.Pools_POOLS_APP_STAKE,
+			Name:   "app",
+			Getter: state.GetApplications,
+			InsertFn: func(address, publicKey, output []byte, paused bool, status int32, serviceURL, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error {
+				return rwContext.InsertApp(address, publicKey, output, paused, status, stakedTokens, chains, pausedHeight, unstakingHeight)
+			},
+			Pool: coreTypes.Pools_POOLS_APP_STAKE,
 		},
 		{
 			Name:     "servicer",
@@ -98,7 +100,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			if err != nil {
 				log.Fatalf("an error occurred converting output to bytes %s", act.GetOutput())
 			}
-			err = saic.InsertFn(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GetGenericParam(), act.GetStakedAmount(), act.GetChains(), act.GetPausedHeight(), act.GetUnstakingHeight())
+			err = saic.InsertFn(addrBz, pubKeyBz, outputBz, false, int32(coreTypes.StakeStatus_Staked), act.GetServiceUrl(), act.GetStakedAmount(), act.GetChains(), act.GetPausedHeight(), act.GetUnstakingHeight())
 			if err != nil {
 				log.Fatalf("an error occurred inserting an %s in the genesis state: %s", saic.Name, err.Error())
 			}

@@ -20,6 +20,11 @@ type Keybase interface {
 	// Insert a new keypair from the JSON string of the encrypted private key into the DB
 	ImportFromJSON(jsonStr, passphrase string) (crypto.KeyPair, error)
 
+	// SLIPS-0010 Key Derivation
+	// Deterministically generate, store and return the derived child key
+	DeriveChildFromKey(masterAddrHex, passphrase string, childIndex uint32, childPassphrase, childHint string, shouldStore bool) (crypto.KeyPair, error)
+	DeriveChildFromSeed(seed []byte, childIndex uint32, childPassphrase, childHint string, shouldStore bool) (crypto.KeyPair, error)
+
 	// Accessors
 	Get(address string) (crypto.KeyPair, error)
 	GetPubKey(address string) (crypto.PublicKey, error)

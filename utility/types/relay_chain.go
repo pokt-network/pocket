@@ -7,10 +7,8 @@ const (
 
 type relayChain string
 
-// No need for a relayChain interface abstraction for the time being
-var _ Validatable = relayChain("")
-
 // TODO: Consider adding a governance parameter for a list of valid relay chains
+// ValidateBasic validates the relay chain follows a pre-determined format
 func (rc relayChain) ValidateBasic() Error {
 	if rc == "" {
 		return ErrEmptyRelayChain()

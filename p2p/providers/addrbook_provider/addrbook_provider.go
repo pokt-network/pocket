@@ -17,8 +17,7 @@ const ModuleName = "addrbook_provider"
 
 // AddrBookProvider is an interface that provides AddrBook accessors
 type AddrBookProvider interface {
-	modules.IntegratableModule
-	modules.InterruptableModule
+	modules.Module
 
 	GetStakedAddrBookAtHeight(height uint64) (typesP2P.AddrBook, error)
 	GetConnFactory() typesP2P.ConnectionFactory
@@ -40,7 +39,7 @@ func ActorsToAddrBook(abp AddrBookProvider, actors []*coreTypes.Actor) (typesP2P
 }
 
 func ActorToNetworkPeer(abp AddrBookProvider, actor *coreTypes.Actor) (*typesP2P.NetworkPeer, error) {
-	conn, err := abp.GetConnFactory()(abp.GetP2PConfig(), actor.GetGenericParam()) // generic param is service url
+	conn, err := abp.GetConnFactory()(abp.GetP2PConfig(), actor.GetServiceUrl()) // generic param is service url
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)
 	}
@@ -54,7 +53,7 @@ func ActorToNetworkPeer(abp AddrBookProvider, actor *coreTypes.Actor) (*typesP2P
 		Dialer:     conn,
 		PublicKey:  pubKey,
 		Address:    pubKey.Address(),
-		ServiceUrl: actor.GetGenericParam(), // service url
+		ServiceURL: actor.GetServiceUrl(), // service url
 	}
 
 	return peer, nil

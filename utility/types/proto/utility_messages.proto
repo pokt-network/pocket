@@ -4,9 +4,9 @@ package utility;
 
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
-// Messages that are sent between nodes (e.g. Evidence) for node specific business logic but are
-// not intended to be stored on the blockchain or drive state transitions.
+// Messages that are sent between nodes for utility specific purposes but are not intended to be store
+// on-chain to derive state transitions.
 
-message TransactionGossipMessage {
-  bytes tx = 1;
+message TxGossipMessage {
+  bytes tx = 1; // TECHDEBT: Make this an explicit `Transaction` proto type
 }

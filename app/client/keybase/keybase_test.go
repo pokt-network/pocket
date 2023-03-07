@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
@@ -12,9 +12,10 @@ import (
 //nolint:gosec // G101 Credentials are for tests
 const (
 	// Example account
-	testPrivString = "045e8380086abc6f6e941d6fe47ca93b86723bc246ec8c4beee411b410028675ed78c49592f836f7a4d47d4fb6a0e6b19f07aebc201d005f6b2c6afe389086e9"
-	testPubString  = "ed78c49592f836f7a4d47d4fb6a0e6b19f07aebc201d005f6b2c6afe389086e9"
-	testAddr       = "26e16ccab7a898400022476332e2972b8199f2f9"
+	testPrivString    = "045e8380086abc6f6e941d6fe47ca93b86723bc246ec8c4beee411b410028675ed78c49592f836f7a4d47d4fb6a0e6b19f07aebc201d005f6b2c6afe389086e9"
+	testPubString     = "ed78c49592f836f7a4d47d4fb6a0e6b19f07aebc201d005f6b2c6afe389086e9"
+	testAddr          = "26e16ccab7a898400022476332e2972b8199f2f9"
+	testChildAddrIdx1 = "8b83d7057df7ac1d20a2f0aa0edadf206eb6764d"
 
 	// Other
 	testPassphrase    = "Testing@Testing123"
@@ -375,6 +376,62 @@ func TestKeybase_ExportJSON(t *testing.T) {
 	require.Equal(t, privKey.String(), testPrivString)
 }
 
+func TestKeybase_DeriveChildFromKey(t *testing.T) {
+	db := initDB(t)
+	defer stopDB(t, db)
+
+	_, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
+	require.NoError(t, err)
+
+	childKey, err := db.DeriveChildFromKey(testAddr, testPassphrase, 1, "", "", false)
+	require.NoError(t, err)
+	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
+}
+
+func TestKeybase_DeriveChildFromSeed(t *testing.T) {
+	db := initDB(t)
+	defer stopDB(t, db)
+
+	kp, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
+	require.NoError(t, err)
+
+	seed, err := kp.GetSeed(testPassphrase)
+	require.NoError(t, err)
+
+	childKey, err := db.DeriveChildFromSeed(seed, 1, "", "", false)
+	require.NoError(t, err)
+	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
+}
+
+func TestKeybase_StoreChildFromKey(t *testing.T) {
+	db := initDB(t)
+	defer stopDB(t, db)
+
+	_, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
+	require.NoError(t, err)
+
+	childKey, err := db.DeriveChildFromKey(testAddr, testPassphrase, 1, testPassphrase, testHint, true)
+	require.NoError(t, err)
+	require.NotNil(t, childKey)
+	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
+}
+
+func TestKeybase_StoreChildFromSeed(t *testing.T) {
+	db := initDB(t)
+	defer stopDB(t, db)
+
+	kp, err := db.ImportFromString(testPrivString, testPassphrase, testHint)
+	require.NoError(t, err)
+
+	seed, err := kp.GetSeed(testPassphrase)
+	require.NoError(t, err)
+
+	childKey, err := db.DeriveChildFromSeed(seed, 1, testPassphrase, testHint, true)
+	require.NoError(t, err)
+	require.NotNil(t, childKey)
+	require.Equal(t, childKey.GetAddressString(), testChildAddrIdx1)
+}
+
 func initDB(t *testing.T) Keybase {
 	db, err := NewKeybaseInMemory()
 	require.NoError(t, err)
@@ -384,7 +441,7 @@ func initDB(t *testing.T) Keybase {
 func createTestKeys(t *testing.T, n int) []crypto.PrivateKey {
 	pks := make([]crypto.PrivateKey, 0)
 	for i := 0; i < n; i++ {
-		privKeyString, _, _ := keygenerator.GetInstance().Next()
+		privKeyString, _, _ := keygen.GetInstance().Next()
 		privKey, err := crypto.NewPrivateKey(privKeyString)
 		require.NoError(t, err)
 		pks = append(pks, privKey)

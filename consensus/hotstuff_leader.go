@@ -392,8 +392,13 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 		return nil, err
 	}
 
-	// IMPROVE: This data can be read via an ephemeral read context - no need to use the utility's persistence context
-	prevBlockHash, err := m.utilityContext.GetPersistenceContext().GetBlockHash(int64(m.height) - 1)
+	prevHeight := int64(m.height) - 1
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(prevHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	prevBlockHash, err := readCtx.GetBlockHash(prevHeight)
 	if err != nil {
 		return nil, err
 	}
@@ -408,7 +413,6 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 		Height:            m.height,
 		StateHash:         stateHash,
 		PrevStateHash:     prevBlockHash,
-		NumTxs:            uint32(len(txs)),
 		ProposerAddress:   m.privateKey.Address().Bytes(),
 		QuorumCertificate: qcBytes,
 	}

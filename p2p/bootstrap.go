@@ -62,10 +62,10 @@ func (m *p2pModule) bootstrap() error {
 			rpcABP.WithP2PConfig(
 				m.GetBus().GetRuntimeMgr().GetConfig().P2P,
 			),
-			rpcABP.WithCustomRPCUrl(bootstrapNode),
+			rpcABP.WithCustomRPCURL(bootstrapNode),
 		)
 
-		currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(rpcCHP.WithCustomRPCUrl(bootstrapNode))
+		currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(rpcCHP.WithCustomRPCURL(bootstrapNode))
 
 		addrBook, err = addressBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 		if err != nil {

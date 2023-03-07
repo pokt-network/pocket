@@ -6,10 +6,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
-	"github.com/pokt-network/pocket/shared/codec"
-	typesCore "github.com/pokt-network/pocket/shared/core/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	typesUtil "github.com/pokt-network/pocket/utility/types"
+	"github.com/pokt-network/pocket/utility"
 )
 
 func (s *rpcServer) GetV1Health(ctx echo.Context) error {
@@ -31,7 +30,7 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "cannot decode tx bytes")
 	}
 
-	if err = s.GetBus().GetUtilityModule().CheckTransaction(txBz); err != nil {
+	if err = s.GetBus().GetUtilityModule().HandleTransaction(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -53,20 +52,17 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 
 // Broadcast to the entire validator set
 func (s *rpcServer) broadcastMessage(msgBz []byte) error {
-	utilMsg := &typesUtil.TransactionGossipMessage{
-		Tx: msgBz,
-	}
-
-	anyUtilityMessage, err := codec.GetCodec().ToAny(utilMsg)
+	utilityMsg, err := utility.PrepareTxGossipMessage(msgBz)
 	if err != nil {
-		s.logger.Error().Err(err).Msg("Failed to create Any proto from transaction gossip")
+		s.logger.Error().Err(err).Msg("Failed to prepare transaction gossip message")
 		return err
 	}
 
-	if err := s.GetBus().GetP2PModule().Broadcast(anyUtilityMessage); err != nil {
+	if err := s.GetBus().GetP2PModule().Broadcast(utilityMsg); err != nil {
 		s.logger.Error().Err(err).Msg("Failed to broadcast utility message")
 		return err
 	}
+
 	return nil
 }
 
@@ -98,7 +94,7 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 			Address:    protocolActor.Address,
 			Type:       protocolActorToRPCActorTypeEnum(protocolActor.ActorType),
 			PublicKey:  protocolActor.PublicKey,
-			ServiceUrl: protocolActor.GenericParam,
+			ServiceUrl: protocolActor.ServiceUrl,
 		})
 	}
 
@@ -111,15 +107,15 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 }
 
 // protocolActorToRPCActorTypeEnum converts a protocol actor type to the rpc actor type enum
-func protocolActorToRPCActorTypeEnum(protocolActorType typesCore.ActorType) ActorTypesEnum {
+func protocolActorToRPCActorTypeEnum(protocolActorType coreTypes.ActorType) ActorTypesEnum {
 	switch protocolActorType {
-	case typesCore.ActorType_ACTOR_TYPE_APP:
+	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		return Application
-	case typesCore.ActorType_ACTOR_TYPE_FISH:
+	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		return Fisherman
-	case typesCore.ActorType_ACTOR_TYPE_SERVICER:
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		return Servicer
-	case typesCore.ActorType_ACTOR_TYPE_VAL:
+	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		return Validator
 	default:
 		panic("invalid actor type")
@@ -127,8 +123,8 @@ func protocolActorToRPCActorTypeEnum(protocolActorType typesCore.ActorType) Acto
 }
 
 // getProtocolActorGetter returns the correct protocol actor getter function based on the actor type parameter
-func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, params GetV1P2pStakedActorsAddressBookParams) func(height int64) ([]*typesCore.Actor, error) {
-	var protocolActorGetter func(height int64) ([]*typesCore.Actor, error) = persistenceContext.GetAllStakedActors
+func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, params GetV1P2pStakedActorsAddressBookParams) func(height int64) ([]*coreTypes.Actor, error) {
+	var protocolActorGetter func(height int64) ([]*coreTypes.Actor, error) = persistenceContext.GetAllStakedActors
 	if params.ActorType == nil {
 		return persistenceContext.GetAllStakedActors
 	}

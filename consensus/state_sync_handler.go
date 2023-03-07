@@ -13,7 +13,7 @@ import (
 func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
-	m.logger.Info().Msg("Received a state sync message")
+	m.logger.Info().Msg("Handling StateSyncMessage")
 
 	switch stateSyncMessageAny.MessageName() {
 	case messaging.StateSyncMessageContentType:
@@ -36,6 +36,7 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.StateSyncMessage) error {
 	switch stateSyncMessage.Message.(type) {
 	case *typesCons.StateSyncMessage_MetadataReq:
+		m.logger.Info().Str("proto_type", "MetadataRequest").Msg("Handling StateSyncMessage MetadataReq")
 		if !m.stateSync.IsServerModEnabled() {
 			return fmt.Errorf("server module is not enabled")
 		}
@@ -43,6 +44,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 	case *typesCons.StateSyncMessage_MetadataRes:
 		return m.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
 	case *typesCons.StateSyncMessage_GetBlockReq:
+		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage MetadataReq")
 		if !m.stateSync.IsServerModEnabled() {
 			return fmt.Errorf("server module is not enabled")
 		}

@@ -7,10 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.35] - 2023-02-27
+
+## [0.0.0.39] - 2023-03-07
 
 - Add `ConsensusFSMHandlers` interface to handle state transition events in consensus module
 - Update FSM events `Consensus_IsSynchedValidator`, `Consensus_IsSynchedNonValidator` and state `Consensus_Pacemaker`. 
+
+## [0.0.0.38] - 2023-03-03
+
+- Support libp2p module in node
+
+## [0.0.0.37] - 2023-03-01
+
+- add pokt --> libp2p crypto helpers
+
+## [0.0.0.36] - 2023-02-28
+
+- Move `StakeStatus` into `actor.proto`
+- Rename `generic_param` into `service_url`
+- Remove unused params from `BlockHeader`
+- Document `transaction.proto` and move it from the `utility` module to `shared`
+- Moved `signature.go` from the `utility` module to `shared`
+- Added documentation to important functions in the `Persistence` and `Utility` shared modules
+- Added documentation on how/why `UnstakingActor` should be removed
+
+## [0.0.0.35] - 2023-02-28
+
+- Implement SLIP-0010 specification for HD child key derivation
+- Cover both Test Vectors 1 and 2 from the specification
 
 ## [0.0.0.34] - 2023-02-24
 
@@ -26,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.31] - 2023-02-22
 
--  Export consensus module's ConsensusDebugModule interface.
+- Export consensus module's ConsensusDebugModule interface.
 
 ## [0.0.0.30] - 2023-02-21
 

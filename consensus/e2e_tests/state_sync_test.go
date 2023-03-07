@@ -225,7 +225,6 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 		Height:            testHeight,
 		StateHash:         stateHash,
 		PrevStateHash:     "",
-		NumTxs:            0,
 		ProposerAddress:   consensusPK.Address(),
 		QuorumCertificate: nil,
 	}

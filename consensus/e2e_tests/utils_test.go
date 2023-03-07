@@ -21,12 +21,12 @@ import (
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -375,13 +375,13 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
 
 	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
-		heightInt := converters.HeightFromBytes(height)
+		heightInt := utils.HeightFromBytes(height)
 		if bus.GetConsensusModule().CurrentHeight() < heightInt {
 			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
 		}
 		blockWithHeight := &coreTypes.Block{
 			BlockHeader: &coreTypes.BlockHeader{
-				Height: converters.HeightFromBytes(height),
+				Height: utils.HeightFromBytes(height),
 			},
 		}
 		return codec.GetCodec().Marshal(blockWithHeight)
@@ -407,7 +407,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	// state; hence the `-1` expectation in the call above.
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
-
+	persistenceReadContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
 	return persistenceMock
@@ -475,7 +475,6 @@ func baseUtilityContextMock(t *testing.T, genesisState *genesis.GenesisState) *m
 	utilityContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Release().Return(nil).AnyTimes()
-	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
 
 	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
 

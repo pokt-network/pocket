@@ -81,7 +81,7 @@ func TestUpdateServicer(t *testing.T) {
 
 	require.NotEqual(t, DefaultStake, StakeToUpdate)   // sanity check to make sure the tests are correct
 	require.NotEqual(t, DefaultChains, ChainsToUpdate) // sanity check to make sure the tests are correct
-	err = db.UpdateServicer(addrBz, servicer.GenericParam, StakeToUpdate, ChainsToUpdate)
+	err = db.UpdateServicer(addrBz, servicer.ServiceUrl, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
 
 	_, _, stakedTokens, _, _, _, _, chains, err = db.GetServicer(addrBz, 0)
@@ -117,23 +117,23 @@ func TestGetServicersReadyToUnstake(t *testing.T) {
 	require.NoError(t, err)
 
 	// Unstake servicer at height 0
-	err = db.SetServicerUnstakingHeightAndStatus(addrBz, 0, persistence.UnstakingStatus)
+	err = db.SetServicerUnstakingHeightAndStatus(addrBz, 0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 
 	// Unstake servicer2 and servicer3 at height 1
-	err = db.SetServicerUnstakingHeightAndStatus(addrBz2, 1, persistence.UnstakingStatus)
+	err = db.SetServicerUnstakingHeightAndStatus(addrBz2, 1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
-	err = db.SetServicerUnstakingHeightAndStatus(addrBz3, 1, persistence.UnstakingStatus)
+	err = db.SetServicerUnstakingHeightAndStatus(addrBz3, 1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 
 	// Check unstaking servicers at height 0
-	unstakingServicers, err := db.GetServicersReadyToUnstake(0, persistence.UnstakingStatus)
+	unstakingServicers, err := db.GetServicersReadyToUnstake(0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingServicers), "wrong number of actors ready to unstake at height 0")
 	require.Equal(t, servicer.Address, unstakingServicers[0].Address, "unexpected servicerlication actor returned")
 
 	// Check unstaking servicers at height 1
-	unstakingServicers, err = db.GetServicersReadyToUnstake(1, persistence.UnstakingStatus)
+	unstakingServicers, err = db.GetServicersReadyToUnstake(1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingServicers), "wrong number of actors ready to unstake at height 1")
 	require.ElementsMatch(t, []string{servicer2.Address, servicer3.Address}, []string{unstakingServicers[0].Address, unstakingServicers[1].Address})
@@ -151,7 +151,7 @@ func TestGetServicerStatus(t *testing.T) {
 	// Check status before the servicer exists
 	status, err := db.GetServicerStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
+	require.Equal(t, int32(coreTypes.StakeStatus_UnknownStatus), status, "unexpected status")
 
 	// Check status after the servicer exists
 	status, err = db.GetServicerStatus(addrBz, 1)
@@ -235,7 +235,7 @@ func newTestServicer() (*coreTypes.Actor, error) {
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
-		GenericParam:    DefaultServiceUrl,
+		ServiceUrl:      DefaultServiceURL,
 		StakedAmount:    DefaultStake,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
@@ -266,7 +266,7 @@ func createAndInsertDefaultTestServicer(db *persistence.PostgresContext) (*coreT
 		outputBz,
 		false,
 		DefaultStakeStatus,
-		DefaultServiceUrl,
+		DefaultServiceURL,
 		DefaultStake,
 		DefaultChains,
 		DefaultPauseHeight,
@@ -298,7 +298,7 @@ func getTestServicer(db *persistence.PostgresContext, address []byte) (*coreType
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
 		Chains:          chains,
-		GenericParam:    serviceURL,
+		ServiceUrl:      serviceURL,
 		StakedAmount:    stakedTokens,
 		PausedHeight:    pauseHeight,
 		UnstakingHeight: unstakingHeight,

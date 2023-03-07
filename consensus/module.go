@@ -236,7 +236,7 @@ func (*consensusModule) ValidateGenesis(gen *genesis.GenesisState) error {
 	// Sort the validators by their generic param (i.e. service URL)
 	vals := gen.GetValidators()
 	sort.Slice(vals, func(i, j int) bool {
-		return vals[i].GetGenericParam() < vals[j].GetGenericParam()
+		return vals[i].GetServiceUrl() < vals[j].GetServiceUrl()
 	})
 
 	// Sort the validators by their address

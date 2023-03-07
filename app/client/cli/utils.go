@@ -14,8 +14,9 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
@@ -89,7 +90,7 @@ func prepareTxBytes(msg typesUtil.Message, pk crypto.PrivateKey) ([]byte, error)
 		return nil, err
 	}
 
-	tx := &typesUtil.Transaction{
+	tx := &coreTypes.Transaction{
 		Msg:   anyMsg,
 		Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
 	}
@@ -104,7 +105,7 @@ func prepareTxBytes(msg typesUtil.Message, pk crypto.PrivateKey) ([]byte, error)
 		return nil, err
 	}
 
-	tx.Signature = &typesUtil.Signature{
+	tx.Signature = &coreTypes.Signature{
 		Signature: signature,
 		PublicKey: pk.PublicKey().Bytes(),
 	}
@@ -155,13 +156,13 @@ func readPassphraseMessage(currPwd, prompt string) string {
 }
 
 func validateStakeAmount(amount string) error {
-	am, err := converters.StringToBigInt(amount)
+	am, err := utils.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}
 
 	sr := big.NewInt(stakingRecommendationAmount)
-	if converters.BigIntLessThan(am, sr) {
+	if utils.BigIntLessThan(am, sr) {
 		fmt.Printf("The amount you are staking for is below the recommendation of %d POKT, would you still like to continue? y|n\n", sr.Div(sr, oneMillion).Int64())
 		if !confirmation(pwd) {
 			return fmt.Errorf("aborted")
@@ -217,6 +218,24 @@ func attachImportFlagToSubcommands() []cmdOption {
 func attachHintFlagToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
 		c.Flags().StringVar(&hint, "hint", "", "hint for the passphrase of the private key")
+	}}
+}
+
+func attachStoreChildFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().BoolVar(&storeChild, "store_child", true, "store the derived child key in the keybase")
+	}}
+}
+
+func attachChildHintFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&childHint, "child_hint", "", "hint for the passphrase of the derived child's private key")
+	}}
+}
+
+func attachChildPwdFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&childPwd, "child_pwd", "", "passphrase for the derived child's private key")
 	}}
 }
 

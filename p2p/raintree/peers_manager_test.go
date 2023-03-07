@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	serviceUrlFormat = "val_%d"
+	serviceURLFormat = "val_%d"
 )
 
 type ExpectedRainTreeNetworkConfig struct {
@@ -244,7 +244,7 @@ func getAlphabetAddrBook(n int) (addrBook types.AddrBook) {
 			return
 		}
 		addrBook = append(addrBook, &types.NetworkPeer{
-			ServiceUrl: fmt.Sprintf(serviceUrlFormat, i),
+			ServiceURL: fmt.Sprintf(serviceURLFormat, i),
 			Address:    []byte{byte(ch)},
 		})
 	}
