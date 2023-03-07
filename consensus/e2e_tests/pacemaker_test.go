@@ -164,7 +164,6 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		Height:            testHeight,
 		StateHash:         stateHash,
 		PrevStateHash:     "",
-		NumTxs:            0,
 		ProposerAddress:   consensusPK.Address(),
 		QuorumCertificate: nil,
 	}
@@ -237,11 +236,11 @@ func forcePacemakerTimeout(t *testing.T, clockMock *clock.Mock, paceMakerTimeout
 	advanceTime(t, clockMock, paceMakerTimeout+10*time.Millisecond)
 }
 
-// TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
-
 func TestPacemakerDifferentHeightsCatchup(t *testing.T) {
 	t.Skip()
 }
+
+// TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
 
 func TestPacemakerDifferentStepsCatchup(t *testing.T) {
 	t.Skip()

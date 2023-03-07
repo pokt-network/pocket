@@ -10,15 +10,14 @@ const (
 	// Application actor gov params
 	AppMinimumStakeParamName       = "app_minimum_stake"
 	AppMaxChainsParamName          = "app_max_chains"
-	AppBaselineStakeRateParamName  = "app_baseline_stake_rate"
 	AppUnstakingBlocksParamName    = "app_unstaking_blocks"
 	AppMinimumPauseBlocksParamName = "app_minimum_pause_blocks"
 	AppMaxPauseBlocksParamName     = "app_max_pause_blocks"
-	// The constant integer adjustment that the DAO may use to move the stake. The DAO may manually
-	// adjust an application's MaxRelays at the time of staking to correct for short-term fluctuations
-	// in the price of POKT, which may not be reflected in ParticipationRate
-	// When this parameter is set to 0, no adjustment is being made.
-	AppStakingAdjustmentParamName = "app_staking_adjustment" // IMPROVE: Document & explain the purpose of this parameter in more detail.
+	// The Application's usage tokens during each session is determined by its stake. The session
+	// is rate limited using the "Token Bucket" algorithm, where the number of tokens in the beginning
+	// of each session is determined by this parameter.
+	//nolint:gosec // G101 - Not a hardcoded credential
+	AppSessionTokensMultiplierParamName = "app_session_tokens_multiplier"
 
 	// Servicer actor gov params
 	ServicerMinimumStakeParamName       = "servicer_minimum_stake"
@@ -94,13 +93,13 @@ const (
 
 	BlocksPerSessionOwner = "blocks_per_session_owner"
 
-	AppMinimumStakeOwner       = "app_minimum_stake_owner"
-	AppMaxChainsOwner          = "app_max_chains_owner"
-	AppBaselineStakeRateOwner  = "app_baseline_stake_rate_owner"
-	AppStakingAdjustmentOwner  = "app_staking_adjustment_owner"
-	AppUnstakingBlocksOwner    = "app_unstaking_blocks_owner"
-	AppMinimumPauseBlocksOwner = "app_minimum_pause_blocks_owner"
-	AppMaxPausedBlocksOwner    = "app_max_paused_blocks_owner"
+	AppMinimumStakeOwner = "app_minimum_stake_owner"
+	AppMaxChainsOwner    = "app_max_chains_owner"
+	//nolint:gosec // G101 - Not a hardcoded credential
+	AppSessionTokensMultiplierOwner = "app_session_tokens_multiplier_owner"
+	AppUnstakingBlocksOwner         = "app_unstaking_blocks_owner"
+	AppMinimumPauseBlocksOwner      = "app_minimum_pause_blocks_owner"
+	AppMaxPausedBlocksOwner         = "app_max_paused_blocks_owner"
 
 	ServicerMinimumStakeOwner       = "servicer_minimum_stake_owner"
 	ServicerMaxChainsOwner          = "servicer_max_chains_owner"

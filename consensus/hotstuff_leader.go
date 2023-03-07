@@ -89,7 +89,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		m.paceMaker.InterruptRound("failed to create propose message")
 		return
 	}
-	m.BroadcastMessageToValidators(m.convertToAny(prepareProposeMessage))
+	m.broadcastToValidators(prepareProposeMessage)
 
 	// Leader also acts like a replica
 	prepareVoteMessage, err := CreateVoteMessage(m.height, m.round, Prepare, m.block, m.privateKey)
@@ -141,7 +141,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		return
 	}
 	//m.broadcastToValidators(preCommitProposeMessage)
-	m.BroadcastMessageToValidators(m.convertToAny(preCommitProposeMessage))
+	m.broadcastToValidators(preCommitProposeMessage)
 
 	// Leader also acts like a replica
 	precommitVoteMessage, err := CreateVoteMessage(m.height, m.round, PreCommit, m.block, m.privateKey)
@@ -193,7 +193,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		return
 	}
 	//m.broadcastToValidators(commitProposeMessage)
-	m.BroadcastMessageToValidators(m.convertToAny(commitProposeMessage))
+	m.broadcastToValidators(commitProposeMessage)
 
 	// Leader also acts like a replica
 	commitVoteMessage, err := CreateVoteMessage(m.height, m.round, Commit, m.block, m.privateKey)
@@ -244,7 +244,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		return
 	}
 	//m.broadcastToValidators(decideProposeMessage)
-	m.BroadcastMessageToValidators(m.convertToAny(decideProposeMessage))
+	m.broadcastToValidators(decideProposeMessage)
 
 	if err := m.commitBlock(m.block); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrCommitBlock.Error())
@@ -336,7 +336,7 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 
 	address := partialSig.GetAddress()
 
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
@@ -395,8 +395,13 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 		return nil, err
 	}
 
-	// IMPROVE: This data can be read via an ephemeral read context - no need to use the utility's persistence context
-	prevBlockHash, err := m.utilityContext.GetPersistenceContext().GetBlockHash(int64(m.height) - 1)
+	prevHeight := int64(m.height) - 1
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(prevHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	prevBlockHash, err := readCtx.GetBlockHash(prevHeight)
 	if err != nil {
 		return nil, err
 	}
@@ -411,7 +416,6 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 		Height:            m.height,
 		StateHash:         stateHash,
 		PrevStateHash:     prevBlockHash,
-		NumTxs:            uint32(len(txs)),
 		ProposerAddress:   m.privateKey.Address().Bytes(),
 		QuorumCertificate: qcBytes,
 	}

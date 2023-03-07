@@ -3,6 +3,7 @@ package e2e_tests
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"reflect"
 	"sort"
@@ -20,12 +21,12 @@ import (
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/converters"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -44,6 +45,13 @@ const (
 )
 
 type IdToNodeMapping map[typesCons.NodeId]*shared.Node
+
+type StateSyncHelper struct {
+	maxheight uint64 // the max height of the node
+	minheight uint64 // the min height of the node
+}
+
+var stateSyncHelper StateSyncHelper
 
 /*** Node Generation Helpers ***/
 
@@ -98,8 +106,8 @@ func CreateTestConsensusPocketNode(
 	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
 ) *shared.Node {
-	stateMachineMock := baseStateMachineMock(t, eventsChannel)
-	bus.RegisterModule(stateMachineMock)
+	//stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
+	//bus.RegisterModule(stateMachineMock)
 	// persistence is a dependency of consensus, so we need to create it first
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
 	bus.RegisterModule(persistenceMock)
@@ -117,7 +125,7 @@ func CreateTestConsensusPocketNode(
 	rpcMock := baseRpcMock(t, eventsChannel)
 
 	for _, module := range []modules.Module{
-		stateMachineMock,
+		//stateMachineMock,
 		p2pMock,
 		utilityMock,
 		telemetryMock,
@@ -126,6 +134,9 @@ func CreateTestConsensusPocketNode(
 	} {
 		bus.RegisterModule(module)
 	}
+
+	stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
+	bus.RegisterModule(stateMachineMock)
 
 	require.NoError(t, err)
 
@@ -237,7 +248,7 @@ func WaitForNetworkConsensusEvents(
 	}
 
 	errMsg := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(msgType)])
-	return waitForEventsInternal(clck, eventsChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clck, eventsChannel, messaging.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // IMPROVE: Consider unifying this function with WaitForNetworkConsensusEvents
@@ -261,7 +272,7 @@ func WaitForNetworkStateSyncEvents(
 		return true
 	}
 
-	return waitForEventsInternal(clck, eventsChannel, consensus.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clck, eventsChannel, messaging.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework
@@ -364,13 +375,13 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
 
 	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
-		heightInt := converters.HeightFromBytes(height)
+		heightInt := utils.HeightFromBytes(height)
 		if bus.GetConsensusModule().CurrentHeight() < heightInt {
 			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
 		}
 		blockWithHeight := &coreTypes.Block{
 			BlockHeader: &coreTypes.BlockHeader{
-				Height: converters.HeightFromBytes(height),
+				Height: utils.HeightFromBytes(height),
 			},
 		}
 		return codec.GetCodec().Marshal(blockWithHeight)
@@ -396,7 +407,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	// state; hence the `-1` expectation in the call above.
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
-
+	persistenceReadContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
 	return persistenceMock
@@ -464,7 +475,6 @@ func baseUtilityContextMock(t *testing.T, genesisState *genesis.GenesisState) *m
 	utilityContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Release().Return(nil).AnyTimes()
-	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
 
 	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
 
@@ -496,14 +506,43 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 	return rpcMock
 }
 
-func baseStateMachineMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockStateMachineModule {
+func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *mockModules.MockStateMachineModule {
 	ctrl := gomock.NewController(t)
 	stateMachineMock := mockModules.NewMockStateMachineModule(ctrl)
 	stateMachineMock.EXPECT().Start().Return(nil).AnyTimes()
 	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
+	//stateMachineMock.EXPECT().SendEvent(gomock.Any()).Return(nil).AnyTimes()
+
+	consensusModImpl := reflect.ValueOf(bus.GetConsensusModule())
+
+	stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
+		switch coreTypes.StateMachineEvent(event) {
+		case coreTypes.StateMachineEvent_Consensus_IsUnsynched:
+			t.Logf("Node is unsynched")
+			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(stateSyncHelper.maxheight)})
+			bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
+			return nil
+		case coreTypes.StateMachineEvent_Consensus_IsSynchedValidator:
+			t.Logf("Validator is synched")
+
+			return nil
+
+		default:
+			log.Printf("Not handling this event: %s", event)
+			return nil
+
+		}
+
+		//return nil
+	}).AnyTimes()
 
 	return stateMachineMock
+}
+
+func MockPeriodicMetaDataSynch(maxHeight, mingHeight uint64) {
+	stateSyncHelper.maxheight = maxHeight
+	stateSyncHelper.minheight = mingHeight
 }
 
 func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAgent {

@@ -7,10 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.36] - 2023-02-28
+## [0.0.0.37] - 2023-03-07
 
 - Add `fsm_handler.go` to handle FSM transition events in consensus module
 - Update State Machine mock in `utils_test.go`
+
+## [0.0.0.36] - 2023-02-28
+
+- Creating a persistence read context when needing to accessing stateless (i.e. block hash) data
+- Renamed package names and parameters to reflect changes in the rest of the codebase
+- Removed the unused `validator.proto`
 
 ## [0.0.0.35] - 2023-02-28
 

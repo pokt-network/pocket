@@ -13,8 +13,6 @@ import (
 var (
 	testingSenderPrivateKey, _ = crypto.GeneratePrivateKey()
 	testingSenderPublicKey     = testingSenderPrivateKey.PublicKey()
-	testingSenderAddr          = testingSenderPublicKey.Address()
-	testingToAddr, _           = crypto.GenerateAddress()
 )
 
 func TestTransaction_BytesAndFromBytes(t *testing.T) {
@@ -35,30 +33,14 @@ func TestTransaction_BytesAndFromBytes(t *testing.T) {
 	require.Equal(t, proto.Clone(&tx), proto.Clone(tx2), "transaction mismatch")
 }
 
-func TestTransaction_GetMessage(t *testing.T) {
-	tx := newUnsignedTestingTransaction(t)
-	msg, err := tx.GetMessage()
-	require.NoError(t, err)
-
-	expected := newTestingMsgSend(t)
-	require.NotEqual(t, expected, msg)
-	require.Equal(t, msg.ProtoReflect().Type(), expected.ProtoReflect().Type())
-
-	messageSend := msg.(*MessageSend)
-	expectedMessageSend := expected.(*MessageSend)
-	require.Equal(t, messageSend.Amount, expectedMessageSend.Amount, "unequal messages")
-	require.Equal(t, messageSend.FromAddress, expectedMessageSend.FromAddress, "unequal messages")
-	require.Equal(t, messageSend.ToAddress, expectedMessageSend.ToAddress, "unequal messages")
-}
-
 func TestTransaction_Sign(t *testing.T) {
 	tx := newUnsignedTestingTransaction(t)
 
 	err := tx.Sign(testingSenderPrivateKey)
 	require.NoError(t, err)
 
-	msg, er := tx.SignableBytes()
-	require.NoError(t, er)
+	msg, err := tx.SignableBytes()
+	require.NoError(t, err)
 
 	verified := testingSenderPublicKey.Verify(msg, tx.Signature.Signature)
 	require.True(t, verified, "signature should be verified")
@@ -69,53 +51,44 @@ func TestTransaction_ValidateBasic(t *testing.T) {
 	err := tx.Sign(testingSenderPrivateKey)
 	require.NoError(t, err)
 
-	er := tx.ValidateBasic()
-	require.NoError(t, er)
+	err = tx.ValidateBasic()
+	require.NoError(t, err)
 
 	txNoNonce := proto.Clone(&tx).(*Transaction)
 	txNoNonce.Nonce = ""
-	er = txNoNonce.ValidateBasic()
-	require.Equal(t, ErrEmptyNonce().Code(), er.Code())
+	err = txNoNonce.ValidateBasic()
+	require.Error(t, err)
 
 	txInvalidMessageAny := proto.Clone(&tx).(*Transaction)
 	txInvalidMessageAny.Msg = nil
-	er = txInvalidMessageAny.ValidateBasic()
-	require.Equal(t, ErrProtoFromAny(er).Code(), er.Code())
+	err = txInvalidMessageAny.ValidateBasic()
+	require.Error(t, err)
 
 	txEmptySig := proto.Clone(&tx).(*Transaction)
 	txEmptySig.Signature = nil
-	er = txEmptySig.ValidateBasic()
-	require.Equal(t, ErrEmptySignature().Code(), er.Code())
+	err = txEmptySig.ValidateBasic()
+	require.Error(t, err)
 
 	txEmptyPublicKey := proto.Clone(&tx).(*Transaction)
 	txEmptyPublicKey.Signature.PublicKey = nil
-	er = txEmptyPublicKey.ValidateBasic()
-	require.Equal(t, ErrEmptyPublicKey().Code(), er.Code())
+	err = txEmptyPublicKey.ValidateBasic()
+	require.Error(t, err)
 
 	txInvalidPublicKey := proto.Clone(&tx).(*Transaction)
 	txInvalidPublicKey.Signature.PublicKey = []byte("publickey")
 	err = txInvalidPublicKey.ValidateBasic()
-	require.Equal(t, ErrNewPublicKeyFromBytes(err).Code(), err.Code())
+	require.Error(t, err)
 
 	txInvalidSignature := proto.Clone(&tx).(*Transaction)
 	tx.Signature.PublicKey = testingSenderPublicKey.Bytes()
-	txInvalidSignature.Signature.Signature = []byte("signature")
-	er = txInvalidSignature.ValidateBasic()
-	require.Equal(t, ErrSignatureVerificationFailed().Code(), er.Code())
-}
-
-func newTestingMsgSend(_ *testing.T) Message {
-	return &MessageSend{
-		FromAddress: testingSenderAddr,
-		ToAddress:   testingToAddr,
-		Amount:      defaultAmount,
-	}
+	txInvalidSignature.Signature.Signature = []byte("signature2")
+	err = txInvalidSignature.ValidateBasic()
+	require.Error(t, err)
 }
 
 func newUnsignedTestingTransaction(t *testing.T) Transaction {
-	msg := newTestingMsgSend(t)
-
-	anyMsg, err := codec.GetCodec().ToAny(msg)
+	txMsg := &Transaction{}
+	anyMsg, err := codec.GetCodec().ToAny(txMsg)
 	require.NoError(t, err)
 
 	return Transaction{

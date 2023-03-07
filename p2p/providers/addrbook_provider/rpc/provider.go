@@ -33,7 +33,7 @@ type rpcAddrBookProvider struct {
 	base_modules.IntegratableModule
 	base_modules.InterruptableModule
 
-	rpcUrl    string
+	rpcURL    string
 	p2pCfg    *configs.P2PConfig
 	rpcClient *rpc.ClientWithResponses
 
@@ -42,7 +42,7 @@ type rpcAddrBookProvider struct {
 
 func NewRPCAddrBookProvider(options ...modules.ModuleOption) *rpcAddrBookProvider {
 	rabp := &rpcAddrBookProvider{
-		rpcUrl:      fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
+		rpcURL:      fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
 		connFactory: transport.CreateDialer,                                        // default connection factory, overridable with WithConnectionFactory()
 	}
 
@@ -88,10 +88,10 @@ func (rabp *rpcAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (types
 	var coreActors []*types.Actor
 	for _, rpcActor := range rpcActors {
 		coreActors = append(coreActors, &types.Actor{
-			Address:      rpcActor.Address,
-			PublicKey:    rpcActor.PublicKey,
-			GenericParam: rpcActor.ServiceUrl,
-			ActorType:    types.ActorType_ACTOR_TYPE_VAL,
+			Address:    rpcActor.Address,
+			PublicKey:  rpcActor.PublicKey,
+			ServiceUrl: rpcActor.ServiceUrl,
+			ActorType:  types.ActorType_ACTOR_TYPE_VAL,
 		})
 	}
 
@@ -114,7 +114,7 @@ func (rabp *rpcAddrBookProvider) SetConnectionFactory(connFactory typesP2P.Conne
 }
 
 func (rabp *rpcAddrBookProvider) initRPCClient() {
-	rpcClient, err := rpc.NewClientWithResponses(rabp.rpcUrl)
+	rpcClient, err := rpc.NewClientWithResponses(rabp.rpcURL)
 	if err != nil {
 		log.Fatalf("could not create RPC client: %v", err)
 	}
@@ -130,9 +130,9 @@ func WithP2PConfig(p2pCfg *configs.P2PConfig) modules.ModuleOption {
 	}
 }
 
-// WithCustomRPCUrl allows to specify a custom RPC URL
-func WithCustomRPCUrl(rpcUrl string) modules.ModuleOption {
+// WithCustomRPCURL allows to specify a custom RPC URL
+func WithCustomRPCURL(rpcURL string) modules.ModuleOption {
 	return func(rabp modules.InitializableModule) {
-		rabp.(*rpcAddrBookProvider).rpcUrl = rpcUrl
+		rabp.(*rpcAddrBookProvider).rpcURL = rpcURL
 	}
 }

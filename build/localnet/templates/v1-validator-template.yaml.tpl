@@ -29,7 +29,7 @@ spec:
             - -config=/configs/config.json
             - -genesis=/genesis.json
           ports:
-            - containerPort: 8080
+            - containerPort: 42069
               name: consensus
             - containerPort: 50832
               name: rpc
@@ -63,6 +63,8 @@ spec:
               value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
             - name: POCKET_PERSISTENCE_NODE_SCHEMA
               value: validator${VALIDATOR_NUMBER}
+            - name: POCKET_P2P_HOSTNAME
+              value: "v1-validator${VALIDATOR_NUMBER}"
           volumeMounts:
             - name: config-volume
               mountPath: /configs
@@ -106,7 +108,7 @@ metadata:
     v1-purpose: validator
 spec:
   ports:
-    - port: 8080
+    - port: 42069
       name: consensus
     - port: 50832
       name: rpc

@@ -23,22 +23,19 @@ type ConsensusModule interface {
 
 	ConsensusStateSync
 	ConsensusPacemaker
-	FSMConsensusEvents
 	ConsensusDebugModule
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
 	// State Sync messages Handler
 	HandleStateSyncMessage(*anypb.Any) error
+	// FSM transition events handler
+	HandleStateTransitionEvent(transitionMessageAny *anypb.Any) error
 
 	// Consensus State Accessors
 	CurrentHeight() uint64
 	CurrentRound() uint64
 	CurrentStep() uint64
-
-	// State Sync functions
-	EnableServerMode() error
-	DisableServerMode() error
 }
 
 // This interface represents functions exposed by the Consensus module for Pacemaker specific business logic.
@@ -57,7 +54,7 @@ type ConsensusPacemaker interface {
 	SetStep(uint8) // CONSIDERATION: Change to `typesCons.HotstuffStep; causes an import cycle.
 
 	// Communicators
-	BroadcastMessageToValidators(*anypb.Any)
+	BroadcastMessageToValidators(*anypb.Any) error
 
 	// Leader helpers
 	IsLeader() bool
@@ -76,14 +73,8 @@ type ConsensusPacemaker interface {
 type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
-	//IsOutOfSync() bool
-}
-
-type FSMConsensusEvents interface {
-	HandleUnsynched(*messaging.StateMachineTransitionEvent) error
-	HandleSync(*messaging.StateMachineTransitionEvent) error
-	HandleSynced(*messaging.StateMachineTransitionEvent) error
-	HandlePacemaker(*messaging.StateMachineTransitionEvent) error
+	IsSynched() (bool, error)
+	GetValidatorsAtHeight(uint64) ([]*types.Actor, error)
 }
 
 type ConsensusDebugModule interface {
@@ -95,4 +86,6 @@ type ConsensusDebugModule interface {
 	SetStep(uint8)
 	SetBlock(*types.Block)
 	SetUtilityContext(UtilityContext)
+
+	SetAggregatedMetadata(uint64, uint64, string)
 }

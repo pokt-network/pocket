@@ -82,7 +82,7 @@ type consensusModule struct {
 // Implementations of the ConsensusStateSync interface
 
 func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error) {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		// REFACTOR(#434): As per issue #434, once the new id is sorted out, this return statement must be changed
 		return 0, err
@@ -151,7 +151,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	consensusCfg := runtimeMgr.GetConfig().Consensus
 
 	if consensusCfg.ServerModeEnabled {
-		m.EnableServerMode()
+		m.stateSync.EnableServerMode()
 	}
 
 	genesisState := runtimeMgr.GetGenesis()
@@ -165,7 +165,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	}
 	address := privateKey.Address().String()
 
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func (*consensusModule) ValidateGenesis(gen *genesis.GenesisState) error {
 	// Sort the validators by their generic param (i.e. service URL)
 	vals := gen.GetValidators()
 	sort.Slice(vals, func(i, j int) bool {
-		return vals[i].GetGenericParam() < vals[j].GetGenericParam()
+		return vals[i].GetServiceUrl() < vals[j].GetServiceUrl()
 	})
 
 	// Sort the validators by their address
@@ -266,7 +266,8 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	defer m.m.Unlock()
 
 	switch message.MessageName() {
-	case HotstuffMessageContentType:
+
+	case messaging.HotstuffMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
 			return err
@@ -275,28 +276,11 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if !ok {
 			return fmt.Errorf("failed to cast message to HotstuffMessage")
 		}
-		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
-			return err
-		}
-	case StateMachineTransitionEventType:
-		msg, err := codec.GetCodec().FromAny(message)
-		if err != nil {
-			return err
-		}
-		stateMachineTransitionEvent, ok := msg.(*messaging.StateMachineTransitionEvent)
-		if !ok {
-			return fmt.Errorf("failed to cast message to StateMachineTransitionEvent")
-		}
-
-		if err := m.handleStateMachineTransitionEvent(stateMachineTransitionEvent); err != nil {
-			return err
-		}
+		return m.handleHotstuffMessage(hotstuffMessage)
 
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}
-
-	return nil
 }
 
 func (m *consensusModule) CurrentHeight() uint64 {
@@ -332,19 +316,24 @@ func (m *consensusModule) loadPersistedState() error {
 	return nil
 }
 
-func (m *consensusModule) EnableServerMode() error {
-	return m.stateSync.EnableServerMode()
-}
+func (m *consensusModule) IsSynched() (bool, error) {
+	m.logger.Debug().Msg("IsSynched called, checking if consensus module is synched GOKHAN")
+	lastPersistedBlockHeight := m.GetBus().GetConsensusModule().CurrentHeight() - 1
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
+	if err != nil {
+		m.logger.Debug().Msg("IsSynched called, couldn't receive persistence module GOKHAN 2")
+		return false, err
+	}
+	defer persistenceContext.Close()
 
-func (m *consensusModule) DisableServerMode() error {
-	return m.stateSync.DisableServerMode()
-}
+	maxHeight, err := persistenceContext.GetMaximumBlockHeight()
+	if err != nil {
+		return false, err
+	}
 
-// TODO! Implement this, placeholder function
-func (m *consensusModule) IsValidator() bool {
-	return true
-}
+	if maxHeight == m.stateSync.GetAggregatedSyncMetadata().MaxHeight {
+		return true, nil
+	}
 
-// func (m *consensusModule) IsOutOfSync() bool {
-// 	return m.stateSync.IsOutOfSync()
-// }
+	return false, nil
+}

@@ -27,9 +27,9 @@ const (
 
 	ByzantineThreshold = float64(2) / float64(3)
 
-	HotstuffMessageContentType      = "consensus.HotstuffMessage"
-	StateSyncMessageContentType     = "consensus.StateSyncMessage"
-	StateMachineTransitionEventType = "pocket.StateMachineTransitionEvent"
+	// HotstuffMessageContentType      = "consensus.HotstuffMessage"
+	// StateSyncMessageContentType     = "consensus.StateSyncMessage"
+	// StateMachineTransitionEventType = "pocket.StateMachineTransitionEvent"
 )
 
 var HotstuffSteps = [...]typesCons.HotstuffStep{NewRound, Prepare, PreCommit, Commit, Decide}
@@ -85,7 +85,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		pss = append(pss, msg.GetPartialSignature())
 	}
 
-	validators, err := m.getValidatorsAtHeight(height)
+	validators, err := m.GetValidatorsAtHeight(height)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signa
 }
 
 func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
@@ -148,6 +148,7 @@ func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.Hotstuff
 }
 
 func (m *consensusModule) isOptimisticThresholdMet(numSignatures int, validators []*coreTypes.Actor) error {
+	m.logger.Info().Msgf("THRESHOLD CHECK, no of signatures %d , no of validators %d", numSignatures, len(validators))
 	numValidators := len(validators)
 	if !(float64(numSignatures) > ByzantineThreshold*float64(numValidators)) {
 		return typesCons.ErrByzantineThresholdCheck(numSignatures, ByzantineThreshold*float64(numValidators))
@@ -187,7 +188,7 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 		return
 	}
 
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
@@ -200,38 +201,9 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 	}
 }
 
-// // Star-like (O(n)) broadcast - send to all nodes directly
-// // INVESTIGATE: Re-evaluate if we should be using our structured broadcast (RainTree O(log3(n))) algorithm instead
-// func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
-// 	m.logger.Info().Fields(
-// 		map[string]any{
-// 			"height": m.CurrentHeight(),
-// 			"step":   m.step,
-// 			"round":  m.round,
-// 		},
-// 	).Msg("📣 Broadcasting message 📣")
-
-// 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
-// 	if err != nil {
-// 		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
-// 		return
-// 	}
-
-// 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-// 	if err != nil {
-// 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
-// 	}
-
-// 	for _, val := range validators {
-// 		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
-// 			m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
-// 		}
-// 	}
-// }
-
 // Star-like (O(n)) broadcast - send to all nodes directly
 // INVESTIGATE: Re-evaluate if we should be using our structured broadcast (RainTree O(log3(n))) algorithm instead
-func (m *consensusModule) broadcastToValidators(msg *anypb.Any) {
+func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
 	m.logger.Info().Fields(
 		map[string]any{
 			"height": m.CurrentHeight(),
@@ -240,16 +212,32 @@ func (m *consensusModule) broadcastToValidators(msg *anypb.Any) {
 		},
 	).Msg("📣 Broadcasting message 📣")
 
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
+	if err != nil {
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
+		return
+	}
+
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
 
 	for _, val := range validators {
-		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), msg); err != nil {
+		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
 			m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
 		}
 	}
+}
+
+// convert HotStuffMessage to anypb.Any
+func (m *consensusModule) convertToAny(msg *typesCons.HotstuffMessage) (*anypb.Any, error) {
+	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
+	if err != nil {
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
+		return nil, err
+	}
+	return anyConsensusMessage, nil
 }
 
 /*** Persistence Helpers ***/
@@ -294,7 +282,7 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 	}
 	m.leaderId = &leaderId
 
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
@@ -333,7 +321,7 @@ func (m *consensusModule) setLogPrefix(logPrefix string) {
 	m.logger = logger.Global.CreateLoggerForModule("consensus")
 }
 
-func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
+func (m *consensusModule) GetValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
 	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err
@@ -343,11 +331,17 @@ func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Act
 	return persistenceReadContext.GetAllValidators(int64(height))
 }
 
-func (m *consensusModule) convertToAny(msg *typesCons.HotstuffMessage) *anypb.Any {
-	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
+func (m *consensusModule) IsValidator() (bool, error) {
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
-		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
-		return nil
+		return false, err
 	}
-	return anyConsensusMessage
+
+	for _, actor := range validators {
+		if actor.Address == m.nodeAddress {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pokt-network/pocket/consensus"
+	//"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/messaging"
-	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -28,11 +27,11 @@ func TestPocketEnvelope_GetContentType(t *testing.T) {
 		},
 		{
 			msg:             &typesCons.HotstuffMessage{},
-			wantContentType: consensus.HotstuffMessageContentType,
+			wantContentType: messaging.HotstuffMessageContentType,
 		},
 		{
-			msg:             &typesUtil.TransactionGossipMessage{},
-			wantContentType: utility.TransactionGossipMessageContentType,
+			msg:             &typesUtil.TxGossipMessage{},
+			wantContentType: messaging.TxGossipMessageContentType,
 		},
 	}
 

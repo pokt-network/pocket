@@ -6,7 +6,6 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -38,36 +37,19 @@ func (m *consensusModule) ReleaseUtilityContext() error {
 	return nil
 }
 
-func (m *consensusModule) BroadcastMessageToValidators(msg *anypb.Any) {
-	m.logger.Info().Fields(
-		map[string]any{
-			"height": m.CurrentHeight(),
-			"step":   m.step,
-			"round":  m.round,
-		},
-	).Msg("📣 Broadcasting message 📣")
-
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+func (m *consensusModule) BroadcastMessageToValidators(msg *anypb.Any) error {
+	msgCodec, err := codec.GetCodec().FromAny(msg)
 	if err != nil {
-		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
+		return err
 	}
 
-	for _, val := range validators {
-		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), msg); err != nil {
-			m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
-		}
+	broadcastMessage, ok := msgCodec.(*typesCons.HotstuffMessage)
+	if !ok {
+		return fmt.Errorf("failed to cast message to HotstuffMessage")
 	}
+	m.broadcastToValidators(broadcastMessage)
 
-	// msgCodec, err := codec.GetCodec().FromAny(msg)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// broadcastMessage, ok := msgCodec.(*typesCons.HotstuffMessage)
-	// if !ok {
-	// 	return fmt.Errorf("failed to cast message to HotstuffMessage")
-	// }
-	// m.broadcastToValidators(m.convertToAny(broadcastMessage))
+	return nil
 }
 
 func (m *consensusModule) IsLeader() bool {
