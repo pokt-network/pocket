@@ -242,7 +242,6 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 		consensusModImpl := GetConsensusModImpl(pocketNode)
 		if id == unsynchedNodeId {
 			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(unsynchedNodeHeight)})
-			//consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(unSynchedNodeRound)})
 		} else {
 			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
 		}

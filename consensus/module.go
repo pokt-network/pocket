@@ -317,11 +317,9 @@ func (m *consensusModule) loadPersistedState() error {
 }
 
 func (m *consensusModule) IsSynched() (bool, error) {
-	m.logger.Debug().Msg("IsSynched called, checking if consensus module is synched GOKHAN")
 	lastPersistedBlockHeight := m.GetBus().GetConsensusModule().CurrentHeight() - 1
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
 	if err != nil {
-		m.logger.Debug().Msg("IsSynched called, couldn't receive persistence module GOKHAN 2")
 		return false, err
 	}
 	defer persistenceContext.Close()

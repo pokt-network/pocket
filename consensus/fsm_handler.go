@@ -103,7 +103,6 @@ func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEven
 
 // HandlePacemaker handles FSM event IsSynchedValidator, and Pacemaker is the destination state.
 // Execution of this state means the validator node is synced.
-// TODO:
 func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM of validator node is synced and in Pacemaker mode. It will stay in this mode until it receives a new block proposal that has a higher height than the current block height")
 	// validator receives a new block proposal, and it understands that it doesn't have block and it transitions to unsycnhed state
