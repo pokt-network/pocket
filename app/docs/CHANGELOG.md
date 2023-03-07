@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.3] - 2023-03-15
+
+- Adds send and broadcast message type distinctions to debug CLI actions
+
 ## [0.0.0.2] - 2023-03-14
 
 - Simplifies the debug CLI tooling by embedding private-keys.yaml manifest
