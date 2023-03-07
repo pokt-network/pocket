@@ -22,12 +22,17 @@ enum DebugMessageAction {
 
 	DEBUG_PERSISTENCE_CLEAR_STATE = 8;
 	DEBUG_PERSISTENCE_RESET_TO_GENESIS = 9;
-	
-
-
 }
 
 message DebugMessage {
   DebugMessageAction action = 1;
-  google.protobuf.Any message = 2;
+  DebugMessageType type = 2;
+  google.protobuf.Any message = 3;
+}
+
+enum DebugMessageType {
+	DEBUG_MESSAGE_TYPE_UNKNOWN = 0;
+
+	DEBUG_MESSAGE_TYPE_SEND = 1;
+	DEBUG_MESSAGE_TYPE_BROADCAST = 2;
 }
