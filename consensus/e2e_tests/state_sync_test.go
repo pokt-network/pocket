@@ -217,7 +217,6 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 
 	// Prepare unsynched node info
 	unsynchedNodeId := typesCons.NodeId(2)
-	//unSynchedNodeRound := uint64(1)
 	unsynchedNodeHeight := uint64(2)
 
 	// Placeholder block
@@ -258,7 +257,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// Assert that unsynched node has a seperate view of the network than the rest of the nodes
+	// Assert that unsynched node has a separate view of the network than the rest of the nodes
 	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 250, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
@@ -284,7 +283,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
-	// Mock the unsynched node's periodic metadata sync, which is ()
+	// Mock the unsynched node's periodic metadata sync
 	MockPeriodicMetaDataSynch(testHeight, 1)
 
 	for _, message := range newRoundMessages {

@@ -20,6 +20,8 @@ func (m *stateSync) broadCastStateSyncMessage(stateSyncMsg *typesCons.StateSyncM
 		},
 	).Msg("📣 Broadcasting state sync message... 📣")
 
+	_ = stateSyncMsg
+
 	return nil
 }
 

@@ -46,12 +46,13 @@ const (
 
 type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
-type StateSyncHelper struct {
+// Used to mock state sync
+type StateSyncMockHelper struct {
 	maxheight uint64 // the max height of the node
 	minheight uint64 // the min height of the node
 }
 
-var stateSyncHelper StateSyncHelper
+var stateSyncHelper StateSyncMockHelper
 
 /*** Node Generation Helpers ***/
 
@@ -106,9 +107,6 @@ func CreateTestConsensusPocketNode(
 	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
 ) *shared.Node {
-	//stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
-	//bus.RegisterModule(stateMachineMock)
-	// persistence is a dependency of consensus, so we need to create it first
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
 	bus.RegisterModule(persistenceMock)
 
@@ -125,7 +123,6 @@ func CreateTestConsensusPocketNode(
 	rpcMock := baseRpcMock(t, eventsChannel)
 
 	for _, module := range []modules.Module{
-		//stateMachineMock,
 		p2pMock,
 		utilityMock,
 		telemetryMock,
@@ -521,8 +518,7 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 		case coreTypes.StateMachineEvent_Consensus_IsUnsynched:
 			t.Logf("Node is unsynched")
 			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(stateSyncHelper.maxheight)})
-			bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
-			return nil
+			return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
 		case coreTypes.StateMachineEvent_Consensus_IsSynchedValidator:
 			t.Logf("Validator is synched")
 
@@ -533,8 +529,6 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 			return nil
 
 		}
-
-		//return nil
 	}).AnyTimes()
 
 	return stateMachineMock

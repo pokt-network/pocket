@@ -224,16 +224,6 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 	}
 }
 
-// convert HotStuffMessage to anypb.Any
-// func (m *consensusModule) convertToAny(msg *typesCons.HotstuffMessage) (*anypb.Any, error) {
-// 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
-// 	if err != nil {
-// 		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
-// 		return nil, err
-// 	}
-// 	return anyConsensusMessage, nil
-// }
-
 /*** Persistence Helpers ***/
 
 // TECHDEBT(#388): Integrate this with the `persistence` module or a real mempool.
