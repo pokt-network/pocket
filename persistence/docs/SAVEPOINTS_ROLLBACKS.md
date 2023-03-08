@@ -11,7 +11,7 @@ The entry points will be in the `Persistence` module but there are going to be p
   - [Savepoints](#savepoints)
   - [Rollbacks](#rollbacks)
   - [Minimum Viable Product](#minimum-viable-product)
-  - [Improvements over MVP (Ideas)](#improvements-over-mvp-ideas)
+  - [Long-term (🚀 🌔 ) ideas](#long-term----ideas)
     - [Savepoints](#savepoints-1)
     - [Rollbacks](#rollbacks-1)
   - [Further improvements](#further-improvements)
@@ -95,7 +95,7 @@ After having examined the `Persistence` and `Utility` modules, I have identified
 
 - [**Tooling**] The CLI should provide ways to create savepoints and rollbacks. i.e.: `p1 persistence rollback --num_blocks=5`
 
-### Improvements over MVP (Ideas)
+### Long-term (🚀 🌔 ) ideas
 
 Apart from internal failures that should resolve themselves automatically whenever possible, nodes might require a way to save their state and restore it later, not necessarily at the previous block height. This could be useful for a number of reasons:
 
@@ -120,7 +120,8 @@ A savepoint must have the following properties:
 - The action of creating a savepoint must be easy to perform (e.g. a CLI command and/or a flag being passed to the node binary when starting it)
 - The action of creating a savepoint must be as fast as possible
 - The operator should be informed with meaningful messages about the progress of the savepoint creation process (telemetry, logging and stdout come to mind)
-- It should be, as much as possible, compact
+- It should be, as much as possible, compact (i.e. zipped) to reduce the size and cost of disseminating snapshots
+- A reduction in the snapshot size should be prioritized over its compression speed since it is an infrequent event
 - It must have some form of integrity check mechanism (e.g. checksum/hash verification and even a signature that could be very useful in the case of a social rollback)
 
 #### Rollbacks
