@@ -120,7 +120,7 @@ A savepoint must have the following properties:
 - The action of creating a savepoint must be as fast as possible
 - The operator should be informed with meaningful messages about the progress of the savepoint creation process (telemetry, logging and stdout come to mind)
 - It should be, as much as possible, compact
-- It must have some form of integrity check mechanism (e.g. checksum/hash verification and maybe even a signature that could be very useful in the case of a social rollback)
+- It must have some form of integrity check mechanism (e.g. checksum/hash verification and even a signature that could be very useful in the case of a social rollback)
 
 #### Rollbacks
 
