@@ -138,7 +138,7 @@ func (m *stateSync) SetAggregatedSyncMetadata(metaData *typesCons.StateSyncMetad
 	m.aggregatedSyncMetadata = metaData
 }
 
-// TODO! implement this function, placeholder
+// TODO(#352): Implement this function, currently a placeholder.
 func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
 	consensusMod := m.GetBus().GetConsensusModule()
 	serverNodePeerId := consensusMod.GetNodeAddress()
@@ -159,7 +159,7 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 	return nil
 }
 
-// TODO! implement this fuction, placeholder
+// TODO(#352): Implement this function, currently a placeholder.
 func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
 
 	serverNodePeerId := m.bus.GetConsensusModule().GetNodeAddress()
@@ -180,8 +180,8 @@ func (m *stateSync) GetSyncMetadataBuffer() []*typesCons.StateSyncMetadataRespon
 	return m.syncMetadataBuffer
 }
 
-// TODO! implement this function, placeholder
-// This function requests blocks one by one from peers
+// TODO(#352): Implement this function, currently a placeholder.
+// Requests blocks one by one from its peers.
 func (m *stateSync) StartSynching() error {
 	current_height := m.GetBus().GetConsensusModule().CurrentHeight()
 	var lastPersistedBlockHeight uint64
@@ -194,10 +194,12 @@ func (m *stateSync) StartSynching() error {
 
 	m.logger.Debug().Msgf("Starting synching, last persisted block %d, aggregated maxHeight %d", lastPersistedBlockHeight, m.aggregatedSyncMetadata.MaxHeight)
 
+	// ADD BUSINESS LOGIC
+
 	return nil
 }
 
-// TODO! Implement this function, placeholder
+// TODO(#352): Implement this function, currently a placeholder.
 // Returns max block height metadainfo received from all peers by aggregating responses in the buffer.
 func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataResponse {
 	m.m.Lock()
@@ -208,9 +210,9 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 	return metadataResponse
 }
 
-// TODO! Implement this function, placeholder
-// This function periodically (initially by using timers) queries the network by sending metadata requests to peers using broadCastStateSyncMessage() function.
-// This update frequency can be tuned accordingly to the state. Initially, it will have a default  behaviour.
+// TODO(#352): Implement this function, currently a placeholder.
+// Periodically (initially by using timers) queries the network by sending metadata requests to peers using broadCastStateSyncMessage() function.
+// Update frequency can be tuned accordingly to the state. Initially, it will have a default  behaviour.
 func (m *stateSync) periodicMetaDataSynch() error {
 
 	// set a timer to periodically query the network

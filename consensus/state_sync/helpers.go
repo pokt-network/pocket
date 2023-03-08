@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// TODO! Implement this function, placeholder.
+// TODO(#352): Implement this function, currently a placeholder.
 // Helper function for broadcasting state sync messages to the all peers known to the node
 // It is used for:
 //
@@ -41,7 +41,7 @@ func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessag
 	return m.sendToPeer(anyMsg, peerId)
 }
 
-// Helper function for sending state sync messages
+// Helper function for messages to the peers
 func (m *stateSync) sendToPeer(msg *anypb.Any, peerId cryptoPocket.Address) error {
 	if err := m.GetBus().GetP2PModule().Send(peerId, msg); err != nil {
 		m.logger.Error().Msgf(typesCons.ErrSendMessage.Error(), err)
