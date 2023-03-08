@@ -36,8 +36,6 @@ type KeyPair interface {
 	// Marshalling
 	Marshal() ([]byte, error)
 	Unmarshal([]byte) error
-	MarshalJSON() ([]byte, error)
-	UnmarshalJSON([]byte) error
 }
 
 var _ KeyPair = &encKeyPair{}
@@ -49,12 +47,7 @@ type encKeyPair struct {
 	PrivKeyArmour string    `json:"priv_key_armour"`
 }
 
-type simpleEncKeyPair struct {
-	PublicKey     string `json:"public_key"`
-	PrivKeyArmour string `json:"priv_key_armour"`
-}
-
-// Generate a new KeyPair struct given the public key and armoured private key
+// newKeyPair Generate a new KeyPair struct given the public key and armoured private key
 func newKeyPair(pub PublicKey, priv string) KeyPair {
 	return &encKeyPair{
 		PublicKey:     pub,
@@ -142,6 +135,26 @@ func (kp *encKeyPair) Unmarshal(bz []byte) error {
 	return nil
 }
 
+// UnmarshalJSON Unmarshals a JSON string into an encKeyPair struct
+func (ekp *encKeyPair) UnmarshalJSON(data []byte) error {
+	// Unmarshal the JSON into a temporary struct since the public key is a string
+	type encKeyPairJSON struct {
+		PublicKey     string `json:"public_key"`
+		PrivKeyArmour string `json:"priv_key_armour"`
+	}
+	var tmp encKeyPairJSON
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	publicKey, err := NewPublicKey(tmp.PublicKey)
+	if err != nil {
+		return err
+	}
+	ekp.PublicKey = publicKey
+	ekp.PrivKeyArmour = tmp.PrivKeyArmour
+	return nil
+}
+
 // CreateNewKey Generates a new private ED25519 key and encrypt and armour it as a string
 // Returns a KeyPair interface and error if any
 func CreateNewKey(passphrase, hint string) (KeyPair, error) {
@@ -215,25 +228,4 @@ func ImportKeyFromJSON(jsonStr, passphrase string) (KeyPair, error) {
 	kp := newKeyPair(pubKey, jsonStr)
 
 	return kp, nil
-}
-
-func (ekp *encKeyPair) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&simpleEncKeyPair{
-		PublicKey:     ekp.PublicKey.String(),
-		PrivKeyArmour: ekp.PrivKeyArmour,
-	})
-}
-
-func (ekp *encKeyPair) UnmarshalJSON(data []byte) error {
-	var tmp simpleEncKeyPair
-	if err := json.Unmarshal(data, &tmp); err != nil {
-		return err
-	}
-	publicKey, err := NewPublicKey(tmp.PublicKey)
-	if err != nil {
-		return err
-	}
-	ekp.PublicKey = publicKey
-	ekp.PrivKeyArmour = tmp.PrivKeyArmour
-	return nil
 }

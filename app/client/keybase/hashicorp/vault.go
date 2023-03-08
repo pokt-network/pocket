@@ -3,6 +3,7 @@ package hashicorp
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -126,8 +127,8 @@ func (vk *vaultKeybase) Get(address string) (crypto.KeyPair, error) {
 	}
 
 	keyPairStruct := crypto.GetKeypair()
-	err = keyPairStruct.UnmarshalJSON([]byte(keyPairStr))
-	if err != nil {
+
+	if err := json.Unmarshal([]byte(keyPairStr), &keyPairStruct); err != nil {
 		return nil, err
 	}
 
@@ -330,7 +331,7 @@ func (vk *vaultKeybase) Delete(address, passphrase string) error {
 
 // writeVaultKeyPair writes a keypair to vault
 func writeVaultKeyPair(vk *vaultKeybase, address string, kp crypto.KeyPair, hint string) error {
-	dataBz, err := kp.MarshalJSON()
+	dataBz, err := json.Marshal(kp)
 	if err != nil {
 		return err
 	}
