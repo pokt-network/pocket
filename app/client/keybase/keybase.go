@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/dgraph-io/badger/v3"
+	"github.com/pokt-network/pocket/app/client/keybase/hashicorp"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
@@ -80,7 +81,7 @@ func NewKeybase(keybaseType KeybaseType, opts *KeybaseOptions) (Keybase, error) 
 		}
 		return NewBadgerKeybase(opts.KeybasePath)
 	case KeybaseTypeVault:
-		return NewVaultKeybase(vaultKeybaseConfig{
+		return hashicorp.NewVaultKeybase(hashicorp.VaultKeybaseConfig{
 			Address: opts.VaultAddr,
 			Token:   opts.VaultToken,
 			Mount:   opts.VaultMountPath,

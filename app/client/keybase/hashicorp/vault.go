@@ -1,5 +1,5 @@
 // Keybase using HashiCorp vault
-package keybase
+package hashicorp
 
 import (
 	"context"
@@ -18,15 +18,15 @@ type vaultKeybase struct {
 	mount  string
 }
 
-// vaultKeybaseConfig contains the configuration parameters for the VaultKeybase.
-type vaultKeybaseConfig struct {
+// VaultKeybaseConfig contains the configuration parameters for the VaultKeybase.
+type VaultKeybaseConfig struct {
 	Address string
 	Token   string
 	Mount   string
 }
 
 // NewVaultKeybase returns a new instance of vaultKeybase.
-func NewVaultKeybase(config vaultKeybaseConfig) (*vaultKeybase, error) {
+func NewVaultKeybase(config VaultKeybaseConfig) (*vaultKeybase, error) {
 	apiConfig := api.DefaultConfig()
 
 	// Set default values for the configuration parameters

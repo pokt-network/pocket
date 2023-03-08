@@ -1,4 +1,4 @@
-package keybase
+package hashicorp
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ var (
 )
 
 func setupTestVaultKeybase(address string) (*vaultKeybase, error) {
-	return NewVaultKeybase(vaultKeybaseConfig{
+	return NewVaultKeybase(VaultKeybaseConfig{
 		Address: address,
 		Token:   "dev-only-token",
 		Mount:   "secret",
