@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -23,6 +22,11 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
+)
+
+const (
+	KeybaseFile  = "file"
+	KeybaseVault = "vault"
 )
 
 var (
@@ -262,26 +266,23 @@ func keybaseForCLI() (keybase.Keybase, error) {
 	keybaseType := keybase.KeybaseTypeFile
 	keybaseOptions := keybase.KeybaseOptions{}
 
-	if keybaseTypeFromCLI != "" {
-		switch keybaseTypeFromCLI {
-		case "file":
-			keybaseType = keybase.KeybaseTypeFile
-			// Open the keybase at the specified directory
-			pocketDir := strings.TrimSuffix(dataDir, "/")
-			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-			if err != nil {
-				return nil, err
-			}
-			keybaseOptions.KeybasePath = keybasePath
-		case "vault":
-			keybaseType = keybase.KeybaseTypeVault
-			keybaseOptions.VaultAddr = keybaseVaultAddrFromCLI
-			keybaseOptions.VaultToken = keybaseVaultTokenFromCLI
-			keybaseOptions.VaultMountPath = keybaseVaultMountPathFromCLI
-		default:
-			fmt.Printf("❌ Invalid keybase type: %s\n", keybaseTypeFromCLI)
-			os.Exit(1)
+	switch keybaseTypeFromCLI {
+	case KeybaseFile:
+		keybaseType = keybase.KeybaseTypeFile
+		// Open the keybase at the specified directory
+		pocketDir := strings.TrimSuffix(dataDir, "/")
+		keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
+		if err != nil {
+			return nil, err
 		}
+		keybaseOptions.KeybasePath = keybasePath
+	case KeybaseVault:
+		keybaseType = keybase.KeybaseTypeVault
+		keybaseOptions.VaultAddr = keybaseVaultAddrFromCLI
+		keybaseOptions.VaultToken = keybaseVaultTokenFromCLI
+		keybaseOptions.VaultMountPath = keybaseVaultMountPathFromCLI
+	default:
+		logger.Global.Fatal().Msgf("invalid keybase type: %s", keybaseTypeFromCLI)
 	}
 	return keybase.NewKeybase(keybaseType, &keybaseOptions)
 }
@@ -309,9 +310,10 @@ func getValueFromCLIContext[T any](cmd *cobra.Command, key cliContextKey) (T, bo
 	return value, ok
 }
 
+// confirmPassphrase should be used when a new key is being created or a raw unarmored key is being imported
 func confirmPassphrase(currPwd string) {
 	confirm := readPassphraseMessage("", "Confirm passphrase: ")
 	if currPwd != confirm {
-		log.Fatalf("❌ Passphrases do not match")
+		logger.Global.Fatal().Msg("❌ Passphrases do not match")
 	}
 }
