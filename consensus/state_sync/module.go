@@ -1,9 +1,7 @@
 package state_sync
 
 import (
-	"context"
 	"sync"
-	"time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
@@ -88,8 +86,7 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 func (m *stateSync) Start() error {
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
-	// node will be periodically checking if its up to date.
-	// and it will be updating the AggregatedSynchMetaData.
+	// Node periodically checks if its up to date by requesting metadata from its peers as an external process with periodicMetaDataSynch() function
 	go m.periodicMetaDataSynch()
 
 	return nil
@@ -200,6 +197,7 @@ func (m *stateSync) StartSynching() error {
 	return nil
 }
 
+// TODO! Implement this function, placeholder
 // Returns max block height metadainfo received from all peers by aggregating responses in the buffer.
 func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataResponse {
 	m.m.Lock()
@@ -207,60 +205,12 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 
 	metadataResponse := m.aggregatedSyncMetadata
 
-	for _, meta := range m.syncMetadataBuffer {
-		if meta.MaxHeight > metadataResponse.MaxHeight {
-			metadataResponse.MaxHeight = meta.MaxHeight
-		}
-
-		if meta.MinHeight < metadataResponse.MinHeight {
-			metadataResponse.MinHeight = meta.MinHeight
-		}
-	}
-
-	//clear buffer after aggregation
-	m.syncMetadataBuffer = make([]*typesCons.StateSyncMetadataResponse, 0)
-
 	return metadataResponse
 }
 
-// This function periodically cqueries the network by sending metadata requests to peers.
-// It updates the aggregatedSyncMetadata field.
-// This update frequency can be tuned accordingly to the state. Currently, it has a default  behaviour.
+// TODO! Implement this function, placeholder
+// This function periodically (initially by using timers) queries the network by sending metadata requests to peers using broadCastStateSyncMessage() function.
+// This update frequency can be tuned accordingly to the state. Initially, it will have a default  behaviour.
 func (m *stateSync) periodicMetaDataSynch() error {
-	m.logger.Debug().Msgf("periodicSynch() called GOKHAN")
-
-	//add timer channel with context to cancel the timer
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// // form a metaData request
-	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
-		Message: &typesCons.StateSyncMessage_MetadataReq{
-			MetadataReq: &typesCons.StateSyncMetadataRequest{
-				PeerAddress: m.GetBus().GetConsensusModule().GetNodeAddress(),
-			},
-		},
-	}
-
-	ticker := time.NewTicker(20 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			m.logger.Debug().Msg("Periodic metadata synch is triggered")
-			currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-
-			//broadcast metadata request to all peers
-			//err := m.synch(currentHeight)
-			err := m.broadCastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
-			if err != nil {
-				return err
-			}
-
-		case <-ctx.Done():
-			return nil
-
-		}
-	}
+	return nil
 }
