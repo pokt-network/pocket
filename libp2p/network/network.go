@@ -10,29 +10,34 @@ import (
 
 	"github.com/pokt-network/pocket/libp2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
-	persABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
+	persABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/persistence"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
-
-type libp2pNetwork struct {
-	base_modules.IntegratableModule
-
-	logger      *modules.Logger
-	host        libp2pHost.Host
-	topic       *pubsub.Topic
-	addrBookMap typesP2P.AddrBookMap
-}
 
 const (
 	week = time.Hour * 24 * 7
 	// TECHDEBT: consider more carefully and parameterize.
 	defaultPeerTTL = 2 * week
 )
+
+var (
+	_ typesP2P.Network = &libp2pNetwork{}
+)
+
+type libp2pNetwork struct {
+	base_modules.IntegratableModule
+
+	logger *modules.Logger
+	host   libp2pHost.Host
+	topic  *pubsub.Topic
+	pstore sharedP2P.Peerstore
+}
 
 func NewLibp2pNetwork(
 	bus modules.Bus,
@@ -85,8 +90,8 @@ func (p2pNet *libp2pNetwork) NetworkSend(data []byte, poktAddr crypto.Address) e
 		return nil
 	}
 
-	peer, ok := p2pNet.addrBookMap[poktAddr.String()]
-	if !ok {
+	peer := p2pNet.pstore.GetPeer(poktAddr)
+	if peer == nil {
 		// This should not happen.
 		return fmt.Errorf(
 			"peer not found in address book, pokt address: %s: %w",
@@ -134,22 +139,24 @@ func (p2pNet *libp2pNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	return data, nil
 }
 
-func (p2pNet *libp2pNetwork) GetAddrBook() typesP2P.AddrBook {
-	addrBook := make(typesP2P.AddrBook, 0)
-	for _, peer := range p2pNet.addrBookMap {
-		addrBook = append(addrBook, peer)
-	}
-	return addrBook
+func (p2pNet *libp2pNetwork) GetPeerstore() sharedP2P.Peerstore {
+	return p2pNet.pstore
 }
 
-func (p2pNet *libp2pNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
-	p2pNet.addrBookMap[peer.Address.String()] = peer
+func (p2pNet *libp2pNetwork) AddPeer(peer sharedP2P.Peer) error {
+	if err := p2pNet.pstore.AddPeer(peer); err != nil {
+		return fmt.Errorf(
+			"adding peer, pokt address %s: %w",
+			peer.GetAddress(),
+			err,
+		)
+	}
 
 	pubKey, err := Libp2pPublicKeyFromPeer(peer)
 	if err != nil {
 		return fmt.Errorf(
 			"converting peer public key, pokt address: %s: %w",
-			peer.Address,
+			peer.GetAddress(),
 			err,
 		)
 	}
@@ -157,7 +164,7 @@ func (p2pNet *libp2pNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error
 	if err != nil {
 		return fmt.Errorf(
 			"converting peer info, pokt address: %s: %w",
-			peer.Address,
+			peer.GetAddress(),
 			err,
 		)
 	}
@@ -166,21 +173,27 @@ func (p2pNet *libp2pNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error
 	if err := p2pNet.host.Peerstore().AddPubKey(libp2pPeer.ID, pubKey); err != nil {
 		return fmt.Errorf(
 			"adding peer public key, pokt address: %s: %w",
-			peer.Address,
+			peer.GetAddress(),
 			err,
 		)
 	}
 	return nil
 }
 
-func (p2pNet *libp2pNetwork) RemovePeerFromAddrBook(peer *typesP2P.NetworkPeer) error {
-	delete(p2pNet.addrBookMap, peer.Address.String())
+func (p2pNet *libp2pNetwork) RemovePeer(peer sharedP2P.Peer) error {
+	if err := p2pNet.pstore.RemovePeer(peer.GetAddress()); err != nil {
+		return fmt.Errorf(
+			"removing peer, pokt address %s: %w",
+			peer.GetAddress(),
+			err,
+		)
+	}
 
 	libp2pPeer, err := Libp2pAddrInfoFromPeer(peer)
 	if err != nil {
 		return fmt.Errorf(
 			"converting peer info, pokt address: %s: %w",
-			peer.Address,
+			peer.GetAddress(),
 			err,
 		)
 	}
@@ -193,14 +206,14 @@ func (p2pNet *libp2pNetwork) Close() error {
 	return p2pNet.host.Close()
 }
 
-// setupAddrBookProvider attempts to retrieve the address book provider from the
-// bus, if one is registered, otherwise returns a new `persistenceAddrBookProvider`.
-func (p2pNet *libp2pNetwork) setupAddrBookProvider() providers.AddrBookProvider {
-	addrBookProviderModule, err := p2pNet.GetBus().GetModulesRegistry().GetModule(addrbook_provider.ModuleName)
+// setupPeerstoreProvider attempts to retrieve the peerstore provider from the
+// bus, if one is registered, otherwise returns a new `persistencePeerstoreProvider`.
+func (p2pNet *libp2pNetwork) setupPeerstoreProvider() providers.PeerstoreProvider {
+	pstoreProviderModule, err := p2pNet.GetBus().GetModulesRegistry().GetModule(peerstore_provider.ModuleName)
 	if err != nil {
-		addrBookProviderModule = persABP.NewPersistenceAddrBookProvider(p2pNet.GetBus())
+		pstoreProviderModule = persABP.NewPersistencePeerstoreProvider(p2pNet.GetBus())
 	}
-	return addrBookProviderModule.(providers.AddrBookProvider)
+	return pstoreProviderModule.(providers.PeerstoreProvider)
 }
 
 // setupCurrentHeightProvider attempts to retrieve the current height provider
@@ -213,59 +226,54 @@ func (p2pNet *libp2pNetwork) setupCurrentHeightProvider() providers.CurrentHeigh
 	return currentHeightProviderModule.(providers.CurrentHeightProvider)
 }
 
-// setupAddrBookMap iterates through `addrBook`, storing each entry into the
-// returned `AddrBookMap` but also converting each entry to its respective
-// libp2p representation and adding it to the libp2p peerstore.
-func (p2pNet *libp2pNetwork) setupAddrBookMap(addrBook typesP2P.AddrBook) (typesP2P.AddrBookMap, error) {
-	addrBookMap := make(typesP2P.AddrBookMap)
-
-	for _, peer := range addrBook {
-		addrBookMap[peer.Address.String()] = peer
+// setupHost iterates through peers in given `pstore`, converting peer info for
+// use with libp2p and adding it to the underlying libp2p host's peerstore.
+// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.2/core/host#Host)
+// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.2/core/peerstore#Peerstore)
+func (p2pNet *libp2pNetwork) setupHost() error {
+	for _, peer := range p2pNet.pstore.GetAllPeers() {
 		pubKey, err := Libp2pPublicKeyFromPeer(peer)
 		if err != nil {
-			return nil, fmt.Errorf(
+			return fmt.Errorf(
 				"converting peer public key, pokt address: %s: %w",
-				peer.Address,
+				peer.GetAddress(),
 				err,
 			)
 		}
 		libp2pPeer, err := Libp2pAddrInfoFromPeer(peer)
 		if err != nil {
-			return nil, fmt.Errorf(
+			return fmt.Errorf(
 				"converting peer info, pokt address: %s: %w",
-				peer.Address,
+				peer.GetAddress(),
 				err,
 			)
 		}
 
 		p2pNet.host.Peerstore().AddAddrs(libp2pPeer.ID, libp2pPeer.Addrs, defaultPeerTTL)
 		if err := p2pNet.host.Peerstore().AddPubKey(libp2pPeer.ID, pubKey); err != nil {
-			return nil, fmt.Errorf(
+			return fmt.Errorf(
 				"adding peer public key, pokt address: %s: %w",
-				peer.Address,
+				peer.GetAddress(),
 				err,
 			)
 		}
 	}
-	return addrBookMap, nil
+	return nil
 }
 
-// setup initializes p2pNet.addrBookMap using the addrBookProvider
-// and currentHeightProvider registered on the bus, if preseent.
-func (p2pNet *libp2pNetwork) setup() error {
-	addrBookProvider := p2pNet.setupAddrBookProvider()
+// setup initializes p2pNet.pstore using the PeerstoreProvider
+// and CurrentHeightProvider registered on the bus, if preseent.
+func (p2pNet *libp2pNetwork) setup() (err error) {
+	peerstoreProvider := p2pNet.setupPeerstoreProvider()
 	currentHeightProvider := p2pNet.setupCurrentHeightProvider()
 
-	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
+	p2pNet.pstore, err = peerstoreProvider.GetStakedPeerstoreAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		return fmt.Errorf("getting staked address book: %w", err)
+		return fmt.Errorf("getting staked peerstore: %w", err)
 	}
 
-	addrBookMap, err := p2pNet.setupAddrBookMap(addrBook)
-	if err != nil {
+	if err := p2pNet.setupHost(); err != nil {
 		return err
 	}
-
-	p2pNet.addrBookMap = addrBookMap
 	return nil
 }

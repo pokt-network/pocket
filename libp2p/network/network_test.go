@@ -6,7 +6,6 @@ import (
 
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/logger"
@@ -16,31 +15,23 @@ import (
 
 const testIP6ServiceURL = "2a00:1450:4005:802::2004:8080"
 
-func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {
+func TestLibp2pNetwork_AddPeer(t *testing.T) {
 	p2pNet := newTestLibp2pNetwork(t)
-	peerstore := p2pNet.host.Peerstore()
+	libp2pPStore := p2pNet.host.Peerstore()
 
 	// NB: assert initial state
-	require.Len(t, p2pNet.addrBookMap, 1)
+	require.Equal(t, 1, p2pNet.pstore.Size())
 
-	var (
-		existingAddrStr string
-		existingPeer    *types.NetworkPeer
-	)
-	for addr, peer := range p2pNet.addrBookMap {
-		existingAddrStr = addr
-		existingPeer = peer
-	}
-	require.NotEmpty(t, existingAddrStr)
+	existingPeer := p2pNet.pstore.GetAllPeers()[0]
 	require.NotNil(t, existingPeer)
 
 	existingPeerInfo, err := Libp2pAddrInfoFromPeer(existingPeer)
 	require.NoError(t, err)
 
-	existingPeerstoreAddrs := peerstore.Addrs(existingPeerInfo.ID)
+	existingPeerstoreAddrs := libp2pPStore.Addrs(existingPeerInfo.ID)
 	require.Len(t, existingPeerstoreAddrs, 1)
 
-	existingPeerMultiaddr, err := Libp2pMultiaddrFromServiceURL(existingPeer.ServiceURL)
+	existingPeerMultiaddr, err := Libp2pMultiaddrFromServiceURL(existingPeer.GetServiceURL())
 	require.NoError(t, err)
 	require.Equal(t, existingPeerstoreAddrs[0].String(), existingPeerMultiaddr.String())
 
@@ -58,37 +49,29 @@ func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {
 	newPeerMultiaddr := newPeerInfo.Addrs[0]
 
 	// NB: add to address book
-	err = p2pNet.AddPeerToAddrBook(newPeer)
+	err = p2pNet.AddPeer(newPeer)
 	require.NoError(t, err)
 
-	require.Len(t, p2pNet.addrBookMap, 2)
-	require.Equal(t, p2pNet.addrBookMap[existingAddrStr], existingPeer)
-	require.Equal(t, p2pNet.addrBookMap[newPeer.Address.String()], newPeer)
+	require.Len(t, p2pNet.pstore, 2)
+	require.Equal(t, p2pNet.pstore.GetPeer(existingPeer.GetAddress()), existingPeer)
+	require.Equal(t, p2pNet.pstore.GetPeer(newPeer.Address), newPeer)
 
-	existingPeerstoreAddrs = peerstore.Addrs(existingPeerInfo.ID)
-	newPeerstoreAddrs := peerstore.Addrs(newPeerInfo.ID)
+	existingPeerstoreAddrs = libp2pPStore.Addrs(existingPeerInfo.ID)
+	newPeerstoreAddrs := libp2pPStore.Addrs(newPeerInfo.ID)
 
 	require.Len(t, existingPeerstoreAddrs, 1)
 	require.Len(t, newPeerstoreAddrs, 1)
 	require.Equal(t, newPeerstoreAddrs[0].String(), newPeerMultiaddr.String())
 }
 
-func TestLibp2pNetwork_RemovePeerToAddrBook(t *testing.T) {
+func TestLibp2pNetwork_RemovePeer(t *testing.T) {
 	p2pNet := newTestLibp2pNetwork(t)
 	peerstore := p2pNet.host.Peerstore()
 
 	// NB: assert initial state
-	require.Len(t, p2pNet.addrBookMap, 1)
+	require.Len(t, p2pNet.pstore, 1)
 
-	var (
-		existingAddrStr string
-		existingPeer    *types.NetworkPeer
-	)
-	for addr, peer := range p2pNet.addrBookMap {
-		existingAddrStr = addr
-		existingPeer = peer
-	}
-	require.NotEmpty(t, existingAddrStr)
+	existingPeer := p2pNet.pstore.GetAllPeers()[0]
 	require.NotNil(t, existingPeer)
 
 	existingPeerInfo, err := Libp2pAddrInfoFromPeer(existingPeer)
@@ -97,14 +80,14 @@ func TestLibp2pNetwork_RemovePeerToAddrBook(t *testing.T) {
 	existingPeerstoreAddrs := peerstore.Addrs(existingPeerInfo.ID)
 	require.Len(t, existingPeerstoreAddrs, 1)
 
-	existingPeerMultiaddr, err := Libp2pMultiaddrFromServiceURL(existingPeer.ServiceURL)
+	existingPeerMultiaddr, err := Libp2pMultiaddrFromServiceURL(existingPeer.GetServiceURL())
 	require.NoError(t, err)
 	require.Equal(t, existingPeerstoreAddrs[0].String(), existingPeerMultiaddr.String())
 
-	err = p2pNet.RemovePeerFromAddrBook(existingPeer)
+	err = p2pNet.RemovePeer(existingPeer)
 	require.NoError(t, err)
 
-	require.Len(t, p2pNet.addrBookMap, 0)
+	require.Len(t, p2pNet.pstore, 0)
 
 	// NB: peerstore implementations seem to only remove peer keys and
 	// metadata but not the embedded AddrBook entry.
@@ -150,8 +133,7 @@ func newTestLibp2pNetwork(t *testing.T) *libp2pNetwork {
 	require.NoError(t, err)
 
 	libp2pNet, ok := p2pNetwork.(*libp2pNetwork)
-	if !assert.True(t, ok) {
-		t.Fatalf("p2pNetwork type: %T", p2pNetwork)
-	}
+	require.Truef(t, ok, "unexpected p2pNetwork type: %T", p2pNetwork)
+
 	return libp2pNet
 }
