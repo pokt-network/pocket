@@ -509,7 +509,6 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 	stateMachineMock.EXPECT().Start().Return(nil).AnyTimes()
 	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
-	//stateMachineMock.EXPECT().SendEvent(gomock.Any()).Return(nil).AnyTimes()
 
 	consensusModImpl := reflect.ValueOf(bus.GetConsensusModule())
 

@@ -151,7 +151,9 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	consensusCfg := runtimeMgr.GetConfig().Consensus
 
 	if consensusCfg.ServerModeEnabled {
-		m.stateSync.EnableServerMode()
+		if err := m.stateSync.EnableServerMode(); err != nil {
+			return nil, err
+		}
 	}
 
 	genesisState := runtimeMgr.GetGenesis()
