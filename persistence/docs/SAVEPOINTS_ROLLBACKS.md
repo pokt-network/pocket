@@ -95,7 +95,7 @@ After having examined the `Persistence` and `Utility` modules, I have identified
 
 - [**Tooling**] The CLI should provide ways to create savepoints and rollbacks. i.e.: `p1 persistence rollback --num_blocks=5`
 
-### Improvements over MVP (Ideas)
+### Long-term (🚀 🌔 ) ideas
 
 Apart from internal failures that should resolve themselves automatically whenever possible, nodes might require a way to save their state and restore it later, not necessarily at the previous block height. This could be useful for a number of reasons:
 
