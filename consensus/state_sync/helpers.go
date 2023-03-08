@@ -10,7 +10,7 @@ import (
 // Helper function for broadcasting state sync messages to the all peers known to the node
 // It is used for:
 //
-//		requesting for metadata, via the periodicSynch() function
+//		requesting for metadata, via the periodicMetaDataSynch() function
 //	 	requesting for blocks, via the StartSynching() function
 func (m *stateSync) broadCastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, height uint64) error {
 	m.logger.Info().Fields(
