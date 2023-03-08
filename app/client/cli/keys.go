@@ -83,6 +83,7 @@ func keysCreateCommands() []*cobra.Command {
 
 				logger.Global.Info().Str("address", kp.GetAddressString()).Msg("New Key Created")
 
+				// TODO(0xbigboss): Remove this once we have a better way to test and verify CLI commands
 				cmd.Println("New Key Created")
 
 				return nil
@@ -90,9 +91,11 @@ func keysCreateCommands() []*cobra.Command {
 		},
 	}
 
+	// Add --pwd and --hint flags
 	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
-	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 	applySubcommandOptions(cmds, attachHintFlagToSubcommands())
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 
 	return cmds
 }
@@ -136,10 +139,12 @@ func keysUpdateCommands() []*cobra.Command {
 		},
 	}
 
+	// Add --pwd, --new_pwd and --hint flags
 	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
-	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 	applySubcommandOptions(cmds, attachNewPwdFlagToSubcommands())
 	applySubcommandOptions(cmds, attachHintFlagToSubcommands())
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 
 	return cmds
 }
@@ -181,7 +186,10 @@ func keysDeleteCommands() []*cobra.Command {
 		},
 	}
 
+	// Add --pwd flag
 	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+
+	// Add --keybase flag
 	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 
 	return cmds
@@ -246,6 +254,7 @@ func keysGetCommands() []*cobra.Command {
 		},
 	}
 
+	// Add --keybase flag
 	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 
 	return cmds
@@ -306,10 +315,13 @@ func keysExportCommands() []*cobra.Command {
 		},
 	}
 
+	// Add --pwd, --output_file and --export_format flags
 	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
-	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 	applySubcommandOptions(cmds, attachOutputFlagToSubcommands())
 	applySubcommandOptions(cmds, attachExportFlagToSubcommands())
+
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 
 	return cmds
 }
@@ -378,11 +390,14 @@ func keysImportCommands() []*cobra.Command {
 		},
 	}
 
+	// Add --pwd, --hint, --input_file and --import_format flags
 	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
-	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 	applySubcommandOptions(cmds, attachHintFlagToSubcommands())
 	applySubcommandOptions(cmds, attachInputFlagToSubcommands())
 	applySubcommandOptions(cmds, attachImportFlagToSubcommands())
+
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 
 	return cmds
 }
@@ -470,7 +485,9 @@ func keysSignMsgCommands() []*cobra.Command {
 		},
 	}
 
+	// Add --pwd flag
 	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	// Add --keybase flag
 	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 
 	return cmds
@@ -620,10 +637,12 @@ func keysSignTxCommands() []*cobra.Command {
 		},
 	}
 
+	// Add --pwd, --input_file and --output_file flags
 	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
-	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 	applySubcommandOptions(cmds, attachInputFlagToSubcommands())
 	applySubcommandOptions(cmds, attachOutputFlagToSubcommands())
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 
 	return cmds
 }
@@ -670,10 +689,12 @@ func keysSlipCommands() []*cobra.Command {
 		},
 	}
 
+	// Add --pwd, --store_child, --child_pwd, --child_hint flags
 	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
 	applySubcommandOptions(cmds, attachStoreChildFlagToSubcommands())
 	applySubcommandOptions(cmds, attachChildPwdFlagToSubcommands())
 	applySubcommandOptions(cmds, attachChildHintFlagToSubcommands())
+	// Add --keybase flag
 	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 
 	return cmds

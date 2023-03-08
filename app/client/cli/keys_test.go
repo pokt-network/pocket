@@ -10,10 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestKeysCreateCommands is a test for the keys create command.
-// This is a simple, contrived example of how to test one command.
-func TestKeysCreateCommands(t *testing.T) {
-
+// TODO(0xbigboss): Add more tests for the other commands and verify the state changes rather than just the output.
+// TestKeysCommands_Create is a test for the keys create command.
+func TestKeysCommands_Create(t *testing.T) {
 	// boilerplate that should be in a setup function for all tests
 	dir, err := os.MkdirTemp("", "keys_test")
 	require.NoError(t, err)
@@ -40,9 +39,9 @@ func TestKeysCreateCommands(t *testing.T) {
 	err = cmd.Execute()
 	require.NoError(t, err)
 
+	// TODO(0xbigboss): Add verify the state changes rather than just the output.
 	// Verify the output
 	output, err := io.ReadAll(buf)
 	require.NoError(t, err)
 	assert.Contains(t, string(output), expectedOutput)
-
 }
