@@ -55,6 +55,7 @@ type stateSync struct {
 	logPrefix  string
 	serverMode bool
 
+	// metadata buffer that is periodically updated
 	aggregatedSyncMetadata *typesCons.StateSyncMetadataResponse
 	syncMetadataBuffer     []*typesCons.StateSyncMetadataResponse
 }
@@ -194,7 +195,7 @@ func (m *stateSync) StartSynching() error {
 
 	m.logger.Debug().Msgf("Starting synching, last persisted block %d, aggregated maxHeight %d", lastPersistedBlockHeight, m.aggregatedSyncMetadata.MaxHeight)
 
-	// ADD BUSINESS LOGIC
+	// TODO(#352): Add buiness logic
 
 	return nil
 }
@@ -212,10 +213,11 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 
 // TODO(#352): Implement this function, currently a placeholder.
 // Periodically (initially by using timers) queries the network by sending metadata requests to peers using broadCastStateSyncMessage() function.
-// Update frequency can be tuned accordingly to the state. Initially, it will have a default  behaviour.
+// Update frequency can be tuned accordingly to the state. Initially, it will have a static timer for periodic snych.
+// CONSIDER: Improving meta data request synchronistaion, without timers.
 func (m *stateSync) periodicMetaDataSynch() error {
 
-	// set a timer to periodically query the network
+	// uses a timer to periodically query the network
 	// form a metadata request
 	// send to peers using broadCastStateSyncMessage()
 
