@@ -102,6 +102,7 @@ Apart from internal failures that should resolve themselves automatically whenev
 - To allow nodes to recover from an unforeseen crash (bugs)
 - To facilitate socially coordinated rollbacks of the chain to a specific block height in the case of a consensus failure/chain-halt
 - To improve operator experience when managing and upgrading their fleet of nodes
+- Governance transactions that enable rolling back state subsets
 - And more...
 
 Performing operations like: copying datadirs, compressing them, etc. is probably not the best approach.
