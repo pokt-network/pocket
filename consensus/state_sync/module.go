@@ -212,5 +212,10 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 // This function periodically (initially by using timers) queries the network by sending metadata requests to peers using broadCastStateSyncMessage() function.
 // This update frequency can be tuned accordingly to the state. Initially, it will have a default  behaviour.
 func (m *stateSync) periodicMetaDataSynch() error {
+
+	// set a timer to periodically query the network
+	// form a metadata request
+	// send to peers using broadCastStateSyncMessage()
+
 	return nil
 }

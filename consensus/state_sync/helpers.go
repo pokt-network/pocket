@@ -2,11 +2,11 @@ package state_sync
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// TODO! Implement this function, placeholder.
 // Helper function for broadcasting state sync messages to the all peers known to the node
 // It is used for:
 //
@@ -18,37 +18,7 @@ func (m *stateSync) broadCastStateSyncMessage(stateSyncMsg *typesCons.StateSyncM
 			"height": height,
 			"nodeId": m.GetBus().GetConsensusModule().GetNodeId(),
 		},
-	).Msg("📣 Broadcasting state sync message GOKHANSA📣")
-
-	anyMessage, err := codec.GetCodec().ToAny(stateSyncMsg)
-	if err != nil {
-		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
-		return err
-	}
-
-	validators, err := m.GetBus().GetConsensusModule().GetValidatorsAtHeight(height)
-	if err != nil {
-		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
-	}
-
-	// for _, val := range validators {
-	// 	m.logger.Debug().Msgf("VAL: %s", val.Address)
-	// 	if err := m.SendStateSyncMessage(stateSyncMsg, cryptoPocket.Address(val.Address), height); err != nil {
-	// 		m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
-	// 		return err
-	// 	}
-	// }
-
-	for _, val := range validators {
-		m.logger.Info().Fields(
-			map[string]any{
-				"val": val.GetAddress(),
-			},
-		).Msg("📣 Sneding state sync message 📣")
-		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyMessage); err != nil {
-			m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
-		}
-	}
+	).Msg("📣 Broadcasting state sync message... 📣")
 
 	return nil
 }
@@ -92,17 +62,3 @@ func getMessageType(msg *typesCons.StateSyncMessage) string {
 		return "Unknown"
 	}
 }
-
-// func (m *stateSync) validateBlock(block *types.Block) error {
-
-// 	//stateHash := block.BlockHeader.StateHash
-// 	//quorumCertificate := block.BlockHeader.QuorumCertificate
-
-// 	// validate quorum certificate
-
-// 	// validate block
-
-// 	// apply block
-
-// 	return nil
-// }
