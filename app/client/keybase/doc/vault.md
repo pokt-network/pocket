@@ -1,11 +1,11 @@
 # Keybase Vault
 
-The Keybase Vault stores key pairs, public key and armoured private keys, using the Hashicorp Vault KV secrets engine. The Keybase Vault is a wrapper around the Hashicorp Vault API.
+The Keybase Vault stores key pairs, `(public_key, armoured_private_key)`, using the [Hashicorp Vault](https://www.vaultproject.io/) KV secrets engine. The Keybase Vault is a wrapper around the Hashicorp Vault API.
 
 Keybase Vault requires a few pieces of information to be able to connect to it:
 
-- Address (e.g. VAULT_ADDR=http://127.0.0.1:8200/)
-- Token (e.g. VAULT_TOKEN=hvs.25YM7qJDN8S2EpFEA4SL0ciD)
+- Address (e.g. `VAULT_ADDR`=http://127.0.0.1:8200/)
+- Token (e.g. `VAULT_TOKEN`=hvs.25YM7qJDN8S2EpFEA4SL0ciD)
 - Mount Path (e.g. /secret)
 
 ## Simple Vault Demo
