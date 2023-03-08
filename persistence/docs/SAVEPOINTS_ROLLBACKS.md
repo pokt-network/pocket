@@ -120,7 +120,8 @@ A savepoint must have the following properties:
 - The action of creating a savepoint must be easy to perform (e.g. a CLI command and/or a flag being passed to the node binary when starting it)
 - The action of creating a savepoint must be as fast as possible
 - The operator should be informed with meaningful messages about the progress of the savepoint creation process (telemetry, logging and stdout come to mind)
-- It should be, as much as possible, compact
+- It should be, as much as possible, compact (i.e. zipped) to reduce the size and cost of disseminating snapshots
+- A reduction in the snapshot size should be prioritized over its compression speed since it is an infrequent event
 - It must have some form of integrity check mechanism (e.g. checksum/hash verification and maybe even a signature that could be very useful in the case of a social rollback)
 
 #### Rollbacks
