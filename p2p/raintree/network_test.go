@@ -4,8 +4,10 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,15 +37,13 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	err = network.AddPeerToAddrBook(peer)
 	require.NoError(t, err)
 
-	stateView := network.peersManager.getNetworkView()
-	require.Equal(t, 2, len(stateView.addrList))
-	require.ElementsMatch(t, []string{selfAddr.String(), peerAddr.String()}, stateView.addrList, "addrList does not match")
-	require.ElementsMatch(t, []*typesP2P.NetworkPeer{selfPeer, peer}, stateView.addrBook, "addrBook does not match")
+	stateView := network.peersManager.GetPeersView()
+	require.Equal(t, 2, len(stateView.GetAddrs()))
+	require.ElementsMatch(t, []string{selfAddr.String(), peerAddr.String()}, stateView.GetAddrs(), "addrList does not match")
+	require.ElementsMatch(t, []*typesP2P.NetworkPeer{selfPeer, peer}, stateView.GetPeers(), "addrBook does not match")
 
-	require.Contains(t, stateView.addrBookMap, selfAddr.String(), "addrBookMap does not contain self key")
-	require.Equal(t, selfPeer, stateView.addrBookMap[selfAddr.String()], "addrBookMap does not contain self")
-	require.Contains(t, stateView.addrBookMap, peerAddr.String(), "addrBookMap does not contain peer key")
-	require.Equal(t, peer, stateView.addrBookMap[peerAddr.String()], "addrBookMap does not contain peer")
+	require.Equal(t, selfPeer, stateView.GetPeerstore().GetPeer(selfAddr), "Peerstore does not contain self")
+	require.Equal(t, peer, stateView.GetPeerstore().GetPeer(peerAddr), "Peerstore does not contain peer")
 }
 
 func TestRainTreeNetwork_RemovePeerFromAddrBook(t *testing.T) {
@@ -62,18 +62,18 @@ func TestRainTreeNetwork_RemovePeerFromAddrBook(t *testing.T) {
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
 	network := NewRainTreeNetwork(selfAddr, busMock, addrBookProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
-	stateView := network.peersManager.getNetworkView()
-	require.Equal(t, numAddressesInAddressBook+1, len(stateView.addrList)) // +1 to account for self in the addrBook as well
+	stateView := network.peersManager.GetPeersView()
+	require.Equal(t, numAddressesInAddressBook+1, len(stateView.GetAddrs())) // +1 to account for self in the addrBook as well
 
 	// removing a peer
 	peer := addrBook[1]
 	err = network.RemovePeerFromAddrBook(peer)
 	require.NoError(t, err)
 
-	stateView = network.peersManager.getNetworkView()
-	require.Equal(t, numAddressesInAddressBook+1-1, len(stateView.addrList)) // +1 to account for self and the peer removed
+	stateView = network.peersManager.GetPeersView()
+	require.Equal(t, numAddressesInAddressBook+1-1, len(stateView.GetAddrs())) // +1 to account for self and the peer removed
 
-	require.Contains(t, stateView.addrBookMap, selfAddr.String(), "addrBookMap does not contain self key")
-	require.Equal(t, selfPeer, stateView.addrBookMap[selfAddr.String()], "addrBookMap contains self")
-	require.NotContains(t, stateView.addrBookMap, peer.Address.String(), "addrBookMap contains removed peer key")
+	require.Contains(t, stateView.GetPeerstore(), selfAddr.String(), "Peerstore does not contain self key")
+	require.Equal(t, selfPeer, stateView.GetPeerstore().GetPeer(selfAddr), "Peerstore contains self")
+	require.NotContains(t, stateView.GetPeerstore(), peerToRemove.GetAddress().String(), "Peerstore contains removed peer key")
 }

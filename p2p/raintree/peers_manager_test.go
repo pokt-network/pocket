@@ -11,6 +11,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,7 +36,7 @@ type ExpectedRainTreeMessageProp struct {
 	targets  []ExpectedRainTreeMessageTarget
 }
 
-func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
+func TestRainTreePeerstoreUtilsHandleUpdate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	addr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
@@ -72,25 +73,26 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 	for _, testCase := range testCases {
 		n := testCase.numNodes
 		t.Run(fmt.Sprintf("n=%d", n), func(t *testing.T) {
-			addrBook := getAddrBook(t, n-1)
-			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
+			pstore := getPeerstore(t, n-1)
+			err = pstore.AddPeer(&types.NetworkPeer{Address: addr})
+			require.NoError(t, err)
 
 			mockBus := mockBus(ctrl)
-			mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
+			pstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 			currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-			network := NewRainTreeNetwork(addr, mockBus, mockAddrBookProvider, currentHeightProviderMock).(*rainTreeNetwork)
+			network := NewRainTreeNetwork(addr, mockBus, pstoreProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
 
-			peersManagerStateView := network.peersManager.getNetworkView()
+			peersManagerStateView, actualMaxNumLevels := network.peersManager.getPeersViewWithLevels()
 
-			require.Equal(t, n, len(peersManagerStateView.addrList))
-			require.Equal(t, n, len(peersManagerStateView.addrBookMap))
-			require.Equal(t, testCase.numExpectedLevels, int(peersManagerStateView.maxNumLevels))
+			require.Equal(t, n, len(peersManagerStateView.GetAddrs()))
+			require.Equal(t, n, peersManagerStateView.GetPeerstore().Size())
+			require.Equal(t, testCase.numExpectedLevels, int(actualMaxNumLevels))
 		})
 	}
 }
 
-func BenchmarkAddrBookUpdates(b *testing.B) {
+func BenchmarkPeerstoreUpdates(b *testing.B) {
 	ctrl := gomock.NewController(gomock.TestReporter(b))
 	addr, err := cryptoPocket.GenerateAddress()
 	require.NoError(b, err)
@@ -112,50 +114,56 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 	for _, testCase := range testCases {
 		n := testCase.numNodes
 		b.Run(fmt.Sprintf("n=%d", n), func(b *testing.B) {
-			addrBook := getAddrBook(nil, n-1)
-			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
+			pstore := getPeerstore(nil, n-1)
+			err := pstore.AddPeer(&types.NetworkPeer{Address: addr})
+			require.NoError(b, err)
 
 			mockBus := mockBus(ctrl)
-			mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
+			pstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 			currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-			network := NewRainTreeNetwork(addr, mockBus, mockAddrBookProvider, currentHeightProviderMock).(*rainTreeNetwork)
+			network := NewRainTreeNetwork(addr, mockBus, pstoreProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
 
-			peersManagerStateView := network.peersManager.getNetworkView()
+			peersManagerStateView, actualMaxNumLevels := network.peersManager.getPeersViewWithLevels()
 
-			require.Equal(b, n, len(peersManagerStateView.addrList))
-			require.Equal(b, n, len(peersManagerStateView.addrBookMap))
-			require.Equal(b, testCase.numExpectedLevels, int(peersManagerStateView.maxNumLevels))
+			require.Equal(b, n, len(peersManagerStateView.GetAddrs()))
+			require.Equal(b, n, peersManagerStateView.GetPeerstore().Size())
+			require.Equal(b, testCase.numExpectedLevels, int(actualMaxNumLevels))
 
 			for i := 0; i < numAddressesToBeAdded; i++ {
 				newAddr, err := cryptoPocket.GenerateAddress()
 				require.NoError(b, err)
-				err = network.AddPeerToAddrBook(&types.NetworkPeer{Address: newAddr})
+				err = network.AddPeer(&types.NetworkPeer{Address: newAddr})
 				require.NoError(b, err)
 			}
 
-			peersManagerStateView = network.peersManager.getNetworkView()
+			peersManagerStateView = network.peersManager.GetPeersView()
 
-			require.Equal(b, n+numAddressesToBeAdded, len(peersManagerStateView.addrList))
-			require.Equal(b, n+numAddressesToBeAdded, len(peersManagerStateView.addrBookMap))
+			require.Equal(b, n+numAddressesToBeAdded, len(peersManagerStateView.GetAddrs()))
+			require.Equal(b, n+numAddressesToBeAdded, peersManagerStateView.GetPeerstore().Size())
 		})
 	}
 }
 
 // Generates an address book with a random set of `n` addresses
-func getAddrBook(t *testing.T, n int) (addrBook types.AddrBook) {
-	addrBook = make([]*types.NetworkPeer, 0)
+func getPeerstore(t *testing.T, n int) sharedP2P.Peerstore {
+	pstore := make(sharedP2P.PeerAddrMap)
 	for i := 0; i < n; i++ {
 		addr, err := cryptoPocket.GenerateAddress()
 		if t != nil {
 			require.NoError(t, err)
 		}
-		addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
+		err = pstore.AddPeer(&types.NetworkPeer{
+			Address: addr,
+		})
+		if t != nil {
+			require.NoError(t, err)
+		}
 	}
-	return
+	return pstore
 }
 
-func TestRainTreeAddrBookTargetsSixNodes(t *testing.T) {
+func TestRainTreePeerstoreTargetsSixNodes(t *testing.T) {
 	// 		                  A
 	// 		   ┌──────────────┴────────┬────────────────────┐
 	// 		   C                       A                    E
@@ -209,19 +217,19 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
 	runtimeMgrMock.EXPECT().GetConfig().Return(configs.NewDefaultConfig()).AnyTimes()
 
-	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
-	mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
+	pstore := getAlphabetPeerstore(t, expectedMsgProp.numNodes)
+	pstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 1)
 
-	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, busMock, mockAddrBookProvider, currentHeightProviderMock).(*rainTreeNetwork)
+	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, busMock, pstoreProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
 
 	network.SetBus(busMock)
 
-	peersManagerStateView := network.peersManager.getNetworkView()
+	peersManagerStateView := network.peersManager.GetPeersView()
 
-	require.Equal(t, strings.Join(peersManagerStateView.addrList, ""), strToAddrList(expectedMsgProp.addrList))
+	require.Equal(t, strings.Join(peersManagerStateView.GetAddrs(), ""), strToAddrList(expectedMsgProp.addrList))
 
-	i, found := network.peersManager.getSelfIndexInAddrBook()
+	i, found := network.peersManager.getSelfIndexInPeersView()
 	require.True(t, found)
 	require.Equal(t, i, 0)
 
@@ -237,18 +245,19 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 }
 
 // Generates an address book with a constant set 27 addresses; ['A', ..., 'Z']
-func getAlphabetAddrBook(n int) (addrBook types.AddrBook) {
-	addrBook = make([]*types.NetworkPeer, 0)
+func getAlphabetPeerstore(t *testing.T, n int) sharedP2P.Peerstore {
+	pstore := make(sharedP2P.PeerAddrMap)
 	for i, ch := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ[" {
 		if i >= n {
-			return
+			return pstore
 		}
-		addrBook = append(addrBook, &types.NetworkPeer{
+		err := pstore.AddPeer(&types.NetworkPeer{
 			ServiceURL: fmt.Sprintf(serviceURLFormat, i),
 			Address:    []byte{byte(ch)},
 		})
+		require.NoError(t, err)
 	}
-	return
+	return pstore
 }
 
 func strToAddrList(s string) string {

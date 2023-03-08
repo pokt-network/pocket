@@ -14,19 +14,19 @@ const (
 )
 
 func (n *rainTreeNetwork) getAddrBookLength(level uint32, height uint64) int {
-	peersManagerStateView := n.peersManager.getNetworkView()
+	peersView, maxNumLevels := n.peersManager.getPeersViewWithLevels()
 
-	// if we are propagating a message from a previous height, we need to instantiate an ephemeral peersManager (without add/remove)
+	// if we are propagating a message from a previous height, we need to instantiate an ephemeral rainTreePeersManager (without add/remove)
 	if height < n.currentHeightProvider.CurrentHeight() {
-		peersManagerWithAddrBookProvider, err := newPeersManagerWithAddrBookProvider(n.selfAddr, n.addrBookProvider, height)
+		peersMgr, err := newPeersManagerWithAddrBookProvider(n.selfAddr, n.addrBookProvider, height)
 		if err != nil {
-			n.logger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManagerWithAddrBookProvider")
+			n.logger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork rainTreePeersManager")
 		}
-		peersManagerStateView = peersManagerWithAddrBookProvider.getNetworkView()
+		peersView, maxNumLevels = peersMgr.getPeersViewWithLevels()
 	}
 
-	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(peersManagerStateView.maxNumLevels-level))
-	return int(float64(len(peersManagerStateView.addrList)) * (shrinkageCoefficient))
+	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(maxNumLevels-level))
+	return int(float64(len(peersView.GetAddrs())) * (shrinkageCoefficient))
 }
 
 // getTargetsAtLevel returns the targets for a given level
@@ -50,10 +50,12 @@ func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 func (n *rainTreeNetwork) getTarget(targetPercentage float64, addrBookLen int, level uint32) target {
 	i := int(targetPercentage * float64(addrBookLen))
 
-	peersManagerStateView := n.peersManager.getNetworkView()
+	peersView := n.peersManager.GetPeersView()
+
+	serviceURL := peersView.GetPeers()[i].GetServiceURL()
 
 	target := target{
-		serviceURL:             peersManagerStateView.addrBookMap[peersManagerStateView.addrList[i]].ServiceURL,
+		serviceURL:             serviceURL,
 		percentage:             targetPercentage,
 		level:                  level,
 		addrBookLengthAtHeight: addrBookLen,
@@ -67,13 +69,13 @@ func (n *rainTreeNetwork) getTarget(targetPercentage float64, addrBookLen int, l
 		return target
 	}
 
-	addrStr := peersManagerStateView.addrList[i]
-	if addr, ok := peersManagerStateView.addrBookMap[addrStr]; ok {
-		target.address = addr.Address
+	addrStr := peersView.GetAddrs()[i]
+	if addr := peersView.GetPeerstore().GetPeerFromString(addrStr); addr != nil {
+		target.address = addr.GetAddress()
 		return target
 	}
 
-	n.logger.Debug().Str("addrStr", addrStr).Msg("addrStr not found in addrBookMap")
+	n.logger.Debug().Str("address", addrStr).Msg("address not found in Peerstore")
 
 	return target
 }

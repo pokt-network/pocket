@@ -60,14 +60,15 @@ type SortedPeersView struct {
 	sortedPeers PeerList
 }
 
-// NewSortedPeersManager creates a new peersManager instance, it is in charge of
-// handling operations on sortedPeers (like adding/removing them) within a PeerAddrMap
-// it also takes care of keeping the PeerAddrMap sorted and indexed for fast access
+// NewSortedPeerManager creates a new SortedPeerManager instance, it is
+// responsible for handling operations on `sortedAddrs` and `sortedPeers`
+// (like adding/removing them) within a Peerstore. It also takes care of
+// keeping them sorted and indexed for fast access.
 //
 // If `isDynamic` is false, the peersManager will not handle addressBook changes,
 // it will only be used for querying the PeerAddrMap
 // TECHDEBT: signature should include a logger reference.
-func NewSortedPeersManager(startAddr crypto.Address, pstore Peerstore, isDynamic bool) (*SortedPeerManager, error) {
+func NewSortedPeerManager(startAddr crypto.Address, pstore Peerstore, isDynamic bool) (*SortedPeerManager, error) {
 	pm := &SortedPeerManager{
 		startAddr:   startAddr,
 		eventCh:     make(chan PeerManagerEvent, 1),
