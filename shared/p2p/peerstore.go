@@ -50,3 +50,17 @@ func (paMap PeerAddrMap) RemovePeer(addr crypto.Address) error {
 func (paMap PeerAddrMap) Size() int {
 	return len(paMap)
 }
+
+// mustAddrPeer calls `#AddPeer` and panics if it returns an error.
+func (paMap PeerAddrMap) mustAddPeer(peer Peer) {
+	if err := paMap.AddPeer(peer); err != nil {
+		panic(err)
+	}
+}
+
+// mustRemovePeer calls `#RemovePeer` and panics if it returns an error.
+func (paMap PeerAddrMap) mustRemovePeer(addr crypto.Address) {
+	if err := paMap.RemovePeer(addr); err != nil {
+		panic(err)
+	}
+}

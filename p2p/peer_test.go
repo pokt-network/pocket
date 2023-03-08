@@ -5,13 +5,14 @@ import (
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 	"github.com/stretchr/testify/require"
 )
 
-func Test_getAddrBookDelta(t *testing.T) {
+func Test_getPeerListDelta(t *testing.T) {
 	type args struct {
-		before typesP2P.AddrBook
-		after  typesP2P.AddrBook
+		before []*typesP2P.NetworkPeer
+		after  []*typesP2P.NetworkPeer
 	}
 	tests := []struct {
 		name        string
@@ -58,7 +59,16 @@ func Test_getAddrBookDelta(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotAdded, gotRemoved := getAddrBookDelta(tt.args.before, tt.args.after)
+			before := make(sharedP2P.PeerList, len(tt.args.before))
+			for i, peer := range tt.args.before {
+				before[i] = peer
+			}
+
+			after := make(sharedP2P.PeerList, len(tt.args.after))
+			for i, peer := range tt.args.after {
+				after[i] = peer
+			}
+			gotAdded, gotRemoved := before.Delta(after)
 			require.ElementsMatch(t, gotAdded, tt.wantAdded)
 			require.ElementsMatch(t, gotRemoved, tt.wantRemoved)
 		})
