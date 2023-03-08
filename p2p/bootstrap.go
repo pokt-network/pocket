@@ -11,9 +11,9 @@ import (
 
 	rpcABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/rpc"
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime/defaults"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 // configureBootstrapNodes parses the bootstrap nodes from the config and validates them
@@ -43,7 +43,7 @@ func (m *p2pModule) configureBootstrapNodes() error {
 
 // bootstrap attempts to bootstrap from a bootstrap node
 func (m *p2pModule) bootstrap() error {
-	var addrBook typesP2P.AddrBook
+	var pstore sharedP2P.Peerstore
 
 	for _, bootstrapNode := range m.bootstrapNodes {
 		m.logger.Info().Str("endpoint", bootstrapNode).Msg("Attempting to bootstrap from bootstrap node")
@@ -67,20 +67,21 @@ func (m *p2pModule) bootstrap() error {
 
 		currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(rpcCHP.WithCustomRPCURL(bootstrapNode))
 
-		addrBook, err = addressBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
+		pstore, err = addressBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 		if err != nil {
 			m.logger.Warn().Err(err).Str("endpoint", bootstrapNode).Msg("Error getting address book from bootstrap node")
 			continue
 		}
 	}
 
-	if len(addrBook) == 0 {
+	if pstore.Size() == 0 {
 		return fmt.Errorf("bootstrap failed")
 	}
 
-	for _, peer := range addrBook {
-		m.logger.Debug().Str("address", peer.Address.String()).Msg("Adding peer to addrBook")
-		if err := m.network.AddPeerToAddrBook(peer); err != nil {
+	for _, peer := range pstore.GetAllPeers() {
+		m.logger.Debug().Str("address", peer.GetAddress().String()).Msg("Adding peer to pstore")
+		// TECHDEBT: either remove the returned error from the interface OR log the error here.
+		if err := m.network.AddPeer(peer); err != nil {
 			return err
 		}
 	}

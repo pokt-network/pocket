@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// CONSIDER: making this part of some new `ConnManager` concern.
 func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 	evt, err := codec.GetCodec().FromAny(event)
 	if err != nil {
@@ -30,12 +31,12 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 
 		added, removed := oldPeerList.Delta(updatedPeerstore.GetAllPeers())
 		for _, add := range added {
-			if err := m.network.AddPeerToAddrBook(add); err != nil {
+			if err := m.network.AddPeer(add); err != nil {
 				return err
 			}
 		}
 		for _, rm := range removed {
-			if err := m.network.RemovePeerFromAddrBook(rm); err != nil {
+			if err := m.network.RemovePeer(rm); err != nil {
 				return err
 			}
 		}
@@ -47,8 +48,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		}
 
 		if stateMachineTransitionEvent.NewState == string(coreTypes.StateMachineState_P2P_Bootstrapping) {
-			addrBook := m.network.GetAddrBook()
-			if len(addrBook) == 0 {
+			if m.network.GetPeerstore().Size() == 0 {
 				m.logger.Warn().Msg("No peers in addrbook, bootstrapping")
 
 				if err := m.bootstrap(); err != nil {

@@ -259,8 +259,11 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		p2pMod.listener = connMocks[validatorId]
 		err := p2pMod.Start()
 		require.NoError(t, err)
-		for _, peer := range p2pMod.network.GetAddrBook() {
-			peer.Transport = connMocks[peer.ServiceURL]
+
+		for _, peer := range p2pMod.network.GetPeerstore().GetAllPeers() {
+			netPeer, ok := peer.(*typesP2P.NetworkPeer)
+			require.True(t, ok, "unexpected `peer` type: %T", peer)
+			netPeer.Transport = connMocks[peer.GetServiceURL()]
 		}
 	}
 
