@@ -47,7 +47,7 @@ type ConsensusPacemaker interface {
 	ResetRound()
 	ResetForNewHeight()
 	ClearLeaderMessagesPool()
-	ReleaseUtilityContext() error
+	ReleaseUtilityUnitOfWork() error
 
 	// Setters
 	SetHeight(uint64)
