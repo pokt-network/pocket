@@ -47,6 +47,8 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 			return fmt.Errorf("failed to cast event to StateMachineTransitionEvent")
 		}
 
+		m.logger.Debug().Fields(messaging.EventToMap(stateMachineTransitionEvent)).Msg("Received state machine transition event")
+
 		if stateMachineTransitionEvent.NewState == string(coreTypes.StateMachineState_P2P_Bootstrapping) {
 			addrBook := m.network.GetAddrBook()
 			if len(addrBook) == 0 {

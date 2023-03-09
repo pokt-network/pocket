@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.34] - 2023-03-09
+
+- Add log for `StateMachineTransitionEvent`
+
 ## [0.0.0.33] - 2023-03-03
 
 - Add TECHDEBT comments
