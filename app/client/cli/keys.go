@@ -83,9 +83,6 @@ func keysCreateCommands() []*cobra.Command {
 
 				logger.Global.Info().Str("address", kp.GetAddressString()).Msg("New Key Created")
 
-				// TODO(0xbigboss): Remove this once we have a better way to test and verify CLI commands
-				cmd.Println("New Key Created")
-
 				return nil
 			},
 		},

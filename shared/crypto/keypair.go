@@ -11,6 +11,7 @@ import (
 func init() {
 	gob.Register(Ed25519PublicKey{})
 	gob.Register(ed25519.PublicKey{})
+	gob.Register(encKeyPair{})
 }
 
 // KeyPair interface exposes functions relating to public and encrypted private key pairs
