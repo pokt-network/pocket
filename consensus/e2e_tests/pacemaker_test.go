@@ -182,6 +182,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
 		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
 
+		// TODO: @deblasis - refactor using uow
 		// utilityContext is only set on new rounds, which is skipped in this test
 		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
 		require.NoError(t, err)
