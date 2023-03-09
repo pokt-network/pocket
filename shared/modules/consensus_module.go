@@ -47,6 +47,7 @@ type ConsensusPacemaker interface {
 	ResetRound()
 	ResetForNewHeight()
 	ClearLeaderMessagesPool()
+	// TODO: @deblasis - remove this and implement an event based approach
 	ReleaseUtilityUnitOfWork() error
 
 	// Setters
