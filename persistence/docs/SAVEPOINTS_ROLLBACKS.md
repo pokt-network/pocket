@@ -111,7 +111,9 @@ Apart from internal failures that should resolve themselves automatically whenev
 Performing operations like: copying datadirs, compressing them, etc. is probably not the best approach.
 Having a first-class support for savepoints and rollbacks would be, IMHO, a much better solution.
 
-A more advanced/flexible version of **Savepoints** could be to efficiently serialize the state into an artifact (non-trivial also because we have multiple data-stores but definitely possible), maybe leveraging previous savepoints to only store the changes that have been made since the last one and/or using some version of a WAL (Write-Ahead log that records the changes that happened).
+A more advanced/flexible version of **Savepoints** could be to efficiently serialize the state into an artifact (**Snapshot**) (non-trivial also because we have multiple data-stores but definitely possible), maybe leveraging previous savepoints to only store the changes that have been made since the last one and/or using some version of a WAL (Write-Ahead log that records the changes that happened).
+
+**Snapshot** hash verification using the `genesis.json` file and [Mina protocol](https://minaprotocol.com/lightweight-blockchain)
 
 #### Savepoints
 
