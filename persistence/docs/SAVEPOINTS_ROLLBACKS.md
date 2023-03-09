@@ -9,9 +9,10 @@ The entry points will be in the `Persistence` module but there are going to be p
   - [Data Consistency (the "C" in CAP Theorem)](#data-consistency-the-c-in-cap-theorem)
 - [Definitions](#definitions)
   - [Savepoints](#savepoints)
+  - [Snapshots](#snapshots)
   - [Rollbacks](#rollbacks)
   - [Minimum Viable Product](#minimum-viable-product)
-  - [Long-term (🚀 🌔 ) ideas](#long-term----ideas)
+  - [Long-term (🚀 🌔) ideas](#long-term---ideas)
     - [Savepoints](#savepoints-1)
     - [Rollbacks](#rollbacks-1)
   - [Further improvements](#further-improvements)
@@ -69,7 +70,11 @@ flowchart TD
 
 ### Savepoints
 
-A savepoint (also called checkpoints/snapshots, depending on the implementation) is either the beginning of a database transaction (or distributed transaction) or some artifact created right after a successful commit happened that allows recreating a perfect copy of the state at the time it was created.
+A savepoint is either the beginning of a database transaction (or distributed transaction) created right after a successful commit happened that allows recreating a perfect copy of the state at the time it was created.
+
+### Snapshots
+
+A snapshot is an artifact that encapsulates a savepoint. In V0 terms, it would be a shareable copy of the data directory. In V1 terms it's going to be a compressed archive that once decompressed and loaded into the node, it allows us to recover the state of the node at the height at which the snapshot was created.
 
 ### Rollbacks
 
@@ -85,8 +90,6 @@ After having examined the `Persistence` and `Utility` modules, I have identified
 
 - [**Distributed commits across data-stores**] We need to implement a 2PC (two-phase commit) or 3PC (three-phase commit) protocol that should make sure that the state has been committed safely on **all** data stores before it is considered `valid`.
 
-    > TODO: **Discuss what is appropriate to do here**
-
 - [**Savepoints**] The simplest version could be the database transaction that can simply be discarded, basically the uncommitted transaction sits in memory until it's flushed to storage and rolling back to a savepoint would be as simple as discarding the non-pristine version of the state in memory.
 
 - [**Rollbacks**] Rolling back to a savepoint would mean not only that the state has been restored to the previous savepoint but also that the node has to go back into a state that allows it to proceed with its normal operation (i.e. all the modules should behave as if nothing has happened)
@@ -95,7 +98,7 @@ After having examined the `Persistence` and `Utility` modules, I have identified
 
 - [**Tooling**] The CLI should provide ways to create savepoints and rollbacks. i.e.: `p1 persistence rollback --num_blocks=5`
 
-### Long-term (🚀 🌔 ) ideas
+### Long-term (🚀 🌔) ideas
 
 Apart from internal failures that should resolve themselves automatically whenever possible, nodes might require a way to save their state and restore it later, not necessarily at the previous block height. This could be useful for a number of reasons:
 
