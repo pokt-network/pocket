@@ -43,7 +43,7 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 		savePointsList: make([][]byte, 0),
 		savePointsSet:  make(map[string]struct{}),
 	}
-	ctx.IntegratableModule.SetBus(u.GetBus())
+	ctx.SetBus(u.GetBus())
 	return ctx, nil
 }
 
