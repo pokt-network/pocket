@@ -29,7 +29,7 @@ type p2pModule struct {
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
 
-	logger modules.Logger
+	logger *modules.Logger
 
 	network typesP2P.Network
 
@@ -154,6 +154,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
 	}
+	//TECHDEBT: use shared/codec for marshalling
 	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
 	if err != nil {
 		return err
@@ -167,6 +168,7 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
 	}
+	//TECHDEBT: use shared/codec for marshalling
 	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
 	if err != nil {
 		return err
@@ -175,7 +177,7 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 	return m.network.NetworkSend(data, addr)
 }
 
-// TECHDEBT(drewsky): Discuss how to best expose/access `Address` throughout the codebase.
+// TECHDEBT: Define what the node identity is throughout the codebase
 func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }

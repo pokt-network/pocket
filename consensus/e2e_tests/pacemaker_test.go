@@ -164,7 +164,6 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		Height:            testHeight,
 		StateHash:         stateHash,
 		PrevStateHash:     "",
-		NumTxs:            0,
 		ProposerAddress:   consensusPK.Address(),
 		QuorumCertificate: nil,
 	}
@@ -182,7 +181,6 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		consensusModImpl := GetConsensusModImpl(pocketNode)
 		consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
 		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
-		consensusModImpl.MethodByName("SetLeaderId").Call([]reflect.Value{reflect.Zero(reflect.TypeOf(&leaderId))})
 
 		// utilityContext is only set on new rounds, which is skipped in this test
 		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))

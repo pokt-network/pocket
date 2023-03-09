@@ -7,9 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.38] - 2023-03-09
+## [0.0.0.41] - 2023-03-09
 
 - Added `SAVEPOINTS_ROLLBACKS.md` design document
+
+## [0.0.0.40] - 2023-03-01
+
+- Update state hash test after modifying genesis (updated port numbers)
+
+## [0.0.0.39] - 2023-02-28
+
+- Renamed package names and parameters to reflect changes in the rest of the codebase
+- Removed the `StakeStatus` constants to use the global proto enum types
+- Removed the whole concept of `maxRelays` as we're introducing a new rate limiting approach
+- Added documentation to make certain things clearer
+- Renamed `GenericParam` to `ServiceURL`
+- Removed `txsOrderInBlockHashDescending` since we don't need a hash specific to txs - it's part of the state hash
+
+## [0.0.0.38] - 2023-02-24
+
+- Update logger value references with pointers
+- Remove unnecessary (and problematic) logger calls
 
 ## [0.0.0.37] - 2023-02-21
 

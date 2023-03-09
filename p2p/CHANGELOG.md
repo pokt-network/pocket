@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.33] - 2023-03-03
+
+- Add TECHDEBT comments
+
+## [0.0.0.32] - 2023-03-03
+
+- Added embedded `modules.InitializableModule` to the P2P `AddrBookProvider` interface so that it can be dependency injected as a `modules.Module` via the bus registry.
+
+## [0.0.0.31] - 2023-03-01
+
+- replace `consensus_port` with `port` in P2P config
+- update default P2P config `port` to from `8080` to `42069`
+
+## [0.0.0.30] - 2023-02-28
+
+- Renamed package names and parameters to reflect changes in the rest of the codebase
+
+## [0.0.0.29] - 2023-02-24
+
+- Update logger value references with pointers
+
 ## [0.0.0.28] - 2023-02-20
 
 - Added basic `bootstrap` nodes support

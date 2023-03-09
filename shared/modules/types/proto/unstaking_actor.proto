@@ -4,8 +4,10 @@ package modules;
 
 option go_package = "github.com/pokt-network/pocket/shared/modules/types";
 
-// TECHDEBT: Identify if the codebase can be simplified by removing this protobuf altogether in
-// exchange for using actor.proto. If not, move it into coreTypes.
+// TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead
+// There will need to be some documentation or indicator that the Actor struct returned may not be
+// fully hydrated. Alternatively, we could eat the performance cost and just hydrate the entire struct
+// which may be simpler and clearer.
 message UnstakingActor {
   string address = 1;
   string stake_amount = 2;

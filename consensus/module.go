@@ -27,7 +27,6 @@ const (
 
 var (
 	_ modules.ConsensusModule = &consensusModule{}
-	_ ConsensusDebugModule    = &consensusModule{}
 )
 
 type consensusModule struct {
@@ -71,48 +70,12 @@ type consensusModule struct {
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	logger    modules.Logger
+	logger    *modules.Logger
 	logPrefix string
 
 	stateSync state_sync.StateSyncModule
 
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
-}
-
-// Functions exposed by the debug interface should only be used for testing puposes.
-type ConsensusDebugModule interface {
-	SetHeight(uint64)
-	SetRound(uint64)
-	// REFACTOR: This should accept typesCons.HotstuffStep.
-	SetStep(uint8)
-	SetBlock(*coreTypes.Block)
-	SetLeaderId(*typesCons.NodeId)
-	SetUtilityContext(modules.UtilityContext)
-}
-
-func (m *consensusModule) SetHeight(height uint64) {
-	m.height = height
-	m.publishNewHeightEvent(height)
-}
-
-func (m *consensusModule) SetRound(round uint64) {
-	m.round = round
-}
-
-func (m *consensusModule) SetStep(step uint8) {
-	m.step = typesCons.HotstuffStep(step)
-}
-
-func (m *consensusModule) SetBlock(block *coreTypes.Block) {
-	m.block = block
-}
-
-func (m *consensusModule) SetLeaderId(leaderId *typesCons.NodeId) {
-	m.leaderId = leaderId
-}
-
-func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
-	m.utilityContext = utilityContext
 }
 
 // Implementations of the ConsensusStateSync interface
@@ -130,13 +93,6 @@ func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error
 
 func (m *consensusModule) GetNodeAddress() string {
 	return m.nodeAddress
-}
-
-// Implementations of the type PaceMakerAccessModule interface
-// SetHeight, SeetRound, SetStep are implemented for ConsensusDebugModule
-func (m *consensusModule) ClearLeaderMessagesPool() {
-	m.clearLeader()
-	m.clearMessagesPool()
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -279,7 +235,7 @@ func (*consensusModule) ValidateGenesis(gen *genesis.GenesisState) error {
 	// Sort the validators by their generic param (i.e. service URL)
 	vals := gen.GetValidators()
 	sort.Slice(vals, func(i, j int) bool {
-		return vals[i].GetGenericParam() < vals[j].GetGenericParam()
+		return vals[i].GetServiceUrl() < vals[j].GetServiceUrl()
 	})
 
 	// Sort the validators by their address

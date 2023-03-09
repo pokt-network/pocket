@@ -22,12 +22,12 @@ import (
 const cliPath = "/usr/local/bin/client"
 
 var (
-	rpcUrl string
+	rpcURL string
 	logger = pocketLogger.Global.CreateLoggerForModule("cluster-manager")
 )
 
 func init() {
-	rpcUrl = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "v1-validator001"), defaults.DefaultRPCPort)
+	rpcURL = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "v1-validator001"), defaults.DefaultRPCPort)
 }
 
 func main() {
@@ -67,7 +67,8 @@ func main() {
 		case watch.Added:
 			logger.Info().Str("validator", service.Name).Msg("Validator added to the cluster")
 			// TODO: consolidate args into constants
-			if err := stakeValidator(privateKey, "150000000001", []string{"0001"}, fmt.Sprintf("v1-validator%s:8080", validatorId)); err != nil {
+			validatorServiceUrl := fmt.Sprintf("v1-validator%s:%d", validatorId, defaults.DefaultP2PPort)
+			if err := stakeValidator(privateKey, "150000000001", []string{"0001"}, validatorServiceUrl); err != nil {
 				logger.Err(err).Msg("Error staking validator")
 			}
 		case watch.Deleted:
@@ -87,7 +88,7 @@ func stakeValidator(pk crypto.PrivateKey, amount string, chains []string, servic
 
 	args := []string{
 		"--non_interactive=true",
-		"--remote_cli_url=" + rpcUrl,
+		"--remote_cli_url=" + rpcURL,
 		"Validator",
 		"Stake",
 		pk.Address().String(),
@@ -114,7 +115,7 @@ func unstakeValidator(pk crypto.PrivateKey) error {
 
 	args := []string{
 		"--non_interactive=true",
-		"--remote_cli_url=" + rpcUrl,
+		"--remote_cli_url=" + rpcURL,
 		"Validator",
 		"Unstake",
 		pk.Address().String(),

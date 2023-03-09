@@ -11,27 +11,6 @@ import (
 	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 )
 
-// IMPROVE(team): Move this into a proto enum. We are not using `iota` for the time being
-// for the purpose of being explicit: https://github.com/pokt-network/pocket/pull/140#discussion_r939731342
-// TODO: Consolidate with proto enum in the utility module
-const (
-	UndefinedStakingStatus = int32(0)
-	UnstakingStatus        = int32(1)
-	StakedStatus           = int32(2)
-	UnstakedStatus         = int32(3)
-)
-
-func UnstakingHeightToStatus(unstakingHeight int64) int32 {
-	switch unstakingHeight {
-	case -1:
-		return StakedStatus
-	case 0:
-		return UnstakedStatus
-	default:
-		return UnstakingStatus
-	}
-}
-
 func (p *PostgresContext) GetExists(actorSchema types.ProtocolActorSchema, address []byte, height int64) (exists bool, err error) {
 	ctx, tx := p.getCtxAndTx()
 
@@ -94,7 +73,7 @@ func (p *PostgresContext) getActorFromRow(actorType coreTypes.ActorType, row pgx
 		&actor.Address,
 		&actor.PublicKey,
 		&actor.StakedAmount,
-		&actor.GenericParam,
+		&actor.ServiceUrl,
 		&actor.Output,
 		&actor.PausedHeight,
 		&actor.UnstakingHeight,
@@ -143,7 +122,7 @@ func (p *PostgresContext) InsertActor(actorSchema types.ProtocolActorSchema, act
 	}
 
 	_, err = tx.Exec(ctx, actorSchema.InsertQuery(
-		actor.Address, actor.PublicKey, actor.StakedAmount, actor.GenericParam,
+		actor.Address, actor.PublicKey, actor.StakedAmount, actor.ServiceUrl,
 		actor.Output, actor.PausedHeight, actor.UnstakingHeight, actor.Chains,
 		height))
 	return err
@@ -157,7 +136,7 @@ func (p *PostgresContext) UpdateActor(actorSchema types.ProtocolActorSchema, act
 		return err
 	}
 
-	if _, err = tx.Exec(ctx, actorSchema.UpdateQuery(actor.Address, actor.StakedAmount, actor.GenericParam, height)); err != nil {
+	if _, err = tx.Exec(ctx, actorSchema.UpdateQuery(actor.Address, actor.StakedAmount, actor.ServiceUrl, height)); err != nil {
 		return err
 	}
 
@@ -198,16 +177,16 @@ func (p *PostgresContext) GetActorStatus(actorSchema types.ProtocolActorSchema, 
 	ctx, tx := p.getCtxAndTx()
 
 	if err := tx.QueryRow(ctx, actorSchema.GetUnstakingHeightQuery(hex.EncodeToString(address), height)).Scan(&unstakingHeight); err != nil {
-		return UndefinedStakingStatus, err
+		return int32(coreTypes.StakeStatus_UnknownStatus), err
 	}
 
 	switch {
 	case unstakingHeight == -1:
-		return StakedStatus, nil
+		return int32(coreTypes.StakeStatus_Staked), nil
 	case unstakingHeight > height:
-		return UnstakingStatus, nil
+		return int32(coreTypes.StakeStatus_Unstaking), nil
 	default:
-		return UnstakedStatus, nil
+		return int32(coreTypes.StakeStatus_Unstaked), nil
 	}
 }
 

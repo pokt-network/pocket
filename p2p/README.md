@@ -14,7 +14,6 @@ This document is meant to be a supplement to the living specification of [1.0 Po
   - [RainTree testing framework](#raintree-testing-framework)
     - [Helpers](#helpers)
     - [Test Generators](#test-generators)
-    - [Considerations](#considerations)
 
 ## Interface
 
@@ -119,10 +118,5 @@ Given a specific `originatorNode` which initiates the broadcast, the `testRainTr
 The [rain-tree-simulator](https://github.com/pokt-network/rain-tree-sim/blob/main/python) library contains an example Golang implementation and a Python implementation of RainTree simulators.
 
 You can read the documentation in the [python simulator](https://github.com/pokt-network/rain-tree-sim/blob/main/python) on how it can be used to generate the unit tests found in `module_raintree_test.go`.
-
-#### Considerations
-
-- **Deterministic Private Key Generation**: Since RainTree is dependant on the lexicographic order of the addresses, the generation of the private keys (and in turn the public keys and addresses) is important and cannot be randomized for the time being.
-- **Variable Coupling**:There is an implicit coupling between `validatorId`, `serviceUrl` and `genericParam` that requires understanding of the codebase. Reach out to @olshansk or @andrewnguyen22 for clarity on this.
 
 <!-- GITHUB_WIKI: p2p/readme -->

@@ -26,17 +26,25 @@ var (
 type persistenceModule struct {
 	base_modules.IntegratableModule
 
+	logger *modules.Logger
+
 	config       *configs.PersistenceConfig
 	genesisState *genesis.GenesisState
 
+	// A key-value store mapping heights to blocks. Needed for block synchronization.
 	blockStore kvstore.KVStore
-	txIndexer  indexer.TxIndexer
+
+	// A tx indexer (i.e. key-value store) mapping transaction hashes to transactions. Needed for
+	// avoiding tx replays attacks, and is also used as the backing database for the transaction
+	// tx merkle tree.
+	txIndexer indexer.TxIndexer
+
+	// A list of all the merkle trees maintained by the persistence module that roll up into the state commitment.
 	stateTrees *stateTrees
 
-	logger modules.Logger
-
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
-	writeContext *PostgresContext // only one write context is allowed at a time
+	// only one write context is allowed at a time
+	writeContext *PostgresContext
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -47,6 +55,12 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 	m := &persistenceModule{
 		writeContext: nil,
 	}
+
+	// TECHDEBT: move to `persistenceModule#Start` as per documentation.
+	// Temporarily moving this here as long as there are references to
+	// the logger in methods which are called by `#Create` (i.e.
+	// `persistenceModule#populateGenesisState`, `postgresContext#Commit`)
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
 	for _, option := range options {
 		option(m)
@@ -109,8 +123,6 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 }
 
 func (m *persistenceModule) Start() error {
-	m.logger.Info().Msg("Starting module...")
-	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 	return nil
 }
 
@@ -133,7 +145,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	tx, err := conn.BeginTx(context.TODO(), pgx.TxOptions{
 		IsoLevel:       pgx.ReadUncommitted,
 		AccessMode:     pgx.ReadWrite,
-		DeferrableMode: pgx.Deferrable, // TODO(andrew): Research if this should be `Deferrable`
+		DeferrableMode: pgx.Deferrable, // INVESTIGATE: Research if this should be `Deferrable`
 	})
 	if err != nil {
 		return nil, err
@@ -164,7 +176,7 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	tx, err := conn.BeginTx(context.TODO(), pgx.TxOptions{
 		IsoLevel:       pgx.ReadCommitted,
 		AccessMode:     pgx.ReadOnly,
-		DeferrableMode: pgx.NotDeferrable, // TODO(andrew): Research if this should be `Deferrable`
+		DeferrableMode: pgx.NotDeferrable, // INVESTIGATE: Research if this should be `Deferrable`
 	})
 	if err != nil {
 		return nil, err

@@ -101,7 +101,7 @@ Each module should have its own logger to appropriately namespace the logs.
 
 ```golang
 type sweetModule struct {
-    logger    modules.Logger
+    logger    *modules.Logger
 }
 
 func (m *sweetModule) DoSomething() {
@@ -119,7 +119,7 @@ Please initiate loggers in the `Start` method of the module, like this:
 
 ```golang
 type sweetModule struct {
-    logger    modules.Logger
+    logger    *modules.Logger
 }
 
 func (m *sweetModule) Start() error {

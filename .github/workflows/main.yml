@@ -55,7 +55,7 @@ jobs:
         # Not utilizing makefile target here to make use of pipefail bash feature.
         run: |
           set -euo pipefail
-          go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out 2>&1 | tee test_results.json
+          GODEBUG=netdns=cgo go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out 2>&1 | tee test_results.json
       - name: Sanitize test results
         # We're utilizing `tee` above which can capture non-json stdout output so we need to remove non-json lines before additional parsing and submitting it to the external github action.
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
@@ -63,7 +63,7 @@ jobs:
       - name: Output test failures
         # Makes it easier to find failed tests so no need to scroll through the whole log.
         if: ${{ failure() && env.TARGET_GOLANG_VERSION == matrix.go }}
-        run: cat test_results.json | jq 'select(.Action == "fail")'
+        run: jq --argjson fail_tests "$(jq -c -r 'select(.Action == "fail") | select(.Test) | .Test' test_results.json | jq -R -s -c -r 'split("\n") | map(select(length>0))')" 'select(.Test as $t | ($fail_tests | arrays)[] | select($t == .)) | select(.Output) | .Output' test_results.json | jq -r | sed ':a;N;$!ba;s/\n\n/\n/g'
       - name: Upload test results
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: actions/upload-artifact@v3

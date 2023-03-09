@@ -18,7 +18,6 @@ type loggerModule struct {
 	base_modules.InterruptableModule
 
 	zerolog.Logger
-	bus    modules.Bus
 	config *configs.LoggerConfig
 }
 
@@ -57,8 +56,10 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 	return new(loggerModule).Create(bus, options...)
 }
 
-func (*loggerModule) CreateLoggerForModule(moduleName string) modules.Logger {
-	return Global.Logger.With().Str("module", moduleName).Logger()
+// CreateLoggerForModule implements the respective `modules.Logger` interface member.
+func (*loggerModule) CreateLoggerForModule(moduleName string) *modules.Logger {
+	logger := Global.Logger.With().Str("module", moduleName).Logger()
+	return &logger
 }
 
 func (*loggerModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -98,7 +99,7 @@ func (*loggerModule) Create(bus modules.Bus, options ...modules.ModuleOption) (m
 }
 
 func (m *loggerModule) Start() error {
-	Global.Logger = m.CreateLoggerForModule("global")
+	Global.Logger = *m.CreateLoggerForModule("global")
 	return nil
 }
 

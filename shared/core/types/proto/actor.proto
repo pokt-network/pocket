@@ -12,12 +12,22 @@ enum ActorType {
   ACTOR_TYPE_VAL = 4;
 }
 
+enum StakeStatus {
+  UnknownStatus = 0;
+  Unstaking = 1;
+  Staked = 2;
+  Unstaked = 3;
+}
+
+// TODO(#555): Investigate ways of having actor specific params that are not part of the shared struct.
 message Actor {
   ActorType actor_type = 1;
   string address = 2;
   string public_key = 3;
-  repeated string chains = 4;
-  string generic_param = 5; // TODO(#313): Generalize `GenericParam` to a different name
+  repeated string chains = 4; // Not applicable to `Validator` actors
+  // proto-gen-c does not support `go_name` at the time of writing resulting
+  // in the output go field being snakeCase: ServiceUrl (https://github.com/golang/protobuf/issues/555)
+  string service_url = 5; // Not applicable to `Application` actors
   string staked_amount = 6;
   int64 paused_height = 7;
   int64 unstaking_height = 8;

@@ -1,18 +1,17 @@
 package debug
 
 import (
-	"errors"
 	"fmt"
-	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	r "runtime"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
+	"github.com/pokt-network/pocket/shared/utils"
 	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -34,12 +33,13 @@ var (
 func init() {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("[ERROR] Cannot find user home directory: %s", err.Error())
+		logger.Global.Fatal().Err(err).Msg("Cannot find user home directory")
 	}
 	debugKeybasePath = homeDir + debugKeybaseSuffix
 
-	if err := initializeDebugKeybase(); err != nil { // Initialise the debug keybase with the 999 validators
-		log.Fatalf("[ERROR] Cannot initialise the keybase with the validator keys: %s", err.Error())
+	// Initialise the debug keybase with the 999 validators
+	if err := initializeDebugKeybase(); err != nil {
+		logger.Global.Fatal().Err(err).Msg("Cannot initialise the keybase with the validator keys")
 	}
 }
 
@@ -133,7 +133,7 @@ func fetchValidatorPrivateKeysFromFile() (map[string]string, error) {
 	_, current, _, _ := r.Caller(0)
 	//nolint:gocritic // Use path to find private-keys yaml file from being called in any location in the repo
 	yamlFile := filepath.Join(current, privateKeysYamlFile)
-	if exists, err := fileExists(yamlFile); !exists || err != nil {
+	if exists, err := utils.FileExists(yamlFile); !exists || err != nil {
 		return nil, fmt.Errorf("unable to find YAML file: %s", yamlFile)
 	}
 
@@ -158,16 +158,4 @@ func fetchValidatorPrivateKeysFromFile() (map[string]string, error) {
 		validatorKeysMap[id] = privHexString
 	}
 	return validatorKeysMap, nil
-}
-
-// Check file at the given path exists
-func fileExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-	if errors.Is(err, fs.ErrNotExist) {
-		return false, nil
-	}
-	return false, err
 }

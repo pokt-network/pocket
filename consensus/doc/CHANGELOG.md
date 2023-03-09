@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.36] - 2023-02-28
+
+- Creating a persistence read context when needing to accessing stateless (i.e. block hash) data
+- Renamed package names and parameters to reflect changes in the rest of the codebase
+- Removed the unused `validator.proto`
+
+## [0.0.0.35] - 2023-02-28
+
+- Fixed bug in `sendGetMetadataStateSyncMessage`
+
+## [0.0.0.34] - 2023-02-24
+
+- Fixed `TestPacemakerCatchupSameStepDifferentRounds` test
+
+## [0.0.0.33] - 2023-02-24
+
+- Update logger value references with pointers
+
+## [0.0.0.32] - 2023-02-22
+
+- Move functions exposed by ConsensusDebugModule to debugging.go
+
 ## [0.0.0.31] - 2023-02-21
 
 - Rename ServiceNode Actor Type Name to Servicer

@@ -2,6 +2,7 @@ package shared
 
 import (
 	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/libp2p"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
@@ -33,6 +34,13 @@ func CreateNode(bus modules.Bus, options ...modules.ModuleOption) (modules.Modul
 }
 
 func (m *Node) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	// TECHDEBT: simplify after P2P module consolidation.
+	useLibP2P := bus.GetRuntimeMgr().GetConfig().UseLibP2P
+	p2pCreate := p2p.Create
+	if useLibP2P {
+		p2pCreate = libp2p.Create
+	}
+
 	for _, mod := range []func(modules.Bus, ...modules.ModuleOption) (modules.Module, error){
 		state_machine.Create,
 		persistence.Create,
@@ -41,7 +49,7 @@ func (m *Node) Create(bus modules.Bus, options ...modules.ModuleOption) (modules
 		telemetry.Create,
 		logger.Create,
 		rpc.Create,
-		p2p.Create,
+		p2pCreate,
 	} {
 		if _, err := mod(bus); err != nil {
 			return nil, err
@@ -126,6 +134,8 @@ func (m *Node) GetBus() modules.Bus {
 	return m.bus
 }
 
+// TECHDEBT: The `shared` package has dependencies on types in the individual modules.
+// TODO: Move all message types this is dependant on to the `messaging` package
 func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	contentType := message.GetContentType()
 	switch contentType {
@@ -138,8 +148,8 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 	case consensus.StateSyncMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
-	case utility.TransactionGossipMessageContentType:
-		return node.GetBus().GetUtilityModule().HandleMessage(message.Content)
+	case messaging.TxGossipMessageContentType:
+		return node.GetBus().GetUtilityModule().HandleUtilityMessage(message.Content)
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
 	case messaging.ConsensusNewHeightEventType, messaging.StateMachineTransitionEventType:

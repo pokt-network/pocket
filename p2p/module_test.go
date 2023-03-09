@@ -83,7 +83,7 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 		{
 			name: "negative port number yields an error and empty list of bootstrap nodes",
 			args: args{
-				initialBootstrapNodesCsv: "udp://somenode:-8080",
+				initialBootstrapNodesCsv: "udp://somenode:-42069",
 			},
 			wantBootstrapNodes: []string(nil),
 			wantErr:            true,
