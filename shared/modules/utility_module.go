@@ -39,6 +39,7 @@ type UtilityModule interface {
 //           `GetProposalBlock` and `ApplyProposalBlock` functions
 
 // The context within which the node can operate with the utility layer.
+// TODO: @deblasis - deprecate this
 type UtilityContext interface {
 	// SetProposalBlock updates the utility context with the proposed state transition.
 	// It does not apply, validate or commit the changes.
