@@ -10,7 +10,6 @@ import (
 
 	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/pocket/utility/types"
-	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 // Accounts specific functionality
@@ -18,11 +17,11 @@ import (
 func (u *utilityContext) getAccountAmount(address []byte) (*big.Int, types.Error) {
 	amountStr, err := u.store.GetAccountAmount(address, u.height)
 	if err != nil {
-		return nil, typesUtil.ErrGetAccountAmount(err)
+		return nil, types.ErrGetAccountAmount(err)
 	}
 	amount, err := utils.StringToBigInt(amountStr)
 	if err != nil {
-		return nil, typesUtil.ErrStringToBigInt(err)
+		return nil, types.ErrStringToBigInt(err)
 	}
 	return amount, nil
 }
