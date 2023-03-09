@@ -8,7 +8,7 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 
-	"github.com/pokt-network/pocket/libp2p/protocol"
+	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
