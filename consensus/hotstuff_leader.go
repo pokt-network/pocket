@@ -1,10 +1,13 @@
 package consensus
 
 import (
+	"errors"
+
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // CONSOLIDATE: Last/Prev & AppHash/StateHash/BlockHash
@@ -48,9 +51,9 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		},
 	).Msg("📬 Received enough 📬 votes")
 
-	// Clear the previous utility context, if it exists, and create a new one
-	if err := m.refreshUtilityContext(); err != nil {
-		m.logger.Error().Err(err).Msg("Could not refresh utility context")
+	// Clear the previous utility unitOfWork, if it exists, and create a new one
+	if err := m.refreshUtilityUnitOfWork(); err != nil {
+		m.logger.Error().Err(err).Msg("Could not refresh utility unitOfWork")
 		return
 	}
 
@@ -62,7 +65,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
 	// TODO: Add more unit tests for these checks...
 	if m.shouldPrepareNewBlock(highPrepareQC) {
-		block, err := m.prepareAndApplyBlock(highPrepareQC)
+		block, err := m.prepareBlock(highPrepareQC)
 		if err != nil {
 			m.logger.Error().Err(err).Msg(typesCons.ErrPrepareBlock.Error())
 			m.paceMaker.InterruptRound("failed to prepare & apply block")
@@ -72,12 +75,13 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	} else {
 		// Leader acts like a replica if `prepareQC` is not `nil`
 		// TODO: Do we need to call `validateProposal` here similar to how replicas does it
-		if err := m.applyBlock(highPrepareQC.Block); err != nil {
-			m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())
-			m.paceMaker.InterruptRound("failed to apply block")
-			return
-		}
 		m.block = highPrepareQC.Block
+	}
+
+	if err := m.applyBlock(m.block); err != nil {
+		m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())
+		m.paceMaker.InterruptRound("failed to apply block")
+		return
 	}
 
 	m.step = Prepare
@@ -372,17 +376,20 @@ func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) e
 
 // This is a helper function intended to be called by a leader/validator during a view change
 // to prepare a new block that is applied to the new underlying context.
-// TODO: Split this into atomic & functional `prepareBlock` and `applyBlock` methods
-func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) (*coreTypes.Block, error) {
+func (m *consensusModule) prepareBlock(qc *typesCons.QuorumCertificate) (*coreTypes.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
 
 	maxTxBytes := int(m.consCfg.MaxMempoolBytes)
 
+	leaderUow, ok := m.utilityUnitOfWork.(modules.LeaderUtilityUnitOfWork)
+	if !ok {
+		return nil, errors.New("invalid utility unitOfWork, should be of type LeaderUtilityUnitOfWork")
+	}
 
 	// Reap the mempool for transactions to be applied in this block
-	stateHash, txs, err := m.utilityContext.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
+	stateHash, txs, err := leaderUow.CreateProposalBlock(m.privateKey.Address(), maxTxBytes, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -417,7 +424,7 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	}
 
 	// Set the proposal block in the persistence context
-	if err := m.utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err := m.utilityUnitOfWork.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return nil, err
 	}
 
