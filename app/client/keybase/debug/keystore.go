@@ -3,13 +3,15 @@ package debug
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	r "runtime"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
-	"github.com/pokt-network/pocket/build"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
+	"github.com/pokt-network/pocket/shared/utils"
 	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -17,8 +19,9 @@ import (
 
 const (
 	// NOTE: This is the number of validators in the private-keys.yaml manifest file
-	numValidators      = 999
-	debugKeybaseSuffix = "/.pocket/keys"
+	numValidators       = 999
+	debugKeybaseSuffix  = "/.pocket/keys"
+	privateKeysYamlFile = "../../../../../build/localnet/manifests/private-keys.yaml"
 )
 
 var (
@@ -128,8 +131,20 @@ func fetchValidatorPrivateKeysFromK8S() (map[string]string, error) {
 }
 
 func fetchValidatorPrivateKeysFromFile() (map[string]string, error) {
+	// BUG: When running the CLI using the build binary (i.e. `p1`), it searched for the private-keys.yaml file in `github.com/pokt-network/pocket/build/localnet/manifests/private-keys.yaml`
+	// Get private keys from manifest file
+	_, current, _, _ := r.Caller(0)
+	//nolint:gocritic // Use path to find private-keys yaml file from being called in any location in the repo
+	yamlFile := filepath.Join(current, privateKeysYamlFile)
+	if exists, err := utils.FileExists(yamlFile); !exists || err != nil {
+		return nil, fmt.Errorf("unable to find YAML file: %s", yamlFile)
+	}
 
 	// Parse the YAML file and load into the config struct
+	yamlData, err := os.ReadFile(yamlFile)
+	if err != nil {
+		return nil, err
+	}
 	var config struct {
 		ApiVersion string            `yaml:"apiVersion"`
 		Kind       string            `yaml:"kind"`
@@ -137,7 +152,7 @@ func fetchValidatorPrivateKeysFromFile() (map[string]string, error) {
 		Type       string            `yaml:"type"`
 		StringData map[string]string `yaml:"stringData"`
 	}
-	if err := yaml.Unmarshal(build.PrivateKeysFile, &config); err != nil {
+	if err := yaml.Unmarshal(yamlData, &config); err != nil {
 		return nil, err
 	}
 	validatorKeysMap := make(map[string]string)
