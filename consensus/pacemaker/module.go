@@ -243,7 +243,7 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	consensusMod := m.GetBus().GetConsensusModule()
 	consensusMod.SetStep(uint8(newRound))
 	consensusMod.ResetRound()
-	if err := consensusMod.ReleaseUtilityContext(); err != nil {
+	if err := consensusMod.ReleaseUtilityUnitOfWork(); err != nil {
 		log.Println("[WARN] NewHeight: Failed to release utility context: ", err)
 		return
 	}
