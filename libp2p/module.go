@@ -34,8 +34,8 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pokt-network/pocket/libp2p/network"
-	"github.com/pokt-network/pocket/libp2p/protocol"
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/p2p/protocol"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
