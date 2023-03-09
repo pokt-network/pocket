@@ -378,8 +378,8 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
 
-	// TECHDEBT: Retrieve this from consensus consensus config
-	maxTxBytes := 90000
+	maxTxBytes := int(m.consCfg.MaxMempoolBytes)
+
 
 	// Reap the mempool for transactions to be applied in this block
 	stateHash, txs, err := m.utilityContext.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
