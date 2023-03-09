@@ -355,11 +355,6 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 		address, valAddrToIdMap[address], msg, pubKey)
 }
 
-// TODO(#388): Utilize the shared mempool implementation for consensus messages.
-//
-//	It doesn't actually work because SizeOf returns the size of the map pointer,
-//	and does not recursively determine the size of all the underlying elements
-//	Add proper tests and implementation once the mempool is implemented.
 func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) error {
 	if m.consCfg.MaxMempoolBytes < uint64(m.hotstuffMempool[typesCons.HotstuffStep(msg.Type)].TotalMsgBytes()) {
 		m.logger.Error().Err(typesCons.ErrConsensusMempoolFull).Msg(typesCons.DisregardHotstuffMessage)
