@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.38] - 2023-02-22
+## [0.0.0.38] - 2023-03-09
 
 - Added `SAVEPOINTS_ROLLBACKS.md` design document
 
