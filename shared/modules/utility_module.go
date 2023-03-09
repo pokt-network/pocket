@@ -17,7 +17,11 @@ type UtilityModule interface {
 	Module
 
 	// NewContext creates a `utilityContext` with an underlying read-write `persistenceContext` (only 1 of which can exist at a time)
+	// TODO - @deblasis - deprecate this
 	NewContext(height int64) (UtilityContext, error)
+
+	// NewUnitOfWork creates a `utilityUnitOfWork` used to allow atomicity and commit/rollback functionality (https://martinfowler.com/eaaCatalog/unitOfWork.html)
+	NewUnitOfWork(height int64) (UtilityUnitOfWork, error)
 
 	// HandleTransaction does basic `Transaction` validation & adds it to the utility's module mempool if valid
 	HandleTransaction(tx []byte) error
