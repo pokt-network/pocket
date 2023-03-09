@@ -85,5 +85,5 @@ type ConsensusDebugModule interface {
 	// REFACTOR: This should accept typesCons.HotstuffStep.
 	SetStep(uint8)
 	SetBlock(*types.Block)
-	SetUtilityContext(UtilityContext)
+	SetUtilityUnitOfWork(UtilityUnitOfWork)
 }
