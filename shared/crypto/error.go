@@ -14,6 +14,7 @@ const (
 	CreatePrivateKeyError         = "an error occurred creating the private key"
 	InvalidPublicKeyLenError      = "the public key length is not valid"
 	CreatePublicKeyError          = "an error occurred creating the public key"
+	decodePrivateKeyError         = "decoding private key"
 )
 
 func ErrInvalidAddressLen(length int) error {
@@ -46,4 +47,8 @@ func ErrInvalidPublicKeyLen(length int) error {
 
 func ErrCreatePublicKey(err error) error {
 	return fmt.Errorf("%s; %s", CreatePublicKeyError, err.Error())
+}
+
+func errDecodePrivateKey(err error) error {
+	return fmt.Errorf("%s; %w", decodePrivateKeyError, err)
 }

@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.21] - 2023-03-01
+## [0.0.0.22] - 2023-03-08
 
 - Introduces private key yaml file go:embed for debug keybase
+
+## [0.0.0.21] - 2023-03-02
+
+- added HOME environment variable to image build to fix tilt installation
 
 ## [0.0.0.20] - 2023-03-01
 

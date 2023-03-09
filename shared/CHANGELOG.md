@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.37] - 2023-02-28
+## [0.0.0.39] - 2023-03-08
 
-- Add MarshalJSON and UnmarshalJSON to KeyPair interface
+- Add UnmarshalJSON to KeyPair to unmarshal public key correctly
+
+## [0.0.0.38] - 2023-03-03
+
+- Support libp2p module in node
+
+## [0.0.0.37] - 2023-03-01
+
+- add pokt --> libp2p crypto helpers
 
 ## [0.0.0.36] - 2023-02-28
 
