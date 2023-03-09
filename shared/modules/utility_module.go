@@ -71,3 +71,26 @@ type UnstakingActor interface {
 	GetAddress() []byte
 	GetOutputAddress() []byte
 }
+
+type UtilityUnitOfWork interface {
+	IntegratableModule
+
+	// SetProposalBlock updates the utility context with the proposed state transition.
+	// It does not apply, validate or commit the changes.
+	// For example, it can be use during state sync to set a proposed state transition before validation.
+	// TODO: Investigate a way to potentially simplify the interface by removing this function.
+	// TODO: @deblasis: there's still some mix and match between blockHash and stateHash
+	SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error
+
+	// ApplyBlock applies the context's in-memory proposed state (i.e. the txs in this context).
+	// Only intended to be used by the block verifiers (i.e. replicas).
+	// NOTE: this is called by the replica OR by the leader when `prepareQc` is not `nil`
+	ApplyBlock(beforeApplyBlock, afterApplyBlock func(UtilityUnitOfWork) error) (stateHash string, txs [][]byte, err error)
+
+	// Release releases this utility context and any underlying contexts it references
+	Release() error
+
+	// Commit commits this utility context along with any underlying contexts (e.g. persistenceContext) it references
+	Commit(quorumCert []byte) error
+}
+
