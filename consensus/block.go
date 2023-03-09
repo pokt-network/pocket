@@ -10,7 +10,7 @@ import (
 
 func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 	// Commit the context
-	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
+	if err := m.utilityUnitOfWork.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
 
@@ -22,12 +22,7 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 			}).
 		Msg("🧱🧱🧱 Committing block 🧱🧱🧱")
 
-	// Release the context
-	if err := m.utilityContext.Release(); err != nil {
-		m.logger.Warn().Err(err).Msg("Error releasing utility context")
-	}
-
-	m.utilityContext = nil
+	m.utilityUnitOfWork = nil
 
 	return nil
 }
@@ -71,16 +66,16 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 	return true, nil
 }
 
-// Creates a new Utility context and clears/nullifies any previous contexts if they exist
-func (m *consensusModule) refreshUtilityContext() error {
+// Creates a new Utility Unit Of Work and clears/nullifies any previous U.O.W. if they exist
+func (m *consensusModule) refreshUtilityUnitOfWork() error {
 	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
 	// Ideally, this should not be called.
-	if m.utilityContext != nil {
+	if m.utilityUnitOfWork != nil {
 		m.logger.Warn().Msg(typesCons.NilUtilityContextWarning)
-		if err := m.utilityContext.Release(); err != nil {
+		if err := m.utilityUnitOfWork.Release(); err != nil {
 			m.logger.Warn().Err(err).Msg("Error releasing utility context")
 		}
-		m.utilityContext = nil
+		m.utilityUnitOfWork = nil
 	}
 
 	// Only one write context can exist at a time, and the utility context needs to instantiate
@@ -89,11 +84,11 @@ func (m *consensusModule) refreshUtilityContext() error {
 		m.logger.Warn().Err(err).Msg("Error releasing persistence write context")
 	}
 
-	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.height))
+	utilityUow, err := m.GetBus().GetUtilityModule().NewUnitOfWork(int64(m.height))
 	if err != nil {
 		return err
 	}
 
-	m.utilityContext = utilityContext
+	m.utilityUnitOfWork = utilityUow
 	return nil
 }
