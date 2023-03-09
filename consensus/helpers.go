@@ -229,7 +229,6 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 
 /*** Persistence Helpers ***/
 
-// TECHDEBT(#388): Integrate this with the `persistence` module or a real mempool.
 func (m *consensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
 		m.hotstuffMempool[step].Clear()
