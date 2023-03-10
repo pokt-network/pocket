@@ -58,7 +58,8 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 
 	case coreTypes.StateMachineState_Consensus_Pacemaker:
 		return m.HandlePacemaker(msg)
-	default:
+
+		default:
 		m.logger.Warn().Msg("Consensus module not handling this event")
 
 	}
