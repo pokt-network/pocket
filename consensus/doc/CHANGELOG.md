@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.37] - 2023-03-10
+
+- Add helper function `logHelper()` for logging
+
 ## [0.0.0.36] - 2023-02-28
 
 - Creating a persistence read context when needing to accessing stateless (i.e. block hash) data

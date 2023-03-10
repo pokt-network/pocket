@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.39] - 2023-03-09
+## [0.0.0.39] - 2023-03-10
 
-- Add `EventToMap()` helper function for logging
+- Add `TransitionEventToMap()` helper function for logging
 
 ## [0.0.0.38] - 2023-03-03
 
