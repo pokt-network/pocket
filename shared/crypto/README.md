@@ -113,6 +113,28 @@ The keys are generated using the BIP-44 path `m/44'/635'/%d'` where `%d` is the 
 Master key derivation is done as follows:
 ```mermaid
 flowchart LR
+    subgraph HMAC
+        direction TB
+        A["hmac = hmacNew(sha512, seedModifier)"]
+        B["hmac.Write(seed)"]
+        C["convertToBytes(hmac)"]
+        A-->B
+        B--hmac-->C
+    end
+    subgraph MASTER-KEY
+        direction LR
+        D["SecretKey: hmacBytes[:32]"]
+        E["ChainCode: hmacBytes[32:]"]
+        D --> KEY
+        E --> KEY
+    end
+    seed-->HMAC
+    HMAC--hmacBytes-->MASTER-KEY
+```
+
+Child keys are derived from their parents as follows:
+```mermaid
+flowchart LR
     subgraph HCHILD["HMAC-CHILD"]
         direction TB
         C["append(0x0, parent.SecretKey, bigEndian(index))"]
@@ -133,28 +155,6 @@ flowchart LR
     Index-->HCHILD
     Parent-->HCHILD
     HCHILD--hmacBytes-->CKEY
-```
-
-Child keys are derived from their parents as follows:
-```mermaid
-flowchart LR
-    subgraph HMAC
-        direction TB
-        A["hmac = hmacNew(sha512, seedModifier)"]
-        B["hmac.Write(seed)"]
-        C["convertToBytes(hmac)"]
-        A-->B
-        B--hmac-->C
-    end
-    subgraph MASTER-KEY
-        direction LR
-        D["SecretKey: hmacBytes[:32]"]
-        E["ChainCode: hmacBytes[32:]"]
-        D --> KEY
-        E --> KEY
-    end
-    seed-->HMAC
-    HMAC--hmacBytes-->MASTER-KEY
 ```
 
 <!-- GITHUB_WIKI: shared/crypto/readme -->
