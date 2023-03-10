@@ -130,9 +130,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 		if !isSynched {
 			err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
-			if err != nil {
-				return false, err
-			}
+			return false, err
 		}
 
 		return false, nil
