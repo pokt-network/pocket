@@ -88,6 +88,4 @@ type ConsensusDebugModule interface {
 	SetStep(uint8)
 	SetBlock(*types.Block)
 	SetUtilityContext(UtilityContext)
-
-	SetAggregatedMetadata(maxHeight, minHeight uint64, peerAddress string)
 }

@@ -19,18 +19,22 @@ type StateSyncModule interface {
 	StateSyncServerModule
 	DebugStateSync
 
+	// This functions are used for managing the Server mode of the node, which is handled independently from the FSM.
 	IsServerModEnabled() bool
 	EnableServerMode() error
 	DisableServerMode() error
 
+	// This functions contains the business logic on handling Block and Metadata responses.
 	HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error
 	HandleGetBlockResponse(*typesCons.GetBlockResponse) error
 
 	SendStateSyncMessage(msg *typesCons.StateSyncMessage, nodeAddress cryptoPocket.Address, height uint64) error
 
+	// Getter functions for the aggregated metadata and the metadata buffer, used by consensus module.
 	GetSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse
 	GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse
 
+	// Starts synching the node with the network by requesting blocks.
 	StartSynching() error
 }
 
@@ -146,6 +150,7 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 	clientPeerId := metaDataRes.PeerAddress
 	currentHeight := consensusMod.CurrentHeight()
 
+	// TODO (#571): update with logger helper function
 	fields := map[string]any{
 		"currentHeight": currentHeight,
 		"sender":        serverNodePeerId,
@@ -166,6 +171,7 @@ func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse)
 	serverNodePeerId := m.bus.GetConsensusModule().GetNodeAddress()
 	clientPeerId := blockRes.PeerAddress
 
+	// TODO (#571): update with logger helper function
 	fields := map[string]any{
 		"currentHeight": blockRes.Block.BlockHeader.Height,
 		"sender":        serverNodePeerId,

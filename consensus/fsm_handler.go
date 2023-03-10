@@ -36,6 +36,7 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Info().Msgf("Begin handling StateMachineTransitionEvent: %s", msg)
 
+	// TODO (#571): update with logger helper function
 	fsm_state := msg.NewState
 	m.logger.Debug().Fields(map[string]any{
 		"event":          msg.Event,
@@ -60,7 +61,7 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 		return m.HandlePacemaker(msg)
 
 	default:
-		m.logger.Warn().Msg("Consensus module not handling this event")
+		m.logger.Warn().Msgf("Consensus module not handling this event: %s", msg.Event)
 
 	}
 

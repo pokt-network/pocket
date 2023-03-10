@@ -13,6 +13,7 @@ import (
 //		requesting for metadata, via the periodicMetaDataSynch() function
 //	 	requesting for blocks, via the StartSynching() function
 func (m *stateSync) broadCastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, height uint64) error {
+	// TODO (#571): update with logger helper function
 	m.logger.Info().Fields(
 		map[string]any{
 			"height": height,
@@ -31,6 +32,7 @@ func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessag
 		return err
 	}
 
+	// TODO (#571): update with logger helper function
 	fields := map[string]any{
 		"height":     height,
 		"peerId":     peerId,
