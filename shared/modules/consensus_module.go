@@ -75,9 +75,10 @@ type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
 	IsSynched() (bool, error)
-	GetValidatorsAtHeight(uint64) ([]*types.Actor, error)
 }
 
+// This interface represents functions exposed by the Consensus module for mainly used for testing.
+// This interface is not intended to be used by any other module than testing in Consensus module.
 type ConsensusDebugModule interface {
 	HandleDebugMessage(*messaging.DebugMessage) error
 
@@ -88,5 +89,5 @@ type ConsensusDebugModule interface {
 	SetBlock(*types.Block)
 	SetUtilityContext(UtilityContext)
 
-	SetAggregatedMetadata(uint64, uint64, string)
+	SetAggregatedMetadata(maxHeight, minHeight uint64, peerAddress string)
 }

@@ -263,7 +263,7 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	msgToJustify := qcToHotstuffMessage(qc)
 	numValid := 0
 
-	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}

@@ -80,7 +80,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		pss = append(pss, msg.GetPartialSignature())
 	}
 
-	validators, err := m.GetValidatorsAtHeight(height)
+	validators, err := m.getValidatorsAtHeight(height)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signa
 }
 
 func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
-	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 		return
 	}
 
-	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
@@ -212,7 +212,7 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 		return
 	}
 
-	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
@@ -266,7 +266,7 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 	}
 	m.leaderId = &leaderId
 
-	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
@@ -305,7 +305,7 @@ func (m *consensusModule) setLogPrefix(logPrefix string) {
 	m.logger = logger.Global.CreateLoggerForModule("consensus")
 }
 
-func (m *consensusModule) GetValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
+func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
 	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err
@@ -316,7 +316,7 @@ func (m *consensusModule) GetValidatorsAtHeight(height uint64) ([]*coreTypes.Act
 }
 
 func (m *consensusModule) IsValidator() (bool, error) {
-	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return false, err
 	}
