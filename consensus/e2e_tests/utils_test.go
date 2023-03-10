@@ -16,6 +16,7 @@ import (
 	mocksPer "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared"
@@ -40,7 +41,6 @@ func TestMain(m *testing.M) {
 const (
 	numValidators = 4
 	stateHash     = "42"
-	maxTxBytes    = 500000000
 )
 
 var maxTxBytes = defaults.DefaultConsensusMaxMempoolBytes
@@ -104,14 +104,14 @@ func CreateTestConsensusPocketNode(
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
 	bus.RegisterModule(persistenceMock)
 
-	_, err := consensus.Create(bus)
+	consensusModule, err := consensus.Create(bus)
 	require.NoError(t, err)
 
 	runtimeMgr := (bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
 	p2pMock := baseP2PMock(t, eventsChannel)
-	utilityMock := baseUtilityMock(t, eventsChannel, runtimeMgr.GetGenesis())
+	utilityMock := baseUtilityMock(t, eventsChannel, runtimeMgr.GetGenesis(), consensusModule.(modules.ConsensusModule))
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
@@ -431,44 +431,71 @@ func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *mockModules
 }
 
 // Creates a utility module mock with mock implementations of some basic functionality
-func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesis.GenesisState) *mockModules.MockUtilityModule {
+func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesis.GenesisState, consensusMod modules.ConsensusModule) *mockModules.MockUtilityModule {
 	ctrl := gomock.NewController(t)
 	utilityMock := mockModules.NewMockUtilityModule(ctrl)
-	utilityContextMock := baseUtilityContextMock(t, genesisState)
-
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
 	utilityMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	utilityMock.EXPECT().
-		NewContext(gomock.Any()).
-		Return(utilityContextMock, nil).
+		NewUnitOfWork(gomock.Any()).
+		DoAndReturn(
+			// mimicking the behavior of the utility module's NewUnitOfWork method
+			func(height int64) (modules.UtilityUnitOfWork, error) {
+				if consensusMod.IsLeader() {
+					return baseLeaderUtilityUnitOfWorkMock(t, genesisState), nil
+				}
+				return baseReplicaUtilityUnitOfWorkMock(t, genesisState), nil
+			}).
 		MaxTimes(4)
 	utilityMock.EXPECT().GetModuleName().Return(modules.UtilityModuleName).AnyTimes()
 
 	return utilityMock
 }
 
-func baseUtilityContextMock(t *testing.T, genesisState *genesis.GenesisState) *mockModules.MockUtilityContext {
+func baseLeaderUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.GenesisState) *mockModules.MockLeaderUtilityUnitOfWork {
 	ctrl := gomock.NewController(t)
-	utilityContextMock := mockModules.NewMockUtilityContext(ctrl)
+	utilityLeaderUnitOfWorkMock := mockModules.NewMockLeaderUtilityUnitOfWork(ctrl)
+
 	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
 	persistenceContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
 	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 
-	utilityContextMock.EXPECT().
-		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).
+	utilityLeaderUnitOfWorkMock.EXPECT().
+		CreateProposalBlock(gomock.Any(), maxTxBytes, gomock.Any(), gomock.Any()). // TODO: @deblasis - review before/after
 		Return(stateHash, make([][]byte, 0), nil).
 		AnyTimes()
-	utilityContextMock.EXPECT().
-		ApplyBlock().
-		Return(stateHash, nil).
+	utilityLeaderUnitOfWorkMock.EXPECT().
+		ApplyBlock(gomock.Any(), gomock.Any()). // TODO: @deblasis - review before/after
+		Return(stateHash, make([][]byte, 0), nil).
 		AnyTimes()
-	utilityContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	utilityContextMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
-	utilityContextMock.EXPECT().Release().Return(nil).AnyTimes()
+	utilityLeaderUnitOfWorkMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	utilityLeaderUnitOfWorkMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
+	utilityLeaderUnitOfWorkMock.EXPECT().Release().Return(nil).AnyTimes()
 
 	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
 
-	return utilityContextMock
+	return utilityLeaderUnitOfWorkMock
+}
+
+func baseReplicaUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.GenesisState) *mockModules.MockReplicaUtilityUnitOfWork {
+	ctrl := gomock.NewController(t)
+	utilityReplicaUnitOfWorkMock := mockModules.NewMockReplicaUtilityUnitOfWork(ctrl)
+
+	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
+	persistenceContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
+
+	utilityReplicaUnitOfWorkMock.EXPECT().
+		ApplyBlock(gomock.Any(), gomock.Any()). // TODO: @deblasis - review before/after
+		Return(stateHash, make([][]byte, 0), nil).
+		AnyTimes()
+	utilityReplicaUnitOfWorkMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	utilityReplicaUnitOfWorkMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
+	utilityReplicaUnitOfWorkMock.EXPECT().Release().Return(nil).AnyTimes()
+
+	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
+
+	return utilityReplicaUnitOfWorkMock
 }
 
 func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockTelemetryModule {
