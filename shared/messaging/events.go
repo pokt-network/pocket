@@ -14,7 +14,6 @@ const (
 
 // Helper logger for state sync tranition events
 func EventToMap(stateSyncMsg *StateMachineTransitionEvent) map[string]any {
-
 	fields := map[string]any{
 		"previous_state": stateSyncMsg.PreviousState,
 		"new_state":      stateSyncMsg.NewState,
