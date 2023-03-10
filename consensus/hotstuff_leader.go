@@ -381,7 +381,7 @@ func (m *consensusModule) prepareBlock(qc *typesCons.QuorumCertificate) (*coreTy
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
 
-	maxTxBytes := int(m.consCfg.MaxMempoolBytes)
+	maxTxBytes := m.consCfg.MaxMempoolBytes
 
 	leaderUow, ok := m.utilityUnitOfWork.(modules.LeaderUtilityUnitOfWork)
 	if !ok {

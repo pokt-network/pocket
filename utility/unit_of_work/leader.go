@@ -24,7 +24,7 @@ func NewForLeader(height int64, readContext modules.PersistenceReadContext, rwPe
 	}
 }
 
-func (uow *leaderUtilityUnitOfWork) CreateProposalBlock(proposer []byte, maxTxBytes int, beforeApplyBlock, afterApplyBlock func(modules.UtilityUnitOfWork) error) (stateHash string, txs [][]byte, err error) {
+func (uow *leaderUtilityUnitOfWork) CreateProposalBlock(proposer []byte, maxTxBytes uint64, beforeApplyBlock, afterApplyBlock func(modules.UtilityUnitOfWork) error) (stateHash string, txs [][]byte, err error) {
 	if beforeApplyBlock != nil {
 		uow.logger.Debug().Msg("running beforeApplyBlock...")
 		if err := beforeApplyBlock(uow); err != nil {
