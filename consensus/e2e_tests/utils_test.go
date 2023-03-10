@@ -40,8 +40,10 @@ func TestMain(m *testing.M) {
 const (
 	numValidators = 4
 	stateHash     = "42"
-	maxTxBytes    = 90000
+	maxTxBytes    = 500000000
 )
+
+var maxTxBytes = defaults.DefaultConsensusMaxMempoolBytes
 
 type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
@@ -55,7 +57,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 	for i, config := range cfgs {
 		config.Consensus = &configs.ConsensusConfig{
 			PrivateKey:      config.PrivateKey,
-			MaxMempoolBytes: 500000000,
+			MaxMempoolBytes: maxTxBytes,
 			PacemakerConfig: &configs.PacemakerConfig{
 				TimeoutMsec:               5000,
 				Manual:                    false,
