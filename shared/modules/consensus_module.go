@@ -74,6 +74,8 @@ type ConsensusPacemaker interface {
 type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
+
+	// Compares the persisted state with the aggregated state of the network. If the persisted state is behind the network state, i.e. that node is not synched, it will return false.
 	IsSynched() (bool, error)
 }
 

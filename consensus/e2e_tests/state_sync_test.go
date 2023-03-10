@@ -284,7 +284,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	}
 
 	// Mock the unsynched node's periodic metadata sync
-	MockPeriodicMetaDataSynch(testHeight, 1)
+	MockPeriodicMetaDataSync(testHeight, 1)
 
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)
@@ -307,4 +307,12 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 			},
 			nodeState)
 	}
+}
+
+func TestStateSync_Unsynched4PeersSynchs_Success(t *testing.T) {
+	t.Skip()
+}
+
+func TestStateSync_UnsynchedPeerCatchsUpConsensus_Success(t *testing.T) {
+	t.Skip()
 }

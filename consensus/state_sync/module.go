@@ -31,8 +31,7 @@ type StateSyncModule interface {
 	SendStateSyncMessage(msg *typesCons.StateSyncMessage, nodeAddress cryptoPocket.Address, height uint64) error
 
 	// Getter functions for the aggregated metadata and the metadata buffer, used by consensus module.
-	GetSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse
-	GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse
+	GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse
 
 	// Starts synching the node with the network by requesting blocks.
 	StartSynching() error
@@ -91,8 +90,8 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 func (m *stateSync) Start() error {
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
-	// Node periodically checks if its up to date by requesting metadata from its peers as an external process with periodicMetaDataSynch() function
-	go m.periodicMetaDataSynch()
+	// Node periodically checks if its up to date by requesting metadata from its peers as an external process with periodicMetadataSynch() function
+	go m.periodicMetadataSync()
 
 	return nil
 }
@@ -134,20 +133,20 @@ func (m *stateSync) DisableServerMode() error {
 	return nil
 }
 
-func (m *stateSync) GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse {
+func (m *stateSync) GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse {
 	m.aggregatedSyncMetadata = m.aggregateMetadataResponses()
 	return m.aggregatedSyncMetadata
 }
 
-func (m *stateSync) SetAggregatedSyncMetadata(metaData *typesCons.StateSyncMetadataResponse) {
-	m.aggregatedSyncMetadata = metaData
+func (m *stateSync) SetAggregatedSyncMetadata(metadata *typesCons.StateSyncMetadataResponse) {
+	m.aggregatedSyncMetadata = metadata
 }
 
 // TODO(#352): Implement this function, currently a placeholder.
-func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
+func (m *stateSync) HandleStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) error {
 	consensusMod := m.GetBus().GetConsensusModule()
 	serverNodePeerId := consensusMod.GetNodeAddress()
-	clientPeerId := metaDataRes.PeerAddress
+	clientPeerId := metadataRes.PeerAddress
 	currentHeight := consensusMod.CurrentHeight()
 
 	// TODO (#571): update with logger helper function
@@ -157,7 +156,7 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 		"receiver":      clientPeerId,
 	}
 
-	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataResponse: %s", metaDataRes)
+	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataResponse: %s", metadataRes)
 
 	m.m.Lock()
 	defer m.m.Unlock()
@@ -181,10 +180,6 @@ func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse)
 	m.logger.Info().Fields(fields).Msgf("Received GetBlockResponse: %s", blockRes)
 
 	return nil
-}
-
-func (m *stateSync) GetSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse {
-	return m.syncMetadataBuffer
 }
 
 // TODO(#352): Implement this function, currently a placeholder.
@@ -221,7 +216,7 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 // Periodically (initially by using timers) queries the network by sending metadata requests to peers using broadCastStateSyncMessage() function.
 // Update frequency can be tuned accordingly to the state. Initially, it will have a static timer for periodic snych.
 // CONSIDER: Improving meta data request synchronistaion, without timers.
-func (m *stateSync) periodicMetaDataSynch() error {
+func (m *stateSync) periodicMetadataSync() error {
 
 	// uses a timer to periodically query the network
 	// form a metadata request

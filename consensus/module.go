@@ -318,6 +318,7 @@ func (m *consensusModule) loadPersistedState() error {
 	return nil
 }
 
+// IsSynched implements the interface function for checking if the node is synched with the network.
 func (m *consensusModule) IsSynched() (bool, error) {
 	lastPersistedBlockHeight := m.GetBus().GetConsensusModule().CurrentHeight() - 1
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
@@ -326,14 +327,12 @@ func (m *consensusModule) IsSynched() (bool, error) {
 	}
 	defer persistenceContext.Close()
 
-	maxHeight, err := persistenceContext.GetMaximumBlockHeight()
+	maxPersistedHeight, err := persistenceContext.GetMaximumBlockHeight()
 	if err != nil {
 		return false, err
 	}
 
-	if maxHeight == m.stateSync.GetAggregatedSyncMetadata().MaxHeight {
-		return true, nil
-	}
+	maxSeenHeight := m.stateSync.GetAggregatedStateSyncMetadata().MaxHeight
 
-	return false, nil
+	return maxPersistedHeight == maxSeenHeight, nil
 }

@@ -10,9 +10,12 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// HandleEvent handles FSM state transition events.
 func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
+
+	// TODO (#571): update with logger helper function
 	m.logger.Info().Msgf("Received a state transition message: %s", transitionMessageAny)
 
 	switch transitionMessageAny.MessageName() {
@@ -94,7 +97,7 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	return m.stateSync.StartSynching()
 }
 
-// HandleSynced handles FSM event IsSynchedNonValidator, and Synced is the destination state.
+// HandleSynced handles FSM event IsSynchedNonValidator for Non-Validators, and Synced is the destination state.
 // Currently, FSM never transition to this state and a non-validator node always stays in syncmode.
 // CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state.
 // TODO: Add check that this never happens when IsValidator() is false, i.e. node is not validator.

@@ -6,13 +6,12 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// TODO(#352): Implement this function, currently a placeholder.
-// Helper function for broadcasting state sync messages to the all peers known to the node
-// It is used for:
+// TODO (#352): Implement this function, currently a placeholder.
+// Helper function for broadcasting state sync messages to the all peers known to the node:
 //
-//		requesting for metadata, via the periodicMetaDataSynch() function
-//	 	requesting for blocks, via the StartSynching() function
-func (m *stateSync) broadCastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, height uint64) error {
+//		requests for metadata using the `periodicMetadataSynch()` function
+//	 	requests for blocks using the `StartSynching()` function
+func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, height uint64) error {
 	// TODO (#571): update with logger helper function
 	m.logger.Info().Fields(
 		map[string]any{
@@ -21,6 +20,7 @@ func (m *stateSync) broadCastStateSyncMessage(stateSyncMsg *typesCons.StateSyncM
 		},
 	).Msg("📣 Broadcasting state sync message... 📣")
 
+	// TODO (#571) update, this is a placeholder
 	_ = stateSyncMsg
 
 	return nil

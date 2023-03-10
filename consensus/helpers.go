@@ -315,6 +315,7 @@ func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Act
 	return persistenceReadContext.GetAllValidators(int64(height))
 }
 
+// TODO: This is a temporary solution, cache this in Consensus module. This field will be populated once with a single query to the persistence module.
 func (m *consensusModule) IsValidator() (bool, error) {
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
