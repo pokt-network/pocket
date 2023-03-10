@@ -25,6 +25,7 @@ func (m *stateSync) sendToPeer(msg *anypb.Any, peerId cryptoPocket.Address) erro
 	return nil
 }
 
+// TODO (#352, goku) check if this is needed, if not, remove
 func getMessageType(msg *typesCons.StateSyncMessage) string {
 	switch msg.Message.(type) {
 	case *typesCons.StateSyncMessage_MetadataReq:
