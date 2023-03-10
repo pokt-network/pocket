@@ -26,11 +26,12 @@ type ConsensusModule interface {
 	ConsensusDebugModule
 
 	// Consensus Engine Handlers
+	// TODO: Rename function to more specific name that is consistent with the pattern.
 	HandleMessage(*anypb.Any) error
 	// State Sync messages Handler
 	HandleStateSyncMessage(*anypb.Any) error
 	// FSM transition events handler
-	HandleStateTransitionEvent(transitionMessageAny *anypb.Any) error
+	HandleEvent(transitionMessageAny *anypb.Any) error
 
 	// Consensus State Accessors
 	CurrentHeight() uint64

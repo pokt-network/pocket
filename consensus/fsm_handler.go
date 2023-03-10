@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (m *consensusModule) HandleStateTransitionEvent(transitionMessageAny *anypb.Any) error {
+func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.logger.Info().Msgf("Received a state transition message: %s", transitionMessageAny)
@@ -59,7 +59,7 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 	case coreTypes.StateMachineState_Consensus_Pacemaker:
 		return m.HandlePacemaker(msg)
 
-		default:
+	default:
 		m.logger.Warn().Msg("Consensus module not handling this event")
 
 	}
