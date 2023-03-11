@@ -72,6 +72,9 @@ type UnstakingActor interface {
 	GetOutputAddress() []byte
 }
 
+// TECHDEBT: @deblasis - `CreateAndApplyProposalBlock` and `ApplyBlock` should be be refactored into a
+//
+//	`GetProposalBlock` and `ApplyProposalBlock` functions
 type UtilityUnitOfWork interface {
 	IntegratableModule
 
@@ -85,7 +88,7 @@ type UtilityUnitOfWork interface {
 	// ApplyBlock applies the context's in-memory proposed state (i.e. the txs in this context).
 	// Only intended to be used by the block verifiers (i.e. replicas).
 	// NOTE: this is called by the replica OR by the leader when `prepareQc` is not `nil`
-	ApplyBlock(beforeApplyBlock, afterApplyBlock func(UtilityUnitOfWork) error) (stateHash string, txs [][]byte, err error)
+	ApplyBlock() (stateHash string, txs [][]byte, err error)
 
 	// Release releases this utility context and any underlying contexts it references
 	Release() error
@@ -100,7 +103,7 @@ type LeaderUtilityUnitOfWork interface {
 	// CreateAndApplyProposalBlock reaps the mempool for txs to be proposed in a new block, and
 	// applies them to this context after validation.
 	// TODO: @deblasis: new signature?
-	CreateProposalBlock(proposer []byte, maxTxBytes uint64, beforeApplyBlock, afterApplyBlock func(UtilityUnitOfWork) error) (stateHash string, txs [][]byte, err error)
+	CreateProposalBlock(proposer []byte, maxTxBytes uint64) (stateHash string, txs [][]byte, err error)
 }
 
 type ReplicaUtilityUnitOfWork interface {
