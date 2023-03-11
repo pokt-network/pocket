@@ -235,7 +235,7 @@ func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 	}
 
 	// Apply all the transactions in the block and get the stateHash
-	stateHash, _, err := m.utilityUnitOfWork.ApplyBlock(nil, nil)
+	stateHash, _, err := m.utilityUnitOfWork.ApplyBlock()
 	if err != nil {
 		return err
 	}
