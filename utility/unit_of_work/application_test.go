@@ -12,9 +12,9 @@ const (
 )
 
 func TestUtilityContext_CalculateMaxAppRelays(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 1)
-	actor := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_APP)
-	appSessionTokens, err := ctx.calculateAppSessionTokens(actor.StakedAmount)
+	uow := newTestingUtilityUnitOfWork(t, 1)
+	actor := getFirstActor(t, uow, coreTypes.ActorType_ACTOR_TYPE_APP)
+	appSessionTokens, err := uow.calculateAppSessionTokens(actor.StakedAmount)
 	require.NoError(t, err)
 	// TODO: These are hardcoded values based on params from the genesis file. Expand on tests
 	// when implementing the Application protocol.

@@ -13,8 +13,8 @@ import (
 )
 
 func TestUtilityContext_AddAccountAmount(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
-	acc := getFirstTestingAccount(t, ctx)
+	uow := newTestingUtilityUnitOfWork(t, 0)
+	acc := getFirstTestingAccount(t, uow)
 
 	initialAmount, err := utils.StringToBigInt(acc.GetAmount())
 	require.NoError(t, err)
@@ -22,9 +22,9 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	addAmount := big.NewInt(1)
 	addrBz, err := hex.DecodeString(acc.GetAddress())
 	require.NoError(t, err)
-	require.NoError(t, ctx.addAccountAmount(addrBz, addAmount), "add account amount")
+	require.NoError(t, uow.addAccountAmount(addrBz, addAmount), "add account amount")
 
-	afterAmount, err := ctx.getAccountAmount(addrBz)
+	afterAmount, err := uow.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
@@ -32,8 +32,8 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 }
 
 func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
-	acc := getFirstTestingAccount(t, ctx)
+	uow := newTestingUtilityUnitOfWork(t, 0)
+	acc := getFirstTestingAccount(t, uow)
 
 	beforeAmount, err := utils.StringToBigInt(acc.GetAmount())
 	require.NoError(t, err)
@@ -41,9 +41,9 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	subAmount := big.NewInt(100)
 	addrBz, er := hex.DecodeString(acc.GetAddress())
 	require.NoError(t, er)
-	require.NoError(t, ctx.subtractAccountAmount(addrBz, subAmount), "sub account amount")
+	require.NoError(t, uow.subtractAccountAmount(addrBz, subAmount), "sub account amount")
 
-	amount, err := ctx.getAccountAmount(addrBz)
+	amount, err := uow.getAccountAmount(addrBz)
 	require.NoError(t, err)
 	require.NotEqual(t, beforeAmount, amount)
 
@@ -52,30 +52,30 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 }
 
 func TestUtilityContext_SetAccountAmount(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
+	uow := newTestingUtilityUnitOfWork(t, 0)
 
 	addr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
 	amount := big.NewInt(100)
-	require.NoError(t, ctx.setAccountAmount(addr, amount), "set account amount")
+	require.NoError(t, uow.setAccountAmount(addr, amount), "set account amount")
 
-	gotAmount, err := ctx.getAccountAmount(addr)
+	gotAmount, err := uow.getAccountAmount(addr)
 	require.NoError(t, err)
 	require.Equal(t, amount, gotAmount)
 }
 
 func TestUtilityContext_AddPoolAmount(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
-	pool := getFirstTestingPool(t, ctx)
+	uow := newTestingUtilityUnitOfWork(t, 0)
+	pool := getFirstTestingPool(t, uow)
 
 	initialAmount, err := utils.StringToBigInt(pool.GetAmount())
 	require.NoError(t, err)
 
 	addAmount := big.NewInt(1)
-	require.NoError(t, ctx.addPoolAmount(pool.GetAddress(), addAmount), "add pool amount")
+	require.NoError(t, uow.addPoolAmount(pool.GetAddress(), addAmount), "add pool amount")
 
-	afterAmount, err := ctx.getPoolAmount(pool.GetAddress())
+	afterAmount, err := uow.getPoolAmount(pool.GetAddress())
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
@@ -83,45 +83,45 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 }
 
 func TestUtilityContext_InsertPool(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
+	uow := newTestingUtilityUnitOfWork(t, 0)
 	testPoolName := "TEST_POOL"
 
 	amount := big.NewInt(1000)
-	err := ctx.insertPool(testPoolName, amount)
+	err := uow.insertPool(testPoolName, amount)
 	require.NoError(t, err, "insert pool")
 
-	poolAmount, err := ctx.getPoolAmount(testPoolName)
+	poolAmount, err := uow.getPoolAmount(testPoolName)
 	require.NoError(t, err)
 	require.Equal(t, amount, poolAmount)
 }
 
 func TestUtilityContext_SetPoolAmount(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
-	pool := getFirstTestingPool(t, ctx)
+	uow := newTestingUtilityUnitOfWork(t, 0)
+	pool := getFirstTestingPool(t, uow)
 
 	beforeAmount, err := utils.StringToBigInt(pool.GetAmount())
 	require.NoError(t, err)
 
 	expectedAfterAmount := big.NewInt(100)
-	require.NoError(t, ctx.setPoolAmount(pool.GetAddress(), expectedAfterAmount), "set pool amount")
+	require.NoError(t, uow.setPoolAmount(pool.GetAddress(), expectedAfterAmount), "set pool amount")
 
-	amount, err := ctx.getPoolAmount(pool.GetAddress())
+	amount, err := uow.getPoolAmount(pool.GetAddress())
 	require.NoError(t, err)
 	require.NotEqual(t, beforeAmount, amount)
 	require.Equal(t, amount, expectedAfterAmount)
 }
 
 func TestUtilityContext_SubPoolAmount(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
-	pool := getFirstTestingPool(t, ctx)
+	uow := newTestingUtilityUnitOfWork(t, 0)
+	pool := getFirstTestingPool(t, uow)
 
 	beforeAmountBig := big.NewInt(1000000000000000)
-	require.NoError(t, ctx.setPoolAmount(pool.GetAddress(), beforeAmountBig))
+	require.NoError(t, uow.setPoolAmount(pool.GetAddress(), beforeAmountBig))
 
 	subAmount := big.NewInt(100)
-	require.NoError(t, ctx.subPoolAmount(pool.GetAddress(), subAmount), "sub pool amount")
+	require.NoError(t, uow.subPoolAmount(pool.GetAddress(), subAmount), "sub pool amount")
 
-	amount, err := ctx.getPoolAmount(pool.GetAddress())
+	amount, err := uow.getPoolAmount(pool.GetAddress())
 	require.NoError(t, err)
 	require.NotEqual(t, beforeAmountBig, amount)
 
@@ -129,8 +129,8 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	require.Equal(t, expected, amount)
 }
 
-func getAllTestingAccounts(t *testing.T, ctx *baseUtilityUnitOfWork) []*coreTypes.Account {
-	accs, err := ctx.persistenceReadContext.GetAllAccounts(0)
+func getAllTestingAccounts(t *testing.T, uow *baseUtilityUnitOfWork) []*coreTypes.Account {
+	accs, err := uow.persistenceReadContext.GetAllAccounts(0)
 	require.NoError(t, err)
 
 	sort.Slice(accs, func(i, j int) bool {
@@ -139,12 +139,12 @@ func getAllTestingAccounts(t *testing.T, ctx *baseUtilityUnitOfWork) []*coreType
 	return accs
 }
 
-func getFirstTestingAccount(t *testing.T, ctx *baseUtilityUnitOfWork) *coreTypes.Account {
-	return getAllTestingAccounts(t, ctx)[0]
+func getFirstTestingAccount(t *testing.T, uow *baseUtilityUnitOfWork) *coreTypes.Account {
+	return getAllTestingAccounts(t, uow)[0]
 }
 
-func getAllTestingPools(t *testing.T, ctx *baseUtilityUnitOfWork) []*coreTypes.Account {
-	pools, err := ctx.persistenceReadContext.GetAllPools(0)
+func getAllTestingPools(t *testing.T, uow *baseUtilityUnitOfWork) []*coreTypes.Account {
+	pools, err := uow.persistenceReadContext.GetAllPools(0)
 	require.NoError(t, err)
 
 	sort.Slice(pools, func(i, j int) bool {
@@ -153,6 +153,6 @@ func getAllTestingPools(t *testing.T, ctx *baseUtilityUnitOfWork) []*coreTypes.A
 	return pools
 }
 
-func getFirstTestingPool(t *testing.T, ctx *baseUtilityUnitOfWork) *coreTypes.Account {
-	return getAllTestingPools(t, ctx)[0]
+func getFirstTestingPool(t *testing.T, uow *baseUtilityUnitOfWork) *coreTypes.Account {
+	return getAllTestingPools(t, uow)[0]
 }

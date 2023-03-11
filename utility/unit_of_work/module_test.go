@@ -28,8 +28,6 @@ const (
 )
 
 var (
-	// testUtilityMod mock_modules.MockUtilityModule
-
 	// TODO(#261): Utility module tests should have no dependencies on the persistence module (which instantiates a postgres container)
 	testPersistenceMod modules.PersistenceModule
 )
@@ -47,7 +45,6 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Error creating bus: %s", err)
 	}
 
-	//testUtilityMod = newTestUtilityModule(bus)
 	testPersistenceMod = newTestPersistenceModule(bus)
 
 	exitCode := m.Run()
@@ -55,7 +52,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func newTestingUtilityContext(t *testing.T, height int64) *baseUtilityUnitOfWork {
+func newTestingUtilityUnitOfWork(t *testing.T, height int64, options ...func(*baseUtilityUnitOfWork)) *baseUtilityUnitOfWork {
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
@@ -71,7 +68,7 @@ func newTestingUtilityContext(t *testing.T, height int64) *baseUtilityUnitOfWork
 		//testUtilityMod.GetMempool().Clear()
 	})
 
-	ctx := &baseUtilityUnitOfWork{
+	uow := &baseUtilityUnitOfWork{
 		logger: logger.Global.CreateLoggerForModule(modules.UtilityModuleName),
 		height: height,
 		// TODO: - @deblasis: refactor
@@ -79,21 +76,14 @@ func newTestingUtilityContext(t *testing.T, height int64) *baseUtilityUnitOfWork
 		persistenceReadContext: persistenceContext,
 	}
 
-	utilityMod := mock_modules.NewMockUtilityModule()
+	uow.SetBus(testPersistenceMod.GetBus())
 
-	ctx.SetBus(testPersistenceMod.GetBus())
+	for _, option := range options {
+		option(uow)
+	}
 
-	return ctx
+	return uow
 }
-
-// func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
-// 	ctrl := gomock.NewController(nil)
-// 	utilityMod = mock_modules.NewMockUtilityModule(bus)
-// 	if err != nil {
-// 		log.Fatalf("Error creating persistence module: %s", err)
-// 	}
-// 	return utilityMod.(modules.UtilityModule)
-// }
 
 func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
 	persistenceMod, err := persistence.Create(bus)
