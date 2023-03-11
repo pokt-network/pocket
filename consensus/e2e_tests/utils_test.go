@@ -461,11 +461,11 @@ func baseLeaderUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.Genesis
 	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 
 	utilityLeaderUnitOfWorkMock.EXPECT().
-		CreateProposalBlock(gomock.Any(), maxTxBytes, gomock.Any(), gomock.Any()). // TODO: @deblasis - review before/after
+		CreateProposalBlock(gomock.Any(), maxTxBytes).
 		Return(stateHash, make([][]byte, 0), nil).
 		AnyTimes()
 	utilityLeaderUnitOfWorkMock.EXPECT().
-		ApplyBlock(gomock.Any(), gomock.Any()). // TODO: @deblasis - review before/after
+		ApplyBlock().
 		Return(stateHash, make([][]byte, 0), nil).
 		AnyTimes()
 	utilityLeaderUnitOfWorkMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
@@ -486,7 +486,7 @@ func baseReplicaUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.Genesi
 	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 
 	utilityReplicaUnitOfWorkMock.EXPECT().
-		ApplyBlock(gomock.Any(), gomock.Any()). // TODO: @deblasis - review before/after
+		ApplyBlock().
 		Return(stateHash, make([][]byte, 0), nil).
 		AnyTimes()
 	utilityReplicaUnitOfWorkMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
