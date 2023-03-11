@@ -16,10 +16,6 @@ const (
 type UtilityModule interface {
 	Module
 
-	// NewContext creates a `utilityContext` with an underlying read-write `persistenceContext` (only 1 of which can exist at a time)
-	// TODO - @deblasis - deprecate this
-	NewContext(height int64) (UtilityContext, error)
-
 	// NewUnitOfWork creates a `utilityUnitOfWork` used to allow atomicity and commit/rollback functionality (https://martinfowler.com/eaaCatalog/unitOfWork.html)
 	NewUnitOfWork(height int64) (UtilityUnitOfWork, error)
 
@@ -33,34 +29,6 @@ type UtilityModule interface {
 	// It is useful for handling messages from the utility module's of other nodes that do not directly affect the state.
 	// IMPROVE: Find opportunities to break this apart as the module matures.
 	HandleUtilityMessage(*anypb.Any) error
-}
-
-// TECHDEBT: `CreateAndApplyProposalBlock` and `ApplyBlock` should be be refactored into a
-//           `GetProposalBlock` and `ApplyProposalBlock` functions
-
-// The context within which the node can operate with the utility layer.
-// TODO: @deblasis - deprecate this
-type UtilityContext interface {
-	// SetProposalBlock updates the utility context with the proposed state transition.
-	// It does not apply, validate or commit the changes.
-	// For example, it can be use during state sync to set a proposed state transition before validation.
-	// TODO: Investigate a way to potentially simplify the interface by removing this function.
-	SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error
-
-	// CreateAndApplyProposalBlock reaps the mempool for txs to be proposed in a new block, and
-	// applies them to this context after validation.
-	// Only intended to be used by the block proposer.
-	CreateAndApplyProposalBlock(proposer []byte, maxTxBytes int) (stateHash string, txs [][]byte, err error)
-
-	// ApplyBlock applies the context's in-memory proposed state (i.e. the txs in this context).
-	// Only intended to be used by the block verifiers (i.e. replicas).
-	ApplyBlock() (stateHash string, err error)
-
-	// Release releases this utility context and any underlying contexts it references
-	Release() error
-
-	// Commit commits this utility context along with any underlying contexts (e.g. persistenceContext) it references
-	Commit(quorumCert []byte) error
 }
 
 // TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead
