@@ -1,4 +1,4 @@
-package utility
+package unit_of_work
 
 import (
 	"log"
@@ -28,7 +28,7 @@ const (
 )
 
 var (
-	testUtilityMod modules.UtilityModule
+	// testUtilityMod mock_modules.MockUtilityModule
 
 	// TODO(#261): Utility module tests should have no dependencies on the persistence module (which instantiates a postgres container)
 	testPersistenceMod modules.PersistenceModule
@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Error creating bus: %s", err)
 	}
 
-	testUtilityMod = newTestUtilityModule(bus)
+	//testUtilityMod = newTestUtilityModule(bus)
 	testPersistenceMod = newTestPersistenceModule(bus)
 
 	exitCode := m.Run()
@@ -55,7 +55,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
+func newTestingUtilityContext(t *testing.T, height int64) *baseUtilityUnitOfWork {
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
@@ -68,28 +68,32 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
 		}))
-		testUtilityMod.GetMempool().Clear()
+		//testUtilityMod.GetMempool().Clear()
 	})
 
-	ctx := &utilityContext{
-		logger:         logger.Global.CreateLoggerForModule(modules.UtilityModuleName),
-		height:         height,
-		store:          persistenceContext,
-		savePointsSet:  make(map[string]struct{}),
-		savePointsList: make([][]byte, 0),
+	ctx := &baseUtilityUnitOfWork{
+		logger: logger.Global.CreateLoggerForModule(modules.UtilityModuleName),
+		height: height,
+		// TODO: - @deblasis: refactor
+		persistenceRWContext:   persistenceContext,
+		persistenceReadContext: persistenceContext,
 	}
-	ctx.SetBus(testUtilityMod.GetBus())
+
+	utilityMod := mock_modules.NewMockUtilityModule()
+
+	ctx.SetBus(testPersistenceMod.GetBus())
 
 	return ctx
 }
 
-func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
-	utilityMod, err := Create(bus)
-	if err != nil {
-		log.Fatalf("Error creating persistence module: %s", err)
-	}
-	return utilityMod.(modules.UtilityModule)
-}
+// func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
+// 	ctrl := gomock.NewController(nil)
+// 	utilityMod = mock_modules.NewMockUtilityModule(bus)
+// 	if err != nil {
+// 		log.Fatalf("Error creating persistence module: %s", err)
+// 	}
+// 	return utilityMod.(modules.UtilityModule)
+// }
 
 func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
 	persistenceMod, err := persistence.Create(bus)

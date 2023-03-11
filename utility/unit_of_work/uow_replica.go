@@ -17,6 +17,7 @@ type replicaUtilityUnitOfWork struct {
 func NewForReplica(height int64, readContext modules.PersistenceReadContext, rwPersistenceContext modules.PersistenceRWContext) *replicaUtilityUnitOfWork {
 	return &replicaUtilityUnitOfWork{
 		baseUtilityUnitOfWork: baseUtilityUnitOfWork{
+			height:                 height,
 			persistenceReadContext: readContext,
 			persistenceRWContext:   rwPersistenceContext,
 			logger:                 logger.Global.CreateLoggerForModule(replicaUtilityUOWModuleName),

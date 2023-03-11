@@ -1,4 +1,4 @@
-package utility
+package unit_of_work
 
 import (
 	"encoding/hex"
@@ -27,7 +27,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	err = ctx.SetProposalBlock("", addrBz, [][]byte{txBz})
 	require.NoError(t, err)
 
-	appHash, err := ctx.ApplyBlock()
+	appHash, _, err := ctx.ApplyBlock()
 	require.NoError(t, err)
 	require.NotNil(t, appHash)
 
@@ -77,7 +77,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	er = ctx.SetProposalBlock("", addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 
-	_, er = ctx.ApplyBlock()
+	_, _, er = ctx.ApplyBlock()
 	require.NoError(t, er)
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
@@ -106,7 +106,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	er = ctx.SetProposalBlock("", addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 
-	_, er = ctx.ApplyBlock()
+	_, _, er = ctx.ApplyBlock()
 	require.NoError(t, er)
 
 	feeBig, err := ctx.getMessageSendFee()

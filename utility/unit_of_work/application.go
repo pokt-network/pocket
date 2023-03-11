@@ -1,4 +1,4 @@
-package utility
+package unit_of_work
 
 // Internal business logic for the `Application` protocol actor.
 //
@@ -15,7 +15,7 @@ import (
 //
 // calculateAppSessionTokens determines the number of "session tokens" an application gets at the beginning
 // of every session. For example, 1 session token could equate to a quota of 1 relay.
-func (u *utilityContext) calculateAppSessionTokens(appStakeStr string) (string, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) calculateAppSessionTokens(appStakeStr string) (string, typesUtil.Error) {
 	appStake, er := utils.StringToBigInt(appStakeStr)
 	if er != nil {
 		return typesUtil.EmptyString, typesUtil.ErrStringToBigInt(er)
