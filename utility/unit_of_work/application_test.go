@@ -1,4 +1,4 @@
-package utility
+package unit_of_work
 
 import (
 	"testing"

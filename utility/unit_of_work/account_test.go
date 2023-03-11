@@ -1,4 +1,4 @@
-package utility
+package unit_of_work
 
 import (
 	"encoding/hex"
@@ -129,8 +129,8 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	require.Equal(t, expected, amount)
 }
 
-func getAllTestingAccounts(t *testing.T, ctx *utilityContext) []*coreTypes.Account {
-	accs, err := ctx.store.GetAllAccounts(0)
+func getAllTestingAccounts(t *testing.T, ctx *baseUtilityUnitOfWork) []*coreTypes.Account {
+	accs, err := ctx.persistenceReadContext.GetAllAccounts(0)
 	require.NoError(t, err)
 
 	sort.Slice(accs, func(i, j int) bool {
@@ -139,12 +139,12 @@ func getAllTestingAccounts(t *testing.T, ctx *utilityContext) []*coreTypes.Accou
 	return accs
 }
 
-func getFirstTestingAccount(t *testing.T, ctx *utilityContext) *coreTypes.Account {
+func getFirstTestingAccount(t *testing.T, ctx *baseUtilityUnitOfWork) *coreTypes.Account {
 	return getAllTestingAccounts(t, ctx)[0]
 }
 
-func getAllTestingPools(t *testing.T, ctx *utilityContext) []*coreTypes.Account {
-	pools, err := ctx.store.GetAllPools(0)
+func getAllTestingPools(t *testing.T, ctx *baseUtilityUnitOfWork) []*coreTypes.Account {
+	pools, err := ctx.persistenceReadContext.GetAllPools(0)
 	require.NoError(t, err)
 
 	sort.Slice(pools, func(i, j int) bool {
@@ -153,6 +153,6 @@ func getAllTestingPools(t *testing.T, ctx *utilityContext) []*coreTypes.Account 
 	return pools
 }
 
-func getFirstTestingPool(t *testing.T, ctx *utilityContext) *coreTypes.Account {
+func getFirstTestingPool(t *testing.T, ctx *baseUtilityUnitOfWork) *coreTypes.Account {
 	return getAllTestingPools(t, ctx)[0]
 }

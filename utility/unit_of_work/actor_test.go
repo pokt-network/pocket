@@ -1,4 +1,4 @@
-package utility
+package unit_of_work
 
 import (
 	"encoding/hex"
@@ -142,7 +142,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			err := ctx.store.SetParam(paramName, numUnstakingBlocks)
+			err := ctx.persistenceRWContext.SetParam(paramName, numUnstakingBlocks)
 			require.NoError(t, err, "error setting minimum pause blocks")
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -193,7 +193,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			err := ctx.store.SetParam(paramName, minPauseBlocksNumber)
+			err := ctx.persistenceRWContext.SetParam(paramName, minPauseBlocksNumber)
 			require.NoError(t, err, "error setting minimum pause blocks")
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -308,7 +308,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-			err := ctx.store.SetParam(paramName, maxPausedBlocks)
+			err := ctx.persistenceRWContext.SetParam(paramName, maxPausedBlocks)
 			require.NoError(t, err)
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -400,9 +400,9 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
 
-			er := ctx.store.SetParam(paramName1, maxPausedBlocks)
+			er := ctx.persistenceRWContext.SetParam(paramName1, maxPausedBlocks)
 			require.NoError(t, er, "error setting max paused blocks")
-			er = ctx.store.SetParam(paramName2, unstakingBlocks)
+			er = ctx.persistenceRWContext.SetParam(paramName2, unstakingBlocks)
 			require.NoError(t, er, "error setting max paused blocks")
 			er = ctx.setPoolAmount(poolName, poolInitAMount)
 			require.NoError(t, er)
@@ -653,7 +653,7 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 
 // Helpers
 
-func getAllTestingActors(t *testing.T, ctx *utilityContext, actorType coreTypes.ActorType) (actors []*coreTypes.Actor) {
+func getAllTestingActors(t *testing.T, ctx *baseUtilityUnitOfWork, actorType coreTypes.ActorType) (actors []*coreTypes.Actor) {
 	actors = make([]*coreTypes.Actor, 0)
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -675,24 +675,24 @@ func getAllTestingActors(t *testing.T, ctx *utilityContext, actorType coreTypes.
 	return
 }
 
-func getFirstActor(t *testing.T, ctx *utilityContext, actorType coreTypes.ActorType) *coreTypes.Actor {
+func getFirstActor(t *testing.T, ctx *baseUtilityUnitOfWork, actorType coreTypes.ActorType) *coreTypes.Actor {
 	return getAllTestingActors(t, ctx, actorType)[0]
 }
 
-func getActorByAddr(t *testing.T, ctx *utilityContext, actorType coreTypes.ActorType, addr string) (actor *coreTypes.Actor) {
+func getActorByAddr(t *testing.T, ctx *baseUtilityUnitOfWork, actorType coreTypes.ActorType, addr string) (actor *coreTypes.Actor) {
 	actors := getAllTestingActors(t, ctx, actorType)
 	idx := slices.IndexFunc(actors, func(a *coreTypes.Actor) bool { return a.GetAddress() == addr })
 	return actors[idx]
 }
 
-func getAllTestingApps(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := ctx.store.GetAllApps(ctx.height)
+func getAllTestingApps(t *testing.T, ctx *baseUtilityUnitOfWork) []*coreTypes.Actor {
+	actors, err := ctx.persistenceReadContext.GetAllApps(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
 
-func getAllTestingValidators(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := ctx.store.GetAllValidators(ctx.height)
+func getAllTestingValidators(t *testing.T, ctx *baseUtilityUnitOfWork) []*coreTypes.Actor {
+	actors, err := ctx.persistenceReadContext.GetAllValidators(ctx.height)
 	require.NoError(t, err)
 	sort.Slice(actors, func(i, j int) bool {
 		return actors[i].GetAddress() < actors[j].GetAddress()
@@ -700,14 +700,14 @@ func getAllTestingValidators(t *testing.T, ctx *utilityContext) []*coreTypes.Act
 	return actors
 }
 
-func getAllTestingFish(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := ctx.store.GetAllFishermen(ctx.height)
+func getAllTestingFish(t *testing.T, ctx *baseUtilityUnitOfWork) []*coreTypes.Actor {
+	actors, err := ctx.persistenceReadContext.GetAllFishermen(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
 
-func getAllTestingServicers(t *testing.T, ctx *utilityContext) []*coreTypes.Actor {
-	actors, err := ctx.store.GetAllServicers(ctx.height)
+func getAllTestingServicers(t *testing.T, ctx *baseUtilityUnitOfWork) []*coreTypes.Actor {
+	actors, err := ctx.persistenceReadContext.GetAllServicers(ctx.height)
 	require.NoError(t, err)
 	return actors
 }
