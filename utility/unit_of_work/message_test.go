@@ -11,7 +11,7 @@ import (
 )
 
 func TestUtilityContext_HandleMessageSend(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityUnitOfWork(t, 0)
 	accs := getAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
@@ -43,7 +43,7 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
+	ctx := newTestingUtilityUnitOfWork(t, 0)
 	accs := getAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
