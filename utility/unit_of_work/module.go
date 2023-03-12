@@ -114,7 +114,7 @@ func (u *baseUtilityUnitOfWork) CreateAndApplyProposalBlock(proposer []byte, max
 }
 
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
-func (u *baseUtilityUnitOfWork) ApplyBlock() (string, [][]byte, error) {
+func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, err error) {
 	lastByzantineValidators, err := u.prevBlockByzantineValidators()
 	if err != nil {
 		return "", nil, err
@@ -172,7 +172,7 @@ func (u *baseUtilityUnitOfWork) ApplyBlock() (string, [][]byte, error) {
 	}
 	// TODO: @deblasis - this should be from a ReadContext (the ephemeral/staging one)
 	// return the app hash (consensus module will get the validator set directly)
-	stateHash, err := u.persistenceRWContext.ComputeStateHash()
+	stateHash, err = u.persistenceRWContext.ComputeStateHash()
 	if err != nil {
 		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return "", nil, utilTypes.ErrAppHash(err)

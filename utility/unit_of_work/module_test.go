@@ -65,7 +65,6 @@ func newTestingUtilityUnitOfWork(t *testing.T, height int64, options ...func(*ba
 			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
 		}))
-		//testUtilityMod.GetMempool().Clear()
 	})
 
 	uow := &baseUtilityUnitOfWork{
