@@ -65,7 +65,7 @@ sequenceDiagram
     actor N as Node
     participant NP as Network Peer(s)
 
-    loop eriodic sync
+    loop periodic sync
         N->>+NP: Are you alive? If so, what's your Peer Metadata?
         NP->>N: Yup, here's my Peer Metadata. What's yours?
         N->>+N: Add metadata to local buffer
