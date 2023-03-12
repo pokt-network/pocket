@@ -36,6 +36,19 @@ func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContex
 	m.utilityContext = utilityContext
 }
 
+func (m *consensusModule) SetAggregatedStateSyncMetadata(minHeight uint64, maxHeight uint64, peerAddress string) {
+	m.stateSync.SetAggregatedSyncMetadata(&typesCons.StateSyncMetadataResponse{
+		MinHeight:   minHeight,
+		MaxHeight:   maxHeight,
+		PeerAddress: peerAddress,
+	})
+}
+
+func (m *consensusModule) GetAggregatedStateSyncMetadataMaxHeight() (maxHeight uint64) {
+	metadata := m.stateSync.GetAggregatedStateSyncMetadata()
+	return metadata.MaxHeight
+}
+
 func (m *consensusModule) HandleDebugMessage(debugMessage *messaging.DebugMessage) error {
 	m.m.Lock()
 	defer m.m.Unlock()

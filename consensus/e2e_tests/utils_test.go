@@ -46,14 +46,6 @@ const (
 
 type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
-// Used to mock state sync
-type stateSyncMockHelper struct {
-	maxHeight uint64 // the max height of the node
-	minHeight uint64 // the min height of the node
-}
-
-var stateSyncHelper stateSyncMockHelper
-
 /*** Node Generation Helpers ***/
 
 func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Clock) []*runtime.Manager {
@@ -516,24 +508,22 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 		switch coreTypes.StateMachineEvent(event) {
 		case coreTypes.StateMachineEvent_Consensus_IsUnsynched:
 			t.Logf("Node is unsynched")
-			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(stateSyncHelper.maxHeight)})
-			return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
+			return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
+		case coreTypes.StateMachineEvent_Consensus_IsSyncing:
+			maxHeight := bus.GetConsensusModule().GetAggregatedStateSyncMetadataMaxHeight()
+			t.Logf("Node is syncing")
+			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(maxHeight)})
+			return nil
 		case coreTypes.StateMachineEvent_Consensus_IsSynchedValidator:
 			t.Logf("Validator is synched")
 			return nil
 		default:
 			log.Printf("Not handling this event: %s", event)
 			return nil
-
 		}
 	}).AnyTimes()
 
 	return stateMachineMock
-}
-
-func MockPeriodicMetaDataSync(maxHeight, mingHeight uint64) {
-	stateSyncHelper.maxHeight = maxHeight
-	stateSyncHelper.minHeight = mingHeight
 }
 
 func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAgent {

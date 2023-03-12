@@ -37,7 +37,7 @@ type StateSyncModule interface {
 	StartSynching() error
 }
 
-// This interface is used for debugging purposes.
+// This interface should be only used for debugging purposes and tests.
 type DebugStateSync interface {
 	SetAggregatedSyncMetadata(*typesCons.StateSyncMetadataResponse)
 }
