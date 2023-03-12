@@ -109,16 +109,16 @@ flowchart TD
     A[Node] --> B[Periodic <br> Sync]
     A[Node] --> |New Block| C{IsSynched}
 
-    %% periodi snyc
+    %% periodic snyc
     B --> |Request <br> metadata| D[Peers]
     D[Peers] --> |Collect metadata| B[Periodic <br> Sync]
 
 
-    %% is sycnhed
+    %% is node sycnhed
     C -->  |No| E[StartSynching]
     C -->  |Yes| F[Apply Block]
 
-    %% sync
+    %% syncing
     E --> |Request Blocks| D[Peers]
     D[Peers] --> |Block| A[Node] 
 
