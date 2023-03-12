@@ -461,7 +461,7 @@ func baseLeaderUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.Genesis
 	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 
 	utilityLeaderUnitOfWorkMock.EXPECT().
-		CreateProposalBlock(gomock.Any(), maxTxBytes).
+		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).
 		Return(stateHash, make([][]byte, 0), nil).
 		AnyTimes()
 	utilityLeaderUnitOfWorkMock.EXPECT().
