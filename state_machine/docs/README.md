@@ -54,14 +54,14 @@ These are the main building blocks:
 
 ## State Machine States, Events and Lifecycle
 
-- Node starts in `Stopped` state -> event `start` -> transitions to `P2P_Bootstrapping`,
-- P2P module handles `P2P_Bootstrapping` state, fills the peer address book, sends `P2P_IsBootstrapped` event, transitions to `P2P_Bootstrapped` state,
-- Consensus module handles `P2P_Bootstrapped` state, and since node just bootstrapped, it sends `Consensus_IsUnsynched` event, transitions to the `Consensus_Unsynched` state, 
-- Whenever node is in `Consensus_Unsynched` state, consensus module sends `Consensus_SyncMode` event in order to catch up the global state, transitions to `Consensus_SyncMode` state,
+- Node starts in `Stopped` state -> event `start`, and transitions to `P2P_Bootstrapping`,
+- P2P module handles `P2P_Bootstrapping` state, fills the peer address book -> `P2P_IsBootstrapped` event -> `P2P_Bootstrapped`,
+- Consensus module handles `P2P_Bootstrapped` state, and since node just bootstrapped -> `Consensus_IsUnsynched` event -> `Consensus_Unsynched`, 
+- Whenever node is in `Consensus_Unsynched` state, consensus module -> `Consensus_IsSyncing` event -> `Consensus_SyncMode`,
 - In `Consensus_SyncMode` state, consensus module starts synching by running `StartSynching()` function, which requests blocks one by one from peers in the network. Once synched:
-  - if the node is validator, it sends `Consensus_IsSynchedValidator`, event and transitions to `Consensus_Synced` state,
-  - if the node is not a validator, it sends `Consensus_IsSynchedNonValidator` event, and transitions to `Consensus_Pacemaker` state,
-- Whenever a node receives a block that is higher than its current state, consensus module sends `Consensus_IsUnsynched` event, transitions to the `Consensus_Unsynched` state.
+  - if the node is validator -> `Consensus_IsSynchedValidator` event -> `Consensus_Synched`,
+  - if the node is not a validator -> `Consensus_IsSynchedNonValidator` event -> `Consensus_Pacemaker`,
+- Whenever a node receives a block that is higher than its current state, consensus module -> `Consensus_IsUnsynched` event ->`Consensus_Unsynched`.
  
 It is important to node that a non-validator node practically always stays in the `Consensus_SyncMode` state to receive latest blocks from validators blocks from the peers.
 
