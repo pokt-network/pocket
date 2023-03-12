@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-
-## [0.0.0.39] - 2023-03-08
+## [0.0.0.40] - 2023-03-12
 
 - Add `ConsensusStateSync` interface to define exported state sync functions in consensus module
 - Update `ConsensusDebugModule` with getter and setter function for state sync testing
-- Update FSM events `Consensus_IsSynchedValidator`, `Consensus_IsSynchedNonValidator` and state `Consensus_Pacemaker` 
+- Update FSM events `Consensus_IsSynchedValidator`, `Consensus_IsSynchedNonValidator` and state `Consensus_Pacemaker`
+
+## [0.0.0.39] - 2023-03-09
+
+- Fix diagrams in SLIP documentation to be in the correct order
 
 ## [0.0.0.38] - 2023-03-03
 
