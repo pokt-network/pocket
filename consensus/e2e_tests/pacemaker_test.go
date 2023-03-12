@@ -177,7 +177,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 
 	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS
 	for _, pocketNode := range pocketNodes {
-		// Update height, step, leaderId, and utility context via setters exposed with the debug interface
+		// Update height, step, leaderId, and utility unit of work via setters exposed with the debug interface
 		consensusModImpl := GetConsensusModImpl(pocketNode)
 		consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
 		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
