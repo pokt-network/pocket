@@ -2,53 +2,26 @@ package state_sync
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// Helper function for broadcasting state sync messages to the all peers known to the node
-// It is used for:
+// TODO (#352): Implement this function, currently a placeholder.
+// Helper function for broadcasting state sync messages to the all peers known to the node:
 //
-//		requesting for metadata, via the periodicSynch() function
-//	 	requesting for blocks, via the StartSynching() function
-func (m *stateSync) broadCastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, height uint64) error {
+//		requests for metadata using the `periodicMetadataSynch()` function
+//	 	requests for blocks using the `StartSynching()` function
+func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, height uint64) error {
+	// TODO (#571): update with logger helper function
 	m.logger.Info().Fields(
 		map[string]any{
 			"height": height,
 			"nodeId": m.GetBus().GetConsensusModule().GetNodeId(),
 		},
-	).Msg("📣 Broadcasting state sync message GOKHANSA📣")
+	).Msg("📣 Broadcasting state sync message... 📣")
 
-	anyMessage, err := codec.GetCodec().ToAny(stateSyncMsg)
-	if err != nil {
-		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
-		return err
-	}
-
-	validators, err := m.GetBus().GetConsensusModule().GetValidatorsAtHeight(height)
-	if err != nil {
-		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
-	}
-
-	// for _, val := range validators {
-	// 	m.logger.Debug().Msgf("VAL: %s", val.Address)
-	// 	if err := m.SendStateSyncMessage(stateSyncMsg, cryptoPocket.Address(val.Address), height); err != nil {
-	// 		m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
-	// 		return err
-	// 	}
-	// }
-
-	for _, val := range validators {
-		m.logger.Info().Fields(
-			map[string]any{
-				"val": val.GetAddress(),
-			},
-		).Msg("📣 Sneding state sync message 📣")
-		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyMessage); err != nil {
-			m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
-		}
-	}
+	// TODO (#571) update, this is a placeholder
+	_ = stateSyncMsg
 
 	return nil
 }
@@ -59,6 +32,7 @@ func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessag
 		return err
 	}
 
+	// TODO (#571): update with logger helper function
 	fields := map[string]any{
 		"height":     height,
 		"peerId":     peerId,
@@ -69,7 +43,7 @@ func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessag
 	return m.sendToPeer(anyMsg, peerId)
 }
 
-// Helper function for sending state sync messages
+// Helper function for messages to the peers
 func (m *stateSync) sendToPeer(msg *anypb.Any, peerId cryptoPocket.Address) error {
 	if err := m.GetBus().GetP2PModule().Send(peerId, msg); err != nil {
 		m.logger.Error().Msgf(typesCons.ErrSendMessage.Error(), err)

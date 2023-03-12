@@ -26,11 +26,12 @@ type ConsensusModule interface {
 	ConsensusDebugModule
 
 	// Consensus Engine Handlers
+	// TODO: Rename function to more specific name that is consistent with the pattern.
 	HandleMessage(*anypb.Any) error
 	// State Sync messages Handler
 	HandleStateSyncMessage(*anypb.Any) error
 	// FSM transition events handler
-	HandleStateTransitionEvent(transitionMessageAny *anypb.Any) error
+	HandleEvent(transitionMessageAny *anypb.Any) error
 
 	// Consensus State Accessors
 	CurrentHeight() uint64
@@ -73,10 +74,13 @@ type ConsensusPacemaker interface {
 type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
+
+	// Compares the persisted state with the aggregated state of the network. If the persisted state is behind the network state, i.e. that node is not synched, it will return false.
 	IsSynched() (bool, error)
-	GetValidatorsAtHeight(uint64) ([]*types.Actor, error)
 }
 
+// This interface represents functions exposed by the Consensus module for mainly used for testing.
+// This interface is not intended to be used by any other module than testing in Consensus module.
 type ConsensusDebugModule interface {
 	HandleDebugMessage(*messaging.DebugMessage) error
 
@@ -87,5 +91,6 @@ type ConsensusDebugModule interface {
 	SetBlock(*types.Block)
 	SetUtilityContext(UtilityContext)
 
-	SetAggregatedMetadata(uint64, uint64, string)
+	SetAggregatedStateSyncMetadata(minHeight uint64, maxHeight uint64, peerAddress string)
+	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
 }

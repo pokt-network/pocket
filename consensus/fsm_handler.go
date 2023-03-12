@@ -10,9 +10,12 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (m *consensusModule) HandleStateTransitionEvent(transitionMessageAny *anypb.Any) error {
+// HandleEvent handles FSM state transition events.
+func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
+
+	// TODO (#571): update with logger helper function
 	m.logger.Info().Msgf("Received a state transition message: %s", transitionMessageAny)
 
 	switch transitionMessageAny.MessageName() {
@@ -36,6 +39,7 @@ func (m *consensusModule) HandleStateTransitionEvent(transitionMessageAny *anypb
 func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Info().Msgf("Begin handling StateMachineTransitionEvent: %s", msg)
 
+	// TODO (#571): update with logger helper function
 	fsm_state := msg.NewState
 	m.logger.Debug().Fields(map[string]any{
 		"event":          msg.Event,
@@ -53,13 +57,14 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 	case coreTypes.StateMachineState_Consensus_SyncMode:
 		return m.HandleSyncMode(msg)
 
-	case coreTypes.StateMachineState_Consensus_Synced:
-		return m.HandleSynced(msg)
+	case coreTypes.StateMachineState_Consensus_Synched:
+		return m.HandleSynched(msg)
 
 	case coreTypes.StateMachineState_Consensus_Pacemaker:
 		return m.HandlePacemaker(msg)
+
 	default:
-		m.logger.Warn().Msg("Consensus module not handling this event")
+		m.logger.Warn().Msgf("Consensus module not handling this event: %s", msg.Event)
 
 	}
 
@@ -87,25 +92,24 @@ func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionE
 // HandleSyncMode handles FSM event Consensus_IsSyncing, and SyncMode is the destination state.
 // In Sync mode node (validator or non-validator) starts syncing with the rest of the network.
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Debug().Msg("FSM is in Sync Mode, starting syncing...")
+	m.logger.Debug().Msg("FSM is in Sync Mode, start syncing...")
 
 	return m.stateSync.StartSynching()
 }
 
-// HandleSynced handles FSM event IsSynchedNonValidator, and Synced is the destination state.
+// HandleSynched handles FSM event IsSynchedNonValidator for Non-Validators, and Synched is the destination state.
 // Currently, FSM never transition to this state and a non-validator node always stays in syncmode.
 // CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state.
 // TODO: Add check that this never happens when IsValidator() is false, i.e. node is not validator.
-func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Debug().Msg("FSM of non-validator node is in Synced mode")
+func (m *consensusModule) HandleSynched(msg *messaging.StateMachineTransitionEvent) error {
+	m.logger.Debug().Msg("FSM of non-validator node is in Synched mode")
 	return nil
 }
 
 // HandlePacemaker handles FSM event IsSynchedValidator, and Pacemaker is the destination state.
-// Execution of this state means the validator node is synced.
-// TODO:
+// Execution of this state means the validator node is synched.
 func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Debug().Msg("FSM of validator node is synced and in Pacemaker mode. It will stay in this mode until it receives a new block proposal that has a higher height than the current block height")
+	m.logger.Debug().Msg("FSM of validator node is synched and in Pacemaker mode. It will stay in this mode until it receives a new block proposal that has a higher height than the current block height")
 	// validator receives a new block proposal, and it understands that it doesn't have block and it transitions to unsycnhed state
 	// transitioning out of this state happens when a new block proposal is received by the hotstuff_replica
 	return nil

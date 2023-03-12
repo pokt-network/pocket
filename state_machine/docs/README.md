@@ -52,17 +52,26 @@ These are the main building blocks:
 - **State**: A state is a string that represents a state that the FSM can be in. For example, the state `stopped` can be used to represent a state where the node is not running.
 - **Callback**: A callback is a function that is called when a transition occurs. For example, a callback can be used to log the transition or to perform some other action. Various types of callbacks essentially drive behaviour **WHEN** they are called and help build more complex behaviours like transition cancelling, etc. See the core FSM library documentation for more details.
 
-## Current State Machine Definition
+## State Machine States, Events and Lifecycle
 
-A diagram of the current state machine definition can be found [here](state-machine.diagram.md)
-If you make any changes to it, you can re-generate it via:
+- Node starts in `Stopped` state -> event `start`, and transitions to `P2P_Bootstrapping`,
+- P2P module handles `P2P_Bootstrapping` state, fills the peer address book -> `P2P_IsBootstrapped` event -> `P2P_Bootstrapped`,
+- Consensus module handles `P2P_Bootstrapped` state, and since node just bootstrapped -> `Consensus_IsUnsynched` event -> `Consensus_Unsynched`, 
+- Whenever node is in `Consensus_Unsynched` state, consensus module -> `Consensus_IsSyncing` event -> `Consensus_SyncMode`,
+- In `Consensus_SyncMode` state, consensus module starts synching by running `StartSynching()` function, which requests blocks one by one from peers in the network. Once synched:
+  - if the node is validator -> `Consensus_IsSynchedValidator` event -> `Consensus_Synched`,
+  - if the node is not a validator -> `Consensus_IsSynchedNonValidator` event -> `Consensus_Pacemaker`,
+- Whenever a node receives a block that is higher than its current state, consensus module -> `Consensus_IsUnsynched` event ->`Consensus_Unsynched`.
+ 
+It is important to node that a non-validator node practically always stays in the `Consensus_SyncMode` state to receive latest blocks from validators blocks from the peers.
+
+A diagram of the current state machine definition can be found [here](state-machine.diagram.md).
+
+
+*NOTE:* If you make changes to the state machine by changing states, events, or state transitions, you can re-generate the state machine diagram via:
 
 ```bash
 make generate_node_state_machine_diagram
 ```
-
-
-## State Machine Lifecycle
-Node FSM starts from stopped state, and transitions to the bootstapping state, which is handled by the P2P module. In bootstrapping state, the node fills its address book, and upon completing mode transitions to unsynched state. Node's FSM moves to sync mode to start requesting block metadata and receive the blocks it is missing. Upon completing state sync in sync mode; if the node is a validator FSM transitions to pacemaker state and starts participating in the consensus state, else if the node is non-validator, FSM moves to the synced state. However, it is important to node that the non-validator node practically always stays in the snyc mode to keep getting blocks from the peers. The node may transition to unsynched state if it stays behind, i.e. in pacemaker mode if the node receives a block proposal which is higher than it's current height.
 
 <!-- GITHUB_WIKI: state_machine/README -->

@@ -1,9 +1,7 @@
 package state_sync
 
 import (
-	"context"
 	"sync"
-	"time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
@@ -21,29 +19,25 @@ type StateSyncModule interface {
 	StateSyncServerModule
 	DebugStateSync
 
-	// Handle a metadata response from a peer so this node can update its local view of the state
-	// sync metadata available from its peers
-	//HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error
-
-	// Handle a block response from a peer so this node can update apply it to its local state
-	// and catch up to the global world state
-	//HandleGetBlockResponse(*typesCons.GetBlockResponse) error
-
+	// This functions are used for managing the Server mode of the node, which is handled independently from the FSM.
 	IsServerModEnabled() bool
 	EnableServerMode() error
 	DisableServerMode() error
 
+	// This functions contains the business logic on handling Block and Metadata responses.
+	HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error
+	HandleGetBlockResponse(*typesCons.GetBlockResponse) error
+
 	SendStateSyncMessage(msg *typesCons.StateSyncMessage, nodeAddress cryptoPocket.Address, height uint64) error
-	//IsSynched() bool
-	//AggregateMetadataResponses() error
-	SetSyncMetadataBuffer([]*typesCons.StateSyncMetadataResponse)
-	GetSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse
 
-	GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse
+	// Getter functions for the aggregated metadata and the metadata buffer, used by consensus module.
+	GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse
 
+	// Starts synching the node with the network by requesting blocks.
 	StartSynching() error
 }
 
+// This interface should be only used for debugging purposes and tests.
 type DebugStateSync interface {
 	SetAggregatedSyncMetadata(*typesCons.StateSyncMetadataResponse)
 }
@@ -64,6 +58,7 @@ type stateSync struct {
 	logPrefix  string
 	serverMode bool
 
+	// metadata buffer that is periodically updated
 	aggregatedSyncMetadata *typesCons.StateSyncMetadataResponse
 	syncMetadataBuffer     []*typesCons.StateSyncMetadataResponse
 }
@@ -95,9 +90,8 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 func (m *stateSync) Start() error {
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
-	// node will be periodically checking if its up to date.
-	// and it will be updating the AggregatedSynchMetaData.
-	go m.periodicMetaDataSynch()
+	// Node periodically checks if its up to date by requesting metadata from its peers as an external process with periodicMetadataSynch() function
+	go m.periodicMetadataSync()
 
 	return nil
 }
@@ -139,121 +133,94 @@ func (m *stateSync) DisableServerMode() error {
 	return nil
 }
 
-func (m *stateSync) GetAggregatedSyncMetadata() *typesCons.StateSyncMetadataResponse {
+func (m *stateSync) GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse {
 	m.aggregatedSyncMetadata = m.aggregateMetadataResponses()
-	m.logger.Debug().Msgf("GETTING AGGREGATED SYNC METADATA TO: %s, nodeId: %d", m.aggregatedSyncMetadata, m.GetBus().GetConsensusModule().GetNodeId())
 	return m.aggregatedSyncMetadata
 }
 
-func (m *stateSync) SetAggregatedSyncMetadata(metaData *typesCons.StateSyncMetadataResponse) {
-	m.logger.Debug().Msgf("SETTING AGGREGATED SYNC METADATA TO: %s, nodeId: %d", metaData, m.GetBus().GetConsensusModule().GetNodeId())
-	m.aggregatedSyncMetadata = metaData
+func (m *stateSync) SetAggregatedSyncMetadata(metadata *typesCons.StateSyncMetadataResponse) {
+	m.aggregatedSyncMetadata = metadata
 }
 
-func (m *stateSync) SetSyncMetadataBuffer(aggregatedSyncMetadata []*typesCons.StateSyncMetadataResponse) {
+// TODO(#352): Implement this function, currently a placeholder.
+func (m *stateSync) HandleStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) error {
+	consensusMod := m.GetBus().GetConsensusModule()
+	serverNodePeerId := consensusMod.GetNodeAddress()
+	clientPeerId := metadataRes.PeerAddress
+	currentHeight := consensusMod.CurrentHeight()
+
+	// TODO (#571): update with logger helper function
+	fields := map[string]any{
+		"currentHeight": currentHeight,
+		"sender":        serverNodePeerId,
+		"receiver":      clientPeerId,
+	}
+
+	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataResponse: %s", metadataRes)
+
 	m.m.Lock()
 	defer m.m.Unlock()
-	m.syncMetadataBuffer = aggregatedSyncMetadata
-}
-
-func (m *stateSync) GetSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse {
-	return m.syncMetadataBuffer
-}
-
-// TODO! implement this function, placeholder
-// This function requests blocks one by one from peers
-func (m *stateSync) StartSynching() error {
-	m.logger.Debug().Msgf("StartSynching() called NEWGOKHAN")
-
-	current_height := m.GetBus().GetConsensusModule().CurrentHeight()
-	//! TODO CHECK THIS
-	lastPersistedBlockHeight := current_height - 1
-	m.logger.Debug().Msgf("Last persisted block %d, Aggregated maxHeight %d", lastPersistedBlockHeight, m.aggregatedSyncMetadata.MaxHeight)
-
-	for i := lastPersistedBlockHeight; i < m.aggregatedSyncMetadata.MaxHeight; i++ {
-		m.logger.Debug().Msgf("StartSynching() Requesting block %d", i)
-		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-			Message: &typesCons.StateSyncMessage_GetBlockReq{
-				GetBlockReq: &typesCons.GetBlockRequest{
-					PeerAddress: m.GetBus().GetConsensusModule().GetNodeAddress(),
-					Height:      i,
-				},
-			},
-		}
-
-		m.broadCastStateSyncMessage(stateSyncGetBlockMessage, current_height)
-	}
 
 	return nil
 }
 
-// Returns max block height metadainfo received from all peers.
-// This function requests blocks one by one from peers thorughusing p2p module request, aggregates responses.
-// It requests blocks one by one from peers thorughusing p2p module request
+// TODO(#352): Implement this function, currently a placeholder.
+func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
+
+	serverNodePeerId := m.bus.GetConsensusModule().GetNodeAddress()
+	clientPeerId := blockRes.PeerAddress
+
+	// TODO (#571): update with logger helper function
+	fields := map[string]any{
+		"currentHeight": blockRes.Block.BlockHeader.Height,
+		"sender":        serverNodePeerId,
+		"receiver":      clientPeerId,
+	}
+
+	m.logger.Info().Fields(fields).Msgf("Received GetBlockResponse: %s", blockRes)
+
+	return nil
+}
+
+// TODO(#352): Implement this function, currently a placeholder.
+// Requests blocks one by one from its peers.
+func (m *stateSync) StartSynching() error {
+	current_height := m.GetBus().GetConsensusModule().CurrentHeight()
+	var lastPersistedBlockHeight uint64
+
+	if current_height == 0 {
+		lastPersistedBlockHeight = 0
+	} else {
+		lastPersistedBlockHeight = current_height - 1
+	}
+
+	m.logger.Debug().Msgf("Starting synching, last persisted block %d, aggregated maxHeight %d", lastPersistedBlockHeight, m.aggregatedSyncMetadata.MaxHeight)
+
+	// TODO(#352): Add buiness logic
+
+	return nil
+}
+
+// TODO(#352): Implement this function, currently a placeholder.
+// Returns max block height metadainfo received from all peers by aggregating responses in the buffer.
 func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataResponse {
 	m.m.Lock()
 	defer m.m.Unlock()
 
 	metadataResponse := m.aggregatedSyncMetadata
 
-	//aggregate metadataResponses by setting the metadataResponse
-	for _, meta := range m.syncMetadataBuffer {
-		if meta.MaxHeight > metadataResponse.MaxHeight {
-			m.logger.Debug().Msgf("YOYOOYYO (): %s", metadataResponse)
-			metadataResponse.MaxHeight = meta.MaxHeight
-		}
-
-		if meta.MinHeight < metadataResponse.MinHeight {
-			metadataResponse.MinHeight = meta.MinHeight
-		}
-	}
-
-	m.logger.Debug().Msgf("GOKHAN aggregateMetadataResponses, max height: %d", metadataResponse.MaxHeight)
-
-	//clear the buffer
-	m.syncMetadataBuffer = make([]*typesCons.StateSyncMetadataResponse, 0)
-
 	return metadataResponse
 }
 
-// This function periodically checks if node is up to date with the network by sending metadata requests to peers.
-// It updates the aggregatedSyncMetadata field.
-// This update frequency can be tuned accordingly to the state. Currently, it has a default  behaviour.
-func (m *stateSync) periodicMetaDataSynch() error {
-	m.logger.Debug().Msgf("periodicSynch() called GOKHAN")
+// TODO(#352): Implement this function, currently a placeholder.
+// Periodically (initially by using timers) queries the network by sending metadata requests to peers using broadCastStateSyncMessage() function.
+// Update frequency can be tuned accordingly to the state. Initially, it will have a static timer for periodic snych.
+// CONSIDER: Improving meta data request synchronistaion, without timers.
+func (m *stateSync) periodicMetadataSync() error {
 
-	//add timer channel with context to cancel the timer
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	// uses a timer to periodically query the network
+	// form a metadata request
+	// send to peers using broadCastStateSyncMessage()
 
-	// // form a metaData request
-	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
-		Message: &typesCons.StateSyncMessage_MetadataReq{
-			MetadataReq: &typesCons.StateSyncMetadataRequest{
-				PeerAddress: m.GetBus().GetConsensusModule().GetNodeAddress(),
-			},
-		},
-	}
-
-	ticker := time.NewTicker(20 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			m.logger.Debug().Msg("Periodic metadata synch is triggered")
-			currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-
-			//broadcast metadata request to all peers
-			//err := m.synch(currentHeight)
-			err := m.broadCastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
-			if err != nil {
-				return err
-			}
-
-		case <-ctx.Done():
-			return nil
-
-		}
-	}
+	return nil
 }

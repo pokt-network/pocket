@@ -46,13 +46,6 @@ const (
 
 type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
-type StateSyncHelper struct {
-	maxheight uint64 // the max height of the node
-	minheight uint64 // the min height of the node
-}
-
-var stateSyncHelper StateSyncHelper
-
 /*** Node Generation Helpers ***/
 
 func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Clock) []*runtime.Manager {
@@ -106,9 +99,6 @@ func CreateTestConsensusPocketNode(
 	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
 ) *shared.Node {
-	//stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
-	//bus.RegisterModule(stateMachineMock)
-	// persistence is a dependency of consensus, so we need to create it first
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
 	bus.RegisterModule(persistenceMock)
 
@@ -123,20 +113,18 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
+	stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
 
 	for _, module := range []modules.Module{
-		//stateMachineMock,
 		p2pMock,
 		utilityMock,
 		telemetryMock,
 		loggerMock,
 		rpcMock,
+		stateMachineMock,
 	} {
 		bus.RegisterModule(module)
 	}
-
-	stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
-	bus.RegisterModule(stateMachineMock)
 
 	require.NoError(t, err)
 
@@ -512,7 +500,6 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 	stateMachineMock.EXPECT().Start().Return(nil).AnyTimes()
 	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
-	//stateMachineMock.EXPECT().SendEvent(gomock.Any()).Return(nil).AnyTimes()
 
 	consensusModImpl := reflect.ValueOf(bus.GetConsensusModule())
 
@@ -520,29 +507,25 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 		switch coreTypes.StateMachineEvent(event) {
 		case coreTypes.StateMachineEvent_Consensus_IsUnsynched:
 			t.Logf("Node is unsynched")
-			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(stateSyncHelper.maxheight)})
-			bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
+			return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
+		case coreTypes.StateMachineEvent_Consensus_IsSyncing:
+			maxHeight := bus.GetConsensusModule().GetAggregatedStateSyncMetadataMaxHeight()
+			t.Logf("Node is syncing")
+			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(maxHeight)})
 			return nil
 		case coreTypes.StateMachineEvent_Consensus_IsSynchedValidator:
-			t.Logf("Validator is synched")
-
+			t.Logf("Validator node is synched")
 			return nil
-
+		case coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator:
+			t.Logf("Non-validator node is synched")
+			return nil
 		default:
 			log.Printf("Not handling this event: %s", event)
 			return nil
-
 		}
-
-		//return nil
 	}).AnyTimes()
 
 	return stateMachineMock
-}
-
-func MockPeriodicMetaDataSynch(maxHeight, mingHeight uint64) {
-	stateSyncHelper.maxheight = maxHeight
-	stateSyncHelper.minheight = mingHeight
 }
 
 func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAgent {

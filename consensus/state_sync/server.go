@@ -27,6 +27,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
 	lastPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
+	// TODO (#571): update with logger helper function
 	fields := map[string]any{
 		"height":   lastPersistedBlockHeight,
 		"sender":   serverNodePeerAddress,
@@ -71,6 +72,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
 	lastPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
+	// TODO (#571): update with logger helper function
 	fields := map[string]any{
 		"height":   lastPersistedBlockHeight,
 		"sender":   serverNodePeerAddress,

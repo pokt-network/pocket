@@ -82,7 +82,7 @@ type consensusModule struct {
 // Implementations of the ConsensusStateSync interface
 
 func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error) {
-	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		// REFACTOR(#434): As per issue #434, once the new id is sorted out, this return statement must be changed
 		return 0, err
@@ -151,7 +151,9 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	consensusCfg := runtimeMgr.GetConfig().Consensus
 
 	if consensusCfg.ServerModeEnabled {
-		m.stateSync.EnableServerMode()
+		if err := m.stateSync.EnableServerMode(); err != nil {
+			return nil, err
+		}
 	}
 
 	genesisState := runtimeMgr.GetGenesis()
@@ -165,7 +167,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	}
 	address := privateKey.Address().String()
 
-	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return nil, err
 	}
@@ -316,24 +318,21 @@ func (m *consensusModule) loadPersistedState() error {
 	return nil
 }
 
+// IsSynched implements the interface function for checking if the node is synched with the network.
 func (m *consensusModule) IsSynched() (bool, error) {
-	m.logger.Debug().Msg("IsSynched called, checking if consensus module is synched GOKHAN")
 	lastPersistedBlockHeight := m.GetBus().GetConsensusModule().CurrentHeight() - 1
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
 	if err != nil {
-		m.logger.Debug().Msg("IsSynched called, couldn't receive persistence module GOKHAN 2")
 		return false, err
 	}
 	defer persistenceContext.Close()
 
-	maxHeight, err := persistenceContext.GetMaximumBlockHeight()
+	maxPersistedHeight, err := persistenceContext.GetMaximumBlockHeight()
 	if err != nil {
 		return false, err
 	}
 
-	if maxHeight == m.stateSync.GetAggregatedSyncMetadata().MaxHeight {
-		return true, nil
-	}
+	maxSeenHeight := m.stateSync.GetAggregatedStateSyncMetadata().MaxHeight
 
-	return false, nil
+	return maxPersistedHeight == maxSeenHeight, nil
 }

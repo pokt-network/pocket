@@ -216,9 +216,10 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// Prepare unsynched node info
+	unsynchedNode := pocketNodes[2]
 	unsynchedNodeId := typesCons.NodeId(2)
-	//unSynchedNodeRound := uint64(1)
 	unsynchedNodeHeight := uint64(2)
+	unsynchedNodeModImpl := GetConsensusModImpl(unsynchedNode)
 
 	// Placeholder block
 	blockHeader := &coreTypes.BlockHeader{
@@ -242,7 +243,6 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 		consensusModImpl := GetConsensusModImpl(pocketNode)
 		if id == unsynchedNodeId {
 			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(unsynchedNodeHeight)})
-			//consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(unSynchedNodeRound)})
 		} else {
 			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
 		}
@@ -259,7 +259,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// Assert that unsynched node has a seperate view of the network than the rest of the nodes
+	// Assert that unsynched node has a separate view of the network than the rest of the nodes
 	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 250, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
@@ -285,8 +285,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
-	// Mock the unsynched node's periodic metadata sync, which is ()
-	MockPeriodicMetaDataSynch(testHeight, 1)
+	unsynchedNodeModImpl.MethodByName("SetAggregatedStateSyncMetadata").Call([]reflect.Value{reflect.ValueOf(uint64(1)), reflect.ValueOf(testHeight), reflect.ValueOf(string(consensusPK.Address()))})
 
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)
@@ -309,4 +308,13 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 			},
 			nodeState)
 	}
+}
+
+func TestStateSync_Unsynched4PeersSynchs_Success(t *testing.T) {
+	t.Skip()
+}
+
+// Test if unsynched peer can catch up with the rest of the network
+func TestStateSync_UnsynchedPeerCatchsUpConsensus_ConsensusProceedsSuccessfully(t *testing.T) {
+	t.Skip()
 }

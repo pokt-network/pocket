@@ -122,7 +122,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// 1. If node is out of sync, node can't verify the block proposal, so rejects it. But node will eventually sync with the rest of the network and add the block.
 	// 2. If node is synched, node must reject the proposal because proposal is not valid.
 	if msg.Height > currentHeight {
-		m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
+		m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d < message height %d", currentHeight, msg.Height)
 		isSynched, err := m.GetBus().GetConsensusModule().IsSynched()
 		if err != nil {
 			return false, err
@@ -130,9 +130,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 		if !isSynched {
 			err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
-			if err != nil {
-				return false, err
-			}
+			return false, err
 		}
 
 		return false, nil
