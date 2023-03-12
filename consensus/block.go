@@ -71,7 +71,7 @@ func (m *consensusModule) refreshUtilityUnitOfWork() error {
 	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
 	// Ideally, this should not be called.
 	if m.utilityUnitOfWork != nil {
-		m.logger.Warn().Msg(typesCons.NilUtilityContextWarning)
+		m.logger.Warn().Msg(typesCons.NilUtilityUOWWarning)
 		if err := m.utilityUnitOfWork.Release(); err != nil {
 			m.logger.Warn().Err(err).Msg("Error releasing utility context")
 		}
