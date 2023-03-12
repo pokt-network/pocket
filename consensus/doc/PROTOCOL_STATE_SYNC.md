@@ -6,7 +6,7 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
 - [State Sync - Peer Metadata](#state-sync---peer-metadata)
 - [State Sync - Operation Modes](#state-sync---operation-modes)
   - [Sync Mode](#sync-mode)
-  - [Synced Mode](#synced-mode)
+  - [Synched Mode](#synched-mode)
   - [Pacemaker Mode](#pacemaker-mode)
   - [Server Mode](#server-mode)
   - [Operation Modes Lifecycle](#operation-modes-lifecycle)
@@ -130,7 +130,7 @@ State sync can be viewed as a state machine that transverses various modes the n
 
 1. Unsyched Mode
 2. Sync Mode
-2. Synced Mode
+2. Synched Mode
 3. Pacemaker Mode
 4. Server Mode
 
@@ -152,17 +152,17 @@ In `Unsynched` Mode, node transitions to `Sync Mode` by sending `Consensus_IsSyn
 
 In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `StartSynching()` function to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
 
-Though it is unspecified whether or not a Node may make `GetBlock` requests in order or in parallel, the cryptographic restraints of block processing require the Node to call `CommitBlock` sequentially until it is `Synced`.
+Though it is unspecified whether or not a Node may make `GetBlock` requests in order or in parallel, the cryptographic restraints of block processing require the Node to call `CommitBlock` sequentially until it is `Synched`.
 
-### Synced Mode
+### Synched Mode
 
-The Node is in `Synced` mode if `localSyncState.Height == globalSyncMeta.MaxHeight`.
+The Node is in `Synched` mode if `localSyncState.Height == globalSyncMeta.MaxHeight`.
 
-In `SyncedMode`, the Node is caught up to the latest block (based on the visible view of the network) and relies on new blocks to be propagated via the P2P network every time the Validators finalize a new block during the consensus lifecycle.
+In `SynchedMode`, the Node is caught up to the latest block (based on the visible view of the network) and relies on new blocks to be propagated via the P2P network every time the Validators finalize a new block during the consensus lifecycle.
 
 ### Pacemaker Mode
 
-The Node is in `Pacemaker` mode if the Node is in `Synced` mode **and** is an active Validator at the current height.
+The Node is in `Pacemaker` mode if the Node is snyched **and** is an active Validator at the current height.
 
 In `Pacemaker` mode, the Node is actively participating in the HotPOKT lifecycle.
 
