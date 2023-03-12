@@ -57,8 +57,8 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 	case coreTypes.StateMachineState_Consensus_SyncMode:
 		return m.HandleSyncMode(msg)
 
-	case coreTypes.StateMachineState_Consensus_Synced:
-		return m.HandleSynced(msg)
+	case coreTypes.StateMachineState_Consensus_Synched:
+		return m.HandleSynched(msg)
 
 	case coreTypes.StateMachineState_Consensus_Pacemaker:
 		return m.HandlePacemaker(msg)
@@ -101,7 +101,7 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 // Currently, FSM never transition to this state and a non-validator node always stays in syncmode.
 // CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state.
 // TODO: Add check that this never happens when IsValidator() is false, i.e. node is not validator.
-func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
+func (m *consensusModule) HandleSynched(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM of non-validator node is in Synced mode")
 	return nil
 }
