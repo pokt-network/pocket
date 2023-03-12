@@ -113,6 +113,7 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
+	stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
 
 	for _, module := range []modules.Module{
 		p2pMock,
@@ -120,12 +121,10 @@ func CreateTestConsensusPocketNode(
 		telemetryMock,
 		loggerMock,
 		rpcMock,
+		stateMachineMock,
 	} {
 		bus.RegisterModule(module)
 	}
-
-	stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
-	bus.RegisterModule(stateMachineMock)
 
 	require.NoError(t, err)
 
