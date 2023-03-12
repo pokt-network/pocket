@@ -46,7 +46,7 @@ type UnstakingActor interface {
 type UtilityUnitOfWork interface {
 	IntegratableModule
 
-	// SetProposalBlock updates the utility context with the proposed state transition.
+	// SetProposalBlock updates the utility unit of work with the proposed state transition.
 	// It does not apply, validate or commit the changes.
 	// For example, it can be use during state sync to set a proposed state transition before validation.
 	// TODO: Investigate a way to potentially simplify the interface by removing this function.
@@ -58,10 +58,10 @@ type UtilityUnitOfWork interface {
 	// NOTE: this is called by the replica OR by the leader when `prepareQc` is not `nil`
 	ApplyBlock() (stateHash string, txs [][]byte, err error)
 
-	// Release releases this utility context and any underlying contexts it references
+	// Release releases this utility unit of work and any underlying contexts it references
 	Release() error
 
-	// Commit commits this utility context along with any underlying contexts (e.g. persistenceContext) it references
+	// Commit commits this utility unit of work along with any underlying contexts (e.g. persistenceContext) it references
 	Commit(quorumCert []byte) error
 }
 
