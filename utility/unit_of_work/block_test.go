@@ -9,7 +9,6 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,8 +20,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 
 	uow := newTestingUtilityUnitOfWork(t, 0, func(uow *baseUtilityUnitOfWork) {
 		uow.GetBus().RegisterModule(mockUtilityMod)
-		utilityCfg := uow.GetBus().GetRuntimeMgr().GetConfig().Utility
-		mockUtilityMod.EXPECT().GetMempool().Return(types.NewTxFIFOMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)).AnyTimes()
+		mockUtilityMod.EXPECT().GetMempool().Return(NewTestingMempool(t)).AnyTimes()
 	})
 	tx, startingBalance, amountSent, signer := newTestingTransaction(t, uow)
 
