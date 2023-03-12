@@ -20,7 +20,7 @@ const (
 	ProposalBlockExtends     = "the ProposalQC block is the same as the LockedQC block"
 
 	// WARN
-	NilUtilityContextWarning     = "⚠️ [WARN] utilityContext expected to be nil but is not. TODO: Investigate why this is and fix it"
+	NilUtilityUOWWarning         = "⚠️ [WARN] utilityUnitOfWork expected to be nil but is not. TODO: Investigate why this is and fix it"
 	InvalidPartialSigInQCWarning = "⚠️ [WARN] QC contains an invalid partial signature"
 
 	// DEBUG
