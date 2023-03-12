@@ -68,17 +68,17 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 
 // Creates a new Utility Unit Of Work and clears/nullifies any previous U.O.W. if they exist
 func (m *consensusModule) refreshUtilityUnitOfWork() error {
-	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
+	// Catch-all structure to release the previous utility unit of work if it wasn't properly cleaned up.
 	// Ideally, this should not be called.
 	if m.utilityUnitOfWork != nil {
 		m.logger.Warn().Msg(typesCons.NilUtilityUOWWarning)
 		if err := m.utilityUnitOfWork.Release(); err != nil {
-			m.logger.Warn().Err(err).Msg("Error releasing utility context")
+			m.logger.Warn().Err(err).Msg("Error releasing utility unit of work")
 		}
 		m.utilityUnitOfWork = nil
 	}
 
-	// Only one write context can exist at a time, and the utility context needs to instantiate
+	// Only one write context can exist at a time, and the utility unit of work needs to instantiate
 	// a new one to modify the state.
 	if err := m.GetBus().GetPersistenceModule().ReleaseWriteContext(); err != nil {
 		m.logger.Warn().Err(err).Msg("Error releasing persistence write context")
