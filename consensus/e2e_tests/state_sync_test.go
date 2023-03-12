@@ -285,13 +285,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
-	// Mock the unsynched node's periodic metadata sync
-	//MockPeriodicMetaDataSync(testHeight, 1)
-
-	//SetAggregatedStateSyncMetadata(minHeight uint64, maxHeight uint64, peerAddress string)
-
 	unsynchedNodeModImpl.MethodByName("SetAggregatedStateSyncMetadata").Call([]reflect.Value{reflect.ValueOf(uint64(1)), reflect.ValueOf(testHeight), reflect.ValueOf(string(consensusPK.Address()))})
-	t.Log("GOKHAN now SetAggregatedStateSyncMetadata \n")
 
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)

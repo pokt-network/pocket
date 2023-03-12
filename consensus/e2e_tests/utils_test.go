@@ -517,6 +517,9 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 		case coreTypes.StateMachineEvent_Consensus_IsSynchedValidator:
 			t.Logf("Validator is synched")
 			return nil
+		case coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator:
+			t.Logf("Non-validator node is synched")
+			return nil
 		default:
 			log.Printf("Not handling this event: %s", event)
 			return nil
