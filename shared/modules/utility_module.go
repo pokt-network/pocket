@@ -70,8 +70,8 @@ type LeaderUtilityUnitOfWork interface {
 
 	// CreateAndApplyProposalBlock reaps the mempool for txs to be proposed in a new block, and
 	// applies them to this context after validation.
-	// TODO: @deblasis: new signature?
-	CreateProposalBlock(proposer []byte, maxTxBytes uint64) (stateHash string, txs [][]byte, err error)
+	// TODO: #508 new signature
+	CreateAndApplyProposalBlock(proposer []byte, maxTxBytes uint64) (stateHash string, txs [][]byte, err error)
 }
 
 type ReplicaUtilityUnitOfWork interface {
