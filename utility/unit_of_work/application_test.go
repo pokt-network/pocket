@@ -11,7 +11,7 @@ const (
 	DefaultAppSessionTokens = "100000000000000"
 )
 
-func TestUtilityContext_CalculateMaxAppRelays(t *testing.T) {
+func TestUtilityUnitOfWork_CalculateMaxAppRelays(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 1)
 	actor := getFirstActor(t, uow, coreTypes.ActorType_ACTOR_TYPE_APP)
 	appSessionTokens, err := uow.calculateAppSessionTokens(actor.StakedAmount)

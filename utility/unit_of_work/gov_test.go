@@ -20,7 +20,7 @@ func DefaultTestingParams(_ *testing.T) *genesis.Params {
 	return test_artifacts.DefaultParams()
 }
 
-func TestUtilityContext_GetAppMaxChains(t *testing.T) {
+func TestUtilityUnitOfWork_GetAppMaxChains(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	maxChains, err := uow.getAppMaxChains()
@@ -28,7 +28,7 @@ func TestUtilityContext_GetAppMaxChains(t *testing.T) {
 	require.Equal(t, int(defaultParams.GetAppMaxChains()), maxChains)
 }
 
-func TestUtilityContext_GetAppMaxPausedBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetAppMaxPausedBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	gotParam, err := uow.getAppMaxPausedBlocks()
@@ -36,7 +36,7 @@ func TestUtilityContext_GetAppMaxPausedBlocks(t *testing.T) {
 	require.Equal(t, int(defaultParams.GetAppMaxPauseBlocks()), gotParam)
 }
 
-func TestUtilityContext_GetAppMinimumPauseBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetAppMinimumPauseBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetAppMinimumPauseBlocks())
@@ -45,7 +45,7 @@ func TestUtilityContext_GetAppMinimumPauseBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetAppMinimumStake(t *testing.T) {
+func TestUtilityUnitOfWork_GetAppMinimumStake(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetAppMinimumStake()
@@ -54,7 +54,7 @@ func TestUtilityContext_GetAppMinimumStake(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetAppUnstakingBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetAppUnstakingBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int64(defaultParams.GetAppUnstakingBlocks())
@@ -63,7 +63,7 @@ func TestUtilityContext_GetAppUnstakingBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
+func TestUtilityUnitOfWork_GetBlocksPerSession(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetBlocksPerSession())
@@ -72,7 +72,7 @@ func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetDoubleSignBurnPercentage(t *testing.T) {
+func TestUtilityUnitOfWork_GetDoubleSignBurnPercentage(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetDoubleSignBurnPercentage())
@@ -81,7 +81,7 @@ func TestUtilityContext_GetDoubleSignBurnPercentage(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetDoubleSignFeeOwner(t *testing.T) {
+func TestUtilityUnitOfWork_GetDoubleSignFeeOwner(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageDoubleSignFeeOwner()
@@ -94,7 +94,7 @@ func TestUtilityContext_GetDoubleSignFeeOwner(t *testing.T) {
 	require.Equal(t, defaultParamTx, gotParam)
 }
 
-func TestUtilityContext_GetFishermanMaxChains(t *testing.T) {
+func TestUtilityUnitOfWork_GetFishermanMaxChains(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetFishermanMaxChains())
@@ -103,7 +103,7 @@ func TestUtilityContext_GetFishermanMaxChains(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetFishermanMaxPausedBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetFishermanMaxPausedBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetFishermanMaxPauseBlocks())
@@ -112,7 +112,7 @@ func TestUtilityContext_GetFishermanMaxPausedBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetFishermanMinimumPauseBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetFishermanMinimumPauseBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetFishermanMinimumPauseBlocks())
@@ -121,7 +121,7 @@ func TestUtilityContext_GetFishermanMinimumPauseBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetFishermanMinimumStake(t *testing.T) {
+func TestUtilityUnitOfWork_GetFishermanMinimumStake(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetFishermanMinimumStake()
@@ -130,7 +130,7 @@ func TestUtilityContext_GetFishermanMinimumStake(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetFishermanUnstakingBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetFishermanUnstakingBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int64(defaultParams.GetFishermanUnstakingBlocks())
@@ -139,7 +139,7 @@ func TestUtilityContext_GetFishermanUnstakingBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetMaxEvidenceAgeInBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetMaxEvidenceAgeInBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetValidatorMaxEvidenceAgeInBlocks())
@@ -148,7 +148,7 @@ func TestUtilityContext_GetMaxEvidenceAgeInBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetMessageChangeParameterFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageChangeParameterFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageChangeParameterFee()
@@ -157,7 +157,7 @@ func TestUtilityContext_GetMessageChangeParameterFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageDoubleSignFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageDoubleSignFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageDoubleSignFee()
@@ -166,7 +166,7 @@ func TestUtilityContext_GetMessageDoubleSignFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageEditStakeAppFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageEditStakeAppFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageEditStakeAppFee()
@@ -175,7 +175,7 @@ func TestUtilityContext_GetMessageEditStakeAppFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageEditStakeFishermanFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageEditStakeFishermanFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageEditStakeFishermanFee()
@@ -184,7 +184,7 @@ func TestUtilityContext_GetMessageEditStakeFishermanFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageEditStakeServicerFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageEditStakeServicerFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageEditStakeServicerFee()
@@ -193,7 +193,7 @@ func TestUtilityContext_GetMessageEditStakeServicerFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageEditStakeValidatorFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageEditStakeValidatorFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageEditStakeValidatorFee()
@@ -202,7 +202,7 @@ func TestUtilityContext_GetMessageEditStakeValidatorFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageFishermanPauseServicerFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageFishermanPauseServicerFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageFishermanPauseServicerFee()
@@ -211,7 +211,7 @@ func TestUtilityContext_GetMessageFishermanPauseServicerFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessagePauseAppFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessagePauseAppFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessagePauseAppFee()
@@ -220,7 +220,7 @@ func TestUtilityContext_GetMessagePauseAppFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessagePauseFishermanFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessagePauseFishermanFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessagePauseFishermanFee()
@@ -229,7 +229,7 @@ func TestUtilityContext_GetMessagePauseFishermanFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessagePauseServicerFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessagePauseServicerFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessagePauseServicerFee()
@@ -238,7 +238,7 @@ func TestUtilityContext_GetMessagePauseServicerFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessagePauseValidatorFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessagePauseValidatorFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessagePauseValidatorFee()
@@ -247,7 +247,7 @@ func TestUtilityContext_GetMessagePauseValidatorFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageProveTestScoreFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageProveTestScoreFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageProveTestScoreFee()
@@ -256,7 +256,7 @@ func TestUtilityContext_GetMessageProveTestScoreFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageSendFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageSendFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageSendFee()
@@ -265,7 +265,7 @@ func TestUtilityContext_GetMessageSendFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageStakeAppFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageStakeAppFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageStakeAppFee()
@@ -274,7 +274,7 @@ func TestUtilityContext_GetMessageStakeAppFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageStakeFishermanFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageStakeFishermanFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageStakeFishermanFee()
@@ -283,7 +283,7 @@ func TestUtilityContext_GetMessageStakeFishermanFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageStakeServicerFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageStakeServicerFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageStakeServicerFee()
@@ -292,7 +292,7 @@ func TestUtilityContext_GetMessageStakeServicerFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageStakeValidatorFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageStakeValidatorFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageStakeValidatorFee()
@@ -301,7 +301,7 @@ func TestUtilityContext_GetMessageStakeValidatorFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageTestScoreFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageTestScoreFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageTestScoreFee()
@@ -310,7 +310,7 @@ func TestUtilityContext_GetMessageTestScoreFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageUnpauseAppFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageUnpauseAppFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnpauseAppFee()
@@ -319,7 +319,7 @@ func TestUtilityContext_GetMessageUnpauseAppFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageUnpauseFishermanFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageUnpauseFishermanFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnpauseFishermanFee()
@@ -328,7 +328,7 @@ func TestUtilityContext_GetMessageUnpauseFishermanFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageUnpauseServicerFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageUnpauseServicerFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnpauseServicerFee()
@@ -337,7 +337,7 @@ func TestUtilityContext_GetMessageUnpauseServicerFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageUnpauseValidatorFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageUnpauseValidatorFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnpauseValidatorFee()
@@ -346,7 +346,7 @@ func TestUtilityContext_GetMessageUnpauseValidatorFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageUnstakeAppFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageUnstakeAppFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnstakeAppFee()
@@ -355,7 +355,7 @@ func TestUtilityContext_GetMessageUnstakeAppFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageUnstakeFishermanFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageUnstakeFishermanFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnstakeFishermanFee()
@@ -364,7 +364,7 @@ func TestUtilityContext_GetMessageUnstakeFishermanFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageUnstakeServicerFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageUnstakeServicerFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnstakeServicerFee()
@@ -373,7 +373,7 @@ func TestUtilityContext_GetMessageUnstakeServicerFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMessageUnstakeValidatorFee(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageUnstakeValidatorFee(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetMessageUnstakeValidatorFee()
@@ -382,7 +382,7 @@ func TestUtilityContext_GetMessageUnstakeValidatorFee(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetMissedBlocksBurnPercentage(t *testing.T) {
+func TestUtilityUnitOfWork_GetMissedBlocksBurnPercentage(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetMissedBlocksBurnPercentage())
@@ -391,7 +391,7 @@ func TestUtilityContext_GetMissedBlocksBurnPercentage(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetProposerPercentageOfFees(t *testing.T) {
+func TestUtilityUnitOfWork_GetProposerPercentageOfFees(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetProposerPercentageOfFees())
@@ -400,7 +400,7 @@ func TestUtilityContext_GetProposerPercentageOfFees(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetServicerMaxChains(t *testing.T) {
+func TestUtilityUnitOfWork_GetServicerMaxChains(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetServicerMaxChains())
@@ -409,7 +409,7 @@ func TestUtilityContext_GetServicerMaxChains(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetServicerMaxPausedBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetServicerMaxPausedBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetServicerMaxPauseBlocks())
@@ -418,7 +418,7 @@ func TestUtilityContext_GetServicerMaxPausedBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetServicerMinimumPauseBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetServicerMinimumPauseBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetServicerMinimumPauseBlocks())
@@ -427,7 +427,7 @@ func TestUtilityContext_GetServicerMinimumPauseBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetServicerMinimumStake(t *testing.T) {
+func TestUtilityUnitOfWork_GetServicerMinimumStake(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetServicerMinimumStake()
@@ -436,7 +436,7 @@ func TestUtilityContext_GetServicerMinimumStake(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetServicerUnstakingBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetServicerUnstakingBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int64(defaultParams.GetServicerUnstakingBlocks())
@@ -445,7 +445,7 @@ func TestUtilityContext_GetServicerUnstakingBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetSessionTokensMultiplier(t *testing.T) {
+func TestUtilityUnitOfWork_GetSessionTokensMultiplier(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetAppSessionTokensMultiplier())
@@ -454,7 +454,7 @@ func TestUtilityContext_GetSessionTokensMultiplier(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetValidatorMaxMissedBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetValidatorMaxMissedBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetValidatorMaximumMissedBlocks())
@@ -463,7 +463,7 @@ func TestUtilityContext_GetValidatorMaxMissedBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetValidatorMaxPausedBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetValidatorMaxPausedBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetValidatorMaxPauseBlocks())
@@ -472,7 +472,7 @@ func TestUtilityContext_GetValidatorMaxPausedBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetValidatorMinimumPauseBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetValidatorMinimumPauseBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetValidatorMinimumPauseBlocks())
@@ -481,7 +481,7 @@ func TestUtilityContext_GetValidatorMinimumPauseBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_GetValidatorMinimumStake(t *testing.T) {
+func TestUtilityUnitOfWork_GetValidatorMinimumStake(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetValidatorMinimumStake()
@@ -490,7 +490,7 @@ func TestUtilityContext_GetValidatorMinimumStake(t *testing.T) {
 	require.Equal(t, defaultParam, utils.BigIntToString(gotParam))
 }
 
-func TestUtilityContext_GetValidatorUnstakingBlocks(t *testing.T) {
+func TestUtilityUnitOfWork_GetValidatorUnstakingBlocks(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int64(defaultParams.GetValidatorUnstakingBlocks())
@@ -499,7 +499,7 @@ func TestUtilityContext_GetValidatorUnstakingBlocks(t *testing.T) {
 	require.Equal(t, defaultParam, gotParam)
 }
 
-func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
+func TestUtilityUnitOfWork_HandleMessageChangeParameter(t *testing.T) {
 	cdc := codec.GetCodec()
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
@@ -524,7 +524,7 @@ func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
 	require.Equal(t, int(newParamValue), gotParam)
 }
 
-func TestUtilityContext_GetParamOwner(t *testing.T) {
+func TestUtilityUnitOfWork_GetParamOwner(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.GetAclOwner()

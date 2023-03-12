@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUtilityContext_HandleMessageSend(t *testing.T) {
-	ctx := newTestingUtilityUnitOfWork(t, 0)
-	accs := getAllTestingAccounts(t, ctx)
+func TestUtilityUnitOfWork_HandleMessageSend(t *testing.T) {
+	uow := newTestingUtilityUnitOfWork(t, 0)
+	accs := getAllTestingAccounts(t, uow)
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := utils.BigIntToString(sendAmount)
@@ -29,10 +29,10 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 	require.NoError(t, er)
 
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
-	err = ctx.handleMessageSend(&msg)
+	err = uow.handleMessageSend(&msg)
 	require.NoError(t, err, "handle message send")
 
-	accs = getAllTestingAccounts(t, ctx)
+	accs = getAllTestingAccounts(t, uow)
 	senderBalanceAfter, err := utils.StringToBigInt(accs[0].GetAmount())
 	require.NoError(t, err)
 
@@ -42,9 +42,9 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore))
 }
 
-func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
-	ctx := newTestingUtilityUnitOfWork(t, 0)
-	accs := getAllTestingAccounts(t, ctx)
+func TestUtilityUnitOfWork_GetMessageSendSignerCandidates(t *testing.T) {
+	uow := newTestingUtilityUnitOfWork(t, 0)
+	accs := getAllTestingAccounts(t, uow)
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := utils.BigIntToString(sendAmount)
@@ -56,7 +56,7 @@ func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 	require.NoError(t, er)
 
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
-	candidates, err := ctx.getMessageSendSignerCandidates(&msg)
+	candidates, err := uow.getMessageSendSignerCandidates(&msg)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(candidates))
 	require.Equal(t, addrBz, candidates[0])

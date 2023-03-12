@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUtilityContext_ApplyBlock(t *testing.T) {
+func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockUtilityMod := mockModules.NewMockUtilityModule(ctrl)
 	mockUtilityMod.EXPECT().GetModuleName().Return(modules.UtilityModuleName).AnyTimes()
@@ -73,7 +73,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 
 }
 
-func TestUtilityContext_BeginBlock(t *testing.T) {
+func TestUtilityUnitOfWork_BeginBlock(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, uow)
 
@@ -99,7 +99,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 
 }
 
-func TestUtilityContext_EndBlock(t *testing.T) {
+func TestUtilityUnitOfWork_EndBlock(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, uow)
 
