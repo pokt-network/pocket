@@ -99,7 +99,7 @@ For every new block and block proposal (for validator nodes):
 - if block is  higher than node's current height, node checks if it is out of synch via `IsSynched()` function that compares node's local state and the global state by aggregating the collected metada responses.
 
 According to the result of the `IsSynched()` function:
-- If the node is out of sync, it sends `Consensus_IsUnsynched` event, which in turn, through FSM state transitions, triggers `StartSynching()` function. Node  requests block one by one using the minimum and maximum height in aggregated state sync metadata.
+- If the node is out of sync, it runs `StartSynching()` function. Node  requests block one by one using the minimum and maximum height in aggregated state sync metadata.
 - If the node is in synch with its peers it rejects the block and/or block proposal. 
 
  
@@ -188,7 +188,7 @@ flowchart TD
     %% Is caught up?
     B --> |Yes| C{Is Validator?}
     B --> |No| E[UnsynchedMode]
-    E --> D[SyncMode]
+    E --> |Send | D[SyncMode]
 
     %% Synching
     D --> |Request blocks| Z[Peers]
