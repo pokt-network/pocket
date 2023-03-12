@@ -138,21 +138,21 @@ func (kp *encKeyPair) Unmarshal(bz []byte) error {
 
 // UnmarshalJSON Unmarshals a JSON string into an encKeyPair struct
 func (ekp *encKeyPair) UnmarshalJSON(data []byte) error {
-	// Unmarshal the JSON into a temporary struct since the public key is a string
-	type encKeyPairJSON struct {
-		PublicKey     string `json:"public_key"`
-		PrivKeyArmour string `json:"priv_key_armour"`
+	type Alias encKeyPair
+	aux := &struct {
+		PublicKey string `json:"public_key"`
+		*Alias
+	}{
+		Alias: (*Alias)(ekp),
 	}
-	var tmp encKeyPairJSON
-	if err := json.Unmarshal(data, &tmp); err != nil {
+	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	publicKey, err := NewPublicKey(tmp.PublicKey)
+	pubKey, err := NewPublicKey(aux.PublicKey)
 	if err != nil {
 		return err
 	}
-	ekp.PublicKey = publicKey
-	ekp.PrivKeyArmour = tmp.PrivKeyArmour
+	ekp.PublicKey = pubKey
 	return nil
 }
 
