@@ -17,7 +17,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func TestUtilityContext_HandleMessageStake(t *testing.T) {
+func TestUtilityUnitOfWork_HandleMessageStake(t *testing.T) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -61,7 +61,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
+func TestUtilityUnitOfWork_HandleMessageEditStake(t *testing.T) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -116,7 +116,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
+func TestUtilityUnitOfWork_HandleMessageUnstake(t *testing.T) {
 	// The gov param for each actor will be set to this value
 	numUnstakingBlocks := 5
 
@@ -167,7 +167,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
+func TestUtilityUnitOfWork_HandleMessageUnpause(t *testing.T) {
 	// The gov param for each actor will be set to this value
 	minPauseBlocksNumber := 5
 
@@ -249,7 +249,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_GetUnbondingHeight(t *testing.T) {
+func TestUtilityUnitOfWork_GetUnbondingHeight(t *testing.T) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -282,7 +282,7 @@ func TestUtilityContext_GetUnbondingHeight(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
+func TestUtilityUnitOfWork_BeginUnstakingMaxPausedActors(t *testing.T) {
 	// The gov param for each actor will be set to this value
 	maxPausedBlocks := 5
 
@@ -359,7 +359,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t *testing.T) {
+func TestUtilityUnitOfWork_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t *testing.T) {
 	// The gov param for each actor will be set to this value
 	maxPausedBlocks := 5
 	unstakingBlocks := 10
@@ -478,7 +478,7 @@ func TestUtilityContext_BeginUnstakingActorsPausedBefore_UnbondUnstakingActors(t
 	}
 }
 
-func TestUtilityContext_GetActorExists(t *testing.T) {
+func TestUtilityUnitOfWork_GetActorExists(t *testing.T) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -506,7 +506,7 @@ func TestUtilityContext_GetActorExists(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_GetOutputAddress(t *testing.T) {
+func TestUtilityUnitOfWork_GetOutputAddress(t *testing.T) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -527,7 +527,7 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
+func TestUtilityUnitOfWork_GetPauseHeightIfExists(t *testing.T) {
 	pauseHeight := int64(100)
 
 	for actorTypeNum := range coreTypes.ActorType_name {
@@ -565,7 +565,7 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 		})
 	}
 }
-func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageEditStakeSignerCandidates(t *testing.T) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -595,7 +595,7 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageUnpauseSignerCandidates(t *testing.T) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -623,7 +623,7 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
+func TestUtilityUnitOfWork_GetMessageUnstakeSignerCandidates(t *testing.T) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue

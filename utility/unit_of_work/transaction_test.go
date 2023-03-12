@@ -17,7 +17,7 @@ var (
 	defaultSendAmount = big.NewInt(10000)
 )
 
-func TestUtilityContext_AnteHandleMessage(t *testing.T) {
+func TestUtilityUnitOfWork_AnteHandleMessage(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 
 	tx, startingBalance, _, signer := newTestingTransaction(t, uow)
@@ -33,7 +33,7 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 }
 
-func TestUtilityContext_ApplyTransaction(t *testing.T) {
+func TestUtilityUnitOfWork_ApplyTransaction(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 
 	tx, startingBalance, amount, signer := newTestingTransaction(t, uow)
@@ -52,7 +52,7 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 }
 
 // TODO: - @deblasis - refactor this to test HandleTransaction specifically in the utility package
-// func TestUtilityContext_HandleTransaction(t *testing.T) {
+// func TestUtilityUnitOfWork_HandleTransaction(t *testing.T) {
 // 	ctx := newTestingUtilityContext(t, 0)
 // 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
@@ -66,7 +66,7 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 // 	require.Equal(t, testUtilityMod.HandleTransaction(txBz).Error(), typesUtil.ErrDuplicateTransaction().Error())
 // }
 
-func TestUtilityContext_GetSignerCandidates(t *testing.T) {
+func TestUtilityUnitOfWork_GetSignerCandidates(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	accs := getAllTestingAccounts(t, uow)
 
@@ -85,7 +85,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 }
 
 // TODO: - @deblasis - refactor this to test HandleTransaction specifically in the utility package
-// func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
+// func TestUtilityUnitOfWork_CreateAndApplyBlock(t *testing.T) {
 // 	ctx := newTestingUtilityContext(t, 0)
 // 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
@@ -101,7 +101,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 // 	require.Equal(t, txs[0], txBz)
 // }
 
-func TestUtilityContext_HandleMessage(t *testing.T) {
+func TestUtilityUnitOfWork_HandleMessage(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	accs := getAllTestingAccounts(t, uow)
 

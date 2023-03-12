@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUtilityContext_AddAccountAmount(t *testing.T) {
+func TestUtilityUnitOfWork_AddAccountAmount(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	acc := getFirstTestingAccount(t, uow)
 
@@ -31,7 +31,7 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	require.Equal(t, expected, afterAmount)
 }
 
-func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
+func TestUtilityUnitOfWork_SubtractAccountAmount(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	acc := getFirstTestingAccount(t, uow)
 
@@ -51,7 +51,7 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	require.Equal(t, expected, amount)
 }
 
-func TestUtilityContext_SetAccountAmount(t *testing.T) {
+func TestUtilityUnitOfWork_SetAccountAmount(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 
 	addr, err := crypto.GenerateAddress()
@@ -65,7 +65,7 @@ func TestUtilityContext_SetAccountAmount(t *testing.T) {
 	require.Equal(t, amount, gotAmount)
 }
 
-func TestUtilityContext_AddPoolAmount(t *testing.T) {
+func TestUtilityUnitOfWork_AddPoolAmount(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	pool := getFirstTestingPool(t, uow)
 
@@ -82,7 +82,7 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 	require.Equal(t, expected, afterAmount)
 }
 
-func TestUtilityContext_InsertPool(t *testing.T) {
+func TestUtilityUnitOfWork_InsertPool(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	testPoolName := "TEST_POOL"
 
@@ -95,7 +95,7 @@ func TestUtilityContext_InsertPool(t *testing.T) {
 	require.Equal(t, amount, poolAmount)
 }
 
-func TestUtilityContext_SetPoolAmount(t *testing.T) {
+func TestUtilityUnitOfWork_SetPoolAmount(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	pool := getFirstTestingPool(t, uow)
 
@@ -111,7 +111,7 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 	require.Equal(t, amount, expectedAfterAmount)
 }
 
-func TestUtilityContext_SubPoolAmount(t *testing.T) {
+func TestUtilityUnitOfWork_SubPoolAmount(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	pool := getFirstTestingPool(t, uow)
 
