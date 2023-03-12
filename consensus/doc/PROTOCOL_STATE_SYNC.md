@@ -102,8 +102,6 @@ According to the result of the `IsSynched()` function:
 - If the node is out of sync, it runs `StartSynching()` function. Node  requests block one by one using the minimum and maximum height in aggregated state sync metadata.
 - If the node is in synch with its peers it rejects the block and/or block proposal. 
 
- 
-
 
 ```mermaid
 flowchart TD
