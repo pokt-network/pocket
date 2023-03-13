@@ -257,7 +257,8 @@ PROTOC_SHARED = $(PROTOC) -I=./shared
 protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
 	# Shared
 	$(PROTOC) -I=./shared/core/types/proto    --go_out=./shared/core/types          ./shared/core/types/proto/*.proto
-	$(PROTOC) -I=./shared/modules/types/proto --go_out=./shared/modules/types ./shared/modules/types/proto/*.proto
+	$(PROTOC) -I=./shared/pokterrors/proto    --go_out=./shared/pokterrors          ./shared/pokterrors/proto/*.proto
+	$(PROTOC) -I=./shared/modules/types/proto --go_out=./shared/modules/types 		./shared/modules/types/proto/*.proto
 	$(PROTOC) -I=./shared/messaging/proto     --go_out=./shared/messaging           ./shared/messaging/proto/*.proto
 	$(PROTOC) -I=./shared/codec/proto         --go_out=./shared/codec               ./shared/codec/proto/*.proto
 
