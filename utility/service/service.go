@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/utility/types"
+	"github.com/pokt-network/pocket/shared/pokterrors"
 )
 
 type Relay interface {
@@ -51,7 +51,7 @@ var _ Relay = &relay{}
 type relay struct{}
 
 // Validate a submitted relay by a client before servicing
-func (r *relay) Validate() types.Error {
+func (r *relay) Validate() pokterrors.Error {
 
 	// validate payload
 
@@ -79,7 +79,7 @@ func (r *relay) Validate() types.Error {
 }
 
 // Store a submitted relay by a client for volume tracking
-func (r *relay) Store() types.Error {
+func (r *relay) Store() pokterrors.Error {
 
 	// marshal relay object into protoBytes
 
@@ -91,7 +91,7 @@ func (r *relay) Store() types.Error {
 }
 
 // Execute a submitted relay by a client after validation
-func (r *relay) Execute() (RelayResponse, types.Error) {
+func (r *relay) Execute() (RelayResponse, pokterrors.Error) {
 
 	// retrieve the RelayChain url from the servicer's local configuration file
 
@@ -103,7 +103,7 @@ func (r *relay) Execute() (RelayResponse, types.Error) {
 }
 
 // Get volume metric applicable relays from store
-func (r *relay) ReapStoreForHashCollision(sessionBlockHeight int64, hashEndWith string) ([]Relay, types.Error) {
+func (r *relay) ReapStoreForHashCollision(sessionBlockHeight int64, hashEndWith string) ([]Relay, pokterrors.Error) {
 
 	// Pull all relays whose hash collides with the revealed secret key
 	// It's important to note, the secret key isn't revealed by the network until the session is over
@@ -119,7 +119,7 @@ func (r *relay) ReapStoreForHashCollision(sessionBlockHeight int64, hashEndWith 
 }
 
 // Report volume metric applicable relays to Fisherman
-func (r *relay) ReportVolumeMetrics(fishermanServiceURL string, volumeRelays []Relay) types.Error {
+func (r *relay) ReportVolumeMetrics(fishermanServiceURL string, volumeRelays []Relay) pokterrors.Error {
 
 	// Send all volume applicable relays to the assigned trusted Fisherman for
 	// a proper verification of the volume completed. Send volumeRelays to fishermanServiceURL

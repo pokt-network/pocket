@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/pokterrors"
 	"github.com/pokt-network/pocket/shared/utils"
 )
 
@@ -34,7 +35,7 @@ type stakingMessage interface {
 	GetServiceUrl() string
 }
 
-func validateStaker(msg stakingMessage) coreTypes.Error {
+func validateStaker(msg stakingMessage) pokterrors.Error {
 	if err := validateActorType(msg.GetActorType()); err != nil {
 		return err
 	}
@@ -47,24 +48,24 @@ func validateStaker(msg stakingMessage) coreTypes.Error {
 	return validateServiceURL(msg.GetActorType(), msg.GetServiceUrl())
 }
 
-func validateActorType(actorType coreTypes.ActorType) coreTypes.Error {
+func validateActorType(actorType coreTypes.ActorType) pokterrors.Error {
 	if actorType == coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED {
-		return coreTypes.ErrUnknownActorType(string(actorType))
+		return pokterrors.UtilityErrUnknownActorType(string(actorType))
 	}
 	return nil
 }
 
-func validateAmount(amount string) coreTypes.Error {
+func validateAmount(amount string) pokterrors.Error {
 	if amount == "" {
-		return coreTypes.ErrEmptyAmount()
+		return pokterrors.UtilityErrEmptyAmount()
 	}
 	if _, err := utils.StringToBigInt(amount); err != nil {
-		return coreTypes.ErrStringToBigInt(err)
+		return pokterrors.UtilityErrStringToBigInt(err)
 	}
 	return nil
 }
 
-func validateServiceURL(actorType coreTypes.ActorType, uri string) coreTypes.Error {
+func validateServiceURL(actorType coreTypes.ActorType, uri string) pokterrors.Error {
 	if actorType == coreTypes.ActorType_ACTOR_TYPE_APP {
 		return nil
 	}
@@ -72,25 +73,25 @@ func validateServiceURL(actorType coreTypes.ActorType, uri string) coreTypes.Err
 	uri = strings.ToLower(uri)
 	_, err := url.ParseRequestURI(uri)
 	if err != nil {
-		return coreTypes.ErrInvalidServiceURL(err.Error())
+		return pokterrors.UtilityErrInvalidServiceURL(err.Error())
 	}
 	if !(uri[:8] == httpsPrefix || uri[:7] == httpPrefix) {
-		return coreTypes.ErrInvalidServiceURL(invalidURLPrefix)
+		return pokterrors.UtilityErrInvalidServiceURL(invalidURLPrefix)
 	}
 
 	urlParts := strings.Split(uri, colon)
 	if len(urlParts) != 3 { // protocol:host:port
-		return coreTypes.ErrInvalidServiceURL(portRequired)
+		return pokterrors.UtilityErrInvalidServiceURL(portRequired)
 	}
 	port, err := strconv.Atoi(urlParts[2])
 	if err != nil {
-		return coreTypes.ErrInvalidServiceURL(nonNumberPort)
+		return pokterrors.UtilityErrInvalidServiceURL(nonNumberPort)
 	}
 	if port > maxPort || port < 0 {
-		return coreTypes.ErrInvalidServiceURL(portOutOfRange)
+		return pokterrors.UtilityErrInvalidServiceURL(portOutOfRange)
 	}
 	if !strings.Contains(uri, period) {
-		return coreTypes.ErrInvalidServiceURL(noPeriod)
+		return pokterrors.UtilityErrInvalidServiceURL(noPeriod)
 	}
 	return nil
 }

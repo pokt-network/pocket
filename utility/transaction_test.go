@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/shared/core/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/pokterrors"
 	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/stretchr/testify/require"
 )
@@ -63,7 +64,7 @@ func TestUtilityContext_HandleTransaction(t *testing.T) {
 	hash, err := tx.Hash()
 	require.NoError(t, err)
 	require.True(t, testUtilityMod.GetMempool().Contains(hash))
-	require.Equal(t, testUtilityMod.HandleTransaction(txBz).Error(), coreTypes.ErrDuplicateTransaction().Error())
+	require.Equal(t, testUtilityMod.HandleTransaction(txBz).Error(), pokterrors.UtilityErrDuplicateTransaction().Error())
 }
 
 func TestUtilityContext_GetSignerCandidates(t *testing.T) {

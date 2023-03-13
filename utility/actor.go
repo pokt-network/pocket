@@ -9,13 +9,14 @@ import (
 	"math/big"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/pokterrors"
 	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 // Actor setters
 
-func (u *utilityContext) setActorStakeAmount(actorType coreTypes.ActorType, addr []byte, amount *big.Int) coreTypes.Error {
+func (u *utilityContext) setActorStakeAmount(actorType coreTypes.ActorType, addr []byte, amount *big.Int) pokterrors.Error {
 	amountStr := utils.BigIntToString(amount)
 
 	var err error
@@ -29,16 +30,16 @@ func (u *utilityContext) setActorStakeAmount(actorType coreTypes.ActorType, addr
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		err = u.store.SetValidatorStakeAmount(addr, amountStr)
 	default:
-		err = coreTypes.ErrUnknownActorType(actorType.String())
+		err = pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return coreTypes.ErrSetValidatorStakedAmount(err)
+		return pokterrors.UtilityErrSetValidatorStakedAmount(err)
 	}
 	return nil
 }
 
-func (u *utilityContext) setActorUnbondingHeight(actorType coreTypes.ActorType, addr []byte, height int64) coreTypes.Error {
+func (u *utilityContext) setActorUnbondingHeight(actorType coreTypes.ActorType, addr []byte, height int64) pokterrors.Error {
 	var err error
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -50,16 +51,16 @@ func (u *utilityContext) setActorUnbondingHeight(actorType coreTypes.ActorType, 
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		err = u.store.SetValidatorUnstakingHeightAndStatus(addr, height, int32(coreTypes.StakeStatus_Unstaking))
 	default:
-		err = coreTypes.ErrUnknownActorType(actorType.String())
+		err = pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return coreTypes.ErrSetUnstakingHeightAndStatus(err)
+		return pokterrors.UtilityErrSetUnstakingHeightAndStatus(err)
 	}
 	return nil
 }
 
-func (u *utilityContext) setActorPausedHeight(actorType coreTypes.ActorType, addr []byte, height int64) coreTypes.Error {
+func (u *utilityContext) setActorPausedHeight(actorType coreTypes.ActorType, addr []byte, height int64) pokterrors.Error {
 	var err error
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -71,18 +72,18 @@ func (u *utilityContext) setActorPausedHeight(actorType coreTypes.ActorType, add
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		err = u.store.SetValidatorPauseHeight(addr, height)
 	default:
-		err = coreTypes.ErrUnknownActorType(actorType.String())
+		err = pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return coreTypes.ErrSetPauseHeight(err)
+		return pokterrors.UtilityErrSetPauseHeight(err)
 	}
 	return nil
 }
 
 // Actor getters
 
-func (u *utilityContext) getActorStakeAmount(actorType coreTypes.ActorType, addr []byte) (*big.Int, coreTypes.Error) {
+func (u *utilityContext) getActorStakeAmount(actorType coreTypes.ActorType, addr []byte) (*big.Int, pokterrors.Error) {
 	var stakeAmount string
 	var err error
 
@@ -96,22 +97,22 @@ func (u *utilityContext) getActorStakeAmount(actorType coreTypes.ActorType, addr
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		stakeAmount, err = u.store.GetValidatorStakeAmount(u.height, addr)
 	default:
-		err = coreTypes.ErrUnknownActorType(actorType.String())
+		err = pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return nil, coreTypes.ErrGetStakeAmount(err)
+		return nil, pokterrors.UtilityErrGetStakeAmount(err)
 	}
 
 	amount, err := utils.StringToBigInt(stakeAmount)
 	if err != nil {
-		return nil, coreTypes.ErrStringToBigInt(err)
+		return nil, pokterrors.UtilityErrStringToBigInt(err)
 	}
 
 	return amount, nil
 }
 
-func (u *utilityContext) getMaxAllowedPausedBlocks(actorType coreTypes.ActorType) (int, coreTypes.Error) {
+func (u *utilityContext) getMaxAllowedPausedBlocks(actorType coreTypes.ActorType) (int, pokterrors.Error) {
 	var paramName string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -123,18 +124,18 @@ func (u *utilityContext) getMaxAllowedPausedBlocks(actorType coreTypes.ActorType
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		paramName = typesUtil.ValidatorMaxPausedBlocksParamName
 	default:
-		return 0, coreTypes.ErrUnknownActorType(actorType.String())
+		return 0, pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	maxPausedBlocks, err := u.store.GetIntParam(paramName, u.height)
 	if err != nil {
-		return 0, coreTypes.ErrGetParam(paramName, err)
+		return 0, pokterrors.UtilityErrGetParam(paramName, err)
 	}
 
 	return maxPausedBlocks, nil
 }
 
-func (u *utilityContext) getMinRequiredPausedBlocks(actorType coreTypes.ActorType) (int, coreTypes.Error) {
+func (u *utilityContext) getMinRequiredPausedBlocks(actorType coreTypes.ActorType) (int, pokterrors.Error) {
 	var paramName string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -146,17 +147,17 @@ func (u *utilityContext) getMinRequiredPausedBlocks(actorType coreTypes.ActorTyp
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		paramName = typesUtil.ValidatorMinimumPauseBlocksParamName
 	default:
-		return 0, coreTypes.ErrUnknownActorType(actorType.String())
+		return 0, pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	minPausedBlocks, er := u.store.GetIntParam(paramName, u.height)
 	if er != nil {
-		return 0, coreTypes.ErrGetParam(paramName, er)
+		return 0, pokterrors.UtilityErrGetParam(paramName, er)
 	}
 	return minPausedBlocks, nil
 }
 
-func (u *utilityContext) getPausedHeightIfExists(actorType coreTypes.ActorType, addr []byte) (int64, coreTypes.Error) {
+func (u *utilityContext) getPausedHeightIfExists(actorType coreTypes.ActorType, addr []byte) (int64, pokterrors.Error) {
 	var pauseHeight int64
 	var err error
 
@@ -170,17 +171,17 @@ func (u *utilityContext) getPausedHeightIfExists(actorType coreTypes.ActorType, 
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		pauseHeight, err = u.store.GetValidatorPauseHeightIfExists(addr, u.height)
 	default:
-		err = coreTypes.ErrUnknownActorType(actorType.String())
+		err = pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return 0, coreTypes.ErrGetPauseHeight(err)
+		return 0, pokterrors.UtilityErrGetPauseHeight(err)
 	}
 
 	return pauseHeight, nil
 }
 
-func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, addr []byte) (coreTypes.StakeStatus, coreTypes.Error) {
+func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, addr []byte) (coreTypes.StakeStatus, pokterrors.Error) {
 	var status int32
 	var err error
 
@@ -194,21 +195,21 @@ func (u *utilityContext) getActorStatus(actorType coreTypes.ActorType, addr []by
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		status, err = u.store.GetValidatorStatus(addr, u.height)
 	default:
-		err = coreTypes.ErrUnknownActorType(actorType.String())
+		err = pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return coreTypes.StakeStatus_UnknownStatus, coreTypes.ErrGetStatus(err)
+		return coreTypes.StakeStatus_UnknownStatus, pokterrors.UtilityErrGetStatus(err)
 	}
 
 	if _, ok := coreTypes.StakeStatus_name[status]; !ok {
-		return coreTypes.StakeStatus_UnknownStatus, coreTypes.ErrUnknownStatus(status)
+		return coreTypes.StakeStatus_UnknownStatus, pokterrors.UtilityErrUnknownStatus(status)
 	}
 
 	return coreTypes.StakeStatus(status), nil
 }
 
-func (u *utilityContext) getMinRequiredStakeAmount(actorType coreTypes.ActorType) (*big.Int, coreTypes.Error) {
+func (u *utilityContext) getMinRequiredStakeAmount(actorType coreTypes.ActorType) (*big.Int, pokterrors.Error) {
 	var paramName string
 
 	switch actorType {
@@ -221,22 +222,22 @@ func (u *utilityContext) getMinRequiredStakeAmount(actorType coreTypes.ActorType
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		paramName = typesUtil.ValidatorMinimumStakeParamName
 	default:
-		return nil, coreTypes.ErrUnknownActorType(actorType.String())
+		return nil, pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	minStake, er := u.store.GetStringParam(paramName, u.height)
 	if er != nil {
-		return nil, coreTypes.ErrGetParam(paramName, er)
+		return nil, pokterrors.UtilityErrGetParam(paramName, er)
 	}
 
 	amount, err := utils.StringToBigInt(minStake)
 	if err != nil {
-		return nil, coreTypes.ErrStringToBigInt(err)
+		return nil, pokterrors.UtilityErrStringToBigInt(err)
 	}
 	return amount, nil
 }
 
-func (u *utilityContext) getUnbondingHeight(actorType coreTypes.ActorType) (int64, coreTypes.Error) {
+func (u *utilityContext) getUnbondingHeight(actorType coreTypes.ActorType) (int64, pokterrors.Error) {
 	var paramName string
 
 	switch actorType {
@@ -249,18 +250,18 @@ func (u *utilityContext) getUnbondingHeight(actorType coreTypes.ActorType) (int6
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		paramName = typesUtil.ValidatorUnstakingBlocksParamName
 	default:
-		return 0, coreTypes.ErrUnknownActorType(actorType.String())
+		return 0, pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	unstakingBlocksPeriod, err := u.store.GetIntParam(paramName, u.height)
 	if err != nil {
-		return 0, coreTypes.ErrGetParam(paramName, err)
+		return 0, pokterrors.UtilityErrGetParam(paramName, err)
 	}
 
 	return u.height + int64(unstakingBlocksPeriod), nil
 }
 
-func (u *utilityContext) getMaxAllowedChains(actorType coreTypes.ActorType) (int, coreTypes.Error) {
+func (u *utilityContext) getMaxAllowedChains(actorType coreTypes.ActorType) (int, pokterrors.Error) {
 	var paramName string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -270,18 +271,18 @@ func (u *utilityContext) getMaxAllowedChains(actorType coreTypes.ActorType) (int
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		paramName = typesUtil.ServicerMaxChainsParamName
 	default:
-		return 0, coreTypes.ErrUnknownActorType(actorType.String())
+		return 0, pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	maxChains, err := u.store.GetIntParam(paramName, u.height)
 	if err != nil {
-		return 0, coreTypes.ErrGetParam(paramName, err)
+		return 0, pokterrors.UtilityErrGetParam(paramName, err)
 	}
 
 	return maxChains, nil
 }
 
-func (u *utilityContext) getActorExists(actorType coreTypes.ActorType, addr []byte) (bool, coreTypes.Error) {
+func (u *utilityContext) getActorExists(actorType coreTypes.ActorType, addr []byte) (bool, pokterrors.Error) {
 	var exists bool
 	var err error
 
@@ -295,11 +296,11 @@ func (u *utilityContext) getActorExists(actorType coreTypes.ActorType, addr []by
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		exists, err = u.store.GetValidatorExists(addr, u.height)
 	default:
-		return false, coreTypes.ErrUnknownActorType(actorType.String())
+		return false, pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return false, coreTypes.ErrGetExists(err)
+		return false, pokterrors.UtilityErrGetExists(err)
 	}
 
 	return exists, nil
@@ -307,7 +308,7 @@ func (u *utilityContext) getActorExists(actorType coreTypes.ActorType, addr []by
 
 // IMPROVE: Need to re-evaluate the design of `Output Address` to support things like "rev-share"
 // and multiple output addresses.
-func (u *utilityContext) getActorOutputAddress(actorType coreTypes.ActorType, operator []byte) ([]byte, coreTypes.Error) {
+func (u *utilityContext) getActorOutputAddress(actorType coreTypes.ActorType, operator []byte) ([]byte, pokterrors.Error) {
 	var outputAddr []byte
 	var err error
 
@@ -321,11 +322,11 @@ func (u *utilityContext) getActorOutputAddress(actorType coreTypes.ActorType, op
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		outputAddr, err = u.store.GetValidatorOutputAddress(operator, u.height)
 	default:
-		err = coreTypes.ErrUnknownActorType(actorType.String())
+		err = pokterrors.UtilityErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return nil, coreTypes.ErrGetOutputAddress(operator, err)
+		return nil, pokterrors.UtilityErrGetOutputAddress(operator, err)
 
 	}
 	return outputAddr, nil

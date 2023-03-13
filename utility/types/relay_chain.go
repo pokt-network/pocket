@@ -1,6 +1,8 @@
 package types
 
-import coreTypes "github.com/pokt-network/pocket/shared/core/types"
+import (
+	"github.com/pokt-network/pocket/shared/pokterrors"
+)
 
 const (
 	// DISCUSS: Should this be a governance parameter or moved to a shared file?
@@ -11,13 +13,13 @@ type relayChain string
 
 // TODO: Consider adding a governance parameter for a list of valid relay chains
 // ValidateBasic validates the relay chain follows a pre-determined format
-func (rc relayChain) ValidateBasic() coreTypes.Error {
+func (rc relayChain) ValidateBasic() pokterrors.Error {
 	if rc == "" {
-		return coreTypes.ErrEmptyRelayChain()
+		return pokterrors.UtilityErrEmptyRelayChain()
 	}
 	rcLen := len(rc)
 	if rcLen != relayChainLength {
-		return coreTypes.ErrInvalidRelayChainLength(rcLen, relayChainLength)
+		return pokterrors.UtilityErrInvalidRelayChainLength(rcLen, relayChainLength)
 	}
 	return nil
 }

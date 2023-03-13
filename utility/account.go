@@ -8,41 +8,41 @@ package utility
 import (
 	"math/big"
 
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/pokterrors"
 	"github.com/pokt-network/pocket/shared/utils"
 )
 
 // Accounts specific functionality
 
-func (u *utilityContext) getAccountAmount(address []byte) (*big.Int, coreTypes.Error) {
+func (u *utilityContext) getAccountAmount(address []byte) (*big.Int, pokterrors.Error) {
 	amountStr, err := u.store.GetAccountAmount(address, u.height)
 	if err != nil {
-		return nil, coreTypes.ErrGetAccountAmount(err)
+		return nil, pokterrors.UtilityErrGetAccountAmount(err)
 	}
 	amount, err := utils.StringToBigInt(amountStr)
 	if err != nil {
-		return nil, coreTypes.ErrStringToBigInt(err)
+		return nil, pokterrors.UtilityErrStringToBigInt(err)
 	}
 	return amount, nil
 }
 
-func (u *utilityContext) addAccountAmount(address []byte, amountToAdd *big.Int) coreTypes.Error {
+func (u *utilityContext) addAccountAmount(address []byte, amountToAdd *big.Int) pokterrors.Error {
 	if err := u.store.AddAccountAmount(address, utils.BigIntToString(amountToAdd)); err != nil {
-		return coreTypes.ErrAddAccountAmount(err)
+		return pokterrors.UtilityErrAddAccountAmount(err)
 	}
 	return nil
 }
 
-func (u *utilityContext) subtractAccountAmount(address []byte, amountToSubtract *big.Int) coreTypes.Error {
+func (u *utilityContext) subtractAccountAmount(address []byte, amountToSubtract *big.Int) pokterrors.Error {
 	if err := u.store.SubtractAccountAmount(address, utils.BigIntToString(amountToSubtract)); err != nil {
-		return coreTypes.ErrSetAccountAmount(err)
+		return pokterrors.UtilityErrSetAccountAmount(err)
 	}
 	return nil
 }
 
-func (u *utilityContext) setAccountAmount(address []byte, amount *big.Int) coreTypes.Error {
+func (u *utilityContext) setAccountAmount(address []byte, amount *big.Int) pokterrors.Error {
 	if err := u.store.SetAccountAmount(address, utils.BigIntToString(amount)); err != nil {
-		return coreTypes.ErrSetAccountAmount(err)
+		return pokterrors.UtilityErrSetAccountAmount(err)
 	}
 	return nil
 }
@@ -51,42 +51,42 @@ func (u *utilityContext) setAccountAmount(address []byte, amount *big.Int) coreT
 
 // IMPROVE: Pool function should accept the actual pool types rather than the `FriendlyName` string
 
-func (u *utilityContext) insertPool(name string, amount *big.Int) coreTypes.Error {
+func (u *utilityContext) insertPool(name string, amount *big.Int) pokterrors.Error {
 	if err := u.store.InsertPool(name, utils.BigIntToString(amount)); err != nil {
-		return coreTypes.ErrSetPool(name, err)
+		return pokterrors.UtilityErrSetPool(name, err)
 	}
 	return nil
 }
 
-func (u *utilityContext) getPoolAmount(name string) (*big.Int, coreTypes.Error) {
+func (u *utilityContext) getPoolAmount(name string) (*big.Int, pokterrors.Error) {
 	amountStr, err := u.store.GetPoolAmount(name, u.height)
 	if err != nil {
-		return nil, coreTypes.ErrGetPoolAmount(name, err)
+		return nil, pokterrors.UtilityErrGetPoolAmount(name, err)
 	}
 	amount, err := utils.StringToBigInt(amountStr)
 	if err != nil {
-		return nil, coreTypes.ErrStringToBigInt(err)
+		return nil, pokterrors.UtilityErrStringToBigInt(err)
 	}
 	return amount, nil
 }
 
-func (u *utilityContext) addPoolAmount(name string, amountToAdd *big.Int) coreTypes.Error {
+func (u *utilityContext) addPoolAmount(name string, amountToAdd *big.Int) pokterrors.Error {
 	if err := u.store.AddPoolAmount(name, utils.BigIntToString(amountToAdd)); err != nil {
-		return coreTypes.ErrAddPoolAmount(name, err)
+		return pokterrors.UtilityErrAddPoolAmount(name, err)
 	}
 	return nil
 }
 
-func (u *utilityContext) subPoolAmount(name string, amountToSub *big.Int) coreTypes.Error {
+func (u *utilityContext) subPoolAmount(name string, amountToSub *big.Int) pokterrors.Error {
 	if err := u.store.SubtractPoolAmount(name, utils.BigIntToString(amountToSub)); err != nil {
-		return coreTypes.ErrSubPoolAmount(name, err)
+		return pokterrors.UtilityErrSubPoolAmount(name, err)
 	}
 	return nil
 }
 
-func (u *utilityContext) setPoolAmount(name string, amount *big.Int) coreTypes.Error {
+func (u *utilityContext) setPoolAmount(name string, amount *big.Int) pokterrors.Error {
 	if err := u.store.SetPoolAmount(name, utils.BigIntToString(amount)); err != nil {
-		return coreTypes.ErrSetPoolAmount(name, err)
+		return pokterrors.UtilityErrSetPoolAmount(name, err)
 	}
 	return nil
 }

@@ -8,6 +8,7 @@ import (
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
+	"github.com/pokt-network/pocket/shared/pokterrors"
 	"github.com/pokt-network/pocket/shared/utils"
 )
 
@@ -147,7 +148,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 	stateHash, err := u.store.ComputeStateHash()
 	if err != nil {
 		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
-		return "", coreTypes.ErrAppHash(err)
+		return "", pokterrors.UtilityErrAppHash(err)
 	}
 	u.logger.Info().Msgf("ApplyBlock - computed state hash: %s", stateHash)
 
@@ -155,7 +156,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 	return stateHash, nil
 }
 
-func (u *utilityContext) beginBlock(previousBlockByzantineValidators [][]byte) coreTypes.Error {
+func (u *utilityContext) beginBlock(previousBlockByzantineValidators [][]byte) pokterrors.Error {
 	if err := u.handleByzantineValidators(previousBlockByzantineValidators); err != nil {
 		return err
 	}
@@ -163,7 +164,7 @@ func (u *utilityContext) beginBlock(previousBlockByzantineValidators [][]byte) c
 	return nil
 }
 
-func (u *utilityContext) endBlock(proposer []byte) coreTypes.Error {
+func (u *utilityContext) endBlock(proposer []byte) pokterrors.Error {
 	// reward the block proposer
 	if err := u.handleProposerRewards(proposer); err != nil {
 		return err
@@ -183,7 +184,7 @@ func (u *utilityContext) endBlock(proposer []byte) coreTypes.Error {
 	return nil
 }
 
-func (u *utilityContext) handleProposerRewards(proposer []byte) coreTypes.Error {
+func (u *utilityContext) handleProposerRewards(proposer []byte) pokterrors.Error {
 	feePoolName := coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName()
 	feesAndRewardsCollected, err := u.getPoolAmount(feePoolName)
 	if err != nil {
@@ -203,7 +204,7 @@ func (u *utilityContext) handleProposerRewards(proposer []byte) coreTypes.Error 
 
 	daoCutPercentage := 100 - proposerCutPercentage
 	if daoCutPercentage < 0 || daoCutPercentage > 100 {
-		return coreTypes.ErrInvalidProposerCutPercentage()
+		return pokterrors.UtilityErrInvalidProposerCutPercentage()
 	}
 
 	amountToProposerFloat := new(big.Float).SetInt(feesAndRewardsCollected)
@@ -220,7 +221,7 @@ func (u *utilityContext) handleProposerRewards(proposer []byte) coreTypes.Error 
 	return nil
 }
 
-func (u *utilityContext) unbondUnstakingActors() (err coreTypes.Error) {
+func (u *utilityContext) unbondUnstakingActors() (err pokterrors.Error) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -248,7 +249,7 @@ func (u *utilityContext) unbondUnstakingActors() (err coreTypes.Error) {
 			continue
 		}
 		if er != nil {
-			return coreTypes.ErrGetReadyToUnstake(er)
+			return pokterrors.UtilityErrGetReadyToUnstake(er)
 		}
 
 		// Loop through all unstaking actors and unbond those that have reached the waiting period,
@@ -256,12 +257,12 @@ func (u *utilityContext) unbondUnstakingActors() (err coreTypes.Error) {
 		for _, actor := range readyToUnbond {
 			stakeAmount, err := utils.StringToBigInt(actor.StakeAmount)
 			if err != nil {
-				return coreTypes.ErrStringToBigInt(err)
+				return pokterrors.UtilityErrStringToBigInt(err)
 			}
 
 			outputAddrBz, err := hex.DecodeString(actor.OutputAddress)
 			if err != nil {
-				return coreTypes.ErrHexDecodeFromString(err)
+				return pokterrors.UtilityErrHexDecodeFromString(err)
 			}
 
 			if err := u.subPoolAmount(poolName, stakeAmount); err != nil {
@@ -276,7 +277,7 @@ func (u *utilityContext) unbondUnstakingActors() (err coreTypes.Error) {
 	return nil
 }
 
-func (u *utilityContext) beginUnstakingMaxPausedActors() (err coreTypes.Error) {
+func (u *utilityContext) beginUnstakingMaxPausedActors() (err pokterrors.Error) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -301,7 +302,7 @@ func (u *utilityContext) beginUnstakingMaxPausedActors() (err coreTypes.Error) {
 	return nil
 }
 
-func (u *utilityContext) beginUnstakingActorsPausedBefore(pausedBeforeHeight int64, actorType coreTypes.ActorType) (err coreTypes.Error) {
+func (u *utilityContext) beginUnstakingActorsPausedBefore(pausedBeforeHeight int64, actorType coreTypes.ActorType) (err pokterrors.Error) {
 	unbondingHeight, err := u.getUnbondingHeight(actorType)
 	if err != nil {
 		return err
@@ -319,7 +320,7 @@ func (u *utilityContext) beginUnstakingActorsPausedBefore(pausedBeforeHeight int
 		er = u.store.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
 	}
 	if er != nil {
-		return coreTypes.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
+		return pokterrors.UtilityErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}
 	return nil
 }

@@ -3,9 +3,9 @@ package types
 import (
 	"sync"
 
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/mempool"
+	"github.com/pokt-network/pocket/shared/pokterrors"
 )
 
 var _ mempool.TXMempool = &txFIFOMempool{}
@@ -21,7 +21,7 @@ type txFIFOMempool struct {
 // AddTx adds a tx to the mempool
 func (t *txFIFOMempool) AddTx(tx []byte) error {
 	if err := t.g.Push(tx); err != nil {
-		return coreTypes.ErrDuplicateTransaction()
+		return pokterrors.UtilityErrDuplicateTransaction()
 	}
 	return nil
 }
@@ -94,7 +94,7 @@ func NewTxFIFOMempool(maxTxsBytesTotal uint64, maxTxs uint32) *txFIFOMempool {
 			return txFIFOMempool.txCount > maxTxs || txFIFOMempool.txsBytesTotal > txFIFOMempool.maxTxsBytesTotal
 		}),
 		mempool.WithOnCollision(func(item []byte, g *mempool.GenericFIFOSet[string, []byte]) error {
-			return coreTypes.ErrDuplicateTransaction()
+			return pokterrors.UtilityErrDuplicateTransaction()
 		}),
 		mempool.WithOnAdd(func(item []byte, g *mempool.GenericFIFOSet[string, []byte]) {
 			txFIFOMempool.m.Lock()

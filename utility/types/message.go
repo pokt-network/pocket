@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/pokterrors"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -16,7 +17,7 @@ import (
 type Message interface {
 	proto.Message // TECHDEBT: Still making direct `proto` reference even with a central `codec` package
 
-	ValidateBasic() coreTypes.Error
+	ValidateBasic() pokterrors.Error
 
 	SetSigner(signerAddr []byte) // TECHDEBT: Convert to string or `crypto.Address` type
 
@@ -36,7 +37,7 @@ var (
 	_ Message = &MessageChangeParameter{}
 )
 
-func (msg *MessageSend) ValidateBasic() coreTypes.Error {
+func (msg *MessageSend) ValidateBasic() pokterrors.Error {
 	if err := validateAddress(msg.FromAddress); err != nil {
 		return err
 	}
@@ -48,7 +49,7 @@ func (msg *MessageSend) ValidateBasic() coreTypes.Error {
 	}
 	return nil
 }
-func (msg *MessageStake) ValidateBasic() coreTypes.Error {
+func (msg *MessageStake) ValidateBasic() pokterrors.Error {
 	if err := validatePublicKey(msg.PublicKey); err != nil {
 		return err
 	}
@@ -57,24 +58,24 @@ func (msg *MessageStake) ValidateBasic() coreTypes.Error {
 	}
 	return validateStaker(msg)
 }
-func (msg *MessageUnstake) ValidateBasic() coreTypes.Error {
+func (msg *MessageUnstake) ValidateBasic() pokterrors.Error {
 	return validateAddress(msg.Address)
 }
-func (msg *MessageUnpause) ValidateBasic() coreTypes.Error {
+func (msg *MessageUnpause) ValidateBasic() pokterrors.Error {
 	return validateAddress(msg.Address)
 }
-func (msg *MessageEditStake) ValidateBasic() coreTypes.Error {
+func (msg *MessageEditStake) ValidateBasic() pokterrors.Error {
 	if err := validateAddress(msg.Address); err != nil {
 		return err
 	}
 	return validateStaker(msg)
 }
-func (msg *MessageChangeParameter) ValidateBasic() coreTypes.Error {
+func (msg *MessageChangeParameter) ValidateBasic() pokterrors.Error {
 	if msg.ParameterKey == "" {
-		return coreTypes.ErrEmptyParamKey()
+		return pokterrors.UtilityErrEmptyParamKey()
 	}
 	if msg.ParameterValue == nil {
-		return coreTypes.ErrEmptyParamValue()
+		return pokterrors.UtilityErrEmptyParamValue()
 	}
 	if err := validateAddress(msg.Owner); err != nil {
 		return err
@@ -123,25 +124,25 @@ func (msg *MessageChangeParameter) GetCanonicalBytes() []byte { return getCanoni
 
 // CONSIDERATION: If the protobufs contain semantic types (e.g. Address is an interface), we could
 // potentially leverage a shared `address.ValidateBasic()` throughout the codebase.
-func validateAddress(address []byte) coreTypes.Error {
+func validateAddress(address []byte) pokterrors.Error {
 	if address == nil {
-		return coreTypes.ErrEmptyAddress()
+		return pokterrors.UtilityErrEmptyAddress()
 	}
 	addrLen := len(address)
 	if addrLen != cryptoPocket.AddressLen {
-		return coreTypes.ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
+		return pokterrors.UtilityErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
 	}
 	return nil
 }
 
 // CONSIDERATION: Consolidate with `validateAddress`? The only difference is the error message.
-func validateOutputAddress(address []byte) coreTypes.Error {
+func validateOutputAddress(address []byte) pokterrors.Error {
 	if address == nil {
-		return coreTypes.ErrNilOutputAddress()
+		return pokterrors.UtilityErrNilOutputAddress()
 	}
 	addrLen := len(address)
 	if addrLen != cryptoPocket.AddressLen {
-		return coreTypes.ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
+		return pokterrors.UtilityErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
 	}
 	return nil
 }
@@ -149,32 +150,32 @@ func validateOutputAddress(address []byte) coreTypes.Error {
 // CONSIDERATION: If the protobufs contain semantic types, we could potentially leverage
 //
 //	a shared `address.ValidateBasic()` throughout the codebase.s
-func validatePublicKey(publicKey []byte) coreTypes.Error {
+func validatePublicKey(publicKey []byte) pokterrors.Error {
 	if publicKey == nil {
-		return coreTypes.ErrEmptyPublicKey()
+		return pokterrors.UtilityErrEmptyPublicKey()
 	}
 	pubKeyLen := len(publicKey)
 	if pubKeyLen != cryptoPocket.PublicKeyLen {
-		return coreTypes.ErrInvalidPublicKeyLen(pubKeyLen)
+		return pokterrors.UtilityErrInvalidPublicKeyLen(pubKeyLen)
 	}
 	return nil
 }
 
 //nolint:unused // TODO: need to figure out why this function was added and never used
-func validateHash(hash []byte) coreTypes.Error {
+func validateHash(hash []byte) pokterrors.Error {
 	if hash == nil {
-		return coreTypes.ErrEmptyHash()
+		return pokterrors.UtilityErrEmptyHash()
 	}
 	hashLen := len(hash)
 	if hashLen != cryptoPocket.SHA3HashLen {
-		return coreTypes.ErrInvalidHashLength(hashLen)
+		return pokterrors.UtilityErrInvalidHashLength(hashLen)
 	}
 	return nil
 }
 
-func validateRelayChains(chains []string) coreTypes.Error {
+func validateRelayChains(chains []string) pokterrors.Error {
 	if chains == nil {
-		return coreTypes.ErrEmptyRelayChains()
+		return pokterrors.UtilityErrEmptyRelayChains()
 	}
 	for _, chain := range chains {
 		if err := relayChain(chain).ValidateBasic(); err != nil {

@@ -6,13 +6,14 @@ import (
 	"math/big"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/pokterrors"
 )
 
 // handleByzantineValidators identifies & handles byzantine or faulty validators.
 // This includes validators who double signed, didn't sign at all or disagree with 2/3+ majority.
 // IMPROVE: Need to add more logging to this function.
 // INCOMPLETE: handleByzantineValidators is a WIP and needs to be fully designed, implemented, tested and documented
-func (u *utilityContext) handleByzantineValidators(prevBlockByzantineValidators [][]byte) coreTypes.Error {
+func (u *utilityContext) handleByzantineValidators(prevBlockByzantineValidators [][]byte) pokterrors.Error {
 	maxMissedBlocks, err := u.getValidatorMaxMissedBlocks()
 	if err != nil {
 		return err
@@ -22,7 +23,7 @@ func (u *utilityContext) handleByzantineValidators(prevBlockByzantineValidators 
 		// Get the latest number of missed blocks by the validator
 		numMissedBlocks, err := u.store.GetValidatorMissedBlocks(address, u.height)
 		if err != nil {
-			return coreTypes.ErrGetMissedBlocks(err)
+			return pokterrors.UtilityErrGetMissedBlocks(err)
 		}
 
 		// increment missed blocks
@@ -31,18 +32,18 @@ func (u *utilityContext) handleByzantineValidators(prevBlockByzantineValidators 
 		// handle if under the threshold of max missed blocks
 		if numMissedBlocks < maxMissedBlocks {
 			if err := u.store.SetValidatorMissedBlocks(address, numMissedBlocks); err != nil {
-				return coreTypes.ErrSetMissedBlocks(err)
+				return pokterrors.UtilityErrSetMissedBlocks(err)
 			}
 			continue
 		}
 
 		// pause the validator for exceeding the threshold: numMissedBlocks >= maxMissedBlocks
 		if err := u.store.SetValidatorPauseHeight(address, u.height); err != nil {
-			return coreTypes.ErrSetPauseHeight(err)
+			return pokterrors.UtilityErrSetPauseHeight(err)
 		}
 		// update the number of blocks it missed
 		if err := u.store.SetValidatorMissedBlocks(address, numMissedBlocks); err != nil {
-			return coreTypes.ErrSetMissedBlocks(err)
+			return pokterrors.UtilityErrSetMissedBlocks(err)
 		}
 		// burn validator for missing blocks
 		if err := u.burnValidator(address); err != nil {
@@ -56,7 +57,7 @@ func (u *utilityContext) handleByzantineValidators(prevBlockByzantineValidators 
 // and begins unstaking if the stake falls below the necessary threshold
 // REFACTOR: Extend this to support burning other actors types & pools once the logic is implemented
 // ADDTEST: There are no good tests for this functionality, which MUST be added.
-func (u *utilityContext) burnValidator(addr []byte) coreTypes.Error {
+func (u *utilityContext) burnValidator(addr []byte) pokterrors.Error {
 	actorType := coreTypes.ActorType_ACTOR_TYPE_VAL
 	actorPool := coreTypes.Pools_POOLS_VALIDATOR_STAKE
 

@@ -7,6 +7,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/pokterrors"
 )
 
 var _ modules.TxResult = &TxResult{}
@@ -16,11 +17,11 @@ func TxToTxResult(
 	height int64,
 	index int,
 	msg Message,
-	msgHandlingResult coreTypes.Error,
-) (*TxResult, coreTypes.Error) {
+	msgHandlingResult pokterrors.Error,
+) (*TxResult, pokterrors.Error) {
 	txBz, err := tx.Bytes()
 	if err != nil {
-		return nil, coreTypes.ErrProtoMarshal(err)
+		return nil, pokterrors.UtilityErrProtoMarshal(err)
 	}
 	resultCode := int32(0)
 	errorMsg := ""

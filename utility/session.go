@@ -8,6 +8,7 @@ import (
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/pokterrors"
 )
 
 // TODO: When implementing please review if block height tolerance (+,-1) is included in the session protocol: pokt-network/pocket-core#1464 CC @Olshansk
@@ -17,7 +18,7 @@ type RelayChain string
 type GeoZone string
 
 type Session interface {
-	NewSession(sessionHeight int64, relayChain RelayChain, geoZone GeoZone, application *coreTypes.Actor) (Session, coreTypes.Error)
+	NewSession(sessionHeight int64, relayChain RelayChain, geoZone GeoZone, application *coreTypes.Actor) (Session, pokterrors.Error)
 	GetSessionID() []byte             // the identifier of the dispatched session
 	GetSessionHeight() int64          // the block height when the session started
 	GetRelayChain() RelayChain        // the web3 chain identifier
@@ -44,7 +45,7 @@ func (*session) NewSession(
 	relayChain RelayChain,
 	geoZone GeoZone,
 	application *coreTypes.Actor,
-) (Session, coreTypes.Error) {
+) (Session, pokterrors.Error) {
 	s := &session{
 		height:      sessionHeight,
 		relayChain:  relayChain,
@@ -56,7 +57,7 @@ func (*session) NewSession(
 	numServicers := 1
 	numFisherman := 1
 
-	var err coreTypes.Error
+	var err pokterrors.Error
 	if s.servicers, err = s.selectSessionServicers(numServicers); err != nil {
 		return nil, err
 	}
@@ -99,7 +100,7 @@ func (s *session) GetServicers() []*coreTypes.Actor {
 
 // use the seed information to determine a SHA3Hash that is used to find the closest N actors based
 // by comparing the sessionKey with the actors' public key
-func (s *session) getSessionId() ([]byte, coreTypes.Error) {
+func (s *session) getSessionId() ([]byte, pokterrors.Error) {
 	sessionHeightBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(sessionHeightBz, uint64(s.height))
 
@@ -107,7 +108,7 @@ func (s *session) getSessionId() ([]byte, coreTypes.Error) {
 
 	appPubKey, err := crypto.NewPublicKey(s.application.GetPublicKey())
 	if err != nil {
-		return nil, coreTypes.ErrNewPublicKeyFromBytes(err)
+		return nil, pokterrors.UtilityErrNewPublicKeyFromBytes(err)
 	}
 
 	return concat(sessionHeightBz, blockHashBz, []byte(s.geoZone), []byte(s.relayChain), appPubKey.Bytes()), nil
@@ -120,7 +121,7 @@ func (s *session) getSessionId() ([]byte, coreTypes.Error) {
 //   - staked for relay-chain
 //
 // 2) calls `pseudoRandomSelection(servicers, numberOfNodesPerSession)`
-func (s *session) selectSessionServicers(numServicers int) ([]*coreTypes.Actor, coreTypes.Error) {
+func (s *session) selectSessionServicers(numServicers int) ([]*coreTypes.Actor, pokterrors.Error) {
 	// IMPORTANT: This function is for behaviour illustrative purposes only and implementation may differ.
 	return nil, nil
 }
@@ -132,7 +133,7 @@ func (s *session) selectSessionServicers(numServicers int) ([]*coreTypes.Actor, 
 //   - staked for relay-chain
 //
 // 2) calls `pseudoRandomSelection(fishermen, numberOfFishPerSession)`
-func (s *session) selectSessionFishermen(numFishermen int) ([]*coreTypes.Actor, coreTypes.Error) {
+func (s *session) selectSessionFishermen(numFishermen int) ([]*coreTypes.Actor, pokterrors.Error) {
 	// IMPORTANT: This function is for behaviour illustrative purposes only and implementation may differ.
 	return nil, nil
 }
