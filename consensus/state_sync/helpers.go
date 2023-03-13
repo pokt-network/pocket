@@ -105,3 +105,35 @@ func (m *stateSync) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, er
 
 	return persistenceReadContext.GetAllValidators(int64(height))
 }
+
+func (m *stateSync) maximumPersistedBlockHeight() (uint64, error) {
+	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	if err != nil {
+		return 0, err
+	}
+	defer persistenceContext.Close()
+
+	maxHeight, err := persistenceContext.GetMaximumBlockHeight()
+	if err != nil {
+		return 0, err
+	}
+
+	return maxHeight, nil
+}
+
+func (m *stateSync) minimumPersistedBlockHeight() (uint64, error) {
+	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	if err != nil {
+		return 0, err
+	}
+	defer persistenceContext.Close()
+
+	maxHeight, err := persistenceContext.GetMinimumBlockHeight()
+	if err != nil {
+		return 0, err
+	}
+
+	return maxHeight, nil
+}

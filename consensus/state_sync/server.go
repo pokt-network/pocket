@@ -36,18 +36,12 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 
 	m.logger.Info().Fields(fields).Msgf("Received StateSync MetadataRequest %s", metadataReq)
 
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
-	if err != nil {
-		return nil
-	}
-	defer persistenceContext.Close()
-
-	maxHeight, err := persistenceContext.GetMaximumBlockHeight()
+	maxHeight, err := m.maximumPersistedBlockHeight()
 	if err != nil {
 		return err
 	}
 
-	minHeight, err := persistenceContext.GetMinimumBlockHeight()
+	minHeight, err := m.minimumPersistedBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -69,8 +63,11 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	consensusMod := m.GetBus().GetConsensusModule()
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := blockReq.PeerAddress
-	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
-	lastPersistedBlockHeight := consensusMod.CurrentHeight() - 1
+
+	lastPersistedBlockHeight, err := m.maximumPersistedBlockHeight()
+	if err != nil {
+		return err
+	}
 
 	// TODO (#571): update with logger helper function
 	fields := map[string]any{
