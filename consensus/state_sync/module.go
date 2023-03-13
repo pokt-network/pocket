@@ -7,6 +7,7 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -207,7 +208,10 @@ func (m *stateSync) StartSynching() error {
 	lastPersistedBlockHeight := current_height - 1
 	m.logger.Debug().Msgf("Last persisted block %d, Aggregated maxHeight %d", lastPersistedBlockHeight, m.aggregatedSyncMetadata.MaxHeight)
 
+	// Request blocks one by one from its peers,
 	for i := lastPersistedBlockHeight; i < m.aggregatedSyncMetadata.MaxHeight; i++ {
+		// ensure that prev block is persisted!!
+
 		m.logger.Debug().Msgf("StartSynching() Requesting block %d", i)
 		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 			Message: &typesCons.StateSyncMessage_GetBlockReq{
@@ -220,7 +224,12 @@ func (m *stateSync) StartSynching() error {
 		m.broadcastStateSyncMessage(stateSyncGetBlockMessage, current_height)
 	}
 
-	return nil
+	// TODO! check if its validator after all blocks are received, transition to state
+	// if m.GetBus().GetConsensusModule().IsValidator() == m.aggregatedSyncMetadata.MaxHeight {
+
+	// }
+
+	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
 }
 
 // TODO(#352): Implement this function, currently a placeholder.
