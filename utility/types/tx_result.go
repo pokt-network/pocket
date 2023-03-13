@@ -16,11 +16,11 @@ func TxToTxResult(
 	height int64,
 	index int,
 	msg Message,
-	msgHandlingResult Error,
-) (*TxResult, Error) {
+	msgHandlingResult coreTypes.Error,
+) (*TxResult, coreTypes.Error) {
 	txBz, err := tx.Bytes()
 	if err != nil {
-		return nil, ErrProtoMarshal(err)
+		return nil, coreTypes.ErrProtoMarshal(err)
 	}
 	resultCode := int32(0)
 	errorMsg := ""

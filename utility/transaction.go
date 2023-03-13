@@ -17,20 +17,20 @@ func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
 
 	// Is the tx already in the mempool (in memory)?
 	if u.mempool.Contains(txHash) {
-		return typesUtil.ErrDuplicateTransaction()
+		return coreTypes.ErrDuplicateTransaction()
 	}
 
 	// Is the tx already committed & indexed (on disk)?
 	if txExists, err := u.GetBus().GetPersistenceModule().TransactionExists(txHash); err != nil {
 		return err
 	} else if txExists {
-		return typesUtil.ErrTransactionAlreadyCommitted()
+		return coreTypes.ErrTransactionAlreadyCommitted()
 	}
 
 	// Can the tx be decoded?
 	tx := &coreTypes.Transaction{}
 	if err := codec.GetCodec().Unmarshal(txProtoBytes, tx); err != nil {
-		return typesUtil.ErrProtoUnmarshal(err)
+		return coreTypes.ErrProtoUnmarshal(err)
 	}
 
 	// Does the tx pass basic validation?
@@ -48,7 +48,7 @@ func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
 //
 // IMPROVE: hydration should accept and return the same type (i.e. TxResult) so there may be opportunity
 // to refactor this in the future.
-func (u *utilityContext) hydrateTxResult(tx *coreTypes.Transaction, index int) (modules.TxResult, typesUtil.Error) {
+func (u *utilityContext) hydrateTxResult(tx *coreTypes.Transaction, index int) (modules.TxResult, coreTypes.Error) {
 	msg, err := u.anteHandleMessage(tx)
 	if err != nil {
 		return nil, err
@@ -60,21 +60,21 @@ func (u *utilityContext) hydrateTxResult(tx *coreTypes.Transaction, index int) (
 // anteHandleMessage handles basic validation of the message in the Transaction before it is processed
 // REFACTOR: Splitting this into a `feeValidation`, `signerValidation`, and `messageValidation` etc
 // would make it more modular and readable.
-func (u *utilityContext) anteHandleMessage(tx *coreTypes.Transaction) (typesUtil.Message, typesUtil.Error) {
+func (u *utilityContext) anteHandleMessage(tx *coreTypes.Transaction) (typesUtil.Message, coreTypes.Error) {
 	// Check if the transaction has a valid message
 	anyMsg, er := tx.GetMessage()
 	if er != nil {
-		return nil, typesUtil.ErrDecodeMessage(er)
+		return nil, coreTypes.ErrDecodeMessage(er)
 	}
 	msg, ok := anyMsg.(typesUtil.Message)
 	if !ok {
-		return nil, typesUtil.ErrDecodeMessage(fmt.Errorf("not a supported message type"))
+		return nil, coreTypes.ErrDecodeMessage(fmt.Errorf("not a supported message type"))
 	}
 
 	// Get the address of the transaction signer
 	pubKey, er := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
 	if er != nil {
-		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
+		return nil, coreTypes.ErrNewPublicKeyFromBytes(er)
 	}
 	address := pubKey.Address()
 	addressHex := address.ToString()
@@ -86,11 +86,11 @@ func (u *utilityContext) anteHandleMessage(tx *coreTypes.Transaction) (typesUtil
 	}
 	accountAmount, err := u.getAccountAmount(address)
 	if err != nil {
-		return nil, typesUtil.ErrGetAccountAmount(err)
+		return nil, coreTypes.ErrGetAccountAmount(err)
 	}
 	accountAmount.Sub(accountAmount, fee)
 	if accountAmount.Sign() == -1 {
-		return nil, typesUtil.ErrInsufficientAmount(addressHex)
+		return nil, coreTypes.ErrInsufficientAmount(addressHex)
 	}
 
 	// Validate that the signer has a valid signature
@@ -107,7 +107,7 @@ func (u *utilityContext) anteHandleMessage(tx *coreTypes.Transaction) (typesUtil
 		}
 	}
 	if !isValidSigner {
-		return nil, typesUtil.ErrInvalidSigner(addressHex)
+		return nil, coreTypes.ErrInvalidSigner(addressHex)
 	}
 
 	// Remove the fee from the signer's account and add it to the fee collector pool

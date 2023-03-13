@@ -3,9 +3,9 @@ package utility
 import (
 	"encoding/hex"
 
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
-	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 var (
@@ -32,7 +32,7 @@ type utilityContext struct {
 func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error) {
 	persistenceCtx, err := u.GetBus().GetPersistenceModule().NewRWContext(height)
 	if err != nil {
-		return nil, typesUtil.ErrNewPersistenceContext(err)
+		return nil, coreTypes.ErrNewPersistenceContext(err)
 	}
 	ctx := &utilityContext{
 		logger: u.logger,
@@ -74,28 +74,28 @@ func (u *utilityContext) Release() error {
 }
 
 // TODO: This has not been tested or investigated in detail
-func (u *utilityContext) revertLastSavePoint() typesUtil.Error {
+func (u *utilityContext) revertLastSavePoint() coreTypes.Error {
 	if len(u.savePointsSet) == 0 {
-		return typesUtil.ErrEmptySavePoints()
+		return coreTypes.ErrEmptySavePoints()
 	}
 	var key []byte
 	popIndex := len(u.savePointsList) - 1
 	key, u.savePointsList = u.savePointsList[popIndex], u.savePointsList[:popIndex]
 	delete(u.savePointsSet, hex.EncodeToString(key))
 	if err := u.store.RollbackToSavePoint(key); err != nil {
-		return typesUtil.ErrRollbackSavePoint(err)
+		return coreTypes.ErrRollbackSavePoint(err)
 	}
 	return nil
 }
 
 //nolint:unused // TODO: This has not been tested or investigated in detail
-func (u *utilityContext) newSavePoint(txHashBz []byte) typesUtil.Error {
+func (u *utilityContext) newSavePoint(txHashBz []byte) coreTypes.Error {
 	if err := u.store.NewSavePoint(txHashBz); err != nil {
-		return typesUtil.ErrNewSavePoint(err)
+		return coreTypes.ErrNewSavePoint(err)
 	}
 	txHash := hex.EncodeToString(txHashBz)
 	if _, exists := u.savePointsSet[txHash]; exists {
-		return typesUtil.ErrDuplicateSavePoint()
+		return coreTypes.ErrDuplicateSavePoint()
 	}
 	u.savePointsList = append(u.savePointsList, txHashBz)
 	u.savePointsSet[txHash] = struct{}{}
