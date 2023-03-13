@@ -322,7 +322,7 @@ test_all: ## Run all go unit tests
 	go test -p 1 -count=1 ./...
 
 .PHONY: test_e2e
-test_e2e:
+test_e2e: ## Assumes that `localnet_up` is running *warm*.
 	go test -v ./e2e/tests/steps_init_test.go
 
 .PHONY: test_all_with_json_coverage

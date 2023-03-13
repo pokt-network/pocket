@@ -2,92 +2,57 @@ package e2e
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os/exec"
 	"testing"
 
 	"github.com/cucumber/godog"
-	"github.com/testcontainers/testcontainers-go"
-	"golang.org/x/net/context"
 
 	"github.com/pokt-network/pocket/e2e/tests/runner"
 )
 
 var (
-	// commander is a reference to the container these tests start and issue commands to.
-	commander runner.PocketClient
+	client runner.PocketClient
 )
+
+// KubeClient saves a reference to a command
+type KubeClient struct {
+	cmd *exec.Cmd
+}
+
+// RunCommand runs a command on a KubeClient.
+func (k *KubeClient) RunCommand(args ...string) (*runner.CommandResult, error) {
+	// TODO: wire this up to run arbitrary commands wrapped around the kubectl now that we have the right pod
+	// fmt.Printf("k.cmd: %v\n", k.cmd)
+	return nil, godog.ErrPending
+}
 
 func thePocketClientShouldHaveExitedWithoutError() error {
 	return godog.ErrPending
 }
 
-// debugContainer makes the debug conatiner implement the PocketClient command interface.
-type debugContainer struct {
-	runner.PocketClient
-
-	c testcontainers.Container
-}
-
-func (d *debugContainer) RunCommand(args ...string) (*runner.CommandResult, error) {
-	_, reader, err := d.c.Exec(context.Background(), []string{"echo 'hello world'"})
-	if err != nil {
-		return nil, err
-	}
-	result, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("result: %+v", result)
-	return &runner.CommandResult{
-		Stdout: string(result),
-		Stderr: err.Error(),
-		Err:    nil,
-	}, nil
-}
-
-func newDebugContainer() (*debugContainer, error) {
-	ctx := context.Background()
-	req := testcontainers.ContainerRequest{
-		Image: "pocket/client",
-		// WaitingFor: wait.ForAll(wait.ForLog("rainTreeNetwork")), // TODO: do we need to wait at all?
-	}
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if err := container.Start(ctx); err != nil {
-		return nil, err
-	}
-
-	host, err := container.Host(ctx)
-	if err != nil {
-		return nil, err
-	}
-	ip, err := container.ContainerIP(ctx)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("started debug container with %s %s", host, ip)
-
-	return &debugContainer{c: container}, nil
-}
-
 func theUserHasAPocketClient() error {
-	c, err := newDebugContainer()
+	cmd := exec.Command("kubectl",
+		"exec", "-it", "deploy/pocket-v1-cli-client",
+		"--container", "pocket",
+		"--", "client",
+		"help")
+	// TODO: for some reason the cluster-manager does not want to play nice for this command?
+	// cmd := exec.Command("kubectl", "exec", "-i", "-t", "deploy/pocket-v1-cluster-manager", "--", "/usr/local/bin/cluster-manager")
+	// cmd.Wait()
+	log.Println(cmd)
+	out, err := cmd.Output()
 	if err != nil {
-		return fmt.Errorf("failed to get debug container: %+v", err)
+		fmt.Printf("err: %v\n", err)
+		return err
 	}
-	commander = c
+	fmt.Printf("### OUTPUT: %s\n", out)
+	client = &KubeClient{cmd: cmd}
 	return nil
 }
 
 func theUserRunsTheCommand(arg1 string) error {
-	result, err := commander.RunCommand(arg1)
+	result, err := client.RunCommand(arg1)
 	if err != nil {
 		return err
 	}
