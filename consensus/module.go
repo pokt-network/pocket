@@ -320,6 +320,8 @@ func (m *consensusModule) loadPersistedState() error {
 
 // IsSynched implements the interface function for checking if the node is synched with the network.
 func (m *consensusModule) IsSynched() (bool, error) {
+	m.logger.Debug().Msg("IsSynched called, checking if consensus module is synched GOKHAN")
+
 	lastPersistedBlockHeight := m.GetBus().GetConsensusModule().CurrentHeight() - 1
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
 	if err != nil {

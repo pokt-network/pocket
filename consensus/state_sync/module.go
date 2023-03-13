@@ -1,7 +1,9 @@
 package state_sync
 
 import (
+	"context"
 	"sync"
+	"time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
@@ -25,10 +27,13 @@ type StateSyncModule interface {
 	DisableServerMode() error
 
 	// This functions contains the business logic on handling Block and Metadata responses.
-	HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error
-	HandleGetBlockResponse(*typesCons.GetBlockResponse) error
+	//HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error
+	//HandleGetBlockResponse(*typesCons.GetBlockResponse) error
 
 	SendStateSyncMessage(msg *typesCons.StateSyncMessage, nodeAddress cryptoPocket.Address, height uint64) error
+
+	SetStateSyncMetadataBuffer([]*typesCons.StateSyncMetadataResponse)
+	GetStateSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse
 
 	// Getter functions for the aggregated metadata and the metadata buffer, used by consensus module.
 	GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse
@@ -142,61 +147,78 @@ func (m *stateSync) SetAggregatedSyncMetadata(metadata *typesCons.StateSyncMetad
 	m.aggregatedSyncMetadata = metadata
 }
 
-// TODO(#352): Implement this function, currently a placeholder.
-func (m *stateSync) HandleStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) error {
-	consensusMod := m.GetBus().GetConsensusModule()
-	serverNodePeerId := consensusMod.GetNodeAddress()
-	clientPeerId := metadataRes.PeerAddress
-	currentHeight := consensusMod.CurrentHeight()
-
-	// TODO (#571): update with logger helper function
-	fields := map[string]any{
-		"currentHeight": currentHeight,
-		"sender":        serverNodePeerId,
-		"receiver":      clientPeerId,
-	}
-
-	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataResponse: %s", metadataRes)
-
+func (m *stateSync) SetStateSyncMetadataBuffer(aggregatedSyncMetadata []*typesCons.StateSyncMetadataResponse) {
 	m.m.Lock()
 	defer m.m.Unlock()
-
-	return nil
+	m.syncMetadataBuffer = aggregatedSyncMetadata
 }
 
-// TODO(#352): Implement this function, currently a placeholder.
-func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-
-	serverNodePeerId := m.bus.GetConsensusModule().GetNodeAddress()
-	clientPeerId := blockRes.PeerAddress
-
-	// TODO (#571): update with logger helper function
-	fields := map[string]any{
-		"currentHeight": blockRes.Block.BlockHeader.Height,
-		"sender":        serverNodePeerId,
-		"receiver":      clientPeerId,
-	}
-
-	m.logger.Info().Fields(fields).Msgf("Received GetBlockResponse: %s", blockRes)
-
-	return nil
+func (m *stateSync) GetStateSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse {
+	return m.syncMetadataBuffer
 }
+
+// // TODO(#352): Implement this function, currently a placeholder.
+// func (m *stateSync) HandleStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) error {
+// 	consensusMod := m.GetBus().GetConsensusModule()
+// 	serverNodePeerId := consensusMod.GetNodeAddress()
+// 	clientPeerId := metadataRes.PeerAddress
+// 	currentHeight := consensusMod.CurrentHeight()
+
+// 	// TODO (#571): update with logger helper function
+// 	fields := map[string]any{
+// 		"currentHeight": currentHeight,
+// 		"sender":        serverNodePeerId,
+// 		"receiver":      clientPeerId,
+// 	}
+
+// 	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataResponse: %s", metadataRes)
+
+// 	m.m.Lock()
+// 	defer m.m.Unlock()
+
+// 	return nil
+// }
+
+// // TODO(#352): Implement this function, currently a placeholder.
+// func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
+
+// 	serverNodePeerId := m.bus.GetConsensusModule().GetNodeAddress()
+// 	clientPeerId := blockRes.PeerAddress
+
+// 	// TODO (#571): update with logger helper function
+// 	fields := map[string]any{
+// 		"currentHeight": blockRes.Block.BlockHeader.Height,
+// 		"sender":        serverNodePeerId,
+// 		"receiver":      clientPeerId,
+// 	}
+
+// 	m.logger.Info().Fields(fields).Msgf("Received GetBlockResponse: %s", blockRes)
+
+// 	return nil
+// }
 
 // TODO(#352): Implement this function, currently a placeholder.
 // Requests blocks one by one from its peers.
 func (m *stateSync) StartSynching() error {
+	m.logger.Debug().Msgf("StartSynching() called NEWGOKHAN")
+
 	current_height := m.GetBus().GetConsensusModule().CurrentHeight()
-	var lastPersistedBlockHeight uint64
+	//! TODO CHECK THIS
+	lastPersistedBlockHeight := current_height - 1
+	m.logger.Debug().Msgf("Last persisted block %d, Aggregated maxHeight %d", lastPersistedBlockHeight, m.aggregatedSyncMetadata.MaxHeight)
 
-	if current_height == 0 {
-		lastPersistedBlockHeight = 0
-	} else {
-		lastPersistedBlockHeight = current_height - 1
+	for i := lastPersistedBlockHeight; i < m.aggregatedSyncMetadata.MaxHeight; i++ {
+		m.logger.Debug().Msgf("StartSynching() Requesting block %d", i)
+		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+			Message: &typesCons.StateSyncMessage_GetBlockReq{
+				GetBlockReq: &typesCons.GetBlockRequest{
+					PeerAddress: m.GetBus().GetConsensusModule().GetNodeAddress(),
+					Height:      i,
+				},
+			},
+		}
+		m.broadcastStateSyncMessage(stateSyncGetBlockMessage, current_height)
 	}
-
-	m.logger.Debug().Msgf("Starting synching, last persisted block %d, aggregated maxHeight %d", lastPersistedBlockHeight, m.aggregatedSyncMetadata.MaxHeight)
-
-	// TODO(#352): Add buiness logic
 
 	return nil
 }
@@ -209,6 +231,23 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 
 	metadataResponse := m.aggregatedSyncMetadata
 
+	//aggregate metadataResponses by setting the metadataResponse
+	for _, meta := range m.syncMetadataBuffer {
+		if meta.MaxHeight > metadataResponse.MaxHeight {
+			m.logger.Debug().Msgf("YOYOOYYO (): %s", metadataResponse)
+			metadataResponse.MaxHeight = meta.MaxHeight
+		}
+
+		if meta.MinHeight < metadataResponse.MinHeight {
+			metadataResponse.MinHeight = meta.MinHeight
+		}
+	}
+
+	m.logger.Debug().Msgf("GOKHAN aggregateMetadataResponses, max height: %d", metadataResponse.MaxHeight)
+
+	//clear the buffer
+	m.syncMetadataBuffer = make([]*typesCons.StateSyncMetadataResponse, 0)
+
 	return metadataResponse
 }
 
@@ -218,9 +257,42 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 // CONSIDER: Improving meta data request synchronistaion, without timers.
 func (m *stateSync) periodicMetadataSync() error {
 
-	// uses a timer to periodically query the network
-	// form a metadata request
-	// send to peers using broadCastStateSyncMessage()
+	m.logger.Debug().Msgf("periodicSynch() called GOKHAN")
+
+	//add timer channel with context to cancel the timer
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// // form a metaData request
+	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
+		Message: &typesCons.StateSyncMessage_MetadataReq{
+			MetadataReq: &typesCons.StateSyncMetadataRequest{
+				PeerAddress: m.GetBus().GetConsensusModule().GetNodeAddress(),
+			},
+		},
+	}
+
+	ticker := time.NewTicker(20 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			m.logger.Debug().Msg("Periodic metadata synch is triggered")
+			currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+
+			//broadcast metadata request to all peers
+			//err := m.synch(currentHeight)
+			err := m.broadcastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
+			if err != nil {
+				return err
+			}
+
+		case <-ctx.Done():
+			return nil
+
+		}
+	}
 
 	return nil
 }

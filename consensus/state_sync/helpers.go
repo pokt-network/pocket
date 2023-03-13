@@ -2,6 +2,8 @@ package state_sync
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -20,8 +22,35 @@ func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncM
 		},
 	).Msg("📣 Broadcasting state sync message... 📣")
 
-	// TODO (#571) update, this is a placeholder
-	_ = stateSyncMsg
+	anyMessage, err := codec.GetCodec().ToAny(stateSyncMsg)
+	if err != nil {
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
+		return err
+	}
+
+	validators, err := m.getValidatorsAtHeight(height)
+	if err != nil {
+		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
+	}
+
+	// for _, val := range validators {
+	// 	m.logger.Debug().Msgf("VAL: %s", val.Address)
+	// 	if err := m.SendStateSyncMessage(stateSyncMsg, cryptoPocket.Address(val.Address), height); err != nil {
+	// 		m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
+	// 		return err
+	// 	}
+	// }
+
+	for _, val := range validators {
+		m.logger.Info().Fields(
+			map[string]any{
+				"val": val.GetAddress(),
+			},
+		).Msg("📣 Sneding state sync message 📣")
+		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyMessage); err != nil {
+			m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
+		}
+	}
 
 	return nil
 }
@@ -65,4 +94,14 @@ func getMessageType(msg *typesCons.StateSyncMessage) string {
 	default:
 		return "Unknown"
 	}
+}
+
+func (m *stateSync) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
+	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
+	if err != nil {
+		return nil, err
+	}
+	defer persistenceReadContext.Close()
+
+	return persistenceReadContext.GetAllValidators(int64(height))
 }
