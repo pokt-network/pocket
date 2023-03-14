@@ -21,7 +21,7 @@ func TxToTxResult(
 ) (*TxResult, pokterrors.Error) {
 	txBz, err := tx.Bytes()
 	if err != nil {
-		return nil, pokterrors.UtilityErrProtoMarshal(err)
+		return nil, pokterrors.CodecErrProtoMarshal(err)
 	}
 	resultCode := int32(0)
 	errorMsg := ""

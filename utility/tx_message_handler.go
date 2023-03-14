@@ -215,7 +215,7 @@ func (u *utilityContext) handleUnpauseMessage(message *typesUtil.MessageUnpause)
 func (u *utilityContext) handleMessageChangeParameter(message *typesUtil.MessageChangeParameter) pokterrors.Error {
 	v, err := codec.GetCodec().FromAny(message.ParameterValue)
 	if err != nil {
-		return pokterrors.UtilityErrProtoFromAny(err)
+		return pokterrors.CodecErrProtoFromAny(err)
 	}
 	return u.updateParam(message.ParameterKey, v)
 }

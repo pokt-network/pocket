@@ -31,7 +31,7 @@ func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
 	// Can the tx be decoded?
 	tx := &coreTypes.Transaction{}
 	if err := codec.GetCodec().Unmarshal(txProtoBytes, tx); err != nil {
-		return pokterrors.UtilityErrProtoUnmarshal(err)
+		return pokterrors.CodecErrProtoUnmarshal(err)
 	}
 
 	// Does the tx pass basic validation?
