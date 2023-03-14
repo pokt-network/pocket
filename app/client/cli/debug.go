@@ -153,49 +153,50 @@ func handleSelect(cmd *cobra.Command, selection string) {
 	case PromptResetToGenesis:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
-			Type:    messaging.DebugMessageType_DEBUG_MESSAGE_TYPE_BROADCAST,
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)
 	case PromptPrintNodeState:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
-			Type:    messaging.DebugMessageType_DEBUG_MESSAGE_TYPE_BROADCAST,
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)
 	case PromptTriggerNextView:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
-			Type:    messaging.DebugMessageType_DEBUG_MESSAGE_TYPE_BROADCAST,
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)
 	case PromptTogglePacemakerMode:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
-			Type:    messaging.DebugMessageType_DEBUG_MESSAGE_TYPE_BROADCAST,
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)
 	case PromptShowLatestBlockInStore:
 		m := &messaging.DebugMessage{
-			Action:  messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
-			Type:    messaging.DebugMessageType_DEBUG_MESSAGE_TYPE_SEND,
+			Action: messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
+			// NB: Anycast because we technically accept any node but we arbitrarily choose the first in our address book.
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_ANYCAST,
 			Message: nil,
 		}
 		sendDebugMessage(cmd, m)
 	case PromptSendMetadataRequest:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ,
-			Type:    messaging.DebugMessageType_DEBUG_MESSAGE_TYPE_BROADCAST,
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)
 	case PromptSendBlockRequest:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ,
-			Type:    messaging.DebugMessageType_DEBUG_MESSAGE_TYPE_BROADCAST,
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)

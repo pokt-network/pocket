@@ -26,13 +26,16 @@ enum DebugMessageAction {
 
 message DebugMessage {
   DebugMessageAction action = 1;
-  DebugMessageType type = 2;
+  DebugMessageRoutingType type = 2;
   google.protobuf.Any message = 3;
 }
 
-enum DebugMessageType {
+// NB: See https://en.wikipedia.org/wiki/Routing for more info on routing and delivery schemes.
+enum DebugMessageRoutingType {
 	DEBUG_MESSAGE_TYPE_UNKNOWN = 0;
 
-	DEBUG_MESSAGE_TYPE_SEND = 1;
-	DEBUG_MESSAGE_TYPE_BROADCAST = 2;
+	DEBUG_MESSAGE_TYPE_ANYCAST = 1;
+	DEBUG_MESSAGE_TYPE_MULTICAST = 2;
+	DEBUG_MESSAGE_TYPE_BROADCAST = 3;
+	DEBUG_MESSAGE_TYPE_UNICAST = 4;
 }
