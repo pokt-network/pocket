@@ -45,7 +45,7 @@ func initializeDebugKeybase() error {
 		err                  error
 	)
 
-	validatorKeysPairMap, err = fetchValidatorPrivateKeysFromYaml()
+	validatorKeysPairMap, err = parseValidatorPrivateKeysFromEmbeddedYaml()
 
 	if err != nil {
 		return err
@@ -128,8 +128,8 @@ func initializeDebugKeybase() error {
 	return nil
 }
 
-// fetchValidatorPrivateKeysFromYaml fetches the validator private keys from the private-keys.yaml manifest file.
-func fetchValidatorPrivateKeysFromYaml() (map[string]string, error) {
+// parseValidatorPrivateKeysFromEmbeddedYaml fetches the validator private keys from the embedded build/localnet/manifests/private-keys.yaml manifest file.
+func parseValidatorPrivateKeysFromEmbeddedYaml() (map[string]string, error) {
 
 	// Parse the YAML file and load into the config struct
 	var config struct {
