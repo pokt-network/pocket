@@ -109,6 +109,8 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	currentRound := consensusMod.CurrentRound()
 	currentStep := typesCons.HotstuffStep(consensusMod.CurrentStep())
 
+	m.logger.Info().Msgf("⚠️ Node at height %d received message height %d", currentHeight, msg.Height)
+
 	// Consensus message is from the past
 	if msg.Height < currentHeight {
 		m.logger.Info().Msgf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)

@@ -158,78 +158,69 @@ func (m *stateSync) GetStateSyncMetadataBuffer() []*typesCons.StateSyncMetadataR
 	return m.syncMetadataBuffer
 }
 
-// // TODO(#352): Implement this function, currently a placeholder.
-// func (m *stateSync) HandleStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) error {
-// 	consensusMod := m.GetBus().GetConsensusModule()
-// 	serverNodePeerId := consensusMod.GetNodeAddress()
-// 	clientPeerId := metadataRes.PeerAddress
-// 	currentHeight := consensusMod.CurrentHeight()
-
-// 	// TODO (#571): update with logger helper function
-// 	fields := map[string]any{
-// 		"currentHeight": currentHeight,
-// 		"sender":        serverNodePeerId,
-// 		"receiver":      clientPeerId,
-// 	}
-
-// 	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataResponse: %s", metadataRes)
-
-// 	m.m.Lock()
-// 	defer m.m.Unlock()
-
-// 	return nil
-// }
-
-// // TODO(#352): Implement this function, currently a placeholder.
-// func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-
-// 	serverNodePeerId := m.bus.GetConsensusModule().GetNodeAddress()
-// 	clientPeerId := blockRes.PeerAddress
-
-// 	// TODO (#571): update with logger helper function
-// 	fields := map[string]any{
-// 		"currentHeight": blockRes.Block.BlockHeader.Height,
-// 		"sender":        serverNodePeerId,
-// 		"receiver":      clientPeerId,
-// 	}
-
-// 	m.logger.Info().Fields(fields).Msgf("Received GetBlockResponse: %s", blockRes)
-
-// 	return nil
-// }
-
 // TODO(#352): Implement this function, currently a placeholder.
 // Requests blocks one by one from its peers.
 func (m *stateSync) StartSynching() error {
-	m.logger.Debug().Msgf("StartSynching() called NEWGOKHAN")
+	consensusMod := m.GetBus().GetConsensusModule()
+	currentHeight := consensusMod.CurrentHeight()
+	nodeAddress := consensusMod.GetNodeAddress()
 
-	current_height := m.GetBus().GetConsensusModule().CurrentHeight()
-	//! TODO CHECK THIS
-	lastPersistedBlockHeight := current_height - 1
-	m.logger.Debug().Msgf("Last persisted block %d, Aggregated maxHeight %d", lastPersistedBlockHeight, m.aggregatedSyncMetadata.MaxHeight)
+	currentPersistedBlockHeight, err := m.maximumPersistedBlockHeight()
+	if err != nil {
+		return err
+	}
+
+	maxPersistedBlockHeight := currentPersistedBlockHeight
+
+	m.logger.Debug().Msgf("Starting synching, last persisted block height is: %d, aggregated metadata maxHeight is: %d", maxPersistedBlockHeight, m.aggregatedSyncMetadata.MaxHeight)
 
 	// Request blocks one by one from its peers,
-	for i := lastPersistedBlockHeight; i < m.aggregatedSyncMetadata.MaxHeight; i++ {
-		// ensure that prev block is persisted!!
+	for i := currentPersistedBlockHeight; i < m.aggregatedSyncMetadata.MaxHeight; i++ {
+		blockHeightToRequest := i + 1
 
-		m.logger.Debug().Msgf("StartSynching() Requesting block %d", i)
+		// if blockHeightToRequest <= 2 {
+		// 	blockHeightToRequest = 2
+		// }
+
+		m.logger.Debug().Msgf("StartSynching() Requesting block %d", blockHeightToRequest)
 		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 			Message: &typesCons.StateSyncMessage_GetBlockReq{
 				GetBlockReq: &typesCons.GetBlockRequest{
-					PeerAddress: m.GetBus().GetConsensusModule().GetNodeAddress(),
-					Height:      i,
+					PeerAddress: nodeAddress,
+					Height:      blockHeightToRequest,
 				},
 			},
 		}
-		m.broadcastStateSyncMessage(stateSyncGetBlockMessage, current_height)
+		m.broadcastStateSyncMessage(stateSyncGetBlockMessage, currentHeight)
+
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+
+		// querying persistence to check if the requested block is received and persisted
+		// loop:
+		// 	for range ticker.C {
+		// 		m.logger.Debug().Msg("Checking if block is persisted...")
+		// 		maxPersistedBlockHeight, err = m.maximumPersistedBlockHeight()
+		// 		if err != nil {
+		// 			return err
+		// 		}
+		// 		if maxPersistedBlockHeight == blockHeightToRequest {
+		// 			m.logger.Debug().Msgf("Block %d is persisted!", blockHeightToRequest)
+		// 			break loop
+		// 		}
+		// 	}
 	}
 
-	// TODO! check if its validator after all blocks are received, transition to state
-	// if m.GetBus().GetConsensusModule().IsValidator() == m.aggregatedSyncMetadata.MaxHeight {
+	isValidator, err := m.GetBus().GetConsensusModule().IsValidator()
+	if err != nil {
+		return err
+	}
 
-	// }
+	if isValidator {
+		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
+	}
 
-	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
+	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator)
 }
 
 // TODO(#352): Implement this function, currently a placeholder.
@@ -243,7 +234,6 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 	//aggregate metadataResponses by setting the metadataResponse
 	for _, meta := range m.syncMetadataBuffer {
 		if meta.MaxHeight > metadataResponse.MaxHeight {
-			m.logger.Debug().Msgf("YOYOOYYO (): %s", metadataResponse)
 			metadataResponse.MaxHeight = meta.MaxHeight
 		}
 
@@ -252,7 +242,7 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 		}
 	}
 
-	m.logger.Debug().Msgf("GOKHAN aggregateMetadataResponses, max height: %d", metadataResponse.MaxHeight)
+	m.logger.Debug().Msgf("aggregateMetadataResponses, max height: %d", metadataResponse.MaxHeight)
 
 	//clear the buffer
 	m.syncMetadataBuffer = make([]*typesCons.StateSyncMetadataResponse, 0)
@@ -266,13 +256,11 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 // CONSIDER: Improving meta data request synchronistaion, without timers.
 func (m *stateSync) periodicMetadataSync() error {
 
-	m.logger.Debug().Msgf("periodicSynch() called GOKHAN")
-
 	//add timer channel with context to cancel the timer
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// // form a metaData request
+	// form a metaData request
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_MetadataReq{
 			MetadataReq: &typesCons.StateSyncMetadataRequest{
@@ -281,7 +269,7 @@ func (m *stateSync) periodicMetadataSync() error {
 		},
 	}
 
-	ticker := time.NewTicker(20 * time.Second)
+	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -290,8 +278,6 @@ func (m *stateSync) periodicMetadataSync() error {
 			m.logger.Debug().Msg("Periodic metadata synch is triggered")
 			currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
 
-			//broadcast metadata request to all peers
-			//err := m.synch(currentHeight)
 			err := m.broadcastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
 			if err != nil {
 				return err
@@ -303,5 +289,5 @@ func (m *stateSync) periodicMetadataSync() error {
 		}
 	}
 
-	return nil
+	//return nil
 }

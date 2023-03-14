@@ -424,6 +424,8 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 		Transactions: txs,
 	}
 
+	m.logger.Debug().Msgf("Prepared a new block, QC is: %c, len: %d", qcBytes, len(qcBytes))
+
 	// Set the proposal block in the persistence context
 	if err := m.utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return nil, err

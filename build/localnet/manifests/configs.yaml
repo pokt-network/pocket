@@ -16,7 +16,8 @@ data:
           "manual": true,
           "debug_time_between_steps_msec": 1000
         },
-        "private_key": ""
+        "private_key": "",
+        "server_mode_enabled": true
       },
       "utility": {
         "max_mempool_transaction_bytes": 1073741824,

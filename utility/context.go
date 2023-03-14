@@ -55,6 +55,7 @@ func (p *utilityContext) SetProposalBlock(blockHash string, proposerAddr []byte,
 }
 
 func (u *utilityContext) Commit(quorumCert []byte) error {
+	u.logger.Info().Msg("Committing in utility context")
 	if err := u.store.Commit(u.proposalProposerAddr, quorumCert); err != nil {
 		return err
 	}

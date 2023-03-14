@@ -77,6 +77,7 @@ type ConsensusStateSync interface {
 
 	// Compares the persisted state with the aggregated state of the network. If the persisted state is behind the network state, i.e. that node is not synched, it will return false.
 	IsSynched() (bool, error)
+	IsValidator() (bool, error)
 }
 
 // This interface represents functions exposed by the Consensus module for mainly used for testing.
