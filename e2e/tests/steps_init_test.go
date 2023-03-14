@@ -12,19 +12,30 @@ import (
 )
 
 var (
-	client runner.PocketClient
+	client = &KubeClient{}
 )
 
 // KubeClient saves a reference to a command
-type KubeClient struct {
-	cmd *exec.Cmd
-}
+type KubeClient struct{}
 
 // RunCommand runs a command on a KubeClient.
 func (k *KubeClient) RunCommand(args ...string) (*runner.CommandResult, error) {
-	// TODO: wire this up to run arbitrary commands wrapped around the kubectl now that we have the right pod
-	// fmt.Printf("k.cmd: %v\n", k.cmd)
-	return nil, godog.ErrPending
+	base := []string{"exec", "-it", "deploy/pocket-v1-cli-client", "--container", "pocket", "--", "client"}
+	args = append(base, args...)
+	cmd := exec.Command("kubectl", args...)
+	fmt.Printf("cmd.Args: %v\n", cmd.Args)
+	cmd.Wait()
+	log.Println(cmd)
+	r := &runner.CommandResult{}
+	out, err := cmd.Output()
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		r.Stderr = err.Error()
+		r.Err = err
+		return r, err
+	}
+	r.Stdout = string(out)
+	return r, nil
 }
 
 func thePocketClientShouldHaveExitedWithoutError() error {
@@ -32,22 +43,11 @@ func thePocketClientShouldHaveExitedWithoutError() error {
 }
 
 func theUserHasAPocketClient() error {
-	cmd := exec.Command("kubectl",
-		"exec", "-it", "deploy/pocket-v1-cli-client",
-		"--container", "pocket",
-		"--", "client",
-		"help")
-	// TODO: for some reason the cluster-manager does not want to play nice for this command?
-	// cmd := exec.Command("kubectl", "exec", "-i", "-t", "deploy/pocket-v1-cluster-manager", "--", "/usr/local/bin/cluster-manager")
-	// cmd.Wait()
-	log.Println(cmd)
-	out, err := cmd.Output()
+	result, err := client.RunCommand("help")
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		return err
+		return fmt.Errorf("failed to run command: %w", err)
 	}
-	fmt.Printf("### OUTPUT: %s\n", out)
-	client = &KubeClient{cmd: cmd}
+	fmt.Printf("result: %+v", result)
 	return nil
 }
 
