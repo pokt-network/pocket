@@ -73,17 +73,17 @@ func (u *utilityContext) anteHandleMessage(tx *coreTypes.Transaction) (typesUtil
 	}
 
 	// Get the address of the transaction signer
-	pubKey, er := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
-	if er != nil {
-		return nil, pokterrors.UtilityErrNewPublicKeyFromBytes(er)
+	pubKey, err := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
+	if err != nil {
+		return nil, pokterrors.UtilityErrNewPublicKeyFromBytes(err)
 	}
 	address := pubKey.Address()
 	addressHex := address.ToString()
 
 	// Validate that the signer has enough funds to pay the fee of the message signed
-	fee, err := u.getFee(msg, msg.GetActorType())
-	if err != nil {
-		return nil, err
+	fee, er := u.getFee(msg, msg.GetActorType())
+	if er != nil {
+		return nil, er
 	}
 	accountAmount, err := u.getAccountAmount(address)
 	if err != nil {
@@ -96,9 +96,9 @@ func (u *utilityContext) anteHandleMessage(tx *coreTypes.Transaction) (typesUtil
 
 	// Validate that the signer has a valid signature
 	var isValidSigner bool
-	signerCandidates, err := u.getSignerCandidates(msg)
+	signerCandidates, er := u.getSignerCandidates(msg)
 	if err != nil {
-		return nil, err
+		return nil, er
 	}
 	for _, candidate := range signerCandidates {
 		if bytes.Equal(candidate, address) {

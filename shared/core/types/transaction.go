@@ -2,20 +2,20 @@ package types
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/pokterrors"
 	"google.golang.org/protobuf/proto"
 )
 
 var _ ITransaction = &Transaction{}
 
 // TxFromBytes unmarshals a proto serialized Transaction to a Transaction protobuf
-func TxFromBytes(txProtoBz []byte) (*Transaction, error) {
+func TxFromBytes(txProtoBz []byte) (*Transaction, pokterrors.Error) {
 	tx := &Transaction{}
 	if err := codec.GetCodec().Unmarshal(txProtoBz, tx); err != nil {
-		return nil, err
+		return nil, pokterrors.UtilityErrUnmarshalTransaction(err)
 	}
 	return tx, nil
 }
@@ -28,24 +28,24 @@ func TxHash(txProtoBz []byte) string {
 // `ITransaction` is an interface that helps capture the functions added to the `Transaction` data structure.
 // It is unlikely for there to be multiple implementations of this interface in prod.
 type ITransaction interface {
-	GetMessage() (proto.Message, error)
-	Sign(privateKey crypto.PrivateKey) error
-	Hash() (string, error)
+	GetMessage() (proto.Message, pokterrors.Error)
+	Sign(privateKey crypto.PrivateKey) pokterrors.Error
+	Hash() (string, pokterrors.Error)
 	SignableBytes() ([]byte, error)
 	Bytes() ([]byte, error)
 	Equals(tx2 ITransaction) bool
 }
 
 // TODO(#556): Update this function to return pocket specific error codes.
-func (tx *Transaction) ValidateBasic() error {
+func (tx *Transaction) ValidateBasic() pokterrors.Error {
 	// Nonce cannot be empty to avoid transaction replays
 	if tx.Nonce == "" {
-		return fmt.Errorf("nonce cannot be empty") // ErrEmptyNonce
+		return pokterrors.UtilityErrEmptyNonce()
 	}
 
 	// Is there a signature we can verify?
 	if tx.Signature == nil {
-		return fmt.Errorf("signature cannot be empty") // ErrEmptySignature
+		return pokterrors.UtilityErrEmptySignature()
 	}
 	if err := tx.Signature.ValidateBasic(); err != nil {
 		return err
@@ -54,42 +54,42 @@ func (tx *Transaction) ValidateBasic() error {
 	// Does the transaction have a valid key?
 	publicKey, err := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
 	if err != nil {
-		return err // ErrEmptyPublicKey or ErrNewPublicKeyFromBytes
+		return pokterrors.UtilityErrNewPublicKeyFromBytes(err)
 	}
 
 	// Is there a valid msg that can be decoded?
 	if _, err := tx.GetMessage(); err != nil {
-		return err // ? ErrBadMessage
+		return pokterrors.UtilityErrBadMessage(err)
 	}
 
 	signBytes, err := tx.SignableBytes()
 	if err != nil {
-		return err // ? ErrBadSignature
+		return pokterrors.UtilityErrBadSignature(err)
 	}
 
 	if ok := publicKey.Verify(signBytes, tx.Signature.Signature); !ok {
-		return fmt.Errorf("signature verification failed") // ErrSignatureVerificationFailed
+		return pokterrors.UtilityErrSignatureVerificationFailed()
 	}
 
 	return nil
 }
 
-func (tx *Transaction) GetMessage() (proto.Message, error) {
+func (tx *Transaction) GetMessage() (proto.Message, pokterrors.Error) {
 	anyMsg, err := codec.GetCodec().FromAny(tx.Msg)
 	if err != nil {
-		return nil, err
+		return nil, pokterrors.UtilityErrProtoFromAny(err)
 	}
 	return anyMsg, nil
 }
 
-func (tx *Transaction) Sign(privateKey crypto.PrivateKey) error {
+func (tx *Transaction) Sign(privateKey crypto.PrivateKey) pokterrors.Error {
 	txSignableBz, err := tx.SignableBytes()
 	if err != nil {
-		return err
+		return pokterrors.UtilityErrProtoMarshal(err)
 	}
 	signature, er := privateKey.Sign(txSignableBz)
 	if er != nil {
-		return err
+		return pokterrors.UtilityErrTransactionSign(err)
 	}
 	tx.Signature = &Signature{
 		PublicKey: privateKey.PublicKey().Bytes(),
@@ -98,10 +98,10 @@ func (tx *Transaction) Sign(privateKey crypto.PrivateKey) error {
 	return nil
 }
 
-func (tx *Transaction) Hash() (string, error) {
+func (tx *Transaction) Hash() (string, pokterrors.Error) {
 	txProtoBz, err := tx.Bytes()
 	if err != nil {
-		return "", err
+		return "", pokterrors.UtilityErrProtoMarshal(err)
 	}
 	return TxHash(txProtoBz), nil
 }

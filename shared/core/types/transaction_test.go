@@ -39,8 +39,8 @@ func TestTransaction_Sign(t *testing.T) {
 	err := tx.Sign(testingSenderPrivateKey)
 	require.NoError(t, err)
 
-	msg, err := tx.SignableBytes()
-	require.NoError(t, err)
+	msg, er := tx.SignableBytes()
+	require.NoError(t, er)
 
 	verified := testingSenderPublicKey.Verify(msg, tx.Signature.Signature)
 	require.True(t, verified, "signature should be verified")

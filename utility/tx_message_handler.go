@@ -177,7 +177,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake) pokterrors.Error {
 	if status, err := u.getActorStatus(message.ActorType, message.Address); err != nil || status != coreTypes.StakeStatus_Staked {
 		if status != coreTypes.StakeStatus_Staked {
-			return pokterrors.UtilityErrInvalidStatus(status, coreTypes.StakeStatus_Staked)
+			return pokterrors.UtilityErrInvalidStatus(int32(status), int32(coreTypes.StakeStatus_Staked))
 		}
 		return err
 	}

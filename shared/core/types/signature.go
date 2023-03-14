@@ -1,13 +1,15 @@
 package types
 
-import "fmt"
+import (
+	"github.com/pokt-network/pocket/shared/pokterrors"
+)
 
-func (s *Signature) ValidateBasic() error {
+func (s *Signature) ValidateBasic() pokterrors.Error {
 	if s.Signature == nil {
-		return fmt.Errorf("signature cannot be empty")
+		return pokterrors.UtilityErrEmptySignature()
 	}
 	if s.PublicKey == nil {
-		return fmt.Errorf("public key cannot be empty")
+		return pokterrors.UtilityErrEmptyPublicKey()
 	}
 	return nil
 }
