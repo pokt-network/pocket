@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -16,39 +17,39 @@ var (
 )
 
 // KubeClient saves a reference to a command
-type KubeClient struct{}
+type KubeClient struct {
+	result *runner.CommandResult // stores the result of the last command that was run.
+}
 
 // RunCommand runs a command on a KubeClient.
 func (k *KubeClient) RunCommand(args ...string) (*runner.CommandResult, error) {
 	base := []string{"exec", "-it", "deploy/pocket-v1-cli-client", "--container", "pocket", "--", "client"}
 	args = append(base, args...)
 	cmd := exec.Command("kubectl", args...)
-	fmt.Printf("cmd.Args: %v\n", cmd.Args)
-	cmd.Wait()
-	log.Println(cmd)
 	r := &runner.CommandResult{}
 	out, err := cmd.Output()
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
 		r.Stderr = err.Error()
 		r.Err = err
+		k.result = r
 		return r, err
 	}
 	r.Stdout = string(out)
+	k.result = r
 	return r, nil
 }
 
 func thePocketClientShouldHaveExitedWithoutError() error {
-	return godog.ErrPending
+	return client.result.Err
 }
 
 func theUserHasAPocketClient() error {
 	result, err := client.RunCommand("help")
-	if err != nil {
-		return fmt.Errorf("failed to run command: %w", err)
+	if result.Stdout != "" {
+		log.Printf("%s", result.Stdout)
 	}
-	fmt.Printf("result: %+v", result)
-	return nil
+	return err
 }
 
 func theUserRunsTheCommand(arg1 string) error {
@@ -66,7 +67,10 @@ func theUserRunsTheCommand(arg1 string) error {
 }
 
 func theUserShouldBeAbleToSeeStandardOutputContaining(arg1 string) error {
-	return godog.ErrPending
+	if !strings.Contains(client.result.Stdout, arg1) {
+		return fmt.Errorf("stdout must contain %s", arg1)
+	}
+	return nil
 }
 
 // InitializeScenario registers step regexes to function handlers
