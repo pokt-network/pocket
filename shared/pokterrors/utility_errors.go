@@ -4,9 +4,10 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
+
+const utilityModuleErrorsPrefix = "utility"
 
 const (
 	GetStakedAmountsError             = "an error occurred getting the validator's amount staked"
@@ -136,6 +137,8 @@ const (
 	NegativeAmountError               = "the amount is negative"
 	UnknownActorTypeError             = "the actor type is not recognized"
 	UnknownMessageTypeError           = "the message being by the utility message is not recognized"
+	ErrBadMessageError                = "unable to decode the transaction message"
+	ErrBadSignatureError              = "the signature of the transaction is invalid"
 )
 
 func UtilityErrUnknownParam(paramName string) Error {
@@ -286,7 +289,7 @@ func UtilityErrUnknownStatus(status int32) Error {
 	return NewUtilityError(UtilityErrorCode_InvalidStatusError, fmt.Sprintf("%s: unknown status %d", InvalidStatusError, status))
 }
 
-func UtilityErrInvalidStatus(got, expected coreTypes.StakeStatus) Error {
+func UtilityErrInvalidStatus(got, expected int32) Error {
 	return NewUtilityError(UtilityErrorCode_InvalidStatusError, fmt.Sprintf("%s: %d expected %d", InvalidStatusError, got, expected))
 }
 
@@ -650,4 +653,12 @@ func UtilityErrUnknownActorType(actorType string) Error {
 
 func UtilityErrUnknownMessageType(messageType any) Error {
 	return NewUtilityError(UtilityErrorCode_UnknownMessageType, fmt.Sprintf("%s: %v", UnknownMessageTypeError, messageType))
+}
+
+func UtilityErrBadMessage(err error) Error {
+	return NewUtilityError(UtilityErrorCode_ErrBadMessage, fmt.Sprintf("%s: %s", ErrBadMessageError, err.Error()))
+}
+
+func UtilityErrBadSignature(err error) Error {
+	return NewUtilityError(UtilityErrorCode_ErrBadSignature, fmt.Sprintf("%s: %s", ErrBadSignatureError, err.Error()))
 }

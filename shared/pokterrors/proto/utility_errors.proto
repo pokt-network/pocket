@@ -135,4 +135,6 @@ enum UtilityErrorCode {
   GetHeightError = 129;
   UnknownActorType = 130;
   UnknownMessageType = 131;
+  ErrBadMessage = 133;
+  ErrBadSignature = 134;
 }

@@ -6,8 +6,6 @@ package pokterrors
 import (
 	"errors"
 	"fmt"
-
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
 type Code int32
@@ -40,7 +38,7 @@ func (se *stdErr) Module() string {
 func NewUtilityError(code UtilityErrorCode, msg string) Error {
 	return &stdErr{
 		CodeError: Code(code),
-		module:    modules.UtilityModuleName,
+		module:    utilityModuleErrorsPrefix,
 		error:     errors.New(msg),
 	}
 }
