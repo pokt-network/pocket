@@ -27,6 +27,8 @@ type ProtocolActorSchema interface {
 	GetQuery(address string, height int64) string
 	// Returns all actors at that height
 	GetAllQuery(height int64) string
+	// Returns all actors at that height in JSON format
+	GetAllJSONQuery(height int64) string
 	// Returns a query for the existence of an Actor given its address.
 	GetExistsQuery(address string, height int64) string
 	// Returns a query to retrieve data associated with all the apps ready to unstake.

@@ -16,6 +16,8 @@ type ProtocolAccountSchema interface {
 
 	// Returns a query to get all accounts
 	GetAllQuery(height int64) string
+	// Returns a query to get all accounts in JSON format
+	GetAllJSONQuery(height int64) string
 	// Returns a query to get the balance of an account at a specified height
 	GetAccountAmountQuery(identifier string, height int64) string // Identifier can either be address (cryptographic ID) (Account) or semantic name (Pool)
 	// Returns a query to select all accounts updated at a specified height

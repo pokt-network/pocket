@@ -65,6 +65,10 @@ func (actor *BaseProtocolActorSchema) GetAllQuery(height int64) string {
 	return SelectActors(actor.GetActorSpecificColName(), height, actor.tableName)
 }
 
+func (actor *BaseProtocolActorSchema) GetAllJSONQuery(height int64) string {
+	return SelectJSON(SelectActors(actor.GetActorSpecificColName(), height, actor.tableName))
+}
+
 func (actor *BaseProtocolActorSchema) GetExistsQuery(address string, height int64) string {
 	return Exists(address, height, actor.tableName)
 }

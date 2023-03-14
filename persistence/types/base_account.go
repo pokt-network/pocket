@@ -43,6 +43,10 @@ func (account baseProtocolAccountSchema) GetAllQuery(height int64) string {
 	return SelectAccounts(height, account.accountSpecificColName, account.tableName)
 }
 
+func (account baseProtocolAccountSchema) GetAllJSONQuery(height int64) string {
+	return SelectJSON(SelectAccounts(height, account.accountSpecificColName, account.tableName))
+}
+
 func (account baseProtocolAccountSchema) InsertAccountQuery(identifier, amount string, height int64) string {
 	return InsertAccount(account.accountSpecificColName, identifier, amount, height, account.tableName, account.heightConstraintName)
 }
