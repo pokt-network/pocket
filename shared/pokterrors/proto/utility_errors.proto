@@ -7,7 +7,7 @@ package pokterrors;
 option go_package = "github.com/pokt-network/pocket/shared/pokterrors";
 
 enum UtilityErrorCode {
-  OK = 0;
+  UtilityErrorCode_UNSPECIFIED = 0;
   EmptyTransactionError = 2;
   InvalidSignerError = 3;
   DecodeMessageError = 4;
@@ -30,10 +30,6 @@ enum UtilityErrorCode {
   InvalidAddressLenError = 21;
   InvalidNonceError = 22;
   InvalidAmountError = 23;
-  ProtoMarshalError = 25;
-  ProtoUnmarshalError = 26;
-  ProtoNewAnyError = 27;
-  ProtoFromAnyError = 28;
   NewFeeFromStringError = 29;
   EmptyNonceError = 30;
   EmptyPublicKeyError = 31;

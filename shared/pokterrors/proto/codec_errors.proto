@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+// This file captures all the different error codes for the codec
+
+package pokterrors;
+
+option go_package = "github.com/pokt-network/pocket/shared/pokterrors";
+
+enum CodecErrorCode {
+  CodecErrorCode_UNSPECIFIED = 0;
+  ProtoMarshalError = 1;
+  ProtoUnmarshalError = 2;
+  ProtoNewAnyError = 3;
+  ProtoFromAnyError = 4;
+}

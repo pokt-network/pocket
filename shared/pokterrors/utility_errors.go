@@ -2,12 +2,13 @@ package pokterrors
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
-const utilityModuleErrorsPrefix = "utility"
+const utilityErrorsPrefix = "utility"
 
 const (
 	GetStakedAmountsError             = "an error occurred getting the validator's amount staked"
@@ -58,7 +59,6 @@ const (
 	InvalidNonceError                 = "the nonce field is invalid; cannot be converted to big.Int"
 	NewPublicKeyFromBytesError        = "unable to convert the raw bytes to a valid public key"
 	SignatureVerificationFailedError  = "the public key / signature combination is not valid for the msg"
-	ProtoFromAnyError                 = "an error occurred getting the structure from the protobuf any"
 	NewFeeFromStringError             = "the fee string is unable to be converted to a valid base 10 number"
 	EmptyNonceError                   = "the nonce in the transaction is empty"
 	EmptyPublicKeyError               = "the public key field is empty"
@@ -121,9 +121,6 @@ const (
 	InvalidHashLengthError            = "the length of the hash is not the correct size"
 	NilQuorumCertificateError         = "the quorum certificate is nil"
 	HexDecodeFromStringError          = "an error occurred decoding the string into hex bytes"
-	ProtoMarshalError                 = "an error occurred marshalling the structure in protobuf"
-	ProtoUnmarshalError               = "an error occurred unmarshalling the structure in protobuf"
-	ProtoNewAnyError                  = "an error occurred creating the protobuf any"
 	UpdateParamError                  = "an error occurred updating the parameter"
 	InitGenesisParamError             = "an error occurred initializing the params in genesis"
 	GetAllFishermenError              = "an error occurred getting all of the fishermen¬"
@@ -140,6 +137,14 @@ const (
 	ErrBadMessageError                = "unable to decode the transaction message"
 	ErrBadSignatureError              = "the signature of the transaction is invalid"
 )
+
+func NewUtilityError(code UtilityErrorCode, msg string) Error {
+	return &stdErr{
+		CodeError: Code(code),
+		module:    utilityErrorsPrefix,
+		error:     errors.New(msg),
+	}
+}
 
 func UtilityErrUnknownParam(paramName string) Error {
 	return NewUtilityError(UtilityErrorCode_UnknownParamError, fmt.Sprintf("%s: %s", UnknownParamError, paramName))
@@ -433,10 +438,6 @@ func UtilityErrDecodeMessage(err error) Error {
 	return NewUtilityError(UtilityErrorCode_DecodeMessageError, fmt.Sprintf("%s: %s", DecodeMessageError, err.Error()))
 }
 
-func UtilityErrProtoFromAny(err error) Error {
-	return NewUtilityError(UtilityErrorCode_ProtoFromAnyError, fmt.Sprintf("%s: %s", ProtoFromAnyError, err.Error()))
-}
-
 func UtilityErrTransactionAlreadyCommitted() Error {
 	return NewUtilityError(UtilityErrorCode_TransactionAlreadyCommittedError, TransactionAlreadyCommittedError)
 }
@@ -624,19 +625,6 @@ func UtilityErrNilQuorumCertificate() Error {
 
 func UtilityErrNewAddressFromBytes(err error) Error {
 	return NewUtilityError(UtilityErrorCode_NewAddressFromBytesError, fmt.Sprintf("%s: %s", NewAddressFromBytesError, err.Error()))
-}
-
-// CONSIDERATION: Moving this into the `codec` library could reduce some code bloat
-func UtilityErrProtoMarshal(err error) Error {
-	return NewUtilityError(UtilityErrorCode_ProtoMarshalError, fmt.Sprintf("%s: %s", ProtoMarshalError, err.Error()))
-}
-
-func UtilityErrProtoUnmarshal(err error) Error {
-	return NewUtilityError(UtilityErrorCode_ProtoUnmarshalError, fmt.Sprintf("%s: %s", ProtoUnmarshalError, err.Error()))
-}
-
-func UtilityErrProtoNewAny(err error) Error {
-	return NewUtilityError(UtilityErrorCode_ProtoNewAnyError, fmt.Sprintf("%s: %s", ProtoNewAnyError, err.Error()))
 }
 
 func UtilityErrUpdateParam(err error) Error {

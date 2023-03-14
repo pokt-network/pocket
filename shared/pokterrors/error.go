@@ -4,7 +4,6 @@ package pokterrors
 // TECHDEBT: Remove reference to the term `Proto`; it's why we created a codec package
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -33,12 +32,4 @@ func (se *stdErr) Code() Code {
 
 func (se *stdErr) Module() string {
 	return se.module
-}
-
-func NewUtilityError(code UtilityErrorCode, msg string) Error {
-	return &stdErr{
-		CodeError: Code(code),
-		module:    utilityModuleErrorsPrefix,
-		error:     errors.New(msg),
-	}
 }
