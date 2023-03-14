@@ -30,11 +30,6 @@ type PostgresContext struct {
 	stateTrees *stateTrees
 }
 
-func (p *PostgresContext) NewSavePoint(bytes []byte) error {
-	p.logger.Info().Bool("TODO", true).Msg("NewSavePoint not implemented")
-	return nil
-}
-
 // TECHDEBT(#327): Guarantee atomicity betweens `prepareBlock`, `insertBlock` and `storeBlock` for save points & rollbacks.
 func (p *PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	p.logger.Info().Bool("TODO", true).Msg("RollbackToSavePoint not fully implemented")
