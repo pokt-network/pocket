@@ -1,31 +1,27 @@
+//go:build debug
+
 package debug
 
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	r "runtime"
+	"sync"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
+	"github.com/pokt-network/pocket/build"
 	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/runtime"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
-	"github.com/pokt-network/pocket/shared/utils"
 	"gopkg.in/yaml.v2"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 const (
 	// NOTE: This is the number of validators in the private-keys.yaml manifest file
-	numValidators       = 999
-	debugKeybaseSuffix  = "/.pocket/keys"
-	privateKeysYamlFile = "../../../../../build/localnet/manifests/private-keys.yaml"
+	numValidators      = 999
+	debugKeybaseSuffix = "/.pocket/keys"
 )
 
 var (
-	// TODO: Allow users to override this value via `datadir` flag
+	// TODO: Allow users to override this value via `datadir` flag or env var or config file
 	debugKeybasePath string
 )
 
@@ -49,11 +45,8 @@ func initializeDebugKeybase() error {
 		err                  error
 	)
 
-	if runtime.IsProcessRunningInsideKubernetes() {
-		validatorKeysPairMap, err = fetchValidatorPrivateKeysFromK8S()
-	} else {
-		validatorKeysPairMap, err = fetchValidatorPrivateKeysFromFile()
-	}
+	validatorKeysPairMap, err = parseValidatorPrivateKeysFromEmbeddedYaml()
+
 	if err != nil {
 		return err
 	}
@@ -73,28 +66,55 @@ func initializeDebugKeybase() error {
 
 	// Add validator addresses if not present
 	if len(curAddr) < numValidators {
-		fmt.Println("Rehydrating keybase from private-keys.yaml ...")
+		logger.Global.Debug().Msgf(fmt.Sprintf("Debug keybase initializing... Adding %d validator keys to the keybase", numValidators-len(curAddr)))
+
 		// Use writebatch to speed up bulk insert
 		wb := db.NewWriteBatch()
+
+		// Create a channel to receive errors from goroutines
+		errCh := make(chan error, numValidators)
+
+		// Create a WaitGroup to wait for all goroutines to finish
+		var wg sync.WaitGroup
+		wg.Add(numValidators)
+
 		for _, privHexString := range validatorKeysPairMap {
-			// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
-			keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
-			if err != nil {
-				return err
-			}
+			go func(privHexString string) {
+				defer wg.Done()
 
-			// Use key address as key in DB
-			addrKey := keyPair.GetAddressBytes()
+				// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
+				keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
+				if err != nil {
+					errCh <- err
+					return
+				}
 
-			// Encode KeyPair into []byte for value
-			keypairBz, err := keyPair.Marshal()
-			if err != nil {
-				return err
-			}
-			if err := wb.Set(addrKey, keypairBz); err != nil {
-				return err
-			}
+				// Use key address as key in DB
+				addrKey := keyPair.GetAddressBytes()
+
+				// Encode KeyPair into []byte for value
+				keypairBz, err := keyPair.Marshal()
+				if err != nil {
+					errCh <- err
+					return
+				}
+				if err := wb.Set(addrKey, keypairBz); err != nil {
+					errCh <- err
+					return
+				}
+			}(privHexString)
 		}
+
+		// Wait for all goroutines to finish
+		wg.Wait()
+
+		// Check if any goroutines returned an error
+		select {
+		case err := <-errCh:
+			return err
+		default:
+		}
+
 		if err := wb.Flush(); err != nil {
 			return err
 		}
@@ -108,40 +128,10 @@ func initializeDebugKeybase() error {
 	return nil
 }
 
-func fetchValidatorPrivateKeysFromK8S() (map[string]string, error) {
-	// Initialize Kubernetes client
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize Kubernetes config: %w", err)
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize Kubernetes client: %w", err)
-	}
-
-	// Fetch validator private keys from Kubernetes
-	validatorKeysPairMap, err := pocketk8s.FetchValidatorPrivateKeys(clientset)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch validator private keys from Kubernetes: %w", err)
-	}
-	return validatorKeysPairMap, nil
-}
-
-func fetchValidatorPrivateKeysFromFile() (map[string]string, error) {
-	// BUG: When running the CLI using the build binary (i.e. `p1`), it searched for the private-keys.yaml file in `github.com/pokt-network/pocket/build/localnet/manifests/private-keys.yaml`
-	// Get private keys from manifest file
-	_, current, _, _ := r.Caller(0)
-	//nolint:gocritic // Use path to find private-keys yaml file from being called in any location in the repo
-	yamlFile := filepath.Join(current, privateKeysYamlFile)
-	if exists, err := utils.FileExists(yamlFile); !exists || err != nil {
-		return nil, fmt.Errorf("unable to find YAML file: %s", yamlFile)
-	}
+// parseValidatorPrivateKeysFromEmbeddedYaml fetches the validator private keys from the embedded build/localnet/manifests/private-keys.yaml manifest file.
+func parseValidatorPrivateKeysFromEmbeddedYaml() (map[string]string, error) {
 
 	// Parse the YAML file and load into the config struct
-	yamlData, err := os.ReadFile(yamlFile)
-	if err != nil {
-		return nil, err
-	}
 	var config struct {
 		ApiVersion string            `yaml:"apiVersion"`
 		Kind       string            `yaml:"kind"`
@@ -149,7 +139,7 @@ func fetchValidatorPrivateKeysFromFile() (map[string]string, error) {
 		Type       string            `yaml:"type"`
 		StringData map[string]string `yaml:"stringData"`
 	}
-	if err := yaml.Unmarshal(yamlData, &config); err != nil {
+	if err := yaml.Unmarshal(build.PrivateKeysFile, &config); err != nil {
 		return nil, err
 	}
 	validatorKeysMap := make(map[string]string)
