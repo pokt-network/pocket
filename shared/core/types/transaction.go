@@ -77,7 +77,7 @@ func (tx *Transaction) ValidateBasic() pokterrors.Error {
 func (tx *Transaction) GetMessage() (proto.Message, pokterrors.Error) {
 	anyMsg, err := codec.GetCodec().FromAny(tx.Msg)
 	if err != nil {
-		return nil, pokterrors.UtilityErrProtoFromAny(err)
+		return nil, pokterrors.CodecErrProtoFromAny(err)
 	}
 	return anyMsg, nil
 }
@@ -85,7 +85,7 @@ func (tx *Transaction) GetMessage() (proto.Message, pokterrors.Error) {
 func (tx *Transaction) Sign(privateKey crypto.PrivateKey) pokterrors.Error {
 	txSignableBz, err := tx.SignableBytes()
 	if err != nil {
-		return pokterrors.UtilityErrProtoMarshal(err)
+		return pokterrors.CodecErrProtoMarshal(err)
 	}
 	signature, er := privateKey.Sign(txSignableBz)
 	if er != nil {
@@ -101,7 +101,7 @@ func (tx *Transaction) Sign(privateKey crypto.PrivateKey) pokterrors.Error {
 func (tx *Transaction) Hash() (string, pokterrors.Error) {
 	txProtoBz, err := tx.Bytes()
 	if err != nil {
-		return "", pokterrors.UtilityErrProtoMarshal(err)
+		return "", pokterrors.CodecErrProtoMarshal(err)
 	}
 	return TxHash(txProtoBz), nil
 }
