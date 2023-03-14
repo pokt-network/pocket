@@ -151,6 +151,11 @@ func (p *PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Accoun
 	}
 	return
 }
+func (p *PostgresContext) GetAllAccountsJSON(height int64) (json string, err error) {
+	ctx, tx := p.getCtxAndTx()
+	err = tx.QueryRow(ctx, types.SelectJSON(types.Account.GetAllQuery(height))).Scan(&json)
+	return
+}
 
 // CLEANUP: Consolidate with GetAllAccounts.
 func (p *PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, err error) {
@@ -166,5 +171,11 @@ func (p *PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, 
 		}
 		accs = append(accs, pool)
 	}
+	return
+}
+
+func (p *PostgresContext) GetAllPoolsJSON(height int64) (json string, err error) {
+	ctx, tx := p.getCtxAndTx()
+	err = tx.QueryRow(ctx, types.SelectJSON(types.Pool.GetAllQuery(height))).Scan(&json)
 	return
 }

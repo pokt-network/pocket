@@ -80,6 +80,13 @@ func (p *PostgresContext) GetBytesParam(paramName string, height int64) (param [
 	return v, err
 }
 
+func (p *PostgresContext) GetAllParamsJSON(height int64) (string, error) {
+	ctx, tx := p.getCtxAndTx()
+	var paramsJSON string
+	err := tx.QueryRow(ctx, types.GetAllParamsOrFlagsJSONQuery(types.ParamsTableName, height)).Scan(&paramsJSON)
+	return paramsJSON, err
+}
+
 func (p *PostgresContext) SetParam(paramName string, value any) error {
 	return p.setParamOrFlag(paramName, value, nil)
 }
@@ -99,6 +106,13 @@ func (p *PostgresContext) GetStringFlag(flagName string, height int64) (value st
 
 func (p *PostgresContext) GetBytesFlag(flagName string, height int64) (value []byte, enabled bool, err error) {
 	return getParamOrFlag[[]byte](p, types.FlagsTableName, flagName, height)
+}
+
+func (p *PostgresContext) GetAllFlagsJSON(height int64) (string, error) {
+	ctx, tx := p.getCtxAndTx()
+	var paramsJSON string
+	err := tx.QueryRow(ctx, types.GetAllParamsOrFlagsJSONQuery(types.FlagsTableName, height)).Scan(&paramsJSON)
+	return paramsJSON, err
 }
 
 func (p *PostgresContext) SetFlag(flagName string, value any, enabled bool) error {
