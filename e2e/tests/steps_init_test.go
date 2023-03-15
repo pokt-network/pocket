@@ -3,42 +3,15 @@ package e2e
 import (
 	"fmt"
 	"log"
-	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/cucumber/godog"
-
-	"github.com/pokt-network/pocket/e2e/tests/runner"
 )
 
 var (
 	client = &KubeClient{}
 )
-
-// KubeClient saves a reference to a command
-type KubeClient struct {
-	result *runner.CommandResult // stores the result of the last command that was run.
-}
-
-// RunCommand runs a command on a KubeClient.
-func (k *KubeClient) RunCommand(args ...string) (*runner.CommandResult, error) {
-	base := []string{"exec", "-it", "deploy/pocket-v1-cli-client", "--container", "pocket", "--", "client"}
-	args = append(base, args...)
-	cmd := exec.Command("kubectl", args...)
-	r := &runner.CommandResult{}
-	out, err := cmd.Output()
-	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		r.Stderr = err.Error()
-		r.Err = err
-		k.result = r
-		return r, err
-	}
-	r.Stdout = string(out)
-	k.result = r
-	return r, nil
-}
 
 func thePocketClientShouldHaveExitedWithoutError() error {
 	return client.result.Err
