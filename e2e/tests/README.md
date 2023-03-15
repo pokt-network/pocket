@@ -27,6 +27,10 @@ e2e/
 `kube_client` defines the KubeClient that grabs a Pod and drives it around for the tests.
 `steps_init_test.go` registers the handler functions and runs the test suite.
 
+### KubeClient and Kubernetes Clientsets
+
+The KubeClient wraps the command and saves a reference to the last run command's result. The local environment's Kube client configuration is used to call commands. The Kubernetes Clientset can be changed in the test suite by swapping out the client that is defined at the package level. Multiple configurations can be maintained to test multiple environments and they can be swapped out arbitrarily.
+
 ### Separation of Concerns
 
 The hardest architectural problem is correctly waiting for services so that we can call the commands at the correct moment, but doing so in the package without altering the LocalNet component. We should indirectly depend on the LocalNet but not modify it, since we consider it a separate concern.
