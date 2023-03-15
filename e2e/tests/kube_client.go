@@ -1,3 +1,5 @@
+//go:build e2e
+
 package e2e
 
 import (
@@ -13,7 +15,6 @@ type CommandResult struct {
 var _ PocketClient = &KubeClient{}
 
 // PocketClient is a single function interface for interacting with a node.
-// We could consider upgrading it to a io.Reader interface but for now string is plenty flexible.
 type PocketClient interface {
 	RunCommand(...string) (*CommandResult, error)
 }

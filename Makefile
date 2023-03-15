@@ -323,7 +323,7 @@ test_all: ## Run all go unit tests
 
 .PHONY: test_e2e
 test_e2e: ## Assumes that `localnet_up` is running *warm*.
-	go test -v ./e2e/tests/...
+	go test -v ./e2e/tests/... -tags=e2e
 
 .PHONY: test_all_with_json_coverage
 test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, output results & coverage into json & coverage files

@@ -202,6 +202,6 @@ k8s_resource(
 )
 
 test_go('e2e-tests', '../../e2e/tests', '.',
-        extra_args=["-v"],
+        extra_args=["-v", "-tags=e2e"],
         trigger_mode=TRIGGER_MODE_MANUAL,
 )
