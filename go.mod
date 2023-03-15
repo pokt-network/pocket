@@ -2,36 +2,8 @@ module github.com/pokt-network/pocket
 
 go 1.18
 
-replace (
-	// See the following link for explanation of why we temporarily need this replace
-	// https://golang.testcontainers.org/features/docker_compose/
-	github.com/cucumber/godog => github.com/laurazard/godog v0.0.0-20220922095256-4c4b17abdae7
-	// See the following link for reasoning on why we need the replacement:
-	// https://discuss.dgraph.io/t/error-mremap-size-mismatch-on-arm64/15333/8
-	github.com/dgraph-io/ristretto v0.1.0 => github.com/46bit/ristretto v0.1.0-with-arm-fix
-
-	// For k8s dependencies, we use a replace directive, to prevent them being
-	// upgraded to the version specified in containerd, which is not relevant to the
-	// version needed.
-	// See https://github.com/docker/buildx/pull/948 for details.
-	// https://github.com/docker/buildx/blob/v0.8.1/go.mod#L62-L64
-	k8s.io/api => k8s.io/api v0.22.4
-	k8s.io/apimachinery => k8s.io/apimachinery v0.22.4
-	k8s.io/client-go => k8s.io/client-go v0.22.4
-)
-
 require (
 	github.com/ProtonMail/go-ecvrf v0.0.1
-	github.com/golang/mock v1.6.0
-	github.com/ory/dockertest v3.3.5+incompatible
-	github.com/stretchr/testify v1.8.1
-	golang.org/x/crypto v0.4.0
-	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db
-	gonum.org/v1/gonum v0.12.0
-	google.golang.org/protobuf v1.28.1
-)
-
-require (
 	github.com/benbjohnson/clock v1.3.0
 	github.com/celestiaorg/smt v0.2.1-0.20220414134126-dba215ccb884
 	github.com/cucumber/godog v0.12.6
@@ -39,6 +11,7 @@ require (
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/foxcpp/go-mockdns v1.0.0
 	github.com/getkin/kin-openapi v0.107.0
+	github.com/golang/mock v1.6.0
 	github.com/jackc/pgconn v1.13.0
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
 	github.com/korovkin/limiter v0.0.0-20230307205149-3d4b2b34c99d
@@ -49,12 +22,17 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/multiformats/go-multiaddr v0.8.0
+	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/quasilyte/go-ruleguard/dsl v0.3.21
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
-	github.com/testcontainers/testcontainers-go v0.18.0
+	github.com/stretchr/testify v1.8.1
+	golang.org/x/crypto v0.4.0
+	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db
 	golang.org/x/term v0.3.0
+	gonum.org/v1/gonum v0.12.0
+	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
@@ -104,18 +82,20 @@ require (
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/docker v23.0.0+incompatible // indirect
 	github.com/elastic/gosigar v0.14.2 // indirect
+	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/flynn/noise v1.0.0 // indirect
 	github.com/francoispqt/gojay v1.2.13 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
+	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/pprof v0.0.0-20221203041831-ce31453925ec // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-memdb v1.3.2 // indirect
@@ -164,6 +144,7 @@ require (
 	github.com/multiformats/go-multihash v0.2.1 // indirect
 	github.com/multiformats/go-multistream v0.4.1 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
+	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/onsi/ginkgo/v2 v2.5.1 // indirect
 	github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
@@ -191,9 +172,11 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
+	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
+	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
