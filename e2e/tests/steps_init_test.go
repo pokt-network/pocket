@@ -18,10 +18,7 @@ func thePocketClientShouldHaveExitedWithoutError() error {
 }
 
 func theUserHasAPocketClient() error {
-	result, err := client.RunCommand("help")
-	if result.Stdout != "" {
-		log.Printf("%s", result.Stdout)
-	}
+	_, err := client.RunCommand("help")
 	return err
 }
 
