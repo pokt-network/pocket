@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"fmt"
 	"os/exec"
 )
 
@@ -32,7 +31,6 @@ func (k *KubeClient) RunCommand(args ...string) (*CommandResult, error) {
 	r := &CommandResult{}
 	out, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
 		r.Stderr = err.Error()
 		r.Err = err
 		k.result = r

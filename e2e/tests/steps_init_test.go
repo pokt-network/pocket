@@ -2,7 +2,6 @@ package e2e
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"testing"
 
@@ -29,9 +28,6 @@ func theUserRunsTheCommand(arg1 string) error {
 	}
 	if result.Err != nil {
 		return result.Err
-	}
-	if result.Stdout != "" {
-		log.Println(result.Stdout)
 	}
 	return nil
 }
