@@ -14,7 +14,6 @@
 - [Iteration Goals 🎯](#iteration-goals-)
 - [Iteration Results ✅](#iteration-results-)
 - [External Contributions ⭐](#external-contributions-)
-- [Demo 💻](#demo-)
 - [Upcoming Iteration 🗓️](#upcoming-iteration-️)
 - [Feedback and Open Discussion 💡](#feedback-and-open-discussion-)
   - [Q: ???](#q-)
