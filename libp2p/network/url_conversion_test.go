@@ -222,6 +222,7 @@ func TestGetPeerIP_SingleRecord_Success(t *testing.T) {
 		}
 	}
 	closeDNSMock := prepareDNSResolverMock(t, zones)
+	defer closeDNSMock()
 
 	// Run tests
 	for _, testCase := range testCases {
@@ -231,9 +232,7 @@ func TestGetPeerIP_SingleRecord_Success(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, testCase.expectedIP, actualIP.String())
 		})
-
 	}
-	closeDNSMock()
 }
 
 func TestGetPeerIP_MultipleRecord_Success(t *testing.T) {
@@ -286,6 +285,7 @@ func TestGetPeerIP_MultipleRecord_Success(t *testing.T) {
 		}
 	}
 	closeDNSMock := prepareDNSResolverMock(t, zones)
+	defer closeDNSMock()
 
 	// Run tests
 	for _, testCase := range testCases {
@@ -309,9 +309,7 @@ func TestGetPeerIP_MultipleRecord_Success(t *testing.T) {
 			}
 			require.ElementsMatchf(t, seenIPs, testCase.expectedIPs, "expected and seen IPs don't match")
 		})
-
 	}
-	closeDNSMock()
 }
 
 func TestGetPeerIP_Error(t *testing.T) {
