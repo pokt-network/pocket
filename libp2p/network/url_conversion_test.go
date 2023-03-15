@@ -2,24 +2,32 @@ package network
 
 import (
 	"fmt"
-	"regexp"
+	"net"
 	"testing"
+
+	"github.com/foxcpp/go-mockdns"
 
 	"github.com/multiformats/go-multiaddr"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPeerMultiAddrFromServiceURL_Success(t *testing.T) {
+	zones := map[string]mockdns.Zone{
+		"www.google.com.": {
+			A: []string{"142.250.181.196"},
+		},
+	}
+	closeDNSMock := prepareDNSResolverMock(t, zones)
+
 	testCases := []struct {
-		name                  string
-		serviceURL            string
-		expetedMultiaddrRegex string
+		name              string
+		serviceURL        string
+		expectedMultiaddr string
 	}{
 		{
 			"fqdn",
 			"www.google.com:8080",
-			// These regexes match a superset of valid IPv4/6 address space; simplified for convenience.
-			`(/ip4/(\d{1,3}\.){3}\d{1,3}/tcp/8080)|(/ip6/([0-9a-f]{1,4}::?){1,7}[0-9a-f]{1,4}/tcp/8080)`,
+			"/ip4/142.250.181.196/tcp/8080",
 		},
 		{
 			"IPv4",
@@ -38,9 +46,10 @@ func TestPeerMultiAddrFromServiceURL_Success(t *testing.T) {
 			actualMultiaddr, err := Libp2pMultiaddrFromServiceURL(testCase.serviceURL)
 			require.NoError(t, err)
 			require.NotNil(t, actualMultiaddr)
-			require.Regexp(t, regexp.MustCompile(testCase.expetedMultiaddrRegex), actualMultiaddr.String())
+			require.Equal(t, testCase.expectedMultiaddr, actualMultiaddr.String())
 		})
 	}
+	closeDNSMock()
 }
 
 const (
@@ -211,4 +220,23 @@ func TestGetPeerIP_Error(t *testing.T) {
 	_, err := getPeerIP(hostname)
 	require.ErrorContains(t, err, errResolvePeerIPMsg)
 	require.ErrorContains(t, err, hostname)
+}
+
+func prepareDNSResolverMock(t *testing.T, zones map[string]mockdns.Zone) (done func()) {
+	srv, err := mockdns.NewServerWithLogger(zones, noopLogger{}, false)
+	require.NoError(t, err)
+
+	srv.PatchNet(net.DefaultResolver)
+	return func() {
+		_ = srv.Close()
+		mockdns.UnpatchNet(net.DefaultResolver)
+	}
+}
+
+// noopLogger implements go-mockdns's `mockdns.Logger` interface.
+// The default logging behavior in mockdns is too noisy.
+type noopLogger struct{}
+
+func (nl noopLogger) Printf(format string, args ...interface{}) {
+	// noop
 }
