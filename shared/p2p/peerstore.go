@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -40,7 +41,12 @@ func (paMap PeerAddrMap) GetPeerList() (peerList PeerList) {
 
 // AddPeer implements the respective `Peerstore` interface member.
 func (paMap PeerAddrMap) AddPeer(peer Peer) error {
-	paMap[peer.GetAddress().String()] = peer
+	addr := peer.GetAddress().String()
+	if _, ok := paMap[addr]; ok {
+		return fmt.Errorf("peer exists, remove first; addr: %s", addr)
+	}
+
+	paMap[addr] = peer
 	return nil
 }
 
