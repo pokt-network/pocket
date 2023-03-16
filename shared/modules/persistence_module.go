@@ -211,11 +211,11 @@ type PersistenceReadContext interface {
 	GetAllFlagsJSON(height int64) (string, error)
 }
 
-// SavepointManager is an interface that allows the creation of savepoints.
+// SavepointFactory is an interface that allows the creation of savepoints.
 //
 // Savepoints are a way to create an in-memory snapshot of the state of the blockchain at a given height.
 // This is useful for the utility module, which needs to be able to query the state of the blockchain at
 // a given height, but does not have access to the persistence module.
-type SavepointManager interface {
-	CreateSavepoint(height int64) PersistenceReadContext
+type SavepointFactory interface {
+	CreateSavepoint(height int64) (PersistenceReadContext, error)
 }
