@@ -6,7 +6,6 @@ import (
 
 	"github.com/libp2p/go-libp2p"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/logger"
@@ -150,8 +149,7 @@ func newTestLibp2pNetwork(t *testing.T) *libp2pNetwork {
 	require.NoError(t, err)
 
 	libp2pNet, ok := p2pNetwork.(*libp2pNetwork)
-	if !assert.True(t, ok) {
-		t.Fatalf("p2pNetwork type: %T", p2pNetwork)
-	}
+	require.Truef(t, ok, "p2pNetwork type: %T", p2pNetwork)
+
 	return libp2pNet
 }
