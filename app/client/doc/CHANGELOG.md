@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.21] - 2023-03-16
+## [0.0.0.22] - 2023-03-16
 
 - Refactor debug CLI to use new P2P interfaces
+
+## [0.0.0.21] - 2023-03-14
+
+- Simplifies the debug CLI tooling by embedding private-keys.yaml manifest
+  into the CLI binary when the debug build tag is present.
 
 ## [0.0.0.20] - 2023-03-03
 

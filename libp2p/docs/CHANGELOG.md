@@ -5,9 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.3] - 2023-03-16
+## [0.0.0.4] - 2023-03-16
 
 - Refactored libp2p module to use new P2P interfaces
+
+## [0.0.0.3] - 2023-03-15
+
+- Added mockdns as a test dependency
+- Mocked DNS resolution in url_conversion_test.go
+- Added regression tests to url_conversion_test.go for single- and multi-record DNS responses
 
 ## [0.0.0.2] - 2023-03-03
 

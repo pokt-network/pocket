@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.39] - 2023-03-16
+## [0.0.0.40] - 2023-03-16
 
 - Added *temporary* `shared/p2p` package to hold P2P interfaces common to both legacy and libp2p modules
 - Added `Peerstore` interface
@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored `getAddrBookDelta` to be a member of `PeerList`
 - Factored `SortedPeerManager` out of `raintree.peersManager` and add `PeerManager` interface
 - Refactored getAddrBookDelta to be a member of PeerList
+
+## [0.0.0.39] - 2023-03-09
+
+- Fix diagrams in SLIP documentation to be in the correct order
 
 ## [0.0.0.38] - 2023-03-03
 
