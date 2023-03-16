@@ -131,6 +131,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		}
 
 		if !isSynched {
+			// CONSIDER: if node is already transitioned to the Unsynched state, this transition event will be sent, but will be rejected by the
 			err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
 			return false, err
 		}

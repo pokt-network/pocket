@@ -131,6 +131,9 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 	m.logger.Info().Fields(fields).Msg("Block is Committed")
 
+	// Send current persisted block height to the state sync module
+	m.stateSync.PersistedBlock(block.BlockHeader.Height)
+
 	return nil
 
 }
