@@ -1,6 +1,10 @@
 package p2p
 
-import "github.com/pokt-network/pocket/shared/crypto"
+import (
+	"log"
+
+	"github.com/pokt-network/pocket/shared/crypto"
+)
 
 type Peerstore interface {
 	AddPeer(peer Peer) error
@@ -54,13 +58,13 @@ func (paMap PeerAddrMap) Size() int {
 // mustAddrPeer calls `#AddPeer` and panics if it returns an error.
 func (paMap PeerAddrMap) mustAddPeer(peer Peer) {
 	if err := paMap.AddPeer(peer); err != nil {
-		panic(err)
+		log.Fatalf("in PeerAddrMap#mustAddPeer: %s", err)
 	}
 }
 
 // mustRemovePeer calls `#RemovePeer` and panics if it returns an error.
 func (paMap PeerAddrMap) mustRemovePeer(addr crypto.Address) {
 	if err := paMap.RemovePeer(addr); err != nil {
-		panic(err)
+		log.Fatalf("in PeerAddrMap#mustRemovePeer: %s", err)
 	}
 }
