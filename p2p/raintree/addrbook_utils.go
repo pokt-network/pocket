@@ -70,7 +70,7 @@ func (n *rainTreeNetwork) getTarget(targetPercentage float64, pstoreSize int, le
 	}
 
 	addrStr := peersView.GetAddrs()[i]
-	if addr := peersView.GetPeerstore().GetPeerFromString(addrStr); addr != nil {
+	if addr := n.GetPeerstore().GetPeerFromString(addrStr); addr != nil {
 		target.address = addr.GetAddress()
 		return target
 	}

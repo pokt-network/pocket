@@ -87,7 +87,7 @@ func (pm *rainTreePeersManager) getSelfIndexInPeersView() (int, bool) {
 }
 
 func (pm *rainTreePeersManager) getMaxPeerstoreLevels() uint32 {
-	pstoreSize := pm.GetPeersView().GetPeerstore().Size()
+	pstoreSize := pm.GetPeerstore().Size()
 	return uint32(math.Ceil(logBase(float64(pstoreSize))))
 }
 

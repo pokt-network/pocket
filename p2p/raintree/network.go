@@ -128,7 +128,7 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return nil
 	}
 
-	peer := n.peersManager.GetPeersView().GetPeerstore().GetPeer(address)
+	peer := n.peersManager.GetPeerstore().GetPeer(address)
 	if peer == nil {
 		n.logger.Error().Str("address", address.String()).Msg("address not found in peerstore")
 	}
@@ -217,7 +217,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 }
 
 func (n *rainTreeNetwork) GetPeerstore() sharedP2P.Peerstore {
-	return n.peersManager.GetPeersView().GetPeerstore()
+	return n.peersManager.GetPeerstore()
 }
 
 func (n *rainTreeNetwork) AddPeer(peer sharedP2P.Peer) error {
@@ -241,7 +241,7 @@ func (n *rainTreeNetwork) RemovePeer(peer sharedP2P.Peer) error {
 }
 
 func (n *rainTreeNetwork) Size() int {
-	return n.peersManager.GetPeersView().GetPeerstore().Size()
+	return n.peersManager.GetPeerstore().Size()
 }
 
 func shouldSendToTarget(target target) bool {

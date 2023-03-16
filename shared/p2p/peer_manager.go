@@ -12,12 +12,12 @@ import (
 type PeersView interface {
 	GetAddrs() []string
 	GetPeers() PeerList
-	GetPeerstore() Peerstore
 }
 
 type PeerManager interface {
 	// TECHDEBT: move this to some new `ConnManager` interface.
 	GetSelfAddr() crypto.Address
+	GetPeerstore() Peerstore
 	GetPeersView() PeersView
 	// HandleEvent synchronously reacts to `PeerManagerEvent`s
 	HandleEvent(event PeerManagerEvent)
@@ -55,7 +55,6 @@ type SortedPeerManager struct {
 }
 
 type SortedPeersView struct {
-	pstore      Peerstore
 	sortedAddrs []string
 	sortedPeers PeerList
 }
@@ -153,6 +152,10 @@ func NewSortedPeerManager(startAddr crypto.Address, pstore Peerstore, isDynamic 
 	return pm, nil
 }
 
+func (sortedPM *SortedPeerManager) GetPeerstore() Peerstore {
+	return sortedPM.pstore
+}
+
 func (sortedPM *SortedPeerManager) GetPeersView() PeersView {
 	sortedPM.m.RLock()
 	defer sortedPM.m.RUnlock()
@@ -162,7 +165,6 @@ func (sortedPM *SortedPeerManager) GetPeersView() PeersView {
 	return SortedPeersView{
 		sortedPeers: sortedPM.sortedPeers,
 		sortedAddrs: sortedPM.sortedAddrs,
-		pstore:      sortedPM.pstore,
 	}
 }
 
@@ -197,9 +199,4 @@ func (view SortedPeersView) GetAddrs() []string {
 func (view SortedPeersView) GetPeers() PeerList {
 	// TECHDEBT: consider freezing/duplicating to avoid unintentional modification.
 	return view.sortedPeers
-}
-
-func (view SortedPeersView) GetPeerstore() Peerstore {
-	// TECHDEBT: consider freezing/duplicating to avoid unintentional modification.
-	return view.pstore
 }

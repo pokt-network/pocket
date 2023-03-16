@@ -85,8 +85,14 @@ func TestRainTreePeerstoreUtilsHandleUpdate(t *testing.T) {
 
 			peersManagerStateView, actualMaxNumLevels := network.peersManager.getPeersViewWithLevels()
 
-			require.Equal(t, n, len(peersManagerStateView.GetAddrs()))
-			require.Equal(t, n, peersManagerStateView.GetPeerstore().Size())
+			require.Equal(t, n, network.GetPeerstore().Size())
+			require.Len(t, peersManagerStateView.GetAddrs(), n)
+			if n < 100 {
+				// This is can be slow when `n` is very large.
+				require.ElementsMatchf(t, pstore.GetPeerList(), peersManagerStateView.GetPeers(), "peers don't match")
+			} else {
+				require.Len(t, peersManagerStateView.GetPeers(), n)
+			}
 			require.Equal(t, testCase.numExpectedLevels, int(actualMaxNumLevels))
 		})
 	}
@@ -126,8 +132,9 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 
 			peersManagerStateView, actualMaxNumLevels := network.peersManager.getPeersViewWithLevels()
 
+			require.Equal(b, n, network.GetPeerstore().Size())
 			require.Equal(b, n, len(peersManagerStateView.GetAddrs()))
-			require.Equal(b, n, peersManagerStateView.GetPeerstore().Size())
+			require.ElementsMatchf(b, pstore.GetPeerList(), peersManagerStateView.GetAddrs(), "peers don't match")
 			require.Equal(b, testCase.numExpectedLevels, int(actualMaxNumLevels))
 
 			for i := 0; i < numAddressesToBeAdded; i++ {
@@ -139,8 +146,8 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 
 			peersManagerStateView = network.peersManager.GetPeersView()
 
+			require.Equal(b, n+numAddressesToBeAdded, network.GetPeerstore().Size())
 			require.Equal(b, n+numAddressesToBeAdded, len(peersManagerStateView.GetAddrs()))
-			require.Equal(b, n+numAddressesToBeAdded, peersManagerStateView.GetPeerstore().Size())
 		})
 	}
 }

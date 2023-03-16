@@ -42,18 +42,18 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	require.NoError(t, err)
 	expectedPStoreSize++
 
-	peersView, peerAddrs, peers := getPeersViewParts(network.peersManager)
+	peerAddrs, peers := getPeersViewParts(network.peersManager)
 
 	// Ensure size / lengths are consistent.
-	require.Equal(t, expectedPStoreSize, peersView.GetPeerstore().Size())
+	require.Equal(t, expectedPStoreSize, network.GetPeerstore().Size())
 	require.Equal(t, expectedPStoreSize, len(peerAddrs))
 	require.Equal(t, expectedPStoreSize, len(peers))
 
 	require.ElementsMatch(t, []string{selfAddr.String(), peerAddr.String()}, peerAddrs, "addresses do not match")
 	require.ElementsMatch(t, []*typesP2P.NetworkPeer{selfPeer, peerToAdd}, peers, "peers do not match")
 
-	require.Equal(t, selfPeer, peersView.GetPeerstore().GetPeer(selfAddr), "Peerstore does not contain self")
-	require.Equal(t, peerToAdd, peersView.GetPeerstore().GetPeer(peerAddr), "Peerstore does not contain added peer")
+	require.Equal(t, selfPeer, network.GetPeerstore().GetPeer(selfAddr), "Peerstore does not contain self")
+	require.Equal(t, peerToAdd, network.GetPeerstore().GetPeer(peerAddr), "Peerstore does not contain added peer")
 }
 
 func TestRainTreeNetwork_RemovePeer(t *testing.T) {
@@ -81,7 +81,7 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	network := NewRainTreeNetwork(selfAddr, busMock, peerstoreProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
 
 	// Ensure expected starting size / lengths are consistent.
-	peersView, peerAddrs, peers := getPeersViewParts(network.peersManager)
+	peerAddrs, peers := getPeersViewParts(network.peersManager)
 	require.Equal(t, expectedPStoreSize, pstore.Size())
 	require.Equal(t, expectedPStoreSize, len(peerAddrs))
 	require.Equal(t, expectedPStoreSize, len(peers))
@@ -103,10 +103,10 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	require.NoError(t, err)
 	expectedPStoreSize--
 
-	peersView, peerAddrs, peers = getPeersViewParts(network.peersManager)
+	peerAddrs, peers = getPeersViewParts(network.peersManager)
 	removedAddr := peerToRemove.GetAddress()
 	getPeer := func(addr cryptoPocket.Address) sharedP2P.Peer {
-		return peersView.GetPeerstore().GetPeer(addr)
+		return network.GetPeerstore().GetPeer(addr)
 	}
 
 	// Ensure updated size / lengths are consistent.
@@ -119,14 +119,12 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 }
 
 func getPeersViewParts(pm sharedP2P.PeerManager) (
-	view sharedP2P.PeersView,
 	addrs []string,
 	peers sharedP2P.PeerList,
 ) {
-
-	view = pm.GetPeersView()
+	view := pm.GetPeersView()
 	addrs = view.GetAddrs()
 	peers = view.GetPeers()
 
-	return view, addrs, peers
+	return addrs, peers
 }

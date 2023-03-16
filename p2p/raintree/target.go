@@ -25,7 +25,7 @@ func (t target) DebugString(n *rainTreeNetwork) string {
 	selfAddr := n.selfAddr.String()
 	for i := 0; i < t.peerstoreSizeAtHeight; i++ {
 		addrStr := peersManagerStateView.GetAddrs()[i]
-		serviceURL := peersManagerStateView.GetPeerstore().
+		serviceURL := n.GetPeerstore().
 			GetPeerFromString(addrStr).
 			GetServiceURL()
 		switch {
