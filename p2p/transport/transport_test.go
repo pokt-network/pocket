@@ -5,19 +5,17 @@ import (
 
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	// localhostName represents an IPv4 address on the loopback interface
-	localhostName = "127.0.0.1"
-	randPort      = 42069
-)
+// localhostName represents an IPv4 address on the loopback interface
+const localhostName = "127.0.0.1"
 
 func TestTcpConn_ReadAll(t *testing.T) {
 	expectedData := []byte("testing 123")
-	receiver := newTestReceiver(t, localhostName, randPort)
+	receiver := newTestReceiver(t, localhostName, int(defaults.DefaultP2PPort))
 	sender := newTestSender(t, receiver.address.String())
 
 	// Send via `Write`
