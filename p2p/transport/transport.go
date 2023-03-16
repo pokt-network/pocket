@@ -43,8 +43,9 @@ type tcpConn struct {
 	address  *net.TCPAddr
 	listener *net.TCPListener
 
-	muConn sync.Mutex
-	conn   net.Conn
+	muReadAll sync.Mutex
+	muRead    sync.Mutex
+	conn      net.Conn
 }
 
 func createTCPListener(cfg *configs.P2PConfig) (*tcpConn, error) {
@@ -87,10 +88,10 @@ func (c *tcpConn) ReadAll() ([]byte, error) {
 	}
 	defer conn.Close()
 
-	c.muConn.Lock()
-	c.conn = conn
-	c.muConn.Unlock()
+	c.muReadAll.Lock()
+	defer c.muReadAll.Unlock()
 
+	c.conn = conn
 	return io.ReadAll(c)
 }
 
@@ -98,8 +99,8 @@ func (c *tcpConn) ReadAll() ([]byte, error) {
 // TECHDEBT (#554): Read in this implementation is not intended to be
 // called directly and will return an error if `tcpConn.conn` is `nil`.
 func (c *tcpConn) Read(buf []byte) (int, error) {
-	c.muConn.Lock()
-	defer c.muConn.Unlock()
+	c.muRead.Lock()
+	defer c.muRead.Unlock()
 
 	if c.conn == nil {
 		return 0, fmt.Errorf("no connection accepted on listener")
