@@ -50,9 +50,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 }
 
 // TestFeatures runs the e2e tests specifiedin any .features files in this directory.
-// * This test suite assumes that you have a local network running.
-// * loops over networkConfigs and runs the entire cucumebr suite against that network instance.
-// * allows support for multiple seed network configurations in the future.
+// * This test suite assumes that a LocalNet is running that can be accessed by `kubectl`.
 func TestFeatures(t *testing.T) {
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeScenario,
