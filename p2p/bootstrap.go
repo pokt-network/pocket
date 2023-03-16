@@ -74,16 +74,17 @@ func (m *p2pModule) bootstrap() error {
 		}
 	}
 
-	if pstore.Size() == 0 {
-		return fmt.Errorf("bootstrap failed")
+	for _, peer := range pstore.GetPeerList() {
+		m.logger.Debug().Str("address", peer.GetAddress().String()).Msg("Adding peer to network")
+		if err := m.network.AddPeer(peer); err != nil {
+			m.logger.Error().Err(err).
+				Str("pokt address", peer.GetAddress().String()).
+				Msg("adding peer")
+		}
 	}
 
-	for _, peer := range pstore.GetPeerList() {
-		m.logger.Debug().Str("address", peer.GetAddress().String()).Msg("Adding peer to pstore")
-		// TECHDEBT: either remove the returned error from the interface OR log the error here.
-		if err := m.network.AddPeer(peer); err != nil {
-			return err
-		}
+	if m.network.GetPeerstore().Size() == 0 {
+		return fmt.Errorf("bootstrap failed")
 	}
 	return nil
 }
