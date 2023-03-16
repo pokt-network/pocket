@@ -8,7 +8,7 @@ type Peerstore interface {
 
 	GetPeer(addr crypto.Address) Peer
 	GetPeerFromString(string) Peer
-	GetAllPeers() PeerList
+	GetPeerList() PeerList
 
 	Size() int
 }
@@ -27,7 +27,7 @@ func (paMap PeerAddrMap) GetPeerFromString(addrStr string) Peer {
 }
 
 // GetAllPeers implements the respective `Peerstore` interface member.
-func (paMap PeerAddrMap) GetAllPeers() (peerList PeerList) {
+func (paMap PeerAddrMap) GetPeerList() (peerList PeerList) {
 	for _, peer := range paMap {
 		peerList = append(peerList, peer)
 	}

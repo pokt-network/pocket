@@ -22,7 +22,7 @@ func TestLibp2pNetwork_AddPeer(t *testing.T) {
 	// NB: assert initial state
 	require.Equal(t, 1, p2pNet.pstore.Size())
 
-	existingPeer := p2pNet.pstore.GetAllPeers()[0]
+	existingPeer := p2pNet.pstore.GetPeerList()[0]
 	require.NotNil(t, existingPeer)
 
 	existingPeerInfo, err := Libp2pAddrInfoFromPeer(existingPeer)
@@ -71,7 +71,7 @@ func TestLibp2pNetwork_RemovePeer(t *testing.T) {
 	// NB: assert initial state
 	require.Len(t, p2pNet.pstore, 1)
 
-	existingPeer := p2pNet.pstore.GetAllPeers()[0]
+	existingPeer := p2pNet.pstore.GetPeerList()[0]
 	require.NotNil(t, existingPeer)
 
 	existingPeerInfo, err := Libp2pAddrInfoFromPeer(existingPeer)

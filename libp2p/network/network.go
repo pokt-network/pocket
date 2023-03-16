@@ -231,7 +231,7 @@ func (p2pNet *libp2pNetwork) setupCurrentHeightProvider() providers.CurrentHeigh
 // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.2/core/host#Host)
 // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.2/core/peerstore#Peerstore)
 func (p2pNet *libp2pNetwork) setupHost() error {
-	for _, peer := range p2pNet.pstore.GetAllPeers() {
+	for _, peer := range p2pNet.pstore.GetPeerList() {
 		pubKey, err := Libp2pPublicKeyFromPeer(peer)
 		if err != nil {
 			return fmt.Errorf(

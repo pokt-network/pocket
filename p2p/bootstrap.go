@@ -78,7 +78,7 @@ func (m *p2pModule) bootstrap() error {
 		return fmt.Errorf("bootstrap failed")
 	}
 
-	for _, peer := range pstore.GetAllPeers() {
+	for _, peer := range pstore.GetPeerList() {
 		m.logger.Debug().Str("address", peer.GetAddress().String()).Msg("Adding peer to pstore")
 		// TECHDEBT: either remove the returned error from the interface OR log the error here.
 		if err := m.network.AddPeer(peer); err != nil {

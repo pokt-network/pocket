@@ -23,13 +23,13 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 			return fmt.Errorf("failed to cast event to ConsensusNewHeightEvent")
 		}
 
-		oldPeerList := m.network.GetPeerstore().GetAllPeers()
+		oldPeerList := m.network.GetPeerstore().GetPeerList()
 		updatedPeerstore, err := m.peerstoreProvider.GetStakedPeerstoreAtHeight(consensusNewHeightEvent.Height)
 		if err != nil {
 			return err
 		}
 
-		added, removed := oldPeerList.Delta(updatedPeerstore.GetAllPeers())
+		added, removed := oldPeerList.Delta(updatedPeerstore.GetPeerList())
 		for _, add := range added {
 			if err := m.network.AddPeer(add); err != nil {
 				return err

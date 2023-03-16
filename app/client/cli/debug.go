@@ -212,7 +212,7 @@ func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage)
 	// p2pMod.Broadcast(anyProto)
 
 	pstore, err := fetchPeerstore(cmd)
-	for _, val := range pstore.GetAllPeers() {
+	for _, val := range pstore.GetPeerList() {
 		addr := val.GetAddress()
 		if err != nil {
 			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
@@ -241,9 +241,8 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 		logger.Global.Fatal().Msg("No validators found")
 	}
 
-	// DISCUSS_IN_THIS_COMMIT: what does the following comment mean?
 	// if the message needs to be broadcast, it'll be handled by the business logic of the message handler
-	validatorAddress = pstore.GetAllPeers()[0].GetAddress()
+	validatorAddress = pstore.GetPeerList()[0].GetAddress()
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 	}

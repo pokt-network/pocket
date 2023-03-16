@@ -41,7 +41,7 @@ func NewNetwork(bus modules.Bus, pstoreProvider providers.PeerstoreProvider, cur
 
 // TODO(olshansky): How do we avoid self-broadcasts given that `AddrBook` may contain self in the current p2p implementation?
 func (n *network) NetworkBroadcast(data []byte) error {
-	for _, peer := range n.pstore.GetAllPeers() {
+	for _, peer := range n.pstore.GetPeerList() {
 		if _, err := peer.GetStream().Write(data); err != nil {
 			n.logger.Error().Err(err).Msg("Error writing to one of the peers during broadcast")
 			continue

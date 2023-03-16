@@ -89,7 +89,7 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	var peerToRemove sharedP2P.Peer
 	// Ensure we don't remove selfPeer. `Peerstore` interface isn't aware
 	// of the concept of "self" so we have to find it.
-	for _, peer := range pstore.GetAllPeers() {
+	for _, peer := range pstore.GetPeerList() {
 		if peer.GetAddress().Equals(selfAddr) {
 			continue
 		}
@@ -121,7 +121,8 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 func getPeersViewParts(pm sharedP2P.PeerManager) (
 	view sharedP2P.PeersView,
 	addrs []string,
-	peers sharedP2P.PeerList) {
+	peers sharedP2P.PeerList,
+) {
 
 	view = pm.GetPeersView()
 	addrs = view.GetAddrs()

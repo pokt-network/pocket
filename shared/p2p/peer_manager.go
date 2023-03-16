@@ -74,11 +74,11 @@ func NewSortedPeerManager(startAddr crypto.Address, pstore Peerstore, isDynamic 
 		eventCh:     make(chan PeerManagerEvent, 1),
 		pstore:      pstore,
 		sortedAddrs: make([]string, pstore.Size()),
-		sortedPeers: pstore.GetAllPeers(),
+		sortedPeers: pstore.GetPeerList(),
 	}
 
 	// initialize sortedAddrs
-	for i, peer := range pstore.GetAllPeers() {
+	for i, peer := range pstore.GetPeerList() {
 		pm.sortedAddrs[i] = peer.GetAddress().String()
 	}
 	sort.Strings(pm.sortedAddrs)
