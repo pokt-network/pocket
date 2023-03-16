@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -259,28 +260,22 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 func fetchPeerstore(cmd *cobra.Command) (sharedP2P.Peerstore, error) {
 	bus, ok := getValueFromCLIContext[modules.Bus](cmd, busCLICtxKey)
 	if !ok || bus == nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the bus from CLI context")
+		return nil, errors.New("retrieving bus from CLI context")
 	}
 	modulesRegistry := bus.GetModulesRegistry()
 	pstoreProvider, err := modulesRegistry.GetModule(peerstore_provider.ModuleName)
 	if err != nil {
-		// CONSIDER: preferring to return errors instead of using the logger's
-		// fatal method. `#Fatal()` calls `os.Exit()`, which is a rather violent
-		// way to terminate the program as it does not allow for cleanup or handling.
-		// Any cleanup which happens in `defer`s won't be executed, e.g.: closing
-		// IO connections with databases or remote peers.
-		// (see: https://pkg.go.dev/os#Exit)
-		logger.Global.Fatal().Msg("Unable to retrieve the peerstore provider")
+		return nil, errors.New("retrieving peerstore provider")
 	}
 	currentHeightProvider, err := modulesRegistry.GetModule(current_height_provider.ModuleName)
 	if err != nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the currentHeightProvider")
+		return nil, errors.New("retrieving currentHeightProvider")
 	}
 
 	height := currentHeightProvider.(current_height_provider.CurrentHeightProvider).CurrentHeight()
 	pstore, err := pstoreProvider.(peerstore_provider.PeerstoreProvider).GetStakedPeerstoreAtHeight(height)
 	if err != nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the peerstore")
+		return nil, fmt.Errorf("retrieving peerstore at height %d", height)
 	}
 	return pstore, err
 }
