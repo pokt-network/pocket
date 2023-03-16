@@ -5,8 +5,8 @@ package debug
 import (
 	"fmt"
 	"os"
-	"sync"
 
+	"github.com/korovkin/limiter"
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/build"
 	"github.com/pokt-network/pocket/logger"
@@ -74,14 +74,10 @@ func initializeDebugKeybase() error {
 		// Create a channel to receive errors from goroutines
 		errCh := make(chan error, numValidators)
 
-		// Create a WaitGroup to wait for all goroutines to finish
-		var wg sync.WaitGroup
-		wg.Add(numValidators)
+		limit := limiter.NewConcurrencyLimiter(4)
 
 		for _, privHexString := range validatorKeysPairMap {
-			go func(privHexString string) {
-				defer wg.Done()
-
+			limit.Execute(func() {
 				// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
 				keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
 				if err != nil {
@@ -102,11 +98,10 @@ func initializeDebugKeybase() error {
 					errCh <- err
 					return
 				}
-			}(privHexString)
+			})
 		}
 
-		// Wait for all goroutines to finish
-		wg.Wait()
+		limit.WaitAndClose()
 
 		// Check if any goroutines returned an error
 		select {

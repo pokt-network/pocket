@@ -30,6 +30,13 @@ spec:
           image: client-image
           imagePullPolicy: IfNotPresent
           command: ["sleep", "infinity"]
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "4"
           env:
             - name: POCKET_P2P_IS_CLIENT_ONLY
               value: "true"
