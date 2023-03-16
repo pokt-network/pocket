@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// CONSIDER: making this part of some new `ConnManager` concern.
+// CONSIDERATION: making this part of some new `ConnManager`.
 func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 	evt, err := codec.GetCodec().FromAny(event)
 	if err != nil {

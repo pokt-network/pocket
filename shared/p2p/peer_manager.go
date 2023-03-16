@@ -65,6 +65,11 @@ type SortedPeersView struct {
 // (like adding/removing them) within a Peerstore. It also takes care of
 // keeping them sorted and indexed for fast access.
 //
+// `startAddr` is intended to be that of the host/peer using the peer manager.
+// It's kept at the beginning of the sorted lists in exception to the sorting for
+// the convenience of the consumer. Used to identifying themselves, conventionally,
+// within these primitive data structures.
+//
 // If `isDynamic` is false, the peersManager will not handle addressBook changes,
 // it will only be used for querying the PeerAddrMap
 // TECHDEBT: signature should include a logger reference.
@@ -90,8 +95,6 @@ func NewSortedPeerManager(startAddr crypto.Address, pstore Peerstore, isDynamic 
 			Str("mode", "client-only").
 			Msg("self address not found in peerstore so this client can send messages but does not propagate them")
 	}
-	// TECHDEBT: this message implies the `SortedPeerManager` knows too much about how it will be used.
-	// Consider moving this check out to a "connection manager" in future refactoring.
 	// Sorting is done lexicographically above, but is modified here so this addr of this node
 	// is always the first in the list. This makes RainTree propagation easier to compute and interpret.
 	pm.sortedAddrs = append(pm.sortedAddrs[i:len(pm.sortedAddrs)], pm.sortedAddrs[0:i]...)
@@ -105,6 +108,7 @@ func NewSortedPeerManager(startAddr crypto.Address, pstore Peerstore, isDynamic 
 		return pm, nil
 	}
 
+	// TECKDEBT: moving this out to a "connection manager" in future refactoring.
 	// listening and reacting to peer changes (addition/deletion) events
 	go func() {
 		for evt := range pm.eventCh {

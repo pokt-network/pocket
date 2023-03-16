@@ -68,8 +68,8 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	require.NoError(t, err)
 	selfPeer := &typesP2P.NetworkPeer{Address: selfAddr}
 
-	// TODO _THIS_COMMIT: finish comment
-	// Add self to peerstore because ... it's expected by something
+	// Add self to peerstore as a control to ensure existing peers persist after
+	// removing the target peer.
 	err = pstore.AddPeer(&typesP2P.NetworkPeer{Address: selfAddr})
 	require.NoError(t, err)
 	expectedPStoreSize++

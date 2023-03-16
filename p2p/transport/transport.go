@@ -95,7 +95,7 @@ func (c *tcpConn) ReadAll() ([]byte, error) {
 }
 
 // Read implements the respective member in the io.Reader interface.
-// TECHDEBT (SOON OBSOLETE): Read in this implementation is not intended to be
+// TECHDEBT (#554): Read in this implementation is not intended to be
 // called directly and will return an error if `tcpConn.conn` is `nil`.
 func (c *tcpConn) Read(buf []byte) (int, error) {
 	c.muConn.Lock()
