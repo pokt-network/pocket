@@ -1,18 +1,11 @@
 package p2p
 
 import (
-	"sort"
 	"sync"
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
-
-// TECHDEBT(#553): can this be simplified / consolidated in to something else?
-type PeersView interface {
-	GetAddrs() []string
-	GetPeers() PeerList
-}
 
 type PeerManager interface {
 	// TECHDEBT: move this to some new `ConnManager` interface.
@@ -49,14 +42,8 @@ type SortedPeerManager struct {
 	m  sync.RWMutex
 	wg sync.WaitGroup
 
-	sortedPeers PeerList
-	sortedAddrs []string
-	pstore      Peerstore
-}
-
-type SortedPeersView struct {
-	sortedAddrs []string
-	sortedPeers PeerList
+	view   *SortedPeersView
+	pstore Peerstore
 }
 
 // NewSortedPeerManager creates a new SortedPeerManager instance, it is
@@ -74,33 +61,10 @@ type SortedPeersView struct {
 // TECHDEBT: signature should include a logger reference.
 func NewSortedPeerManager(startAddr crypto.Address, pstore Peerstore, isDynamic bool) (*SortedPeerManager, error) {
 	pm := &SortedPeerManager{
-		startAddr:   startAddr,
-		eventCh:     make(chan PeerManagerEvent, 1),
-		pstore:      pstore,
-		sortedAddrs: make([]string, pstore.Size()),
-		sortedPeers: pstore.GetPeerList(),
-	}
-
-	// initialize sortedAddrs
-	for i, peer := range pstore.GetPeerList() {
-		pm.sortedAddrs[i] = peer.GetAddress().String()
-	}
-	sort.Strings(pm.sortedAddrs)
-
-	i := sort.SearchStrings(pm.sortedAddrs, pm.startAddr.String())
-	if i == len(pm.sortedAddrs) {
-		logger.Global.Warn().
-			Str("address", pm.startAddr.String()).
-			Str("mode", "client-only").
-			Msg("self address not found in peerstore so this client can send messages but does not propagate them")
-	}
-	// Sorting is done lexicographically above, but is modified here so this addr of this node
-	// is always the first in the list. This makes RainTree propagation easier to compute and interpret.
-	pm.sortedAddrs = append(pm.sortedAddrs[i:len(pm.sortedAddrs)], pm.sortedAddrs[0:i]...)
-
-	// sorting pm.sortedPeers as well, leveraging the sort order we just achieved
-	for i := 0; i < len(pm.sortedAddrs); i++ {
-		pm.sortedPeers[i] = pm.pstore.GetPeerFromString(pm.sortedAddrs[i])
+		startAddr: startAddr,
+		eventCh:   make(chan PeerManagerEvent, 1),
+		pstore:    pstore,
+		view:      NewSortedPeersView(startAddr, pstore),
 	}
 
 	if !isDynamic {
@@ -122,12 +86,7 @@ func NewSortedPeerManager(startAddr crypto.Address, pstore Peerstore, isDynamic 
 						Bool("TODO", true).
 						Msgf("adding peer to peerstore")
 				}
-				// insert into sorted sortedAddrs and pstore
-				// searching from index 1 because index 0 is self by convention and the rest of the slice is sorted
-				i := sort.SearchStrings(pm.sortedAddrs[1:], peerAddress.String())
-				pm.sortedAddrs = insertElementAtIndex(pm.sortedAddrs, peerAddress.String(), i)
-				pm.sortedPeers = insertElementAtIndex(pm.sortedPeers, evt.Peer, i)
-
+				pm.view.Add(evt.Peer)
 				pm.wg.Done()
 			case RemovePeerEventType:
 				if err := pm.pstore.RemovePeer(peerAddress); err != nil {
@@ -136,12 +95,7 @@ func NewSortedPeerManager(startAddr crypto.Address, pstore Peerstore, isDynamic 
 						Msgf("removing peer from peerstore")
 				}
 
-				// remove from sorted sortedAddrs and sortedPeers
-				// searching from index 1 because index 0 is self by convention and the rest of the slice is sorted
-				i := sort.SearchStrings(pm.sortedAddrs[1:], peerAddress.String())
-				pm.sortedAddrs = removeElementAtIndex(pm.sortedAddrs, i)
-				pm.sortedPeers = removeElementAtIndex(pm.sortedPeers, i)
-
+				pm.view.Remove(evt.Peer.GetAddress())
 				pm.wg.Done()
 			}
 
@@ -160,12 +114,7 @@ func (sortedPM *SortedPeerManager) GetPeersView() PeersView {
 	sortedPM.m.RLock()
 	defer sortedPM.m.RUnlock()
 
-	// TECHDEBT: consider duplicating to avoid unintentional modification
-	// by BasePeerManager consumers.
-	return SortedPeersView{
-		sortedPeers: sortedPM.sortedPeers,
-		sortedAddrs: sortedPM.sortedAddrs,
-	}
+	return sortedPM.view
 }
 
 func (sortedPM *SortedPeerManager) HandleEvent(event PeerManagerEvent) {
@@ -176,27 +125,4 @@ func (sortedPM *SortedPeerManager) HandleEvent(event PeerManagerEvent) {
 
 func (sortedPM *SortedPeerManager) GetSelfAddr() crypto.Address {
 	return sortedPM.startAddr
-}
-
-func insertElementAtIndex[T any](slice []T, element T, index int) []T {
-	slice = append(slice, element)
-	copy(slice[index+1:], slice[index:])
-	slice[index] = element
-	return slice
-}
-
-func removeElementAtIndex[T any](slice []T, index int) []T {
-	ret := make([]T, 0)
-	ret = append(ret, slice[:index]...)
-	return append(ret, slice[index+1:]...)
-}
-
-func (view SortedPeersView) GetAddrs() []string {
-	// TECHDEBT: consider freezing/duplicating to avoid unintentional modification.
-	return view.sortedAddrs
-}
-
-func (view SortedPeersView) GetPeers() PeerList {
-	// TECHDEBT: consider freezing/duplicating to avoid unintentional modification.
-	return view.sortedPeers
 }
