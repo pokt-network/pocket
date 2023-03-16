@@ -2,9 +2,19 @@ package defaults
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pokt-network/pocket/runtime/configs/types"
 )
+
+func init() {
+	// use home directory + /.pocket as root directory
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	DefaultRootDirectory = homeDir + "/.pocket"
+}
 
 const (
 	DefaultRPCPort                  = "50832"
@@ -17,6 +27,9 @@ const (
 )
 
 var (
+	// root directory for the pocket node is initialized in the init function to be the home directory + /.pocket
+	DefaultRootDirectory = ""
+
 	DefaultRemoteCLIURL = fmt.Sprintf("http://%s:%s", DefaultRPCHost, DefaultRPCPort)
 	DefaultUseLibp2p    = false
 
@@ -54,4 +67,11 @@ var (
 	DefaultLoggerFormat = "pretty"
 	// rpc
 	DefaultRPCTimeout = uint64(defaultRPCTimeout)
+
+	// keybase
+	DefaultKeybaseType           = "file"
+	DefaultKeybasePath           = "path/to/your/keybase/file"
+	DefaultKeybaseVaultAddr      = "http://vault.example.com:8200"
+	DefaultKeybaseVaultToken     = "your-vault-token"
+	DefaultKeybaseVaultMountPath = "your-vault-mount-path"
 )

@@ -8,18 +8,19 @@ type Config struct {
 	ClientDebugMode bool   `json:"client_debug_mode"`
 	UseLibP2P       bool   `json:"use_lib_p2p"` // Determines if `root/libp2p` or `root/p2p` should be used as the p2p module
 
-	Consensus   *ConsensusConfig   `json:"consensus"`
-	Utility     *UtilityConfig     `json:"utility"`
-	Persistence *PersistenceConfig `json:"persistence"`
-	P2P         *P2PConfig         `json:"p2p"`
-	Telemetry   *TelemetryConfig   `json:"telemetry"`
-	Logger      *LoggerConfig      `json:"logger"`
-	RPC         *RPCConfig         `json:"rpc"`
+	Consensus     *ConsensusConfig   `json:"consensus"`
+	Utility       *UtilityConfig     `json:"utility"`
+	Persistence   *PersistenceConfig `json:"persistence"`
+	P2P           *P2PConfig         `json:"p2p"`
+	Telemetry     *TelemetryConfig   `json:"telemetry"`
+	Logger        *LoggerConfig      `json:"logger"`
+	RPC           *RPCConfig         `json:"rpc"`
+	KeybaseConfig *KeybaseConfig     `json:"keybase_config"`
 }
 
 func NewDefaultConfig(options ...func(*Config)) *Config {
 	cfg := &Config{
-		RootDirectory: "/go/src/github.com/pocket-network",
+		RootDirectory: defaults.DefaultRootDirectory,
 		UseLibP2P:     defaults.DefaultUseLibp2p,
 		Consensus: &ConsensusConfig{
 			MaxMempoolBytes: defaults.DefaultConsensusMaxMempoolBytes,
