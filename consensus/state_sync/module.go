@@ -262,7 +262,7 @@ loop:
 			m.m.Lock()
 			if m.state.height == m.state.endingHeight {
 				m.logger.Log().Msgf("Node is synched for state: %s", m.state)
-				return nil
+				break loop
 			}
 			m.m.Unlock()
 
