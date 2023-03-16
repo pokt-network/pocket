@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.34] - 2023-03-08
+## [0.0.0.34] - 2023-03-16
 
 - Refactored P2P module to use new P2P interfaces
 - Moved `typesP2P.AddrBookMap` to `sharedP2P.PeerAddrMap` and refactor to implement the new `Peerstore` interface
