@@ -18,6 +18,7 @@ type Config struct {
 	KeybaseConfig *KeybaseConfig     `json:"keybase_config"`
 }
 
+// IMPROVE: could go all in on viper and use viper.SetDefault()
 func NewDefaultConfig(options ...func(*Config)) *Config {
 	cfg := &Config{
 		RootDirectory: defaults.DefaultRootDirectory,
@@ -56,6 +57,13 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 		RPC: &RPCConfig{
 			Timeout: defaults.DefaultRPCTimeout,
 			Port:    defaults.DefaultRPCPort,
+		},
+		KeybaseConfig: &KeybaseConfig{
+			KeybaseType:    defaults.DefaultKeybaseType,
+			KeybasePath:    defaults.DefaultKeybasePath,
+			VaultAddr:      defaults.DefaultKeybaseVaultAddr,
+			VaultToken:     defaults.DefaultKeybaseVaultToken,
+			VaultMountPath: defaults.DefaultKeybaseVaultMountPath,
 		},
 	}
 

@@ -8,6 +8,10 @@ import (
 )
 
 func init() {
+	initDefaultRootDirectory()
+}
+
+func initDefaultRootDirectory() {
 	// use home directory + /.pocket as root directory
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -27,7 +31,7 @@ const (
 )
 
 var (
-	// root directory for the pocket node is initialized in the init function to be the home directory + /.pocket
+	// DefaultRootDirectory is root directory for the pocket node is initialized in the init function to be the home directory + /.pocket
 	DefaultRootDirectory = ""
 
 	DefaultRemoteCLIURL = fmt.Sprintf("http://%s:%s", DefaultRPCHost, DefaultRPCPort)
@@ -69,9 +73,10 @@ var (
 	DefaultRPCTimeout = uint64(defaultRPCTimeout)
 
 	// keybase
-	DefaultKeybaseType           = "file"
-	DefaultKeybasePath           = "path/to/your/keybase/file"
-	DefaultKeybaseVaultAddr      = "http://vault.example.com:8200"
-	DefaultKeybaseVaultToken     = "your-vault-token"
-	DefaultKeybaseVaultMountPath = "your-vault-mount-path"
+	DefaultKeybaseType = types.KeybaseType_FILE
+	DefaultKeybasePath = DefaultRootDirectory + "/keys"
+	// vault
+	DefaultKeybaseVaultAddr      = ""
+	DefaultKeybaseVaultToken     = ""
+	DefaultKeybaseVaultMountPath = "secret"
 )

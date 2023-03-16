@@ -2,11 +2,10 @@ package cli
 
 import (
 	"context"
-	"os"
 
-	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -21,13 +20,10 @@ var (
 )
 
 func init() {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Cannot find user home directory")
-	}
 	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remote_cli_url", defaults.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
 	rootCmd.PersistentFlags().BoolVar(&nonInteractive, "non_interactive", false, "if true skips the interactive prompts wherever possible (useful for scripting & automation)")
-	rootCmd.PersistentFlags().StringVar(&dataDir, "data_dir", homeDir+"/.pocket", "Path to store pocket related data (keybase etc.)")
+	rootCmd.PersistentFlags().StringVar(&dataDir, "data_dir", defaults.DefaultRootDirectory, "Path to store pocket related data (keybase etc.)")
+	viper.BindPFlag("root_directory", rootCmd.PersistentFlags().Lookup("data_dir"))
 }
 
 var rootCmd = &cobra.Command{

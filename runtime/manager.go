@@ -89,6 +89,8 @@ func parseFiles(configJSONPath, genesisJSONPath string) (config *configs.Config,
 	dir, configFile := path.Split(configJSONPath)
 	filename := strings.TrimSuffix(configFile, filepath.Ext(configFile))
 
+	viper.AddConfigPath("/etc/pocket/")
+	viper.AddConfigPath("$HOME/.pocket")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath(dir)
 	viper.SetConfigName(filename)

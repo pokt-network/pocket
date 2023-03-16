@@ -6,6 +6,8 @@ import (
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/app/client/keybase/hashicorp"
+	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
@@ -50,41 +52,20 @@ type Keybase interface {
 	Delete(address, passphrase string) error
 }
 
-type KeybaseType int
-
-const (
-	KeybaseTypeFile KeybaseType = iota
-	KeybaseTypeVault
-)
-
-type KeybaseOptions struct {
-	// Path to the keybase file
-	KeybasePath string
-
-	// Address of the keybase server
-	VaultAddr string
-
-	// Token for the keybase server
-	VaultToken string
-
-	// Mount path for the keybase server
-	VaultMountPath string
-}
-
 // NewKeybase creates a new keybase based on the type and customized with the options provided
-func NewKeybase(keybaseType KeybaseType, opts *KeybaseOptions) (Keybase, error) {
+func NewKeybase(keybaseType types.KeybaseType, conf *configs.KeybaseConfig) (Keybase, error) {
 	switch keybaseType {
-	case KeybaseTypeFile:
+	case types.KeybaseType_FILE:
 		// Open the file-based keybase at the specified path
-		if opts == nil || opts.KeybasePath == "" {
+		if conf == nil || conf.KeybasePath == "" {
 			return nil, errors.New("keybase path is required for file-based keybase")
 		}
-		return NewBadgerKeybase(opts.KeybasePath)
-	case KeybaseTypeVault:
+		return NewBadgerKeybase(conf.KeybasePath)
+	case types.KeybaseType_VAULT:
 		return hashicorp.NewVaultKeybase(hashicorp.VaultKeybaseConfig{
-			Address: opts.VaultAddr,
-			Token:   opts.VaultToken,
-			Mount:   opts.VaultMountPath,
+			Address: conf.VaultAddr,
+			Token:   conf.VaultToken,
+			Mount:   conf.VaultMountPath,
 		})
 	default:
 		return nil, fmt.Errorf("invalid keybase type: %d", keybaseType)

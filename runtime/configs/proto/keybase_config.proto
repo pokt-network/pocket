@@ -1,16 +1,14 @@
 syntax = "proto3";
 
-package proto;
+package configs;
+
+import "keybase.proto";
 
 option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
 message KeybaseConfig {
-  enum KeybaseType {
-    FILE = 0;
-    VAULT = 1;
-  }
 
-  KeybaseType keybase_type = 1;
+  keybase.KeybaseType keybase_type = 1;
 
   // For KeybaseType.FILE
   string keybase_path = 2;

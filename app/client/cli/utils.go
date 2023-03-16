@@ -15,6 +15,8 @@ import (
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
+	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -24,13 +26,8 @@ import (
 	"golang.org/x/term"
 )
 
-const (
-	KeybaseFile  = "file"
-	KeybaseVault = "vault"
-)
-
 var (
-	keybaseTypeFromCLI           string
+	kbTypeFromCLI                string
 	keybaseVaultAddrFromCLI      string
 	keybaseVaultTokenFromCLI     string
 	keybaseVaultMountPathFromCLI string
@@ -255,7 +252,7 @@ func attachChildPwdFlagToSubcommands() []cmdOption {
 
 func attachKeybaseFlagsToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
-		c.Flags().StringVar(&keybaseTypeFromCLI, "keybase", "file", "keybase type used by the cmd, options are: file, vault")
+		c.Flags().StringVar(&kbTypeFromCLI, "keybase", "file", "keybase type used by the cmd, options are: file, vault")
 		c.Flags().StringVar(&keybaseVaultAddrFromCLI, "vault-addr", "", "Vault address used by the cmd. Defaults to https://127.0.0.1:8200 or VAULT_ADDR env var")
 		c.Flags().StringVar(&keybaseVaultTokenFromCLI, "vault-token", "", "Vault token used by the cmd. Defaults to VAULT_TOKEN env var")
 		c.Flags().StringVar(&keybaseVaultMountPathFromCLI, "vault-mount", "", "Vault mount path used by the cmd. Defaults to secret")
@@ -263,28 +260,29 @@ func attachKeybaseFlagsToSubcommands() []cmdOption {
 }
 
 func keybaseForCLI() (keybase.Keybase, error) {
-	keybaseType := keybase.KeybaseTypeFile
-	keybaseOptions := keybase.KeybaseOptions{}
+	kbTypeFromCLI = strings.ToUpper(kbTypeFromCLI)
+	kbType := types.KeybaseType(types.KeybaseType_value[kbTypeFromCLI])
+	kbConf := configs.KeybaseConfig{}
 
-	switch keybaseTypeFromCLI {
-	case KeybaseFile:
-		keybaseType = keybase.KeybaseTypeFile
+	switch kbType {
+	case types.KeybaseType_FILE:
+		kbType = types.KeybaseType_FILE
 		// Open the keybase at the specified directory
 		pocketDir := strings.TrimSuffix(dataDir, "/")
 		keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
 		if err != nil {
 			return nil, err
 		}
-		keybaseOptions.KeybasePath = keybasePath
-	case KeybaseVault:
-		keybaseType = keybase.KeybaseTypeVault
-		keybaseOptions.VaultAddr = keybaseVaultAddrFromCLI
-		keybaseOptions.VaultToken = keybaseVaultTokenFromCLI
-		keybaseOptions.VaultMountPath = keybaseVaultMountPathFromCLI
+		kbConf.KeybasePath = keybasePath
+	case types.KeybaseType_VAULT:
+		kbType = types.KeybaseType_VAULT
+		kbConf.VaultAddr = keybaseVaultAddrFromCLI
+		kbConf.VaultToken = keybaseVaultTokenFromCLI
+		kbConf.VaultMountPath = keybaseVaultMountPathFromCLI
 	default:
-		logger.Global.Fatal().Msgf("invalid keybase type: %s", keybaseTypeFromCLI)
+		logger.Global.Fatal().Msgf("invalid keybase type: %s", kbTypeFromCLI)
 	}
-	return keybase.NewKeybase(keybaseType, &keybaseOptions)
+	return keybase.NewKeybase(kbType, &kbConf)
 }
 
 func unableToConnectToRpc(err error) error {
