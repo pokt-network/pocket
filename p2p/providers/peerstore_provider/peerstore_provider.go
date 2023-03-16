@@ -4,15 +4,13 @@ package peerstore_provider
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
+	"go.uber.org/multierr"
 )
 
 const ModuleName = "peerstore_provider"
@@ -27,37 +25,20 @@ type PeerstoreProvider interface {
 	SetConnectionFactory(typesP2P.ConnectionFactory)
 }
 
-func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (sharedP2P.Peerstore, error) {
-	// TECHDEBT: consider using a multi-error pkg or upgrading to go 1.20.
-	// (see: https://go.dev/doc/go1.20#errors)
-	var errs []string
-	appendErr := func(err error) {
-		errs = append(errs, err.Error())
-	}
-	joinErrs := func() string {
-		return strings.Join(errs, "; ")
-	}
-
-	pstore := make(sharedP2P.PeerAddrMap)
+func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore sharedP2P.Peerstore, errs error) {
+	pstore = make(sharedP2P.PeerAddrMap)
 	for _, a := range actors {
 		networkPeer, err := ActorToPeer(abp, a)
 		if err != nil {
-			appendErr(err)
+			errs = multierr.Append(errs, err)
 			continue
 		}
 
 		if err = pstore.AddPeer(networkPeer); err != nil {
-			appendErr(err)
-		}
-
-		// TECHDEBT: consider using a multi-error and returning instead of logging.
-		if len(errs) > 0 {
-			logger.Global.Warn().
-				Bool("TODO", true).
-				Msgf("building peerstore from actors list: %s", joinErrs())
+			errs = multierr.Append(errs, err)
 		}
 	}
-	return pstore, nil
+	return pstore, errs
 }
 
 func ActorToPeer(abp PeerstoreProvider, actor *coreTypes.Actor) (sharedP2P.Peer, error) {
