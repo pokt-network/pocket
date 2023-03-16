@@ -202,6 +202,17 @@ flowchart TD
 
 _IMPORTANT: `CommitBlock` is implicit in the diagram above. If any blocks processed result in an invalid `AppHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._
 
+
+## State Sync Operation
+
+
+ StateSync's state can be modified in two ways:
+ 1. By the FSM, when the node is transitions to SyncMode, the state is updated.
+   - In this scenario, if the node is currently not synching, we generate a new state and trigger the sync operation.
+   - If the node is currently synching, we update the sync state, with the most up to date aggregated metadata in thread safe manner.
+ 2. Indirectly by consensus module, when a new block is received the state's "height" is updated to the last persisted block in thread safe manner.
+
+
 ## State Sync Designs
 
 ### Block by Block
