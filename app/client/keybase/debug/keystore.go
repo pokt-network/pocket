@@ -16,8 +16,11 @@ import (
 
 const (
 	// NOTE: This is the number of validators in the private-keys.yaml manifest file
-	numValidators                      = 999
-	debugKeybaseSuffix                 = "/.pocket/keys"
+	numValidators      = 999
+	debugKeybaseSuffix = "/.pocket/keys"
+
+	// Increasing that number linearly grows an amount of RAM required for the debug client to start and import
+	// pre-generated keys into the keybase. Beware that might cause OOM and process can exit with 137 status code.
 	debugKeybaseImportConcurrencyLimit = 4
 )
 
