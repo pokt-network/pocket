@@ -7,7 +7,7 @@ type Peerstore interface {
 	RemovePeer(addr crypto.Address) error
 
 	GetPeer(addr crypto.Address) Peer
-	GetPeerFromString(string) Peer
+	GetPeerFromString(addrHex string) Peer
 	GetPeerList() PeerList
 
 	Size() int
@@ -22,8 +22,8 @@ func (paMap PeerAddrMap) GetPeer(addr crypto.Address) Peer {
 }
 
 // GetPeerFromString implements the respective `Peerstore` interface member.
-func (paMap PeerAddrMap) GetPeerFromString(addrStr string) Peer {
-	return paMap.GetPeer(crypto.AddressFromString(addrStr))
+func (paMap PeerAddrMap) GetPeerFromString(addrHex string) Peer {
+	return paMap.GetPeer(crypto.AddressFromString(addrHex))
 }
 
 // GetAllPeers implements the respective `Peerstore` interface member.
