@@ -16,8 +16,9 @@ import (
 
 const (
 	// NOTE: This is the number of validators in the private-keys.yaml manifest file
-	numValidators      = 999
-	debugKeybaseSuffix = "/.pocket/keys"
+	numValidators                      = 999
+	debugKeybaseSuffix                 = "/.pocket/keys"
+	debugKeybaseImportConcurrencyLimit = 4
 )
 
 var (
@@ -74,7 +75,7 @@ func initializeDebugKeybase() error {
 		// Create a channel to receive errors from goroutines
 		errCh := make(chan error, numValidators)
 
-		limit := limiter.NewConcurrencyLimiter(4)
+		limit := limiter.NewConcurrencyLimiter(debugKeybaseImportConcurrencyLimit)
 
 		for _, privHexString := range validatorKeysPairMap {
 			limit.Execute(func() {
