@@ -212,6 +212,9 @@ func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage)
 	// p2pMod.Broadcast(anyProto)
 
 	pstore, err := fetchPeerstore(cmd)
+	if err != nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the pstore")
+	}
 	for _, val := range pstore.GetPeerList() {
 		addr := val.GetAddress()
 		if err != nil {
