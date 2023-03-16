@@ -26,9 +26,7 @@ const (
 	defaultPeerTTL = 2 * week
 )
 
-var (
-	_ typesP2P.Network = &libp2pNetwork{}
-)
+var _ typesP2P.Network = &libp2pNetwork{}
 
 type libp2pNetwork struct {
 	base_modules.IntegratableModule
