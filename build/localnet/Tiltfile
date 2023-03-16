@@ -28,6 +28,7 @@ if (localnet_config_file != localnet_config) or (
 deps = [
     "app",
     "build/localnet",
+    "build/debug.go",
     "consensus",
     "p2p",
     "persistance",

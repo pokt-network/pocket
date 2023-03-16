@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.39] - 2023-03-08
+## [0.0.0.40] - 2023-03-15
 
 - Add UnmarshalJSON to KeyPair to unmarshal public key correctly
+
+## [0.0.0.39] - 2023-03-09
+
+- Fix diagrams in SLIP documentation to be in the correct order
 
 ## [0.0.0.38] - 2023-03-03
 
