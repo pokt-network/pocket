@@ -24,7 +24,7 @@ e2e/
 2 directories, 4 files
 ```
 
-`kube_client` defines the KubeClient that grabs a Pod and drives it around for the tests.
+`kube_client.go` defines the KubeClient that grabs a Pod and drives it around for the tests.
 `steps_init_test.go` registers the handler functions and runs the test suite.
 
 ### KubeClient and Kubernetes Clientsets
@@ -33,8 +33,8 @@ The KubeClient wraps the command and saves a reference to the last run command's
 
 ### Separation of Concerns
 
-The hardest architectural problem is correctly waiting for services so that we can call the commands at the correct moment, but doing so in the package without altering the LocalNet component. We should indirectly depend on the LocalNet but not modify it, since we consider it a separate concern.
+The hardest architectural problem is correctly waiting for services so that we can call the commands at the correct moment, but doing so in the package without altering the LocalNet component. We should indirectly depend on the LocalNet but not modify it, since we consider it a separate concern. To achieve this, we will need to query the Kubernetes Clientset that we acquire from the local configuration and repeatedly poll that for changes until all services our tests rely on are running.
 
 ### Kubernetes Configurations
 
-A goal of this project is to support swapping Kubernetes configurations out with the same test suite. This design accomplishes that by not requiring any direct dependency of the LocalNet and instead running commands through Kubernetes. 
+A goal of this project is to support swapping Kubernetes configurations out with the same test suite. This design accomplishes that by not requiring any direct dependency of the LocalNet and instead running commands through Kubernetes.
