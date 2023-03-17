@@ -36,7 +36,7 @@ type ExpectedRainTreeMessageProp struct {
 	targets  []ExpectedRainTreeMessageTarget
 }
 
-func TestRainTreePeerstoreUtilsHandleUpdate(t *testing.T) {
+func TestRainTree_Peerstore_HandleUpdate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	addr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
@@ -170,7 +170,7 @@ func getPeerstore(t *testing.T, n int) sharedP2P.Peerstore {
 	return pstore
 }
 
-func TestRainTreePeerstoreTargetsSixNodes(t *testing.T) {
+func TestRainTree_MessageTargets_SixNodes(t *testing.T) {
 	// 		                  A
 	// 		   ┌──────────────┴────────┬────────────────────┐
 	// 		   C                       A                    E
@@ -183,7 +183,7 @@ func TestRainTreePeerstoreTargetsSixNodes(t *testing.T) {
 	testRainTreeMessageTargets(t, prop)
 }
 
-func TestRainTreeAddrBookTargetsNineNodes(t *testing.T) {
+func TestRainTree_MessageTargets_NineNodes(t *testing.T) {
 	//                      A
 	//       ┌──────────────┴────────┬────────────────────┐
 	//       D                       A                    G
@@ -195,7 +195,7 @@ func TestRainTreeAddrBookTargetsNineNodes(t *testing.T) {
 	}}
 	testRainTreeMessageTargets(t, prop)
 }
-func TestRainTreeAddrBookTargetsTwentySevenNodes(t *testing.T) {
+func TestRainTree_MessageTargets_TwentySevenNodes(t *testing.T) {
 
 	// 		                                                             O
 	// 		                ┌────────────────────────────────────────────┴───────────────────────┬─────────────────────────────────────────────────────────────────┐
