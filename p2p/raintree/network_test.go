@@ -109,7 +109,7 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 		return network.GetPeerstore().GetPeer(addr)
 	}
 
-	// Ensure updated size / lengths are consistent.
+	// Ensure updated sizes are consistent.
 	require.Equal(t, expectedPStoreSize, pstore.Size())
 	require.Equal(t, expectedPStoreSize, len(peerAddrs))
 	require.Equal(t, expectedPStoreSize, len(peers))
