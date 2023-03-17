@@ -166,6 +166,7 @@ const (
 	broadcastMessageError                       = "error broadcasting message"
 	createConsensusMessageError                 = "error creating consensus message"
 	createStateSyncMessageError                 = "error creating state sync message"
+	noQcInReceivedBlockError                    = "received block does not contain a quorum certificate"
 	blockRetrievalError                         = "couldn't retrieve the block from persistence module"
 	anteValidationError                         = "discarding hotstuff message because ante validation failed"
 	nilLeaderIdError                            = "attempting to send a message to leader when LeaderId is nil"
@@ -205,6 +206,7 @@ var (
 	ErrBroadcastMessage                       = errors.New(broadcastMessageError)
 	ErrCreateConsensusMessage                 = errors.New(createConsensusMessageError)
 	ErrCreateStateSyncMessage                 = errors.New(createStateSyncMessageError)
+	ErrNoQcInReceivedBlock                    = errors.New(noQcInReceivedBlockError)
 	ErrBlockRetrievalMessage                  = errors.New(blockRetrievalError)
 	ErrHotstuffValidation                     = errors.New(anteValidationError)
 	ErrNilLeaderId                            = errors.New(nilLeaderIdError)
