@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.22] - 2023-03-16
+## [0.0.0.22] - 2023-03-17
 
 - Added a limit on concurrent key imports for debug client to avoid OOM.
 

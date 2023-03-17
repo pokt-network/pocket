@@ -21,6 +21,7 @@ const (
 
 	// Increasing this number is linearly proportional to the amount of RAM required for the debug client to start and import
 	// pre-generated keys into the keybase. Beware that might cause OOM and process can exit with 137 status code.
+	// 4 threads takes 350-400MiB from a few tests which sounds acceptable.
 	debugKeybaseImportConcurrencyLimit = 4
 )
 
