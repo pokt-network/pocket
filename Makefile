@@ -1,5 +1,8 @@
 include build.mk
 
+# OLSH - Need to fix github wiki
+# OLSH - Need to fix github wiki
+
 # For simplicity's sake, we will use the same docker-compose file for all docker-compose commands.
 docker-compose := $(shell command -v docker-compose 2> /dev/null || echo "docker compose") \
 	-f build/deployments/docker-compose.yaml
@@ -43,6 +46,15 @@ prompt_user:
 warn_destructive: ## Print WARNING to the user
 	@echo "This is a destructive action that will affect docker resources outside the scope of this repo!"
 
+.PHONY: protoc_check
+protoc_check: ## Checks if protoc is installed
+	{ \
+	if ! command -v protoc >/dev/null; then \
+		echo "Follow instructions to install 'protoc': https://grpc.io/docs/protoc-installation/"; \
+	fi; \
+	}
+
+
 .PHONY: go_vet
 go_vet: ## Run `go vet` on all files in the current project
 	go vet ./...
@@ -58,8 +70,7 @@ go_staticcheck: ## Run `go staticcheck` on all files in the current project
 	}
 
 .PHONY: go_doc
-# INCOMPLETE: Generate documentation for the current project using `godo`
-go_doc:
+go_doc: # INCOMPLETE: [WIP] Generate documentation for the current project using `godo`
 	{ \
 	if command -v godoc >/dev/null; then \
 		echo "Visit http://localhost:6060/pkg/github.com/pokt-network/pocket"; \
@@ -70,17 +81,16 @@ go_doc:
 	}
 
 .PHONY: go_protoc-go-inject-tag
-### Checks if protoc-go-inject-tag is installed
-go_protoc-go-inject-tag:
+go_protoc-go-inject-tag: ## Checks if protoc-go-inject-tag is installed
 	{ \
 	if ! command -v protoc-go-inject-tag >/dev/null; then \
 		echo "Install with 'go install github.com/favadi/protoc-go-inject-tag@latest'"; \
 	fi; \
 	}
 
+
 .PHONY: go_oapi-codegen
-### Checks if oapi-codegen is installed
-go_oapi-codegen:
+go_oapi-codegen: ## Checks if oapi-codegen is installed
 	{ \
 	if ! command -v oapi-codegen >/dev/null; then \
 		echo "Install with 'go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0'"; \
@@ -110,6 +120,7 @@ install_cli_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag'
 
 .PHONY: develop_start
 develop_start: ## Run all of the make commands necessary to develop on the project
+		make protoc_check && \
 		make docker_loki_check && \
 		make clean_mocks && \
 		make protogen_clean && make protogen_local && \
