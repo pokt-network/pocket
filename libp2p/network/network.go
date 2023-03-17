@@ -217,41 +217,6 @@ func (p2pNet *libp2pNetwork) setupCurrentHeightProvider() providers.CurrentHeigh
 	return currentHeightProviderModule.(providers.CurrentHeightProvider)
 }
 
-// setupHost iterates through peers in given `pstore`, converting peer info for
-// use with libp2p and adding it to the underlying libp2p host's peerstore.
-// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.2/core/host#Host)
-// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.2/core/peerstore#Peerstore)
-func (p2pNet *libp2pNetwork) setupHost() error {
-	for _, peer := range p2pNet.pstore.GetPeerList() {
-		pubKey, err := Libp2pPublicKeyFromPeer(peer)
-		if err != nil {
-			return fmt.Errorf(
-				"converting peer public key, pokt address: %s: %w",
-				peer.GetAddress(),
-				err,
-			)
-		}
-		libp2pPeer, err := Libp2pAddrInfoFromPeer(peer)
-		if err != nil {
-			return fmt.Errorf(
-				"converting peer info, pokt address: %s: %w",
-				peer.GetAddress(),
-				err,
-			)
-		}
-
-		p2pNet.host.Peerstore().AddAddrs(libp2pPeer.ID, libp2pPeer.Addrs, defaultPeerTTL)
-		if err := p2pNet.host.Peerstore().AddPubKey(libp2pPeer.ID, pubKey); err != nil {
-			return fmt.Errorf(
-				"adding peer public key, pokt address: %s: %w",
-				peer.GetAddress(),
-				err,
-			)
-		}
-	}
-	return nil
-}
-
 // setup initializes p2pNet.pstore using the PeerstoreProvider
 // and CurrentHeightProvider registered on the bus, if preseent.
 func (p2pNet *libp2pNetwork) setup() (err error) {
