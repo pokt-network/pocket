@@ -49,7 +49,6 @@ var (
 		PromptSendBlockRequest,
 	}
 
-	configPath  string = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
 	genesisPath string = runtime.GetEnv("GENESIS_PATH", "build/config/genesis.json")
 	rpcHost     string
 )
@@ -78,6 +77,10 @@ func NewDebugCommand() *cobra.Command {
 		Short: "Debug utility for rapid development",
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+
+			// CLEANUP: this is to keep backwards compatibility with localnet
+			configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
+
 			runtimeMgr := runtime.NewManagerFromFiles(
 				configPath, genesisPath,
 				runtime.WithClientDebugMode(),

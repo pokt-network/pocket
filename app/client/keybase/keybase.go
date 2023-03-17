@@ -53,8 +53,8 @@ type Keybase interface {
 }
 
 // NewKeybase creates a new keybase based on the type and customized with the options provided
-func NewKeybase(keybaseType types.KeybaseType, conf *configs.KeybaseConfig) (Keybase, error) {
-	switch keybaseType {
+func NewKeybase(conf *configs.KeybaseConfig) (Keybase, error) {
+	switch conf.KeybaseType {
 	case types.KeybaseType_FILE:
 		// Open the file-based keybase at the specified path
 		if conf == nil || conf.KeybasePath == "" {
@@ -68,6 +68,6 @@ func NewKeybase(keybaseType types.KeybaseType, conf *configs.KeybaseConfig) (Key
 			Mount:   conf.VaultMountPath,
 		})
 	default:
-		return nil, fmt.Errorf("invalid keybase type: %d", keybaseType)
+		return nil, fmt.Errorf("invalid keybase type: %d", conf.KeybaseType)
 	}
 }

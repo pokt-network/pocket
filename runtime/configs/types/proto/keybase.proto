@@ -6,5 +6,6 @@ option go_package = "github.com/pokt-network/pocket/runtime/configs/types";
 
 enum KeybaseType {
   FILE = 0;
+  // Hashicorp Vault
   VAULT = 1;
 }

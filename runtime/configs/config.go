@@ -1,6 +1,17 @@
 package configs
 
-import "github.com/pokt-network/pocket/runtime/defaults"
+import (
+	"log"
+	"strings"
+
+	"github.com/mitchellh/mapstructure"
+	"github.com/pokt-network/pocket/runtime/defaults"
+	"github.com/spf13/viper"
+)
+
+// IMPROVE: add a SaveConfig() function to save the config to a file and
+// generate a default config file for the user. Add it as a new command
+// into the CLI.
 
 type Config struct {
 	RootDirectory   string `json:"root_directory"`
@@ -8,14 +19,57 @@ type Config struct {
 	ClientDebugMode bool   `json:"client_debug_mode"`
 	UseLibP2P       bool   `json:"use_lib_p2p"` // Determines if `root/libp2p` or `root/p2p` should be used as the p2p module
 
-	Consensus     *ConsensusConfig   `json:"consensus"`
-	Utility       *UtilityConfig     `json:"utility"`
-	Persistence   *PersistenceConfig `json:"persistence"`
-	P2P           *P2PConfig         `json:"p2p"`
-	Telemetry     *TelemetryConfig   `json:"telemetry"`
-	Logger        *LoggerConfig      `json:"logger"`
-	RPC           *RPCConfig         `json:"rpc"`
-	KeybaseConfig *KeybaseConfig     `json:"keybase_config"`
+	Consensus   *ConsensusConfig   `json:"consensus"`
+	Utility     *UtilityConfig     `json:"utility"`
+	Persistence *PersistenceConfig `json:"persistence"`
+	P2P         *P2PConfig         `json:"p2p"`
+	Telemetry   *TelemetryConfig   `json:"telemetry"`
+	Logger      *LoggerConfig      `json:"logger"`
+	RPC         *RPCConfig         `json:"rpc"`
+	Keybase     *KeybaseConfig     `json:"keybase"`
+}
+
+// ParseConfig parses the config file and returns a Config struct
+func ParseConfig(cfgFile string) *Config {
+	config := NewDefaultConfig()
+
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+	} else {
+
+		viper.AddConfigPath("/etc/pocket/")  // path to look for the config file in
+		viper.AddConfigPath("$HOME/.pocket") // call multiple times to add many search paths
+		viper.AddConfigPath(".")             // optionally look for config in the working directory
+		viper.SetConfigName("config")        // name of config file (without extension)
+		viper.SetConfigType("json")          // REQUIRED if the config file does not have the extension in the name
+	}
+
+	// The lines below allow for environment variables configuration (12 factor app)
+	// Eg: POCKET_CONSENSUS_PRIVATE_KEY=somekey would override `consensus.private_key` in config
+	viper.SetEnvPrefix("POCKET")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok && cfgFile == "" {
+			// if file does not exist and there is no override, return default config
+			// DISCUSS: how should we handle this? Should we return an error? Should we create the default file?
+			return config
+		} else {
+			// Some other error occurred while reading the config file
+			log.Fatalf("[ERROR] failed to read config %s", err.Error())
+		}
+	}
+
+	decoderConfig := func(dc *mapstructure.DecoderConfig) {
+		// This is to leverage the `json` struct tags without having to add `mapstructure` ones.
+		// Until we have complex use cases, this should work just fine.
+		dc.TagName = "json"
+	}
+	if err := viper.Unmarshal(&config, decoderConfig); err != nil {
+		log.Fatalf("[ERROR] failed to unmarshal config %s", err.Error())
+	}
+	return config
 }
 
 // IMPROVE: could go all in on viper and use viper.SetDefault()
@@ -58,7 +112,7 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			Timeout: defaults.DefaultRPCTimeout,
 			Port:    defaults.DefaultRPCPort,
 		},
-		KeybaseConfig: &KeybaseConfig{
+		Keybase: &KeybaseConfig{
 			KeybaseType:    defaults.DefaultKeybaseType,
 			KeybasePath:    defaults.DefaultKeybasePath,
 			VaultAddr:      defaults.DefaultKeybaseVaultAddr,

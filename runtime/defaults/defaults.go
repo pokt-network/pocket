@@ -18,6 +18,8 @@ func initDefaultRootDirectory() {
 		panic(err)
 	}
 	DefaultRootDirectory = homeDir + "/.pocket"
+	// TECHDEBT: this is a hack to get around the fact that we don't know the home directory until after the init function has run
+	DefaultKeybasePath = DefaultRootDirectory + "/keys"
 }
 
 const (
@@ -74,7 +76,7 @@ var (
 
 	// keybase
 	DefaultKeybaseType = types.KeybaseType_FILE
-	DefaultKeybasePath = DefaultRootDirectory + "/keys"
+	DefaultKeybasePath = "" // set in init function
 	// vault
 	DefaultKeybaseVaultAddr      = ""
 	DefaultKeybaseVaultToken     = ""
