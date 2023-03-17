@@ -15,9 +15,10 @@ type Peer interface {
 	GetStream() io.ReadWriteCloser
 }
 
+// PeerList is a convenience type for operating on a slice of `Peer`s.
 type PeerList []Peer
 
-// getPeerListDelta returns the difference between two PeerList slices
+// Delta returns the difference between two PeerList slices
 func (peerList PeerList) Delta(compareList PeerList) (added, removed PeerList) {
 	tempPStore := make(PeerAddrMap)
 	for _, np := range peerList {
