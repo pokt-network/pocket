@@ -182,6 +182,8 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
+	//fmt.Println("PrecommitQC: ", preCommitQC)
+
 	m.step = Commit
 	m.lockedQC = preCommitQC
 	m.hotstuffMempool[PreCommit].Clear()
@@ -243,8 +245,16 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		m.paceMaker.InterruptRound("failed to create propose message")
 		return
 	}
-	//m.broadcastToValidators(decideProposeMessage)
+
 	m.broadcastToValidators(decideProposeMessage)
+
+	commitQcBytes, err := codec.GetCodec().Marshal(commitQC)
+	if err != nil {
+		m.logger.Error().Err(err).Msg("Failed to convert commit QC to bytes")
+		return
+	}
+
+	m.block.BlockHeader.QuorumCertificate = commitQcBytes
 
 	if err := m.commitBlock(m.block); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrCommitBlock.Error())
@@ -253,7 +263,6 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	}
 
 	// There is no "replica behavior" to imitate here because the leader already committed the block proposal.
-
 	m.paceMaker.NewHeight()
 	m.GetBus().
 		GetTelemetryModule().
