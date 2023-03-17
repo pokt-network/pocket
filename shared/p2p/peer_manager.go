@@ -35,8 +35,9 @@ type SortedPeerManager struct {
 
 	// eventCh provides a way for processing additions and removals from the pstore in an event-sourced way.
 	//
-	// The idea is that when we receive one of these events, we update the peersManager internal data structures
-	// so that it can present a consistent state but in an optimized way.
+	// The idea is that when we receive one of these events, we update the view
+	// to be sorted in the expected order and format without having to compute
+	// it every time.
 	eventCh chan PeerManagerEvent
 
 	m  sync.RWMutex
