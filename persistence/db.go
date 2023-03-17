@@ -63,9 +63,7 @@ func (pg *PostgresContext) ResetContext() error {
 	return nil
 }
 
-func connectToDatabase(cfg *configs.PersistenceConfig) (*pgx.Conn, error) {
-	ctx := context.TODO()
-
+func initializePool(cfg *configs.PersistenceConfig) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(cfg.GetPostgresUrl())
 	if err != nil {
 		return nil, fmt.Errorf("unable to create database config: %v", err)
@@ -96,9 +94,17 @@ func connectToDatabase(cfg *configs.PersistenceConfig) (*pgx.Conn, error) {
 		return nil, fmt.Errorf("unable to connect to database: %v", err)
 	}
 
-	conn, _ := pool.Acquire(ctx)
+	return pool, nil
+}
 
-	nodeSchema := cfg.GetNodeSchema()
+func connectToDatabase(pool *pgxpool.Pool, nodeSchema string) (*pgxpool.Conn, error) {
+	ctx := context.TODO()
+
+	conn, err := pool.Acquire(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to acquire connection from pool: %v", err)
+	}
+
 	// Creating and setting a new schema so we can running multiple nodes on one postgres instance. See
 	// more details at https://github.com/go-pg/pg/issues/351.
 	if _, err = conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, nodeSchema)); err != nil {
@@ -114,11 +120,11 @@ func connectToDatabase(cfg *configs.PersistenceConfig) (*pgx.Conn, error) {
 		return nil, err
 	}
 
-	return conn.Conn(), nil
+	return conn, nil
 }
 
-// TODO(pokt-network/pocket/issues/77): Enable proper up and down migrations
-func initializeDatabase(conn *pgx.Conn) error {
+// TODO(#77): Enable proper up and down migrations
+func initializeDatabase(conn *pgxpool.Conn) error {
 	// Initialize the tables if they don't already exist
 	if err := initializeAllTables(context.TODO(), conn); err != nil {
 		return fmt.Errorf("unable to initialize tables: %v", err)
@@ -126,8 +132,8 @@ func initializeDatabase(conn *pgx.Conn) error {
 	return nil
 }
 
-// TODO(pokt-network/pocket/issues/77): Delete all the `initializeAllTables` calls once proper migrations are implemented.
-func initializeAllTables(ctx context.Context, db *pgx.Conn) error {
+// TODO(#77): Delete all the `initializeAllTables` calls once proper migrations are implemented.
+func initializeAllTables(ctx context.Context, db *pgxpool.Conn) error {
 	if err := initializeAccountTables(ctx, db); err != nil {
 		return err
 	}
@@ -149,7 +155,7 @@ func initializeAllTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func initializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor types.ProtocolActorSchema) error {
+func initializeProtocolActorTables(ctx context.Context, db *pgxpool.Conn, actor types.ProtocolActorSchema) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, actor.GetTableName(), actor.GetTableSchema())); err != nil {
 		return err
 	}
@@ -161,7 +167,7 @@ func initializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor type
 	return nil
 }
 
-func initializeAccountTables(ctx context.Context, db *pgx.Conn) error {
+func initializeAccountTables(ctx context.Context, db *pgxpool.Conn) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.AccountTableName, types.Account.GetTableSchema())); err != nil {
 		return err
 	}
@@ -171,7 +177,7 @@ func initializeAccountTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
+func initializeGovTables(ctx context.Context, db *pgxpool.Conn) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s`, fmt.Sprintf(CreateEnumType, types.ValTypeName), types.ValTypeEnumTypes)); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code != DuplicateObjectErrorCode {
@@ -190,7 +196,7 @@ func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
+func initializeBlockTables(ctx context.Context, db *pgxpool.Conn) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.BlockTableName, types.BlockTableSchema)); err != nil {
 		return err
 	}

@@ -3,7 +3,6 @@
 package debug
 
 import (
-	"fmt"
 	"os"
 	"sync"
 
@@ -66,7 +65,7 @@ func initializeDebugKeybase() error {
 
 	// Add validator addresses if not present
 	if len(curAddr) < numValidators {
-		logger.Global.Debug().Msgf(fmt.Sprintf("Debug keybase initializing... Adding %d validator keys to the keybase", numValidators-len(curAddr)))
+		logger.Global.Debug().Msgf("Debug keybase initializing... Adding %d validator keys to the keybase", numValidators-len(curAddr))
 
 		// Use writebatch to speed up bulk insert
 		wb := db.NewWriteBatch()

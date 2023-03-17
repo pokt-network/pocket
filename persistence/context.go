@@ -6,6 +6,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -16,7 +17,7 @@ var _ modules.PersistenceRWContext = &PostgresContext{}
 // TECHDEBT: All the functions of `PostgresContext` should be organized in appropriate packages and use pointer receivers
 type PostgresContext struct {
 	Height int64 // TECHDEBT: `Height` is only externalized for testing purposes. Replace with a `Debug` interface containing helpers
-	conn   *pgx.Conn
+	conn   *pgxpool.Conn
 	tx     pgx.Tx
 
 	stateHash string
@@ -77,9 +78,8 @@ func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 	if err := p.getTx().Commit(ctx); err != nil {
 		return err
 	}
-	if err := p.conn.Close(ctx); err != nil {
-		p.logger.Error().Err(err).Bool("TODO", true).Msg("Error when closing DB connection")
-	}
+
+	p.conn.Release()
 
 	return nil
 }
@@ -97,7 +97,8 @@ func (p *PostgresContext) Release() error {
 }
 
 func (p *PostgresContext) Close() error {
-	return p.conn.Close(context.TODO())
+	p.conn.Release()
+	return nil
 }
 
 // INVESTIGATE(#361): Revisit if is used correctly in the context of the lifecycle of a persistenceContext and a utilityContext
@@ -116,11 +117,7 @@ func (p *PostgresContext) resetContext() (err error) {
 	}
 
 	conn := tx.Conn()
-	if conn == nil {
-		return nil
-	}
-
-	if !conn.IsClosed() {
+	if conn != nil && !conn.IsClosed() {
 		if err := conn.Close(context.TODO()); err != nil {
 			return err
 		}

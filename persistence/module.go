@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -45,6 +46,8 @@ type persistenceModule struct {
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	// only one write context is allowed at a time
 	writeContext *PostgresContext
+
+	pool *pgxpool.Pool
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -73,14 +76,19 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 	persistenceCfg := runtimeMgr.GetConfig().Persistence
 	genesisState := runtimeMgr.GetGenesis()
 
-	conn, err := connectToDatabase(persistenceCfg)
+	pool, err := initializePool(persistenceCfg)
+	if err != nil {
+		return nil, err
+	}
+	m.pool = pool
+
+	conn, err := connectToDatabase(m.pool, persistenceCfg.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
 	if err := initializeDatabase(conn); err != nil {
 		return nil, err
 	}
-	conn.Close(context.TODO())
 
 	// TODO: Follow the same pattern as txIndexer below for initializing the blockStore
 	blockStore, err := initializeBlockStore(persistenceCfg.BlockStorePath)
@@ -127,6 +135,7 @@ func (m *persistenceModule) Start() error {
 }
 
 func (m *persistenceModule) Stop() error {
+	m.pool.Close()
 	return m.blockStore.Stop()
 }
 
@@ -135,10 +144,11 @@ func (m *persistenceModule) GetModuleName() string {
 }
 
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
-	if m.writeContext != nil && m.writeContext.conn != nil && !m.writeContext.conn.IsClosed() {
+	if m.writeContext != nil && m.writeContext.conn != nil {
+		fmt.Println("OLSH", m.writeContext.conn.Conn())
 		return nil, fmt.Errorf("write context already exists")
 	}
-	conn, err := connectToDatabase(m.config)
+	conn, err := connectToDatabase(m.pool, m.config.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +179,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 }
 
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
-	conn, err := connectToDatabase(m.config)
+	conn, err := connectToDatabase(m.pool, m.config.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}

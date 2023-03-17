@@ -4201,7 +4201,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						BlockStorePath:    "/var/blockstore",
 						TxIndexerPath:     "",
 						TreesStoreDir:     "/var/trees",
-						MaxConnsCount:     8,
+						MaxConnsCount:     50,
 						MinConnsCount:     0,
 						MaxConnLifetime:   "1h",
 						MaxConnIdleTime:   "30m",
