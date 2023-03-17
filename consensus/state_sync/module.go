@@ -40,7 +40,7 @@ type StateSyncModule interface {
 	EnableServerMode() error
 	DisableServerMode() error
 
-	SendStateSyncMessage(msg *typesCons.StateSyncMessage, nodeAddress cryptoPocket.Address, height uint64) error
+	SendStateSyncMessage(msg *typesCons.StateSyncMessage, receiverPeerAddress cryptoPocket.Address, block_height uint64) error
 
 	SetStateSyncMetadataBuffer([]*typesCons.StateSyncMetadataResponse)
 	GetStateSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse
@@ -350,7 +350,7 @@ func (m *stateSync) metadataSyncLoop() error {
 		},
 	}
 
-	ticker := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(1000 * time.Second)
 	defer ticker.Stop()
 
 	for {

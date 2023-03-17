@@ -50,7 +50,6 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		}
 		return m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
 	case *typesCons.StateSyncMessage_GetBlockRes:
-		m.logger.Info().Str("proto_type", "GetBlockResponse").Msg("GOKHAN RECEIVED StateSyncMessage GetBlockResponse")
 		return m.HandleGetBlockResponse(stateSyncMessage.GetGetBlockRes())
 	default:
 		return fmt.Errorf("unspecified state sync message type")
@@ -71,42 +70,29 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 		"receiver":      clientPeerId,
 	}
 
-	m.logger.Info().Fields(fields).Msgf("Received GetBlockResponse: %s", blockRes)
+	m.logger.Info().Fields(fields).Msgf("Handling GetBlockResponse: %s", blockRes)
 
 	block := blockRes.Block
 	lastPersistedBlockHeight := m.CurrentHeight() - 1
 
-	//quorumCertBytes := block.BlockHeader.QuorumCertificate
+	blockHeader := block.BlockHeader
 
-	if block.BlockHeader.QuorumCertificate == nil {
-		m.logger.Info().Fields(fields).Msg("GOKHANSA HandleGetBlockResponse No QC in block")
-		block.BlockHeader.QuorumCertificate = make([]byte, 0)
+	qcBytes := blockHeader.GetQuorumCertificate()
 
-	}
-
-	if block.BlockHeader.Height <= lastPersistedBlockHeight {
-		m.logger.Info().Msgf("Received block with height %d, but already at height %d, so not going to apply", block.BlockHeader.Height, lastPersistedBlockHeight)
-		return nil
-	}
-
-	m.logger.Info().Fields(fields).Msg("HandleGetBlockResponse Unmarshalling QC")
-
-	//if len(block.BlockHeader.QuorumCertificate) != 0 {
-
-	var qc *typesCons.QuorumCertificate
-	err := proto.Unmarshal(block.BlockHeader.QuorumCertificate, qc)
+	qc := typesCons.QuorumCertificate{}
+	err := proto.Unmarshal(qcBytes, &qc)
 	if err != nil {
 		return err
 	}
 
 	m.logger.Info().Fields(fields).Msg("HandleGetBlockResponse Validating Quroum Certificate")
 
-	if err := m.validateQuorumCertificate(qc); err != nil {
+	if err := m.validateQuorumCertificate(&qc); err != nil {
 		m.logger.Error().Err(err).Msg("Couldn't apply block, invalid QC")
 		return err
 	}
 
-	//}
+	m.logger.Info().Fields(fields).Msg("VALID QC")
 
 	if m.utilityContext == nil {
 		m.logger.Info().Msg("Utility context is nil")
@@ -117,6 +103,14 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 		m.utilityContext = utilityContext
 
+	}
+
+	m.logger.Info().Fields(fields).Msg("utility context is set")
+
+	// checking if the block is already persisted
+	if block.BlockHeader.Height <= lastPersistedBlockHeight {
+		m.logger.Info().Msgf("Received block with height %d, but already at height %d, so not going to apply", block.BlockHeader.Height, lastPersistedBlockHeight)
+		return nil
 	}
 
 	m.logger.Info().Fields(fields).Msg("HandleGetBlockResponse Committing the block")
