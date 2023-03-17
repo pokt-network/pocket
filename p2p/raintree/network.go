@@ -133,7 +133,7 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		n.logger.Error().Str("address", address.String()).Msg("address not found in peerstore")
 	}
 
-	// TECHDEBT: should not bee `Peer`s responsibility
+	// TECHDEBT: should not be `Peer`s responsibility
 	// to manage or expose its connections.
 	if _, err := peer.GetStream().Write(data); err != nil {
 		n.logger.Error().Err(err).Msg("Error writing to peer during send")
