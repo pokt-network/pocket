@@ -42,7 +42,7 @@ type SortedPeerManager struct {
 	m  sync.RWMutex
 	wg sync.WaitGroup
 
-	view   *SortedPeersView
+	view   *sortedPeersView
 	pstore Peerstore
 }
 

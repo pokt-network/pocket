@@ -11,16 +11,16 @@ type PeersView interface {
 	GetPeers() PeerList
 }
 
-type SortedPeersView struct {
+type sortedPeersView struct {
 	sortedAddrs []string
 	sortedPeers PeerList
 }
 
-// NewSortedPeersView constructs a `SortedPeersView` from the given `Peerstore`.
+// NewSortedPeersView constructs a `sortedPeersView` from the given `Peerstore`.
 // `startAddr` is kept at the first index of `sortedAddrs` by convention, same
 // for the respective `Peer` in `sortedPeers`. See `NewSortedPeerManager` for more.
-func NewSortedPeersView(startAddr crypto.Address, pstore Peerstore) *SortedPeersView {
-	view := &SortedPeersView{
+func NewSortedPeersView(startAddr crypto.Address, pstore Peerstore) *sortedPeersView {
+	view := &sortedPeersView{
 		sortedAddrs: make([]string, pstore.Size()),
 		sortedPeers: pstore.GetPeerList(),
 	}
@@ -41,19 +41,19 @@ func removeElementAtIndex[T any](slice []T, index int) []T {
 }
 
 // GetAddrs implements the respective member of the `PeersView` interface.
-func (view *SortedPeersView) GetAddrs() []string {
+func (view *sortedPeersView) GetAddrs() []string {
 	return view.sortedAddrs
 }
 
 // GetPeers implements the respective member of the `PeersView` interface.
-func (view *SortedPeersView) GetPeers() PeerList {
+func (view *sortedPeersView) GetPeers() PeerList {
 	return view.sortedPeers
 }
 
 // Add inserts into sorted sortedAddrs and sortedPeers.
 // Searches from index 1 because index 0 is self by convention and the rest of
 // the slice is sorted.
-func (view *SortedPeersView) Add(peer Peer) {
+func (view *sortedPeersView) Add(peer Peer) {
 	i := sort.SearchStrings(view.sortedAddrs[1:], peer.GetAddress().String())
 	view.sortedAddrs = insertElementAtIndex(view.sortedAddrs, peer.GetAddress().String(), i)
 	view.sortedPeers = insertElementAtIndex(view.sortedPeers, peer, i)
@@ -62,7 +62,7 @@ func (view *SortedPeersView) Add(peer Peer) {
 // Remove removes the peer with the given address from sortedAddrs and sortedPeers.
 // Searches from index 1 because index 0 is self by convention and the rest of
 // the slice is sorted.
-func (view *SortedPeersView) Remove(addr crypto.Address) {
+func (view *sortedPeersView) Remove(addr crypto.Address) {
 	i := sort.SearchStrings(view.sortedAddrs[1:], addr.String())
 	view.sortedAddrs = removeElementAtIndex(view.sortedAddrs, i)
 	view.sortedPeers = removeElementAtIndex(view.sortedPeers, i)
@@ -70,7 +70,7 @@ func (view *SortedPeersView) Remove(addr crypto.Address) {
 
 // init copies peers and addresses from `pstore` into `sortedAddrs` and
 // `sortedPeers`, and then sorts both. Returns itself for convenience.
-func (view *SortedPeersView) init(startAddr crypto.Address, pstore Peerstore) *SortedPeersView {
+func (view *sortedPeersView) init(startAddr crypto.Address, pstore Peerstore) *sortedPeersView {
 	for i, peer := range pstore.GetPeerList() {
 		view.sortedAddrs[i] = peer.GetAddress().String()
 	}
@@ -87,7 +87,7 @@ func (view *SortedPeersView) init(startAddr crypto.Address, pstore Peerstore) *S
 // sortAddrs sorts addresses in `sortedAddrs` lexicographically but then `startAddr`
 // is moved to be first in the list. This makes RainTree propagation easier to
 // compute and interpret.
-func (view *SortedPeersView) sortAddrs(startAddr crypto.Address) {
+func (view *sortedPeersView) sortAddrs(startAddr crypto.Address) {
 	sort.Strings(view.sortedAddrs)
 
 	i := sort.SearchStrings(view.sortedAddrs, startAddr.String())
