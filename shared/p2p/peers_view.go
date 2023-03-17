@@ -1,9 +1,10 @@
 package p2p
 
 import (
+	"sort"
+
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"sort"
 )
 
 type PeersView interface {
@@ -66,6 +67,13 @@ func (view *sortedPeersView) Add(peer Peer) {
 // the slice is sorted.
 func (view *sortedPeersView) Remove(addr crypto.Address) {
 	i := sort.SearchStrings(view.sortedAddrs[1:], addr.String())
+	if i == len(view.sortedAddrs) {
+		logger.Global.Debug().
+			Str("pokt_addr", addr.String()).
+			Msg("not found in view.sortedAddrs")
+		return
+	}
+
 	view.sortedAddrs = removeElementAtIndex(view.sortedAddrs, i)
 	view.sortedPeers = removeElementAtIndex(view.sortedPeers, i)
 }
