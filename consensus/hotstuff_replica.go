@@ -155,7 +155,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 
 	quorumCertBytes, err := codec.GetCodec().Marshal(quorumCert)
 	if err != nil {
-		m.logger.Error().Err(err).Msg("Failed to convert commit QC to bytes")
+		m.logger.Error().Err(err).Msg("Failed to convert the quorum certificate to bytes")
 		return
 	}
 	m.block.BlockHeader.QuorumCertificate = quorumCertBytes
