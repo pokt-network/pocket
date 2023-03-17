@@ -24,7 +24,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		}
 
 		oldPeerList := m.network.GetPeerstore().GetPeerList()
-		updatedPeerstore, err := m.peerstoreProvider.GetStakedPeerstoreAtHeight(consensusNewHeightEvent.Height)
+		updatedPeerstore, err := m.pstoreProvider.GetStakedPeerstoreAtHeight(consensusNewHeightEvent.Height)
 		if err != nil {
 			return err
 		}
