@@ -11,6 +11,8 @@ type PeersView interface {
 	GetPeers() PeerList
 }
 
+var _ PeersView = &sortedPeersView{}
+
 type sortedPeersView struct {
 	sortedAddrs []string
 	sortedPeers PeerList
