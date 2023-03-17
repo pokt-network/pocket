@@ -4,6 +4,7 @@ import (
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
@@ -151,6 +152,14 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 		m.paceMaker.InterruptRound("invalid quorum certificate")
 		return
 	}
+
+	quorumCertBytes, err := codec.GetCodec().Marshal(quorumCert)
+	if err != nil {
+		m.logger.Error().Err(err).Msg("Failed to convert commit QC to bytes")
+		return
+	}
+
+	m.block.BlockHeader.QuorumCertificate = quorumCertBytes
 
 	if err := m.commitBlock(m.block); err != nil {
 		m.logger.Error().Err(err).Msg("Could not commit block")

@@ -243,6 +243,14 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	}
 	m.broadcastToValidators(decideProposeMessage)
 
+	commitQcBytes, err := codec.GetCodec().Marshal(commitQC)
+	if err != nil {
+		m.logger.Error().Err(err).Msg("Failed to convert commit QC to bytes")
+		return
+	}
+
+	m.block.BlockHeader.QuorumCertificate = commitQcBytes
+
 	if err := m.commitBlock(m.block); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrCommitBlock.Error())
 		m.paceMaker.InterruptRound("failed to commit block")

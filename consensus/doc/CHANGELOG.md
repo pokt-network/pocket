@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.37] - 2023-03-17
+
+- Add quorum certificate to the block before commiting to the persistence
+- Add error messages `ErrNoQcInReceivedBlock` error 
+
 ## [0.0.0.36] - 2023-02-28
 
 - Creating a persistence read context when needing to accessing stateless (i.e. block hash) data
