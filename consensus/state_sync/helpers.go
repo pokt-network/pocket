@@ -25,29 +25,13 @@ func (m *stateSync) sendToPeer(msg *anypb.Any, peerId cryptoPocket.Address) erro
 	return nil
 }
 
-// TODO (#352, goku) check if this is needed, if not, remove
-func getMessageType(msg *typesCons.StateSyncMessage) string {
-	switch msg.Message.(type) {
-	case *typesCons.StateSyncMessage_MetadataReq:
-		return "StateSyncMetadataRequest"
-	case *typesCons.StateSyncMessage_MetadataRes:
-		return "StateSyncMetadataResponse"
-	case *typesCons.StateSyncMessage_GetBlockReq:
-		return "GetBlockRequest"
-	case *typesCons.StateSyncMessage_GetBlockRes:
-		return "GetBlockResponse"
-	default:
-		return "Unknown"
-	}
-}
-
-func (m *stateSync) logHelper(receiver string) map[string]any {
+func (m *stateSync) logHelper(receiverPeerId string) map[string]any {
 	consensusMod := m.GetBus().GetConsensusModule()
 
 	return map[string]any{
 		"height":   consensusMod.CurrentHeight(),
 		"sender":   consensusMod.GetNodeAddress(),
-		"receiver": receiver,
+		"receiver": receiverPeerId,
 	}
 
 }
