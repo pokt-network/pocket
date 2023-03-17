@@ -29,9 +29,9 @@ func (m *stateSync) logHelper(receiverPeerId string) map[string]any {
 	consensusMod := m.GetBus().GetConsensusModule()
 
 	return map[string]any{
-		"height":   consensusMod.CurrentHeight(),
-		"sender":   consensusMod.GetNodeAddress(),
-		"receiver": receiverPeerId,
+		"height":         consensusMod.CurrentHeight(),
+		"senderPeerId":   consensusMod.GetNodeAddress(),
+		"receiverPeerId": receiverPeerId,
 	}
 
 }
