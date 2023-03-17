@@ -261,7 +261,7 @@ loop:
 		case <-ticker.C:
 			m.m.Lock()
 			if m.state.height == m.state.endingHeight {
-				m.logger.Log().Msgf("Node is synched for state: %s", m.state)
+				m.logger.Log().Msgf("Node is synched for state, height: %d, starting height: %d, ending height:%d", m.state.height, m.state.startingHeight, m.state.startingHeight)
 				break loop
 			}
 			m.m.Unlock()
