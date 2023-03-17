@@ -19,22 +19,25 @@ type Peer interface {
 type PeerList []Peer
 
 // Delta returns the difference between two PeerList slices
-func (peerList PeerList) Delta(compareList PeerList) (added, removed PeerList) {
-	tempPStore := make(PeerAddrMap)
-	for _, np := range peerList {
-		tempPStore.mustAddPeer(np)
+func (peers PeerList) Delta(comparePeers PeerList) (added, removed PeerList) {
+	commonPeers := make(PeerAddrMap)
+	for _, p := range peers {
+		commonPeers.mustAddPeer(p)
 	}
 
-	for _, comparePeer := range compareList {
-		if addedPeer := tempPStore.GetPeer(comparePeer.GetAddress()); addedPeer == nil {
+	for _, comparePeer := range comparePeers {
+		addedPeer := commonPeers.GetPeer(comparePeer.GetAddress())
+		if addedPeer == nil {
 			added = append(added, comparePeer)
 			continue
 		}
-		// Does not modify peerList nor compareList.
-		tempPStore.mustRemovePeer(comparePeer.GetAddress())
+
+		// `comparePeer` exists in both `peers` and `comparePeers`;
+		// neither added nor removed.
+		commonPeers.mustRemovePeer(comparePeer.GetAddress())
 	}
 
-	for _, removedPeer := range tempPStore {
+	for _, removedPeer := range commonPeers {
 		removed = append(removed, removedPeer)
 	}
 	return
