@@ -33,8 +33,6 @@ const (
 
 	PromptSendMetadataRequest string = "MetadataRequest"
 	PromptSendBlockRequest    string = "BlockRequest"
-
-	//PromptTriggerNextViewWithUnsyncedNode string = "TriggerNextViewWithUnsyncedNode"
 )
 
 var (
@@ -49,7 +47,6 @@ var (
 		PromptShowLatestBlockInStore,
 		PromptSendMetadataRequest,
 		PromptSendBlockRequest,
-		//PromptTriggerNextViewWithUnsyncedNode,
 	}
 
 	configPath  string = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
@@ -197,12 +194,6 @@ func handleSelect(cmd *cobra.Command, selection string) {
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)
-	// case PromptTriggerNextViewWithUnsyncedNode:
-	// 	m := &messaging.DebugMessage{
-	// 		Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_STATESYNC_UNSYNCHED_PEER,
-	// 		Message: nil,
-	// 	}
-	// 	broadcastDebugMessage(cmd, m)
 	default:
 		logger.Global.Error().Msg("Selection not yet implemented...")
 	}
