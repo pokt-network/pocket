@@ -180,8 +180,6 @@ func TestServiceURLFromLibp2pMultiaddr_Error(t *testing.T) {
 	}
 }
 
-// TECHDEBT: add helpers for crating and/or using a "test resolver" which can
-// be switched with `net.DefaultResolver` and can return mocked responses.
 func TestGetPeerIP_SingleRecord_Success(t *testing.T) {
 	testCases := []struct {
 		name       string
