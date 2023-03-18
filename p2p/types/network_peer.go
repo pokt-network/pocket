@@ -1,8 +1,6 @@
 package types
 
 import (
-	"io"
-
 	"github.com/multiformats/go-multiaddr"
 
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -11,7 +9,6 @@ import (
 var _ Peer = &NetworkPeer{}
 
 type NetworkPeer struct {
-	Transport Transport
 	PublicKey crypto.PublicKey
 	Address   crypto.Address
 	Multiaddr multiaddr.Multiaddr
@@ -22,10 +19,6 @@ type NetworkPeer struct {
 
 func (peer *NetworkPeer) GetAddress() crypto.Address {
 	return peer.Address
-}
-
-func (peer *NetworkPeer) GetStream() io.ReadWriteCloser {
-	return peer.Transport
 }
 
 func (peer *NetworkPeer) GetPublicKey() crypto.PublicKey {

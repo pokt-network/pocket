@@ -2,13 +2,11 @@ package utils
 
 import (
 	"fmt"
-
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/network"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
-	"github.com/pokt-network/pocket/libp2p/transport"
 	"github.com/pokt-network/pocket/p2p/types"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -33,7 +31,6 @@ func PeerFromLibp2pStream(stream network.Stream) (typesP2P.Peer, error) {
 	}
 
 	return &types.NetworkPeer{
-		Transport:  transport.NewLibP2PTransport(stream),
 		PublicKey:  publicKey,
 		Address:    publicKey.Address(),
 		Multiaddr:  peerMultiaddr,
