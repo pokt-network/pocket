@@ -5,6 +5,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2023-03-18
+
+- Corrected libp2p module tests
+- Improve libp2p code quality in response to post-merge review feedback
+
 ## [0.0.0.3] - 2023-03-15
 
 - Added mockdns as a test dependency
