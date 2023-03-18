@@ -38,9 +38,11 @@ func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 
 	n.logger.Debug().Fields(
 		map[string]any{
-			"firstTarget":  firstTarget,
-			"secondTarget": secondTarget,
+			"firstTarget":  firstTarget.serviceURL,
+			"secondTarget": secondTarget.serviceURL,
 			"height":       height,
+			"level":        level,
+			"pstoreSize":   pstoreSizeAtHeight,
 		},
 	).Msg("Targets at height")
 
@@ -50,9 +52,22 @@ func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 func (n *rainTreeNetwork) getTarget(targetPercentage float64, pstoreSize int, level uint32) target {
 	i := int(targetPercentage * float64(pstoreSize))
 
+	selfPeer := n.GetPeerstore().GetPeer(n.selfAddr)
+	if selfPeer == nil {
+		panic("selfPeer not foud in addrbook")
+	}
 	peersView := n.peersManager.GetPeersView()
-
 	serviceURL := peersView.GetPeers()[i].GetServiceURL()
+	var peerURLs []string
+	for _, peer := range peersView.GetPeers() {
+		peerURLs = append(peerURLs, peer.GetServiceURL())
+	}
+	n.logger.Debug().Fields(map[string]any{
+		"self":     selfPeer.GetServiceURL(),
+		"ith_peer": serviceURL,
+		"i":        i,
+		"urls":     peerURLs,
+	}).Msg("")
 
 	target := target{
 		serviceURL:            serviceURL,
