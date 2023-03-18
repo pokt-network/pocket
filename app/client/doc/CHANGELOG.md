@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.24] - 2023-03-24
+
+- Refactor debug CLI post P2P module re-consolidation
+
 ## [0.0.0.23] - 2023-03-21
 
 - Refactor debug CLI to use new P2P interfaces
