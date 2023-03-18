@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 	"math/big"
@@ -130,6 +131,9 @@ func newResolvePeerIPErr(hostname string, err error) error {
 }
 
 func getPeerIP(hostname string) (net.IP, error) {
+	// TECHDEBT(#595): receive `ctx` from caller.
+	ctx := context.Background()
+
 	// Attempt to parse peer hostname as an IP address.
 	// (see: https://pkg.go.dev/net#ParseIP)
 	peerIP := net.ParseIP(hostname)
@@ -140,7 +144,7 @@ func getPeerIP(hostname string) (net.IP, error) {
 	// CONSIDERATION: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
 	// I attempted using `/dns4/.../tcp/...` and go this error:
 	// > failed to listen on any addresses: [can only dial TCP over IPv4 or IPv6]
-	addrs, err := net.LookupHost(hostname)
+	addrs, err := net.DefaultResolver.LookupHost(ctx, hostname)
 	if err != nil {
 		return nil, newResolvePeerIPErr(hostname, err)
 	}
