@@ -3,18 +3,24 @@ package p2p
 import (
 	"fmt"
 	"log"
+	"net"
+	"net/url"
 	"sort"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/foxcpp/go-mockdns"
 	"github.com/golang/mock/gomock"
+	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
+	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
+	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
+	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
@@ -97,14 +103,83 @@ func waitForNetworkSimulationCompletion(t *testing.T, wg *sync.WaitGroup) {
 // ~~~~~~ RainTree Unit Test Mocks ~~~~~~
 
 // createP2PModules returns a map of configured p2pModules keyed by an incremental naming convention (eg: `val_1`, `val_2`, etc.)
-func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus) (p2pModules map[string]*p2pModule) {
+func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus, netMock mocknet.Mocknet) (p2pModules map[string]*p2pModule) {
+	peerIDs := setupMockNetPeers(t, netMock, len(busMocks))
+
 	p2pModules = make(map[string]*p2pModule, len(busMocks))
 	for i := range busMocks {
-		p2pMod, err := Create(busMocks[i])
+		host := netMock.Host(peerIDs[i])
+		p2pMod, err := Create(busMocks[i], WithHostOption(host))
 		require.NoError(t, err)
 		p2pModules[validatorId(i+1)] = p2pMod.(*p2pModule)
 	}
 	return
+}
+
+func setupMockNetPeers(t *testing.T, netMock mocknet.Mocknet, numPeers int) (peerIDs []libp2pPeer.ID) {
+	// Add a libp2p peers/hosts to the `MockNet` with the keypairs corresponding
+	// to the genesis validators' keypairs
+	for i, privKey := range keys[:numPeers] {
+		peerInfo, err := utils.Libp2pAddrInfoFromPeer(&typesP2P.NetworkPeer{
+			PublicKey:  privKey.PublicKey(),
+			Address:    privKey.Address(),
+			ServiceURL: validatorId(i + 1),
+		})
+		require.NoError(t, err)
+
+		libp2pPrivKey, err := libp2pCrypto.UnmarshalEd25519PrivateKey(privKey.Bytes())
+		require.NoError(t, err)
+
+		_, err = netMock.AddPeer(libp2pPrivKey, peerInfo.Addrs[0])
+		require.NoError(t, err)
+
+		peerIDs = append(peerIDs, peerInfo.ID)
+	}
+
+	// Link all peers such that any may dial/connect to any other.
+	err := netMock.LinkAll()
+	require.NoError(t, err)
+
+	return peerIDs
+}
+
+// TECHDEBT(#609): this is one of a few places where we could de-duplicate test
+// code if we had a conventional place to store packages intended for import
+// only into tests.
+func prepareDNSResolverMock(t *testing.T, serviceURLs []string) (done func()) {
+	zones := make(map[string]mockdns.Zone)
+	for i, u := range serviceURLs {
+		// Perpend `scheme://` as serviceURLs are currently scheme-less.
+		// Required to for parsing to produce useful results.
+		// (see: https://pkg.go.dev/net/url@go1.20.2#URL)
+		serviceURL, err := url.Parse(fmt.Sprintf("scheme://%s", u))
+		require.NoError(t, err)
+
+		ipStr := fmt.Sprintf("10.0.0.%d", i+1)
+
+		if i >= 254 {
+			panic(fmt.Sprintf("would generate invalid IPv4 address: %s", ipStr))
+		}
+
+		zones[fmt.Sprintf("%s.", serviceURL.Hostname())] = mockdns.Zone{
+			A: []string{ipStr},
+		}
+	}
+
+	srv, _ := mockdns.NewServerWithLogger(zones, noopLogger{}, false)
+	srv.PatchNet(net.DefaultResolver)
+	return func() {
+		_ = srv.Close()
+		mockdns.UnpatchNet(net.DefaultResolver)
+	}
+}
+
+// NB: default logging behavior is too noisy.
+// noopLogger implements go-mockdns's `mockdns.Logger` interface.
+type noopLogger struct{}
+
+func (nl noopLogger) Printf(format string, args ...interface{}) {
+	// noop
 }
 
 // createMockRuntimeMgrs creates `numValidators` instances of mocked `RuntimeMgr` that are essentially
@@ -120,6 +195,7 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 			RootDirectory: "",
 			PrivateKey:    valKeys[i].String(),
 			P2P: &configs.P2PConfig{
+				Hostname:       validatorId(i + 1),
 				PrivateKey:     valKeys[i].String(),
 				Port:           defaults.DefaultP2PPort,
 				UseRainTree:    true,
@@ -268,28 +344,4 @@ func prepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).AnyTimes()
 
 	return eventMetricsAgentMock
-}
-
-// Network transport mock - used to simulate reading to/from the network via the main events channel
-// as well as counting the number of expected reads
-func prepareConnMock(t *testing.T, valId string, wg *sync.WaitGroup, expectedNumNetworkReads int) typesP2P.Transport {
-	eventsChannel := make(chan []byte, eventsChannelSize)
-	ctrl := gomock.NewController(t)
-	connMock := mocksP2P.NewMockTransport(ctrl)
-
-	connMock.EXPECT().ReadAll().DoAndReturn(func() ([]byte, error) {
-		wg.Done()
-		log.Printf("[valId: %s] ReadAll\n", valId)
-		data := <-eventsChannel
-		return data, nil
-	}).Times(expectedNumNetworkReads + 1) // +1 is necessary because there is one extra read of empty data by every channel when it starts
-
-	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) (int, error) {
-		eventsChannel <- data
-		return len(data), nil
-	}).Times(expectedNumNetworkReads)
-
-	connMock.EXPECT().Close().Return(nil).Times(1)
-
-	return connMock
 }
