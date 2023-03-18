@@ -512,6 +512,8 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 			maxHeight := bus.GetConsensusModule().GetAggregatedStateSyncMetadataMaxHeight()
 			t.Logf("Node is syncing")
 			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(maxHeight)})
+
+			//bus.GetConsensusModule().TriggerSync()
 			return nil
 		case coreTypes.StateMachineEvent_Consensus_IsSynchedValidator:
 			t.Logf("Validator node is synched")

@@ -252,7 +252,7 @@ func (m *stateSync) Sync() error {
 	consensusMod := m.GetBus().GetConsensusModule()
 	nodeAddress := consensusMod.GetNodeAddress()
 
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
 loop:
@@ -350,7 +350,7 @@ func (m *stateSync) metadataSyncLoop() error {
 		},
 	}
 
-	ticker := time.NewTicker(1000 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
 	for {
