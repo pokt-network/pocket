@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.35] - 2023-03-20
+
+- Moved peer & url conversion utils to `p2p/utils` package
+- Refactor `getPeerIP` to use `net.DefaultResolver` for easier testing
+- Moved & refactor libp2p `host.Host` setup util to `p2p/utils`
+- Consolidated Libp2p & P2P `modules.Module` implementations
+- Consolidated Libp2p & P2P `stdnetwork` `typesP2P.Network` implementations
+- Refactored raintree `typesP2P.Network` implementation to use libp2p
+- Moved `shared/p2p` package into `p2p/types` packages
+- Removed `Trnasport` interface and implementations
+- Removed `ConnectionFactory` type and related members
+- Added libp2p `host.Host` mock generator
+
 ## [0.0.0.34] - 2023-03-16
 
 - Refactored P2P module to use new P2P interfaces
