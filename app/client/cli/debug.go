@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/pokt-network/pocket/libp2p"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
@@ -103,11 +102,15 @@ func NewDebugCommand() *cobra.Command {
 
 			setValueInCLIContext(cmd, busCLICtxKey, bus)
 
-			// TECHDEBT: simplify after P2P module consolidation.
-			var err error
-			p2pMod, err = getP2PModule(runtimeMgr)
+			mod, err := p2p.Create(bus)
 			if err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
+			}
+
+			var ok bool
+			p2pMod, ok = mod.(modules.P2PModule)
+			if !ok {
+				logger.Global.Fatal().Msgf("unexpected P2P module type: %T", mod)
 			}
 
 			if err := p2pMod.Start(); err != nil {
@@ -284,20 +287,4 @@ func fetchPeerstore(cmd *cobra.Command) (sharedP2P.Peerstore, error) {
 		return nil, fmt.Errorf("retrieving peerstore at height %d", height)
 	}
 	return pstore, err
-}
-
-func getP2PModule(runtimeMgr *runtime.Manager) (p2pModule modules.P2PModule, err error) {
-	bus := runtimeMgr.GetBus()
-
-	var mod modules.Module
-	if runtimeMgr.GetConfig().UseLibP2P {
-		mod, err = libp2p.Create(bus)
-	} else {
-		mod, err = p2p.Create(bus)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return mod.(modules.P2PModule), nil
 }
