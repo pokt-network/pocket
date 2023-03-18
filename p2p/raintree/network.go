@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"log"
 
+	libp2pHost "github.com/libp2p/go-libp2p/core/host"
+
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -24,43 +27,51 @@ var _ typesP2P.Network = &rainTreeNetwork{}
 type rainTreeNetwork struct {
 	base_modules.IntegratableModule
 
-	selfAddr       cryptoPocket.Address
-	pstoreProvider peerstore_provider.PeerstoreProvider
-
-	peersManager *rainTreePeersManager
-	nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]
-
-	currentHeightProvider providers.CurrentHeightProvider
-
 	logger *modules.Logger
+	// host represents a libp2p network node, it encapsulates a libp2p peerstore
+	// & connection manager. `libp2p.New` configures and starts listening
+	// according to options.
+	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
+	host libp2pHost.Host
+	// selfAddr is the pocket address representing this host.
+	selfAddr              cryptoPocket.Address
+	peersManager          *rainTreePeersManager
+	pstoreProvider        peerstore_provider.PeerstoreProvider
+	currentHeightProvider providers.CurrentHeightProvider
+	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, pstoreProvider providers.PeerstoreProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+// TECHDEBT: refactor signature to receive a config struct
+// (i.e. `NewRainTreeNetwork(bus modules.Bus, cfg NetworkConfig).
+func NewRainTreeNetwork(host libp2pHost.Host, addr cryptoPocket.Address, bus modules.Bus, pstoreProvider providers.PeerstoreProvider, currentHeightProvider providers.CurrentHeightProvider) (typesP2P.Network, error) {
 	networkLogger := logger.Global.CreateLoggerForModule("network")
 	networkLogger.Info().Msg("Initializing rainTreeNetwork")
 
-	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(currentHeightProvider.CurrentHeight())
-	if err != nil {
-		networkLogger.Fatal().Err(err).Msg("Error getting pstore")
+	if pstoreProvider == nil {
+		return nil, fmt.Errorf("peerstore provider required, got nil")
 	}
 
-	pm, err := newPeersManager(addr, pstore, true)
-	if err != nil {
-		networkLogger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork rainTreePeersManager")
+	if currentHeightProvider == nil {
+		return nil, fmt.Errorf("current height provider required, got nil")
 	}
 
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
 
 	n := &rainTreeNetwork{
+		host:                  host,
 		selfAddr:              addr,
-		peersManager:          pm,
 		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
 		pstoreProvider:        pstoreProvider,
 		currentHeightProvider: currentHeightProvider,
 		logger:                networkLogger,
 	}
 	n.SetBus(bus)
-	return typesP2P.Network(n)
+
+	if err := n.setupDependencies(); err != nil {
+		return nil, err
+	}
+
+	return typesP2P.Network(n), nil
 }
 
 func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
@@ -129,13 +140,11 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 
 	peer := n.peersManager.GetPeerstore().GetPeer(address)
 	if peer == nil {
-		n.logger.Error().Str("address", address.String()).Msg("address not found in peerstore")
+		return fmt.Errorf("no known peer with pokt address %s", address)
 	}
 
-	// TECHDEBT: should not be `Peer`s responsibility
-	// to manage or expose its connections.
-	if _, err := peer.GetStream().Write(data); err != nil {
-		n.logger.Error().Err(err).Msg("Error writing to peer during send")
+	if err := utils.Libp2pSendToPeer(n.host, data, peer); err != nil {
+		logger.Global.Debug().Err(err).Msg("from libp2pSendInternal")
 		return err
 	}
 
@@ -220,6 +229,11 @@ func (n *rainTreeNetwork) GetPeerstore() typesP2P.Peerstore {
 }
 
 func (n *rainTreeNetwork) AddPeer(peer typesP2P.Peer) error {
+	// Noop if peer with the same pokt address exists in the peerstore.
+	// TECHDEBT: add method(s) to update peers.
+	if p := n.peersManager.GetPeerstore().GetPeer(peer.GetAddress()); p != nil {
+		return nil
+	}
 	n.peersManager.HandleEvent(
 		typesP2P.PeerManagerEvent{
 			EventType: typesP2P.AddPeerEventType,
@@ -245,4 +259,25 @@ func (n *rainTreeNetwork) Size() int {
 
 func shouldSendToTarget(target target) bool {
 	return !target.isSelf
+}
+
+func (n *rainTreeNetwork) setupDependencies() error {
+	pstore, err := n.pstoreProvider.GetStakedPeerstoreAtHeight(n.currentHeightProvider.CurrentHeight())
+	if err != nil {
+		return err
+	}
+
+	if err := n.setupPeerManager(pstore); err != nil {
+		return err
+	}
+
+	if err := utils.PopulateLibp2pHost(n.host, pstore); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (n *rainTreeNetwork) setupPeerManager(pstore typesP2P.Peerstore) (err error) {
+	n.peersManager, err = newPeersManager(n.selfAddr, pstore, true)
+	return err
 }
