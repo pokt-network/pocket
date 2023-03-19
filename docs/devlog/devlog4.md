@@ -11,13 +11,12 @@
 ## Agenda <!-- omit in toc -->
 
 - [Current Iteration 🗓️](#current-iteration-️)
-- [Iteration Goals 🎯](#iteration-goals-)
-- [Iteration Results ✅](#iteration-results-)
-- [External Contributions ⭐](#external-contributions-)
+   - [Iteration Goals 🎯](#iteration-goals-)
+   - [Iteration Results ✅](#iteration-results-)
+   - [External Contributions ⭐](#external-contributions-)
 - [Upcoming Iteration 🗓️](#upcoming-iteration-️)
 - [Feedback and Open Discussion 💡](#feedback-and-open-discussion-)
-  - [Q: Are these keys also hierarchical in the original sense of bit-44 such as that any given key you can derive valid keys deterministically but not going back up? Can you also re-derive deeper ancestor keys from midpoint between the root and far off ancestor?](#q-are-these-keys-also-hierarchical-in-the-original-sense-of-bit-44-such-as-that-any-given-key-you-can-derive-valid-keys-deterministically-but-not-going-back-up-can-you-also-re-derive-deeper-ancestor-keys-from-midpoint-between-the-root-and-far-off-ancestor)
-  - [Contribute to V1 🧑‍💻](#contribute-to-v1-)
+- [Contribute to V1 🧑‍💻](#contribute-to-v1-)
 - [About Pocket Network 💙](#about-pocket-network-)
 
 ---
@@ -50,7 +49,7 @@
   - https://github.com/pokt-network/pocket/issues/352
   - https://github.com/pokt-network/pocket/issues/473
   - https://github.com/pokt-network/pocket/issues/508 (Save Points foundational work)
-  -
+  - 
 
 ## External Contributions ⭐
 

@@ -38,22 +38,22 @@ func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx) {
 	return context.TODO(), pg.getTx()
 }
 
-func (pg *PostgresContext) getTx() pgx.Tx {
-	return pg.tx
-}
-
 func (pg *PostgresContext) ResetContext() error {
 	if pg == nil {
+		pg.logger.Warn().Msg("postgres context is nil when trying to reset it")
 		return nil
 	}
+
 	tx := pg.getTx()
-	if tx == nil {
+	if p.tx == nil {
 		return nil
 	}
+
 	conn := tx.Conn()
 	if conn == nil {
 		return nil
 	}
+
 	if !conn.IsClosed() {
 		if err := pg.Release(); err != nil {
 			pg.logger.Error().Err(err).Bool("TODO", true).Msg("error releasing write context")

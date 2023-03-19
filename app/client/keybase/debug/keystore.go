@@ -3,7 +3,9 @@
 package debug
 
 import (
+	"fmt"
 	"os"
+	"runtime"
 	"sync"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
@@ -51,11 +53,14 @@ func initializeDebugKeybase() error {
 	}
 
 	// Create/Open the keybase at `$HOME/.pocket/keys`
-	kb, err := keybase.NewKeybase(debugKeybasePath)
+	kb, err := keybase.NewBadgerKeybase(debugKeybasePath)
 	if err != nil {
 		return err
 	}
-	db := kb.GetBadgerDB()
+	db, err := kb.GetBadgerDB()
+	if err != nil {
+		return err
+	}
 
 	// Add the keys if the keybase contains less than 999
 	curAddr, _, err := kb.GetAll()
@@ -65,7 +70,7 @@ func initializeDebugKeybase() error {
 
 	// Add validator addresses if not present
 	if len(curAddr) < numValidators {
-		logger.Global.Debug().Msgf("Debug keybase initializing... Adding %d validator keys to the keybase", numValidators-len(curAddr))
+		logger.Global.Debug().Msgf(fmt.Sprintf("Debug keybase initializing... Adding %d validator keys to the keybase", numValidators-len(curAddr)))
 
 		// Use writebatch to speed up bulk insert
 		wb := db.NewWriteBatch()
@@ -75,36 +80,52 @@ func initializeDebugKeybase() error {
 
 		// Create a WaitGroup to wait for all goroutines to finish
 		var wg sync.WaitGroup
-		wg.Add(numValidators)
 
-		for _, privHexString := range validatorKeysPairMap {
-			go func(privHexString string) {
+		// Create a worker pool with a limited number of workers
+		numWorkers := runtime.NumCPU()
+		wg.Add(numWorkers)
+
+		// Create a channel to send tasks to the workers
+		taskCh := make(chan string, numValidators)
+
+		// Start the worker pool
+		for i := 0; i < numWorkers; i++ {
+			go func() {
 				defer wg.Done()
+				for privHexString := range taskCh {
+					// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
+					keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
+					if err != nil {
+						errCh <- err
+						return
+					}
 
-				// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
-				keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
-				if err != nil {
-					errCh <- err
-					return
-				}
+					// Use key address as key in DB
+					addrKey := keyPair.GetAddressBytes()
 
-				// Use key address as key in DB
-				addrKey := keyPair.GetAddressBytes()
-
-				// Encode KeyPair into []byte for value
-				keypairBz, err := keyPair.Marshal()
-				if err != nil {
-					errCh <- err
-					return
+					// Encode KeyPair into []byte for value
+					keypairBz, err := keyPair.Marshal()
+					if err != nil {
+						errCh <- err
+						return
+					}
+					if err := wb.Set(addrKey, keypairBz); err != nil {
+						errCh <- err
+						return
+					}
 				}
-				if err := wb.Set(addrKey, keypairBz); err != nil {
-					errCh <- err
-					return
-				}
-			}(privHexString)
+			}()
 		}
 
-		// Wait for all goroutines to finish
+		// Send tasks to the workers
+		for _, privHexString := range validatorKeysPairMap {
+			taskCh <- privHexString
+		}
+
+		// Close the task channel to signal the workers to exit
+		close(taskCh)
+
+		// Wait for all workers to finish
 		wg.Wait()
 
 		// Check if any goroutines returned an error

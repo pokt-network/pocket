@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.22] - 2023-03-17
+
+- Updated documentation on CLI modes
+- Fixed one logging statement
+
+app/client/doc/README.md
+
 ## [0.0.0.21] - 2023-03-14
 
 - Simplifies the debug CLI tooling by embedding private-keys.yaml manifest

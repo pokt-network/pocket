@@ -3,8 +3,8 @@
 package main
 
 import (
-	// Importing the "debug" package from "github.com/pokt-network/pocket/app/client/keybase/debug".
-	_ "github.com/pokt-network/pocket/app/client/keybase/debug"
+// Importing the "debug" package from "github.com/pokt-network/pocket/app/client/keybase/debug".
+// _ "github.com/pokt-network/pocket/app/client/keybase/debug"
 )
 
 // This file serves as a feature flag based on the build tag "debug".
