@@ -47,11 +47,8 @@ func NewLibp2pNetwork(
 	}
 
 	p2pNet.SetBus(bus)
-	if err := p2pNet.setup(); err != nil {
-		return nil, err
-	}
-
-	return p2pNet, nil
+	err := p2pNet.setup()
+	return p2pNet, err
 }
 
 // NetworkBroadcast uses the configured pubsub router to broadcast data to peers.
@@ -59,11 +56,7 @@ func (p2pNet *libp2pNetwork) NetworkBroadcast(data []byte) error {
 	// IMPROVE: receive context in interface methods.
 	ctx := context.Background()
 
-	// NB: Routed send using pubsub
-	if err := p2pNet.topic.Publish(ctx, data); err != nil {
-		return fmt.Errorf("unable to publish to topic: %w", err)
-	}
-	return nil
+	return p2pNet.topic.Publish(ctx, data)
 }
 
 // NetworkSend connects sends data directly to the specified peer.

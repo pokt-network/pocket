@@ -22,6 +22,7 @@ require (
 	github.com/celestiaorg/smt v0.2.1-0.20220414134126-dba215ccb884
 	github.com/deepmap/oapi-codegen v1.12.4
 	github.com/dgraph-io/badger/v3 v3.2103.2
+	github.com/foxcpp/go-mockdns v1.0.0
 	github.com/getkin/kin-openapi v0.107.0
 	github.com/jackc/pgconn v1.13.0
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754

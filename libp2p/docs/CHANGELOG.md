@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2023-03-18
+
+- Corrected libp2p module tests
+- Improve libp2p code quality in response to post-merge review feedback
+
+## [0.0.0.3] - 2023-03-15
+
+- Added mockdns as a test dependency
+- Mocked DNS resolution in url_conversion_test.go
+- Added regression tests to url_conversion_test.go for single- and multi-record DNS responses
+
 ## [0.0.0.2] - 2023-03-03
 
 - Added a new `modules.P2PModule` implementation to the `libp2p` module directory
