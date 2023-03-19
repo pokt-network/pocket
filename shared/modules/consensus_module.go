@@ -91,6 +91,6 @@ type ConsensusDebugModule interface {
 	SetBlock(*types.Block)
 	SetUtilityContext(UtilityContext)
 
-	SetAggregatedStateSyncMetadata(minHeight uint64, maxHeight uint64, peerAddress string)
+	SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64, peerAddress string)
 	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
 }

@@ -36,7 +36,7 @@ func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContex
 	m.utilityContext = utilityContext
 }
 
-func (m *consensusModule) SetAggregatedStateSyncMetadata(minHeight uint64, maxHeight uint64, peerAddress string) {
+func (m *consensusModule) SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64, peerAddress string) {
 	m.stateSync.SetAggregatedSyncMetadata(&typesCons.StateSyncMetadataResponse{
 		MinHeight:   minHeight,
 		MaxHeight:   maxHeight,
