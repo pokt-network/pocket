@@ -94,4 +94,5 @@ type ConsensusDebugModule interface {
 
 	SetAggregatedStateSyncMetadata(minHeight uint64, maxHeight uint64, peerAddress string)
 	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
+	DebugTriggerSync() error
 }

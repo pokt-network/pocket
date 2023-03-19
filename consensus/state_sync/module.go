@@ -93,7 +93,7 @@ type stateSync struct {
 	cancel context.CancelFunc
 
 	// signal only channel triggered by the FSM transition
-	triggerSyncChan chan struct{}
+	//triggerSyncChan chan struct{}
 }
 
 // information about current state of the synching node
@@ -101,7 +101,7 @@ type state struct {
 	height         uint64 // latest persisted height, updated after every block is added to the module
 	startingHeight uint64 // starting height for the sync, set when state is generated
 	endingHeight   uint64 // ending height for the sync, set when state is generated
-	err            error  //snyc error
+	//err            error  //snyc error
 
 	blockReceived chan uint64
 }
@@ -115,8 +115,11 @@ func (m *stateSync) CurrentState() state {
 // 1. If the node is not currently syncing, it generates a new sync state. And triggers the sync.
 // 2. If the node is currently syncing, it updates the current sync state, by updating the ending height.
 func (m *stateSync) TriggerSync() error {
+	m.logger.Log().Msgf("TriggerSync is called")
 	// check if the node is not currently syncing, if it is synching update the state
 	m.m.Lock()
+	defer m.m.Unlock()
+
 	if m.snycing { // if the node is currently syncing, update the sync state
 		m.state.endingHeight = m.aggregatedSyncMetadata.MaxHeight
 	} else { // if the node is not currently syncing, generate a new sync state
@@ -131,14 +134,16 @@ func (m *stateSync) TriggerSync() error {
 			endingHeight:   m.aggregatedSyncMetadata.MaxHeight,
 			blockReceived:  make(chan uint64, 1),
 		}
+		go m.Sync()
 	}
-	m.m.Unlock()
+	//m.m.Unlock()
+	//m.logger.Log().Msgf("TriggerSync is continuing")
 
 	// signal the sync loop to start
-	select {
-	case m.triggerSyncChan <- struct{}{}:
-	default:
-	}
+	// select {
+	// case m.triggerSyncChan <- struct{}{}:
+	// default:
+	// }
 
 	return nil
 }
@@ -247,18 +252,20 @@ func (m *stateSync) GetStateSyncMetadataBuffer() []*typesCons.StateSyncMetadataR
 // if the received block is the target height, it will perform FSM state transition.
 // else it will request the next block (after waiting sometime) and repeat the process.
 // check how others handle re-requesting blocks
-func (m *stateSync) Sync() error {
-
-	consensusMod := m.GetBus().GetConsensusModule()
-	nodeAddress := consensusMod.GetNodeAddress()
+func (m *stateSync) Sync() {
+	m.logger.Log().Msgf("GOKHAN Node is starting snycing")
 
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
+	m.requestBlocks()
+
 loop:
 	for {
+		m.logger.Log().Msgf("GOKHAN Node is loop %s", m.state)
 		select {
 		case <-ticker.C:
+			m.logger.Log().Msgf("GOKHAN Node is ticked")
 			m.m.Lock()
 			if m.state.height == m.state.endingHeight {
 				m.logger.Log().Msgf("Node is synched for state, height: %d, starting height: %d, ending height:%d", m.state.height, m.state.startingHeight, m.state.startingHeight)
@@ -266,21 +273,7 @@ loop:
 			}
 			m.m.Unlock()
 
-			// start requesting the missing blocks in the state
-			// fire and forget pattern, broadcasts to all peers
-			blockToRequest := m.state.height + 1
-			for i := blockToRequest; i <= m.state.endingHeight; i++ {
-				m.logger.Log().Msgf("Sync is requesting block: %d", i)
-				stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-					Message: &typesCons.StateSyncMessage_GetBlockReq{
-						GetBlockReq: &typesCons.GetBlockRequest{
-							PeerAddress: nodeAddress,
-							Height:      i,
-						},
-					},
-				}
-				m.broadcastStateSyncMessage(stateSyncGetBlockMessage, i)
-			}
+			m.requestBlocks()
 
 		case persistedBlockHeight := <-m.state.blockReceived:
 			m.m.Lock()
@@ -289,21 +282,51 @@ loop:
 			m.logger.Log().Msgf("Received block: %d, updating the state", persistedBlockHeight)
 
 		case <-m.ctx.Done():
-			return nil
+			return
 
 		}
 	}
 
+	// ToDo this must be initialized and cached in consensus module
 	isValidator, err := m.GetBus().GetConsensusModule().IsValidator()
 	if err != nil {
-		return err
+		m.logger.Err(err).Msg("Couldn't check if the node is validator")
+		return
 	}
+
+	var event coreTypes.StateMachineEvent
 
 	if isValidator {
-		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
+		event = coreTypes.StateMachineEvent_Consensus_IsSynchedValidator
+	} else {
+		event = coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator
 	}
 
-	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator)
+	if err := m.GetBus().GetStateMachineModule().SendEvent(event); err != nil {
+		m.logger.Err(err).Msg("Couldn't send state transition event")
+	}
+}
+
+func (m *stateSync) requestBlocks() {
+	consensusMod := m.GetBus().GetConsensusModule()
+	nodeAddress := consensusMod.GetNodeAddress()
+
+	// start requesting the missing blocks in the state
+	// fire and forget pattern, broadcasts to all peers
+	blockToRequest := m.state.height + 1
+	for i := blockToRequest; i <= m.state.endingHeight; i++ {
+		m.logger.Log().Msgf("Sync is requesting block: %d", i)
+		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+			Message: &typesCons.StateSyncMessage_GetBlockReq{
+				GetBlockReq: &typesCons.GetBlockRequest{
+					PeerAddress: nodeAddress,
+					Height:      i,
+				},
+			},
+		}
+		m.broadcastStateSyncMessage(stateSyncGetBlockMessage, i)
+	}
+
 }
 
 // Returns max block height metadainfo received from all peers by aggregating responses in the buffer.

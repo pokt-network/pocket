@@ -257,6 +257,12 @@ func WaitForNetworkStateSyncEvents(
 		_, ok := msg.(*typesCons.StateSyncMessage)
 		require.True(t, ok)
 
+		// stateSyncBlockReqMessage, ok := msg.(*typesCons.StateSyncMessage)
+		// require.True(t, ok)
+
+		// blockReq := stateSyncBlockReqMessage.String()
+		// fmt.Println("Gokhansa Requests", blockReq)
+
 		return true
 	}
 
@@ -367,12 +373,14 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 		if bus.GetConsensusModule().CurrentHeight() < heightInt {
 			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
 		}
-		blockWithHeight := &coreTypes.Block{
-			BlockHeader: &coreTypes.BlockHeader{
-				Height: utils.HeightFromBytes(height),
-			},
-		}
-		return codec.GetCodec().Marshal(blockWithHeight)
+		fmt.Println("NOW I AM RESPONDING FOR THE REQUESTED HEIGHT, ", heightInt)
+		// blockWithHeight := &coreTypes.Block{
+		// 	BlockHeader: &coreTypes.BlockHeader{
+		// 		Height: utils.HeightFromBytes(height),
+		// 	},
+		// }
+		block := generateDummyBlock(uint64(heightInt))
+		return codec.GetCodec().Marshal(block)
 	}).AnyTimes()
 
 	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
@@ -423,6 +431,7 @@ func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *mockModules
 		}).
 		AnyTimes()
 	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()
+	// TODO! Update, send event p2p bootstrapped depending on type
 	p2pMock.EXPECT().HandleEvent(gomock.Any()).Return(nil).AnyTimes()
 
 	return p2pMock
@@ -501,7 +510,7 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
 
-	consensusModImpl := reflect.ValueOf(bus.GetConsensusModule())
+	//consensusModImpl := reflect.ValueOf(bus.GetConsensusModule())
 
 	stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
 		switch coreTypes.StateMachineEvent(event) {
@@ -509,9 +518,11 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 			t.Logf("Node is unsynched")
 			return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
 		case coreTypes.StateMachineEvent_Consensus_IsSyncing:
-			maxHeight := bus.GetConsensusModule().GetAggregatedStateSyncMetadataMaxHeight()
-			t.Logf("Node is syncing")
-			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(maxHeight)})
+			//maxHeight := bus.GetConsensusModule().GetAggregatedStateSyncMetadataMaxHeight()
+			t.Logf("CALLING Node is syncing")
+			//consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(maxHeight)})
+			//consensusModImpl.MethodByName("TriggerSync").Call([]reflect.Value{})
+			bus.GetConsensusModule().DebugTriggerSync()
 
 			//bus.GetConsensusModule().TriggerSync()
 			return nil
@@ -553,6 +564,60 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 	loggerMock.EXPECT().GetModuleName().Return(modules.LoggerModuleName).AnyTimes()
 
 	return loggerMock
+}
+
+func generateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators uint64, pocketNodes IdToNodeMapping) []*coreTypes.Block {
+	blocks := make([]*coreTypes.Block, numberOfBlocks)
+
+	var i uint64 = 0
+	for i < numberOfBlocks {
+		// given height find the leader
+		leaderId := i % uint64(numberOfValidators)
+		leader := pocketNodes[typesCons.NodeId(leaderId)]
+		leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
+		require.NoError(t, err)
+		blockHeader := &coreTypes.BlockHeader{
+			Height:            i,
+			StateHash:         stateHash,
+			PrevStateHash:     "",
+			ProposerAddress:   leaderPK.Address(),
+			QuorumCertificate: generateValidQC(pocketNodes),
+		}
+
+		blocks[i] = &coreTypes.Block{
+			BlockHeader:  blockHeader,
+			Transactions: make([][]byte, 0),
+		}
+	}
+
+	return blocks
+}
+
+func generateValidQC(pocketNodes IdToNodeMapping) []byte {
+	qc := make([]byte, 0)
+	return qc
+}
+
+func generateDummyBlock(height uint64) *coreTypes.Block {
+	//blocks := make([]*coreTypes.Block, num)
+
+	blockHeader := &coreTypes.BlockHeader{
+		Height:            height,
+		StateHash:         stateHash,
+		PrevStateHash:     stateHash,
+		ProposerAddress:   make([]byte, 0),
+		QuorumCertificate: make([]byte, 0),
+	}
+
+	return &coreTypes.Block{
+		BlockHeader:  blockHeader,
+		Transactions: make([][]byte, 0),
+	}
+}
+
+func applyDummyBlocks(blocks []*coreTypes.Block) {
+	//doesn't perform any validate check, just stores
+
 }
 
 func logTime(t *testing.T, clck *clock.Mock) {

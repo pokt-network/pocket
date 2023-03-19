@@ -107,6 +107,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 	m.logger.Info().Fields(fields).Msg("utility context is set")
 
+	// TODO! Move this to before, here for debugging
 	// checking if the block is already persisted
 	if block.BlockHeader.Height <= lastPersistedBlockHeight {
 		m.logger.Info().Msgf("Received block with height %d, but already at height %d, so not going to apply", block.BlockHeader.Height, lastPersistedBlockHeight)

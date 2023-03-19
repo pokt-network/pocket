@@ -49,6 +49,10 @@ func (m *consensusModule) GetAggregatedStateSyncMetadataMaxHeight() (maxHeight u
 	return metadata.MaxHeight
 }
 
+func (m *consensusModule) DebugTriggerSync() error {
+	return m.stateSync.TriggerSync()
+}
+
 func (m *consensusModule) HandleDebugMessage(debugMessage *messaging.DebugMessage) error {
 	m.m.Lock()
 	defer m.m.Unlock()

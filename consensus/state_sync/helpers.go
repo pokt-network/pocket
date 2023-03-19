@@ -22,9 +22,13 @@ func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncM
 	}
 
 	for _, val := range validators {
-		if err := m.SendStateSyncMessage(stateSyncMsg, cryptoPocket.AddressFromString(val.GetAddress()), block_height); err != nil {
-			return err
+		validatorAddr := val.GetAddress()
+		if m.GetBus().GetConsensusModule().GetNodeAddress() != validatorAddr {
+			if err := m.SendStateSyncMessage(stateSyncMsg, cryptoPocket.AddressFromString(val.GetAddress()), block_height); err != nil {
+				return err
+			}
 		}
+
 	}
 
 	return nil
@@ -47,7 +51,7 @@ func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessag
 	}
 	m.logger.Info().Fields(fields).Msg("Sending StateSync Message")
 
-	m.logger.Info().Msgf("NodeId: %d, NodeAddress: %s \n", m.GetBus().GetConsensusModule().GetNodeId(), receiverPeerAddress)
+	//m.logger.Info().Msgf("NodeId: %d, NodeAddress: %s \n", m.GetBus().GetConsensusModule().GetNodeId(), receiverPeerAddress)
 
 	if err := m.GetBus().GetP2PModule().Send(receiverPeerAddress, anyMsg); err != nil {
 		m.logger.Error().Msgf(typesCons.ErrSendMessage.Error(), err)

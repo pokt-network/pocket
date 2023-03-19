@@ -14,7 +14,7 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 		m.logger.Info().Msgf("commitBlock QC is nil")
 
 	}
-	m.logger.Info().Msgf("commitBlock block is: %s", block)
+	m.logger.Info().Msgf("commitBlock block QuorumCertificate is: %s", block.BlockHeader.QuorumCertificate)
 
 	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err

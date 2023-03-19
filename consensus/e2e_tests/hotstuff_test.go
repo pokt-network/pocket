@@ -192,7 +192,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	// Test state synchronisation's get block functionality
-	// At this stage, first round is finished, get block request for block height 1 must return non-nill block
+	// At this stage, first round is finished, get block request for block height 1 must return non-nil block
 	serverNode := pocketNodes[1]
 
 	// We choose node 2 as the requester node.
