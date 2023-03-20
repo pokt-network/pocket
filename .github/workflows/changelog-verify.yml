@@ -45,11 +45,11 @@ jobs:
           echo "result=$(bash ./.githooks/pre-receive "${{ needs.changedfiles.outputs.all }}")" >> $GITHUB_OUTPUT
           echo "$result"
       - name: Verify changelogs - Review
-        if: ${{ steps.verify_changelogs.outcome == 'failure' }}
+        if: ${{ contains(steps.verify_changelogs.outputs.result, 'failed') }}
         uses: actions/github-script@v5
         with:
           script: |
-            const result = `The changelog validation failed with the following output:
+            const result = `<!-- verify_changelogs_review -->The changelog validation failed with the following output:
 
             \`\`\`
             ${{ steps.verify_changelogs.outputs.result }}
@@ -65,3 +65,30 @@ jobs:
               event: "REQUEST_CHANGES",
             });
             process.exit(1);
+      - name: Dismiss review comments
+        if: ${{ !contains(steps.verify_changelogs.outputs.result, 'failed') }}
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const uniqueIdentifier = "<!-- verify_changelogs_review -->";
+
+            // List all the reviews on the pull request
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            // Dismiss all reviews containing the unique identifier
+            for (const review of reviews) {
+              if (review.body.includes(uniqueIdentifier)) {
+                await github.rest.pulls.dismissReview({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber,
+                  review_id: review.id,
+                  message: "The check succeeded, dismissing the review comment.",
+                });
+              }
+            }
