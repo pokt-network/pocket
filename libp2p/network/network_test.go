@@ -118,10 +118,10 @@ func newTestLibp2pNetwork(t *testing.T) *libp2pNetwork {
 	require.NoError(t, err)
 	defer host.Close()
 
-	pubsub_, err := pubsub.NewFloodSub(ctx, host)
+	floodSub, err := pubsub.NewFloodSub(ctx, host)
 	require.NoError(t, err)
 
-	topic, err := pubsub_.Join("test_protocol")
+	topic, err := floodSub.Join("test_protocol")
 	require.NoError(t, err)
 
 	p2pNetwork, err := NewLibp2pNetwork(

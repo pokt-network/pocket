@@ -68,10 +68,11 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 		cfg := &configs.Config{
 			RootDirectory: "",
 			PrivateKey:    valKeys[i].String(),
+			UseLibP2P:     true,
 			P2P: &configs.P2PConfig{
 				PrivateKey:     valKeys[i].String(),
 				Port:           42069,
-				UseRainTree:    true,
+				UseRainTree:    false,
 				ConnectionType: configTypes.ConnectionType_EmptyConnection,
 			},
 		}
