@@ -1,7 +1,9 @@
 package p2p
 
 import (
+	"context"
 	"fmt"
+	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	"log"
 	"net"
 	"net/url"
@@ -12,14 +14,18 @@ import (
 
 	"github.com/foxcpp/go-mockdns"
 	"github.com/golang/mock/gomock"
-	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
+	libp2pHost "github.com/libp2p/go-libp2p/core/host"
+	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
-	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	libp2pProtocol "github.com/libp2p/go-libp2p/core/protocol"
+	"github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoremem"
 	"github.com/stretchr/testify/require"
 
+	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	mock_types "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -103,38 +109,14 @@ func waitForNetworkSimulationCompletion(t *testing.T, wg *sync.WaitGroup) {
 // ~~~~~~ RainTree Unit Test Mocks ~~~~~~
 
 // createP2PModules returns a map of configured p2pModules keyed by an incremental naming convention (eg: `val_1`, `val_2`, etc.)
-func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus, libp2pMockNet mocknet.Mocknet) (p2pModules map[string]*p2pModule) {
-	// Add a libp2p peers/hosts to the `MockNet` with the keypairs corresponding
-	// to the genesis validators' keypairs
-	// TODO _THIS_COMMIT: refactor this function
-	var libp2pPeerInfos []libp2pPeer.AddrInfo
-	for i, privKey := range keys[:len(busMocks)] {
-		peerInfo, err := utils.Libp2pAddrInfoFromPeer(&typesP2P.NetworkPeer{
-			PublicKey: privKey.PublicKey(),
-			Address:   privKey.Address(),
-			// TECHDEBT: rename `validatorId` ...
-			ServiceURL: validatorId(i + 1),
-		})
-		require.NoError(t, err)
-
-		libp2pPrivKey, err := libp2pCrypto.UnmarshalEd25519PrivateKey(privKey.Bytes())
-		require.NoError(t, err)
-
-		_, err = libp2pMockNet.AddPeer(libp2pPrivKey, peerInfo.Addrs[0])
-		require.NoError(t, err)
-
-		libp2pPeerInfos = append(libp2pPeerInfos, peerInfo)
-	}
-	// Link all peers such that any may dial/connect to any other.
-	err := libp2pMockNet.LinkAll()
-	require.NoError(t, err)
-
+func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus, hostMocks map[string]libp2pHost.Host) (p2pModules map[string]*p2pModule) {
 	p2pModules = make(map[string]*p2pModule, len(busMocks))
 	for i := range busMocks {
-		host := libp2pMockNet.Host(libp2pPeerInfos[i].ID)
+		serviceURL := validatorId(i + 1)
+		host := hostMocks[serviceURL]
 		p2pMod, err := Create(busMocks[i], WithHostOption(host))
 		require.NoError(t, err)
-		p2pModules[validatorId(i+1)] = p2pMod.(*p2pModule)
+		p2pModules[serviceURL] = p2pMod.(*p2pModule)
 	}
 	return
 }
@@ -340,4 +322,147 @@ func prepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).AnyTimes()
 
 	return eventMetricsAgentMock
+}
+
+// TODO _THIS_COMMIT: refactor this function
+func prepareHostMock(t *testing.T, hostStreamHandlerMocks map[string]func(stream libp2pNetwork.Stream), pstore typesP2P.Peerstore, runtimeCfg *configs.Config, wg *sync.WaitGroup, expectedNumNetworkReads int) libp2pHost.Host {
+	ctrl := gomock.NewController(t)
+
+	privKey, err := cryptoPocket.NewPrivateKey(runtimeCfg.PrivateKey)
+	require.NoError(t, err)
+
+	peerInfo, err := utils.Libp2pAddrInfoFromPeer(&typesP2P.NetworkPeer{
+		PublicKey:  privKey.PublicKey(),
+		Address:    privKey.Address(),
+		ServiceURL: runtimeCfg.P2P.Hostname,
+	})
+	require.NoError(t, err)
+
+	hostMock := mock_types.NewMockHost(ctrl)
+	hostMock.EXPECT().ID().Return(peerInfo.ID)
+
+	selfLibp2pInfo, err := utils.Libp2pAddrInfoFromPeer(&typesP2P.NetworkPeer{
+		PublicKey:  privKey.PublicKey(),
+		Address:    privKey.Address(),
+		ServiceURL: runtimeCfg.P2P.Hostname,
+	})
+	require.NoError(t, err)
+
+	hostMock.EXPECT().Addrs().Return(selfLibp2pInfo.Addrs)
+	hostMock.EXPECT().ID().Return(selfLibp2pInfo.ID)
+
+	// TODO _THIS_COMMIT: move
+	libp2pPStore, err := pstoremem.NewPeerstore()
+	require.NoError(t, err)
+
+	for _, peer := range pstore.GetPeerList() {
+		peerInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
+		require.NoError(t, err)
+
+		var libp2pPubKey libp2pCrypto.PubKey
+		if privKey.Address().Equals(peer.GetAddress()) {
+			var libp2pPrivKey libp2pCrypto.PrivKey
+			libp2pPrivKey, err = libp2pCrypto.UnmarshalEd25519PrivateKey(privKey.Bytes())
+			libp2pPStore.AddPrivKey(selfLibp2pInfo.ID, libp2pPrivKey)
+
+			libp2pPubKey = libp2pPrivKey.GetPublic()
+		} else {
+			libp2pPubKey, err = utils.Libp2pPublicKeyFromPeer(peer)
+		}
+		require.NoError(t, err)
+
+		libp2pPStore.AddAddrs(peerInfo.ID, peerInfo.Addrs, utils.DefaultPeerTTL)
+		err = libp2pPStore.AddPubKey(peerInfo.ID, libp2pPubKey)
+		require.NoError(t, err)
+	}
+	// --- END TODO
+
+	networkMock := mock_types.NewMockNetwork(ctrl)
+	networkMock.EXPECT().Notify(gomock.Any()).AnyTimes()
+	networkMock.EXPECT().Peers().Return(libp2pPStore.Peers()).AnyTimes()
+	networkMock.EXPECT().ConnsToPeer(gomock.Any()).Return(nil).AnyTimes()
+	hostMock.EXPECT().Network().Return(networkMock).AnyTimes()
+
+	hostMock.EXPECT().Peerstore().Return(libp2pPStore).AnyTimes()
+	hostMock.EXPECT().Close().Return(nil).AnyTimes()
+	hostMock.EXPECT().NewStream(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, peerID libp2pPeer.ID, protocolIDs ...libp2pProtocol.ID) (libp2pNetwork.Stream, error) {
+			eventsChannel := make(chan []byte, eventsChannelSize)
+
+			handler, ok := hostStreamHandlerMocks[peerID.String()]
+			require.Truef(t, ok, "no handle registered for peerID: %s", peerID)
+
+			// Construct mock stream to return to sender caller.
+			writeStreamMock := mock_types.NewMockStream(ctrl)
+			writeStreamMock.EXPECT().Close().Return(nil).AnyTimes()
+			writeStreamMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) (int, error) {
+				eventsChannel <- data
+				return len(data), nil
+			}).AnyTimes()
+			//}).Times(expectedNumNetworkReads)
+
+			// Construct mock stream to pass to receiver stream handler func.
+			readStreamMock := mock_types.NewMockStream(ctrl)
+			readStreamMock.EXPECT().SetReadDeadline(gomock.Any()).Return(nil).AnyTimes()
+			readStreamMock.EXPECT().Close().Return(nil).AnyTimes()
+			readStreamMock.EXPECT().Read(gomock.Any()).DoAndReturn(func(data []byte) (int, error) {
+				wg.Done()
+				log.Printf("[valId: %s] Read\n", runtimeCfg.P2P.Hostname)
+				data = <-eventsChannel
+				return len(data), nil
+			}).AnyTimes()
+			//}).Times(expectedNumNetworkReads)
+
+			selfLibp2pPubKey, err := libp2pCrypto.UnmarshalEd25519PublicKey(privKey.PublicKey().Bytes())
+			require.NoError(t, err)
+
+			connMock := mock_types.NewMockConn(ctrl)
+			connMock.EXPECT().RemotePeer().Return(selfLibp2pInfo.ID).AnyTimes()
+			connMock.EXPECT().RemotePublicKey().Return(selfLibp2pPubKey).AnyTimes()
+			connMock.EXPECT().RemoteMultiaddr().Return(selfLibp2pInfo.Addrs[0]).AnyTimes()
+			readStreamMock.EXPECT().Conn().Return(connMock).AnyTimes()
+
+			// Call respective mock stream handler func
+			handler(readStreamMock)
+
+			return writeStreamMock, nil
+		},
+	).AnyTimes() // TODO _THIS_COMMIT: assert times
+
+	// Collect stream handler functions as they're registered by peers.
+	hostMock.EXPECT().SetStreamHandler(gomock.Eq(protocol.PoktProtocolID), gomock.Any()).
+		DoAndReturn(func(protocolID libp2pProtocol.ID, handler func(stream libp2pNetwork.Stream)) {
+			hostStreamHandlerMocks[peerInfo.ID.String()] = handler
+		})
+
+	// Gracefully ignore pubsub streams.
+	hostMock.EXPECT().SetStreamHandler(gomock.Any(), gomock.Any()).Return().AnyTimes()
+	return hostMock
+}
+
+// preparePStore populates a `Peerstore` instance of `*NetworkPeer`s derived
+// from the passed runtime managers' configs' private keys.
+func preparePStore(t *testing.T, runtimeMgrs []modules.RuntimeMgr) typesP2P.Peerstore {
+	libp2pPeerInfos := make(map[string]libp2pPeer.AddrInfo)
+	pstore := make(typesP2P.PeerAddrMap)
+	for i, mgr := range runtimeMgrs {
+		privKey, err := cryptoPocket.NewPrivateKey(mgr.GetConfig().PrivateKey)
+		require.NoError(t, err)
+
+		peer := &typesP2P.NetworkPeer{
+			PublicKey: privKey.PublicKey(),
+			Address:   privKey.Address(),
+			// TECHDEBT: rename `validatorId`
+			ServiceURL: validatorId(i + 1),
+		}
+
+		err = pstore.AddPeer(peer)
+		require.NoError(t, err)
+
+		peerInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
+		require.NoError(t, err)
+
+		libp2pPeerInfos[peer.GetAddress().String()] = peerInfo
+	}
+	return pstore
 }
