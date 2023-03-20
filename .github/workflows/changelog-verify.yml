@@ -80,7 +80,7 @@ jobs:
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
-            const uniqueIdentifier = "Changelog verification failed";
+            const uniqueIdentifier = "changelog validation failed";
 
             // List all the reviews on the pull request
             const { data: reviews } = await github.rest.pulls.listReviews({
