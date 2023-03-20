@@ -36,18 +36,19 @@ jobs:
     needs: changedfiles
     # Map a step output to a job output
     outputs:
-      result: ${{ steps.verify_changelogs.outputs.result }}
+      result: ${{ steps.validate.outputs.result }}
     # only run if there are changed files
     if: ${{needs.changedfiles.outputs.all}}
     steps:
       - uses: actions/checkout@v3
       - name: Verify changelogs
-        id: verify_changelogs
+        id: validate
+        # Set outputs using the command.
         run: echo "result=$(bash ./.githooks/pre-receive "${{needs.changedfiles.outputs.all}}")" >> $GITHUB_OUTPUT
 
   review:
     runs-on: ubuntu-latest
-    # require the first job to have ran
+    # require the validate job to have ran
     needs: validate
     if: always()
     steps:
@@ -59,7 +60,7 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            const result = `<!-- verify_changelogs_review -->The changelog validation failed with the following output:
+            const result = `<!-- validate_review -->The changelog validation failed with the following output:
 
             \`\`\`
             ${{ needs.validate.outputs.result }}
