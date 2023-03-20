@@ -8,6 +8,12 @@ Keybase Vault requires a few pieces of information to be able to connect to it:
 - Token (e.g. `VAULT_TOKEN`=hvs.25YM7qJDN8S2EpFEA4SL0ciD)
 - Mount Path (e.g. /secret)
 
+You can configure the CLI to use a Hashicorp Vault keybase in three different ways, listed in order of precedence:
+
+1. configuration file
+2. environment variables prefixed with POCKET\_ (e.g., POCKET_KEYBASE_TYPE=vault) to override the configuration file
+3. command-line flags (highest precedence)
+
 ## Simple Vault Demo
 
 Here are some quick commands to familiarize oneself with the keybase vault. Deep dive here: https://developer.hashicorp.com/vault/tutorials/getting-started/getting-started-intro
@@ -23,7 +29,9 @@ vault server -dev -dev-root-token-id="dev-only-token"
 
 Vault comes with a web UI. Open a browser and navigate to http://127.0.0.1:8200 and login with the token `dev-only-token`. Take a look at the secrets engine at `secret/`.
 
-Then, open a new terminal window and run the following commands:
+## Vault Test Drive
+
+The following commands demo the keybase vault using various methods of configuration for the CLI.
 
 ## Using environment variables
 
@@ -76,9 +84,6 @@ p1 Keys VerifyTx --keybase vault
 ## Example using command line flags
 
 ```sh
-
-export VAULT_ADDR='http://127.0.0.1:8200'
-export VAULT_TOKEN='dev-only-token'
 
 p1 Keys Create --keybase vault \
     --vault-token dev-only-token \
@@ -152,5 +157,69 @@ p1 Keys SignTx --keybase vault \
 p1 Keys VerifyTx --keybase vault \
     --vault-token dev-only-token \
     --vault-addr http://127.0.0.1:8200/
+
+```
+
+## Example using config.json
+
+```sh
+cat << EOF > config-with-vault.json
+{
+  "keybase": {
+    "type": "vault",
+    "vault_addr": "http://127.0.0.1:8200",
+    "vault_token": "dev-only-token",
+    "vault_mount": "secret"
+  }
+}
+EOF
+
+
+p1 Keys Create --config config-with-vault.json
+
+# note the address
+# {"level":"info","address":"addr_goes_here","time":"2023-02-24T23:12:06-04:00","message":"New Key Created"}
+
+p1 Keys Get --config config-with-vault.json
+
+# {"level":"info","address":"addr_goes_here","public_key":"d82cd23f4809491c04ab456dd9714e647093bcc6cb649a8510f4d54c194f80ea","time":"2023-02-24T23:14:01-04:00","message":"Found key"}
+
+p1 Keys Export addr_goes_here --config config-with-vault.json
+
+## note the private key
+# {"level":"info","private_key":"{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_ere\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}","time":"2023-02-24T23:12:53-04:00","message":"Key exported"}
+
+p1 Keys Import --config config-with-vault.json \
+    --import_format json "{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_ere\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}"
+
+p1 Keys List --config config-with-vault.json
+
+# {"level":"info","addresses":["addr_goes_here"],"time":"2023-02-24T23:14:44-04:00","message":"Get all keys"}
+
+p1 Keys Sign --config config-with-vault.json \
+    addr_goes_here abcd
+
+# note the signature
+# {"level":"info","signature":"signature_goes_here","address":"addr_goes_here","time":"2023-02-24T23:15:18-04:00","message":"Message signed"}
+
+p1 Keys Verify --config config-with-vault.json \
+    addr_goes_here abcd signature_goes_here
+
+# {"level":"info","address":"addr_goes_here","valid":true,"time":"2023-02-24T23:16:05-04:00","message":"Signature checked"}
+
+p1 Keys Update --config config-with-vault.json addr_goes_here
+
+
+p1 Keys Keys DeriveChild addr_goes_here 0 --config config-with-vault.json \
+    addr_goes_here
+
+# {"level":"info","address":"new_addr_goes_here","parent":"addr_goes_here","index":0,"stored":true,"time":"2023-02-28T09:26:11-04:00","message":"Child key derived"}
+
+p1 Keys Delete --config config-with-vault.json addr_goes_here
+
+## TODO: add SignTx and VerifyTx
+
+p1 Keys SignTx --config config-with-vault.json
+p1 Keys VerifyTx --config config-with-vault.json
 
 ```
