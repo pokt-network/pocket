@@ -14,7 +14,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/pokt-network/pocket/libp2p/network"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
@@ -22,6 +21,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	persABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/raintree"
+	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -166,23 +166,7 @@ func (m *p2pModule) Start() (err error) {
 		return fmt.Errorf("subscribing to pubsub topic: %w", err)
 	}
 
-	// TODO_THIS_COMMIT: refactor this function!
-	if m.cfg.UseRainTree {
-		privKey, keyErr := crypto.NewPrivateKey(m.cfg.GetPrivateKey())
-		if keyErr != nil {
-			return keyErr
-		}
-		m.network, err = raintree.NewRainTreeNetwork(
-			m.host,
-			privKey.Address(),
-			m.GetBus(),
-			m.pstoreProvider,
-			m.currentHeightProvider,
-		)
-	} else {
-		m.network, err = network.NewLibp2pNetwork(m.GetBus(), m.logger, m.host, m.topic)
-	}
-	if err != nil {
+	if err := m.startNetwork(); err != nil {
 		return fmt.Errorf("creating network: %w", err)
 	}
 
@@ -268,6 +252,29 @@ func (m *p2pModule) setupCurrentHeightProvider() {
 	}
 	// TECHDEBT: what if this type assertion fails?
 	m.currentHeightProvider = currentHeightProviderModule.(providers.CurrentHeightProvider)
+}
+
+func (m *p2pModule) startNetwork() (err error) {
+	if m.cfg.UseRainTree {
+		privKey, keyErr := crypto.NewPrivateKey(m.cfg.GetPrivateKey())
+		if keyErr != nil {
+			return keyErr
+		}
+		m.network, err = raintree.NewRainTreeNetwork(
+			m.host,
+			privKey.Address(),
+			m.GetBus(),
+			m.pstoreProvider,
+			m.currentHeightProvider,
+		)
+	} else {
+		m.network, err = stdnetwork.NewNetwork(
+			m.host,
+			m.pstoreProvider,
+			m.currentHeightProvider,
+		)
+	}
+	return err
 }
 
 func (m *p2pModule) startHost() (err error) {

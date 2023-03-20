@@ -1,11 +1,14 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 
+	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/shared/p2p"
 )
 
@@ -49,4 +52,33 @@ func PopulateLibp2pHost(host libp2pHost.Host, pstore p2p.Peerstore) error {
 		}
 	}
 	return nil
+}
+
+func Libp2pSendToPeer(host libp2pHost.Host, data []byte, peer typesP2P.Peer) error {
+	// TECHDEBT: add ctx to interface methods and propagate down.
+	ctx := context.Background()
+
+	libp2pAddrInfo, err := Libp2pAddrInfoFromPeer(peer)
+	if err != nil {
+		return err
+	}
+
+	logger.Global.Debug().
+		Str("pokt address", peer.GetAddress().String()).
+		Str("pokt url", peer.GetServiceURL()).
+		Str("peerID", libp2pAddrInfo.ID.String()).
+		Str("peerAddr", libp2pAddrInfo.Addrs[0].String()).
+		Msg("from n.host.NewStream")
+
+	stream, err := host.NewStream(ctx, libp2pAddrInfo.ID, protocol.PoktProtocolID)
+	if err != nil {
+		logger.Global.Debug().Err(err).Msg("from n.host.NewStream")
+		return err
+	}
+
+	if _, err = stream.Write(data); err != nil {
+		logger.Global.Debug().Err(err).Msg("from stream.Write")
+		return err
+	}
+	return stream.Close()
 }
