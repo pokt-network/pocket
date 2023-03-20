@@ -51,6 +51,9 @@ jobs:
     needs: validate
     if: always()
     steps:
+      - env:
+          OUT: ${{needs.validate.outputs.result}}
+        run: echo "$OUT"
       - name: Verify changelogs KO
         if: ${{ contains(needs.validate.outputs.result, 'failed') }}
         uses: actions/github-script@v5
@@ -88,19 +91,17 @@ jobs:
               repo: context.repo.repo,
               pull_number: prNumber,
             });
-            console.log(reviews);
-            console.log(`Found ${reviews.length} reviews.`);
+            const matchingReviews = reviews.filter(review => review.body.includes(uniqueIdentifier));
+            console.log(`Found ${matchingReviews.length} reviews.`);
 
             // Dismiss all reviews containing the unique identifier
-            for (const review of reviews) {
-              if (review.body.includes(uniqueIdentifier)) {
-                console.log(`Dismissing review ${review.id}...`);
-                await github.rest.pulls.dismissReview({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: prNumber,
-                  review_id: review.id,
-                  message: "The check succeeded, dismissing the review comment.",
-                });
-              }
+            for (const review of matchingReviews) {
+              console.log(`Dismissing review ${review.id}...`);
+              await github.rest.pulls.dismissReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                review_id: review.id,
+                message: "The check succeeded, dismissing the review comment.",
+              });
             }
