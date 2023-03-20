@@ -24,17 +24,8 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	consensusMod := m.GetBus().GetConsensusModule()
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := metadataReq.PeerAddress
-	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
-	lastPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
-	// TODO (#571): update with logger helper function
-	fields := map[string]any{
-		"height":   lastPersistedBlockHeight,
-		"sender":   serverNodePeerAddress,
-		"receiver": clientPeerAddress,
-	}
-
-	m.logger.Info().Fields(fields).Msgf("Received StateSync MetadataRequest %s", metadataReq)
+	m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Received StateSyncMetadataRequest %s", metadataReq)
 
 	maxHeight, err := m.maximumPersistedBlockHeight()
 	if err != nil {
@@ -69,14 +60,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 		return err
 	}
 
-	// TODO (#571): update with logger helper function
-	fields := map[string]any{
-		"height":   lastPersistedBlockHeight,
-		"sender":   serverNodePeerAddress,
-		"receiver": clientPeerAddress,
-	}
-
-	m.logger.Info().Fields(fields).Msgf("Received StateSync GetBlockRequest: %s", blockReq)
+	m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Received StateSync GetBlockRequest: %s", blockReq)
 
 	if lastPersistedBlockHeight < blockReq.Height {
 		return fmt.Errorf("requested block height: %d is higher than current persisted block height: %d", blockReq.Height, lastPersistedBlockHeight)
@@ -97,7 +81,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 		},
 	}
 
-	m.logger.Info().Fields(fields).Msgf("Responding to StateSync GetBlockRequest with: %s", &stateSyncMessage.GetGetBlockRes().Block.BlockHeader.QuorumCertificate)
+	m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Responding to StateSync GetBlockRequest with: %s", &stateSyncMessage.GetGetBlockRes().Block.BlockHeader.QuorumCertificate)
 
 	return m.SendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress), blockReq.Height)
 }

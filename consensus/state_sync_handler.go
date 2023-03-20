@@ -60,17 +60,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 // benefit of leaving them here is not expporting internal consensus module functions
 // such as validateQuorumCertificate() and commitBlock
 func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-
-	serverNodePeerId := m.GetNodeAddress()
-	clientPeerId := blockRes.PeerAddress
-
-	fields := map[string]any{
-		"currentHeight": blockRes.Block.BlockHeader.Height,
-		"sender":        serverNodePeerId,
-		"receiver":      clientPeerId,
-	}
-
-	m.logger.Info().Fields(fields).Msgf("Handling GetBlockResponse: %s", blockRes)
+	m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse: %s", blockRes)
 
 	block := blockRes.Block
 	lastPersistedBlockHeight := m.CurrentHeight() - 1
@@ -85,14 +75,14 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 		return err
 	}
 
-	m.logger.Info().Fields(fields).Msg("HandleGetBlockResponse Validating Quroum Certificate")
+	m.logger.Info().Msg("HandleGetBlockResponse Validating Quroum Certificate")
 
 	if err := m.validateQuorumCertificate(&qc); err != nil {
 		m.logger.Error().Err(err).Msg("Couldn't apply block, invalid QC")
 		return err
 	}
 
-	m.logger.Info().Fields(fields).Msg("VALID QC")
+	m.logger.Info().Msg("VALID QC")
 
 	if m.utilityContext == nil {
 		m.logger.Info().Msg("Utility context is nil")
@@ -105,7 +95,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 	}
 
-	m.logger.Info().Fields(fields).Msg("utility context is set")
+	m.logger.Info().Msg("utility context is set")
 
 	// TODO! Move this to before, here for debugging
 	// checking if the block is already persisted
@@ -114,7 +104,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 		return nil
 	}
 
-	m.logger.Info().Fields(fields).Msg("HandleGetBlockResponse Committing the block")
+	m.logger.Info().Msg("HandleGetBlockResponse Committing the block")
 
 	m.m.Lock()
 	defer m.m.Unlock()
@@ -124,7 +114,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 		return nil
 	}
 
-	m.logger.Info().Fields(fields).Msg("Block is Committed")
+	m.logger.Info().Msg("Block is Committed")
 
 	// Send current persisted block height to the state sync module
 	m.stateSync.PersistedBlock(block.BlockHeader.Height)
@@ -134,18 +124,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 }
 
 func (m *consensusModule) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
-	consensusMod := m.GetBus().GetConsensusModule()
-	serverNodePeerId := consensusMod.GetNodeAddress()
-	clientPeerId := metaDataRes.PeerAddress
-	currentHeight := consensusMod.CurrentHeight()
-
-	fields := map[string]any{
-		"currentHeight": currentHeight,
-		"sender":        serverNodePeerId,
-		"receiver":      clientPeerId,
-	}
-
-	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataResponse: %s", metaDataRes)
+	m.logger.Info().Fields(m.logHelper(metaDataRes.PeerAddress)).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
 
 	metaDataBuffer := m.stateSync.GetStateSyncMetadataBuffer()
 	metaDataBuffer = append(metaDataBuffer, metaDataRes)

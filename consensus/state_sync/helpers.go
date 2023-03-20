@@ -36,21 +36,12 @@ func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncM
 
 // SendStateSyncMessage sends a state sync message after converting to any proto, to the given peer
 func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, receiverPeerAddress cryptoPocket.Address, block_height uint64) error {
-	consensusMod := m.GetBus().GetConsensusModule()
-
 	anyMsg, err := anypb.New(stateSyncMsg)
 	if err != nil {
 		return err
 	}
 
-	// TODO (#571): update when #571 is merged
-	fields := map[string]any{
-		"height":              consensusMod.CurrentHeight(),
-		"senderPeerAddress":   consensusMod.GetNodeAddress(),
-		"receiverPeerAddress": receiverPeerAddress,
-	}
-	m.logger.Info().Fields(fields).Msg("Sending StateSync Message")
-
+	m.logger.Info().Fields(m.logHelper(string(receiverPeerAddress))).Msg("Sending StateSync Message")
 	//m.logger.Info().Msgf("NodeId: %d, NodeAddress: %s \n", m.GetBus().GetConsensusModule().GetNodeId(), receiverPeerAddress)
 
 	if err := m.GetBus().GetP2PModule().Send(receiverPeerAddress, anyMsg); err != nil {
@@ -100,4 +91,15 @@ func (m *stateSync) minimumPersistedBlockHeight() (uint64, error) {
 	}
 
 	return maxHeight, nil
+}
+
+func (m *stateSync) logHelper(receiverPeerId string) map[string]any {
+	consensusMod := m.GetBus().GetConsensusModule()
+
+	return map[string]any{
+		"height":         consensusMod.CurrentHeight(),
+		"senderPeerId":   consensusMod.GetNodeAddress(),
+		"receiverPeerId": receiverPeerId,
+	}
+
 }

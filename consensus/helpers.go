@@ -330,3 +330,11 @@ func (m *consensusModule) IsValidator() (bool, error) {
 
 	return false, nil
 }
+
+func (m *consensusModule) logHelper(receiverPeerId string) map[string]any {
+	return map[string]any{
+		"height":         m.CurrentHeight(),
+		"senderPeerId":   m.GetNodeAddress(),
+		"receiverPeerId": receiverPeerId,
+	}
+}
