@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	leaderUtilityUOWModuleName  = "leader_utility_unit_of_work"
-	replicaUtilityUOWModuleName = "replica_utility_unit_of_work"
+	leaderUtilityUOWModuleName  = "leader_utility_UOW"
+	replicaUtilityUOWModuleName = "replica_utility_UOW"
 )
 
 var _ modules.UtilityUnitOfWork = &baseUtilityUnitOfWork{}
