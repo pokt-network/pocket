@@ -15,7 +15,6 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 	telemetry "github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
 )
@@ -216,24 +215,24 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	return rainTreeMsg.Data, nil
 }
 
-func (n *rainTreeNetwork) GetPeerstore() sharedP2P.Peerstore {
+func (n *rainTreeNetwork) GetPeerstore() typesP2P.Peerstore {
 	return n.peersManager.GetPeerstore()
 }
 
-func (n *rainTreeNetwork) AddPeer(peer sharedP2P.Peer) error {
+func (n *rainTreeNetwork) AddPeer(peer typesP2P.Peer) error {
 	n.peersManager.HandleEvent(
-		sharedP2P.PeerManagerEvent{
-			EventType: sharedP2P.AddPeerEventType,
+		typesP2P.PeerManagerEvent{
+			EventType: typesP2P.AddPeerEventType,
 			Peer:      peer,
 		},
 	)
 	return nil
 }
 
-func (n *rainTreeNetwork) RemovePeer(peer sharedP2P.Peer) error {
+func (n *rainTreeNetwork) RemovePeer(peer typesP2P.Peer) error {
 	n.peersManager.HandleEvent(
-		sharedP2P.PeerManagerEvent{
-			EventType: sharedP2P.RemovePeerEventType,
+		typesP2P.PeerManagerEvent{
+			EventType: typesP2P.RemovePeerEventType,
 			Peer:      peer,
 		},
 	)

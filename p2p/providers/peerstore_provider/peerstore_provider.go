@@ -4,13 +4,14 @@ package peerstore_provider
 
 import (
 	"fmt"
+
+	"go.uber.org/multierr"
+
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
-	"go.uber.org/multierr"
 )
 
 const ModuleName = "peerstore_provider"
@@ -19,14 +20,14 @@ const ModuleName = "peerstore_provider"
 type PeerstoreProvider interface {
 	modules.Module
 
-	GetStakedPeerstoreAtHeight(height uint64) (sharedP2P.Peerstore, error)
+	GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error)
 	GetConnFactory() typesP2P.ConnectionFactory
 	GetP2PConfig() *configs.P2PConfig
 	SetConnectionFactory(typesP2P.ConnectionFactory)
 }
 
-func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore sharedP2P.Peerstore, errs error) {
-	pstore = make(sharedP2P.PeerAddrMap)
+func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore typesP2P.Peerstore, errs error) {
+	pstore = make(typesP2P.PeerAddrMap)
 	for _, a := range actors {
 		networkPeer, err := ActorToPeer(abp, a)
 		if err != nil {
@@ -41,7 +42,7 @@ func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore
 	return pstore, errs
 }
 
-func ActorToPeer(abp PeerstoreProvider, actor *coreTypes.Actor) (sharedP2P.Peer, error) {
+func ActorToPeer(abp PeerstoreProvider, actor *coreTypes.Actor) (typesP2P.Peer, error) {
 	// TECHDEBT: this should be the responsibility of some new `ConnManager` interface.
 	// Peerstore (identity / address mapping) is a separate concern from managing
 	// connections to/from peers.
@@ -49,7 +50,6 @@ func ActorToPeer(abp PeerstoreProvider, actor *coreTypes.Actor) (sharedP2P.Peer,
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)
 	}
-
 	pubKey, err := cryptoPocket.NewPublicKey(actor.GetPublicKey())
 	if err != nil {
 		return nil, err

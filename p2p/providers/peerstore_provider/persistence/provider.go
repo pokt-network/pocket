@@ -7,7 +7,6 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 var _ peerstore_provider.PeerstoreProvider = &persistencePeerstoreProvider{}
@@ -44,7 +43,7 @@ func (*persistencePeerstoreProvider) GetModuleName() string {
 	return peerstore_provider.ModuleName
 }
 
-func (pabp *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (sharedP2P.Peerstore, error) {
+func (pabp *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
 	persistenceReadContext, err := pabp.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err

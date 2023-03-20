@@ -9,7 +9,7 @@ import (
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/protocol"
-	"github.com/pokt-network/pocket/shared/p2p"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 // info for use with libp2p and adding it to the underlying libp2p host's peerstore.
 // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.2/core/host#Host)
 // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.2/core/peerstore#Peerstore)
-func PopulateLibp2pHost(host libp2pHost.Host, pstore p2p.Peerstore) error {
+func PopulateLibp2pHost(host libp2pHost.Host, pstore typesP2P.Peerstore) error {
 	for _, peer := range pstore.GetPeerList() {
 		pubKey, err := Libp2pPublicKeyFromPeer(peer)
 		if err != nil {
@@ -55,7 +55,7 @@ func PopulateLibp2pHost(host libp2pHost.Host, pstore p2p.Peerstore) error {
 }
 
 func Libp2pSendToPeer(host libp2pHost.Host, data []byte, peer typesP2P.Peer) error {
-	// TECHDEBT: add ctx to interface methods and propagate down.
+	// TECHDEBT(#595): add ctx to interface methods and propagate down.
 	ctx := context.Background()
 
 	libp2pAddrInfo, err := Libp2pAddrInfoFromPeer(peer)

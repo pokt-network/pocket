@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 	"github.com/stretchr/testify/require"
 )
 
@@ -153,8 +153,8 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 }
 
 // Generates an address book with a random set of `n` addresses
-func getPeerstore(t *testing.T, n int) sharedP2P.Peerstore {
-	pstore := make(sharedP2P.PeerAddrMap)
+func getPeerstore(t *testing.T, n int) typesP2P.Peerstore {
+	pstore := make(typesP2P.PeerAddrMap)
 	for i := 0; i < n; i++ {
 		addr, err := cryptoPocket.GenerateAddress()
 		if t != nil {
@@ -252,8 +252,8 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 }
 
 // Generates an address book with a constant set 27 addresses; ['A', ..., 'Z']
-func getAlphabetPeerstore(t *testing.T, n int) sharedP2P.Peerstore {
-	pstore := make(sharedP2P.PeerAddrMap)
+func getAlphabetPeerstore(t *testing.T, n int) typesP2P.Peerstore {
+	pstore := make(typesP2P.PeerAddrMap)
 	for i, ch := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ[" {
 		if i >= n {
 			return pstore
