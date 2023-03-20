@@ -20,7 +20,7 @@ jobs:
     outputs:
       all: ${{ steps.changes.outputs.all}}
     steps:
-        # Make sure we have some code to diff.
+      # Make sure we have some code to diff.
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
@@ -39,4 +39,28 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Verify changelogs
-        run: bash ./.githooks/pre-receive "${{needs.changedfiles.outputs.all}}"
+        id: verify_changelogs
+        continue-on-error: true
+        run: |
+          result=$(bash ./.githooks/pre-receive "${{ needs.changedfiles.outputs.all }}" 2>&1)
+          echo "result=$result" | tee $GITHUB_OUTPUT
+      - name: Create comment
+        if: ${{ failure() }}
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const result = `The changelog validation failed with the following output:
+
+            \`\`\`
+            ${{ steps.verify_changelogs.outputs.result }}
+            \`\`\`
+
+            Please update the relevant CHANGELOG.md files and ensure they follow the correct format.`;
+
+            await github.rest.pulls.createReview({
+              pull_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: result,
+              event: "REQUEST_CHANGES",
+            });
