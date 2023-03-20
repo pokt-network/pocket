@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.24] - 2023-03-17
+
+- Added resource limits and PVC for debug client pod.
+- Added `procps` to the client pod image.
+
 ## [0.0.0.23] - 2023-03-14
 
 - Simplifies the debug CLI tooling by embedding private-keys.yaml manifest
