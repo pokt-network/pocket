@@ -28,7 +28,7 @@ const (
 	PromptPrintNodeState         string = "PrintNodeState (broadcast)"
 	PromptTriggerNextView        string = "TriggerNextView (broadcast)"
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode (broadcast)"
-	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore (send)"
+	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore (anycast)"
 	PromptSendMetadataRequest    string = "MetadataRequest (broadcast)"
 	PromptSendBlockRequest       string = "BlockRequest (broadcast)"
 )
