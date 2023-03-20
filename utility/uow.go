@@ -15,13 +15,13 @@ func (u *utilityModule) NewUnitOfWork(height int64) (modules.UtilityUnitOfWork, 
 		return nil, err
 	}
 
-	var utilityUow modules.UtilityUnitOfWork
+	var utilityUOW modules.UtilityUnitOfWork
 	if u.GetBus().GetConsensusModule().IsLeader() {
-		utilityUow = unit_of_work.NewForLeader(height, readContext, rwContext)
+		utilityUOW = unit_of_work.NewForLeader(height, readContext, rwContext)
 	} else {
-		utilityUow = unit_of_work.NewForReplica(height, readContext, rwContext)
+		utilityUOW = unit_of_work.NewForReplica(height, readContext, rwContext)
 	}
 
-	utilityUow.SetBus(u.GetBus())
-	return utilityUow, nil
+	utilityUOW.SetBus(u.GetBus())
+	return utilityUOW, nil
 }
