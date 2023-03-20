@@ -49,6 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     # require the first job to have ran
     needs: validate
+    if: always()
     steps:
       - name: Verify changelogs KO
         if: ${{ contains(needs.validate.outputs.result, 'failed') }}
