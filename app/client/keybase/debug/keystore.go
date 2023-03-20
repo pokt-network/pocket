@@ -5,8 +5,7 @@ package debug
 import (
 	"fmt"
 	"os"
-	"runtime"
-	"sync"
+
 	"github.com/korovkin/limiter"
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/build"
@@ -58,14 +57,11 @@ func initializeDebugKeybase() error {
 	}
 
 	// Create/Open the keybase at `$HOME/.pocket/keys`
-	kb, err := keybase.NewBadgerKeybase(debugKeybasePath)
+	kb, err := keybase.NewKeybase(debugKeybasePath)
 	if err != nil {
 		return err
 	}
-	db, err := kb.GetBadgerDB()
-	if err != nil {
-		return err
-	}
+	db := kb.GetBadgerDB()
 
 	// Add the keys if the keybase contains less than 999
 	curAddr, _, err := kb.GetAll()
@@ -75,7 +71,7 @@ func initializeDebugKeybase() error {
 
 	// Add validator addresses if not present
 	if len(curAddr) < numValidators {
-		logger.Global.Debug().Msgf("Debug keybase initializing... Adding %d validator keys to the keybase", numValidators-len(curAddr))
+		logger.Global.Debug().Msgf(fmt.Sprintf("Debug keybase initializing... Adding %d validator keys to the keybase", numValidators-len(curAddr)))
 
 		// Use writebatch to speed up bulk insert
 		wb := db.NewWriteBatch()
@@ -94,16 +90,14 @@ func initializeDebugKeybase() error {
 					return
 				}
 
-					// Encode KeyPair into []byte for value
-					keypairBz, err := keyPair.Marshal()
-					if err != nil {
-						errCh <- err
-						return
-					}
-					if err := wb.Set(addrKey, keypairBz); err != nil {
-						errCh <- err
-						return
-					}
+				// Use key address as key in DB
+				addrKey := keyPair.GetAddressBytes()
+
+				// Encode KeyPair into []byte for value
+				keypairBz, err := keyPair.Marshal()
+				if err != nil {
+					errCh <- err
+					return
 				}
 				if err := wb.Set(addrKey, keypairBz); err != nil {
 					errCh <- err
