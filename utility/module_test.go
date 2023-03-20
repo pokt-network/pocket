@@ -56,6 +56,15 @@ func TestMain(m *testing.M) {
 }
 
 func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
+	// err := testPersistenceMod.ReleaseWriteContext()
+	// require.NoError(t, err)
+	// err = testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
+	// 	Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
+	// 	Message: nil,
+	// })
+	// require.NoError(t, err)
+	// testUtilityMod.GetMempool().Clear()
+
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
@@ -63,11 +72,13 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 	// beginning of every test. This (the current implementation) is an issue because if we call
 	// `NewTestingUtilityContext` more than once in a single test, we create unnecessary calls to clean.
 	t.Cleanup(func() {
-		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
-		require.NoError(t, testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
+		err := testPersistenceMod.ReleaseWriteContext()
+		require.NoError(t, err)
+		err = testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
-		}))
+		})
+		require.NoError(t, err)
 		testUtilityMod.GetMempool().Clear()
 	})
 
@@ -79,7 +90,6 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 		savePointsList: make([][]byte, 0),
 	}
 	ctx.SetBus(testUtilityMod.GetBus())
-
 	return ctx
 }
 
@@ -111,8 +121,8 @@ func newTestRuntimeConfig(databaseURL string) *runtime.Manager {
 			BlockStorePath:    "", // in memory
 			TxIndexerPath:     "", // in memory
 			TreesStoreDir:     "", // in memory
-			MaxConnsCount:     4,
-			MinConnsCount:     0,
+			MaxConnsCount:     5,
+			MinConnsCount:     1,
 			MaxConnLifetime:   "1h",
 			MaxConnIdleTime:   "30m",
 			HealthCheckPeriod: "5m",

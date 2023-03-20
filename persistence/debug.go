@@ -35,8 +35,7 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMess
 		if err := m.clearAllState(debugMessage); err != nil {
 			return err
 		}
-		g := m.genesisState
-		m.populateGenesisState(g) // fatal if there's an error
+		m.populateGenesisState(m.genesisState) // fatal if there's an error
 	default:
 		m.logger.Debug().Str("message", debugMessage.Message.String()).Msg("Debug message not handled by persistence module")
 	}
@@ -74,7 +73,7 @@ func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
 		return err
 	}
 
-	// Release the SQL context
+	// Release the SQL write context
 	if err := m.ReleaseWriteContext(); err != nil {
 		return err
 	}
@@ -90,7 +89,7 @@ func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
 	}
 
 	m.logger.Info().Msg("Cleared all the state")
-	// reclaming memory manually because the above calls deallocate and reallocate a lot of memory
+	// reclaiming memory manually because the above calls de-allocate and reallocate a lot of memory
 	debug.FreeOSMemory()
 	return nil
 }

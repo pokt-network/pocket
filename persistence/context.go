@@ -4,6 +4,7 @@ package persistence
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -79,28 +80,36 @@ func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 		return err
 	}
 
+	// Similar to `Release` but without rolling back the transaction
+	p.tx = nil
 	p.conn.Release()
+	p.conn = nil
 
 	return nil
 }
 
 func (p *PostgresContext) Release() error {
 	p.logger.Info().Int64("height", p.Height).Msg("About to release context")
-	ctx := context.TODO()
-	if err := p.tx.Rollback(ctx); err != nil {
+	if err := p.tx.Rollback(context.TODO()); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 		return err
 	}
-	if err := p.resetContext(); err != nil {
-		return err
-	}
+	p.tx = nil
+	p.conn.Release()
+	p.conn = nil
 	return nil
 }
 
+// Close first releases the connection by calling `Release` and then closes the connection nas well
 func (p *PostgresContext) Close() error {
-	if err := p.resetContext(); err != nil {
+	if err := p.Release(); err != nil {
 		return err
 	}
-	p.conn.Release()
+	if p.conn == nil || p.conn.Conn() == nil {
+		return nil
+	}
+	if err := p.conn.Conn().Close(context.TODO()); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -109,20 +118,6 @@ func (p *PostgresContext) IndexTransaction(txResult modules.TxResult) error {
 	return p.txIndexer.Index(txResult)
 }
 
-func (pg *PostgresContext) resetContext() (err error) {
-	if pg == nil {
-		pg.logger.Warn().Msg("postgres context is nil when trying to reset it")
-		return nil
-	}
-	if pg.tx == nil {
-		return nil
-	}
-	conn := pg.tx.Conn()
-	if conn != nil && !conn.IsClosed() {
-		if err := pg.Release(); err != nil {
-			pg.logger.Error().Err(err).Bool("TODO", true).Msg("error releasing write context")
-		}
-	}
-	pg.tx = nil
-	return nil
+func (p *PostgresContext) isClosed() bool {
+	return p.tx == nil && p.conn == nil
 }

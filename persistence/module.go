@@ -44,7 +44,7 @@ type persistenceModule struct {
 	stateTrees *stateTrees
 
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
-	// only one write context is allowed at a time
+	// Only one write context is allowed at a time
 	writeContext *PostgresContext
 
 	// A pool of connections to the postgres database
@@ -146,7 +146,7 @@ func (m *persistenceModule) GetModuleName() string {
 }
 
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
-	if m.writeContext != nil && m.writeContext.conn != nil {
+	if m.writeContext != nil && !m.writeContext.isClosed() {
 		return nil, fmt.Errorf("cannot create a new write context if one already exists")
 	}
 
@@ -215,9 +215,12 @@ func (m *persistenceModule) ReleaseWriteContext() error {
 	if m.writeContext == nil {
 		return nil
 	}
-
-	if err := m.writeContext.resetContext(); err != nil {
-		logger.Global.Error().Err(err).Msg("Error releasing write context")
+	if m.writeContext.isClosed() {
+		m.writeContext = nil
+		return nil
+	}
+	if err := m.writeContext.Release(); err != nil {
+		return err
 	}
 	m.writeContext = nil
 	return nil
