@@ -73,6 +73,8 @@ jobs:
             });
             process.exit(1);
       - name: Verify changelogs OK - Dismiss review comments
+        env:
+          OUTPUT: ${{ needs.validate.outputs.result }}
         if: ${{ !contains(needs.validate.outputs.result, 'failed') }}
         uses: actions/github-script@v5
         with:
@@ -86,10 +88,13 @@ jobs:
               repo: context.repo.repo,
               pull_number: prNumber,
             });
+            console.log(reviews);
+            console.log(`Found ${reviews.length} reviews.`);
 
             // Dismiss all reviews containing the unique identifier
             for (const review of reviews) {
               if (review.body.includes(uniqueIdentifier)) {
+                console.log(`Dismissing review ${review.id}...`);
                 await github.rest.pulls.dismissReview({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
