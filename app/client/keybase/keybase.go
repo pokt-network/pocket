@@ -54,16 +54,16 @@ type Keybase interface {
 
 // NewKeybase creates a new keybase based on the type and customized with the options provided
 func NewKeybase(conf *configs.KeybaseConfig) (Keybase, error) {
-	switch conf.KeybaseType {
+	switch conf.Type {
 	case types.KeybaseType_FILE:
 		// Open the file-based keybase at the specified path
-		if conf == nil || conf.KeybasePath == "" {
+		if conf == nil || conf.FilePath == "" {
 			return nil, errors.New("keybase path is required for file-based keybase")
 		}
-		return NewBadgerKeybase(conf.KeybasePath)
+		return NewBadgerKeybase(conf.FilePath)
 	case types.KeybaseType_VAULT:
 		return hashicorp.NewVaultKeybase(conf)
 	default:
-		return nil, fmt.Errorf("invalid keybase type: %d", conf.KeybaseType)
+		return nil, fmt.Errorf("invalid keybase type: %d", conf.Type)
 	}
 }

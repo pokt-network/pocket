@@ -1,6 +1,7 @@
 package configs
 
 import (
+	"encoding/json"
 	"log"
 	"strings"
 
@@ -45,7 +46,8 @@ func ParseConfig(cfgFile string) *Config {
 	}
 
 	// The lines below allow for environment variables configuration (12 factor app)
-	// Eg: POCKET_CONSENSUS_PRIVATE_KEY=somekey would override `consensus.private_key` in config
+	// Eg: POCKET_CONSENSUS_PRIVATE_KEY=somekey would override `consensus.private_key` in config.json
+	// If the key is not set in the config, the env var will not be used.
 	viper.SetEnvPrefix("POCKET")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
@@ -67,7 +69,12 @@ func ParseConfig(cfgFile string) *Config {
 		dc.TagName = "json"
 	}
 	if err := viper.Unmarshal(&config, decoderConfig); err != nil {
-		log.Fatalf("[ERROR] failed to unmarshal config %s", err.Error())
+		// Use json.Unmarshal instead of viper.Unmarshal to leverage the custom unmarshaler
+		cfgData := viper.AllSettings()
+		cfgJSON, _ := json.Marshal(cfgData)
+		if err := json.Unmarshal(cfgJSON, &config); err != nil {
+			log.Fatalf("[ERROR] failed to unmarshal config %s", err.Error())
+		}
 	}
 	return config
 }
@@ -113,8 +120,8 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			Port:    defaults.DefaultRPCPort,
 		},
 		Keybase: &KeybaseConfig{
-			KeybaseType:    defaults.DefaultKeybaseType,
-			KeybasePath:    defaults.DefaultKeybasePath,
+			Type:           defaults.DefaultKeybaseType,
+			FilePath:       defaults.DefaultKeybaseFilePath,
 			VaultAddr:      defaults.DefaultKeybaseVaultAddr,
 			VaultToken:     defaults.DefaultKeybaseVaultToken,
 			VaultMountPath: defaults.DefaultKeybaseVaultMountPath,

@@ -9,10 +9,10 @@ option go_package = "github.com/pokt-network/pocket/runtime/configs";
 message KeybaseConfig {
 
   // The type of keybase to use. Can be FILE or VAULT. Defaults to FILE.
-  keybase.KeybaseType keybase_type = 1;
+  keybase.KeybaseType type = 1;
 
   // For KeybaseType.FILE, the path to the keybase file.
-  string keybase_path = 2;
+  string file_path = 2;
 
   // For KeybaseType.VAULT, the vault address to use for authentication.
   string vault_addr = 3;
