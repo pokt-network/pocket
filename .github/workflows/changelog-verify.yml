@@ -77,9 +77,8 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            console.log(needs.validate);
             const prNumber = context.payload.pull_request.number;
-            const uniqueIdentifier = "<!-- verify_changelogs_review -->";
+            const uniqueIdentifier = "Changelog verification failed";
 
             // List all the reviews on the pull request
             const { data: reviews } = await github.rest.pulls.listReviews({
