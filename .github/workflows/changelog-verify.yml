@@ -45,7 +45,7 @@ jobs:
           echo "result=$(bash ./.githooks/pre-receive "${{ needs.changedfiles.outputs.all }}")" >> $GITHUB_OUTPUT
           echo "$result"
       - name: Verify changelogs - Review
-        if: ${{ contains(steps.verify_changelogs.outputs.result, 'failed') }}
+        if: ${{ steps.verify_changelogs.outputs.result }}
         uses: actions/github-script@v5
         with:
           script: |
@@ -66,7 +66,7 @@ jobs:
             });
             process.exit(1);
       - name: Dismiss review comments
-        if: ${{ !contains(steps.verify_changelogs.outputs.result, 'failed') }}
+        if: ${{ !steps.verify_changelogs.outputs.result }}
         uses: actions/github-script@v5
         with:
           script: |
