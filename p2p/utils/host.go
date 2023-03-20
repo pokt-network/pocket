@@ -1,11 +1,14 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
+	"go.uber.org/multierr"
 
+	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/shared/p2p"
 )
 
@@ -49,4 +52,28 @@ func PopulateLibp2pHost(host libp2pHost.Host, pstore p2p.Peerstore) error {
 		}
 	}
 	return nil
+}
+
+func Libp2pSendToPeer(host libp2pHost.Host, data []byte, peer typesP2P.Peer) error {
+	// TECHDEBT(#595): add ctx to interface methods and propagate down.
+	ctx := context.Background()
+
+	peerInfo, err := Libp2pAddrInfoFromPeer(peer)
+	if err != nil {
+		return err
+	}
+
+	stream, err := host.NewStream(ctx, peerInfo.ID, protocol.PoktProtocolID)
+	if err != nil {
+		return fmt.Errorf("opening stream: %w", err)
+	}
+
+	if _, err = stream.Write(data); err != nil {
+		return multierr.Append(
+			fmt.Errorf("writing to stream: %w", err),
+			stream.Reset(),
+		)
+	}
+
+	return stream.CloseWrite()
 }

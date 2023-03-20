@@ -4,13 +4,16 @@ package stdnetwork
 
 import (
 	"fmt"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
+
+	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/p2p/utils"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 var (
@@ -19,45 +22,49 @@ var (
 )
 
 type network struct {
+	host   libp2pHost.Host
 	pstore sharedP2P.Peerstore
 
 	logger *modules.Logger
 }
 
-func NewNetwork(bus modules.Bus, pstoreProvider providers.PeerstoreProvider, currentHeightProvider providers.CurrentHeightProvider) (n typesP2P.Network) {
+func NewNetwork(host libp2pHost.Host, pstoreProvider providers.PeerstoreProvider, currentHeightProvider providers.CurrentHeightProvider) (typesP2P.Network, error) {
 	networkLogger := logger.Global.CreateLoggerForModule("network")
 	networkLogger.Info().Msg("Initializing stdnetwork")
 
 	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		networkLogger.Fatal().Err(err).Msg("Error getting peerstore")
+		return nil, err
 	}
 
 	return &network{
+		host:   host,
 		logger: networkLogger,
 		pstore: pstore,
-	}
+	}, nil
 }
 
-// TODO(olshansky): How do we avoid self-broadcasts given that `AddrBook` may contain self in the current p2p implementation?
 func (n *network) NetworkBroadcast(data []byte) error {
 	for _, peer := range n.pstore.GetPeerList() {
-		if _, err := peer.GetStream().Write(data); err != nil {
-			n.logger.Error().Err(err).Msg("Error writing to one of the peers during broadcast")
+		if err := utils.Libp2pSendToPeer(n.host, data, peer); err != nil {
+			n.logger.Error().
+				Err(err).
+				Bool("TODO", true).
+				Str("pokt address", peer.GetAddress().String()).
+				Msg("broadcasting to peer")
 			continue
 		}
 	}
 	return nil
 }
 
-func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) error {
+func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) (err error) {
 	peer := n.pstore.GetPeer(address)
 	if peer == nil {
 		return fmt.Errorf("peer with address %s not in peerstore", address)
 	}
 
-	if _, err := peer.GetStream().Write(data); err != nil {
-		n.logger.Error().Err(err).Msg("Error writing to peer during send")
+	if err := utils.Libp2pSendToPeer(n.host, data, peer); err != nil {
 		return err
 	}
 	return nil

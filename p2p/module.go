@@ -14,7 +14,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/pokt-network/pocket/libp2p/network"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
@@ -22,6 +21,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	persABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/raintree"
+	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -284,7 +284,11 @@ func (m *p2pModule) startNetwork() (err error) {
 			m.currentHeightProvider,
 		)
 	} else {
-		m.network, err = network.NewLibp2pNetwork(m.GetBus(), m.logger, m.host, m.topic)
+		m.network, err = stdnetwork.NewNetwork(
+			m.host,
+			m.pstoreProvider,
+			m.currentHeightProvider,
+		)
 	}
 	return err
 }
