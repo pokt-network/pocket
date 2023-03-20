@@ -104,14 +104,16 @@ func CreateTestConsensusPocketNode(
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
 	bus.RegisterModule(persistenceMock)
 
-	consensusModule, err := consensus.Create(bus)
+	consensusMod, err := consensus.Create(bus)
 	require.NoError(t, err)
+	consensusModule, ok := consensusMod.(modules.ConsensusModule)
+	require.True(t, ok)
 
 	runtimeMgr := (bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
 	p2pMock := baseP2PMock(t, eventsChannel)
-	utilityMock := baseUtilityMock(t, eventsChannel, runtimeMgr.GetGenesis(), consensusModule.(modules.ConsensusModule))
+	utilityMock := baseUtilityMock(t, eventsChannel, runtimeMgr.GetGenesis(), consensusModule)
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
