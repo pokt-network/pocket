@@ -382,24 +382,22 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
 		}
 
-		// // TODO! fetch from valid dummy blocks
-		// blockWithHeight := &coreTypes.Block{
-		// 	BlockHeader: &coreTypes.BlockHeader{
-		// 		Height: utils.HeightFromBytes(height),
-		// 	},
-		// }
-		//block := generateDummyBlock(uint64(heightInt))
-
-		block := stateSyncDummyblocks[heightInt]
-		fmt.Println("NOW I AM RESPONDING FOR THE REQUESTED HEIGHT WITH: ", block.GetBlockHeader())
+		block := stateSyncDummyblocks[heightInt-1]
 		return codec.GetCodec().Marshal(block)
 	}).AnyTimes()
 
 	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().GetMaximumBlockHeight().DoAndReturn(func() (uint64, error) {
-		height := bus.GetConsensusModule().CurrentHeight()
-		return height, nil
+		currentHeight := bus.GetConsensusModule().CurrentHeight()
+		var maxPersistedHeight uint64
+		if currentHeight == 0 {
+			maxPersistedHeight = currentHeight
+		} else {
+			maxPersistedHeight = currentHeight - 1
+		}
+
+		return maxPersistedHeight, nil
 	}).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().GetMinimumBlockHeight().DoAndReturn(func() (uint64, error) {
@@ -582,7 +580,7 @@ func GenerateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators 
 	//blocks := make([]*coreTypes.Block, numberOfBlocks)
 
 	var i uint64 = 1
-	for i < numberOfBlocks {
+	for i <= numberOfBlocks {
 		// given height find the leader
 		leaderId := i % uint64(numberOfValidators)
 		if leaderId == 0 {
@@ -630,21 +628,6 @@ func generateValidBlockWithQC(pocketNodes IdToNodeMapping, block *coreTypes.Bloc
 	return block, nil
 
 }
-
-// func generateDummyBlock(height uint64) *coreTypes.Block {
-// 	blockHeader := &coreTypes.BlockHeader{
-// 		Height:            height,
-// 		StateHash:         stateHash,
-// 		PrevStateHash:     stateHash,
-// 		ProposerAddress:   make([]byte, 0),
-// 		QuorumCertificate: make([]byte, 0),
-// 	}
-
-// 	return &coreTypes.Block{
-// 		BlockHeader:  blockHeader,
-// 		Transactions: make([][]byte, 0),
-// 	}
-// }
 
 func logTime(t *testing.T, clck *clock.Mock) {
 	t.Helper()
@@ -782,73 +765,3 @@ func getSignableBytes(block *coreTypes.Block) ([]byte, error) {
 	}
 	return codec.GetCodec().Marshal(msgToSign)
 }
-
-/*
-// TODO!!! remove unneccsary parts
-func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
-	var pss []*typesCons.PartialSignature
-	for !m.hotstuffMempool[step].IsEmpty() {
-		msg, err := m.hotstuffMempool[step].Pop()
-		if err != nil {
-			return nil, err
-		}
-		if msg.GetPartialSignature() == nil {
-
-			m.logger.Warn().Fields(
-				map[string]any{
-					"height": msg.GetHeight(),
-					"step":   msg.GetStep(),
-					"round":  msg.GetRound(),
-				},
-			).Msg("No partial signature found which should not happen...")
-
-			continue
-		}
-		if msg.GetHeight() != height || msg.GetStep() != step || msg.GetRound() != round {
-
-			m.logger.Warn().Fields(
-				map[string]any{
-					"height": msg.GetHeight(),
-					"step":   msg.GetStep(),
-					"round":  msg.GetRound(),
-				},
-			).Msg("Message in pool does not match (height, step, round) of QC being generated")
-
-			continue
-		}
-
-		ps := msg.GetPartialSignature()
-		if ps.Signature == nil || ps.Address == "" {
-
-			m.logger.Warn().Fields(
-				map[string]any{
-					"height": msg.GetHeight(),
-					"step":   msg.GetStep(),
-					"round":  msg.GetRound(),
-				},
-			).Msg("Partial signature is incomplete which should not happen...")
-			continue
-		}
-		pss = append(pss, msg.GetPartialSignature())
-	}
-
-	validators, err := m.getValidatorsAtHeight(height)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := m.isOptimisticThresholdMet(len(pss), validators); err != nil {
-		return nil, err
-	}
-
-	thresholdSig := getThresholdSignature(pss)
-
-	return &typesCons.QuorumCertificate{
-		Height:             height,
-		Step:               step,
-		Round:              round,
-		Block:              m.block,
-		ThresholdSignature: thresholdSig,
-	}, nil
-}
-*/

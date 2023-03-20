@@ -45,8 +45,9 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	// Advance time by an amount shorter than the pacemaker timeout
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// Verify consensus started - NewRound messages have an N^2 complexity
-	_, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, consensusMessageTimeoutMsec, true)
+	// Verify consensus started - NewRound messages have an N^2 complexity.
+	numExpectedMsgs := numValidators * numValidators
+	_, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numExpectedMsgs, consensusMessageTimeoutMsec, true)
 	require.NoError(t, err)
 
 	for pocketId, pocketNode := range pocketNodes {
@@ -63,7 +64,7 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
 
 	// Verify that a new round started at the same height
-	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, consensusMessageTimeoutMsec, true)
+	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numExpectedMsgs, consensusMessageTimeoutMsec, true)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,
@@ -78,7 +79,7 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
 
 	// Check that a new round starts at the same height
-	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, consensusMessageTimeoutMsec, true)
+	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numExpectedMsgs, consensusMessageTimeoutMsec, true)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,
@@ -93,7 +94,7 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
 
 	// Check that a new round starts at the same height.
-	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, consensusMessageTimeoutMsec, true)
+	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numExpectedMsgs, consensusMessageTimeoutMsec, true)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,
@@ -114,7 +115,8 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Confirm we are at the next step (NewRound -> Prepare)
-	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, consensusMessageTimeoutMsec, true)
+	numExpectedMsgs = numValidators
+	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numExpectedMsgs, consensusMessageTimeoutMsec, true)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,

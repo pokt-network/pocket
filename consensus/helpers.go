@@ -218,9 +218,12 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 	}
 
 	for _, val := range validators {
+		//validatorAddr := val.GetAddress()
+		//if m.GetBus().GetConsensusModule().GetNodeAddress() != validatorAddr {
 		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
 			m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
 		}
+		//}
 	}
 }
 

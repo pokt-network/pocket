@@ -1,8 +1,6 @@
 package state_sync
 
 import (
-	"fmt"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -63,7 +61,8 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Received StateSync GetBlockRequest: %s", blockReq)
 
 	if lastPersistedBlockHeight < blockReq.Height {
-		return fmt.Errorf("requested block height: %d is higher than current persisted block height: %d", blockReq.Height, lastPersistedBlockHeight)
+		m.logger.Debug().Msgf("requested block height: %d is higher than current persisted block height: %d, so not going to reply", blockReq.Height, lastPersistedBlockHeight)
+		return nil
 	}
 
 	// get block from the persistence module

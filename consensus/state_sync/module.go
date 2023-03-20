@@ -17,7 +17,6 @@ const (
 	stateSyncModuleName = "stateSyncModule"
 )
 
-// TODO! continue updating this
 // State sync implements synchronization for hotpokt blocks.
 //
 // Pocket node take one or two rules during state snychronization: client and/or server.
@@ -55,9 +54,6 @@ type StateSyncModule interface {
 
 	// Returns the current state of the sync node.
 	CurrentState() state
-
-	// Set the current state of the node.
-	//SetStateCurrentHeight(uint64)
 }
 
 // This interface should be only used for debugging purposes and tests.
@@ -92,9 +88,6 @@ type stateSync struct {
 	// snychronisation lifecycle controls
 	ctx    context.Context
 	cancel context.CancelFunc
-
-	// signal only channel triggered by the FSM transition
-	//triggerSyncChan chan struct{}
 }
 
 // information about current state of the synching node
@@ -116,7 +109,7 @@ func (m *stateSync) CurrentState() state {
 // 1. If the node is not currently syncing, it generates a new sync state. And triggers the sync.
 // 2. If the node is currently syncing, it updates the current sync state, by updating the ending height.
 func (m *stateSync) TriggerSync() error {
-	m.logger.Log().Msgf("TriggerSync is called")
+	m.logger.Log().Msgf("Triggering syncing...")
 	// check if the node is not currently syncing, if it is synching update the state
 	m.m.Lock()
 	defer m.m.Unlock()
@@ -131,20 +124,12 @@ func (m *stateSync) TriggerSync() error {
 		m.snycing = true
 		m.state = state{
 			height:         maxPersistedBlockHeight,
-			startingHeight: maxPersistedBlockHeight,
+			startingHeight: maxPersistedBlockHeight + 1,
 			endingHeight:   m.aggregatedSyncMetadata.MaxHeight,
 			blockReceived:  make(chan uint64, 1),
 		}
 		go m.Sync()
 	}
-	//m.m.Unlock()
-	//m.logger.Log().Msgf("TriggerSync is continuing")
-
-	// signal the sync loop to start
-	// select {
-	// case m.triggerSyncChan <- struct{}{}:
-	// default:
-	// }
 
 	return nil
 }
@@ -152,6 +137,7 @@ func (m *stateSync) TriggerSync() error {
 // PersistedBlock is called by the consensus module's state_sync handler when a new block is received and persisted.
 // It is used to update current height of the state that is being actively synched.
 func (m *stateSync) PersistedBlock(blockHeight uint64) {
+	m.logger.Info().Msgf("Block is persisted...")
 	m.state.blockReceived <- blockHeight
 }
 
@@ -254,7 +240,7 @@ func (m *stateSync) GetStateSyncMetadataBuffer() []*typesCons.StateSyncMetadataR
 // else it will request the next block (after waiting sometime) and repeat the process.
 // check how others handle re-requesting blocks
 func (m *stateSync) Sync() {
-	m.logger.Log().Msgf("GOKHAN Node is starting snycing")
+	m.logger.Log().Msgf("Node is starting snycing...")
 
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
@@ -263,13 +249,11 @@ func (m *stateSync) Sync() {
 
 loop:
 	for {
-		m.logger.Log().Msgf("GOKHAN Node is loop %s", m.state)
 		select {
 		case <-ticker.C:
-			m.logger.Log().Msgf("GOKHAN Node is ticked")
 			m.m.Lock()
 			if m.state.height == m.state.endingHeight {
-				m.logger.Log().Msgf("Node is synched for state, height: %d, starting height: %d, ending height:%d", m.state.height, m.state.startingHeight, m.state.startingHeight)
+				m.logger.Log().Msgf("Node is synched for state: height: %d, starting height: %d, ending height: %d", m.state.height, m.state.startingHeight, m.state.startingHeight)
 				break loop
 			}
 			m.m.Unlock()
@@ -288,7 +272,7 @@ loop:
 		}
 	}
 
-	// ToDo this must be initialized and cached in consensus module
+	// TODO this must be initialized and cached in consensus module
 	isValidator, err := m.GetBus().GetConsensusModule().IsValidator()
 	if err != nil {
 		m.logger.Err(err).Msg("Couldn't check if the node is validator")
@@ -316,7 +300,7 @@ func (m *stateSync) requestBlocks() {
 	// fire and forget pattern, broadcasts to all peers
 	blockToRequest := m.state.height + 1
 	for i := blockToRequest; i <= m.state.endingHeight; i++ {
-		m.logger.Log().Msgf("Sync is requesting block: %d", i)
+		m.logger.Log().Msgf("Sync is requesting block: %d, starting height: %d, ending height: %d", i, m.state.startingHeight, m.state.endingHeight)
 		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 			Message: &typesCons.StateSyncMessage_GetBlockReq{
 				GetBlockReq: &typesCons.GetBlockRequest{
@@ -380,7 +364,7 @@ func (m *stateSync) metadataSyncLoop() error {
 	for {
 		select {
 		case <-ticker.C:
-			m.logger.Debug().Msg("Periodic metadata synch is triggered")
+			m.logger.Debug().Msg("Periodic metadata sync is triggered")
 			currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
 
 			err := m.broadcastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
@@ -394,9 +378,3 @@ func (m *stateSync) metadataSyncLoop() error {
 		}
 	}
 }
-
-func (m state) isFinished() bool {
-	return m.endingHeight <= m.height
-}
-
-// Consider SyncWait()

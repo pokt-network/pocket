@@ -12,7 +12,7 @@ import (
 //		requests for metadata using the `periodicMetadataSynch()` function
 //	 	requests for blocks using the `StartSynching()` function
 func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, block_height uint64) error {
-	m.logger.Info().Msg("📣 Broadcasting state sync message... 📣")
+	m.logger.Info().Msg("📣 GOKHAN Broadcasting state sync message... 📣")
 
 	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
 

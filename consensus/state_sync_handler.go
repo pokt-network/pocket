@@ -105,12 +105,14 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 		return nil
 	}
 
+	m.paceMaker.NewHeight()
+
 	maxHeight, err = m.maximumPersistedBlockHeight()
 	if err != nil {
 		return err
 	}
 
-	m.logger.Info().Msgf("HandleGetBlockResponse, Block is Committed, maxPersistedHeight is: %d", maxHeight)
+	m.logger.Info().Msgf("HandleGetBlockResponse, Block is Committed, maxPersistedHeight is: %d, currentHeight is :%d", maxHeight, m.CurrentHeight())
 
 	// Send current persisted block height to the state sync module
 	m.stateSync.PersistedBlock(block.BlockHeader.Height)

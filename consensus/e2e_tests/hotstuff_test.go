@@ -193,6 +193,10 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 
 	// Test state synchronisation's get block functionality
 	// At this stage, first round is finished, get block request for block height 1 must return non-nil block
+	// We generate the dummy statesync block for mocking
+	GenerateDummyBlocksWithQC(t, 1, uint64(numValidators), pocketNodes)
+
+	// We choose node 1 as the server node.
 	serverNode := pocketNodes[1]
 
 	// We choose node 2 as the requester node.
