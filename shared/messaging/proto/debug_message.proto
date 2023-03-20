@@ -22,12 +22,20 @@ enum DebugMessageAction {
 
 	DEBUG_PERSISTENCE_CLEAR_STATE = 8;
 	DEBUG_PERSISTENCE_RESET_TO_GENESIS = 9;
-	
-
-
 }
 
 message DebugMessage {
   DebugMessageAction action = 1;
-  google.protobuf.Any message = 2;
+  DebugMessageRoutingType type = 2;
+  google.protobuf.Any message = 3;
+}
+
+// NB: See https://en.wikipedia.org/wiki/Routing for more info on routing and delivery schemes.
+enum DebugMessageRoutingType {
+	DEBUG_MESSAGE_TYPE_UNKNOWN = 0;
+
+	DEBUG_MESSAGE_TYPE_ANYCAST = 1;
+	DEBUG_MESSAGE_TYPE_MULTICAST = 2;
+	DEBUG_MESSAGE_TYPE_BROADCAST = 3;
+	DEBUG_MESSAGE_TYPE_UNICAST = 4;
 }

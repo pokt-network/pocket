@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.22] - 2023-03-17
+## [0.0.0.23] - 2023-03-20
 
 - Updated documentation on CLI modes
 - Fixed one logging statement
 
-app/client/doc/README.md
+## [0.0.0.22] - 2023-03-17
+
+- Added a limit on concurrent key imports for debug client to avoid OOM.
 
 ## [0.0.0.21] - 2023-03-14
 

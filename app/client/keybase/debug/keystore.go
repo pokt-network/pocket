@@ -7,7 +7,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
-
+	"github.com/korovkin/limiter"
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/build"
 	"github.com/pokt-network/pocket/logger"
@@ -19,6 +19,11 @@ const (
 	// NOTE: This is the number of validators in the private-keys.yaml manifest file
 	numValidators      = 999
 	debugKeybaseSuffix = "/.pocket/keys"
+
+	// Increasing this number is linearly proportional to the amount of RAM required for the debug client to start and import
+	// pre-generated keys into the keybase. Beware that might cause OOM and process can exit with 137 status code.
+	// 4 threads takes 350-400MiB from a few tests which sounds acceptable.
+	debugKeybaseImportConcurrencyLimit = 4
 )
 
 var (
@@ -78,30 +83,16 @@ func initializeDebugKeybase() error {
 		// Create a channel to receive errors from goroutines
 		errCh := make(chan error, numValidators)
 
-		// Create a WaitGroup to wait for all goroutines to finish
-		var wg sync.WaitGroup
+		limit := limiter.NewConcurrencyLimiter(debugKeybaseImportConcurrencyLimit)
 
-		// Create a worker pool with a limited number of workers
-		numWorkers := runtime.NumCPU()
-		wg.Add(numWorkers)
-
-		// Create a channel to send tasks to the workers
-		taskCh := make(chan string, numValidators)
-
-		// Start the worker pool
-		for i := 0; i < numWorkers; i++ {
-			go func() {
-				defer wg.Done()
-				for privHexString := range taskCh {
-					// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
-					keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
-					if err != nil {
-						errCh <- err
-						return
-					}
-
-					// Use key address as key in DB
-					addrKey := keyPair.GetAddressBytes()
+		for _, privHexString := range validatorKeysPairMap {
+			limit.Execute(func() {
+				// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
+				keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
+				if err != nil {
+					errCh <- err
+					return
+				}
 
 					// Encode KeyPair into []byte for value
 					keypairBz, err := keyPair.Marshal()
@@ -114,19 +105,14 @@ func initializeDebugKeybase() error {
 						return
 					}
 				}
-			}()
+				if err := wb.Set(addrKey, keypairBz); err != nil {
+					errCh <- err
+					return
+				}
+			})
 		}
 
-		// Send tasks to the workers
-		for _, privHexString := range validatorKeysPairMap {
-			taskCh <- privHexString
-		}
-
-		// Close the task channel to signal the workers to exit
-		close(taskCh)
-
-		// Wait for all workers to finish
-		wg.Wait()
+		limit.WaitAndClose()
 
 		// Check if any goroutines returned an error
 		select {
