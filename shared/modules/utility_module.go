@@ -16,7 +16,7 @@ const (
 type UtilityModule interface {
 	Module
 
-	// NewUnitOfWork creates a `utilityUnitOfWork` used to allow atomicity and commit/rollback functionality (https://martinfowler.com/eaaCatalog/unitOfWork.html)
+	// NewUnitOfWork creates a `utilityUnitOfWork` used to allow atomicity and commit/rollback functionality
 	NewUnitOfWork(height int64) (UtilityUnitOfWork, error)
 
 	// HandleTransaction does basic `Transaction` validation & adds it to the utility's module mempool if valid
@@ -40,9 +40,11 @@ type UnstakingActor interface {
 	GetOutputAddress() []byte
 }
 
-// TECHDEBT: @deblasis - `CreateAndApplyProposalBlock` and `ApplyBlock` should be be refactored into a
+// TECHDEBT(@deblasis) - `CreateAndApplyProposalBlock` and `ApplyBlock` should be be refactored into a
 //
 //	`GetProposalBlock` and `ApplyProposalBlock` functions
+
+// UtilityUnitOfWork is a unit of work (https://martinfowler.com/eaaCatalog/unitOfWork.html) that allows for atomicity and commit/rollback functionality
 type UtilityUnitOfWork interface {
 	IntegratableModule
 
