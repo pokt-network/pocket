@@ -50,6 +50,7 @@ Please mark the relevant option(s):
 
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have added, or updated, [`godoc` format comments](https://go.dev/blog/godoc) on touched members (see: [tip.golang.org/doc/comment](https://tip.golang.org/doc/comment))
 - [ ] I have tested my changes using the available tooling
 - [ ] I have updated the corresponding CHANGELOG
 
