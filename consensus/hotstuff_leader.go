@@ -383,13 +383,13 @@ func (m *consensusModule) prepareBlock(qc *typesCons.QuorumCertificate) (*coreTy
 
 	maxTxBytes := m.consCfg.MaxMempoolBytes
 
-	leaderUow, ok := m.utilityUnitOfWork.(modules.LeaderUtilityUnitOfWork)
+	leaderUOW, ok := m.utilityUnitOfWork.(modules.LeaderUtilityUnitOfWork)
 	if !ok {
 		return nil, errors.New("invalid utility unitOfWork, should be of type LeaderUtilityUnitOfWork")
 	}
 
 	// Reap the mempool for transactions to be applied in this block
-	stateHash, txs, err := leaderUow.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
+	stateHash, txs, err := leaderUOW.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
 	if err != nil {
 		return nil, err
 	}
