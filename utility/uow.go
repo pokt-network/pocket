@@ -17,9 +17,9 @@ func (u *utilityModule) NewUnitOfWork(height int64) (modules.UtilityUnitOfWork, 
 
 	var utilityUOW modules.UtilityUnitOfWork
 	if u.GetBus().GetConsensusModule().IsLeader() {
-		utilityUOW = unit_of_work.NewForLeader(height, readContext, rwContext)
+		utilityUOW = unit_of_work.NewLeaderUOW(height, readContext, rwContext)
 	} else {
-		utilityUOW = unit_of_work.NewForReplica(height, readContext, rwContext)
+		utilityUOW = unit_of_work.NewReplicaUOW(height, readContext, rwContext)
 	}
 
 	utilityUOW.SetBus(u.GetBus())

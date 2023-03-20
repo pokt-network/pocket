@@ -15,7 +15,7 @@ type leaderUtilityUnitOfWork struct {
 	baseUtilityUnitOfWork
 }
 
-func NewForLeader(height int64, readContext modules.PersistenceReadContext, rwPersistenceContext modules.PersistenceRWContext) *leaderUtilityUnitOfWork {
+func NewLeaderUOW(height int64, readContext modules.PersistenceReadContext, rwPersistenceContext modules.PersistenceRWContext) *leaderUtilityUnitOfWork {
 	return &leaderUtilityUnitOfWork{
 		baseUtilityUnitOfWork: baseUtilityUnitOfWork{
 			height:                 height,
