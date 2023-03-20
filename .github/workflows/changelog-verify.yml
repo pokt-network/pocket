@@ -46,16 +46,13 @@ jobs:
         # Set outputs using the command.
         run: |
           bash ./.githooks/pre-receive "${{needs.changedfiles.outputs.all}}" 2>&1 | tee output.txt
-          echo "all=$(cat output.txt)" >> $GITHUB_OUTPUT
+          all=$(cat output.txt) && echo "all=$all" >> $GITHUB_OUTPUT
   review:
     runs-on: ubuntu-latest
     # require the validate job to have ran
     needs: validate
     if: always()
     steps:
-      - env:
-          OUT: ${{needs.validate.outputs.all}}
-        run: echo "$OUT"
       - name: Verify changelogs KO
         if: ${{ contains(needs.validate.outputs.all, 'failed') }}
         uses: actions/github-script@v5
