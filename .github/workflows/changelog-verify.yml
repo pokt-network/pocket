@@ -34,25 +34,31 @@ jobs:
     runs-on: ubuntu-latest
     # require the first job to have ran
     needs: changedfiles
+    # Map a step output to a job output
+    outputs:
+      result: ${{ steps.verify_changelogs.outputs.result }}
     # only run if there are changed files
     if: ${{needs.changedfiles.outputs.all}}
     steps:
       - uses: actions/checkout@v3
       - name: Verify changelogs
         id: verify_changelogs
-        continue-on-error: true
-        run: |
-          echo "result=$(bash ./.githooks/pre-receive "${{ needs.changedfiles.outputs.all }}")" >> $GITHUB_OUTPUT
-          echo "$result"
-      - name: Verify changelogs - Review
-        if: ${{ steps.verify_changelogs.outputs.result }}
+        run: bash ./.githooks/pre-receive "${{needs.changedfiles.outputs.all}}"
+
+  review:
+    runs-on: ubuntu-latest
+    # require the first job to have ran
+    needs: validate
+    steps:
+      - name: Verify changelogs KO
+        if: ${{ contains(needs.validate.outputs.result, 'failed') }}
         uses: actions/github-script@v5
         with:
           script: |
             const result = `<!-- verify_changelogs_review -->The changelog validation failed with the following output:
 
             \`\`\`
-            ${{ steps.verify_changelogs.outputs.result }}
+            ${{ needs.validate.outputs.result }}
             \`\`\`
 
             Please update the relevant CHANGELOG.md files and ensure they follow the correct format.`;
@@ -65,8 +71,8 @@ jobs:
               event: "REQUEST_CHANGES",
             });
             process.exit(1);
-      - name: Dismiss review comments
-        if: ${{ !steps.verify_changelogs.outputs.result }}
+      - name: Verify changelogs OK - Dismiss review comments
+        if: ${{ !contains(needs.validate.outputs.result, 'failed') }}
         uses: actions/github-script@v5
         with:
           script: |
