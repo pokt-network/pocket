@@ -33,7 +33,7 @@ Vault comes with a web UI. Open a browser and navigate to http://127.0.0.1:8200 
 
 The following commands demo the keybase vault using various methods of configuration for the CLI.
 
-## Using environment variables
+### Using environment variables
 
 ```sh
 export VAULT_ADDR='http://127.0.0.1:8200'
@@ -81,7 +81,7 @@ p1 Keys SignTx --keybase vault
 p1 Keys VerifyTx --keybase vault
 ```
 
-## Example using command line flags
+### Example using command line flags
 
 ```sh
 
@@ -160,7 +160,7 @@ p1 Keys VerifyTx --keybase vault \
 
 ```
 
-## Example using config.json
+### Example using config.json
 
 ```sh
 cat << EOF > config-with-vault.json
