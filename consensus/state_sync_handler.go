@@ -62,6 +62,12 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 	block := blockRes.Block
 	lastPersistedBlockHeight := m.CurrentHeight() - 1
+	maxHeight, err := m.maximumPersistedBlockHeight()
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info().Msgf("HandleGetBlockResponse, Starting, maxPersistedHeight is: %d", maxHeight)
 
 	// checking if the received block is already persisted
 	if block.BlockHeader.Height <= lastPersistedBlockHeight {
@@ -72,7 +78,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 	blockHeader := block.BlockHeader
 	qcBytes := blockHeader.GetQuorumCertificate()
 	qc := typesCons.QuorumCertificate{}
-	err := proto.Unmarshal(qcBytes, &qc)
+	err = proto.Unmarshal(qcBytes, &qc)
 	if err != nil {
 		return err
 	}
@@ -92,15 +98,19 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 	m.logger.Info().Msg("HandleGetBlockResponse, committing the block")
 
-	m.m.Lock()
-	defer m.m.Unlock()
-
+	//m.m.Lock()
+	//defer m.m.Unlock()
 	if err := m.commitBlock(block); err != nil {
 		m.logger.Error().Err(err).Msg("Could not commit block, invalid QC")
 		return nil
 	}
 
-	m.logger.Info().Msg("HandleGetBlockResponse, Block is Committed")
+	maxHeight, err = m.maximumPersistedBlockHeight()
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info().Msgf("HandleGetBlockResponse, Block is Committed, maxPersistedHeight is: %d", maxHeight)
 
 	// Send current persisted block height to the state sync module
 	m.stateSync.PersistedBlock(block.BlockHeader.Height)

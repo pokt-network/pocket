@@ -331,10 +331,27 @@ func (m *consensusModule) IsValidator() (bool, error) {
 	return false, nil
 }
 
+// CONSIDER: Below are same as the ones on statesync helper. We should probably move them to a common place.
 func (m *consensusModule) logHelper(receiverPeerId string) map[string]any {
 	return map[string]any{
 		"height":         m.CurrentHeight(),
 		"senderPeerId":   m.GetNodeAddress(),
 		"receiverPeerId": receiverPeerId,
 	}
+}
+
+func (m *consensusModule) maximumPersistedBlockHeight() (uint64, error) {
+	currentHeight := m.CurrentHeight()
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	if err != nil {
+		return 0, err
+	}
+	defer persistenceContext.Close()
+
+	maxHeight, err := persistenceContext.GetMaximumBlockHeight()
+	if err != nil {
+		return 0, err
+	}
+
+	return maxHeight, nil
 }

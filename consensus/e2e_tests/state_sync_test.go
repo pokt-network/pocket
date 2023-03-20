@@ -211,6 +211,10 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	// Create & start test pocket nodes
 	eventsChannel := make(modules.EventsChannel, 100)
 	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+
+	dummyBlockCount := uint64(10)
+	GenerateDummyBlocksWithQC(t, dummyBlockCount, uint64(numberOfValidators), pocketNodes)
+
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Prepare leader info
@@ -348,44 +352,32 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	}
 
 	P2PSend(t, unsynchedNode, msgs[1])
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// //receivedStateSyncMsgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
-	// msgs, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
-	// require.NoError(t, err)
+	for nodeId, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		if nodeId == unsynchedNodeId {
+			assertNodeConsensusView(t, nodeId,
+				typesCons.ConsensusNodeState{
+					Height: unsynchedNodeHeight,
+					Step:   testStep + 1,
+					Round:  uint8(testRound + 1),
+				},
+				nodeState)
+		}
+		// else {
+		// 	assertNodeConsensusView(t, nodeId,
+		// 		typesCons.ConsensusNodeState{
+		// 			Height: testHeight,
+		// 			Step:   testStep,
+		// 			Round:  uint8(testRound + 1),
+		// 		},
+		// 		nodeState)
+		// }
+		// require.Equal(t, false, nodeState.IsLeader)
+		// require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
+	}
 
-	// for _, msg := range msgs {
-
-	// 	//fmt.Println("RECEIVED STATE SYNC MSG: ", msg.TypeUrl)
-	// 	msg, err := codec.GetCodec().FromAny(msg)
-	// 	require.NoError(t, err)
-
-	// 	stateSyncBlockReqMessage, ok := msg.(*typesCons.StateSyncMessage)
-	// 	require.True(t, ok)
-
-	// 	blockReq := stateSyncBlockReqMessage.String()
-	// 	fmt.Println("Gokhansa Second Requests", blockReq)
-
-	// }
-
-	//if len(receivedStateSyncMsgs)
-	/*
-	   // 2. Propose
-	   numExpectedMsgs := numberOfValidators
-	   _, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numExpectedMsgs, 250, true)
-	   require.NoError(t, err)
-
-	   	for nodeId, pocketNode := range pocketNodes {
-	   		nodeState := GetConsensusNodeState(pocketNode)
-
-	   		assertNodeConsensusView(t, nodeId,
-	   			typesCons.ConsensusNodeState{
-	   				Height: testHeight,
-	   				Step:   uint8(consensus.Prepare),
-	   				Round:  uint8(testRound + 1),
-	   			},
-	   			nodeState)
-	   	}
-	*/
 }
 func TestStateSync_UnsynchedPeerSynchs(t *testing.T) {
 	t.Skip()

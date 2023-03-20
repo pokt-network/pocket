@@ -14,6 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	mocksPer "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -42,9 +43,13 @@ const (
 	numValidators = 4
 	stateHash     = "42"
 	maxTxBytes    = 90000
+	//stateSyncBlockCount = 250
 )
 
 type IdToNodeMapping map[typesCons.NodeId]*shared.Node
+
+// CONSIDER: Remove this global variable and pass it around as a parameter.
+var stateSyncDummyblocks []*coreTypes.Block
 
 /*** Node Generation Helpers ***/
 
@@ -359,6 +364,9 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
 	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
 
+	//persistence block must have access to the dummy valid blocks
+	// CHECK IF NUMVALIDATORS CAN BE AN ISSUE HERE
+	//pocketNodes
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
@@ -373,15 +381,18 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 		if bus.GetConsensusModule().CurrentHeight() < heightInt {
 			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
 		}
-		fmt.Println("NOW I AM RESPONDING FOR THE REQUESTED HEIGHT, ", heightInt)
-		// TODO! fetch from valid dummy blocks
-		blockWithHeight := &coreTypes.Block{
-			BlockHeader: &coreTypes.BlockHeader{
-				Height: utils.HeightFromBytes(height),
-			},
-		}
+
+		// // TODO! fetch from valid dummy blocks
+		// blockWithHeight := &coreTypes.Block{
+		// 	BlockHeader: &coreTypes.BlockHeader{
+		// 		Height: utils.HeightFromBytes(height),
+		// 	},
+		// }
 		//block := generateDummyBlock(uint64(heightInt))
-		return codec.GetCodec().Marshal(blockWithHeight)
+
+		block := stateSyncDummyblocks[heightInt]
+		fmt.Println("NOW I AM RESPONDING FOR THE REQUESTED HEIGHT WITH: ", block.GetBlockHeader())
+		return codec.GetCodec().Marshal(block)
 	}).AnyTimes()
 
 	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
@@ -567,31 +578,57 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 	return loggerMock
 }
 
-func generateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators uint64, pocketNodes IdToNodeMapping) []*coreTypes.Block {
-	blocks := make([]*coreTypes.Block, numberOfBlocks)
+func GenerateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators uint64, pocketNodes IdToNodeMapping) { //[]*coreTypes.Block {
+	//blocks := make([]*coreTypes.Block, numberOfBlocks)
 
-	var i uint64 = 0
+	var i uint64 = 1
 	for i < numberOfBlocks {
 		// given height find the leader
 		leaderId := i % uint64(numberOfValidators)
+		if leaderId == 0 {
+			leaderId = numberOfValidators
+		}
 		leader := pocketNodes[typesCons.NodeId(leaderId)]
 		leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
 		require.NoError(t, err)
+
+		// Construct the block
 		blockHeader := &coreTypes.BlockHeader{
 			Height:            i,
 			StateHash:         stateHash,
-			PrevStateHash:     "",
+			PrevStateHash:     stateHash,
 			ProposerAddress:   leaderPK.Address(),
-			QuorumCertificate: generateValidQC(pocketNodes),
+			QuorumCertificate: nil,
 		}
-
-		blocks[i] = &coreTypes.Block{
+		block := &coreTypes.Block{
 			BlockHeader:  blockHeader,
 			Transactions: make([][]byte, 0),
 		}
+
+		block, err = generateValidBlockWithQC(pocketNodes, block)
+		require.NoError(t, err)
+
+		stateSyncDummyblocks = append(stateSyncDummyblocks, block)
+		i++
+	}
+}
+
+func generateValidBlockWithQC(pocketNodes IdToNodeMapping, block *coreTypes.Block) (*coreTypes.Block, error) {
+	qc, err := generateValidQuorumCertificate(pocketNodes, block)
+	if err != nil {
+		return nil, err
 	}
 
-	return blocks
+	qcBytes, err := codec.GetCodec().Marshal(qc)
+	if err != nil {
+		log.Fatalf("could not marshal quorum certificate to bytes: %v", err)
+		return nil, err
+	}
+
+	block.BlockHeader.QuorumCertificate = qcBytes
+
+	return block, nil
+
 }
 
 // func generateDummyBlock(height uint64) *coreTypes.Block {
@@ -608,11 +645,6 @@ func generateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators 
 // 		Transactions: make([][]byte, 0),
 // 	}
 // }
-
-func generateValidQC(pocketNodes IdToNodeMapping) []byte {
-	qc := make([]byte, 0)
-	return qc
-}
 
 func logTime(t *testing.T, clck *clock.Mock) {
 	t.Helper()
@@ -678,3 +710,145 @@ func startNode(t *testing.T, pocketNode *shared.Node) {
 	err := pocketNode.Start()
 	require.NoError(t, err)
 }
+
+func generateValidQuorumCertificate(pocketNodes IdToNodeMapping, block *coreTypes.Block) (*typesCons.QuorumCertificate, error) {
+	var pss []*typesCons.PartialSignature
+
+	for _, val := range pocketNodes {
+		ps, err := generatePartialSignature(block, val)
+		if err != nil {
+			return nil, err
+		}
+		pss = append(pss, ps)
+	}
+
+	thresholdSig := getThresholdSignature(pss)
+
+	return &typesCons.QuorumCertificate{
+		Height:             block.BlockHeader.Height,
+		Step:               1,
+		Round:              1,
+		Block:              block,
+		ThresholdSignature: thresholdSig,
+	}, nil
+}
+
+// generate partial signature for the validator
+func generatePartialSignature(block *coreTypes.Block, node *shared.Node) (*typesCons.PartialSignature, error) {
+	privKey, err := node.GetBus().GetConsensusModule().GetPrivateKey()
+	if err != nil {
+		return nil, err
+	}
+	return &typesCons.PartialSignature{
+		Signature: getMessageSignature(block, privKey),
+		Address:   privKey.PublicKey().Address().String(),
+	}, nil
+}
+
+func getThresholdSignature(partialSigs []*typesCons.PartialSignature) *typesCons.ThresholdSignature {
+	thresholdSig := new(typesCons.ThresholdSignature)
+	thresholdSig.Signatures = make([]*typesCons.PartialSignature, len(partialSigs))
+	copy(thresholdSig.Signatures, partialSigs)
+	return thresholdSig
+}
+
+// Generates partial signature with given private key
+// If there is an error signing the bytes, nil is returned instead.
+func getMessageSignature(block *coreTypes.Block, privKey cryptoPocket.PrivateKey) []byte {
+	bytesToSign, err := getSignableBytes(block)
+	if err != nil {
+		logger.Global.Warn().Err(err).Msgf("error getting bytes to sign")
+		return nil
+	}
+
+	signature, err := privKey.Sign(bytesToSign)
+	if err != nil {
+		logger.Global.Warn().Err(err).Msgf("error signing message")
+		return nil
+	}
+
+	return signature
+}
+
+// Signature only over subset of fields in HotstuffMessage
+// For reference, see section 4.3 of the the hotstuff whitepaper, partial signatures are
+// computed over `tsignr(hm.type, m.viewNumber , m.nodei)`. https://arxiv.org/pdf/1803.05069.pdf
+func getSignableBytes(block *coreTypes.Block) ([]byte, error) {
+	msgToSign := &typesCons.HotstuffMessage{
+		Height: block.BlockHeader.Height,
+		Step:   1,
+		Round:  1,
+		Block:  block,
+	}
+	return codec.GetCodec().Marshal(msgToSign)
+}
+
+/*
+// TODO!!! remove unneccsary parts
+func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
+	var pss []*typesCons.PartialSignature
+	for !m.hotstuffMempool[step].IsEmpty() {
+		msg, err := m.hotstuffMempool[step].Pop()
+		if err != nil {
+			return nil, err
+		}
+		if msg.GetPartialSignature() == nil {
+
+			m.logger.Warn().Fields(
+				map[string]any{
+					"height": msg.GetHeight(),
+					"step":   msg.GetStep(),
+					"round":  msg.GetRound(),
+				},
+			).Msg("No partial signature found which should not happen...")
+
+			continue
+		}
+		if msg.GetHeight() != height || msg.GetStep() != step || msg.GetRound() != round {
+
+			m.logger.Warn().Fields(
+				map[string]any{
+					"height": msg.GetHeight(),
+					"step":   msg.GetStep(),
+					"round":  msg.GetRound(),
+				},
+			).Msg("Message in pool does not match (height, step, round) of QC being generated")
+
+			continue
+		}
+
+		ps := msg.GetPartialSignature()
+		if ps.Signature == nil || ps.Address == "" {
+
+			m.logger.Warn().Fields(
+				map[string]any{
+					"height": msg.GetHeight(),
+					"step":   msg.GetStep(),
+					"round":  msg.GetRound(),
+				},
+			).Msg("Partial signature is incomplete which should not happen...")
+			continue
+		}
+		pss = append(pss, msg.GetPartialSignature())
+	}
+
+	validators, err := m.getValidatorsAtHeight(height)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.isOptimisticThresholdMet(len(pss), validators); err != nil {
+		return nil, err
+	}
+
+	thresholdSig := getThresholdSignature(pss)
+
+	return &typesCons.QuorumCertificate{
+		Height:             height,
+		Step:               step,
+		Round:              round,
+		Block:              m.block,
+		ThresholdSignature: thresholdSig,
+	}, nil
+}
+*/
