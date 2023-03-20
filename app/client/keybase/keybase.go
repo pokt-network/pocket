@@ -62,11 +62,7 @@ func NewKeybase(conf *configs.KeybaseConfig) (Keybase, error) {
 		}
 		return NewBadgerKeybase(conf.KeybasePath)
 	case types.KeybaseType_VAULT:
-		return hashicorp.NewVaultKeybase(hashicorp.VaultKeybaseConfig{
-			Address: conf.VaultAddr,
-			Token:   conf.VaultToken,
-			Mount:   conf.VaultMountPath,
-		})
+		return hashicorp.NewVaultKeybase(conf)
 	default:
 		return nil, fmt.Errorf("invalid keybase type: %d", conf.KeybaseType)
 	}

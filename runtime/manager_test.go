@@ -4153,7 +4153,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 		genesisReader io.Reader
 		options       []func(*Manager)
 	}
-
+	defaultCfg := configs.NewDefaultConfig()
 	buildConfigBytes, err := os.ReadFile("../build/config/config1.json")
 	if err != nil {
 		require.NoError(t, err)
@@ -4230,7 +4230,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						Timeout: 30000,
 						UseCors: false,
 					},
-					Keybase: &configs.KeybaseConfig{},
+					Keybase: defaultCfg.Keybase,
 				},
 				genesisState: expectedGenesis,
 				clock:        clock.New(),
@@ -4264,7 +4264,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						ConnectionType:  configTypes.ConnectionType_TCPConnection,
 						MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
 					},
-					Keybase: &configs.KeybaseConfig{},
+					Keybase: defaultCfg.Keybase,
 				},
 				genesisState: expectedGenesis,
 				clock:        clock.New(),

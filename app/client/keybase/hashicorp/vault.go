@@ -9,6 +9,7 @@ import (
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/hashicorp/vault/api"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/crypto/slip"
 )
@@ -19,44 +20,37 @@ type vaultKeybase struct {
 	mount  string
 }
 
-// VaultKeybaseConfig contains the configuration parameters for the VaultKeybase.
-type VaultKeybaseConfig struct {
-	Address string
-	Token   string
-	Mount   string
-}
-
 // NewVaultKeybase returns a new instance of vaultKeybase.
-func NewVaultKeybase(config VaultKeybaseConfig) (*vaultKeybase, error) {
+func NewVaultKeybase(cfg *configs.KeybaseConfig) (*vaultKeybase, error) {
 	apiConfig := api.DefaultConfig()
 
 	// Set default values for the configuration parameters
-	if config.Address == "" {
-		config.Address = apiConfig.Address
+	if cfg.VaultAddr == "" {
+		cfg.VaultAddr = apiConfig.Address
 	}
 
 	// Set the default mount path for the secret engine
-	if config.Mount == "" {
-		config.Mount = "secret"
+	if cfg.VaultMountPath == "" {
+		cfg.VaultMountPath = "secret"
 	}
 
 	// Create a new vault API client
 	client, err := api.NewClient(&api.Config{
-		Address: config.Address,
+		Address: cfg.VaultAddr,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	// Set the root token for the client if provided
-	if config.Token != "" {
-		client.SetToken(config.Token)
+	if cfg.VaultToken != "" {
+		client.SetToken(cfg.VaultToken)
 	}
 
 	// Create a new VaultKeybase instance
 	vk := &vaultKeybase{
 		client: client,
-		mount:  config.Mount,
+		mount:  cfg.VaultMountPath,
 	}
 
 	return vk, nil

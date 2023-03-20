@@ -8,6 +8,7 @@ import (
 
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,10 +19,10 @@ var (
 )
 
 func setupTestVaultKeybase(address string) (*vaultKeybase, error) {
-	return NewVaultKeybase(VaultKeybaseConfig{
-		Address: address,
-		Token:   "dev-only-token",
-		Mount:   "secret",
+	return NewVaultKeybase(&configs.KeybaseConfig{
+		VaultAddr:      address,
+		VaultToken:     "dev-only-token",
+		VaultMountPath: "secret",
 	})
 }
 
@@ -45,12 +46,6 @@ func TestMain(m *testing.M) {
 		Env: []string{
 			"VAULT_DEV_ROOT_TOKEN_ID=dev-only-token",
 			"VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200",
-		},
-		ExposedPorts: []string{"8200/tcp"},
-		PortBindings: map[docker.Port][]docker.PortBinding{
-			"8200/tcp": {
-				{HostIP: "127.0.0.1", HostPort: "8200"},
-			},
 		},
 		CapAdd: []string{"IPC_LOCK"},
 	}, func(config *docker.HostConfig) {
