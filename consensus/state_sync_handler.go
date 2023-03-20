@@ -56,55 +56,41 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 	}
 }
 
-// CONSIDER! re-locating these functions to the state_sync module
-// benefit of leaving them here is not expporting internal consensus module functions
-// such as validateQuorumCertificate() and commitBlock
+// HandleGetBlockResponse handles the received block. It validates the block, quorum certificate and applies to its persistence
 func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
 	m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse: %s", blockRes)
 
 	block := blockRes.Block
 	lastPersistedBlockHeight := m.CurrentHeight() - 1
 
+	// checking if the received block is already persisted
+	if block.BlockHeader.Height <= lastPersistedBlockHeight {
+		m.logger.Info().Msgf("Received block with height %d, but already at height %d, so not going to apply", block.BlockHeader.Height, lastPersistedBlockHeight)
+		return nil
+	}
+
 	blockHeader := block.BlockHeader
-
 	qcBytes := blockHeader.GetQuorumCertificate()
-
 	qc := typesCons.QuorumCertificate{}
 	err := proto.Unmarshal(qcBytes, &qc)
 	if err != nil {
 		return err
 	}
 
-	m.logger.Info().Msg("HandleGetBlockResponse Validating Quroum Certificate")
+	m.logger.Info().Msg("HandleGetBlockResponse, validating Quroum Certificate")
 
 	if err := m.validateQuorumCertificate(&qc); err != nil {
 		m.logger.Error().Err(err).Msg("Couldn't apply block, invalid QC")
 		return err
 	}
 
-	m.logger.Info().Msg("VALID QC")
-
-	if m.utilityContext == nil {
-		m.logger.Info().Msg("Utility context is nil")
-		utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(block.BlockHeader.Height))
-		if err != nil {
-			return err
-		}
-
-		m.utilityContext = utilityContext
-
+	m.logger.Info().Msg("HandleGetBlockResponse, QC is valid, refreshing utility context")
+	if err := m.refreshUtilityContext(); err != nil {
+		m.logger.Error().Err(err).Msg("Could not refresh utility context")
+		return err
 	}
 
-	m.logger.Info().Msg("utility context is set")
-
-	// TODO! Move this to before, here for debugging
-	// checking if the block is already persisted
-	if block.BlockHeader.Height <= lastPersistedBlockHeight {
-		m.logger.Info().Msgf("Received block with height %d, but already at height %d, so not going to apply", block.BlockHeader.Height, lastPersistedBlockHeight)
-		return nil
-	}
-
-	m.logger.Info().Msg("HandleGetBlockResponse Committing the block")
+	m.logger.Info().Msg("HandleGetBlockResponse, committing the block")
 
 	m.m.Lock()
 	defer m.m.Unlock()
@@ -114,7 +100,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 		return nil
 	}
 
-	m.logger.Info().Msg("Block is Committed")
+	m.logger.Info().Msg("HandleGetBlockResponse, Block is Committed")
 
 	// Send current persisted block height to the state sync module
 	m.stateSync.PersistedBlock(block.BlockHeader.Height)
@@ -123,6 +109,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 }
 
+// HandleStateSyncMetadataResponse handles the received metadata. It updates state sync buffer
 func (m *consensusModule) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
 	m.logger.Info().Fields(m.logHelper(metaDataRes.PeerAddress)).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
 

@@ -17,6 +17,7 @@ const (
 	stateSyncModuleName = "stateSyncModule"
 )
 
+// TODO! continue updating this
 // State sync implements synchronization for hotpokt blocks.
 //
 // Pocket node take one or two rules during state snychronization: client and/or server.

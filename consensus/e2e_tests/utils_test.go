@@ -374,13 +374,14 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
 		}
 		fmt.Println("NOW I AM RESPONDING FOR THE REQUESTED HEIGHT, ", heightInt)
-		// blockWithHeight := &coreTypes.Block{
-		// 	BlockHeader: &coreTypes.BlockHeader{
-		// 		Height: utils.HeightFromBytes(height),
-		// 	},
-		// }
-		block := generateDummyBlock(uint64(heightInt))
-		return codec.GetCodec().Marshal(block)
+		// TODO! fetch from valid dummy blocks
+		blockWithHeight := &coreTypes.Block{
+			BlockHeader: &coreTypes.BlockHeader{
+				Height: utils.HeightFromBytes(height),
+			},
+		}
+		//block := generateDummyBlock(uint64(heightInt))
+		return codec.GetCodec().Marshal(blockWithHeight)
 	}).AnyTimes()
 
 	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
@@ -593,31 +594,24 @@ func generateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators 
 	return blocks
 }
 
+// func generateDummyBlock(height uint64) *coreTypes.Block {
+// 	blockHeader := &coreTypes.BlockHeader{
+// 		Height:            height,
+// 		StateHash:         stateHash,
+// 		PrevStateHash:     stateHash,
+// 		ProposerAddress:   make([]byte, 0),
+// 		QuorumCertificate: make([]byte, 0),
+// 	}
+
+// 	return &coreTypes.Block{
+// 		BlockHeader:  blockHeader,
+// 		Transactions: make([][]byte, 0),
+// 	}
+// }
+
 func generateValidQC(pocketNodes IdToNodeMapping) []byte {
 	qc := make([]byte, 0)
 	return qc
-}
-
-func generateDummyBlock(height uint64) *coreTypes.Block {
-	//blocks := make([]*coreTypes.Block, num)
-
-	blockHeader := &coreTypes.BlockHeader{
-		Height:            height,
-		StateHash:         stateHash,
-		PrevStateHash:     stateHash,
-		ProposerAddress:   make([]byte, 0),
-		QuorumCertificate: make([]byte, 0),
-	}
-
-	return &coreTypes.Block{
-		BlockHeader:  blockHeader,
-		Transactions: make([][]byte, 0),
-	}
-}
-
-func applyDummyBlocks(blocks []*coreTypes.Block) {
-	//doesn't perform any validate check, just stores
-
 }
 
 func logTime(t *testing.T, clck *clock.Mock) {

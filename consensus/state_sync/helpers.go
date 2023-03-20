@@ -28,7 +28,6 @@ func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncM
 				return err
 			}
 		}
-
 	}
 
 	return nil
@@ -101,5 +100,4 @@ func (m *stateSync) logHelper(receiverPeerId string) map[string]any {
 		"senderPeerId":   consensusMod.GetNodeAddress(),
 		"receiverPeerId": receiverPeerId,
 	}
-
 }
