@@ -45,9 +45,9 @@ jobs:
         id: validate
         # Set outputs using the command.
         run: |
-          echo "all=$(bash ./.githooks/pre-receive "${{needs.changedfiles.outputs.all}}" 2>&1)" >> $GITHUB_OUTPUT
-          echo $all >&2
 
+          bash ./.githooks/pre-receive "${{needs.changedfiles.outputs.all}}" 2>&1 | tee output.txt
+          echo "all=$(cat output.txt) >> $GITHUB_OUTPUT
   review:
     runs-on: ubuntu-latest
     # require the validate job to have ran
