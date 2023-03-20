@@ -35,32 +35,7 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 }
 
 func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx) {
-	return context.TODO(), pg.getTx()
-}
-
-func (pg *PostgresContext) ResetContext() error {
-	if pg == nil {
-		pg.logger.Warn().Msg("postgres context is nil when trying to reset it")
-		return nil
-	}
-
-	tx := pg.getTx()
-	if p.tx == nil {
-		return nil
-	}
-
-	conn := tx.Conn()
-	if conn == nil {
-		return nil
-	}
-
-	if !conn.IsClosed() {
-		if err := pg.Release(); err != nil {
-			pg.logger.Error().Err(err).Bool("TODO", true).Msg("error releasing write context")
-		}
-	}
-	pg.tx = nil
-	return nil
+	return context.TODO(), pg.tx
 }
 
 func initializePool(cfg *configs.PersistenceConfig) (*pgxpool.Pool, error) {

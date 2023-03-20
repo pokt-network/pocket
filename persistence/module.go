@@ -220,6 +220,7 @@ func (m *persistenceModule) ReleaseWriteContext() error {
 		logger.Global.Error().Err(err).Msg("Error releasing write context")
 	}
 	m.writeContext = nil
+	return nil
 }
 
 func (m *persistenceModule) GetBlockStore() kvstore.KVStore {

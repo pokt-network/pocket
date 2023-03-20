@@ -97,6 +97,9 @@ func (p *PostgresContext) Release() error {
 }
 
 func (p *PostgresContext) Close() error {
+	if err := p.resetContext(); err != nil {
+		return err
+	}
 	p.conn.Release()
 	return nil
 }
@@ -106,17 +109,20 @@ func (p *PostgresContext) IndexTransaction(txResult modules.TxResult) error {
 	return p.txIndexer.Index(txResult)
 }
 
-func (p *PostgresContext) resetContext() (err error) {
-	if p == nil {
+func (pg *PostgresContext) resetContext() (err error) {
+	if pg == nil {
+		pg.logger.Warn().Msg("postgres context is nil when trying to reset it")
 		return nil
 	}
-	if p.tx == nil {
+	if pg.tx == nil {
 		return nil
 	}
-	if p.conn != nil {
-		p.conn.Release()
+	conn := pg.tx.Conn()
+	if conn != nil && !conn.IsClosed() {
+		if err := pg.Release(); err != nil {
+			pg.logger.Error().Err(err).Bool("TODO", true).Msg("error releasing write context")
+		}
 	}
-	p.conn = nil
-	p.tx = nil
-	return err
+	pg.tx = nil
+	return nil
 }
