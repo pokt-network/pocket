@@ -42,10 +42,9 @@ jobs:
         id: verify_changelogs
         continue-on-error: true
         run: |
-          result=$(bash ./.githooks/pre-receive "${{ needs.changedfiles.outputs.all }}" 2>&1)
-          echo "result=$result" >> $GITHUB_OUTPUT
+          echo "result=$(bash ./.githooks/pre-receive "${{ needs.changedfiles.outputs.all }}") >> $GITHUB_OUTPUT
           echo "$result"
-      - name: Create comment
+      - name: Verify changelogs - Review
         if: ${{ steps.verify_changelogs.outcome == 'failure' }}
         uses: actions/github-script@v5
         with:
@@ -65,3 +64,4 @@ jobs:
               body: result,
               event: "REQUEST_CHANGES",
             });
+            process.exit(1);
