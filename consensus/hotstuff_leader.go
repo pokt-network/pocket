@@ -68,7 +68,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		block, err := m.prepareBlock(highPrepareQC)
 		if err != nil {
 			m.logger.Error().Err(err).Msg(typesCons.ErrPrepareBlock.Error())
-			m.paceMaker.InterruptRound("failed to prepare & apply block")
+			m.paceMaker.InterruptRound("failed to prepare new block")
 			return
 		}
 		m.block = block
