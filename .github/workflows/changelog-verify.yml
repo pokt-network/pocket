@@ -73,6 +73,7 @@ jobs:
               body: result,
               event: "REQUEST_CHANGES",
             });
+            console.log("❌ Check failed, review comment created");
             process.exit(1);
       - name: Verify changelogs OK - Dismiss review comments
         env:
@@ -82,7 +83,7 @@ jobs:
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
-            const uniqueIdentifier = "changelog validation failed";
+            const uniqueIdentifier = "<!-- validate_review -->";
 
             // List all the reviews on the pull request
             const { data: reviews } = await github.rest.pulls.listReviews({
@@ -104,3 +105,4 @@ jobs:
                 message: "The check succeeded, dismissing the review comment.",
               });
             }
+            console.log("✅ Check passed, dismissed all review comments");
