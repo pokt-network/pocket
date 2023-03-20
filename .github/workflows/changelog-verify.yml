@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Verify changelogs
         id: verify_changelogs
-        run: bash ./.githooks/pre-receive "${{needs.changedfiles.outputs.all}}"
+        run: echo "result=$(bash ./.githooks/pre-receive "${{needs.changedfiles.outputs.all}}")" >> $GITHUB_OUTPUT
 
   review:
     runs-on: ubuntu-latest
