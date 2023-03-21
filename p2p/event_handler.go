@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// CONSIDERATION(#576): making this part of some new `ConnManager`.
 func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 	evt, err := codec.GetCodec().FromAny(event)
 	if err != nil {
@@ -22,21 +23,20 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 			return fmt.Errorf("failed to cast event to ConsensusNewHeightEvent")
 		}
 
-		addrBook := m.network.GetAddrBook()
-		newAddrBook, err := m.addrBookProvider.GetStakedAddrBookAtHeight(consensusNewHeightEvent.Height)
-
+		oldPeerList := m.network.GetPeerstore().GetPeerList()
+		updatedPeerstore, err := m.peerstoreProvider.GetStakedPeerstoreAtHeight(consensusNewHeightEvent.Height)
 		if err != nil {
 			return err
 		}
 
-		added, removed := getAddrBookDelta(addrBook, newAddrBook)
+		added, removed := oldPeerList.Delta(updatedPeerstore.GetPeerList())
 		for _, add := range added {
-			if err := m.network.AddPeerToAddrBook(add); err != nil {
+			if err := m.network.AddPeer(add); err != nil {
 				return err
 			}
 		}
 		for _, rm := range removed {
-			if err := m.network.RemovePeerFromAddrBook(rm); err != nil {
+			if err := m.network.RemovePeer(rm); err != nil {
 				return err
 			}
 		}
@@ -50,8 +50,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		m.logger.Debug().Fields(messaging.TransitionEventToMap(stateMachineTransitionEvent)).Msg("Received state machine transition event")
 
 		if stateMachineTransitionEvent.NewState == string(coreTypes.StateMachineState_P2P_Bootstrapping) {
-			addrBook := m.network.GetAddrBook()
-			if len(addrBook) == 0 {
+			if m.network.GetPeerstore().Size() == 0 {
 				m.logger.Warn().Msg("No peers in addrbook, bootstrapping")
 
 				if err := m.bootstrap(); err != nil {
