@@ -146,10 +146,11 @@ func protoHash(m proto.Message) string {
 func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 	m.logger.Debug().Fields(
 		map[string]any{
-			"node_id": m.leaderId,
-			"height":  msg.GetHeight(),
-			"step":    msg.GetStep(),
-			"round":   msg.GetRound(),
+			"src":    m.nodeId,
+			"dst":    m.leaderId,
+			"height": msg.GetHeight(),
+			"step":   msg.GetStep(),
+			"round":  msg.GetRound(),
 		},
 	).Msg("✉️ About to try sending hotstuff message ✉️")
 
@@ -289,5 +290,6 @@ func msgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
 		"height": msg.GetHeight(),
 		"round":  msg.GetRound(),
 		"step":   msg.GetStep(),
+		// "stepStr": typesCons.StepToString[NewRound],
 	}
 }

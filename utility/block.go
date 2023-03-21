@@ -150,7 +150,7 @@ func (u *utilityContext) ApplyBlock() (string, error) {
 		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return "", typesUtil.ErrAppHash(err)
 	}
-	u.logger.Info().Msgf("ApplyBlock - computed state hash: %s", stateHash)
+	u.logger.Info().Str("state_hash", stateHash).Msgf("ApplyBlock succeeded.")
 
 	// return the app hash; consensus module will get the validator set directly
 	return stateHash, nil
