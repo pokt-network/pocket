@@ -191,6 +191,8 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId, "Leader should be empty")
 	}
 
+	// TODO(goku): Add QC verification here after valid block mocking is implemented with issue #352.
+
 	// Test state synchronisation's get block functionality
 	// At this stage, first round is finished, get block request for block height 1 must return non-nill block
 	serverNode := pocketNodes[1]
@@ -235,6 +237,10 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 }
 
 // TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
+
+func TestValidateQuorumCertificate(t *testing.T) {
+	t.Skip()
+}
 
 func TestHotstuff4Nodes1Byzantine1Block(t *testing.T) {
 	t.Skip()
