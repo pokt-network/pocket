@@ -16,6 +16,7 @@ type HotstuffMessageHandler interface {
 func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) error {
 	step := msg.GetStep()
 
+	// TODO(olshansky): Add source and destination NodeId of message here
 	m.logger.Debug().Fields(map[string]any{
 		"step":   msg.GetStep(),
 		"height": msg.Height,
@@ -27,6 +28,7 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 		return err
 	}
 
+	// TODO(olshansky): Add source and destination NodeId of message here
 	m.logger.Debug().Fields(map[string]any{
 		"step":   msg.GetStep(),
 		"height": msg.Height,

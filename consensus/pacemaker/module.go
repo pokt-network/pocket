@@ -2,6 +2,7 @@ package pacemaker
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -110,14 +111,14 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Consensus message is from the past
 	if msg.Height < currentHeight {
-		m.logger.Info().Msgf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
+		m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
 		return false, nil
 	}
 
 	// TODO: Need to restart state sync or be in state sync mode right now
 	// Current node is out of sync
 	if msg.Height > currentHeight {
-		m.logger.Info().Msgf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
+		m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
 		return false, nil
 	}
 
@@ -131,7 +132,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Message is from the past
 	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
-		m.logger.Info().Msgf("⚠️ [WARN][DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round)
+		m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round)
 		return false, nil
 	}
 
@@ -142,7 +143,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
 	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {
-		m.logger.Info().Msg(typesCons.PacemakerCatchup(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
+		m.logger.Info().Msg(pacemakerCatchupLog(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
 		consensusMod.SetStep(uint8(msg.Step))
 		consensusMod.SetRound(msg.Round)
 
@@ -193,7 +194,7 @@ func (m *pacemaker) RestartTimer() {
 
 func (m *pacemaker) InterruptRound(reason string) {
 	consensusMod := m.GetBus().GetConsensusModule()
-	m.logger.Info().Msg(typesCons.PacemakerInterrupt(reason, consensusMod.CurrentHeight(), typesCons.HotstuffStep(consensusMod.CurrentStep()), consensusMod.CurrentRound()))
+	m.logger.Warn().Fields(m.sharedLoggingFields()).Msgf("⏰ Interrupt ⏰ due to: %s", reason)
 
 	consensusMod.SetRound(consensusMod.CurrentRound() + 1)
 
@@ -224,7 +225,7 @@ func (m *pacemaker) InterruptRound(reason string) {
 func (m *pacemaker) NewHeight() {
 	consensusMod := m.GetBus().GetConsensusModule()
 
-	m.logger.Info().Msg(typesCons.PacemakerNewHeight(consensusMod.CurrentHeight() + 1))
+	m.logger.Info().Uint64("height", consensusMod.CurrentHeight()+1).Msg("🏁 Starting 1st round 🏁")
 	consensusMod.SetHeight(consensusMod.CurrentHeight() + 1)
 	consensusMod.ResetForNewHeight()
 
@@ -286,4 +287,17 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 func (m *pacemaker) getStepTimeout() time.Duration {
 	baseTimeout := time.Duration(int64(time.Millisecond) * int64(m.pacemakerCfg.TimeoutMsec))
 	return baseTimeout
+}
+
+func (m *pacemaker) sharedLoggingFields() map[string]interface{} {
+	consensusMod := m.GetBus().GetConsensusModule()
+	return map[string]interface{}{
+		"height": consensusMod.CurrentHeight(),
+		"step":   typesCons.HotstuffStep(consensusMod.CurrentStep()),
+		"round":  consensusMod.CurrentRound(),
+	}
+}
+
+func pacemakerCatchupLog(height1, step1, round1, height2, step2, round2 uint64) string {
+	return fmt.Sprintf("🏃 Pacemaker catching 🏃 up (height, step, round) FROM (%d, %d, %d) TO (%d, %d, %d)", height1, step1, round1, height2, step2, round2)
 }

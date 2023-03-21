@@ -44,40 +44,18 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 			return nil, err
 		}
 		if msg.GetPartialSignature() == nil {
-
-			m.logger.Warn().Fields(
-				map[string]any{
-					"height": msg.GetHeight(),
-					"step":   msg.GetStep(),
-					"round":  msg.GetRound(),
-				},
-			).Msg("No partial signature found which should not happen...")
-
+			m.logger.Warn().Fields(msgToLoggingFields(msg)).Msg("No partial signature found which should not happen...")
 			continue
 		}
 		if msg.GetHeight() != height || msg.GetStep() != step || msg.GetRound() != round {
-
-			m.logger.Warn().Fields(
-				map[string]any{
-					"height": msg.GetHeight(),
-					"step":   msg.GetStep(),
-					"round":  msg.GetRound(),
-				},
-			).Msg("Message in pool does not match (height, step, round) of QC being generated")
-
+			m.logger.Warn().Fields(msgToLoggingFields(msg)).Msg("Message in pool does not match (height, step, round) of QC being generated")
 			continue
 		}
 
 		ps := msg.GetPartialSignature()
 		if ps.Signature == nil || ps.Address == "" {
 
-			m.logger.Warn().Fields(
-				map[string]any{
-					"height": msg.GetHeight(),
-					"step":   msg.GetStep(),
-					"round":  msg.GetRound(),
-				},
-			).Msg("Partial signature is incomplete which should not happen...")
+			m.logger.Warn().Fields(msgToLoggingFields(msg)).Msg("Partial signature is incomplete which should not happen...")
 			continue
 		}
 		pss = append(pss, msg.GetPartialSignature())
@@ -164,14 +142,14 @@ func protoHash(m proto.Message) string {
 /*** P2P Helpers ***/
 
 func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
-	m.logger.Info().Fields(
+	m.logger.Debug().Fields(
 		map[string]any{
 			"node_id": m.leaderId,
 			"height":  msg.GetHeight(),
 			"step":    msg.GetStep(),
 			"round":   msg.GetRound(),
 		},
-	).Msg("✉️ Sending message ✉️")
+	).Msg("✉️ About to try sending hotstuff message ✉️")
 
 	// TODO: This can happen due to a race condition with the pacemaker.
 	if m.leaderId == nil {
@@ -254,46 +232,32 @@ func (m *consensusModule) clearLeader() {
 
 func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) error {
 	leaderId, err := m.leaderElectionMod.ElectNextLeader(message)
-	if err != nil || leaderId == 0 {
-
-		m.logger.Error().Err(err).Fields(
-			map[string]any{
-				"leaderId": leaderId,
-				"height":   m.height,
-				"round":    m.round,
-			},
-		).Msg("leader election failed: Validator cannot take part in consensus")
-
-		m.clearLeader()
-		return err
-	}
-	m.leaderId = &leaderId
-
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
-
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
+	leader := idToValAddrMap[leaderId]
+	loggingFields := map[string]any{
+		"leader":   leader,
+		"leaderId": leaderId,
+		"height":   m.height,
+		"round":    m.round,
+	}
 
+	if err != nil || leaderId == 0 {
+		m.logger.Error().Err(err).Fields(loggingFields).Msg("leader election failed: Validator cannot take part in consensus")
+		m.clearLeader()
+		return err
+	}
+
+	m.leaderId = &leaderId
 	if m.IsLeader() {
 		m.setLogPrefix("LEADER")
-		m.logger.Info().Fields(
-			map[string]any{
-				"leaderId": idToValAddrMap[*m.leaderId],
-				"height":   m.height,
-				"round":    m.round,
-			},
-		).Msg("👑 I am the leader 👑")
+		m.logger.Info().Fields(loggingFields).Msg("👑 I am the leader 👑")
 	} else {
 		m.setLogPrefix("REPLICA")
-		m.logger.Info().Fields(
-			map[string]any{
-				"leaderId": idToValAddrMap[*m.leaderId],
-				"height":   m.height,
-				"round":    m.round,
-			},
-		).Msg("🙇 Elected leader 🙇")
+		m.logger.Info().Fields(loggingFields).Msg("🙇 Elected leader 🙇")
 	}
 
 	return nil
@@ -316,4 +280,12 @@ func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Act
 	defer persistenceReadContext.Close()
 
 	return persistenceReadContext.GetAllValidators(int64(height))
+}
+
+func msgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
+	return map[string]any{
+		"height": msg.GetHeight(),
+		"round":  msg.GetRound(),
+		"step":   msg.GetStep(),
+	}
 }
