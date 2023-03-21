@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.23] - 2023-03-20
+## [0.0.0.234] - 2023-03-201
 
 - Updated documentation on CLI modes
 - Fixed one logging statement
+
+## [0.0.0.23] - 2023-03-21
+
+- Refactor debug CLI to use new P2P interfaces
 
 ## [0.0.0.22] - 2023-03-17
 
