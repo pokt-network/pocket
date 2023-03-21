@@ -9,11 +9,11 @@ import (
 	"strconv"
 	"strings"
 
-	rpcABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/rpc"
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	rpcABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime/defaults"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 // configureBootstrapNodes parses the bootstrap nodes from the config and validates them
@@ -43,7 +43,7 @@ func (m *p2pModule) configureBootstrapNodes() error {
 
 // bootstrap attempts to bootstrap from a bootstrap node
 func (m *p2pModule) bootstrap() error {
-	var addrBook typesP2P.AddrBook
+	var pstore sharedP2P.Peerstore
 
 	for _, bootstrapNode := range m.bootstrapNodes {
 		m.logger.Info().Str("endpoint", bootstrapNode).Msg("Attempting to bootstrap from bootstrap node")
@@ -58,7 +58,7 @@ func (m *p2pModule) bootstrap() error {
 			continue
 		}
 
-		addressBookProvider := rpcABP.NewRPCAddrBookProvider(
+		pstoreProvider := rpcABP.NewRPCPeerstoreProvider(
 			rpcABP.WithP2PConfig(
 				m.GetBus().GetRuntimeMgr().GetConfig().P2P,
 			),
@@ -67,22 +67,24 @@ func (m *p2pModule) bootstrap() error {
 
 		currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(rpcCHP.WithCustomRPCURL(bootstrapNode))
 
-		addrBook, err = addressBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
+		pstore, err = pstoreProvider.GetStakedPeerstoreAtHeight(currentHeightProvider.CurrentHeight())
 		if err != nil {
 			m.logger.Warn().Err(err).Str("endpoint", bootstrapNode).Msg("Error getting address book from bootstrap node")
 			continue
 		}
 	}
 
-	if len(addrBook) == 0 {
-		return fmt.Errorf("bootstrap failed")
+	for _, peer := range pstore.GetPeerList() {
+		m.logger.Debug().Str("address", peer.GetAddress().String()).Msg("Adding peer to network")
+		if err := m.network.AddPeer(peer); err != nil {
+			m.logger.Error().Err(err).
+				Str("pokt_address", peer.GetAddress().String()).
+				Msg("adding peer")
+		}
 	}
 
-	for _, peer := range addrBook {
-		m.logger.Debug().Str("address", peer.Address.String()).Msg("Adding peer to addrBook")
-		if err := m.network.AddPeerToAddrBook(peer); err != nil {
-			return err
-		}
+	if m.network.GetPeerstore().Size() == 0 {
+		return fmt.Errorf("bootstrap failed")
 	}
 	return nil
 }
