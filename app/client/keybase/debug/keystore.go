@@ -1,5 +1,3 @@
-//go:build debug
-
 package debug
 
 import (
@@ -45,7 +43,7 @@ func initializeDebugKeybase() error {
 		err                  error
 	)
 
-	validatorKeysPairMap, err = parseValidatorPrivateKeysFromEmbeddedYaml()
+	validatorKeysPairMap, err = ParseValidatorPrivateKeysFromEmbeddedYaml()
 
 	if err != nil {
 		return err
@@ -128,8 +126,8 @@ func initializeDebugKeybase() error {
 	return nil
 }
 
-// parseValidatorPrivateKeysFromEmbeddedYaml fetches the validator private keys from the embedded build/localnet/manifests/private-keys.yaml manifest file.
-func parseValidatorPrivateKeysFromEmbeddedYaml() (map[string]string, error) {
+// ParseValidatorPrivateKeysFromEmbeddedYaml fetches the validator private keys from the embedded build/localnet/manifests/private-keys.yaml manifest file.
+func ParseValidatorPrivateKeysFromEmbeddedYaml() (map[string]string, error) {
 
 	// Parse the YAML file and load into the config struct
 	var config struct {

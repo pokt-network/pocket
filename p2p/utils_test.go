@@ -17,6 +17,7 @@ import (
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/pokt-network/pocket/app/client/keybase/debug"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -52,17 +53,27 @@ func init() {
 	keys = generateKeys(nil, maxNumKeys)
 }
 
-func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
-	keys := make([]cryptoPocket.PrivateKey, numValidators)
+func generateKeys(t *testing.T, numValidators int) []cryptoPocket.PrivateKey {
+	privKeys := make([]cryptoPocket.PrivateKey, numValidators)
+	preGeneratedKeys, err := debug.ParseValidatorPrivateKeysFromEmbeddedYaml()
+	require.NoError(t, err)
 
-	for i := range keys {
-		seedInt := genesisConfigSeedStart + i
-		keys[i] = cryptoPocket.GetPrivKeySeed(seedInt)
+	if numValidators > len(preGeneratedKeys) {
+		t.Fatal("not enough pregenerated privKeys")
 	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i].Address().String() < keys[j].Address().String()
+
+	idx := 0
+	for _, keyHex := range preGeneratedKeys {
+		privKey, err := cryptoPocket.NewPrivateKey(keyHex)
+		require.NoError(t, err)
+
+		privKeys[idx] = privKey
+		idx++
+	}
+	sort.Slice(privKeys, func(i, j int) bool {
+		return privKeys[i].Address().String() < privKeys[j].Address().String()
 	})
-	return keys
+	return privKeys
 }
 
 // A configuration helper used to specify how many messages are expected to be sent or read by the
