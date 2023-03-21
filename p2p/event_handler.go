@@ -47,6 +47,8 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 			return fmt.Errorf("failed to cast event to StateMachineTransitionEvent")
 		}
 
+		m.logger.Debug().Fields(messaging.TransitionEventToMap(stateMachineTransitionEvent)).Msg("Received state machine transition event")
+
 		if stateMachineTransitionEvent.NewState == string(coreTypes.StateMachineState_P2P_Bootstrapping) {
 			if m.network.GetPeerstore().Size() == 0 {
 				m.logger.Warn().Msg("No peers in addrbook, bootstrapping")
