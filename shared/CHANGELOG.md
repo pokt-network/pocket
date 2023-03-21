@@ -7,14 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.41] - 2023-03-20
+## [0.0.0.42] - 2023-03-21
 
 - Add `ConsensusStateSync` interface to define exported state sync functions in consensus module
 - Update `ConsensusDebugModule` with getter and setter function for state sync testing
 - Update FSM events `Consensus_IsSynchedValidator`, `Consensus_IsSynchedNonValidator` and state `Consensus_Pacemaker`
-## [0.0.0.40] - 2023-03-20
+## [0.0.0.41] - 2023-03-21
 
 - Add `TransitionEventToMap()` helper function for logging
+
+## [0.0.0.40] - 2023-03-20
+
+- Adds enum DebugMessageType for distinguishing message routing behavior
 
 ## [0.0.0.39] - 2023-03-09
 
