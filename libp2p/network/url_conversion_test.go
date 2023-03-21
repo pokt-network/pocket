@@ -3,11 +3,13 @@ package network
 import (
 	"fmt"
 	"net"
+	"strings"
 	"testing"
 
 	"github.com/foxcpp/go-mockdns"
 
 	"github.com/multiformats/go-multiaddr"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,7 +38,7 @@ func TestPeerMultiAddrFromServiceURL_Success(t *testing.T) {
 		},
 		{
 			"IPv6",
-			"2a00:1450:4005:802::2004:8080",
+			"[2a00:1450:4005:802::2004]:8080",
 			"/ip6/2a00:1450:4005:802::2004/tcp/8080",
 		},
 	}
@@ -63,40 +65,37 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 	hostnames := map[string]string{
 		fqdn: "www.google.com",
 		ip4:  "142.250.181.196",
-		ip6:  "2a00:1450:4005:802::2004",
+		ip6:  "[2a00:1450:4005:802::2004]",
 	}
 
 	testCases := []struct {
 		name             string
 		serviceURLFormat string
-		// TECHDEBT: assert specific errors.
-		expectedErrContains string
+		expectedErr      string
 	}{
 		// Usage of scheme is invalid.
 		{
 			"fully qualified domain name with scheme",
 			"tcp://%s:8080",
-			"resolving peer IP for hostname",
+			"usage of scheme is invalid",
 		},
 
 		// Port **number** is required
 		{
 			"invalid port number",
 			"%s:abc",
-			"invalid port",
+			"parsing peer service URL",
 		},
 		{
 			"missing port number",
 			"%s:",
-			"unexpected end of multiaddr",
+			"missing port number and delimiter in service URL",
 		},
-		// TODO: this case is tricky to detect as IPv6 addresses
-		// can omit multiple "hextet" delimiters and still be valid.
-		// (see: https://en.wikipedia.org/wiki/IPv6#Address_representation)
-		// {
-		// 	"missing port number and delimiter",
-		// 	"%s",
-		// },
+		{
+			"missing port number and delimiter",
+			"%s",
+			"missing port number and delimiter in service URL",
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -105,12 +104,33 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 			t.Run(testName, func(t *testing.T) {
 				serviceURL := fmt.Sprintf(testCase.serviceURLFormat, hostname)
 				actualMultiaddr, err := Libp2pMultiaddrFromServiceURL(serviceURL)
-				// TECHDEBT: assert specific errors
-				// Print resulting multiaddr to understand why no error.
-				require.ErrorContainsf(t, err, testCase.expectedErrContains, fmt.Sprintf("actualMultiaddr: %s", actualMultiaddr))
+				assert.Error(t, err, fmt.Sprintf("actualMultiaddr: %s", actualMultiaddr))
+				assert.True(t, strings.HasPrefix(err.Error(), testCase.expectedErr), fmt.Sprintf("expected error to start with %q, but got %q", testCase.expectedErr, err.Error()))
 			})
 		}
 	}
+}
+
+func ExampleLibp2pMultiaddrFromServiceURL() {
+	// Example: IPv4
+	peerMultiAddr, err := Libp2pMultiaddrFromServiceURL("www.google.com:8080")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(peerMultiAddr)
+
+	// Output: /ip4/142.251.40.164/tcp/8080
+}
+
+func ExampleLibp2pMultiaddrFromServiceURL_IPv6() {
+	// Example: IPv6
+	peerMultiAddr, err := Libp2pMultiaddrFromServiceURL("[2a00:1450:4005:802::2004]:8080")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(peerMultiAddr)
+
+	// Output: /ip6/2a00:1450:4005:802::2004/tcp/8080
 }
 
 func TestServiceURLFromLibp2pMultiaddr_Success(t *testing.T) {

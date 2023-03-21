@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"net"
 	"net/url"
+	"strconv"
+	"strings"
 
 	"github.com/multiformats/go-multiaddr"
 	"github.com/pokt-network/pocket/logger"
@@ -24,7 +26,11 @@ const (
 	errResolvePeerIPMsg = "resolving peer IP for hostname"
 )
 
-// Libp2pMultiaddrFromServiceURL transforms a URL into its libp2p multiaddr equivalent.
+// Libp2pMultiaddrFromServiceURL transforms a URL into its libp2p multiaddr equivalent. The URL must contain a port number.
+// The URL may contain a hostname or IP address. If a hostname is provided, it will be resolved to an IP address.
+// The URL may not contain a scheme. The URL will be prefixed with "scheme://".
+// The URL may contain an IPv6 address, but it must be enclosed in square brackets.
+// The URL may contain an IPv4 address, but it must not be enclosed in square brackets.
 // (see: https://github.com/libp2p/specs/blob/master/addressing/README.md#multiaddr-basics)
 func Libp2pMultiaddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error) {
 	var (
@@ -35,23 +41,36 @@ func Libp2pMultiaddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, erro
 		peerIPVersionStr = ipVersion4
 	)
 
-	peerUrl, err := url.Parse(anyScheme + serviceURL)
+	// Conditionally add the anyScheme prefix if no scheme is present.
+	if strings.Contains(serviceURL, "://") {
+		return nil, fmt.Errorf("usage of scheme is invalid service URL: %s", serviceURL)
+	} else {
+		serviceURL = anyScheme + serviceURL
+	}
+
+	peerUrl, err := url.Parse(serviceURL)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"parsing peer service URL: %s: %w",
-			serviceURL,
-			err,
-		)
+		return nil, fmt.Errorf("parsing peer service URL: %s: %w", serviceURL, err)
+	}
+
+	// Check if service URL contains a port number
+	if _, port, err := net.SplitHostPort(peerUrl.Host); err != nil || port == "" {
+		return nil, fmt.Errorf("missing port number and delimiter in service URL: %s", serviceURL)
 	}
 
 	peerIP, err := getPeerIP(peerUrl.Hostname())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolving peer IP for hostname: %s: %w", peerUrl.Hostname(), err)
 	}
 
 	// Check IP version.
 	if peerIP.To4() == nil {
 		peerIPVersionStr = ipVersion6
+	}
+
+	// Check if port is valid.
+	if _, err := strconv.Atoi(peerUrl.Port()); err != nil {
+		return nil, fmt.Errorf("invalid port: %s", peerUrl.Port())
 	}
 
 	peerMultiAddrStr := fmt.Sprintf(
