@@ -13,7 +13,7 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
-// https://www.rfc-editor.org/rfc/rfc2732
+// https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2
 const testIP6ServiceURL = "[2a00:1450:4005:802::2004]:8080"
 
 func TestLibp2pNetwork_AddPeerToAddrBook(t *testing.T) {

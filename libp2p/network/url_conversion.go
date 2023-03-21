@@ -31,6 +31,7 @@ const (
 // The URL may not contain a scheme. The URL will be prefixed with "scheme://".
 // The URL may contain an IPv6 address, but it must be enclosed in square brackets.
 // The URL may contain an IPv4 address, but it must not be enclosed in square brackets.
+(see: https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2)
 // (see: https://github.com/libp2p/specs/blob/master/addressing/README.md#multiaddr-basics)
 func Libp2pMultiaddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error) {
 	var (
@@ -60,7 +61,7 @@ func Libp2pMultiaddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, erro
 
 	peerIP, err := getPeerIP(peerUrl.Hostname())
 	if err != nil {
-		return nil, fmt.Errorf("resolving peer IP for hostname: %s: %w", peerUrl.Hostname(), err)
+		return nil, fmt.Errorf("%s: %s: %w", errResolvePeerIPMsg, peerUrl.Hostname(), err)
 	}
 
 	// Check IP version.
