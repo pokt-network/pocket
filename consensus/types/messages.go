@@ -63,8 +63,8 @@ const (
 	selfProposalError                           = "hotstuff message is a self proposal"
 	olderStepRoundError                         = "hotstuff message is of the right height but from the past"
 	unexpectedPacemakerCaseError                = "an unexpected pacemaker case occurred"
-	invalidAppHashError                         = "apphash being applied does not equal that from utility"
-	byzantineOptimisticThresholdError           = "byzantine optimistic threshold not met"
+	invalidStateHashError                       = "stateHash being applied does not equal that from utility"
+	byzantineOptimisticThresholdError           = "BFT threshold not met"
 	consensusMempoolFullError                   = "mempool is full"
 	applyBlockError                             = "could not apply block"
 	prepareBlockError                           = "could not prepare block"
@@ -125,8 +125,8 @@ func ErrInvalidBlockSize(blockSize, maxSize uint64) error {
 	return fmt.Errorf("%s: %d bytes VS max of %d bytes", blockSizeTooLargeError, blockSize, maxSize)
 }
 
-func ErrInvalidAppHash(blockHeaderHash, appHash string) error {
-	return fmt.Errorf("%s: %s != %s", invalidAppHashError, blockHeaderHash, appHash)
+func ErrInvalidStateHash(blockHeaderHash, stateHash string) error {
+	return fmt.Errorf("%s: %s != %s", invalidStateHashError, blockHeaderHash, stateHash)
 }
 
 func ErrByzantineThresholdCheck(n int, threshold float64) error {

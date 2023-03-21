@@ -7,7 +7,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
-// CONSOLIDATE: Last/Prev & AppHash/StateHash/BlockHash
+// CONSOLIDATE: Last/Prev
 
 type HotstuffLeaderMessageHandler struct{}
 

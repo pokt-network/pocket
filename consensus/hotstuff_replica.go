@@ -7,8 +7,6 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
-// CONSOLIDATE: Terminology of `appHash` and `stateHash`
-
 type HotstuffReplicaMessageHandler struct{}
 
 var (
@@ -241,7 +239,7 @@ func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 	}
 
 	if blockHeader.StateHash != stateHash {
-		return typesCons.ErrInvalidAppHash(blockHeader.StateHash, stateHash)
+		return typesCons.ErrInvalidStateHash(blockHeader.StateHash, stateHash)
 	}
 
 	return nil

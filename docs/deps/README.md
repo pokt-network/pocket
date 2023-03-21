@@ -47,6 +47,6 @@ This is okay in the case of Pocket's Leader Election Algorithm because the seed 
 1. Each validator generates VRF keys at some `height N`
 2. The network leverages consensus messages to distribute the keys throughout the network in `O(N)`
 3. The VRF keys begin to be used for leader election at some `height (N+M)` where `M > 0`
-4. The input to the VRF for each `height (N+M')` where `M' ≥ M` will use publicly known information (e.g. appHash, byzValidators, etc..) known at `height (N+M'-1)` and therefore satisfy the security notice above.
+4. The input to the VRF for each `height (N+M')` where `M' ≥ M` will use publicly known information (e.g. stateHash, byzValidators, etc..) known at `height (N+M'-1)` and therefore satisfy the security notice above.
 
 <!-- GITHUB_WIKI: guides/dependencies/readme -->

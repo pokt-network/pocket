@@ -33,7 +33,7 @@ func CreateVRFRandReader(lastBlockHash string, privKey crypto.PrivateKey) (io.Re
 	}
 
 	if len(lastBlockHash) < crypto.SeedSize/2 {
-		return nil, ErrBadAppHashLength(crypto.SeedSize)
+		return nil, ErrBadStateHashLength(crypto.SeedSize)
 	}
 
 	privKeySeed := privKey.Seed()[:crypto.SeedSize/2]

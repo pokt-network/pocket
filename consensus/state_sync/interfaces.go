@@ -50,7 +50,7 @@ type StateSyncModuleLEGACY interface {
 	// - Consensus Module Replica Path
 	//   - Prepare Block:  utilityContext.SetProposalBlock(block)
 	//   - Apply Block:    utilityContext.ApplyBlock(block)
-	//   - Validate Block: utilityContext.AppHash == Block.AppHash
+	//   - Validate Block: utilityContext.StateHash == Block.StateHash
 	//   - Store Block:    consensusModule.CommitBlock()
 	HandleStateSyncMessage(msg BlockResponseMessage)
 
