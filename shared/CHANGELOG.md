@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.42] - 2023-03-21
+
+- Add `TransitionEventToMap()` helper function for logging
+
 ## [0.0.0.41] - 2023-03-21
 
 - Added *temporary* `shared/p2p` package to hold P2P interfaces common to both legacy and libp2p modules
