@@ -6,7 +6,14 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/modules"
 	"google.golang.org/protobuf/types/known/anypb"
+)
+
+// Implementations of the type ConsensusPacemaker interface
+var (
+	_ modules.ConsensusPacemaker   = &consensusModule{}
+	_ modules.ConsensusDebugModule = &consensusModule{}
 )
 
 // Implementations of the type ConsensusPacemaker interface
@@ -26,14 +33,15 @@ func (m *consensusModule) ResetForNewHeight() {
 
 // This function releases consensus module's utility context, called by pacemaker module
 func (m *consensusModule) ReleaseUtilityContext() error {
-	if m.utilityContext != nil {
-		if err := m.utilityContext.Release(); err != nil {
-			log.Println("[WARN] Failed to release utility context: ", err)
-			return err
-		}
-		m.utilityContext = nil
+	if m.utilityContext == nil {
+		return nil
 	}
 
+	if err := m.utilityContext.Release(); err != nil {
+		log.Println("[WARN] Failed to release utility context: ", err)
+		return err
+	}
+	m.utilityContext = nil
 	return nil
 }
 

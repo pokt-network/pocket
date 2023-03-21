@@ -25,9 +25,7 @@ const (
 	DefaultLogPrefix = "NODE" // TODO(#164): Make implicit when logging is standardized
 )
 
-var (
-	_ modules.ConsensusModule = &consensusModule{}
-)
+var _ modules.ConsensusModule = &consensusModule{}
 
 type consensusModule struct {
 	base_modules.IntegratableModule
