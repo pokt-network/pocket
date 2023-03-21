@@ -2,7 +2,6 @@ package consensus
 
 import (
 	"fmt"
-	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -10,14 +9,11 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// Implementations of the type ConsensusPacemaker interface
 var (
 	_ modules.ConsensusPacemaker   = &consensusModule{}
 	_ modules.ConsensusDebugModule = &consensusModule{}
 )
 
-// Implementations of the type ConsensusPacemaker interface
-// SetHeight, SetRound, SetStep are implemented for ConsensusDebugModule
 func (m *consensusModule) ResetRound() {
 	m.clearLeader()
 	m.clearMessagesPool()
@@ -26,6 +22,7 @@ func (m *consensusModule) ResetRound() {
 // This function resets the current state of the consensus module, called by pacemaker submodule before node proceeds to the next view.
 func (m *consensusModule) ResetForNewHeight() {
 	m.round = 0
+	m.step = 0
 	m.block = nil
 	m.prepareQC = nil
 	m.lockedQC = nil
@@ -36,9 +33,8 @@ func (m *consensusModule) ReleaseUtilityContext() error {
 	if m.utilityContext == nil {
 		return nil
 	}
-
 	if err := m.utilityContext.Release(); err != nil {
-		log.Println("[WARN] Failed to release utility context: ", err)
+		m.logger.Error().Err(err).Msg("Failed to release utility context.")
 		return err
 	}
 	m.utilityContext = nil
@@ -89,7 +85,7 @@ func (m *consensusModule) IsPrepareQCNil() bool {
 func (m *consensusModule) GetPrepareQC() (*anypb.Any, error) {
 	anyProto, err := anypb.New(m.prepareQC)
 	if err != nil {
-		return nil, fmt.Errorf("[WARN] NewHeight: Failed to convert paceMaker message to proto: %s", err)
+		return nil, fmt.Errorf("Failed to convert paceMaker message to proto: %s", err)
 	}
 	return anyProto, nil
 }

@@ -146,14 +146,14 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return nil
 	}
 
-	bus.
-		GetTelemetryModule().
-		GetEventMetricsAgent().
-		EmitEvent(
-			telemetry.P2P_EVENT_METRICS_NAMESPACE,
-			telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_NAME,
-			telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL, "send",
-		)
+	// bus.
+	// 	GetTelemetryModule().
+	// 	GetEventMetricsAgent().
+	// 	EmitEvent(
+	// 		telemetry.P2P_EVENT_METRICS_NAMESPACE,
+	// 		telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_NAME,
+	// 		telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL, "send",
+	// 	)
 
 	return nil
 }
@@ -162,14 +162,14 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	blockHeightInt := n.GetBus().GetConsensusModule().CurrentHeight()
 	blockHeight := fmt.Sprintf("%d", blockHeightInt)
 
-	n.GetBus().
-		GetTelemetryModule().
-		GetEventMetricsAgent().
-		EmitEvent(
-			telemetry.P2P_EVENT_METRICS_NAMESPACE,
-			telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_NAME,
-			telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
-		)
+	// n.GetBus().
+	// 	GetTelemetryModule().
+	// 	GetEventMetricsAgent().
+	// 	EmitEvent(
+	// 		telemetry.P2P_EVENT_METRICS_NAMESPACE,
+	// 		telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_NAME,
+	// 		telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
+	// 	)
 
 	var rainTreeMsg typesP2P.RainTreeMessage
 	if err := proto.Unmarshal(data, &rainTreeMsg); err != nil {

@@ -3,7 +3,6 @@ package pacemaker
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
@@ -49,8 +48,9 @@ type pacemaker struct {
 	base_modules.IntegratableModule
 	base_modules.InterruptableModule
 
-	pacemakerCfg   *configs.PacemakerConfig
-	stepCancelFunc context.CancelFunc
+	pacemakerCfg    *configs.PacemakerConfig
+	baseTimeout     time.Duration
+	roundCancelFunc context.CancelFunc
 
 	// Only used for development and debugging.
 	debug pacemakerDebug
@@ -79,6 +79,7 @@ func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	cfg := runtimeMgr.GetConfig()
 
 	m.pacemakerCfg = cfg.Consensus.PacemakerConfig
+	m.baseTimeout = m.getRoundTimeout()
 	m.debug = pacemakerDebug{
 		manualMode:                m.pacemakerCfg.GetManual(),
 		debugTimeBetweenStepsMsec: m.pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
@@ -152,7 +153,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		if currentRound != msg.Round || !consensusMod.IsLeaderSet() {
 			anyProto, err := anypb.New(msg)
 			if err != nil {
-				log.Println("[WARN] NewHeight: Failed to convert pacemaker message to proto: ", err)
+				m.logger.Warn().Err(err).Msg("Failed to convert pacemaker message to proto.")
 				return false, err
 			}
 			// TODO: Add new custom error
@@ -169,51 +170,55 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 func (m *pacemaker) RestartTimer() {
 	// NOTE: Not deferring a cancel call because this function is asynchronous.
-	if m.stepCancelFunc != nil {
-		m.stepCancelFunc()
+	if m.roundCancelFunc != nil {
+		m.roundCancelFunc()
 	}
 
-	// NOTE: Not defering a cancel call because this function is asynchronous.
-	stepTimeout := m.getStepTimeout()
 	clock := m.GetBus().GetRuntimeMgr().GetClock()
-
-	ctx, cancel := clock.WithTimeout(context.TODO(), stepTimeout)
-	m.stepCancelFunc = cancel
-
+	ctx, cancel := clock.WithTimeout(context.TODO(), m.baseTimeout)
+	m.roundCancelFunc = cancel
+	// NOTE: Not deferring a cancel call because this function is asynchronous.
 	go func() {
 		select {
 		case <-ctx.Done():
 			if ctx.Err() == context.DeadlineExceeded {
 				m.InterruptRound("timeout")
 			}
-		case <-clock.After(stepTimeout + timeoutBuffer):
+		case <-clock.After(m.baseTimeout + timeoutBuffer):
 			return
 		}
 	}()
 }
 
 func (m *pacemaker) InterruptRound(reason string) {
+	defer m.RestartTimer()
+
 	consensusMod := m.GetBus().GetConsensusModule()
 	m.logger.Warn().Fields(m.sharedLoggingFields()).Msgf("⏰ Interrupt ⏰ due to: %s", reason)
 
 	consensusMod.SetRound(consensusMod.CurrentRound() + 1)
 
-	//ADDTEST: check if this is indeed ensured after a successful round
+	fmt.Println("OLSH1")
+	// ADDTEST: check if this is indeed ensured after a successful round
 	if m.GetBus().GetConsensusModule().IsPrepareQCNil() {
 		m.startNextView(nil, false)
 		return
 	}
 
+	fmt.Println("OLSH2")
 	msgAny, err := consensusMod.GetPrepareQC()
 	if err != nil {
 		return
 	}
+
+	fmt.Println("OLSH3")
 
 	msg, err := codec.GetCodec().FromAny(msgAny)
 	if err != nil {
 		return
 	}
 
+	fmt.Println("OLSH4")
 	quorumCertificate, ok := msg.(*typesCons.QuorumCertificate)
 	if !ok {
 		return
@@ -223,13 +228,16 @@ func (m *pacemaker) InterruptRound(reason string) {
 }
 
 func (m *pacemaker) NewHeight() {
+	defer m.RestartTimer()
+
 	consensusMod := m.GetBus().GetConsensusModule()
-
-	m.logger.Info().Uint64("height", consensusMod.CurrentHeight()+1).Msg("🏁 Starting 1st round 🏁")
-	consensusMod.SetHeight(consensusMod.CurrentHeight() + 1)
+	newHeight := consensusMod.CurrentHeight() + 1
+	consensusMod.SetHeight(newHeight)
 	consensusMod.ResetForNewHeight()
+	m.logger.Info().Uint64("height", newHeight).Msg("🏁 Starting 1st round at new height 🏁")
 
-	m.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
+	// CONSIDERATION: We are omitting CommitQC and TimeoutQC here for simplicity, but should we add them?
+	m.startNextView(nil, false)
 
 	m.GetBus().
 		GetTelemetryModule().
@@ -240,21 +248,27 @@ func (m *pacemaker) NewHeight() {
 }
 
 func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
+	defer m.RestartTimer()
+
+	fmt.Println("OLSH22")
 	// DISCUSS: Should we lock the consensus module here?
 	consensusMod := m.GetBus().GetConsensusModule()
 	consensusMod.SetStep(uint8(newRound))
 	consensusMod.ResetRound()
 	if err := consensusMod.ReleaseUtilityContext(); err != nil {
-		log.Println("[WARN] NewHeight: Failed to release utility context: ", err)
-		return
+		m.logger.Warn().Err(err).Msg("Failed to release utility context.")
+		// return
 	}
+	consensusMod.ClearLeaderMessagesPool()
 
+	fmt.Println("OLSH33")
 	// TECHDEBT: This if structure for debug purposes only; think of a way to externalize it from the main consensus flow...
 	if m.debug.manualMode && !forceNextView {
 		m.debug.quorumCertificate = qc
 		return
 	}
 
+	fmt.Println("OLSH44")
 	hotstuffMessage := &typesCons.HotstuffMessage{
 		Type:          propose,
 		Height:        consensusMod.CurrentHeight(),
@@ -270,21 +284,19 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 		}
 	}
 
-	m.RestartTimer()
-
 	anyProto, err := anypb.New(hotstuffMessage)
 	if err != nil {
-		log.Println("[WARN] NewHeight: Failed to convert pacemaker message to proto: ", err)
+		m.logger.Error().Err(err).Fields(m.sharedLoggingFields()).Msgf("Failed to convert pacemaker message to proto.")
 		return
 	}
 	if err := consensusMod.BroadcastMessageToValidators(anyProto); err != nil {
-		log.Println("[WARN] NewHeight: Failed to broadcast message to validators: ", err)
+		m.logger.Error().Err(err).Fields(m.sharedLoggingFields()).Msgf("Failed to broadcast message to validators.")
 		return
 	}
 }
 
 // TODO: Increase timeout using exponential backoff.
-func (m *pacemaker) getStepTimeout() time.Duration {
+func (m *pacemaker) getRoundTimeout() time.Duration {
 	baseTimeout := time.Duration(int64(time.Millisecond) * int64(m.pacemakerCfg.TimeoutMsec))
 	return baseTimeout
 }

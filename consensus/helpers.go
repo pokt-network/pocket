@@ -144,10 +144,11 @@ func protoHash(m proto.Message) string {
 /*** P2P Helpers ***/
 
 func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
+	leaderId := m.leaderId
 	m.logger.Debug().Fields(
 		map[string]any{
 			"src":    m.nodeId,
-			"dst":    m.leaderId,
+			"dst":    leaderId,
 			"height": msg.GetHeight(),
 			"step":   msg.GetStep(),
 			"round":  msg.GetRound(),
@@ -155,7 +156,7 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 	).Msg("✉️ About to try sending hotstuff message ✉️")
 
 	// TODO: This can happen due to a race condition with the pacemaker.
-	if m.leaderId == nil {
+	if leaderId == nil {
 		m.logger.Error().Msg(typesCons.ErrNilLeaderId.Error())
 		return
 	}
@@ -170,10 +171,10 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
-
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 
-	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(idToValAddrMap[*m.leaderId]), anyConsensusMessage); err != nil {
+	leaderAddr := cryptoPocket.AddressFromString(idToValAddrMap[*leaderId])
+	if err := m.GetBus().GetP2PModule().Send(leaderAddr, anyConsensusMessage); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
 		return
 	}
@@ -210,7 +211,6 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 
 /*** Persistence Helpers ***/
 
-// TECHDEBT(#388): Integrate this with the `persistence` module or a real mempool.
 func (m *consensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
 		m.hotstuffMempool[step].Clear()

@@ -82,8 +82,7 @@ func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
 
 	m.SetHeight(0)
 	m.ResetForNewHeight()
-	m.clearLeader()
-	m.clearMessagesPool()
+	m.ResetRound()
 	m.GetBus().GetUtilityModule().GetMempool().Clear()
 	if err := m.GetBus().GetPersistenceModule().HandleDebugMessage(&messaging.DebugMessage{
 		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
@@ -195,9 +194,6 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 
 }
 
-// Implementations of the type PaceMakerAccessModule interface
-//
-//	SetHeight, SetRound, SetStep are implemented for ConsensusDebugModule
 func (m *consensusModule) ClearLeaderMessagesPool() {
 	m.clearLeader()
 	m.clearMessagesPool()
