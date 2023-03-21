@@ -116,8 +116,7 @@ func (m *stateSync) EnableServerMode() {
 	m.serverMode = true
 }
 
-// TODO(#352): Implement this function
-// Placeholder function
+// TODO(#352): Implement the business logic for this function
 func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
 	m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse: %s", blockRes)
 
