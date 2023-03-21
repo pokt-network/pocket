@@ -532,6 +532,8 @@ func TestStateSync_UnsynchedPeerSynchsMultipleBlocks(t *testing.T) {
 		//require.NotEmpty(t, blockReq)
 	}
 
+	advanceTime(t, clockMock, 10*time.Millisecond)
+
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		//fmt.Println("Node state is h s r: ", nodeState.Height, nodeState.Step, nodeState.Round)
