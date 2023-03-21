@@ -1,8 +1,10 @@
-//go:build debug
+//go:build debug || test
 
 package build
 
-import _ "embed"
+import (
+	_ "embed"
+)
 
 // PrivateKeysFile is the pre-generated manifest file for LocalNet debugging
 //

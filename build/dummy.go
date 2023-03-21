@@ -1,4 +1,4 @@
-//go:build !debug
+//go:build !debug && !test
 
 // build dummy exists to prevent the gopls from complaining about an empty package without extra configuration. This
 // dummy is included when the debug build tag is not included.
