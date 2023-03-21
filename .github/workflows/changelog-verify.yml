@@ -53,12 +53,12 @@ jobs:
     needs: validate
     if: always()
     steps:
-      - name: Verify changelogs KO
+      - name: Verify changelogs Failed - Create review comment
         if: ${{ contains(needs.validate.outputs.all, 'failed') }}
         uses: actions/github-script@v5
         with:
           script: |
-            const result = `<!-- validate_review -->The changelog validation failed with the following output:
+            const result = `<!-- validate_changelogs_review -->The changelog validation failed with the following output:
 
             \`\`\`
             ${{ needs.validate.outputs.all }}
@@ -83,7 +83,7 @@ jobs:
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
-            const uniqueIdentifier = "<!-- validate_review -->";
+            const uniqueIdentifier = "<!-- validate_changelogs_review -->";
 
             // List all the reviews on the pull request
             const { data: reviews } = await github.rest.pulls.listReviews({
