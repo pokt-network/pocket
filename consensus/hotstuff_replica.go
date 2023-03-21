@@ -288,7 +288,7 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 		}
 		numValid++
 	}
-	if err := m.isOptimisticThresholdMet(numValid, validators); err != nil {
+	if err := m.validateOptimisticThresholdMet(numValid, validators); err != nil {
 		return err
 	}
 

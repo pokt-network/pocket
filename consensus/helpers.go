@@ -66,7 +66,8 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		return nil, err
 	}
 
-	if err := m.isOptimisticThresholdMet(len(pss), validators); err != nil {
+	numPartialSignatures := len(pss)
+	if err := m.validateOptimisticThresholdMet(numPartialSignatures, validators); err != nil {
 		return nil, err
 	}
 
@@ -120,13 +121,14 @@ func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.Hotstuff
 	if err != nil {
 		return err
 	}
-	return m.isOptimisticThresholdMet(int(m.hotstuffMempool[step].Size()), validators)
+	numMessages := int(m.hotstuffMempool[step].Size())
+	return m.validateOptimisticThresholdMet(numMessages, validators)
 }
 
-func (m *consensusModule) isOptimisticThresholdMet(numSignatures int, validators []*coreTypes.Actor) error {
-	numValidators := len(validators)
-	if !(float64(numSignatures) > ByzantineThreshold*float64(numValidators)) {
-		return typesCons.ErrByzantineThresholdCheck(numSignatures, ByzantineThreshold*float64(numValidators))
+func (m *consensusModule) validateOptimisticThresholdMet(num int, currentValidators []*coreTypes.Actor) error {
+	numValidators := len(currentValidators)
+	if !(float64(num) > ByzantineThreshold*float64(numValidators)) {
+		return typesCons.ErrByzantineThresholdCheck(num, ByzantineThreshold*float64(numValidators))
 	}
 	return nil
 }

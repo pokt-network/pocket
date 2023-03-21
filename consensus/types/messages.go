@@ -69,7 +69,7 @@ const (
 	applyBlockError                             = "could not apply block"
 	prepareBlockError                           = "could not prepare block"
 	commitBlockError                            = "could not commit block"
-	replicaPrepareBlockError                    = "node should not call `prepareBlock` if it is not a leader"
+	replicaPrepareBlockError                    = "REPLICATE SHOULD NOT call `prepareBlock`"
 	blockSizeTooLargeError                      = "block size is too large"
 	sendMessageError                            = "error sending message"
 	broadcastMessageError                       = "error broadcasting message"
