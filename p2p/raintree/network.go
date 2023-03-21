@@ -6,7 +6,7 @@ import (
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -15,6 +15,7 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 	telemetry "github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
 )
@@ -24,10 +25,10 @@ var _ typesP2P.Network = &rainTreeNetwork{}
 type rainTreeNetwork struct {
 	base_modules.IntegratableModule
 
-	selfAddr         cryptoPocket.Address
-	addrBookProvider addrbook_provider.AddrBookProvider
+	selfAddr       cryptoPocket.Address
+	pstoreProvider peerstore_provider.PeerstoreProvider
 
-	peersManager *peersManager
+	peersManager *rainTreePeersManager
 	nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]
 
 	currentHeightProvider providers.CurrentHeightProvider
@@ -35,18 +36,18 @@ type rainTreeNetwork struct {
 	logger *modules.Logger
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, pstoreProvider providers.PeerstoreProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
 	networkLogger := logger.Global.CreateLoggerForModule("network")
 	networkLogger.Info().Msg("Initializing rainTreeNetwork")
 
-	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
+	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		networkLogger.Fatal().Err(err).Msg("Error getting addrBook")
+		networkLogger.Fatal().Err(err).Msg("Error getting pstore")
 	}
 
-	pm, err := newPeersManager(addr, addrBook, true)
+	pm, err := newPeersManager(addr, pstore, true)
 	if err != nil {
-		networkLogger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
+		networkLogger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork rainTreePeersManager")
 	}
 
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
@@ -55,7 +56,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProv
 		selfAddr:              addr,
 		peersManager:          pm,
 		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
-		addrBookProvider:      addrBookProvider,
+		pstoreProvider:        pstoreProvider,
 		currentHeightProvider: currentHeightProvider,
 		logger:                networkLogger,
 	}
@@ -64,7 +65,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProv
 }
 
 func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
-	return n.networkBroadcastAtLevel(data, n.peersManager.getNetworkView().maxNumLevels, crypto.GetNonce())
+	return n.networkBroadcastAtLevel(data, n.peersManager.GetMaxNumLevels(), crypto.GetNonce())
 }
 
 func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, nonce uint64) error {
@@ -127,12 +128,14 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return nil
 	}
 
-	peer, ok := n.peersManager.getNetworkView().addrBookMap[address.String()]
-	if !ok {
-		n.logger.Error().Str("address", address.String()).Msg("address not found in addrBookMap")
+	peer := n.peersManager.GetPeerstore().GetPeer(address)
+	if peer == nil {
+		n.logger.Error().Str("address", address.String()).Msg("address not found in peerstore")
 	}
 
-	if err := peer.Dialer.Write(data); err != nil {
+	// TECHDEBT: should not be `Peer`s responsibility
+	// to manage or expose its connections.
+	if _, err := peer.GetStream().Write(data); err != nil {
 		n.logger.Error().Err(err).Msg("Error writing to peer during send")
 		return err
 	}
@@ -213,22 +216,32 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	return rainTreeMsg.Data, nil
 }
 
-func (n *rainTreeNetwork) GetAddrBook() typesP2P.AddrBook {
-	return n.peersManager.getNetworkView().addrBook
+func (n *rainTreeNetwork) GetPeerstore() sharedP2P.Peerstore {
+	return n.peersManager.GetPeerstore()
 }
 
-func (n *rainTreeNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
-	n.peersManager.wg.Add(1)
-	n.peersManager.eventCh <- addressBookEvent{addToAddressBook, peer}
-	n.peersManager.wg.Wait()
+func (n *rainTreeNetwork) AddPeer(peer sharedP2P.Peer) error {
+	n.peersManager.HandleEvent(
+		sharedP2P.PeerManagerEvent{
+			EventType: sharedP2P.AddPeerEventType,
+			Peer:      peer,
+		},
+	)
 	return nil
 }
 
-func (n *rainTreeNetwork) RemovePeerFromAddrBook(peer *typesP2P.NetworkPeer) error {
-	n.peersManager.wg.Add(1)
-	n.peersManager.eventCh <- addressBookEvent{removeFromAddressBook, peer}
-	n.peersManager.wg.Wait()
+func (n *rainTreeNetwork) RemovePeer(peer sharedP2P.Peer) error {
+	n.peersManager.HandleEvent(
+		sharedP2P.PeerManagerEvent{
+			EventType: sharedP2P.RemovePeerEventType,
+			Peer:      peer,
+		},
+	)
 	return nil
+}
+
+func (n *rainTreeNetwork) Size() int {
+	return n.peersManager.GetPeerstore().Size()
 }
 
 func shouldSendToTarget(target target) bool {
