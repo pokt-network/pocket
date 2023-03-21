@@ -8,7 +8,7 @@ import (
 )
 
 type PeerManager interface {
-	// TECHDEBT: move this to some new `ConnManager` interface.
+	// TECHDEBT(#576): move this to some new `ConnManager` interface.
 	GetSelfAddr() crypto.Address
 	GetPeerstore() Peerstore
 	GetPeersView() PeersView

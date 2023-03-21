@@ -11,7 +11,7 @@ type Peer interface {
 	GetPublicKey() crypto.PublicKey
 	GetServiceURL() string
 
-	// TECHDEBT: move this to some new `ConnManager` interface.
+	// TECHDEBT(#576): move this to some new `ConnManager` interface.
 	GetStream() io.ReadWriteCloser
 }
 

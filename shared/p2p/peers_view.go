@@ -7,6 +7,10 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
+// CONSIDERATION(#576): does it make more sense to move this interface to the
+// consumer package and unexport?
+// Pro: interface can be unexported
+// Con: can't make interface assignment compile-time check
 type PeersView interface {
 	GetAddrs() []string
 	GetPeers() PeerList

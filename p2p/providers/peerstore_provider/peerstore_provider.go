@@ -42,7 +42,7 @@ func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore
 }
 
 func ActorToPeer(abp PeerstoreProvider, actor *coreTypes.Actor) (sharedP2P.Peer, error) {
-	// TECHDEBT: this should be the responsibility of some new `ConnManager` interface.
+	// TECHDEBT(#576): this should be the responsibility of some new `ConnManager` interface.
 	// Peerstore (identity / address mapping) is a separate concern from managing
 	// connections to/from peers.
 	conn, err := abp.GetConnFactory()(abp.GetP2PConfig(), actor.GetServiceUrl()) // generic param is service url
