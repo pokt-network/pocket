@@ -40,10 +40,10 @@ func TestMain(m *testing.M) {
 // TODO(integration): These are temporary variables used in the prototype integration phase that
 // will need to be parameterized later once the test framework design matures.
 const (
-	numValidators = 4
-	stateHash     = "42"
-	maxTxBytes    = 90000
-	//stateSyncBlockCount = 250
+	numValidators          = 4
+	stateHash              = "42"
+	maxTxBytes             = 90000
+	stateSyncMaxBlockCount = 1000
 )
 
 type IdToNodeMapping map[typesCons.NodeId]*shared.Node
@@ -262,12 +262,6 @@ func WaitForNetworkStateSyncEvents(
 		_, ok := msg.(*typesCons.StateSyncMessage)
 		require.True(t, ok)
 
-		// stateSyncBlockReqMessage, ok := msg.(*typesCons.StateSyncMessage)
-		// require.True(t, ok)
-
-		// blockReq := stateSyncBlockReqMessage.String()
-		// fmt.Println("Gokhansa Requests", blockReq)
-
 		return true
 	}
 
@@ -458,7 +452,10 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesi
 	utilityMock.EXPECT().
 		NewContext(gomock.Any()).
 		Return(utilityContextMock, nil).
-		MaxTimes(4)
+		MaxTimes(stateSyncMaxBlockCount)
+	// utilityMock.EXPECT().
+	// 	NewContext(gomock.Any()).
+	// 	Return(utilityContextMock, nil)
 	utilityMock.EXPECT().GetModuleName().Return(modules.UtilityModuleName).AnyTimes()
 
 	return utilityMock
