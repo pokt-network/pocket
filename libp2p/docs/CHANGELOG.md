@@ -5,7 +5,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.5] - 2023-03-20
+## [0.0.0.5] - 2023-03-21
 
 - Refactored libp2p module to use new P2P interfaces
 
