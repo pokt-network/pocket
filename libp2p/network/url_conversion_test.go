@@ -3,13 +3,11 @@ package network
 import (
 	"fmt"
 	"net"
-	"strings"
 	"testing"
 
 	"github.com/foxcpp/go-mockdns"
 
 	"github.com/multiformats/go-multiaddr"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -77,24 +75,24 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 		{
 			"fully qualified domain name with scheme",
 			"tcp://%s:8080",
-			"usage of scheme is invalid",
+			errInvalidSchemeUsageMsg,
 		},
 
 		// Port **number** is required
 		{
 			"invalid port number",
 			"%s:abc",
-			"parsing peer service URL",
+			errParsingServiceURLMsg,
 		},
 		{
 			"missing port number",
 			"%s:",
-			"missing port number and delimiter in service URL",
+			errMissingPortAndDelimiterMsg,
 		},
 		{
 			"missing port number and delimiter",
 			"%s",
-			"missing port number and delimiter in service URL",
+			errMissingPortAndDelimiterMsg,
 		},
 	}
 
@@ -103,9 +101,8 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 			testName := fmt.Sprintf("%s/%s", testCase.name, hostType)
 			t.Run(testName, func(t *testing.T) {
 				serviceURL := fmt.Sprintf(testCase.serviceURLFormat, hostname)
-				actualMultiaddr, err := Libp2pMultiaddrFromServiceURL(serviceURL)
-				assert.Error(t, err, fmt.Sprintf("actualMultiaddr: %s", actualMultiaddr))
-				assert.True(t, strings.HasPrefix(err.Error(), testCase.expectedErr), fmt.Sprintf("expected error to start with %q, but got %q", testCase.expectedErr, err.Error()))
+				_, err := Libp2pMultiaddrFromServiceURL(serviceURL)
+				require.ErrorContainsf(t, err, testCase.expectedErr, fmt.Sprintf("expected error to start with %q, but got %q", testCase.expectedErr, err.Error()))
 			})
 		}
 	}
@@ -113,7 +110,7 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 
 func ExampleLibp2pMultiaddrFromServiceURL() {
 	// Example: IPv4
-	peerMultiAddr, err := Libp2pMultiaddrFromServiceURL("www.google.com:8080")
+	peerMultiAddr, err := Libp2pMultiaddrFromServiceURL("142.251.40.164:8080")
 	if err != nil {
 		panic(err)
 	}
@@ -122,7 +119,7 @@ func ExampleLibp2pMultiaddrFromServiceURL() {
 	// Output: /ip4/142.251.40.164/tcp/8080
 }
 
-func ExampleLibp2pMultiaddrFromServiceURL_IPv6() {
+func ExampleLibp2pMultiaddrFromServiceURL_ipv6() {
 	// Example: IPv6
 	peerMultiAddr, err := Libp2pMultiaddrFromServiceURL("[2a00:1450:4005:802::2004]:8080")
 	if err != nil {

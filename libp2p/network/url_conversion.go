@@ -22,16 +22,19 @@ const (
 	// anyScheme is a string which fills the "scheme" degree of freedom for
 	// a URL. Used to pad URLs without schemes such that they can be parsed
 	// via stdlib URL parser.
-	anyScheme           = "scheme://"
-	errResolvePeerIPMsg = "resolving peer IP for hostname"
+	anyScheme                     = "scheme://"
+	errResolvePeerIPMsg           = "resolving peer IP for hostname"
+	errMissingPortAndDelimiterMsg = "missing port number and delimiter in service URL"
+	errParsingServiceURLMsg       = "parsing peer service URL"
+	errInvalidPortMsg             = "invalid port"
+	errInvalidSchemeUsageMsg      = "usage of scheme is invalid in service URL"
 )
 
 // Libp2pMultiaddrFromServiceURL transforms a URL into its libp2p multiaddr equivalent. The URL must contain a port number.
 // The URL may contain a hostname or IP address. If a hostname is provided, it will be resolved to an IP address.
-// The URL may not contain a scheme. The URL will be prefixed with "scheme://".
-// The URL may contain an IPv6 address, but it must be enclosed in square brackets.
+// The URL may not contain a scheme. The URL may contain an IPv6 address, but it must be enclosed in square brackets.
 // The URL may contain an IPv4 address, but it must not be enclosed in square brackets.
-(see: https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2)
+// (see: https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2)
 // (see: https://github.com/libp2p/specs/blob/master/addressing/README.md#multiaddr-basics)
 func Libp2pMultiaddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, error) {
 	var (
@@ -44,19 +47,19 @@ func Libp2pMultiaddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, erro
 
 	// Conditionally add the anyScheme prefix if no scheme is present.
 	if strings.Contains(serviceURL, "://") {
-		return nil, fmt.Errorf("usage of scheme is invalid service URL: %s", serviceURL)
+		return nil, fmt.Errorf("%s: %s", errInvalidSchemeUsageMsg, serviceURL)
 	} else {
 		serviceURL = anyScheme + serviceURL
 	}
 
 	peerUrl, err := url.Parse(serviceURL)
 	if err != nil {
-		return nil, fmt.Errorf("parsing peer service URL: %s: %w", serviceURL, err)
+		return nil, fmt.Errorf("%s: %s: %w", errParsingServiceURLMsg, serviceURL, err)
 	}
 
 	// Check if service URL contains a port number
 	if _, port, err := net.SplitHostPort(peerUrl.Host); err != nil || port == "" {
-		return nil, fmt.Errorf("missing port number and delimiter in service URL: %s", serviceURL)
+		return nil, fmt.Errorf("%s: %s: %w", errMissingPortAndDelimiterMsg, serviceURL, err)
 	}
 
 	peerIP, err := getPeerIP(peerUrl.Hostname())
@@ -71,7 +74,7 @@ func Libp2pMultiaddrFromServiceURL(serviceURL string) (multiaddr.Multiaddr, erro
 
 	// Check if port is valid.
 	if _, err := strconv.Atoi(peerUrl.Port()); err != nil {
-		return nil, fmt.Errorf("invalid port: %s", peerUrl.Port())
+		return nil, fmt.Errorf("%s: %s", errInvalidPortMsg, peerUrl.Port())
 	}
 
 	peerMultiAddrStr := fmt.Sprintf(
