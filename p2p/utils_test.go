@@ -17,7 +17,6 @@ import (
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/pokt-network/pocket/app/client/keybase/debug"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -32,6 +31,7 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/pokt-network/pocket/shared/poktesting"
 	"github.com/pokt-network/pocket/telemetry"
 )
 
@@ -40,41 +40,55 @@ import (
 const (
 	serviceURLFormat  = "node%d.consensus:42069"
 	eventsChannelSize = 10000
-	// Since we simulate up to a 27 node network, we will pre-generate a n >= 27 number of keys to avoid generation
-	// every time. The genesis config seed start is set for deterministic key generation and 42 was chosen arbitrarily.
-	genesisConfigSeedStart = 42
-	// Arbitrary value of the number of private keys we should generate during tests so it is only done once
+	// Arbitrary value of the number of private keys we should use during tests so that the decoding from string to PrivateKeys is only done once
 	maxNumKeys = 42
 )
 
 var keys []cryptoPocket.PrivateKey
 
 func init() {
-	keys = generateKeys(maxNumKeys)
+	keys = preparePrivateKeys(maxNumKeys)
 }
 
-func generateKeys(numValidators int) []cryptoPocket.PrivateKey {
+func preparePrivateKeys(numValidators int) []cryptoPocket.PrivateKey {
+	// Create a slice of private keys.
 	privKeys := make([]cryptoPocket.PrivateKey, numValidators)
-	preGeneratedKeys, err := debug.ParseValidatorPrivateKeysFromEmbeddedYaml()
+
+	// Get the pre-generated private keys from the embedded YAML file.
+	preGeneratedKeys, err := poktesting.ParseValidatorPrivateKeysFromEmbeddedYaml()
 	if err != nil {
 		panic(err)
 	}
 
+	// Check that there are enough pre-generated keys to match the number of validators.
 	if numValidators > len(preGeneratedKeys) {
 		panic(fmt.Sprintf("not enough pregenerated privKeys; wanted: %d; have: %d", numValidators, len(preGeneratedKeys)))
 	}
 
+	// Loop through the pre-generated keys and create a slice of private keys.
 	idx := 0
 	for _, keyHex := range preGeneratedKeys {
-		privKey, err := cryptoPocket.NewPrivateKey(keyHex)
-		panic(err)
+		if idx >= numValidators {
+			break
+		}
 
+		// Create a private key from the hex string.
+		privKey, err := cryptoPocket.NewPrivateKey(keyHex)
+		if err != nil {
+			panic(err)
+		}
+
+		// Add the private key to the slice of private keys.
 		privKeys[idx] = privKey
 		idx++
 	}
+
+	// Sort the private keys by address.
 	sort.Slice(privKeys, func(i, j int) bool {
 		return privKeys[i].Address().String() < privKeys[j].Address().String()
 	})
+
+	// Return the slice of private keys.
 	return privKeys
 }
 
@@ -108,7 +122,7 @@ func waitForNetworkSimulationCompletion(t *testing.T, wg *sync.WaitGroup) {
 	case <-done:
 
 	// All done!
-	case <-time.After(2 * time.Second): // 2 seconds was chosen arbitrarily. In a mocked environment, all messages should finish sending in less than one minute.
+	case <-time.After(15 * time.Second): // 10 seconds was chosen arbitrarily. In a mocked environment, all messages should finish sending in less than one minute.
 		t.Fatal("Timeout waiting for message to be handled")
 	}
 }
