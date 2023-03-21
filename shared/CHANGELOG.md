@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.40] - 2023-03-20
+## [0.0.0.41] - 2023-03-21
 
 - Add `TransitionEventToMap()` helper function for logging
+
+## [0.0.0.40] - 2023-03-20
+
+- Adds enum DebugMessageType for distinguishing message routing behavior
 
 ## [0.0.0.39] - 2023-03-09
 

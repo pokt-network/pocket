@@ -5,8 +5,8 @@ package debug
 import (
 	"fmt"
 	"os"
-	"sync"
 
+	"github.com/korovkin/limiter"
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/build"
 	"github.com/pokt-network/pocket/logger"
@@ -18,6 +18,11 @@ const (
 	// NOTE: This is the number of validators in the private-keys.yaml manifest file
 	numValidators      = 999
 	debugKeybaseSuffix = "/.pocket/keys"
+
+	// Increasing this number is linearly proportional to the amount of RAM required for the debug client to start and import
+	// pre-generated keys into the keybase. Beware that might cause OOM and process can exit with 137 status code.
+	// 4 threads takes 350-400MiB from a few tests which sounds acceptable.
+	debugKeybaseImportConcurrencyLimit = 4
 )
 
 var (
@@ -74,14 +79,10 @@ func initializeDebugKeybase() error {
 		// Create a channel to receive errors from goroutines
 		errCh := make(chan error, numValidators)
 
-		// Create a WaitGroup to wait for all goroutines to finish
-		var wg sync.WaitGroup
-		wg.Add(numValidators)
+		limit := limiter.NewConcurrencyLimiter(debugKeybaseImportConcurrencyLimit)
 
 		for _, privHexString := range validatorKeysPairMap {
-			go func(privHexString string) {
-				defer wg.Done()
-
+			limit.Execute(func() {
 				// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
 				keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
 				if err != nil {
@@ -102,11 +103,10 @@ func initializeDebugKeybase() error {
 					errCh <- err
 					return
 				}
-			}(privHexString)
+			})
 		}
 
-		// Wait for all goroutines to finish
-		wg.Wait()
+		limit.WaitAndClose()
 
 		// Check if any goroutines returned an error
 		select {
