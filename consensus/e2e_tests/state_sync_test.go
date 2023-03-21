@@ -1,6 +1,7 @@
 package e2e_tests
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
@@ -309,18 +311,18 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	msgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
 	require.NoError(t, err)
 
-	// for _, msg := range msgs {
-	// 	msg, err := codec.GetCodec().FromAny(msg)
-	// 	require.NoError(t, err)
+	for _, msg := range msgs {
+		msg, err := codec.GetCodec().FromAny(msg)
+		require.NoError(t, err)
 
-	// 	stateSyncBlockReqMessage, ok := msg.(*typesCons.StateSyncMessage)
-	// 	require.True(t, ok)
+		stateSyncBlockReqMessage, ok := msg.(*typesCons.StateSyncMessage)
+		require.True(t, ok)
 
-	// 	blockReq := stateSyncBlockReqMessage.GetGetBlockReq()
-	// 	require.NotEmpty(t, blockReq)
+		blockReq := stateSyncBlockReqMessage.GetGetBlockReq()
+		require.NotEmpty(t, blockReq)
 
-	// 	fmt.Println("Block req is: ", blockReq)
-	// }
+		fmt.Println("Block req is: ", blockReq)
+	}
 
 	// send the block request sent by unsynched node to all nodes
 	P2PBroadcast(t, pocketNodes, msgs[0])
@@ -332,22 +334,22 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	msgs, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
 	require.NoError(t, err)
 
-	// get a valid block. One of them should be valid
-	// for _, msg := range msgs {
+	//get a valid block. One of them should be valid
+	for _, msg := range msgs {
 
-	// 	//fmt.Println("RECEIVED STATE SYNC MSG: ", msg.TypeUrl)
-	// 	msg, err := codec.GetCodec().FromAny(msg)
-	// 	require.NoError(t, err)
+		//fmt.Println("RECEIVED STATE SYNC MSG: ", msg.TypeUrl)
+		msg, err := codec.GetCodec().FromAny(msg)
+		require.NoError(t, err)
 
-	// 	stateSyncBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
-	// 	require.True(t, ok)
+		stateSyncBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
+		require.True(t, ok)
 
-	// 	fmt.Println("Received Get Block Response: ", stateSyncBlockResMessage)
+		fmt.Println("Received Get Block Response: ", stateSyncBlockResMessage)
 
-	// 	blockReq := stateSyncBlockResMessage.GetGetBlockRes()
-	// 	require.NotEmpty(t, blockReq)
+		blockReq := stateSyncBlockResMessage.GetGetBlockRes()
+		require.NotEmpty(t, blockReq)
 
-	// }
+	}
 
 	// send the first reply to the unsynched node
 	P2PSend(t, unsynchedNode, msgs[0])

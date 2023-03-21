@@ -577,7 +577,7 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 }
 
 func GenerateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators uint64, pocketNodes IdToNodeMapping) { //[]*coreTypes.Block {
-	//blocks := make([]*coreTypes.Block, numberOfBlocks)
+	blocks := make([]*coreTypes.Block, 0)
 
 	var i uint64 = 1
 	for i <= numberOfBlocks {
@@ -606,9 +606,11 @@ func GenerateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators 
 		block, err = generateValidBlockWithQC(pocketNodes, block)
 		require.NoError(t, err)
 
-		stateSyncDummyblocks = append(stateSyncDummyblocks, block)
+		blocks = append(blocks, block)
 		i++
 	}
+
+	stateSyncDummyblocks = blocks
 }
 
 func generateValidBlockWithQC(pocketNodes IdToNodeMapping, block *coreTypes.Block) (*coreTypes.Block, error) {

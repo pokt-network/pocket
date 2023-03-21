@@ -236,6 +236,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	require.NotEmpty(t, getBlockRes)
 
 	require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
+
 }
 
 // TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
