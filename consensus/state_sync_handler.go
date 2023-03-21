@@ -112,7 +112,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 		return err
 	}
 
-	m.logger.Info().Msgf("HandleGetBlockResponse, Block is Committed, maxPersistedHeight is: %d, currentHeight is :%d", maxHeight, m.CurrentHeight())
+	m.logger.Info().Msgf("HandleGetBlockResponse, Block is Committed, maxPersistedHeight is: %d, m.Height is :%d", maxHeight, m.height)
 
 	// Send current persisted block height to the state sync module
 	m.stateSync.PersistedBlock(block.BlockHeader.Height)
