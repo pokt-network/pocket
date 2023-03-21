@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -11,15 +12,15 @@ import (
 	"github.com/pokt-network/pocket/libp2p"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
-	rpcABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/rpc"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
-	"github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
+	rpcABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 // TECHDEBT: Lowercase variables / constants that do not need to be exported.
@@ -87,7 +88,7 @@ func NewDebugCommand() *cobra.Command {
 
 			rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
 
-			addressBookProvider := rpcABP.NewRPCAddrBookProvider(
+			addressBookProvider := rpcABP.NewRPCPeerstoreProvider(
 				rpcABP.WithP2PConfig(
 					runtimeMgr.GetConfig().P2P,
 				),
@@ -217,9 +218,12 @@ func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage)
 	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
 	// p2pMod.Broadcast(anyProto)
 
-	addrBook, err := fetchAddressBook(cmd)
-	for _, val := range addrBook {
-		addr := val.Address
+	pstore, err := fetchPeerstore(cmd)
+	if err != nil {
+		logger.Global.Fatal().Msg("Unable to retrieve the pstore")
+	}
+	for _, val := range pstore.GetPeerList() {
+		addr := val.GetAddress()
 		if err != nil {
 			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 		}
@@ -237,18 +241,18 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 		logger.Global.Error().Err(err).Msg("Failed to create Any proto")
 	}
 
-	addrBook, err := fetchAddressBook(cmd)
+	pstore, err := fetchPeerstore(cmd)
 	if err != nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the addrBook")
+		logger.Global.Fatal().Msg("Unable to retrieve the pstore")
 	}
 
 	var validatorAddress []byte
-	if len(addrBook) == 0 {
+	if pstore.Size() == 0 {
 		logger.Global.Fatal().Msg("No validators found")
 	}
 
 	// if the message needs to be broadcast, it'll be handled by the business logic of the message handler
-	validatorAddress = addrBook[0].Address
+	validatorAddress = pstore.GetPeerList()[0].GetAddress()
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 	}
@@ -258,28 +262,28 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 	}
 }
 
-// fetchAddressBook retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
-func fetchAddressBook(cmd *cobra.Command) (types.AddrBook, error) {
+// fetchPeerstore retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
+func fetchPeerstore(cmd *cobra.Command) (sharedP2P.Peerstore, error) {
 	bus, ok := getValueFromCLIContext[modules.Bus](cmd, busCLICtxKey)
 	if !ok || bus == nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the bus from CLI context")
+		return nil, errors.New("retrieving bus from CLI context")
 	}
 	modulesRegistry := bus.GetModulesRegistry()
-	addrBookProvider, err := modulesRegistry.GetModule(addrbook_provider.ModuleName)
+	pstoreProvider, err := modulesRegistry.GetModule(peerstore_provider.ModuleName)
 	if err != nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the addrBookProvider")
+		return nil, errors.New("retrieving peerstore provider")
 	}
 	currentHeightProvider, err := modulesRegistry.GetModule(current_height_provider.ModuleName)
 	if err != nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the currentHeightProvider")
+		return nil, errors.New("retrieving currentHeightProvider")
 	}
 
 	height := currentHeightProvider.(current_height_provider.CurrentHeightProvider).CurrentHeight()
-	addrBook, err := addrBookProvider.(addrbook_provider.AddrBookProvider).GetStakedAddrBookAtHeight(height)
+	pstore, err := pstoreProvider.(peerstore_provider.PeerstoreProvider).GetStakedPeerstoreAtHeight(height)
 	if err != nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the addrBook")
+		return nil, fmt.Errorf("retrieving peerstore at height %d", height)
 	}
-	return addrBook, err
+	return pstore, err
 }
 
 func getP2PModule(runtimeMgr *runtime.Manager) (p2pModule modules.P2PModule, err error) {

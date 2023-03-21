@@ -7,14 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.42] - 2023-03-21
+## [0.0.0.43] - 2023-03-21
 
 - Add `ConsensusStateSync` interface to define exported state sync functions in consensus module
 - Update `ConsensusDebugModule` with getter and setter function for state sync testing
 - Update FSM events `Consensus_IsSynchedValidator`, `Consensus_IsSynchedNonValidator` and state `Consensus_Pacemaker`
-## [0.0.0.41] - 2023-03-21
+
+## [0.0.0.42] - 2023-03-21
 
 - Add `TransitionEventToMap()` helper function for logging
+
+## [0.0.0.41] - 2023-03-21
+
+- Added *temporary* `shared/p2p` package to hold P2P interfaces common to both legacy and libp2p modules
+- Added `Peerstore` interface
+- Added `Peer` and `PeerList` and interfaces
+- Moved `typesP2P.AddrBookMap` to `sharedP2P.PeerAddrMap` and refactor to implement the new `Peerstore` interface
+- Refactored `getAddrBookDelta` to be a member of `PeerList`
+- Factored `SortedPeerManager` out of `raintree.peersManager` and add `PeerManager` interface
+- Refactored getAddrBookDelta to be a member of PeerList
 
 ## [0.0.0.40] - 2023-03-20
 
