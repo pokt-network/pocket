@@ -53,7 +53,7 @@ jobs:
     needs: validate
     if: always()
     steps:
-      - name: Verify changelogs KO
+      - name: Verify changelogs Failed - Create review comment
         if: ${{ contains(needs.validate.outputs.all, 'failed') }}
         uses: actions/github-script@v5
         with:
