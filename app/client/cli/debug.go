@@ -25,15 +25,13 @@ import (
 
 // TECHDEBT: Lowercase variables / constants that do not need to be exported.
 const (
-	PromptResetToGenesis      string = "ResetToGenesis"
-	PromptPrintNodeState      string = "PrintNodeState"
-	PromptTriggerNextView     string = "TriggerNextView"
-	PromptTogglePacemakerMode string = "TogglePacemakerMode"
-
-	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
-
-	PromptSendMetadataRequest string = "MetadataRequest"
-	PromptSendBlockRequest    string = "BlockRequest"
+	PromptResetToGenesis         string = "ResetToGenesis (broadcast)"
+	PromptPrintNodeState         string = "PrintNodeState (broadcast)"
+	PromptTriggerNextView        string = "TriggerNextView (broadcast)"
+	PromptTogglePacemakerMode    string = "TogglePacemakerMode (broadcast)"
+	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore (anycast)"
+	PromptSendMetadataRequest    string = "MetadataRequest (broadcast)"
+	PromptSendBlockRequest       string = "BlockRequest (broadcast)"
 )
 
 var (
@@ -156,42 +154,50 @@ func handleSelect(cmd *cobra.Command, selection string) {
 	case PromptResetToGenesis:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)
 	case PromptPrintNodeState:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)
 	case PromptTriggerNextView:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)
 	case PromptTogglePacemakerMode:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)
 	case PromptShowLatestBlockInStore:
 		m := &messaging.DebugMessage{
-			Action:  messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
+			Action: messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
+			// NB: Anycast because we technically accept any node but we arbitrarily choose the first in our address book.
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_ANYCAST,
 			Message: nil,
 		}
 		sendDebugMessage(cmd, m)
 	case PromptSendMetadataRequest:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ,
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)
 	case PromptSendBlockRequest:
 		m := &messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ,
+			Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
 			Message: nil,
 		}
 		broadcastDebugMessage(cmd, m)
