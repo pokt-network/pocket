@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.39] - 2023-03-24
+
+- Added a test which asserts that transport encryption is required (i.e. unencrypted connections are refused)
+
 ## [0.0.0.38] - 2023-03-24
 
 - Moved peer & url conversion utils to `p2p/utils` package
