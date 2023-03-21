@@ -50,22 +50,24 @@ const (
 var keys []cryptoPocket.PrivateKey
 
 func init() {
-	keys = generateKeys(nil, maxNumKeys)
+	keys = generateKeys(maxNumKeys)
 }
 
-func generateKeys(t *testing.T, numValidators int) []cryptoPocket.PrivateKey {
+func generateKeys(numValidators int) []cryptoPocket.PrivateKey {
 	privKeys := make([]cryptoPocket.PrivateKey, numValidators)
 	preGeneratedKeys, err := debug.ParseValidatorPrivateKeysFromEmbeddedYaml()
-	require.NoError(t, err)
+	if err != nil {
+		panic(err)
+	}
 
 	if numValidators > len(preGeneratedKeys) {
-		t.Fatal("not enough pregenerated privKeys")
+		panic(fmt.Sprintf("not enough pregenerated privKeys; wanted: %d; have: %d", numValidators, len(preGeneratedKeys)))
 	}
 
 	idx := 0
 	for _, keyHex := range preGeneratedKeys {
 		privKey, err := cryptoPocket.NewPrivateKey(keyHex)
-		require.NoError(t, err)
+		panic(err)
 
 		privKeys[idx] = privKey
 		idx++
