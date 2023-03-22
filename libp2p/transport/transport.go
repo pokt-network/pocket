@@ -25,13 +25,16 @@ func (transport *libP2PTransport) IsListener() bool {
 	return true
 }
 
-func (transport *libP2PTransport) Read() ([]byte, error) {
-	return io.ReadAll(transport.stream)
+func (transport *libP2PTransport) ReadAll() ([]byte, error) {
+	return io.ReadAll(transport)
 }
 
-func (transport *libP2PTransport) Write(data []byte) error {
-	_, err := transport.stream.Write(data)
-	return err
+func (transport *libP2PTransport) Read(buf []byte) (int, error) {
+	return transport.stream.Read(buf)
+}
+
+func (transport *libP2PTransport) Write(data []byte) (int, error) {
+	return transport.stream.Write(data)
 }
 
 func (transport *libP2PTransport) Close() error {
