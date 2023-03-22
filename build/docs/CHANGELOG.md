@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.25] - 2023-03-20
+## [0.0.0.25] - 2023-03-23
 
-- Update `max_conns_count` from 8 to 50
+- Update `pacemaker_timeout` from 5 to 10 seconds
+- Updated configurations related to postgres connection pooling
 
 ## [0.0.0.24] - 2023-03-17
 

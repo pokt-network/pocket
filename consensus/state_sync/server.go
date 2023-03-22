@@ -28,9 +28,9 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Received StateSyncMetadataRequest %s", metadataReq)
 
 	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
-	lastPersistedBlockHeight := consensusMod.CurrentHeight() - 1
+	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
-	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(prevPersistedBlockHeight))
 	if err != nil {
 		return nil
 	}
@@ -67,10 +67,10 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Received StateSync GetBlockRequest: %s", blockReq)
 
 	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
-	lastPersistedBlockHeight := consensusMod.CurrentHeight() - 1
+	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
-	if lastPersistedBlockHeight < blockReq.Height {
-		return fmt.Errorf("requested block height: %d is higher than current persisted block height: %d", blockReq.Height, lastPersistedBlockHeight)
+	if prevPersistedBlockHeight < blockReq.Height {
+		return fmt.Errorf("requested block height: %d is higher than current persisted block height: %d", blockReq.Height, prevPersistedBlockHeight)
 	}
 
 	// get block from the persistence module

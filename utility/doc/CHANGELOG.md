@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.32] - 2023-03-23
+
+- Improved logging throughout the module
+
 ## [0.0.0.31] - 2023-02-28
 
 - Fixed bug where we were not removing txs from the mempool of replicas

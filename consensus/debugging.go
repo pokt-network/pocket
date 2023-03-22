@@ -6,7 +6,7 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
-// TECHDEBT: Exposed publicly so it can be accessed via reflection in tests
+// TECHDEBT: GetNodeState is only exposed publicly so it can be accessed via reflection in tests
 func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	leaderId := typesCons.NodeId(0)
 	if m.leaderId != nil {

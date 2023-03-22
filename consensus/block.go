@@ -73,9 +73,9 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 // Creates a new Utility context and clears/nullifies any previous contexts if they exist
 func (m *consensusModule) refreshUtilityContext() error {
 	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
-	// TODO: This should not be called once fixed
 	utilityContext := m.utilityContext
 	if utilityContext != nil {
+		// TODO: This should, ideally, never be called
 		m.logger.Warn().Bool("TODO", true).Msg(typesCons.NilUtilityContextWarning)
 		utilityContext.Release()
 		m.utilityContext = nil

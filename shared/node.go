@@ -2,7 +2,6 @@ package shared
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/pokt-network/pocket/consensus"
@@ -21,7 +20,8 @@ import (
 )
 
 const (
-	mainModuleName = "main"
+	mainModuleName       = "main"
+	eventHandlingTimeout = 30 * time.Second // see usage for a description
 )
 
 type Node struct {
@@ -113,28 +113,33 @@ func (node *Node) Start() error {
 
 	logger.Global.Info().Msg("About to start pocket node main loop...")
 
-	// While loop lasting throughout the entire lifecycle of the node to handle asynchronous events
+	// A while loop lasting throughout the entire lifecycle of the node to handle asynchronous events
+	// send between modules or external participants.
 	for {
+		//
 		event := node.GetBus().GetBusEvent()
-		timeout := time.Second * 5
 		clock := node.GetBus().GetRuntimeMgr().GetClock()
-		ctx, cancel := clock.WithTimeout(context.TODO(), timeout)
+		ctx, cancel := clock.WithTimeout(context.TODO(), eventHandlingTimeout)
+
+		// `node.handleEvent`` is a blocking call, and the entrypoint into all the operations inside the node.
+		// It is run in a goroutine to allow setting a deadline for message handling and get visibility into
+		// bugs/issue including deadlocks and other concurrency issues.
 		go func() {
-			fmt.Println("About to handle event", event)
 			if err := node.handleEvent(event); err != nil {
 				logger.Global.Error().Err(err).Msg("Error handling event")
 			}
 			cancel()
 		}()
+
+		// Block the node event handler from continuing until the event has been handled or the deadline has been reached.
 		select {
 		case <-ctx.Done():
-			if ctx.Err() == context.Canceled {
-				continue
-			} else if ctx.Err() == context.DeadlineExceeded {
+			if ctx.Err() == context.DeadlineExceeded {
+				logger.Global.Error().Msgf("Event handling timed out: %v", event)
 				cancel()
 			}
-		case <-clock.After(timeout + 1*time.Second):
-			continue
+		case <-clock.After(eventHandlingTimeout + 1*time.Second):
+			cancel()
 		}
 	}
 }

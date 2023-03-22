@@ -43,8 +43,8 @@ type persistenceModule struct {
 	// A list of all the merkle trees maintained by the persistence module that roll up into the state commitment.
 	stateTrees *stateTrees
 
-	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	// Only one write context is allowed at a time
+	//
 	writeContext *PostgresContext
 
 	// A pool of connections to the postgres database

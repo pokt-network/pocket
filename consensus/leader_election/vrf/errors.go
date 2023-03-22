@@ -7,7 +7,7 @@ import (
 
 const (
 	NilPrivateKeyError      = "private key cannot be nil"
-	BadStateHashLengthError = "the last block hash must be at least %d bytes in length"
+	BadStateHashLengthError = "the previous block hash must be at least %d bytes in length"
 )
 
 var (

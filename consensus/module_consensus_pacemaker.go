@@ -11,6 +11,7 @@ import (
 
 var _ modules.ConsensusPacemaker = &consensusModule{}
 
+// ResetRound resets the hotstuff view / round at either the current or new height depending on the var prvodied
 func (m *consensusModule) ResetRound(isNewHeight bool) {
 	m.leaderId = nil
 	m.clearMessagesPool()

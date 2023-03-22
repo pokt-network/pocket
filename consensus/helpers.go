@@ -286,6 +286,5 @@ func msgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
 		"height": msg.GetHeight(),
 		"round":  msg.GetRound(),
 		"step":   msg.GetStep(),
-		// "stepStr": typesCons.StepToString[NewRound],
 	}
 }

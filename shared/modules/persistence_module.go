@@ -62,7 +62,7 @@ type PersistenceWriteContext interface {
 	RollbackToSavePoint([]byte) error
 	Release()
 
-	// Commits the current context (height, hash, transactions, etc...) to disk (i.e. finality) and releases it.
+	// Commits (and releases) the current context to disk (i.e. finality).
 	Commit(proposerAddr, quorumCert []byte) error
 
 	// Indexer Operations

@@ -443,10 +443,10 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesi
 func baseUtilityContextMock(t *testing.T, genesisState *genesis.GenesisState) *mockModules.MockUtilityContext {
 	ctrl := gomock.NewController(t)
 	utilityContextMock := mockModules.NewMockUtilityContext(ctrl)
-	persistenceRWContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
-	persistenceRWContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
-	persistenceRWContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
-	persistenceRWContextMock.EXPECT().Release().AnyTimes()
+	rwContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
+	rwContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	rwContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
+	rwContextMock.EXPECT().Release().AnyTimes()
 
 	utilityContextMock.EXPECT().
 		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).

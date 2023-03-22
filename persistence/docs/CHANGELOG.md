@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.41] - 2023-03-23
+
+- Replaced all `pgx.Conn` with `pgxpool.Conn` to use postgres connection pooling
+- Consolidate and simplify `Release` and `Close` and `resetContext` into a single function
+- Introduced a `ConnectTimeout` to the postgres connection
+- Remove the unnecessary `getTx` helper
+- Maintain a pool of connections to the postgres DB rather than creating a new one each time
+- Improve readability of `ReleaseWriteContext`
+
 ## [0.0.0.40] - 2023-03-01
 
 - Update state hash test after modifying genesis (updated port numbers)

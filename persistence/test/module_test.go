@@ -56,19 +56,19 @@ func TestPersistenceContextTwoWritesErrors(t *testing.T) {
 	prepareAndCleanContext(t)
 
 	// Opening up first write context succeeds
-	rwCtx, err := testPersistenceMod.NewRWContext(0)
+	rwCtx1, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
-	rwCtx.Release()
+	defer rwCtx1.Release()
 
 	// Opening up second write context at the same height fails
-	rwCtx, err = testPersistenceMod.NewRWContext(0)
+	_, err = testPersistenceMod.NewRWContext(0)
 	require.Error(t, err)
-	rwCtx.Release()
+	// defer rwCtx2.Release()
 
 	// Opening up second write context at a different height fails
-	rwCtx, err = testPersistenceMod.NewRWContext(1)
+	_, err = testPersistenceMod.NewRWContext(1)
 	require.Error(t, err)
-	rwCtx.Release()
+	// defer rwCtx3.Release()
 }
 
 func TestPersistenceContextSequentialWrites(t *testing.T) {

@@ -66,27 +66,34 @@ func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
 	if err != nil {
 		return err
 	}
-	// defer rwCtx.Release()
+	// NB: Not calling `defer rwCtx.Release()` because we `Commit`, which releases, the tx below/
 
 	postgresCtx := rwCtx.(*PostgresContext)
 
-	// Clear the SQL DB
+	// Clear all the Merkle Trees (i.e. backed the key-value stores)
+	if err := postgresCtx.clearAllTreeState(); err != nil {
+		return err
+	}
+
+	// Clear all the SQL tables
 	if err := postgresCtx.clearAllSQLState(); err != nil {
 		return err
 	}
 
-	// Release the SQL write context
+	// Commit the SQL transaction that clears everything
+	ctx, tx := postgresCtx.getCtxAndTx()
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	// NB: We are manually committing the transaction above (since clearing everything is not a prod use case),
+	// which is why we also need to manually release the write context to allow creating a new one in the future.
 	if err := m.ReleaseWriteContext(); err != nil {
 		return err
 	}
 
-	// Clear the BlockStore
+	// Clear the BlockStore (i.e. backed by the key-value store)
 	if err := m.blockStore.ClearAll(); err != nil {
-		return err
-	}
-
-	// Clear all the Trees
-	if err := postgresCtx.clearAllTreeState(); err != nil {
 		return err
 	}
 
@@ -114,10 +121,6 @@ func (p *PostgresContext) clearAllSQLState() error {
 		if _, err := clearTx.Exec(ctx, clearFn()); err != nil {
 			return err
 		}
-	}
-
-	if err := clearTx.Commit(ctx); err != nil {
-		return err
 	}
 
 	return nil

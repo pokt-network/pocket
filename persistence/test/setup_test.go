@@ -71,6 +71,7 @@ func TestMain(m *testing.M) {
 
 // IMPROVE: Look into returning `testPersistenceMod` to avoid exposing underlying abstraction.
 func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresContext {
+
 	rwCtx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
 		log.Fatalf("Error creating new context: %v\n", err)

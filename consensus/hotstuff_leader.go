@@ -9,8 +9,6 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
-// CONSOLIDATE: Last/Prev
-
 type HotstuffLeaderMessageHandler struct{}
 
 var (

@@ -24,6 +24,9 @@ const (
 
 	// DUPLICATE OBJECT error. For reference: https://www.postgresql.org/docs/8.4/errcodes-appendix.html
 	DuplicateObjectErrorCode = "42710"
+
+	// TODO: Make this a node configuration
+	connTimeout = 5 * time.Second
 )
 
 // TODO: Move schema related functionality into its own package
@@ -47,11 +50,11 @@ func initializePool(cfg *configs.PersistenceConfig) (*pgxpool.Pool, error) {
 	config.MaxConns = cfg.GetMaxConnsCount()
 	config.MinConns = cfg.GetMinConnsCount()
 
-	// maxConnLifetime, err := time.ParseDuration(cfg.GetMaxConnLifetime())
-	// if err != nil {
-	// 	return nil, fmt.Errorf("unable to set max connection lifetime: %v", err)
-	// }
-	config.MaxConnLifetime = time.Second * 10
+	maxConnLifetime, err := time.ParseDuration(cfg.GetMaxConnLifetime())
+	if err != nil {
+		return nil, fmt.Errorf("unable to set max connection lifetime: %v", err)
+	}
+	config.MaxConnLifetime = maxConnLifetime
 
 	maxConnIdleTime, err := time.ParseDuration(cfg.GetMaxConnIdleTime())
 	if err != nil {
@@ -66,7 +69,7 @@ func initializePool(cfg *configs.PersistenceConfig) (*pgxpool.Pool, error) {
 	config.HealthCheckPeriod = healthCheckPeriod
 
 	// Update the base connection configurations
-	config.ConnConfig.ConnectTimeout = 5 * time.Second
+	config.ConnConfig.ConnectTimeout = connTimeout
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
