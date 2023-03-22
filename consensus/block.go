@@ -42,7 +42,7 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 		if step != NewRound {
 			return false, fmt.Errorf("validateBlockBasic failed - block is nil during step %s", typesCons.StepToString[m.step])
 		}
-		m.logger.Debug().Msg("Nil (expected) block is present during NewRound step.")
+		m.logger.Debug().Msg("✅ NewRound block is nil.")
 		return true, nil
 	}
 
