@@ -25,9 +25,9 @@ type ConsensusModule interface {
 	ConsensusPacemaker
 	ConsensusDebugModule
 
-	// Consensus Engine Handlers
+	// Consensus engine handlers
 	HandleMessage(*anypb.Any) error
-	// State Sync messages Handler
+	// State Sync message handlers
 	HandleStateSyncMessage(*anypb.Any) error
 
 	// Consensus State Accessors
@@ -39,14 +39,20 @@ type ConsensusModule interface {
 	EnableServerMode()
 }
 
-// This interface represents functions exposed by the Consensus module for Pacemaker specific business logic.
+// ConsensusStateSync represents functions exposed by the Consensus module for StateSync specific business logic.
+// These functions are intended to only be called by the StateSync module.
+// TODO: This interface enables a fast implementation of state sync but should be removed in the future
+type ConsensusStateSync interface {
+	GetNodeIdFromNodeAddress(string) (uint64, error)
+	GetNodeAddress() string
+}
+
+// ConsensusPacemaker represents functions exposed by the Consensus module for Pacemaker specific business logic.
 // These functions are intended to only be called by the Pacemaker module.
-// TODO(#428): This interface will be removed when the communication between the pacemaker and consensus module become asynchronous via the bus.
+// TODO(#428): This interface should be removed when the communication between the pacemaker and consensus module become asynchronous via the bus or go channels.
 type ConsensusPacemaker interface {
 	// Clearers
-	ResetRound()
-	ResetForNewHeight()
-	ClearLeaderMessagesPool()
+	ResetRound(isNewHeight bool)
 	ReleaseUtilityContext() error
 
 	// Setters
@@ -68,21 +74,15 @@ type ConsensusPacemaker interface {
 	GetNodeId() uint64
 }
 
-// This interface represents functions exposed by the Consensus module for StateSync specific business logic.
-// These functions are intended to only be called by the StateSync module.
-// INVESTIGATE: This interface enable a fast implementation of state sync but look into a way of removing it in the future
-type ConsensusStateSync interface {
-	GetNodeIdFromNodeAddress(string) (uint64, error)
-	GetNodeAddress() string
-}
-
+// ConsensusDebugModule exposes functionality used for testing & development purposes.
+// Not to be used in production.
+// TODO: Add a flag so this is not compiled in the prod binary.
 type ConsensusDebugModule interface {
 	HandleDebugMessage(*messaging.DebugMessage) error
 
 	SetHeight(uint64)
 	SetRound(uint64)
-	// REFACTOR: This should accept typesCons.HotstuffStep.
-	SetStep(uint8)
+	SetStep(uint8) // REFACTOR: This should accept typesCons.HotstuffStep.
 	SetBlock(*types.Block)
 	SetUtilityContext(UtilityContext)
 }

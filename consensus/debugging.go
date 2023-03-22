@@ -2,65 +2,11 @@ package consensus
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var (
-	_ modules.ConsensusDebugModule = &consensusModule{}
-)
-
-// Implementation of ConsensusDebugModule functions (i.e. SetHeight(), SetRound(), SetStep(), SetUtilityContext())
-// exposed by the debug interface should only be used for testing purposes.
-
-func (m *consensusModule) SetHeight(height uint64) {
-	m.height = height
-	m.publishNewHeightEvent(height)
-}
-
-func (m *consensusModule) SetRound(round uint64) {
-	m.round = round
-}
-
-func (m *consensusModule) SetStep(step uint8) {
-	m.step = typesCons.HotstuffStep(step)
-}
-
-func (m *consensusModule) SetBlock(block *coreTypes.Block) {
-	m.block = block
-}
-
-func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
-	m.utilityContext = utilityContext
-}
-
-func (m *consensusModule) HandleDebugMessage(debugMessage *messaging.DebugMessage) error {
-	m.m.Lock()
-	defer m.m.Unlock()
-
-	switch debugMessage.Action {
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
-		if err := m.resetToGenesis(debugMessage); err != nil {
-			return err
-		}
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
-		m.printNodeState(debugMessage)
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
-		m.triggerNextView(debugMessage)
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
-		m.togglePacemakerManualMode(debugMessage)
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_BLOCK_REQ:
-		m.sendGetBlockStateSyncMessage(debugMessage)
-	case messaging.DebugMessageAction_DEBUG_CONSENSUS_SEND_METADATA_REQ:
-		m.sendGetMetadataStateSyncMessage(debugMessage)
-	default:
-		m.logger.Debug().Msgf("Debug message: %s", debugMessage.Message)
-	}
-	return nil
-}
-
+// TECHDEBT: Exposed publicly so it can be accessed via reflection in tests
 func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	leaderId := typesCons.NodeId(0)
 	if m.leaderId != nil {
@@ -80,9 +26,8 @@ func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
 	m.logger.Debug().Msg(typesCons.DebugResetToGenesis)
 
+	m.ResetRound(true)
 	m.SetHeight(0)
-	m.ResetForNewHeight()
-	m.ResetRound()
 	m.GetBus().GetUtilityModule().GetMempool().Clear()
 	if err := m.GetBus().GetPersistenceModule().HandleDebugMessage(&messaging.DebugMessage{
 		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
@@ -192,9 +137,4 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 		}
 	}
 
-}
-
-func (m *consensusModule) ClearLeaderMessagesPool() {
-	m.clearLeader()
-	m.clearMessagesPool()
 }

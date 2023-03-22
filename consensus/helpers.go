@@ -228,11 +228,6 @@ func (m *consensusModule) isReplica() bool {
 	return !m.IsLeader()
 }
 
-func (m *consensusModule) clearLeader() {
-	m.logPrefix = DefaultLogPrefix
-	m.leaderId = nil
-}
-
 func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) error {
 	leaderId, err := m.leaderElectionMod.ElectNextLeader(message)
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
@@ -250,7 +245,7 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 	if err != nil || leaderId == 0 {
 		m.logger.Error().Err(err).Fields(loggingFields).Msg("leader election failed: Validator cannot take part in consensus")
-		m.clearLeader()
+		m.leaderId = nil
 		return err
 	}
 

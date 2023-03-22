@@ -9,23 +9,18 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-var (
-	_ modules.ConsensusPacemaker   = &consensusModule{}
-	_ modules.ConsensusDebugModule = &consensusModule{}
-)
+var _ modules.ConsensusPacemaker = &consensusModule{}
 
-func (m *consensusModule) ResetRound() {
-	m.clearLeader()
+func (m *consensusModule) ResetRound(isNewHeight bool) {
+	m.leaderId = nil
 	m.clearMessagesPool()
-}
-
-// This function resets the current state of the consensus module, called by pacemaker submodule before node proceeds to the next view.
-func (m *consensusModule) ResetForNewHeight() {
-	m.round = 0
 	m.step = 0
-	m.block = nil
-	m.prepareQC = nil
-	m.lockedQC = nil
+	if isNewHeight {
+		m.round = 0
+		m.block = nil
+		m.prepareQC = nil
+		m.lockedQC = nil
+	}
 }
 
 // This function releases consensus module's utility context, called by pacemaker module

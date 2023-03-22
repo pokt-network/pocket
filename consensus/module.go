@@ -21,10 +21,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const (
-	DefaultLogPrefix = "NODE" // TODO(#164): Make implicit when logging is standardized
-)
-
 var _ modules.ConsensusModule = &consensusModule{}
 
 type consensusModule struct {
@@ -76,23 +72,6 @@ type consensusModule struct {
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
 }
 
-// Implementations of the ConsensusStateSync interface
-
-func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error) {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-	if err != nil {
-		// REFACTOR(#434): As per issue #434, once the new id is sorted out, this return statement must be changed
-		return 0, err
-	}
-
-	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
-	return uint64(valAddrToIdMap[peerId]), nil
-}
-
-func (m *consensusModule) GetNodeAddress() string {
-	return m.nodeAddress
-}
-
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return new(consensusModule).Create(bus, options...)
 }
@@ -130,10 +109,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 
 		leaderId: nil,
 
-		utilityContext: nil,
-
-		logPrefix: DefaultLogPrefix,
-
+		utilityContext:  nil,
 		hotstuffMempool: make(map[typesCons.HotstuffStep]*hotstuffFIFOMempool),
 	}
 
@@ -294,6 +270,10 @@ func (m *consensusModule) CurrentStep() uint64 {
 	return uint64(m.step)
 }
 
+func (m *consensusModule) EnableServerMode() {
+	m.stateSync.EnableServerMode()
+}
+
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...
 func (m *consensusModule) loadPersistedState() error {
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
@@ -313,8 +293,4 @@ func (m *consensusModule) loadPersistedState() error {
 	m.logger.Info().Uint64("height", m.height).Msg("Starting consensus module")
 
 	return nil
-}
-
-func (m *consensusModule) EnableServerMode() {
-	m.stateSync.EnableServerMode()
 }

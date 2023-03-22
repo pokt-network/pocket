@@ -37,7 +37,6 @@ type Pacemaker interface {
 	PacemakerDebug
 
 	ShouldHandleMessage(message *typesCons.HotstuffMessage) (bool, error)
-	SetLogPrefix(string)
 
 	RestartTimer()
 	NewHeight()
@@ -97,10 +96,6 @@ func (m *pacemaker) Start() error {
 
 func (*pacemaker) GetModuleName() string {
 	return pacemakerModuleName
-}
-
-func (m *pacemaker) SetLogPrefix(logPrefix string) {
-	m.logPrefix = logPrefix
 }
 
 func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, error) {
@@ -198,27 +193,22 @@ func (m *pacemaker) InterruptRound(reason string) {
 
 	consensusMod.SetRound(consensusMod.CurrentRound() + 1)
 
-	fmt.Println("OLSH1")
 	// ADDTEST: check if this is indeed ensured after a successful round
 	if m.GetBus().GetConsensusModule().IsPrepareQCNil() {
 		m.startNextView(nil, false)
 		return
 	}
 
-	fmt.Println("OLSH2")
 	msgAny, err := consensusMod.GetPrepareQC()
 	if err != nil {
 		return
 	}
-
-	fmt.Println("OLSH3")
 
 	msg, err := codec.GetCodec().FromAny(msgAny)
 	if err != nil {
 		return
 	}
 
-	fmt.Println("OLSH4")
 	quorumCertificate, ok := msg.(*typesCons.QuorumCertificate)
 	if !ok {
 		return
@@ -231,9 +221,9 @@ func (m *pacemaker) NewHeight() {
 	defer m.RestartTimer()
 
 	consensusMod := m.GetBus().GetConsensusModule()
+	consensusMod.ResetRound(true)
 	newHeight := consensusMod.CurrentHeight() + 1
 	consensusMod.SetHeight(newHeight)
-	consensusMod.ResetForNewHeight()
 	m.logger.Info().Uint64("height", newHeight).Msg("🏁 Starting 1st round at new height 🏁")
 
 	// CONSIDERATION: We are omitting CommitQC and TimeoutQC here for simplicity, but should we add them?
@@ -250,25 +240,21 @@ func (m *pacemaker) NewHeight() {
 func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
 	defer m.RestartTimer()
 
-	fmt.Println("OLSH22")
 	// DISCUSS: Should we lock the consensus module here?
 	consensusMod := m.GetBus().GetConsensusModule()
-	consensusMod.SetStep(uint8(newRound))
-	consensusMod.ResetRound()
+	consensusMod.ResetRound(false)
 	if err := consensusMod.ReleaseUtilityContext(); err != nil {
-		m.logger.Warn().Err(err).Msg("Failed to release utility context.")
+		m.logger.Error().Err(err).Msg("Failed to release utility context.")
 		// return
 	}
-	consensusMod.ClearLeaderMessagesPool()
+	consensusMod.SetStep(uint8(newRound))
 
-	fmt.Println("OLSH33")
 	// TECHDEBT: This if structure for debug purposes only; think of a way to externalize it from the main consensus flow...
 	if m.debug.manualMode && !forceNextView {
 		m.debug.quorumCertificate = qc
 		return
 	}
 
-	fmt.Println("OLSH44")
 	hotstuffMessage := &typesCons.HotstuffMessage{
 		Type:          propose,
 		Height:        consensusMod.CurrentHeight(),
