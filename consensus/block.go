@@ -9,8 +9,13 @@ import (
 )
 
 func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
+	utilityContext := m.utilityContext
+	if utilityContext == nil {
+		return fmt.Errorf("utility context is nil")
+	}
+
 	// Commit the context
-	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
+	if err := utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
 
@@ -23,10 +28,9 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 		Msg("🧱🧱🧱 Committing block 🧱🧱🧱")
 
 	// Release the context
-	if err := m.utilityContext.Release(); err != nil {
+	if err := utilityContext.Release(); err != nil {
 		m.logger.Warn().Err(err).Msg("Error releasing utility context")
 	}
-
 	m.utilityContext = nil
 
 	return nil
@@ -75,9 +79,10 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 func (m *consensusModule) refreshUtilityContext() error {
 	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
 	// TODO: This should not be called once fixed
-	if m.utilityContext != nil {
+	utilityContext := m.utilityContext
+	if utilityContext != nil {
 		m.logger.Warn().Bool("TODO", true).Msg(typesCons.NilUtilityContextWarning)
-		if err := m.utilityContext.Release(); err != nil {
+		if err := utilityContext.Release(); err != nil {
 			m.logger.Warn().Err(err).Msg("Error releasing utility context")
 		}
 		m.utilityContext = nil

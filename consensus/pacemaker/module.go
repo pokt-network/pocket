@@ -19,8 +19,8 @@ const (
 	defaultLogPrefix    = "NODE"
 	pacemakerModuleName = "pacemaker"
 
-	// A buffer around the pacemaker timeout to avoid race condition; 30ms was arbitrarily chosen
-	timeoutBuffer = 30 * time.Millisecond
+	// A buffer around the pacemaker timeout to avoid race condition; 100ms was arbitrarily chosen
+	timeoutBuffer = 100 * time.Millisecond
 
 	newRound = typesCons.HotstuffStep_HOTSTUFF_STEP_NEWROUND
 	propose  = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_PROPOSE
@@ -48,7 +48,7 @@ type pacemaker struct {
 	base_modules.InterruptableModule
 
 	pacemakerCfg    *configs.PacemakerConfig
-	roundTimeout     time.Duration
+	roundTimeout    time.Duration
 	roundCancelFunc context.CancelFunc
 
 	// Only used for development and debugging.
@@ -106,15 +106,15 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	currentStep := typesCons.HotstuffStep(consensusMod.CurrentStep())
 
 	// Consensus message is from the past
-	if msg.Height < currentHeight {
-		m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
+	if currentHeight > msg.Height {
+		m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node (ahead) at height %d > message height %d", currentHeight, msg.Height)
 		return false, nil
 	}
 
 	// TODO: Need to restart state sync or be in state sync mode right now
 	// Current node is out of sync
-	if msg.Height > currentHeight {
-		m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
+	if currentHeight < msg.Height {
+		m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node (behind) at height %d < message height %d", currentHeight, msg.Height)
 		return false, nil
 	}
 
@@ -174,10 +174,11 @@ func (m *pacemaker) RestartTimer() {
 	m.roundCancelFunc = cancel
 	// NOTE: Not deferring a cancel call because this function is asynchronous.
 	go func() {
+		// m.logger.Debug().Fields(m.sharedLoggingFields()).Msgf("⏲️ Restarting timer ⏲️")
 		select {
 		case <-ctx.Done():
 			if ctx.Err() == context.DeadlineExceeded {
-				m.InterruptRound("timeout")
+				m.InterruptRound("pacemaker timeout")
 			}
 		case <-clock.After(m.roundTimeout + timeoutBuffer):
 			return
@@ -283,8 +284,7 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 
 // TODO: Increase timeout using exponential backoff.
 func (m *pacemaker) getRoundTimeout() time.Duration {
-	baseTimeout := time.Duration(int64(time.Millisecond) * int64(m.pacemakerCfg.TimeoutMsec))
-	return baseTimeout
+	return time.Duration(int64(time.Millisecond) * int64(m.pacemakerCfg.TimeoutMsec))
 }
 
 func (m *pacemaker) sharedLoggingFields() map[string]interface{} {

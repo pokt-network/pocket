@@ -112,9 +112,11 @@ func (node *Node) Start() error {
 	// While loop lasting throughout the entire lifecycle of the node to handle asynchronous events
 	for {
 		event := node.GetBus().GetBusEvent()
+		// go func() {
 		if err := node.handleEvent(event); err != nil {
 			logger.Global.Error().Err(err).Msg("Error handling event")
 		}
+		// }()
 	}
 }
 

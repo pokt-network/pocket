@@ -26,9 +26,7 @@ func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
 	m.logger.Debug().Msg(typesCons.DebugResetToGenesis)
 
-	m.ResetRound(true)
-	m.SetHeight(0)
-	m.GetBus().GetUtilityModule().GetMempool().Clear()
+	// Reset Persistence
 	if err := m.GetBus().GetPersistenceModule().HandleDebugMessage(&messaging.DebugMessage{
 		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 		Message: nil,
@@ -38,6 +36,14 @@ func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
 	if err := m.GetBus().GetPersistenceModule().Start(); err != nil { // reload genesis state
 		return err
 	}
+
+	// Reset Utility
+	m.GetBus().GetUtilityModule().GetMempool().Clear()
+
+	// Restart consensus
+	m.ResetRound(true)
+	m.SetHeight(0)
+
 	return nil
 }
 

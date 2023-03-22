@@ -123,8 +123,9 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 }
 
 func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.Address) error {
-	// NOOP: Trying to send a message to self
+	// TODO: How should we handle this?
 	if n.selfAddr.Equals(address) {
+		n.logger.Debug().Str("address", address.String()).Msg("trying to send message to self")
 		return nil
 	}
 

@@ -1,6 +1,8 @@
 package consensus
 
 import (
+	"fmt"
+
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -227,13 +229,18 @@ func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 // This helper applies the block metadata to the utility & persistence layers
 func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 	blockHeader := block.BlockHeader
+	utilityContext := m.utilityContext
+	if utilityContext == nil {
+		return fmt.Errorf("utility context is nil")
+	}
+
 	// Set the proposal block in the persistence context
-	if err := m.utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err := utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return err
 	}
 
 	// Apply all the transactions in the block and get the stateHash
-	stateHash, err := m.utilityContext.ApplyBlock()
+	stateHash, err := utilityContext.ApplyBlock()
 	if err != nil {
 		return err
 	}

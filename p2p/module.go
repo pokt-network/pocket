@@ -205,6 +205,5 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	event := messaging.PocketEnvelope{
 		Content: networkMessage.Content,
 	}
-
 	m.GetBus().PublishEventToBus(&event)
 }

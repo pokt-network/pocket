@@ -35,11 +35,10 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	}
 
 	if m.IsLeader() {
-		// Hotstuff - Handle message as a leader
+		// Hotstuff - Handle message as a leader; leader also acts as a replica, but this logic is implemented in the underlying code.
 		leaderHandlers[step](m, msg)
 	} else {
 		// Hotstuff - Handle message as a replica
-		// Note that the leader also acts as a replica, but this logic is implemented in the underlying code.
 		replicaHandlers[step](m, msg)
 	}
 

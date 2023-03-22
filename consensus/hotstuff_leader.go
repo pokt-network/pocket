@@ -1,6 +1,8 @@
 package consensus
 
 import (
+	"fmt"
+
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -383,11 +385,16 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
 
+	utilityContext := m.utilityContext
+	if utilityContext == nil {
+		return nil, fmt.Errorf("utility context is nil")
+	}
+
 	// TECHDEBT: Retrieve this from consensus consensus config
 	maxTxBytes := 90000
 
 	// Reap the mempool for transactions to be applied in this block
-	stateHash, txs, err := m.utilityContext.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
+	stateHash, txs, err := utilityContext.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -422,7 +429,7 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	}
 
 	// Set the proposal block in the persistence context
-	if err := m.utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err := utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return nil, err
 	}
 
