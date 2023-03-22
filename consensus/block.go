@@ -14,10 +14,11 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 		return fmt.Errorf("utility context is nil")
 	}
 
-	// Commit the context
+	// Commit & release the context
 	if err := utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
+	m.utilityContext = nil
 
 	m.logger.Info().
 		Fields(
@@ -26,12 +27,6 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 				"transactions": len(block.Transactions),
 			}).
 		Msg("🧱🧱🧱 Committing block 🧱🧱🧱")
-
-	// Release the context
-	if err := utilityContext.Release(); err != nil {
-		m.logger.Warn().Err(err).Msg("Error releasing utility context")
-	}
-	m.utilityContext = nil
 
 	return nil
 }
@@ -82,9 +77,7 @@ func (m *consensusModule) refreshUtilityContext() error {
 	utilityContext := m.utilityContext
 	if utilityContext != nil {
 		m.logger.Warn().Bool("TODO", true).Msg(typesCons.NilUtilityContextWarning)
-		if err := utilityContext.Release(); err != nil {
-			m.logger.Warn().Err(err).Msg("Error releasing utility context")
-		}
+		utilityContext.Release()
 		m.utilityContext = nil
 	}
 

@@ -25,14 +25,12 @@ func (m *consensusModule) ResetRound(isNewHeight bool) {
 
 // This function releases consensus module's utility context, called by pacemaker module
 func (m *consensusModule) ReleaseUtilityContext() error {
-	if m.utilityContext == nil {
+	utilityContext := m.utilityContext
+	if utilityContext == nil {
 		return nil
 	}
-	if err := m.utilityContext.Release(); err != nil {
-		m.logger.Error().Err(err).Msg("Failed to release utility context.")
-		return err
-	}
 	m.utilityContext = nil
+	utilityContext.Release()
 	return nil
 }
 

@@ -43,26 +43,30 @@ func initializePool(cfg *configs.PersistenceConfig) (*pgxpool.Pool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to create database config: %v", err)
 	}
-	maxConnLifetime, err := time.ParseDuration(cfg.GetMaxConnLifetime())
-	if err == nil {
-		config.MaxConnLifetime = maxConnLifetime
-	} else {
-		return nil, fmt.Errorf("unable to set max connection lifetime: %v", err)
-	}
-	maxConnIdleTime, err := time.ParseDuration(cfg.GetMaxConnIdleTime())
-	if err == nil {
-		config.MaxConnIdleTime = maxConnIdleTime
-	} else {
-		return nil, fmt.Errorf("unable to set max connection idle time : %v", err)
-	}
+
 	config.MaxConns = cfg.GetMaxConnsCount()
 	config.MinConns = cfg.GetMinConnsCount()
+
+	// maxConnLifetime, err := time.ParseDuration(cfg.GetMaxConnLifetime())
+	// if err != nil {
+	// 	return nil, fmt.Errorf("unable to set max connection lifetime: %v", err)
+	// }
+	config.MaxConnLifetime = time.Second * 10
+
+	maxConnIdleTime, err := time.ParseDuration(cfg.GetMaxConnIdleTime())
+	if err != nil {
+		return nil, fmt.Errorf("unable to set max connection idle time : %v", err)
+	}
+	config.MaxConnIdleTime = maxConnIdleTime
+
 	healthCheckPeriod, err := time.ParseDuration(cfg.GetHealthCheckPeriod())
-	if err == nil {
-		config.HealthCheckPeriod = healthCheckPeriod
-	} else {
+	if err != nil {
 		return nil, fmt.Errorf("unable to set healthcheck period: %v", err)
 	}
+	config.HealthCheckPeriod = healthCheckPeriod
+
+	// Update the base connection configurations
+	config.ConnConfig.ConnectTimeout = 5 * time.Second
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
@@ -72,10 +76,12 @@ func initializePool(cfg *configs.PersistenceConfig) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
-func connectToDatabase(pool *pgxpool.Pool, nodeSchema string) (*pgxpool.Conn, error) {
+func connectToPool(pool *pgxpool.Pool, nodeSchema string) (*pgxpool.Conn, error) {
 	ctx := context.TODO()
 
+	fmt.Println("OLSH BEFORE ACQUIRE ")
 	conn, err := pool.Acquire(ctx)
+	fmt.Println("OLSH AFTER ACQUIRE ")
 	if err != nil {
 		return nil, fmt.Errorf("unable to acquire connection from pool: %v", err)
 	}

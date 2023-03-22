@@ -14,18 +14,17 @@ type HotstuffMessageHandler interface {
 }
 
 func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) error {
-	step := msg.GetStep()
-
-	// TODO(olshansky): Add source and destination NodeId of message here
-	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("Received hotstuff msg")
+	// IMPROVE: Add source of message here
+	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("Received hotstuff msg...")
 
 	// Pacemaker - Liveness & safety checks
 	if shouldHandle, err := m.paceMaker.ShouldHandleMessage(msg); !shouldHandle {
+		m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("Not handling hotstuff msg...")
 		return err
 	}
 
-	// TODO(olshansky): Add source and destination NodeId of message here
-	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("Handling hotstuff msg")
+	// IMPROVE: Add source of message here
+	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("About to start handling hotstuff msg...")
 
 	// Elect a leader for the current round if needed
 	if m.shouldElectNextLeader() {
@@ -35,17 +34,18 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	}
 
 	if m.IsLeader() {
-		// Hotstuff - Handle message as a leader; leader also acts as a replica, but this logic is implemented in the underlying code.
-		leaderHandlers[step](m, msg)
+		// Hotstuff - Handle message as a leader;
+		// NB: Leader also acts as a replica, but this logic is implemented in the underlying code
+		leaderHandlers[msg.GetStep()](m, msg)
 	} else {
 		// Hotstuff - Handle message as a replica
-		replicaHandlers[step](m, msg)
+		replicaHandlers[msg.GetStep()](m, msg)
 	}
 
 	return nil
 }
 
 func (m *consensusModule) shouldElectNextLeader() bool {
-	// Execute leader election if there is no leader and we are in a new round
+	// Execute leader election if there is no leader and we are in a newRound
 	return m.step == NewRound && m.leaderId == nil
 }

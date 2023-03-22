@@ -30,7 +30,7 @@ type utilityContext struct {
 }
 
 func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error) {
-	persistenceCtx, err := u.GetBus().GetPersistenceModule().NewRWContext(height)
+	rwCtx, err := u.GetBus().GetPersistenceModule().NewRWContext(height)
 	if err != nil {
 		return nil, typesUtil.ErrNewPersistenceContext(err)
 	}
@@ -39,7 +39,7 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 		height: height,
 
 		// No save points on start
-		store:          persistenceCtx,
+		store:          rwCtx,
 		savePointsList: make([][]byte, 0),
 		savePointsSet:  make(map[string]struct{}),
 	}
@@ -63,13 +63,12 @@ func (u *utilityContext) Commit(quorumCert []byte) error {
 }
 
 func (u *utilityContext) Release() error {
-	if u.store == nil {
+	store := u.store
+	if store == nil {
 		return nil
 	}
-	if err := u.store.Release(); err != nil {
-		return err
-	}
 	u.store = nil
+	store.Release()
 	return nil
 }
 

@@ -83,7 +83,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 	}
 	m.pool = pool
 
-	conn, err := connectToDatabase(m.pool, persistenceCfg.GetNodeSchema())
+	conn, err := connectToPool(m.pool, persistenceCfg.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -146,12 +146,12 @@ func (m *persistenceModule) GetModuleName() string {
 }
 
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
-	if m.writeContext != nil && !m.writeContext.isClosed() {
+	if m.writeContext != nil && m.writeContext.isOpen() {
 		return nil, fmt.Errorf("cannot create a new write context if one already exists")
 	}
 
 	// Take one of the connections from the db pool
-	conn, err := connectToDatabase(m.pool, m.config.GetNodeSchema())
+	conn, err := connectToPool(m.pool, m.config.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 }
 
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
-	conn, err := connectToDatabase(m.pool, m.config.GetNodeSchema())
+	conn, err := connectToPool(m.pool, m.config.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -212,17 +212,15 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 }
 
 func (m *persistenceModule) ReleaseWriteContext() error {
-	if m.writeContext == nil {
+	writeContext := m.writeContext
+	if writeContext == nil {
 		return nil
-	}
-	if m.writeContext.isClosed() {
-		m.writeContext = nil
-		return nil
-	}
-	if err := m.writeContext.Release(); err != nil {
-		return err
 	}
 	m.writeContext = nil
+	if !writeContext.isOpen() {
+		return nil
+	}
+	writeContext.Release()
 	return nil
 }
 
@@ -245,23 +243,24 @@ func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 //
 //	move the if logic out of this file.
 func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
-	checkContext, err := m.NewReadContext(-1)
+	readCtx, err := m.NewReadContext(-1)
 	if err != nil {
 		return false, err
 	}
-	defer checkContext.Close()
+	defer readCtx.Release()
 
-	blockHeight, err := checkContext.GetMaximumBlockHeight()
+	blockHeight, err := readCtx.GetMaximumBlockHeight()
 	if err != nil {
 		return true, nil
 	}
 
-	if blockHeight == 0 {
-		if err := m.clearAllState(nil); err != nil {
-			return false, err
-		}
-		return true, nil
+	if blockHeight > 0 {
+		return false, nil
 	}
 
-	return false, nil
+	if err := m.clearAllState(nil); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

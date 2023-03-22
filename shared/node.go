@@ -1,6 +1,10 @@
 package shared
 
 import (
+	"context"
+	"fmt"
+	"time"
+
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/libp2p"
 	"github.com/pokt-network/pocket/logger"
@@ -112,11 +116,28 @@ func (node *Node) Start() error {
 	// While loop lasting throughout the entire lifecycle of the node to handle asynchronous events
 	for {
 		event := node.GetBus().GetBusEvent()
-		// go func() {
-		if err := node.handleEvent(event); err != nil {
-			logger.Global.Error().Err(err).Msg("Error handling event")
+		timeout := time.Second * 5
+		clock := node.GetBus().GetRuntimeMgr().GetClock()
+		ctx, cancel := clock.WithTimeout(context.TODO(), timeout)
+		go func() {
+			fmt.Println("About to handle event", event)
+			if err := node.handleEvent(event); err != nil {
+				logger.Global.Error().Err(err).Msg("Error handling event")
+			}
+			fmt.Println("HERE")
+			cancel()
+		}()
+		select {
+		case <-ctx.Done():
+			if ctx.Err() == context.Canceled {
+				continue
+			} else if ctx.Err() == context.DeadlineExceeded {
+				fmt.Println("OLSH TIMEOUT", event)
+				cancel()
+			}
+		case <-clock.After(timeout + 1*time.Second):
+			continue
 		}
-		// }()
 	}
 }
 

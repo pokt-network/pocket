@@ -404,6 +404,7 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	if err != nil {
 		return nil, err
 	}
+	defer readCtx.Release()
 
 	prevBlockHash, err := readCtx.GetBlockHash(prevHeight)
 	if err != nil {

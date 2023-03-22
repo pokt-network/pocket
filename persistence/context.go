@@ -79,38 +79,31 @@ func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 	if err := p.tx.Commit(ctx); err != nil {
 		return err
 	}
-
-	// Similar to `Release` but without rolling back the transaction
 	p.tx = nil
+
+	// Release the connection back to the pool
 	p.conn.Release()
 	p.conn = nil
 
 	return nil
 }
 
-func (p *PostgresContext) Release() error {
+func (p *PostgresContext) Release() {
 	p.logger.Info().Int64("height", p.Height).Msg("About to release context")
-	if err := p.tx.Rollback(context.TODO()); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
-		return err
-	}
-	p.tx = nil
-	p.conn.Release()
-	p.conn = nil
-	return nil
-}
 
-// Close first releases the connection by calling `Release` and then closes the connection nas well
-func (p *PostgresContext) Close() error {
-	if err := p.Release(); err != nil {
-		return err
+	// Rollback the transaction
+	if p.tx != nil {
+		if err := p.tx.Rollback(context.TODO()); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
+			p.logger.Error().Err(err).Msg("failed to rollback transaction")
+		}
+		p.tx = nil
 	}
-	if p.conn == nil || p.conn.Conn() == nil {
-		return nil
+
+	// Release the db connection back to the pool
+	if p.conn != nil {
+		p.conn.Release()
+		p.conn = nil
 	}
-	if err := p.conn.Conn().Close(context.TODO()); err != nil {
-		return err
-	}
-	return nil
 }
 
 // INVESTIGATE(#361): Revisit if is used correctly in the context of the lifecycle of a persistenceContext and a utilityContext
@@ -118,6 +111,6 @@ func (p *PostgresContext) IndexTransaction(txResult modules.TxResult) error {
 	return p.txIndexer.Index(txResult)
 }
 
-func (p *PostgresContext) isClosed() bool {
-	return p.tx == nil && p.conn == nil
+func (p *PostgresContext) isOpen() bool {
+	return p.tx != nil && p.conn != nil
 }

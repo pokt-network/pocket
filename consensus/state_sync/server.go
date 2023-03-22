@@ -30,18 +30,18 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
 	lastPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
 	if err != nil {
 		return nil
 	}
-	defer persistenceContext.Close()
+	defer readCtx.Release()
 
-	maxHeight, err := persistenceContext.GetMaximumBlockHeight()
+	maxHeight, err := readCtx.GetMaximumBlockHeight()
 	if err != nil {
 		return err
 	}
 
-	minHeight, err := persistenceContext.GetMinimumBlockHeight()
+	minHeight, err := readCtx.GetMinimumBlockHeight()
 	if err != nil {
 		return err
 	}

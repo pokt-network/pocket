@@ -56,16 +56,7 @@ func TestMain(m *testing.M) {
 }
 
 func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
-	// err := testPersistenceMod.ReleaseWriteContext()
-	// require.NoError(t, err)
-	// err = testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
-	// 	Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
-	// 	Message: nil,
-	// })
-	// require.NoError(t, err)
-	// testUtilityMod.GetMempool().Clear()
-
-	persistenceContext, err := testPersistenceMod.NewRWContext(height)
+	rwCtx, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
 	// TECHDEBT: Move the internal of cleanup into a separate function and call this in the
@@ -85,7 +76,7 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 	ctx := &utilityContext{
 		logger:         logger.Global.CreateLoggerForModule(modules.UtilityModuleName),
 		height:         height,
-		store:          persistenceContext,
+		store:          rwCtx,
 		savePointsSet:  make(map[string]struct{}),
 		savePointsList: make([][]byte, 0),
 	}
@@ -121,11 +112,11 @@ func newTestRuntimeConfig(databaseURL string) *runtime.Manager {
 			BlockStorePath:    "", // in memory
 			TxIndexerPath:     "", // in memory
 			TreesStoreDir:     "", // in memory
-			MaxConnsCount:     5,
+			MaxConnsCount:     50,
 			MinConnsCount:     1,
-			MaxConnLifetime:   "1h",
-			MaxConnIdleTime:   "30m",
-			HealthCheckPeriod: "5m",
+			MaxConnLifetime:   "5m",
+			MaxConnIdleTime:   "1m",
+			HealthCheckPeriod: "30s",
 		},
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(

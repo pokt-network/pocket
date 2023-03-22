@@ -1,6 +1,8 @@
 package consensus
 
 import (
+	"fmt"
+
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -10,7 +12,9 @@ import (
 var _ modules.ConsensusDebugModule = &consensusModule{}
 
 func (m *consensusModule) HandleDebugMessage(debugMessage *messaging.DebugMessage) error {
+	fmt.Println("OLSH2 - About to try to acquire lock")
 	m.m.Lock()
+	fmt.Println("OLSH2 - Acquired lock")
 	defer m.m.Unlock()
 
 	switch debugMessage.Action {

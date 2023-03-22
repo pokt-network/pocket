@@ -350,7 +350,6 @@ loop:
 func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *mockModules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
-	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
 	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
 
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
@@ -390,13 +389,9 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 		return 0, nil
 	}).AnyTimes()
 
-	// The persistence context should usually be accessed via the utility module within the context
-	// of the consensus module. This one is only used when loading the initial consensus module
-	// state; hence the `-1` expectation in the call above.
-	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
-	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().Release().AnyTimes()
 
 	return persistenceMock
 }
@@ -448,9 +443,10 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesi
 func baseUtilityContextMock(t *testing.T, genesisState *genesis.GenesisState) *mockModules.MockUtilityContext {
 	ctrl := gomock.NewController(t)
 	utilityContextMock := mockModules.NewMockUtilityContext(ctrl)
-	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
-	persistenceContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
-	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
+	persistenceRWContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
+	persistenceRWContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	persistenceRWContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
+	persistenceRWContextMock.EXPECT().Release().AnyTimes()
 
 	utilityContextMock.EXPECT().
 		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).
@@ -463,8 +459,6 @@ func baseUtilityContextMock(t *testing.T, genesisState *genesis.GenesisState) *m
 	utilityContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Release().Return(nil).AnyTimes()
-
-	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
 
 	return utilityContextMock
 }

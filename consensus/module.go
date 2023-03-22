@@ -235,7 +235,9 @@ func (m *consensusModule) GetPrivateKey() (cryptoPocket.PrivateKey, error) {
 }
 
 func (m *consensusModule) HandleMessage(message *anypb.Any) error {
+	fmt.Println("OLSH - About to try to acquire lock")
 	m.m.Lock()
+	fmt.Println("OLSH - Acquired lock")
 	defer m.m.Unlock()
 
 	switch message.MessageName() {
@@ -249,6 +251,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 			return fmt.Errorf("failed to cast message to HotstuffMessage")
 		}
 		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
+			m.logger.Error().Err(err).Msg("failed to handle hotstuff message")
 			return err
 		}
 	default:
@@ -276,13 +279,13 @@ func (m *consensusModule) EnableServerMode() {
 
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...
 func (m *consensusModule) loadPersistedState() error {
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
 	if err != nil {
 		return nil
 	}
-	defer persistenceContext.Close()
+	defer readCtx.Release()
 
-	latestHeight, err := persistenceContext.GetMaximumBlockHeight()
+	latestHeight, err := readCtx.GetMaximumBlockHeight()
 	if err != nil || latestHeight == 0 {
 		// TODO: Proper state sync not implemented yet
 		return nil

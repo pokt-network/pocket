@@ -173,7 +173,7 @@ func getAllActorsUpdatedAtHeightTest[T any](
 	require.Equal(t, numActorsInTestGenesis+1, len(accs))
 
 	// Close context at height 0 without committing new Pool
-	require.NoError(t, db.Close())
+	db.Release()
 	// start a new context at height 1
 	db = NewTestPostgresContext(t, 1)
 

@@ -62,11 +62,13 @@ func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) {
 
 // TECHDEBT: Make sure this is atomic
 func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
-	ctx, err := m.NewRWContext(-1)
+	rwCtx, err := m.NewRWContext(-1)
 	if err != nil {
 		return err
 	}
-	postgresCtx := ctx.(*PostgresContext)
+	// defer rwCtx.Release()
+
+	postgresCtx := rwCtx.(*PostgresContext)
 
 	// Clear the SQL DB
 	if err := postgresCtx.clearAllSQLState(); err != nil {
