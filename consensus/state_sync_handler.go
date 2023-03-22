@@ -71,7 +71,10 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 	// checking if the received block is already persisted
 	if block.BlockHeader.Height <= lastPersistedBlockHeight {
-		m.logger.Info().Msgf("Received block with height %d, but already at height %d, so not going to apply", block.BlockHeader.Height, lastPersistedBlockHeight)
+		m.logger.Info().Msgf("Received block with height %d, but already at height %d, so node will not apply this block", block.BlockHeader.Height, lastPersistedBlockHeight)
+		return nil
+	} else if block.BlockHeader.Height > m.CurrentHeight() {
+		m.logger.Info().Msgf("Received block with height %d, but node's last persisted height is: %d, so node will not apply this block", block.BlockHeader.Height, lastPersistedBlockHeight)
 		return nil
 	}
 
