@@ -102,7 +102,7 @@ func TestPeerMultiAddrFromServiceURL_Error(t *testing.T) {
 			t.Run(testName, func(t *testing.T) {
 				serviceURL := fmt.Sprintf(testCase.serviceURLFormat, hostname)
 				_, err := Libp2pMultiaddrFromServiceURL(serviceURL)
-				require.ErrorContainsf(t, err, testCase.expectedErr, fmt.Sprintf("expected error to start with %q, but got %q", testCase.expectedErr, err.Error()))
+				require.ErrorContainsf(t, err, testCase.expectedErr, "unexpected error")
 			})
 		}
 	}
