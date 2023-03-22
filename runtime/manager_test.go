@@ -4185,7 +4185,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						PrivateKey:      "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 						MaxMempoolBytes: 500000000,
 						PacemakerConfig: &configs.PacemakerConfig{
-							TimeoutMsec:               5000,
+							TimeoutMsec:               10000,
 							Manual:                    true,
 							DebugTimeBetweenStepsMsec: 1000,
 						},

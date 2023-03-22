@@ -57,7 +57,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 			PrivateKey:      config.PrivateKey,
 			MaxMempoolBytes: 500000000,
 			PacemakerConfig: &configs.PacemakerConfig{
-				TimeoutMsec:               5000,
+				TimeoutMsec:               10000,
 				Manual:                    false,
 				DebugTimeBetweenStepsMsec: 0,
 			},

@@ -48,7 +48,7 @@ type pacemaker struct {
 	base_modules.InterruptableModule
 
 	pacemakerCfg    *configs.PacemakerConfig
-	baseTimeout     time.Duration
+	roundTimeout     time.Duration
 	roundCancelFunc context.CancelFunc
 
 	// Only used for development and debugging.
@@ -78,7 +78,7 @@ func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	cfg := runtimeMgr.GetConfig()
 
 	m.pacemakerCfg = cfg.Consensus.PacemakerConfig
-	m.baseTimeout = m.getRoundTimeout()
+	m.roundTimeout = m.getRoundTimeout()
 	m.debug = pacemakerDebug{
 		manualMode:                m.pacemakerCfg.GetManual(),
 		debugTimeBetweenStepsMsec: m.pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
@@ -170,7 +170,7 @@ func (m *pacemaker) RestartTimer() {
 	}
 
 	clock := m.GetBus().GetRuntimeMgr().GetClock()
-	ctx, cancel := clock.WithTimeout(context.TODO(), m.baseTimeout)
+	ctx, cancel := clock.WithTimeout(context.TODO(), m.roundTimeout)
 	m.roundCancelFunc = cancel
 	// NOTE: Not deferring a cancel call because this function is asynchronous.
 	go func() {
@@ -179,7 +179,7 @@ func (m *pacemaker) RestartTimer() {
 			if ctx.Err() == context.DeadlineExceeded {
 				m.InterruptRound("timeout")
 			}
-		case <-clock.After(m.baseTimeout + timeoutBuffer):
+		case <-clock.After(m.roundTimeout + timeoutBuffer):
 			return
 		}
 	}()

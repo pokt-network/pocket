@@ -5,7 +5,7 @@
   "consensus": {
     "max_mempool_bytes": 500000000,
     "pacemaker_config": {
-      "timeout_msec": 5000,
+      "timeout_msec": 10000,
       "manual": true,
       "debug_time_between_steps_msec": 1000
     },
