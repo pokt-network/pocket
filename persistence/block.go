@@ -52,6 +52,7 @@ func (p *PostgresContext) GetBlockHash(height int64) (string, error) {
 	return blockHash, nil
 }
 
+// TODO: Consider removing this function and using `Height` directly
 func (p *PostgresContext) GetHeight() (int64, error) {
 	return p.Height, nil
 }

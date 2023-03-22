@@ -19,7 +19,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	// setup a write context, insert a pool and commit it
 	context, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
-	context.Release()
+	defer context.Release()
 
 	require.NoError(t, context.InsertPool(poolName, originalAmount))
 	require.NoError(t, context.Commit(proposerAddr, quorumCert))
@@ -27,7 +27,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	// verify the insert in the previously committed context worked
 	contextA, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
-	contextA.Release()
+	defer contextA.Release()
 
 	contextAOriginalAmount, err := contextA.GetPoolAmount(poolName, 0)
 	require.NoError(t, err)
@@ -43,7 +43,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	// setup a read context - independent of the previous modified but uncommitted context
 	contextB, err := testPersistenceMod.NewReadContext(0)
 	require.NoError(t, err)
-	contextB.Release()
+	defer contextB.Release()
 
 	// verify context b is unchanged
 	contextBOriginalAmount, err := contextB.GetPoolAmount(poolName, 0)

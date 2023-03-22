@@ -19,7 +19,8 @@ var _ modules.PersistenceRWContext = &PostgresContext{}
 type PostgresContext struct {
 	logger *modules.Logger
 
-	Height int64 // TECHDEBT: `Height` is only externalized for testing purposes. Replace with a `Debug` interface containing helpers
+	// TECHDEBT: `Height` is only externalized for testing purposes. Replace with a `Debug` interface containing helpers
+	Height int64
 
 	conn *pgxpool.Conn
 	tx   pgx.Tx
