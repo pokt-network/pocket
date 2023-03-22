@@ -124,7 +124,6 @@ func (node *Node) Start() error {
 			if err := node.handleEvent(event); err != nil {
 				logger.Global.Error().Err(err).Msg("Error handling event")
 			}
-			fmt.Println("HERE")
 			cancel()
 		}()
 		select {
@@ -132,7 +131,6 @@ func (node *Node) Start() error {
 			if ctx.Err() == context.Canceled {
 				continue
 			} else if ctx.Err() == context.DeadlineExceeded {
-				fmt.Println("OLSH TIMEOUT", event)
 				cancel()
 			}
 		case <-clock.After(timeout + 1*time.Second):

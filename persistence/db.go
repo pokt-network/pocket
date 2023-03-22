@@ -79,9 +79,7 @@ func initializePool(cfg *configs.PersistenceConfig) (*pgxpool.Pool, error) {
 func connectToPool(pool *pgxpool.Pool, nodeSchema string) (*pgxpool.Conn, error) {
 	ctx := context.TODO()
 
-	fmt.Println("OLSH BEFORE ACQUIRE ")
 	conn, err := pool.Acquire(ctx)
-	fmt.Println("OLSH AFTER ACQUIRE ")
 	if err != nil {
 		return nil, fmt.Errorf("unable to acquire connection from pool: %v", err)
 	}

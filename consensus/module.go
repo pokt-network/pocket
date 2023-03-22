@@ -235,9 +235,7 @@ func (m *consensusModule) GetPrivateKey() (cryptoPocket.PrivateKey, error) {
 }
 
 func (m *consensusModule) HandleMessage(message *anypb.Any) error {
-	fmt.Println("OLSH - About to try to acquire lock")
 	m.m.Lock()
-	fmt.Println("OLSH - Acquired lock")
 	defer m.m.Unlock()
 
 	switch message.MessageName() {

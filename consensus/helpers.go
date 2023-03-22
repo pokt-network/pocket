@@ -234,28 +234,21 @@ func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error 
 	m.logger.Info().Fields(loggingFields).Msg("About to elect the next leader")
 
 	m.leaderId = nil
-	fmt.Println("OLSH L - 111")
 	leaderId, err := m.leaderElectionMod.ElectNextLeader(msg)
 	if err != nil || leaderId == 0 {
-		fmt.Println("OLSH L - 222")
 		m.logger.Error().Err(err).Fields(loggingFields).Msg("leader election failed; validator cannot take part in consensus...")
 		return err
 	}
 	loggingFields["leaderId"] = leaderId
-	fmt.Println("OLSH L - 333")
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
-	fmt.Println("OLSH L - 444")
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
-	fmt.Println("OLSH L - 555")
 	leader, ok := idToValAddrMap[leaderId]
 	if !ok {
-		fmt.Println("OLSH L - 666")
 		return fmt.Errorf("could not find leader with id %d in the validator map", leaderId)
 	}
-	fmt.Println("OLSH L - 777")
 	loggingFields["leader"] = leader
 
 	m.leaderId = &leaderId
@@ -280,15 +273,11 @@ func (m *consensusModule) setLogPrefix(logPrefix string) {
 }
 
 func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
-	fmt.Println("OLSH getValidatorsAtHeight - 111")
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
-	fmt.Println("OLSH getValidatorsAtHeight - 222")
 	if err != nil {
-		fmt.Println("OLSH getValidatorsAtHeight - 333", err)
 		return nil, err
 	}
 	defer readCtx.Release()
-	fmt.Println("OLSH getValidatorsAtHeight - 444")
 	return readCtx.GetAllValidators(int64(height))
 }
 
