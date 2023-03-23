@@ -42,7 +42,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, pstoreProvid
 
 	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
-		networkLogger.Fatal().Err(err).Msg("Error getting pstore")
+		networkLogger.Debug().Err(err).Msg("Error getting pstore")
 	}
 
 	pm, err := newPeersManager(addr, pstore, true)
@@ -131,13 +131,14 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 	peer := n.peersManager.GetPeerstore().GetPeer(address)
 	if peer == nil {
 		n.logger.Error().Str("address", address.String()).Msg("address not found in peerstore")
+		return nil
 	}
 
 	// TECHDEBT: should not be `Peer`s responsibility
 	// to manage or expose its connections.
 	if _, err := peer.GetStream().Write(data); err != nil {
 		n.logger.Error().Err(err).Msg("Error writing to peer during send")
-		return err
+		return nil
 	}
 
 	// A bus is not available In client debug mode
