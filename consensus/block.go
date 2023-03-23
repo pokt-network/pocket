@@ -11,10 +11,9 @@ import (
 func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 	// Commit the context
 	if block.BlockHeader.QuorumCertificate == nil {
-		m.logger.Info().Msgf("commitBlock QC is nil")
+		m.logger.Info().Msg("commitBlock QC is nil")
 
 	}
-	//m.logger.Info().Msgf("commitBlock block QuorumCertificate is: %s", block.BlockHeader.QuorumCertificate)
 
 	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err

@@ -125,7 +125,6 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	).Msg("📬 Received enough 📬 votes")
 
 	prepareQC, err := m.getQuorumCertificate(m.height, Prepare, m.round)
-	m.logger.Debug().Msgf("")
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Prepare).Error())
 		return // TODO(olshansky): Should we interrupt the round here?

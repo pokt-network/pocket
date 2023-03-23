@@ -12,7 +12,7 @@ import (
 //		requests for metadata using the `periodicMetadataSynch()` function
 //	 	requests for blocks using the `StartSynching()` function
 func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, block_height uint64) error {
-	m.logger.Info().Msg("📣 GOKHAN Broadcasting state sync message... 📣")
+	m.logger.Info().Msg("📣 Broadcasting state sync message... 📣")
 
 	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
 
@@ -41,7 +41,6 @@ func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessag
 	}
 
 	m.logger.Info().Fields(m.logHelper(string(receiverPeerAddress))).Msg("Sending StateSync Message")
-	//m.logger.Info().Msgf("NodeId: %d, NodeAddress: %s \n", m.GetBus().GetConsensusModule().GetNodeId(), receiverPeerAddress)
 
 	if err := m.GetBus().GetP2PModule().Send(receiverPeerAddress, anyMsg); err != nil {
 		m.logger.Error().Msgf(typesCons.ErrSendMessage.Error(), err)
