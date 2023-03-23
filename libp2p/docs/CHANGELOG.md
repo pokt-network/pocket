@@ -5,14 +5,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.7] - 2023-03-23
-
-- Wrap IPv6 address in square brackets as per RFC3986 §3.2.2
-
-## [0.0.0.6] - 2023-03-22
-
-- Improve URL validation and error handling in Libp2pMultiaddrFromServiceURL function
-
 ## [0.0.0.5] - 2023-03-21
 
 - Refactored libp2p module to use new P2P interfaces

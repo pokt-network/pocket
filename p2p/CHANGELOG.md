@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.37] - 2023-03-23
+
+- Wrap IPv6 address in square brackets as per RFC3986 §3.2.2
+
+## [0.0.0.36] - 2023-03-22
+
+- Improve URL validation and error handling in Libp2pMultiaddrFromServiceURL function
+
 ## [0.0.0.35] - 2023-03-21
 
 - Add log for `StateMachineTransitionEvent`
