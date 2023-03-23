@@ -11,9 +11,9 @@ import (
 )
 
 func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any) error {
-	m.m.Lock()
-	defer m.m.Unlock()
-	m.logger.Info().Msg("Handling StateSyncMessage")
+	//m.m.Lock()
+	//defer m.m.Unlock()
+	m.logger.Info().Msg("Handling StateSyncMessage, consensus module")
 
 	switch stateSyncMessageAny.MessageName() {
 	case messaging.StateSyncMessageContentType:

@@ -358,7 +358,7 @@ func (m *stateSync) metadataSyncLoop() error {
 		},
 	}
 
-	ticker := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
 
 	for {

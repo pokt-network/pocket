@@ -148,6 +148,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 	case messaging.StateSyncMessageContentType:
+		logger.Global.Info().Msg("Received StateSyncMessage")
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
 	case messaging.TxGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleUtilityMessage(message.Content)
