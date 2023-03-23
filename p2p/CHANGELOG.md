@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.36] - 2023-03-23
+
+- Updated errors on Send from fatal to recoverable
+- Updated `PeerstoreProvider` to ignore gracefully peers that are not resolvable/reachable
+
 ## [0.0.0.35] - 2023-03-21
 
 - Add log for `StateMachineTransitionEvent`
