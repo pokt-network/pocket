@@ -81,7 +81,7 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 
 	limit := limiter.NewConcurrencyLimiter(debugKeybaseImportConcurrencyLimit)
 	for _, privHexString := range validatorKeysPairMap {
-		limit.Execute(func() {
+		if _, err := limit.Execute(func() {
 			// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
 			keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
 			if err != nil {
@@ -102,10 +102,14 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 				errCh <- err
 				return
 			}
-		})
+		}); err != nil {
+			panic(err)
+		}
 	}
 
-	limit.WaitAndClose()
+	if err := limit.WaitAndClose(); err != nil {
+		panic(err)
+	}
 
 	// Check if any goroutines returned an error
 	select {
