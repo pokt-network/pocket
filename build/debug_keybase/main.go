@@ -12,6 +12,7 @@ import (
 
 	"github.com/pokt-network/pocket/app/client/keybase"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/utils"
 )
 
 const (
@@ -41,8 +42,7 @@ func main() {
 	hashString := fmt.Sprintf("%x.md5", sourceYamlHash)
 	hashFilePath := filepath.Join(targetFolderPath, hashString)
 	targetFilePath := filepath.Join(targetFolderPath, "debug_keybase.bak")
-	_, err = os.Stat(hashFilePath)
-	if os.IsNotExist(err) {
+	if exists, _ := utils.FileExists(hashFilePath); !exists {
 		cleanupStaleFiles(targetFolderPath)
 		dumpKeybase(privateKeysYamlBytes, targetFilePath)
 		createHashFile(hashFilePath)
