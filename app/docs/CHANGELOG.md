@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2023-03-23
+
+- The debug CLI now updates its peerstore mimicking the behavior of the validators via `sendConsensusNewHeightEventToP2PModule`.
+
 ## [0.0.0.3] - 2023-03-20
 
 - Adds message routing type field labels to debug CLI actions
