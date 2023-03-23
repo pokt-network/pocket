@@ -137,7 +137,8 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 	// TECHDEBT: should not be `Peer`s responsibility
 	// to manage or expose its connections.
 	if _, err := peer.GetStream().Write(data); err != nil {
-		n.logger.Error().Err(err).Msg("Error writing to peer during send")
+		n.logger.Error().Bool("TODO", true).Err(err).Msg("Error writing to peer during send")
+		// IMPROVE: returning nil for now to handle the transient nature of dynamic networks, we should probably return the error and handle it in the caller with retries, etc.
 		return nil
 	}
 
