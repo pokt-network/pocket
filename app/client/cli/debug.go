@@ -243,7 +243,7 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 
 	pstore, err := fetchPeerstore(cmd)
 	if err != nil {
-		logger.Global.Debug().Err(err).Msg("Unable to retrieve the pstore")
+		logger.Global.Fatal().Err(err).Msg("Unable to retrieve the pstore")
 	}
 
 	var validatorAddress []byte
