@@ -37,7 +37,7 @@ func main() {
 		fmt.Printf("Error reading source_yaml: %v\n", err)
 		return
 	}
-	sourceYamlHash := md5.Sum(privateKeysYamlBytes)
+	sourceYamlHash := md5.Sum(privateKeysYamlBytes) // nolint:gosec // Weak hashing function only used to check if the file has been changed
 	hashString := fmt.Sprintf("%x.md5", sourceYamlHash)
 	hashFilePath := filepath.Join(targetFolderPath, hashString)
 	targetFilePath := filepath.Join(targetFolderPath, "debug_keybase.bak")
