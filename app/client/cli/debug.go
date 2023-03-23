@@ -314,6 +314,5 @@ func sendConsensusNewHeightEventToP2PModule(height uint64, bus modules.Bus) erro
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to pack consensus new height event")
 	}
-	bus.GetP2PModule().HandleEvent(newHeightEvent.Content)
-	return err
+	return bus.GetP2PModule().HandleEvent(newHeightEvent.Content)
 }
