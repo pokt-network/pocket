@@ -1,9 +1,8 @@
 package main
 
 import (
-	"crypto/md5"
+	"crypto/md5" // nolint:gosec // Weak hashing function only used to check if the file has been changed
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -33,7 +32,7 @@ func main() {
 	sourceYamlPath := os.Args[1]
 	targetFolderPath := os.Args[2]
 
-	privateKeysYamlBytes, err := ioutil.ReadFile(sourceYamlPath)
+	privateKeysYamlBytes, err := os.ReadFile(sourceYamlPath)
 	if err != nil {
 		fmt.Printf("Error reading source_yaml: %v\n", err)
 		return
@@ -188,5 +187,7 @@ func createHashFile(hashFilePath string) {
 		panic(err)
 	}
 	defer file.Close()
-	file.WriteString("This file is used to check if the keybase dump is in sync with the YAML file. Its name is the MD5 hash of the private_keys.yaml")
+	if _, err := file.WriteString("This file is used to check if the keybase dump is in sync with the YAML file. Its name is the MD5 hash of the private_keys.yaml"); err != nil {
+		panic(err)
+	}
 }
