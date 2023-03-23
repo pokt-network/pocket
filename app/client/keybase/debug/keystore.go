@@ -43,8 +43,7 @@ func initializeDebugKeybase() error {
 	}
 	db := kb.GetBadgerDB()
 
-	err = restoreBadgerDB(build.DebugKeybaseBackup, db)
-	if err != nil {
+	if err := restoreBadgerDB(build.DebugKeybaseBackup, db); err != nil {
 		return err
 	}
 
@@ -68,8 +67,7 @@ func restoreBadgerDB(backupData []byte, db *badger.DB) error {
 
 	// Write the backup data to a file in the temporary directory
 	backupFilePath := filepath.Join(tempDir, "backup")
-	err = ioutil.WriteFile(backupFilePath, backupData, 0644)
-	if err != nil {
+	if err := ioutil.WriteFile(backupFilePath, backupData, 0644); err != nil {
 		return err
 	}
 
@@ -79,8 +77,7 @@ func restoreBadgerDB(backupData []byte, db *badger.DB) error {
 	}
 	defer backupFile.Close()
 
-	err = db.Load(backupFile, 4)
-	if err != nil {
+	if err := db.Load(backupFile, 4); err != nil {
 		return err
 	}
 

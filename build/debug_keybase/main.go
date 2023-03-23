@@ -162,23 +162,20 @@ func parseValidatorPrivateKeysFromEmbeddedYaml(privateKeysYamlBytes []byte) (map
 func cleanupStaleFiles(targetFolderPath string) {
 	fmt.Printf("🧹 Cleaning up stale backup files in in %s\n", targetFolderPath)
 
-	err := filepath.Walk(targetFolderPath, func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk(targetFolderPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			panic(err)
 		}
 
 		if !info.IsDir() && (filepath.Ext(path) == ".bak" || filepath.Ext(path) == ".md5") {
-			err := os.Remove(path)
-			if err != nil {
+			if err := os.Remove(path); err != nil {
 				panic(err)
 			}
 			fmt.Println("🚮 Deleted file:", path)
 		}
 
 		return nil
-	})
-
-	if err != nil {
+	}); err != nil {
 		panic(err)
 	}
 }
@@ -190,6 +187,6 @@ func createHashFile(hashFilePath string) {
 	if err != nil {
 		panic(err)
 	}
-	file.WriteString("This file is used to check if the keybase dump is in sync with the YAML file. Its name is the MD5 hash of the private_keys.yaml")
 	defer file.Close()
+	file.WriteString("This file is used to check if the keybase dump is in sync with the YAML file. Its name is the MD5 hash of the private_keys.yaml")
 }
