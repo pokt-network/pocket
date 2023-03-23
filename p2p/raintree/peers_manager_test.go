@@ -3,20 +3,27 @@ package raintree
 import (
 	"encoding/hex"
 	"fmt"
+	"net"
+	"net/url"
 	"strings"
 	"testing"
 
+	"github.com/foxcpp/go-mockdns"
 	"github.com/golang/mock/gomock"
+	"github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoremem"
+	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	"github.com/stretchr/testify/require"
 
-	"github.com/pokt-network/pocket/p2p/types"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/runtime/configs"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 const (
-	serviceURLFormat = "val_%d"
+	serviceURLFormat = "val_%d:42069"
+	addrAlphabet     = "ABCDEFGHIJKLMNOPQRSTUVWXYZ["
 )
 
 type ExpectedRainTreeNetworkConfig struct {
@@ -38,7 +45,7 @@ type ExpectedRainTreeMessageProp struct {
 
 func TestRainTree_Peerstore_HandleUpdate(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	addr, err := cryptoPocket.GenerateAddress()
+	pubKey, err := cryptoPocket.GeneratePublicKey()
 	require.NoError(t, err)
 
 	testCases := []ExpectedRainTreeNetworkConfig{
@@ -74,16 +81,33 @@ func TestRainTree_Peerstore_HandleUpdate(t *testing.T) {
 		n := testCase.numNodes
 		t.Run(fmt.Sprintf("n=%d", n), func(t *testing.T) {
 			pstore := getPeerstore(t, n-1)
-			err = pstore.AddPeer(&types.NetworkPeer{Address: addr})
+
+			err = pstore.AddPeer(&typesP2P.NetworkPeer{
+				PublicKey:  pubKey,
+				Address:    pubKey.Address(),
+				ServiceURL: "10.0.0.1:42069",
+			})
 			require.NoError(t, err)
 
 			mockBus := mockBus(ctrl)
 			pstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 			currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-			network := NewRainTreeNetwork(addr, mockBus, pstoreProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
+			libp2pMockNet, err := mocknet.WithNPeers(1)
+			require.NoError(t, err)
 
-			peersManagerStateView, actualMaxNumLevels := network.peersManager.getPeersViewWithLevels()
+			network, err := NewRainTreeNetwork(
+				libp2pMockNet.Hosts()[0],
+				pubKey.Address(),
+				mockBus,
+				pstoreProviderMock,
+				currentHeightProviderMock,
+			)
+			require.NoError(t, err)
+
+			rainTree := network.(*rainTreeNetwork)
+
+			peersManagerStateView, actualMaxNumLevels := rainTree.peersManager.getPeersViewWithLevels()
 
 			require.Equal(t, n, network.GetPeerstore().Size())
 			require.Len(t, peersManagerStateView.GetAddrs(), n)
@@ -121,16 +145,21 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 		n := testCase.numNodes
 		b.Run(fmt.Sprintf("n=%d", n), func(b *testing.B) {
 			pstore := getPeerstore(nil, n-1)
-			err := pstore.AddPeer(&types.NetworkPeer{Address: addr})
+			err := pstore.AddPeer(&typesP2P.NetworkPeer{Address: addr})
 			require.NoError(b, err)
 
 			mockBus := mockBus(ctrl)
 			pstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 			currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-			network := NewRainTreeNetwork(addr, mockBus, pstoreProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
+			hostMock := mocksP2P.NewMockHost(ctrl)
 
-			peersManagerStateView, actualMaxNumLevels := network.peersManager.getPeersViewWithLevels()
+			network, err := NewRainTreeNetwork(hostMock, addr, mockBus, pstoreProviderMock, currentHeightProviderMock)
+			require.NoError(b, err)
+
+			rainTree := network.(*rainTreeNetwork)
+
+			peersManagerStateView, actualMaxNumLevels := rainTree.peersManager.getPeersViewWithLevels()
 
 			require.Equal(b, n, network.GetPeerstore().Size())
 			require.Equal(b, n, len(peersManagerStateView.GetAddrs()))
@@ -140,11 +169,11 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 			for i := 0; i < numAddressesToBeAdded; i++ {
 				newAddr, err := cryptoPocket.GenerateAddress()
 				require.NoError(b, err)
-				err = network.AddPeer(&types.NetworkPeer{Address: newAddr})
+				err = rainTree.AddPeer(&typesP2P.NetworkPeer{Address: newAddr})
 				require.NoError(b, err)
 			}
 
-			peersManagerStateView = network.peersManager.GetPeersView()
+			peersManagerStateView = rainTree.peersManager.GetPeersView()
 
 			require.Equal(b, n+numAddressesToBeAdded, network.GetPeerstore().Size())
 			require.Equal(b, n+numAddressesToBeAdded, len(peersManagerStateView.GetAddrs()))
@@ -156,12 +185,15 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 func getPeerstore(t *testing.T, n int) typesP2P.Peerstore {
 	pstore := make(typesP2P.PeerAddrMap)
 	for i := 0; i < n; i++ {
-		addr, err := cryptoPocket.GenerateAddress()
+		privKey, err := cryptoPocket.GeneratePrivateKey()
 		if t != nil {
 			require.NoError(t, err)
 		}
-		err = pstore.AddPeer(&types.NetworkPeer{
-			Address: addr,
+
+		err = pstore.AddPeer(&typesP2P.NetworkPeer{
+			PublicKey:  privKey.PublicKey(),
+			Address:    privKey.Address(),
+			ServiceURL: "10.0.0.1:42069",
 		})
 		if t != nil {
 			require.NoError(t, err)
@@ -224,24 +256,39 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
 	runtimeMgrMock.EXPECT().GetConfig().Return(configs.NewDefaultConfig()).AnyTimes()
 
+	mockAlphabetValidatorServiceURLsDNS(t)
 	pstore := getAlphabetPeerstore(t, expectedMsgProp.numNodes)
 	pstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 1)
 
-	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, busMock, pstoreProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
+	libp2pPStore, err := pstoremem.NewPeerstore()
+	require.NoError(t, err)
 
-	network.SetBus(busMock)
+	hostMock := mocksP2P.NewMockHost(ctrl)
+	hostMock.EXPECT().Peerstore().Return(libp2pPStore).AnyTimes()
 
-	peersManagerStateView := network.peersManager.GetPeersView()
+	network, err := NewRainTreeNetwork(
+		hostMock,
+		[]byte{expectedMsgProp.orig},
+		busMock,
+		pstoreProviderMock,
+		currentHeightProviderMock,
+	)
+	require.NoError(t, err)
+	rainTree := network.(*rainTreeNetwork)
+
+	rainTree.SetBus(busMock)
+
+	peersManagerStateView := rainTree.peersManager.GetPeersView()
 
 	require.Equal(t, strings.Join(peersManagerStateView.GetAddrs(), ""), strToAddrList(expectedMsgProp.addrList))
 
-	i, found := network.peersManager.getSelfIndexInPeersView()
+	i, found := rainTree.peersManager.getSelfIndexInPeersView()
 	require.True(t, found)
 	require.Equal(t, i, 0)
 
 	for _, target := range expectedMsgProp.targets {
-		actualTargets := network.getTargetsAtLevel(uint32(target.level))
+		actualTargets := rainTree.getTargetsAtLevel(uint32(target.level))
 
 		require.True(t, shouldSendToTarget(actualTargets[0]))
 		require.Equal(t, cryptoPocket.Address(target.left), actualTargets[0].address)
@@ -254,11 +301,15 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 // Generates an address book with a constant set 27 addresses; ['A', ..., 'Z']
 func getAlphabetPeerstore(t *testing.T, n int) typesP2P.Peerstore {
 	pstore := make(typesP2P.PeerAddrMap)
-	for i, ch := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ[" {
+	for i, ch := range addrAlphabet {
 		if i >= n {
 			return pstore
 		}
-		err := pstore.AddPeer(&types.NetworkPeer{
+		pubKey, err := cryptoPocket.GeneratePublicKey()
+		require.NoError(t, err)
+
+		err = pstore.AddPeer(&typesP2P.NetworkPeer{
+			PublicKey:  pubKey,
 			ServiceURL: fmt.Sprintf(serviceURLFormat, i),
 			Address:    []byte{byte(ch)},
 		})
@@ -269,4 +320,35 @@ func getAlphabetPeerstore(t *testing.T, n int) typesP2P.Peerstore {
 
 func strToAddrList(s string) string {
 	return hex.EncodeToString([]byte(s))
+}
+
+func mockAlphabetValidatorServiceURLsDNS(t *testing.T) (done func()) {
+	zones := make(map[string]mockdns.Zone)
+	for i := range addrAlphabet {
+		serviceURL, err := url.Parse(fmt.Sprintf("scheme://"+serviceURLFormat, i))
+		require.NoError(t, err)
+
+		fqdn := fmt.Sprintf("%s.", serviceURL.Hostname())
+		zones[fqdn] = mockdns.Zone{
+			A: []string{fmt.Sprintf("10.0.0.%d", i+1)},
+		}
+	}
+	return prepareDNSMock(zones)
+}
+
+// TECHDEBT(#609): de-duplicate / refactor `prepaand reDNSMock` & `noopLogger`.
+func prepareDNSMock(zones map[string]mockdns.Zone) (done func()) {
+	srv, _ := mockdns.NewServerWithLogger(zones, noopLogger{}, false)
+	srv.PatchNet(net.DefaultResolver)
+	return func() {
+		_ = srv.Close()
+		mockdns.UnpatchNet(net.DefaultResolver)
+	}
+}
+
+// noopLogger implements go-mockdns's `mockdns.Logger` interface.
+type noopLogger struct{}
+
+func (nl noopLogger) Printf(format string, args ...interface{}) {
+	// noop
 }
