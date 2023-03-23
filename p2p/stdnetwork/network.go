@@ -13,7 +13,6 @@ import (
 	"github.com/pokt-network/pocket/p2p/utils"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 var (
@@ -23,7 +22,7 @@ var (
 
 type network struct {
 	host   libp2pHost.Host
-	pstore sharedP2P.Peerstore
+	pstore typesP2P.Peerstore
 
 	logger *modules.Logger
 }
@@ -74,15 +73,15 @@ func (n *network) HandleNetworkData(data []byte) ([]byte, error) {
 	return data, nil // intentional passthrough
 }
 
-func (n *network) GetPeerstore() sharedP2P.Peerstore {
+func (n *network) GetPeerstore() typesP2P.Peerstore {
 	return n.pstore
 }
 
-func (n *network) AddPeer(peer sharedP2P.Peer) error {
+func (n *network) AddPeer(peer typesP2P.Peer) error {
 	return n.pstore.AddPeer(peer)
 }
 
-func (n *network) RemovePeer(peer sharedP2P.Peer) error {
+func (n *network) RemovePeer(peer typesP2P.Peer) error {
 	return n.pstore.RemovePeer(peer.GetAddress())
 }
 

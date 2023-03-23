@@ -6,10 +6,9 @@ import (
 	"github.com/multiformats/go-multiaddr"
 
 	"github.com/pokt-network/pocket/shared/crypto"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
-var _ sharedP2P.Peer = &NetworkPeer{}
+var _ Peer = &NetworkPeer{}
 
 type NetworkPeer struct {
 	Transport Transport

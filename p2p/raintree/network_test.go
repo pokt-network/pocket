@@ -7,7 +7,6 @@ import (
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 	"github.com/stretchr/testify/require"
 )
 
@@ -86,7 +85,7 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	require.Equal(t, expectedPStoreSize, len(peerAddrs))
 	require.Equal(t, expectedPStoreSize, len(peers))
 
-	var peerToRemove sharedP2P.Peer
+	var peerToRemove typesP2P.Peer
 	// Ensure we don't remove selfPeer. `Peerstore` interface isn't aware
 	// of the concept of "self" so we have to find it.
 	for _, peer := range pstore.GetPeerList() {
@@ -105,7 +104,7 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 
 	peerAddrs, peers = getPeersViewParts(network.peersManager)
 	removedAddr := peerToRemove.GetAddress()
-	getPeer := func(addr cryptoPocket.Address) sharedP2P.Peer {
+	getPeer := func(addr cryptoPocket.Address) typesP2P.Peer {
 		return network.GetPeerstore().GetPeer(addr)
 	}
 
@@ -118,9 +117,9 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	require.Nil(t, getPeer(removedAddr), "Peerstore contains removed peer")
 }
 
-func getPeersViewParts(pm sharedP2P.PeerManager) (
+func getPeersViewParts(pm typesP2P.PeerManager) (
 	addrs []string,
-	peers sharedP2P.PeerList,
+	peers typesP2P.PeerList,
 ) {
 	view := pm.GetPeersView()
 	addrs = view.GetAddrs()

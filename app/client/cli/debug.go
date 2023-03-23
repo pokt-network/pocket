@@ -15,11 +15,11 @@ import (
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	rpcABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 // TECHDEBT: Lowercase variables / constants that do not need to be exported.
@@ -266,7 +266,7 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 }
 
 // fetchPeerstore retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
-func fetchPeerstore(cmd *cobra.Command) (sharedP2P.Peerstore, error) {
+func fetchPeerstore(cmd *cobra.Command) (typesP2P.Peerstore, error) {
 	bus, ok := getValueFromCLIContext[modules.Bus](cmd, busCLICtxKey)
 	if !ok || bus == nil {
 		return nil, errors.New("retrieving bus from CLI context")

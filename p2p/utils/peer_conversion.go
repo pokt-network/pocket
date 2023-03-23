@@ -10,13 +10,13 @@ import (
 
 	"github.com/pokt-network/pocket/libp2p/transport"
 	"github.com/pokt-network/pocket/p2p/types"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 // PeerFromLibp2pStream builds a network peer using peer info available
 // from the given libp2p stream.
-func PeerFromLibp2pStream(stream network.Stream) (sharedP2P.Peer, error) {
+func PeerFromLibp2pStream(stream network.Stream) (typesP2P.Peer, error) {
 	publicKeyBz, err := stream.Conn().RemotePublicKey().Raw()
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func PeerFromLibp2pStream(stream network.Stream) (sharedP2P.Peer, error) {
 }
 
 // Libp2pPublicKeyFromPeer retrieves the libp2p compatible public key from a pocket peer.
-func Libp2pPublicKeyFromPeer(peer sharedP2P.Peer) (libp2pCrypto.PubKey, error) {
+func Libp2pPublicKeyFromPeer(peer typesP2P.Peer) (libp2pCrypto.PubKey, error) {
 	publicKey, err := libp2pCrypto.UnmarshalEd25519PublicKey(peer.GetPublicKey().Bytes())
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -55,7 +55,7 @@ func Libp2pPublicKeyFromPeer(peer sharedP2P.Peer) (libp2pCrypto.PubKey, error) {
 }
 
 // Libp2pAddrInfoFromPeer builds a libp2p AddrInfo which maps to the passed pocket peer.
-func Libp2pAddrInfoFromPeer(peer sharedP2P.Peer) (libp2pPeer.AddrInfo, error) {
+func Libp2pAddrInfoFromPeer(peer typesP2P.Peer) (libp2pPeer.AddrInfo, error) {
 	publicKey, err := Libp2pPublicKeyFromPeer(peer)
 	if err != nil {
 		return libp2pPeer.AddrInfo{}, err

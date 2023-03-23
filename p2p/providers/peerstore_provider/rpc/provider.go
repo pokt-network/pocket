@@ -17,7 +17,6 @@ import (
 	"github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 var (
@@ -68,7 +67,7 @@ func (*rpcPeerstoreProvider) GetModuleName() string {
 	return peerstore_provider.ModuleName
 }
 
-func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (sharedP2P.Peerstore, error) {
+func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
 
