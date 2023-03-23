@@ -38,12 +38,12 @@ func main() {
 		return
 	}
 	sourceYamlHash := md5.Sum(privateKeysYamlBytes)
-	hashString := fmt.Sprintf("%x", sourceYamlHash)
+	hashString := fmt.Sprintf("%x.md5", sourceYamlHash)
 	hashFilePath := filepath.Join(targetFolderPath, hashString)
 	targetFilePath := filepath.Join(targetFolderPath, "debug_keybase.bak")
 	_, err = os.Stat(hashFilePath)
 	if os.IsNotExist(err) {
-		cleanupBakFiles(targetFolderPath)
+		cleanupStaleFiles(targetFolderPath)
 		dumpKeybase(privateKeysYamlBytes, targetFilePath)
 		createHashFile(hashFilePath)
 	} else {
@@ -72,7 +72,7 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 	db := kb.GetBadgerDB()
 
 	// Add validator addresses if not present
-	fmt.Println("✍️ Debug keybase initializing... Adding all the validator keys to the keybase")
+	fmt.Println("✍️ Debug keybase initializing... Adding all the validator keys")
 
 	// Use writebatch to speed up bulk insert
 	wb := db.NewWriteBatch()
@@ -159,7 +159,7 @@ func parseValidatorPrivateKeysFromEmbeddedYaml(privateKeysYamlBytes []byte) (map
 	return validatorKeysMap, nil
 }
 
-func cleanupBakFiles(targetFolderPath string) {
+func cleanupStaleFiles(targetFolderPath string) {
 	fmt.Printf("🧹 Cleaning up stale backup files in in %s\n", targetFolderPath)
 
 	err := filepath.Walk(targetFolderPath, func(path string, info os.FileInfo, err error) error {
@@ -167,7 +167,7 @@ func cleanupBakFiles(targetFolderPath string) {
 			panic(err)
 		}
 
-		if !info.IsDir() && filepath.Ext(path) == ".bak" {
+		if !info.IsDir() && (filepath.Ext(path) == ".bak" || filepath.Ext(path) == ".md5") {
 			err := os.Remove(path)
 			if err != nil {
 				panic(err)
