@@ -144,18 +144,18 @@ func TestServiceURLFromLibp2pMultiaddr_Success(t *testing.T) {
 		{
 			"IPv6 full",
 			"/ip6/2a00:1450:4005:0802:0000:0000:0000:2004/tcp/8080",
-			"2a00:1450:4005:802::2004:8080",
+			"[2a00:1450:4005:802::2004]:8080",
 		},
 		{
 			"IPv6 short",
 			"/ip6/2a00:1450:4005:802::2004/tcp/8080",
-			"2a00:1450:4005:802::2004:8080",
+			"[2a00:1450:4005:802::2004]:8080",
 		},
 		{
 			"IPv6 shorter",
 			// NB: this address is not equivalent to those above.
 			"/ip6/2a00::2004/tcp/8080",
-			"2a00::2004:8080",
+			"[2a00::2004]:8080",
 		},
 	}
 

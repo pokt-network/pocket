@@ -113,8 +113,10 @@ func ServiceURLFromLibp2pMultiaddr(addr multiaddr.Multiaddr) (string, error) {
 
 	// Top level protocol must be a network protocol (e.g. ip4, ip6).
 	switch networkProtocol.Code {
-	case multiaddr.P_IP4, multiaddr.P_IP6:
+	case multiaddr.P_IP4:
 		return fmt.Sprintf("%s:%s", networkValue, transportValue), nil
+	case multiaddr.P_IP6:
+		return fmt.Sprintf("[%s]:%s", networkValue, transportValue), nil
 	}
 
 	return "", fmt.Errorf(
