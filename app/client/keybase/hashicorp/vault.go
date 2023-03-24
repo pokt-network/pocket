@@ -14,6 +14,10 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto/slip"
 )
 
+const (
+	defaultVaultMountPath = "secret"
+)
+
 // vaultKeybase implements the Keybase interface using HashiCorp Vault.
 type vaultKeybase struct {
 	client *api.Client
@@ -31,7 +35,7 @@ func NewVaultKeybase(cfg *configs.KeybaseConfig) (*vaultKeybase, error) {
 
 	// Set the default mount path for the secret engine
 	if cfg.VaultMountPath == "" {
-		cfg.VaultMountPath = "secret"
+		cfg.VaultMountPath = defaultVaultMountPath
 	}
 
 	// Create a new vault API client
@@ -156,6 +160,7 @@ func (vk *vaultKeybase) GetPrivKey(address, passphrase string) (crypto.PrivateKe
 
 // GetAll get all keys at this path, NOTE: these may not all be keypairs so practice good hygiene
 func (vk *vaultKeybase) GetAll() ([]string, []crypto.KeyPair, error) {
+	// See https://developer.hashicorp.com/vault/api-docs/secret/kv/kv-v2#list-secrets
 	data, err := vk.client.Logical().List(fmt.Sprintf("%s/metadata", vk.mount))
 
 	if err != nil {
@@ -304,7 +309,6 @@ func (vk *vaultKeybase) Verify(address string, msg, sig []byte) (bool, error) {
 
 // Delete a keypair from vault
 func (vk *vaultKeybase) Delete(address, passphrase string) error {
-
 	_, err := vk.GetPrivKey(address, passphrase)
 	if err != nil {
 		return err

@@ -7,7 +7,6 @@ import "keybase.proto";
 option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
 message KeybaseConfig {
-
   // The type of keybase to use. Can be FILE or VAULT. Defaults to FILE.
   keybase.KeybaseType type = 1;
 

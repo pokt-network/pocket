@@ -19,7 +19,7 @@ The Keybase package supports multiple backend options to store keys:
 - **BadgerDB**: A filesystem key-value database used to persistently store keys locally on the client machine. The DB stores the local keys encoded as `[]byte` using `encoding/gob`. It is the default backend for the Keybase.
 - **Hashicorp Vault**: An external secrets management system that can be used to store keys securely. The Vault backend requires additional configuration to connect and authenticate with a Vault server.
 
-The backend option can be selected using the CLI or by configuring environment variables. Check the [Configuration Methods](#configuration-methods) section for more details.
+The backend option can be selected using the CLI or by configuring environment variables. Check the [Configuration Methods](#configuration-methods) section for more details. The key pairs are stored in the vault as an encoded JSON string using `encoding/json` at the vault mount path + the public address.
 
 ## Keybase Interface
 

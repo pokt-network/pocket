@@ -84,3 +84,6 @@ val2.json
 localnet_config.yaml
 
 .env
+
+# ignore highest precedence config file read by default
+/config.json

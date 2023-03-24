@@ -78,7 +78,7 @@ func NewDebugCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 
-			// CLEANUP: this is to keep backwards compatibility with localnet
+			// TECHDEBT: this is to keep backwards compatibility with localnet
 			configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
 
 			runtimeMgr := runtime.NewManagerFromFiles(

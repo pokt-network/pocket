@@ -4,14 +4,14 @@ The Keybase Vault stores key pairs, `(public_key, armoured_private_key)`, using 
 
 Keybase Vault requires a few pieces of information to be able to connect to it:
 
-- Address (e.g. `VAULT_ADDR`=http://127.0.0.1:8200/)
-- Token (e.g. `VAULT_TOKEN`=hvs.25YM7qJDN8S2EpFEA4SL0ciD)
+- Address (e.g. `VAULT_ADDR`=http://127.0.0.1:8200/ or `POCKET_KEYBASE_VAULT_ADDR`=http://127.0.0.1:8200/)
+- Token (e.g. `VAULT_TOKEN`=hvs.notarealtoken or `POCKET_KEYBASE_VAULT_TOKEN`=hvs.notarealtoken)
 - Mount Path (e.g. /secret)
 
 You can configure the CLI to use a Hashicorp Vault keybase in three different ways, listed in order of precedence:
 
 1. configuration file
-2. environment variables prefixed with POCKET\_ (e.g., POCKET_KEYBASE_TYPE=vault) to override the configuration file
+2. environment variables prefixed with POCKET\_ (e.g., `POCKET_KEYBASE_TYPE=vault`) to override the configuration file
 3. command-line flags (highest precedence)
 
 ## Simple Vault Demo

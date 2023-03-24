@@ -18,14 +18,14 @@ var (
 	dataDir        string
 	configPath     string
 	nonInteractive bool
-	cfg            configs.Config
+	cfg            *configs.Config
 )
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remote_cli_url", defaults.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
 	rootCmd.PersistentFlags().BoolVar(&nonInteractive, "non_interactive", false, "if true skips the interactive prompts wherever possible (useful for scripting & automation)")
 
-	// CLEANUP: Why do we have a data dir when we have a config path if the data dir is only storing keys?
+	// TECHDEBT: Why do we have a data dir when we have a config path if the data dir is only storing keys?
 	rootCmd.PersistentFlags().StringVar(&dataDir, "data_dir", defaults.DefaultRootDirectory, "Path to store pocket related data (keybase etc.)")
 	rootCmd.PersistentFlags().StringVar(&configPath, "config", "", "Path to config")
 	if err := viper.BindPFlag("root_directory", rootCmd.PersistentFlags().Lookup("data_dir")); err != nil {
@@ -39,7 +39,7 @@ var rootCmd = &cobra.Command{
 	Long:  "The CLI is meant to be an user but also a machine friendly way for interacting with Pocket Network.",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// by this time, the config path should be set
-		cfg = *configs.ParseConfig(configPath)
+		cfg = configs.ParseConfig(configPath)
 		return nil
 	},
 }

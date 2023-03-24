@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
+	// "github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/spf13/viper"
 )
@@ -37,7 +38,6 @@ func ParseConfig(cfgFile string) *Config {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
-
 		viper.AddConfigPath("/etc/pocket/")  // path to look for the config file in
 		viper.AddConfigPath("$HOME/.pocket") // call multiple times to add many search paths
 		viper.AddConfigPath(".")             // optionally look for config in the working directory
@@ -56,30 +56,57 @@ func ParseConfig(cfgFile string) *Config {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok && cfgFile == "" {
 			// if file does not exist and there is no override, return default config
 			// DISCUSS: how should we handle this? Should we return an error? Should we create the default file?
+			log.Default().Printf("No config provided, using defaults")
 			return config
 		} else {
-			// Some other error occurred while reading the config file
-			log.Fatalf("[ERROR] failed to read config %s", err.Error())
+			// TECHEBT: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
+			log.Fatalf("[ERROR] fatal error reading config file %s", err.Error())
+			// logger.Global.Fatal().Err(err).Msg("Fatal error reading config file")
 		}
 	}
+
+	// TECHEBT: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
+	log.Default().Printf("Using config file: %s", viper.ConfigFileUsed())
+	// logger.Global.Debug().Msgf("Using config file: %s", viper.ConfigFileUsed())
 
 	decoderConfig := func(dc *mapstructure.DecoderConfig) {
 		// This is to leverage the `json` struct tags without having to add `mapstructure` ones.
 		// Until we have complex use cases, this should work just fine.
 		dc.TagName = "json"
 	}
+	// Detect if we need to use json.Unmarshal instead of viper.Unmarshal
 	if err := viper.Unmarshal(&config, decoderConfig); err != nil {
-		// Use json.Unmarshal instead of viper.Unmarshal to leverage the custom unmarshaler
 		cfgData := viper.AllSettings()
 		cfgJSON, _ := json.Marshal(cfgData)
+
+		// last ditch effort to unmarshal the config
 		if err := json.Unmarshal(cfgJSON, &config); err != nil {
 			log.Fatalf("[ERROR] failed to unmarshal config %s", err.Error())
 		}
 	}
+
 	return config
 }
 
-// IMPROVE: could go all in on viper and use viper.SetDefault()
+// setViperDefaults this is a hacky way to set the default values for Viper so env var overrides work.
+// DISCUSS: is there a better way to do this?
+func setViperDefaults(cfg *Config) {
+	// convert the config struct to a map with the json tags as keys
+	cfgData, err := json.Marshal(cfg)
+
+	if err != nil {
+		log.Fatalf("[ERROR] failed to marshal config %s", err.Error())
+	}
+	var cfgMap map[string]any
+	if err := json.Unmarshal(cfgData, &cfgMap); err != nil {
+		log.Fatalf("[ERROR] failed to unmarshal config %s", err.Error())
+	}
+
+	for k, v := range cfgMap {
+		viper.SetDefault(k, v)
+	}
+}
+
 func NewDefaultConfig(options ...func(*Config)) *Config {
 	cfg := &Config{
 		RootDirectory: defaults.DefaultRootDirectory,
@@ -131,6 +158,9 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 	for _, option := range options {
 		option(cfg)
 	}
+
+	// set Viper defaults so POCKET_ env vars work without having to set in config file
+	setViperDefaults(cfg)
 
 	return cfg
 }

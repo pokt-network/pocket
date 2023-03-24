@@ -26,10 +26,10 @@ import (
 )
 
 var (
-	kbTypeStrFromCLI             string
-	keybaseVaultAddrFromCLI      string
-	keybaseVaultTokenFromCLI     string
-	keybaseVaultMountPathFromCLI string
+	kbTypeStrFromCLI        string
+	kbVaultAddrFromCLI      string
+	kbVaultTokenFromCLI     string
+	kbVaultMountPathFromCLI string
 )
 
 func parseEd25519PrivateKeyFromReader(reader io.Reader) (pk crypto.Ed25519PrivateKey, err error) {
@@ -252,9 +252,9 @@ func attachChildPwdFlagToSubcommands() []cmdOption {
 func attachKeybaseFlagsToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
 		c.Flags().StringVar(&kbTypeStrFromCLI, "keybase", "file", "keybase type used by the cmd, options are: file, vault")
-		c.Flags().StringVar(&keybaseVaultAddrFromCLI, "vault-addr", "", "Vault address used by the cmd. Defaults to https://127.0.0.1:8200 or VAULT_ADDR env var")
-		c.Flags().StringVar(&keybaseVaultTokenFromCLI, "vault-token", "", "Vault token used by the cmd. Defaults to VAULT_TOKEN env var")
-		c.Flags().StringVar(&keybaseVaultMountPathFromCLI, "vault-mount", "", "Vault mount path used by the cmd. Defaults to secret")
+		c.Flags().StringVar(&kbVaultAddrFromCLI, "vault-addr", "", "Vault address used by the cmd. Defaults to https://127.0.0.1:8200 or VAULT_ADDR env var")
+		c.Flags().StringVar(&kbVaultTokenFromCLI, "vault-token", "", "Vault token used by the cmd. Defaults to VAULT_TOKEN env var")
+		c.Flags().StringVar(&kbVaultMountPathFromCLI, "vault-mount", "", "Vault mount path used by the cmd. Defaults to secret")
 
 		// override the PersistentPreRunE to set the keybase type
 		c.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
