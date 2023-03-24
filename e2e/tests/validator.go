@@ -1,3 +1,5 @@
+//go:build e2e
+
 package e2e
 
 import (
@@ -13,35 +15,38 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// rpcURL of the pod that the test harness drives
+var rpcURL string
+
 func init() {
-	// NB: the defaults package exports several common & useful defaults for localnet interaction
 	rpcURL = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "v1-validator001"), defaults.DefaultRPCPort)
 }
 
-// rpcURL of the debug client that the test harness drives.
-var rpcURL string
-
+// cliPath is the path of the binary installed and is set by the Tiltfile
 const cliPath = "/usr/local/bin/client"
 
-// CommandResult combines the stdout, stderr, and err of an operation.
-type CommandResult struct {
+// commandResult combines the stdout, stderr, and err of an operation
+type commandResult struct {
 	Stdout string
 	Stderr string
 	Err    error
 }
 
-// PocketClient is a single function interface for interacting with a node.
+// PocketClient is a single function interface for interacting with a node
 type PocketClient interface {
-	RunCommand(...string) (*CommandResult, error)
+	RunCommand(...string) (*commandResult, error)
 }
 
-var _ PocketClient = &Validator{}
+// Ensure that Validator fulfills PocketClient
+var _ PocketClient = &validatorPod{}
 
-// Validator holds the connection information for validator-001 for testing.
-type Validator struct {
-	result *CommandResult // stores the result of the last command that was run.
+// validatorPod holds the connection information to pod validator-001 for testing
+type validatorPod struct {
+	result *commandResult // stores the result of the last command that was run
 }
 
+// getClientset uses the default path `$HOME/.kube/config` to build a kubeconfig
+// and then connects to that cluster and returns a *Clientset or an error
 func getClientset() (*kubernetes.Clientset, error) {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -63,18 +68,18 @@ func getClientset() (*kubernetes.Clientset, error) {
 }
 
 // RunCommand runs a command on the pocket binary
-func (v *Validator) RunCommand(args ...string) (*CommandResult, error) {
+func (v *validatorPod) RunCommand(args ...string) (*commandResult, error) {
 	base := []string{
 		"exec", "-i", "deploy/pocket-v1-cli-client",
 		"--container", "pocket",
 		"--", cliPath,
 		"--non_interactive=true",
-		// "--remote_cli_url=" + rpcURL,
+		"--remote_cli_url=" + rpcURL,
 	}
 
 	args = append(base, args...)
 	cmd := exec.Command("kubectl", args...)
-	r := &CommandResult{}
+	r := &commandResult{}
 
 	out, err := cmd.Output()
 	if err != nil {
