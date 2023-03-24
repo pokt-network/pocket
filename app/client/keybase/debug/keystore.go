@@ -56,7 +56,7 @@ func initializeDebugKeybase() error {
 }
 
 func restoreBadgerDB(backupData []byte, db *badger.DB) error {
-	logger.Global.Debug().Msgf(fmt.Sprintf("Debug keybase initializing... Restoring from the embedded backup file..."))
+	logger.Global.Debug().Msg("Debug keybase initializing... Restoring from the embedded backup file...")
 
 	// Create a temporary directory to store the backup data
 	tempDir, err := ioutil.TempDir("", "badgerdb-restore")
