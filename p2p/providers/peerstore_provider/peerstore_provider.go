@@ -29,6 +29,7 @@ func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore
 	pstore = make(sharedP2P.PeerAddrMap)
 	for _, a := range actors {
 		networkPeer, err := ActorToPeer(abp, a)
+		// TECHDEBT(#519): consider checking for behaviour instead of type. For reference: https://github.com/pokt-network/pocket/pull/611#discussion_r1147476057
 		if _, ok := err.(*ErrResolvingAddr); ok {
 			logger.Global.Warn().Err(err).Msg("ignoring ErrResolvingAddr - peer unreachable, not adding it to peerstore")
 			continue
