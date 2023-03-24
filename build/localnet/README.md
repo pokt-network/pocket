@@ -39,13 +39,13 @@ Otherwise, please continue with the full guide.
 
 ## Dependencies
 
-All necessary dependencies, except Docker and Kubernetes cluster, are installed automatically when running `make install_cli_deps`. The following dependencies are required:
+All necessary dependencies, except Docker and Kubernetes cluster, are installed automatically when running `make install_cli_deps`. The following dependencies are required for LocalNet to function:
 
 1. [tilt](https://docs.tilt.dev/install.html)
 2. [Docker](https://docs.docker.com/engine/install/) or [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 3. `Kubernetes cluster`: refer to [Choosing Kubernetes Distribution](#choosing-kubernetes-distribution) section for more details.
 4. `kubectl`: CLI is required and should be configured to access the cluster. This should happen automatically if using Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc.
-5. [helm](https://helm.sh/docs/intro/install): required to template the yaml manifests for the dependencies (e.g. postgres, grafana). Installation instructions available.
+5. [helm](https://helm.sh/docs/intro/install): required to template the YAML manifests for the dependencies (e.g., Postgres, Grafana). Installation instructions available.
 
 ### Choosing Kubernetes Distribution
 
@@ -53,13 +53,13 @@ While [any Kubernetes distribution](https://docs.tilt.dev/choosing_clusters.html
 
 #### How to create Kind Kubernetes cluster
 
-Assuming you have Docker installed, it is easy to create a new kind cluster:
+Kind depends solely on Docker. To install Kind, follow [this page](https://kind.sigs.k8s.io/docs/user/quick-start/#installation).
+
+Create a new cluster:
 
 ```bash
 kind create cluster
 ```
-
-Full guide on kind is available [here](https://kind.sigs.k8s.io/docs/user/quick-start/).
 
 Make sure your Kubernetes context is pointed to new kind cluster:
 
@@ -67,7 +67,7 @@ Make sure your Kubernetes context is pointed to new kind cluster:
 kubectl config current-context
 ```
 
-should return `kind-kind`.
+should return `kind-kind`. Now you can start LocalNet!
 
 ## LocalNet
 
