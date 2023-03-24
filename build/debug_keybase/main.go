@@ -39,7 +39,8 @@ func main() {
 	}
 	sourceYamlHash := md5.Sum(privateKeysYamlBytes) // nolint:gosec // Weak hashing function only used to check if the file has been changed
 	hashString := fmt.Sprintf("%x.md5", sourceYamlHash)
-	hashFilePath := filepath.Join(targetFolderPath, hashString) // the file name is a hash used to track changes in the keybase	targetFilePath := filepath.Join(targetFolderPath, "debug_keybase.bak")
+	hashFilePath := filepath.Join(targetFolderPath, hashString)
+	targetFilePath := filepath.Join(targetFolderPath, "debug_keybase.bak")
 	if exists, _ := utils.FileExists(hashFilePath); !exists {
 		cleanupStaleFiles(targetFolderPath)
 		dumpKeybase(privateKeysYamlBytes, targetFilePath)
