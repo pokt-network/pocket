@@ -2,6 +2,8 @@ package peerstore_provider
 
 import "fmt"
 
+// TECHDEBT(#519, #556): Standardize how errors are managed throughout the codebase.
+
 type ErrResolvingAddr struct {
 	error
 }

@@ -30,7 +30,7 @@ func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore
 	for _, a := range actors {
 		networkPeer, err := ActorToPeer(abp, a)
 		if _, ok := err.(*ErrResolvingAddr); ok {
-			logger.Global.Debug().Err(err).Msg("ignoring ErrResolvingAddr - peer unreachable, not adding it to peerstore")
+			logger.Global.Warn().Err(err).Msg("ignoring ErrResolvingAddr - peer unreachable, not adding it to peerstore")
 			continue
 		} else if err != nil {
 			errs = multierr.Append(errs, err)
