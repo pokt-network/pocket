@@ -30,7 +30,7 @@ type ConsensusModule interface {
 	HandleMessage(*anypb.Any) error
 	// State Sync messages Handler
 	HandleStateSyncMessage(*anypb.Any) error
-	// FSM transition events handler
+	// FSM transition event handler
 	HandleEvent(transitionMessageAny *anypb.Any) error
 
 	// Consensus State Accessors
