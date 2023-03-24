@@ -56,7 +56,7 @@ type StateSyncMetadataResponse {
 }
 ```
 
-Node periodically requests peer metadata from active peers upon starting, as an external process. The following is an illustrative example for a high-level understanding:
+Node periodically requests peer metadata from active peers after starting, as a background process. The following is an illustrative example:
 
 ```mermaid
 sequenceDiagram
