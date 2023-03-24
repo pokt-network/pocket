@@ -238,9 +238,28 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 
 // TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
 
-func TestValidateQuorumCertificate(t *testing.T) {
+// TODO(#XXX): Implement this test
+func TestQuorumCertificate_Valid(t *testing.T) {
 	t.Skip()
 }
+
+// TODO(#XXX): Implement this test
+func TestQuorumCertificate_InsufficientSignaturesSignature(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#XXX): Implement this test
+func TestQuorumCertificate_SignatureFromInvalidValidatorSet(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#XXX): Implement this test
+func TestQuorumCertificate_SignatureFromJailedValidators(t *testing.T) {
+	t.Skip()
+}
+
+// Can you add a few more?
+
 
 func TestHotstuff4Nodes1Byzantine1Block(t *testing.T) {
 	t.Skip()
