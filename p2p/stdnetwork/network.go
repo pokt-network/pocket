@@ -58,7 +58,7 @@ func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) error {
 	}
 
 	if _, err := peer.GetStream().Write(data); err != nil {
-		n.logger.Error().Bool("TODO", true).Err(err).Msg("Error writing to peer during send")
+		n.logger.Error().Bool("TODO", true).Err(err).Msg("Ignoring error writing to peer during send")
 		// IMPROVE: returning nil for now to handle the transient nature of dynamic networks, we should probably return the error and handle it in the caller with retries, etc.
 		return nil
 	}
