@@ -283,11 +283,12 @@ func fetchPeerstore(cmd *cobra.Command) (sharedP2P.Peerstore, error) {
 	if err != nil {
 		return nil, fmt.Errorf("retrieving peerstore at height %d", height)
 	}
+	// Inform the client's main P2P that a the blockchain is at a new height so it can, if needed, update its view of the validator set
 	err = sendConsensusNewHeightEventToP2PModule(height, bus)
 	if err != nil {
 		return nil, errors.New("sending consensus new height event")
 	}
-	return pstore, err
+	return pstore, nil
 }
 
 func getP2PModule(runtimeMgr *runtime.Manager) (p2pModule modules.P2PModule, err error) {
@@ -309,6 +310,7 @@ func getP2PModule(runtimeMgr *runtime.Manager) (p2pModule modules.P2PModule, err
 // sendConsensusNewHeightEventToP2PModule mimicks the consensus module sending a ConsensusNewHeightEvent to the p2p module
 // This is necessary because the debug client is not a validator and has no consensus module but it has to update the peerstore
 // depending on the changes in the validator set.
+// TODO(#613): Make the debug client mimic a full node.
 func sendConsensusNewHeightEventToP2PModule(height uint64, bus modules.Bus) error {
 	newHeightEvent, err := messaging.PackMessage(&messaging.ConsensusNewHeightEvent{Height: height})
 	if err != nil {
