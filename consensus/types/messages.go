@@ -166,7 +166,7 @@ const (
 	broadcastMessageError                       = "error broadcasting message"
 	createConsensusMessageError                 = "error creating consensus message"
 	createStateSyncMessageError                 = "error creating state sync message"
-	noQcInReceivedBlockError                    = "received block does not contain a quorum certificate"
+	noQcInReceivedBlockError                    = "block does not contain a quorum certificate"
 	blockRetrievalError                         = "couldn't retrieve the block from persistence module"
 	anteValidationError                         = "discarding hotstuff message because ante validation failed"
 	nilLeaderIdError                            = "attempting to send a message to leader when LeaderId is nil"

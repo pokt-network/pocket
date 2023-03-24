@@ -191,7 +191,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId, "Leader should be empty")
 	}
 
-	// TODO(goku): Add QC verification here after valid block mocking is implemented with issue #352.
+	// TODO(#615): Add QC verification here after valid block mocking is implemented with issue #352.
 
 	// Test state synchronisation's get block functionality
 	// At this stage, first round is finished, get block request for block height 1 must return non-nill block
@@ -238,28 +238,42 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 
 // TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
 
-// TODO(#XXX): Implement this test
+// TODO(#615): Implement this test
 func TestQuorumCertificate_Valid(t *testing.T) {
 	t.Skip()
 }
 
-// TODO(#XXX): Implement this test
-func TestQuorumCertificate_InsufficientSignaturesSignature(t *testing.T) {
+// TODO(#615): Implement this test
+func TestQuorumCertificate_InsufficientSignature(t *testing.T) {
 	t.Skip()
 }
 
-// TODO(#XXX): Implement this test
+// TODO(#615): Implement this test
 func TestQuorumCertificate_SignatureFromInvalidValidatorSet(t *testing.T) {
 	t.Skip()
 }
 
-// TODO(#XXX): Implement this test
+// TODO(#615): Implement this test
 func TestQuorumCertificate_SignatureFromJailedValidators(t *testing.T) {
 	t.Skip()
 }
 
-// Can you add a few more?
+// TODO(#615): Implement this test
+func TestQuorumCertificate_SignaturesFromUnJailedValidators_Valid(t *testing.T) {
+	// Jailed validators should be able to sign a valid QC.
+	t.Skip()
+}
 
+// TODO(#615): Implement this test
+func TestQuorumCertificate_SignatureFromValidatorsAndNonValidators(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_ProposalQuorumCertificateIsModified(t *testing.T) {
+	// Leader modifies the QC after sending the proposal, therefore sent QC is invalid.
+	t.Skip()
+}
 
 func TestHotstuff4Nodes1Byzantine1Block(t *testing.T) {
 	t.Skip()
