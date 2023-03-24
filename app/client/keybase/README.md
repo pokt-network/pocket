@@ -88,7 +88,7 @@ To configure the Keybase to use a specific backend, you can use one of the follo
    }
    ```
 
-   Save this file and pass its path to the client using the `--config` flag. If a configuration is present in the file, you can override it by passing an environment variable prefixed with `POCKET_` such as `POCKET_KEYBASE_TYPE=vault`. NOTE: if the configuration is not present, the environment variable will be ignored.
+   Save this file and pass its path to the client using the `--config` flag. If a configuration is present in the file, you can override it by passing an environment variable prefixed with `POCKET_` such as `POCKET_KEYBASE_TYPE=vault`.
 
 2. **Command-Line Flags**: When starting the client, pass the appropriate flags to specify the desired backend and its settings. For example, use `--keybase-type=vault`, `--vault-addr=http://127.0.0.1:8200`, `--vault-token=dev-only-token`, and `--vault-mount=secret`. Command-line flags have the highest precedence.
 
