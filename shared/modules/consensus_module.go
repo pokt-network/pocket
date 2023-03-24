@@ -26,7 +26,7 @@ type ConsensusModule interface {
 	ConsensusDebugModule
 
 	// Consensus Engine Handlers
-	// TODO: Rename function to more specific name that is consistent with the pattern.
+	// TODO: Rename `HandleMessage` to amore specific name that is consistent with its business logic.
 	HandleMessage(*anypb.Any) error
 	// State Sync messages Handler
 	HandleStateSyncMessage(*anypb.Any) error
