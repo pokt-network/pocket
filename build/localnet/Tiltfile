@@ -205,5 +205,6 @@ k8s_resource(
 # E2E test button
 test_go('e2e-tests', '{root_dir}/e2e/tests'.format(root_dir=root_dir), '.',
         extra_args=["-v", "-tags=e2e"],
+        labels=['e2e-tests'],
         trigger_mode=TRIGGER_MODE_MANUAL,
 )

@@ -56,8 +56,6 @@ func main() {
 		panic(err)
 	}
 
-	// RIGHT HERE we have everything we need.
-
 	for event := range watcher.ResultChan() {
 		service, ok := event.Object.(*k8s.Service)
 		if !ok {
@@ -91,13 +89,6 @@ func main() {
 		}
 	}
 }
-
-// IDEA: I think what we need to do here is essentially build a binary with a set of these types of
-// commands and, instead of listening for events, they are called manually. But then they can still
-// retrieve an in-cluster config of Kubernetes and then just run RPC commands.
-// I think this is how we should build arbitrary node behavior in.
-// First we can create an e2e node.
-// But then next, we create a byzantine node, with an arbitrary set of hooks into each service.
 
 func stakeValidator(pk crypto.PrivateKey, amount string, chains []string, serviceURL string) error {
 	logger.Info().Str("address", pk.Address().String()).Msg("Staking Validator")

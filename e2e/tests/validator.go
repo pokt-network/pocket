@@ -1,14 +1,16 @@
-//
-// //go:build e2e
-
 package e2e
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
+
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 func init() {
@@ -33,10 +35,6 @@ type PocketClient interface {
 	RunCommand(...string) (*CommandResult, error)
 }
 
-// TODO: we could collect these into a service map to keep them hidden from global services
-var _ PocketClient = &KubeClient{}
-
-// TODO_IN_THIS_COMMIT: take this out into its own file. Adapters should be in their own files.
 var _ PocketClient = &Validator{}
 
 // Validator holds the connection information for validator-001 for testing.
@@ -44,14 +42,35 @@ type Validator struct {
 	result *CommandResult // stores the result of the last command that was run.
 }
 
-// RunCommand runs a command on the v1-cli-client binary
+func getClientset() (*kubernetes.Clientset, error) {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get home dir: %w", err)
+	}
+	kubeConfigPath := filepath.Join(userHomeDir, ".kube", "config")
+
+	kubeConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build kubeconfig: %w", err)
+	}
+
+	clientset, err := kubernetes.NewForConfig(kubeConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get clientset from config: %w", err)
+	}
+
+	return clientset, nil
+}
+
+// RunCommand runs a command on the pocket binary
 func (v *Validator) RunCommand(args ...string) (*CommandResult, error) {
 	base := []string{
-		"exec", "-it", "deploy/pocket-v1-cli-client",
+		"exec", "-i", "deploy/pocket-v1-cli-client",
 		"--container", "pocket",
 		"--", cliPath,
 		"--non_interactive=true",
-		"--remote_cli_url=" + rpcURL}
+		// "--remote_cli_url=" + rpcURL,
+	}
 
 	args = append(base, args...)
 	cmd := exec.Command("kubectl", args...)
@@ -59,36 +78,10 @@ func (v *Validator) RunCommand(args ...string) (*CommandResult, error) {
 
 	out, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("VALIDATOR DEBUG CMD OUTPUT %s %+v", out, err)
-		r.Stderr = err.Error()
-		r.Err = err
 		v.result = r
 		return r, err
 	}
 	r.Stdout = string(out)
 	v.result = r
-	return r, nil
-}
-
-// KubeClient saves a reference to a command
-type KubeClient struct {
-	result *CommandResult // stores the result of the last command that was run.
-}
-
-// RunCommand runs a command on a KubeClient.
-func (k *KubeClient) RunCommand(args ...string) (*CommandResult, error) {
-	base := []string{"exec", "-it", "deploy/pocket-v1-cli-client", "--container", "pocket", "--", "client"}
-	args = append(base, args...)
-	cmd := exec.Command("kubectl", args...)
-	r := &CommandResult{}
-	out, err := cmd.Output()
-	if err != nil {
-		r.Stderr = err.Error()
-		r.Err = err
-		k.result = r
-		return r, err
-	}
-	r.Stdout = string(out)
-	k.result = r
 	return r, nil
 }

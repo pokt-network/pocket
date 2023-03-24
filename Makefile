@@ -24,10 +24,6 @@ list:
 help:
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-## 
-## TODO_IN_THIS_COMMIT: write a docker_check but for localnet_up
-##
-
 .PHONY: docker_check
 # Internal helper target - check if docker is installed
 docker_check:
@@ -341,7 +337,7 @@ test_all: ## Run all go unit tests
 
 .PHONY: test_e2e
 test_e2e: ## Assumes that `localnet_up` is running *warm*.
-	go test -v ./e2e/tests/... -tags=e2e
+	go test ${VERBOSE_TEST} ./e2e/tests/... -tags=e2e
 
 .PHONY: test_all_with_json_coverage
 test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, output results & coverage into json & coverage files
