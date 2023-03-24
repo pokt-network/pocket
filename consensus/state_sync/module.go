@@ -132,7 +132,7 @@ func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse)
 	m.logger.Info().Fields(fields).Msgf("Received GetBlockResponse: %s", blockRes)
 
 	if blockRes.Block.BlockHeader.GetQuorumCertificate() == nil {
-		m.logger.Error().Err(typesCons.ErrNoQcInReceivedBlock).Msg("Discarding received block")
+		m.logger.Error().Err(typesCons.ErrNoQcInReceivedBlock).Msg(typesCons.DisregardBlock)
 		return typesCons.ErrNoQcInReceivedBlock
 	}
 

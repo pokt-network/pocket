@@ -18,6 +18,7 @@ const (
 	DisregardHotstuffMessage = "Discarding hotstuff message"
 	NotLockedOnQC            = "node is not locked on any QC"
 	ProposalBlockExtends     = "the ProposalQC block is the same as the LockedQC block"
+	DisregardBlock           = "Discarding block"
 
 	// WARN
 	NilUtilityContextWarning     = "⚠️ [WARN] utilityContext expected to be nil but is not. TODO: Investigate why this is and fix it"

@@ -259,19 +259,32 @@ func TestQuorumCertificate_SignatureFromJailedValidators(t *testing.T) {
 }
 
 // TODO(#615): Implement this test
-func TestQuorumCertificate_SignaturesFromUnJailedValidators_Valid(t *testing.T) {
-	// Jailed validators should be able to sign a valid QC.
+func TestQuorumCertificate_SignatureFromUnJailedValidators_Valid(t *testing.T) {
+	// Unjailed validators should be able to sign a valid QC.
 	t.Skip()
 }
 
 // TODO(#615): Implement this test
-func TestQuorumCertificate_SignatureFromValidatorsAndNonValidators(t *testing.T) {
+func TestQuorumCertificate_SignatureFromValidAndInvalidValidatorSet(t *testing.T) {
 	t.Skip()
 }
 
 // TODO(#615): Implement this test
-func TestQuorumCertificate_ProposalQuorumCertificateIsModified(t *testing.T) {
+func TestQuorumCertificate_QuorumCertificateIsModified(t *testing.T) {
 	// Leader modifies the QC after sending the proposal, therefore sent QC is invalid.
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_InvalidSignaturesFromValidValidators(t *testing.T) {
+	t.Skip()
+}
+
+// DISCUSS: This test scenario is currently more exploratory, and it may or may not be relevant.
+// CONSIDER: Adding tests to crypto package to test for signature malleability.
+// Signature malleability is a problem for ed25519, where a signature can be modified without invalidating it.
+// ed25519 signatures are vulnerable to this problem: https://slowli.github.io/ed25519-quirks/malleability/
+func TestQuorumCertificate_ResistenceToSignatureMalleability(t *testing.T) {
 	t.Skip()
 }
 
