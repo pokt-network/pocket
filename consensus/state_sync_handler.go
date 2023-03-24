@@ -80,6 +80,12 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 	blockHeader := block.BlockHeader
 	qcBytes := blockHeader.GetQuorumCertificate()
+
+	if qcBytes == nil {
+		m.logger.Error().Err(typesCons.ErrNoQcInReceivedBlock).Msg(typesCons.DisregardBlock)
+		return typesCons.ErrNoQcInReceivedBlock
+	}
+
 	qc := typesCons.QuorumCertificate{}
 	err = proto.Unmarshal(qcBytes, &qc)
 	if err != nil {

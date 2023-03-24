@@ -137,7 +137,7 @@ func (m *stateSync) TriggerSync() error {
 // PersistedBlock is called by the consensus module's state_sync handler when a new block is received and persisted.
 // It is used to update current height of the state that is being actively synched.
 func (m *stateSync) PersistedBlock(blockHeight uint64) {
-	m.logger.Info().Msg("Block is persisted...")
+	m.logger.Info().Msgf("Block at height %d is persisted...", blockHeight)
 	m.state.blockReceived <- blockHeight
 }
 
