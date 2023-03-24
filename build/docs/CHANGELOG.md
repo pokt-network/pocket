@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.25] - 2023-03-23
+## [0.0.0.25] - 2023-03-24
 
 - Introduced a new binary that's used to check if the debug_keybase.bak is up to date with the private-keys.yaml file and to update it if it's not.
 
