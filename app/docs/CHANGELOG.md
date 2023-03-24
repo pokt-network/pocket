@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.4] - 2023-03-23
+## [0.0.0.4] - 2023-03-24
 
 - Updated debug keystore initialization to use an embedded backup instead of the yaml file that has to be rehydrated every time.
 
