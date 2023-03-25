@@ -366,7 +366,7 @@ test_pacemaker: ## Run all go unit tests related to the hotstuff pacemaker
 	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Pacemaker
 
 .PHONY: test_statesync
-test_statesync: ## Run all go unit tests related to the hotstuff statesync
+test_statesync: ## Run all go unit tests related to hotstuff statesync
 	go test -v ${VERBOSE_TEST} -count=1  -run StateSync ./consensus/e2e_tests
 
 .PHONY: test_vrf
