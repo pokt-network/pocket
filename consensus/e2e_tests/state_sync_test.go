@@ -302,7 +302,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	}
 }
 
-func TestStateSync_Unsynched4PeersSynchs_Success(t *testing.T) {
+func TestStateSync_4of10UnsynchedPeersCatchUp(t *testing.T) {
 	t.Skip()
 }
 
