@@ -95,7 +95,7 @@ Using the aggregated `StateSyncMetadataResponse` returned by `GetAggregatedState
 
 The Node bootstraps and collects state sync metadata from the rest of the network periodically, via a background process. This enables nodes to have an up-to-date view of the global state. Through periodic sync, the node collects received `StateSyncMetadataResponse`s in a buffer. 
 
-For every new block and block proposal (for validator nodes):
+For every new block and block proposal `Validator`s receive:
 - node checks block's and block proposal's validity and applies the block to its persistence if its valid.
 - if block is  higher than node's current height, node checks if it is out of synch via `IsSynched()` function that compares node's local state and the global state by aggregating the collected metada responses.
 
