@@ -120,6 +120,11 @@ func (m *stateSync) EnableServerMode() {
 func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
 	m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse: %s", blockRes)
 
+	if blockRes.Block.BlockHeader.GetQuorumCertificate() == nil {
+		m.logger.Error().Err(typesCons.ErrNoQcInReceivedBlock).Msg(typesCons.DisregardBlock)
+		return typesCons.ErrNoQcInReceivedBlock
+	}
+
 	return nil
 }
 

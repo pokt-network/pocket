@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.38] - 2023-03-25
+
+- Add quorum certificate to the block before committing to persistence
+- Add error `ErrNoQcInReceivedBlock` and message `DisregardBlock`
+
 ## [0.0.0.37] - 2023-03-21
 
 - Add helper function `logHelper()` for logging
