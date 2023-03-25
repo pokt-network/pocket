@@ -44,36 +44,39 @@ p1 Keys Create --keybase vault
 # note the address
 # {"level":"info","address":"addr_goes_here","time":"2023-02-24T23:12:06-04:00","message":"New Key Created"}
 
-p1 Keys Get --keybase vault addr_goes_here
+# copy and paste the address from the previous command
+export POKT_ADDR=addr_goes_here
+
+p1 Keys Get --keybase vault $POKT_ADDR
 
 # {"level":"info","address":"addr_goes_here","public_key":"public_key_goes_here","time":"2023-02-24T23:14:01-04:00","message":"Found key"}
 
-p1 Keys Export addr_goes_here --keybase vault
+p1 Keys Export $POKT_ADDR --keybase vault
 
 ## note the private key
-# {"level":"info","private_key":"{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_ere\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}","time":"2023-02-24T23:12:53-04:00","message":"Key exported"}
+# {"level":"info","private_key":"{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_here\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}","time":"2023-02-24T23:12:53-04:00","message":"Key exported"}
 
-p1 Keys Import --keybase vault --import_format json "{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_ere\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}"
+p1 Keys Import --keybase vault --import_format json "{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_here\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}"
 
 p1 Keys List --keybase vault
 
 # {"level":"info","addresses":["addr_goes_here"],"time":"2023-02-24T23:14:44-04:00","message":"Get all keys"}
 
-p1 Keys Sign --keybase vault addr_goes_here abcd
+p1 Keys Sign --keybase vault $POKT_ADDR abcd
 
 # note the signature
 # {"level":"info","signature":"signature_goes_here","address":"addr_goes_here","time":"2023-02-24T23:15:18-04:00","message":"Message signed"}
 
-p1 Keys Verify --keybase vault addr_goes_here abcd signature_goes_here
+p1 Keys Verify --keybase vault $POKT_ADDR abcd signature_goes_here
 
 # {"level":"info","address":"addr_goes_here","valid":true,"time":"2023-02-24T23:16:05-04:00","message":"Signature checked"}
 
-p1 Keys Update --keybase vault addr_goes_here
+p1 Keys Update --keybase vault $POKT_ADDR
 
-p1 Keys DeriveChild addr_goes_here 0 --keybase vault
+p1 Keys DeriveChild $POKT_ADDR 0 --keybase vault
 # {"level":"info","address":"new_addr_goes_here","parent":"addr_goes_here","index":0,"stored":true,"time":"2023-02-28T09:26:11-04:00","message":"Child key derived"}
 
-p1 Keys Delete --keybase vault addr_goes_here
+p1 Keys Delete --keybase vault $POKT_ADDR
 
 ## TODO: add SignTx and VerifyTx
 
@@ -92,23 +95,26 @@ p1 Keys Create --keybase vault \
 # note the address
 # {"level":"info","address":"addr_goes_here","time":"2023-02-24T23:12:06-04:00","message":"New Key Created"}
 
+# copy and paste the address from the previous command
+export POKT_ADDR=addr_goes_here
+
 p1 Keys Get --keybase vault \
     --vault-token dev-only-token \
-    --vault-addr http://127.0.0.1:8200/  addr_goes_here
+    --vault-addr http://127.0.0.1:8200/ $POKT_ADDR
 
 # {"level":"info","address":"addr_goes_here","public_key":"d82cd23f4809491c04ab456dd9714e647093bcc6cb649a8510f4d54c194f80ea","time":"2023-02-24T23:14:01-04:00","message":"Found key"}
 
-p1 Keys Export addr_goes_here --keybase vault \
+p1 Keys Export $POKT_ADDR --keybase vault \
     --vault-token dev-only-token \
     --vault-addr http://127.0.0.1:8200/
 
 ## note the private key
-# {"level":"info","private_key":"{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_ere\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}","time":"2023-02-24T23:12:53-04:00","message":"Key exported"}
+# {"level":"info","private_key":"{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_here\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}","time":"2023-02-24T23:12:53-04:00","message":"Key exported"}
 
 p1 Keys Import --keybase vault \
     --vault-token dev-only-token \
     --vault-addr http://127.0.0.1:8200/ \
-    --import_format json "{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_ere\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}"
+    --import_format json "{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_here\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}"
 
 p1 Keys List --keybase vault \
     --vault-token dev-only-token \
@@ -119,7 +125,7 @@ p1 Keys List --keybase vault \
 p1 Keys Sign --keybase vault \
     --vault-token dev-only-token \
     --vault-addr http://127.0.0.1:8200/ \
-    addr_goes_here abcd
+    $POKT_ADDR abcd
 
 # note the signature
 # {"level":"info","signature":"signature_goes_here","address":"addr_goes_here","time":"2023-02-24T23:15:18-04:00","message":"Message signed"}
@@ -127,27 +133,27 @@ p1 Keys Sign --keybase vault \
 p1 Keys Verify --keybase vault \
     --vault-token dev-only-token \
     --vault-addr http://127.0.0.1:8200/ \
-    addr_goes_here abcd signature_goes_here
+    $POKT_ADDR abcd signature_goes_here
 
 # {"level":"info","address":"addr_goes_here","valid":true,"time":"2023-02-24T23:16:05-04:00","message":"Signature checked"}
 
 p1 Keys Update --keybase vault \
     --vault-token dev-only-token \
     --vault-addr http://127.0.0.1:8200/ \
-    addr_goes_here
+    $POKT_ADDR
 
 
 p1 Keys Keys DeriveChild addr_goes_here 0 --keybase vault \
     --vault-token dev-only-token \
     --vault-addr http://127.0.0.1:8200/ \
-    addr_goes_here
+    $POKT_ADDR
 
 # {"level":"info","address":"new_addr_goes_here","parent":"addr_goes_here","index":0,"stored":true,"time":"2023-02-28T09:26:11-04:00","message":"Child key derived"}
 
 p1 Keys Delete --keybase vault \
     --vault-token dev-only-token \
     --vault-addr http://127.0.0.1:8200/ \
-    addr_goes_here
+    $POKT_ADDR
 
 ## TODO: add SignTx and VerifyTx
 
@@ -174,48 +180,50 @@ cat << EOF > config-with-vault.json
 }
 EOF
 
-
 p1 Keys Create --config config-with-vault.json
 
 # note the address
 # {"level":"info","address":"addr_goes_here","time":"2023-02-24T23:12:06-04:00","message":"New Key Created"}
 
-p1 Keys Get --config config-with-vault.json
+# copy and paste the address from the previous command
+export POKT_ADDR=addr_goes_here
+
+p1 Keys Get --config config-with-vault.json $POKT_ADDR
 
 # {"level":"info","address":"addr_goes_here","public_key":"d82cd23f4809491c04ab456dd9714e647093bcc6cb649a8510f4d54c194f80ea","time":"2023-02-24T23:14:01-04:00","message":"Found key"}
 
-p1 Keys Export addr_goes_here --config config-with-vault.json
+p1 Keys Export --config config-with-vault.json $POKT_ADDR
 
 ## note the private key
-# {"level":"info","private_key":"{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_ere\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}","time":"2023-02-24T23:12:53-04:00","message":"Key exported"}
+# {"level":"info","private_key":"{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_here\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}","time":"2023-02-24T23:12:53-04:00","message":"Key exported"}
 
 p1 Keys Import --config config-with-vault.json \
-    --import_format json "{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_ere\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}"
+    --import_format json "{\"kdf\":\"scrypt\",\"salt\":\"salty_goes_here\",\"secparam\":\"12\",\"hint\":\"\",\"ciphertext\":\"ciphertext_goes_here\"}"
 
 p1 Keys List --config config-with-vault.json
 
 # {"level":"info","addresses":["addr_goes_here"],"time":"2023-02-24T23:14:44-04:00","message":"Get all keys"}
 
 p1 Keys Sign --config config-with-vault.json \
-    addr_goes_here abcd
+    $POKT_ADDR abcd
 
 # note the signature
 # {"level":"info","signature":"signature_goes_here","address":"addr_goes_here","time":"2023-02-24T23:15:18-04:00","message":"Message signed"}
 
 p1 Keys Verify --config config-with-vault.json \
-    addr_goes_here abcd signature_goes_here
+    $POKT_ADDR abcd signature_goes_here
 
 # {"level":"info","address":"addr_goes_here","valid":true,"time":"2023-02-24T23:16:05-04:00","message":"Signature checked"}
 
-p1 Keys Update --config config-with-vault.json addr_goes_here
+p1 Keys Update --config config-with-vault.json $POKT_ADDR
 
 
 p1 Keys Keys DeriveChild addr_goes_here 0 --config config-with-vault.json \
-    addr_goes_here
+    $POKT_ADDR
 
 # {"level":"info","address":"new_addr_goes_here","parent":"addr_goes_here","index":0,"stored":true,"time":"2023-02-28T09:26:11-04:00","message":"Child key derived"}
 
-p1 Keys Delete --config config-with-vault.json addr_goes_here
+p1 Keys Delete --config config-with-vault.json $POKT_ADDR
 
 ## TODO: add SignTx and VerifyTx
 

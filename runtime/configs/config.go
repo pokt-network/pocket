@@ -59,13 +59,13 @@ func ParseConfig(cfgFile string) *Config {
 			log.Default().Printf("No config provided, using defaults")
 			return config
 		} else {
-			// TECHEBT: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
+			// TODO: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
 			log.Fatalf("[ERROR] fatal error reading config file %s", err.Error())
 			// logger.Global.Fatal().Err(err).Msg("Fatal error reading config file")
 		}
 	}
 
-	// TECHEBT: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
+	// TODO: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
 	log.Default().Printf("Using config file: %s", viper.ConfigFileUsed())
 	// logger.Global.Debug().Msgf("Using config file: %s", viper.ConfigFileUsed())
 
