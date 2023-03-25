@@ -506,7 +506,7 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 	stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
 		switch coreTypes.StateMachineEvent(event) {
 		case coreTypes.StateMachineEvent_Consensus_IsUnsynched:
-			t.Logf("Node is unsynched")
+			t.Logf("Mocked node is unsynched")
 			return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
 		case coreTypes.StateMachineEvent_Consensus_IsSyncing:
 			maxHeight := bus.GetConsensusModule().GetAggregatedStateSyncMetadataMaxHeight()
