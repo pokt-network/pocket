@@ -73,7 +73,7 @@ sequenceDiagram
     end
 ```
 
-The aggregation and consumption of this peer-meta information enables the node to understand the globalized network state through sampling Peer Metadata in its local peer list. Node aggregates the collected peer metadata to identify the `MaxHeight` and `MinHeight` in the global state.
+The aggregation and consumption of this peer-meta information enables the node to understand the global network state through sampling Peer Metadata in its local peer list. The Node aggregates the collected peer metadata to identify the `MaxHeight` and `MinHeight` in the global state.
 
 This gives a view into the data availability layer, with details of what data can be consumed from peer via:
 
