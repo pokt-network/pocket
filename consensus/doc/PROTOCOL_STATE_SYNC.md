@@ -49,8 +49,8 @@ Peer metadata can be collected through the `P2P` module during the `Churn Manage
 Node gathers peer metadata from its peers in `StateSyncMetadataResponse` type, defined as the following:
 
 ```golang
-type StateSyncMetadataResponse {
-  PeerAddress string
+type StateSyncMetadataResponse struct {
+    PeerAddress string
 	MinHeight   uint64 
 	MaxHeight   uint64 
 }
@@ -81,7 +81,7 @@ This gives a view into the data availability layer, with details of what data ca
 ```golang
 type StateSyncModule interface {
   // ...
-  GetAggregatedStateSyncMetadata() *StateSyncMetadataResponse // Aggregated metadata received from of peers' metadata. 
+  GetAggregatedStateSyncMetadata() *StateSyncMetadataResponse // Aggregated metadata received from peers. 
   IsSynched() (bool, error)
   StartSynching() error
   // ...
@@ -100,7 +100,7 @@ For every new block and block proposal `Validator`s receive:
 - if block is  higher than node's current height, node checks if it is out of synch via `IsSynched()` function that compares node's local state and the global state by aggregating the collected metada responses.
 
 According to the result of the `IsSynched()` function:
-- If the node is out of sync, it runs `StartSynching()` function. Node  requests block one by one using the minimum and maximum height in aggregated state sync metadata.
+- If the node is out of sync, it runs `StartSynching()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
 - If the node is in synch with its peers it rejects the block and/or block proposal. 
 
 

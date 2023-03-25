@@ -8,12 +8,9 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var (
-	_ modules.ConsensusDebugModule = &consensusModule{}
-)
+var _ modules.ConsensusDebugModule = &consensusModule{}
 
-// Implementation of ConsensusDebugModule functions (i.e. SetHeight(), SetRound(), SetStep(), SetUtilityContext())
-// exposed by the debug interface should only be used for testing purposes.
+// Implementation of functions exposed by ConsensusDebugModule interface.
 
 func (m *consensusModule) SetHeight(height uint64) {
 	m.height = height

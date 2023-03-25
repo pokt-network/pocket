@@ -37,15 +37,9 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 }
 
 func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Msgf("Begin handling StateMachineTransitionEvent: %s", msg)
-
-	// TODO (#571): update with logger helper function
 	fsm_state := msg.NewState
-	m.logger.Debug().Fields(map[string]any{
-		"event":          msg.Event,
-		"previous_state": msg.PreviousState,
-		"new_state":      fsm_state,
-	}).Msg("Received state machine transition msg")
+
+	m.logger.Debug().Fields(messaging.TransitionEventToMap(msg)).Msg("Received state machine transition msg")
 
 	switch coreTypes.StateMachineState(fsm_state) {
 	case coreTypes.StateMachineState_P2P_Bootstrapped:
