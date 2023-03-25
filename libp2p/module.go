@@ -257,7 +257,7 @@ func (mod *libp2pModule) handleStream(stream libp2pNetwork.Stream) {
 	peer, err := network.PeerFromLibp2pStream(stream)
 	if err != nil {
 		mod.logger.Error().Err(err).
-			Str("address", peer.Address.String()).
+			Str("address", peer.GetAddress().String()).
 			Msg("parsing remote peer public key")
 
 		if err = stream.Close(); err != nil {
@@ -265,9 +265,9 @@ func (mod *libp2pModule) handleStream(stream libp2pNetwork.Stream) {
 		}
 	}
 
-	if err := mod.network.AddPeerToAddrBook(peer); err != nil {
+	if err := mod.network.AddPeer(peer); err != nil {
 		mod.logger.Error().Err(err).
-			Str("address", peer.Address.String()).
+			Str("address", peer.GetAddress().String()).
 			Msg("adding remote peer to address book")
 	}
 

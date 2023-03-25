@@ -6,8 +6,9 @@ import "github.com/pokt-network/pocket/runtime/configs"
 
 type Transport interface {
 	IsListener() bool
-	Read() ([]byte, error)
-	Write([]byte) error
+	ReadAll() ([]byte, error)
+	Read([]byte) (int, error)
+	Write([]byte) (int, error)
 	Close() error
 }
 

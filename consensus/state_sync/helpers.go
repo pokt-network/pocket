@@ -32,14 +32,7 @@ func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessag
 		return err
 	}
 
-	// TODO (#571): update with logger helper function
-	fields := map[string]any{
-		"height":     height,
-		"peerId":     peerId,
-		"proto_type": getMessageType(stateSyncMsg),
-	}
-
-	m.logger.Info().Fields(fields).Msg("Sending StateSync Message")
+	m.logger.Info().Fields(m.logHelper(string(peerId))).Msg("Sending StateSync Message")
 	return m.sendToPeer(anyMsg, peerId)
 }
 
@@ -52,17 +45,13 @@ func (m *stateSync) sendToPeer(msg *anypb.Any, peerId cryptoPocket.Address) erro
 	return nil
 }
 
-func getMessageType(msg *typesCons.StateSyncMessage) string {
-	switch msg.Message.(type) {
-	case *typesCons.StateSyncMessage_MetadataReq:
-		return "StateSyncMetadataRequest"
-	case *typesCons.StateSyncMessage_MetadataRes:
-		return "StateSyncMetadataResponse"
-	case *typesCons.StateSyncMessage_GetBlockReq:
-		return "GetBlockRequest"
-	case *typesCons.StateSyncMessage_GetBlockRes:
-		return "GetBlockResponse"
-	default:
-		return "Unknown"
+func (m *stateSync) logHelper(receiverPeerId string) map[string]any {
+	consensusMod := m.GetBus().GetConsensusModule()
+
+	return map[string]any{
+		"height":         consensusMod.CurrentHeight(),
+		"senderPeerId":   consensusMod.GetNodeAddress(),
+		"receiverPeerId": receiverPeerId,
 	}
+
 }

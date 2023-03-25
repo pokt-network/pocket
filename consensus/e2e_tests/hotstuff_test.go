@@ -191,6 +191,8 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId, "Leader should be empty")
 	}
 
+	// TODO(#615): Add QC verification here after valid block mocking is implemented with issue #352.
+
 	// Test state synchronisation's get block functionality
 	// At this stage, first round is finished, get block request for block height 1 must return non-nill block
 	serverNode := pocketNodes[1]
@@ -235,6 +237,53 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 }
 
 // TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_Valid(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_InsufficientSignature(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_SignatureFromInvalidValidatorSet(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_SignatureFromJailedValidators(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_SignatureFromUnJailedValidators_Valid(t *testing.T) {
+	// Unjailed validators should be able to sign a valid QC.
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_SignatureFromValidAndInvalidValidatorSet(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_QuorumCertificateIsModified(t *testing.T) {
+	// Leader modifies the QC after sending the proposal, therefore sent QC is invalid.
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_InvalidSignaturesFromValidValidatorSet(t *testing.T) {
+	t.Skip()
+}
+
+// DISCUSS: This test scenario is currently more exploratory, and it may or may not be relevant.
+func TestQuorumCertificate_ResistenceToSignatureMalleability(t *testing.T) {
+	t.Skip()
+}
 
 func TestHotstuff4Nodes1Byzantine1Block(t *testing.T) {
 	t.Skip()

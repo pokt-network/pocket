@@ -34,7 +34,7 @@ type StateSyncModule interface {
 	GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse
 
 	// Starts synching the node with the network by requesting blocks.
-	StartSynching() error
+	StartSyncing() error
 }
 
 // This interface should be only used for debugging purposes and tests.
@@ -142,49 +142,28 @@ func (m *stateSync) SetAggregatedSyncMetadata(metadata *typesCons.StateSyncMetad
 	m.aggregatedSyncMetadata = metadata
 }
 
-// TODO(#352): Implement this function, currently a placeholder.
-func (m *stateSync) HandleStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) error {
-	consensusMod := m.GetBus().GetConsensusModule()
-	serverNodePeerId := consensusMod.GetNodeAddress()
-	clientPeerId := metadataRes.PeerAddress
-	currentHeight := consensusMod.CurrentHeight()
+// TODO(#352): Implement the business logic for this function
+func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
+	m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse: %s", blockRes)
 
-	// TODO (#571): update with logger helper function
-	fields := map[string]any{
-		"currentHeight": currentHeight,
-		"sender":        serverNodePeerId,
-		"receiver":      clientPeerId,
+	if blockRes.Block.BlockHeader.GetQuorumCertificate() == nil {
+		m.logger.Error().Err(typesCons.ErrNoQcInReceivedBlock).Msg(typesCons.DisregardBlock)
+		return typesCons.ErrNoQcInReceivedBlock
 	}
-
-	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataResponse: %s", metadataRes)
-
-	m.m.Lock()
-	defer m.m.Unlock()
 
 	return nil
 }
 
-// TODO(#352): Implement this function, currently a placeholder.
-func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-
-	serverNodePeerId := m.bus.GetConsensusModule().GetNodeAddress()
-	clientPeerId := blockRes.PeerAddress
-
-	// TODO (#571): update with logger helper function
-	fields := map[string]any{
-		"currentHeight": blockRes.Block.BlockHeader.Height,
-		"sender":        serverNodePeerId,
-		"receiver":      clientPeerId,
-	}
-
-	m.logger.Info().Fields(fields).Msgf("Received GetBlockResponse: %s", blockRes)
+// TODO(#352): Implement the business logic for this function
+func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
+	m.logger.Info().Fields(m.logHelper(metaDataRes.PeerAddress)).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
 
 	return nil
 }
 
 // TODO(#352): Implement this function, currently a placeholder.
 // Requests blocks one by one from its peers.
-func (m *stateSync) StartSynching() error {
+func (m *stateSync) StartSyncing() error {
 	current_height := m.GetBus().GetConsensusModule().CurrentHeight()
 	var lastPersistedBlockHeight uint64
 
