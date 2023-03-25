@@ -92,7 +92,8 @@ Using the aggregated `StateSyncMetadataResponse` returned by `GetAggregatedState
 
 
 ### State Sync Lifecycle
-Node bootstraps and starts collecting state sync metadata from the rest of the network periodically as an external process. This enables node to have up-to-date view on the global state. Through periodic sync, node collects received `StateSyncMetadataResponse`s to a buffer. 
+
+The Node bootstraps and collects state sync metadata from the rest of the network periodically, via a background process. This enables nodes to have an up-to-date view of the global state. Through periodic sync, the node collects received `StateSyncMetadataResponse`s in a buffer. 
 
 For every new block and block proposal (for validator nodes):
 - node checks block's and block proposal's validity and applies the block to its persistence if its valid.
