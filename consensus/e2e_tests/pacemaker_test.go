@@ -1,7 +1,6 @@
 package e2e_tests
 
 import (
-	"reflect"
 	"runtime"
 	"testing"
 	"time"
@@ -174,27 +173,25 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		Transactions: make([][]byte, 0),
 	}
 
-	leaderConsensusModImpl := GetConsensusModImpl(leader)
-	leaderConsensusModImpl.MethodByName("SetBlock").Call([]reflect.Value{reflect.ValueOf(block)})
+	leader.GetBus().GetConsensusModule().SetBlock(block)
 
 	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS
 	for _, pocketNode := range pocketNodes {
 		// Update height, step, leaderId, and utility context via setters exposed with the debug interface
-		consensusModImpl := GetConsensusModImpl(pocketNode)
-		consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
-		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
+		pocketNode.GetBus().GetConsensusModule().SetHeight(testHeight)
+		pocketNode.GetBus().GetConsensusModule().SetStep(testStep)
 
 		// utilityContext is only set on new rounds, which is skipped in this test
 		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
 		require.NoError(t, err)
-		consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
+		pocketNode.GetBus().GetConsensusModule().SetUtilityContext(utilityContext)
 	}
 
 	// Set the leader to be in the highest round.
-	GetConsensusModImpl(pocketNodes[1]).MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(leaderRound - 2)})
-	GetConsensusModImpl(pocketNodes[2]).MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(leaderRound - 3)})
-	GetConsensusModImpl(pocketNodes[leaderId]).MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(leaderRound)})
-	GetConsensusModImpl(pocketNodes[4]).MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(leaderRound - 4)})
+	pocketNodes[1].GetBus().GetConsensusModule().SetRound(leaderRound - 2)
+	pocketNodes[2].GetBus().GetConsensusModule().SetRound(leaderRound - 3)
+	pocketNodes[leaderId].GetBus().GetConsensusModule().SetRound(leaderRound)
+	pocketNodes[4].GetBus().GetConsensusModule().SetRound(leaderRound - 4)
 
 	prepareProposal := &typesCons.HotstuffMessage{
 		Type:          consensus.Propose,

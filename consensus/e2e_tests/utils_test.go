@@ -611,20 +611,20 @@ func GenerateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators 
 }
 
 func generateValidBlockWithQC(pocketNodes IdToNodeMapping, block *coreTypes.Block) (*coreTypes.Block, error) {
-	// qc, err := generateValidQuorumCertificate(pocketNodes, block)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	qc, err := generateValidQuorumCertificate(pocketNodes, block)
+	if err != nil {
+		return nil, err
+	}
 
-	// qcBytes, err := codec.GetCodec().Marshal(qc)
-	// if err != nil {
-	// 	log.Fatalf("could not marshal quorum certificate to bytes: %v", err)
-	// 	return nil, err
-	// }
+	qcBytes, err := codec.GetCodec().Marshal(qc)
+	if err != nil {
+		log.Fatalf("could not marshal quorum certificate to bytes: %v", err)
+		return nil, err
+	}
 
-	//block.BlockHeader.QuorumCertificate = qcBytes
+	block.BlockHeader.QuorumCertificate = qcBytes
 
-	block.BlockHeader.QuorumCertificate = nil
+	//block.BlockHeader.QuorumCertificate = nil
 
 	return block, nil
 
