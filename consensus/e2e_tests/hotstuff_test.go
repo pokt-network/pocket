@@ -34,6 +34,14 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
+	initialHeight := uint64(1)
+	initialStep := uint8(consensus.NewRound)
+	initialRound := uint64(0)
+
+	// Get leaderId for the given height, round and step, via one of the nodes with GetLeaderElectionResult() function
+	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderElectionResult(initialHeight, initialRound, initialStep))
+	leader := pocketNodes[leaderId]
+
 	// 1. NewRound
 	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 250, true)
 	require.NoError(t, err)
@@ -41,9 +49,9 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
-				Height: 1,
-				Step:   uint8(consensus.NewRound),
-				Round:  0,
+				Height: initialHeight,
+				Step:   initialStep,
+				Round:  uint8(initialRound),
 			},
 			nodeState)
 		require.Equal(t, false, nodeState.IsLeader)
@@ -54,11 +62,6 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		P2PBroadcast(t, pocketNodes, message)
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
-
-	// IMPROVE: Use seeding for deterministic leader election in unit tests.
-	// Leader election is deterministic for now, so we know its NodeId
-	leaderId := typesCons.NodeId(2)
-	leader := pocketNodes[leaderId]
 
 	// 2. Prepare
 	prepareProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 250, true)

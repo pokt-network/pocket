@@ -184,9 +184,6 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	timeReminder(t, clockMock, time.Second)
 
 	numberOfValidators := 6
-	testHeight := uint64(3)
-	testStep := uint8(consensus.NewRound)
-
 	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numberOfValidators, clockMock)
 	buses := GenerateBuses(t, runtimeMgrs)
 
@@ -196,17 +193,42 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Prepare leader info
-	leaderId := typesCons.NodeId(3)
-	require.Equal(t, uint64(leaderId), testHeight%uint64(numberOfValidators)) // Uses our deterministic round robin leader election
-	testRound := uint64(6)
-	leader := pocketNodes[leaderId]
-	consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
-	require.NoError(t, err)
+	testHeight := uint64(3)
+	testRound := uint64(0)
+	testStep := uint8(consensus.NewRound)
 
 	// Prepare unsynched node info
 	unsynchedNode := pocketNodes[2]
 	unsynchedNodeId := typesCons.NodeId(2)
 	unsynchedNodeHeight := uint64(2)
+
+	// Set the unsynched node to height (2)
+	// Set rest of the nodes to height (3)
+	for id, pocketNode := range pocketNodes {
+		if id == unsynchedNodeId {
+			pocketNode.GetBus().GetConsensusModule().SetHeight(unsynchedNodeHeight)
+		} else {
+			pocketNode.GetBus().GetConsensusModule().SetHeight(testHeight)
+		}
+		pocketNode.GetBus().GetConsensusModule().SetStep(testStep)
+		pocketNode.GetBus().GetConsensusModule().SetRound(testRound)
+
+		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
+		require.NoError(t, err)
+		pocketNode.GetBus().GetConsensusModule().SetUtilityContext(utilityContext)
+	}
+
+	// Debug message to start consensus by triggering first view change
+	for _, pocketNode := range pocketNodes {
+		TriggerNextView(t, pocketNode)
+	}
+	currentRound := testRound + 1
+
+	// Get leaderId for the given height, round and step, via one of the nodes with GetLeaderElectionResult() function
+	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderElectionResult(testHeight, currentRound, testStep))
+	leader := pocketNodes[leaderId]
+	consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
+	require.NoError(t, err)
 
 	// Placeholder block
 	blockHeader := &coreTypes.BlockHeader{
@@ -223,30 +245,10 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 
 	leader.GetBus().GetConsensusModule().SetBlock(block)
 
-	// Set the unsynched node to height (1) and round (1)
-	// Set rest of the nodes to the same height (3) and round (6)
-	for id, pocketNode := range pocketNodes {
-		if id == unsynchedNodeId {
-			pocketNode.GetBus().GetConsensusModule().SetHeight(unsynchedNodeHeight)
-		} else {
-			pocketNode.GetBus().GetConsensusModule().SetHeight(testHeight)
-		}
-		pocketNode.GetBus().GetConsensusModule().SetStep(testStep)
-		pocketNode.GetBus().GetConsensusModule().SetRound(testRound)
-		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
-		require.NoError(t, err)
-		pocketNode.GetBus().GetConsensusModule().SetUtilityContext(utilityContext)
-	}
-
-	// Debug message to start consensus by triggering first view change
-	for _, pocketNode := range pocketNodes {
-		TriggerNextView(t, pocketNode)
-	}
-	advanceTime(t, clockMock, 10*time.Millisecond)
-
 	// Assert that unsynched node has a separate view of the network than the rest of the nodes
 	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 250, true)
 	require.NoError(t, err)
+
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		if nodeId == unsynchedNodeId {
@@ -254,7 +256,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 				typesCons.ConsensusNodeState{
 					Height: unsynchedNodeHeight,
 					Step:   testStep,
-					Round:  uint8(testRound + 1),
+					Round:  uint8(currentRound),
 				},
 				nodeState)
 		} else {
@@ -262,7 +264,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 				typesCons.ConsensusNodeState{
 					Height: testHeight,
 					Step:   testStep,
-					Round:  uint8(testRound + 1),
+					Round:  uint8(currentRound),
 				},
 				nodeState)
 		}
@@ -284,16 +286,18 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-
 		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
 				Height: testHeight,
 				Step:   uint8(consensus.Prepare),
-				Round:  uint8(testRound + 1),
+				Round:  uint8(currentRound),
 			},
 			nodeState)
+		require.Equal(t, leaderId, nodeState.LeaderId)
 	}
 }
+
+// TODO (#352) Implement these tests
 
 func TestStateSync_UnsynchedPeerSynchsABlock_Success(t *testing.T) {
 	t.Skip()
@@ -307,6 +311,14 @@ func TestStateSync_UnsynchedPeerSynchsMultipleUnorderedBlocks_Success(t *testing
 	t.Skip()
 }
 
+func TestStateSync_TemporarilyOfflineValidatorCatchesUp(t *testing.T) {
+	t.Skip()
+}
+
 func TestStateSync_4of10UnsynchedPeersCatchUp(t *testing.T) {
+	t.Skip()
+}
+
+func TestStateSync_9of10UnsynchedPeersCatchUp(t *testing.T) {
 	t.Skip()
 }

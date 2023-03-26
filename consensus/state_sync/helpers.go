@@ -12,16 +12,11 @@ import (
 //		requests for metadata using the `periodicMetadataSynch()` function
 //	 	requests for blocks using the `StartSynching()` function
 func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, height uint64) error {
-	// TODO (#571): update with logger helper function
-	m.logger.Info().Fields(
-		map[string]any{
-			"height": height,
-			"nodeId": m.GetBus().GetConsensusModule().GetNodeId(),
-		},
-	).Msg("📣 Broadcasting state sync message... 📣")
+	m.logger.Info().Msg("📣 Broadcasting state sync message... 📣")
 
-	// TODO (#571) update, this is a placeholder
+	// TODO (#352) update, this is a placeholder
 	_ = stateSyncMsg
+	_ = height
 
 	return nil
 }

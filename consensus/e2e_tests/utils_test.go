@@ -501,24 +501,26 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
 
+	consensusMod := bus.GetConsensusModule()
+
 	stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
 		switch coreTypes.StateMachineEvent(event) {
 		case coreTypes.StateMachineEvent_Consensus_IsUnsynched:
 			t.Logf("Mocked node is unsynched")
 			return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
 		case coreTypes.StateMachineEvent_Consensus_IsSyncing:
-			maxHeight := bus.GetConsensusModule().GetAggregatedStateSyncMetadataMaxHeight()
-			t.Logf("Node is syncing")
-			bus.GetConsensusModule().SetHeight(maxHeight)
+			t.Logf("Mocked node is syncing")
+			maxHeight := consensusMod.GetAggregatedStateSyncMetadataMaxHeight()
+			consensusMod.SetHeight(maxHeight)
 			return nil
 		case coreTypes.StateMachineEvent_Consensus_IsSynchedValidator:
-			t.Logf("Validator node is synched")
+			t.Logf("Mocked validator node is synched")
 			return nil
 		case coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator:
-			t.Logf("Non-validator node is synched")
+			t.Logf("Mocked non-validator node is synched")
 			return nil
 		default:
-			log.Printf("Not handling this event: %s", event)
+			log.Printf("Mocked node is not handling this event: %s", event)
 			return nil
 		}
 	}).AnyTimes()

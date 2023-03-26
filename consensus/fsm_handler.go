@@ -15,9 +15,6 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 
-	// TODO (#571): update with logger helper function
-	m.logger.Info().Msgf("Received a state transition message: %s", transitionMessageAny)
-
 	switch transitionMessageAny.MessageName() {
 	case messaging.StateMachineTransitionEventType:
 		msg, err := codec.GetCodec().FromAny(transitionMessageAny)
