@@ -21,6 +21,13 @@ type baseUtilityUnitOfWork struct {
 
 	height int64
 
+	// TECHDEBT(#564): the way we access the contexts and apply changes to them is still a work in progress.
+	// The path forward will become clearer during the implementation of change tracking in #564.
+	// For now, it seems sensible to have separate contexts for read and write operations.
+	// The idea is that:
+	// - the write context will track ephemeral changes and also provide a way to persist them.
+	// - the read context will only read but also see what has been changed in the ephemeral state.
+	// from the consumers of the unit of work point of view, this is just an implementation detail.
 	persistenceReadContext modules.PersistenceReadContext
 	persistenceRWContext   modules.PersistenceRWContext
 
