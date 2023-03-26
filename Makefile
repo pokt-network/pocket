@@ -527,4 +527,4 @@ send_local_tx: ## A hardcoded send tx to make LocalNet debugging easier
 
 .PHONY: query_node_params
 query_node_params: ## A hardcoded NodeParams query to make LocalNet debugging easier
-	go run -tags=debug app/client/*.go System NodeParams
+	go run app/client/main.go System NodeParams
