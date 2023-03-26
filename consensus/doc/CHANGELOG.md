@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.39] - 2023-03-26
+
+- Refactored `utilityContext` into `utilityUnitOfWork`
+- Added `utilityUnitOfWorkFactory` to create `utilityUnitOfWork` instances depending on the fact that the current node is `Leader` or `Replica`
+- Renamed `prepareAndApplyBlock` to `prepareBlock`
+- Centralized `applyBlock` logic
+- Updated tests
+
 ## [0.0.0.38] - 2023-03-25
 
 - Add quorum certificate to the block before committing to persistence

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.43] - 2023-03-26
+
+- Updated `PROTOCOL_STATE_HASH.md` to reference the `UtilityUnitOfWork`
+- Refactored interfaces to use `UtilityUnitOfWork`
+- Added interfaces for `UtilityUnitOfWork` and `UtilityUnitOfWorkFactory`
+- Added interfaces `LeaderUtilityUnitOfWork` and `ReplicaUtilityUnitOfWork`
+- Updated `UtilityModule` to use `UtilityUnitOfWork`
+- Refactored utility module implementation to use `UtilityUnitOfWork` and moved into separate sub-package
+
 ## [0.0.0.42] - 2023-03-21
 
 - Add `TransitionEventToMap()` helper function for logging

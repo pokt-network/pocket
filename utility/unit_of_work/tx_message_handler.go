@@ -1,4 +1,4 @@
-package utility
+package unit_of_work
 
 import (
 	"encoding/hex"
@@ -11,7 +11,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *utilityContext) handleMessage(msg typesUtil.Message) (err typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) handleMessage(msg typesUtil.Message) (err typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:
 		return u.handleMessageSend(x)
@@ -30,7 +30,7 @@ func (u *utilityContext) handleMessage(msg typesUtil.Message) (err typesUtil.Err
 	}
 }
 
-func (u *utilityContext) handleMessageSend(message *typesUtil.MessageSend) typesUtil.Error {
+func (u *baseUtilityUnitOfWork) handleMessageSend(message *typesUtil.MessageSend) typesUtil.Error {
 	// convert the amount to big.Int
 	amount, er := utils.StringToBigInt(message.Amount)
 	if er != nil {
@@ -59,7 +59,7 @@ func (u *utilityContext) handleMessageSend(message *typesUtil.MessageSend) types
 	return nil
 }
 
-func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typesUtil.Error {
+func (u *baseUtilityUnitOfWork) handleStakeMessage(message *typesUtil.MessageStake) typesUtil.Error {
 	publicKey, er := crypto.NewPublicKeyFromBytes(message.PublicKey)
 	if er != nil {
 		return typesUtil.ErrNewPublicKeyFromBytes(er)
@@ -102,13 +102,13 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 	// insert actor
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		er = u.store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.persistenceRWContext.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = u.store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.persistenceRWContext.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-		er = u.store.InsertServicer(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.persistenceRWContext.InsertServicer(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		er = u.store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = u.persistenceRWContext.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(coreTypes.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	}
 	if er != nil {
 		return typesUtil.ErrInsert(er)
@@ -116,7 +116,7 @@ func (u *utilityContext) handleStakeMessage(message *typesUtil.MessageStake) typ
 	return nil
 }
 
-func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditStake) typesUtil.Error {
+func (u *baseUtilityUnitOfWork) handleEditStakeMessage(message *typesUtil.MessageEditStake) typesUtil.Error {
 	// ensure actor exists
 	if exists, err := u.getActorExists(message.ActorType, message.Address); err != nil || !exists {
 		if !exists {
@@ -159,13 +159,13 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 	}
 	switch message.ActorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		er = u.store.UpdateApp(message.Address, message.Amount, message.Chains)
+		er = u.persistenceRWContext.UpdateApp(message.Address, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		er = u.store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
+		er = u.persistenceRWContext.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-		er = u.store.UpdateServicer(message.Address, message.ServiceUrl, message.Amount, message.Chains)
+		er = u.persistenceRWContext.UpdateServicer(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		er = u.store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
+		er = u.persistenceRWContext.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
 	}
 	if er != nil {
 		return typesUtil.ErrInsert(er)
@@ -173,7 +173,7 @@ func (u *utilityContext) handleEditStakeMessage(message *typesUtil.MessageEditSt
 	return nil
 }
 
-func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake) typesUtil.Error {
+func (u *baseUtilityUnitOfWork) handleUnstakeMessage(message *typesUtil.MessageUnstake) typesUtil.Error {
 	if status, err := u.getActorStatus(message.ActorType, message.Address); err != nil || status != coreTypes.StakeStatus_Staked {
 		if status != coreTypes.StakeStatus_Staked {
 			return typesUtil.ErrInvalidStatus(status, coreTypes.StakeStatus_Staked)
@@ -190,7 +190,7 @@ func (u *utilityContext) handleUnstakeMessage(message *typesUtil.MessageUnstake)
 	return nil
 }
 
-func (u *utilityContext) handleUnpauseMessage(message *typesUtil.MessageUnpause) typesUtil.Error {
+func (u *baseUtilityUnitOfWork) handleUnpauseMessage(message *typesUtil.MessageUnpause) typesUtil.Error {
 	pausedHeight, err := u.getPausedHeightIfExists(message.ActorType, message.Address)
 	if err != nil {
 		return err
@@ -211,7 +211,7 @@ func (u *utilityContext) handleUnpauseMessage(message *typesUtil.MessageUnpause)
 	return nil
 }
 
-func (u *utilityContext) handleMessageChangeParameter(message *typesUtil.MessageChangeParameter) typesUtil.Error {
+func (u *baseUtilityUnitOfWork) handleMessageChangeParameter(message *typesUtil.MessageChangeParameter) typesUtil.Error {
 	v, err := codec.GetCodec().FromAny(message.ParameterValue)
 	if err != nil {
 		return typesUtil.ErrProtoFromAny(err)
@@ -220,7 +220,7 @@ func (u *utilityContext) handleMessageChangeParameter(message *typesUtil.Message
 }
 
 // REFACTOR: This can be moved over into utility/types/message.go
-func (u *utilityContext) getSignerCandidates(msg typesUtil.Message) ([][]byte, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getSignerCandidates(msg typesUtil.Message) ([][]byte, typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:
 		return u.getMessageSendSignerCandidates(x)
@@ -237,7 +237,7 @@ func (u *utilityContext) getSignerCandidates(msg typesUtil.Message) ([][]byte, t
 	}
 }
 
-func (u *utilityContext) getMessageStakeSignerCandidates(msg *typesUtil.MessageStake) ([][]byte, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getMessageStakeSignerCandidates(msg *typesUtil.MessageStake) ([][]byte, typesUtil.Error) {
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
@@ -247,7 +247,7 @@ func (u *utilityContext) getMessageStakeSignerCandidates(msg *typesUtil.MessageS
 	return candidates, nil
 }
 
-func (u *utilityContext) getMessageEditStakeSignerCandidates(msg *typesUtil.MessageEditStake) ([][]byte, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getMessageEditStakeSignerCandidates(msg *typesUtil.MessageEditStake) ([][]byte, typesUtil.Error) {
 	output, err := u.getActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
@@ -257,7 +257,7 @@ func (u *utilityContext) getMessageEditStakeSignerCandidates(msg *typesUtil.Mess
 	return candidates, nil
 }
 
-func (u *utilityContext) getMessageUnstakeSignerCandidates(msg *typesUtil.MessageUnstake) ([][]byte, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getMessageUnstakeSignerCandidates(msg *typesUtil.MessageUnstake) ([][]byte, typesUtil.Error) {
 	output, err := u.getActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
@@ -267,7 +267,7 @@ func (u *utilityContext) getMessageUnstakeSignerCandidates(msg *typesUtil.Messag
 	return candidates, nil
 }
 
-func (u *utilityContext) getMessageUnpauseSignerCandidates(msg *typesUtil.MessageUnpause) ([][]byte, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getMessageUnpauseSignerCandidates(msg *typesUtil.MessageUnpause) ([][]byte, typesUtil.Error) {
 	output, err := u.getActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
@@ -277,11 +277,11 @@ func (u *utilityContext) getMessageUnpauseSignerCandidates(msg *typesUtil.Messag
 	return candidates, nil
 }
 
-func (u *utilityContext) getMessageSendSignerCandidates(msg *typesUtil.MessageSend) ([][]byte, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getMessageSendSignerCandidates(msg *typesUtil.MessageSend) ([][]byte, typesUtil.Error) {
 	return [][]byte{msg.FromAddress}, nil
 }
 
-func (u *utilityContext) checkBelowMaxChains(actorType coreTypes.ActorType, chains []string) typesUtil.Error {
+func (u *baseUtilityUnitOfWork) checkBelowMaxChains(actorType coreTypes.ActorType, chains []string) typesUtil.Error {
 	// validators don't have chains field
 	if actorType == coreTypes.ActorType_ACTOR_TYPE_VAL {
 		return nil
@@ -297,7 +297,7 @@ func (u *utilityContext) checkBelowMaxChains(actorType coreTypes.ActorType, chai
 	return nil
 }
 
-func (u *utilityContext) checkAboveMinStake(actorType coreTypes.ActorType, amountStr string) (*big.Int, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) checkAboveMinStake(actorType coreTypes.ActorType, amountStr string) (*big.Int, typesUtil.Error) {
 	minStake, err := u.getMinRequiredStakeAmount(actorType)
 	if err != nil {
 		return nil, err
