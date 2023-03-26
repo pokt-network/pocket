@@ -1,7 +1,6 @@
 package e2e_tests
 
 import (
-	"reflect"
 	"testing"
 	"time"
 
@@ -34,8 +33,7 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 	// Set server node's height to test height.
 	serverNode := pocketNodes[1]
 	serverNodePeerId := serverNode.GetBus().GetConsensusModule().GetNodeAddress()
-	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
-	serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
+	serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
 
 	// We choose node 2 as the requester node.
 	requesterNode := pocketNodes[2]
@@ -91,8 +89,7 @@ func TestStateSync_ServerGetBlock_Success(t *testing.T) {
 	testHeight := uint64(5)
 
 	serverNode := pocketNodes[1]
-	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
-	serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
+	serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
 
 	// Choose node 2 as the requester node
 	requesterNode := pocketNodes[2]
@@ -150,8 +147,7 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	testHeight := uint64(5)
 
 	serverNode := pocketNodes[1]
-	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
-	serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
+	serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
 
 	// Choose node 2 as the requester node
 	requesterNode := pocketNodes[2]
@@ -211,7 +207,6 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	unsynchedNode := pocketNodes[2]
 	unsynchedNodeId := typesCons.NodeId(2)
 	unsynchedNodeHeight := uint64(2)
-	unsynchedNodeModImpl := GetConsensusModImpl(unsynchedNode)
 
 	// Placeholder block
 	blockHeader := &coreTypes.BlockHeader{
@@ -226,23 +221,21 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 		Transactions: make([][]byte, 0),
 	}
 
-	leaderConsensusModImpl := GetConsensusModImpl(leader)
-	leaderConsensusModImpl.MethodByName("SetBlock").Call([]reflect.Value{reflect.ValueOf(block)})
+	leader.GetBus().GetConsensusModule().SetBlock(block)
 
 	// Set the unsynched node to height (1) and round (1)
 	// Set rest of the nodes to the same height (3) and round (6)
 	for id, pocketNode := range pocketNodes {
-		consensusModImpl := GetConsensusModImpl(pocketNode)
 		if id == unsynchedNodeId {
-			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(unsynchedNodeHeight)})
+			pocketNode.GetBus().GetConsensusModule().SetHeight(unsynchedNodeHeight)
 		} else {
-			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
+			pocketNode.GetBus().GetConsensusModule().SetHeight(testHeight)
 		}
-		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
-		consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(testRound)})
+		pocketNode.GetBus().GetConsensusModule().SetStep(testStep)
+		pocketNode.GetBus().GetConsensusModule().SetRound(testRound)
 		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
 		require.NoError(t, err)
-		consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
+		pocketNode.GetBus().GetConsensusModule().SetUtilityContext(utilityContext)
 	}
 
 	// Debug message to start consensus by triggering first view change
@@ -277,7 +270,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
-	unsynchedNodeModImpl.MethodByName("SetAggregatedStateSyncMetadata").Call([]reflect.Value{reflect.ValueOf(uint64(1)), reflect.ValueOf(testHeight), reflect.ValueOf(string(consensusPK.Address()))})
+	unsynchedNode.GetBus().GetConsensusModule().SetAggregatedStateSyncMetadata(uint64(1), testHeight, string(consensusPK.Address()))
 
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)
