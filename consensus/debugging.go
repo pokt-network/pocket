@@ -46,6 +46,19 @@ func (m *consensusModule) GetAggregatedStateSyncMetadataMaxHeight() (maxHeight u
 	return metadata.MaxHeight
 }
 
+func (m *consensusModule) GetLeaderElectionResult(height, round uint64, step uint8) uint64 {
+	msg := &typesCons.HotstuffMessage{
+		Height: height,
+		Round:  round,
+		Step:   typesCons.HotstuffStep(step),
+	}
+	leaderId, err := m.leaderElectionMod.ElectNextLeader(msg)
+	if err != nil {
+		return 0
+	}
+	return uint64(leaderId)
+}
+
 func (m *consensusModule) HandleDebugMessage(debugMessage *messaging.DebugMessage) error {
 	m.m.Lock()
 	defer m.m.Unlock()

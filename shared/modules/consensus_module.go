@@ -93,4 +93,7 @@ type ConsensusDebugModule interface {
 
 	SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64, peerAddress string)
 	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
+
+	// REFACTIR: This should accept typesCons.HotstuffStep and return typesCons.NodeId
+	GetLeaderElectionResult(height, round uint64, step uint8) (leaderId uint64)
 }
