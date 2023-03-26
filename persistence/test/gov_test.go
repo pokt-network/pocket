@@ -189,5 +189,26 @@ func TestGetSetToggleByteArrayFlag(t *testing.T) {
 
 	require.Equal(t, newOwner, owner)
 	require.Equal(t, true, enabled)
+}
 
+func TestGetAllParams(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
+
+	err := db.InitGenesisParams(test_artifacts.DefaultParams())
+	require.NoError(t, err)
+
+	appMaxChain, err := db.GetStringParam(AppMaxChainsParamName, 0)
+	require.NoError(t, err)
+
+	minStake, err := db.GetStringParam(ServicerMinimumStakeParamName, 0)
+	require.NoError(t, err)
+
+	unstakeOwner, err := db.GetStringParam(ServicerUnstakingBlocksOwner, 0)
+	require.NoError(t, err)
+
+	paramNameValues, err := db.GetAllParams()
+	require.NoError(t, err)
+	require.Equal(t, paramNameValues[AppMaxChainsParamName], appMaxChain)
+	require.Equal(t, paramNameValues[ServicerMinimumStakeParamName], minStake)
+	require.Equal(t, paramNameValues[ServicerUnstakingBlocksOwner], unstakeOwner)
 }
