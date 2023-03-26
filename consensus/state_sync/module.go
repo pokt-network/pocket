@@ -31,7 +31,7 @@ type StateSyncModule interface {
 	SendStateSyncMessage(msg *typesCons.StateSyncMessage, nodeAddress cryptoPocket.Address, height uint64) error
 
 	// Getter functions for the aggregated metadata and the metadata buffer, used by consensus module.
-	GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse
+	GetAggregatedMetadata() *typesCons.StateSyncMetadataResponse
 
 	// Starts synching the node with the network by requesting blocks.
 	StartSyncing() error
@@ -39,7 +39,7 @@ type StateSyncModule interface {
 
 // This interface should be only used for debugging purposes and tests.
 type DebugStateSync interface {
-	SetAggregatedSyncMetadata(*typesCons.StateSyncMetadataResponse)
+	SetAggregatedMetadata(*typesCons.StateSyncMetadataResponse)
 }
 
 var (
@@ -133,12 +133,12 @@ func (m *stateSync) DisableServerMode() error {
 	return nil
 }
 
-func (m *stateSync) GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse {
+func (m *stateSync) GetAggregatedMetadata() *typesCons.StateSyncMetadataResponse {
 	m.aggregatedSyncMetadata = m.aggregateMetadataResponses()
 	return m.aggregatedSyncMetadata
 }
 
-func (m *stateSync) SetAggregatedSyncMetadata(metadata *typesCons.StateSyncMetadataResponse) {
+func (m *stateSync) SetAggregatedMetadata(metadata *typesCons.StateSyncMetadataResponse) {
 	m.aggregatedSyncMetadata = metadata
 }
 

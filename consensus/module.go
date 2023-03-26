@@ -332,7 +332,7 @@ func (m *consensusModule) IsSynched() (bool, error) {
 		return false, err
 	}
 
-	maxSeenHeight := m.stateSync.GetAggregatedStateSyncMetadata().MaxHeight
+	maxSeenHeight := m.stateSync.GetAggregatedMetadata().MaxHeight
 
 	return maxPersistedHeight == maxSeenHeight, nil
 }
