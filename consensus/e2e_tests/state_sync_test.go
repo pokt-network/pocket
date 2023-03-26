@@ -295,11 +295,18 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	}
 }
 
-func TestStateSync_4of10UnsynchedPeersCatchUp(t *testing.T) {
+func TestStateSync_UnsynchedPeerSynchsABlock_Success(t *testing.T) {
 	t.Skip()
 }
 
-// Test if unsynched peer can catch up with the rest of the network
-func TestStateSync_UnsynchedPeerCatchsUpConsensus_ConsensusProceedsSuccessfully(t *testing.T) {
+func TestStateSync_UnsynchedPeerSynchsMultipleBlocksInOrder_Success(t *testing.T) {
+	t.Skip()
+}
+
+func TestStateSync_UnsynchedPeerSynchsMultipleUnorderedBlocks_Success(t *testing.T) {
+	t.Skip()
+}
+
+func TestStateSync_4of10UnsynchedPeersCatchUp(t *testing.T) {
 	t.Skip()
 }
