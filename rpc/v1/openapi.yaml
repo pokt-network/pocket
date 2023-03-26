@@ -222,8 +222,8 @@ components:
     Parameter:
       type: object
       required:
-        - parameter_name
-        - parameter_value
+        - param_key
+        - param_value
       properties:
         parameter_name:
           type: "string"

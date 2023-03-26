@@ -251,5 +251,5 @@ func (p *PostgresContext) getLatestParamsOrFlagsQuery(tableName string) string {
 		fields += ",enabled"
 	}
 	// Return a query to select all params or queries but only the most recent update for each
-	return fmt.Sprintf("SELECT DISTINCT ON (name) %s FROM %s ORDER BY name,%s.height DESC", fields, tableName, tableName)
+	return fmt.Sprintf("SELECT DISTINCT ON (name) %s FROM %s ORDER BY name ASC,%s.height DESC", fields, tableName, tableName)
 }

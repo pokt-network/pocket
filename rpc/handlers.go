@@ -3,6 +3,7 @@ package rpc
 import (
 	"encoding/hex"
 	"net/http"
+	"sort"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
@@ -60,7 +61,23 @@ func (s *rpcServer) GetV1QueryNodeParams(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	return ctx.JSON(200, paramValueMap)
+	parameterKeyValues := make([]*paramValue, 0)
+	keys := make([]string, 0)
+	for key, _ := range paramValueMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		val := paramValueMap[key]
+		parameterKeyValues = append(parameterKeyValues, &paramValue{ParamKey: key, ParamValue: val})
+	}
+	return ctx.JSON(200, parameterKeyValues)
+}
+
+type paramValue struct {
+	ParamKey   string `json:"param_key"`
+	ParamValue string `json:"param_value"`
 }
 
 // Broadcast to the entire validator set
