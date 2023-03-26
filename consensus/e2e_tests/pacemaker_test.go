@@ -169,7 +169,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	leaderRound := uint64(6)
 	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderElectionResult(testHeight, leaderRound, uint8(leaderElectionStep)))
 	leader := pocketNodes[leaderId]
-	consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
+	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
 	require.NoError(t, err)
 
 	// Placeholder block
@@ -177,7 +177,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		Height:            testHeight,
 		StateHash:         stateHash,
 		PrevStateHash:     "",
-		ProposerAddress:   consensusPK.Address(),
+		ProposerAddress:   leaderPK.Address(),
 		QuorumCertificate: nil,
 	}
 	block := &coreTypes.Block{

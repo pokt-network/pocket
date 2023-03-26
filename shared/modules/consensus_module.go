@@ -26,7 +26,7 @@ type ConsensusModule interface {
 	ConsensusDebugModule
 
 	// Consensus Engine Handlers
-	// TODO: Rename `HandleMessage` to amore specific name that is consistent with its business logic.
+	// TODO: Rename `HandleMessage` to a more specific name that is consistent with its business logic.
 	HandleMessage(*anypb.Any) error
 	// State Sync messages Handler
 	HandleStateSyncMessage(*anypb.Any) error
@@ -94,6 +94,6 @@ type ConsensusDebugModule interface {
 	SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64, peerAddress string)
 	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
 
-	// REFACTIR: This should accept typesCons.HotstuffStep and return typesCons.NodeId
+	// REFACTOR: This should accept typesCons.HotstuffStep and return typesCons.NodeId.
 	GetLeaderElectionResult(height, round uint64, step uint8) (leaderId uint64)
 }

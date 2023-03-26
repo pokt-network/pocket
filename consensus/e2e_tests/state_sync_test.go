@@ -227,7 +227,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	// Get leaderId for the given height, round and step, via one of the nodes with GetLeaderElectionResult() function
 	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderElectionResult(testHeight, currentRound, testStep))
 	leader := pocketNodes[leaderId]
-	consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
+	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
 	require.NoError(t, err)
 
 	// Placeholder block
@@ -235,7 +235,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 		Height:            testHeight,
 		StateHash:         stateHash,
 		PrevStateHash:     "",
-		ProposerAddress:   consensusPK.Address(),
+		ProposerAddress:   leaderPK.Address(),
 		QuorumCertificate: nil,
 	}
 	block := &coreTypes.Block{
@@ -272,7 +272,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
-	unsynchedNode.GetBus().GetConsensusModule().SetAggregatedStateSyncMetadata(uint64(1), testHeight, string(consensusPK.Address()))
+	unsynchedNode.GetBus().GetConsensusModule().SetAggregatedStateSyncMetadata(uint64(1), testHeight, string(leaderPK.Address()))
 
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)
