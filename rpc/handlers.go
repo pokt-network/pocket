@@ -63,7 +63,7 @@ func (s *rpcServer) GetV1QueryNodeParams(ctx echo.Context) error {
 	}
 	parameterKeyValues := make([]*paramValue, 0)
 	keys := make([]string, 0)
-	for key, _ := range paramValueMap {
+	for key := range paramValueMap {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
