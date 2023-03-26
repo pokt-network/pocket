@@ -501,8 +501,6 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
 
-	consensusModImpl := reflect.ValueOf(bus.GetConsensusModule())
-
 	stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
 		switch coreTypes.StateMachineEvent(event) {
 		case coreTypes.StateMachineEvent_Consensus_IsUnsynched:
@@ -511,7 +509,7 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 		case coreTypes.StateMachineEvent_Consensus_IsSyncing:
 			maxHeight := bus.GetConsensusModule().GetAggregatedStateSyncMetadataMaxHeight()
 			t.Logf("Node is syncing")
-			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(maxHeight)})
+			bus.GetConsensusModule().SetHeight(maxHeight)
 			return nil
 		case coreTypes.StateMachineEvent_Consensus_IsSynchedValidator:
 			t.Logf("Validator node is synched")
