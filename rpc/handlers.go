@@ -50,6 +50,19 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 	})
 }
 
+func (s *rpcServer) GetV1QueryNodeParams(ctx echo.Context) error {
+	currHeight := s.GetBus().GetConsensusModule().CurrentHeight()
+	persistenceRC, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currHeight))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	paramValueMap, err := persistenceRC.GetAllParams()
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	return ctx.JSON(200, paramValueMap)
+}
+
 // Broadcast to the entire validator set
 func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 	utilityMsg, err := utility.PrepareTxGossipMessage(msgBz)
