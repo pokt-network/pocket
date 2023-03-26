@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.32] - 2023-03-21
+## [0.0.0.32] - 2023-03-26
 
 - Refactored `utilityContext` into `utilityUnitOfWork`
 - Added `utilityUnitOfWorkFactory` to create `utilityUnitOfWork` instances depending on the fact that the current node is `Leader` or `Replica`
