@@ -19,7 +19,6 @@ var (
 
 type govParamMetadata struct {
 	PropertyName string
-	ParamName    string
 	ParamOwner   string
 	PoktType     string
 	GoType       string
@@ -48,7 +47,6 @@ func parseGovProto() (govParamMetadataMap map[string]govParamMetadata) {
 		protoName := extractStructTag(protoTag, "name=")
 		govParamMetadataMap[protoName] = govParamMetadata{
 			PropertyName: field.Name,
-			ParamName:    protoName,
 			ParamOwner:   poktOwner,
 			PoktType:     poktValType,
 			GoType:       golangType,
