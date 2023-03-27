@@ -63,7 +63,7 @@ type consensusModule struct {
 	nodeAddress string
 
 	// Module Dependencies
-	// IMPROVE(#283): Investigate whether the current approach to how the `utilityContext` should be
+	// IMPROVE(#283): Investigate whether the current approach to how the `utilityUnitOfWork` should be
 	//                managed or changed. Also consider exposing a function that exposes the context
 	//                to streamline how its accessed in the module (see the ticket).
 
