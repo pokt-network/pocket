@@ -3,11 +3,9 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
-	"reflect"
-	"strconv"
-	"strings"
-
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/utils"
+	"strconv"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
@@ -18,26 +16,6 @@ const (
 	BlocksPerSessionParamName    = "blocks_per_session"
 	ServicersPerSessionParamName = "servicers_per_session"
 )
-
-// Mapping of parameter names and their stringified type names
-var parameterNameTypeMap = make(map[string]string)
-
-// Using the json tag of the fields in the Params struct to extract the name of the
-// parameters and build a mapping in memory of the types associated to each parameter
-// name according to the struct generated from: persistence_genesis.proto
-func init() {
-	fields := reflect.VisibleFields(reflect.TypeOf(genesis.Params{}))
-	// Loop through struct fields to build parameterNameTypeMap
-	for _, field := range fields {
-		if !field.IsExported() {
-			continue
-		}
-		json := field.Tag.Get("json") // Match the json tag of field: json:"paramName,omitempty"
-		paramName := strings.Split(json, ",")[0]
-		typ := field.Type.Name() // Get string version of field's type
-		parameterNameTypeMap[paramName] = typ
-	}
-}
 
 func (p *PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	ctx, tx := p.getCtxAndTx()
@@ -51,7 +29,7 @@ func (p *PostgresContext) InitGenesisParams(params *genesis.Params) error {
 // Match paramName against the ParameterNameTypeMap struct and call the proper
 // getter function getParamOrFlag[int | string | byte] and return its values
 func (p *PostgresContext) GetParameter(paramName string, height int64) (v any, err error) {
-	paramType := parameterNameTypeMap[paramName]
+	paramType := utils.GovParamMetadataMap[paramName].GoType
 	switch paramType {
 	case "int", "int32", "int64":
 		v, _, err = getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
