@@ -106,6 +106,8 @@ if err != nil {
 
 ##### Add a logger to the module
 
+<!-- DISCUSS: I believe we should change this convention, to me it's more semantic if logging is configured during construction/initialization and not during `Start` (which some modules might not even have if they don't implement `InterruptableModule`). I believe that a better approach is summarized here: https://github.com/pokt-network/pocket/blob/8bee148f3b0e768154be4bce02e94813c9382aac/state_machine/module.go#L29-L32 -->
+
 When defining the start function for the module, it is essential to initialise a namespace logger as well:
 
 ```golang
