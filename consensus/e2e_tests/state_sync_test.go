@@ -1,6 +1,7 @@
 package e2e_tests
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -246,7 +247,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 
 	leader.GetBus().GetConsensusModule().SetBlock(block)
 
-	// Assert that unsynched node has a separate view of the network than the rest of the nodes
+	// Assert that unsynched node has a different view of the network than the rest of the nodes
 	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 250, true)
 	require.NoError(t, err)
 
@@ -285,8 +286,10 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numExpectedMsgs, 250, true)
 	require.NoError(t, err)
 
+	advanceTime(t, clockMock, 10*time.Millisecond)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
+		fmt.Printf("Node state, node id: %d, height: %d, round: %d, step: %d, leaderId: %d \n", nodeId, nodeState.Height, nodeState.Round, nodeState.Step, nodeState.LeaderId)
 		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
 				Height: testHeight,
