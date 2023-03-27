@@ -10,17 +10,19 @@ type Module interface {
 	InterruptableModule
 }
 
+// IntegratableModule is a module that integrates with the bus.
+// Essentially it's a module that is capable of communicating with the `bus` (see `shared/modules/bus_module.go`) for additional details.
 type IntegratableModule interface {
 	SetBus(Bus)
 	GetBus() Bus
 }
 
+// InitializableModule is a module that has some basic lifecycle logic. Specifically, it can be started and stopped.
 type InterruptableModule interface {
 	Start() error
 	Stop() error
 }
 
-// TODO(#509): improve the documentation for this and other interfaces/functions
 // ModuleOption is a function that configures a module when it is created.
 // It uses a widely used pattern in Go called functional options.
 // See https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
@@ -49,19 +51,25 @@ type InterruptableModule interface {
 //	  return m, nil
 //	}
 type ModuleOption func(InitializableModule)
+
+// InitializableModule is a module that can be created via the standardized `Create` method and that has a name
+// that can be used to identify it (see `shared\modules\modules_registry_module.go`) for additional details.
 type InitializableModule interface {
 	GetModuleName() string
 	Create(bus Bus, options ...ModuleOption) (Module, error)
 }
 
+// KeyholderModule is a module that can provide a private key.
 type KeyholderModule interface {
 	GetPrivateKey() (cryptoPocket.PrivateKey, error)
 }
 
+// P2PAddressableModule is a module that can provide a P2P address.
 type P2PAddressableModule interface {
 	GetP2PAddress() cryptoPocket.Address
 }
 
+// ObservableModule is a module that can provide observability via a Logger.
 type ObservableModule interface {
 	GetLogger() Logger
 }
