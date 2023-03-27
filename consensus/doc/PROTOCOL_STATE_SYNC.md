@@ -83,7 +83,7 @@ type StateSyncModule interface {
   // ...
   GetAggregatedStateSyncMetadata() *StateSyncMetadataResponse // Aggregated metadata received from peers. 
   IsSynched() (bool, error)
-  StartSynching() error
+  StartSyncing() error
   // ...
 }
 ```
@@ -100,7 +100,7 @@ For every new block and block proposal `Validator`s receive:
 - if block is  higher than node's current height, node checks if it is out of synch via `IsSynched()` function that compares node's local state and the global state by aggregating the collected metada responses.
 
 According to the result of the `IsSynched()` function:
-- If the node is out of sync, it runs `StartSynching()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
+- If the node is out of sync, it runs `StartSyncing()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
 - If the node is in synch with its peers it rejects the block and/or block proposal. 
 
 
@@ -116,7 +116,7 @@ flowchart TD
 
 
     %% is node sycnhed
-    C -->  |No| E[StartSynching]
+    C -->  |No| E[StartSyncing]
     C -->  |Yes| F[Apply Block]
 
     %% syncing
@@ -151,7 +151,7 @@ In `Unsynched` Mode, node transitions to `Sync Mode` by sending `Consensus_IsSyn
 
 ### Sync Mode
 
-In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `StartSynching()` function to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
+In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `StartSyncing()` function to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
 
 Though it is unspecified whether or not a Node may make `GetBlock` requests in order or in parallel, the cryptographic restraints of block processing require the Node to call `CommitBlock` sequentially until it is `Synched`.
 
@@ -189,7 +189,7 @@ flowchart TD
     B --> |No| E[UnsynchedMode]
     E --> |Send | D[SyncMode]
 
-    %% Synching
+    %% Syncing
     D --> |Request blocks| Z[Peers]
 
     %% Is a validator?
@@ -451,6 +451,6 @@ Aptos follow an **async "fire-and-forget"** pattern as can be seen [here](https:
 - [https://docs.chia.net/peer-protocol](https://docs.chia.net/peer-protocol)
   - A detailed list of the type of requests Chia uses for communication between peers
 - [https://docs.chia.net/node-syncing](https://docs.chia.net/node-syncing)
-  - An explanation of the configurations Chia exposes for node synching
+  - An explanation of the configurations Chia exposes for node syncing
 
 <!-- GITHUB_WIKI: consensus/state_sync_protocol -->

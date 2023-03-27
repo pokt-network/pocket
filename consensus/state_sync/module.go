@@ -33,7 +33,7 @@ type StateSyncModule interface {
 	// Getter functions for the aggregated metadata and the metadata buffer, used by consensus module.
 	GetAggregatedMetadata() *typesCons.StateSyncMetadataResponse
 
-	// Starts synching the node with the network by requesting blocks.
+	// Starts syncing the node with the network by requesting blocks.
 	StartSyncing() error
 }
 
@@ -173,7 +173,7 @@ func (m *stateSync) StartSyncing() error {
 		lastPersistedBlockHeight = current_height - 1
 	}
 
-	m.logger.Debug().Msgf("Starting synching, last persisted block %d, aggregated maxHeight %d", lastPersistedBlockHeight, m.aggregatedSyncMetadata.MaxHeight)
+	m.logger.Debug().Msgf("Starting syncing, last persisted block %d, aggregated maxHeight %d", lastPersistedBlockHeight, m.aggregatedSyncMetadata.MaxHeight)
 
 	// TODO(#352): Add buiness logic
 
