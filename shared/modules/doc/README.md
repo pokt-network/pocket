@@ -35,7 +35,7 @@ A module is an abstraction (go interface) of a self-contained unit of functional
 
 ### **Module mock**
 
-A mock is a fake implementation of a module that is used for testing purposes. It is used to simulate the behaviour of the module and to verify that the module is interacting with other modules correctly. Mocks are generated using `go:generate` directives together with the `mockgen` tool.
+A mock is a stand-in, a fake or simplified implementation of a module that is used for testing purposes. It is used to simulate the behaviour of the module and to verify that the module is interacting with other modules correctly. Mocks are generated using `go:generate` directives together with the `mockgen` tool.
 
 ### **Base module**
 
