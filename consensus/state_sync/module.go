@@ -90,7 +90,7 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 func (m *stateSync) Start() error {
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
-	// Node periodically checks if its up to date by requesting metadata from its peers as an external process with periodicMetadataSynch() function
+	// Node periodically checks if its up to date by requesting metadata from its peers as an external process with periodicMetadataSync() function
 	go m.periodicMetadataSync()
 
 	return nil
@@ -161,26 +161,17 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 	return nil
 }
 
-// TODO(#352): Implement this function, currently a placeholder.
+// TODO(#352): Implement the business logic for this function
 // Requests blocks one by one from its peers.
 func (m *stateSync) StartSyncing() error {
 	current_height := m.GetBus().GetConsensusModule().CurrentHeight()
-	var lastPersistedBlockHeight uint64
 
-	if current_height == 0 {
-		lastPersistedBlockHeight = 0
-	} else {
-		lastPersistedBlockHeight = current_height - 1
-	}
-
-	m.logger.Debug().Msgf("Starting syncing, last persisted block %d, aggregated maxHeight %d", lastPersistedBlockHeight, m.aggregatedSyncMetadata.MaxHeight)
-
-	// TODO(#352): Add buiness logic
+	m.logger.Debug().Msgf("Starting syncing, current height %d, aggregated maxHeight %d", current_height, m.aggregatedSyncMetadata.MaxHeight)
 
 	return nil
 }
 
-// TODO(#352): Implement this function, currently a placeholder.
+// TODO(#352):  Implement the business logic for this function
 // Returns max block height metadainfo received from all peers by aggregating responses in the buffer.
 func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataResponse {
 	m.m.Lock()
@@ -193,8 +184,6 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 
 // TODO(#352): Implement this function, currently a placeholder.
 // Periodically (initially by using timers) queries the network by sending metadata requests to peers using broadCastStateSyncMessage() function.
-// Update frequency can be tuned accordingly to the state. Initially, it will have a static timer for periodic snych.
-// CONSIDER: Improving meta data request synchronistaion, without timers.
 func (m *stateSync) periodicMetadataSync() {
 
 	// uses a timer to periodically query the network
