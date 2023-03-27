@@ -24,14 +24,14 @@ func (m *consensusModule) ResetForNewHeight() {
 	m.lockedQC = nil
 }
 
-// This function releases consensus module's utility context, called by pacemaker module
-func (m *consensusModule) ReleaseUtilityContext() error {
-	if m.utilityContext != nil {
-		if err := m.utilityContext.Release(); err != nil {
-			log.Println("[WARN] Failed to release utility context: ", err)
+// This function releases consensus module's utility unitOfWork, called by pacemaker module
+func (m *consensusModule) ReleaseUtilityUnitOfWork() error {
+	if m.utilityUnitOfWork != nil {
+		if err := m.utilityUnitOfWork.Release(); err != nil {
+			log.Println("[WARN] Failed to release utility unitOfWork: ", err)
 			return err
 		}
-		m.utilityContext = nil
+		m.utilityUnitOfWork = nil
 	}
 
 	return nil

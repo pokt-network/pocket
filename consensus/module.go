@@ -66,7 +66,7 @@ type consensusModule struct {
 	//                managed or changed. Also consider exposing a function that exposes the context
 	//                to streamline how its accessed in the module (see the ticket).
 
-	utilityContext    modules.UtilityContext
+	utilityUnitOfWork modules.UtilityUnitOfWork
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
@@ -132,7 +132,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 
 		leaderId: nil,
 
-		utilityContext: nil,
+		utilityUnitOfWork: nil,
 
 		logPrefix: DefaultLogPrefix,
 

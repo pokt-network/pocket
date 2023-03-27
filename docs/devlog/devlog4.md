@@ -1,4 +1,4 @@
-# Pocket V1 DevLog Call #{UPDATE_ME} Notes <!-- omit in toc -->
+# Pocket V1 DevLog Call #4 Notes <!-- omit in toc -->
 
 - **Date and Time**: <!-- UPDATE_ME -->
 - **Location**: [Discord](https://discord.gg/pokt)
@@ -96,4 +96,4 @@ Pocket Network is a blockchain data platform, built for applications, that uses 
 - [Discord](https://discord.gg/pokt)
 - [Twitter](https://twitter.com/POKTnetwork)
 
-<!-- GITHUB_WIKI: devlog/template -->
+<!-- GITHUB_WIKI: devlog/4 -->
