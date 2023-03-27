@@ -16,7 +16,7 @@ const (
 	// consensus
 	DefaultConsensusMaxMempoolBytes = uint64(500000000)
 	// pacemaker
-	DefaultPacemakerTimeoutMsec               = uint64(5000)
+	DefaultPacemakerTimeoutMsec               = uint64(10000)
 	DefaultPacemakerManual                    = true
 	DefaultPacemakerDebugTimeBetweenStepsMsec = uint64(1000)
 	// utility

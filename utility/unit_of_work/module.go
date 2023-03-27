@@ -44,7 +44,7 @@ func (uow *baseUtilityUnitOfWork) SetProposalBlock(blockHash string, proposerAdd
 	return nil
 }
 
-// CreateAndApplyProposalBlock implements the exposed functionality of the shared UtilityContext interface.
+// CreateAndApplyProposalBlock implements the exposed functionality of the shared UtilityUnitOfWork interface.
 func (u *baseUtilityUnitOfWork) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (stateHash string, txs [][]byte, err error) {
 	prevBlockByzantineVals, err := u.prevBlockByzantineValidators()
 	if err != nil {
@@ -109,7 +109,7 @@ func (u *baseUtilityUnitOfWork) CreateAndApplyProposalBlock(proposer []byte, max
 		return "", nil, err
 	}
 
-	// TODO: @deblasis - this should be from a ReadContext (the ephemeral/staging one)
+	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
 	// Compute & return the new state hash
 	stateHash, err = u.persistenceRWContext.ComputeStateHash()
 	if err != nil {
@@ -177,21 +177,21 @@ func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, er
 	if err := u.endBlock(u.proposalProposerAddr); err != nil {
 		return "", nil, err
 	}
-	// TODO: @deblasis - this should be from a ReadContext (the ephemeral/staging one)
+	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
 	// return the app hash (consensus module will get the validator set directly)
 	stateHash, err = u.persistenceRWContext.ComputeStateHash()
 	if err != nil {
 		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return "", nil, utilTypes.ErrAppHash(err)
 	}
-	u.logger.Info().Msgf("ApplyBlock - computed state hash: %s", stateHash)
+	u.logger.Info().Str("state_hash", stateHash).Msgf("ApplyBlock succeeded!")
 
 	// return the app hash; consensus module will get the validator set directly
 	return stateHash, nil, nil
 }
 
 func (uow *baseUtilityUnitOfWork) Commit(quorumCert []byte) error {
-	// TODO: @deblasis - change tracking here
+	// TODO(@deblasis): change tracking here
 
 	uow.logger.Debug().Msg("committing the rwPersistenceContext...")
 	if err := uow.persistenceRWContext.Commit(uow.proposalProposerAddr, quorumCert); err != nil {
@@ -201,16 +201,14 @@ func (uow *baseUtilityUnitOfWork) Commit(quorumCert []byte) error {
 	return nil
 }
 
+// TODO(@deblasis) - change tracking reset here
 func (uow *baseUtilityUnitOfWork) Release() error {
-	// TODO: @deblasis - change tracking reset here
-
-	if uow.persistenceRWContext == nil {
+	rwCtx := uow.persistenceRWContext
+	if rwCtx == nil {
 		return nil
 	}
-
-	if err := uow.persistenceRWContext.Release(); err != nil {
-		return err
-	}
 	uow.persistenceRWContext = nil
+	rwCtx.Release()
+
 	return nil
 }

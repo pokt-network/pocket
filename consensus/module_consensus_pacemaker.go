@@ -2,38 +2,36 @@ package consensus
 
 import (
 	"fmt"
-	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/modules"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// Implementations of the type ConsensusPacemaker interface
-// SetHeight, SetRound, SetStep are implemented for ConsensusDebugModule
-func (m *consensusModule) ResetRound() {
-	m.clearLeader()
-	m.clearMessagesPool()
-}
+var _ modules.ConsensusPacemaker = &consensusModule{}
 
-// This function resets the current state of the consensus module, called by pacemaker submodule before node proceeds to the next view.
-func (m *consensusModule) ResetForNewHeight() {
-	m.round = 0
-	m.block = nil
-	m.prepareQC = nil
-	m.lockedQC = nil
+// ResetRound resets the hotstuff view / round at either the current or new height depending on the var prvodied
+func (m *consensusModule) ResetRound(isNewHeight bool) {
+	m.leaderId = nil
+	m.clearMessagesPool()
+	m.step = 0
+	if isNewHeight {
+		m.round = 0
+		m.block = nil
+		m.prepareQC = nil
+		m.lockedQC = nil
+	}
 }
 
 // This function releases consensus module's utility unitOfWork, called by pacemaker module
 func (m *consensusModule) ReleaseUtilityUnitOfWork() error {
-	if m.utilityUnitOfWork != nil {
-		if err := m.utilityUnitOfWork.Release(); err != nil {
-			log.Println("[WARN] Failed to release utility unitOfWork: ", err)
-			return err
-		}
-		m.utilityUnitOfWork = nil
+	utilityUnitOfWork := m.utilityUnitOfWork
+	if utilityUnitOfWork == nil {
+		return nil
 	}
-
+	m.utilityUnitOfWork = nil
+	utilityUnitOfWork.Release()
 	return nil
 }
 
@@ -81,7 +79,7 @@ func (m *consensusModule) IsPrepareQCNil() bool {
 func (m *consensusModule) GetPrepareQC() (*anypb.Any, error) {
 	anyProto, err := anypb.New(m.prepareQC)
 	if err != nil {
-		return nil, fmt.Errorf("[WARN] NewHeight: Failed to convert paceMaker message to proto: %s", err)
+		return nil, fmt.Errorf("Failed to convert paceMaker message to proto: %s", err)
 	}
 	return anyProto, nil
 }

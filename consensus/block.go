@@ -9,10 +9,16 @@ import (
 )
 
 func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
-	// Commit the context
-	if err := m.utilityUnitOfWork.Commit(block.BlockHeader.QuorumCertificate); err != nil {
+	utilityUnitOfWork := m.utilityUnitOfWork
+	if utilityUnitOfWork == nil {
+		return fmt.Errorf("utility context is nil")
+	}
+
+	// Commit & release the context
+	if err := utilityUnitOfWork.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
+	m.utilityUnitOfWork = nil
 
 	m.logger.Info().
 		Fields(
@@ -21,8 +27,6 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 				"transactions": len(block.Transactions),
 			}).
 		Msg("🧱🧱🧱 Committing block 🧱🧱🧱")
-
-	m.utilityUnitOfWork = nil
 
 	return nil
 }
@@ -37,7 +41,7 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 		if step != NewRound {
 			return false, fmt.Errorf("validateBlockBasic failed - block is nil during step %s", typesCons.StepToString[m.step])
 		}
-		m.logger.Debug().Msg("Nil (expected) block is present during NewRound step.")
+		m.logger.Debug().Msg("✅ NewRound block is nil.")
 		return true, nil
 	}
 
@@ -66,15 +70,14 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 	return true, nil
 }
 
-// Creates a new Utility Unit Of Work and clears/nullifies any previous UOW if they exist
+// Creates a new Utility context and clears/nullifies any previous contexts if they exist
 func (m *consensusModule) refreshUtilityUnitOfWork() error {
-	// Catch-all structure to release the previous utility UOW if it wasn't properly cleaned up.
-	// IMPROVE: This should not be called if the UOW is properly managed in the entire lifecycle
-	if m.utilityUnitOfWork != nil {
-		m.logger.Warn().Msg(typesCons.NilUtilityUOWWarning)
-		if err := m.utilityUnitOfWork.Release(); err != nil {
-			m.logger.Warn().Err(err).Msg("Error releasing utility unit of work")
-		}
+	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
+	utilityUnitOfWork := m.utilityUnitOfWork
+	if utilityUnitOfWork != nil {
+		// TODO: This should, ideally, never be called
+		m.logger.Warn().Bool("TODO", true).Msg(typesCons.NilUtilityUOWWarning)
+		utilityUnitOfWork.Release()
 		m.utilityUnitOfWork = nil
 	}
 

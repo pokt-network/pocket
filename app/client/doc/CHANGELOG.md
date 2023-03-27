@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.24] - 2023-03-23
+
+- Make `PromptPrintNodeState` the first prompt in debug mode
+- Minor cleanup to documentation related to CLI modes
+- Fixed one logging statement
+
 ## [0.0.0.23] - 2023-03-21
 
 - Refactor debug CLI to use new P2P interfaces
