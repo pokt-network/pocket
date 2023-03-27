@@ -84,3 +84,6 @@ val2.json
 localnet_config.yaml
 
 .env
+
+# Local files created during https://github.com/pokt-network/pocket/wiki creation
+tools/wiki
