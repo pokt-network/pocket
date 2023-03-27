@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.26] - 2023-03-26
+
+- Updated defaults to be `const` instead of `var` where applicable
+
 ## [0.0.0.25] - 2023-03-01
 
 - replace `consensus_port` with `port` in P2P config

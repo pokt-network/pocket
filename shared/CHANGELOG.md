@@ -7,11 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.43] - 2023-03-26
+## [0.0.0.44] - 2023-03-27
 
 - Add `ConsensusStateSync` interface to define exported state sync functions in consensus module
 - Update `ConsensusDebugModule` with getter and setter function for state sync testing
 - Update FSM events `Consensus_IsSynchedValidator`, `Consensus_IsSynchedNonValidator` and state `Consensus_Pacemaker`
+
+## [0.0.0.43] - 2023-03-26
+
+- Updated `PROTOCOL_STATE_HASH.md` to reference the `UtilityUnitOfWork`
+- Refactored interfaces to use `UtilityUnitOfWork`
+- Added interfaces for `UtilityUnitOfWork` and `UtilityUnitOfWorkFactory`
+- Added interfaces `LeaderUtilityUnitOfWork` and `ReplicaUtilityUnitOfWork`
+- Updated `UtilityModule` to use `UtilityUnitOfWork`
+- Refactored utility module implementation to use `UtilityUnitOfWork` and moved into separate sub-package
 
 ## [0.0.0.42] - 2023-03-21
 

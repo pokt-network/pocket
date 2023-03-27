@@ -1,33 +1,44 @@
-package utility
+package unit_of_work
 
 import (
 	"encoding/hex"
 	"math/big"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/modules"
+	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
 )
 
-func TestUtilityContext_ApplyBlock(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
-	tx, startingBalance, amountSent, signer := newTestingTransaction(t, ctx)
+func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockUtilityMod := mockModules.NewMockUtilityModule(ctrl)
+	mockUtilityMod.EXPECT().GetModuleName().Return(modules.UtilityModuleName).AnyTimes()
+	mockUtilityMod.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+
+	uow := newTestingUtilityUnitOfWork(t, 0, func(uow *baseUtilityUnitOfWork) {
+		uow.GetBus().RegisterModule(mockUtilityMod)
+		mockUtilityMod.EXPECT().GetMempool().Return(NewTestingMempool(t)).AnyTimes()
+	})
+	tx, startingBalance, amountSent, signer := newTestingTransaction(t, uow)
 
 	txBz, er := tx.Bytes()
 	require.NoError(t, er)
 
-	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
+	proposer := getFirstActor(t, uow, coreTypes.ActorType_ACTOR_TYPE_VAL)
 
 	addrBz, err := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, err)
 
-	proposerBeforeBalance, err := ctx.getAccountAmount(addrBz)
+	proposerBeforeBalance, err := uow.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
-	err = ctx.SetProposalBlock("", addrBz, [][]byte{txBz})
+	err = uow.SetProposalBlock("", addrBz, [][]byte{txBz})
 	require.NoError(t, err)
 
-	appHash, err := ctx.ApplyBlock()
+	appHash, _, err := uow.ApplyBlock()
 	require.NoError(t, err)
 	require.NotNil(t, appHash)
 
@@ -37,16 +48,16 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	// require.NoError(t, err)
 	// require.Equal(t, missed, 1)
 
-	feeBig, err := ctx.getMessageSendFee()
+	feeBig, err := uow.getMessageSendFee()
 	require.NoError(t, err)
 
 	expectedAmountSubtracted := big.NewInt(0).Add(amountSent, feeBig)
 	expectedAfterBalance := big.NewInt(0).Sub(startingBalance, expectedAmountSubtracted)
-	amountAfter, err := ctx.getAccountAmount(signer.Address())
+	amountAfter, err := uow.getAccountAmount(signer.Address())
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amountAfter, "unexpected after balance; expected %v got %v", expectedAfterBalance, amountAfter)
 
-	proposerCutPercentage, err := ctx.getProposerPercentageOfFees()
+	proposerCutPercentage, err := uow.getProposerPercentageOfFees()
 	require.NoError(t, err)
 
 	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feeBig)
@@ -54,7 +65,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	feesAndRewardsCollectedFloat.Quo(feesAndRewardsCollectedFloat, big.NewFloat(100))
 	expectedProposerBalanceDifference, _ := feesAndRewardsCollectedFloat.Int(nil)
 
-	proposerAfterBalance, err := ctx.getAccountAmount(addrBz)
+	proposerAfterBalance, err := uow.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
@@ -62,11 +73,11 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 
 }
 
-func TestUtilityContext_BeginBlock(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
-	tx, _, _, _ := newTestingTransaction(t, ctx)
+func TestUtilityUnitOfWork_BeginBlock(t *testing.T) {
+	uow := newTestingUtilityUnitOfWork(t, 0)
+	tx, _, _, _ := newTestingTransaction(t, uow)
 
-	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
+	proposer := getFirstActor(t, uow, coreTypes.ActorType_ACTOR_TYPE_VAL)
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
@@ -74,10 +85,10 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
 
-	er = ctx.SetProposalBlock("", addrBz, [][]byte{txBz})
+	er = uow.SetProposalBlock("", addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 
-	_, er = ctx.ApplyBlock()
+	_, _, er = uow.ApplyBlock()
 	require.NoError(t, er)
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
@@ -88,11 +99,11 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 
 }
 
-func TestUtilityContext_EndBlock(t *testing.T) {
-	ctx := newTestingUtilityContext(t, 0)
-	tx, _, _, _ := newTestingTransaction(t, ctx)
+func TestUtilityUnitOfWork_EndBlock(t *testing.T) {
+	uow := newTestingUtilityUnitOfWork(t, 0)
+	tx, _, _, _ := newTestingTransaction(t, uow)
 
-	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
+	proposer := getFirstActor(t, uow, coreTypes.ActorType_ACTOR_TYPE_VAL)
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
@@ -100,26 +111,26 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
 
-	proposerBeforeBalance, err := ctx.getAccountAmount(addrBz)
+	proposerBeforeBalance, err := uow.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
-	er = ctx.SetProposalBlock("", addrBz, [][]byte{txBz})
+	er = uow.SetProposalBlock("", addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 
-	_, er = ctx.ApplyBlock()
+	_, _, er = uow.ApplyBlock()
 	require.NoError(t, er)
 
-	feeBig, err := ctx.getMessageSendFee()
+	feeBig, err := uow.getMessageSendFee()
 	require.NoError(t, err)
 
-	proposerCutPercentage, err := ctx.getProposerPercentageOfFees()
+	proposerCutPercentage, err := uow.getProposerPercentageOfFees()
 	require.NoError(t, err)
 
 	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feeBig)
 	feesAndRewardsCollectedFloat.Mul(feesAndRewardsCollectedFloat, big.NewFloat(float64(proposerCutPercentage)))
 	feesAndRewardsCollectedFloat.Quo(feesAndRewardsCollectedFloat, big.NewFloat(100))
 	expectedProposerBalanceDifference, _ := feesAndRewardsCollectedFloat.Int(nil)
-	proposerAfterBalance, err := ctx.getAccountAmount(addrBz)
+	proposerAfterBalance, err := uow.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)

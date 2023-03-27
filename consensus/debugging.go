@@ -29,8 +29,8 @@ func (m *consensusModule) SetBlock(block *coreTypes.Block) {
 	m.block = block
 }
 
-func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
-	m.utilityContext = utilityContext
+func (m *consensusModule) SetUtilityUnitOfWork(utilityUnitOfWork modules.UtilityUnitOfWork) {
+	m.utilityUnitOfWork = utilityUnitOfWork
 }
 
 func (m *consensusModule) SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64, peerAddress string) {
