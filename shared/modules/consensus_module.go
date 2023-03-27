@@ -47,7 +47,8 @@ type ConsensusPacemaker interface {
 	ResetRound()
 	ResetForNewHeight()
 	ClearLeaderMessagesPool()
-	ReleaseUtilityContext() error
+	// TODO: @deblasis - remove this and implement an event based approach
+	ReleaseUtilityUnitOfWork() error
 
 	// Setters
 	SetHeight(uint64)
@@ -89,7 +90,8 @@ type ConsensusDebugModule interface {
 	// REFACTOR: This should accept typesCons.HotstuffStep.
 	SetStep(uint8)
 	SetBlock(*types.Block)
-	SetUtilityContext(UtilityContext)
+
+	SetUtilityUnitOfWork(UtilityUnitOfWork)
 
 	SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64, peerAddress string)
 	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)

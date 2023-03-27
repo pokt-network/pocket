@@ -159,9 +159,9 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		pocketNode.GetBus().GetConsensusModule().SetStep(testStep)
 
 		// utilityContext is only set on new rounds, which is skipped in this test
-		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
+		utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(testHeight))
 		require.NoError(t, err)
-		pocketNode.GetBus().GetConsensusModule().SetUtilityContext(utilityContext)
+		pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
 	}
 
 	// Prepare leader info
