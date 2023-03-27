@@ -40,7 +40,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	startingStep := uint8(consensus.NewRound)
 
 	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderElectionResult() function.
-	// Any node in pocketNodes can be used to call GetLeaderElectionResult() function.
+	// Any node in pocketNodes mapping can be used to gather leader election result via GetLeaderElectionResult() function.
 	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderElectionResult(startingHeight, startingRound, startingStep))
 	leader := pocketNodes[leaderId]
 

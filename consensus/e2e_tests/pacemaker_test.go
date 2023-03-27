@@ -167,6 +167,9 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	// Prepare leader info
 	leaderElectionStep := consensus.Prepare
 	leaderRound := uint64(6)
+
+	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderElectionResult() function.
+	// Any node in pocketNodes mapping can be used to call GetLeaderElectionResult() function.
 	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderElectionResult(testHeight, leaderRound, uint8(leaderElectionStep)))
 	leader := pocketNodes[leaderId]
 	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
