@@ -34,12 +34,14 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	initialHeight := uint64(1)
-	initialStep := uint8(consensus.NewRound)
-	initialRound := uint64(0)
+	// Set starting height, round and step of the test.
+	startingHeight := uint64(1)
+	startingRound := uint64(0)
+	startingStep := uint8(consensus.NewRound)
 
-	// Get leaderId for the given height, round and step, via one of the nodes with GetLeaderElectionResult() function
-	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderElectionResult(initialHeight, initialRound, initialStep))
+	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderElectionResult() function.
+	// Any node in pocketNodes can be used to call GetLeaderElectionResult() function.
+	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderElectionResult(startingHeight, startingRound, startingStep))
 	leader := pocketNodes[leaderId]
 
 	// 1. NewRound
@@ -49,9 +51,9 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
-				Height: initialHeight,
-				Step:   initialStep,
-				Round:  uint8(initialRound),
+				Height: startingHeight,
+				Step:   startingStep,
+				Round:  uint8(startingRound),
 			},
 			nodeState)
 		require.Equal(t, false, nodeState.IsLeader)
@@ -70,9 +72,9 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
-				Height: 1,
-				Step:   uint8(consensus.Prepare),
-				Round:  0,
+				Height: startingHeight,
+				Step:   startingStep + 1,
+				Round:  uint8(startingRound),
 			},
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
@@ -98,9 +100,9 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
-				Height: 1,
-				Step:   uint8(consensus.PreCommit),
-				Round:  0,
+				Height: startingHeight,
+				Step:   startingStep + 2,
+				Round:  uint8(startingRound),
 			},
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
@@ -126,9 +128,9 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
-				Height: 1,
-				Step:   uint8(consensus.Commit),
-				Round:  0,
+				Height: startingHeight,
+				Step:   startingStep + 3,
+				Round:  uint8(startingRound),
 			},
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
@@ -156,9 +158,9 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		if pocketId == leaderId {
 			assertNodeConsensusView(t, pocketId,
 				typesCons.ConsensusNodeState{
-					Height: 2,
-					Step:   uint8(consensus.NewRound),
-					Round:  0,
+					Height: startingHeight + 1,
+					Step:   startingStep,
+					Round:  uint8(startingRound),
 				},
 				nodeState)
 			require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId, "Leader should be empty")

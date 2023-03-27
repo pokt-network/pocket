@@ -44,7 +44,7 @@ type PeerSyncMetadata interface {
 }
 ```
 ## State Sync - Peer Metadata Collection 
-Peer metadata can be collected through the `P2P` module during the `Churn Management Protocol`. It can also be abstracted to an `ask-response` cycle where the node continuously asks this meta-information of its active peers. 
+Peer metadata can be collected through the `P2P` module during the `Churn Management Protocol`. It can also be abstracted to an `ask-response` cycle where the node continuously asks this metadata information to its active peers. 
 
 Node gathers peer metadata from its peers in `StateSyncMetadataResponse` type, defined as the following:
 
