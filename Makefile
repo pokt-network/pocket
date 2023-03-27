@@ -1,11 +1,5 @@
 include build.mk
 
-# OLSH - Godoc stuff
-# Add k8s localnet to github PR
-
-# OLSH - Need to fix github wiki
-# OLSH - Need to fix github wiki
-
 # For simplicity's sake, we will use the same docker-compose file for all docker-compose commands.
 docker-compose := $(shell command -v docker-compose 2> /dev/null || echo "docker compose") \
 	-f build/deployments/docker-compose.yaml
