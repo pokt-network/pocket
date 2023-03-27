@@ -1,6 +1,6 @@
 # Modules <!-- omit in toc -->
 
-This document outlines how we structured the code splitting it into modules, what a module is and how to create one.
+This document outlines how we structured the code by splitting it into modules, what a module is and how to create one.
 
 ## Contents <!-- omit in toc -->
 
