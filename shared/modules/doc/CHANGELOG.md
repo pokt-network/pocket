@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.9] - 2023-03-27
+
+- Improved README.md
+- Improved GoDoc comments
+
 ## [0.0.0.8] - 2023-02-21
 
 - Rename ServiceNode Actor Type Name to Servicer
