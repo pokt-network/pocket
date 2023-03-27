@@ -39,7 +39,7 @@ A mock is a stand-in, a fake or simplified implementation of a module that is us
 
 ### **Base module**
 
-A base module is a module that implements a common interface exposing the most basic logic. They are meant to be embedded in the structs of the modules that implement the common interface when there's no special logic to be implemented and improve DRYness (Don't Repeat Yourself) and to reduce boilerplate code. You can find the base modules in the `shared/modules/base_modules` package.
+A base module is a module that implements a common interface, exposing the most basic logic. Base modules are meant to be **embedded** in module structs which implement this common interface **and** don't need to override the respective interface member(s). The intention being to improve DRYness (Don't Repeat Yourself) and to reduce boilerplate code. You can find the base modules in the `shared/modules/base_modules` package.
 
 ## Code Organization
 
