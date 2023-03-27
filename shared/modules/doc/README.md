@@ -12,11 +12,12 @@ This document outlines how we structured the code by splitting it into modules, 
 - [Code Organization](#code-organization)
 - [Modules in detail](#modules-in-detail)
 	- [Module creation](#module-creation)
-		- [Interacting \& Registering with the `bus`](#interacting--registering-with-the-bus)
-			- [Start the module](#start-the-module)
-			- [Add a logger to the module](#add-a-logger-to-the-module)
-		- [Get the module `bus`](#get-the-module-bus)
-		- [Stop the module](#stop-the-module)
+	- [Interacting \& Registering with the `bus`](#interacting--registering-with-the-bus)
+		- [Modules Registry](#modules-registry)
+	- [Start the module](#start-the-module)
+	- [Add a logger to the module](#add-a-logger-to-the-module)
+	- [Get the module `bus`](#get-the-module-bus)
+	- [Stop the module](#stop-the-module)
 
 ## Definitions
 
@@ -81,16 +82,43 @@ For an example of a module that uses a `ModuleOption`, you can search for `WithC
 Essentially the `ModuleOption` sets a custom RPC URL for the module at runtime.
 
 
-#### Interacting & Registering with the `bus`
+### Interacting & Registering with the `bus`
 
 The `bus` is the specific integration mechanism that enables the greater application.
 
 When a module is constructed via the `Create(bus modules.Bus, options ...modules.ModuleOption)` function, it is expected to internally call `bus.RegisterModule(module)`, which registers the module with the `bus` so its sibling modules can access it synchronously via a DI-like pattern.
 
-Probably worth mentioning that we implemented a `ModulesRegistry` module that takes care of the module registration and retrieval. This module is registered with the `bus` at the application level, it is accessible to all modules via the `bus` interface and it's also mockable as you would expect.
+#### Modules Registry
+
+We implemented a `ModulesRegistry` module [here](https://github.com/pokt-network/pocket/blob/19bf4d3f6507f5d406d9fafdb69b81359bccf110/runtime/modules_registry.go) that takes care of the module registration and retrieval.
+This module is registered with the `bus` at the application level, it is accessible to all modules via the `bus` interface and it's also mockable as you would expect.
+
+Modules register themselves with the `bus` by calling `bus.RegisterModule(module)`. This is done in the `Create` function of the module. (For example, in the [consensus module](https://github.com/pokt-network/pocket/blob/19bf4d3f6507f5d406d9fafdb69b81359bccf110/consensus/module.go#L146))
 
 
-##### Start the module
+What the `bus` does is setting its reference to the module instance and delegating the registration to the `ModulesRegistry`.
+
+```golang
+func (m *bus) RegisterModule(module modules.Module) {
+	module.SetBus(m)
+	m.modulesRegistry.RegisterModule(module)
+}
+```
+
+Under the hood, the module name is used to map to the instance of the module so that it's possible to retrieve a module by its name.
+
+This is quite **important** because it unlock a powerful concept **Dependency Injection**.
+
+Essentially this enables the developer to define different implementations of a module and to register the one that is needed at runtime. This is because we can only have one module registered with a unique name and also because, by convention, we keep module names defined as constants.
+This is useful not only for prototyping but also for different use cases such as the `p1` CLI and the `pocket` binary where different implementations of the same module are necessary due to the fact that the `p1` CLI doesn't have a persistence module but still needs to know what's going on in the network.
+
+The `peerstore_provider` ([here](https://github.com/pokt-network/pocket/tree/19bf4d3f6507f5d406d9fafdb69b81359bccf110/p2p/providers/peerstore_provider)) is a perfect example of this.
+
+We have a `persistence` and an `rpc` implementation of the same module and they are registered at runtime depending on the use case.
+
+Within the `P2P` module ([here](https://github.com/pokt-network/pocket/blob/19bf4d3f6507f5d406d9fafdb69b81359bccf110/p2p/module.go#L84-L88)), we check if we have a registration of the `peerstore_provider` module and if not we fallback to the default one (the `persistence` implementation).
+
+### Start the module
 
 Starting the module begins the service and enables operation.
 
@@ -104,7 +132,7 @@ if err != nil {
 }
 ```
 
-##### Add a logger to the module
+### Add a logger to the module
 
 <!-- DISCUSS: I believe we should change this convention, to me it's more semantic if logging is configured during construction/initialization and not during `Start` (which some modules might not even have if they don't implement `InterruptableModule`). I believe that a better approach is summarized here: https://github.com/pokt-network/pocket/blob/8bee148f3b0e768154be4bce02e94813c9382aac/state_machine/module.go#L29-L32 -->
 
@@ -117,7 +145,7 @@ func (m *newModule) Start() error {
 }
 ```
 
-#### Get the module `bus`
+### Get the module `bus`
 
 The bus may be accessed by the module object at anytime using the `getter`
 
@@ -130,7 +158,7 @@ bus.GetPersistenceModule().<FunctionName>
 ...
 ```
 
-#### Stop the module
+### Stop the module
 
 Stopping the module, ends the service and disables operation.
 
