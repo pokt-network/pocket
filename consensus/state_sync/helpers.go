@@ -6,21 +6,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// TODO (#352): Implement this function, currently a placeholder.
-// Helper function for broadcasting state sync messages to the all peers known to the node:
-//
-//		requests for metadata using the `periodicMetadataSynch()` function
-//	 	requests for blocks using the `StartSynching()` function
-func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, height uint64) error {
-	m.logger.Info().Msg("📣 Broadcasting state sync message... 📣")
-
-	// TODO (#352) update, this is a placeholder
-	_ = stateSyncMsg
-	_ = height
-
-	return nil
-}
-
 func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, peerId cryptoPocket.Address, height uint64) error {
 	anyMsg, err := anypb.New(stateSyncMsg)
 	if err != nil {

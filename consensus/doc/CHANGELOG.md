@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.39] - 2023-03-26
+## [0.0.0.39] - 2023-03-27
 
 - Add `fsm_handler.go` to handle FSM transition events in consensus module
 - Update State Machine mock in `utils_test.go`
