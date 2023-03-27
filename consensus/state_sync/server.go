@@ -27,11 +27,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 
 	m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Received StateSyncMetadataRequest %s", metadataReq)
 
-	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
-	// TODO update
-	lastPersistedBlockHeight := consensusMod.CurrentHeight() - 1
-
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(consensusMod.CurrentHeight() - 1))
 	if err != nil {
 		return nil
 	}
