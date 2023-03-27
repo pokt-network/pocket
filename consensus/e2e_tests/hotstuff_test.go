@@ -168,9 +168,9 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		}
 		assertNodeConsensusView(t, pocketId,
 			typesCons.ConsensusNodeState{
-				Height: 1,
-				Step:   uint8(consensus.Decide),
-				Round:  0,
+				Height: startingHeight,
+				Step:   startingStep + 4,
+				Round:  uint8(startingRound),
 			},
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
@@ -188,9 +188,9 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, pocketId,
 			typesCons.ConsensusNodeState{
-				Height: 2,
-				Step:   uint8(consensus.NewRound),
-				Round:  0,
+				Height: startingHeight + 1,
+				Step:   startingStep,
+				Round:  uint8(startingRound),
 			},
 			nodeState)
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId, "Leader should be empty")
@@ -223,7 +223,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	// Send get block request to the server node
 	P2PSend(t, serverNode, anyProto)
 
-	// Start waiting for the get block request on server node,
+	// Server node is waiting for the Get Block Request.
 	numExpectedMsgs := 1
 	errMsg := "StateSync Get Block Request Message"
 	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
