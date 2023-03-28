@@ -219,6 +219,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	// Configure & prepare test module
 	numValidators := len(networkSimulationConfig)
 	runtimeConfigs := createMockRuntimeMgrs(t, numValidators)
+	genesisMock := runtimeConfigs[0].GetGenesis()
 	busMocks := createMockBuses(t, runtimeConfigs)
 
 	valIds := make([]string, 0, numValidators)
@@ -247,7 +248,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		wg.Add(expectedReads)
 		wg.Add(expectedWrites)
 
-		persistenceMock := preparePersistenceMock(t, busMocks[i], runtimeConfigs[0].GetGenesis())
+		persistenceMock := preparePersistenceMock(t, busMocks[i], genesisMock)
 		consensusMock := prepareConsensusMock(t, busMocks[i])
 		telemetryMock := prepareTelemetryMock(t, busMocks[i], valId, &wg, expectedWrites)
 
