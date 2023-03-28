@@ -63,8 +63,7 @@ func InsertParams(params *genesis.Params, height int64) string {
 		pnt := utils.GovParamMetadataMap[k]
 		sb.WriteString(fmt.Sprintf("('%s', %d, '%s', ", k, height, pnt.PoktType))
 		pVal := val.Elem().FieldByName(pnt.PropertyName)
-		pType := pnt.PoktType
-		switch pType {
+		switch pnt.PoktType {
 		case ValTypeString:
 			switch vt := pVal.Interface().(type) {
 			case []byte:
@@ -78,7 +77,7 @@ func InsertParams(params *genesis.Params, height int64) string {
 		case ValTypeSmallInt, ValTypeBigInt:
 			fmt.Fprintf(&sb, "%d)", pVal.Interface())
 		default:
-			log.Fatalf("unhandled PropertyType: %s.", pType)
+			log.Fatalf("unhandled PropertyType: %s.", pnt.PoktType)
 		}
 
 		if i < l-1 {
