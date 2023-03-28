@@ -29,7 +29,6 @@ require (
 	github.com/korovkin/limiter v0.0.0-20230307205149-3d4b2b34c99d
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/libp2p/go-libp2p v0.25.1
-	github.com/libp2p/go-libp2p-pubsub v0.9.2
 	github.com/looplab/fsm v1.0.1
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/mapstructure v1.5.0
@@ -97,7 +96,6 @@ require (
 	github.com/google/pprof v0.0.0-20221203041831-ce31453925ec // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.1 // indirect
 	github.com/huin/goupnp v1.0.3 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/ipfs/go-cid v0.3.2 // indirect
