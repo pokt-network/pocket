@@ -58,12 +58,10 @@ func ParseConfig(cfgFile string) *Config {
 		} else {
 			// TODO: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
 			log.Fatalf("[ERROR] fatal error reading config file %s", err.Error())
-			// logger.Global.Fatal().Err(err).Msg("Fatal error reading config file")
 		}
 	} else {
 		// TODO: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
 		log.Default().Printf("Using config file: %s", viper.ConfigFileUsed())
-		// logger.Global.Debug().Msgf("Using config file: %s", viper.ConfigFileUsed())
 	}
 
 	decoderConfig := func(dc *mapstructure.DecoderConfig) {
