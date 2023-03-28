@@ -54,20 +54,17 @@ func ParseConfig(cfgFile string) *Config {
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok && cfgFile == "" {
-			// if file does not exist and there is no override, return default config
-			// DISCUSS: how should we handle this? Should we return an error? Should we create the default file?
 			log.Default().Printf("No config provided, using defaults")
-			return config
 		} else {
 			// TODO: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
 			log.Fatalf("[ERROR] fatal error reading config file %s", err.Error())
 			// logger.Global.Fatal().Err(err).Msg("Fatal error reading config file")
 		}
+	} else {
+		// TODO: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
+		log.Default().Printf("Using config file: %s", viper.ConfigFileUsed())
+		// logger.Global.Debug().Msgf("Using config file: %s", viper.ConfigFileUsed())
 	}
-
-	// TODO: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
-	log.Default().Printf("Using config file: %s", viper.ConfigFileUsed())
-	// logger.Global.Debug().Msgf("Using config file: %s", viper.ConfigFileUsed())
 
 	decoderConfig := func(dc *mapstructure.DecoderConfig) {
 		// This is to leverage the `json` struct tags without having to add `mapstructure` ones.
