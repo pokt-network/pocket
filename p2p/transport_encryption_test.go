@@ -28,29 +28,10 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 
 	privKey := cryptoPocket.GetPrivKeySeed(1)
 
-	runtimeMgrMock := mockModules.NewMockRuntimeMgr(ctrl)
-	busMock := createMockBus(t, runtimeMgrMock)
-
-	telemetryMock := mockModules.NewMockTelemetryModule(ctrl)
-	timeSeriesAgentMock := prepareNoopTimeSeriesAgentMock(t)
-	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-
-	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
-	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
-
-	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
-	telemetryMock.EXPECT().GetBus().Return(busMock).AnyTimes()
-	telemetryMock.EXPECT().SetBus(busMock).AnyTimes()
-	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
-
-	genesisStateMock := createMockGenesisState(keys[:1])
-	persistenceMock := preparePersistenceMock(t, busMock, genesisStateMock)
-	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
-
 	mockConsensusModule := mockModules.NewMockConsensusModule(ctrl)
 	mockConsensusModule.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
-	busMock.EXPECT().GetConsensusModule().Return(mockConsensusModule).AnyTimes()
+
+	runtimeMgrMock := mockModules.NewMockRuntimeMgr(ctrl)
 	runtimeMgrMock.EXPECT().GetConfig().Return(&configs.Config{
 		PrivateKey: privKey.String(),
 		P2P: &configs.P2PConfig{
@@ -60,7 +41,27 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 			ConnectionType: types.ConnectionType_TCPConnection,
 		},
 	}).AnyTimes()
+
+	timeSeriesAgentMock := prepareNoopTimeSeriesAgentMock(t)
+	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
+	telemetryMock := mockModules.NewMockTelemetryModule(ctrl)
+	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
+	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
+	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
+
+	busMock := createMockBus(t, runtimeMgrMock)
+	busMock.EXPECT().GetConsensusModule().Return(mockConsensusModule).AnyTimes()
 	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
+	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
+
+	genesisStateMock := createMockGenesisState(keys[:1])
+	persistenceMock := preparePersistenceMock(t, busMock, genesisStateMock)
+	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
+
+	telemetryMock.EXPECT().GetBus().Return(busMock).AnyTimes()
+	telemetryMock.EXPECT().SetBus(busMock).AnyTimes()
 
 	p2pMod, err := Create(busMock)
 	require.NoError(t, err)
