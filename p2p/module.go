@@ -143,8 +143,11 @@ func (m *p2pModule) Start() (err error) {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	if err = m.startHost(); err != nil {
-		return fmt.Errorf("starting libp2pHost: %w", err)
+	// Return early if host has already been started (e.g. via `WithHostOption`)
+	if m.host == nil {
+		if err = m.startHost(); err != nil {
+			return fmt.Errorf("starting libp2pHost: %w", err)
+		}
 	}
 
 	// Don't handle incoming streams in client debug mode.
@@ -160,7 +163,11 @@ func (m *p2pModule) Start() (err error) {
 }
 
 func (m *p2pModule) Stop() error {
-	return m.host.Close()
+	err := m.host.Close()
+
+	// Don't reuse closed host, `#Start()` will re-create.
+	m.host = nil
+	return err
 }
 
 func (m *p2pModule) Broadcast(msg *anypb.Any) error {
@@ -254,11 +261,9 @@ func (m *p2pModule) startNetwork() (err error) {
 	return err
 }
 
+// startHost creates a new libp2p host and assignes it to `m.host`, if one does
+// not already exist. Libp2p host starts listening upon instantiation.
 func (m *p2pModule) startHost() (err error) {
-	// Return early if host has already been started (e.g. via `WithHostOption`)
-	if m.host != nil {
-		return nil
-	}
 	opts := []libp2p.Option{
 		// Explicitly specify supported transport security options (noise, TLS)
 		// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.3#DefaultSecurity)
