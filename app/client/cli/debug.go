@@ -6,9 +6,6 @@ import (
 	"os"
 
 	"github.com/manifoldco/promptui"
-	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/types/known/anypb"
-
 	"github.com/pokt-network/pocket/libp2p"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
@@ -21,6 +18,8 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
+	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // TECHDEBT: Lowercase variables / constants that do not need to be exported.

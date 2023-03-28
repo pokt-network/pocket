@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.24] - 2023-03-27
+## [0.0.0.25] - 2023-03-28
 
-- Introduces vault keybase to allow for the use of a vault server to store the private keys
+- Introduces hashicorp vault keybase to allow for the use of a vault server to store keypairs
+
+## [0.0.0.24] - 2023-03-28
+
+- Automatic import reorder
 
 ## [0.0.0.23] - 2023-03-21
 
