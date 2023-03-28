@@ -100,13 +100,13 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 	for _, target := range n.getTargetsAtLevel(level) {
 		if shouldSendToTarget(target) {
 			if err = n.networkSendInternal(msgBz, target.address); err != nil {
-				n.logger.Error().Err(err).Msg("Error sending to peer during broadcast")
+				n.logger.Error().Err(err).Msg("sending to peer during broadcast")
 			}
 		}
 	}
 
 	if err = n.demote(msg); err != nil {
-		n.logger.Error().Err(err).Msg("Error demoting self during RainTree message propagation")
+		n.logger.Error().Err(err).Msg("demoting self during RainTree message propagation")
 	}
 
 	return nil
@@ -142,7 +142,9 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 // networkSendInternal sends `data` to the peer at pokt `address` if not self.
 func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.Address) error {
 	// NOOP: Trying to send a message to self
+	n.logger.Debug().Str("self", n.selfAddr.String()).Str("target", address.String()).Msg("HEER!!!!")
 	if n.selfAddr.Equals(address) {
+		n.logger.Debug().Str("pokt_addr", address.String()).Msg("attempted to send to self")
 		return nil
 	}
 
@@ -152,7 +154,7 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 	}
 
 	if err := utils.Libp2pSendToPeer(n.host, data, peer); err != nil {
-		logger.Global.Debug().Err(err).Msg("from libp2pSendInternal")
+		n.logger.Debug().Err(err).Msg("from libp2pSendInternal")
 		return err
 	}
 
