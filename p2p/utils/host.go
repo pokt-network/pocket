@@ -15,8 +15,7 @@ import (
 const (
 	week = time.Hour * 24 * 7
 	// TECHDEBT: consider more carefully and parameterize.
-	// TECHDEBT: unexport after consolidation of P2P modules
-	DefaultPeerTTL = 2 * week
+	defaultPeerTTL = 2 * week
 )
 
 // PopulateLibp2pHost iterates through peers in given `pstore`, converting peer

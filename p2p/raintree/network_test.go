@@ -2,6 +2,7 @@ package raintree
 
 import (
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
@@ -28,7 +29,7 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 		libp2pPeerInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
 		require.NoError(t, err)
 
-		host.Peerstore().AddAddrs(libp2pPeerInfo.ID, libp2pPeerInfo.Addrs, utils.DefaultPeerTTL)
+		host.Peerstore().AddAddrs(libp2pPeerInfo.ID, libp2pPeerInfo.Addrs, time.Hour)
 
 		libp2pPeerPubKey, err := utils.Libp2pPublicKeyFromPeer(peer)
 		require.NoError(t, err)
