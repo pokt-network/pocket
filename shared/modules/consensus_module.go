@@ -93,6 +93,7 @@ type ConsensusDebugModule interface {
 
 	SetUtilityUnitOfWork(UtilityUnitOfWork)
 
+	// SetAggregatedStateSyncMetadata is used to set peer's aggregated metadata in testing scenarios to simulate periodic metadata synchronization. It is not intended to be used outside of testing.
 	SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64, peerAddress string)
 	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
 
