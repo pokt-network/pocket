@@ -69,9 +69,11 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 
 	err = p2pMod.Start()
 	require.NoError(t, err)
-	defer func() {
-		_ = p2pMod.Stop()
-	}()
+
+	t.Cleanup(func() {
+		err = p2pMod.Stop()
+		require.NoError(t, err)
+	})
 
 	// Setup cleartext transport node
 	clearNodeMultiAddrStr := fmt.Sprintf("/ip4/127.0.0.1/tcp/%d", defaults.DefaultP2PPort+1)
@@ -80,9 +82,11 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 
 	clearNode, err := libp2p.New(libp2p.NoSecurity, libp2p.ListenAddrs(clearNodeAddr))
 	require.NoError(t, err)
-	defer func() {
-		_ = clearNode.Close()
-	}()
+
+	t.Cleanup(func() {
+		err := clearNode.Close()
+		require.NoError(t, err)
+	})
 
 	p2pModPeer := &typesP2P.NetworkPeer{
 		PublicKey:  privKey.PublicKey(),
