@@ -34,10 +34,6 @@ func (u *baseUtilityUnitOfWork) updateParam(paramName string, value any) typesUt
 	return typesUtil.ErrUnknownParam(paramName)
 }
 
-func (u *baseUtilityUnitOfWork) getParameter(paramName string) (any, error) {
-	return u.persistenceReadContext.GetParameter(paramName, u.height)
-}
-
 func (u *baseUtilityUnitOfWork) getAppMinimumStake() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.AppMinimumStakeParamName)
 }
@@ -324,10 +320,13 @@ func (u *baseUtilityUnitOfWork) getMessageChangeParameterSignerCandidates(msg *t
 	return [][]byte{owner}, nil
 }
 
+func (u *baseUtilityUnitOfWork) getParameter(paramName string) (any, error) {
+	return u.persistenceReadContext.GetParameter(paramName, u.height)
+}
+
 func (u *baseUtilityUnitOfWork) getBigIntParam(paramName string) (*big.Int, typesUtil.Error) {
 	value, err := u.getParameter(paramName)
 	if err != nil {
-		u.logger.Err(err)
 		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
 	val, ok := value.(string)
