@@ -78,7 +78,7 @@ func RemovePeerFromLibp2pHost(host libp2pHost.Host, peer typesP2P.Peer) error {
 // Libp2pSendToPeer sends data to the given pocket peer from the given libp2p host.
 func Libp2pSendToPeer(host libp2pHost.Host, data []byte, peer typesP2P.Peer) error {
 	// TECHDEBT(#595): add ctx to interface methods and propagate down.
-	ctx := context.Background()
+	ctx := context.TODO()
 
 	peerInfo, err := Libp2pAddrInfoFromPeer(peer)
 	if err != nil {
