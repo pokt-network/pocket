@@ -57,7 +57,7 @@ func (n *network) NetworkBroadcast(data []byte) error {
 	return nil
 }
 
-func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) (err error) {
+func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) error {
 	peer := n.pstore.GetPeer(address)
 	if peer == nil {
 		return fmt.Errorf("peer with address %s not in peerstore", address)
