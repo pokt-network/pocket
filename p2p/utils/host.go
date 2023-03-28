@@ -14,7 +14,7 @@ import (
 
 const (
 	week = time.Hour * 24 * 7
-	// TECHDEBT: consider more carefully and parameterize.
+	// TECHDEBT(#629): consider more carefully and parameterize.
 	defaultPeerTTL = 2 * week
 )
 

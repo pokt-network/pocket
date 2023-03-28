@@ -31,8 +31,8 @@ import (
 	"github.com/pokt-network/pocket/telemetry"
 )
 
-// TECHDEBT: configure timeouts. Consider security exposure vs. real-world conditions).
-// TECHDEBT: parameterize and expose via config.
+// TECHDEBT(#629): configure timeouts. Consider security exposure vs. real-world conditions.
+// TECHDEBT(#629): parameterize and expose via config.
 // readStreamTimeout is the duration to wait for a read operation on a
 // stream to complete, after which the stream is closed ("timed out").
 const readStreamTimeout = time.Second * 10
