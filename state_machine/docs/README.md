@@ -7,6 +7,7 @@
 This document outlines the purpose of this module, its components and how they all interact with the other modules.
 
 ## Contents <!-- omit in toc -->
+
 - [Overview](#overview)
 - [Code Structure](#code-structure)
 - [High Level Architecture](#high-level-architecture)
@@ -63,19 +64,18 @@ These are the main building blocks:
 
 ### Consensus
 
-- **P2P_Bootstrapped**: The Consensus module handles `P2P_Bootstrapped` -> triggers a `Consensus_IsUnsynched` event -> transitions to `Consensus_Unsynched`.
-- **Consensus_Unsynched**: Node is out of sync, the Consensus module sends `Consensus_IsSyncing` event -> transitions to `Consensus_SyncMode` to start syncing with the rest of the network.
-- **Consensus_SyncMode**: The Consensus module runs `StartSyncing()` and requests blocks one by one from peers in its address book. 
-- **Node finishes syncing**: Upon completing syncing: 
-  - if the node is a validator, the Consensus module sends `Consensus_IsSynchedValidator` event -> transitions to `Consensus_Synched`. 
+- **P2P_Bootstrapped**: The Consensus module handles `P2P_Bootstrapped` -> triggers a `Consensus_IsUnsynced` event -> transitions to `Consensus_Unsynced`.
+- **Consensus_Unsynced**: Node is out of sync, the Consensus module sends `Consensus_IsSyncing` event -> transitions to `Consensus_SyncMode` to start syncing with the rest of the network.
+- **Consensus_SyncMode**: The Consensus module runs `StartSyncing()` and requests blocks one by one from peers in its address book.
+- **Node finishes syncing**: Upon completing syncing:
+  - if the node is a validator, the Consensus module sends `Consensus_IsSynchedValidator` event -> transitions to `Consensus_Synched`.
   - if the node is not a validator, the Consensus module sends `Consensus_IsSynchedNonValidator` event -> transitions to `Consensus_Pacemaker`.
-- **Consensus_Pacemaker**: Node participates in the block generation process. If node receives a block proposal with height higher than its current height, the Consensus Module sends `Consensus_IsUnsynched` event -> transitions to `Consensus_Unsynched`.
-- **Consensus_Synched**:  Currently, the Consensus module never sends `Consensus_IsSynchedValidator` event, and non-validator node always stays in `Consensus_SyncMode`.
- 
+- **Consensus_Pacemaker**: Node participates in the block generation process. If node receives a block proposal with height higher than its current height, the Consensus Module sends `Consensus_IsUnsynced` event -> transitions to `Consensus_Unsynced`.
+- **Consensus_Synched**: Currently, the Consensus module never sends `Consensus_IsSynchedValidator` event, and non-validator node always stays in `Consensus_SyncMode`.
 
 A diagram of the current state machine definition can be found [here](state-machine.diagram.md).
 
-*NOTE:* If you make changes to the state machine by changing states, events, or state transitions, you can re-generate the state machine diagram via:
+_NOTE:_ If you make changes to the state machine by changing states, events, or state transitions, you can re-generate the state machine diagram via:
 
 ```bash
 make generate_node_state_machine_diagram

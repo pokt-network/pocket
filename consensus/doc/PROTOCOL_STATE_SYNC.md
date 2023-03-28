@@ -43,16 +43,18 @@ type PeerSyncMetadata interface {
   // ...
 }
 ```
-## State Sync - Peer Metadata Collection 
-Peer metadata can be collected through the `P2P` module during the `Churn Management Protocol`. It can also be abstracted to an `ask-response` cycle where the node continuously asks this metadata information to its active peers. 
+
+## State Sync - Peer Metadata Collection
+
+Peer metadata can be collected through the `P2P` module during the `Churn Management Protocol`. It can also be abstracted to an `ask-response` cycle where the node continuously asks this metadata information to its active peers.
 
 Node gathers peer metadata from its peers in `StateSyncMetadataResponse` type, defined as the following:
 
 ```golang
 type StateSyncMetadataResponse struct {
     PeerAddress string
-	MinHeight   uint64 
-	MaxHeight   uint64 
+	MinHeight   uint64
+	MaxHeight   uint64
 }
 ```
 
@@ -77,11 +79,10 @@ The aggregation and consumption of this peer-meta information enables the node t
 
 This gives a view into the data availability layer, with details of what data can be consumed from peer via:
 
-
 ```golang
 type StateSyncModule interface {
   // ...
-  GetAggregatedStateSyncMetadata() *StateSyncMetadataResponse // Aggregated metadata received from peers. 
+  GetAggregatedStateSyncMetadata() *StateSyncMetadataResponse // Aggregated metadata received from peers.
   IsSynched() (bool, error)
   StartSyncing() error
   // ...
@@ -90,19 +91,19 @@ type StateSyncModule interface {
 
 Using the aggregated `StateSyncMetadataResponse` returned by `GetAggregatedStateSyncMetadata()`, a node is able to compare its local state against that of the Global Network that is visible to it (i.e. the world state).
 
-
 ### State Sync Lifecycle
 
-The Node bootstraps and collects state sync metadata from the rest of the network periodically, via a background process. This enables nodes to have an up-to-date view of the global state. Through periodic sync, the node collects received `StateSyncMetadataResponse`s in a buffer. 
+The Node bootstraps and collects state sync metadata from the rest of the network periodically, via a background process. This enables nodes to have an up-to-date view of the global state. Through periodic sync, the node collects received `StateSyncMetadataResponse`s in a buffer.
 
 For every new block and block proposal `Validator`s receive:
+
 - node checks block's and block proposal's validity and applies the block to its persistence if its valid.
-- if block is  higher than node's current height, node checks if it is out of synch via `IsSynched()` function that compares node's local state and the global state by aggregating the collected metada responses.
+- if block is higher than node's current height, node checks if it is out of synch via `IsSynched()` function that compares node's local state and the global state by aggregating the collected metada responses.
 
 According to the result of the `IsSynched()` function:
-- If the node is out of sync, it runs `StartSyncing()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
-- If the node is in synch with its peers it rejects the block and/or block proposal. 
 
+- If the node is out of sync, it runs `StartSyncing()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
+- If the node is in synch with its peers it rejects the block and/or block proposal.
 
 ```mermaid
 flowchart TD
@@ -121,7 +122,7 @@ flowchart TD
 
     %% syncing
     E --> |Request Blocks| D[Peers]
-    D[Peers] --> |Block| A[Node] 
+    D[Peers] --> |Block| A[Node]
 
 ```
 
@@ -131,9 +132,9 @@ State sync can be viewed as a state machine that transverses various modes the n
 
 1. Unsyched Mode
 2. Sync Mode
-2. Synched Mode
-3. Pacemaker Mode
-4. Server Mode
+3. Synched Mode
+4. Pacemaker Mode
+5. Server Mode
 
 The functionality of the node depends on the mode it is operating it. Note that `Server Mode` is not mutually exclusive to the others.
 
@@ -142,12 +143,11 @@ For illustrative purposes below assume:
 - `localSyncState` is an object instance complying with the `PeerSyncMetadata` interface for the local node
 - `globalSyncMeta` is an object instance of `StateSyncMetadataResponse` complying with the `StateSyncModule` interface for the global network, which is returned by the `GetAggregatedStateSyncMetadata()` function.
 
+### Unsynced Mode
 
-### Unsynched Mode
+The Node is in `Unsynced` mode if `localSyncState.MaxHeight < GlobalSyncMeta.Height`.
 
-The Node is in `Unsynched` mode if `localSyncState.MaxHeight < GlobalSyncMeta.Height`. 
-
-In `Unsynched` Mode, node transitions to `Sync Mode` by sending `Consensus_IsSyncing` state transition event, to start catching up with the network.
+In `Unsynced` Mode, node transitions to `Sync Mode` by sending `Consensus_IsSyncing` state transition event, to start catching up with the network.
 
 ### Sync Mode
 
@@ -173,7 +173,6 @@ The Node can serve data to other nodes, upon request, if `ServerMode` is enabled
 
 ### Operation Modes Lifecycle
 
-
 ```mermaid
 flowchart TD
     A[StateSync] --> B{Caught up?}
@@ -186,7 +185,7 @@ flowchart TD
 
     %% Is caught up?
     B --> |Yes| C{Is Validator?}
-    B --> |No| E[UnsynchedMode]
+    B --> |No| E[UnsyncedMode]
     E --> |Send | D[SyncMode]
 
     %% Syncing

@@ -42,8 +42,8 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 	case coreTypes.StateMachineState_P2P_Bootstrapped:
 		return m.HandleBootstrapped(msg)
 
-	case coreTypes.StateMachineState_Consensus_Unsynched:
-		return m.HandleUnsynched(msg)
+	case coreTypes.StateMachineState_Consensus_Unsynced:
+		return m.HandleUnsynced(msg)
 
 	case coreTypes.StateMachineState_Consensus_SyncMode:
 		return m.HandleSyncMode(msg)
@@ -67,14 +67,14 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 // This is a transition mode from node bootstrapping to a node being out-of-sync.
 func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Node is in bootstrapped state, so it is out of sync, and transitions to unsynched mode")
-	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
+	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
 }
 
-// HandleUnsynched handles FSM event Consensus_IsUnsynched, and Unsynched is the destination state.
-// In Unsynched mode node (validator or non-validator) is out of sync with the rest of the network.
+// HandleUnsynced handles FSM event Consensus_IsUnsynced, and Unsynced is the destination state.
+// In Unsynced mode node (validator or non-validator) is out of sync with the rest of the network.
 // This mode is a transition mode from the node being up-to-date (i.e. Pacemaker mode, Synched mode) with the latest network height to being out-of-sync.
 // As soon as node transitions to this mode, it will transition to the sync mode.
-func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionEvent) error {
+func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Node is in Unsyched state, as node is out of sync sending syncmode event to start syncing")
 
 	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)

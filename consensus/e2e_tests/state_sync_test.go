@@ -179,7 +179,7 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
+func TestStateSync_UnsyncedPeerSynchs_Success(t *testing.T) {
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
@@ -303,15 +303,15 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 
 // TODO (#352) Implement these tests
 
-func TestStateSync_UnsynchedPeerSynchsABlock_Success(t *testing.T) {
+func TestStateSync_UnsyncedPeerSynchsABlock_Success(t *testing.T) {
 	t.Skip()
 }
 
-func TestStateSync_UnsynchedPeerSynchsMultipleBlocksInOrder_Success(t *testing.T) {
+func TestStateSync_UnsyncedPeerSynchsMultipleBlocksInOrder_Success(t *testing.T) {
 	t.Skip()
 }
 
-func TestStateSync_UnsynchedPeerSynchsMultipleUnorderedBlocks_Success(t *testing.T) {
+func TestStateSync_UnsyncedPeerSynchsMultipleUnorderedBlocks_Success(t *testing.T) {
 	t.Skip()
 }
 
@@ -319,10 +319,10 @@ func TestStateSync_TemporarilyOfflineValidatorCatchesUp(t *testing.T) {
 	t.Skip()
 }
 
-func TestStateSync_4of10UnsynchedPeersCatchUp(t *testing.T) {
+func TestStateSync_4of10UnsyncedPeersCatchUp(t *testing.T) {
 	t.Skip()
 }
 
-func TestStateSync_9of10UnsynchedPeersCatchUp(t *testing.T) {
+func TestStateSync_9of10UnsyncedPeersCatchUp(t *testing.T) {
 	t.Skip()
 }
