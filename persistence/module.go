@@ -44,7 +44,6 @@ type persistenceModule struct {
 	stateTrees *stateTrees
 
 	// Only one write context is allowed at a time
-	//
 	writeContext *PostgresContext
 
 	// A pool of connections to the postgres database

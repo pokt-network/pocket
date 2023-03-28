@@ -77,7 +77,9 @@ func (m *consensusModule) refreshUtilityUnitOfWork() error {
 	if utilityUnitOfWork != nil {
 		// TODO: This should, ideally, never be called
 		m.logger.Warn().Bool("TODO", true).Msg(typesCons.NilUtilityUOWWarning)
-		utilityUnitOfWork.Release()
+		if err := utilityUnitOfWork.Release(); err != nil {
+			return err
+		}
 		m.utilityUnitOfWork = nil
 	}
 

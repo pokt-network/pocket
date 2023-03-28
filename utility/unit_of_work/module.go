@@ -204,11 +204,16 @@ func (uow *baseUtilityUnitOfWork) Commit(quorumCert []byte) error {
 // TODO(@deblasis) - change tracking reset here
 func (uow *baseUtilityUnitOfWork) Release() error {
 	rwCtx := uow.persistenceRWContext
-	if rwCtx == nil {
-		return nil
+	if rwCtx != nil {
+		uow.persistenceRWContext = nil
+		rwCtx.Release()
 	}
-	uow.persistenceRWContext = nil
-	rwCtx.Release()
+
+	readCtx := uow.persistenceReadContext
+	if rwCtx != nil {
+		uow.persistenceReadContext = nil
+		readCtx.Release()
+	}
 
 	return nil
 }

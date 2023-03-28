@@ -28,7 +28,6 @@ const (
 )
 
 var (
-	// testUtilityMod modules.UtilityModule
 	// TODO(#261): Utility module tests should have no dependencies on the persistence module (which instantiates a postgres container)
 	testPersistenceMod modules.PersistenceModule
 )
@@ -46,7 +45,6 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Error creating bus: %s", err)
 	}
 
-	// testUtilityMod = newTestUtilityModule(bus)
 	testPersistenceMod = newTestPersistenceModule(bus)
 
 	exitCode := m.Run()
@@ -69,7 +67,7 @@ func newTestingUtilityUnitOfWork(t *testing.T, height int64, options ...func(*ba
 			Message: nil,
 		})
 		require.NoError(t, err)
-		// testPersistenceMod.GetBus().GetUtilityModule().GetMempool().Clear() // testUtilityMod.GetMempool().Clear()
+		// TODO: May need to run `bus.GetUtilityModule().GetMempool().Clear()` here
 	})
 
 	uow := &baseUtilityUnitOfWork{
@@ -88,14 +86,6 @@ func newTestingUtilityUnitOfWork(t *testing.T, height int64, options ...func(*ba
 
 	return uow
 }
-
-// func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
-// 	utilityMod, err := utility.Create(bus)
-// 	if err != nil {
-// 		log.Fatalf("Error creating persistence module: %s", err)
-// 	}
-// 	return utilityMod.(modules.UtilityModule)
-// }
 
 func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
 	persistenceMod, err := persistence.Create(bus)

@@ -174,7 +174,6 @@ func (m *pacemaker) RestartTimer() {
 	m.roundCancelFunc = cancel
 	// NOTE: Not deferring a cancel call because this function is asynchronous.
 	go func() {
-		// m.logger.Debug().Fields(m.sharedLoggingFields()).Msgf("⏲️ Restarting timer ⏲️")
 		select {
 		case <-ctx.Done():
 			if ctx.Err() == context.DeadlineExceeded {
@@ -246,7 +245,6 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	consensusMod.ResetRound(false)
 	if err := consensusMod.ReleaseUtilityUnitOfWork(); err != nil {
 		m.logger.Error().Err(err).Msg("Failed to release utility unit of work.")
-		// return
 	}
 	consensusMod.SetStep(uint8(newRound))
 
