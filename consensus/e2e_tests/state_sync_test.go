@@ -198,16 +198,16 @@ func TestStateSync_UnsyncedPeerSynchs_Success(t *testing.T) {
 	testRound := uint64(0)
 	testStep := uint8(consensus.NewRound)
 
-	// Prepare unsynched node info
-	unsynchedNode := pocketNodes[2]
-	unsynchedNodeId := typesCons.NodeId(2)
-	unsynchedNodeHeight := uint64(2)
+	// Prepare unsynced node info
+	unsyncedNode := pocketNodes[2]
+	unsyncedNodeId := typesCons.NodeId(2)
+	unsyncedNodeHeight := uint64(2)
 
-	// Set the unsynched node to height (2)
+	// Set the unsynced node to height (2)
 	// Set rest of the nodes to height (3)
 	for id, pocketNode := range pocketNodes {
-		if id == unsynchedNodeId {
-			pocketNode.GetBus().GetConsensusModule().SetHeight(unsynchedNodeHeight)
+		if id == unsyncedNodeId {
+			pocketNode.GetBus().GetConsensusModule().SetHeight(unsyncedNodeHeight)
 		} else {
 			pocketNode.GetBus().GetConsensusModule().SetHeight(testHeight)
 		}
@@ -247,16 +247,16 @@ func TestStateSync_UnsyncedPeerSynchs_Success(t *testing.T) {
 
 	leader.GetBus().GetConsensusModule().SetBlock(block)
 
-	// Assert that unsynched node has a different view of the network than the rest of the nodes
+	// Assert that unsynced node has a different view of the network than the rest of the nodes
 	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 500, true)
 	require.NoError(t, err)
 
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		if nodeId == unsynchedNodeId {
+		if nodeId == unsyncedNodeId {
 			assertNodeConsensusView(t, nodeId,
 				typesCons.ConsensusNodeState{
-					Height: unsynchedNodeHeight,
+					Height: unsyncedNodeHeight,
 					Step:   testStep,
 					Round:  uint8(currentRound),
 				},
@@ -274,7 +274,7 @@ func TestStateSync_UnsyncedPeerSynchs_Success(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
-	unsynchedNode.GetBus().GetConsensusModule().SetAggregatedStateSyncMetadata(uint64(1), testHeight, string(leaderPK.Address()))
+	unsyncedNode.GetBus().GetConsensusModule().SetAggregatedStateSyncMetadata(uint64(1), testHeight, string(leaderPK.Address()))
 
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)

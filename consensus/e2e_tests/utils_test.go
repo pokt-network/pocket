@@ -541,7 +541,7 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 	stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
 		switch coreTypes.StateMachineEvent(event) {
 		case coreTypes.StateMachineEvent_Consensus_IsUnsynced:
-			t.Logf("Mocked node is unsynched")
+			t.Logf("Mocked node is unsynced")
 			return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
 		case coreTypes.StateMachineEvent_Consensus_IsSyncing:
 			t.Logf("Mocked node is syncing")
