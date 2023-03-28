@@ -4,13 +4,13 @@ package build
 
 import _ "embed"
 
-// PrivateKeysFile is the pre-generated manifest file for LocalNet debugging
+// DebugKeybaseBackup is a backup of the pre-loaded debug keybase sourced from the manifest file for LocalNet debugging
 //
-//go:embed localnet/manifests/private-keys.yaml
-var PrivateKeysFile []byte
+//go:embed debug_keybase/debug_keybase.bak
+var DebugKeybaseBackup []byte
 
 func init() {
-	if len(PrivateKeysFile) == 0 {
-		panic("PrivateKeysFile is empty")
+	if len(DebugKeybaseBackup) == 0 {
+		panic("DebugKeybaseBackup is empty")
 	}
 }

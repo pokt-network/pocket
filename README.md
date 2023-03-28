@@ -44,7 +44,7 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 - [Persistence Architecture](persistence/docs/README.md)
 - [P2P Architecture](p2p/README.md)
 - [APP Architecture](app/client/doc/README.md)
-- [RPC Architecture](app/pocket/rpc/doc/README.md)
+- [RPC Architecture](rpc/doc/README.md)
 - [Node binary Architecture](app/pocket/doc/README.md)
 
 ### Changelogs
@@ -55,7 +55,7 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 - [Persistence Changelog](persistence/docs/CHANGELOG.md)
 - [P2P Changelog](p2p/CHANGELOG.md)
 - [APP Changelog](app/client/doc/CHANGELOG.md)
-- [RPC Changelog](app/pocket/rpc/doc/CHANGELOG.md)
+- [RPC Changelog](rpc/doc/CHANGELOG.md)
 - [Node binary Changelog](app/pocket/doc/CHANGELOG.md)
 
 - _Coming Soon: Telemetry Changelog_
