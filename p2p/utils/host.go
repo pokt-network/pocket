@@ -23,37 +23,60 @@ const (
 // info for use with libp2p and adding it to the underlying libp2p host's peerstore.
 // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.2/core/host#Host)
 // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.2/core/peerstore#Peerstore)
-func PopulateLibp2pHost(host libp2pHost.Host, pstore typesP2P.Peerstore) error {
+func PopulateLibp2pHost(host libp2pHost.Host, pstore typesP2P.Peerstore) (err error) {
 	for _, peer := range pstore.GetPeerList() {
-		pubKey, err := Libp2pPublicKeyFromPeer(peer)
-		if err != nil {
-			return fmt.Errorf(
-				"converting peer public key, pokt address: %s: %w",
-				peer.GetAddress(),
-				err,
-			)
+		if addErr := AddPeerToLibp2pHost(host, peer); addErr != nil {
+			err = multierr.Append(err, addErr)
 		}
-		libp2pPeer, err := Libp2pAddrInfoFromPeer(peer)
-		if err != nil {
-			return fmt.Errorf(
-				"converting peer info, pokt address: %s: %w",
-				peer.GetAddress(),
-				err,
-			)
-		}
+	}
+	return err
+}
 
-		host.Peerstore().AddAddrs(libp2pPeer.ID, libp2pPeer.Addrs, DefaultPeerTTL)
-		if err := host.Peerstore().AddPubKey(libp2pPeer.ID, pubKey); err != nil {
-			return fmt.Errorf(
-				"adding peer public key, pokt address: %s: %w",
-				peer.GetAddress(),
-				err,
-			)
-		}
+// AddPeerToLibp2pHost covnerts the given pocket peer for use with libp2p and adds
+// it to the given libp2p host's underlying peerstore.
+func AddPeerToLibp2pHost(host libp2pHost.Host, peer typesP2P.Peer) error {
+	pubKey, err := Libp2pPublicKeyFromPeer(peer)
+	if err != nil {
+		return fmt.Errorf(
+			"converting peer public key, pokt address: %s: %w",
+			peer.GetAddress(),
+			err,
+		)
+	}
+
+	libp2pPeer, err := Libp2pAddrInfoFromPeer(peer)
+	if err != nil {
+		return fmt.Errorf(
+			"converting peer info, pokt address: %s: %w",
+			peer.GetAddress(),
+			err,
+		)
+	}
+
+	host.Peerstore().AddAddrs(libp2pPeer.ID, libp2pPeer.Addrs, defaultPeerTTL)
+	if err := host.Peerstore().AddPubKey(libp2pPeer.ID, pubKey); err != nil {
+		return fmt.Errorf(
+			"adding peer public key, pokt address: %s: %w",
+			peer.GetAddress(),
+			err,
+		)
 	}
 	return nil
 }
 
+// RemovePeerFromLibp2pHost removes the given peer's libp2p public keys and
+// protocols from the libp2p host's underlying peerstore.
+func RemovePeerFromLibp2pHost(host libp2pHost.Host, peer typesP2P.Peer) error {
+	peerInfo, err := Libp2pAddrInfoFromPeer(peer)
+	if err != nil {
+		return err
+	}
+
+	host.Peerstore().RemovePeer(peerInfo.ID)
+	return host.Peerstore().RemoveProtocols(peerInfo.ID)
+}
+
+// Libp2pSendToPeer sends data to the given pocket peer from the given libp2p host.
 func Libp2pSendToPeer(host libp2pHost.Host, data []byte, peer typesP2P.Peer) error {
 	// TECHDEBT(#595): add ctx to interface methods and propagate down.
 	ctx := context.Background()
