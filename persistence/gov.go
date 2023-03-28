@@ -20,7 +20,7 @@ func (p *PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	return err
 }
 
-// Match paramName against the ParameterNameTypeMap struct and call the proper
+// GetParameter matches paramName against the GovParamMetadataMap mapping and calls the proper
 // getter function getParamOrFlag[int | string | byte] and return its values
 func (p *PostgresContext) GetParameter(paramName string, height int64) (v any, err error) {
 	paramType := utils.GovParamMetadataMap[paramName].GoType
