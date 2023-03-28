@@ -1,7 +1,9 @@
 package raintree
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
@@ -10,9 +12,13 @@ import (
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
+
+// TECHDEBT(#609): move & de-dup.
+var testLocalServiceURL = fmt.Sprintf("127.0.0.1:%d", defaults.DefaultP2PPort)
 
 func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -28,7 +34,7 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 		libp2pPeerInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
 		require.NoError(t, err)
 
-		host.Peerstore().AddAddrs(libp2pPeerInfo.ID, libp2pPeerInfo.Addrs, utils.DefaultPeerTTL)
+		host.Peerstore().AddAddrs(libp2pPeerInfo.ID, libp2pPeerInfo.Addrs, time.Hour)
 
 		libp2pPeerPubKey, err := utils.Libp2pPublicKeyFromPeer(peer)
 		require.NoError(t, err)
@@ -51,9 +57,13 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 
 	rainTreeNet := network.(*rainTreeNetwork)
 
-	peerAddr, err := cryptoPocket.GenerateAddress()
+	privKey, err := cryptoPocket.GeneratePrivateKey()
 	require.NoError(t, err)
-	peerToAdd := &typesP2P.NetworkPeer{Address: peerAddr}
+	peerToAdd := &typesP2P.NetworkPeer{
+		PublicKey:  privKey.PublicKey(),
+		Address:    privKey.Address(),
+		ServiceURL: testLocalServiceURL,
+	}
 
 	// Add peerToAdd.
 	err = rainTreeNet.AddPeer(peerToAdd)
@@ -67,11 +77,14 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	require.Equal(t, expectedPStoreSize, len(peerAddrs))
 	require.Equal(t, expectedPStoreSize, len(peers))
 
-	require.ElementsMatch(t, []string{selfAddr.String(), peerAddr.String()}, peerAddrs, "addresses do not match")
+	libp2pPStore := host.Peerstore()
+	require.Len(t, libp2pPStore.Peers(), expectedPStoreSize)
+
+	require.ElementsMatch(t, []string{selfAddr.String(), peerToAdd.GetAddress().String()}, peerAddrs, "addresses do not match")
 	require.ElementsMatch(t, []*typesP2P.NetworkPeer{selfPeer, peerToAdd}, peers, "peers do not match")
 
 	require.Equal(t, selfPeer, network.GetPeerstore().GetPeer(selfAddr), "Peerstore does not contain self")
-	require.Equal(t, peerToAdd, network.GetPeerstore().GetPeer(peerAddr), "Peerstore does not contain added peer")
+	require.Equal(t, peerToAdd, network.GetPeerstore().GetPeer(peerToAdd.GetAddress()), "Peerstore does not contain added peer")
 }
 
 func TestRainTreeNetwork_RemovePeer(t *testing.T) {
@@ -104,6 +117,9 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	require.Equal(t, expectedPStoreSize, pstore.Size())
 	require.Equal(t, expectedPStoreSize, len(peerAddrs))
 	require.Equal(t, expectedPStoreSize, len(peers))
+
+	libp2pPStore := host.Peerstore()
+	require.Len(t, libp2pPStore.Peers(), expectedPStoreSize)
 
 	var peerToRemove typesP2P.Peer
 	// Ensure we don't remove selfPeer. `Peerstore` interface isn't aware
@@ -156,7 +172,7 @@ func newTestPeer(t *testing.T) (*typesP2P.NetworkPeer, libp2pHost.Host) {
 	selfPeer := &typesP2P.NetworkPeer{
 		PublicKey:  selfPrivKey.PublicKey(),
 		Address:    selfAddr,
-		ServiceURL: "10.0.0.1:42069",
+		ServiceURL: testLocalServiceURL,
 	}
 	return selfPeer, newLibp2pMockNetHost(t, selfPrivKey, selfPeer)
 }

@@ -1,16 +1,16 @@
 package p2p
 
 import (
-	"context"
+	"errors"
 	"fmt"
 	"io"
 	"time"
 
 	"github.com/libp2p/go-libp2p"
-	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
+	"go.uber.org/multierr"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -33,12 +33,12 @@ import (
 	"github.com/pokt-network/pocket/telemetry"
 )
 
-const readStreamTimeoutDuration = time.Second * 10
-
-// TECHDEBT: configure timeouts. Consider security exposure vs. real-world conditions).
-// TECHDEBT: parameterize and expose via config.
+// TECHDEBT(#629): configure timeouts. Consider security exposure vs. real-world conditions.
+// TECHDEBT(#629): parameterize and expose via config.
 // readStreamTimeout is the duration to wait for a read operation on a
 // stream to complete, after which the stream is closed ("timed out").
+const readStreamTimeout = time.Second * 10
+
 var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
@@ -56,16 +56,8 @@ type p2pModule struct {
 	// & connection manager. `libp2p.New` configures and starts listening
 	// according to options.
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
-	host libp2pHost.Host
-	// pubsub is used for broadcast communication
-	// (i.e. multiple, unidentified receivers)
-	pubsub *pubsub.PubSub
-	// topic similar to pubsub but received messages are filtered by a "topic" string.
-	// Published messages are also given the respective topic before broadcast.
-	topic *pubsub.Topic
-	// subscription provides an interface to continuously read messages from.
-	subscription *pubsub.Subscription
-	network      typesP2P.Network
+	host    libp2pHost.Host
+	network typesP2P.Network
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -93,11 +85,6 @@ func (m *p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 
 	// MUST call before referencing m.bus to ensure != nil.
 	bus.RegisterModule(m)
-	m.setupDependencies()
-
-	for _, option := range options {
-		option(m)
-	}
 
 	if err := m.configureBootstrapNodes(); err != nil {
 		return nil, err
@@ -116,6 +103,14 @@ func (m *p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 		return nil, fmt.Errorf("parsing private key as libp2p key: %w", err)
 	}
 	m.identity = libp2p.Identity(libp2pPrivKey)
+
+	for _, option := range options {
+		option(m)
+	}
+
+	if err := m.setupDependencies(); err != nil {
+		return nil, err
+	}
 
 	switch m.cfg.ConnectionType {
 	case types.ConnectionType_TCPConnection:
@@ -142,9 +137,6 @@ func (m *p2pModule) GetModuleName() string {
 }
 
 func (m *p2pModule) Start() (err error) {
-	// TECHDEBT(#595): receive context in interface methods.
-	ctx := context.Background()
-
 	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
@@ -153,43 +145,16 @@ func (m *p2pModule) Start() (err error) {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	if err = m.startHost(); err != nil {
-		return fmt.Errorf("starting libp2pHost: %w", err)
+	// Return early if host has already been started (e.g. via `WithHostOption`)
+	if m.host == nil {
+		if err = m.startHost(); err != nil {
+			return fmt.Errorf("starting libp2pHost: %w", err)
+		}
 	}
 
-	listenAddrLogEvent := m.logger.Info()
-	for i, addr := range libp2pHost.InfoFromHost(m.host).Addrs {
-		listenAddrLogEvent.Str(fmt.Sprintf("listen_addr_%d", i), addr.String())
-	}
-	listenAddrLogEvent.Msg("Listening for incoming connections...")
-
-	// TECHDEBT: use RandomSub or GossipSub once we're on more stable ground.
-	// IMPROVE: consider supporting multiple router types via config.
-	m.pubsub, err = pubsub.NewFloodSub(ctx, m.host)
-	if err != nil {
-		return fmt.Errorf("unable to create pubsub: %w", err)
-	}
-
-	// Topic is used to `#Publish` messages.
-	m.topic, err = m.pubsub.Join(protocol.DefaultTopicStr)
-	if err != nil {
-		return fmt.Errorf("unable to join pubsub topic: %w", err)
-	}
-
-	// Subscription is notified when a new message is received on the topic.
-	m.subscription, err = m.topic.Subscribe()
-	if err != nil {
-		return fmt.Errorf("subscribing to pubsub topic: %w", err)
-	}
-
-	if err := m.startNetwork(); err != nil {
-		return fmt.Errorf("creating network: %w", err)
-	}
-
-	// Don't handle streams or read from the subscription in client debug mode.
+	// Don't handle incoming streams in client debug mode.
 	if !m.isClientDebugMode() {
 		m.host.SetStreamHandler(protocol.PoktProtocolID, m.handleStream)
-		go m.readFromSubscription(ctx)
 	}
 
 	m.GetBus().
@@ -200,7 +165,11 @@ func (m *p2pModule) Start() (err error) {
 }
 
 func (m *p2pModule) Stop() error {
-	return m.host.Close()
+	err := m.host.Close()
+
+	// Don't reuse closed host, `#Start()` will re-create.
+	m.host = nil
+	return err
 }
 
 func (m *p2pModule) Broadcast(msg *anypb.Any) error {
@@ -235,47 +204,70 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }
 
-func (m *p2pModule) setupDependencies() {
-	m.setupCurrentHeightProvider()
-	m.setupPeerstoreProvider()
+// setupDependencies sets up the module's current height and peerstore
+// providers, and the network.
+func (m *p2pModule) setupDependencies() error {
+	if err := m.setupCurrentHeightProvider(); err != nil {
+		return err
+	}
+
+	if err := m.setupPeerstoreProvider(); err != nil {
+		return err
+	}
+
+	if err := m.setupNetwork(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // setupPeerstoreProvider attempts to retrieve the peerstore provider from the
 // bus, if one is registered, otherwise returns a new `persistencePeerstoreProvider`.
-func (m *p2pModule) setupPeerstoreProvider() {
+func (m *p2pModule) setupPeerstoreProvider() error {
 	m.logger.Debug().Msg("setupPeerstoreProvider")
 	pstoreProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(peerstore_provider.ModuleName)
-	if pstoreProviderModule != nil {
-		m.logger.Debug().Msg("loaded persistence peerstore...")
-	}
 	if err != nil {
-		m.logger.Debug().Msg("NewPersistencePeerstore...")
+		m.logger.Debug().Msg("creating new persistence peerstore...")
 		pstoreProviderModule = persABP.NewPersistencePeerstoreProvider(m.GetBus())
+	} else if pstoreProviderModule != nil {
+		m.logger.Debug().Msg("loaded persistence peerstore...")
 	}
 
 	var ok bool
 	m.pstoreProvider, ok = pstoreProviderModule.(providers.PeerstoreProvider)
 	if !ok {
-		m.logger.Fatal().Msgf("unknown peerstore provider type: %T", pstoreProviderModule)
+		typeErr := fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
+		return multierr.Append(err, typeErr)
 	}
+	return nil
 }
 
 // setupCurrentHeightProvider attempts to retrieve the current height provider
 // from the bus registry, falls back to the consensus module if none is registered.
-func (m *p2pModule) setupCurrentHeightProvider() {
+func (m *p2pModule) setupCurrentHeightProvider() error {
+	m.logger.Debug().Msg("setupCurrentHeightProvider")
 	currentHeightProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(current_height_provider.ModuleName)
 	if err != nil {
 		currentHeightProviderModule = m.GetBus().GetConsensusModule()
 	}
 
+	if currentHeightProviderModule == nil {
+		return errors.New("no current height provider or consensus module registered")
+	}
+
+	m.logger.Debug().Msg("loaded current height provider")
+
 	var ok bool
 	m.currentHeightProvider, ok = currentHeightProviderModule.(providers.CurrentHeightProvider)
 	if !ok {
-		m.logger.Fatal().Msgf("unexpected current height provider type: %T", currentHeightProviderModule)
+		typeErr := fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
+		return multierr.Append(err, typeErr)
 	}
+	return nil
 }
 
-func (m *p2pModule) startNetwork() (err error) {
+// setupNetwork instantiates the configured network implementation.
+func (m *p2pModule) setupNetwork() (err error) {
 	if m.cfg.UseRainTree {
 		m.network, err = raintree.NewRainTreeNetwork(
 			m.host,
@@ -294,11 +286,9 @@ func (m *p2pModule) startNetwork() (err error) {
 	return err
 }
 
+// startHost creates a new libp2p host and assignes it to `m.host`, if one does
+// not already exist. Libp2p host starts listening upon instantiation.
 func (m *p2pModule) startHost() (err error) {
-	// Return early if host has already been started (e.g. via `WithHostOption`)
-	if m.host != nil {
-		return nil
-	}
 	opts := []libp2p.Option{
 		// Explicitly specify supported transport security options (noise, TLS)
 		// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.3#DefaultSecurity)
@@ -323,9 +313,17 @@ func (m *p2pModule) startHost() (err error) {
 	if err != nil {
 		return fmt.Errorf("unable to create libp2p host: %w", err)
 	}
+
+	// TECHDEBT(#609): use `StringArrayLogMarshaler` post test-utilities refactor.
+	addrStrs := make(map[int]string)
+	for i, addr := range libp2pHost.InfoFromHost(m.host).Addrs {
+		addrStrs[i] = addr.String()
+	}
+	m.logger.Info().Fields(addrStrs).Msg("Listening for incoming connections...")
 	return nil
 }
 
+// isClientDebugMode returns the value of `ClientDebugMode` in the base config
 func (m *p2pModule) isClientDebugMode() bool {
 	return m.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode
 }
@@ -337,11 +335,12 @@ func (m *p2pModule) handleStream(stream libp2pNetwork.Stream) {
 	if err != nil {
 		m.logger.Error().Err(err).
 			Str("address", peer.GetAddress().String()).
-			Msg("parsing remote peer public key")
+			Msg("parsing remote peer identity")
 
 		if err = stream.Reset(); err != nil {
 			m.logger.Error().Err(err).Msg("resetting stream")
 		}
+		return
 	}
 
 	if err := m.network.AddPeer(peer); err != nil {
@@ -373,58 +372,32 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 		return
 	}
 
-	m.handleNetworkData(data)
+	if err := m.handleNetworkData(data); err != nil {
+		m.logger.Error().Err(err).Msg("handling network data")
+	}
 
 	if err := stream.CloseRead(); err != nil {
 		m.logger.Debug().Err(err).Msg("closing read stream")
 	}
 }
 
-// readFromSubscription is intended to be called in a goroutine. It continuously
-// reads from the subscribed topic in preparation for handling at the network level.
-// Used for handling "broadcast" messages (i.e. no specific target node).
-func (m *p2pModule) readFromSubscription(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			msg, err := m.subscription.Next(ctx)
-			if err != nil {
-				m.logger.Error().Err(err).
-					Bool("TODO", true).
-					Msg("reading from subscription")
-			}
-
-			// Ignore messages from self
-			if msg.ReceivedFrom == m.host.ID() {
-				continue
-			}
-
-			m.handleNetworkData(msg.Data)
-		}
-	}
-}
-
-func (m *p2pModule) handleNetworkData(data []byte) {
+// handleNetworkData passes a network message to the configured
+// `Network`implementation for routing.
+func (m *p2pModule) handleNetworkData(data []byte) error {
 	appMsgData, err := m.network.HandleNetworkData(data)
 	if err != nil {
-		m.logger.Error().Err(err).Msg("handling network data")
-		return
+		return err
 	}
 
 	// There was no error, but we don't need to forward this to the app-specific bus.
 	// For example, the message has already been handled by the application.
 	if appMsgData == nil {
-		return
+		return nil
 	}
 
 	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
-		m.logger.Error().Err(err).
-			Bool("TODO", true).
-			Msg("Error decoding network message")
-		return
+		return fmt.Errorf("decoding network message: %w", err)
 	}
 
 	event := messaging.PocketEnvelope{
@@ -432,6 +405,7 @@ func (m *p2pModule) handleNetworkData(data []byte) {
 	}
 
 	m.GetBus().PublishEventToBus(&event)
+	return nil
 }
 
 // getMultiaddr returns a multiaddr constructed from the `hostname` and `port`
@@ -447,5 +421,5 @@ func (m *p2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
 // newReadStreamDeadline returns a future deadline
 // based on the read stream timeout duration.
 func newReadStreamDeadline() time.Time {
-	return time.Now().Add(readStreamTimeoutDuration)
+	return time.Now().Add(readStreamTimeout)
 }

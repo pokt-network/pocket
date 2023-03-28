@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.39] - 2023-03-24
+## [0.0.0.40] - 2023-03-28
 
 - Added a test which asserts that transport encryption is required (i.e. unencrypted connections are refused)
 
-## [0.0.0.38] - 2023-03-24
+## [0.0.0.39] - 2023-03-28
 
 - Moved peer & url conversion utils to `p2p/utils` package
 - Refactor `getPeerIP` to use `net.DefaultResolver` for easier testing
@@ -24,13 +24,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `ConnectionFactory` type and related members
 - Added libp2p `host.Host` mock generator
 
-## [0.0.0.37] - 2023-03-23
+## [0.0.0.38] - 2023-03-23
 
 - Wrap IPv6 address in square brackets as per RFC3986 §3.2.2
 
-## [0.0.0.36] - 2023-03-22
+## [0.0.0.37] - 2023-03-22
 
 - Improve URL validation and error handling in Libp2pMultiaddrFromServiceURL function
+
+## [0.0.0.36] - 2023-03-24
+
+- Updated errors on Send from fatal to recoverable
+- Updated `PeerstoreProvider` to ignore gracefully peers that are not resolvable/reachable
 
 ## [0.0.0.35] - 2023-03-21
 

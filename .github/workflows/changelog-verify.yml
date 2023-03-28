@@ -61,7 +61,7 @@ jobs:
             const result = `<!-- validate_changelogs_review -->The changelog validation failed with the following output:
 
             \`\`\`
-            ${{ needs.validate.outputs.all }}
+            ${{ fromJSON(needs.validate.outputs.all) }}
             \`\`\`
 
             Please update the relevant CHANGELOG.md files and ensure they follow the correct format.`;

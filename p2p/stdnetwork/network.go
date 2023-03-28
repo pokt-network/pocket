@@ -57,7 +57,7 @@ func (n *network) NetworkBroadcast(data []byte) error {
 	return nil
 }
 
-func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) (err error) {
+func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) error {
 	peer := n.pstore.GetPeer(address)
 	if peer == nil {
 		return fmt.Errorf("peer with address %s not in peerstore", address)
@@ -78,10 +78,24 @@ func (n *network) GetPeerstore() typesP2P.Peerstore {
 }
 
 func (n *network) AddPeer(peer typesP2P.Peer) error {
+	// Noop if peer with the pokt address already exists in the peerstore.
+	// TECHDEBT: add method(s) to update peers.
+	if p := n.pstore.GetPeer(peer.GetAddress()); p != nil {
+		return nil
+	}
+
+	if err := utils.AddPeerToLibp2pHost(n.host, peer); err != nil {
+		return err
+	}
+
 	return n.pstore.AddPeer(peer)
 }
 
 func (n *network) RemovePeer(peer typesP2P.Peer) error {
+	if err := utils.RemovePeerFromLibp2pHost(n.host, peer); err != nil {
+		return err
+	}
+
 	return n.pstore.RemovePeer(peer.GetAddress())
 }
 
