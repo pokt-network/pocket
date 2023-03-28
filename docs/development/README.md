@@ -12,6 +12,7 @@ Please note that this repository is under very active development and breaking c
   - [Running LocalNet](#running-localnet)
     - [\[Advanced\] Kubernetes](#advanced-kubernetes)
     - [\[Basic\] Docker Compose](#basic-docker-compose)
+  - [Creating a container image from developer's branches](#creating-a-container-image-from-developers-branches)
   - [TODO: Improvements to be added by the core team](#todo-improvements-to-be-added-by-the-core-team)
   - [Profiling](#profiling)
 - [Code Organization](#code-organization)
@@ -242,6 +243,10 @@ make client_start && make client_connect
 ```bash
 ✔ TriggerNextView # Commit the transaction
 ```
+
+### Creating a container image from developer's branches
+
+If you need to test or run non-merged pocket code outside LocalNet, for example on DevNet, TestNet or somewhere else, you can force the CI to build and push a container image by attaching a `push-image` label on your Pull Request.
 
 ### TODO: Improvements to be added by the core team
 
