@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/libp2p/go-libp2p"
@@ -93,7 +94,7 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 	libp2pPubKey, err := utils.Libp2pPublicKeyFromPeer(p2pModPeer)
 	require.NoError(t, err)
 
-	clearNode.Peerstore().AddAddrs(libp2pPeerInfo.ID, libp2pPeerInfo.Addrs, utils.DefaultPeerTTL)
+	clearNode.Peerstore().AddAddrs(libp2pPeerInfo.ID, libp2pPeerInfo.Addrs, time.Hour)
 	err = clearNode.Peerstore().AddPubKey(libp2pPeerInfo.ID, libp2pPubKey)
 	require.NoError(t, err)
 
