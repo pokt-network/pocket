@@ -5,6 +5,7 @@ package peerstore_provider
 import (
 	"go.uber.org/multierr"
 
+	"github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -26,7 +27,11 @@ func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore
 	pstore = make(typesP2P.PeerAddrMap)
 	for _, a := range actors {
 		networkPeer, err := ActorToPeer(abp, a)
-		if err != nil {
+		// TECHDEBT(#519): consider checking for behaviour instead of type. For reference: https://github.com/pokt-network/pocket/pull/611#discussion_r1147476057
+		if _, ok := err.(*ErrResolvingAddr); ok {
+			logger.Global.Warn().Err(err).Msg("ignoring ErrResolvingAddr - peer unreachable, not adding it to peerstore")
+			continue
+		} else if err != nil {
 			errs = multierr.Append(errs, err)
 			continue
 		}

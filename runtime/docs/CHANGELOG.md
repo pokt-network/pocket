@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.26] - 2023-03-24
+## [0.0.0.27] - 2023-03-28
 
 - Removed `runtime/configs.Config#UseLibp2p` field
+
+## [0.0.0.26] - 2023-03-26
+
+- Updated defaults to be `const` instead of `var` where applicable
 
 ## [0.0.0.25] - 2023-03-01
 

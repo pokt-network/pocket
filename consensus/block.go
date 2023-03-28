@@ -10,7 +10,7 @@ import (
 
 func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 	// Commit the context
-	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
+	if err := m.utilityUnitOfWork.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
 
@@ -22,12 +22,7 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 			}).
 		Msg("🧱🧱🧱 Committing block 🧱🧱🧱")
 
-	// Release the context
-	if err := m.utilityContext.Release(); err != nil {
-		m.logger.Warn().Err(err).Msg("Error releasing utility context")
-	}
-
-	m.utilityContext = nil
+	m.utilityUnitOfWork = nil
 
 	return nil
 }
@@ -71,29 +66,29 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 	return true, nil
 }
 
-// Creates a new Utility context and clears/nullifies any previous contexts if they exist
-func (m *consensusModule) refreshUtilityContext() error {
-	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
-	// Ideally, this should not be called.
-	if m.utilityContext != nil {
-		m.logger.Warn().Msg(typesCons.NilUtilityContextWarning)
-		if err := m.utilityContext.Release(); err != nil {
-			m.logger.Warn().Err(err).Msg("Error releasing utility context")
+// Creates a new Utility Unit Of Work and clears/nullifies any previous UOW if they exist
+func (m *consensusModule) refreshUtilityUnitOfWork() error {
+	// Catch-all structure to release the previous utility UOW if it wasn't properly cleaned up.
+	// IMPROVE: This should not be called if the UOW is properly managed in the entire lifecycle
+	if m.utilityUnitOfWork != nil {
+		m.logger.Warn().Msg(typesCons.NilUtilityUOWWarning)
+		if err := m.utilityUnitOfWork.Release(); err != nil {
+			m.logger.Warn().Err(err).Msg("Error releasing utility unit of work")
 		}
-		m.utilityContext = nil
+		m.utilityUnitOfWork = nil
 	}
 
-	// Only one write context can exist at a time, and the utility context needs to instantiate
+	// Only one write context can exist at a time, and the utility unit of work needs to instantiate
 	// a new one to modify the state.
 	if err := m.GetBus().GetPersistenceModule().ReleaseWriteContext(); err != nil {
 		m.logger.Warn().Err(err).Msg("Error releasing persistence write context")
 	}
 
-	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.height))
+	utilityUOW, err := m.GetBus().GetUtilityModule().NewUnitOfWork(int64(m.height))
 	if err != nil {
 		return err
 	}
 
-	m.utilityContext = utilityContext
+	m.utilityUnitOfWork = utilityUOW
 	return nil
 }

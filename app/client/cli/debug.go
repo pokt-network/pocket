@@ -223,7 +223,7 @@ func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage)
 
 	pstore, err := fetchPeerstore(cmd)
 	if err != nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the pstore")
+		logger.Global.Fatal().Err(err).Msg("Unable to retrieve the pstore")
 	}
 	for _, val := range pstore.GetPeerList() {
 		addr := val.GetAddress()
@@ -231,7 +231,7 @@ func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage)
 			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 		}
 		if err := p2pMod.Send(addr, anyProto); err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to send debug message")
+			logger.Global.Error().Err(err).Msg("Failed to send debug message")
 		}
 	}
 
@@ -246,7 +246,7 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 
 	pstore, err := fetchPeerstore(cmd)
 	if err != nil {
-		logger.Global.Fatal().Msg("Unable to retrieve the pstore")
+		logger.Global.Fatal().Err(err).Msg("Unable to retrieve the pstore")
 	}
 
 	var validatorAddress []byte
@@ -261,7 +261,7 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 	}
 
 	if err := p2pMod.Send(validatorAddress, anyProto); err != nil {
-		logger.Global.Fatal().Err(err).Msg("Failed to send debug message")
+		logger.Global.Error().Err(err).Msg("Failed to send debug message")
 	}
 }
 
@@ -286,5 +286,22 @@ func fetchPeerstore(cmd *cobra.Command) (typesP2P.Peerstore, error) {
 	if err != nil {
 		return nil, fmt.Errorf("retrieving peerstore at height %d", height)
 	}
-	return pstore, err
+	// Inform the client's main P2P that a the blockchain is at a new height so it can, if needed, update its view of the validator set
+	err = sendConsensusNewHeightEventToP2PModule(height, bus)
+	if err != nil {
+		return nil, errors.New("sending consensus new height event")
+	}
+	return pstore, nil
+}
+
+// sendConsensusNewHeightEventToP2PModule mimicks the consensus module sending a ConsensusNewHeightEvent to the p2p module
+// This is necessary because the debug client is not a validator and has no consensus module but it has to update the peerstore
+// depending on the changes in the validator set.
+// TODO(#613): Make the debug client mimic a full node.
+func sendConsensusNewHeightEventToP2PModule(height uint64, bus modules.Bus) error {
+	newHeightEvent, err := messaging.PackMessage(&messaging.ConsensusNewHeightEvent{Height: height})
+	if err != nil {
+		logger.Global.Fatal().Err(err).Msg("Failed to pack consensus new height event")
+	}
+	return bus.GetP2PModule().HandleEvent(newHeightEvent.Content)
 }

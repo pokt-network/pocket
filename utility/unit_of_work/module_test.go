@@ -1,4 +1,4 @@
-package utility
+package unit_of_work
 
 import (
 	"log"
@@ -28,8 +28,6 @@ const (
 )
 
 var (
-	testUtilityMod modules.UtilityModule
-
 	// TODO(#261): Utility module tests should have no dependencies on the persistence module (which instantiates a postgres container)
 	testPersistenceMod modules.PersistenceModule
 )
@@ -47,7 +45,6 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Error creating bus: %s", err)
 	}
 
-	testUtilityMod = newTestUtilityModule(bus)
 	testPersistenceMod = newTestPersistenceModule(bus)
 
 	exitCode := m.Run()
@@ -55,7 +52,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
+func newTestingUtilityUnitOfWork(t *testing.T, height int64, options ...func(*baseUtilityUnitOfWork)) *baseUtilityUnitOfWork {
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
@@ -68,27 +65,23 @@ func newTestingUtilityContext(t *testing.T, height int64) *utilityContext {
 			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
 		}))
-		testUtilityMod.GetMempool().Clear()
 	})
 
-	ctx := &utilityContext{
-		logger:         logger.Global.CreateLoggerForModule(modules.UtilityModuleName),
-		height:         height,
-		store:          persistenceContext,
-		savePointsSet:  make(map[string]struct{}),
-		savePointsList: make([][]byte, 0),
+	uow := &baseUtilityUnitOfWork{
+		logger: logger.Global.CreateLoggerForModule(modules.UtilityModuleName),
+		height: height,
+		// TODO: - @deblasis: refactor
+		persistenceRWContext:   persistenceContext,
+		persistenceReadContext: persistenceContext,
 	}
-	ctx.SetBus(testUtilityMod.GetBus())
 
-	return ctx
-}
+	uow.SetBus(testPersistenceMod.GetBus())
 
-func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
-	utilityMod, err := Create(bus)
-	if err != nil {
-		log.Fatalf("Error creating persistence module: %s", err)
+	for _, option := range options {
+		option(uow)
 	}
-	return utilityMod.(modules.UtilityModule)
+
+	return uow
 }
 
 func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
