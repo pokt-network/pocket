@@ -170,10 +170,6 @@ func GetConsensusNodeState(node *shared.Node) typesCons.ConsensusNodeState {
 	return GetConsensusModImpl(node).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(typesCons.ConsensusNodeState)
 }
 
-func GetConsensusHeight(consensusMod modules.ConsensusModule) uint64 {
-	return reflect.ValueOf(consensusMod).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(typesCons.ConsensusNodeState).Height
-}
-
 func GetConsensusModElem(node *shared.Node) reflect.Value {
 	return reflect.ValueOf(node.GetBus().GetConsensusModule()).Elem()
 }
@@ -546,11 +542,9 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 		case coreTypes.StateMachineEvent_Consensus_IsSyncing:
 			t.Logf("Mocked node is syncing")
 			maxHeight := consensusMod.GetAggregatedStateSyncMetadataMaxHeight()
-			// TECHDEBT(#352): Remove the if structure which is only in place to capture non-deterministic behavior.
+			// TECHDEBT(#352): The asynchronicity of this leads to a non-deterministic failing test.
 			// See this discussion for details: https://github.com/pokt-network/pocket/pull/528/files#r1150711575
-			if GetConsensusHeight(consensusMod) < maxHeight {
-				consensusMod.SetHeight(maxHeight)
-			}
+			consensusMod.SetHeight(maxHeight)
 			return nil
 		case coreTypes.StateMachineEvent_Consensus_IsSynchedValidator:
 			t.Logf("Mocked validator node is synched")
