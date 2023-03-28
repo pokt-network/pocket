@@ -174,6 +174,8 @@ const (
 	CodeGetHeightError                    Code = 129
 	CodeUnknownActorType                  Code = 130
 	CodeUnknownMessageType                Code = 131
+	CodeStringToByteArrayError            Code = 132
+	CodeTypeCastError                     Code = 133
 )
 
 const (
@@ -304,6 +306,8 @@ const (
 	NegativeAmountError               = "the amount is negative"
 	UnknownActorTypeError             = "the actor type is not recognized"
 	UnknownMessageTypeError           = "the message being by the utility message is not recognized"
+	StringToByteArrayError            = "an error occurred converting the string primitive to []byte"
+	TypeCastError                     = "an error occured type casting the parameter"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -818,4 +822,12 @@ func ErrUnknownActorType(actorType string) Error {
 
 func ErrUnknownMessageType(messageType any) Error {
 	return NewError(CodeUnknownMessageType, fmt.Sprintf("%s: %v", UnknownMessageTypeError, messageType))
+}
+
+func ErrStringToByteArray(err error) Error {
+	return NewError(CodeStringToByteArrayError, fmt.Sprintf("%s: %s", StringToByteArrayError, err.Error()))
+}
+
+func ErrTypeCast(paramName, cast string) Error {
+	return NewError(CodeTypeCastError, fmt.Sprintf("%s: %s to %s", TypeCastError, paramName, cast))
 }

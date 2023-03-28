@@ -1,6 +1,7 @@
 package unit_of_work
 
 import (
+	"encoding/hex"
 	"math/big"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -247,9 +248,9 @@ func (u *baseUtilityUnitOfWork) getDoubleSignFeeOwner() (owner []byte, err types
 
 func (u *baseUtilityUnitOfWork) getParamOwner(paramName string) ([]byte, error) {
 	if paramOwner := utils.GovParamMetadataMap[paramName].ParamOwner; paramOwner != "" {
-		return u.persistenceReadContext.GetBytesParam(paramOwner, u.height)
+		return u.getByteArrayParam(paramOwner)
 	}
-	return u.persistenceReadContext.GetBytesParam(paramName, u.height)
+	return nil, typesUtil.ErrUnknownParam(paramName)
 }
 
 func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreTypes.ActorType) (amount *big.Int, err typesUtil.Error) {
@@ -324,12 +325,16 @@ func (u *baseUtilityUnitOfWork) getMessageChangeParameterSignerCandidates(msg *t
 }
 
 func (u *baseUtilityUnitOfWork) getBigIntParam(paramName string) (*big.Int, typesUtil.Error) {
-	value, err := u.persistenceReadContext.GetStringParam(paramName, u.height)
+	value, err := u.getParameter(paramName)
 	if err != nil {
 		u.logger.Err(err)
 		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
-	amount, err := utils.StringToBigInt(value)
+	val, ok := value.(string)
+	if !ok {
+		return nil, typesUtil.ErrTypeCast(paramName, "string")
+	}
+	amount, err := utils.StringToBigInt(val)
 	if err != nil {
 		return nil, typesUtil.ErrStringToBigInt(err)
 	}
@@ -337,25 +342,53 @@ func (u *baseUtilityUnitOfWork) getBigIntParam(paramName string) (*big.Int, type
 }
 
 func (u *baseUtilityUnitOfWork) getIntParam(paramName string) (int, typesUtil.Error) {
-	value, err := u.persistenceReadContext.GetIntParam(paramName, u.height)
+	value, err := u.getParameter(paramName)
 	if err != nil {
 		return 0, typesUtil.ErrGetParam(paramName, err)
 	}
-	return value, nil
+	val, ok := value.(int)
+	if !ok {
+		return 0, typesUtil.ErrTypeCast(paramName, "int")
+	}
+	return val, nil
 }
 
 func (u *baseUtilityUnitOfWork) getInt64Param(paramName string) (int64, typesUtil.Error) {
-	value, err := u.persistenceReadContext.GetIntParam(paramName, u.height)
+	value, err := u.getParameter(paramName)
 	if err != nil {
 		return 0, typesUtil.ErrGetParam(paramName, err)
 	}
-	return int64(value), nil
+	val, ok := value.(int)
+	if !ok {
+		return 0, typesUtil.ErrTypeCast(paramName, "int")
+	}
+	return int64(val), nil
 }
 
 func (u *baseUtilityUnitOfWork) getByteArrayParam(paramName string) ([]byte, typesUtil.Error) {
-	value, err := u.persistenceReadContext.GetBytesParam(paramName, u.height)
+	value, err := u.getParameter(paramName)
 	if err != nil {
 		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
-	return value, nil
+	val, ok := value.(string)
+	if !ok {
+		return nil, typesUtil.ErrTypeCast(paramName, "string")
+	}
+	bz, err := hex.DecodeString(val)
+	if err != nil {
+		return nil, typesUtil.ErrStringToByteArray(err)
+	}
+	return bz, nil
+}
+
+func (u *baseUtilityUnitOfWork) getStringParam(paramName string) (string, typesUtil.Error) {
+	value, err := u.getParameter(paramName)
+	if err != nil {
+		return "", typesUtil.ErrGetParam(paramName, err)
+	}
+	val, ok := value.(string)
+	if !ok {
+		return "", typesUtil.ErrTypeCast(paramName, "string")
+	}
+	return val, nil
 }

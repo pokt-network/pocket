@@ -11,12 +11,6 @@ import (
 	"github.com/pokt-network/pocket/runtime/genesis"
 )
 
-// TODO : Deprecate these two constants when we change the persistenceRWContext interface to pass the `paramName`
-const (
-	BlocksPerSessionParamName    = "blocks_per_session"
-	ServicersPerSessionParamName = "servicers_per_session"
-)
-
 func (p *PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	ctx, tx := p.getCtxAndTx()
 	if p.Height != 0 {
@@ -38,7 +32,7 @@ func (p *PostgresContext) GetParameter(paramName string, height int64) (v any, e
 	case "[]uint8": // []byte
 		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
 	default:
-		return nil, fmt.Errorf("unhandled type for param: got %s.", paramType)
+		return nil, fmt.Errorf("unhandled type for param (%s): got %s.", paramName, paramType)
 	}
 	return v, err
 }
