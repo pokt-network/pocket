@@ -83,11 +83,6 @@ func (m *p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 
 	// MUST call before referencing m.bus to ensure != nil.
 	bus.RegisterModule(m)
-	m.setupDependencies()
-
-	for _, option := range options {
-		option(m)
-	}
 
 	if err := m.configureBootstrapNodes(); err != nil {
 		return nil, err
@@ -106,6 +101,14 @@ func (m *p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 		return nil, fmt.Errorf("parsing private key as libp2p key: %w", err)
 	}
 	m.identity = libp2p.Identity(libp2pPrivKey)
+
+	for _, option := range options {
+		option(m)
+	}
+
+	if err := m.setupDependencies(); err != nil {
+		return nil, err
+	}
 
 	switch m.cfg.ConnectionType {
 	case types.ConnectionType_TCPConnection:
