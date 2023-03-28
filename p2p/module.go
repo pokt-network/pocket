@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -9,6 +10,7 @@ import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
+	"go.uber.org/multierr"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -202,47 +204,70 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }
 
-func (m *p2pModule) setupDependencies() {
-	m.setupCurrentHeightProvider()
-	m.setupPeerstoreProvider()
+// setupDependencies sets up the module's current height and peerstore
+// providers, and the network.
+func (m *p2pModule) setupDependencies() error {
+	if err := m.setupCurrentHeightProvider(); err != nil {
+		return err
+	}
+
+	if err := m.setupPeerstoreProvider(); err != nil {
+		return err
+	}
+
+	if err := m.setupNetwork(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // setupPeerstoreProvider attempts to retrieve the peerstore provider from the
 // bus, if one is registered, otherwise returns a new `persistencePeerstoreProvider`.
-func (m *p2pModule) setupPeerstoreProvider() {
+func (m *p2pModule) setupPeerstoreProvider() error {
 	m.logger.Debug().Msg("setupPeerstoreProvider")
 	pstoreProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(peerstore_provider.ModuleName)
-	if pstoreProviderModule != nil {
-		m.logger.Debug().Msg("loaded persistence peerstore...")
-	}
 	if err != nil {
-		m.logger.Debug().Msg("NewPersistencePeerstore...")
+		m.logger.Debug().Msg("creating new persistence peerstore...")
 		pstoreProviderModule = persABP.NewPersistencePeerstoreProvider(m.GetBus())
+	} else if pstoreProviderModule != nil {
+		m.logger.Debug().Msg("loaded persistence peerstore...")
 	}
 
 	var ok bool
 	m.pstoreProvider, ok = pstoreProviderModule.(providers.PeerstoreProvider)
 	if !ok {
-		m.logger.Fatal().Msgf("unknown peerstore provider type: %T", pstoreProviderModule)
+		typeErr := fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
+		return multierr.Append(err, typeErr)
 	}
+	return nil
 }
 
 // setupCurrentHeightProvider attempts to retrieve the current height provider
 // from the bus registry, falls back to the consensus module if none is registered.
-func (m *p2pModule) setupCurrentHeightProvider() {
+func (m *p2pModule) setupCurrentHeightProvider() error {
+	m.logger.Debug().Msg("setupCurrentHeightProvider")
 	currentHeightProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(current_height_provider.ModuleName)
 	if err != nil {
 		currentHeightProviderModule = m.GetBus().GetConsensusModule()
 	}
 
+	if currentHeightProviderModule == nil {
+		return errors.New("no current height provider or consensus module registered")
+	}
+
+	m.logger.Debug().Msg("loaded current height provider")
+
 	var ok bool
 	m.currentHeightProvider, ok = currentHeightProviderModule.(providers.CurrentHeightProvider)
 	if !ok {
-		m.logger.Fatal().Msgf("unexpected current height provider type: %T", currentHeightProviderModule)
+		typeErr := fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
+		return multierr.Append(err, typeErr)
 	}
+	return nil
 }
 
-func (m *p2pModule) startNetwork() (err error) {
+// setupNetwork instantiates the configured network implementation.
+func (m *p2pModule) setupNetwork() (err error) {
 	if m.cfg.UseRainTree {
 		m.network, err = raintree.NewRainTreeNetwork(
 			m.host,
@@ -288,6 +313,13 @@ func (m *p2pModule) startHost() (err error) {
 	if err != nil {
 		return fmt.Errorf("unable to create libp2p host: %w", err)
 	}
+
+	// TECHDEBT(#609): use `StringArrayLogMarshaler` post test-utilities refactor.
+	addrStrs := make(map[int]string)
+	for i, addr := range libp2pHost.InfoFromHost(m.host).Addrs {
+		addrStrs[i] = addr.String()
+	}
+	m.logger.Info().Fields(addrStrs).Msg("Listening for incoming connections...")
 	return nil
 }
 
