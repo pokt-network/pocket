@@ -190,9 +190,8 @@ func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, er
 	return stateHash, nil, nil
 }
 
+// TODO(@deblasis): change tracking here
 func (uow *baseUtilityUnitOfWork) Commit(quorumCert []byte) error {
-	// TODO(@deblasis): change tracking here
-
 	uow.logger.Debug().Msg("committing the rwPersistenceContext...")
 	if err := uow.persistenceRWContext.Commit(uow.proposalProposerAddr, quorumCert); err != nil {
 		return err
@@ -201,7 +200,7 @@ func (uow *baseUtilityUnitOfWork) Commit(quorumCert []byte) error {
 	return nil
 }
 
-// TODO(@deblasis) - change tracking reset here
+// TODO(@deblasis): change tracking reset here
 func (uow *baseUtilityUnitOfWork) Release() error {
 	rwCtx := uow.persistenceRWContext
 	if rwCtx != nil {
@@ -210,7 +209,7 @@ func (uow *baseUtilityUnitOfWork) Release() error {
 	}
 
 	readCtx := uow.persistenceReadContext
-	if rwCtx != nil {
+	if readCtx != nil {
 		uow.persistenceReadContext = nil
 		readCtx.Release()
 	}

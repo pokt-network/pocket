@@ -14,9 +14,12 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 		return fmt.Errorf("utility context is nil")
 	}
 
-	// Commit & release the context
+	// Commit & release the unit of work
 	if err := utilityUnitOfWork.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
+	}
+	if err := utilityUnitOfWork.Release(); err != nil {
+		m.logger.Warn().Err(err).Msg("failed to release utility unit of work after commit")
 	}
 	m.utilityUnitOfWork = nil
 
@@ -78,7 +81,7 @@ func (m *consensusModule) refreshUtilityUnitOfWork() error {
 		// TODO: This should, ideally, never be called
 		m.logger.Warn().Bool("TODO", true).Msg(typesCons.NilUtilityUOWWarning)
 		if err := utilityUnitOfWork.Release(); err != nil {
-			return err
+			m.logger.Warn().Err(err).Msg("failed to release utility unit of work")
 		}
 		m.utilityUnitOfWork = nil
 	}
@@ -93,7 +96,7 @@ func (m *consensusModule) refreshUtilityUnitOfWork() error {
 	if err != nil {
 		return err
 	}
-
 	m.utilityUnitOfWork = utilityUOW
+
 	return nil
 }

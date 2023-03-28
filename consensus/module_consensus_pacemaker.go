@@ -30,10 +30,10 @@ func (m *consensusModule) ReleaseUtilityUnitOfWork() error {
 	if utilityUnitOfWork == nil {
 		return nil
 	}
-	m.utilityUnitOfWork = nil
 	if err := utilityUnitOfWork.Release(); err != nil {
 		return err
 	}
+	m.utilityUnitOfWork = nil
 	return nil
 }
 
