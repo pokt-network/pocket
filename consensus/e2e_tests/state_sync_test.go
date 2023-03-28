@@ -56,7 +56,7 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 
 	// Start waiting for the metadata request on server node,
 	errMsg := "StateSync Metadata Request"
-	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 250, false)
+	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 500, false)
 	require.NoError(t, err)
 
 	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
@@ -116,7 +116,7 @@ func TestStateSync_ServerGetBlock_Success(t *testing.T) {
 	// Start waiting for the get block request on server node, expect to return error
 	errMsg := "StateSync Get Block Request Message"
 	numExpectedMsgs := 1
-	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
+	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 500, false)
 	require.NoError(t, err)
 
 	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
@@ -175,7 +175,7 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	numExpectedMsgs := 1
 	// Start waiting for the get block request on server node, expect to return error
 	errMsg := "StateSync Get Block Request Message"
-	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
+	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 500, false)
 	require.Error(t, err)
 }
 

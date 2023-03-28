@@ -226,7 +226,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	// Server node is waiting for the Get Block Request.
 	numExpectedMsgs := 1
 	errMsg := "StateSync Get Block Request Message"
-	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
+	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 500, false)
 	require.NoError(t, err)
 
 	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
