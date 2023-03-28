@@ -335,11 +335,12 @@ func (m *p2pModule) handleStream(stream libp2pNetwork.Stream) {
 	if err != nil {
 		m.logger.Error().Err(err).
 			Str("address", peer.GetAddress().String()).
-			Msg("parsing remote peer public key")
+			Msg("parsing remote peer identity")
 
 		if err = stream.Reset(); err != nil {
 			m.logger.Error().Err(err).Msg("resetting stream")
 		}
+		return
 	}
 
 	if err := m.network.AddPeer(peer); err != nil {
@@ -371,7 +372,9 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 		return
 	}
 
-	m.handleNetworkData(data)
+	if err := m.handleNetworkData(data); err != nil {
+		m.logger.Error().Err(err).Msg("handling network data")
+	}
 
 	if err := stream.CloseRead(); err != nil {
 		m.logger.Debug().Err(err).Msg("closing read stream")
@@ -380,25 +383,21 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 
 // handleNetworkData passes a network message to the configured
 // `Network`implementation for routing.
-func (m *p2pModule) handleNetworkData(data []byte) {
+func (m *p2pModule) handleNetworkData(data []byte) error {
 	appMsgData, err := m.network.HandleNetworkData(data)
 	if err != nil {
-		m.logger.Error().Err(err).Msg("handling network data")
-		return
+		return err
 	}
 
 	// There was no error, but we don't need to forward this to the app-specific bus.
 	// For example, the message has already been handled by the application.
 	if appMsgData == nil {
-		return
+		return nil
 	}
 
 	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
-		m.logger.Error().Err(err).
-			Bool("TODO", true).
-			Msg("Error decoding network message")
-		return
+		return fmt.Errorf("decoding network message: %w", err)
 	}
 
 	event := messaging.PocketEnvelope{
@@ -406,6 +405,7 @@ func (m *p2pModule) handleNetworkData(data []byte) {
 	}
 
 	m.GetBus().PublishEventToBus(&event)
+	return nil
 }
 
 // getMultiaddr returns a multiaddr constructed from the `hostname` and `port`
