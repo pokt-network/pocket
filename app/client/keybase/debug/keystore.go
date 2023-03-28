@@ -3,22 +3,17 @@
 package debug
 
 import (
-	"fmt"
+	"io/ioutil"
 	"os"
-	"sync"
+	"path/filepath"
 
+	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/build"
 	"github.com/pokt-network/pocket/logger"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"gopkg.in/yaml.v2"
 )
 
-const (
-	// NOTE: This is the number of validators in the private-keys.yaml manifest file
-	numValidators      = 999
-	debugKeybaseSuffix = "/.pocket/keys"
-)
+const debugKeybaseSuffix = "/.pocket/keys"
 
 var (
 	// TODO: Allow users to override this value via `datadir` flag or env var or config file
@@ -40,17 +35,6 @@ func init() {
 }
 
 func initializeDebugKeybase() error {
-	var (
-		validatorKeysPairMap map[string]string
-		err                  error
-	)
-
-	validatorKeysPairMap, err = parseValidatorPrivateKeysFromEmbeddedYaml()
-
-	if err != nil {
-		return err
-	}
-
 	// Create/Open the keybase at `$HOME/.pocket/keys`
 	kb, err := keybase.NewBadgerKeybase(debugKeybasePath)
 	if err != nil {
@@ -61,66 +45,8 @@ func initializeDebugKeybase() error {
 		return err
 	}
 
-	// Add the keys if the keybase contains less than 999
-	curAddr, _, err := kb.GetAll()
-	if err != nil {
+	if err := restoreBadgerDB(build.DebugKeybaseBackup, db); err != nil {
 		return err
-	}
-
-	// Add validator addresses if not present
-	if len(curAddr) < numValidators {
-		logger.Global.Debug().Msgf(fmt.Sprintf("Debug keybase initializing... Adding %d validator keys to the keybase", numValidators-len(curAddr)))
-
-		// Use writebatch to speed up bulk insert
-		wb := db.NewWriteBatch()
-
-		// Create a channel to receive errors from goroutines
-		errCh := make(chan error, numValidators)
-
-		// Create a WaitGroup to wait for all goroutines to finish
-		var wg sync.WaitGroup
-		wg.Add(numValidators)
-
-		for _, privHexString := range validatorKeysPairMap {
-			go func(privHexString string) {
-				defer wg.Done()
-
-				// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
-				keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
-				if err != nil {
-					errCh <- err
-					return
-				}
-
-				// Use key address as key in DB
-				addrKey := keyPair.GetAddressBytes()
-
-				// Encode KeyPair into []byte for value
-				keypairBz, err := keyPair.Marshal()
-				if err != nil {
-					errCh <- err
-					return
-				}
-				if err := wb.Set(addrKey, keypairBz); err != nil {
-					errCh <- err
-					return
-				}
-			}(privHexString)
-		}
-
-		// Wait for all goroutines to finish
-		wg.Wait()
-
-		// Check if any goroutines returned an error
-		select {
-		case err := <-errCh:
-			return err
-		default:
-		}
-
-		if err := wb.Flush(); err != nil {
-			return err
-		}
 	}
 
 	// Close DB connection
@@ -131,24 +57,31 @@ func initializeDebugKeybase() error {
 	return nil
 }
 
-// parseValidatorPrivateKeysFromEmbeddedYaml fetches the validator private keys from the embedded build/localnet/manifests/private-keys.yaml manifest file.
-func parseValidatorPrivateKeysFromEmbeddedYaml() (map[string]string, error) {
+func restoreBadgerDB(backupData []byte, db *badger.DB) error {
+	logger.Global.Debug().Msg("Debug keybase initializing... Restoring from the embedded backup file...")
 
-	// Parse the YAML file and load into the config struct
-	var config struct {
-		ApiVersion string            `yaml:"apiVersion"`
-		Kind       string            `yaml:"kind"`
-		MetaData   map[string]string `yaml:"metadata"`
-		Type       string            `yaml:"type"`
-		StringData map[string]string `yaml:"stringData"`
+	// Create a temporary directory to store the backup data
+	tempDir, err := ioutil.TempDir("", "badgerdb-restore")
+	if err != nil {
+		return err
 	}
-	if err := yaml.Unmarshal(build.PrivateKeysFile, &config); err != nil {
-		return nil, err
-	}
-	validatorKeysMap := make(map[string]string)
+	defer os.RemoveAll(tempDir)
 
-	for id, privHexString := range config.StringData {
-		validatorKeysMap[id] = privHexString
+	// Write the backup data to a file in the temporary directory
+	backupFilePath := filepath.Join(tempDir, "backup")
+	if err := ioutil.WriteFile(backupFilePath, backupData, 0644); err != nil {
+		return err
 	}
-	return validatorKeysMap, nil
+
+	backupFile, err := os.Open(backupFilePath)
+	if err != nil {
+		return err
+	}
+	defer backupFile.Close()
+
+	if err := db.Load(backupFile, 4); err != nil {
+		return err
+	}
+
+	return nil
 }

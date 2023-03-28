@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.22] - 2023-03-15
+## [0.0.0.24] - 2023-03-27
 
 - Introduces vault keybase to allow for the use of a vault server to store the private keys
+
+## [0.0.0.23] - 2023-03-21
+
+- Refactor debug CLI to use new P2P interfaces
+
+## [0.0.0.22] - 2023-03-17
+
+- Added a limit on concurrent key imports for debug client to avoid OOM.
 
 ## [0.0.0.21] - 2023-03-14
 

@@ -117,6 +117,7 @@ develop_start: ## Run all of the make commands necessary to develop on the proje
 		make go_clean_deps && \
 		make mockgen && \
 		make generate_rpc_openapi && \
+		make refresh_debug_keybase && \
 		make build
 
 .PHONY: develop_test
@@ -218,6 +219,10 @@ docker_loki_install: docker_check ## Installs the loki docker driver
 ## check if the loki docker driver is installed
 docker_loki_check:
 	if [ `docker plugin ls | grep loki: | wc -l` -eq 0 ]; then make docker_loki_install; fi
+
+.PHONY: refresh_debug_keybase
+refresh_debug_keybase: ## Refreshes the debug keybase with the latest keys from the private_keys.yaml file if necessary
+	go run build/debug_keybase/main.go ./build/localnet/manifests/private-keys.yaml ./build/debug_keybase
 
 .PHONY: clean_mocks
 clean_mocks: ## Use `clean_mocks` to delete mocks before recreating them. Also useful to cleanup code that was generated from a different branch

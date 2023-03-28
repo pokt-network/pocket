@@ -20,7 +20,7 @@ jobs:
     outputs:
       all: ${{ steps.changes.outputs.all}}
     steps:
-        # Make sure we have some code to diff.
+      # Make sure we have some code to diff.
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
@@ -34,9 +34,75 @@ jobs:
     runs-on: ubuntu-latest
     # require the first job to have ran
     needs: changedfiles
+    # Map a step output to a job output
+    outputs:
+      all: ${{ steps.validate.outputs.all }}
     # only run if there are changed files
     if: ${{needs.changedfiles.outputs.all}}
     steps:
       - uses: actions/checkout@v3
       - name: Verify changelogs
-        run: bash ./.githooks/pre-receive "${{needs.changedfiles.outputs.all}}"
+        id: validate
+        # Set outputs using the command.
+        run: |
+          bash ./.githooks/pre-receive "${{needs.changedfiles.outputs.all}}" 2>&1 | tee output.txt
+          echo "all=$(cat output.txt | jq -sR .)" >> $GITHUB_OUTPUT
+  review:
+    runs-on: ubuntu-latest
+    # require the validate job to have ran
+    needs: validate
+    if: always()
+    steps:
+      - name: Verify changelogs Failed - Create review comment
+        if: ${{ contains(needs.validate.outputs.all, 'failed') }}
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const result = `<!-- validate_changelogs_review -->The changelog validation failed with the following output:
+
+            \`\`\`
+            ${{ fromJSON(needs.validate.outputs.all) }}
+            \`\`\`
+
+            Please update the relevant CHANGELOG.md files and ensure they follow the correct format.`;
+
+            await github.rest.pulls.createReview({
+              pull_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: result,
+              event: "REQUEST_CHANGES",
+            });
+            console.log("❌ Check failed, review comment created");
+            process.exit(1);
+      - name: Verify changelogs OK - Dismiss review comments
+        env:
+          OUTPUT: ${{ needs.validate.outputs.all }}
+        if: ${{ !contains(needs.validate.outputs.all, 'failed') }}
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const uniqueIdentifier = "<!-- validate_changelogs_review -->";
+
+            // List all the reviews on the pull request
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+            const matchingReviews = reviews.filter(review => review.body.includes(uniqueIdentifier) && review.state !== "DISMISSED");
+            console.log(`Found ${matchingReviews.length} reviews.`);
+
+            // Dismiss all reviews containing the unique identifier
+            for (const review of matchingReviews) {
+              console.log(`Dismissing review ${review.id}...`);
+              await github.rest.pulls.dismissReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                review_id: review.id,
+                message: "The check succeeded, dismissing the review comment.",
+              });
+            }
+            console.log("✅ Check passed, dismissed all review comments");

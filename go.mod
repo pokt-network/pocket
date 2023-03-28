@@ -27,6 +27,7 @@ require (
 	github.com/hashicorp/vault/api v1.9.0
 	github.com/jackc/pgconn v1.13.0
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
+	github.com/korovkin/limiter v0.0.0-20230307205149-3d4b2b34c99d
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/libp2p/go-libp2p v0.25.1
 	github.com/libp2p/go-libp2p-pubsub v0.9.2
@@ -38,7 +39,8 @@ require (
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/viper v1.13.0
-	golang.org/x/term v0.4.0
+	go.uber.org/multierr v1.8.0
+	golang.org/x/term v0.5.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
@@ -70,7 +72,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
 )
 
@@ -167,7 +169,6 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/dig v1.15.0 // indirect
 	go.uber.org/fx v1.18.2 // indirect
-	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
 	golang.org/x/sync v0.1.0 // indirect
