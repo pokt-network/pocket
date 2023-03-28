@@ -23,6 +23,7 @@ import (
 )
 
 func TestP2pModule_Insecure_Error(t *testing.T) {
+	// TECHDEBT(#609): refactor mock setup with similar test utilities.
 	ctrl := gomock.NewController(t)
 	hostname := "127.0.0.1"
 
