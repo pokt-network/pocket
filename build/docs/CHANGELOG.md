@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.27] - 2023-03-28
+
+- Improve LocalNet documentation by adding a TLDR commands to provision LocalNet with `kind`.
+
 ## [0.0.0.26] - 2023-03-28
 
 - Make k8s distribution recommendation more opinionated

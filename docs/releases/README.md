@@ -32,7 +32,7 @@ Our images are hosted on GitHub’s Container Registry (GHCR) and are available 
 
 Code built from the default branch (i.e., `main`) is tagged as `latest`.
 
-Code built from commits in Pull Requests, is tagged as `pr-<number>`, as well as `sha-<7 digit sha>`. If you need to build an image from a Pull Request, attach a `build-image` label to the pull request to force CI to upload a container image from a non-main branch.
+Code built from commits in Pull Requests, is tagged as `pr-<number>`, as well as `sha-<7 digit sha>`. If you need to build an image from a Pull Request, attach a `push-image` label to the pull request to force CI to upload a container image from a non-main branch.
 
 Once releases are managed, they will be tagged with the version number (e.g., `v0.0.1-alpha.pre.1`).
 

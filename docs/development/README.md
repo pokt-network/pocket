@@ -246,7 +246,7 @@ make client_start && make client_connect
 
 ### Creating a container image from developer's branches
 
-If you need to test or run non-merged pocket code outside LocalNet, for example on DevNet, TestNet or somewhere else, you can force the CI to build and push a container image by attaching a `push-image` label on your Pull Request.
+If you need to test or run non-merged pocket code outside LocalNet, for example on DevNet, TestNet or somewhere else, you can force the CI to build and push a container image. This can be done by attaching a `push-image` label on your Pull Request. Next CI build will push the container image to our [container registry](../releases/README.md#container-images).
 
 ### TODO: Improvements to be added by the core team
 
