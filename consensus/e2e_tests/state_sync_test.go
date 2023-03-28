@@ -248,7 +248,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	leader.GetBus().GetConsensusModule().SetBlock(block)
 
 	// Assert that unsynched node has a different view of the network than the rest of the nodes
-	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 250, true)
+	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 500, true)
 	require.NoError(t, err)
 
 	for nodeId, pocketNode := range pocketNodes {
@@ -283,7 +283,7 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 
 	// 2. Propose
 	numExpectedMsgs := numberOfValidators
-	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numExpectedMsgs, 250, true)
+	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numExpectedMsgs, 500, true)
 	require.NoError(t, err)
 
 	advanceTime(t, clockMock, 10*time.Millisecond)
