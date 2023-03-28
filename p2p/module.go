@@ -31,12 +31,12 @@ import (
 	"github.com/pokt-network/pocket/telemetry"
 )
 
-const readStreamTimeoutDuration = time.Second * 10
-
 // TECHDEBT: configure timeouts. Consider security exposure vs. real-world conditions).
 // TECHDEBT: parameterize and expose via config.
 // readStreamTimeout is the duration to wait for a read operation on a
 // stream to complete, after which the stream is closed ("timed out").
+const readStreamTimeout = time.Second * 10
+
 var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
@@ -378,5 +378,5 @@ func (m *p2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
 // newReadStreamDeadline returns a future deadline
 // based on the read stream timeout duration.
 func newReadStreamDeadline() time.Time {
-	return time.Now().Add(readStreamTimeoutDuration)
+	return time.Now().Add(readStreamTimeout)
 }
