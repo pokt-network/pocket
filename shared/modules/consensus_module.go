@@ -98,5 +98,5 @@ type ConsensusDebugModule interface {
 	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
 
 	// REFACTOR: This should accept typesCons.HotstuffStep and return typesCons.NodeId.
-	GetLeaderElectionResult(height, round uint64, step uint8) (leaderId uint64)
+	GetLeaderForView(height, round uint64, step uint8) (leaderId uint64)
 }

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.44] - 2023-03-27
+## [0.0.0.44] - 2023-03-28
 
 - Add `ConsensusStateSync` interface to define exported state sync functions in consensus module
 - Update `ConsensusDebugModule` with getter and setter function for state sync testing

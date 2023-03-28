@@ -46,7 +46,7 @@ func (m *consensusModule) GetAggregatedStateSyncMetadataMaxHeight() (maxHeight u
 	return metadata.MaxHeight
 }
 
-func (m *consensusModule) GetLeaderElectionResult(height, round uint64, step uint8) uint64 {
+func (m *consensusModule) GetLeaderForView(height, round uint64, step uint8) uint64 {
 	msg := &typesCons.HotstuffMessage{
 		Height: height,
 		Round:  round,
@@ -84,6 +84,7 @@ func (m *consensusModule) HandleDebugMessage(debugMessage *messaging.DebugMessag
 	return nil
 }
 
+// TODO: Expose GetNodeState() via ConsensusDebugModule interface to be used in tests.
 func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	leaderId := typesCons.NodeId(0)
 	if m.leaderId != nil {

@@ -225,9 +225,9 @@ func TestStateSync_UnsynchedPeerSynchs_Success(t *testing.T) {
 	}
 	currentRound := testRound + 1
 
-	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderElectionResult() function.
-	// Any node in pocketNodes mapping can be used to call GetLeaderElectionResult() function.
-	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderElectionResult(testHeight, currentRound, testStep))
+	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderForView() function.
+	// Any node in pocketNodes mapping can be used to call GetLeaderForView() function.
+	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(testHeight, currentRound, testStep))
 	leader := pocketNodes[leaderId]
 	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
 	require.NoError(t, err)
