@@ -1,6 +1,7 @@
 package raintree
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -11,9 +12,13 @@ import (
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
+
+// TECHDEBT(#609): move & de-dup.
+var testLocalServiceURL = fmt.Sprintf("127.0.0.1:%d", defaults.DefaultP2PPort)
 
 func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -157,7 +162,7 @@ func newTestPeer(t *testing.T) (*typesP2P.NetworkPeer, libp2pHost.Host) {
 	selfPeer := &typesP2P.NetworkPeer{
 		PublicKey:  selfPrivKey.PublicKey(),
 		Address:    selfAddr,
-		ServiceURL: "10.0.0.1:42069",
+		ServiceURL: testLocalServiceURL,
 	}
 	return selfPeer, newLibp2pMockNetHost(t, selfPrivKey, selfPeer)
 }

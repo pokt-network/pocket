@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -17,6 +18,9 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 )
+
+// TECHDEBT(#609): move & de-dup.
+var testLocalServiceURL = fmt.Sprintf("127.0.0.1:%d", defaults.DefaultP2PPort)
 
 func Test_Create_configureBootstrapNodes(t *testing.T) {
 	defaultBootstrapNodes := strings.Split(defaults.DefaultP2PBootstrapNodesCsv, ",")
@@ -128,7 +132,7 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 			peer := &typesP2P.NetworkPeer{
 				PublicKey:  privKey.PublicKey(),
 				Address:    privKey.Address(),
-				ServiceURL: "10.0.0.1:42069",
+				ServiceURL: testLocalServiceURL,
 			}
 
 			host := newLibp2pMockNetHost(t, privKey, peer)
