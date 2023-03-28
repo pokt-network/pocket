@@ -323,6 +323,7 @@ func (m *p2pModule) startHost() (err error) {
 	return nil
 }
 
+// isClientDebugMode returns the value of `ClientDebugMode` in the base config
 func (m *p2pModule) isClientDebugMode() bool {
 	return m.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode
 }
@@ -377,6 +378,8 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 	}
 }
 
+// handleNetworkData passes a network message to the configured
+// `Network`implementation for routing.
 func (m *p2pModule) handleNetworkData(data []byte) {
 	appMsgData, err := m.network.HandleNetworkData(data)
 	if err != nil {
