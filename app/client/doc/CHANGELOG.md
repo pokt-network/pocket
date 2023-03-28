@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.24] - 2023-03-27
+## [0.0.0.24] - 2023-03-28
 
-- Automatic import reoder
+- Automatic import reorder
 
 ## [0.0.0.23] - 2023-03-21
 

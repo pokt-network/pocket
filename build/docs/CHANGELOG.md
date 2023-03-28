@@ -7,11 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.27] - 2023-03-27
-
-- Make k8s distribution recommendation more opinionated
-
-## [0.0.0.26] - 2023-03-27
+## [0.0.0.26] - 2023-03-28
 
 - Make k8s distribution recommendation more opinionated
 
