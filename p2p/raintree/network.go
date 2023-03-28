@@ -247,6 +247,11 @@ func (n *rainTreeNetwork) AddPeer(peer typesP2P.Peer) error {
 	if p := n.peersManager.GetPeerstore().GetPeer(peer.GetAddress()); p != nil {
 		return nil
 	}
+
+	if err := utils.AddPeerToLibp2pHost(n.host, peer); err != nil {
+		return err
+	}
+
 	n.peersManager.HandleEvent(
 		typesP2P.PeerManagerEvent{
 			EventType: typesP2P.AddPeerEventType,
