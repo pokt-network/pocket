@@ -1,13 +1,11 @@
 package p2p
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"time"
 
 	"github.com/libp2p/go-libp2p"
-	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
@@ -56,16 +54,8 @@ type p2pModule struct {
 	// & connection manager. `libp2p.New` configures and starts listening
 	// according to options.
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
-	host libp2pHost.Host
-	// pubsub is used for broadcast communication
-	// (i.e. multiple, unidentified receivers)
-	pubsub *pubsub.PubSub
-	// topic similar to pubsub but received messages are filtered by a "topic" string.
-	// Published messages are also given the respective topic before broadcast.
-	topic *pubsub.Topic
-	// subscription provides an interface to continuously read messages from.
-	subscription *pubsub.Subscription
-	network      typesP2P.Network
+	host    libp2pHost.Host
+	network typesP2P.Network
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -142,9 +132,6 @@ func (m *p2pModule) GetModuleName() string {
 }
 
 func (m *p2pModule) Start() (err error) {
-	// TECHDEBT(#595): receive context in interface methods.
-	ctx := context.Background()
-
 	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
@@ -157,39 +144,9 @@ func (m *p2pModule) Start() (err error) {
 		return fmt.Errorf("starting libp2pHost: %w", err)
 	}
 
-	listenAddrLogEvent := m.logger.Info()
-	for i, addr := range libp2pHost.InfoFromHost(m.host).Addrs {
-		listenAddrLogEvent.Str(fmt.Sprintf("listen_addr_%d", i), addr.String())
-	}
-	listenAddrLogEvent.Msg("Listening for incoming connections...")
-
-	// TECHDEBT: use RandomSub or GossipSub once we're on more stable ground.
-	// IMPROVE: consider supporting multiple router types via config.
-	m.pubsub, err = pubsub.NewFloodSub(ctx, m.host)
-	if err != nil {
-		return fmt.Errorf("unable to create pubsub: %w", err)
-	}
-
-	// Topic is used to `#Publish` messages.
-	m.topic, err = m.pubsub.Join(protocol.DefaultTopicStr)
-	if err != nil {
-		return fmt.Errorf("unable to join pubsub topic: %w", err)
-	}
-
-	// Subscription is notified when a new message is received on the topic.
-	m.subscription, err = m.topic.Subscribe()
-	if err != nil {
-		return fmt.Errorf("subscribing to pubsub topic: %w", err)
-	}
-
-	if err := m.startNetwork(); err != nil {
-		return fmt.Errorf("creating network: %w", err)
-	}
-
-	// Don't handle streams or read from the subscription in client debug mode.
+	// Don't handle incoming streams in client debug mode.
 	if !m.isClientDebugMode() {
 		m.host.SetStreamHandler(protocol.PoktProtocolID, m.handleStream)
-		go m.readFromSubscription(ctx)
 	}
 
 	m.GetBus().
@@ -377,32 +334,6 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 
 	if err := stream.CloseRead(); err != nil {
 		m.logger.Debug().Err(err).Msg("closing read stream")
-	}
-}
-
-// readFromSubscription is intended to be called in a goroutine. It continuously
-// reads from the subscribed topic in preparation for handling at the network level.
-// Used for handling "broadcast" messages (i.e. no specific target node).
-func (m *p2pModule) readFromSubscription(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			msg, err := m.subscription.Next(ctx)
-			if err != nil {
-				m.logger.Error().Err(err).
-					Bool("TODO", true).
-					Msg("reading from subscription")
-			}
-
-			// Ignore messages from self
-			if msg.ReceivedFrom == m.host.ID() {
-				continue
-			}
-
-			m.handleNetworkData(msg.Data)
-		}
 	}
 }
 
