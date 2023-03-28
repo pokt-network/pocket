@@ -109,7 +109,7 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 			mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
 			mockBus := createMockBus(t, mockRuntimeMgr)
 
-			genesisStateMock := createMockGenesisState(keys[:1])
+			genesisStateMock := createMockGenesisState(keys)
 			persistenceMock := preparePersistenceMock(t, mockBus, genesisStateMock)
 			mockBus.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 
