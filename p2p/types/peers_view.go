@@ -61,7 +61,8 @@ func (view *sortedPeersView) GetPeers() PeerList {
 // Searches from index 1 because index 0 is self by convention and the rest of
 // the slice is sorted.
 func (view *sortedPeersView) Add(peer Peer) {
-	i := sort.SearchStrings(view.sortedAddrs[1:], peer.GetAddress().String())
+	i := view.getAddrIndex(peer.GetAddress())
+
 	view.sortedAddrs = insertElementAtIndex(view.sortedAddrs, peer.GetAddress().String(), i)
 	view.sortedPeers = insertElementAtIndex(view.sortedPeers, peer, i)
 }
@@ -70,7 +71,7 @@ func (view *sortedPeersView) Add(peer Peer) {
 // Searches from index 1 because index 0 is self by convention and the rest of
 // the slice is sorted.
 func (view *sortedPeersView) Remove(addr crypto.Address) {
-	i := sort.SearchStrings(view.sortedAddrs[1:], addr.String())
+	i := view.getAddrIndex(addr)
 	if i == len(view.sortedAddrs) {
 		logger.Global.Debug().
 			Str("pokt_addr", addr.String()).
@@ -98,9 +99,9 @@ func (view *sortedPeersView) init(startAddr crypto.Address, pstore Peerstore) *s
 	return view
 }
 
-// sortAddrs sorts addresses in `sortedAddrs` lexicographically but then `startAddr`
-// is moved to be first in the list. This makes RainTree propagation easier to
-// compute and interpret.
+// sortAddrs sorts addresses in `sortedAddrs` lexicographically then shifts
+// `startAddr` to the first index, moving any preceding values to the end
+// of the list; effectively preserving the order by "wrapping around".
 func (view *sortedPeersView) sortAddrs(startAddr crypto.Address) {
 	sort.Strings(view.sortedAddrs)
 
@@ -112,4 +113,21 @@ func (view *sortedPeersView) sortAddrs(startAddr crypto.Address) {
 			Msg("self address not found in peerstore so this client can send messages but does not propagate them")
 	}
 	view.sortedAddrs = append(view.sortedAddrs[i:len(view.sortedAddrs)], view.sortedAddrs[0:i]...)
+}
+
+// getAddrIndex returns the sortedAddrs index at which the given address is stored
+// or at which to insert it if not present.
+func (view *sortedPeersView) getAddrIndex(addr crypto.Address) int {
+	wrapIdx := sort.Search(len(view.sortedAddrs), func(visitIdx int) bool {
+		return view.sortedAddrs[visitIdx] < view.sortedAddrs[0]
+	})
+
+	frontAddrs := view.sortedAddrs[:wrapIdx]
+	backAddrs := view.sortedAddrs[wrapIdx:]
+	i := sort.SearchStrings(frontAddrs, addr.String())
+	if i == 0 {
+		i = sort.SearchStrings(backAddrs, addr.String())
+		i += len(frontAddrs)
+	}
+	return i
 }
