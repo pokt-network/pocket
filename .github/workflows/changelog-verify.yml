@@ -91,6 +91,7 @@ jobs:
               repo: context.repo.repo,
               pull_number: prNumber,
             });
+            console.log(reviews);
             const matchingReviews = reviews.filter(review => review.body.includes(uniqueIdentifier) && review.state !== "DISMISSED");
             console.log(`Found ${matchingReviews.length} reviews.`);
 
