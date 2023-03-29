@@ -2,6 +2,8 @@
 
 This document outlines how we structured the code by splitting it into modules, what a module is and how to create one.
 
+<!-- IMPROVE: Add a PR example when a good example arises. -->
+
 ## Contents <!-- omit in toc -->
 
 - [Definitions](#definitions)
