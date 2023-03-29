@@ -11,15 +11,25 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
+	"github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"golang.org/x/term"
+)
+
+var (
+	kbTypeStrFromCLI        string
+	kbVaultAddrFromCLI      string
+	kbVaultTokenFromCLI     string
+	kbVaultMountPathFromCLI string
 )
 
 func parseEd25519PrivateKeyFromReader(reader io.Reader) (pk crypto.Ed25519PrivateKey, err error) {
@@ -239,6 +249,50 @@ func attachChildPwdFlagToSubcommands() []cmdOption {
 	}}
 }
 
+func attachKeybaseFlagsToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&kbTypeStrFromCLI, "keybase", "", "keybase type used by the cmd, options are: file, vault")
+		c.Flags().StringVar(&kbVaultAddrFromCLI, "vault-addr", "", "Vault address used by the cmd. Defaults to https://127.0.0.1:8200 or VAULT_ADDR env var")
+		c.Flags().StringVar(&kbVaultTokenFromCLI, "vault-token", "", "Vault token used by the cmd. Defaults to VAULT_TOKEN env var")
+		c.Flags().StringVar(&kbVaultMountPathFromCLI, "vault-mount", "", "Vault mount path used by the cmd. Defaults to secret")
+
+		// override the PersistentPreRunE to set the keybase flags before initializing the config
+		c.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+			// note that these are quite brittle so if the config keys change this will break
+			// TODO: add a test to ensure that the configs are overridden by the flags
+			if kbTypeStrFromCLI != "" {
+				// only set the keybase type if it was provided by the user
+				kbTypeStrFromCLI = strings.ToUpper(kbTypeStrFromCLI)
+				kbType, ok := types.KeybaseType_value[kbTypeStrFromCLI]
+				if !ok {
+					return fmt.Errorf("invalid keybase type: %s", kbTypeStrFromCLI)
+				}
+				viper.Set("keybase.type", kbType)
+			}
+			if err := viper.BindPFlag("keybase.vault_addr", c.Flags().Lookup("vault-addr")); err != nil {
+				return err
+			}
+			if err := viper.BindPFlag("keybase.vault_token", c.Flags().Lookup("vault-token")); err != nil {
+				return err
+			}
+			if err := viper.BindPFlag("keybase.vault_mount_path", c.Flags().Lookup("vault-mount")); err != nil {
+				return err
+			}
+
+			// call the root PersistentPreRunE to finally initialize the config
+			if err := rootCmd.PersistentPreRunE(cmd, args); err != nil {
+				return err
+			}
+
+			return nil
+		}
+	}}
+}
+
+func keybaseForCLI() (keybase.Keybase, error) {
+	return keybase.NewKeybase(cfg.Keybase)
+}
+
 func unableToConnectToRpc(err error) error {
 	fmt.Printf("❌ Unable to connect to the RPC @ %s\n\nError: %s", boldText(remoteCLIURL), err)
 	return nil
@@ -260,4 +314,12 @@ func setValueInCLIContext(cmd *cobra.Command, key cliContextKey, value any) {
 func getValueFromCLIContext[T any](cmd *cobra.Command, key cliContextKey) (T, bool) {
 	value, ok := cmd.Context().Value(key).(T)
 	return value, ok
+}
+
+// confirmPassphrase should be used when a new key is being created or a raw unarmored key is being imported
+func confirmPassphrase(currPwd string) {
+	confirm := readPassphraseMessage("", "Confirm passphrase: ")
+	if currPwd != confirm {
+		logger.Global.Fatal().Msg("❌ Passphrases do not match")
+	}
 }

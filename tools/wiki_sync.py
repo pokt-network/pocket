@@ -65,6 +65,11 @@ def categorize_paths() -> Dict[str, List[DocumentationFile]]:
         display_name = " ".join([s.title() for s in file.split("_")])
         filename = f"{categories[-1].title()} {display_name.title()}"
 
+        # No section should be less than 3 characters, so this is used to easily catch bugs
+        if len(dirname) < 3:
+            print("WARNING: Skipping dirname of length < 3", dirname)
+            continue
+
         sidebar[dirname].append(DocumentationFile(filename, display_name, path))
 
     return sidebar
