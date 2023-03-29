@@ -90,6 +90,7 @@ jobs:
             let hasMore = true;
             const matchingReviews = [];
 
+            // List all the reviews on the pull request
             while (hasMore) {
               const { data: reviews } = await github.rest.pulls.listReviews({
                 owner: context.repo.owner,
@@ -111,13 +112,6 @@ jobs:
               page += 1;
             }
 
-            // List all the reviews on the pull request
-            const { data: reviews } = await github.rest.pulls.listReviews({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-            });
-            const matchingReviews = reviews.filter(review => review.body.includes(uniqueIdentifier) && review.state !== "DISMISSED");
             console.log(`Found ${matchingReviews.length} reviews.`);
 
             // Dismiss all reviews containing the unique identifier
