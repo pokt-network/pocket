@@ -40,6 +40,8 @@ type UnstakingActor interface {
 	GetOutputAddress() []byte
 }
 
+// CONSIDERATION: Consider removing `Utility` from `UtilityUnitOfWork` altogether
+
 // TECHDEBT(@deblasis): `CreateAndApplyProposalBlock` and `ApplyBlock` should be be refactored into a
 // `GetProposalBlock` and `ApplyProposalBlock` functions
 
