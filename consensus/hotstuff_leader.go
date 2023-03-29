@@ -75,13 +75,12 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	} else {
 		// Leader acts like a replica if `prepareQC` is not `nil`
 		// TODO: Do we need to call `validateProposal` here similar to how replicas does it
+		if err := m.applyBlock(highPrepareQC.Block); err != nil {
+			m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())
+			m.paceMaker.InterruptRound("failed to apply block")
+			return
+		}
 		m.block = highPrepareQC.Block
-	}
-
-	if err := m.applyBlock(m.block); err != nil {
-		m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())
-		m.paceMaker.InterruptRound("failed to apply block")
-		return
 	}
 
 	m.step = Prepare
