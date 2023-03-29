@@ -1,4 +1,4 @@
-# Pocket V1 DevLog Call #4 Notes <!-- omit in toc -->
+# Pocket V1 DevLog Call #5 Notes <!-- omit in toc -->
 
 - **Date and Time**: Tuesday March 21, 2023 16:00 UTC
 - **Location**: [Discord](https://discord.gg/pokt)
@@ -15,7 +15,6 @@
 - [External Contributions ⭐](#external-contributions-)
 - [Upcoming Iteration 🗓️](#upcoming-iteration-️)
 - [Feedback and Open Discussion 💡](#feedback-and-open-discussion-)
-  - [Q: Are these keys also hierarchical in the original sense of bit-44 such as that any given key you can derive valid keys deterministically but not going back up? Can you also re-derive deeper ancestor keys from midpoint between the root and far off ancestor?](#q-are-these-keys-also-hierarchical-in-the-original-sense-of-bit-44-such-as-that-any-given-key-you-can-derive-valid-keys-deterministically-but-not-going-back-up-can-you-also-re-derive-deeper-ancestor-keys-from-midpoint-between-the-root-and-far-off-ancestor)
 - [Contribute to V1 🧑‍💻](#contribute-to-v1-)
 - [About Pocket Network 💙](#about-pocket-network-)
 
