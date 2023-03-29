@@ -85,7 +85,7 @@ jobs:
             const prNumber = context.payload.pull_request.number;
             const uniqueIdentifier = "<!-- validate_changelogs_review -->";
 
-            const perPage = 2;
+            const perPage = 100;
             let page = 1;
             let hasMore = true;
             const matchingReviews = [];
