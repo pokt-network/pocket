@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.44] - 2023-03-28
+## [0.0.0.45] - 2023-03-28
 
 - Add `ConsensusStateSync` interface to define exported state sync functions in consensus module
 - Update `ConsensusDebugModule` with getter and setter function for state sync testing
 - Update FSM events `Consensus_IsSynchedValidator`, `Consensus_IsSynchedNonValidator` and state `Consensus_Pacemaker`
+- 
+## [0.0.0.44] - 2023-03-28
+
+- Add UnmarshalJSON to KeyPair to unmarshal public key correctly
 
 ## [0.0.0.43] - 2023-03-26
 
@@ -28,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.41] - 2023-03-21
 
-- Added *temporary* `shared/p2p` package to hold P2P interfaces common to both legacy and libp2p modules
+- Added _temporary_ `shared/p2p` package to hold P2P interfaces common to both legacy and libp2p modules
 - Added `Peerstore` interface
 - Added `Peer` and `PeerList` and interfaces
 - Moved `typesP2P.AddrBookMap` to `sharedP2P.PeerAddrMap` and refactor to implement the new `Peerstore` interface
