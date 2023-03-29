@@ -48,9 +48,9 @@ A base module is a module that implements a common interface, exposing the most 
 
 ```bash
 ├── base_modules            # All the base modules are defined here
-├── doc			            # Documentation for the modules
+├── doc                     # Documentation for the modules
 ├── mocks                   # Mocks of the modules will be generated in this folder
-├── module.go   	        # Common interfaces for the modules
+├── module.go               # Common interfaces for the modules
 ├── [moduleName]_module.go  # These files contain module interface definitions
 └── types                   # Common types for the modules
 ```
