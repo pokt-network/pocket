@@ -16,7 +16,7 @@ The `Utility` and `Persistence` modules maintain a context (i.e. an ephemeral st
 On every round of every height:
 
 1. The `Consensus` module handles a `NEWROUND` message
-2. A new `UtilityContext` is initialized at the current height
+2. A new `UtilityUnitOfWork` is initialized at the current height
 3. A new `PersistenceRWContext` is initialized at the current height
 4. The [Block Application](#block-application) flow commences
 
@@ -41,7 +41,7 @@ sequenceDiagram
     U->>U: store context<br>locally
     activate U
     deactivate U
-    U->>-C: UtilityContext
+    U->>-C: UtilityUnitOfWork
     C->>C: store context<br>locally
     deactivate C
 
@@ -56,9 +56,9 @@ _The **Proposer** drives the **Validators** to agreement via the **Consensus Lif
 ---
 
 5. The `Consensus` module handles the `DECIDE` message
-6. The `commitQC` is propagated to the `UtilityContext` & `PersistenceContext` on `Commit`
+6. The `commitQC` is propagated to the `UtilityUnitOfWork` & `PersistenceContext` on `Commit`
 7. The persistence module's internal implementation for ['Store Block'](../../persistence/docs/PROTOCOL_STORE_BLOCK.md) must execute.
-8. Both the `UtilityContext` and `PersistenceContext` are released
+8. Both the `UtilityUnitOfWork` and `PersistenceContext` are released
 
 ```mermaid
 sequenceDiagram
@@ -121,7 +121,7 @@ graph TD
 
 As either the _leader_ or _replica_, the following steps are followed to apply the proposal transactions in the block.
 
-1. Update the `UtilityContext` with the proposed block
+1. Update the `UtilityUnitOfWork` with the proposed block
 2. Call either `ApplyBlock` or `CreateAndApplyProposalBlock` based on the flow above
 
 ```mermaid

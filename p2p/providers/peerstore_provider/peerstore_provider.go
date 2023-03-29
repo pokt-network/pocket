@@ -3,7 +3,7 @@ package peerstore_provider
 //go:generate mockgen -source=$GOFILE -destination=../../types/mocks/peerstore_provider_mock.go -package=mock_types github.com/pokt-network/pocket/p2p/types PeerstoreProvider
 
 import (
-	"fmt"
+	"github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -29,7 +29,11 @@ func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore
 	pstore = make(sharedP2P.PeerAddrMap)
 	for _, a := range actors {
 		networkPeer, err := ActorToPeer(abp, a)
-		if err != nil {
+		// TECHDEBT(#519): consider checking for behaviour instead of type. For reference: https://github.com/pokt-network/pocket/pull/611#discussion_r1147476057
+		if _, ok := err.(*ErrResolvingAddr); ok {
+			logger.Global.Warn().Err(err).Msg("ignoring ErrResolvingAddr - peer unreachable, not adding it to peerstore")
+			continue
+		} else if err != nil {
 			errs = multierr.Append(errs, err)
 			continue
 		}
@@ -47,7 +51,7 @@ func ActorToPeer(abp PeerstoreProvider, actor *coreTypes.Actor) (sharedP2P.Peer,
 	// connections to/from peers.
 	conn, err := abp.GetConnFactory()(abp.GetP2PConfig(), actor.GetServiceUrl()) // generic param is service url
 	if err != nil {
-		return nil, fmt.Errorf("error resolving addr: %v", err)
+		return nil, NewErrResolvingAddr(err)
 	}
 
 	pubKey, err := cryptoPocket.NewPublicKey(actor.GetPublicKey())

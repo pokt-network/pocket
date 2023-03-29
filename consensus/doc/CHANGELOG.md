@@ -7,11 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.38] - 2023-03-20
+## [0.0.0.40] - 2023-03-29
 
 - Add `fsm_handler.go` to handle FSM transition events in consensus module
 - Update State Machine mock in `utils_test.go`
 - Update state_sync module with additional function definitions 
+  
+## [0.0.0.39] - 2023-03-26
+
+- Refactored `utilityContext` into `utilityUnitOfWork`
+- Added `utilityUnitOfWorkFactory` to create `utilityUnitOfWork` instances depending on the fact that the current node is `Leader` or `Replica`
+- Renamed `prepareAndApplyBlock` to `prepareBlock`
+- Centralized `applyBlock` logic
+- Updated tests
+
+## [0.0.0.38] - 2023-03-25
+
+- Add quorum certificate to the block before committing to persistence
+- Add error `ErrNoQcInReceivedBlock` and message `DisregardBlock`
 
 ## [0.0.0.37] - 2023-03-21
 

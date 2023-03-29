@@ -243,7 +243,50 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 
 // TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
 
-func TestValidateQuorumCertificate(t *testing.T) {
+// TODO(#615): Implement this test
+func TestQuorumCertificate_Valid(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_InsufficientSignature(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_SignatureFromInvalidValidatorSet(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_SignatureFromJailedValidators(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_SignatureFromUnJailedValidators_Valid(t *testing.T) {
+	// Unjailed validators should be able to sign a valid QC.
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_SignatureFromValidAndInvalidValidatorSet(t *testing.T) {
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_QuorumCertificateIsModified(t *testing.T) {
+	// Leader modifies the QC after sending the proposal, therefore sent QC is invalid.
+	t.Skip()
+}
+
+// TODO(#615): Implement this test
+func TestQuorumCertificate_InvalidSignaturesFromValidValidatorSet(t *testing.T) {
+	t.Skip()
+}
+
+// DISCUSS: This test scenario is currently more exploratory, and it may or may not be relevant.
+func TestQuorumCertificate_ResistenceToSignatureMalleability(t *testing.T) {
 	t.Skip()
 }
 

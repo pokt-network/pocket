@@ -3,7 +3,6 @@
 package debug
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -37,11 +36,14 @@ func init() {
 
 func initializeDebugKeybase() error {
 	// Create/Open the keybase at `$HOME/.pocket/keys`
-	kb, err := keybase.NewKeybase(debugKeybasePath)
+	kb, err := keybase.NewBadgerKeybase(debugKeybasePath)
 	if err != nil {
 		return err
 	}
-	db := kb.GetBadgerDB()
+	db, err := kb.GetBadgerDB()
+	if err != nil {
+		return err
+	}
 
 	if err := restoreBadgerDB(build.DebugKeybaseBackup, db); err != nil {
 		return err
@@ -56,7 +58,7 @@ func initializeDebugKeybase() error {
 }
 
 func restoreBadgerDB(backupData []byte, db *badger.DB) error {
-	logger.Global.Debug().Msgf(fmt.Sprintf("Debug keybase initializing... Restoring from the embedded backup file..."))
+	logger.Global.Debug().Msg("Debug keybase initializing... Restoring from the embedded backup file...")
 
 	// Create a temporary directory to store the backup data
 	tempDir, err := ioutil.TempDir("", "badgerdb-restore")

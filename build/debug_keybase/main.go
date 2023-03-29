@@ -1,9 +1,8 @@
 package main
 
 import (
-	"crypto/md5"
+	"crypto/md5" // nolint:gosec // Weak hashing function only used to check if the file has been changed
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -11,6 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
+	"github.com/pokt-network/pocket/runtime/configs"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
 )
@@ -33,7 +33,7 @@ func main() {
 	sourceYamlPath := os.Args[1]
 	targetFolderPath := os.Args[2]
 
-	privateKeysYamlBytes, err := ioutil.ReadFile(sourceYamlPath)
+	privateKeysYamlBytes, err := os.ReadFile(sourceYamlPath)
 	if err != nil {
 		fmt.Printf("Error reading source_yaml: %v\n", err)
 		return
@@ -65,11 +65,14 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	kb, err := keybase.NewKeybase(tmpDir)
+	kb, err := keybase.NewKeybase(&configs.KeybaseConfig{})
 	if err != nil {
 		panic(err)
 	}
-	db := kb.GetBadgerDB()
+	db, err := kb.GetBadgerDB()
+	if err != nil {
+		panic(err)
+	}
 
 	// Add validator addresses if not present
 	fmt.Println("✍️ Debug keybase initializing... Adding all the validator keys")
@@ -82,7 +85,7 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 
 	limit := limiter.NewConcurrencyLimiter(debugKeybaseImportConcurrencyLimit)
 	for _, privHexString := range validatorKeysPairMap {
-		limit.Execute(func() {
+		if _, err := limit.Execute(func() {
 			// Import the keys into the keybase with no passphrase or hint as these are for debug purposes
 			keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
 			if err != nil {
@@ -103,10 +106,14 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 				errCh <- err
 				return
 			}
-		})
+		}); err != nil {
+			panic(err)
+		}
 	}
 
-	limit.WaitAndClose()
+	if err := limit.WaitAndClose(); err != nil {
+		panic(err)
+	}
 
 	// Check if any goroutines returned an error
 	select {
@@ -188,5 +195,7 @@ func createHashFile(hashFilePath string) {
 		panic(err)
 	}
 	defer file.Close()
-	file.WriteString("This file is used to check if the keybase dump is in sync with the YAML file. Its name is the MD5 hash of the private_keys.yaml")
+	if _, err := file.WriteString("This file is used to check if the keybase dump is in sync with the YAML file. Its name is the MD5 hash of the private_keys.yaml"); err != nil {
+		panic(err)
+	}
 }

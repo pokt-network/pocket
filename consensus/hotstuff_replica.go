@@ -34,9 +34,9 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 		return
 	}
 
-	// Clear the previous utility context, if it exists, and create a new one
-	if err := m.refreshUtilityContext(); err != nil {
-		m.logger.Error().Err(err).Msg("Could not refresh utility context")
+	// Clear the previous utility unitOfWork, if it exists, and create a new one
+	if err := m.refreshUtilityUnitOfWork(); err != nil {
+		m.logger.Error().Err(err).Msg("Could not refresh utility unitOfWork")
 		return
 	}
 
@@ -155,10 +155,9 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 
 	quorumCertBytes, err := codec.GetCodec().Marshal(quorumCert)
 	if err != nil {
-		m.logger.Error().Err(err).Msg("Failed to convert commit QC to bytes")
+		m.logger.Error().Err(err).Msg("Failed to convert the quorum certificate to bytes")
 		return
 	}
-
 	m.block.BlockHeader.QuorumCertificate = quorumCertBytes
 
 	if err := m.commitBlock(m.block); err != nil {
@@ -239,12 +238,12 @@ func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 	blockHeader := block.BlockHeader
 	// Set the proposal block in the persistence context
-	if err := m.utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err := m.utilityUnitOfWork.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return err
 	}
 
 	// Apply all the transactions in the block and get the stateHash
-	stateHash, err := m.utilityContext.ApplyBlock()
+	stateHash, _, err := m.utilityUnitOfWork.ApplyBlock()
 	if err != nil {
 		return err
 	}

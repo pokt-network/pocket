@@ -82,120 +82,120 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 func TestStateSync_ServerGetBlock_Success(t *testing.T) {
 	t.Skip()
 	/*
-		// Test preparation
-		clockMock := clock.NewMock()
-		timeReminder(t, clockMock, time.Second)
+	   // Test preparation
+	   clockMock := clock.NewMock()
+	   timeReminder(t, clockMock, time.Second)
 
-		// Test configs
-		runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-		buses := GenerateBuses(t, runtimeMgrs)
+	   // Test configs
+	   runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	   buses := GenerateBuses(t, runtimeMgrs)
 
-		// Create & start test pocket nodes
-		eventsChannel := make(modules.EventsChannel, 100)
-		pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-		StartAllTestPocketNodes(t, pocketNodes)
+	   // Create & start test pocket nodes
+	   eventsChannel := make(modules.EventsChannel, 100)
+	   pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+	   StartAllTestPocketNodes(t, pocketNodes)
 
-		testHeight := uint64(5)
+	   testHeight := uint64(5)
 
-		serverNode := pocketNodes[1]
-		serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
-		serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
+	   serverNode := pocketNodes[1]
+	   serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
+	   serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
 
-		// Choose node 2 as the requester node
-		requesterNode := pocketNodes[2]
-		requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
+	   // Choose node 2 as the requester node
+	   requesterNode := pocketNodes[2]
+	   requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
-		// Passing Test
-		// Test GetBlock Req
-		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-			Message: &typesCons.StateSyncMessage_GetBlockReq{
-				GetBlockReq: &typesCons.GetBlockRequest{
-					PeerAddress: requesterNodePeerAddress,
-					Height:      1,
-				},
-			},
-		}
+	   // Passing Test
+	   // Test GetBlock Req
 
-		anyProto, err := anypb.New(stateSyncGetBlockMessage)
-		require.NoError(t, err)
+	   	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+	   		Message: &typesCons.StateSyncMessage_GetBlockReq{
+	   			GetBlockReq: &typesCons.GetBlockRequest{
+	   				PeerAddress: requesterNodePeerAddress,
+	   				Height:      1,
+	   			},
+	   		},
+	   	}
 
-		// Send get block request to the server node
-		P2PSend(t, serverNode, anyProto)
+	   anyProto, err := anypb.New(stateSyncGetBlockMessage)
+	   require.NoError(t, err)
 
-		// Start waiting for the get block request on server node, expect to return error
-		errMsg := "StateSync Get Block Request Message"
-		numExpectedMsgs := 1
-		receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
-		require.NoError(t, err)
+	   // Send get block request to the server node
+	   P2PSend(t, serverNode, anyProto)
 
-		msg, err := codec.GetCodec().FromAny(receivedMsg[0])
-		require.NoError(t, err)
+	   // Start waiting for the get block request on server node, expect to return error
+	   errMsg := "StateSync Get Block Request Message"
+	   numExpectedMsgs := 1
+	   receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
+	   require.NoError(t, err)
 
-		stateSyncGetBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
-		require.True(t, ok)
+	   msg, err := codec.GetCodec().FromAny(receivedMsg[0])
+	   require.NoError(t, err)
 
-		getBlockRes := stateSyncGetBlockResMessage.GetGetBlockRes()
-		require.NotEmpty(t, getBlockRes)
+	   stateSyncGetBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
+	   require.True(t, ok)
 
-		require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
+	   getBlockRes := stateSyncGetBlockResMessage.GetGetBlockRes()
+	   require.NotEmpty(t, getBlockRes)
 
+	   require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
 	*/
 }
 
 func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
-	t.Skip()
-	/*
-		// Test preparation
-		clockMock := clock.NewMock()
-		timeReminder(t, clockMock, time.Second)
+	//t.Skip()
 
-		// Test configs
-		runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-		buses := GenerateBuses(t, runtimeMgrs)
+	// Test preparation
+	clockMock := clock.NewMock()
+	timeReminder(t, clockMock, time.Second)
 
-		// Create & start test pocket nodes
-		eventsChannel := make(modules.EventsChannel, 100)
-		pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-		StartAllTestPocketNodes(t, pocketNodes)
+	// Test configs
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	buses := GenerateBuses(t, runtimeMgrs)
 
-		testHeight := uint64(5)
+	// Create & start test pocket nodes
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+	StartAllTestPocketNodes(t, pocketNodes)
 
-		serverNode := pocketNodes[1]
-		serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
-		serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
+	testHeight := uint64(5)
 
-		// Choose node 2 as the requester node
-		requesterNode := pocketNodes[2]
-		requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
+	serverNode := pocketNodes[1]
+	serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
+	serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
 
-		// Failing Test
-		// Get Block Req is current block height + 1
-		requestHeight := testHeight + 1
-		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-			Message: &typesCons.StateSyncMessage_GetBlockReq{
-				GetBlockReq: &typesCons.GetBlockRequest{
-					PeerAddress: requesterNodePeerAddress,
-					Height:      requestHeight,
-				},
+	// Choose node 2 as the requester node
+	requesterNode := pocketNodes[2]
+	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
+
+	// Failing Test
+	// Get Block Req is current block height + 1
+	requestHeight := testHeight + 1
+	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+		Message: &typesCons.StateSyncMessage_GetBlockReq{
+			GetBlockReq: &typesCons.GetBlockRequest{
+				PeerAddress: requesterNodePeerAddress,
+				Height:      requestHeight,
 			},
-		}
+		},
+	}
 
-		anyProto, err := anypb.New(stateSyncGetBlockMessage)
-		require.NoError(t, err)
+	anyProto, err := anypb.New(stateSyncGetBlockMessage)
+	require.NoError(t, err)
 
-		// Send get block request to the server node
-		P2PSend(t, serverNode, anyProto)
+	// Send get block request to the server node
+	P2PSend(t, serverNode, anyProto)
 
-		numExpectedMsgs := 1
-		// Start waiting for the get block request on server node, expect to return error
-		errMsg := "StateSync Get Block Request Message"
-		_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
-		require.Error(t, err)
-	*/
+	numExpectedMsgs := 1
+	// Start waiting for the get block request on server node, expect to return error
+	errMsg := "StateSync Get Block Request Message"
+	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
+	require.Error(t, err)
+	//*/
 }
 
 func TestStateSync_UnsynchedPeerSynchsABlock_Success(t *testing.T) {
-	t.Skip()
+	//t.Skip()
 
 	// Test preparation
 	clockMock := clock.NewMock()
@@ -234,6 +234,7 @@ func TestStateSync_UnsynchedPeerSynchsABlock_Success(t *testing.T) {
 	unsynchedNodeModImpl := GetConsensusModImpl(unsynchedNode)
 
 	// Placeholder block
+
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            testHeight,
 		StateHash:         stateHash,
@@ -241,6 +242,7 @@ func TestStateSync_UnsynchedPeerSynchsABlock_Success(t *testing.T) {
 		ProposerAddress:   consensusPK.Address(),
 		QuorumCertificate: nil,
 	}
+
 	block := &coreTypes.Block{
 		BlockHeader:  blockHeader,
 		Transactions: make([][]byte, 0),
@@ -251,32 +253,36 @@ func TestStateSync_UnsynchedPeerSynchsABlock_Success(t *testing.T) {
 
 	// Set the unsynched node to last persisted height 9
 	// Set rest of the nodes to the last persisted height 11
+
 	for id, pocketNode := range pocketNodes {
 		consensusModImpl := GetConsensusModImpl(pocketNode)
 		if id == unsynchedNodeId {
 			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(unsynchedNodeHeight)})
-			utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(unsynchedNodeHeight))
+			utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(unsynchedNodeHeight))
 			require.NoError(t, err)
-			consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
+			pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
 		} else {
 			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
-			utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
+			utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(testHeight))
 			require.NoError(t, err)
-			consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
+			pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
 		}
 		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
 		consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(testRound)})
 	}
 
 	//Debug message to start consensus by triggering first view change
+
 	for _, pocketNode := range pocketNodes {
 		TriggerNextView(t, pocketNode)
 	}
+
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// // Assert that unsynched node has a separate view of the network than the rest of the nodes
 	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 250, true)
 	require.NoError(t, err)
+
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		if nodeId == unsynchedNodeId {
@@ -305,6 +311,7 @@ func TestStateSync_UnsynchedPeerSynchsABlock_Success(t *testing.T) {
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)
 	}
+
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Node must request blocks from all other validators.
@@ -366,183 +373,182 @@ func TestStateSync_UnsynchedPeerSynchsABlock_Success(t *testing.T) {
 	}
 
 }
+
 func TestStateSync_UnsynchedPeerSynchsMultipleBlocksInOrder(t *testing.T) {
-	/*
-	   clockMock := clock.NewMock()
-	   timeReminder(t, clockMock, time.Second)
+	//t.Skip()
 
-	   numberOfValidators := 4
-	   numberOfPersistedDummyBlocks := uint64(10)
-	   // current height of the node is one plus the number of persisted dummy blocks
-	   testHeight := numberOfPersistedDummyBlocks + 1
-	   testStep := uint8(consensus.NewRound)
-	   testRound := uint64(1)
+	clockMock := clock.NewMock()
+	timeReminder(t, clockMock, time.Second)
 
-	   runtimeMgrs := GenerateNodeRuntimeMgrs(t, numberOfValidators, clockMock)
-	   buses := GenerateBuses(t, runtimeMgrs)
+	numberOfValidators := 4
+	numberOfPersistedDummyBlocks := uint64(10)
+	// current height of the node is one plus the number of persisted dummy blocks
+	testHeight := numberOfPersistedDummyBlocks + 1
+	testStep := uint8(consensus.NewRound)
+	testRound := uint64(1)
 
-	   // Create & start test pocket nodes
-	   eventsChannel := make(modules.EventsChannel, 100)
-	   pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numberOfValidators, clockMock)
+	buses := GenerateBuses(t, runtimeMgrs)
 
-	   GenerateDummyBlocksWithQC(t, testHeight, uint64(numberOfValidators), pocketNodes)
+	// Create & start test pocket nodes
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
 
-	   StartAllTestPocketNodes(t, pocketNodes)
+	GenerateDummyBlocksWithQC(t, testHeight, uint64(numberOfValidators), pocketNodes)
 
-	   // Prepare leader info
-	   leaderId := typesCons.NodeId(3)
-	   require.Equal(t, uint64(leaderId), testHeight%uint64(numberOfValidators)) // Uses our deterministic round robin leader election
-	   leader := pocketNodes[leaderId]
-	   consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
-	   require.NoError(t, err)
+	StartAllTestPocketNodes(t, pocketNodes)
 
-	   // Prepare unsynched node info
-	   //unsynchedNode := pocketNodes[2]
-	   unsynchedNodes := []*shared.Node{pocketNodes[2], pocketNodes[3]}
-	   //unsynchedNodeId := typesCons.NodeId(2)
-	   unsynchedNodeIds := []typesCons.NodeId{2, 3}
-	   unsynchedNumberOfPersistedDummyBlocks := uint64(3)
-	   unsynchedNodeHeight := unsynchedNumberOfPersistedDummyBlocks + 1
-	   //unsynchedNodeModImpl := GetConsensusModImpl(unsynchedNode)
+	// Prepare leader info
+	leaderId := typesCons.NodeId(3)
+	require.Equal(t, uint64(leaderId), testHeight%uint64(numberOfValidators)) // Uses our deterministic round robin leader election
+	leader := pocketNodes[leaderId]
+	consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
+	require.NoError(t, err)
 
-	   // Placeholder block
+	// Prepare unsynched node info
+	unsynchedNode := pocketNodes[2]
+	unsynchedNodeId := typesCons.NodeId(2)
+	unsynchedNumberOfPersistedDummyBlocks := uint64(3)
+	unsynchedNodeHeight := unsynchedNumberOfPersistedDummyBlocks + 1
+	unsynchedNodeModImpl := GetConsensusModImpl(unsynchedNode)
 
-	   	blockHeader := &coreTypes.BlockHeader{
-	   		Height:            testHeight,
-	   		StateHash:         stateHash,
-	   		PrevStateHash:     "",
-	   		ProposerAddress:   consensusPK.Address(),
-	   		QuorumCertificate: nil,
-	   	}
+	// Placeholder block
 
-	   	block := &coreTypes.Block{
-	   		BlockHeader:  blockHeader,
-	   		Transactions: make([][]byte, 0),
-	   	}
+	blockHeader := &coreTypes.BlockHeader{
+		Height:            testHeight,
+		StateHash:         stateHash,
+		PrevStateHash:     "",
+		ProposerAddress:   consensusPK.Address(),
+		QuorumCertificate: nil,
+	}
 
-	   leaderConsensusModImpl := GetConsensusModImpl(leader)
-	   leaderConsensusModImpl.MethodByName("SetBlock").Call([]reflect.Value{reflect.ValueOf(block)})
+	block := &coreTypes.Block{
+		BlockHeader:  blockHeader,
+		Transactions: make([][]byte, 0),
+	}
 
-	   	for id, pocketNode := range pocketNodes {
-	   		consensusModImpl := GetConsensusModImpl(pocketNode)
-	   		if id == unsynchedNodeId {
-	   			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(unsynchedNodeHeight)})
-	   			utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(unsynchedNodeHeight))
-	   			require.NoError(t, err)
-	   			consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
-	   		} else {
-	   			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
-	   			utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
-	   			require.NoError(t, err)
-	   			consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
-	   		}
-	   		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
-	   		consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(testRound)})
-	   	}
+	leaderConsensusModImpl := GetConsensusModImpl(leader)
+	leaderConsensusModImpl.MethodByName("SetBlock").Call([]reflect.Value{reflect.ValueOf(block)})
 
-	   //Debug message to start consensus by triggering first view change
+	for id, pocketNode := range pocketNodes {
+		consensusModImpl := GetConsensusModImpl(pocketNode)
+		if id == unsynchedNodeId {
+			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(unsynchedNodeHeight)})
+			utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(unsynchedNodeHeight))
+			require.NoError(t, err)
+			pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
+		} else {
+			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
+			utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(testHeight))
+			require.NoError(t, err)
+			pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
+		}
+		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
+		consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(testRound)})
+	}
 
-	   	for _, pocketNode := range pocketNodes {
-	   		TriggerNextView(t, pocketNode)
-	   	}
+	//Debug message to start consensus by triggering first view change
+	for _, pocketNode := range pocketNodes {
+		TriggerNextView(t, pocketNode)
+	}
 
-	   advanceTime(t, clockMock, 10*time.Millisecond)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	   // // Assert that unsynched node has a separate view of the network than the rest of the nodes
-	   newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 250, true)
-	   require.NoError(t, err)
+	// // Assert that unsynched node has a separate view of the network than the rest of the nodes
+	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 250, true)
+	require.NoError(t, err)
 
-	   	for nodeId, pocketNode := range pocketNodes {
-	   		nodeState := GetConsensusNodeState(pocketNode)
-	   		if nodeId == unsynchedNodeId {
-	   			assertNodeConsensusView(t, nodeId,
-	   				typesCons.ConsensusNodeState{
-	   					Height: unsynchedNodeHeight,
-	   					Step:   testStep,
-	   					Round:  uint8(testRound + 1),
-	   				},
-	   				nodeState)
-	   		} else {
-	   			assertNodeConsensusView(t, nodeId,
-	   				typesCons.ConsensusNodeState{
-	   					Height: testHeight,
-	   					Step:   testStep,
-	   					Round:  uint8(testRound + 1),
-	   				},
-	   				nodeState)
-	   		}
-	   		require.Equal(t, false, nodeState.IsLeader)
-	   		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
-	   	}
+	for nodeId, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		if nodeId == unsynchedNodeId {
+			assertNodeConsensusView(t, nodeId,
+				typesCons.ConsensusNodeState{
+					Height: unsynchedNodeHeight,
+					Step:   testStep,
+					Round:  uint8(testRound + 1),
+				},
+				nodeState)
+		} else {
+			assertNodeConsensusView(t, nodeId,
+				typesCons.ConsensusNodeState{
+					Height: testHeight,
+					Step:   testStep,
+					Round:  uint8(testRound + 1),
+				},
+				nodeState)
+		}
+		require.Equal(t, false, nodeState.IsLeader)
+		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
+	}
 
-	   unsynchedNodeModImpl.MethodByName("SetAggregatedStateSyncMetadata").Call([]reflect.Value{reflect.ValueOf(uint64(1)), reflect.ValueOf(numberOfPersistedDummyBlocks), reflect.ValueOf(string(consensusPK.Address()))})
+	unsynchedNodeModImpl.MethodByName("SetAggregatedStateSyncMetadata").Call([]reflect.Value{reflect.ValueOf(uint64(1)), reflect.ValueOf(numberOfPersistedDummyBlocks), reflect.ValueOf(string(consensusPK.Address()))})
 
-	   	for _, message := range newRoundMessages {
-	   		P2PBroadcast(t, pocketNodes, message)
-	   	}
+	for _, message := range newRoundMessages {
+		P2PBroadcast(t, pocketNodes, message)
+	}
 
-	   advanceTime(t, clockMock, 10*time.Millisecond)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	   // Node must request blocks from all other validators.
-	   // Ensure it sends requests to "numberOfValidators - 1" getBlockReq messages.
-	   errMsg := "StateSync Block Request Messages"
-	   numberOfExpectedBlocks := int(numberOfPersistedDummyBlocks - unsynchedNumberOfPersistedDummyBlocks)
-	   numberOfMessagesPerBlock := numberOfValidators - 1
-	   numExpectedMsgs := numberOfMessagesPerBlock * numberOfExpectedBlocks
-	   receivedRequests := make([]*anypb.Any, 0)
-	   msgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
-	   require.NoError(t, err)
+	// Node must request blocks from all other validators.
+	// Ensure it sends requests to "numberOfValidators - 1" getBlockReq messages.
+	errMsg := "StateSync Block Request Messages"
+	numberOfExpectedBlocks := int(numberOfPersistedDummyBlocks - unsynchedNumberOfPersistedDummyBlocks)
+	numberOfMessagesPerBlock := numberOfValidators - 1
+	numExpectedMsgs := numberOfMessagesPerBlock * numberOfExpectedBlocks
+	receivedRequests := make([]*anypb.Any, 0)
+	msgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
+	require.NoError(t, err)
 
-	   	for i := 0; i < len(msgs); i += numberOfMessagesPerBlock {
-	   		msg, err := codec.GetCodec().FromAny(msgs[i])
-	   		require.NoError(t, err)
+	for i := 0; i < len(msgs); i += numberOfMessagesPerBlock {
+		msg, err := codec.GetCodec().FromAny(msgs[i])
+		require.NoError(t, err)
 
-	   		stateSyncBlockReqMessage, ok := msg.(*typesCons.StateSyncMessage)
-	   		require.True(t, ok)
+		stateSyncBlockReqMessage, ok := msg.(*typesCons.StateSyncMessage)
+		require.True(t, ok)
 
-	   		blockReq := stateSyncBlockReqMessage.GetGetBlockReq()
-	   		require.NotEmpty(t, blockReq)
-	   		fmt.Println("Received Get Block Request: ", blockReq)
+		blockReq := stateSyncBlockReqMessage.GetGetBlockReq()
+		require.NotEmpty(t, blockReq)
+		fmt.Println("Received Get Block Request: ", blockReq)
 
-	   		receivedRequests = append(receivedRequests, msgs[i])
-	   	}
+		receivedRequests = append(receivedRequests, msgs[i])
+	}
 
-	   errMsg = "StateSync Get Block Response Messages"
-	   numExpectedMsgs = numberOfMessagesPerBlock
+	errMsg = "StateSync Get Block Response Messages"
+	numExpectedMsgs = numberOfMessagesPerBlock
 
-	   	for _, req := range receivedRequests {
-	   		P2PBroadcast(t, pocketNodes, req)
-	   		advanceTime(t, clockMock, 10*time.Millisecond)
+	for _, req := range receivedRequests {
+		P2PBroadcast(t, pocketNodes, req)
+		advanceTime(t, clockMock, 10*time.Millisecond)
 
-	   		msgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
-	   		require.NoError(t, err)
+		msgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
+		require.NoError(t, err)
 
-	   		msg, err := codec.GetCodec().FromAny(msgs[0])
-	   		require.NoError(t, err)
+		msg, err := codec.GetCodec().FromAny(msgs[0])
+		require.NoError(t, err)
 
-	   		stateSyncBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
-	   		require.True(t, ok)
+		stateSyncBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
+		require.True(t, ok)
 
-	   		blockReq := stateSyncBlockResMessage.GetGetBlockRes()
-	   		require.NotEmpty(t, blockReq)
+		blockReq := stateSyncBlockResMessage.GetGetBlockRes()
+		require.NotEmpty(t, blockReq)
 
-	   		fmt.Println("Received Get Block Response: ", stateSyncBlockResMessage)
+		fmt.Println("Received Get Block Response: ", stateSyncBlockResMessage)
 
-	   		// send one of the blocks to the unsynched node
-	   		P2PSend(t, unsynchedNode, msgs[0])
-	   		advanceTime(t, clockMock, 10*time.Millisecond)
-	   		//blockReq := stateSyncBlockResMessage.GetGetBlockRes()
-	   		//require.NotEmpty(t, blockReq)
-	   	}
+		// send one of the blocks to the unsynched node
+		P2PSend(t, unsynchedNode, msgs[0])
+		advanceTime(t, clockMock, 10*time.Millisecond)
+		//blockReq := stateSyncBlockResMessage.GetGetBlockRes()
+		//require.NotEmpty(t, blockReq)
+	}
 
-	   advanceTime(t, clockMock, 10*time.Millisecond)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	   	for nodeId, pocketNode := range pocketNodes {
-	   		nodeState := GetConsensusNodeState(pocketNode)
-	   		//fmt.Println("Node state is h s r: ", nodeState.Height, nodeState.Step, nodeState.Round)
-	   		assertHeight(t, nodeId, testHeight, nodeState.Height)
-	   	}
-	*/
+	for nodeId, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		//fmt.Println("Node state is h s r: ", nodeState.Height, nodeState.Step, nodeState.Round)
+		assertHeight(t, nodeId, testHeight, nodeState.Height)
+	}
+	// */
 }
 
 func TestStateSync_UnsynchedPeerSynchsMultipleBlocks_Unordered(t *testing.T) {
@@ -601,14 +607,16 @@ func TestStateSync_UnsynchedPeerSynchsMultipleBlocks_Unordered(t *testing.T) {
 		consensusModImpl := GetConsensusModImpl(pocketNode)
 		if id == unsynchedNodeId {
 			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(unsynchedNodeHeight)})
-			utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(unsynchedNodeHeight))
+			utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(unsynchedNodeHeight))
 			require.NoError(t, err)
-			consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
+			//consensusModImpl.MethodByName("SetUtilityUnitOfWork").Call([]reflect.Value{reflect.ValueOf(utilityUnitOfWork)})
+			pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
 		} else {
 			consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
-			utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
+			utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(testHeight))
 			require.NoError(t, err)
-			consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
+			//consensusModImpl.MethodByName("SetUtilityUnitOfWork").Call([]reflect.Value{reflect.ValueOf(utilityUnitOfWork)})
+			pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
 		}
 		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
 		consensusModImpl.MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(testRound)})
@@ -747,6 +755,7 @@ func TestStateSync_UnsynchedPeerSynchsMultipleBlocks_Unordered(t *testing.T) {
 }
 
 func TestStateSync_UnsynchedTwoPeersSynchsMultipleBlocks(t *testing.T) {
+	t.Skip()
 	/*
 	   clockMock := clock.NewMock()
 	   timeReminder(t, clockMock, time.Second)

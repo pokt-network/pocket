@@ -100,7 +100,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 	}
 
 	m.logger.Info().Msg("HandleGetBlockResponse, QC is valid, refreshing utility context")
-	if err := m.refreshUtilityContext(); err != nil {
+	if err := m.refreshUtilityUnitOfWork(); err != nil {
 		m.logger.Error().Err(err).Msg("Could not refresh utility context")
 		return err
 	}
