@@ -4,5 +4,5 @@
 // dummy is included when the debug build tag is not included.
 package build
 
-// PrivateKeysFile is the pre-generated manifest file for LocalNet debugging
-var PrivateKeysFile []byte
+// DebugKeybaseBackup is a backup of the pre-loaded debug keybase sourced from the manifest file for LocalNet debugging
+var DebugKeybaseBackup []byte
