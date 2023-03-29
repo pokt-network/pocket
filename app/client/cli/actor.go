@@ -3,11 +3,8 @@ package cli
 import (
 	"fmt"
 	"math/big"
-	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/pokt-network/pocket/app/client/keybase"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -16,7 +13,7 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(NewActorCommands(attachPwdFlagToSubcommands())...)
+	rootCmd.AddCommand(NewActorCommands()...)
 
 	rawChainCleanupRegex = regexp.MustCompile(rawChainCleanupExpr)
 
@@ -40,16 +37,15 @@ type (
 	actorCmdDef struct {
 		Name      string
 		ActorType coreTypes.ActorType
-		Options   []cmdOption
 	}
 )
 
-func NewActorCommands(cmdOptions []cmdOption) []*cobra.Command {
+func NewActorCommands() []*cobra.Command {
 	actorCmdDefs := []actorCmdDef{
-		{"Application", coreTypes.ActorType_ACTOR_TYPE_APP, cmdOptions},
-		{"Servicer", coreTypes.ActorType_ACTOR_TYPE_SERVICER, cmdOptions},
-		{"Fisherman", coreTypes.ActorType_ACTOR_TYPE_FISH, cmdOptions},
-		{"Validator", coreTypes.ActorType_ACTOR_TYPE_VAL, cmdOptions},
+		{"Application", coreTypes.ActorType_ACTOR_TYPE_APP},
+		{"Servicer", coreTypes.ActorType_ACTOR_TYPE_SERVICER},
+		{"Fisherman", coreTypes.ActorType_ACTOR_TYPE_FISH},
+		{"Validator", coreTypes.ActorType_ACTOR_TYPE_VAL},
 	}
 
 	cmds := make([]*cobra.Command, len(actorCmdDefs))
@@ -73,7 +69,8 @@ func newActorCommands(cmdDef actorCmdDef) []*cobra.Command {
 		newUnstakeCmd(cmdDef),
 		newUnpauseCmd(cmdDef),
 	}
-	applySubcommandOptions(cmds, cmdDef.Options)
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
 	return cmds
 }
 
@@ -98,13 +95,7 @@ If no changes are desired for the parameter, just enter the current param value 
 			fromAddrHex := args[0]
 			amount := args[1]
 
-			// Open the keybase at the specified directory
-			pocketDir := strings.TrimSuffix(dataDir, "/")
-			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-			if err != nil {
-				return err
-			}
-			kb, err := keybase.NewKeybase(keybasePath)
+			kb, err := keybaseForCLI()
 			if err != nil {
 				return err
 			}
@@ -173,13 +164,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			fromAddr := crypto.AddressFromString(args[0])
 			amount := args[1]
 
-			// Open the keybase at the specified directory
-			pocketDir := strings.TrimSuffix(dataDir, "/")
-			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-			if err != nil {
-				return err
-			}
-			kb, err := keybase.NewKeybase(keybasePath)
+			kb, err := keybaseForCLI()
 			if err != nil {
 				return err
 			}
@@ -241,13 +226,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			// Unpack CLI arguments
 			fromAddrHex := args[0]
 
-			// Open the keybase at the specified directory
-			pocketDir := strings.TrimSuffix(dataDir, "/")
-			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-			if err != nil {
-				return err
-			}
-			kb, err := keybase.NewKeybase(keybasePath)
+			kb, err := keybaseForCLI()
 			if err != nil {
 				return err
 			}
@@ -298,13 +277,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 			// Unpack CLI arguments
 			fromAddrHex := args[0]
 
-			// Open the keybase at the specified directory
-			pocketDir := strings.TrimSuffix(dataDir, "/")
-			keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-			if err != nil {
-				return err
-			}
-			kb, err := keybase.NewKeybase(keybasePath)
+			kb, err := keybaseForCLI()
 			if err != nil {
 				return err
 			}
