@@ -20,3 +20,9 @@ Feature: Validators Namespace
     Then the user should be able to unstake their wallet
     Then the user should be able to see standard output containing ""
     And the validator should have exited without error
+
+  Scenario: User Can Send To An Address
+    Given the user has a validator
+    When the user sends 150000000 POKT to another address
+    Then the user should be able to see standard output containing ""
+    And the validator should have exited without error

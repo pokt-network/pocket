@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.31] - 2023-04-04
+
+- Adds e2e-tests button to Tiltfile
+
 ## [0.0.0.30] - 2023-03-31
 
 - Improve LocalNet documentation by adding a TLDR commands to provision LocalNet with `kind`.

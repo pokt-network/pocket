@@ -34,6 +34,15 @@ docker_check:
 	fi; \
 	}
 
+# Internal helper target - check if kubectl is installed.
+kubectl_check:
+	{ \
+	if ( ! ( command -v kubectl >/dev/null )); then \
+		echo "Seems like you don't have Kubectl installed. Make sure you review docs/development/README.md before continuing"; \
+		exit 1; \
+	fi; \
+	}
+
 .PHONY: prompt_user
 # Internal helper target - prompt the user before continuing
 prompt_user:
@@ -50,7 +59,6 @@ protoc_check: ## Checks if protoc is installed
 		echo "Follow instructions to install 'protoc': https://grpc.io/docs/protoc-installation/"; \
 	fi; \
 	}
-
 
 .PHONY: go_vet
 go_vet: ## Run `go vet` on all files in the current project
@@ -336,7 +344,7 @@ test_all: ## Run all go unit tests
 	go test -p 1 -count=1 ./...
 
 .PHONY: test_e2e
-test_e2e: ## Assumes that `localnet_up` is running *warm*.
+test_e2e: kubectl_check ## Run all E2E tests
 	go test ${VERBOSE_TEST} ./e2e/tests/... -tags=e2e
 
 .PHONY: test_all_with_json_coverage
