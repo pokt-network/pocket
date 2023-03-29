@@ -307,7 +307,7 @@ const (
 	UnknownActorTypeError             = "the actor type is not recognized"
 	UnknownMessageTypeError           = "the message being by the utility message is not recognized"
 	StringToByteArrayError            = "an error occurred converting the string primitive to []byte"
-	TypeCastError                     = "an error occured type casting the parameter"
+	TypeCastError                     = "an error occurred type casting the parameter"
 )
 
 func ErrUnknownParam(paramName string) Error {
