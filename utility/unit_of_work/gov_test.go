@@ -20,6 +20,13 @@ func DefaultTestingParams(_ *testing.T) *genesis.Params {
 	return test_artifacts.DefaultParams()
 }
 
+func TestUtilityUnitOfWork_GetGovParams(t *testing.T) {
+	uow := newTestingUtilityUnitOfWork(t, 0)
+	for _, paramName := range utils.GovParamMetadataKeys {
+		gotParam, err := getGovParam[](uow, paramName)
+	}
+}
+
 func TestUtilityUnitOfWork_GetAppMaxChains(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	defaultParams := DefaultTestingParams(t)

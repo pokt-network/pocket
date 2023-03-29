@@ -3,9 +3,10 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
+	"strconv"
+
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/utils"
-	"strconv"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"

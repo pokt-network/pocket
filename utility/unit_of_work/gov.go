@@ -34,6 +34,29 @@ func (u *baseUtilityUnitOfWork) updateParam(paramName string, value any) typesUt
 	return typesUtil.ErrUnknownParam(paramName)
 }
 
+func getGovParam[T *big.Int | int | int64 | []byte | string](u *baseUtilityUnitOfWork, paramName string) (i T, err typesUtil.Error) {
+	switch tp := any(i).(type) {
+	case *big.Int:
+		v, er := u.getBigIntParam(paramName)
+		return any(v).(T), er
+	case int:
+		v, er := u.getIntParam(paramName)
+		return any(v).(T), er
+	case int64:
+		v, er := u.getInt64Param(paramName)
+		return any(v).(T), er
+	case []byte:
+		v, er := u.getByteArrayParam(paramName)
+		return any(v).(T), er
+	case string:
+		v, er := u.getStringParam(paramName)
+		return any(v).(T), er
+	default:
+		u.logger.Fatal().Msgf("unhandled parameter type: %T", tp)
+	}
+	return
+}
+
 func (u *baseUtilityUnitOfWork) getAppMinimumStake() (*big.Int, typesUtil.Error) {
 	return u.getBigIntParam(typesUtil.AppMinimumStakeParamName)
 }
