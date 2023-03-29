@@ -73,7 +73,7 @@ A:
 
 ---
 
-### Contribute to V1 🧑‍💻
+## Contribute to V1 🧑‍💻
 
 V1 is an open source project that is open to external contributors. Find information about onboarding to the project, browse available bounties, or look for open issues in the linked resources below. For any questions about contributing, contact @jessicadaugherty
 
