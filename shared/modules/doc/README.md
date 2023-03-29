@@ -5,10 +5,10 @@ This document outlines how we structured the code by splitting it into modules, 
 ## Contents <!-- omit in toc -->
 
 - [Definitions](#definitions)
-	- [**Module common interface**](#module-common-interface)
-	- [**Module**](#module)
-	- [**Module mock**](#module-mock)
-	- [**Base module**](#base-module)
+	- [Module common interface](#module-common-interface)
+	- [Module](#module)
+	- [Module mock](#module-mock)
+	- [Base module](#base-module)
 - [Code Organization](#code-organization)
 - [Modules in detail](#modules-in-detail)
 	- [Module creation](#module-creation)
@@ -21,7 +21,7 @@ This document outlines how we structured the code by splitting it into modules, 
 
 ## Definitions
 
-### **Module common interface**
+### Module common interface
 
 A module common interface is an interface that defines the methods that we modelled as common to multiple modules. For example: the ability to start/stop a module is pretty common and for that we defined the `InterruptableModule` interface.
 There are some interfaces that are common to multiple modules and we followed the [Interface segregation principle](https://en.wikipedia.org/wiki/Interface_segregation_principle) and also [Rob Pike's Go Proverb](https://youtu.be/PAAkCSZUG1c?t=317):
@@ -30,15 +30,15 @@ There are some interfaces that are common to multiple modules and we followed th
 
 These interfaces that can be embedded in modules are defined in `shared/modules/module.go`. GoDoc comments will provide you with more information about each interface.
 
-### **Module**
+### Module
 
 A module is an abstraction (go interface) of a self-contained unit of functionality that carries out a specific task/set of tasks with the idea of being reusable, modular, testable and having a clear and concise API. A module might implement 0..N common interfaces. You can find additional details in the [Modules in detail](#modules-in-detail) section below.
 
-### **Module mock**
+### Module mock
 
 A mock is a stand-in, a fake or simplified implementation of a module that is used for testing purposes. It is used to simulate the behaviour of the module and to verify that the module is interacting with other modules correctly. Mocks are generated using `go:generate` directives together with the [`mockgen` tool](https://pkg.go.dev/github.com/golang/mock#readme-running-mockgen).
 
-### **Base module**
+### Base module
 
 A base module is a module that implements a common interface, exposing the most basic logic. Base modules are meant to be **embedded** in module structs which implement this common interface **and** don't need to override the respective interface member(s). The intention being to improve DRYness (Don't Repeat Yourself) and to reduce boilerplate code. You can find the base modules in the `shared/modules/base_modules` package.
 
