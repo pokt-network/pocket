@@ -6,9 +6,6 @@ import (
 	"os"
 
 	"github.com/manifoldco/promptui"
-	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/types/known/anypb"
-
 	"github.com/pokt-network/pocket/libp2p"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
@@ -21,6 +18,8 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
+	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // TECHDEBT: Lowercase variables / constants that do not need to be exported.
@@ -48,7 +47,6 @@ var (
 		PromptSendBlockRequest,
 	}
 
-	configPath  string = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
 	genesisPath string = runtime.GetEnv("GENESIS_PATH", "build/config/genesis.json")
 	rpcHost     string
 )
@@ -77,6 +75,10 @@ func NewDebugCommand() *cobra.Command {
 		Short: "Debug utility for rapid development",
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+
+			// TECHDEBT: this is to keep backwards compatibility with localnet
+			configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
+
 			runtimeMgr := runtime.NewManagerFromFiles(
 				configPath, genesisPath,
 				runtime.WithClientDebugMode(),

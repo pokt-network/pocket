@@ -38,8 +38,9 @@ Please mark the relevant option(s):
 
 ## Testing
 
-- [ ] `make develop_test`
-- [ ] [LocalNet](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md) w/ all of the steps outlined in the `README`
+- [ ] `make develop_test`; if any code changes were made
+- [ ] [Docker Compose LocalNet](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md); if any major functionality was changed or introduced
+- [ ] [k8s LocalNet](https://github.com/pokt-network/pocket/blob/main/build/localnet/README.md); if any infrastructure or configuration changes were made
 
 <!-- REMOVE this comment block after following the instructions
  If you added additional tests or infrastructure, describe it here.

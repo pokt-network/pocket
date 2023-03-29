@@ -21,7 +21,7 @@
   - [Q: Were there other projects that inspired how to design the testing and deployment suite?](#q-were-there-other-projects-that-inspired-how-to-design-the-testing-and-deployment-suite)
   - [Q: Other projects, like Cosmos, allow people to configure different backends for key storage. Is it worth surveying the community to see what backends the keybase should integrate with (e.g. Leveldb or Pass)?](#q-other-projects-like-cosmos-allow-people-to-configure-different-backends-for-key-storage-is-it-worth-surveying-the-community-to-see-what-backends-the-keybase-should-integrate-with-eg-leveldb-or-pass)
   - [Q: In V0, the Private Key is a plain text in the server but not in the Keybase. In V1, is this all inside of the Keybase or will there be plain text PKs?](#q-in-v0-the-private-key-is-a-plain-text-in-the-server-but-not-in-the-keybase-in-v1-is-this-all-inside-of-the-keybase-or-will-there-be-plain-text-pks)
-  - [Contribute to V1 🧑‍💻](#contribute-to-v1-)
+- [Contribute to V1 🧑‍💻](#contribute-to-v1-)
 - [About Pocket Network 💙](#about-pocket-network-)
 
 ---
