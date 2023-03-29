@@ -7,13 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.1] - 2023-04-07
+## [0.0.0.1] - 2023-04-10
 
 Adds Stake, Unstake, & Send Tests [#653](https://github.com/pokt-network/pocket/pull/653)
 
 - Introduced this `CHANGELOG.md`
 - Added tests for Stake, Unstake, and Send CLI commands
-- Added the `e2e/tests` directory 
+- Added the `e2e/tests` directory
 
 ## [0.0.0.0] - 2023-03-30
 
