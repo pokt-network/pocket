@@ -13,13 +13,21 @@ type Module interface {
 // IntegratableModule is a module that integrates with the bus.
 // Essentially it's a module that is capable of communicating with the `bus` (see `shared/modules/bus_module.go`) for additional details.
 type IntegratableModule interface {
+	// SetBus sets the bus for the module.
+	//
+	// Generally it is called by the `bus` itself whenever a module is registered via `bus.RegisterModule(module modules.Module)`
 	SetBus(Bus)
+
+	// GetBus returns the bus for the module.
 	GetBus() Bus
 }
 
 // InitializableModule is a module that has some basic lifecycle logic. Specifically, it can be started and stopped.
 type InterruptableModule interface {
+	// Start starts the module and executes any logic that is required at the beginning of the module's lifecycle.
 	Start() error
+
+	// Stop stops the module and executes any logic that is required when the module's lifecycle is over.
 	Stop() error
 }
 
@@ -55,21 +63,21 @@ type ModuleOption func(InitializableModule)
 // InitializableModule is a module that can be created via the standardized `Create` method and that has a name
 // that can be used to identify it (see `shared\modules\modules_registry_module.go`) for additional details.
 type InitializableModule interface {
+	// GetModuleName returns the name of the module.
 	GetModuleName() string
+
+	// Create creates a new instance of the module.
 	Create(bus Bus, options ...ModuleOption) (Module, error)
 }
 
 // KeyholderModule is a module that can provide a private key.
 type KeyholderModule interface {
+	// GetPrivateKey returns the private key held by the module.
 	GetPrivateKey() (cryptoPocket.PrivateKey, error)
-}
-
-// P2PAddressableModule is a module that can provide a P2P address.
-type P2PAddressableModule interface {
-	GetP2PAddress() cryptoPocket.Address
 }
 
 // ObservableModule is a module that can provide observability via a Logger.
 type ObservableModule interface {
+	// GetLogger returns the logger for the module.
 	GetLogger() Logger
 }
