@@ -7,7 +7,7 @@ This document outlines how we structured the code by splitting it into modules, 
 ## Contents <!-- omit in toc -->
 
 - [Definitions](#definitions)
-	- [Module common interface](#module-common-interface)
+	- [Shared module interface](#shared-module-interface)
 	- [Module](#module)
 	- [Module mock](#module-mock)
 	- [Base module](#base-module)
@@ -23,9 +23,9 @@ This document outlines how we structured the code by splitting it into modules, 
 
 ## Definitions
 
-### Module common interface
+### Shared module interface
 
-A module common interface is an interface that defines the methods that we modelled as common to multiple modules. For example: the ability to start/stop a module is pretty common and for that we defined the `InterruptableModule` interface.
+A shared module interface is an interface that defines the methods that we modelled as common to multiple modules. For example: the ability to start/stop a module is pretty common and for that we defined the `InterruptableModule` interface.
 There are some interfaces that are common to multiple modules and we followed the [Interface segregation principle](https://en.wikipedia.org/wiki/Interface_segregation_principle) and also [Rob Pike's Go Proverb](https://youtu.be/PAAkCSZUG1c?t=317):
 
 > The bigger the interface, the weaker the abstraction.
