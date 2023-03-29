@@ -284,6 +284,8 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	return nil
 }
 
+// TODO: remove me, just to test changelog-verify.yml
+
 func (m *consensusModule) CurrentHeight() uint64 {
 	return m.height
 }
