@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.40] - 2023-03-29
+
+- Add test to exercise `sortedPeersView#Add()` and `#Remove()`
+- Fix raintree add/remove index
+
 ## [0.0.0.39] - 2023-03-28
 
 - Moved peer & url conversion utils to `p2p/utils` package
