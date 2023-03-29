@@ -101,11 +101,11 @@ jobs:
               });
 
               console.log(`Processing page ${page} with each page having ${perPage} reviews.`);
-              console.log("reviews", reviews);
+              console.log("reviews count", reviews.length);
               const filteredReviews = reviews.filter(
                 (review) => review.body.includes(uniqueIdentifier) && review.state !== "DISMISSED"
               );
-              console.log("filteredReviews", filteredReviews);
+              console.log("filteredReviews count", filteredReviews.length);
               matchingReviews.push(...filteredReviews);
 
               hasMore = reviews.length === perPage;
