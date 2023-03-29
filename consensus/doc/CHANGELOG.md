@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.40] - 2023-03-29
 
+- Bugfix for (unable to send txs in localnet) #631
+  
+## [0.0.0.40] - 2023-03-29
+
 - Add `fsm_handler.go` to handle FSM transition events in consensus module
 - Update State Machine mock in `utils_test.go`
 - Update state_sync module with additional function definitions 
