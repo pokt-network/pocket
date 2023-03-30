@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.45] - 2023-03-30
+
+- Added `modules.ModuleFactoryWithOptions` interface
+- Added factory interfaces:
+  - `modules.FactoryWithRequired`
+  - `modules.FactoryWithOptions`
+  - `modules.FactoryWithRequiredAndOptions`
+- Embedded `ModuleFactoryWithOptions` in `Module` interface
+- Switched mock generation to use reflect mode for effected interfaces (embedders)
+
 ## [0.0.0.44] - 2023-03-28
 
 - Add UnmarshalJSON to KeyPair to unmarshal public key correctly
