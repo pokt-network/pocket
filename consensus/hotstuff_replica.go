@@ -239,7 +239,7 @@ func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 	blockHeader := block.BlockHeader
 	utilityUnitOfWork := m.utilityUnitOfWork
 	if utilityUnitOfWork == nil {
-		return fmt.Errorf("utility context is nil")
+		return fmt.Errorf("utility unit of work is nil")
 	}
 
 	// Set the proposal block in the persistence context

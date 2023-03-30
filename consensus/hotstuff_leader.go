@@ -388,7 +388,7 @@ func (m *consensusModule) prepareBlock(qc *typesCons.QuorumCertificate) (*coreTy
 
 	utilityUnitOfWork := m.utilityUnitOfWork
 	if utilityUnitOfWork == nil {
-		return nil, fmt.Errorf("utility context is nil")
+		return nil, fmt.Errorf("utility unit of work is nil")
 	}
 
 	maxTxBytes := m.consCfg.MaxMempoolBytes

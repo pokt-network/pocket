@@ -11,7 +11,7 @@ import (
 func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 	utilityUnitOfWork := m.utilityUnitOfWork
 	if utilityUnitOfWork == nil {
-		return fmt.Errorf("utility context is nil")
+		return fmt.Errorf("utility uow is nil")
 	}
 
 	// Commit & release the unit of work
