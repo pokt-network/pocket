@@ -181,6 +181,8 @@ make test_utility_types && make test_utility_module
 
 ## Code Organization
 
+TODO(olshansky): This is outdated
+
 ```bash
 utility
 ├── account.go     # utility context for accounts & pools

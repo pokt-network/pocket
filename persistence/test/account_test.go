@@ -157,7 +157,7 @@ func TestAccountsUpdatedAtHeight(t *testing.T) {
 	require.Equal(t, numAccsInTestGenesis+1, len(accs))
 
 	// Close context at height 0 without committing new account
-	require.NoError(t, db.Close())
+	db.Release()
 	// start a new context at height 1
 	db = NewTestPostgresContext(t, 1)
 
@@ -380,7 +380,7 @@ func TestPoolsUpdatedAtHeight(t *testing.T) {
 	require.Equal(t, numPoolsInTestGenesis+1, len(accs))
 
 	// Close context at height 0 without committing new Pool
-	require.NoError(t, db.Close())
+	db.Release()
 	// start a new context at height 1
 	db = NewTestPostgresContext(t, 1)
 

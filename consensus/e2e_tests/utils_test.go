@@ -59,7 +59,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 			PrivateKey:      config.PrivateKey,
 			MaxMempoolBytes: maxTxBytes,
 			PacemakerConfig: &configs.PacemakerConfig{
-				TimeoutMsec:               5000,
+				TimeoutMsec:               10000,
 				Manual:                    false,
 				DebugTimeBetweenStepsMsec: 0,
 			},
@@ -354,7 +354,6 @@ loop:
 func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *mockModules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
-	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
 	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
 
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
@@ -394,13 +393,9 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 		return 0, nil
 	}).AnyTimes()
 
-	// The persistence context should usually be accessed via the utility module within the context
-	// of the consensus module. This one is only used when loading the initial consensus module
-	// state; hence the `-1` expectation in the call above.
-	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
-	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().Release().AnyTimes()
 
 	return persistenceMock
 }
@@ -458,9 +453,10 @@ func baseLeaderUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.Genesis
 	ctrl := gomock.NewController(t)
 	utilityLeaderUnitOfWorkMock := mockModules.NewMockLeaderUtilityUnitOfWork(ctrl)
 
-	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
-	persistenceContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
-	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
+	rwContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
+	rwContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	rwContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
+	rwContextMock.EXPECT().Release().AnyTimes()
 
 	utilityLeaderUnitOfWorkMock.EXPECT().
 		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).
@@ -474,8 +470,6 @@ func baseLeaderUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.Genesis
 	utilityLeaderUnitOfWorkMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
 	utilityLeaderUnitOfWorkMock.EXPECT().Release().Return(nil).AnyTimes()
 
-	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
-
 	return utilityLeaderUnitOfWorkMock
 }
 
@@ -483,9 +477,10 @@ func baseReplicaUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.Genesi
 	ctrl := gomock.NewController(t)
 	utilityReplicaUnitOfWorkMock := mockModules.NewMockReplicaUtilityUnitOfWork(ctrl)
 
-	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
-	persistenceContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
-	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
+	rwContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
+	rwContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	rwContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
+	rwContextMock.EXPECT().Release().AnyTimes()
 
 	utilityReplicaUnitOfWorkMock.EXPECT().
 		ApplyBlock().
@@ -494,8 +489,6 @@ func baseReplicaUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.Genesi
 	utilityReplicaUnitOfWorkMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	utilityReplicaUnitOfWorkMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
 	utilityReplicaUnitOfWorkMock.EXPECT().Release().Return(nil).AnyTimes()
-
-	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
 
 	return utilityReplicaUnitOfWorkMock
 }

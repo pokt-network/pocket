@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.28] - 2023-03-30
+
+- Update `pacemaker_timeout` from 5 to 10 seconds to make the logging output less noisy during development
+- Updated configurations related to postgres connection pooling
+
 ## [0.0.0.27] - 2023-03-28
 
 - Silence gopls build error about missing DebugKeybaseBackup

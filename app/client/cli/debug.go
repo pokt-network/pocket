@@ -38,10 +38,10 @@ var (
 	p2pMod modules.P2PModule
 
 	items = []string{
-		PromptResetToGenesis,
 		PromptPrintNodeState,
 		PromptTriggerNextView,
 		PromptTogglePacemakerMode,
+		PromptResetToGenesis,
 		PromptShowLatestBlockInStore,
 		PromptSendMetadataRequest,
 		PromptSendBlockRequest,
