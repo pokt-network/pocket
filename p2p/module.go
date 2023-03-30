@@ -270,11 +270,13 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 func (m *p2pModule) setupNetwork() (err error) {
 	if m.cfg.UseRainTree {
 		m.network, err = raintree.NewRainTreeNetwork(
-			m.host,
-			m.address,
 			m.GetBus(),
-			m.pstoreProvider,
-			m.currentHeightProvider,
+			raintree.RainTreeConfig{
+				Host:                  m.host,
+				Addr:                  m.address,
+				PeerstoreProvider:     m.pstoreProvider,
+				CurrentHeightProvider: m.currentHeightProvider,
+			},
 		)
 	} else {
 		m.network, err = stdnetwork.NewNetwork(

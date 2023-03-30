@@ -48,26 +48,26 @@ type rainTreeNetwork struct {
 	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 }
 
-func NewRainTreeNetwork(host libp2pHost.Host, addr cryptoPocket.Address, bus modules.Bus, pstoreProvider providers.PeerstoreProvider, currentHeightProvider providers.CurrentHeightProvider) (typesP2P.Network, error) {
+func NewRainTreeNetwork(bus modules.Bus, cfg RainTreeConfig) (typesP2P.Network, error) {
+	return new(rainTreeNetwork).Create(bus, cfg)
+}
+
+func (*rainTreeNetwork) Create(bus modules.Bus, netCfg RainTreeConfig) (typesP2P.Network, error) {
 	networkLogger := logger.Global.CreateLoggerForModule("network")
 	networkLogger.Info().Msg("Initializing rainTreeNetwork")
 
-	if pstoreProvider == nil {
-		return nil, fmt.Errorf("peerstore provider required, got nil")
-	}
-
-	if currentHeightProvider == nil {
-		return nil, fmt.Errorf("current height provider required, got nil")
+	if err := netCfg.isValid(); err != nil {
+		return nil, err
 	}
 
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
 
 	n := &rainTreeNetwork{
-		host:                  host,
-		selfAddr:              addr,
+		host:                  netCfg.Host,
+		selfAddr:              netCfg.Addr,
 		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
-		pstoreProvider:        pstoreProvider,
-		currentHeightProvider: currentHeightProvider,
+		pstoreProvider:        netCfg.PeerstoreProvider,
+		currentHeightProvider: netCfg.CurrentHeightProvider,
 		logger:                networkLogger,
 	}
 	n.SetBus(bus)
