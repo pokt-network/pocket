@@ -44,20 +44,22 @@ var _ modules.P2PModule = &p2pModule{}
 type p2pModule struct {
 	base_modules.IntegratableModule
 
-	address               cryptoPocket.Address
-	logger                *modules.Logger
-	cfg                   *configs.P2PConfig
-	bootstrapNodes        []string
-	currentHeightProvider providers.CurrentHeightProvider
-	pstoreProvider        providers.PeerstoreProvider
-	identity              libp2p.Option
-	listenAddrs           libp2p.Option
+	address        cryptoPocket.Address
+	logger         *modules.Logger
+	cfg            *configs.P2PConfig
+	bootstrapNodes []string
+	identity       libp2p.Option
+	listenAddrs    libp2p.Option
 	// host represents a libp2p network node, it encapsulates a libp2p peerstore
 	// & connection manager. `libp2p.New` configures and starts listening
-	// according to options.
+	// according to options. Assigned via `#Start()` (starts on instantiation).
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
-	host    libp2pHost.Host
-	network typesP2P.Network
+	host libp2pHost.Host
+
+	// Assigned during creation via `#setupDependencies()`.
+	network               typesP2P.Network
+	currentHeightProvider providers.CurrentHeightProvider
+	pstoreProvider        providers.PeerstoreProvider
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
