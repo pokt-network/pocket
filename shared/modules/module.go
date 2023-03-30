@@ -8,6 +8,7 @@ type Module interface {
 	InitializableModule
 	IntegratableModule
 	InterruptableModule
+	ModuleFactoryWithOptions
 }
 
 type IntegratableModule interface {
