@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.41] - 2023-03-29
+## [0.0.0.41] - 2023-03-30
 
 - Improve & simplify `utilityUnitOfWork` management
 - Logging - improve the wordig and context of various logging statements

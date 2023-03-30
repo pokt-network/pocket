@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.42] - 2023-03-28
+## [0.0.0.42] - 2023-03-30
 
 - Replaced all `pgx.Conn` with `pgxpool.Conn` to use postgres connection pooling
 - Consolidate and simplify `Release` and `Close` and `resetContext` into a single function

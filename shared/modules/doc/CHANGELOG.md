@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.9] - 2023-03-23
+## [0.0.0.9] - 2023-03-30
 
 - `Consensus` - improved documentation for supporting interfaces
 - `Consensus` - Consolidated `ResetRound`, `ResetForNewHeight` `ClearLeaderMessagesPool`
