@@ -191,7 +191,7 @@ func getPeerIP(hostname string) (net.IP, error) {
 
 // stringLogArrayMarshaler implements the `zerolog.LogArrayMarshaler` interface
 // to marshal an array of strings for use with zerolog.
-// TECHDEBT(#609): move to test common utilities.
+// TECHDEBT(#609): move & de-duplicate
 type stringLogArrayMarshaler struct {
 	strs []string
 }
