@@ -48,6 +48,6 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 }
 
 func (m *consensusModule) shouldElectNextLeader() bool {
-	// Execute leader election if there is no leader and we are in a newRound
+	// Execute leader election if there is no leader and we are in a NewRound
 	return m.step == NewRound && m.leaderId == nil
 }

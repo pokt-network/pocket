@@ -6,7 +6,7 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
-// TECHDEBT: GetNodeState is only exposed publicly so it can be accessed via reflection in tests
+// TODO (#609): GetNodeState is currently exposed publicly so it can be accessed via reflection in tests. Refactor to use the test-only package and remove reflection
 func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	leaderId := typesCons.NodeId(0)
 	if m.leaderId != nil {
