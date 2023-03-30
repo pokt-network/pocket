@@ -24,6 +24,13 @@ import (
 
 var _ typesP2P.Network = &rainTreeNetwork{}
 
+type RainTreeConfig struct {
+	Addr                  cryptoPocket.Address
+	PeerstoreProvider     providers.PeerstoreProvider
+	CurrentHeightProvider providers.CurrentHeightProvider
+	Host                  libp2pHost.Host
+}
+
 type rainTreeNetwork struct {
 	base_modules.IntegratableModule
 
@@ -41,8 +48,6 @@ type rainTreeNetwork struct {
 	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 }
 
-// TECHDEBT: refactor signature to receive a config struct
-// (i.e. `NewRainTreeNetwork(bus modules.Bus, cfg NetworkConfig).
 func NewRainTreeNetwork(host libp2pHost.Host, addr cryptoPocket.Address, bus modules.Bus, pstoreProvider providers.PeerstoreProvider, currentHeightProvider providers.CurrentHeightProvider) (typesP2P.Network, error) {
 	networkLogger := logger.Global.CreateLoggerForModule("network")
 	networkLogger.Info().Msg("Initializing rainTreeNetwork")
@@ -301,4 +306,15 @@ func (n *rainTreeNetwork) setupDependencies() error {
 func (n *rainTreeNetwork) setupPeerManager(pstore typesP2P.Peerstore) (err error) {
 	n.peersManager, err = newPeersManager(n.selfAddr, pstore, true)
 	return err
+}
+
+func (cfg RainTreeConfig) isValid() error {
+	if cfg.PeerstoreProvider == nil {
+		return fmt.Errorf("peerstore provider not configured")
+	}
+
+	if cfg.CurrentHeightProvider == nil {
+		return fmt.Errorf("current height provider not configured")
+	}
+	return nil
 }
