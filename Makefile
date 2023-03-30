@@ -66,12 +66,13 @@ go_staticcheck: ## Run `go staticcheck` on all files in the current project
 	fi; \
 	}
 
+GODOC_PORT ?= 6060
 .PHONY: go_doc
 go_doc: # INCOMPLETE: [WIP] Generate documentation for the current project using `godo`
 	{ \
 	if command -v godoc >/dev/null; then \
-		echo "Visit http://localhost:6060/pkg/github.com/pokt-network/pocket"; \
-		godoc -http=localhost:6060  -goroot=${PWD}/..; \
+		echo "Visit http://localhost:${GODOC_PORT}/pkg/github.com/pokt-network/pocket"; \
+		godoc -http=localhost:${GODOC_PORT}  -goroot=${PWD}/..; \
 	else \
 		echo "Install with 'go install golang.org/x/tools/cmd/godoc@latest'"; \
 	fi; \

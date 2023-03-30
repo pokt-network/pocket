@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/pokt-network/pocket/app/client/keybase"
+	"github.com/pokt-network/pocket/runtime/configs"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
 )
@@ -64,11 +65,14 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	kb, err := keybase.NewKeybase(tmpDir)
+	kb, err := keybase.NewKeybase(&configs.KeybaseConfig{})
 	if err != nil {
 		panic(err)
 	}
-	db := kb.GetBadgerDB()
+	db, err := kb.GetBadgerDB()
+	if err != nil {
+		panic(err)
+	}
 
 	// Add validator addresses if not present
 	fmt.Println("✍️ Debug keybase initializing... Adding all the validator keys")
