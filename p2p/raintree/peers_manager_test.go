@@ -96,13 +96,14 @@ func TestRainTree_Peerstore_HandleUpdate(t *testing.T) {
 			libp2pMockNet, err := mocknet.WithNPeers(1)
 			require.NoError(t, err)
 
-			network, err := NewRainTreeNetwork(
-				libp2pMockNet.Hosts()[0],
-				pubKey.Address(),
-				mockBus,
-				pstoreProviderMock,
-				currentHeightProviderMock,
-			)
+			netCfg := RainTreeConfig{
+				Host:                  libp2pMockNet.Hosts()[0],
+				Addr:                  pubKey.Address(),
+				PeerstoreProvider:     pstoreProviderMock,
+				CurrentHeightProvider: currentHeightProviderMock,
+			}
+
+			network, err := NewRainTreeNetwork(mockBus, netCfg)
 			require.NoError(t, err)
 
 			rainTree := network.(*rainTreeNetwork)
@@ -151,10 +152,15 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 			mockBus := mockBus(ctrl)
 			pstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 			currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
-
 			hostMock := mocksP2P.NewMockHost(ctrl)
+			netCfg := RainTreeConfig{
+				Host:                  hostMock,
+				Addr:                  addr,
+				PeerstoreProvider:     pstoreProviderMock,
+				CurrentHeightProvider: currentHeightProviderMock,
+			}
 
-			network, err := NewRainTreeNetwork(hostMock, addr, mockBus, pstoreProviderMock, currentHeightProviderMock)
+			network, err := NewRainTreeNetwork(mockBus, netCfg)
 			require.NoError(b, err)
 
 			rainTree := network.(*rainTreeNetwork)
@@ -267,13 +273,14 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 	hostMock := mocksP2P.NewMockHost(ctrl)
 	hostMock.EXPECT().Peerstore().Return(libp2pPStore).AnyTimes()
 
-	network, err := NewRainTreeNetwork(
-		hostMock,
-		[]byte{expectedMsgProp.orig},
-		busMock,
-		pstoreProviderMock,
-		currentHeightProviderMock,
-	)
+	netCfg := RainTreeConfig{
+		Host:                  hostMock,
+		Addr:                  []byte{expectedMsgProp.orig},
+		PeerstoreProvider:     pstoreProviderMock,
+		CurrentHeightProvider: currentHeightProviderMock,
+	}
+
+	network, err := NewRainTreeNetwork(busMock, netCfg)
 	require.NoError(t, err)
 	rainTree := network.(*rainTreeNetwork)
 

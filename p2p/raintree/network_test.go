@@ -52,7 +52,14 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	peerstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-	network, err := NewRainTreeNetwork(host, selfAddr, busMock, peerstoreProviderMock, currentHeightProviderMock)
+	netCfg := RainTreeConfig{
+		Host:                  host,
+		Addr:                  selfAddr,
+		PeerstoreProvider:     peerstoreProviderMock,
+		CurrentHeightProvider: currentHeightProviderMock,
+	}
+
+	network, err := NewRainTreeNetwork(busMock, netCfg)
 	require.NoError(t, err)
 
 	rainTreeNet := network.(*rainTreeNetwork)
@@ -107,8 +114,14 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	busMock := mockBus(ctrl)
 	peerstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
+	netCfg := RainTreeConfig{
+		Host:                  host,
+		Addr:                  selfAddr,
+		PeerstoreProvider:     peerstoreProviderMock,
+		CurrentHeightProvider: currentHeightProviderMock,
+	}
 
-	network, err := NewRainTreeNetwork(host, selfAddr, busMock, peerstoreProviderMock, currentHeightProviderMock)
+	network, err := NewRainTreeNetwork(busMock, netCfg)
 	require.NoError(t, err)
 	rainTree := network.(*rainTreeNetwork)
 
