@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.40] - 2023-03-28
+## [0.0.0.41] - 2023-03-29
 
 - Improve & simplify `utilityUnitOfWork` management
 - Logging - improve the wordig and context of various logging statements
@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved implementation of `modules.ConsensusDebugModule` into its own file
 - Moved implementation of `modules.ConsensusPacemaker` into its own file
 - Moved implementation of `modules.ConsensusStateSync` into its own file
+
+## [0.0.0.40] - 2023-03-29
+
+- Bugfix for (unable to send txs in localnet) #631
 
 ## [0.0.0.39] - 2023-03-26
 
