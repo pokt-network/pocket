@@ -8,6 +8,7 @@ stateDiagram-v2
     Consensus_Pacemaker --> Consensus_Unsynched: Consensus_IsUnsynched
     Consensus_SyncMode --> Consensus_Synched: Consensus_IsSynchedNonValidator
     Consensus_SyncMode --> Consensus_Pacemaker: Consensus_IsSynchedValidator
+    Consensus_SyncMode --> Consensus_Unsynched: Consensus_IsUnsynched
     Consensus_Synched --> Consensus_Unsynched: Consensus_IsUnsynched
     Consensus_Unsynched --> Consensus_SyncMode: Consensus_IsSyncing
     P2P_Bootstrapped --> Consensus_Unsynched: Consensus_IsUnsynched

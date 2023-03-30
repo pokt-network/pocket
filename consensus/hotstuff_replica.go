@@ -248,6 +248,8 @@ func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 		return err
 	}
 
+	m.logger.Info().Msgf("Block's proposer address is : %x, I think the leaderID is: %d", blockHeader.ProposerAddress, *m.leaderId)
+
 	if blockHeader.StateHash != stateHash {
 		return typesCons.ErrInvalidAppHash(blockHeader.StateHash, stateHash)
 	}

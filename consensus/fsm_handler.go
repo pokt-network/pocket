@@ -76,6 +76,7 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 // This is a transition mode from node bootstrapping to a node being out-of-sync.
 func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM is in bootstrapped state, so it is out of sync, and transitions to unsynched mode")
+
 	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
 }
 
@@ -84,7 +85,15 @@ func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransiti
 // This mode is a transition mode from the node being up-to-date (i.e. Pacemaker mode, Synched mode) with the latest network height to being out-of-sync.
 // As soon as node transitions to this mode, it will transition to the sync mode.
 func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Debug().Msg("FSM is in Unsyched state, as node is out of sync sending syncmode event to start syncing")
+	m.logger.Debug().Msg("FSM is in Unsyched state, as node is out of sync, sending syncmode event to start syncing")
+
+	// when node first bootstraps, request metadata from the network,
+	// then transtion to sync mode
+
+	// TODO: consider to add this, because it doesn't make any difference, as node is not yet in the other peers' address book
+	// but node must keep trying to receive metadata from the network until it receives it, when it is unsyched and can't continue bootstrapped
+	// so we trigger again requesting metadata from the network as soons as node transitions to unsynched mode
+	// m.stateSync.RequestMetadata()
 
 	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
 }
@@ -92,9 +101,10 @@ func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionE
 // HandleSyncMode handles FSM event Consensus_IsSyncing, and SyncMode is the destination state.
 // In Sync mode node (validator or non-validator) starts syncing with the rest of the network.
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Debug().Msg("FSM is in Sync Mode, start syncing...")
+	m.logger.Debug().Msg("FSM is in Sync Mode, starting syncing...")
 
-	//return m.stateSync.StartSynching()
+	// FSM can transition to Unsynched mode from syncmode if it can't start syncing with the network,
+	// This can happen due to node not having any/updated metadata
 
 	return m.stateSync.TriggerSync()
 }

@@ -60,6 +60,7 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 					string(coreTypes.StateMachineState_Consensus_Pacemaker),
 					string(coreTypes.StateMachineState_Consensus_Synched),
 					string(coreTypes.StateMachineState_P2P_Bootstrapped),
+					string(coreTypes.StateMachineState_Consensus_SyncMode),
 				},
 				Dst: string(coreTypes.StateMachineState_Consensus_Unsynched),
 			},

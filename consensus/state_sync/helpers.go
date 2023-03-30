@@ -17,6 +17,7 @@ func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncM
 	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
 
 	validators, err := m.getValidatorsAtHeight(currentHeight)
+	//validators, err := m.getValidatorsAtHeight(block_height)
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
@@ -40,7 +41,7 @@ func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessag
 		return err
 	}
 
-	m.logger.Info().Fields(m.logHelper(string(receiverPeerAddress))).Msg("Sending StateSync Message")
+	m.logger.Info().Fields(m.logHelper(receiverPeerAddress.ToString())).Msgf("Sending StateSync Message: %s", stateSyncMsg)
 
 	if err := m.GetBus().GetP2PModule().Send(receiverPeerAddress, anyMsg); err != nil {
 		m.logger.Error().Msgf(typesCons.ErrSendMessage.Error(), err)

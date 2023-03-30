@@ -1,6 +1,8 @@
 package leader_election
 
 import (
+	"fmt"
+
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
@@ -38,6 +40,7 @@ func (m *leaderElectionModule) GetModuleName() string {
 }
 
 func (m *leaderElectionModule) ElectNextLeader(message *typesCons.HotstuffMessage) (typesCons.NodeId, error) {
+	fmt.Printf("ELECTING NEXT LEADER, for this message: %v ", message)
 	nodeId, err := m.electNextLeaderDeterministicRoundRobin(message)
 	if err != nil {
 		return typesCons.NodeId(0), err

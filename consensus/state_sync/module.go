@@ -42,8 +42,8 @@ type StateSyncModule interface {
 
 	SendStateSyncMessage(msg *typesCons.StateSyncMessage, receiverPeerAddress cryptoPocket.Address, block_height uint64) error
 
-	SetStateSyncMetadataBuffer([]*typesCons.StateSyncMetadataResponse)
-	GetStateSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse
+	//SetStateSyncMetadataBuffer([]*typesCons.StateSyncMetadataResponse)
+	//GetStateSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse
 
 	// Getter functions for the aggregated metadata and the metadata buffer, used by consensus module.
 	GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse
@@ -54,6 +54,10 @@ type StateSyncModule interface {
 
 	// Returns the current state of the sync node.
 	CurrentState() state
+
+	HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error
+
+	RequestMetadata() error
 }
 
 // This interface should be only used for debugging purposes and tests.
@@ -115,12 +119,25 @@ func (m *stateSync) TriggerSync() error {
 	defer m.m.Unlock()
 
 	if m.snycing { // if the node is currently syncing, update the sync state
+		m.logger.Info().Msg("Node is already syncing, so updating the sync state.")
 		m.state.endingHeight = m.aggregatedSyncMetadata.MaxHeight
 	} else { // if the node is not currently syncing, generate a new sync state
+		m.logger.Info().Msg("Node is currently not syncing, so generating a new sync state.")
 		maxPersistedBlockHeight, err := m.maximumPersistedBlockHeight()
 		if err != nil {
 			return err
 		}
+
+		if maxPersistedBlockHeight > m.aggregatedSyncMetadata.MaxHeight || m.aggregatedSyncMetadata.MaxHeight == 0 {
+			// should only happen when node is back online, or bootstraps, and the aggregated metadata is not updated yet.
+			m.logger.Info().Msg("Unsynched event is triggered, but aggregated metadata's height is less than node's current height. So skipping the syncing. Syncing will start when there is a new block proposal and aggregated metadata is updated.")
+			//return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
+			return nil
+		} else if maxPersistedBlockHeight == m.aggregatedSyncMetadata.MaxHeight {
+			m.logger.Info().Msg("Node is already synched with the network, so skipping the syncing.")
+			return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
+		}
+
 		m.snycing = true
 		m.state = state{
 			height:         maxPersistedBlockHeight,
@@ -128,6 +145,7 @@ func (m *stateSync) TriggerSync() error {
 			endingHeight:   m.aggregatedSyncMetadata.MaxHeight,
 			blockReceived:  make(chan uint64, 1),
 		}
+		m.logger.Info().Msgf("Starting syncing from height %d to height %d", m.state.startingHeight, m.state.endingHeight)
 		go m.Sync()
 	}
 
@@ -213,6 +231,15 @@ func (m *stateSync) DisableServerMode() error {
 	return nil
 }
 
+func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
+	m.logger.Info().Fields(m.logHelper(metaDataRes.PeerAddress)).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
+
+	m.syncMetadataBuffer = append(m.syncMetadataBuffer, metaDataRes)
+	m.logger.Info().Msg("Finished handling StateSync MetadataResponse")
+
+	return nil
+}
+
 func (m *stateSync) GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse {
 	m.aggregatedSyncMetadata = m.aggregateMetadataResponses()
 	return m.aggregatedSyncMetadata
@@ -222,15 +249,15 @@ func (m *stateSync) SetAggregatedSyncMetadata(metadata *typesCons.StateSyncMetad
 	m.aggregatedSyncMetadata = metadata
 }
 
-func (m *stateSync) SetStateSyncMetadataBuffer(aggregatedSyncMetadata []*typesCons.StateSyncMetadataResponse) {
-	m.m.Lock()
-	defer m.m.Unlock()
-	m.syncMetadataBuffer = aggregatedSyncMetadata
-}
+// func (m *stateSync) SetStateSyncMetadataBuffer(aggregatedSyncMetadata []*typesCons.StateSyncMetadataResponse) {
+// 	m.m.Lock()
+// 	defer m.m.Unlock()
+// 	m.syncMetadataBuffer = aggregatedSyncMetadata
+// }
 
-func (m *stateSync) GetStateSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse {
-	return m.syncMetadataBuffer
-}
+// func (m *stateSync) GetStateSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse {
+// 	return m.syncMetadataBuffer
+// }
 
 // StartSynching
 // requests missing blocks one by one from its peers.
@@ -253,7 +280,7 @@ loop:
 		case <-ticker.C:
 			m.m.Lock()
 			if m.state.height == m.state.endingHeight {
-				m.logger.Info().Msgf("Node is synched for state: height: %d, starting height: %d, ending height: %d", m.state.height, m.state.startingHeight, m.state.startingHeight)
+				m.logger.Info().Msgf("Node is synched for state: height: %d, starting height: %d, ending height: %d", m.state.height, m.state.startingHeight, m.state.endingHeight)
 				break loop
 			}
 			m.m.Unlock()
@@ -273,11 +300,16 @@ loop:
 	}
 
 	// TODO this must be initialized and cached in consensus module
-	isValidator, err := m.GetBus().GetConsensusModule().IsValidator()
-	if err != nil {
-		m.logger.Err(err).Msg("Couldn't check if the node is validator")
-		return
-	}
+	// isValidator, err := m.GetBus().GetConsensusModule().IsValidator()
+	// if err != nil {
+	// 	m.logger.Err(err).Msg("Couldn't check if the node is validator")
+	// 	return
+	// }
+
+	// TECHDEBT: this is a temporary fix to make the node a validator
+	isValidator := true
+
+	m.logger.Info().Msg("Noce is synched, transitions as validator \n")
 
 	var event coreTypes.StateMachineEvent
 
@@ -349,6 +381,24 @@ func (m *stateSync) metadataSyncLoop() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			m.logger.Info().Msg("Periodic metadata sync is triggered")
+			m.RequestMetadata()
+
+		case <-ctx.Done():
+			return nil
+
+		}
+	}
+}
+
+func (m *stateSync) RequestMetadata() error {
+
 	// form a metaData request
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_MetadataReq{
@@ -358,23 +408,13 @@ func (m *stateSync) metadataSyncLoop() error {
 		},
 	}
 
-	ticker := time.NewTicker(20 * time.Second)
-	defer ticker.Stop()
+	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
 
-	for {
-		select {
-		case <-ticker.C:
-			m.logger.Info().Msg("Periodic metadata sync is triggered")
-			currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-
-			err := m.broadcastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
-			if err != nil {
-				return err
-			}
-
-		case <-ctx.Done():
-			return nil
-
-		}
+	err := m.broadcastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
+	if err != nil {
+		return err
 	}
+
+	return nil
+
 }

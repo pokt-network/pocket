@@ -42,7 +42,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		}
 		return m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
 	case *typesCons.StateSyncMessage_MetadataRes:
-		return m.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
+		return m.stateSync.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
 	case *typesCons.StateSyncMessage_GetBlockReq:
 		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage MetadataReq")
 		if !m.stateSync.IsServerModEnabled() {
@@ -131,12 +131,13 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 }
 
 // HandleStateSyncMetadataResponse handles the received metadata. It updates state sync buffer
-func (m *consensusModule) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
-	m.logger.Info().Fields(m.logHelper(metaDataRes.PeerAddress)).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
+// func (m *consensusModule) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
+// 	m.logger.Info().Fields(m.logHelper(metaDataRes.PeerAddress)).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
 
-	metaDataBuffer := m.stateSync.GetStateSyncMetadataBuffer()
-	metaDataBuffer = append(metaDataBuffer, metaDataRes)
-	m.stateSync.SetStateSyncMetadataBuffer(metaDataBuffer)
+// 	metaDataBuffer := m.stateSync.GetStateSyncMetadataBuffer()
+// 	metaDataBuffer = append(metaDataBuffer, metaDataRes)
+// 	m.stateSync.SetStateSyncMetadataBuffer(metaDataBuffer)
+// 	m.logger.Info().Msg("Finished handling StateSync MetadataResponse")
 
-	return nil
-}
+// 	return nil
+// }
