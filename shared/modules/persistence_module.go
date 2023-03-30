@@ -196,7 +196,6 @@ type PersistenceReadContext interface {
 	GetIntParam(paramName string, height int64) (int, error)
 	GetStringParam(paramName string, height int64) (string, error)
 	GetBytesParam(paramName string, height int64) ([]byte, error)
-	GetParameter(paramName string, height int64) (any, error)
 	GetAllParams() (map[string]string, error)
 
 	// Flags

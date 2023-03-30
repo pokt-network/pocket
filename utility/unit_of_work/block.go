@@ -53,7 +53,7 @@ func (u *baseUtilityUnitOfWork) handleProposerRewards(proposer []byte) typesUtil
 	}
 
 	//
-	proposerCutPercentage, err := u.getProposerPercentageOfFees()
+	proposerCutPercentage, err := getGovParam[int](u, typesUtil.ProposerPercentageOfFeesParamName)
 	if err != nil {
 		return err
 	}

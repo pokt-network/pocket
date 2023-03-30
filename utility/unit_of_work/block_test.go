@@ -9,6 +9,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -48,7 +49,7 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 	// require.NoError(t, err)
 	// require.Equal(t, missed, 1)
 
-	feeBig, err := uow.getMessageSendFee()
+	feeBig, err := getGovParam[*big.Int](uow, typesUtil.MessageSendFee)
 	require.NoError(t, err)
 
 	expectedAmountSubtracted := big.NewInt(0).Add(amountSent, feeBig)
@@ -57,7 +58,7 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amountAfter, "unexpected after balance; expected %v got %v", expectedAfterBalance, amountAfter)
 
-	proposerCutPercentage, err := uow.getProposerPercentageOfFees()
+	proposerCutPercentage, err := getGovParam[int](uow, typesUtil.ProposerPercentageOfFeesParamName)
 	require.NoError(t, err)
 
 	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feeBig)
@@ -120,10 +121,10 @@ func TestUtilityUnitOfWork_EndBlock(t *testing.T) {
 	_, _, er = uow.ApplyBlock()
 	require.NoError(t, er)
 
-	feeBig, err := uow.getMessageSendFee()
+	feeBig, err := getGovParam[*big.Int](uow, typesUtil.MessageSendFee)
 	require.NoError(t, err)
 
-	proposerCutPercentage, err := uow.getProposerPercentageOfFees()
+	proposerCutPercentage, err := getGovParam[int](uow, typesUtil.ProposerPercentageOfFeesParamName)
 	require.NoError(t, err)
 
 	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feeBig)

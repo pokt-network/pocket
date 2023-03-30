@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/utils"
+	"github.com/pokt-network/pocket/shared/modules"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
@@ -21,21 +22,21 @@ func (p *PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	return err
 }
 
-// GetParameter matches paramName against the GovParamMetadataMap mapping and calls the proper
-// getter function getParamOrFlag[int | string | byte] and return its values
-func (p *PostgresContext) GetParameter(paramName string, height int64) (v any, err error) {
-	paramType := utils.GovParamMetadataMap[paramName].GoType
-	switch paramType {
-	case "int", "int32", "int64":
-		v, _, err = getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
-	case "string":
-		v, _, err = getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
-	case "[]uint8": // []byte
-		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
+func GetParameter[T int | string | []byte](p modules.PersistenceReadContext, paramName string, height int64) (i T, err error) {
+	switch tp := any(i).(type) {
+	case int:
+		v, er := p.GetIntParam(paramName, height)
+		return any(v).(T), er
+	case string:
+		v, er := p.GetStringParam(paramName, height)
+		return any(v).(T), er
+	case []byte:
+		v, er := p.GetBytesParam(paramName, height)
+		return any(v).(T), er
 	default:
-		return nil, fmt.Errorf("unhandled type for param (%s): got %s.", paramName, paramType)
+		logger.Global.Fatal().Msgf("unhandled type for param (%s): got %s.", paramName, tp)
 	}
-	return v, err
+	return
 }
 
 func (p *PostgresContext) GetIntParam(paramName string, height int64) (int, error) {

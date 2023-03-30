@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"github.com/pokt-network/pocket/runtime/genesis"
 	"reflect"
 	"strings"
+
+	"github.com/pokt-network/pocket/runtime/genesis"
 )
 
 // init initializes a map that contains the metadata extracted from `gov.proto`.
@@ -13,12 +14,13 @@ func init() {
 }
 
 var (
-	GovParamMetadataMap  map[string]govParamMetadata
+	GovParamMetadataMap  map[string]GovParamMetadata
 	GovParamMetadataKeys []string
 )
 
-type govParamMetadata struct {
+type GovParamMetadata struct {
 	PropertyName string
+	ParamName    string
 	ParamOwner   string
 	PoktType     string
 	GoType       string
@@ -32,8 +34,8 @@ type govParamMetadata struct {
 // and related metadata into the protobuf file.
 //
 // WARNING: reflections in prod
-func parseGovProto() (govParamMetadataMap map[string]govParamMetadata) {
-	govParamMetadataMap = make(map[string]govParamMetadata)
+func parseGovProto() (govParamMetadataMap map[string]GovParamMetadata) {
+	govParamMetadataMap = make(map[string]GovParamMetadata)
 	fields := reflect.VisibleFields(reflect.TypeOf(genesis.Params{}))
 	for _, field := range fields {
 		if !field.IsExported() {
@@ -45,8 +47,9 @@ func parseGovProto() (govParamMetadataMap map[string]govParamMetadata) {
 		poktOwner := extractStructTag(poktTag, "owner=")
 		golangType := field.Type.Name() // Get string version of field's Golang type
 		protoName := extractStructTag(protoTag, "name=")
-		govParamMetadataMap[protoName] = govParamMetadata{
+		govParamMetadataMap[protoName] = GovParamMetadata{
 			PropertyName: field.Name,
+			ParamName:    protoName,
 			ParamOwner:   poktOwner,
 			PoktType:     poktValType,
 			GoType:       golangType,
