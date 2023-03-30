@@ -69,7 +69,7 @@ const (
 	applyBlockError                             = "could not apply block"
 	prepareBlockError                           = "could not prepare block"
 	commitBlockError                            = "could not commit block"
-	replicaPrepareBlockError                    = "REPLICATE SHOULD NOT call `prepareBlock`"
+	replicaPrepareBlockError                    = "replica should not call `prepareBlock`"
 	blockSizeTooLargeError                      = "block size is too large"
 	sendMessageError                            = "error sending message"
 	broadcastMessageError                       = "error broadcasting message"
