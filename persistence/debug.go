@@ -66,7 +66,7 @@ func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
 	if err != nil {
 		return err
 	}
-	// NB: Not calling `defer rwCtx.Release()` because we `Commit`, which releases, the tx below/
+	// NB: Not calling `defer rwCtx.Release()` because we `Commit`, which releases the tx below
 
 	postgresCtx := rwCtx.(*PostgresContext)
 

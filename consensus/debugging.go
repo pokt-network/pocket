@@ -26,7 +26,7 @@ func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
 	m.logger.Debug().Msg(typesCons.DebugResetToGenesis)
 
-	// Reset Persistence
+	// Reset Persistence to the genesis state
 	if err := m.GetBus().GetPersistenceModule().HandleDebugMessage(&messaging.DebugMessage{
 		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 		Message: nil,
@@ -37,10 +37,10 @@ func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
 		return err
 	}
 
-	// Reset Utility
+	// Reset Utility - must be done before consensus is restarted since it could affect the transactions in the next block
 	m.GetBus().GetUtilityModule().GetMempool().Clear()
 
-	// Restart consensus
+	// Restart consensus - must be done after the persistence module is cleared since it could affect the next elected leader
 	m.ResetRound(true)
 	m.SetHeight(0)
 

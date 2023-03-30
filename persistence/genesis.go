@@ -32,7 +32,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	if err != nil {
 		m.logger.Fatal().Err(err).Msg("an error occurred creating the rwContext for the genesis state")
 	}
-	// NB: Not calling `defer rwCtx.Release()` because we `Commit`, which releases, the tx below/
+	// NB: Not calling `defer rwCtx.Release()` because we `Commit`, which releases the tx below
 
 	for _, acc := range state.GetAccounts() {
 		addrBz, err := hex.DecodeString(acc.GetAddress())

@@ -73,9 +73,9 @@ func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (b
 	return true, nil
 }
 
-// Creates a new Utility context and clears/nullifies any previous contexts if they exist
+// Creates a new Utility Unit Of Work and clears/nullifies any previous UOW if they exist
 func (m *consensusModule) refreshUtilityUnitOfWork() error {
-	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
+	// Catch-all structure to release the previous utility UOW if it wasn't properly cleaned up.
 	utilityUnitOfWork := m.utilityUnitOfWork
 	if utilityUnitOfWork != nil {
 		// TODO: This should, ideally, never be called
