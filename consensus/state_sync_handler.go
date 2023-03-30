@@ -58,23 +58,23 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 
 // HandleGetBlockResponse handles the received block. It validates the block, quorum certificate and applies to its persistence
 func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-	m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse: %s", blockRes)
+	m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse, Transactions: %x", blockRes.Block.Transactions)
 
 	block := blockRes.Block
-	lastPersistedBlockHeight := m.CurrentHeight() - 1
-	maxHeight, err := m.maximumPersistedBlockHeight()
+	//lastPersistedBlockHeight := m.CurrentHeight() - 1
+	maxPersistedHeight, err := m.maximumPersistedBlockHeight()
 	if err != nil {
 		return err
 	}
 
-	m.logger.Info().Msgf("HandleGetBlockResponse, Starting, maxPersistedHeight is: %d", maxHeight)
+	m.logger.Info().Msgf("HandleGetBlockResponse, Starting, maxPersistedHeight is: %d", maxPersistedHeight)
 
 	// checking if the received block is already persisted
-	if block.BlockHeader.Height <= lastPersistedBlockHeight {
-		m.logger.Info().Msgf("Received block with height %d, but already at height %d, so node will not apply this block", block.BlockHeader.Height, lastPersistedBlockHeight)
+	if block.BlockHeader.Height <= maxPersistedHeight {
+		m.logger.Info().Msgf("Received block with height: %d, but node already persisted blocks until height: %d, so node will not apply this block", block.BlockHeader.Height, maxPersistedHeight)
 		return nil
 	} else if block.BlockHeader.Height > m.CurrentHeight() {
-		m.logger.Info().Msgf("Received block with height %d, but node's last persisted height is: %d, so node will not apply this block", block.BlockHeader.Height, lastPersistedBlockHeight)
+		m.logger.Info().Msgf("Received block with height %d, but node's last persisted height is: %d, so node will not apply this block", block.BlockHeader.Height, maxPersistedHeight)
 		return nil
 	}
 
@@ -105,6 +105,10 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 		return err
 	}
 
+	m.logger.Info().Msg("HandleGetBlockResponse, applying the block")
+	// Apply all the transactions in the block and get the stateHash
+	m.applyBlock(block)
+
 	m.logger.Info().Msg("HandleGetBlockResponse, committing the block")
 
 	//m.m.Lock()
@@ -116,12 +120,12 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 	m.paceMaker.NewHeight()
 
-	maxHeight, err = m.maximumPersistedBlockHeight()
+	maxPersistedHeight, err = m.maximumPersistedBlockHeight()
 	if err != nil {
 		return err
 	}
 
-	m.logger.Info().Msgf("HandleGetBlockResponse, Block is Committed, maxPersistedHeight is: %d, m.Height is :%d", maxHeight, m.height)
+	m.logger.Info().Msgf("HandleGetBlockResponse, Block is Committed, maxPersistedHeight is: %d, m.Height is :%d", maxPersistedHeight, m.height)
 
 	// Send current persisted block height to the state sync module
 	m.stateSync.PersistedBlock(block.BlockHeader.Height)

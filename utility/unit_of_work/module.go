@@ -122,6 +122,7 @@ func (u *baseUtilityUnitOfWork) CreateAndApplyProposalBlock(proposer []byte, max
 
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
 func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, err error) {
+	u.logger.Info().Msgf("Apply Block begins with stateHash: %s", stateHash)
 	lastByzantineValidators, err := u.prevBlockByzantineValidators()
 	if err != nil {
 		return "", nil, err
@@ -133,6 +134,8 @@ func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, er
 	}
 
 	mempool := u.GetBus().GetUtilityModule().GetMempool()
+
+	u.logger.Info().Msgf("Apply Block will itarate over transactions")
 
 	// deliver txs lifecycle phase
 	for index, txProtoBytes := range u.proposalBlockTxs {
@@ -173,6 +176,8 @@ func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, er
 		}
 	}
 
+	u.logger.Info().Msgf("Apply Block - ending block lifecycle")
+
 	// end block lifecycle phase
 	if err := u.endBlock(u.proposalProposerAddr); err != nil {
 		return "", nil, err
@@ -194,7 +199,7 @@ func (uow *baseUtilityUnitOfWork) Commit(quorumCert []byte) error {
 	// TODO: @deblasis - change tracking here
 
 	uow.logger.Debug().Msg("committing the rwPersistenceContext...")
-	if err := uow.persistenceRWContext.Commit(uow.proposalProposerAddr, quorumCert); err != nil {
+	if err := uow.persistenceRWContext.Commit(uow.proposalProposerAddr, quorumCert, uow.proposalBlockTxs); err != nil {
 		return err
 	}
 	uow.persistenceRWContext = nil

@@ -41,7 +41,7 @@ func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessag
 		return err
 	}
 
-	m.logger.Info().Fields(m.logHelper(receiverPeerAddress.ToString())).Msgf("Sending StateSync Message: %s", stateSyncMsg)
+	//m.logger.Info().Fields(m.logHelper(receiverPeerAddress.ToString())).Msgf("Sending StateSync Message: %s", stateSyncMsg)
 
 	if err := m.GetBus().GetP2PModule().Send(receiverPeerAddress, anyMsg); err != nil {
 		m.logger.Error().Msgf(typesCons.ErrSendMessage.Error(), err)

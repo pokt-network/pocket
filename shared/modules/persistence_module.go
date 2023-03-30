@@ -63,7 +63,7 @@ type PersistenceWriteContext interface {
 	Release() error
 
 	// Commits the current context (height, hash, transactions, etc...) to disk (i.e. finality).
-	Commit(proposerAddr, quorumCert []byte) error
+	Commit(proposerAddr, quorumCert []byte, transactions [][]byte) error
 
 	// Indexer Operations
 

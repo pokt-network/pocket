@@ -1,6 +1,8 @@
 package consensus
 
 import (
+	"fmt"
+
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -61,6 +63,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 	}
 
 	block := msg.GetBlock()
+	fmt.Printf("HandlePrepareMessage block txs: %x \n", block.Transactions)
 	if err := m.applyBlock(block); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())
 		m.paceMaker.InterruptRound("failed to apply block")
@@ -160,6 +163,10 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	}
 	m.block.BlockHeader.QuorumCertificate = quorumCertBytes
 
+	fmt.Printf("Block will be committed, \nCommitted Transactions: %x", m.block.Transactions)
+
+	//m.block.BlockHeader.ProposerAddress = m.leaderId
+
 	if err := m.commitBlock(m.block); err != nil {
 		m.logger.Error().Err(err).Msg("Could not commit block")
 		m.paceMaker.InterruptRound("failed to commit block")
@@ -238,6 +245,21 @@ func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 	blockHeader := block.BlockHeader
 	// Set the proposal block in the persistence context
+
+	fmt.Printf("Apply block called with block transactions: %x \n", block.Transactions)
+
+	if blockHeader.StateHash == "" {
+		fmt.Println("blockHeader.StateHash is empty")
+	}
+
+	if blockHeader.ProposerAddress == nil {
+		fmt.Println("blockHeader.ProposerAddress is nil")
+	}
+
+	if block.Transactions == nil {
+		fmt.Println("block.Transactions is nil")
+	}
+
 	if err := m.utilityUnitOfWork.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return err
 	}
@@ -248,7 +270,8 @@ func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 		return err
 	}
 
-	m.logger.Info().Msgf("Block's proposer address is : %x, I think the leaderID is: %d", blockHeader.ProposerAddress, *m.leaderId)
+	//m.logger.Info().Msgf("Block's proposer address is : %x, I think the leaderID is: %d", blockHeader.ProposerAddress, *m.leaderId)
+	m.logger.Info().Msg("finishing applyBlock")
 
 	if blockHeader.StateHash != stateHash {
 		return typesCons.ErrInvalidAppHash(blockHeader.StateHash, stateHash)

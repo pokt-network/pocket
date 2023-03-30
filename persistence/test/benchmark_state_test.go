@@ -76,7 +76,7 @@ func BenchmarkStateHash(b *testing.B) {
 				}
 				_, err := db.ComputeStateHash()
 				require.NoError(b, err)
-				err = db.Commit([]byte("placeholderProposerAddr"), []byte("placeholderQuorumCert"))
+				err = db.Commit([]byte("placeholderProposerAddr"), []byte("placeholderQuorumCert"), [][]byte{{'a'}, {'a'}})
 				require.NoError(b, err)
 				err = db.Release()
 				require.NoError(b, err)

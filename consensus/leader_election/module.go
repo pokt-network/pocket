@@ -62,5 +62,10 @@ func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(message *t
 	value := int64(message.Height) + int64(message.Round) + int64(message.Step) - 1
 	numVals := int64(len(vals))
 
+	fmt.Printf("Length of all validators: %d, and the result: %d \n", len(vals), value%numVals+1)
+	for _, val := range vals {
+		fmt.Printf("Validator Address: %v", val.Address)
+	}
+
 	return typesCons.NodeId(value%numVals + 1), nil
 }
