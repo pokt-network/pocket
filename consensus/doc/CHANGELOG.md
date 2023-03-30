@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Avoid redundant handling of hotstuff messages by replicas
 - Consolidated `prev` & `last` terminology
 - Consolidated `stateHash` & `prevHash` terminology
-- Removed unsused `logPrefix` variables
+- Removed unused `logPrefix` variables
 - Moved implementation of `modules.ConsensusDebugModule` into its own file
 - Moved implementation of `modules.ConsensusPacemaker` into its own file
 - Moved implementation of `modules.ConsensusStateSync` into its own file
