@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.39] - 2023-03-28
+## [0.0.0.39] - 2023-03-30
 
 - Moved peer & url conversion utils to `p2p/utils` package
 - Refactor `getPeerIP` to use `net.DefaultResolver` for easier testing
@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `Trnasport` interface and implementations
 - Removed `ConnectionFactory` type and related members
 - Added libp2p `host.Host` mock generator
+- Refactor raintree constructor function signature to use new `RainTreeConfig` struct
 
 ## [0.0.0.38] - 2023-03-23
 
