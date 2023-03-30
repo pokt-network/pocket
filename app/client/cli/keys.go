@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
 
-	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/spf13/cobra"
 )
 
@@ -42,62 +40,15 @@ func NewKeysCommand() *cobra.Command {
 		Args:    cobra.ExactArgs(0),
 	}
 
-	createCmds := keysCreateCommands()
-	updateCmds := keysUpdateCommands()
-	deleteCmds := keysDeleteCommands()
-	getCmds := keysGetCommands()
-	exportCmds := keysExportCommands()
-	importCmds := keysImportCommands()
-	signMsgCmds := keysSignMsgCommands()
-	signTxCmds := keysSignTxCommands()
-	slipCmds := keysSlipCommands()
-
-	// Add --pwd and --hint flags
-	applySubcommandOptions(createCmds, attachPwdFlagToSubcommands())
-	applySubcommandOptions(createCmds, attachHintFlagToSubcommands())
-
-	// Add --pwd, --new_pwd and --hint flags
-	applySubcommandOptions(updateCmds, attachPwdFlagToSubcommands())
-	applySubcommandOptions(updateCmds, attachNewPwdFlagToSubcommands())
-	applySubcommandOptions(updateCmds, attachHintFlagToSubcommands())
-
-	// Add --pwd flag
-	applySubcommandOptions(deleteCmds, attachPwdFlagToSubcommands())
-
-	// Add --pwd, --output_file and --export_format flags
-	applySubcommandOptions(exportCmds, attachPwdFlagToSubcommands())
-	applySubcommandOptions(exportCmds, attachOutputFlagToSubcommands())
-	applySubcommandOptions(exportCmds, attachExportFlagToSubcommands())
-
-	// Add --pwd, --hint, --input_file and --import_format flags
-	applySubcommandOptions(importCmds, attachPwdFlagToSubcommands())
-	applySubcommandOptions(importCmds, attachHintFlagToSubcommands())
-	applySubcommandOptions(importCmds, attachInputFlagToSubcommands())
-	applySubcommandOptions(importCmds, attachImportFlagToSubcommands())
-
-	// Add --pwd flag
-	applySubcommandOptions(signMsgCmds, attachPwdFlagToSubcommands())
-
-	// Add --pwd, --input_file and --output_file flags
-	applySubcommandOptions(signTxCmds, attachPwdFlagToSubcommands())
-	applySubcommandOptions(signTxCmds, attachInputFlagToSubcommands())
-	applySubcommandOptions(signTxCmds, attachOutputFlagToSubcommands())
-
-	// Add --pwd, --store_child, --child_pwd, --child_hint flags
-	applySubcommandOptions(slipCmds, attachPwdFlagToSubcommands())
-	applySubcommandOptions(slipCmds, attachStoreChildFlagToSubcommands())
-	applySubcommandOptions(slipCmds, attachChildPwdFlagToSubcommands())
-	applySubcommandOptions(slipCmds, attachChildHintFlagToSubcommands())
-
-	cmd.AddCommand(createCmds...)
-	cmd.AddCommand(updateCmds...)
-	cmd.AddCommand(deleteCmds...)
-	cmd.AddCommand(getCmds...)
-	cmd.AddCommand(exportCmds...)
-	cmd.AddCommand(importCmds...)
-	cmd.AddCommand(signMsgCmds...)
-	cmd.AddCommand(signTxCmds...)
-	cmd.AddCommand(slipCmds...)
+	cmd.AddCommand(keysCreateCommands()...)
+	cmd.AddCommand(keysUpdateCommands()...)
+	cmd.AddCommand(keysDeleteCommands()...)
+	cmd.AddCommand(keysGetCommands()...)
+	cmd.AddCommand(keysExportCommands()...)
+	cmd.AddCommand(keysImportCommands()...)
+	cmd.AddCommand(keysSignMsgCommands()...)
+	cmd.AddCommand(keysSignTxCommands()...)
+	cmd.AddCommand(keysSlipCommands()...)
 
 	return cmd
 }
@@ -111,19 +62,14 @@ func keysCreateCommands() []*cobra.Command {
 			Aliases: []string{"create"},
 			Args:    cobra.ExactArgs(0),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				// Open the debug keybase at the specified path
-				pocketDir := strings.TrimSuffix(dataDir, "/")
-				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-				if err != nil {
-					return err
-				}
-				kb, err := keybase.NewKeybase(keybasePath)
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
 
 				if !nonInteractive {
 					pwd = readPassphrase(pwd)
+					confirmPassphrase(pwd)
 				}
 
 				kp, err := kb.Create(pwd, hint)
@@ -141,6 +87,13 @@ func keysCreateCommands() []*cobra.Command {
 			},
 		},
 	}
+
+	// Add --pwd and --hint flags
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(cmds, attachHintFlagToSubcommands())
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
+
 	return cmds
 }
 
@@ -156,13 +109,7 @@ func keysUpdateCommands() []*cobra.Command {
 				// Unpack CLI args
 				addrHex := args[0]
 
-				// Open the debug keybase at the specified path
-				pocketDir := strings.TrimSuffix(dataDir, "/")
-				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-				if err != nil {
-					return err
-				}
-				kb, err := keybase.NewKeybase(keybasePath)
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
@@ -170,6 +117,7 @@ func keysUpdateCommands() []*cobra.Command {
 				if !nonInteractive {
 					pwd = readPassphrase(pwd)
 					newPwd = readPassphraseMessage(newPwd, "New passphrase: ")
+					confirmPassphrase(newPwd)
 				}
 
 				err = kb.UpdatePassphrase(addrHex, pwd, newPwd, hint)
@@ -187,6 +135,14 @@ func keysUpdateCommands() []*cobra.Command {
 			},
 		},
 	}
+
+	// Add --pwd, --new_pwd and --hint flags
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(cmds, attachNewPwdFlagToSubcommands())
+	applySubcommandOptions(cmds, attachHintFlagToSubcommands())
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
+
 	return cmds
 }
 
@@ -202,13 +158,7 @@ func keysDeleteCommands() []*cobra.Command {
 				// Unpack CLI args
 				addrHex := args[0]
 
-				// Open the debug keybase at the specified path
-				pocketDir := strings.TrimSuffix(dataDir, "/")
-				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-				if err != nil {
-					return err
-				}
-				kb, err := keybase.NewKeybase(keybasePath)
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
@@ -232,6 +182,13 @@ func keysDeleteCommands() []*cobra.Command {
 			},
 		},
 	}
+
+	// Add --pwd flag
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
+
 	return cmds
 }
 
@@ -244,13 +201,7 @@ func keysGetCommands() []*cobra.Command {
 			Aliases: []string{"list"},
 			Args:    cobra.ExactArgs(0),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				// Open the debug keybase at the specified path
-				pocketDir := strings.TrimSuffix(dataDir, "/")
-				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-				if err != nil {
-					return err
-				}
-				kb, err := keybase.NewKeybase(keybasePath)
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
@@ -279,13 +230,7 @@ func keysGetCommands() []*cobra.Command {
 				// Unpack CLI args
 				addrHex := args[0]
 
-				// Open the debug keybase at the specified path
-				pocketDir := strings.TrimSuffix(dataDir, "/")
-				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-				if err != nil {
-					return err
-				}
-				kb, err := keybase.NewKeybase(keybasePath)
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
@@ -305,6 +250,10 @@ func keysGetCommands() []*cobra.Command {
 			},
 		},
 	}
+
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
+
 	return cmds
 }
 
@@ -320,13 +269,7 @@ func keysExportCommands() []*cobra.Command {
 				// Unpack CLI args
 				addrHex := args[0]
 
-				// Open the debug keybase at the specified path
-				pocketDir := strings.TrimSuffix(dataDir, "/")
-				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-				if err != nil {
-					return err
-				}
-				kb, err := keybase.NewKeybase(keybasePath)
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
@@ -368,6 +311,15 @@ func keysExportCommands() []*cobra.Command {
 			},
 		},
 	}
+
+	// Add --pwd, --output_file and --export_format flags
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(cmds, attachOutputFlagToSubcommands())
+	applySubcommandOptions(cmds, attachExportFlagToSubcommands())
+
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
+
 	return cmds
 }
 
@@ -394,13 +346,7 @@ func keysImportCommands() []*cobra.Command {
 					return fmt.Errorf("no input file or argument provided")
 				}
 
-				// Open the debug keybase at the specified path
-				pocketDir := strings.TrimSuffix(dataDir, "/")
-				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-				if err != nil {
-					return err
-				}
-				kb, err := keybase.NewKeybase(keybasePath)
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
@@ -418,6 +364,10 @@ func keysImportCommands() []*cobra.Command {
 						return err
 					}
 				case "raw":
+					// it is unarmoured so we need to confirm the passphrase
+					if !nonInteractive {
+						confirmPassphrase(pwd)
+					}
 					kp, err = kb.ImportFromString(privateKeyString, pwd, hint)
 					if err != nil {
 						return err
@@ -436,6 +386,16 @@ func keysImportCommands() []*cobra.Command {
 			},
 		},
 	}
+
+	// Add --pwd, --hint, --input_file and --import_format flags
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(cmds, attachHintFlagToSubcommands())
+	applySubcommandOptions(cmds, attachInputFlagToSubcommands())
+	applySubcommandOptions(cmds, attachImportFlagToSubcommands())
+
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
+
 	return cmds
 }
 
@@ -456,13 +416,7 @@ func keysSignMsgCommands() []*cobra.Command {
 					return err
 				}
 
-				// Open the debug keybase at the specified path
-				pocketDir := strings.TrimSuffix(dataDir, "/")
-				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-				if err != nil {
-					return err
-				}
-				kb, err := keybase.NewKeybase(keybasePath)
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
@@ -507,13 +461,7 @@ func keysSignMsgCommands() []*cobra.Command {
 					return err
 				}
 
-				// Open the debug keybase at the specified path
-				pocketDir := strings.TrimSuffix(dataDir, "/")
-				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-				if err != nil {
-					return err
-				}
-				kb, err := keybase.NewKeybase(keybasePath)
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
@@ -533,6 +481,12 @@ func keysSignMsgCommands() []*cobra.Command {
 			},
 		},
 	}
+
+	// Add --pwd flag
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
+
 	return cmds
 }
 
@@ -554,13 +508,7 @@ func keysSignTxCommands() []*cobra.Command {
 					return fmt.Errorf("no output file provided")
 				}
 
-				// Open the debug keybase at the specified path
-				pocketDir := strings.TrimSuffix(dataDir, "/")
-				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-				if err != nil {
-					return err
-				}
-				kb, err := keybase.NewKeybase(keybasePath)
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
@@ -634,13 +582,7 @@ func keysSignTxCommands() []*cobra.Command {
 					return fmt.Errorf("no input file provided")
 				}
 
-				// Open the debug keybase at the specified path
-				pocketDir := strings.TrimSuffix(dataDir, "/")
-				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-				if err != nil {
-					return err
-				}
-				kb, err := keybase.NewKeybase(keybasePath)
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
@@ -691,6 +633,14 @@ func keysSignTxCommands() []*cobra.Command {
 			},
 		},
 	}
+
+	// Add --pwd, --input_file and --output_file flags
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(cmds, attachInputFlagToSubcommands())
+	applySubcommandOptions(cmds, attachOutputFlagToSubcommands())
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
+
 	return cmds
 }
 
@@ -711,13 +661,7 @@ func keysSlipCommands() []*cobra.Command {
 				}
 				index := uint32(idx64)
 
-				// Open the debug keybase at the specified path
-				pocketDir := strings.TrimSuffix(dataDir, "/")
-				keybasePath, err := filepath.Abs(pocketDir + keybaseSuffix)
-				if err != nil {
-					return err
-				}
-				kb, err := keybase.NewKeybase(keybasePath)
+				kb, err := keybaseForCLI()
 				if err != nil {
 					return err
 				}
@@ -741,5 +685,14 @@ func keysSlipCommands() []*cobra.Command {
 			},
 		},
 	}
+
+	// Add --pwd, --store_child, --child_pwd, --child_hint flags
+	applySubcommandOptions(cmds, attachPwdFlagToSubcommands())
+	applySubcommandOptions(cmds, attachStoreChildFlagToSubcommands())
+	applySubcommandOptions(cmds, attachChildPwdFlagToSubcommands())
+	applySubcommandOptions(cmds, attachChildHintFlagToSubcommands())
+	// Add --keybase flag
+	applySubcommandOptions(cmds, attachKeybaseFlagsToSubcommands())
+
 	return cmds
 }

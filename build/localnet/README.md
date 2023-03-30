@@ -35,12 +35,11 @@ All necessary dependencies, except Kubernetes cluster, are installed automatical
 
 ### Choosing Kubernetes Distribution
 
-While any Kubernetes distribution should work, we verified that LocalNet works on:
+tl;dr If you are not familiar with kubernetes, we highly recommend using [kind](https://kind.sigs.k8s.io/) - the official Kubernetes distribution that runs inside docker containers. It is what most of the core team uses.
 
-- [Rancher Desktop](https://rancherdesktop.io/), which is GUI powered by a popular distribution `k3s`.
-- [kind](https://kind.sigs.k8s.io/) - official Kubernetes distribution that runs inside docker containers.
+If you have a personal preference, any kubernetes distribution should work. We've seen some people use [Rancher Desktop](https://rancherdesktop.io/), a GUI powered by a popular distribution `k3s`, but it has also led to some issues.
 
-Here is a list of alternative set ups that should work: https://docs.tilt.dev/choosing_clusters.html
+Here is a list of alternative set ups that should work: docs.tilt.dev/choosing_clusters.html
 
 ### Enabling Kubernetes For Docker Desktop
 

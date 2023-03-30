@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.27] - 2023-03-28
+## [0.0.0.28] - 2023-03-30
 
 - Removed `runtime/configs.Config#UseLibp2p` field
+
+## [0.0.0.27] - 2023-03-28
+
+- Adds keybase_config.proto
 
 ## [0.0.0.26] - 2023-03-26
 
