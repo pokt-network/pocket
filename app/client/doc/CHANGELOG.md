@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.26] - 2023-03-30
+
+- Make `PromptPrintNodeState` the first prompt in debug mode
+- Minor cleanup to documentation related to CLI modes
+- Fixed one logging statement
+
 ## [0.0.0.25] - 2023-03-28
 
 - Introduces hashicorp vault keybase to allow for the use of a vault server to store keypairs
