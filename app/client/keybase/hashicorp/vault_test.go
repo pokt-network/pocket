@@ -19,10 +19,10 @@ var (
 )
 
 func setupTestVaultKeybase(address string) (*vaultKeybase, error) {
-	return NewVaultKeybase(&configs.KeybaseConfig{
-		VaultAddr:      address,
-		VaultToken:     "dev-only-token",
-		VaultMountPath: "secret",
+	return NewVaultKeybase(&configs.KeybaseVaultConfig{
+		Addr:      address,
+		Token:     "dev-only-token",
+		MountPath: "secret",
 	})
 }
 

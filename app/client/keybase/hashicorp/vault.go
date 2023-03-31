@@ -25,36 +25,36 @@ type vaultKeybase struct {
 }
 
 // NewVaultKeybase returns a new instance of vaultKeybase.
-func NewVaultKeybase(cfg *configs.KeybaseConfig) (*vaultKeybase, error) {
+func NewVaultKeybase(cfg *configs.KeybaseVaultConfig) (*vaultKeybase, error) {
 	apiConfig := api.DefaultConfig()
 
 	// Set default values for the configuration parameters
-	if cfg.VaultAddr == "" {
-		cfg.VaultAddr = apiConfig.Address
+	if cfg.Addr == "" {
+		cfg.Addr = apiConfig.Address
 	}
 
 	// Set the default mount path for the secret engine
-	if cfg.VaultMountPath == "" {
-		cfg.VaultMountPath = defaultVaultMountPath
+	if cfg.MountPath == "" {
+		cfg.MountPath = defaultVaultMountPath
 	}
 
 	// Create a new vault API client
 	client, err := api.NewClient(&api.Config{
-		Address: cfg.VaultAddr,
+		Address: cfg.Addr,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	// Set the root token for the client if provided
-	if cfg.VaultToken != "" {
-		client.SetToken(cfg.VaultToken)
+	if cfg.Token != "" {
+		client.SetToken(cfg.Token)
 	}
 
 	// Create a new VaultKeybase instance
 	vk := &vaultKeybase{
 		client: client,
-		mount:  cfg.VaultMountPath,
+		mount:  cfg.MountPath,
 	}
 
 	return vk, nil

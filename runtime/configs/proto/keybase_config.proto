@@ -2,21 +2,28 @@ syntax = "proto3";
 
 package configs;
 
-import "keybase.proto";
-
 option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
 message KeybaseConfig {
-  // The type of keybase to use. Can be FILE or VAULT. Defaults to FILE.
-  keybase.KeybaseType type = 1;
+	oneof config {
+		KeybaseFileConfig file = 1;
+		KeybaseVaultConfig vault = 2;
+	}
+}
 
-  // For KeybaseType.FILE, the path to the keybase file.
-  string file_path = 2;
 
-  // For KeybaseType.VAULT, the vault address to use for authentication.
-  string vault_addr = 3;
-  // For KeybaseType.VAULT, the vault token to use for authentication.
-  string vault_token = 4;
-  // For KeybaseType.VAULT, the engine mount path for the keybase.
-  string vault_mount_path = 5;
+// KeybaseFileConfig is the configuration for the File Keybase
+message KeybaseFileConfig {
+  // Path to the keybase file
+	string path = 1;
+}
+
+// KeybaseVaultConfig is the configuration for the Hashicorp Vault Keybase
+message KeybaseVaultConfig {
+    // Vault address
+	  string addr = 1;
+    // Vault token
+	  string token = 2;
+    // Vault mount path
+	  string mount_path = 3;
 }

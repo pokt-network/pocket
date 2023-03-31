@@ -2,8 +2,11 @@ package configs
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	reflect "reflect"
 	"strings"
+	"unicode"
 
 	"github.com/mitchellh/mapstructure"
 	// "github.com/pokt-network/pocket/logger"
@@ -64,11 +67,6 @@ func ParseConfig(cfgFile string) *Config {
 		log.Default().Printf("Using config file: %s", viper.ConfigFileUsed())
 	}
 
-	decoderConfig := func(dc *mapstructure.DecoderConfig) {
-		// This is to leverage the `json` struct tags without having to add `mapstructure` ones.
-		// Until we have complex use cases, this should work just fine.
-		dc.TagName = "json"
-	}
 	// Detect if we need to use json.Unmarshal instead of viper.Unmarshal
 	if err := viper.Unmarshal(&config, decoderConfig); err != nil {
 		cfgData := viper.AllSettings()
@@ -84,7 +82,6 @@ func ParseConfig(cfgFile string) *Config {
 }
 
 // setViperDefaults this is a hacky way to set the default values for Viper so env var overrides work.
-// DISCUSS: is there a better way to do this?
 func setViperDefaults(cfg *Config) {
 	// convert the config struct to a map with the json tags as keys
 	cfgData, err := json.Marshal(cfg)
@@ -142,11 +139,11 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			Port:    defaults.DefaultRPCPort,
 		},
 		Keybase: &KeybaseConfig{
-			Type:           defaults.DefaultKeybaseType,
-			FilePath:       defaults.DefaultKeybaseFilePath,
-			VaultAddr:      defaults.DefaultKeybaseVaultAddr,
-			VaultToken:     defaults.DefaultKeybaseVaultToken,
-			VaultMountPath: defaults.DefaultKeybaseVaultMountPath,
+			Config: &KeybaseConfig_File{
+				File: &KeybaseFileConfig{
+					Path: defaults.DefaultKeybaseFilePath,
+				},
+			},
 		},
 	}
 
@@ -175,4 +172,93 @@ func WithNodeSchema(schema string) func(*Config) {
 	return func(cfg *Config) {
 		cfg.Persistence.NodeSchema = schema
 	}
+}
+
+// decoderConfig allows for complete control over the decoding process.
+func decoderConfig(dc *mapstructure.DecoderConfig) {
+	// This is to leverage the `json` struct tags without having to add `mapstructure` ones.
+	// Until we have complex use cases, this should work just fine.
+	dc.TagName = "json"
+
+	// Add decode hook for KeybaseConfig
+	dc.DecodeHook = mapstructure.ComposeDecodeHookFunc(
+		dc.DecodeHook,
+		decodeKeybaseConfig,
+	)
+
+	// This is to allow for case-insensitive and snake-case matching of config keys.
+	dc.MatchName = customMatchFunc
+}
+
+// decodeKeybaseConfig is a custom decode hook for KeybaseConfig due to the fact KeybaseConfig contains a generic(oneof) field.
+func decodeKeybaseConfig(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+	if t != reflect.TypeOf(KeybaseConfig{}) {
+		return data, nil
+	}
+
+	m := data.(map[string]interface{})
+	keybaseConfig := KeybaseConfig{}
+
+	if config, ok := m["config"]; ok {
+		configMap := config.(map[string]interface{})
+
+		// check vault first since it is not the default
+		if vaultConfig, ok := configMap["vault"]; ok {
+			keybaseVaultConfig := &KeybaseVaultConfig{}
+			decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+				MatchName: customMatchFunc,
+				Result:    keybaseVaultConfig,
+			})
+			if err != nil {
+				return nil, err
+			}
+			decoder.Decode(vaultConfig)
+			keybaseConfig.Config = &KeybaseConfig_Vault{Vault: keybaseVaultConfig}
+			return &keybaseConfig, nil // return early
+		}
+
+		// other keybase config types should go here before the default
+
+		// check file **last** since it is the default
+		if fileConfig, ok := configMap["file"]; ok {
+			keybaseFileConfig := &KeybaseFileConfig{}
+			mapstructure.Decode(fileConfig, keybaseFileConfig)
+			keybaseConfig.Config = &KeybaseConfig_File{File: keybaseFileConfig}
+			return &keybaseConfig, nil // return early
+		}
+	}
+
+	// should never happen, this means the default keybase config logic was changed
+	return nil, fmt.Errorf("unsupported keybase config type")
+}
+
+// Custom match function to handle both mount_path and mountPath
+func customMatchFunc(mapKey, fieldName string) bool {
+	if strings.EqualFold(mapKey, fieldName) {
+		return true
+	}
+
+	// Convert field name from CamelCase to snake_case
+	snakeFieldName := convertCamelToSnake(fieldName)
+
+	// Check if the snake_case version of the field name matches the map key
+	return strings.EqualFold(mapKey, snakeFieldName)
+}
+
+// Convert CamelCase string to snake_case string
+func convertCamelToSnake(input string) string {
+	var sb strings.Builder
+
+	for i, r := range input {
+		if unicode.IsUpper(r) {
+			if i > 0 {
+				sb.WriteRune('_')
+			}
+			sb.WriteRune(unicode.ToLower(r))
+		} else {
+			sb.WriteRune(r)
+		}
+	}
+
+	return sb.String()
 }
