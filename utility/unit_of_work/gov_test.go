@@ -16,9 +16,6 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-// TODO : After we change the interface to pass param name, simply use reflection to
-//  iterate over all the params and test them. Suggestion: [Google's go-cmp] (https://github.com/google/go-cmp)
-
 func DefaultTestingParams(_ *testing.T) *genesis.Params {
 	return test_artifacts.DefaultParams()
 }
