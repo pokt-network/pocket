@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	DefaultLogPrefix    = "NODE"
 	stateSyncModuleName = "stateSyncModule"
 )
 
@@ -51,8 +50,7 @@ type stateSync struct {
 	currentMode SyncMode
 	serverMode  bool
 
-	logger    *modules.Logger
-	logPrefix string
+	logger *modules.Logger
 }
 
 func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -60,9 +58,7 @@ func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.
 }
 
 func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	m := &stateSync{
-		logPrefix: DefaultLogPrefix,
-	}
+	m := &stateSync{}
 
 	for _, option := range options {
 		option(m)
@@ -105,10 +101,6 @@ func (m *stateSync) GetModuleName() string {
 
 func (m *stateSync) IsServerModEnabled() bool {
 	return m.serverMode
-}
-
-func (m *stateSync) SetLogPrefix(logPrefix string) {
-	m.logPrefix = logPrefix
 }
 
 func (m *stateSync) EnableServerMode() {

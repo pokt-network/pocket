@@ -407,7 +407,6 @@ func (m *p2pModule) handleNetworkData(data []byte) error {
 	event := messaging.PocketEnvelope{
 		Content: networkMessage.Content,
 	}
-
 	m.GetBus().PublishEventToBus(&event)
 	return nil
 }

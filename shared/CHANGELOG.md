@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.45] - 2023-03-30
+## [0.0.0.46] - 2023-03-31
 
 - Removed *temporary* `shared/p2p` package; consolidated into `p2p`
+
+## [0.0.0.45] - 2023-03-30
+
+- Add a deadline to the primary event handling to get visibility into concurrency issues
 
 ## [0.0.0.44] - 2023-03-28
 

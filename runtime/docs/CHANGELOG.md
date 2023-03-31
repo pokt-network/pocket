@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.28] - 2023-03-30
+## [0.0.0.29] - 2023-03-31
 
 - Removed `runtime/configs.Config#UseLibp2p` field
+
+## [0.0.0.28] - 2023-03-30
+
+- Update the configurations for postgres pooling
 
 ## [0.0.0.27] - 2023-03-28
 

@@ -146,7 +146,7 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 
 // networkSendInternal sends `data` to the peer at pokt `address` if not self.
 func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.Address) error {
-	// NOOP: Trying to send a message to self
+	// TODO: How should we handle this?
 	if n.selfAddr.Equals(address) {
 		n.logger.Debug().Str("pokt_addr", address.String()).Msg("attempted to send to self")
 		return nil

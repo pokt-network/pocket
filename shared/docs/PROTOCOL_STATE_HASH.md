@@ -130,7 +130,7 @@ sequenceDiagram
     participant C as Consensus
     participant U as Utility
 
-        %% Update the proposal in the utility context
+        %% Update the proposal in the utility unit of work
         C->>+U: SetProposalBlock(hash, proposer, txs)
         U->>-C: err_code
 
