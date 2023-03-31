@@ -22,7 +22,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var _ typesP2P.Network = &rainTreeNetwork{}
+var (
+	_ typesP2P.Network           = &rainTreeNetwork{}
+	_ modules.IntegratableModule = &rainTreeNetwork{}
+)
 
 type RainTreeConfig struct {
 	Addr                  cryptoPocket.Address
