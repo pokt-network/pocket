@@ -50,16 +50,19 @@ type p2pModule struct {
 	bootstrapNodes []string
 	identity       libp2p.Option
 	listenAddrs    libp2p.Option
+
+	// Assigned during creation via `#setupDependencies()`.
+	currentHeightProvider providers.CurrentHeightProvider
+	pstoreProvider        providers.PeerstoreProvider
+
+	// Assigned during `#Start()`. TLDR; `host` listens on instantiation.
+	// and `network` depends on `host`.
+	network typesP2P.Network
 	// host represents a libp2p network node, it encapsulates a libp2p peerstore
 	// & connection manager. `libp2p.New` configures and starts listening
 	// according to options. Assigned via `#Start()` (starts on instantiation).
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	host libp2pHost.Host
-
-	// Assigned during creation via `#setupDependencies()`.
-	network               typesP2P.Network
-	currentHeightProvider providers.CurrentHeightProvider
-	pstoreProvider        providers.PeerstoreProvider
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
