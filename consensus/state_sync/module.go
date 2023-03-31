@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	DefaultLogPrefix    = "NODE"
 	stateSyncModuleName = "stateSyncModule"
 )
 
@@ -164,9 +163,7 @@ func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.
 }
 
 func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	m := &stateSync{
-		logPrefix: DefaultLogPrefix,
-	}
+	m := &stateSync{}
 
 	for _, option := range options {
 		option(m)
@@ -381,7 +378,7 @@ func (m *stateSync) metadataSyncLoop() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ticker := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
 	for {

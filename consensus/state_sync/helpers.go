@@ -51,24 +51,24 @@ func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessag
 }
 
 func (m *stateSync) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
-	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	defer persistenceReadContext.Close()
+	defer readCtx.Release()
 
-	return persistenceReadContext.GetAllValidators(int64(height))
+	return readCtx.GetAllValidators(int64(height))
 }
 
 func (m *stateSync) maximumPersistedBlockHeight() (uint64, error) {
 	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
 	if err != nil {
 		return 0, err
 	}
-	defer persistenceContext.Close()
+	defer readCtx.Release()
 
-	maxHeight, err := persistenceContext.GetMaximumBlockHeight()
+	maxHeight, err := readCtx.GetMaximumBlockHeight()
 	if err != nil {
 		return 0, err
 	}
@@ -78,13 +78,13 @@ func (m *stateSync) maximumPersistedBlockHeight() (uint64, error) {
 
 func (m *stateSync) minimumPersistedBlockHeight() (uint64, error) {
 	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
 	if err != nil {
 		return 0, err
 	}
-	defer persistenceContext.Close()
+	defer readCtx.Release()
 
-	maxHeight, err := persistenceContext.GetMinimumBlockHeight()
+	maxHeight, err := readCtx.GetMinimumBlockHeight()
 	if err != nil {
 		return 0, err
 	}

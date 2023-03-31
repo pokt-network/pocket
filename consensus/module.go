@@ -22,13 +22,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const (
-	DefaultLogPrefix = "NODE" // TODO(#164): Make implicit when logging is standardized
-)
-
-var (
-	_ modules.ConsensusModule = &consensusModule{}
-)
+var _ modules.ConsensusModule = &consensusModule{}
 
 type consensusModule struct {
 	base_modules.IntegratableModule
@@ -63,10 +57,9 @@ type consensusModule struct {
 	nodeAddress string
 
 	// Module Dependencies
-	// IMPROVE(#283): Investigate whether the current approach to how the `utilityContext` should be
+	// IMPROVE(#283): Investigate whether the current approach to how the `utilityUnitOfWork` should be
 	//                managed or changed. Also consider exposing a function that exposes the context
 	//                to streamline how its accessed in the module (see the ticket).
-
 	utilityUnitOfWork modules.UtilityUnitOfWork
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
@@ -77,23 +70,6 @@ type consensusModule struct {
 	stateSync state_sync.StateSyncModule
 
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
-}
-
-// Implementations of the ConsensusStateSync interface
-
-func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error) {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-	if err != nil {
-		// REFACTOR(#434): As per issue #434, once the new id is sorted out, this return statement must be changed
-		return 0, err
-	}
-
-	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
-	return uint64(valAddrToIdMap[peerId]), nil
-}
-
-func (m *consensusModule) GetNodeAddress() string {
-	return m.nodeAddress
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -134,10 +110,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 		leaderId: nil,
 
 		utilityUnitOfWork: nil,
-
-		logPrefix: DefaultLogPrefix,
-
-		hotstuffMempool: make(map[typesCons.HotstuffStep]*hotstuffFIFOMempool),
+		hotstuffMempool:   make(map[typesCons.HotstuffStep]*hotstuffFIFOMempool),
 	}
 
 	for _, option := range options {
@@ -275,7 +248,6 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	fmt.Println("New HotStuff Message Received!")
 
 	switch message.MessageName() {
-
 	case messaging.HotstuffMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
@@ -285,11 +257,15 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if !ok {
 			return fmt.Errorf("failed to cast message to HotstuffMessage")
 		}
-		return m.handleHotstuffMessage(hotstuffMessage)
-
+		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
+			m.logger.Error().Err(err).Msg("failed to handle hotstuff message")
+			return err
+		}
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}
+
+	return nil
 }
 
 func (m *consensusModule) CurrentHeight() uint64 {
@@ -304,15 +280,19 @@ func (m *consensusModule) CurrentStep() uint64 {
 	return uint64(m.step)
 }
 
+func (m *consensusModule) EnableServerMode() {
+	m.stateSync.EnableServerMode()
+}
+
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...
 func (m *consensusModule) loadPersistedState() error {
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
 	if err != nil {
 		return nil
 	}
-	defer persistenceContext.Close()
+	defer readCtx.Release()
 
-	latestHeight, err := persistenceContext.GetMaximumBlockHeight()
+	latestHeight, err := readCtx.GetMaximumBlockHeight()
 	if err != nil || latestHeight == 0 {
 		// TODO: Proper state sync not implemented yet
 		return nil
@@ -330,13 +310,18 @@ func (m *consensusModule) IsSynched() (bool, error) {
 	m.logger.Debug().Msg("IsSynched called, checking if consensus module is synched GOKHAN")
 
 	lastPersistedBlockHeight := m.GetBus().GetConsensusModule().CurrentHeight() - 1
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
+	// persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
+	// if err != nil {
+	// 	return false, err
+	// }
+	// defer persistenceContext.Close()
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
 	if err != nil {
 		return false, err
 	}
-	defer persistenceContext.Close()
+	defer readCtx.Release()
 
-	maxPersistedHeight, err := persistenceContext.GetMaximumBlockHeight()
+	maxPersistedHeight, err := readCtx.GetMaximumBlockHeight()
 	if err != nil {
 		return false, err
 	}

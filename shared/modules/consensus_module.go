@@ -25,10 +25,9 @@ type ConsensusModule interface {
 	ConsensusPacemaker
 	ConsensusDebugModule
 
-	// Consensus Engine Handlers
-	// TODO: Rename function to more specific name that is consistent with the pattern.
+	// Consensus engine handlers
 	HandleMessage(*anypb.Any) error
-	// State Sync messages Handler
+	// State Sync message handlers
 	HandleStateSyncMessage(*anypb.Any) error
 	// FSM transition events handler
 	HandleEvent(transitionMessageAny *anypb.Any) error
@@ -39,15 +38,13 @@ type ConsensusModule interface {
 	CurrentStep() uint64
 }
 
-// This interface represents functions exposed by the Consensus module for Pacemaker specific business logic.
+// ConsensusPacemaker represents functions exposed by the Consensus module for Pacemaker specific business logic.
 // These functions are intended to only be called by the Pacemaker module.
-// TODO(#428): This interface will be removed when the communication between the pacemaker and consensus module become asynchronous via the bus.
+// TODO(#428): This interface should be removed when the communication between the pacemaker and consensus module become asynchronous via the bus or go channels.
 type ConsensusPacemaker interface {
 	// Clearers
-	ResetRound()
-	ResetForNewHeight()
-	ClearLeaderMessagesPool()
-	// TODO: @deblasis - remove this and implement an event based approach
+	ResetRound(isNewHeight bool)
+	// TODO(@deblasis): remove this and implement an event based approach
 	ReleaseUtilityUnitOfWork() error
 
 	// Setters
@@ -88,8 +85,7 @@ type ConsensusDebugModule interface {
 
 	SetHeight(uint64)
 	SetRound(uint64)
-	// REFACTOR: This should accept typesCons.HotstuffStep.
-	SetStep(uint8)
+	SetStep(uint8) // REFACTOR: This should accept typesCons.HotstuffStep
 	SetBlock(*types.Block)
 	SetUtilityUnitOfWork(UtilityUnitOfWork)
 

@@ -71,12 +71,12 @@ func TestMain(m *testing.M) {
 
 // IMPROVE: Look into returning `testPersistenceMod` to avoid exposing underlying abstraction.
 func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresContext {
-	ctx, err := testPersistenceMod.NewRWContext(height)
+	rwCtx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
 		log.Fatalf("Error creating new context: %v\n", err)
 	}
 
-	db, ok := ctx.(*persistence.PostgresContext)
+	postgresCtx, ok := rwCtx.(*persistence.PostgresContext)
 	if !ok {
 		log.Fatalf("Error casting RW context to Postgres context")
 	}
@@ -85,7 +85,7 @@ func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresCon
 	// if we call `NewTestPostgresContext` more than once in a single test.
 	t.Cleanup(resetStateToGenesis)
 
-	return db
+	return postgresCtx
 }
 
 // TODO(olshansky): Take in `t testing.T` as a parameter and error if there's an issue
@@ -100,11 +100,11 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 			BlockStorePath:    "",
 			TxIndexerPath:     "",
 			TreesStoreDir:     "",
-			MaxConnsCount:     4,
-			MinConnsCount:     0,
-			MaxConnLifetime:   "1h",
-			MaxConnIdleTime:   "30m",
-			HealthCheckPeriod: "5m",
+			MaxConnsCount:     5,
+			MinConnsCount:     1,
+			MaxConnLifetime:   "5m",
+			MaxConnIdleTime:   "1m",
+			HealthCheckPeriod: "30s",
 		},
 	}
 

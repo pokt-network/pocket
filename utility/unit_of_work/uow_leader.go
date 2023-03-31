@@ -90,7 +90,7 @@ func (uow *leaderUtilityUnitOfWork) CreateAndApplyProposalBlock(proposer []byte,
 		return "", nil, err
 	}
 
-	// TODO: @deblasis - this should be from a ReadContext (the ephemeral/staging one)
+	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
 	// Compute & return the new state hash
 	stateHash, err = uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {

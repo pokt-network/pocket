@@ -85,13 +85,33 @@ jobs:
             const prNumber = context.payload.pull_request.number;
             const uniqueIdentifier = "<!-- validate_changelogs_review -->";
 
+            const perPage = 100;
+            let page = 1;
+            let hasMore = true;
+            const matchingReviews = [];
+
             // List all the reviews on the pull request
-            const { data: reviews } = await github.rest.pulls.listReviews({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-            });
-            const matchingReviews = reviews.filter(review => review.body.includes(uniqueIdentifier) && review.state !== "DISMISSED");
+            while (hasMore) {
+              const { data: reviews } = await github.rest.pulls.listReviews({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                per_page: perPage,
+                page: page,
+              });
+
+              console.log(`Processing page ${page} with each page having ${perPage} reviews.`);
+              console.log("reviews count", reviews.length);
+              const filteredReviews = reviews.filter(
+                (review) => review.body.includes(uniqueIdentifier) && review.state !== "DISMISSED"
+              );
+              console.log("filteredReviews count", filteredReviews.length);
+              matchingReviews.push(...filteredReviews);
+
+              hasMore = reviews.length === perPage;
+              page += 1;
+            }
+
             console.log(`Found ${matchingReviews.length} reviews.`);
 
             // Dismiss all reviews containing the unique identifier

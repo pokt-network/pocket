@@ -54,6 +54,8 @@ func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(message *t
 	if err != nil {
 		return typesCons.NodeId(0), err
 	}
+	defer readCtx.Release()
+
 	vals, err := readCtx.GetAllValidators(height)
 	if err != nil {
 		return typesCons.NodeId(0), err

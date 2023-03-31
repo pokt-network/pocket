@@ -14,16 +14,20 @@ type HotstuffMessageHandler interface {
 }
 
 func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) error {
-	step := msg.GetStep()
+	// IMPROVE: Add source of message here
+	loggingFields := msgToLoggingFields(msg)
 
 	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("GOKHAN Received hotstuff msg")
 
 	// Pacemaker - Liveness & safety checks
 	if shouldHandle, err := m.paceMaker.ShouldHandleMessage(msg); !shouldHandle {
+		m.logger.Debug().Fields(loggingFields).Msg("Not handling hotstuff msg...")
 		return err
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("GOKHAN Handling hotstuff msg")
+	// IMPROVE: Add source of message here
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("GOKHAN Handling hotstuff msg")
+	m.logger.Debug().Fields(loggingFields).Msg("About to start handling hotstuff msg...")
 
 	// Elect a leader for the current round if needed
 	if m.shouldElectNextLeader() {
@@ -32,21 +36,25 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 		}
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("GOKHAN Leader is elected.")
+	// m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("GOKHAN Leader is elected.")
 
-	// Hotstuff - Handle message as a replica
-	if m.isReplica() {
-		replicaHandlers[step](m, msg)
+	// // Hotstuff - Handle message as a replica
+	// if m.isReplica() {
+	// 	replicaHandlers[step](m, msg)
+
+	if m.IsLeader() {
+		// Hotstuff - Handle message as a leader;
+		// NB: Leader also acts as a replica, but this logic is implemented in the underlying code
+		leaderHandlers[msg.GetStep()](m, msg)
+	} else {
+		// Hotstuff - Handle message as a replica
+		replicaHandlers[msg.GetStep()](m, msg)
 	}
-
-	// Hotstuff - Handle message as a leader
-	// Note that the leader also acts as a replica, but this logic is implemented in the underlying code.
-	leaderHandlers[step](m, msg)
 
 	return nil
 }
 
 func (m *consensusModule) shouldElectNextLeader() bool {
-	// Execute leader election if there is no leader and we are in a new round
+	// Execute leader election if there is no leader and we are in a NewRound
 	return m.step == NewRound && m.leaderId == nil
 }

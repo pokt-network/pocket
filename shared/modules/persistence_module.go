@@ -60,7 +60,7 @@ type PersistenceWriteContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
-	Release() error
+	Release()
 
 	// Commits the current context (height, hash, transactions, etc...) to disk (i.e. finality).
 	Commit(proposerAddr, quorumCert []byte, transactions [][]byte) error
@@ -131,7 +131,7 @@ type PersistenceWriteContext interface {
 type PersistenceReadContext interface {
 	// Context Operations
 	GetHeight() (int64, error) // Returns the height of the context
-	Close() error              // Closes the read context
+	Release()                  // Releases the read context
 
 	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries

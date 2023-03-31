@@ -3,7 +3,6 @@ package pacemaker
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
@@ -21,8 +20,8 @@ const (
 	defaultLogPrefix    = "NODE"
 	pacemakerModuleName = "pacemaker"
 
-	// A buffer around the pacemaker timeout to avoid race condition; 30ms was arbitrarily chosen
-	timeoutBuffer = 30 * time.Millisecond
+	// A buffer around the pacemaker timeout to avoid race condition; 100ms was arbitrarily chosen
+	timeoutBuffer = 100 * time.Millisecond
 
 	newRound = typesCons.HotstuffStep_HOTSTUFF_STEP_NEWROUND
 	propose  = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_PROPOSE
@@ -39,7 +38,6 @@ type Pacemaker interface {
 	PacemakerDebug
 
 	ShouldHandleMessage(message *typesCons.HotstuffMessage) (bool, error)
-	SetLogPrefix(string)
 
 	RestartTimer()
 	NewHeight()
@@ -50,8 +48,9 @@ type pacemaker struct {
 	base_modules.IntegratableModule
 	base_modules.InterruptableModule
 
-	pacemakerCfg   *configs.PacemakerConfig
-	stepCancelFunc context.CancelFunc
+	pacemakerCfg    *configs.PacemakerConfig
+	roundTimeout    time.Duration
+	roundCancelFunc context.CancelFunc
 
 	// Only used for development and debugging.
 	debug pacemakerDebug
@@ -80,6 +79,7 @@ func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	cfg := runtimeMgr.GetConfig()
 
 	m.pacemakerCfg = cfg.Consensus.PacemakerConfig
+	m.roundTimeout = m.getRoundTimeout()
 	m.debug = pacemakerDebug{
 		manualMode:                m.pacemakerCfg.GetManual(),
 		debugTimeBetweenStepsMsec: m.pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
@@ -99,10 +99,6 @@ func (*pacemaker) GetModuleName() string {
 	return pacemakerModuleName
 }
 
-func (m *pacemaker) SetLogPrefix(logPrefix string) {
-	m.logPrefix = logPrefix
-}
-
 func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, error) {
 	consensusMod := m.GetBus().GetConsensusModule()
 
@@ -113,8 +109,8 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	m.logger.Info().Msgf("⚠️ Node at height %d received message height %d", currentHeight, msg.Height)
 
 	// Consensus message is from the past
-	if msg.Height < currentHeight {
-		m.logger.Info().Msgf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height)
+	if currentHeight > msg.Height {
+		m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node (ahead) at height %d > message height %d", currentHeight, msg.Height)
 		return false, nil
 	}
 
@@ -153,7 +149,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Message is from the past
 	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
-		m.logger.Info().Msgf("⚠️ [WARN][DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round)
+		m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round)
 		return false, nil
 	}
 
@@ -164,7 +160,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
 	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {
-		m.logger.Info().Msg(typesCons.PacemakerCatchup(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
+		m.logger.Info().Msg(pacemakerCatchupLog(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
 		consensusMod.SetStep(uint8(msg.Step))
 		consensusMod.SetRound(msg.Round)
 
@@ -173,7 +169,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		if currentRound != msg.Round || !consensusMod.IsLeaderSet() {
 			anyProto, err := anypb.New(msg)
 			if err != nil {
-				log.Println("[WARN] NewHeight: Failed to convert pacemaker message to proto: ", err)
+				m.logger.Warn().Err(err).Msg("Failed to convert pacemaker message to proto.")
 				return false, err
 			}
 			// TODO: Add new custom error
@@ -189,36 +185,36 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 }
 
 func (m *pacemaker) RestartTimer() {
-	if m.stepCancelFunc != nil {
-		m.stepCancelFunc()
+	// NOTE: Not deferring a cancel call because this function is asynchronous.
+	if m.roundCancelFunc != nil {
+		m.roundCancelFunc()
 	}
 
-	// NOTE: Not defering a cancel call because this function is asynchronous.
-	stepTimeout := m.getStepTimeout()
 	clock := m.GetBus().GetRuntimeMgr().GetClock()
-
-	ctx, cancel := clock.WithTimeout(context.TODO(), stepTimeout)
-	m.stepCancelFunc = cancel
-
+	ctx, cancel := clock.WithTimeout(context.TODO(), m.roundTimeout)
+	m.roundCancelFunc = cancel
+	// NOTE: Not deferring a cancel call because this function is asynchronous.
 	go func() {
 		select {
 		case <-ctx.Done():
 			if ctx.Err() == context.DeadlineExceeded {
-				m.InterruptRound("timeout")
+				m.InterruptRound("pacemaker timeout")
 			}
-		case <-clock.After(stepTimeout + timeoutBuffer):
+		case <-clock.After(m.roundTimeout + timeoutBuffer):
 			return
 		}
 	}()
 }
 
 func (m *pacemaker) InterruptRound(reason string) {
+	defer m.RestartTimer()
+
 	consensusMod := m.GetBus().GetConsensusModule()
-	m.logger.Info().Msg(typesCons.PacemakerInterrupt(reason, consensusMod.CurrentHeight(), typesCons.HotstuffStep(consensusMod.CurrentStep()), consensusMod.CurrentRound()))
+	m.logger.Warn().Fields(m.sharedLoggingFields()).Msgf("⏰ Interrupt ⏰ due to: %s", reason)
 
 	consensusMod.SetRound(consensusMod.CurrentRound() + 1)
 
-	//ADDTEST: check if this is indeed ensured after a successful round
+	// ADDTEST: check if this is indeed ensured after a successful round
 	if m.GetBus().GetConsensusModule().IsPrepareQCNil() {
 		m.startNextView(nil, false)
 		return
@@ -243,13 +239,16 @@ func (m *pacemaker) InterruptRound(reason string) {
 }
 
 func (m *pacemaker) NewHeight() {
+	defer m.RestartTimer()
+
 	consensusMod := m.GetBus().GetConsensusModule()
+	consensusMod.ResetRound(true)
+	newHeight := consensusMod.CurrentHeight() + 1
+	consensusMod.SetHeight(newHeight)
+	m.logger.Info().Uint64("height", newHeight).Msg("🏁 Starting 1st round at new height 🏁")
 
-	m.logger.Info().Msg(typesCons.PacemakerNewHeight(consensusMod.CurrentHeight() + 1))
-	consensusMod.SetHeight(consensusMod.CurrentHeight() + 1)
-	consensusMod.ResetForNewHeight()
-
-	m.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
+	// CONSIDERATION: We are omitting CommitQC and TimeoutQC here for simplicity, but should we add them?
+	m.startNextView(nil, false)
 
 	m.GetBus().
 		GetTelemetryModule().
@@ -260,14 +259,15 @@ func (m *pacemaker) NewHeight() {
 }
 
 func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
+	defer m.RestartTimer()
+
 	// DISCUSS: Should we lock the consensus module here?
 	consensusMod := m.GetBus().GetConsensusModule()
-	consensusMod.SetStep(uint8(newRound))
-	consensusMod.ResetRound()
+	consensusMod.ResetRound(false)
 	if err := consensusMod.ReleaseUtilityUnitOfWork(); err != nil {
-		log.Println("[WARN] NewHeight: Failed to release utility unit of work: ", err)
-		return
+		m.logger.Error().Err(err).Msg("Failed to release utility unit of work.")
 	}
+	consensusMod.SetStep(uint8(newRound))
 
 	// TECHDEBT: This if structure for debug purposes only; think of a way to externalize it from the main consensus flow...
 	if m.debug.manualMode && !forceNextView {
@@ -290,19 +290,33 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 		}
 	}
 
-	m.RestartTimer()
-
 	anyProto, err := anypb.New(hotstuffMessage)
 	if err != nil {
-		log.Println("[WARN] NewHeight: Failed to convert pacemaker message to proto: ", err)
+		m.logger.Error().Err(err).Fields(m.sharedLoggingFields()).Msgf("Failed to convert pacemaker message to proto.")
 		return
 	}
+
 	fmt.Println("Calling broadcast message to validators")
-	consensusMod.BroadcastMessageToValidators(anyProto)
+	if err := consensusMod.BroadcastMessageToValidators(anyProto); err != nil {
+		m.logger.Error().Err(err).Fields(m.sharedLoggingFields()).Msgf("Failed to broadcast message to validators.")
+		return
+	}
 }
 
 // TODO: Increase timeout using exponential backoff.
-func (m *pacemaker) getStepTimeout() time.Duration {
-	baseTimeout := time.Duration(int64(time.Millisecond) * int64(m.pacemakerCfg.TimeoutMsec))
-	return baseTimeout
+func (m *pacemaker) getRoundTimeout() time.Duration {
+	return time.Duration(int64(time.Millisecond) * int64(m.pacemakerCfg.TimeoutMsec))
+}
+
+func (m *pacemaker) sharedLoggingFields() map[string]interface{} {
+	consensusMod := m.GetBus().GetConsensusModule()
+	return map[string]interface{}{
+		"height": consensusMod.CurrentHeight(),
+		"step":   typesCons.HotstuffStep(consensusMod.CurrentStep()),
+		"round":  consensusMod.CurrentRound(),
+	}
+}
+
+func pacemakerCatchupLog(height1, step1, round1, height2, step2, round2 uint64) string {
+	return fmt.Sprintf("🏃 Pacemaker catching 🏃 up (height, step, round) FROM (%d, %d, %d) TO (%d, %d, %d)", height1, step1, round1, height2, step2, round2)
 }

@@ -7,16 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.40] - 2023-03-29
-
-- Bugfix for (unable to send txs in localnet) #631
-  
-## [0.0.0.40] - 2023-03-29
+## [0.0.0.42] - 2023-03-31
 
 - Add `fsm_handler.go` to handle FSM transition events in consensus module
 - Update State Machine mock in `utils_test.go`
 - Update state_sync module with additional function definitions 
-  
+
+## [0.0.0.41] - 2023-03-30
+
+- Improve & simplify `utilityUnitOfWork` management
+- Logging - improve the wording and context of various logging statements
+- Logging - remove a lot of unused logging function helpers
+- Genesis - Fix ordering of operations when resetting to genesis
+- Added `msgToLoggingFields(hotstuffMsg)` helper
+- Added missing `persistenceContext.Release()` calls
+- Avoid redundant handling of hotstuff messages by replicas
+- Consolidated `prev` & `last` terminology
+- Consolidated `stateHash` & `prevHash` terminology
+- Removed unused `logPrefix` variables
+- Moved implementation of `modules.ConsensusDebugModule` into its own file
+- Moved implementation of `modules.ConsensusPacemaker` into its own file
+- Moved implementation of `modules.ConsensusStateSync` into its own file
+
+## [0.0.0.40] - 2023-03-29
+
+- Bugfix for (unable to send txs in localnet) #631
+
 ## [0.0.0.39] - 2023-03-26
 
 - Refactored `utilityContext` into `utilityUnitOfWork`
