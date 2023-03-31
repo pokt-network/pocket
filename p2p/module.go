@@ -138,6 +138,8 @@ func (m *p2pModule) GetModuleName() string {
 	return modules.P2PModuleName
 }
 
+// Start instantiates and assigns `m.host`, unless one already exists, and
+// `m.network` (which depends on `m.host` as a required config field).
 func (m *p2pModule) Start() (err error) {
 	m.GetBus().
 		GetTelemetryModule().
@@ -152,6 +154,10 @@ func (m *p2pModule) Start() (err error) {
 		if err = m.setupHost(); err != nil {
 			return fmt.Errorf("setting up libp2pHost: %w", err)
 		}
+	}
+
+	if err := m.setupNetwork(); err != nil {
+		return fmt.Errorf("setting up network: %w", err)
 	}
 
 	// Don't handle incoming streams in client debug mode.
@@ -217,9 +223,6 @@ func (m *p2pModule) setupDependencies() error {
 		return err
 	}
 
-	if err := m.setupNetwork(); err != nil {
-		return err
-	}
 	return nil
 }
 
