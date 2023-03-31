@@ -79,7 +79,6 @@ func generateParamConfigs() map[string]int {
 		typesUtil.MessagePauseServicerFee:                  BIGINT,
 		typesUtil.MessageUnpauseServicerFee:                BIGINT,
 		typesUtil.MessageChangeParameterFee:                BIGINT,
-		typesUtil.MessageDoubleSignFeeOwner:                BYTES,
 	}
 }
 
