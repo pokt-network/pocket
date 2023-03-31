@@ -55,7 +55,6 @@ RUN go get -d -v ./app/pocket
 RUN go build -o /usr/local/bin/pocket ./app/pocket
 RUN go build -tags=debug -o /usr/local/bin/client ./app/client
 
-# TODO(@okdas): remove once cluster-manager functionality migrated to pocket-operator
 RUN go build -o /usr/local/bin/cluster-manager ./build/localnet/cluster-manager
 
 CMD ["/usr/local/bin/pocket"]
