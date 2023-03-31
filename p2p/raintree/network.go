@@ -308,6 +308,10 @@ func (n *rainTreeNetwork) setupPeerManager(pstore typesP2P.Peerstore) (err error
 }
 
 func (cfg RainTreeConfig) isValid() error {
+	if cfg.Host == nil {
+		return fmt.Errorf("host not configured")
+	}
+
 	if cfg.PeerstoreProvider == nil {
 		return fmt.Errorf("peerstore provider not configured")
 	}
