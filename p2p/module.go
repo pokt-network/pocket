@@ -149,8 +149,8 @@ func (m *p2pModule) Start() (err error) {
 
 	// Return early if host has already been started (e.g. via `WithHostOption`)
 	if m.host == nil {
-		if err = m.startHost(); err != nil {
-			return fmt.Errorf("starting libp2pHost: %w", err)
+		if err = m.setupHost(); err != nil {
+			return fmt.Errorf("setting up libp2pHost: %w", err)
 		}
 	}
 
@@ -290,9 +290,9 @@ func (m *p2pModule) setupNetwork() (err error) {
 	return err
 }
 
-// startHost creates a new libp2p host and assignes it to `m.host`, if one does
+// setupHost creates a new libp2p host and assignes it to `m.host`, if one does
 // not already exist. Libp2p host starts listening upon instantiation.
-func (m *p2pModule) startHost() (err error) {
+func (m *p2pModule) setupHost() (err error) {
 	opts := []libp2p.Option{
 		// Explicitly specify supported transport security options (noise, TLS)
 		// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.3#DefaultSecurity)
