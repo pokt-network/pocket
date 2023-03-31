@@ -7,10 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.27] - 2023-03-28
+## [0.0.0.30] - 2023-03-31
 
 - Improve LocalNet documentation by adding a TLDR commands to provision LocalNet with `kind`.
 - Include `cluster-manager` to `-dev` flavor of container images.
+
+## [0.0.0.29] - 2023-03-30
+
+- `cluster-manager` now waits for `v1-validator001` to be online AND responsive by checking the `/v1/health` endpoint (dogfooding)
+- `cluster-manager` skips auto staking for the validators that are already staked in genesis
+
+## [0.0.0.28] - 2023-03-30
+
+- Update `pacemaker_timeout` from 5 to 10 seconds to make the logging output less noisy during development
+- Updated configurations related to postgres connection pooling
+
+## [0.0.0.27] - 2023-03-28
+
+- Silence gopls build error about missing DebugKeybaseBackup
 
 ## [0.0.0.26] - 2023-03-28
 

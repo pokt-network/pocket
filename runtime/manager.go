@@ -2,22 +2,16 @@ package runtime
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
-	"path"
-	"path/filepath"
-	"strings"
 
 	"github.com/benbjohnson/clock"
-	"github.com/mitchellh/mapstructure"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
-	"github.com/spf13/viper"
 )
 
 var _ modules.RuntimeMgr = &Manager{}
@@ -84,37 +78,7 @@ func (m *Manager) GetClock() clock.Clock {
 }
 
 func parseFiles(configJSONPath, genesisJSONPath string) (config *configs.Config, genesisState *genesis.GenesisState, err error) {
-	config = configs.NewDefaultConfig()
-
-	dir, configFile := path.Split(configJSONPath)
-	filename := strings.TrimSuffix(configFile, filepath.Ext(configFile))
-
-	viper.AddConfigPath(".")
-	viper.AddConfigPath(dir)
-	viper.SetConfigName(filename)
-	viper.SetConfigType("json")
-
-	// The lines below allow for environment variables configuration (12 factor app)
-	// Eg: POCKET_CONSENSUS_PRIVATE_KEY=somekey would override `consensus.private_key` in config
-	viper.SetEnvPrefix("POCKET")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv()
-
-	if err = viper.ReadInConfig(); err != nil {
-		err = fmt.Errorf("error reading %s: %w", configJSONPath, err)
-		return
-	}
-
-	decoderConfig := func(dc *mapstructure.DecoderConfig) {
-		// This is to leverage the `json` struct tags without having to add `mapstructure` ones.
-		// Until we have complex use cases, this should work just fine.
-		dc.TagName = "json"
-	}
-	if err = viper.Unmarshal(&config, decoderConfig); err != nil {
-		err = fmt.Errorf("error unmarshalling %s: %w", configJSONPath, err)
-		return
-	}
-
+	config = configs.ParseConfig(configJSONPath)
 	genesisState, err = parseGenesis(genesisJSONPath)
 	return
 }

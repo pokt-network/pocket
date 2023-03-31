@@ -35,8 +35,7 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMess
 		if err := m.clearAllState(debugMessage); err != nil {
 			return err
 		}
-		g := m.genesisState
-		m.populateGenesisState(g) // fatal if there's an error
+		m.populateGenesisState(m.genesisState) // fatal if there's an error
 	default:
 		m.logger.Debug().Str("message", debugMessage.Message.String()).Msg("Debug message not handled by persistence module")
 	}
@@ -63,34 +62,43 @@ func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) {
 
 // TECHDEBT: Make sure this is atomic
 func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
-	ctx, err := m.NewRWContext(-1)
+	rwCtx, err := m.NewRWContext(-1)
 	if err != nil {
 		return err
 	}
-	postgresCtx := ctx.(*PostgresContext)
+	// NB: Not calling `defer rwCtx.Release()` because we `Commit`, which releases the tx below
 
-	// Clear the SQL DB
-	if err := postgresCtx.clearAllSQLState(); err != nil {
-		return err
-	}
+	postgresCtx := rwCtx.(*PostgresContext)
 
-	// Release the SQL context
-	if err := m.ReleaseWriteContext(); err != nil {
-		return err
-	}
-
-	// Clear the BlockStore
-	if err := m.blockStore.ClearAll(); err != nil {
-		return err
-	}
-
-	// Clear all the Trees
+	// Clear all the Merkle Trees (i.e. backed the key-value stores)
 	if err := postgresCtx.clearAllTreeState(); err != nil {
 		return err
 	}
 
+	// Clear all the SQL tables
+	if err := postgresCtx.clearAllSQLState(); err != nil {
+		return err
+	}
+
+	// Commit the SQL transaction that clears everything
+	ctx, tx := postgresCtx.getCtxAndTx()
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	// NB: We are manually committing the transaction above (since clearing everything is not a prod use case),
+	// which is why we also need to manually release the write context to allow creating a new one in the future.
+	if err := m.ReleaseWriteContext(); err != nil {
+		return err
+	}
+
+	// Clear the BlockStore (i.e. backed by the key-value store)
+	if err := m.blockStore.ClearAll(); err != nil {
+		return err
+	}
+
 	m.logger.Info().Msg("Cleared all the state")
-	// reclaming memory manually because the above calls deallocate and reallocate a lot of memory
+	// reclaiming memory manually because the above calls de-allocate and reallocate a lot of memory
 	debug.FreeOSMemory()
 	return nil
 }
@@ -113,10 +121,6 @@ func (p *PostgresContext) clearAllSQLState() error {
 		if _, err := clearTx.Exec(ctx, clearFn()); err != nil {
 			return err
 		}
-	}
-
-	if err := clearTx.Commit(ctx); err != nil {
-		return err
 	}
 
 	return nil

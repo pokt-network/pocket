@@ -12,7 +12,7 @@ import (
 func parseGenesis(genesisJSONPath string) (g *genesis.GenesisState, err error) {
 	data, err := os.ReadFile(genesisJSONPath)
 	if err != nil {
-		err = fmt.Errorf("error reading %s: %w", genesisJSONPath, err)
+		err = fmt.Errorf("error reading genesis file %s: %w", genesisJSONPath, err)
 		return
 	}
 

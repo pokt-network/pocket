@@ -19,12 +19,15 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	// setup a write context, insert a pool and commit it
 	context, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
+	defer context.Release()
+
 	require.NoError(t, context.InsertPool(poolName, originalAmount))
 	require.NoError(t, context.Commit(proposerAddr, quorumCert))
 
 	// verify the insert in the previously committed context worked
 	contextA, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
+	defer contextA.Release()
 
 	contextAOriginalAmount, err := contextA.GetPoolAmount(poolName, 0)
 	require.NoError(t, err)
@@ -40,6 +43,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	// setup a read context - independent of the previous modified but uncommitted context
 	contextB, err := testPersistenceMod.NewReadContext(0)
 	require.NoError(t, err)
+	defer contextB.Release()
 
 	// verify context b is unchanged
 	contextBOriginalAmount, err := contextB.GetPoolAmount(poolName, 0)
@@ -52,14 +56,15 @@ func TestPersistenceContextTwoWritesErrors(t *testing.T) {
 	prepareAndCleanContext(t)
 
 	// Opening up first write context succeeds
-	_, err := testPersistenceMod.NewRWContext(0)
+	rwCtx1, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
+	defer rwCtx1.Release()
 
 	// Opening up second write context at the same height fails
 	_, err = testPersistenceMod.NewRWContext(0)
 	require.Error(t, err)
 
-	// Opening up second write context at a different height fails
+	// Opening up a third second write context at a different height fails
 	_, err = testPersistenceMod.NewRWContext(1)
 	require.Error(t, err)
 }
@@ -70,23 +75,17 @@ func TestPersistenceContextSequentialWrites(t *testing.T) {
 	// Opening up first write context succeeds
 	writeContext1, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
-
-	// Close the write context
-	require.NoError(t, writeContext1.Release())
+	writeContext1.Release()
 
 	// Opening up second write context at the same height succeeds
 	writeContext2, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
-
-	// Close the write context
-	require.NoError(t, writeContext2.Release())
+	writeContext2.Release()
 
 	// Opening up third write context at a different height succeeds
 	writeContext3, err := testPersistenceMod.NewRWContext(1)
 	require.NoError(t, err)
-
-	// Close the write context
-	require.NoError(t, writeContext3.Release())
+	writeContext3.Release()
 }
 
 func TestPersistenceContextMultipleParallelReads(t *testing.T) {
@@ -104,9 +103,9 @@ func TestPersistenceContextMultipleParallelReads(t *testing.T) {
 	readContext3, err := testPersistenceMod.NewReadContext(1)
 	require.NoError(t, err)
 
-	require.NoError(t, readContext1.Close())
-	require.NoError(t, readContext2.Close())
-	require.NoError(t, readContext3.Close())
+	readContext1.Release()
+	readContext2.Release()
+	readContext3.Release()
 }
 
 func prepareAndCleanContext(t *testing.T) {

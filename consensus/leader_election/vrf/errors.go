@@ -6,14 +6,14 @@ import (
 )
 
 const (
-	NilPrivateKeyError    = "private key cannot be nil"
-	BadAppHashLengthError = "the last block hash must be at least %d bytes in length"
+	NilPrivateKeyError      = "private key cannot be nil"
+	BadStateHashLengthError = "the previous block hash must be at least %d bytes in length"
 )
 
 var (
 	ErrNilPrivateKey = errors.New(NilPrivateKeyError)
 )
 
-func ErrBadAppHashLength(seedSize int) error {
-	return fmt.Errorf(BadAppHashLengthError, seedSize)
+func ErrBadStateHashLength(seedSize int) error {
+	return fmt.Errorf(BadStateHashLengthError, seedSize)
 }

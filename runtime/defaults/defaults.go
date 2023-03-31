@@ -2,9 +2,25 @@ package defaults
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pokt-network/pocket/runtime/configs/types"
 )
+
+func init() {
+	initDefaultRootDirectory()
+}
+
+func initDefaultRootDirectory() {
+	// use home directory + /.pocket as root directory
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	DefaultRootDirectory = homeDir + "/.pocket"
+	// IMPROVE: this is a hack to get around the fact that we don't know the home directory until after the init function has run
+	DefaultKeybaseFilePath = DefaultRootDirectory + "/keys"
+}
 
 const (
 	DefaultRPCPort                  = "50832"
@@ -12,11 +28,16 @@ const (
 	DefaultRPCHost                  = "localhost"
 	Validator1EndpointDockerCompose = "node1.consensus"
 	Validator1EndpointK8S           = "v1-validator001"
+)
+
+var (
+	// DefaultRootDirectory is root directory for the pocket node is initialized in the init function to be the home directory + /.pocket
+	DefaultRootDirectory = ""
 
 	// consensus
 	DefaultConsensusMaxMempoolBytes = uint64(500000000)
 	// pacemaker
-	DefaultPacemakerTimeoutMsec               = uint64(5000)
+	DefaultPacemakerTimeoutMsec               = uint64(10000)
 	DefaultPacemakerManual                    = true
 	DefaultPacemakerDebugTimeBetweenStepsMsec = uint64(1000)
 	// utility
@@ -40,6 +61,14 @@ const (
 	DefaultLoggerFormat = "pretty"
 	// rpc
 	DefaultRPCTimeout = uint64(30000)
+
+	// keybase
+	DefaultKeybaseType     = types.KeybaseType_FILE
+	DefaultKeybaseFilePath = "" // set in init function
+	// vault
+	DefaultKeybaseVaultAddr      = ""
+	DefaultKeybaseVaultToken     = ""
+	DefaultKeybaseVaultMountPath = ""
 )
 
 var (

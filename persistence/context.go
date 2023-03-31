@@ -4,8 +4,10 @@ package persistence
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -15,14 +17,15 @@ var _ modules.PersistenceRWContext = &PostgresContext{}
 
 // TECHDEBT: All the functions of `PostgresContext` should be organized in appropriate packages and use pointer receivers
 type PostgresContext struct {
-	Height int64 // TECHDEBT: `Height` is only externalized for testing purposes. Replace with a `Debug` interface containing helpers
-	conn   *pgx.Conn
-	tx     pgx.Tx
-
-	stateHash string
-
 	logger *modules.Logger
 
+	// TECHDEBT: `Height` is only externalized for testing purposes. Replace with a `Debug` interface containing helpers
+	Height int64
+
+	conn *pgxpool.Conn
+	tx   pgx.Tx
+
+	stateHash string
 	// TECHDEBT(#361): These three values are pointers to objects maintained by the PersistenceModule.
 	//                 Need to simply access them via the bus.
 	blockStore kvstore.KVStore
@@ -38,7 +41,7 @@ func (p *PostgresContext) NewSavePoint(bytes []byte) error {
 // TECHDEBT(#327): Guarantee atomicity betweens `prepareBlock`, `insertBlock` and `storeBlock` for save points & rollbacks.
 func (p *PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	p.logger.Info().Bool("TODO", true).Msg("RollbackToSavePoint not fully implemented")
-	return p.getTx().Rollback(context.TODO())
+	return p.tx.Rollback(context.TODO())
 }
 
 // IMPROVE(#361): Guarantee the integrity of the state
@@ -74,60 +77,41 @@ func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 
 	// Commit the SQL transaction
 	ctx := context.TODO()
-	if err := p.getTx().Commit(ctx); err != nil {
+	if err := p.tx.Commit(ctx); err != nil {
 		return err
 	}
-	if err := p.conn.Close(ctx); err != nil {
-		p.logger.Error().Err(err).Bool("TODO", true).Msg("Error when closing DB connection")
-	}
+	p.tx = nil
+
+	// Release the connection back to the pool
+	p.conn.Release()
+	p.conn = nil
 
 	return nil
 }
 
-func (p *PostgresContext) Release() error {
+func (p *PostgresContext) Release() {
 	p.logger.Info().Int64("height", p.Height).Msg("About to release context")
-	ctx := context.TODO()
-	if err := p.getTx().Rollback(ctx); err != nil {
-		return err
+
+	// Rollback the transaction
+	if p.tx != nil {
+		if err := p.tx.Rollback(context.TODO()); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
+			p.logger.Error().Err(err).Msg("failed to rollback transaction")
+		}
+		p.tx = nil
 	}
-	if err := p.resetContext(); err != nil {
-		return err
+
+	// Release the db connection back to the pool
+	if p.conn != nil {
+		p.conn.Release()
+		p.conn = nil
 	}
-	return nil
 }
 
-func (p *PostgresContext) Close() error {
-	return p.conn.Close(context.TODO())
-}
-
-// INVESTIGATE(#361): Revisit if is used correctly in the context of the lifecycle of a persistenceContext and a utilityContext
+// INVESTIGATE(#361): Revisit if is used correctly in the context of the lifecycle of a persistenceContext and a utilityUnitOfWork
 func (p *PostgresContext) IndexTransaction(txResult modules.TxResult) error {
 	return p.txIndexer.Index(txResult)
 }
 
-func (p *PostgresContext) resetContext() (err error) {
-	if p == nil {
-		return nil
-	}
-
-	tx := p.getTx()
-	if p.tx == nil {
-		return nil
-	}
-
-	conn := tx.Conn()
-	if conn == nil {
-		return nil
-	}
-
-	if !conn.IsClosed() {
-		if err := conn.Close(context.TODO()); err != nil {
-			return err
-		}
-	}
-
-	p.conn = nil
-	p.tx = nil
-
-	return err
+func (p *PostgresContext) isOpen() bool {
+	return p.tx != nil && p.conn != nil
 }
