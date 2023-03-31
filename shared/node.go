@@ -1,6 +1,8 @@
 package shared
 
 import (
+	"fmt"
+
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/libp2p"
 	"github.com/pokt-network/pocket/logger"
@@ -146,6 +148,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 			return err
 		}
 	case messaging.HotstuffMessageContentType:
+		fmt.Println("Received HotstuffMessage: ", message)
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 	case messaging.StateSyncMessageContentType:
 		logger.Global.Info().Msg("Received StateSyncMessage")

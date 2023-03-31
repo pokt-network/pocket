@@ -3,6 +3,7 @@ package consensus
 // TODO: Split this file into multiple helpers (e.g. signatures.go, hotstuff_helpers.go, etc...)
 import (
 	"encoding/base64"
+	"fmt"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
@@ -135,10 +136,13 @@ func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signa
 }
 
 func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
+	//fmt.Println("didReceiveEnoughMessageForStep", step)
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("didReceiveEnoughMessageForStep, len of validators: ", len(validators))
 	return m.isOptimisticThresholdMet(int(m.hotstuffMempool[step].Size()), validators)
 }
 
@@ -168,7 +172,7 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 			"step":    msg.GetStep(),
 			"round":   msg.GetRound(),
 		},
-	).Msg("✉️ Sending message ✉️")
+	).Msg("✉️ Sending message TO LEADER✉️")
 
 	// TODO: This can happen due to a race condition with the pacemaker.
 	if m.leaderId == nil {
@@ -186,6 +190,7 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
+	//fmt.Println("SendToLeader thinks validators are: ", validators)
 
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 
@@ -216,6 +221,8 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
+
+	fmt.Println("Broadcasting to: ", validators, " len: ", len(validators))
 
 	for _, val := range validators {
 		//validatorAddr := val.GetAddress()
@@ -266,7 +273,16 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 		m.clearLeader()
 		return err
 	}
+
 	m.leaderId = &leaderId
+
+	m.logger.Info().Fields(
+		map[string]any{
+			"leaderId": leaderId,
+			"height":   m.height,
+			"round":    m.round,
+		},
+	).Msgf("leader election is performed and m.leaderId is set: %x, nodeid is: ", leaderId, m.nodeId)
 
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
@@ -274,6 +290,8 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 	}
 
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
+
+	//fmt.Println("electNextLeader thinks validators are: ", validators)
 
 	if m.IsLeader() {
 		m.setLogPrefix("LEADER")
@@ -334,6 +352,7 @@ func (m *consensusModule) IsValidator() (bool, error) {
 }
 
 // CONSIDER: Below are same as the ones on statesync helper. We should probably move them to a common place.
+// TODO!: Remove this, there is already one in state sync
 func (m *consensusModule) logHelper(receiverPeerId string) map[string]any {
 	return map[string]any{
 		"height":         m.CurrentHeight(),
@@ -356,4 +375,12 @@ func (m *consensusModule) maximumPersistedBlockHeight() (uint64, error) {
 	}
 
 	return maxHeight, nil
+}
+
+func (m *consensusModule) hotstuffMsgLogHelper(msg *typesCons.HotstuffMessage) map[string]any {
+	return map[string]any{
+		"step":   msg.Step,
+		"height": msg.Height,
+		"round":  msg.Round,
+	}
 }

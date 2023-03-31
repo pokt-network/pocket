@@ -44,6 +44,7 @@ func NewHotstuffFIFOMempool(maxTotalMsgBytes uint64) *hotstuffFIFOMempool {
 			return hotstuffFIFOMempool.totalMsgBytes >= hotstuffFIFOMempool.maxTotalMsgBytes
 		}),
 		mempool.WithOnAdd(func(item *typesCons.HotstuffMessage, g *mempool.GenericFIFOList[*typesCons.HotstuffMessage]) {
+			//fmt.Printf("Adding message to mempool, with item: %v \n", item)
 			hotstuffFIFOMempool.m.Lock()
 			defer hotstuffFIFOMempool.m.Unlock()
 			hash := hashMsg(item)

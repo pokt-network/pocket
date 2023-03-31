@@ -105,6 +105,16 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 		return err
 	}
 
+	leaderIdInt, err := m.GetNodeIdFromNodeAddress(string(block.BlockHeader.ProposerAddress))
+	if err != nil {
+		m.logger.Error().Err(err).Msg("Could not get leader id from leader address")
+		return err
+	}
+
+	leaderId := typesCons.NodeId(leaderIdInt)
+	m.leaderId = &leaderId
+	m.logger.Info().Msgf("HandleGetBlockResponse, leaderId is: %d", leaderId)
+
 	m.logger.Info().Msg("HandleGetBlockResponse, applying the block")
 	// Apply all the transactions in the block and get the stateHash
 	m.applyBlock(block)
@@ -129,6 +139,8 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 	// Send current persisted block height to the state sync module
 	m.stateSync.PersistedBlock(block.BlockHeader.Height)
+
+	fmt.Printf("Applied Block My state is, height: %d, step: %d, round: %d,", m.CurrentHeight(), m.CurrentStep(), m.CurrentRound())
 
 	return nil
 

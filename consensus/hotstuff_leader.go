@@ -31,10 +31,14 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader starting")
+
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.logger.Error().Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
+
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Checking votes")
 
 	// DISCUSS: Do we need to pause for `MinBlockFreqMSec` here to let more transactions or should we stick with optimistic responsiveness?
 
@@ -56,6 +60,8 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		m.logger.Error().Err(err).Msg("Could not refresh utility unitOfWork")
 		return
 	}
+
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Reshing utility")
 
 	// Likely to be `nil` if blockchain is progressing well.
 	// TECHDEBT: How do we properly validate `prepareQC` here?
@@ -84,8 +90,12 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		m.block = highPrepareQC.Block
 	}
 
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Step is updated to Prepare")
+
 	m.step = Prepare
 	m.hotstuffMempool[NewRound].Clear()
+
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Creating and Sending Prepare Message")
 
 	prepareProposeMessage, err := CreateProposeMessage(m.height, m.round, Prepare, m.block, highPrepareQC)
 	if err != nil {
@@ -110,10 +120,14 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare leader starting")
+
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.logger.Error().Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
+
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Leader checking enough votes")
 
 	if err := m.didReceiveEnoughMessageForStep(Prepare); err != nil {
 		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(Prepare, err.Error()))
@@ -144,7 +158,8 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		m.paceMaker.InterruptRound("failed to create propose message")
 		return
 	}
-	//m.broadcastToValidators(preCommitProposeMessage)
+
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Leader broadcasting precommit message")
 	m.broadcastToValidators(preCommitProposeMessage)
 
 	// Leader also acts like a replica
@@ -153,6 +168,8 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		m.logger.Error().Err(err).Msg(typesCons.ErrCreateVoteMessage(PreCommit).Error())
 		return
 	}
+
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Leader running sendToLeader")
 	m.sendToLeader(precommitVoteMessage)
 }
 
@@ -167,6 +184,8 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		return
 	}
 
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePreCommit Leader checking enough votes")
+
 	if err := m.didReceiveEnoughMessageForStep(PreCommit); err != nil {
 		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(PreCommit, err.Error()))
 		return
@@ -179,6 +198,8 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 			"step":   PreCommit,
 		},
 	).Msg("📬 Received enough 📬 votes")
+
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePreCommit Leader validating QC")
 
 	preCommitQC, err := m.getQuorumCertificate(m.height, PreCommit, m.round)
 	if err != nil {
@@ -198,7 +219,8 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		m.paceMaker.InterruptRound("failed to create propose message")
 		return
 	}
-	//m.broadcastToValidators(commitProposeMessage)
+
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePreCommit Leader broadcasting commit message")
 	m.broadcastToValidators(commitProposeMessage)
 
 	// Leader also acts like a replica
@@ -207,6 +229,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		m.logger.Error().Err(err).Msg(typesCons.ErrCreateVoteMessage(Commit).Error())
 		return
 	}
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePreCommit Leader running sendToLeader")
 	m.sendToLeader(commitVoteMessage)
 }
 
@@ -220,6 +243,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleCommit Leader checking enough votes")
 
 	if err := m.didReceiveEnoughMessageForStep(Commit); err != nil {
 		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(Commit, err.Error()))
@@ -234,6 +258,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		},
 	).Msg("📬 Received enough 📬 votes")
 
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleCommit Leader validating QC")
 	commitQC, err := m.getQuorumCertificate(m.height, Commit, m.round)
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Commit).Error())
@@ -250,6 +275,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		return
 	}
 
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleCommit Leader broadcasting decide message")
 	m.broadcastToValidators(decideProposeMessage)
 
 	commitQcBytes, err := codec.GetCodec().Marshal(commitQC)
@@ -259,6 +285,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	}
 	m.block.BlockHeader.QuorumCertificate = commitQcBytes
 
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleCommit Leader committing block")
 	if err := m.commitBlock(m.block); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrCommitBlock.Error())
 		m.paceMaker.InterruptRound("failed to commit block")
@@ -278,6 +305,8 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
+
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleDecide Leader checking msg")
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
@@ -352,6 +381,8 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 	if err != nil {
 		return err
 	}
+
+	//fmt.Println("Leader thinks validators are: ", validators)
 
 	actorMapper := typesCons.NewActorMapper(validators)
 	validatorMap := actorMapper.GetValidatorMap()

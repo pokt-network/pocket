@@ -40,7 +40,7 @@ func (m *leaderElectionModule) GetModuleName() string {
 }
 
 func (m *leaderElectionModule) ElectNextLeader(message *typesCons.HotstuffMessage) (typesCons.NodeId, error) {
-	fmt.Printf("ELECTING NEXT LEADER, for this message: %v ", message)
+	//fmt.Printf("ELECTING NEXT LEADER, for this message: %v ", message)
 	nodeId, err := m.electNextLeaderDeterministicRoundRobin(message)
 	if err != nil {
 		return typesCons.NodeId(0), err
@@ -62,10 +62,11 @@ func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(message *t
 	value := int64(message.Height) + int64(message.Round) + int64(message.Step) - 1
 	numVals := int64(len(vals))
 
-	fmt.Printf("Length of all validators: %d, and the result: %d \n", len(vals), value%numVals+1)
+	valId := value%numVals + 1
+	fmt.Printf("Length of all validators: %d, and the result: %d \n", len(vals), valId)
 	for _, val := range vals {
-		fmt.Printf("Validator Address: %v", val.Address)
+		fmt.Printf("Validator Address: %v ", val.Address)
 	}
 
-	return typesCons.NodeId(value%numVals + 1), nil
+	return typesCons.NodeId(valId), nil
 }

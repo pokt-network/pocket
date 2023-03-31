@@ -16,22 +16,14 @@ type HotstuffMessageHandler interface {
 func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) error {
 	step := msg.GetStep()
 
-	m.logger.Debug().Fields(map[string]any{
-		"step":   msg.GetStep(),
-		"height": msg.Height,
-		"round":  msg.Round,
-	}).Msg("Received hotstuff msg")
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("GOKHAN Received hotstuff msg")
 
 	// Pacemaker - Liveness & safety checks
 	if shouldHandle, err := m.paceMaker.ShouldHandleMessage(msg); !shouldHandle {
 		return err
 	}
 
-	m.logger.Debug().Fields(map[string]any{
-		"step":   msg.GetStep(),
-		"height": msg.Height,
-		"round":  msg.Round,
-	}).Msg("Handling hotstuff msg")
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("GOKHAN Handling hotstuff msg")
 
 	// Elect a leader for the current round if needed
 	if m.shouldElectNextLeader() {
@@ -39,6 +31,8 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 			return err
 		}
 	}
+
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("GOKHAN Leader is elected.")
 
 	// Hotstuff - Handle message as a replica
 	if m.isReplica() {

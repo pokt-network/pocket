@@ -2,6 +2,7 @@ package pacemaker
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -296,7 +297,7 @@ func (m *pacemaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 		log.Println("[WARN] NewHeight: Failed to convert pacemaker message to proto: ", err)
 		return
 	}
-
+	fmt.Println("Calling broadcast message to validators")
 	consensusMod.BroadcastMessageToValidators(anyProto)
 }
 

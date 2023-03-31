@@ -100,5 +100,4 @@ func (m *stateSync) logHelper(receiverPeerId string) map[string]any {
 		"senderPeerId":   consensusMod.GetNodeAddress(),
 		"receiverPeerId": receiverPeerId,
 	}
-
 }
