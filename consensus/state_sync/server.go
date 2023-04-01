@@ -87,7 +87,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 
 // Get a block from persistence module given block height
 func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, error) {
-	m.logger.Debug().Msgf("Trying to get block at height: %d", blockHeight)
+	//m.logger.Debug().Msgf("Trying to get block at height: %d", blockHeight)
 	blockStore := m.GetBus().GetPersistenceModule().GetBlockStore()
 	heightBytes := utils.HeightToBytes(blockHeight)
 

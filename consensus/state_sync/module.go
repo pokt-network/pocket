@@ -266,7 +266,7 @@ func (m *stateSync) SetAggregatedSyncMetadata(metadata *typesCons.StateSyncMetad
 func (m *stateSync) Sync() {
 	m.logger.Info().Msg("Node is starting snycing...")
 
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
 	m.requestBlocks()

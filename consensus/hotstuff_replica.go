@@ -29,14 +29,14 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Replica starting")
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Replica starting")
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Replica Reshing utility")
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Replica Reshing utility")
 
 	// Clear the previous utility unitOfWork, if it exists, and create a new one
 	if err := m.refreshUtilityUnitOfWork(); err != nil {
@@ -44,7 +44,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Replica Step is updated to Prepare")
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Replica Step is updated to Prepare")
 	m.step = Prepare
 
 	// if m.leaderId == nil {
@@ -52,7 +52,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 	// 	m.leaderId = m.
 	// }
 
-	fmt.Printf("HandleNewRound Replica I think the leaderID is: %d \n", *m.leaderId)
+	//fmt.Printf("HandleNewRound Replica I think the leaderID is: %d \n", *m.leaderId)
 
 }
 
@@ -62,14 +62,14 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Replica starting")
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Replica starting")
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Replica validating proposal")
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Replica validating proposal")
 
 	if err := m.validateProposal(msg); err != nil {
 		m.logger.Error().Err(err).Str("message", Prepare.String()).Msg("Invalid proposal")
@@ -77,7 +77,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Replica applying block")
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Replica applying block")
 
 	block := msg.GetBlock()
 	fmt.Printf("HandlePrepareMessage block txs: %x \n", block.Transactions)
@@ -110,7 +110,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePreCommit Replica checking QC")
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePreCommit Replica checking QC")
 
 	quorumCert := msg.GetQuorumCertificate()
 	if err := m.validateQuorumCertificate(quorumCert); err != nil {
@@ -143,7 +143,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleCommit Replica checking QC")
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleCommit Replica checking QC")
 	quorumCert := msg.GetQuorumCertificate()
 	if err := m.validateQuorumCertificate(quorumCert); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Commit).Error())
@@ -160,7 +160,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 		return // Not interrupting the round because liveness could continue with one failed vote
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleCommit Replica sending vote to Leader")
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleCommit Replica sending vote to Leader")
 	m.sendToLeader(commitVoteMessage)
 }
 
@@ -175,7 +175,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleDecide Replica checking QC")
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleDecide Replica checking QC")
 	quorumCert := msg.GetQuorumCertificate()
 	if err := m.validateQuorumCertificate(quorumCert); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Decide).Error())
@@ -190,9 +190,9 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	}
 	m.block.BlockHeader.QuorumCertificate = quorumCertBytes
 
-	fmt.Printf("Block will be committed, \nCommitted Transactions: %x", m.block.Transactions)
+	//fmt.Printf("Block will be committed, \nCommitted Transactions: %x", m.block.Transactions)
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleDecide Replica committing block")
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleDecide Replica committing block")
 	//m.block.BlockHeader.ProposerAddress = m.leaderId
 
 	if err := m.commitBlock(m.block); err != nil {
@@ -201,7 +201,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleDecide Replica starting new height")
+	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleDecide Replica starting new height")
 	m.paceMaker.NewHeight()
 }
 
@@ -280,19 +280,19 @@ func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 
 	// Set the proposal block in the persistence context
 
-	fmt.Printf("Apply block called with block transactions: %x \n", block.Transactions)
+	//fmt.Printf("Apply block called with block transactions: %x \n", block.Transactions)
 
-	if blockHeader.StateHash == "" {
-		fmt.Println("blockHeader.StateHash is empty")
-	}
+	// if blockHeader.StateHash == "" {
+	// 	fmt.Println("blockHeader.StateHash is empty")
+	// }
 
-	if blockHeader.ProposerAddress == nil {
-		fmt.Println("blockHeader.ProposerAddress is nil")
-	}
+	// if blockHeader.ProposerAddress == nil {
+	// 	fmt.Println("blockHeader.ProposerAddress is nil")
+	// }
 
-	if block.Transactions == nil {
-		fmt.Println("block.Transactions is nil")
-	}
+	// if block.Transactions == nil {
+	// 	fmt.Println("block.Transactions is nil")
+	// }
 
 	//if err := m.utilityUnitOfWork.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 
@@ -307,8 +307,8 @@ func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 		return err
 	}
 
-	fmt.Printf("Block's proposer address is : %x, I think the leaderID is: %d \n", blockHeader.ProposerAddress, *m.leaderId)
-	m.logger.Info().Msg("finishing applyBlock")
+	//fmt.Printf("Block's proposer address is : %x, I think the leaderID is: %d \n", blockHeader.ProposerAddress, *m.leaderId)
+	//m.logger.Info().Msg("finishing applyBlock")
 
 	if blockHeader.StateHash != stateHash {
 		return typesCons.ErrInvalidStateHash(blockHeader.StateHash, stateHash)

@@ -208,7 +208,7 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
 
-	fmt.Println("Broadcasting to: ", validators, " len: ", len(validators))
+	//fmt.Println("Broadcasting to: ", validators, " len: ", len(validators))
 
 	for _, val := range validators {
 		//validatorAddr := val.GetAddress()
