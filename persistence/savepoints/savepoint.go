@@ -3,15 +3,19 @@ package savepoints
 import (
 	"encoding/hex"
 	"encoding/json"
-	"log"
+	"fmt"
 
 	"github.com/itchyny/gojq"
+	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
 )
 
-var _ modules.PersistenceReadContext = &savepoint{}
+var (
+	_   modules.PersistenceReadContext = &savepoint{}
+	log                                = logger.Global.CreateLoggerForModule("savepoint")
+)
 
 type savepoint struct {
 	appsJson       string
@@ -25,7 +29,7 @@ type savepoint struct {
 
 	height int64
 
-	//TODO(@deblasis):  add chains
+	// TODO(@deblasis):  add chains
 }
 
 func (s *savepoint) GetAllAccountsJSON(height int64) (string, error) {
@@ -66,10 +70,21 @@ func (s *savepoint) Close() error {
 }
 
 func (s *savepoint) GetAccountAmount(address []byte, height int64) (string, error) {
+	log := log.With().Fields(map[string]interface{}{
+		"address": hex.EncodeToString(address),
+		"height":  height,
+		"source":  "GetAccountAmount",
+	}).Logger()
+
 	// Parse JSON data into an interface{}
 	var data interface{}
+	if s.accountsJson == "" {
+		return "", fmt.Errorf("no accounts found in savepoint with address %s", hex.EncodeToString(address))
+	}
 	if err := json.Unmarshal([]byte(s.accountsJson), &data); err != nil {
-		log.Fatalf("Error unmarshalling JSON: %v", err)
+		log.Fatal().
+			Err(err).
+			Msg("Error unmarshalling JSON")
 	}
 
 	query, err := gojq.Parse(".[] | select(.address == $address) | .balance")
@@ -93,19 +108,30 @@ func (s *savepoint) GetAccountAmount(address []byte, height int64) (string, erro
 			break
 		}
 		if err, ok := v.(error); ok {
-			log.Fatalln(err)
+			log.Fatal().
+				Err(err).
+				Msg("Error while rehydrating account")
 		}
 		balance = v.(string)
-		break
 	}
 	return balance, nil
 }
 
 func (s *savepoint) GetAllAccounts(height int64) (accs []*coreTypes.Account, err error) {
+	log := log.With().Fields(map[string]interface{}{
+		"height": height,
+		"source": "GetAllAccounts",
+	}).Logger()
+
 	// Parse JSON data into an interface{}
 	var data interface{}
+	if s.accountsJson == "" {
+		return
+	}
 	if err := json.Unmarshal([]byte(s.accountsJson), &data); err != nil {
-		log.Fatalf("Error unmarshalling JSON: %v", err)
+		log.Fatal().
+			Err(err).
+			Msg("Error unmarshalling JSON")
 	}
 
 	query, err := gojq.Parse(".[]")
@@ -123,7 +149,9 @@ func (s *savepoint) GetAllAccounts(height int64) (accs []*coreTypes.Account, err
 			break
 		}
 		if err, ok := v.(error); ok {
-			log.Fatalln(err)
+			log.Fatal().
+				Err(err).
+				Msg("Error while rehydrating account")
 		}
 
 		row := v.(map[string]any)
