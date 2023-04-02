@@ -58,7 +58,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 
 // HandleGetBlockResponse handles the received block. It validates the block, quorum certificate and applies to its persistence
 func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-	m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse, Transactions: %x", blockRes.Block.Transactions)
+	//m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse, Transactions: %x", blockRes.Block.Transactions)
 
 	block := blockRes.Block
 	//lastPersistedBlockHeight := m.CurrentHeight() - 1
@@ -122,11 +122,11 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 	m.logger.Info().Msg("HandleGetBlockResponse, committing the block")
 
 	//m.m.Lock()
-	//defer m.m.Unlock()
 	if err := m.commitBlock(block); err != nil {
 		m.logger.Error().Err(err).Msg("Could not commit block, invalid QC")
 		return nil
 	}
+	//m.m.Unlock()
 
 	m.paceMaker.NewHeight()
 

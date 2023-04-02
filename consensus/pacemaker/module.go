@@ -153,6 +153,14 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		return false, nil
 	}
 
+	// // BUG! pacemaker still tries to catching up when:
+	// // (h: 3, s: 2, r: 29) to (h: 3, s: 1, r: 30)
+	// // return false for this case:
+	// if msg.Step < currentStep {
+	// 	m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round)
+	// 	return false, nil
+	// }
+
 	// Everything checks out!
 	if msg.Height == currentHeight && msg.Step == currentStep && msg.Round == currentRound {
 		return true, nil

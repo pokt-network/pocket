@@ -87,9 +87,6 @@ func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransiti
 func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM is in Unsyched state, as node is out of sync, sending syncmode event to start syncing")
 
-	// when node first bootstraps, request metadata from the network,
-	// then transtion to sync mode
-
 	// TODO: consider to add this, because it doesn't make any difference, as node is not yet in the other peers' address book
 	// but node must keep trying to receive metadata from the network until it receives it, when it is unsyched and can't continue bootstrapped
 	// so we trigger again requesting metadata from the network as soons as node transitions to unsynched mode

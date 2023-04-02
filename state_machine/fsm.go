@@ -61,10 +61,6 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 					string(coreTypes.StateMachineState_Consensus_Synched),
 					string(coreTypes.StateMachineState_P2P_Bootstrapped),
 					string(coreTypes.StateMachineState_Consensus_SyncMode),
-					// Check if needed.
-					// Node gets block proposal from more than one validators and thus while node is in unsynced state.
-					// No transition error
-					// string(coreTypes.StateMachineState_Consensus_Unsynched),
 				},
 				Dst: string(coreTypes.StateMachineState_Consensus_Unsynched),
 			},

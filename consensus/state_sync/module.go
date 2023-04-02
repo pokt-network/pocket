@@ -2,6 +2,7 @@ package state_sync
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -114,13 +115,16 @@ func (m *stateSync) CurrentState() state {
 func (m *stateSync) TriggerSync() error {
 	m.logger.Info().Msg("Triggering syncing...")
 	// check if the node is not currently syncing, if it is synching update the state
-	m.m.Lock()
-	defer m.m.Unlock()
+	//m.m.Lock()
+	//defer m.m.Unlock()
 
 	if m.snycing { // if the node is currently syncing, update the sync state
+		//m.m.Lock()
 		m.logger.Info().Msg("Node is already syncing, so updating the sync state.")
 		m.state.endingHeight = m.aggregatedSyncMetadata.MaxHeight
+		//m.m.Unlock()
 	} else { // if the node is not currently syncing, generate a new sync state
+		//m.m.Lock()
 		m.logger.Info().Msg("Node is currently not syncing, so generating a new sync state.")
 		maxPersistedBlockHeight, err := m.maximumPersistedBlockHeight()
 		if err != nil {
@@ -145,6 +149,7 @@ func (m *stateSync) TriggerSync() error {
 			blockReceived:  make(chan uint64, 1),
 		}
 		m.logger.Info().Msgf("Starting syncing from height %d to height %d", m.state.startingHeight, m.state.endingHeight)
+		//m.m.Unlock()
 		go m.Sync()
 	}
 
@@ -275,19 +280,21 @@ loop:
 	for {
 		select {
 		case <-ticker.C:
-			m.m.Lock()
+			//m.m.Lock()
 			if m.state.height == m.state.endingHeight {
 				m.logger.Info().Msgf("Node is synched for state: height: %d, starting height: %d, ending height: %d", m.state.height, m.state.startingHeight, m.state.endingHeight)
 				break loop
-			}
-			m.m.Unlock()
+			} //else {
 
+			//}
+			//m.m.Unlock()
+			m.logger.Info().Msgf("Node is NOT synched for state: height: %d, starting height: %d, ending height: %d, requesting blocks", m.state.height, m.state.startingHeight, m.state.endingHeight)
 			m.requestBlocks()
 
 		case persistedBlockHeight := <-m.state.blockReceived:
-			m.m.Lock()
+			//m.m.Lock()
 			m.state.height = persistedBlockHeight
-			m.m.Unlock()
+			//m.m.Unlock()
 			m.logger.Info().Msgf("Received block: %d, updating the state", persistedBlockHeight)
 
 		case <-m.ctx.Done():
@@ -304,6 +311,7 @@ loop:
 	// }
 
 	// TECHDEBT: this is a temporary fix to make the node a validator
+	// TODO! check if node is validator or not, how?
 	isValidator := true
 
 	m.logger.Info().Msg("Noce is synched, transitions as validator \n")
@@ -322,6 +330,7 @@ loop:
 }
 
 func (m *stateSync) requestBlocks() {
+	fmt.Println("Requesting blocks")
 	consensusMod := m.GetBus().GetConsensusModule()
 	nodeAddress := consensusMod.GetNodeAddress()
 
@@ -345,8 +354,8 @@ func (m *stateSync) requestBlocks() {
 
 // Returns max block height metadainfo received from all peers by aggregating responses in the buffer.
 func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataResponse {
-	m.m.Lock()
-	defer m.m.Unlock()
+	//m.m.Lock()
+	//defer m.m.Unlock()
 
 	metadataResponse := m.aggregatedSyncMetadata
 
@@ -378,7 +387,7 @@ func (m *stateSync) metadataSyncLoop() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(40 * time.Second)
 	defer ticker.Stop()
 
 	for {

@@ -1,8 +1,6 @@
 package leader_election
 
 import (
-	"fmt"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
@@ -65,10 +63,10 @@ func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(message *t
 	numVals := int64(len(vals))
 
 	valId := value%numVals + 1
-	fmt.Printf("Length of all validators: %d, and the result: %d \n", len(vals), valId)
-	for _, val := range vals {
-		fmt.Printf("Validator Address: %v ", val.Address)
-	}
+	// fmt.Printf("Length of all validators: %d, and the result: %d \n", len(vals), valId)
+	// for _, val := range vals {
+	// 	fmt.Printf("Validator Address: %v ", val.Address)
+	// }
 
 	return typesCons.NodeId(valId), nil
 }
