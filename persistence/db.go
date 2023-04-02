@@ -24,6 +24,9 @@ const (
 
 	// DUPLICATE OBJECT error. For reference: https://www.postgresql.org/docs/8.4/errcodes-appendix.html
 	DuplicateObjectErrorCode = "42710"
+
+	// TODO: Make this a node configuration
+	connTimeout = 5 * time.Second
 )
 
 // TODO: Move schema related functionality into its own package
@@ -35,70 +38,55 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 }
 
 func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx) {
-	return context.TODO(), pg.getTx()
+	return context.TODO(), pg.tx
 }
 
-func (pg *PostgresContext) getTx() pgx.Tx {
-	return pg.tx
-}
-
-func (pg *PostgresContext) ResetContext() error {
-	if pg == nil {
-		return nil
-	}
-	tx := pg.getTx()
-	if tx == nil {
-		return nil
-	}
-	conn := tx.Conn()
-	if conn == nil {
-		return nil
-	}
-	if !conn.IsClosed() {
-		if err := pg.Release(); err != nil {
-			pg.logger.Error().Err(err).Bool("TODO", true).Msg("error releasing write context")
-		}
-	}
-	pg.tx = nil
-	return nil
-}
-
-func connectToDatabase(cfg *configs.PersistenceConfig) (*pgx.Conn, error) {
-	ctx := context.TODO()
-
+func initializePool(cfg *configs.PersistenceConfig) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(cfg.GetPostgresUrl())
 	if err != nil {
 		return nil, fmt.Errorf("unable to create database config: %v", err)
 	}
-	maxConnLifetime, err := time.ParseDuration(cfg.GetMaxConnLifetime())
-	if err == nil {
-		config.MaxConnLifetime = maxConnLifetime
-	} else {
-		return nil, fmt.Errorf("unable to set max connection lifetime: %v", err)
-	}
-	maxConnIdleTime, err := time.ParseDuration(cfg.GetMaxConnIdleTime())
-	if err == nil {
-		config.MaxConnIdleTime = maxConnIdleTime
-	} else {
-		return nil, fmt.Errorf("unable to set max connection idle time : %v", err)
-	}
+
 	config.MaxConns = cfg.GetMaxConnsCount()
 	config.MinConns = cfg.GetMinConnsCount()
+
+	maxConnLifetime, err := time.ParseDuration(cfg.GetMaxConnLifetime())
+	if err != nil {
+		return nil, fmt.Errorf("unable to set max connection lifetime: %v", err)
+	}
+	config.MaxConnLifetime = maxConnLifetime
+
+	maxConnIdleTime, err := time.ParseDuration(cfg.GetMaxConnIdleTime())
+	if err != nil {
+		return nil, fmt.Errorf("unable to set max connection idle time : %v", err)
+	}
+	config.MaxConnIdleTime = maxConnIdleTime
+
 	healthCheckPeriod, err := time.ParseDuration(cfg.GetHealthCheckPeriod())
-	if err == nil {
-		config.HealthCheckPeriod = healthCheckPeriod
-	} else {
+	if err != nil {
 		return nil, fmt.Errorf("unable to set healthcheck period: %v", err)
 	}
+	config.HealthCheckPeriod = healthCheckPeriod
+
+	// Update the base connection configurations
+	config.ConnConfig.ConnectTimeout = connTimeout
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to database: %v", err)
 	}
 
-	conn, _ := pool.Acquire(ctx)
+	return pool, nil
+}
 
-	nodeSchema := cfg.GetNodeSchema()
+func connectToPool(pool *pgxpool.Pool, nodeSchema string) (*pgxpool.Conn, error) {
+	ctx := context.TODO()
+
+	conn, err := pool.Acquire(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to acquire connection from pool: %v", err)
+	}
+
 	// Creating and setting a new schema so we can running multiple nodes on one postgres instance. See
 	// more details at https://github.com/go-pg/pg/issues/351.
 	if _, err = conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, nodeSchema)); err != nil {
@@ -114,11 +102,11 @@ func connectToDatabase(cfg *configs.PersistenceConfig) (*pgx.Conn, error) {
 		return nil, err
 	}
 
-	return conn.Conn(), nil
+	return conn, nil
 }
 
-// TODO(pokt-network/pocket/issues/77): Enable proper up and down migrations
-func initializeDatabase(conn *pgx.Conn) error {
+// TODO(#77): Enable proper up and down migrations
+func initializeDatabase(conn *pgxpool.Conn) error {
 	// Initialize the tables if they don't already exist
 	if err := initializeAllTables(context.TODO(), conn); err != nil {
 		return fmt.Errorf("unable to initialize tables: %v", err)
@@ -126,8 +114,8 @@ func initializeDatabase(conn *pgx.Conn) error {
 	return nil
 }
 
-// TODO(pokt-network/pocket/issues/77): Delete all the `initializeAllTables` calls once proper migrations are implemented.
-func initializeAllTables(ctx context.Context, db *pgx.Conn) error {
+// TODO(#77): Delete all the `initializeAllTables` calls once proper migrations are implemented.
+func initializeAllTables(ctx context.Context, db *pgxpool.Conn) error {
 	if err := initializeAccountTables(ctx, db); err != nil {
 		return err
 	}
@@ -149,7 +137,7 @@ func initializeAllTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func initializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor types.ProtocolActorSchema) error {
+func initializeProtocolActorTables(ctx context.Context, db *pgxpool.Conn, actor types.ProtocolActorSchema) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, actor.GetTableName(), actor.GetTableSchema())); err != nil {
 		return err
 	}
@@ -161,7 +149,7 @@ func initializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor type
 	return nil
 }
 
-func initializeAccountTables(ctx context.Context, db *pgx.Conn) error {
+func initializeAccountTables(ctx context.Context, db *pgxpool.Conn) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.AccountTableName, types.Account.GetTableSchema())); err != nil {
 		return err
 	}
@@ -171,7 +159,7 @@ func initializeAccountTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
+func initializeGovTables(ctx context.Context, db *pgxpool.Conn) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s`, fmt.Sprintf(CreateEnumType, types.ValTypeName), types.ValTypeEnumTypes)); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code != DuplicateObjectErrorCode {
@@ -190,7 +178,7 @@ func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
+func initializeBlockTables(ctx context.Context, db *pgxpool.Conn) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.BlockTableName, types.BlockTableSchema)); err != nil {
 		return err
 	}

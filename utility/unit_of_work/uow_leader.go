@@ -15,7 +15,7 @@ type leaderUtilityUnitOfWork struct {
 	baseUtilityUnitOfWork
 }
 
-func NewForLeader(height int64, readContext modules.PersistenceReadContext, rwPersistenceContext modules.PersistenceRWContext) *leaderUtilityUnitOfWork {
+func NewLeaderUOW(height int64, readContext modules.PersistenceReadContext, rwPersistenceContext modules.PersistenceRWContext) *leaderUtilityUnitOfWork {
 	return &leaderUtilityUnitOfWork{
 		baseUtilityUnitOfWork: baseUtilityUnitOfWork{
 			height:                 height,
@@ -90,7 +90,7 @@ func (uow *leaderUtilityUnitOfWork) CreateAndApplyProposalBlock(proposer []byte,
 		return "", nil, err
 	}
 
-	// TODO: @deblasis - this should be from a ReadContext (the ephemeral/staging one)
+	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
 	// Compute & return the new state hash
 	stateHash, err = uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {

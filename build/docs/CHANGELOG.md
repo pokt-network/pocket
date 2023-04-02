@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.29] - 2023-03-30
+
+- `cluster-manager` now waits for `v1-validator001` to be online AND responsive by checking the `/v1/health` endpoint (dogfooding)
+- `cluster-manager` skips auto staking for the validators that are already staked in genesis
+
+## [0.0.0.28] - 2023-03-30
+
+- Update `pacemaker_timeout` from 5 to 10 seconds to make the logging output less noisy during development
+- Updated configurations related to postgres connection pooling
+
+## [0.0.0.27] - 2023-03-28
+
+- Silence gopls build error about missing DebugKeybaseBackup
+
+## [0.0.0.26] - 2023-03-28
+
+- Make k8s distribution recommendation more opinionated
+
+## [0.0.0.25] - 2023-03-24
+
+- Introduced a new binary that's used to check if the debug_keybase.bak is up to date with the private-keys.yaml file and to update it if it's not.
+
+## [0.0.0.24] - 2023-03-17
+
+- Added resource limits and PVC for debug client pod.
+- Added `procps` to the client pod image.
+
+## [0.0.0.23] - 2023-03-14
+
+- Simplifies the debug CLI tooling by embedding private-keys.yaml manifest
+  into the CLI binary when the debug build tag is present.
+
 ## [0.0.0.22] - 2023-03-08
 
 - add permissions to get private keys secret on cluster-manager-account service account

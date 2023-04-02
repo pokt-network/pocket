@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	DefaultLogPrefix    = "NODE"
 	stateSyncModuleName = "stateSyncModule"
 )
 
@@ -51,8 +50,7 @@ type stateSync struct {
 	currentMode SyncMode
 	serverMode  bool
 
-	logger    *modules.Logger
-	logPrefix string
+	logger *modules.Logger
 }
 
 func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -60,9 +58,7 @@ func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.
 }
 
 func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	m := &stateSync{
-		logPrefix: DefaultLogPrefix,
-	}
+	m := &stateSync{}
 
 	for _, option := range options {
 		option(m)
@@ -107,48 +103,26 @@ func (m *stateSync) IsServerModEnabled() bool {
 	return m.serverMode
 }
 
-func (m *stateSync) SetLogPrefix(logPrefix string) {
-	m.logPrefix = logPrefix
-}
-
 func (m *stateSync) EnableServerMode() {
 	m.currentMode = Server
 	m.serverMode = true
 }
 
-// TODO(#352): Implement this function
-// Placeholder function
+// TODO(#352): Implement the business logic for this function
 func (m *stateSync) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-	consensusMod := m.GetBus().GetConsensusModule()
-	serverNodePeerId := consensusMod.GetNodeAddress()
-	clientPeerId := blockRes.PeerAddress
+	m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse: %s", blockRes)
 
-	fields := map[string]any{
-		"currentHeight": blockRes.Block.BlockHeader.Height,
-		"sender":        serverNodePeerId,
-		"receiver":      clientPeerId,
+	if blockRes.Block.BlockHeader.GetQuorumCertificate() == nil {
+		m.logger.Error().Err(typesCons.ErrNoQcInReceivedBlock).Msg(typesCons.DisregardBlock)
+		return typesCons.ErrNoQcInReceivedBlock
 	}
-
-	m.logger.Info().Fields(fields).Msgf("Received GetBlockResponse: %s", blockRes)
 
 	return nil
 }
 
-// TODO(#352): Implement the business to handle these correctly
-// Placeholder function
+// TODO(#352): Implement the business logic for this function
 func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
-	consensusMod := m.GetBus().GetConsensusModule()
-	serverNodePeerId := consensusMod.GetNodeAddress()
-	clientPeerId := metaDataRes.PeerAddress
-	currentHeight := consensusMod.CurrentHeight()
-
-	fields := map[string]any{
-		"currentHeight": currentHeight,
-		"sender":        serverNodePeerId,
-		"receiver":      clientPeerId,
-	}
-
-	m.logger.Info().Fields(fields).Msgf("Received StateSyncMetadataResponse: %s", metaDataRes)
+	m.logger.Info().Fields(m.logHelper(metaDataRes.PeerAddress)).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
 
 	return nil
 }

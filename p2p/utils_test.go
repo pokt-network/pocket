@@ -11,8 +11,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
@@ -151,7 +151,7 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.Moc
 		m.SetBus(mockBus)
 	}).AnyTimes()
 	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
-	mockModulesRegistry.EXPECT().GetModule(addrbook_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(addrbook_provider.ModuleName)).AnyTimes()
+	mockModulesRegistry.EXPECT().GetModule(peerstore_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(peerstore_provider.ModuleName)).AnyTimes()
 	mockModulesRegistry.EXPECT().GetModule(current_height_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(current_height_provider.ModuleName)).AnyTimes()
 	mockBus.EXPECT().GetModulesRegistry().Return(mockModulesRegistry).AnyTimes()
 	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
@@ -210,19 +210,19 @@ func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus) *mockModul
 func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisState *genesis.GenesisState) *mockModules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 
-	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
-	readContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
+	persistenceModuleMock := mockModules.NewMockPersistenceModule(ctrl)
+	readCtxMock := mockModules.NewMockPersistenceReadContext(ctrl)
 
-	readContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
-	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(readContextMock, nil).AnyTimes()
-	readContextMock.EXPECT().Close().Return(nil).AnyTimes()
+	readCtxMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	persistenceModuleMock.EXPECT().NewReadContext(gomock.Any()).Return(readCtxMock, nil).AnyTimes()
+	readCtxMock.EXPECT().Release().AnyTimes()
 
-	persistenceMock.EXPECT().GetBus().Return(busMock).AnyTimes()
-	persistenceMock.EXPECT().SetBus(busMock).AnyTimes()
-	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
-	busMock.RegisterModule(persistenceMock)
+	persistenceModuleMock.EXPECT().GetBus().Return(busMock).AnyTimes()
+	persistenceModuleMock.EXPECT().SetBus(busMock).AnyTimes()
+	persistenceModuleMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
+	busMock.RegisterModule(persistenceModuleMock)
 
-	return persistenceMock
+	return persistenceModuleMock
 }
 
 // Telemetry mock - Needed to help with proper counts for number of expected network writes
@@ -277,16 +277,16 @@ func prepareConnMock(t *testing.T, valId string, wg *sync.WaitGroup, expectedNum
 	ctrl := gomock.NewController(t)
 	connMock := mocksP2P.NewMockTransport(ctrl)
 
-	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
+	connMock.EXPECT().ReadAll().DoAndReturn(func() ([]byte, error) {
 		wg.Done()
-		log.Printf("[valId: %s] Read\n", valId)
+		log.Printf("[valId: %s] ReadAll\n", valId)
 		data := <-eventsChannel
 		return data, nil
 	}).Times(expectedNumNetworkReads + 1) // +1 is necessary because there is one extra read of empty data by every channel when it starts
 
-	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
+	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) (int, error) {
 		eventsChannel <- data
-		return nil
+		return len(data), nil
 	}).Times(expectedNumNetworkReads)
 
 	connMock.EXPECT().Close().Return(nil).Times(1)

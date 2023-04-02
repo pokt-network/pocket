@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.26] - 2023-03-30
+
+- Make `PromptPrintNodeState` the first prompt in debug mode
+- Minor cleanup to documentation related to CLI modes
+- Fixed one logging statement
+
+## [0.0.0.25] - 2023-03-28
+
+- Introduces hashicorp vault keybase to allow for the use of a vault server to store keypairs
+
+## [0.0.0.24] - 2023-03-28
+
+- Automatic import reorder
+
+## [0.0.0.23] - 2023-03-21
+
+- Refactor debug CLI to use new P2P interfaces
+
+## [0.0.0.22] - 2023-03-17
+
+- Added a limit on concurrent key imports for debug client to avoid OOM.
+
+## [0.0.0.21] - 2023-03-14
+
+- Simplifies the debug CLI tooling by embedding private-keys.yaml manifest
+  into the CLI binary when the debug build tag is present.
+
 ## [0.0.0.20] - 2023-03-03
 
 - Support libp2p module in debug CLI

@@ -149,7 +149,7 @@ func NewPublicKey(hexString string) (PublicKey, error) {
 func NewPublicKeyFromBytes(bz []byte) (PublicKey, error) {
 	bzLen := len(bz)
 	if bzLen != ed25519.PublicKeySize {
-		return nil, ErrInvalidPublicKeyLen(bzLen) 
+		return nil, ErrInvalidPublicKeyLen(bzLen)
 	}
 	return Ed25519PublicKey(bz), nil
 }
@@ -193,6 +193,10 @@ func GenerateAddress() (Address, error) {
 		return nil, err
 	}
 	return pk.Address(), nil
+}
+
+func (pub Ed25519PublicKey) MarshalJSON() ([]byte, error) {
+	return json.Marshal(pub.String())
 }
 
 func (pub *Ed25519PublicKey) UnmarshalJSON(data []byte) error {

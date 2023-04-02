@@ -51,7 +51,7 @@ func TestUtilityUnitOfWork_ApplyTransaction(t *testing.T) {
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 }
 
-// TODO: - @deblasis - refactor this to test HandleTransaction specifically in the utility package
+// TODO(@deblasis): refactor this to test HandleTransaction specifically in the utility package
 // func TestUtilityUnitOfWork_HandleTransaction(t *testing.T) {
 // 	ctx := newTestingUtilityContext(t, 0)
 // 	tx, _, _, _ := newTestingTransaction(t, ctx)
@@ -84,7 +84,7 @@ func TestUtilityUnitOfWork_GetSignerCandidates(t *testing.T) {
 	require.Equal(t, accs[0].GetAddress(), hex.EncodeToString(candidates[0]), "unexpected signer candidate")
 }
 
-// TODO: - @deblasis - refactor this to test HandleTransaction specifically in the utility package
+// TODO(@deblasis): refactor this to test HandleTransaction specifically in the utility package
 // func TestUtilityUnitOfWork_CreateAndApplyBlock(t *testing.T) {
 // 	ctx := newTestingUtilityContext(t, 0)
 // 	tx, _, _, _ := newTestingTransaction(t, ctx)

@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	leaderUtilityUOWModuleName  = "leader_utility_unit_of_work"
-	replicaUtilityUOWModuleName = "replica_utility_unit_of_work"
+	leaderUtilityUOWModuleName  = "leader_utility_UOW"
+	replicaUtilityUOWModuleName = "replica_utility_UOW"
 )
 
 var _ modules.UtilityUnitOfWork = &baseUtilityUnitOfWork{}
@@ -21,6 +21,13 @@ type baseUtilityUnitOfWork struct {
 
 	height int64
 
+	// TECHDEBT(#564): the way we access the contexts and apply changes to them is still a work in progress.
+	// The path forward will become clearer during the implementation of change tracking in #564.
+	// For now, it seems sensible to have separate contexts for read and write operations.
+	// The idea is that:
+	// - the write context will track ephemeral changes and also provide a way to persist them.
+	// - the read context will only read but also see what has been changed in the ephemeral state.
+	// from the consumers of the unit of work point of view, this is just an implementation detail.
 	persistenceReadContext modules.PersistenceReadContext
 	persistenceRWContext   modules.PersistenceRWContext
 
@@ -37,7 +44,7 @@ func (uow *baseUtilityUnitOfWork) SetProposalBlock(blockHash string, proposerAdd
 	return nil
 }
 
-// CreateAndApplyProposalBlock implements the exposed functionality of the shared UtilityContext interface.
+// CreateAndApplyProposalBlock implements the exposed functionality of the shared UtilityUnitOfWork interface.
 func (u *baseUtilityUnitOfWork) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (stateHash string, txs [][]byte, err error) {
 	prevBlockByzantineVals, err := u.prevBlockByzantineValidators()
 	if err != nil {
@@ -102,7 +109,7 @@ func (u *baseUtilityUnitOfWork) CreateAndApplyProposalBlock(proposer []byte, max
 		return "", nil, err
 	}
 
-	// TODO: @deblasis - this should be from a ReadContext (the ephemeral/staging one)
+	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
 	// Compute & return the new state hash
 	stateHash, err = u.persistenceRWContext.ComputeStateHash()
 	if err != nil {
@@ -170,22 +177,21 @@ func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, er
 	if err := u.endBlock(u.proposalProposerAddr); err != nil {
 		return "", nil, err
 	}
-	// TODO: @deblasis - this should be from a ReadContext (the ephemeral/staging one)
+	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
 	// return the app hash (consensus module will get the validator set directly)
 	stateHash, err = u.persistenceRWContext.ComputeStateHash()
 	if err != nil {
 		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return "", nil, utilTypes.ErrAppHash(err)
 	}
-	u.logger.Info().Msgf("ApplyBlock - computed state hash: %s", stateHash)
+	u.logger.Info().Str("state_hash", stateHash).Msgf("ApplyBlock succeeded!")
 
 	// return the app hash; consensus module will get the validator set directly
 	return stateHash, nil, nil
 }
 
+// TODO(@deblasis): change tracking here
 func (uow *baseUtilityUnitOfWork) Commit(quorumCert []byte) error {
-	// TODO: @deblasis - change tracking here
-
 	uow.logger.Debug().Msg("committing the rwPersistenceContext...")
 	if err := uow.persistenceRWContext.Commit(uow.proposalProposerAddr, quorumCert); err != nil {
 		return err
@@ -194,16 +200,19 @@ func (uow *baseUtilityUnitOfWork) Commit(quorumCert []byte) error {
 	return nil
 }
 
+// TODO(@deblasis): change tracking reset here
 func (uow *baseUtilityUnitOfWork) Release() error {
-	// TODO: @deblasis - change tracking reset here
-
-	if uow.persistenceRWContext == nil {
-		return nil
+	rwCtx := uow.persistenceRWContext
+	if rwCtx != nil {
+		uow.persistenceRWContext = nil
+		rwCtx.Release()
 	}
 
-	if err := uow.persistenceRWContext.Release(); err != nil {
-		return err
+	readCtx := uow.persistenceReadContext
+	if readCtx != nil {
+		uow.persistenceReadContext = nil
+		readCtx.Release()
 	}
-	uow.persistenceRWContext = nil
+
 	return nil
 }

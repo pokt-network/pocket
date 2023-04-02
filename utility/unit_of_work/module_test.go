@@ -53,26 +53,29 @@ func TestMain(m *testing.M) {
 }
 
 func newTestingUtilityUnitOfWork(t *testing.T, height int64, options ...func(*baseUtilityUnitOfWork)) *baseUtilityUnitOfWork {
-	persistenceContext, err := testPersistenceMod.NewRWContext(height)
+	rwCtx, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
 	// TECHDEBT: Move the internal of cleanup into a separate function and call this in the
 	// beginning of every test. This (the current implementation) is an issue because if we call
 	// `NewTestingUtilityContext` more than once in a single test, we create unnecessary calls to clean.
 	t.Cleanup(func() {
-		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
-		require.NoError(t, testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
+		err := testPersistenceMod.ReleaseWriteContext()
+		require.NoError(t, err)
+		err = testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
-		}))
+		})
+		require.NoError(t, err)
+		// TODO: May need to run `bus.GetUtilityModule().GetMempool().Clear()` here
 	})
 
 	uow := &baseUtilityUnitOfWork{
 		logger: logger.Global.CreateLoggerForModule(modules.UtilityModuleName),
 		height: height,
-		// TODO: - @deblasis: refactor
-		persistenceRWContext:   persistenceContext,
-		persistenceReadContext: persistenceContext,
+		// TODO(@deblasis): Refactor this
+		persistenceRWContext:   rwCtx,
+		persistenceReadContext: rwCtx,
 	}
 
 	uow.SetBus(testPersistenceMod.GetBus())
@@ -104,11 +107,11 @@ func newTestRuntimeConfig(databaseURL string) *runtime.Manager {
 			BlockStorePath:    "", // in memory
 			TxIndexerPath:     "", // in memory
 			TreesStoreDir:     "", // in memory
-			MaxConnsCount:     4,
-			MinConnsCount:     0,
-			MaxConnLifetime:   "1h",
-			MaxConnIdleTime:   "30m",
-			HealthCheckPeriod: "5m",
+			MaxConnsCount:     50,
+			MinConnsCount:     1,
+			MaxConnLifetime:   "5m",
+			MaxConnIdleTime:   "1m",
+			HealthCheckPeriod: "30s",
 		},
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(

@@ -14,7 +14,7 @@ type replicaUtilityUnitOfWork struct {
 	baseUtilityUnitOfWork
 }
 
-func NewForReplica(height int64, readContext modules.PersistenceReadContext, rwPersistenceContext modules.PersistenceRWContext) *replicaUtilityUnitOfWork {
+func NewReplicaUOW(height int64, readContext modules.PersistenceReadContext, rwPersistenceContext modules.PersistenceRWContext) *replicaUtilityUnitOfWork {
 	return &replicaUtilityUnitOfWork{
 		baseUtilityUnitOfWork: baseUtilityUnitOfWork{
 			height:                 height,
