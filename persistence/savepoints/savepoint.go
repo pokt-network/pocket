@@ -354,3 +354,7 @@ func (*savepoint) GetValidatorStatus(address []byte, height int64) (status int32
 func (*savepoint) GetValidatorsReadyToUnstake(height int64, status int32) (validators []*moduleTypes.UnstakingActor, err error) {
 	panic("unimplemented")
 }
+
+func (*savepoint) Release() {
+	// no-op
+}
