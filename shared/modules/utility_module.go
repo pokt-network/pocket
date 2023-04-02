@@ -53,7 +53,7 @@ type UtilityUnitOfWork interface {
 	// It does not apply, validate or commit the changes.
 	// For example, it can be use during state sync to set a proposed state transition before validation.
 	// TODO: Investigate a way to potentially simplify the interface by removing this function.
-	// TODO: @deblasis: there's still some mix and match between blockHash and stateHash
+	// TODO(@deblasis):  there's still some mix and match between blockHash and stateHash
 	SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error
 
 	// ApplyBlock applies the context's in-memory proposed state (i.e. the txs in this context).

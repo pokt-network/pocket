@@ -25,7 +25,7 @@ type savepoint struct {
 
 	height int64
 
-	//TODO: @deblasis - add chains
+	//TODO(@deblasis):  add chains
 }
 
 func (s *savepoint) GetAllAccountsJSON(height int64) (string, error) {
