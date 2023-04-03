@@ -9,7 +9,7 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
 - [State Sync - Operation Modes](#state-sync---operation-modes)
   - [Unsynced Mode](#unsynced-mode)
   - [Sync Mode](#sync-mode)
-  - [Synched Mode](#synched-mode)
+  - [Synced Mode](#synced-mode)
   - [Pacemaker Mode](#pacemaker-mode)
   - [Server Mode](#server-mode)
   - [Operation Modes Lifecycle](#operation-modes-lifecycle)
@@ -86,7 +86,7 @@ This gives a view into the data availability layer, with details of what data ca
 type StateSyncModule interface {
   // ...
   GetAggregatedStateSyncMetadata() *StateSyncMetadataResponse // Aggregated metadata received from peers.
-  IsSynched() (bool, error)
+  IsSynced() (bool, error)
   StartSyncing() error
   // ...
 }
@@ -101,18 +101,18 @@ The Node bootstraps and collects state sync metadata from the rest of the networ
 For every new block and block proposal `Validator`s receive:
 
 - node checks block's and block proposal's validity and applies the block to its persistence if its valid.
-- if block is higher than node's current height, node checks if it is out of synch via `IsSynched()` function that compares node's local state and the global state by aggregating the collected metada responses.
+- if block is higher than node's current height, node checks if it is out of sync via `IsSynced()` function that compares node's local state and the global state by aggregating the collected metada responses.
 
-According to the result of the `IsSynched()` function:
+According to the result of the `IsSynced()` function:
 
 - If the node is out of sync, it runs `StartSyncing()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
-- If the node is in synch with its peers it rejects the block and/or block proposal.
+- If the node is in sync with its peers it rejects the block and/or block proposal.
 
 ```mermaid
 flowchart TD
     %% start
     A[Node] --> B[Periodic <br> Sync]
-    A[Node] --> |New Block| C{IsSynched}
+    A[Node] --> |New Block| C{IsSynced}
 
     %% periodic snyc
     B --> |Request <br> metadata| D[Peers]
@@ -135,7 +135,7 @@ State sync can be viewed as a state machine that transverses various modes the n
 
 1. Unsyched Mode
 2. Sync Mode
-3. Synched Mode
+3. Synced Mode
 4. Pacemaker Mode
 5. Server Mode
 
@@ -156,13 +156,13 @@ In `Unsynced` Mode, node transitions to `Sync Mode` by sending `Consensus_IsSync
 
 In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `StartSyncing()` function to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
 
-Though it is unspecified whether or not a Node may make `GetBlock` requests in order or in parallel, the cryptographic restraints of block processing require the Node to call `CommitBlock` sequentially until it is `Synched`.
+Though it is unspecified whether or not a Node may make `GetBlock` requests in order or in parallel, the cryptographic restraints of block processing require the Node to call `CommitBlock` sequentially until it is `Synced`.
 
-### Synched Mode
+### Synced Mode
 
-The Node is in `Synched` mode if `localSyncState.Height == globalSyncMeta.MaxHeight`.
+The Node is in `Synced` mode if `localSyncState.Height == globalSyncMeta.MaxHeight`.
 
-In `SynchedMode`, the Node is caught up to the latest block (based on the visible view of the network) and relies on new blocks to be propagated via the P2P network every time the Validators finalize a new block during the consensus lifecycle.
+In `SyncedMode`, the Node is caught up to the latest block (based on the visible view of the network) and relies on new blocks to be propagated via the P2P network every time the Validators finalize a new block during the consensus lifecycle.
 
 ### Pacemaker Mode
 
@@ -195,7 +195,7 @@ flowchart TD
     D --> |Request blocks| Z[Peers]
 
     %% Is a validator?
-    C --> |No| F[Synched Mode]
+    C --> |No| F[Synced Mode]
     C --> |Yes| G(Pacemaker Mode<br>*HotPOKT*)
     F --> |Listen for<br>new blocks| Z[Peers]
 

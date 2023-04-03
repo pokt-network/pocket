@@ -539,11 +539,11 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 			// See this discussion for details: https://github.com/pokt-network/pocket/pull/528/files#r1150711575
 			consensusMod.SetHeight(maxHeight)
 			return nil
-		case coreTypes.StateMachineEvent_Consensus_IsSynchedValidator:
-			t.Logf("Mocked validator node is synched")
+		case coreTypes.StateMachineEvent_Consensus_IsSyncedValidator:
+			t.Logf("Mocked validator node is synced")
 			return nil
-		case coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator:
-			t.Logf("Mocked non-validator node is synched")
+		case coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator:
+			t.Logf("Mocked non-validator node is synced")
 			return nil
 		default:
 			log.Printf("Mocked node is not handling this event: %s", event)

@@ -74,8 +74,8 @@ type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
 
-	// IsSynched compares the persisted state with the aggregated state of the network. If the persisted state is behind the network state, i.e. that node is not synched, it will return false.
-	IsSynched() (bool, error)
+	// IsSynced compares the persisted state with the aggregated state of the network. If the persisted state is behind the network state, i.e. that node is not synced, it will return false.
+	IsSynced() (bool, error)
 }
 
 // ConsensusDebugModule exposes functionality used for testing & development purposes.

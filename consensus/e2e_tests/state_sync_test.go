@@ -179,7 +179,7 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestStateSync_UnsyncedPeerSynchs_Success(t *testing.T) {
+func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
@@ -303,15 +303,15 @@ func TestStateSync_UnsyncedPeerSynchs_Success(t *testing.T) {
 
 // TODO (#352) Implement these tests
 
-func TestStateSync_UnsyncedPeerSynchsABlock_Success(t *testing.T) {
+func TestStateSync_UnsyncedPeerSyncsABlock_Success(t *testing.T) {
 	t.Skip()
 }
 
-func TestStateSync_UnsyncedPeerSynchsMultipleBlocksInOrder_Success(t *testing.T) {
+func TestStateSync_UnsyncedPeerSyncsMultipleBlocksInOrder_Success(t *testing.T) {
 	t.Skip()
 }
 
-func TestStateSync_UnsyncedPeerSynchsMultipleUnorderedBlocks_Success(t *testing.T) {
+func TestStateSync_UnsyncedPeerSyncsMultipleUnorderedBlocks_Success(t *testing.T) {
 	t.Skip()
 }
 

@@ -117,15 +117,15 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// 2. The leader is sending a malicious proposal.
 	// There, for both cases, node rejects the proposal, because:
 	// 1. If node is out of sync, node can't verify the block proposal, so rejects it. But node will eventually sync with the rest of the network and add the block.
-	// 2. If node is synched, node must reject the proposal because proposal is not valid.
+	// 2. If node is synced, node must reject the proposal because proposal is not valid.
 	if msg.Height > currentHeight {
 		m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d < message height %d", currentHeight, msg.Height)
-		isSynched, err := m.GetBus().GetConsensusModule().IsSynched()
+		isSynced, err := m.GetBus().GetConsensusModule().IsSynced()
 		if err != nil {
 			return false, err
 		}
 
-		if !isSynched {
+		if !isSynced {
 			err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
 			return false, err
 		}
@@ -153,7 +153,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		return true, nil
 	}
 
-	// pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
+	// pacemaker catch up! Node is synced to the right height, but on a previous step/round so we just jump to the latest state.
 	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {
 		m.logger.Info().Msg(pacemakerCatchupLog(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
 		consensusMod.SetStep(uint8(msg.Step))

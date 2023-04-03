@@ -10,8 +10,8 @@ const (
 
 	StateMachineState_Consensus_Unsynced StateMachineState = "Consensus_Unsynced"
 	StateMachineState_Consensus_SyncMode StateMachineState = "Consensus_SyncMode"
-	StateMachineState_Consensus_Synched  StateMachineState = "Consensus_Synched"
+	StateMachineState_Consensus_Synced   StateMachineState = "Consensus_Synced"
 
-	// Used by synched validators to participate in the HotPOKT lifecycle
+	// Used by synced validators to participate in the HotPOKT lifecycle
 	StateMachineState_Consensus_Pacemaker StateMachineState = "Consensus_Pacemaker"
 )
