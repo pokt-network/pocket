@@ -77,9 +77,6 @@ type ConsensusStateSync interface {
 	// IsSynced compares the persisted state with the aggregated state of the network.
 	// If the persisted state is behind the network state, i.e. that node is not synced, it will return false.
 	IsSynced() (bool, error)
-
-	// DISCUSS_IN_THIS_COMMIT: Should we remove this?
-	IsValidator() (bool, error)
 }
 
 // ConsensusDebugModule exposes functionality used for testing & development purposes.
@@ -96,7 +93,7 @@ type ConsensusDebugModule interface {
 	SetUtilityUnitOfWork(UtilityUnitOfWork)
 
 	// SetAggregatedStateSyncMetadata is used to set peer's aggregated metadata in testing scenarios to simulate periodic metadata synchronization.
-	SetAggregatedStateSyncMetadata(minHeight uint64, maxHeight uint64, peerAddress string)
+	SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64, peerAddress string)
 	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
 	DebugTriggerSync() error
 

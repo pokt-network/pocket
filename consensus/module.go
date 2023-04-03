@@ -147,16 +147,12 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	}
 
 	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
-	for addr, id := range valAddrToIdMap {
-		fmt.Println("val address is: ", addr, "val id is: ", id)
-	}
 
 	m.privateKey = privateKey.(cryptoPocket.Ed25519PrivateKey)
 	m.consCfg = consensusCfg
 	m.genesisState = genesisState
 
 	m.nodeId = valAddrToIdMap[address]
-	fmt.Println("NODE ID IS: ", m.nodeId)
 	m.nodeAddress = address
 
 	m.initMessagesPool()
@@ -244,8 +240,6 @@ func (m *consensusModule) GetPrivateKey() (cryptoPocket.PrivateKey, error) {
 func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
-
-	fmt.Println("New HotStuff Message Received!")
 
 	switch message.MessageName() {
 	case messaging.HotstuffMessageContentType:

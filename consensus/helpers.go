@@ -117,18 +117,13 @@ func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signa
 }
 
 func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
-	//fmt.Println("didReceiveEnoughMessageForStep", step)
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("didReceiveEnoughMessageForStep, len of validators: ", len(validators))
-	//return m.isOptimisticThresholdMet(int(m.hotstuffMempool[step].Size()), validators)
-
 	numMessages := int(m.hotstuffMempool[step].Size())
 	return m.validateOptimisticThresholdMet(numMessages, validators)
-
 }
 
 func (m *consensusModule) validateOptimisticThresholdMet(num int, currentValidators []*coreTypes.Actor) error {
@@ -177,7 +172,6 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
-	//fmt.Println("SendToLeader thinks validators are: ", validators)
 
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 
@@ -210,15 +204,11 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
 
-	//fmt.Println("Broadcasting to: ", validators, " len: ", len(validators))
-
+	// TODO: Use RainTree here instead
 	for _, val := range validators {
-		//validatorAddr := val.GetAddress()
-		//if m.GetBus().GetConsensusModule().GetNodeAddress() != validatorAddr {
 		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
 			m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
 		}
-		//}
 	}
 }
 
@@ -251,15 +241,6 @@ func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error 
 		m.logger.Error().Err(err).Fields(loggingFields).Msg("leader election failed; validator cannot take part in consensus...")
 		return err
 	}
-
-	m.logger.Info().Fields(
-		map[string]any{
-			"leaderId": leaderId,
-			"height":   m.height,
-			"round":    m.round,
-		},
-	).Msgf("leader election is performed and m.leaderId is set: %x, nodeid is: ", leaderId)
-
 	loggingFields["leaderId"] = leaderId
 
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
@@ -268,40 +249,7 @@ func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error 
 	}
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 	leader, ok := idToValAddrMap[leaderId]
-	if !ok {
-		return fmt.Errorf("could not find leader with id %d in the validator map", leaderId)
-	}
-	loggingFields["leader"] = leader
 
-	m.leaderId = &leaderId
-	if m.IsLeader() {
-		m.setLogPrefix("LEADER")
-		m.logger.Info().Fields(loggingFields).Msg("👑 I am the leader 👑")
-	} else {
-		m.setLogPrefix("REPLICA")
-		m.logger.Info().Fields(loggingFields).Msg("🙇 Elected leader 🙇")
-	}
-	return nil
-}
-
-/*
-func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error {
-	loggingFields := msgToLoggingFields(msg)
-	m.logger.Info().Fields(loggingFields).Msg("About to elect the next leader")
-
-	m.leaderId = nil
-	leaderId, err := m.leaderElectionMod.ElectNextLeader(msg)
-	if err != nil || leaderId == 0 {
-		m.logger.Error().Err(err).Fields(loggingFields).Msg("leader election failed; validator cannot take part in consensus...")
-		return err
-	}
-	loggingFields["leaderId"] = leaderId
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-	if err != nil {
-		return err
-	}
-	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
-	leader, ok := idToValAddrMap[leaderId]
 	if !ok {
 		return fmt.Errorf("could not find leader with id %d in the validator map", leaderId)
 	}
@@ -318,8 +266,6 @@ func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error 
 
 	return nil
 }
-
-*/
 
 /*** General Infrastructure Helpers ***/
 func (m *consensusModule) setLogPrefix(logPrefix string) {
@@ -346,22 +292,6 @@ func msgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
 		"round":  msg.GetRound(),
 		"step":   msg.GetStep(),
 	}
-}
-
-// TODO: This is a temporary solution, cache this in Consensus module. This field will be populated once with a single query to the persistence module.
-func (m *consensusModule) IsValidator() (bool, error) {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-	if err != nil {
-		return false, err
-	}
-
-	for _, actor := range validators {
-		if actor.Address == m.nodeAddress {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }
 
 // CONSIDER: Below are same as the ones on statesync helper. We should probably move them to a common place.

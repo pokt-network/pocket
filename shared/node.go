@@ -174,7 +174,6 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		}
 
 	case messaging.HotstuffMessageContentType:
-		// logger.Global.Debug().Msg("Received HotstuffMessage")
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 
 	case messaging.StateSyncMessageContentType:

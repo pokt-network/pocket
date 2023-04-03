@@ -217,6 +217,7 @@ The StateSync's state can be modified in two ways:
    - If the node is synching -> we update the sync state, with the most up to date aggregated metadata in thread safe manner.
 
 2. By the Consensus module
+
    - New Block is received -> the state's "height" is updated
 
 ## State Sync Designs
