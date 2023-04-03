@@ -92,12 +92,12 @@ func (m *stateSync) minimumPersistedBlockHeight() (uint64, error) {
 	return maxHeight, nil
 }
 
-func (m *stateSync) logHelper(receiverPeerId string) map[string]any {
+func (m *stateSync) logHelper(receiverPeerAddress string) map[string]any {
 	consensusMod := m.GetBus().GetConsensusModule()
 
 	return map[string]any{
-		"height":         consensusMod.CurrentHeight(),
-		"senderPeerId":   consensusMod.GetNodeAddress(),
-		"receiverPeerId": receiverPeerId,
+		"height":              consensusMod.CurrentHeight(),
+		"senderPeerAddress":   consensusMod.GetNodeAddress(),
+		"receiverPeerAddress": receiverPeerAddress,
 	}
 }

@@ -138,7 +138,7 @@ func (m *stateSync) TriggerSync() error {
 			return nil
 		} else if maxPersistedBlockHeight == m.aggregatedSyncMetadata.MaxHeight {
 			m.logger.Info().Msg("Node is already synched with the network, so skipping the syncing.")
-			return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator)
+			return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
 		}
 
 		m.snycing = true
@@ -222,6 +222,16 @@ func (m *stateSync) IsServerModEnabled() bool {
 func (m *stateSync) SetLogPrefix(logPrefix string) {
 	m.logPrefix = logPrefix
 }
+
+// func (m *stateSync) EnableServerMode() error {
+// 	m.serverMode = true
+// 	return nil
+// }
+
+// func (m *stateSync) DisableServerMode() error {
+// 	m.serverMode = false
+// 	return nil
+// }
 
 func (m *stateSync) EnableServerMode() error {
 	m.serverMode = true
@@ -319,9 +329,9 @@ loop:
 	var event coreTypes.StateMachineEvent
 
 	if isValidator {
-		event = coreTypes.StateMachineEvent_Consensus_IsSynchedValidator
+		event = coreTypes.StateMachineEvent_Consensus_IsSyncedValidator
 	} else {
-		event = coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator
+		event = coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator
 	}
 
 	if err := m.GetBus().GetStateMachineModule().SendEvent(event); err != nil {

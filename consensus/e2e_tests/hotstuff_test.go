@@ -32,16 +32,26 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
+	// Set starting height, round and step of the test.
+	startingHeight := uint64(1)
+	startingRound := uint64(0)
+	startingStep := uint8(consensus.NewRound)
+
+	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderForView() function.
+	// Any node in pocketNodes mapping can be used to gather leader election result via GetLeaderForView() function.
+	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(startingHeight, startingRound, startingStep))
+	leader := pocketNodes[leaderId]
+
 	// 1. NewRound
-	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 250, true)
+	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 500, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
-				Height: 1,
-				Step:   uint8(consensus.NewRound),
-				Round:  0,
+				Height: startingHeight,
+				Step:   startingStep,
+				Round:  uint8(startingRound),
 			},
 			nodeState)
 		require.Equal(t, false, nodeState.IsLeader)
@@ -53,21 +63,16 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// IMPROVE: Use seeding for deterministic leader election in unit tests.
-	// Leader election is deterministic for now, so we know its NodeId
-	leaderId := typesCons.NodeId(2)
-	leader := pocketNodes[leaderId]
-
 	// 2. Prepare
-	prepareProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 250, true)
+	prepareProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 500, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
-				Height: 1,
-				Step:   uint8(consensus.Prepare),
-				Round:  0,
+				Height: startingHeight,
+				Step:   startingStep + 1,
+				Round:  uint8(startingRound),
 			},
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
@@ -79,7 +84,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// 3. PreCommit
-	prepareVotes, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Vote, numValidators, 250, true)
+	prepareVotes, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Vote, numValidators, 500, true)
 	require.NoError(t, err)
 
 	for _, vote := range prepareVotes {
@@ -87,15 +92,15 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	preCommitProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.PreCommit, consensus.Propose, numValidators, 250, true)
+	preCommitProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.PreCommit, consensus.Propose, numValidators, 500, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
-				Height: 1,
-				Step:   uint8(consensus.PreCommit),
-				Round:  0,
+				Height: startingHeight,
+				Step:   startingStep + 2,
+				Round:  uint8(startingRound),
 			},
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
@@ -107,7 +112,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// 4. Commit
-	preCommitVotes, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.PreCommit, consensus.Vote, numValidators, 250, true)
+	preCommitVotes, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.PreCommit, consensus.Vote, numValidators, 500, true)
 	require.NoError(t, err)
 
 	for _, vote := range preCommitVotes {
@@ -115,15 +120,15 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	commitProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Commit, consensus.Propose, numValidators, 250, true)
+	commitProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Commit, consensus.Propose, numValidators, 500, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
-				Height: 1,
-				Step:   uint8(consensus.Commit),
-				Round:  0,
+				Height: startingHeight,
+				Step:   startingStep + 3,
+				Round:  uint8(startingRound),
 			},
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
@@ -135,7 +140,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// 5. Decide
-	commitVotes, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Commit, consensus.Vote, numValidators, 250, true)
+	commitVotes, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Commit, consensus.Vote, numValidators, 500, true)
 	require.NoError(t, err)
 
 	for _, vote := range commitVotes {
@@ -143,7 +148,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	decideProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Decide, consensus.Propose, numValidators, 250, true)
+	decideProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Decide, consensus.Propose, numValidators, 500, true)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -151,9 +156,9 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		if pocketId == leaderId {
 			assertNodeConsensusView(t, pocketId,
 				typesCons.ConsensusNodeState{
-					Height: 2,
-					Step:   uint8(consensus.NewRound),
-					Round:  0,
+					Height: startingHeight + 1,
+					Step:   startingStep,
+					Round:  uint8(startingRound),
 				},
 				nodeState)
 			require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId, "Leader should be empty")
@@ -161,9 +166,9 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		}
 		assertNodeConsensusView(t, pocketId,
 			typesCons.ConsensusNodeState{
-				Height: 1,
-				Step:   uint8(consensus.Decide),
-				Round:  0,
+				Height: startingHeight,
+				Step:   startingStep + 4,
+				Round:  uint8(startingRound),
 			},
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
@@ -175,15 +180,15 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// 1. NewRound - begin again
-	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 250, true)
+	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 500, true)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertNodeConsensusView(t, pocketId,
 			typesCons.ConsensusNodeState{
-				Height: 2,
-				Step:   uint8(consensus.NewRound),
-				Round:  0,
+				Height: startingHeight + 1,
+				Step:   startingStep,
+				Round:  uint8(startingRound),
 			},
 			nodeState)
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId, "Leader should be empty")

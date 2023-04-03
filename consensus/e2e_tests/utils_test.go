@@ -256,7 +256,7 @@ func WaitForNetworkStateSyncEvents(
 	eventsChannel modules.EventsChannel,
 	errMsg string,
 	numExpectedMsgs int,
-	millis time.Duration,
+	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
 ) (messages []*anypb.Any, err error) {
 	includeFilter := func(anyMsg *anypb.Any) bool {
@@ -269,7 +269,7 @@ func WaitForNetworkStateSyncEvents(
 		return true
 	}
 
-	return waitForEventsInternal(clck, eventsChannel, messaging.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clck, eventsChannel, messaging.StateSyncMessageContentType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework
@@ -340,7 +340,7 @@ loop:
 			if numRemainingMsgs == 0 {
 				break loop
 			} else if numRemainingMsgs > 0 {
-				return expectedMsgs, fmt.Errorf("Missing '%s' messages; %d expected but %d received. (%s) \n\t DO_NOT_SKIP_ME(#462): Consider increasing `maxWaitTimeMillis` as a workaround", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
+				return expectedMsgs, fmt.Errorf("Missing '%s' messages; %d expected but %d received. (%s) \n\t DO_NOT_SKIP_ME(#462): Consider increasing `maxWaitTime` as a workaround", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			} else {
 				return expectedMsgs, fmt.Errorf("Too many '%s' messages; %d expected but %d received. (%s)", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			}
@@ -549,7 +549,7 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 
 	stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
 		switch coreTypes.StateMachineEvent(event) {
-		case coreTypes.StateMachineEvent_Consensus_IsUnsynched:
+		case coreTypes.StateMachineEvent_Consensus_IsUnsynced:
 			t.Logf("Node is unsynched")
 			return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
 		case coreTypes.StateMachineEvent_Consensus_IsSyncing:
@@ -561,10 +561,10 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 
 			//bus.GetConsensusModule().TriggerSync()
 			return nil
-		case coreTypes.StateMachineEvent_Consensus_IsSynchedValidator:
+		case coreTypes.StateMachineEvent_Consensus_IsSyncedValidator:
 			t.Logf("Validator node is synched")
 			return nil
-		case coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator:
+		case coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator:
 			t.Logf("Non-validator node is synched")
 			return nil
 		default:

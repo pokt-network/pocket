@@ -25,11 +25,12 @@ type ConsensusModule interface {
 	ConsensusPacemaker
 	ConsensusDebugModule
 
-	// Consensus engine handlers
+	// Consensus Engine Handlers
+	// TODO: Rename `HandleMessage` to a more specific name that is consistent with its business logic.
 	HandleMessage(*anypb.Any) error
 	// State Sync message handlers
 	HandleStateSyncMessage(*anypb.Any) error
-	// FSM transition events handler
+	// FSM transition event handler
 	HandleEvent(transitionMessageAny *anypb.Any) error
 
 	// Consensus State Accessors
@@ -66,7 +67,7 @@ type ConsensusPacemaker interface {
 	GetNodeId() uint64
 }
 
-// This interface represents functions exposed by the Consensus module for StateSync specific business logic.
+// ConsensusStateSync exposes functionality of the Consensus module for StateSync specific business logic.
 // These functions are intended to only be called by the StateSync module.
 // INVESTIGATE: This interface enable a fast implementation of state sync but look into a way of removing it in the future
 type ConsensusStateSync interface {
@@ -74,7 +75,7 @@ type ConsensusStateSync interface {
 	GetNodeAddress() string
 
 	// Compares the persisted state with the aggregated state of the network. If the persisted state is behind the network state, i.e. that node is not synched, it will return false.
-	IsSynched() (bool, error)
+	IsSynced() (bool, error)
 	IsValidator() (bool, error)
 }
 
@@ -87,9 +88,13 @@ type ConsensusDebugModule interface {
 	SetRound(uint64)
 	SetStep(uint8) // REFACTOR: This should accept typesCons.HotstuffStep
 	SetBlock(*types.Block)
+
 	SetUtilityUnitOfWork(UtilityUnitOfWork)
 
 	SetAggregatedStateSyncMetadata(minHeight uint64, maxHeight uint64, peerAddress string)
 	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
 	DebugTriggerSync() error
+
+	// REFACTOR: This should accept typesCons.HotstuffStep and return typesCons.NodeId.
+	GetLeaderForView(height, round uint64, step uint8) (leaderId uint64)
 }

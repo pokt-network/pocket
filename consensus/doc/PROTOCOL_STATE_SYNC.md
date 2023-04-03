@@ -5,9 +5,10 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
 - [Background](#background)
 - [State Sync - Peer Metadata](#state-sync---peer-metadata)
 - [State Sync - Peer Metadata Collection](#state-sync---peer-metadata-collection)
+- [State Sync - Peer Metadata Collection](#state-sync---peer-metadata-collection-1)
   - [State Sync Lifecycle](#state-sync-lifecycle)
 - [State Sync - Operation Modes](#state-sync---operation-modes)
-  - [Unsynched Mode](#unsynched-mode)
+  - [Unsynced Mode](#unsynced-mode)
   - [Sync Mode](#sync-mode)
   - [Synched Mode](#synched-mode)
   - [Pacemaker Mode](#pacemaker-mode)
@@ -50,17 +51,21 @@ type PeerSyncMetadata interface {
 ## State Sync - Peer Metadata Collection 
 Peer metadata can be collected through the `P2P` module during the `Churn Management Protocol`. It can also be abstracted to an `ask-response` cycle where the node continuously asks this meta-information of its active peers. 
 
+## State Sync - Peer Metadata Collection
+
+Peer metadata can be collected through the `P2P` module during the `Churn Management Protocol`. It can also be abstracted to an `ask-response` cycle where the node continuously asks this metadata information to its active peers.
+
 Node gathers peer metadata from its peers in `StateSyncMetadataResponse` type, defined as the following:
 
 ```golang
-type StateSyncMetadataResponse {
-  PeerAddress string
-	MinHeight   uint64 
-	MaxHeight   uint64 
+type StateSyncMetadataResponse struct {
+    PeerAddress string
+	MinHeight   uint64
+	MaxHeight   uint64
 }
 ```
 
-Node periodically requests peer metadata from active peers upon starting, as an external process. The following is an illustrative example for a high-level understanding:
+Node periodically requests peer metadata from active peers after starting, as a background process. The following is an illustrative example:
 
 ```mermaid
 sequenceDiagram
@@ -77,41 +82,41 @@ sequenceDiagram
     end
 ```
 
-The aggregation and consumption of this peer-meta information enables the node to understand the globalized network state through sampling Peer Metadata in its local peer list. Node aggregates the collected peer metadata to identify the `MaxHeight` and `MinHeight` in the global state.
+The aggregation and consumption of this peer-meta information enables the node to understand the global network state through sampling Peer Metadata in its local peer list. The Node aggregates the collected peer metadata to identify the `MaxHeight` and `MinHeight` in the global state.
 
 This gives a view into the data availability layer, with details of what data can be consumed from peer via:
-
 
 ```golang
 type StateSyncModule interface {
   // ...
-  GetAggregatedStateSyncMetadata() *StateSyncMetadataResponse // Aggregated metadata received from of peers' metadata. 
-  IsSynched() (bool, error)
-  StartSynching() error
+  GetAggregatedStateSyncMetadata() *StateSyncMetadataResponse // Aggregated metadata received from peers.
+  IsSynced() (bool, error)
+  StartSyncing() error
   // ...
 }
 ```
 
 Using the aggregated `StateSyncMetadataResponse` returned by `GetAggregatedStateSyncMetadata()`, a node is able to compare its local state against that of the Global Network that is visible to it (i.e. the world state).
 
-
 ### State Sync Lifecycle
-Node bootstraps and starts collecting state sync metadata from the rest of the network periodically as an external process. This enables node to have up-to-date view on the global state. Through periodic sync, node collects received `StateSyncMetadataResponse`s to a buffer. 
 
-For every new block and block proposal (for validator nodes):
+The Node bootstraps and collects state sync metadata from the rest of the network periodically, via a background process. This enables nodes to have an up-to-date view of the global state. Through periodic sync, the node collects received `StateSyncMetadataResponse`s in a buffer.
+
+For every new block and block proposal `Validator`s receive:
+
 - node checks block's and block proposal's validity and applies the block to its persistence if its valid.
-- if block is  higher than node's current height, node checks if it is out of synch via `IsSynched()` function that compares node's local state and the global state by aggregating the collected metada responses.
+- if block is higher than node's current height, node checks if it is out of sync via `IsSynced()` function that compares node's local state and the global state by aggregating the collected metada responses.
 
-According to the result of the `IsSynched()` function:
-- If the node is out of sync, it runs `StartSynching()` function. Node  requests block one by one using the minimum and maximum height in aggregated state sync metadata.
-- If the node is in synch with its peers it rejects the block and/or block proposal. 
+According to the result of the `IsSynced()` function:
 
+- If the node is out of sync, it runs `StartSyncing()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
+- If the node is in sync with its peers it rejects the block and/or block proposal.
 
 ```mermaid
 flowchart TD
     %% start
     A[Node] --> B[Periodic <br> Sync]
-    A[Node] --> |New Block| C{IsSynched}
+    A[Node] --> |New Block| C{IsSynced}
 
     %% periodic snyc
     B --> |Request <br> metadata| D[Peers]
@@ -119,12 +124,12 @@ flowchart TD
 
 
     %% is node sycnhed
-    C -->  |No| E[StartSynching]
+    C -->  |No| E[StartSyncing]
     C -->  |Yes| F[Apply Block]
 
     %% syncing
     E --> |Request Blocks| D[Peers]
-    D[Peers] --> |Block| A[Node] 
+    D[Peers] --> |Block| A[Node]
 
 ```
 
@@ -134,9 +139,9 @@ State sync can be viewed as a state machine that transverses various modes the n
 
 1. Unsyched Mode
 2. Sync Mode
-2. Synched Mode
-3. Pacemaker Mode
-4. Server Mode
+3. Synced Mode
+4. Pacemaker Mode
+5. Server Mode
 
 The functionality of the node depends on the mode it is operating it. Note that `Server Mode` is not mutually exclusive to the others.
 
@@ -145,18 +150,17 @@ For illustrative purposes below assume:
 - `localSyncState` is an object instance complying with the `PeerSyncMetadata` interface for the local node
 - `globalSyncMeta` is an object instance of `StateSyncMetadataResponse` complying with the `StateSyncModule` interface for the global network, which is returned by the `GetAggregatedStateSyncMetadata()` function.
 
+### Unsynced Mode
 
-### Unsynched Mode
+The Node is in `Unsynced` mode if `localSyncState.MaxHeight < GlobalSyncMeta.Height`.
 
-The Node is in `Unsynched` mode if `localSyncState.MaxHeight < GlobalSyncMeta.Height`. 
-
-In `Unsynched` Mode, node transitions to `Sync Mode` by sending `Consensus_IsSyncing` state transition event, to start catching up with the network.
+In `Unsynced` Mode, node transitions to `Sync Mode` by sending `Consensus_IsSyncing` state transition event, to start catching up with the network.
 
 ### Sync Mode
 
-In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `StartSynching()` function to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
+In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `StartSyncing()` function to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
 
-Though it is unspecified whether or not a Node may make `GetBlock` requests in order or in parallel, the cryptographic restraints of block processing require the Node to call `CommitBlock` sequentially until it is `Synched`.
+Though it is unspecified whether or not a Node may make `GetBlock` requests in order or in parallel, the cryptographic restraints of block processing require the Node to call `CommitBlock` sequentially until it is `Synced`.
 
 ### Synched Mode
 
@@ -189,14 +193,14 @@ flowchart TD
 
     %% Is caught up?
     B --> |Yes| C{Is Validator?}
-    B --> |No| E[UnsynchedMode]
+    B --> |No| E[UnsyncedMode]
     E --> |Send | D[SyncMode]
 
-    %% Synching
+    %% Syncing
     D --> |Request blocks| Z[Peers]
 
     %% Is a validator?
-    C --> |No| F[Synched Mode]
+    C --> |No| F[Synced Mode]
     C --> |Yes| G(Pacemaker Mode<br>*HotPOKT*)
     F --> |Listen for<br>new blocks| Z[Peers]
 
@@ -465,6 +469,6 @@ Aptos follow an **async "fire-and-forget"** pattern as can be seen [here](https:
 - [https://docs.chia.net/peer-protocol](https://docs.chia.net/peer-protocol)
   - A detailed list of the type of requests Chia uses for communication between peers
 - [https://docs.chia.net/node-syncing](https://docs.chia.net/node-syncing)
-  - An explanation of the configurations Chia exposes for node synching
+  - An explanation of the configurations Chia exposes for node syncing
 
 <!-- GITHUB_WIKI: consensus/state_sync_protocol -->

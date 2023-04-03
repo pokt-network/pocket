@@ -152,12 +152,27 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		runtimeConfig.GetConfig().Consensus.PacemakerConfig.TimeoutMsec = paceMakerTimeoutMsec
 	}
 
+	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS
+	for _, pocketNode := range pocketNodes {
+		// Update height, step, leaderId, and utility via setters exposed with the debug interface
+		pocketNode.GetBus().GetConsensusModule().SetHeight(testHeight)
+		pocketNode.GetBus().GetConsensusModule().SetStep(testStep)
+
+		// utilityUnitOfWork is only set on new rounds, which is skipped in this test
+		utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(testHeight))
+		require.NoError(t, err)
+		pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
+	}
+
 	// Prepare leader info
-	leaderId := typesCons.NodeId(3)
-	require.Equal(t, uint64(leaderId), testHeight%numValidators) // Uses our deterministic round robin leader election
+	leaderElectionStep := consensus.Prepare
 	leaderRound := uint64(6)
+
+	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderForView() function.
+	// Any node in pocketNodes mapping can be used to call GetLeaderForView() function.
+	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(testHeight, leaderRound, uint8(leaderElectionStep)))
 	leader := pocketNodes[leaderId]
-	consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
+	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
 	require.NoError(t, err)
 
 	// Placeholder block
@@ -165,7 +180,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		Height:            testHeight,
 		StateHash:         stateHash,
 		PrevStateHash:     "",
-		ProposerAddress:   consensusPK.Address(),
+		ProposerAddress:   leaderPK.Address(),
 		QuorumCertificate: nil,
 	}
 	block := &coreTypes.Block{
@@ -221,7 +236,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 			require.Equal(t, consensus.PreCommit.String(), typesCons.HotstuffStep(nodeState.Step).String())
 		}
 		require.Equal(t, uint64(3), nodeState.Height)
-		require.Equal(t, uint8(6), nodeState.Round)
+		require.Equal(t, uint8(leaderRound), nodeState.Round)
 		require.Equal(t, leaderId, nodeState.LeaderId)
 	}
 }

@@ -122,16 +122,16 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// 2. If node is synched, node must reject the proposal because proposal is not valid.
 	if msg.Height > currentHeight {
 		m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d < message height %d", currentHeight, msg.Height)
-		isSynched, err := m.GetBus().GetConsensusModule().IsSynched()
+		isSynced, err := m.GetBus().GetConsensusModule().IsSynced()
 		if err != nil {
 			return false, err
 		}
 
-		m.logger.Info().Msg(" Node is not Synched!! Let's start syncing!")
+		m.logger.Info().Msg(" Node is not Synced!! Let's start syncing!")
 
-		if !isSynched {
+		if !isSynced {
 			// CONSIDER: if node is already transitioned to the Unsynched state, this transition event will be sent, but will be rejected by the
-			err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
+			err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
 			return false, err
 		}
 
@@ -166,7 +166,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		return true, nil
 	}
 
-	// pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
+	// pacemaker catch up! Node is synced to the right height, but on a previous step/round so we just jump to the latest state.
 	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {
 		m.logger.Info().Msg(pacemakerCatchupLog(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
 		consensusMod.SetStep(uint8(msg.Step))

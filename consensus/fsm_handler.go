@@ -15,7 +15,6 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 
-	// TODO (#571): update with logger helper function
 	m.logger.Info().Msgf("Received a state transition message: %s", transitionMessageAny)
 
 	switch transitionMessageAny.MessageName() {
@@ -37,28 +36,21 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 }
 
 func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Msgf("Begin handling StateMachineTransitionEvent: %s", msg)
-
-	// TODO (#571): update with logger helper function
 	fsm_state := msg.NewState
-	m.logger.Debug().Fields(map[string]any{
-		"event":          msg.Event,
-		"previous_state": msg.PreviousState,
-		"new_state":      fsm_state,
-	}).Msg("Received state machine transition msg")
+	m.logger.Debug().Fields(messaging.TransitionEventToMap(msg)).Msg("Received state machine transition msg")
 
 	switch coreTypes.StateMachineState(fsm_state) {
 	case coreTypes.StateMachineState_P2P_Bootstrapped:
 		return m.HandleBootstrapped(msg)
 
-	case coreTypes.StateMachineState_Consensus_Unsynched:
-		return m.HandleUnsynched(msg)
+	case coreTypes.StateMachineState_Consensus_Unsynced:
+		return m.HandleUnsynced(msg)
 
 	case coreTypes.StateMachineState_Consensus_SyncMode:
 		return m.HandleSyncMode(msg)
 
-	case coreTypes.StateMachineState_Consensus_Synched:
-		return m.HandleSynched(msg)
+	case coreTypes.StateMachineState_Consensus_Synced:
+		return m.HandleSynced(msg)
 
 	case coreTypes.StateMachineState_Consensus_Pacemaker:
 		return m.HandlePacemaker(msg)
@@ -77,14 +69,14 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM is in bootstrapped state, so it is out of sync, and transitions to unsynched mode")
 
-	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
+	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
 }
 
 // HandleUnsynched handles FSM event Consensus_IsUnsynched, and Unsynched is the destination state.
 // In Unsynched mode node (validator or non-validator) is out of sync with the rest of the network.
 // This mode is a transition mode from the node being up-to-date (i.e. Pacemaker mode, Synched mode) with the latest network height to being out-of-sync.
 // As soon as node transitions to this mode, it will transition to the sync mode.
-func (m *consensusModule) HandleUnsynched(msg *messaging.StateMachineTransitionEvent) error {
+func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM is in Unsyched state, as node is out of sync, sending syncmode event to start syncing")
 
 	// TODO: consider to add this, because it doesn't make any difference, as node is not yet in the other peers' address book
@@ -110,7 +102,7 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 // Currently, FSM never transition to this state and a non-validator node always stays in syncmode.
 // CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state.
 // TODO: Add check that this never happens when IsValidator() is false, i.e. node is not validator.
-func (m *consensusModule) HandleSynched(msg *messaging.StateMachineTransitionEvent) error {
+func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM of non-validator node is in Synched mode")
 	return nil
 }
@@ -130,6 +122,6 @@ func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionE
 	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
 
 	m.nodeId = valAddrToIdMap[m.nodeAddress]
-	fmt.Println("Set nodeId to: ", m.nodeId)
+	//fmt.Println("Set nodeId to: ", m.nodeId)
 	return nil
 }

@@ -7,11 +7,14 @@
 This document outlines the purpose of this module, its components and how they all interact with the other modules.
 
 ## Contents <!-- omit in toc -->
+
 - [Overview](#overview)
 - [Code Structure](#code-structure)
 - [High Level Architecture](#high-level-architecture)
   - [FSM primer](#fsm-primer)
-- [Current State Machine Definition](#current-state-machine-definition)
+- [State Machine States, Events and Lifecycle](#state-machine-states-events-and-lifecycle)
+  - [Startup](#startup)
+  - [Consensus](#consensus)
 
 ## Overview
 
@@ -54,21 +57,25 @@ These are the main building blocks:
 
 ## State Machine States, Events and Lifecycle
 
-- Node starts in `Stopped` state -> event `start`, and transitions to `P2P_Bootstrapping`,
-- P2P module handles `P2P_Bootstrapping` state, fills the peer address book -> `P2P_IsBootstrapped` event -> `P2P_Bootstrapped`,
-- Consensus module handles `P2P_Bootstrapped` state, and since node just bootstrapped -> `Consensus_IsUnsynched` event -> `Consensus_Unsynched`, 
-- Whenever node is in `Consensus_Unsynched` state, consensus module -> `Consensus_IsSyncing` event -> `Consensus_SyncMode`,
-- In `Consensus_SyncMode` state, consensus module starts synching by running `StartSynching()` function, which requests blocks one by one from peers in the network. Once synched:
-  - if the node is validator -> `Consensus_IsSynchedValidator` event -> `Consensus_Synched`,
-  - if the node is not a validator -> `Consensus_IsSynchedNonValidator` event -> `Consensus_Pacemaker`,
-- Whenever a node receives a block that is higher than its current state, consensus module -> `Consensus_IsUnsynched` event ->`Consensus_Unsynched`.
- 
-It is important to node that a non-validator node practically always stays in the `Consensus_SyncMode` state to receive latest blocks from validators blocks from the peers.
+### Startup
+
+- **Initialization**: A node always starts in the `Stopped` state. Once it `Start`s, it transitions to `P2P_Bootstrapping`.
+- **P2P Bootstrapping**: The P2P module handles `P2P_Bootstrapping` -> fills the peer address book -> triggers a `P2P_IsBootstrapped` event -> transitions to `P2P_Bootstrapped`.
+
+### Consensus
+
+- **P2P_Bootstrapped**: The Consensus module handles `P2P_Bootstrapped` -> triggers a `Consensus_IsUnsynced` event -> transitions to `Consensus_Unsynced`.
+- **Consensus_Unsynced**: Node is out of sync, the Consensus module sends `Consensus_IsSyncing` event -> transitions to `Consensus_SyncMode` to start syncing with the rest of the network.
+- **Consensus_SyncMode**: The Consensus module runs `StartSyncing()` and requests blocks one by one from peers in its address book.
+- **Node finishes syncing**: When node completes syncing:
+  - if the node is a validator, the Consensus module sends `Consensus_IsSyncedValidator` event -> transitions to `Consensus_Synced`.
+  - if the node is not a validator, the Consensus module sends `Consensus_IsSyncedNonValidator` event -> transitions to `Consensus_Pacemaker`.
+- **Consensus_Pacemaker**: Node participates in the block generation process. If node receives a block proposal with height higher than its current height, the Consensus Module sends `Consensus_IsUnsynced` event -> transitions to `Consensus_Unsynced`.
+- **Consensus_Synced**: Currently, the Consensus module never sends `Consensus_IsSyncedValidator` event, and non-validator node always stays in `Consensus_SyncMode`.
 
 A diagram of the current state machine definition can be found [here](state-machine.diagram.md).
 
-
-*NOTE:* If you make changes to the state machine by changing states, events, or state transitions, you can re-generate the state machine diagram via:
+_NOTE:_ If you make changes to the state machine by changing states, events, or state transitions, you can re-generate the state machine diagram via:
 
 ```bash
 make generate_node_state_machine_diagram

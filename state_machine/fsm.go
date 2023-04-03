@@ -36,33 +36,42 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 			{
 				Name: string(coreTypes.StateMachineEvent_Consensus_IsSyncing),
 				Src: []string{
-					string(coreTypes.StateMachineState_Consensus_Unsynched),
+					string(coreTypes.StateMachineState_Consensus_Unsynced),
 				},
 				Dst: string(coreTypes.StateMachineState_Consensus_SyncMode),
 			},
 			{
-				Name: string(coreTypes.StateMachineEvent_Consensus_IsSynchedValidator),
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator),
 				Src: []string{
 					string(coreTypes.StateMachineState_Consensus_SyncMode),
 				},
 				Dst: string(coreTypes.StateMachineState_Consensus_Pacemaker),
 			},
 			{
-				Name: string(coreTypes.StateMachineEvent_Consensus_IsSynchedNonValidator),
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator),
 				Src: []string{
 					string(coreTypes.StateMachineState_Consensus_SyncMode),
 				},
-				Dst: string(coreTypes.StateMachineState_Consensus_Synched),
+				Dst: string(coreTypes.StateMachineState_Consensus_Synced),
 			},
 			{
-				Name: string(coreTypes.StateMachineEvent_Consensus_IsUnsynched),
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsUnsynced),
 				Src: []string{
 					string(coreTypes.StateMachineState_Consensus_Pacemaker),
-					string(coreTypes.StateMachineState_Consensus_Synched),
+					string(coreTypes.StateMachineState_Consensus_Synced),
 					string(coreTypes.StateMachineState_P2P_Bootstrapped),
 					string(coreTypes.StateMachineState_Consensus_SyncMode),
 				},
-				Dst: string(coreTypes.StateMachineState_Consensus_Unsynched),
+				Dst: string(coreTypes.StateMachineState_Consensus_Unsynced),
+			},
+			{
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsUnsynced),
+				Src: []string{
+					string(coreTypes.StateMachineState_Consensus_Pacemaker),
+					string(coreTypes.StateMachineState_Consensus_Synced),
+					string(coreTypes.StateMachineState_P2P_Bootstrapped),
+				},
+				Dst: string(coreTypes.StateMachineState_Consensus_Unsynced),
 			},
 		},
 		cb,

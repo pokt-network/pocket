@@ -10,6 +10,8 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -321,11 +323,12 @@ func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error 
 
 /*** General Infrastructure Helpers ***/
 func (m *consensusModule) setLogPrefix(logPrefix string) {
-	logger.Global.UpdateFields(map[string]any{
-		"kind": logPrefix,
+	// TECHDEBT: Do not expose `zerolog` here.
+	m.logger = logger.Global.CreateLoggerForModule(modules.ConsensusModuleName)
+	m.logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
+		c = c.Interface("kind", logPrefix)
+		return c
 	})
-	// INVESTIGATE: Do we need to create a new logger here?
-	m.logger = logger.Global.CreateLoggerForModule("consensus")
 }
 
 func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {

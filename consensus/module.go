@@ -257,15 +257,11 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if !ok {
 			return fmt.Errorf("failed to cast message to HotstuffMessage")
 		}
-		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
-			m.logger.Error().Err(err).Msg("failed to handle hotstuff message")
-			return err
-		}
+		return m.handleHotstuffMessage(hotstuffMessage)
+
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}
-
-	return nil
 }
 
 func (m *consensusModule) CurrentHeight() uint64 {
