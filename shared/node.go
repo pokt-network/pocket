@@ -17,6 +17,7 @@ import (
 	"github.com/pokt-network/pocket/state_machine"
 	"github.com/pokt-network/pocket/telemetry"
 	"github.com/pokt-network/pocket/utility"
+	"go.uber.org/multierr"
 )
 
 const (
@@ -170,16 +171,21 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		if err := node.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
 			return err
 		}
-	case consensus.HotstuffMessageContentType:
+	case messaging.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
-	case consensus.StateSyncMessageContentType:
+	case messaging.StateSyncMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
 	case messaging.TxGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleUtilityMessage(message.Content)
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
-	case messaging.ConsensusNewHeightEventType, messaging.StateMachineTransitionEventType:
+	case messaging.ConsensusNewHeightEventType:
 		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
+	case messaging.StateMachineTransitionEventType:
+		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
+		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
+		// TODO: Remove this lib once we move to Go 1.2
+		return multierr.Combine(err_consensus, err_p2p)
 	default:
 		logger.Global.Warn().Msgf("Unsupported message content type: %s", contentType)
 	}
