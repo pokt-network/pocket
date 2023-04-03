@@ -1,12 +1,15 @@
 package e2e_tests
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -186,171 +189,167 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 }
 
 func TestStateSync_UnsyncedPeerSyncsABlock_Success(t *testing.T) {
-	t.Skip()
 	// Test preparation
-	/*
-		clockMock := clock.NewMock()
-		timeReminder(t, clockMock, time.Second)
+	clockMock := clock.NewMock()
+	timeReminder(t, clockMock, time.Second)
 
-		numberOfValidators := 4
-		numberOfPersistedDummyBlocks := uint64(10)
-		// current height of the node is one plus the number of persisted dummy blocks
-		testHeight := numberOfPersistedDummyBlocks + 1
-		testStep := uint8(consensus.NewRound)
-		testRound := uint64(1)
+	numberOfValidators := 4
+	numberOfPersistedDummyBlocks := uint64(10)
+	// current height of the node is one plus the number of persisted dummy blocks
+	testHeight := numberOfPersistedDummyBlocks + 1
+	testStep := uint8(consensus.NewRound)
+	testRound := uint64(1)
 
-		runtimeMgrs := GenerateNodeRuntimeMgrs(t, numberOfValidators, clockMock)
-		buses := GenerateBuses(t, runtimeMgrs)
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numberOfValidators, clockMock)
+	buses := GenerateBuses(t, runtimeMgrs)
 
-		// Create & start test pocket nodes
-		eventsChannel := make(modules.EventsChannel, 100)
-		pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-		GenerateDummyBlocksWithQC(t, testHeight, uint64(numberOfValidators), pocketNodes)
-		StartAllTestPocketNodes(t, pocketNodes)
+	// Create & start test pocket nodes
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+	GenerateDummyBlocksWithQC(t, testHeight, uint64(numberOfValidators), pocketNodes)
+	StartAllTestPocketNodes(t, pocketNodes)
 
-		// Prepare unsynced node info
-		unsyncedNode := pocketNodes[2]
-		unsyncedNodeId := typesCons.NodeId(2)
-		unsyncedNodeHeight := testHeight - 2
-		//usynchedNumberOfPersistedDummyBlocks := unsynchedNodeHeight - 1
+	// Prepare unsynced node info
+	unsyncedNode := pocketNodes[2]
+	unsyncedNodeId := typesCons.NodeId(2)
+	unsyncedNodeHeight := testHeight - 1
+	//usynchedNumberOfPersistedDummyBlocks := unsynchedNodeHeight - 1
 
-		for id, pocketNode := range pocketNodes {
-			nodeAddress := pocketNode.GetBus().GetConsensusModule().GetNodeAddress()
-
-			if id == unsyncedNodeId {
-				pocketNode.GetBus().GetConsensusModule().SetHeight(unsyncedNodeHeight)
-				unsyncedNode.GetBus().GetConsensusModule().SetAggregatedStateSyncMetadata(uint64(1), numberOfPersistedDummyBlocks, string(nodeAddress))
-				utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(unsyncedNodeHeight))
-				require.NoError(t, err)
-				pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
-			} else {
-				pocketNode.GetBus().GetConsensusModule().SetHeight(testHeight)
-				utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(testHeight))
-				require.NoError(t, err)
-				pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
-			}
-			pocketNode.GetBus().GetConsensusModule().SetStep(testStep)
-			pocketNode.GetBus().GetConsensusModule().SetRound(testRound)
-		}
-
-		leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(testHeight, testRound, uint8(testStep)))
-		leader := pocketNodes[leaderId]
-		leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
-		require.NoError(t, err)
-
-		// Placeholder block
-		blockHeader := &coreTypes.BlockHeader{
-			Height:            testHeight,
-			StateHash:         stateHash,
-			PrevStateHash:     "",
-			ProposerAddress:   leaderPK.Address(),
-			QuorumCertificate: nil,
-		}
-
-		block := &coreTypes.Block{
-			BlockHeader:  blockHeader,
-			Transactions: make([][]byte, 0),
-		}
-
-		leader.GetBus().GetConsensusModule().SetBlock(block)
-
-		for _, pocketNode := range pocketNodes {
-			TriggerNextView(t, pocketNode)
-		}
-
-		advanceTime(t, clockMock, 10*time.Millisecond)
-
-		// // Assert that unsynched node has a separate view of the network than the rest of the nodes
-		newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 250, true)
-		require.NoError(t, err)
-
-		for nodeId, pocketNode := range pocketNodes {
-			nodeState := GetConsensusNodeState(pocketNode)
-			if nodeId == unsyncedNodeId {
-				assertNodeConsensusView(t, nodeId,
-					typesCons.ConsensusNodeState{
-						Height: unsyncedNodeHeight,
-						Step:   testStep,
-						Round:  uint8(testRound + 1),
-					},
-					nodeState)
-			} else {
-				assertNodeConsensusView(t, nodeId,
-					typesCons.ConsensusNodeState{
-						Height: testHeight,
-						Step:   testStep,
-						Round:  uint8(testRound + 1),
-					},
-					nodeState)
-			}
-			require.Equal(t, false, nodeState.IsLeader)
-			require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
-		}
-
-		for _, message := range newRoundMessages {
-			P2PBroadcast(t, pocketNodes, message)
-		}
-
-		advanceTime(t, clockMock, 10*time.Millisecond)
-
-		// Node must request blocks from all other validators.
-		// Ensure it sends requests to "numberOfValidators - 1" getBlockReq messages.
-		errMsg := "StateSync Get Block Request Messages"
-		numExpectedMsgs := numberOfValidators - 1
-		// //receivedStateSyncMsgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
-		msgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 500, false)
-		require.NoError(t, err)
-
-		for _, msg := range msgs {
-			msg, err := codec.GetCodec().FromAny(msg)
+	for id, pocketNode := range pocketNodes {
+		nodeAddress := pocketNode.GetBus().GetConsensusModule().GetNodeAddress()
+		if id == unsyncedNodeId {
+			pocketNode.GetBus().GetConsensusModule().SetHeight(unsyncedNodeHeight)
+			//unsyncedNode.GetBus().GetConsensusModule().SetAggregatedStateSyncMetadata(uint64(1), numberOfPersistedDummyBlocks, string(nodeAddress))
+			utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(unsyncedNodeHeight))
 			require.NoError(t, err)
-
-			stateSyncBlockReqMessage, ok := msg.(*typesCons.StateSyncMessage)
-			require.True(t, ok)
-
-			blockReq := stateSyncBlockReqMessage.GetGetBlockReq()
-			require.NotEmpty(t, blockReq)
-
-			fmt.Println("Block req is: ", blockReq)
+			pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
+		} else {
+			pocketNode.GetBus().GetConsensusModule().SetHeight(testHeight)
+			//unsyncedNode.GetBus().GetConsensusModule().SetAggregatedStateSyncMetadata(uint64(1), numberOfPersistedDummyBlocks, string(nodeAddress))
+			utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(testHeight))
+			require.NoError(t, err)
+			pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
 		}
+		pocketNode.GetBus().GetConsensusModule().SetStep(testStep)
+		pocketNode.GetBus().GetConsensusModule().SetRound(testRound)
+		pocketNode.GetBus().GetConsensusModule().SetAggregatedStateSyncMetadata(uint64(1), numberOfPersistedDummyBlocks, string(nodeAddress))
+	}
 
-		// // send the block request sent by unsynched node to all nodes
-		// P2PBroadcast(t, pocketNodes, msgs[0])
-		// advanceTime(t, clockMock, 10*time.Millisecond)
+	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(testHeight, testRound, uint8(testStep)))
+	leader := pocketNodes[leaderId]
+	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
+	require.NoError(t, err)
 
-		// // We mock that all validators will be replying to its request
-		// // So, ensure it sends requests to "numberOfValidators - 1" getBlockReq messages.
-		// errMsg = "StateSync Get Block Response Messages"
-		// msgs, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
-		// require.NoError(t, err)
+	// Placeholder block
+	blockHeader := &coreTypes.BlockHeader{
+		Height:            testHeight,
+		StateHash:         stateHash,
+		PrevStateHash:     "",
+		ProposerAddress:   leaderPK.Address(),
+		QuorumCertificate: nil,
+	}
 
-		// //get a valid block. One of them should be valid
-		// for _, msg := range msgs {
+	block := &coreTypes.Block{
+		BlockHeader:  blockHeader,
+		Transactions: make([][]byte, 0),
+	}
 
-		// 	//fmt.Println("RECEIVED STATE SYNC MSG: ", msg.TypeUrl)
-		// 	msg, err := codec.GetCodec().FromAny(msg)
-		// 	require.NoError(t, err)
+	leader.GetBus().GetConsensusModule().SetBlock(block)
 
-		// 	stateSyncBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
-		// 	require.True(t, ok)
+	for _, pocketNode := range pocketNodes {
+		TriggerNextView(t, pocketNode)
+	}
 
-		// 	fmt.Println("Received Get Block Response: ", stateSyncBlockResMessage)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
-		// 	blockReq := stateSyncBlockResMessage.GetGetBlockRes()
-		// 	require.NotEmpty(t, blockReq)
+	// // Assert that unsynched node has a separate view of the network than the rest of the nodes
+	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 250, true)
+	require.NoError(t, err)
 
-		// }
+	for nodeId, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		if nodeId == unsyncedNodeId {
+			assertNodeConsensusView(t, nodeId,
+				typesCons.ConsensusNodeState{
+					Height: unsyncedNodeHeight,
+					Step:   testStep,
+					Round:  uint8(testRound + 1),
+				},
+				nodeState)
+		} else {
+			assertNodeConsensusView(t, nodeId,
+				typesCons.ConsensusNodeState{
+					Height: testHeight,
+					Step:   testStep,
+					Round:  uint8(testRound + 1),
+				},
+				nodeState)
+		}
+		require.Equal(t, false, nodeState.IsLeader)
+		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
+	}
 
-		// // send the first reply to the unsynched node
-		// P2PSend(t, unsynchedNode, msgs[0])
-		// advanceTime(t, clockMock, 10*time.Millisecond)
+	for _, message := range newRoundMessages {
+		P2PBroadcast(t, pocketNodes, message)
+	}
 
-		// for nodeId, pocketNode := range pocketNodes {
-		// 	nodeState := GetConsensusNodeState(pocketNode)
-		// 	//fmt.Println("Node state is h s r: ", nodeState.Height, nodeState.Step, nodeState.Round)
-		// 	assertHeight(t, nodeId, testHeight, nodeState.Height)
-		// }
-	*/
+	advanceTime(t, clockMock, 10*time.Millisecond)
+
+	// Node must request blocks from all other validators.
+	// Ensure it sends requests to "numberOfValidators - 1" getBlockReq messages.
+	errMsg := "StateSync Get Block Request Messages"
+	numExpectedMsgs := numberOfValidators - 1
+	// //receivedStateSyncMsgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
+	msgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 500, false)
+	require.NoError(t, err)
+
+	for _, msg := range msgs {
+		msg, err := codec.GetCodec().FromAny(msg)
+		require.NoError(t, err)
+
+		stateSyncBlockReqMessage, ok := msg.(*typesCons.StateSyncMessage)
+		require.True(t, ok)
+
+		blockReq := stateSyncBlockReqMessage.GetGetBlockReq()
+		require.NotEmpty(t, blockReq)
+
+		fmt.Println("Block req is: ", blockReq)
+	}
+
+	// send the block request sent by unsynched node to all nodes
+	P2PBroadcast(t, pocketNodes, msgs[0])
+	advanceTime(t, clockMock, 10*time.Millisecond)
+
+	// We mock that all validators will be replying to its request
+	errMsg = "StateSync Get Block Response Messages"
+	msgs, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
+	require.NoError(t, err)
+
+	//get a valid block. One of them should be valid
+	for _, msg := range msgs {
+		msg, err := codec.GetCodec().FromAny(msg)
+		require.NoError(t, err)
+
+		stateSyncBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
+		require.True(t, ok)
+
+		fmt.Println("Received Get Block Response: ", stateSyncBlockResMessage)
+
+		blockReq := stateSyncBlockResMessage.GetGetBlockRes()
+		require.NotEmpty(t, blockReq)
+
+	}
+
+	// send the first reply to the unsynched node
+	P2PSend(t, unsyncedNode, msgs[0])
+	advanceTime(t, clockMock, 10*time.Millisecond)
+
+	for nodeId, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		fmt.Printf("Node id:  %d ,state: h: %d,  s:%d, r:%d ", nodeId, nodeState.Height, nodeState.Step, nodeState.Round)
+		assertHeight(t, nodeId, testHeight, nodeState.Height)
+	}
+
 }
 
 func TestStateSync_UnsyncedPeerSyncsMultipleBlocksInOrder_Success(t *testing.T) {

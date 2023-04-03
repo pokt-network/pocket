@@ -11,8 +11,8 @@ import (
 )
 
 func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any) error {
-	m.m.Lock()
-	defer m.m.Unlock()
+	//m.m.Lock()
+	//defer m.m.Unlock()
 	m.logger.Info().Msg("Handling StateSyncMessage, consensus module")
 
 	switch stateSyncMessageAny.MessageName() {
@@ -58,6 +58,8 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 
 // HandleGetBlockResponse handles the received block. It validates the block, quorum certificate and applies to its persistence
 func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	//m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse, Transactions: %x", blockRes.Block.Transactions)
 
 	block := blockRes.Block
@@ -135,25 +137,9 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 		return err
 	}
 
-	m.logger.Info().Msgf("HandleGetBlockResponse, Block is Committed, maxPersistedHeight is: %d, m.Height is :%d", maxPersistedHeight, m.height)
+	m.logger.Info().Msgf("HandleGetBlockResponse, Block is Committed, maxPersistedHeight is: %d, current height is :%d", maxPersistedHeight, m.height)
 
 	// Send current persisted block height to the state sync module
 	m.stateSync.PersistedBlock(block.BlockHeader.Height)
-
-	fmt.Printf("Applied Block My state is, height: %d, step: %d, round: %d,", m.CurrentHeight(), m.CurrentStep(), m.CurrentRound())
-
 	return nil
-
 }
-
-// HandleStateSyncMetadataResponse handles the received metadata. It updates state sync buffer
-// func (m *consensusModule) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
-// 	m.logger.Info().Fields(m.logHelper(metaDataRes.PeerAddress)).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
-
-// 	metaDataBuffer := m.stateSync.GetStateSyncMetadataBuffer()
-// 	metaDataBuffer = append(metaDataBuffer, metaDataRes)
-// 	m.stateSync.SetStateSyncMetadataBuffer(metaDataBuffer)
-// 	m.logger.Info().Msg("Finished handling StateSync MetadataResponse")
-
-// 	return nil
-// }

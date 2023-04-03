@@ -115,8 +115,8 @@ func (m *stateSync) CurrentState() state {
 func (m *stateSync) TriggerSync() error {
 	m.logger.Info().Msg("Triggering syncing...")
 	// check if the node is not currently syncing, if it is synching update the state
-	//m.m.Lock()
-	//defer m.m.Unlock()
+	m.m.Lock()
+	defer m.m.Unlock()
 
 	if m.snycing { // if the node is currently syncing, update the sync state
 		//m.m.Lock()
@@ -340,6 +340,8 @@ loop:
 }
 
 func (m *stateSync) requestBlocks() {
+	m.m.Lock()
+	defer m.m.Unlock()
 
 	fmt.Println("Requesting blocks")
 	consensusMod := m.GetBus().GetConsensusModule()
