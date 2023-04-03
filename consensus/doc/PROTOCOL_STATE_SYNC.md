@@ -212,8 +212,6 @@ _IMPORTANT: `CommitBlock` is implicit in the diagram above. If any blocks proces
 
 
 ## State Sync Operation
-
-
  StateSync's state can be modified in two ways:
  1. By the FSM, when the node is transitions to SyncMode, the state is updated.
    - In this scenario, if the node is currently not synching, we generate a new state and trigger the sync operation.

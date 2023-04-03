@@ -2,7 +2,6 @@ package state_sync
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -21,11 +20,10 @@ const (
 //
 // Pocket node take one or two rules during state snychronization: client and/or server.
 //
-//
-// There are three main processes run for the client role:
+// There are two main processes run for the client role:
 // 1. Metadata Aggregation loop (metadataSyncLoop)
 //    - performs periodic metadata aggregation.
-// 2. Requesting missing blocks (StartSynching)
+// 2. Requesting missing blocks (StartSyncing)
 //    - snyncs by requesting missing blocks from peers.
 // 3. Applying incoming blocks (HandleGetBlockResponse)
 //    - applies missing blocks.
@@ -99,7 +97,6 @@ type state struct {
 	height         uint64 // latest persisted height, updated after every block is added to the module
 	startingHeight uint64 // starting height for the sync, set when state is generated
 	endingHeight   uint64 // ending height for the sync, set when state is generated
-	//err            error  //snyc error
 
 	blockReceived chan uint64
 }
@@ -114,7 +111,6 @@ func (m *stateSync) CurrentState() state {
 // 2. If the node is currently syncing, it updates the current sync state, by updating the ending height.
 func (m *stateSync) TriggerSync() error {
 	m.logger.Info().Msg("Triggering syncing...")
-	// check if the node is not currently syncing, if it is synching update the state
 	m.m.Lock()
 	defer m.m.Unlock()
 
@@ -149,7 +145,6 @@ func (m *stateSync) TriggerSync() error {
 			blockReceived:  make(chan uint64, 1),
 		}
 		m.logger.Info().Msgf("Starting syncing from height %d to height %d", m.state.startingHeight, m.state.endingHeight)
-		//m.m.Unlock()
 		go m.Sync()
 	}
 
@@ -251,20 +246,9 @@ func (m *stateSync) SetAggregatedSyncMetadata(metadata *typesCons.StateSyncMetad
 	m.aggregatedSyncMetadata = metadata
 }
 
-// func (m *stateSync) SetStateSyncMetadataBuffer(aggregatedSyncMetadata []*typesCons.StateSyncMetadataResponse) {
-// 	m.m.Lock()
-// 	defer m.m.Unlock()
-// 	m.syncMetadataBuffer = aggregatedSyncMetadata
-// }
-
-// func (m *stateSync) GetStateSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse {
-// 	return m.syncMetadataBuffer
-// }
-
-// StartSynching
-// requests missing blocks one by one from its peers.
-// makes checks on blockReceived channel to see which block is received and persisted.
-// with each reiceved block it will update the current height of the state that is being actively synched.
+// Snyc requests missing blocks one by one from its peers.
+// Checks on blockReceived channel to see which block is received and persisted.
+// Updates the current height of the State  with every reiceved block/
 // if the received block is the target height, it will perform FSM state transition.
 // else it will request the next block (after waiting sometime) and repeat the process.
 // check how others handle re-requesting blocks
@@ -280,21 +264,15 @@ loop:
 	for {
 		select {
 		case <-ticker.C:
-			//m.m.Lock()
 			if m.state.height == m.state.endingHeight {
 				m.logger.Info().Msgf("Node is synched for state: height: %d, starting height: %d, ending height: %d", m.state.height, m.state.startingHeight, m.state.endingHeight)
 				break loop
-			} //else {
-
-			//}
-			//m.m.Unlock()
+			}
 			m.logger.Info().Msgf("Node is NOT synched for state: height: %d, starting height: %d, ending height: %d, requesting blocks", m.state.height, m.state.startingHeight, m.state.endingHeight)
 			m.requestBlocks()
 
 		case persistedBlockHeight := <-m.state.blockReceived:
-			//m.m.Lock()
 			m.state.height = persistedBlockHeight
-			//m.m.Unlock()
 			m.logger.Info().Msgf("Received block: %d, updating the state", persistedBlockHeight)
 
 		case <-m.ctx.Done():
@@ -303,21 +281,9 @@ loop:
 		}
 	}
 
-	// TECHDEBT: this is a temporary fix, assuming node is a validator
-	// TODO check if node is validator and transition accordingly
-	isValidator := true
-
-	m.logger.Info().Msg("Noce is synched, transitions as validator \n")
-
-	var event coreTypes.StateMachineEvent
-
-	if isValidator {
-		event = coreTypes.StateMachineEvent_Consensus_IsSyncedValidator
-	} else {
-		event = coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator
-	}
-
-	if err := m.GetBus().GetStateMachineModule().SendEvent(event); err != nil {
+	// TODO: this is temporary, check if node is validator, and transition accordingly
+	m.logger.Info().Msg("Node is synched, transitions as validator \n")
+	if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator); err != nil {
 		m.logger.Err(err).Msg("Couldn't send state transition event")
 	}
 }
@@ -326,7 +292,7 @@ func (m *stateSync) requestBlocks() {
 	m.m.Lock()
 	defer m.m.Unlock()
 
-	fmt.Println("Requesting blocks")
+	m.logger.Info().Msg("Requesting blocks")
 	consensusMod := m.GetBus().GetConsensusModule()
 	nodeAddress := consensusMod.GetNodeAddress()
 
@@ -350,8 +316,8 @@ func (m *stateSync) requestBlocks() {
 
 // Returns max block height metadainfo received from all peers by aggregating responses in the buffer.
 func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataResponse {
-	//m.m.Lock()
-	//defer m.m.Unlock()
+	m.m.Lock()
+	defer m.m.Unlock()
 
 	metadataResponse := m.aggregatedSyncMetadata
 
@@ -368,7 +334,7 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 
 	m.logger.Debug().Msgf("aggregateMetadataResponses, max height: %d", metadataResponse.MaxHeight)
 
-	//clear the buffer
+	//clear buffer
 	m.syncMetadataBuffer = make([]*typesCons.StateSyncMetadataResponse, 0)
 
 	return metadataResponse
