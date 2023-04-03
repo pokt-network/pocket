@@ -111,8 +111,6 @@ func (m *stateSync) CurrentState() state {
 // 2. If the node is currently syncing, it updates the current sync state, by updating the ending height.
 func (m *stateSync) TriggerSync() error {
 	m.logger.Info().Msg("Triggering syncing...")
-	//m.m.Lock()
-	//defer m.m.Unlock()
 
 	if m.snycing { // if the node is currently syncing, update the sync state
 		m.logger.Info().Msg("Node is already syncing, so updating the sync state.")
@@ -228,7 +226,7 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 	m.logger.Info().Fields(m.logHelper(metaDataRes.PeerAddress)).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
 
 	m.syncMetadataBuffer = append(m.syncMetadataBuffer, metaDataRes)
-	m.logger.Info().Msg("Finished handling StateSync MetadataResponse")
+	//m.logger.Info().Msg("Finished handling StateSync MetadataResponse")
 
 	return nil
 }
@@ -242,38 +240,40 @@ func (m *stateSync) SetAggregatedSyncMetadata(metadata *typesCons.StateSyncMetad
 	m.aggregatedSyncMetadata = metadata
 }
 
-// Snyc requests missing blocks one by one from its peers.
-// Checks on blockReceived channel to see which block is received and persisted.
-// Updates the current height of the State  with every reiceved block/
+// Snyc requests missing blocks one by one from its peers, and updates the syncing state (startingHeight, height, endingHeight).
+// Sync listens on blockReceived channel, which sends heights of the persisted blocks received from peers. It uses this channel to update the height of the state: m.state.height = persistedBlockHeight
 // if the received block is the target height, it will perform FSM state transition.
 // else it will request the next block (after waiting sometime) and repeat the process.
-// check how others handle re-requesting blocks
 func (m *stateSync) Sync() {
 	m.logger.Info().Msg("Node is starting snycing...")
 
+	// Request blocks from the starting height to the ending height
+	m.requestBlocks()
+
+	// start timer to define a timeout period to re-request missing blocks.
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
-
-	m.requestBlocks()
 
 loop:
 	for {
 		select {
+		// check if the node is synched with the network
 		case <-ticker.C:
 			if m.state.height == m.state.endingHeight {
 				m.logger.Info().Msgf("Node is synched for state: height: %d, starting height: %d, ending height: %d", m.state.height, m.state.startingHeight, m.state.endingHeight)
 				break loop
 			}
+			// if not synched, request blocks again
 			m.logger.Info().Msgf("Node is NOT synched for state: height: %d, starting height: %d, ending height: %d, requesting blocks", m.state.height, m.state.startingHeight, m.state.endingHeight)
 			m.requestBlocks()
 
+		// update the state with the received block height
 		case persistedBlockHeight := <-m.state.blockReceived:
 			m.state.height = persistedBlockHeight
 			m.logger.Info().Msgf("Received block: %d, updating the state", persistedBlockHeight)
 
 		case <-m.ctx.Done():
 			return
-
 		}
 	}
 
@@ -284,9 +284,8 @@ loop:
 	}
 }
 
+// requestBlocks requests missing blocks one by one from its peers.
 func (m *stateSync) requestBlocks() {
-	m.m.Lock()
-	defer m.m.Unlock()
 
 	m.logger.Info().Msg("Requesting blocks")
 	consensusMod := m.GetBus().GetConsensusModule()
@@ -312,9 +311,6 @@ func (m *stateSync) requestBlocks() {
 
 // Returns max block height metadainfo received from all peers by aggregating responses in the buffer.
 func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataResponse {
-	m.m.Lock()
-	defer m.m.Unlock()
-
 	metadataResponse := m.aggregatedSyncMetadata
 
 	//aggregate metadataResponses by setting the metadataResponse
@@ -336,14 +332,13 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 	return metadataResponse
 }
 
-// Periodically (initially by using timers) queries the network by sending metadata requests to peers using broadCastStateSyncMessage() function.
-// Update frequency can be tuned accordingly to the state. Initially, it will have a static timer for periodic snych.
+// metadataSyncLoop periodically queries the network by sending metadata requests to peers using broadCastStateSyncMessage.
 // CONSIDER: Improving meta data request synchronistaion, without timers.
 func (m *stateSync) metadataSyncLoop() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ticker := time.NewTicker(40 * time.Second)
+	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
 
 	for {

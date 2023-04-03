@@ -36,7 +36,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Replica Reshing utility")
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Replica Refreshing utility")
 
 	// Clear the previous utility unitOfWork, if it exists, and create a new one
 	if err := m.refreshUtilityUnitOfWork(); err != nil {

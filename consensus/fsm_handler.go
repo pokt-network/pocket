@@ -12,8 +12,8 @@ import (
 
 // HandleEvent handles FSM state transition events.
 func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
-	//m.m.Lock()
-	//defer m.m.Unlock()
+	m.m.Lock()
+	defer m.m.Unlock()
 
 	m.logger.Info().Msgf("Received a state transition message: %s", transitionMessageAny)
 

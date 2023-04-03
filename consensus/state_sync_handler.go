@@ -11,9 +11,6 @@ import (
 )
 
 func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any) error {
-	//m.m.Lock()
-	//defer m.m.Unlock()
-
 	m.logger.Info().Msg("Handling StateSyncMessage, consensus module")
 
 	switch stateSyncMessageAny.MessageName() {
@@ -59,8 +56,8 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 
 // HandleGetBlockResponse handles the received block. It validates the block, quorum certificate and applies to its persistence
 func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-	//m.m.Lock()
-	//defer m.m.Unlock()
+	m.m.Lock()
+	defer m.m.Unlock()
 
 	block := blockRes.Block
 	maxPersistedHeight, err := m.maximumPersistedBlockHeight()
