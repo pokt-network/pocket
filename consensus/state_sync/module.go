@@ -223,16 +223,6 @@ func (m *stateSync) SetLogPrefix(logPrefix string) {
 	m.logPrefix = logPrefix
 }
 
-// func (m *stateSync) EnableServerMode() error {
-// 	m.serverMode = true
-// 	return nil
-// }
-
-// func (m *stateSync) DisableServerMode() error {
-// 	m.serverMode = false
-// 	return nil
-// }
-
 func (m *stateSync) EnableServerMode() error {
 	m.serverMode = true
 	return nil
@@ -313,15 +303,8 @@ loop:
 		}
 	}
 
-	// TODO this must be initialized and cached in consensus module
-	// isValidator, err := m.GetBus().GetConsensusModule().IsValidator()
-	// if err != nil {
-	// 	m.logger.Err(err).Msg("Couldn't check if the node is validator")
-	// 	return
-	// }
-
-	// TECHDEBT: this is a temporary fix to make the node a validator
-	// TODO! check if node is validator or not, how?
+	// TECHDEBT: this is a temporary fix, assuming node is a validator
+	// TODO check if node is validator and transition accordingly
 	isValidator := true
 
 	m.logger.Info().Msg("Noce is synched, transitions as validator \n")

@@ -58,8 +58,8 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 
 // HandleGetBlockResponse handles the received block. It validates the block, quorum certificate and applies to its persistence
 func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-	m.m.Lock()
-	defer m.m.Unlock()
+	//m.m.Lock()
+	//defer m.m.Unlock()
 	//m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse, Transactions: %x", blockRes.Block.Transactions)
 
 	block := blockRes.Block
