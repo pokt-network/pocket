@@ -2,69 +2,96 @@ package e2e_tests
 
 import (
 	"testing"
+	"time"
+
+	"github.com/benbjohnson/clock"
+	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
 
 func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
-	t.Skip()
-	/*
-		// Test preparation
-		clockMock := clock.NewMock()
-		timeReminder(t, clockMock, time.Second)
 
-		runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-		buses := GenerateBuses(t, runtimeMgrs)
+	// // Test preparation
+	// clockMock := clock.NewMock()
+	// timeReminder(t, clockMock, time.Second)
 
-		// Create & start test pocket nodes
-		eventsChannel := make(modules.EventsChannel, 100)
-		pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-		StartAllTestPocketNodes(t, pocketNodes)
+	// runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	// buses := GenerateBuses(t, runtimeMgrs)
 
-		testHeight := uint64(4)
+	// // Create & start test pocket nodes
+	// eventsChannel := make(modules.EventsChannel, 100)
+	// pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+	// StartAllTestPocketNodes(t, pocketNodes)
 
-		// Choose node 1 as the server node
-		// Set server node's height to test height.
-		serverNode := pocketNodes[1]
-		serverNodePeerId := serverNode.GetBus().GetConsensusModule().GetNodeAddress()
-		serverNodeConsensusModImpl := GetConsensusModImpl(serverNode)
-		serverNodeConsensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
+	// testHeight := uint64(4)
 
-		// We choose node 2 as the requester node.
-		requesterNode := pocketNodes[2]
-		requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
+	clockMock := clock.NewMock()
+	timeReminder(t, clockMock, time.Second)
 
-		// Test MetaData Req
-		stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
-			Message: &typesCons.StateSyncMessage_MetadataReq{
-				MetadataReq: &typesCons.StateSyncMetadataRequest{
-					PeerAddress: requesterNodePeerAddress,
-				},
+	numberOfValidators := 4
+	numberOfPersistedDummyBlocks := uint64(4)
+	// current height of the node is one plus the number of persisted dummy blocks
+	testHeight := numberOfPersistedDummyBlocks
+	//testStep := uint8(consensus.NewRound)
+	//testRound := uint64(1)
+
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numberOfValidators, clockMock)
+	buses := GenerateBuses(t, runtimeMgrs)
+
+	// Create & start test pocket nodes
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+
+	GenerateDummyBlocksWithQC(t, testHeight, uint64(numberOfValidators), pocketNodes)
+	StartAllTestPocketNodes(t, pocketNodes)
+
+	// Choose node 1 as the server node
+	// Set server node's height to test height.
+	serverNode := pocketNodes[1]
+	serverNodePeerId := serverNode.GetBus().GetConsensusModule().GetNodeAddress()
+	serverNode.GetBus().GetConsensusModule().SetAggregatedStateSyncMetadata(1, 4, serverNodePeerId)
+	//serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
+
+	// We choose node 2 as the requester node.
+	requesterNode := pocketNodes[2]
+	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
+
+	// Test MetaData Req
+	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
+		Message: &typesCons.StateSyncMessage_MetadataReq{
+			MetadataReq: &typesCons.StateSyncMetadataRequest{
+				PeerAddress: requesterNodePeerAddress,
 			},
-		}
-		anyProto, err := anypb.New(stateSyncMetaDataReqMessage)
-		require.NoError(t, err)
+		},
+	}
+	anyProto, err := anypb.New(stateSyncMetaDataReqMessage)
+	require.NoError(t, err)
 
-		// Send metadata request to the server node
-		P2PSend(t, serverNode, anyProto)
+	// Send metadata request to the server node
+	P2PSend(t, serverNode, anyProto)
 
-		// Start waiting for the metadata request on server node,
-		errMsg := "StateSync Metadata Request"
-		receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 250, false)
-		require.NoError(t, err)
+	// Start waiting for the metadata request on server node,
+	errMsg := "StateSync Metadata Request"
+	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 250, false)
+	require.NoError(t, err)
 
-		msg, err := codec.GetCodec().FromAny(receivedMsg[0])
-		require.NoError(t, err)
+	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
+	require.NoError(t, err)
 
-		stateSyncMetaDataResMessage, ok := msg.(*typesCons.StateSyncMessage)
-		require.True(t, ok)
+	stateSyncMetaDataResMessage, ok := msg.(*typesCons.StateSyncMessage)
+	require.True(t, ok)
 
-		metaDataRes := stateSyncMetaDataResMessage.GetMetadataRes()
-		require.NotEmpty(t, metaDataRes)
+	metaDataRes := stateSyncMetaDataResMessage.GetMetadataRes()
+	require.NotEmpty(t, metaDataRes)
 
-		require.Equal(t, uint64(4), metaDataRes.MaxHeight)
-		require.Equal(t, uint64(1), metaDataRes.MinHeight)
-		require.Equal(t, serverNodePeerId, metaDataRes.PeerAddress)
+	require.Equal(t, uint64(4), metaDataRes.MaxHeight)
+	require.Equal(t, uint64(1), metaDataRes.MinHeight)
+	require.Equal(t, serverNodePeerId, metaDataRes.PeerAddress)
 
-	*/
 }
 
 func TestStateSync_ServerGetBlock_Success(t *testing.T) {

@@ -386,15 +386,8 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().GetMaximumBlockHeight().DoAndReturn(func() (uint64, error) {
-		currentHeight := bus.GetConsensusModule().CurrentHeight()
-		var maxPersistedHeight uint64
-		if currentHeight == 0 {
-			maxPersistedHeight = currentHeight
-		} else {
-			maxPersistedHeight = currentHeight - 1
-		}
 
-		return maxPersistedHeight, nil
+		return uint64(len(stateSyncDummyblocks)), nil
 	}).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().GetMinimumBlockHeight().DoAndReturn(func() (uint64, error) {
