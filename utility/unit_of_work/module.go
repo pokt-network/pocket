@@ -199,7 +199,7 @@ func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, er
 // TODO(@deblasis): change tracking here
 func (uow *baseUtilityUnitOfWork) Commit(quorumCert []byte) error {
 	uow.logger.Debug().Msg("committing the rwPersistenceContext...")
-	if err := uow.persistenceRWContext.Commit(uow.proposalProposerAddr, quorumCert, uow.proposalBlockTxs); err != nil {
+	if err := uow.persistenceRWContext.Commit(uow.proposalProposerAddr, quorumCert); err != nil {
 		return err
 	}
 	uow.persistenceRWContext = nil

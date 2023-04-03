@@ -96,9 +96,8 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		// Commit the transactions above
 		proposer := []byte("placeholderProposer")
 		quorumCert := []byte("placeholderQuorumCert")
-		transactions := [][]byte{{'a'}, {'a'}}
 
-		err = db.Commit(proposer, quorumCert, transactions)
+		err = db.Commit(proposer, quorumCert)
 		require.NoError(t, err)
 
 		// Retrieve the block
@@ -174,9 +173,8 @@ func TestStateHash_ReplayingRandomTransactionsIsDeterministic(t *testing.T) {
 
 				proposer := getRandomBytes(proposerBytesSize)
 				quorumCert := getRandomBytes(quorumCertBytesSize)
-				transactions := [][]byte{{'a'}, {'a'}}
 
-				err = db.Commit(proposer, quorumCert, transactions)
+				err = db.Commit(proposer, quorumCert)
 				require.NoError(t, err)
 
 				replayableBlocks[height] = &TestReplayableBlock{
@@ -222,9 +220,8 @@ func verifyReplayableBlocks(t *testing.T, replayableBlocks []*TestReplayableBloc
 		stateHash, err := db.ComputeStateHash()
 		require.NoError(t, err)
 		require.Equal(t, block.hash, stateHash)
-		transactions := [][]byte{{'a'}, {'a'}}
 
-		err = db.Commit(block.proposer, block.quorumCert, transactions)
+		err = db.Commit(block.proposer, block.quorumCert)
 		require.NoError(t, err)
 	}
 }

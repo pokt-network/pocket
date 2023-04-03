@@ -57,8 +57,8 @@ func (p *PostgresContext) GetHeight() (int64, error) {
 }
 
 // Creates a block protobuf object using the schema defined in the persistence module
-// TODO_IN_THIS_COMMIT: Do not pass the txs to the block - it creates an inconsistency
-func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte, txs [][]byte) (*coreTypes.Block, error) {
+func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTypes.Block, error) {
+	// Retrieve the previous block hash
 	var prevBlockHash string
 	if p.Height != 0 {
 		var err error
@@ -68,8 +68,19 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte, txs [][]
 		}
 	}
 
-	// txs txIndexer.getCtxAndTx
+	// Retrieve the indexed transactions at the current height in this context
+	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
+	if err != nil {
+		return nil, err
+	}
 
+	// Retrieve the transactions from the txResults
+	txs := make([][]byte, len(txResults))
+	for i, txResult := range txResults {
+		txs[i] = txResult.GetTx()
+	}
+
+	// Prepare the block proto
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            uint64(p.Height),
 		StateHash:         p.stateHash,
@@ -104,6 +115,6 @@ func (p *PostgresContext) storeBlock(block *coreTypes.Block) error {
 	if err != nil {
 		return err
 	}
-	p.logger.Info().Uint64("height", block.BlockHeader.Height).Msgf("Storing block in block store, transactions: %x", block.Transactions)
+	p.logger.Info().Uint64("height", block.BlockHeader.Height).Msg("Storing block in block store, transactions.")
 	return p.blockStore.Set(utils.HeightToBytes(uint64(p.Height)), blockBz)
 }

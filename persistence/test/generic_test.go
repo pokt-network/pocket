@@ -192,7 +192,7 @@ func getAllActorsUpdatedAtHeightTest[T any](
 	require.Equal(t, 1, len(accs))
 
 	// Commit & close the context at height 1
-	require.NoError(t, db.Commit(nil, nil, nil))
+	require.NoError(t, db.Commit(nil, nil))
 	// start a new context at height 2
 	db = NewTestPostgresContext(t, 2)
 

@@ -15,7 +15,6 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	modifiedAmount := "10"
 	proposerAddr := []byte("proposerAddr")
 	quorumCert := []byte("quorumCert")
-	transactions := [][]byte{{'a'}, {'a'}}
 
 	// setup a write context, insert a pool and commit it
 	context, err := testPersistenceMod.NewRWContext(0)
@@ -23,7 +22,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	defer context.Release()
 
 	require.NoError(t, context.InsertPool(poolName, originalAmount))
-	require.NoError(t, context.Commit(proposerAddr, quorumCert, transactions))
+	require.NoError(t, context.Commit(proposerAddr, quorumCert))
 
 	// verify the insert in the previously committed context worked
 	contextA, err := testPersistenceMod.NewRWContext(0)

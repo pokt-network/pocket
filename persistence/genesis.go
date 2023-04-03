@@ -128,7 +128,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 
 	// This updates the DB, blockstore, and commits the genesis state.
 	// Note that the `quorumCert for genesis` is nil.
-	if err = rwCtx.Commit(nil, nil, nil); err != nil {
+	if err = rwCtx.Commit(nil, nil); err != nil {
 		m.logger.Fatal().Err(err).Msg("an error occurred committing the genesis state to the DB")
 	}
 }
