@@ -21,8 +21,7 @@ const (
 	DisregardBlock           = "Discarding block"
 
 	// WARN
-	NilUtilityUOWWarning         = "⚠️ utilityUnitOfWork expected to be nil but is not."
-	InvalidPartialSigInQCWarning = "⚠️ [WARN] QC contains an invalid partial signature"
+	NilUtilityUOWWarning = "⚠️ utilityUnitOfWork expected to be nil but is not."
 
 	// DEBUG
 	DebugResetToGenesis  = "🧑‍💻 Resetting to genesis..."
