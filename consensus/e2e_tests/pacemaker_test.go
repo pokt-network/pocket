@@ -190,19 +190,6 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 
 	leader.GetBus().GetConsensusModule().SetBlock(block)
 
-	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS
-	for _, pocketNode := range pocketNodes {
-		// Update height, step, leaderId, and utility context via setters exposed with the debug interface
-		pocketNode.GetBus().GetConsensusModule().SetHeight(testHeight)
-		pocketNode.GetBus().GetConsensusModule().SetStep(testStep)
-
-		// utilityUnitOfWork is only set on new rounds, which is skipped in this test
-		utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(testHeight))
-		require.NoError(t, err)
-		//consensusModImpl.MethodByName("SetUtilityUnitOfWork").Call([]reflect.Value{reflect.ValueOf(utilityUnitOfWork)})
-		pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
-	}
-
 	// Set the leader to be in the highest round.
 	pocketNodes[1].GetBus().GetConsensusModule().SetRound(leaderRound - 2)
 	pocketNodes[2].GetBus().GetConsensusModule().SetRound(leaderRound - 3)

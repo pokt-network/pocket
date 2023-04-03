@@ -386,7 +386,10 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().GetMaximumBlockHeight().DoAndReturn(func() (uint64, error) {
-
+		// if it is checked for an unsynched node, return the current height - 1
+		if int(bus.GetConsensusModule().CurrentHeight()) <= len(stateSyncDummyblocks) {
+			return bus.GetConsensusModule().CurrentHeight() - 1, nil
+		}
 		return uint64(len(stateSyncDummyblocks)), nil
 	}).AnyTimes()
 
@@ -550,7 +553,7 @@ func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus
 			t.Logf("CALLING Node is syncing")
 			//consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(maxHeight)})
 			//consensusModImpl.MethodByName("TriggerSync").Call([]reflect.Value{})
-			bus.GetConsensusModule().DebugTriggerSync()
+			//bus.GetConsensusModule().DebugTriggerSync()
 
 			//bus.GetConsensusModule().TriggerSync()
 			return nil

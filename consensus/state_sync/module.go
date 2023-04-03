@@ -133,7 +133,7 @@ func (m *stateSync) TriggerSync() error {
 
 		if maxPersistedBlockHeight > m.aggregatedSyncMetadata.MaxHeight || m.aggregatedSyncMetadata.MaxHeight == 0 {
 			// should only happen when node is back online, or bootstraps, and the aggregated metadata is not updated yet.
-			m.logger.Info().Msg("Unsynched event is triggered, but aggregated metadata's height is less than node's current height. So skipping the syncing. Syncing will start when there is a new block proposal and aggregated metadata is updated.")
+			m.logger.Info().Msgf("NodeId: %d, Unsynched event is triggered, but aggregated metadata's height: %d is less than node's maxpersisted height: %d. So skipping the syncing. Syncing will start when there is a new block proposal and aggregated metadata is updated.", m.bus.GetConsensusModule().GetNodeId(), m.aggregatedSyncMetadata.MaxHeight, maxPersistedBlockHeight)
 			//return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
 			return nil
 		} else if maxPersistedBlockHeight == m.aggregatedSyncMetadata.MaxHeight {
@@ -340,6 +340,7 @@ loop:
 }
 
 func (m *stateSync) requestBlocks() {
+
 	fmt.Println("Requesting blocks")
 	consensusMod := m.GetBus().GetConsensusModule()
 	nodeAddress := consensusMod.GetNodeAddress()
