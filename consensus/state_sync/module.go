@@ -16,6 +16,7 @@ const (
 	stateSyncModuleName = "stateSyncModule"
 )
 
+// TODO_IN_THIS_COMMIT(goku): Move this into a README and add a diagram
 // State sync implements synchronization for hotpokt blocks.
 //
 // Pocket node take one or two rules during state snychronization: client and/or server.
@@ -38,10 +39,7 @@ type StateSyncModule interface {
 	EnableServerMode() error
 	DisableServerMode() error
 
-	SendStateSyncMessage(msg *typesCons.StateSyncMessage, receiverPeerAddress cryptoPocket.Address, block_height uint64) error
-
-	//SetStateSyncMetadataBuffer([]*typesCons.StateSyncMetadataResponse)
-	//GetStateSyncMetadataBuffer() []*typesCons.StateSyncMetadataResponse
+	SendStateSyncMessage(msg *typesCons.StateSyncMessage, dst cryptoPocket.Address, height uint64) error
 
 	// Getter functions for the aggregated metadata and the metadata buffer, used by consensus module.
 	GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse

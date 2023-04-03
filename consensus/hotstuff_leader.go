@@ -77,7 +77,6 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 			return
 		}
 		m.block = block
-		//fmt.Println("PRepared this block with TXs: ", m.block.Transactions)
 	} else {
 		// Leader acts like a replica if `prepareQC` is not `nil`
 		// TODO: Do we need to call `validateProposal` here similar to how replicas does it
@@ -365,8 +364,6 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 	if err != nil {
 		return err
 	}
-
-	//fmt.Println("Leader thinks validators are: ", validators)
 
 	actorMapper := typesCons.NewActorMapper(validators)
 	validatorMap := actorMapper.GetValidatorMap()

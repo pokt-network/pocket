@@ -309,8 +309,6 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 		return err
 	}
 
-	//fmt.Println("Replica thinks validators are: ", validators)
-
 	actorMapper := typesCons.NewActorMapper(validators)
 	validatorMap := actorMapper.GetValidatorMap()
 	valAddrToIdMap := actorMapper.GetValAddrToIdMap()

@@ -120,6 +120,5 @@ func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionE
 	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
 
 	m.nodeId = valAddrToIdMap[m.nodeAddress]
-	//fmt.Println("Set nodeId to: ", m.nodeId)
 	return nil
 }

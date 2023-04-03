@@ -312,8 +312,6 @@ func TestStateSync_UnsyncedPeerSyncsABlock_Success(t *testing.T) {
 
 		blockReq := stateSyncBlockReqMessage.GetGetBlockReq()
 		require.NotEmpty(t, blockReq)
-
-		fmt.Println("Block req is: ", blockReq)
 	}
 
 	// send the block request sent by unsynched node to all nodes
@@ -332,8 +330,6 @@ func TestStateSync_UnsyncedPeerSyncsABlock_Success(t *testing.T) {
 
 		stateSyncBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
 		require.True(t, ok)
-
-		fmt.Println("Received Get Block Response: ", stateSyncBlockResMessage)
 
 		blockReq := stateSyncBlockResMessage.GetGetBlockRes()
 		require.NotEmpty(t, blockReq)
