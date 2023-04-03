@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.3] - 2023-04-03
 
-- Update state machine states: `Stopped`, `P2P_Bootstrapping`, `P2P_Bootstrapped`, `Consensus_Unsynced`, `Consensus_SyncMode`, `Consensus_Synched`, `Consensus_Pacemaker`.
+- Update state machine states: `Stopped`, `P2P_Bootstrapping`, `P2P_Bootstrapped`, `Consensus_Unsynced`, `Consensus_SyncMode`, `Consensus_Synced`, `Consensus_Pacemaker`.
 - Update state transition events: `Start`, `P2P_IsBootstrapped`, `Consensus_IsUnsynced`, `Consensus_IsSyncing`, `Consensus_IsCaughtUpValidator`, `Consensus_IsCaughtUpNonValidator`, `Consensus_IsUnsynced`.
 
 ## [0.0.0.2] - 2023-02-24

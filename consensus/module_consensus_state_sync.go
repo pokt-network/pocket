@@ -25,11 +25,6 @@ func (m *consensusModule) GetNodeAddress() string {
 // IsSynced implements the interface function for checking if the node is synced with the network.
 func (m *consensusModule) IsSynced() (bool, error) {
 	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	// persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight - 1))
-	// if err != nil {
-	// 	return false, err
-	// }
-	// defer persistenceContext.Close()
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight - 1)) // Unknown height
 	if err != nil {
 		return false, err
