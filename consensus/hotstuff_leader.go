@@ -30,14 +30,14 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader starting")
+	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("HandleNewRound Leader starting")
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.logger.Error().Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Checking votes")
+	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("HandleNewRound Leader Checking votes")
 
 	// DISCUSS: Do we need to pause for `MinBlockFreqMSec` here to let more transactions or should we stick with optimistic responsiveness?
 
@@ -60,7 +60,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Reshing utility")
+	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("HandleNewRound Leader Reshing utility")
 
 	// Likely to be `nil` if blockchain is progressing well.
 	// TECHDEBT: How do we properly validate `prepareQC` here?
@@ -89,12 +89,12 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		m.block = highPrepareQC.Block
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Step is updated to Prepare")
+	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("HandleNewRound Leader Step is updated to Prepare")
 
 	m.step = Prepare
 	m.hotstuffMempool[NewRound].Clear()
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Creating and Sending Prepare Message")
+	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("HandleNewRound Leader Creating and Sending Prepare Message")
 
 	prepareProposeMessage, err := CreateProposeMessage(m.height, m.round, Prepare, m.block, highPrepareQC)
 	if err != nil {
@@ -124,7 +124,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Leader Checking votes")
+	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("HandlePrepare Leader Checking votes")
 
 	if err := m.didReceiveEnoughMessageForStep(Prepare); err != nil {
 		m.logger.Info().Fields(msgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
@@ -165,7 +165,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Leader running sendToLeader")
+	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("HandlePrepare Leader running sendToLeader")
 	m.sendToLeader(precommitVoteMessage)
 }
 
@@ -180,7 +180,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		return
 	}
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePreCommit Leader checking enough votes")
+	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("HandlePreCommit Leader checking enough votes")
 
 	if err := m.didReceiveEnoughMessageForStep(PreCommit); err != nil {
 		m.logger.Info().Fields(msgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())

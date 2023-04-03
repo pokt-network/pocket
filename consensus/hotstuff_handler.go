@@ -17,7 +17,7 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	// IMPROVE: Add source of message here
 	loggingFields := msgToLoggingFields(msg)
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("Received hotstuff msg")
+	m.logger.Debug().Fields(msgToLoggingFields(msg)).Msg("Received hotstuff msg")
 
 	// Pacemaker - Liveness & safety checks
 	if shouldHandle, err := m.paceMaker.ShouldHandleMessage(msg); !shouldHandle {

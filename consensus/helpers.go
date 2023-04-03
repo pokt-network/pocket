@@ -324,11 +324,3 @@ func (m *consensusModule) maximumPersistedBlockHeight() (uint64, error) {
 
 	return maxHeight, nil
 }
-
-func (m *consensusModule) hotstuffMsgLogHelper(msg *typesCons.HotstuffMessage) map[string]any {
-	return map[string]any{
-		"step":   msg.Step,
-		"height": msg.Height,
-		"round":  msg.Round,
-	}
-}
