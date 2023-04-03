@@ -84,6 +84,9 @@ func (p *PostgresContext) GetAllParamsJSON(height int64) (string, error) {
 	ctx, tx := p.getCtxAndTx()
 	var paramsJSON string
 	err := tx.QueryRow(ctx, types.GetAllParamsOrFlagsJSONQuery(types.ParamsTableName, height)).Scan(&paramsJSON)
+	if err != nil && strings.Contains(err.Error(), errCannotScanNULL) {
+		err = nil
+	}
 	return paramsJSON, err
 }
 
@@ -112,6 +115,9 @@ func (p *PostgresContext) GetAllFlagsJSON(height int64) (string, error) {
 	ctx, tx := p.getCtxAndTx()
 	var paramsJSON string
 	err := tx.QueryRow(ctx, types.GetAllParamsOrFlagsJSONQuery(types.FlagsTableName, height)).Scan(&paramsJSON)
+	if err != nil && strings.Contains(err.Error(), errCannotScanNULL) {
+		err = nil
+	}
 	return paramsJSON, err
 }
 

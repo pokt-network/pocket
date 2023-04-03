@@ -27,6 +27,9 @@ const (
 
 	// TODO: Make this a node configuration
 	connTimeout = 5 * time.Second
+
+	// errCannotScanNULL is the error returned when a NULL value is scanned via #pgx.Row.Scan(). For reference: https://pkg.go.dev/github.com/jackc/pgx/v5@v5.2.0#Row.Scan
+	errCannotScanNULL = "cannot scan NULL"
 )
 
 // TODO: Move schema related functionality into its own package
