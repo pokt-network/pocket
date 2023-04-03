@@ -74,13 +74,17 @@ type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
 
-	// Compares the persisted state with the aggregated state of the network. If the persisted state is behind the network state, i.e. that node is not synched, it will return false.
+	// IsSynced compares the persisted state with the aggregated state of the network.
+	// If the persisted state is behind the network state, i.e. that node is not synced, it will return false.
 	IsSynced() (bool, error)
+
+	// DISCUSS_IN_THIS_COMMIT: Should we remove this?
 	IsValidator() (bool, error)
 }
 
-// This interface represents functions exposed by the Consensus module for mainly used for testing.
-// This interface is not intended to be used by any other module than testing in Consensus module.
+// ConsensusDebugModule exposes functionality used for testing & development purposes.
+// NOT INTENDED TO BE USED IN PRODUCTION.
+// TODO: Add a flag so this is not compiled in the prod binary.
 type ConsensusDebugModule interface {
 	HandleDebugMessage(*messaging.DebugMessage) error
 
@@ -91,6 +95,7 @@ type ConsensusDebugModule interface {
 
 	SetUtilityUnitOfWork(UtilityUnitOfWork)
 
+	// SetAggregatedStateSyncMetadata is used to set peer's aggregated metadata in testing scenarios to simulate periodic metadata synchronization.
 	SetAggregatedStateSyncMetadata(minHeight uint64, maxHeight uint64, peerAddress string)
 	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
 	DebugTriggerSync() error

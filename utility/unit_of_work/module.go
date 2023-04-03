@@ -122,7 +122,8 @@ func (u *baseUtilityUnitOfWork) CreateAndApplyProposalBlock(proposer []byte, max
 
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
 func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, err error) {
-	u.logger.Info().Msgf("Apply Block begins with stateHash: %s", stateHash)
+	u.logger.Info().Str("state_hash", stateHash).Msg("ApplyBlock - about to start")
+
 	lastByzantineValidators, err := u.prevBlockByzantineValidators()
 	if err != nil {
 		return "", nil, err
@@ -135,7 +136,7 @@ func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, er
 
 	mempool := u.GetBus().GetUtilityModule().GetMempool()
 
-	u.logger.Info().Msgf("Apply Block will itarate over transactions")
+	u.logger.Info().Int("num_txs", len(u.proposalBlockTxs)).Msg("ApplyBlock - about to iterate over transactions")
 
 	// deliver txs lifecycle phase
 	for index, txProtoBytes := range u.proposalBlockTxs {
@@ -176,7 +177,7 @@ func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, er
 		}
 	}
 
-	u.logger.Info().Msgf("Apply Block - ending block lifecycle")
+	u.logger.Info().Msg("Apply Block - ending block lifecycle")
 
 	// end block lifecycle phase
 	if err := u.endBlock(u.proposalProposerAddr); err != nil {

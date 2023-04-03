@@ -360,18 +360,14 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	ctrl := gomock.NewController(t)
 	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
 	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
+	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
 
-	//persistence block must have access to the dummy valid blocks
-	// CHECK IF NUMVALIDATORS CAN BE AN ISSUE HERE
-	//pocketNodes
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
-
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
-
-	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
+	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
 
 	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
 		heightInt := utils.HeightFromBytes(height)
@@ -382,8 +378,6 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 		block := stateSyncDummyblocks[heightInt-1]
 		return codec.GetCodec().Marshal(block)
 	}).AnyTimes()
-
-	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().GetMaximumBlockHeight().DoAndReturn(func() (uint64, error) {
 		// if it is checked for an unsynched node, return the current height - 1

@@ -57,7 +57,8 @@ func (p *PostgresContext) GetHeight() (int64, error) {
 }
 
 // Creates a block protobuf object using the schema defined in the persistence module
-func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte, transaction [][]byte) (*coreTypes.Block, error) {
+// TODO_IN_THIS_COMMIT: Do not pass the txs to the block - it creates an inconsistency
+func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte, txs [][]byte) (*coreTypes.Block, error) {
 	var prevBlockHash string
 	if p.Height != 0 {
 		var err error
@@ -66,6 +67,8 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte, transact
 			return nil, err
 		}
 	}
+
+	// txs txIndexer.getCtxAndTx
 
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            uint64(p.Height),
@@ -76,7 +79,7 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte, transact
 	}
 	block := &coreTypes.Block{
 		BlockHeader:  blockHeader,
-		Transactions: transaction,
+		Transactions: txs,
 	}
 
 	return block, nil

@@ -353,16 +353,16 @@ test_utility: ## Run all go utility module unit tests
 
 .PHONY: test_shared
 test_shared: ## Run all go unit tests in the shared module
-	go test ${VERBOSE_TEST} -p 1 ./shared/...
+	go test ${VERBOSE_TEST} -p=1 -count=1 ./shared/...
 
 .PHONY: test_consensus
 test_consensus: ## Run all go unit tests in the consensus module
-	go test ${VERBOSE_TEST} -count=1 ./consensus/...
+	go test ${VERBOSE_TEST} -p=1 -count=1 ./consensus/...
 
 # These tests are isolated to a single package which enables logs to be streamed in realtime. More details here: https://stackoverflow.com/a/74903989/768439
 .PHONY: test_consensus_e2e
 test_consensus_e2e: ## Run all go t2e unit tests in the consensus module w/ log streaming
-	go test ${VERBOSE_TEST} -count=1 ./consensus/e2e_tests/...
+	go test ${VERBOSE_TEST} -p=1 -count=1 ./consensus/e2e_tests/...
 
 .PHONY: test_consensus_concurrent_tests
 test_consensus_concurrent_tests: ## Run unit tests in the consensus module that could be prone to race conditions (#192)
@@ -381,7 +381,7 @@ test_pacemaker: ## Run all go unit tests related to hotstuff pacemaker
 
 .PHONY: test_statesync
 test_statesync: ## Run all go unit tests related to hotstuff statesync
-	go test -v ${VERBOSE_TEST} -count=1  -run StateSync ./consensus/e2e_tests
+	go test ${VERBOSE_TEST} -count=1  -run StateSync ./consensus/e2e_tests
 
 .PHONY: test_vrf
 test_vrf: ## Run all go unit tests in the VRF library

@@ -56,11 +56,11 @@ func (p *PostgresContext) ComputeStateHash() (string, error) {
 }
 
 // TECHDEBT(#327): Make sure these operations are atomic
-func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte, transactions [][]byte) error {
+func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte, txs [][]byte) error {
 	p.logger.Info().Int64("height", p.Height).Msg("About to commit block & context")
 
 	// Create a persistence block proto
-	block, err := p.prepareBlock(proposerAddr, quorumCert, transactions)
+	block, err := p.prepareBlock(proposerAddr, quorumCert, txs)
 	if err != nil {
 		return err
 	}

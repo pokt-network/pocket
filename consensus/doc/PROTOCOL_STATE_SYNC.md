@@ -5,7 +5,6 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
 - [Background](#background)
 - [State Sync - Peer Metadata](#state-sync---peer-metadata)
 - [State Sync - Peer Metadata Collection](#state-sync---peer-metadata-collection)
-- [State Sync - Peer Metadata Collection](#state-sync---peer-metadata-collection-1)
   - [State Sync Lifecycle](#state-sync-lifecycle)
 - [State Sync - Operation Modes](#state-sync---operation-modes)
   - [Unsynced Mode](#unsynced-mode)
@@ -48,8 +47,6 @@ type PeerSyncMetadata interface {
   // ...
 }
 ```
-## State Sync - Peer Metadata Collection 
-Peer metadata can be collected through the `P2P` module during the `Churn Management Protocol`. It can also be abstracted to an `ask-response` cycle where the node continuously asks this meta-information of its active peers. 
 
 ## State Sync - Peer Metadata Collection
 
@@ -59,9 +56,9 @@ Node gathers peer metadata from its peers in `StateSyncMetadataResponse` type, d
 
 ```golang
 type StateSyncMetadataResponse struct {
-    PeerAddress string
-	MinHeight   uint64
-	MaxHeight   uint64
+  PeerAddress string
+  MinHeight   uint64
+  MaxHeight   uint64
 }
 ```
 
@@ -180,7 +177,6 @@ The Node can serve data to other nodes, upon request, if `ServerMode` is enabled
 
 ### Operation Modes Lifecycle
 
-
 ```mermaid
 flowchart TD
     A[StateSync] --> B{Caught up?}
@@ -210,14 +206,18 @@ flowchart TD
 
 _IMPORTANT: `CommitBlock` is implicit in the diagram above. If any blocks processed result in an invalid `AppHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._
 
-
 ## State Sync Operation
- StateSync's state can be modified in two ways:
- 1. By the FSM, when the node is transitions to SyncMode, the state is updated.
-   - In this scenario, if the node is currently not synching, we generate a new state and trigger the sync operation.
-   - If the node is currently synching, we update the sync state, with the most up to date aggregated metadata in thread safe manner.
- 2. Indirectly by consensus module, when a new block is received the state's "height" is updated to the last persisted block in thread safe manner.
 
+The StateSync's state can be modified in two ways:
+
+1. By the FSM
+
+   - When the node is transitions to SyncMode -> state is updated
+   - If the node is not synching -> generate a new state and trigger the sync operation
+   - If the node is synching -> we update the sync state, with the most up to date aggregated metadata in thread safe manner.
+
+2. By the Consensus module
+   - New Block is received -> the state's "height" is updated
 
 ## State Sync Designs
 

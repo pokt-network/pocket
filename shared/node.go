@@ -166,28 +166,36 @@ func (m *Node) GetBus() modules.Bus {
 func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	contentType := message.GetContentType()
 	switch contentType {
+
 	case messaging.NodeStartedEventType:
 		logger.Global.Info().Msg("Received NodeStartedEvent")
 		if err := node.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
 			return err
 		}
+
 	case messaging.HotstuffMessageContentType:
-		//fmt.Println("Received HotstuffMessage: ", message)
+		// logger.Global.Debug().Msg("Received HotstuffMessage")
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
+
 	case messaging.StateSyncMessageContentType:
-		logger.Global.Info().Msg("Received StateSyncMessage")
+		logger.Global.Debug().Msg("Received StateSyncMessage")
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
+
 	case messaging.TxGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleUtilityMessage(message.Content)
+
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
+
 	case messaging.ConsensusNewHeightEventType:
 		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
+
 	case messaging.StateMachineTransitionEventType:
 		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
 		// TODO: Remove this lib once we move to Go 1.2
 		return multierr.Combine(err_consensus, err_p2p)
+
 	default:
 		logger.Global.Warn().Msgf("Unsupported message content type: %s", contentType)
 	}

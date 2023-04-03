@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"encoding/hex"
-	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -27,7 +26,6 @@ func (p *PostgresContext) GetValidator(address []byte, height int64) (operator, 
 }
 
 func (p *PostgresContext) InsertValidator(address, publicKey, output []byte, _ bool, _ int32, serviceURL, stakedTokens string, pausedHeight, unstakingHeight int64) error {
-	fmt.Println("Inserting validator")
 	return p.InsertActor(types.ValidatorActor, &coreTypes.Actor{
 		ActorType:       coreTypes.ActorType_ACTOR_TYPE_VAL,
 		Address:         hex.EncodeToString(address),
