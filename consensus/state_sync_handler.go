@@ -13,6 +13,7 @@ import (
 func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any) error {
 	//m.m.Lock()
 	//defer m.m.Unlock()
+
 	m.logger.Info().Msg("Handling StateSyncMessage, consensus module")
 
 	switch stateSyncMessageAny.MessageName() {
@@ -60,10 +61,8 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
 	//m.m.Lock()
 	//defer m.m.Unlock()
-	//m.logger.Info().Fields(m.logHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse, Transactions: %x", blockRes.Block.Transactions)
 
 	block := blockRes.Block
-	//lastPersistedBlockHeight := m.CurrentHeight() - 1
 	maxPersistedHeight, err := m.maximumPersistedBlockHeight()
 	if err != nil {
 		return err
@@ -123,12 +122,10 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 	m.logger.Info().Msg("HandleGetBlockResponse, committing the block")
 
-	//m.m.Lock()
 	if err := m.commitBlock(block); err != nil {
 		m.logger.Error().Err(err).Msg("Could not commit block, invalid QC")
 		return nil
 	}
-	//m.m.Unlock()
 
 	m.paceMaker.NewHeight()
 
@@ -139,7 +136,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 	m.logger.Info().Msgf("HandleGetBlockResponse, Block is Committed, maxPersistedHeight is: %d, current height is :%d", maxPersistedHeight, m.height)
 
-	// Send current persisted block height to the state sync module
+	// Send persisted block height to the state sync module
 	m.stateSync.PersistedBlock(block.BlockHeader.Height)
 	return nil
 }

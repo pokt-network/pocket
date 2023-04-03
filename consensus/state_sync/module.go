@@ -92,7 +92,7 @@ type stateSync struct {
 	cancel context.CancelFunc
 }
 
-// information about current state of the synching node
+// state represents the current "state" of the syncing.
 type state struct {
 	height         uint64 // latest persisted height, updated after every block is added to the module
 	startingHeight uint64 // starting height for the sync, set when state is generated
@@ -111,16 +111,13 @@ func (m *stateSync) CurrentState() state {
 // 2. If the node is currently syncing, it updates the current sync state, by updating the ending height.
 func (m *stateSync) TriggerSync() error {
 	m.logger.Info().Msg("Triggering syncing...")
-	m.m.Lock()
-	defer m.m.Unlock()
+	//m.m.Lock()
+	//defer m.m.Unlock()
 
 	if m.snycing { // if the node is currently syncing, update the sync state
-		//m.m.Lock()
 		m.logger.Info().Msg("Node is already syncing, so updating the sync state.")
 		m.state.endingHeight = m.aggregatedSyncMetadata.MaxHeight
-		//m.m.Unlock()
 	} else { // if the node is not currently syncing, generate a new sync state
-		//m.m.Lock()
 		m.logger.Info().Msg("Node is currently not syncing, so generating a new sync state.")
 		maxPersistedBlockHeight, err := m.maximumPersistedBlockHeight()
 		if err != nil {
@@ -130,7 +127,6 @@ func (m *stateSync) TriggerSync() error {
 		if maxPersistedBlockHeight > m.aggregatedSyncMetadata.MaxHeight || m.aggregatedSyncMetadata.MaxHeight == 0 {
 			// should only happen when node is back online, or bootstraps, and the aggregated metadata is not updated yet.
 			m.logger.Info().Msgf("NodeId: %d, Unsynched event is triggered, but aggregated metadata's height: %d is less than node's maxpersisted height: %d. So skipping the syncing. Syncing will start when there is a new block proposal and aggregated metadata is updated.", m.bus.GetConsensusModule().GetNodeId(), m.aggregatedSyncMetadata.MaxHeight, maxPersistedBlockHeight)
-			//return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynched)
 			return nil
 		} else if maxPersistedBlockHeight == m.aggregatedSyncMetadata.MaxHeight {
 			m.logger.Info().Msg("Node is already synched with the network, so skipping the syncing.")
@@ -344,8 +340,6 @@ func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataRes
 // Update frequency can be tuned accordingly to the state. Initially, it will have a static timer for periodic snych.
 // CONSIDER: Improving meta data request synchronistaion, without timers.
 func (m *stateSync) metadataSyncLoop() error {
-
-	//add timer channel with context to cancel the timer
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -366,8 +360,6 @@ func (m *stateSync) metadataSyncLoop() error {
 }
 
 func (m *stateSync) RequestMetadata() error {
-
-	// form a metaData request
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_MetadataReq{
 			MetadataReq: &typesCons.StateSyncMetadataRequest{
@@ -377,12 +369,10 @@ func (m *stateSync) RequestMetadata() error {
 	}
 
 	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-
 	err := m.broadcastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
 	if err != nil {
 		return err
 	}
 
 	return nil
-
 }
