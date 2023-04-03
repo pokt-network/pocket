@@ -10,7 +10,6 @@ import (
 )
 
 const (
-	DefaultLogPrefix    = "NODE"
 	stateSyncModuleName = "stateSyncModule"
 )
 
@@ -68,9 +67,7 @@ func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.
 }
 
 func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	m := &stateSync{
-		logPrefix: DefaultLogPrefix,
-	}
+	m := &stateSync{}
 
 	for _, option := range options {
 		option(m)

@@ -22,13 +22,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const (
-	DefaultLogPrefix = "NODE" // TODO(#164): Make implicit when logging is standardized
-)
-
-var (
-	_ modules.ConsensusModule = &consensusModule{}
-)
+var _ modules.ConsensusModule = &consensusModule{}
 
 type consensusModule struct {
 	base_modules.IntegratableModule
@@ -66,7 +60,6 @@ type consensusModule struct {
 	// IMPROVE(#283): Investigate whether the current approach to how the `utilityUnitOfWork` should be
 	//                managed or changed. Also consider exposing a function that exposes the context
 	//                to streamline how its accessed in the module (see the ticket).
-
 	utilityUnitOfWork modules.UtilityUnitOfWork
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
@@ -81,20 +74,20 @@ type consensusModule struct {
 
 // Implementations of the ConsensusStateSync interface
 
-func (m *consensusModule) GetNodeIdFromNodeAddress(peerAddress string) (uint64, error) {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-	if err != nil {
-		// REFACTOR(#434): As per issue #434, once the new id is sorted out, this return statement must be changed
-		return 0, err
-	}
+// func (m *consensusModule) GetNodeIdFromNodeAddress(peerAddress string) (uint64, error) {
+// 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+// 	if err != nil {
+// 		// REFACTOR(#434): As per issue #434, once the new id is sorted out, this return statement must be changed
+// 		return 0, err
+// 	}
 
-	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
-	return uint64(valAddrToIdMap[peerAddress]), nil
-}
+// 	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
+// 	return uint64(valAddrToIdMap[peerAddress]), nil
+// }
 
-func (m *consensusModule) GetNodeAddress() string {
-	return m.nodeAddress
-}
+// func (m *consensusModule) GetNodeAddress() string {
+// 	return m.nodeAddress
+// }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return new(consensusModule).Create(bus, options...)
@@ -134,10 +127,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 		leaderId: nil,
 
 		utilityUnitOfWork: nil,
-
-		logPrefix: DefaultLogPrefix,
-
-		hotstuffMempool: make(map[typesCons.HotstuffStep]*hotstuffFIFOMempool),
+		hotstuffMempool:   make(map[typesCons.HotstuffStep]*hotstuffFIFOMempool),
 	}
 
 	for _, option := range options {
@@ -297,15 +287,19 @@ func (m *consensusModule) CurrentStep() uint64 {
 	return uint64(m.step)
 }
 
+func (m *consensusModule) EnableServerMode() {
+	m.stateSync.EnableServerMode()
+}
+
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...
 func (m *consensusModule) loadPersistedState() error {
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
 	if err != nil {
 		return nil
 	}
-	defer persistenceContext.Close()
+	defer readCtx.Release()
 
-	latestHeight, err := persistenceContext.GetMaximumBlockHeight()
+	latestHeight, err := readCtx.GetMaximumBlockHeight()
 	if err != nil || latestHeight == 0 {
 		// TODO: Proper state sync not implemented yet
 		return nil
@@ -321,13 +315,18 @@ func (m *consensusModule) loadPersistedState() error {
 // IsSynched implements the interface function for checking if the node is synched with the network.
 func (m *consensusModule) IsSynched() (bool, error) {
 	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight - 1))
+	// persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight - 1))
+	// if err != nil {
+	// 	return false, err
+	// }
+	// defer persistenceContext.Close()
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight - 1)) // Unknown height
 	if err != nil {
 		return false, err
 	}
-	defer persistenceContext.Close()
+	defer readCtx.Release()
 
-	maxPersistedHeight, err := persistenceContext.GetMaximumBlockHeight()
+	maxPersistedHeight, err := readCtx.GetMaximumBlockHeight()
 	if err != nil {
 		return false, err
 	}

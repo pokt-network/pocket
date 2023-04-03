@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.45] - 2023-03-29
+## [0.0.0.46] - 2023-04-03
 
 - Add `ConsensusStateSync` interface. It defines exported state sync functions in consensus module
 - Update `ConsensusDebugModule` with getter and setter function for state sync testing
 - Update FSM events `Consensus_IsSynchedValidator`, `Consensus_IsSynchedNonValidator` and state `Consensus_Pacemaker`
-- 
+
+## [0.0.0.45] - 2023-03-30
+
+- Add a deadline to the primary event handling to get visibility into concurrency issues
+
 ## [0.0.0.44] - 2023-03-28
 
 - Add UnmarshalJSON to KeyPair to unmarshal public key correctly

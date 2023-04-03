@@ -4,7 +4,10 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
 
 - [Background](#background)
 - [State Sync - Peer Metadata](#state-sync---peer-metadata)
+- [State Sync - Peer Metadata Collection](#state-sync---peer-metadata-collection)
+  - [State Sync Lifecycle](#state-sync-lifecycle)
 - [State Sync - Operation Modes](#state-sync---operation-modes)
+  - [Unsynced Mode](#unsynced-mode)
   - [Sync Mode](#sync-mode)
   - [Synched Mode](#synched-mode)
   - [Pacemaker Mode](#pacemaker-mode)
@@ -200,7 +203,7 @@ flowchart TD
     Z[Peers] --> |Blocks| A[StateSync]
 ```
 
-_IMPORTANT: `CommitBlock` is implicit in the diagram above. If any blocks processed result in an invalid `AppHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._
+_IMPORTANT: `ApplyBlock` is implicit in the diagram above. If any blocks processed result in an invalid `StateHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._
 
 ## State Sync Designs
 
