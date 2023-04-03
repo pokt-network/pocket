@@ -17,7 +17,7 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	// IMPROVE: Add source of message here
 	loggingFields := msgToLoggingFields(msg)
 
-	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("GOKHAN Received hotstuff msg")
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("Received hotstuff msg")
 
 	// Pacemaker - Liveness & safety checks
 	if shouldHandle, err := m.paceMaker.ShouldHandleMessage(msg); !shouldHandle {
@@ -26,7 +26,6 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	}
 
 	// IMPROVE: Add source of message here
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("GOKHAN Handling hotstuff msg")
 	m.logger.Debug().Fields(loggingFields).Msg("About to start handling hotstuff msg...")
 
 	// Elect a leader for the current round if needed
@@ -35,12 +34,6 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 			return err
 		}
 	}
-
-	// m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("GOKHAN Leader is elected.")
-
-	// // Hotstuff - Handle message as a replica
-	// if m.isReplica() {
-	// 	replicaHandlers[step](m, msg)
 
 	if m.IsLeader() {
 		// Hotstuff - Handle message as a leader;

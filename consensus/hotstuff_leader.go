@@ -30,14 +30,14 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader starting")
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader starting")
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.logger.Error().Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Checking votes")
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Checking votes")
 
 	// DISCUSS: Do we need to pause for `MinBlockFreqMSec` here to let more transactions or should we stick with optimistic responsiveness?
 
@@ -60,7 +60,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		return
 	}
 
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Reshing utility")
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Reshing utility")
 
 	// Likely to be `nil` if blockchain is progressing well.
 	// TECHDEBT: How do we properly validate `prepareQC` here?
@@ -94,7 +94,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	m.step = Prepare
 	m.hotstuffMempool[NewRound].Clear()
 
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Creating and Sending Prepare Message")
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleNewRound Leader Creating and Sending Prepare Message")
 
 	prepareProposeMessage, err := CreateProposeMessage(m.height, m.round, Prepare, m.block, highPrepareQC)
 	if err != nil {
@@ -119,14 +119,12 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare leader starting")
-
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.logger.Error().Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Leader checking enough votes")
+	m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Leader Checking votes")
 
 	if err := m.didReceiveEnoughMessageForStep(Prepare); err != nil {
 		m.logger.Info().Fields(msgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
@@ -158,7 +156,6 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		return
 	}
 
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePrepare Leader broadcasting precommit message")
 	m.broadcastToValidators(preCommitProposeMessage)
 
 	// Leader also acts like a replica
@@ -198,15 +195,11 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		},
 	).Msg("📬 Received enough 📬 votes")
 
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePreCommit Leader validating QC")
-
 	preCommitQC, err := m.getQuorumCertificate(m.height, PreCommit, m.round)
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(PreCommit).Error())
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
-
-	//fmt.Println("PrecommitQC: ", preCommitQC)
 
 	m.step = Commit
 	m.lockedQC = preCommitQC
@@ -219,7 +212,6 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		return
 	}
 
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePreCommit Leader broadcasting commit message")
 	m.broadcastToValidators(commitProposeMessage)
 
 	// Leader also acts like a replica
@@ -228,7 +220,6 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		m.logger.Error().Err(err).Msg(typesCons.ErrCreateVoteMessage(Commit).Error())
 		return
 	}
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandlePreCommit Leader running sendToLeader")
 	m.sendToLeader(commitVoteMessage)
 }
 
@@ -242,7 +233,6 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleCommit Leader checking enough votes")
 
 	if err := m.didReceiveEnoughMessageForStep(Commit); err != nil {
 		m.logger.Info().Fields(msgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
@@ -257,7 +247,6 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		},
 	).Msg("📬 Received enough 📬 votes")
 
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleCommit Leader validating QC")
 	commitQC, err := m.getQuorumCertificate(m.height, Commit, m.round)
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Commit).Error())
@@ -274,7 +263,6 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		return
 	}
 
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleCommit Leader broadcasting decide message")
 	m.broadcastToValidators(decideProposeMessage)
 
 	commitQcBytes, err := codec.GetCodec().Marshal(commitQC)
@@ -284,7 +272,6 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	}
 	m.block.BlockHeader.QuorumCertificate = commitQcBytes
 
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleCommit Leader committing block")
 	if err := m.commitBlock(m.block); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrCommitBlock.Error())
 		m.paceMaker.InterruptRound("failed to commit block")
@@ -304,8 +291,6 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
-
-	//m.logger.Debug().Fields(m.hotstuffMsgLogHelper(msg)).Msg("HandleDecide Leader checking msg")
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
