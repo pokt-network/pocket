@@ -68,8 +68,8 @@ These are the main building blocks:
 - **Consensus_Unsynced**: Node is out of sync, the Consensus module sends `Consensus_IsSyncing` event -> transitions to `Consensus_SyncMode` to start syncing with the rest of the network.
 - **Consensus_SyncMode**: The Consensus module runs `StartSyncing()` and requests blocks one by one from peers in its address book.
 - **Node finishes syncing**: When node completes syncing:
-  - if the node is a validator, the Consensus module sends `Consensus_IsSynchedValidator` event -> transitions to `Consensus_Synched`.
-  - if the node is not a validator, the Consensus module sends `Consensus_IsSynchedNonValidator` event -> transitions to `Consensus_Pacemaker`.
+  - if the node is a validator, the Consensus module sends `Consensus_IsSynchedValidator` event -> transitions to `Consensus_Pacemaker`.
+  - if the node is not a validator, the Consensus module sends `Consensus_IsSynchedNonValidator` event -> transitions to `Consensus_Synched`.
 - **Consensus_Pacemaker**: Node participates in the block generation process. If node receives a block proposal with height higher than its current height, the Consensus Module sends `Consensus_IsUnsynced` event -> transitions to `Consensus_Unsynced`.
 - **Consensus_Synched**: Currently, the Consensus module never sends `Consensus_IsSynchedValidator` event, and non-validator node always stays in `Consensus_SyncMode`.
 
