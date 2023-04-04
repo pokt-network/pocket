@@ -140,5 +140,5 @@ func (uow *baseUtilityUnitOfWork) Release() error {
 }
 
 func (uow *baseUtilityUnitOfWork) isProposalBlockSet() bool {
-	return uow.proposalStateHash != "" && uow.proposalProposerAddr != nil && uow.proposalBlockTxs != nil
+	return uow.proposalStateHash != "" && uow.proposalProposerAddr != nil
 }
