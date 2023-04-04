@@ -128,7 +128,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		/*
 			m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d < message height %d", currentHeight, msg.Height)
 			isSynced, err := m.GetBus().GetConsensusModule().IsSynced()
-			if err != nil {
+			if err != nil {}
 				return false, err
 			}
 

@@ -115,6 +115,7 @@ func (m *stateSync) TriggerSync() error {
 		m.logger.Info().Msg("Node is already syncing, so updating the sync state.")
 		// 1. This should always be done automatically
 		// 2. This doesn't trigger aggregation so it could be wrong
+		// TODO_IN_THIS_COMMIT: We have internal state and are assigning it to another piece of internal state - even though we have a persistence module. This is getting weird.
 		m.state.endingHeight = m.aggregatedSyncMetadata.MaxHeight
 		return nil
 	}
@@ -126,16 +127,18 @@ func (m *stateSync) TriggerSync() error {
 		return err
 	}
 
+	// TODO_IN_THIS_COMMIT: This code flow should not happen. You need to leverage persistence and the FSM.
 	if maxPersistedBlockHeight > m.aggregatedSyncMetadata.MaxHeight || m.aggregatedSyncMetadata.MaxHeight == 0 {
 		// should only happen when node is back online, or bootstraps, and the aggregated metadata is not updated yet.
 		// TODO_IN_THIS_COMMIT: This should be a warning, and make messages shorter; ditto everywhere else in this commit.
-		m.logger.Info().Uint64("node_id", m.bus.GetConsensusModule().GetNodeId()).Msgf("Synched event is triggered, but aggregated metadata's height: %d is less than node's maxpersisted height: %d. So skipping the syncing. Syncing will start when there is a new block proposal and aggregated metadata is updated.", m.aggregatedSyncMetadata.MaxHeight, maxPersistedBlockHeight)
+		m.logger.Info().Uint64("node_id", m.bus.GetConsensusModule().GetNodeId()).Msgf("Sync is triggered but skipping because because node is ahead.")
 		return nil
 	} else if maxPersistedBlockHeight == m.aggregatedSyncMetadata.MaxHeight {
-		m.logger.Info().Msg("Node is already synched with the network, so skipping the syncing.")
+		m.logger.Info().Msg("Skipping SYnc - Node is already synched.")
 		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
 	}
 
+	// TODO_IN_THIS_COMMIT: We should not need to maintain so much state inside of the state sync module. Try to remove if possible.
 	m.isSyncing = true
 	m.state = state{
 		height:         maxPersistedBlockHeight,
@@ -251,6 +254,7 @@ func (m *stateSync) Sync() {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
+	// TODO_IN_THIS_COMMIT: We have an event bus, we have a mocked clocked, we have an FSM, we should not need named loops.
 loop:
 	for {
 		select {
@@ -262,6 +266,8 @@ loop:
 			}
 			// if not synched, request blocks again
 			m.logger.Info().Msgf("Node is NOT synched for state: height: %d, starting height: %d, ending height: %d, requesting blocks", m.state.height, m.state.startingHeight, m.state.endingHeight)
+
+			// TODO_IN_THIS_COMMIT: We should not be request blocks one by one. It has to be a background process that continuously accepts them.
 			m.requestBlocks()
 
 		// update the state with the received block height
