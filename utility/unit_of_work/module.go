@@ -46,32 +46,42 @@ func (uow *baseUtilityUnitOfWork) SetProposalBlock(blockHash string, proposerAdd
 }
 
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
-func (u *baseUtilityUnitOfWork) ApplyBlock() (string, [][]byte, error) {
-	if !u.isProposalBlockSet() {
+func (uow *baseUtilityUnitOfWork) ApplyBlock() (string, [][]byte, error) {
+	log := uow.logger.With().Fields(map[string]interface{}{
+		"source": "ApplyBlock",
+	}).Logger()
+
+	log.Debug().Msg("checking if proposal block has been set")
+	if !uow.isProposalBlockSet() {
 		return "", nil, utilTypes.ErrProposalBlockNotSet()
 	}
+
 	// begin block lifecycle phase
-	if err := u.beginBlock(); err != nil {
+	log.Debug().Msg("calling beginBlock")
+	if err := uow.beginBlock(); err != nil {
 		return "", nil, err
 	}
 
-	mempool := u.GetBus().GetUtilityModule().GetMempool()
-	if err := u.processTransactionsFromProposalBlock(mempool, u.proposalBlockTxs); err != nil {
+	log.Debug().Msg("processing transactions from proposal block")
+	mempool := uow.GetBus().GetUtilityModule().GetMempool()
+	if err := uow.processTransactionsFromProposalBlock(mempool, uow.proposalBlockTxs); err != nil {
 		return "", nil, err
 	}
 
 	// end block lifecycle phase
-	if err := u.endBlock(u.proposalProposerAddr); err != nil {
+	log.Debug().Msg("calling endBlock")
+	if err := uow.endBlock(uow.proposalProposerAddr); err != nil {
 		return "", nil, err
 	}
 	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
 	// return the app hash (consensus module will get the validator set directly)
-	stateHash, err := u.persistenceRWContext.ComputeStateHash()
+	log.Debug().Msg("computing state hash")
+	stateHash, err := uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {
-		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
+		log.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return "", nil, utilTypes.ErrAppHash(err)
 	}
-	u.logger.Info().Str("state_hash", stateHash).Msgf("ApplyBlock succeeded!")
+	log.Info().Str("state_hash", stateHash).Msgf("ApplyBlock succeeded!")
 
 	// return the app hash; consensus module will get the validator set directly
 	return stateHash, nil, nil

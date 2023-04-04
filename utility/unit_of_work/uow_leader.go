@@ -1,6 +1,8 @@
 package unit_of_work
 
 import (
+	"encoding/hex"
+
 	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/mempool"
@@ -28,27 +30,37 @@ func NewLeaderUOW(height int64, readContext modules.PersistenceReadContext, rwPe
 }
 
 func (uow *leaderUtilityUnitOfWork) CreateProposalBlock(proposer []byte, maxTxBytes uint64) (stateHash string, txs [][]byte, err error) {
+	log := uow.logger.With().Fields(map[string]interface{}{
+		"proposer":   hex.EncodeToString(proposer),
+		"maxTxBytes": maxTxBytes,
+		"source":     "CreateProposalBlock",
+	}).Logger()
+	log.Debug().Msg("calling beginBlock")
 	// begin block lifecycle phase
 	if err := uow.beginBlock(); err != nil {
 		return "", nil, err
 	}
 
+	log.Debug().Msg("reaping the mempool")
 	mempool := uow.GetBus().GetUtilityModule().GetMempool()
 	if txs, err = uow.reapMempool(mempool, maxTxBytes); err != nil {
 		return "", nil, err
 	}
 
+	// end block lifecycle phase
+	log.Debug().Msg("calling endBlock")
 	if err := uow.endBlock(proposer); err != nil {
 		return "", nil, err
 	}
 
+	log.Debug().Msg("computing state hash")
 	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
 	// Compute & return the new state hash
 	stateHash, err = uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {
-		uow.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
+		log.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 	}
-	uow.logger.Info().Str("state_hash", stateHash).Msgf("CreateProposalBlock finished successfully")
+	log.Info().Str("state_hash", stateHash).Msgf("Finished successfully")
 
 	return stateHash, txs, err
 }
