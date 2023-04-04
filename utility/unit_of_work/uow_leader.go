@@ -66,14 +66,14 @@ func (uow *leaderUtilityUnitOfWork) CreateProposalBlock(proposer []byte, maxTxBy
 }
 
 // reapMempool reaps transactions from the mempool up to the maximum transaction bytes allowed in a block.
-func (uow *leaderUtilityUnitOfWork) reapMempool(mempool mempool.TXMempool, maxTxBytes uint64) (txs [][]byte, err error) {
+func (uow *leaderUtilityUnitOfWork) reapMempool(txMempool mempool.TXMempool, maxTxBytes uint64) (txs [][]byte, err error) {
 	txs = make([][]byte, 0)
 	txsTotalBz := uint64(0)
 	txIdx := 0
-	for !mempool.IsEmpty() {
+	for !txMempool.IsEmpty() {
 		// NB: In order for transactions to have entered the mempool, `HandleTransaction` must have
 		// been called which handles basic checks & validation.
-		txBz, err := mempool.PopTx()
+		txBz, err := txMempool.PopTx()
 		if err != nil {
 			return nil, err
 		}
@@ -89,7 +89,7 @@ func (uow *leaderUtilityUnitOfWork) reapMempool(mempool mempool.TXMempool, maxTx
 		// Exceeding maximum transaction bytes to be added in this block
 		if txsTotalBz >= maxTxBytes {
 			// Add back popped tx to be applied in a future block
-			if err := mempool.AddTx(txBz); err != nil {
+			if err := txMempool.AddTx(txBz); err != nil {
 				return nil, err
 			}
 			break // we've reached our max

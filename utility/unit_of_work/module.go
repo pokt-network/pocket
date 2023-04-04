@@ -46,7 +46,7 @@ func (uow *baseUtilityUnitOfWork) SetProposalBlock(blockHash string, proposerAdd
 }
 
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
-func (uow *baseUtilityUnitOfWork) ApplyBlock() (string, [][]byte, error) {
+func (uow *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, err error) {
 	log := uow.logger.With().Fields(map[string]interface{}{
 		"source": "ApplyBlock",
 	}).Logger()
@@ -63,8 +63,8 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() (string, [][]byte, error) {
 	}
 
 	log.Debug().Msg("processing transactions from proposal block")
-	mempool := uow.GetBus().GetUtilityModule().GetMempool()
-	if err := uow.processTransactionsFromProposalBlock(mempool, uow.proposalBlockTxs); err != nil {
+	txMempool := uow.GetBus().GetUtilityModule().GetMempool()
+	if err := uow.processTransactionsFromProposalBlock(txMempool, uow.proposalBlockTxs); err != nil {
 		return "", nil, err
 	}
 
@@ -76,7 +76,7 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() (string, [][]byte, error) {
 	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
 	// return the app hash (consensus module will get the validator set directly)
 	log.Debug().Msg("computing state hash")
-	stateHash, err := uow.persistenceRWContext.ComputeStateHash()
+	stateHash, err = uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return "", nil, utilTypes.ErrAppHash(err)
@@ -120,7 +120,7 @@ func (uow *baseUtilityUnitOfWork) isProposalBlockSet() bool {
 
 // processTransactionsFromProposalBlock processes the transactions from the proposal block.
 // It also removes the transactions from the mempool if they are already present.
-func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(mempool mempool.TXMempool, txsBytes [][]byte) (err error) {
+func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(txMempool mempool.TXMempool, txsBytes [][]byte) (err error) {
 	for index, txProtoBytes := range txsBytes {
 		tx, err := coreTypes.TxFromBytes(txProtoBytes)
 		if err != nil {
@@ -140,8 +140,8 @@ func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(mempool m
 			return err
 		}
 
-		if mempool.Contains(txHash) {
-			if err := mempool.RemoveTx(txProtoBytes); err != nil {
+		if txMempool.Contains(txHash) {
+			if err := txMempool.RemoveTx(txProtoBytes); err != nil {
 				return err
 			}
 			uow.logger.Info().Str("tx_hash", txHash).Msg("Applying tx that WAS in the local mempool")
