@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.43] - 2023-04-04
+
+- Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`
+
 ## [0.0.0.42] - 2023-04-03
 
 - Add `fsm_handler.go` to handle FSM transition events in consensus module
 - Update State Machine mock in `utils_test.go`
-- Update state_sync module with additional function definitions 
-  
+- Update state_sync module with additional function definitions
+
 ## [0.0.0.41] - 2023-03-30
 
 - Improve & simplify `utilityUnitOfWork` management
