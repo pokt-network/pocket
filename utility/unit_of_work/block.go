@@ -33,7 +33,8 @@ func (uow *baseUtilityUnitOfWork) beginBlock() typesUtil.Error {
 
 func (uow *baseUtilityUnitOfWork) endBlock(proposer []byte) typesUtil.Error {
 	log := uow.logger.With().Fields(map[string]interface{}{
-		"source": "endBlock",
+		"proposer": hex.EncodeToString(proposer),
+		"source":   "endBlock",
 	}).Logger()
 
 	log.Info().Msg("handling proposer rewards")
