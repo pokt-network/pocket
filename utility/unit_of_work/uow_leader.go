@@ -27,13 +27,8 @@ func NewLeaderUOW(height int64, readContext modules.PersistenceReadContext, rwPe
 }
 
 func (uow *leaderUtilityUnitOfWork) CreateAndApplyProposalBlock(proposer []byte, maxTxBytes uint64) (stateHash string, txs [][]byte, err error) {
-	prevBlockByzantineVals, err := uow.prevBlockByzantineValidators()
-	if err != nil {
-		return "", nil, err
-	}
-
 	// begin block lifecycle phase
-	if err := uow.beginBlock(prevBlockByzantineVals); err != nil {
+	if err := uow.beginBlock(); err != nil {
 		return "", nil, err
 	}
 	txs = make([][]byte, 0)

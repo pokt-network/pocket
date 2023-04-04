@@ -44,95 +44,13 @@ func (uow *baseUtilityUnitOfWork) SetProposalBlock(blockHash string, proposerAdd
 	return nil
 }
 
-// CreateAndApplyProposalBlock implements the exposed functionality of the shared UtilityUnitOfWork interface.
-func (u *baseUtilityUnitOfWork) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (stateHash string, txs [][]byte, err error) {
-	prevBlockByzantineVals, err := u.prevBlockByzantineValidators()
-	if err != nil {
-		return "", nil, err
-	}
-
-	// begin block lifecycle phase
-	if err := u.beginBlock(prevBlockByzantineVals); err != nil {
-		return "", nil, err
-	}
-	txs = make([][]byte, 0)
-	txsTotalBz := 0
-	txIdx := 0
-
-	mempool := u.GetBus().GetUtilityModule().GetMempool()
-	for !mempool.IsEmpty() {
-		// NB: In order for transactions to have entered the mempool, `HandleTransaction` must have
-		// been called which handles basic checks & validation.
-		txBz, err := mempool.PopTx()
-		if err != nil {
-			return "", nil, err
-		}
-
-		tx, err := coreTypes.TxFromBytes(txBz)
-		if err != nil {
-			return "", nil, err
-		}
-
-		txBzSize := len(txBz)
-		txsTotalBz += txBzSize
-
-		// Exceeding maximum transaction bytes to be added in this block
-		if txsTotalBz >= maxTransactionBytes {
-			// Add back popped tx to be applied in a future block
-			if err := mempool.AddTx(txBz); err != nil {
-				return "", nil, err
-			}
-			break // we've reached our max
-		}
-
-		txResult, err := u.hydrateTxResult(tx, txIdx)
-		if err != nil {
-			u.logger.Err(err).Msg("Error in ApplyTransaction")
-			// TODO(#327): Properly implement 'unhappy path' for save points
-			if err := u.revertLastSavePoint(); err != nil {
-				return "", nil, err
-			}
-			txsTotalBz -= txBzSize
-			continue
-		}
-
-		// Index the transaction
-		if err := u.persistenceRWContext.IndexTransaction(txResult); err != nil {
-			u.logger.Fatal().Err(err).Msgf("TODO(#327): The transaction can by hydrated but not indexed. Crash the process for now: %v\n", err)
-		}
-
-		txs = append(txs, txBz)
-		txIdx++
-	}
-
-	if err := u.endBlock(proposer); err != nil {
-		return "", nil, err
-	}
-
-	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
-	// Compute & return the new state hash
-	stateHash, err = u.persistenceRWContext.ComputeStateHash()
-	if err != nil {
-		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
-	}
-	u.logger.Info().Str("state_hash", stateHash).Msgf("CreateAndApplyProposalBlock finished successfully")
-
-	return stateHash, txs, err
-}
-
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
-func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, err error) {
+func (u *baseUtilityUnitOfWork) ApplyBlock() (string, [][]byte, error) {
 	if !u.isProposalBlockSet() {
 		return "", nil, utilTypes.ErrProposalBlockNotSet()
 	}
-
-	lastByzantineValidators, err := u.prevBlockByzantineValidators()
-	if err != nil {
-		return "", nil, err
-	}
-
 	// begin block lifecycle phase
-	if err := u.beginBlock(lastByzantineValidators); err != nil {
+	if err := u.beginBlock(); err != nil {
 		return "", nil, err
 	}
 
@@ -183,7 +101,7 @@ func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, er
 	}
 	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
 	// return the app hash (consensus module will get the validator set directly)
-	stateHash, err = u.persistenceRWContext.ComputeStateHash()
+	stateHash, err := u.persistenceRWContext.ComputeStateHash()
 	if err != nil {
 		u.logger.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return "", nil, utilTypes.ErrAppHash(err)

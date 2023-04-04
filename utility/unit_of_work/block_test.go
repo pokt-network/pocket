@@ -75,7 +75,6 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference, "unexpected before / after balance difference")
-
 }
 
 func TestUtilityUnitOfWork_BeginBlock(t *testing.T) {
@@ -90,7 +89,7 @@ func TestUtilityUnitOfWork_BeginBlock(t *testing.T) {
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
 
-	er = uow.SetProposalBlock("", addrBz, [][]byte{txBz})
+	er = uow.SetProposalBlock("computed_state_hash_placeholder", addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 
 	_, _, er = uow.ApplyBlock()
@@ -101,7 +100,6 @@ func TestUtilityUnitOfWork_BeginBlock(t *testing.T) {
 	// missed, err := ctx.getValidatorMissedBlocks(byzantine.Address)
 	// require.NoError(t, err)
 	// require.Equal(t, missed, 1)
-
 }
 
 func TestUtilityUnitOfWork_EndBlock(t *testing.T) {
@@ -119,7 +117,7 @@ func TestUtilityUnitOfWork_EndBlock(t *testing.T) {
 	proposerBeforeBalance, err := uow.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
-	er = uow.SetProposalBlock("", addrBz, [][]byte{txBz})
+	er = uow.SetProposalBlock("computed_state_hash_placeholder", addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 
 	_, _, er = uow.ApplyBlock()
@@ -140,5 +138,4 @@ func TestUtilityUnitOfWork_EndBlock(t *testing.T) {
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference)
-
 }

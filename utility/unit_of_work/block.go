@@ -12,7 +12,12 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *baseUtilityUnitOfWork) beginBlock(previousBlockByzantineValidators [][]byte) typesUtil.Error {
+func (u *baseUtilityUnitOfWork) beginBlock() typesUtil.Error {
+	previousBlockByzantineValidators, err := u.prevBlockByzantineValidators()
+	if err != nil {
+		return typesUtil.ErrGetPrevBlockByzantineValidators(err)
+	}
+
 	if err := u.handleByzantineValidators(previousBlockByzantineValidators); err != nil {
 		return err
 	}

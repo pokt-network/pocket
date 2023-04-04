@@ -40,7 +40,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 134
+// NextCode: 135
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -115,6 +115,7 @@ const (
 	CodeInvalidServiceURLError            Code = 70
 	CodeNotExistsError                    Code = 71
 	CodeGetMissedBlocksError              Code = 72
+	CodeGetPrevBlockByzantineValidators   Code = 134
 	CodeEmptyHashError                    Code = 73
 	CodeInvalidBlockHeightError           Code = 74
 	CodeUnequalPublicKeysError            Code = 75
@@ -185,6 +186,7 @@ const (
 	UnequalVoteTypesError             = "the vote types are not equal"
 	UnequalPublicKeysError            = "the two public keys are not equal"
 	GetMissedBlocksError              = "an error occurred getting the missed blocks field"
+	GetPrevBlockByzantineValidators   = "an error occurred getting the previous block's byzantine validators"
 	DecodeMessageError                = "unable to decode the message"
 	NotExistsError                    = "the actor does not exist in the state"
 	InvalidServiceURLError            = "the service url is not valid"
@@ -366,6 +368,10 @@ func ErrGetHeight(err error) Error {
 
 func ErrGetMissedBlocks(err error) Error {
 	return NewError(CodeGetMissedBlocksError, fmt.Sprintf("%s: %s", GetMissedBlocksError, err.Error()))
+}
+
+func ErrGetPrevBlockByzantineValidators(err error) Error {
+	return NewError(CodeGetPrevBlockByzantineValidators, fmt.Sprintf("%s: %s", GetPrevBlockByzantineValidators, err.Error()))
 }
 
 func ErrGetStakedTokens(err error) Error {
