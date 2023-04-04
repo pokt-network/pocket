@@ -304,14 +304,8 @@ func (m *consensusModule) logHelper(receiverPeerId string) map[string]any {
 	}
 }
 
-func (m *consensusModule) maximumPersistedBlockHeight() (uint64, error) {
-	currentHeight := m.CurrentHeight()
-	// persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
-	// if err != nil {
-	// 	return 0, err
-	// }
-	// defer persistenceContext.Close()
-	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+func (m *consensusModule) maxPersistedBlockHeight() (uint64, error) {
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(m.CurrentHeight()))
 	if err != nil {
 		return 0, err
 	}

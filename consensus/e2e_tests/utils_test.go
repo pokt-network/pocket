@@ -386,7 +386,6 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 		}
 		return uint64(len(stateSyncDummyblocks)), nil
 	}).AnyTimes()
-
 	persistenceReadContextMock.EXPECT().GetMinimumBlockHeight().DoAndReturn(func() (uint64, error) {
 		// mock minimum block height in persistence module to 1 if current height is equal or more than 1, else return 0 as the minimum height
 		if bus.GetConsensusModule().CurrentHeight() >= 1 {
@@ -394,7 +393,6 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 		}
 		return 0, nil
 	}).AnyTimes()
-
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().Release().AnyTimes()
@@ -596,7 +594,7 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 	return loggerMock
 }
 
-func GenerateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators uint64, pocketNodes IdToNodeMapping) { //[]*coreTypes.Block {
+func generateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators uint64, pocketNodes IdToNodeMapping) {
 	blocks := make([]*coreTypes.Block, 0)
 
 	var i uint64 = 1

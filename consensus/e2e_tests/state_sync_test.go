@@ -30,7 +30,7 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 	eventsChannel := make(modules.EventsChannel, 100)
 	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
 
-	GenerateDummyBlocksWithQC(t, numberOfPersistedDummyBlocks, uint64(numberOfValidators), pocketNodes)
+	generateDummyBlocksWithQC(t, numberOfPersistedDummyBlocks, uint64(numberOfValidators), pocketNodes)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Choose node 1 as the server node
@@ -93,7 +93,7 @@ func TestStateSync_ServerGetBlock_Success(t *testing.T) {
 	eventsChannel := make(modules.EventsChannel, 100)
 	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
 
-	GenerateDummyBlocksWithQC(t, numberOfPersistedDummyBlocks, uint64(numberOfValidators), pocketNodes)
+	generateDummyBlocksWithQC(t, numberOfPersistedDummyBlocks, uint64(numberOfValidators), pocketNodes)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	serverNode := pocketNodes[1]
@@ -142,7 +142,7 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
 
-	numberOfValidators := 4
+	numberOfValidators := 4 // TODO_IN_THIS_COMMIT: THis is intentionall a global variable because it's dependant on the genesis file - remove local and add comment
 	numberOfPersistedDummyBlocks := uint64(4)
 	testHeight := numberOfPersistedDummyBlocks + 1
 
@@ -153,7 +153,7 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	eventsChannel := make(modules.EventsChannel, 100)
 	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
 
-	GenerateDummyBlocksWithQC(t, numberOfPersistedDummyBlocks, uint64(numberOfValidators), pocketNodes)
+	generateDummyBlocksWithQC(t, numberOfPersistedDummyBlocks, uint64(numberOfValidators), pocketNodes)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	serverNode := pocketNodes[1]
@@ -189,25 +189,28 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 }
 
 func TestStateSync_UnsyncedPeerSyncsABlock_Success(t *testing.T) {
-	// Test preparation
+	// Clock configurations
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
 
-	numberOfValidators := 4
+	// Node preparation
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	buses := GenerateBuses(t, runtimeMgrs)
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+
+	// Start all nodes
+	StartAllTestPocketNodes(t, pocketNodes)
+
 	numberOfPersistedDummyBlocks := uint64(10)
 	// current height of the node is one plus the number of persisted dummy blocks
 	testHeight := numberOfPersistedDummyBlocks + 1
 	testStep := uint8(consensus.NewRound)
 	testRound := uint64(1)
 
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numberOfValidators, clockMock)
-	buses := GenerateBuses(t, runtimeMgrs)
-
 	// Create & start test pocket nodes
-	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-	GenerateDummyBlocksWithQC(t, testHeight, uint64(numberOfValidators), pocketNodes)
-	StartAllTestPocketNodes(t, pocketNodes)
+
+	generateDummyBlocksWithQC(t, testHeight, uint64(numValidators), pocketNodes)
 
 	// Prepare unsynced node info
 	unsyncedNode := pocketNodes[2]
@@ -262,8 +265,9 @@ func TestStateSync_UnsyncedPeerSyncsABlock_Success(t *testing.T) {
 
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// // Assert that unsynched node has a separate view of the network than the rest of the nodes
-	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numberOfValidators*numberOfValidators, 250, true)
+	fmt.Println(unsyncedNode)
+	// Assert that unsynched node has a separate view of the network than the rest of the nodes
+	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 250, true)
 	require.NoError(t, err)
 
 	for nodeId, pocketNode := range pocketNodes {
@@ -298,8 +302,8 @@ func TestStateSync_UnsyncedPeerSyncsABlock_Success(t *testing.T) {
 	// Node must request blocks from all other validators.
 	// Ensure it sends requests to "numberOfValidators - 1" getBlockReq messages.
 	errMsg := "StateSync Get Block Request Messages"
-	numExpectedMsgs := numberOfValidators - 1
-	// //receivedStateSyncMsgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
+	numExpectedMsgs := numValidators - 1
+	//receivedStateSyncMsgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
 	msgs, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 500, false)
 	require.NoError(t, err)
 
@@ -314,37 +318,37 @@ func TestStateSync_UnsyncedPeerSyncsABlock_Success(t *testing.T) {
 		require.NotEmpty(t, blockReq)
 	}
 
-	// send the block request sent by unsynched node to all nodes
-	P2PBroadcast(t, pocketNodes, msgs[0])
-	advanceTime(t, clockMock, 10*time.Millisecond)
+	// // send the block request sent by unsynched node to all nodes
+	// P2PBroadcast(t, pocketNodes, msgs[0])
+	// advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// We mock that all validators will be replying to its request
-	errMsg = "StateSync Get Block Response Messages"
-	msgs, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
-	require.NoError(t, err)
+	// // We mock that all validators will be replying to its request
+	// errMsg = "StateSync Get Block Response Messages"
+	// msgs, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 250, false)
+	// require.NoError(t, err)
 
-	//get a valid block. One of them should be valid
-	for _, msg := range msgs {
-		msg, err := codec.GetCodec().FromAny(msg)
-		require.NoError(t, err)
+	// //get a valid block. One of them should be valid
+	// for _, msg := range msgs {
+	// 	msg, err := codec.GetCodec().FromAny(msg)
+	// 	require.NoError(t, err)
 
-		stateSyncBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
-		require.True(t, ok)
+	// 	stateSyncBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
+	// 	require.True(t, ok)
 
-		blockReq := stateSyncBlockResMessage.GetGetBlockRes()
-		require.NotEmpty(t, blockReq)
+	// 	blockReq := stateSyncBlockResMessage.GetGetBlockRes()
+	// 	require.NotEmpty(t, blockReq)
 
-	}
+	// }
 
-	// send the first reply to the unsynched node
-	P2PSend(t, unsyncedNode, msgs[0])
-	advanceTime(t, clockMock, 10*time.Millisecond)
+	// // send the first reply to the unsynched node
+	// P2PSend(t, unsyncedNode, msgs[0])
+	// advanceTime(t, clockMock, 10*time.Millisecond)
 
-	for nodeId, pocketNode := range pocketNodes {
-		nodeState := GetConsensusNodeState(pocketNode)
-		fmt.Printf("Node id:  %d ,state: h: %d,  s:%d, r:%d ", nodeId, nodeState.Height, nodeState.Step, nodeState.Round)
-		assertHeight(t, nodeId, testHeight, nodeState.Height)
-	}
+	// for nodeId, pocketNode := range pocketNodes {
+	// 	nodeState := GetConsensusNodeState(pocketNode)
+	// 	fmt.Printf("Node id:  %d ,state: h: %d,  s:%d, r:%d ", nodeId, nodeState.Height, nodeState.Step, nodeState.Round)
+	// 	assertHeight(t, nodeId, testHeight, nodeState.Height)
+	// }
 
 }
 

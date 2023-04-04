@@ -17,13 +17,15 @@ func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncM
 	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
 
 	validators, err := m.getValidatorsAtHeight(currentHeight)
-	//validators, err := m.getValidatorsAtHeight(block_height)
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
 
+	// TODO: Use RainTree for this
+	// IMPROVE: OPtimize so this is not O(n^2)
 	for _, val := range validators {
 		validatorAddr := val.GetAddress()
+		// DISCUSS_IN_THIS_COMMIT: You shouldn't need to do this check at the consensus module level - it's a P2P thin.
 		if m.GetBus().GetConsensusModule().GetNodeAddress() != validatorAddr {
 			if err := m.SendStateSyncMessage(stateSyncMsg, cryptoPocket.AddressFromString(val.GetAddress()), block_height); err != nil {
 				return err
@@ -35,21 +37,20 @@ func (m *stateSync) broadcastStateSyncMessage(stateSyncMsg *typesCons.StateSyncM
 }
 
 // SendStateSyncMessage sends a state sync message after converting to any proto, to the given peer
-func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, receiverPeerAddress cryptoPocket.Address, block_height uint64) error {
-	anyMsg, err := anypb.New(stateSyncMsg)
+func (m *stateSync) SendStateSyncMessage(msg *typesCons.StateSyncMessage, dst cryptoPocket.Address, height uint64) error {
+	anyMsg, err := anypb.New(msg)
 	if err != nil {
 		return err
 	}
 
-	//m.logger.Info().Fields(m.logHelper(receiverPeerAddress.ToString())).Msgf("Sending StateSync Message: %s", stateSyncMsg)
-
-	if err := m.GetBus().GetP2PModule().Send(receiverPeerAddress, anyMsg); err != nil {
-		m.logger.Error().Msgf(typesCons.ErrSendMessage.Error(), err)
+	if err := m.GetBus().GetP2PModule().Send(dst, anyMsg); err != nil {
+		m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
 		return err
 	}
 	return nil
 }
 
+// TODO_IN_THIS_COMMIT: do not copy paste helpers; ditto below
 func (m *stateSync) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {

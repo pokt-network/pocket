@@ -11,6 +11,8 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
+// TODO_IN_THIS_COMMIT: Decide if all the new log messages are really necessary. If so, don't use `Msgf` and use `Fields` instead.
+
 type HotstuffLeaderMessageHandler struct{}
 
 var (

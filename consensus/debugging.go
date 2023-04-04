@@ -54,7 +54,7 @@ func (m *consensusModule) printNodeState(_ *messaging.DebugMessage) {
 			"step":   state.Step,
 			"height": state.Height,
 			"round":  state.Round,
-		}).Msg("Node state")
+		}).Msg("CONSENSUS STATE")
 }
 
 func (m *consensusModule) triggerNextView(_ *messaging.DebugMessage) {

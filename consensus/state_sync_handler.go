@@ -33,22 +33,27 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 
 func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.StateSyncMessage) error {
 	switch stateSyncMessage.Message.(type) {
+
 	case *typesCons.StateSyncMessage_MetadataReq:
 		m.logger.Info().Str("proto_type", "MetadataRequest").Msg("Handling StateSyncMessage MetadataReq")
-		if !m.stateSync.IsServerModEnabled() {
+		if !m.stateSync.IsServerModeEnabled() {
 			return fmt.Errorf("server module is not enabled")
 		}
 		return m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
+
 	case *typesCons.StateSyncMessage_MetadataRes:
 		return m.stateSync.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
+
 	case *typesCons.StateSyncMessage_GetBlockReq:
 		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage MetadataReq")
-		if !m.stateSync.IsServerModEnabled() {
-			return fmt.Errorf("server module is not enabled")
+		if !m.stateSync.IsServerModeEnabled() {
+			return fmt.Errorf("Cannot respond to StateSyncMessage_GetBlockReq because server module is not enabled")
 		}
 		return m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
+
 	case *typesCons.StateSyncMessage_GetBlockRes:
 		return m.HandleGetBlockResponse(stateSyncMessage.GetGetBlockRes())
+
 	default:
 		return fmt.Errorf("unspecified state sync message type")
 	}
@@ -60,7 +65,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 	defer m.m.Unlock()
 
 	block := blockRes.Block
-	maxPersistedHeight, err := m.maximumPersistedBlockHeight()
+	maxPersistedHeight, err := m.maxPersistedBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -85,8 +90,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 	}
 
 	qc := typesCons.QuorumCertificate{}
-	err = proto.Unmarshal(qcBytes, &qc)
-	if err != nil {
+	if err = proto.Unmarshal(qcBytes, &qc); err != nil {
 		return err
 	}
 
@@ -126,7 +130,7 @@ func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockRes
 
 	m.paceMaker.NewHeight()
 
-	maxPersistedHeight, err = m.maximumPersistedBlockHeight()
+	maxPersistedHeight, err = m.maxPersistedBlockHeight()
 	if err != nil {
 		return err
 	}

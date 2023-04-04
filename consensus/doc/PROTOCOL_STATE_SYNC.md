@@ -115,12 +115,12 @@ flowchart TD
     A[Node] --> B[Periodic <br> Sync]
     A[Node] --> |New Block| C{IsSynced}
 
-    %% periodic snyc
+    %% periodic sync
     B --> |Request <br> metadata| D[Peers]
     D[Peers] --> |Collect metadata| B[Periodic <br> Sync]
 
 
-    %% is node sycnhed
+    %% is node synched
     C -->  |No| E[StartSyncing]
     C -->  |Yes| F[Apply Block]
 
@@ -167,7 +167,7 @@ In `SynchedMode`, the Node is caught up to the latest block (based on the visibl
 
 ### Pacemaker Mode
 
-The Node is in `Pacemaker` mode if the Node is snyched **and** is an active Validator at the current height.
+The Node is in `Pacemaker` mode if the Node is synched **and** is an active Validator at the current height.
 
 In `Pacemaker` mode, the Node is actively participating in the HotPOKT lifecycle.
 

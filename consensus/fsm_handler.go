@@ -33,6 +33,8 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 	}
 }
 
+// TODO_IN_THIS_COMMIT: Make sure `synced` and `synched` is properly spelled throughout the codebase.
+
 func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
 	fsm_state := msg.NewState
 	m.logger.Debug().Fields(messaging.TransitionEventToMap(msg)).Msg("Received state machine transition msg")
@@ -77,9 +79,9 @@ func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransiti
 func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("FSM is in Unsyched state, as node is out of sync, sending syncmode event to start syncing")
 
-	// TODO: consider to add this, because it doesn't make any difference, as node is not yet in the other peers' address book
+	// TODO_IN_THIS_COMMIT: consider to add this, because it doesn't make any difference, as node is not yet in the other peers' address book
 	// but node must keep trying to receive metadata from the network until it receives it, when it is unsyched and can't continue bootstrapped
-	// so we trigger again requesting metadata from the network as soons as node transitions to unsynched mode
+	// so we trigger again requesting metadata from the network as soon as node transitions to unsynched mode.
 	// m.stateSync.RequestMetadata()
 
 	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
@@ -88,7 +90,7 @@ func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEv
 // HandleSyncMode handles FSM event Consensus_IsSyncing, and SyncMode is the destination state.
 // In Sync mode node (validator or non-validator) starts syncing with the rest of the network.
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Debug().Msg("FSM is in Sync Mode, starting syncing...")
+	m.logger.Debug().Msg("🔄 Node is Synching 🔄")
 
 	// FSM can transition to Unsynched mode from syncmode if it can't start syncing with the network,
 	// This can happen due to node not having any/updated metadata
@@ -101,24 +103,29 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 // CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state.
 // TODO: Add check that this never happens when IsValidator() is false, i.e. node is not validator.
 func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Debug().Msg("FSM of non-validator node is in Synched mode")
+	// "FSM of non-validator node is in Synched mode"
+	m.logger.Debug().Msg("🏁 NonValidator is Synched 🏁")
 	return nil
 }
 
 // HandlePacemaker handles FSM event IsSynchedValidator, and Pacemaker is the destination state.
 // Execution of this state means the validator node is synched.
 func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Debug().Msg("FSM of validator node is synched and in Pacemaker mode. It will stay in this mode until it receives a new block proposal that has a higher height than the current block height")
+	// FSM of validator node is synched and in Pacemaker mode. It will stay in this mode until it receives a new block proposal that has a higher height than the current block height
+
+	// DISCUSS_IN_THIS_COMMIT: What is this comment saying?
 	// validator receives a new block proposal, and it understands that it doesn't have block and it transitions to unsycnhed state
 	// transitioning out of this state happens when a new block proposal is received by the hotstuff_replica
 
+	// DISCUSS_IN_THIS_COMMIT: What's happening here?
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
-
 	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
-
 	m.nodeId = valAddrToIdMap[m.nodeAddress]
+
+	m.logger.Debug().Uint64("node_id", uint64(m.nodeId)).Msg("🏃 Validator is in PaceMaker mode 🏃")
+
 	return nil
 }

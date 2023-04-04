@@ -95,7 +95,7 @@ type ConsensusDebugModule interface {
 	// SetAggregatedStateSyncMetadata is used to set peer's aggregated metadata in testing scenarios to simulate periodic metadata synchronization.
 	SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64, peerAddress string)
 	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
-	DebugTriggerSync() error
+	DebugTriggerSync() error // TODO_IN_THIS_COMMIT: See if we can remove it
 
 	// REFACTOR: This should accept typesCons.HotstuffStep and return typesCons.NodeId.
 	GetLeaderForView(height, round uint64, step uint8) (leaderId uint64)

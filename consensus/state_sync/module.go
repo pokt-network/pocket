@@ -14,12 +14,14 @@ import (
 
 const (
 	stateSyncModuleName = "stateSyncModule"
+	metadataSyncPeriod  = 30 * time.Second // TODO: Make this configurable
 )
 
-// TODO_IN_THIS_COMMIT(goku): Move this into a README and add a diagram
+// TODO_IN_THIS_COMMIT(goku): Move this into a README and/or add a diagram and/or improve readability.
+
 // State sync implements synchronization for hotpokt blocks.
 //
-// Pocket node take one or two rules during state snychronization: client and/or server.
+// Pocket node take one or two rules during state synchronization: client and/or server.
 //
 // There are two main processes run for the client role:
 // 1. Metadata Aggregation loop (metadataSyncLoop)
@@ -35,25 +37,24 @@ type StateSyncModule interface {
 	DebugStateSync
 
 	// This functions are used for managing the Server mode of the node, which is handled independently from the FSM.
-	IsServerModEnabled() bool
+	IsServerModeEnabled() bool
 	EnableServerMode() error
 	DisableServerMode() error
 
+	// TODO_IN_THIS_COMMIT: Do the functions below this line need to be part of the interface??/
 	SendStateSyncMessage(msg *typesCons.StateSyncMessage, dst cryptoPocket.Address, height uint64) error
 
 	// Getter functions for the aggregated metadata and the metadata buffer, used by consensus module.
 	GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse
 
 	// Starts synching the node with the network by requesting blocks.
-	TriggerSync() error
+	TriggerSync() error // TODO_IN_THIS_COMMIT: This should be an ongoing background process
 	PersistedBlock(uint64)
 
 	// Returns the current state of the sync node.
 	CurrentState() state
 
 	HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error
-
-	RequestMetadata() error
 }
 
 // This interface should be only used for debugging purposes and tests.
@@ -74,18 +75,17 @@ type stateSync struct {
 
 	m sync.RWMutex
 
-	// current state that is synched, or previously last synched
-	state   state
-	snycing bool
-
-	logPrefix  string
-	serverMode bool
+	serverModeEnabled bool
 
 	// metadata buffer that is periodically updated
-	aggregatedSyncMetadata *typesCons.StateSyncMetadataResponse
+	aggregatedSyncMetadata *typesCons.StateSyncMetadataResponse // TECHDEBT: This needs a different type
 	syncMetadataBuffer     []*typesCons.StateSyncMetadataResponse
 
-	// snychronisation lifecycle controls
+	// Synching State
+	state     state // TODO_IN_THIS_COMMIT: This is a property of the persistence module, it should not be part of consensus
+	isSyncing bool  // TODO_IN_THIS_COMMIT: The FSM should be the source of truth for this
+
+	// synchronization lifecycle controls
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -110,35 +110,41 @@ func (m *stateSync) CurrentState() state {
 func (m *stateSync) TriggerSync() error {
 	m.logger.Info().Msg("Triggering syncing...")
 
-	if m.snycing { // if the node is currently syncing, update the sync state
+	// if the node is currently syncing, update the sync state
+	if m.isSyncing {
 		m.logger.Info().Msg("Node is already syncing, so updating the sync state.")
+		// 1. This should always be done automatically
+		// 2. This doesn't trigger aggregation so it could be wrong
 		m.state.endingHeight = m.aggregatedSyncMetadata.MaxHeight
-	} else { // if the node is not currently syncing, generate a new sync state
-		m.logger.Info().Msg("Node is currently not syncing, so generating a new sync state.")
-		maxPersistedBlockHeight, err := m.maximumPersistedBlockHeight()
-		if err != nil {
-			return err
-		}
-
-		if maxPersistedBlockHeight > m.aggregatedSyncMetadata.MaxHeight || m.aggregatedSyncMetadata.MaxHeight == 0 {
-			// should only happen when node is back online, or bootstraps, and the aggregated metadata is not updated yet.
-			m.logger.Info().Msgf("NodeId: %d, Unsynched event is triggered, but aggregated metadata's height: %d is less than node's maxpersisted height: %d. So skipping the syncing. Syncing will start when there is a new block proposal and aggregated metadata is updated.", m.bus.GetConsensusModule().GetNodeId(), m.aggregatedSyncMetadata.MaxHeight, maxPersistedBlockHeight)
-			return nil
-		} else if maxPersistedBlockHeight == m.aggregatedSyncMetadata.MaxHeight {
-			m.logger.Info().Msg("Node is already synched with the network, so skipping the syncing.")
-			return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
-		}
-
-		m.snycing = true
-		m.state = state{
-			height:         maxPersistedBlockHeight,
-			startingHeight: maxPersistedBlockHeight + 1,
-			endingHeight:   m.aggregatedSyncMetadata.MaxHeight,
-			blockReceived:  make(chan uint64, 1),
-		}
-		m.logger.Info().Msgf("Starting syncing from height %d to height %d", m.state.startingHeight, m.state.endingHeight)
-		go m.Sync()
+		return nil
 	}
+
+	// if the node is not currently syncing, generate a new sync state
+	m.logger.Info().Msg("Node is currently not syncing, so generating a new sync state.")
+	maxPersistedBlockHeight, err := m.maximumPersistedBlockHeight()
+	if err != nil {
+		return err
+	}
+
+	if maxPersistedBlockHeight > m.aggregatedSyncMetadata.MaxHeight || m.aggregatedSyncMetadata.MaxHeight == 0 {
+		// should only happen when node is back online, or bootstraps, and the aggregated metadata is not updated yet.
+		// TODO_IN_THIS_COMMIT: This should be a warning, and make messages shorter; ditto everywhere else in this commit.
+		m.logger.Info().Uint64("node_id", m.bus.GetConsensusModule().GetNodeId()).Msgf("Synched event is triggered, but aggregated metadata's height: %d is less than node's maxpersisted height: %d. So skipping the syncing. Syncing will start when there is a new block proposal and aggregated metadata is updated.", m.aggregatedSyncMetadata.MaxHeight, maxPersistedBlockHeight)
+		return nil
+	} else if maxPersistedBlockHeight == m.aggregatedSyncMetadata.MaxHeight {
+		m.logger.Info().Msg("Node is already synched with the network, so skipping the syncing.")
+		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
+	}
+
+	m.isSyncing = true
+	m.state = state{
+		height:         maxPersistedBlockHeight,
+		startingHeight: maxPersistedBlockHeight + 1,
+		endingHeight:   m.aggregatedSyncMetadata.MaxHeight,
+		blockReceived:  make(chan uint64, 1),
+	}
+	m.logger.Info().Msgf("Starting syncing from height %d to height %d", m.state.startingHeight, m.state.endingHeight)
+	go m.Sync()
 
 	return nil
 }
@@ -155,7 +161,11 @@ func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.
 }
 
 func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	m := &stateSync{}
+	m := &stateSync{
+		serverModeEnabled:      false,
+		aggregatedSyncMetadata: &typesCons.StateSyncMetadataResponse{},
+		syncMetadataBuffer:     make([]*typesCons.StateSyncMetadataResponse, 0),
+	}
 
 	for _, option := range options {
 		option(m)
@@ -163,27 +173,20 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 
 	bus.RegisterModule(m)
 
-	m.serverMode = false
-
-	m.aggregatedSyncMetadata = &typesCons.StateSyncMetadataResponse{}
-
-	m.syncMetadataBuffer = make([]*typesCons.StateSyncMetadataResponse, 0)
-
 	return m, nil
 }
 
 func (m *stateSync) Start() error {
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
-	m.ctx, m.cancel = context.WithCancel(context.Background())
-
-	// Node periodically checks if its up to date by requesting metadata from its peers as an external process with periodicMetadataSynch() function
+	// Background process to periodically keep in sync with the state of the network
 	go m.metadataSyncLoop()
 
 	return nil
 }
 
 func (m *stateSync) Stop() error {
+	m.cancel()
 	return nil
 }
 
@@ -202,21 +205,17 @@ func (m *stateSync) GetModuleName() string {
 	return stateSyncModuleName
 }
 
-func (m *stateSync) IsServerModEnabled() bool {
-	return m.serverMode
-}
-
-func (m *stateSync) SetLogPrefix(logPrefix string) {
-	m.logPrefix = logPrefix
+func (m *stateSync) IsServerModeEnabled() bool {
+	return m.serverModeEnabled
 }
 
 func (m *stateSync) EnableServerMode() error {
-	m.serverMode = true
+	m.serverModeEnabled = true
 	return nil
 }
 
 func (m *stateSync) DisableServerMode() error {
-	m.serverMode = false
+	m.serverModeEnabled = false
 	return nil
 }
 
@@ -224,26 +223,26 @@ func (m *stateSync) HandleStateSyncMetadataResponse(metaDataRes *typesCons.State
 	m.logger.Info().Fields(m.logHelper(metaDataRes.PeerAddress)).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
 
 	m.syncMetadataBuffer = append(m.syncMetadataBuffer, metaDataRes)
-	//m.logger.Info().Msg("Finished handling StateSync MetadataResponse")
 
 	return nil
 }
 
+// TODO_IN_THIS_COMMIT: Does this need to be exposed?
 func (m *stateSync) GetAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse {
-	m.aggregatedSyncMetadata = m.aggregateMetadataResponses()
-	return m.aggregatedSyncMetadata
+	return m.aggregateMetadataResponses() // TODO_IN_THIS_COMMIT: Aggregation should happen in the background - it can just be done every time a new message comes in or using a channel; many alternatives available
 }
 
+// TODO_IN_THIS_COMMIT: Remove if we don't need this
 func (m *stateSync) SetAggregatedSyncMetadata(metadata *typesCons.StateSyncMetadataResponse) {
 	m.aggregatedSyncMetadata = metadata
 }
 
-// Snyc requests missing blocks one by one from its peers, and updates the syncing state (startingHeight, height, endingHeight).
+// Sync requests missing blocks one by one from its peers, and updates the syncing state (startingHeight, height, endingHeight).
 // Sync listens on blockReceived channel, which sends heights of the persisted blocks received from peers. It uses this channel to update the height of the state: m.state.height = persistedBlockHeight
 // if the received block is the target height, it will perform FSM state transition.
 // else it will request the next block (after waiting sometime) and repeat the process.
 func (m *stateSync) Sync() {
-	m.logger.Info().Msg("Node is starting snycing...")
+	m.logger.Info().Msg("Node is starting syncing...")
 
 	// Request blocks from the starting height to the ending height
 	m.requestBlocks()
@@ -307,52 +306,53 @@ func (m *stateSync) requestBlocks() {
 
 }
 
-// Returns max block height metadainfo received from all peers by aggregating responses in the buffer.
+// Returns max block height metadata info received from all peers by aggregating responses in the buffer.
 func (m *stateSync) aggregateMetadataResponses() *typesCons.StateSyncMetadataResponse {
-	metadataResponse := m.aggregatedSyncMetadata
+	aggregatedResponses := &typesCons.StateSyncMetadataResponse{}
 
 	//aggregate metadataResponses by setting the metadataResponse
+	// DISCUSS_IN_THIS_COMMIT: What if new responses come while we are processing this?
+	// TODO_IN_THIS_OR_NEXT_COMMIT: `syncMetadataBuffer` needs to be a channel
 	for _, meta := range m.syncMetadataBuffer {
-		if meta.MaxHeight > metadataResponse.MaxHeight {
-			metadataResponse.MaxHeight = meta.MaxHeight
+		if meta.MaxHeight > aggregatedResponses.MaxHeight {
+			aggregatedResponses.MaxHeight = meta.MaxHeight
 		}
-
-		if meta.MinHeight < metadataResponse.MinHeight {
-			metadataResponse.MinHeight = meta.MinHeight
+		if meta.MinHeight < aggregatedResponses.MinHeight {
+			aggregatedResponses.MinHeight = meta.MinHeight
 		}
 	}
 
-	m.logger.Debug().Msgf("aggregateMetadataResponses, max height: %d", metadataResponse.MaxHeight)
+	m.logger.Debug().Uint64("min_height", aggregatedResponses.MinHeight).Uint64("max_height", aggregatedResponses.MaxHeight).Msg("Finished aggregated state sync metadata responses")
 
-	//clear buffer
+	// Clear buffer
 	m.syncMetadataBuffer = make([]*typesCons.StateSyncMetadataResponse, 0)
-
-	return metadataResponse
+	// Store aggregated responses
+	m.aggregatedSyncMetadata = aggregatedResponses
+	return m.aggregatedSyncMetadata
 }
 
-// metadataSyncLoop periodically queries the network by sending metadata requests to peers using broadCastStateSyncMessage.
-// CONSIDER: Improving meta data request synchronistaion, without timers.
+// metadataSyncLoop periodically queries the network to see if it is behind
 func (m *stateSync) metadataSyncLoop() error {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	if m.ctx != nil {
+		m.logger.Warn().Msg("metadataSyncLoop is already running. Cancelling the previous context...")
+	}
+	m.ctx, m.cancel = context.WithCancel(context.TODO())
 
-	ticker := time.NewTicker(60 * time.Second)
-	defer ticker.Stop()
-
+	ticker := time.NewTicker(metadataSyncPeriod)
 	for {
 		select {
 		case <-ticker.C:
-			m.logger.Info().Msg("Periodic metadata sync is triggered")
-			m.RequestMetadata()
+			m.logger.Info().Msg("Background metadata sync check triggered")
+			m.requestMetadata() // request more metadata from peers
 
-		case <-ctx.Done():
+		case <-m.ctx.Done():
+			ticker.Stop()
 			return nil
-
 		}
 	}
 }
 
-func (m *stateSync) RequestMetadata() error {
+func (m *stateSync) requestMetadata() error {
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_MetadataReq{
 			MetadataReq: &typesCons.StateSyncMetadataRequest{
@@ -362,10 +362,5 @@ func (m *stateSync) RequestMetadata() error {
 	}
 
 	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	err := m.broadcastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return m.broadcastStateSyncMessage(stateSyncMetaDataReqMessage, currentHeight)
 }

@@ -64,8 +64,7 @@ type consensusModule struct {
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	logger    *modules.Logger
-	logPrefix string
+	logger *modules.Logger
 
 	stateSync state_sync.StateSyncModule
 
@@ -276,6 +275,7 @@ func (m *consensusModule) EnableServerMode() {
 
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...
 func (m *consensusModule) loadPersistedState() error {
+	// TODO_IN_THIS_COMMIT: Use m.maxPersistedBlockHeight here instead of
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
 	if err != nil {
 		return nil
