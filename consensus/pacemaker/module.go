@@ -121,21 +121,31 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// 1. If this node is out of sync, it cannot verify the proposal. But node will eventually sync with the rest of the network and add the block.
 	// 2. If this node is synched, node must reject a non-valid propoal.
 	if msg.Height > currentHeight {
-		m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d < message height %d", currentHeight, msg.Height)
-		isSynced, err := m.GetBus().GetConsensusModule().IsSynced()
-		if err != nil {
-			return false, err
-		}
+		// TODO_IN_THIS_COMMIT: The code below calling `IsSynched` is a weird code flow. How would we ever
+		// be at a different height if we already have it persisted - need to delete all of it and make assumptions
+		// that consensus doesn't do everything.
 
-		m.logger.Info().Msg(" Node is not Synced!! Let's start syncing!")
+		/*
+			m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d < message height %d", currentHeight, msg.Height)
+			isSynced, err := m.GetBus().GetConsensusModule().IsSynced()
+			if err != nil {
+				return false, err
+			}
 
-		if !isSynced {
-			// CONSIDER: if node is already transitioned to the Unsynched state, this transition event will be sent, but will be rejected by the
-			err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
-			return false, err
-		}
+			m.logger.Info().Msg(" Node is not Synced!! Let's start syncing!")
 
-		return false, nil
+			if !isSynced {
+				// CONSIDER: if node is already transitioned to the Unsynched state, this transition event will be sent, but will be rejected by the
+				err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
+				return false, err
+			}
+
+			return false, nil
+		*/
+
+		m.logger.Info().Int("msg_height", int(msg.Height)).Int("node_height", int(currentHeight)).Msg(" Node is not Synced!! Let's start syncing!")
+		err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
+		return false, err
 
 	}
 

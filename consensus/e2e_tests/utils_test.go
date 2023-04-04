@@ -46,12 +46,12 @@ const (
 	stateSyncMaxBlockCount = 1000
 )
 
-var maxTxBytes = defaults.DefaultConsensusMaxMempoolBytes
+var (
+	maxTxBytes        = defaults.DefaultConsensusMaxMempoolBytes
+	placeholderBlocks []*coreTypes.Block
+)
 
 type IdToNodeMapping map[typesCons.NodeId]*shared.Node
-
-// CONSIDER: Remove this global variable and pass it around as a parameter.
-var stateSyncDummyblocks []*coreTypes.Block
 
 /*** Node Generation Helpers ***/
 
@@ -375,16 +375,16 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
 		}
 
-		block := stateSyncDummyblocks[heightInt-1]
+		block := placeholderBlocks[heightInt-1]
 		return codec.GetCodec().Marshal(block)
 	}).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().GetMaximumBlockHeight().DoAndReturn(func() (uint64, error) {
 		// if it is checked for an unsynched node, return the current height - 1
-		if int(bus.GetConsensusModule().CurrentHeight()) <= len(stateSyncDummyblocks) {
+		if int(bus.GetConsensusModule().CurrentHeight()) <= len(placeholderBlocks) {
 			return bus.GetConsensusModule().CurrentHeight() - 1, nil
 		}
-		return uint64(len(stateSyncDummyblocks)), nil
+		return uint64(len(placeholderBlocks)), nil
 	}).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetMinimumBlockHeight().DoAndReturn(func() (uint64, error) {
 		// mock minimum block height in persistence module to 1 if current height is equal or more than 1, else return 0 as the minimum height
@@ -432,18 +432,12 @@ func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *mockModules
 func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesis.GenesisState, consensusMod modules.ConsensusModule) *mockModules.MockUtilityModule {
 	ctrl := gomock.NewController(t)
 	utilityMock := mockModules.NewMockUtilityModule(ctrl)
+	utilityMock.EXPECT().GetModuleName().Return(modules.UtilityModuleName).AnyTimes()
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
 	utilityMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	utilityMock.EXPECT().
-		// NewContext(gomock.Any()).
-		// Return(utilityContextMock, nil).
-		// MaxTimes(stateSyncMaxBlockCount)
-		// utilityMock.EXPECT().
-		// 	NewContext(gomock.Any()).
-		// 	Return(utilityContextMock, nil)
 		NewUnitOfWork(gomock.Any()).
 		DoAndReturn(
-			// mimicking the behavior of the utility module's NewUnitOfWork method
 			func(height int64) (modules.UtilityUnitOfWork, error) {
 				if consensusMod.IsLeader() {
 					return baseLeaderUtilityUnitOfWorkMock(t, genesisState), nil
@@ -451,8 +445,6 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesi
 				return baseReplicaUtilityUnitOfWorkMock(t, genesisState), nil
 			}).
 		MaxTimes(stateSyncMaxBlockCount)
-
-	utilityMock.EXPECT().GetModuleName().Return(modules.UtilityModuleName).AnyTimes()
 
 	return utilityMock
 }
@@ -594,15 +586,16 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 	return loggerMock
 }
 
-func generateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators uint64, pocketNodes IdToNodeMapping) {
+func preparePlaceholderBlocks(t *testing.T, numBlocks, numValidators uint64, pocketNodes IdToNodeMapping) []*coreTypes.Block {
 	blocks := make([]*coreTypes.Block, 0)
 
-	var i uint64 = 1
-	for i <= numberOfBlocks {
-		// given height find the leader
-		leaderId := i % uint64(numberOfValidators)
+	i := uint64(1)
+	for i <= numBlocks {
+		// get leader for height
+		// TODO: This can be incorrect because the leader depends on more than just the height
+		leaderId := i % uint64(numValidators)
 		if leaderId == 0 {
-			leaderId = numberOfValidators
+			leaderId = numValidators
 		}
 		leader := pocketNodes[typesCons.NodeId(leaderId)]
 		leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
@@ -621,34 +614,20 @@ func generateDummyBlocksWithQC(t *testing.T, numberOfBlocks, numberOfValidators 
 			Transactions: make([][]byte, 0),
 		}
 
-		block, err = generateValidBlockWithQC(pocketNodes, block)
+		// TODO_IN_THIS_COMMIT: Need to redo how this is done.
+		qc, err := generateValidQuorumCertificate(pocketNodes, block)
 		require.NoError(t, err)
+
+		qcBytes, err := codec.GetCodec().Marshal(qc)
+		require.NoError(t, err)
+
+		block.BlockHeader.QuorumCertificate = qcBytes
 
 		blocks = append(blocks, block)
 		i++
 	}
-
-	stateSyncDummyblocks = blocks
-}
-
-func generateValidBlockWithQC(pocketNodes IdToNodeMapping, block *coreTypes.Block) (*coreTypes.Block, error) {
-	qc, err := generateValidQuorumCertificate(pocketNodes, block)
-	if err != nil {
-		return nil, err
-	}
-
-	qcBytes, err := codec.GetCodec().Marshal(qc)
-	if err != nil {
-		log.Fatalf("could not marshal quorum certificate to bytes: %v", err)
-		return nil, err
-	}
-
-	block.BlockHeader.QuorumCertificate = qcBytes
-
-	//block.BlockHeader.QuorumCertificate = nil
-
-	return block, nil
-
+	placeholderBlocks = blocks
+	return blocks
 }
 
 func logTime(t *testing.T, clck *clock.Mock) {

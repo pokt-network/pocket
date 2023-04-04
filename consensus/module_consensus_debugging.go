@@ -67,11 +67,6 @@ func (m *consensusModule) SetAggregatedStateSyncMetadata(minHeight uint64, maxHe
 	})
 }
 
-func (m *consensusModule) GetAggregatedStateSyncMetadataMaxHeight() (maxHeight uint64) {
-	metadata := m.stateSync.GetAggregatedStateSyncMetadata()
-	return metadata.MaxHeight
-}
-
 func (m *consensusModule) GetLeaderForView(height, round uint64, step uint8) uint64 {
 	msg := &typesCons.HotstuffMessage{
 		Height: height,
