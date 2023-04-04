@@ -122,6 +122,10 @@ func (u *baseUtilityUnitOfWork) CreateAndApplyProposalBlock(proposer []byte, max
 
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
 func (u *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, err error) {
+	if !u.isProposalBlockSet() {
+		return "", nil, utilTypes.ErrProposalBlockNotSet()
+	}
+
 	lastByzantineValidators, err := u.prevBlockByzantineValidators()
 	if err != nil {
 		return "", nil, err
@@ -215,4 +219,8 @@ func (uow *baseUtilityUnitOfWork) Release() error {
 	}
 
 	return nil
+}
+
+func (uow *baseUtilityUnitOfWork) isProposalBlockSet() bool {
+	return uow.proposalStateHash != "" && uow.proposalProposerAddr != nil && uow.proposalBlockTxs != nil
 }

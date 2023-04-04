@@ -9,6 +9,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,7 +36,11 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 	proposerBeforeBalance, err := uow.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
-	err = uow.SetProposalBlock("", addrBz, [][]byte{txBz})
+	// calling ApplyBlock without having called SetProposalBlock first should fail with ErrProposalBlockNotSet
+	_, _, err = uow.ApplyBlock()
+	require.Equal(t, err.Error(), utilTypes.ErrProposalBlockNotSet().Error())
+
+	err = uow.SetProposalBlock("computed_state_hash_placeholder", addrBz, [][]byte{txBz})
 	require.NoError(t, err)
 
 	appHash, _, err := uow.ApplyBlock()

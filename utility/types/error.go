@@ -40,7 +40,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 133
+// NextCode: 134
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -174,6 +174,7 @@ const (
 	CodeGetHeightError                    Code = 129
 	CodeUnknownActorType                  Code = 130
 	CodeUnknownMessageType                Code = 131
+	CodeProposalBlockNotSet               Code = 133
 )
 
 const (
@@ -284,6 +285,7 @@ const (
 	InvalidTransactionCountError      = "the total transactions are less than the block transactions"
 	EmptyTimestampError               = "the timestamp field is empty"
 	EmptyProposerError                = "the proposer field is empty"
+	ProposalBlockNotSet               = "the proposal block is not set"
 	EmptyNetworkIDError               = "the network id field is empty"
 	InvalidHashLengthError            = "the length of the hash is not the correct size"
 	NilQuorumCertificateError         = "the quorum certificate is nil"
@@ -765,6 +767,10 @@ func ErrEmptyNetworkID() Error {
 
 func ErrEmptyProposer() Error {
 	return NewError(CodeEmptyProposerError, EmptyProposerError)
+}
+
+func ErrProposalBlockNotSet() Error {
+	return NewError(CodeProposalBlockNotSet, ProposalBlockNotSet)
 }
 
 func ErrEmptyTimestamp() Error {
