@@ -2,6 +2,7 @@ package unit_of_work
 
 import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
@@ -55,44 +56,8 @@ func (u *baseUtilityUnitOfWork) ApplyBlock() (string, [][]byte, error) {
 	}
 
 	mempool := u.GetBus().GetUtilityModule().GetMempool()
-
-	// deliver txs lifecycle phase
-	for index, txProtoBytes := range u.proposalBlockTxs {
-		tx, err := coreTypes.TxFromBytes(txProtoBytes)
-		if err != nil {
-			return "", nil, err
-		}
-		if err := tx.ValidateBasic(); err != nil {
-			return "", nil, err
-		}
-		// TODO(#346): Currently, the pattern is allowing nil err with an error transaction...
-		//             Should we terminate applyBlock immediately if there's an invalid transaction?
-		//             Or wait until the entire lifecycle is over to evaluate an 'invalid' block
-
-		// Validate and apply the transaction to the Postgres database
-		txResult, err := u.hydrateTxResult(tx, index)
-		if err != nil {
-			return "", nil, err
-		}
-
-		txHash, err := tx.Hash()
-		if err != nil {
-			return "", nil, err
-		}
-
-		// TODO: Need to properly add transactions back on rollbacks
-		if mempool.Contains(txHash) {
-			if err := mempool.RemoveTx(txProtoBytes); err != nil {
-				return "", nil, err
-			}
-			u.logger.Info().Str("tx_hash", txHash).Msg("Applying tx that WAS in the local mempool")
-		} else {
-			u.logger.Info().Str("tx_hash", txHash).Msg("Applying tx that WAS NOT in the local mempool")
-		}
-
-		if err := u.persistenceRWContext.IndexTransaction(txResult); err != nil {
-			u.logger.Fatal().Err(err).Msgf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
-		}
+	if err := u.processTransactionsFromProposalBlock(mempool, u.proposalBlockTxs); err != nil {
+		return "", nil, err
 	}
 
 	// end block lifecycle phase
@@ -141,4 +106,43 @@ func (uow *baseUtilityUnitOfWork) Release() error {
 
 func (uow *baseUtilityUnitOfWork) isProposalBlockSet() bool {
 	return uow.proposalStateHash != "" && uow.proposalProposerAddr != nil
+}
+
+// processTransactionsFromProposalBlock processes the transactions from the proposal block.
+// It also removes the transactions from the mempool if they are already present.
+func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(mempool mempool.TXMempool, txsBytes [][]byte) (err error) {
+	for index, txProtoBytes := range txsBytes {
+		tx, err := coreTypes.TxFromBytes(txProtoBytes)
+		if err != nil {
+			return err
+		}
+		if err := tx.ValidateBasic(); err != nil {
+			return err
+		}
+
+		txResult, err := uow.hydrateTxResult(tx, index)
+		if err != nil {
+			return err
+		}
+
+		txHash, err := tx.Hash()
+		if err != nil {
+			return err
+		}
+
+		if mempool.Contains(txHash) {
+			if err := mempool.RemoveTx(txProtoBytes); err != nil {
+				return err
+			}
+			uow.logger.Info().Str("tx_hash", txHash).Msg("Applying tx that WAS in the local mempool")
+		} else {
+			uow.logger.Info().Str("tx_hash", txHash).Msg("Applying tx that WAS NOT in the local mempool")
+		}
+
+		// TODO(#564): make sure that indexing is reversible in case of a rollback
+		if err := uow.persistenceRWContext.IndexTransaction(txResult); err != nil {
+			uow.logger.Fatal().Err(err).Msgf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
+		}
+	}
+	return nil
 }
