@@ -42,8 +42,8 @@ func (uow *leaderUtilityUnitOfWork) CreateProposalBlock(proposer []byte, maxTxBy
 	}
 
 	log.Debug().Msg("reaping the mempool")
-	mempool := uow.GetBus().GetUtilityModule().GetMempool()
-	if txs, err = uow.reapMempool(mempool, maxTxBytes); err != nil {
+	txMempool := uow.GetBus().GetUtilityModule().GetMempool()
+	if txs, err = uow.reapMempool(txMempool, maxTxBytes); err != nil {
 		return "", nil, err
 	}
 
