@@ -42,7 +42,7 @@ type UnstakingActor interface {
 
 // CONSIDERATION: Consider removing `Utility` from `UtilityUnitOfWork` altogether
 
-// TECHDEBT(@deblasis): `CreateAndApplyProposalBlock` and `ApplyBlock` should be be refactored into a
+// TECHDEBT(@deblasis): `CreateProposalBlock` and `ApplyBlock` should be be refactored into a
 // `GetProposalBlock` and `ApplyProposalBlock` functions
 
 // UtilityUnitOfWork is a unit of work (https://martinfowler.com/eaaCatalog/unitOfWork.html) that allows for atomicity and commit/rollback functionality
@@ -53,7 +53,6 @@ type UtilityUnitOfWork interface {
 	// It does not apply, validate or commit the changes.
 	// For example, it can be use during state sync to set a proposed state transition before validation.
 	// TODO: Investigate a way to potentially simplify the interface by removing this function.
-	// TODO: @deblasis: there's still some mix and match between blockHash and stateHash
 	SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error
 
 	// ApplyBlock applies the context's in-memory proposed state (i.e. the txs in this context).
@@ -71,10 +70,9 @@ type UtilityUnitOfWork interface {
 type LeaderUtilityUnitOfWork interface {
 	UtilityUnitOfWork
 
-	// CreateAndApplyProposalBlock reaps the mempool for txs to be proposed in a new block, and
+	// CreateProposalBlock reaps the mempool for txs to be proposed in a new block, and
 	// applies them to this context after validation.
-	// TODO: #508 new signature
-	CreateAndApplyProposalBlock(proposer []byte, maxTxBytes uint64) (stateHash string, txs [][]byte, err error)
+	CreateProposalBlock(proposer []byte, maxTxBytes uint64) (stateHash string, txs [][]byte, err error)
 }
 
 type ReplicaUtilityUnitOfWork interface {
