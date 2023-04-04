@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.47] - 2023-04-04
+
+- Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`
+
 ## [0.0.0.46] - 2023-04-03
 
 - Add `ConsensusStateSync` interface. It defines exported state sync functions in consensus module
