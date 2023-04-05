@@ -143,18 +143,15 @@ type PersistenceReadContext interface {
 	// Returns "0" if the account does not exist
 	GetPoolAmount(name string, height int64) (amount string, err error)
 	GetAllPools(height int64) ([]*coreTypes.Account, error)
-	GetAllPoolsJSON(height int64) (string, error)
 
 	// Account Queries
 
 	// Returns "0" if the account does not exist
 	GetAccountAmount(address []byte, height int64) (string, error)
 	GetAllAccounts(height int64) ([]*coreTypes.Account, error)
-	GetAllAccountsJSON(height int64) (string, error)
 
 	// App Queries
 	GetAllApps(height int64) ([]*coreTypes.Actor, error)
-	GetAllAppsJSON(height int64) (string, error)
 	GetAppExists(address []byte, height int64) (exists bool, err error)
 	GetAppStakeAmount(height int64, address []byte) (string, error)
 	GetAppsReadyToUnstake(height int64, status int32) (apps []*moduleTypes.UnstakingActor, err error)
@@ -164,7 +161,6 @@ type PersistenceReadContext interface {
 
 	// Servicer Queries
 	GetAllServicers(height int64) ([]*coreTypes.Actor, error)
-	GetAllServicersJSON(height int64) (string, error)
 	GetServicerExists(address []byte, height int64) (exists bool, err error)
 	GetServicerStakeAmount(height int64, address []byte) (string, error)
 	GetServicersReadyToUnstake(height int64, status int32) (servicers []*moduleTypes.UnstakingActor, err error)
@@ -175,7 +171,6 @@ type PersistenceReadContext interface {
 
 	// Fisherman Queries
 	GetAllFishermen(height int64) ([]*coreTypes.Actor, error)
-	GetAllFishermenJSON(height int64) (string, error)
 	GetFishermanExists(address []byte, height int64) (exists bool, err error)
 	GetFishermanStakeAmount(height int64, address []byte) (string, error)
 	GetFishermenReadyToUnstake(height int64, status int32) (fishermen []*moduleTypes.UnstakingActor, err error)
@@ -185,7 +180,6 @@ type PersistenceReadContext interface {
 
 	// Validator Queries
 	GetAllValidators(height int64) ([]*coreTypes.Actor, error)
-	GetAllValidatorsJSON(height int64) (string, error)
 	GetValidatorExists(address []byte, height int64) (exists bool, err error)
 	GetValidatorStakeAmount(height int64, address []byte) (string, error)
 	GetValidatorsReadyToUnstake(height int64, status int32) (validators []*moduleTypes.UnstakingActor, err error)
@@ -202,13 +196,11 @@ type PersistenceReadContext interface {
 	GetStringParam(paramName string, height int64) (string, error)
 	GetBytesParam(paramName string, height int64) ([]byte, error)
 	GetParameter(paramName string, height int64) (any, error)
-	GetAllParamsJSON(height int64) (string, error)
 
 	// Flags
 	GetIntFlag(paramName string, height int64) (int, bool, error)
 	GetStringFlag(paramName string, height int64) (string, bool, error)
 	GetBytesFlag(paramName string, height int64) ([]byte, bool, error)
-	GetAllFlagsJSON(height int64) (string, error)
 }
 
 // SavepointFactory is an interface that allows the creation of savepoints.
