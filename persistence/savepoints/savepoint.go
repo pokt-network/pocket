@@ -1,11 +1,6 @@
 package savepoints
 
 import (
-	"encoding/hex"
-	"encoding/json"
-	"fmt"
-
-	"github.com/itchyny/gojq"
 	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -18,50 +13,7 @@ var (
 )
 
 type savepoint struct {
-	appsJson       string
-	validatorsJson string
-	fishermenJson  string
-	servicersJson  string
-	accountsJson   string
-	poolsJson      string
-	paramsJson     string
-	flagsJson      string
-
 	height int64
-
-	// TODO(@deblasis):  add chains
-}
-
-func (s *savepoint) GetAllAccountsJSON(height int64) (string, error) {
-	return s.accountsJson, nil
-}
-
-func (s *savepoint) GetAllAppsJSON(height int64) (string, error) {
-	return s.appsJson, nil
-}
-
-func (s *savepoint) GetAllFishermenJSON(height int64) (string, error) {
-	return s.fishermenJson, nil
-}
-
-func (s *savepoint) GetAllFlagsJSON(height int64) (string, error) {
-	return s.flagsJson, nil
-}
-
-func (s *savepoint) GetAllParamsJSON(height int64) (string, error) {
-	return s.paramsJson, nil
-}
-
-func (s *savepoint) GetAllPoolsJSON(height int64) (string, error) {
-	return s.poolsJson, nil
-}
-
-func (s *savepoint) GetAllServicersJSON(height int64) (string, error) {
-	return s.servicersJson, nil
-}
-
-func (s *savepoint) GetAllValidatorsJSON(height int64) (string, error) {
-	return s.validatorsJson, nil
 }
 
 func (s *savepoint) Close() error {
@@ -70,97 +22,11 @@ func (s *savepoint) Close() error {
 }
 
 func (s *savepoint) GetAccountAmount(address []byte, height int64) (string, error) {
-	log := log.With().Fields(map[string]interface{}{
-		"address": hex.EncodeToString(address),
-		"height":  height,
-		"source":  "GetAccountAmount",
-	}).Logger()
-
-	// Parse JSON data into an interface{}
-	var data interface{}
-	if s.accountsJson == "" {
-		return "", fmt.Errorf("no accounts found in savepoint with address %s", hex.EncodeToString(address))
-	}
-	if err := json.Unmarshal([]byte(s.accountsJson), &data); err != nil {
-		log.Fatal().
-			Err(err).
-			Msg("Error unmarshalling JSON")
-	}
-
-	query, err := gojq.Parse(".[] | select(.address == $address) | .balance")
-	if err != nil {
-		return "", err
-	}
-	code, err := gojq.Compile(
-		query,
-		gojq.WithVariables([]string{
-			"$address",
-		}),
-	)
-	if err != nil {
-		return "", err
-	}
-	var balance string
-	iter := code.Run(data, any(hex.EncodeToString(address)))
-	for {
-		v, ok := iter.Next()
-		if !ok {
-			break
-		}
-		if err, ok := v.(error); ok {
-			log.Fatal().
-				Err(err).
-				Msg("Error while rehydrating account")
-		}
-		balance = v.(string)
-	}
-	return balance, nil
+	panic("unimplemented")
 }
 
 func (s *savepoint) GetAllAccounts(height int64) (accs []*coreTypes.Account, err error) {
-	log := log.With().Fields(map[string]interface{}{
-		"height": height,
-		"source": "GetAllAccounts",
-	}).Logger()
-
-	// Parse JSON data into an interface{}
-	var data interface{}
-	if s.accountsJson == "" {
-		return
-	}
-	if err := json.Unmarshal([]byte(s.accountsJson), &data); err != nil {
-		log.Fatal().
-			Err(err).
-			Msg("Error unmarshalling JSON")
-	}
-
-	query, err := gojq.Parse(".[]")
-	if err != nil {
-		return
-	}
-	code, err := gojq.Compile(query)
-	if err != nil {
-		return
-	}
-	iter := code.Run(data)
-	for {
-		v, ok := iter.Next()
-		if !ok {
-			break
-		}
-		if err, ok := v.(error); ok {
-			log.Fatal().
-				Err(err).
-				Msg("Error while rehydrating account")
-		}
-
-		row := v.(map[string]any)
-		acc := new(coreTypes.Account)
-		acc.Address = row["address"].(string)
-		acc.Amount = row["balance"].(string)
-		accs = append(accs, acc)
-	}
-	return
+	panic("unimplemented")
 }
 
 // GetAllApps implements modules.PersistenceReadContext
