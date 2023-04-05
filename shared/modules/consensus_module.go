@@ -25,26 +25,18 @@ type ConsensusModule interface {
 	ConsensusPacemaker
 	ConsensusDebugModule
 
-	// Consensus engine handlers
+	// Consensus Engine Handlers
+	// TODO: Rename `HandleMessage` to a more specific name that is consistent with its business logic.
 	HandleMessage(*anypb.Any) error
 	// State Sync message handlers
 	HandleStateSyncMessage(*anypb.Any) error
+	// FSM transition event handler
+	HandleEvent(transitionMessageAny *anypb.Any) error
 
 	// Consensus State Accessors
 	CurrentHeight() uint64
 	CurrentRound() uint64
 	CurrentStep() uint64
-
-	// State Sync functions
-	EnableServerMode()
-}
-
-// ConsensusStateSync represents functions exposed by the Consensus module for StateSync specific business logic.
-// These functions are intended to only be called by the StateSync module.
-// TODO: This interface enables a fast implementation of state sync but should be removed in the future
-type ConsensusStateSync interface {
-	GetNodeIdFromNodeAddress(string) (uint64, error)
-	GetNodeAddress() string
 }
 
 // ConsensusPacemaker represents functions exposed by the Consensus module for Pacemaker specific business logic.
@@ -75,6 +67,17 @@ type ConsensusPacemaker interface {
 	GetNodeId() uint64
 }
 
+// ConsensusStateSync exposes functionality of the Consensus module for StateSync specific business logic.
+// These functions are intended to only be called by the StateSync module.
+// INVESTIGATE: This interface enable a fast implementation of state sync but look into a way of removing it in the future
+type ConsensusStateSync interface {
+	GetNodeIdFromNodeAddress(string) (uint64, error)
+	GetNodeAddress() string
+
+	// IsSynced compares the persisted state with the aggregated state of the network. If the persisted state is behind the network state, i.e. that node is not synced, it will return false.
+	IsSynced() (bool, error)
+}
+
 // ConsensusDebugModule exposes functionality used for testing & development purposes.
 // Not to be used in production.
 // TODO: Add a flag so this is not compiled in the prod binary.
@@ -85,5 +88,13 @@ type ConsensusDebugModule interface {
 	SetRound(uint64)
 	SetStep(uint8) // REFACTOR: This should accept typesCons.HotstuffStep
 	SetBlock(*types.Block)
+
 	SetUtilityUnitOfWork(UtilityUnitOfWork)
+
+	// SetAggregatedStateSyncMetadata is used to set peer's aggregated metadata in testing scenarios to simulate periodic metadata synchronization. It is not intended to be used outside of testing.
+	SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64, peerAddress string)
+	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
+
+	// REFACTOR: This should accept typesCons.HotstuffStep and return typesCons.NodeId.
+	GetLeaderForView(height, round uint64, step uint8) (leaderId uint64)
 }

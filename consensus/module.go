@@ -16,6 +16,7 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -122,6 +123,12 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 
 	consensusCfg := runtimeMgr.GetConfig().Consensus
 
+	if consensusCfg.ServerModeEnabled {
+		if err := m.stateSync.EnableServerMode(); err != nil {
+			return nil, err
+		}
+	}
+
 	genesisState := runtimeMgr.GetGenesis()
 	if err := m.ValidateGenesis(genesisState); err != nil {
 		return nil, fmt.Errorf("genesis validation failed: %w", err)
@@ -146,10 +153,6 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 
 	m.nodeId = valAddrToIdMap[address]
 	m.nodeAddress = address
-
-	if consensusCfg.ServerModeEnabled {
-		m.stateSync.EnableServerMode()
-	}
 
 	m.initMessagesPool()
 
@@ -238,7 +241,8 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	defer m.m.Unlock()
 
 	switch message.MessageName() {
-	case HotstuffMessageContentType:
+
+	case messaging.HotstuffMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
 			return err
@@ -247,15 +251,11 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if !ok {
 			return fmt.Errorf("failed to cast message to HotstuffMessage")
 		}
-		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
-			m.logger.Error().Err(err).Msg("failed to handle hotstuff message")
-			return err
-		}
+		return m.handleHotstuffMessage(hotstuffMessage)
+
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}
-
-	return nil
 }
 
 func (m *consensusModule) CurrentHeight() uint64 {

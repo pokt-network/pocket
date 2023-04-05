@@ -11,7 +11,7 @@ import (
 )
 
 // This module is responsible for handling requests and business logic that advertises and shares
-// local state metadata with other peers synching to the latest block.
+// local state metadata with other peers syncing to the latest block.
 type StateSyncServerModule interface {
 	// Advertise (send) the local state sync metadata to the requesting peer
 	HandleStateSyncMetadataRequest(*typesCons.StateSyncMetadataRequest) error
