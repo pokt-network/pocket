@@ -133,8 +133,8 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: okdas # ${{ github.actor }}
-          password: ${{ secrets.DMITRY_PAT_GITHUB_SECRET_REPLACEMENT_CHANGE_BACK_EVENTUALLY }} # ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
