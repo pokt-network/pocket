@@ -119,7 +119,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            ghcr.io/pokt-network/pocket
+            ghcr.io/pokt-network/pocket-v1
           tags: |
             type=schedule${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
             type=semver,pattern={{version}}${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
@@ -133,8 +133,8 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: okdas # ${{ github.actor }}
+          password: ${{ secrets.DMITRY_PAT_GITHUB_SECRET_REPLACEMENT_CHANGE_BACK_EVENTUALLY }} # ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
