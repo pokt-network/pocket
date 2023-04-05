@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.31] - 2023-04-04
+## [0.0.0.31] - 2023-04-05
 
 - Adds e2e-tests button to Tiltfile
 
