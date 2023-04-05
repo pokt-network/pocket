@@ -20,84 +20,84 @@ env:
   PROTOC_VERSION: "3.19.4"
 
 jobs:
-  # test-multiple-go-versions:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       go: ["1.19"] # As we are relying on generics, we can't go lower than 1.18.
-  #     fail-fast: false
-  #   name: Go ${{ matrix.go }} test
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Setup go
-  #       uses: actions/setup-go@v3
-  #       with:
-  #         go-version: ${{ matrix.go }}
-  #     - name: Setup Golang caches
-  #       uses: actions/cache@v3
-  #       with:
-  #         path: |
-  #           ~/.cache/go-build
-  #           ~/go/pkg/mod
-  #         key: ${{ runner.os }}-golang-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-golang-${{ matrix.go }}-
-  #     - name: Install Protoc
-  #       uses: arduino/setup-protoc@v1
-  #       with:
-  #         version: ${{ env.PROTOC_VERSION }}
-  #         repo-token: ${{ secrets.GITHUB_TOKEN }}
-  #     - name: install cli dependencies
-  #       run: make install_cli_deps
-  #     - name: generate protobufs, RPC server, RPC client and mocks
-  #       run: make protogen_local && make mockgen && make generate_rpc_openapi
-  #     - name: Create coverage report and run tests
-  #       # Not utilizing makefile target here to make use of pipefail bash feature.
-  #       run: |
-  #         set -euo pipefail
-  #         GODEBUG=netdns=cgo go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out 2>&1 | tee test_results.json
-  #     - name: Sanitize test results
-  #       # We're utilizing `tee` above which can capture non-json stdout output so we need to remove non-json lines before additional parsing and submitting it to the external github action.
-  #       if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
-  #       run: cat test_results.json | jq -c -R 'fromjson? | select(type == "object")' > tmp.json && mv tmp.json test_results.json
-  #     - name: Output test failures
-  #       # Makes it easier to find failed tests so no need to scroll through the whole log.
-  #       if: ${{ failure() && env.TARGET_GOLANG_VERSION == matrix.go }}
-  #       run: jq --argjson fail_tests "$(jq -c -r 'select(.Action == "fail") | select(.Test) | .Test' test_results.json | jq -R -s -c -r 'split("\n") | map(select(length>0))')" 'select(.Test as $t | ($fail_tests | arrays)[] | select($t == .)) | select(.Output) | .Output' test_results.json | jq -r | sed ':a;N;$!ba;s/\n\n/\n/g'
-  #     - name: Upload test results
-  #       if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: test-results
-  #         path: |
-  #           test_results.json
-  #     - name: Annotate tests on GitHub
-  #       # Only annotate if the test failed on target version to avoid duplicated annotations on GitHub.
-  #       if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
-  #       uses: guyarb/golang-test-annotations@v0.5.1
-  #       with:
-  #         test-results: test_results.json
-  #     - name: Prepare code coverage report
-  #       if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
-  #       run: go tool cover -func=coverage.out -o=coverage.out
-  #     - name: Upload coverage to Codecov
-  #       if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
-  #       uses: codecov/codecov-action@v3
-  #     - name: golangci-lint
-  #       if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
-  #       uses: golangci/golangci-lint-action@v3
-  #       with:
-  #         version: latest
-  #         args: --timeout=10m
-  #         skip-cache: true
-  #         only-new-issues: true
+  test-multiple-go-versions:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ["1.19"] # As we are relying on generics, we can't go lower than 1.18.
+      fail-fast: false
+    name: Go ${{ matrix.go }} test
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Setup Golang caches
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-${{ matrix.go }}-
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: install cli dependencies
+        run: make install_cli_deps
+      - name: generate protobufs, RPC server, RPC client and mocks
+        run: make protogen_local && make mockgen && make generate_rpc_openapi
+      - name: Create coverage report and run tests
+        # Not utilizing makefile target here to make use of pipefail bash feature.
+        run: |
+          set -euo pipefail
+          GODEBUG=netdns=cgo go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out 2>&1 | tee test_results.json
+      - name: Sanitize test results
+        # We're utilizing `tee` above which can capture non-json stdout output so we need to remove non-json lines before additional parsing and submitting it to the external github action.
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        run: cat test_results.json | jq -c -R 'fromjson? | select(type == "object")' > tmp.json && mv tmp.json test_results.json
+      - name: Output test failures
+        # Makes it easier to find failed tests so no need to scroll through the whole log.
+        if: ${{ failure() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        run: jq --argjson fail_tests "$(jq -c -r 'select(.Action == "fail") | select(.Test) | .Test' test_results.json | jq -R -s -c -r 'split("\n") | map(select(length>0))')" 'select(.Test as $t | ($fail_tests | arrays)[] | select($t == .)) | select(.Output) | .Output' test_results.json | jq -r | sed ':a;N;$!ba;s/\n\n/\n/g'
+      - name: Upload test results
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            test_results.json
+      - name: Annotate tests on GitHub
+        # Only annotate if the test failed on target version to avoid duplicated annotations on GitHub.
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        uses: guyarb/golang-test-annotations@v0.5.1
+        with:
+          test-results: test_results.json
+      - name: Prepare code coverage report
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        run: go tool cover -func=coverage.out -o=coverage.out
+      - name: Upload coverage to Codecov
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        uses: codecov/codecov-action@v3
+      - name: golangci-lint
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=10m
+          skip-cache: true
+          only-new-issues: true
 
   # TODO(@okdas): reuse artifacts built by the previous job instead
   # of going through the build process in container build job again
   # - figure out how to handle musl/alpine case if we want to support it
   build-images:
     runs-on: ubuntu-latest
-    # needs: test-multiple-go-versions
+    needs: test-multiple-go-versions
     permissions:
       contents: read
       packages: write
