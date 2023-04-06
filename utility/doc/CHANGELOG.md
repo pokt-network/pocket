@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.35] - 2023-04-06
+## [0.0.0.35] - 2023-04-07
 
 - Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`
 - Added `GetPrevBlockByzantineValidators` and `ProposalBlockNotSet` errors
