@@ -4,6 +4,11 @@ The CLI is meant to be an user but also a machine friendly way for interacting w
 
 The spirit of the documentation is to continuously update and inform the reader of the general scope of the node binary as breaking, rapid development occurs.
 
+There are two modes of operating the CLI: `Standard` and `Debug`.
+
+- **Standard**: The default mode and is meant for users to interact with the network.
+- **Debug**: Intended for developers to interact with the network and debug issues. To enter debug mode, the CLI must be **built** with the `-tags=debug` build tag.
+
 ## Commands
 
 Command tree available [here](./commands/client.md)

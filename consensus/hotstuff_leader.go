@@ -1,13 +1,15 @@
 package consensus
 
 import (
+	"errors"
+	"fmt"
+
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/modules"
 )
-
-// CONSOLIDATE: Last/Prev & AppHash/StateHash/BlockHash
 
 type HotstuffLeaderMessageHandler struct{}
 
@@ -36,7 +38,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// DISCUSS: Do we need to pause for `MinBlockFreqMSec` here to let more transactions or should we stick with optimistic responsiveness?
 
 	if err := m.didReceiveEnoughMessageForStep(NewRound); err != nil {
-		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(NewRound, err.Error()))
+		m.logger.Info().Fields(msgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
 	}
 
@@ -48,9 +50,9 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		},
 	).Msg("📬 Received enough 📬 votes")
 
-	// Clear the previous utility context, if it exists, and create a new one
-	if err := m.refreshUtilityContext(); err != nil {
-		m.logger.Error().Err(err).Msg("Could not refresh utility context")
+	// Clear the previous utility unitOfWork, if it exists, and create a new one
+	if err := m.refreshUtilityUnitOfWork(); err != nil {
+		m.logger.Error().Err(err).Msg("Could not refresh utility unitOfWork")
 		return
 	}
 
@@ -62,10 +64,10 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
 	// TODO: Add more unit tests for these checks...
 	if m.shouldPrepareNewBlock(highPrepareQC) {
-		block, err := m.prepareAndApplyBlock(highPrepareQC)
+		block, err := m.prepareBlock(highPrepareQC)
 		if err != nil {
 			m.logger.Error().Err(err).Msg(typesCons.ErrPrepareBlock.Error())
-			m.paceMaker.InterruptRound("failed to prepare & apply block")
+			m.paceMaker.InterruptRound("failed to prepare new block")
 			return
 		}
 		m.block = block
@@ -112,7 +114,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	}
 
 	if err := m.didReceiveEnoughMessageForStep(Prepare); err != nil {
-		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(Prepare, err.Error()))
+		m.logger.Info().Fields(msgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
 	}
 
@@ -163,7 +165,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 	}
 
 	if err := m.didReceiveEnoughMessageForStep(PreCommit); err != nil {
-		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(PreCommit, err.Error()))
+		m.logger.Info().Fields(msgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
 	}
 
@@ -214,7 +216,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	}
 
 	if err := m.didReceiveEnoughMessageForStep(Commit); err != nil {
-		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(Commit, err.Error()))
+		m.logger.Info().Fields(msgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
 	}
 
@@ -242,6 +244,13 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		return
 	}
 	m.broadcastToValidators(decideProposeMessage)
+
+	commitQcBytes, err := codec.GetCodec().Marshal(commitQC)
+	if err != nil {
+		m.logger.Error().Err(err).Msg("Failed to convert quorum certificate to bytes")
+		return
+	}
+	m.block.BlockHeader.QuorumCertificate = commitQcBytes
 
 	if err := m.commitBlock(m.block); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrCommitBlock.Error())
@@ -355,11 +364,6 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 		address, valAddrToIdMap[address], msg, pubKey)
 }
 
-// TODO(#388): Utilize the shared mempool implementation for consensus messages.
-//
-//	It doesn't actually work because SizeOf returns the size of the map pointer,
-//	and does not recursively determine the size of all the underlying elements
-//	Add proper tests and implementation once the mempool is implemented.
 func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) error {
 	if m.consCfg.MaxMempoolBytes < uint64(m.hotstuffMempool[typesCons.HotstuffStep(msg.Type)].TotalMsgBytes()) {
 		m.logger.Error().Err(typesCons.ErrConsensusMempoolFull).Msg(typesCons.DisregardHotstuffMessage)
@@ -377,17 +381,26 @@ func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) e
 
 // This is a helper function intended to be called by a leader/validator during a view change
 // to prepare a new block that is applied to the new underlying context.
-// TODO: Split this into atomic & functional `prepareBlock` and `applyBlock` methods
-func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) (*coreTypes.Block, error) {
+func (m *consensusModule) prepareBlock(qc *typesCons.QuorumCertificate) (*coreTypes.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
 
-	// TECHDEBT: Retrieve this from consensus consensus config
-	maxTxBytes := 90000
+	utilityUnitOfWork := m.utilityUnitOfWork
+	if utilityUnitOfWork == nil {
+		return nil, fmt.Errorf("utility unit of work is nil")
+	}
+
+	maxTxBytes := m.consCfg.MaxMempoolBytes
+
+	leaderUOW, ok := utilityUnitOfWork.(modules.LeaderUtilityUnitOfWork)
+	if !ok {
+		return nil, errors.New("invalid utility unitOfWork, should be of type LeaderUtilityUnitOfWork")
+	}
 
 	// Reap the mempool for transactions to be applied in this block
-	stateHash, txs, err := m.utilityContext.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
+	stateHash, txs, err := leaderUOW.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
+
 	if err != nil {
 		return nil, err
 	}
@@ -397,6 +410,7 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	if err != nil {
 		return nil, err
 	}
+	defer readCtx.Release()
 
 	prevBlockHash, err := readCtx.GetBlockHash(prevHeight)
 	if err != nil {
@@ -422,7 +436,7 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	}
 
 	// Set the proposal block in the persistence context
-	if err := m.utilityContext.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err := utilityUnitOfWork.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return nil, err
 	}
 

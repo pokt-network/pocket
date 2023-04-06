@@ -28,6 +28,7 @@ if (localnet_config_file != localnet_config) or (
 deps = [
     "app",
     "build/localnet",
+    "build/debug.go",
     "consensus",
     "p2p",
     "persistance",
@@ -131,6 +132,7 @@ docker_build_with_restart(
     "client-image",
     root_dir,
     dockerfile_contents="""FROM debian:bullseye
+RUN apt-get update && apt-get install -y procps
 WORKDIR /
 COPY bin/client-linux /usr/local/bin/client
 """,

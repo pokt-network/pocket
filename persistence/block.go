@@ -3,7 +3,6 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
-	"log"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
@@ -52,6 +51,7 @@ func (p *PostgresContext) GetBlockHash(height int64) (string, error) {
 	return blockHash, nil
 }
 
+// TODO: Consider removing this function and using `Height` directly
 func (p *PostgresContext) GetHeight() (int64, error) {
 	return p.Height, nil
 }
@@ -100,6 +100,6 @@ func (p *PostgresContext) storeBlock(block *coreTypes.Block) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Storing block %d in block store.\n", block.BlockHeader.Height)
+	p.logger.Info().Uint64("height", block.BlockHeader.Height).Msg("Storing block in block store")
 	return p.blockStore.Set(utils.HeightToBytes(uint64(p.Height)), blockBz)
 }

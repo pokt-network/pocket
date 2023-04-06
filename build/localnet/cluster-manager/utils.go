@@ -33,3 +33,13 @@ func getPrivateKey(validatorKeysMap map[string]string, validatorId string) crypt
 	}
 	return privateKey
 }
+
+// shouldSkipAutoStaking returns true if the validatorId is in the autoStakeSkipStakeForValidatorIds list
+func shouldSkipAutoStaking(validatorId string) bool {
+	for _, id := range autoStakeSkipStakeForValidatorIds {
+		if id == validatorId {
+			return true
+		}
+	}
+	return false
+}

@@ -24,6 +24,12 @@ const cliPath = "/usr/local/bin/client"
 var (
 	rpcURL string
 	logger = pocketLogger.Global.CreateLoggerForModule("cluster-manager")
+
+	autoStakeAmount = "150000000001"
+	autoStakeChains = []string{"0001"}
+	// autoStakeSkipStakeForValidatorIds is a list of validator ids that should not be auto-staked
+	// it is used to avoid auto-staking the validators that are already staked as part of genesis.
+	autoStakeSkipStakeForValidatorIds = []string{"001", "002", "003", "004"}
 )
 
 func init() {
@@ -66,9 +72,13 @@ func main() {
 		switch event.Type {
 		case watch.Added:
 			logger.Info().Str("validator", service.Name).Msg("Validator added to the cluster")
-			// TODO: consolidate args into constants
+			if shouldSkipAutoStaking(validatorId) {
+				logger.Info().Str("validator", service.Name).Msg("autoStakeSkipStakeForValidarIds includes this validatorId. Skipping auto-staking")
+				continue
+			}
+
 			validatorServiceUrl := fmt.Sprintf("v1-validator%s:%d", validatorId, defaults.DefaultP2PPort)
-			if err := stakeValidator(privateKey, "150000000001", []string{"0001"}, validatorServiceUrl); err != nil {
+			if err := stakeValidator(privateKey, autoStakeAmount, autoStakeChains, validatorServiceUrl); err != nil {
 				logger.Err(err).Msg("Error staking validator")
 			}
 		case watch.Deleted:

@@ -38,8 +38,9 @@ Please mark the relevant option(s):
 
 ## Testing
 
-- [ ] `make develop_test`
-- [ ] [LocalNet](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md) w/ all of the steps outlined in the `README`
+- [ ] `make develop_test`; if any code changes were made
+- [ ] [Docker Compose LocalNet](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md); if any major functionality was changed or introduced
+- [ ] [k8s LocalNet](https://github.com/pokt-network/pocket/blob/main/build/localnet/README.md); if any infrastructure or configuration changes were made
 
 <!-- REMOVE this comment block after following the instructions
  If you added additional tests or infrastructure, describe it here.
@@ -50,6 +51,7 @@ Please mark the relevant option(s):
 
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have added, or updated, [`godoc` format comments](https://go.dev/blog/godoc) on touched members (see: [tip.golang.org/doc/comment](https://tip.golang.org/doc/comment))
 - [ ] I have tested my changes using the available tooling
 - [ ] I have updated the corresponding CHANGELOG
 

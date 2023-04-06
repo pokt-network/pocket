@@ -12,6 +12,7 @@ Please note that this repository is under very active development and breaking c
   - [Running LocalNet](#running-localnet)
     - [\[Advanced\] Kubernetes](#advanced-kubernetes)
     - [\[Basic\] Docker Compose](#basic-docker-compose)
+  - [Build a container image from development's branch](#build-a-container-image-from-developments-branch)
   - [TODO: Improvements to be added by the core team](#todo-improvements-to-be-added-by-the-core-team)
   - [Profiling](#profiling)
 - [Code Organization](#code-organization)
@@ -132,7 +133,7 @@ function p1 {
     export POCKET_WORKDIR="$(pwd)"
     export CONFIG_PATH="${POCKET_WORKDIR}/build/config/config1.json"
     export GENESIS_PATH="${POCKET_WORKDIR}/build/config/genesis_localhost.json"
-    ${POCKET_WORKDIR}/bin/p1 "$@"
+    ${POCKET_WORKDIR}/bin/p1 "\$@"
 }
 FUNC
 ```
@@ -242,6 +243,12 @@ make client_start && make client_connect
 ```bash
 ✔ TriggerNextView # Commit the transaction
 ```
+
+### Build a container image from development's branch
+
+_tl;dr Attach the `push-image` label to the PR to build and push an image from your branch_
+
+If you need to test or run non-merged pocket code outside LocalNet, for example on DevNet, TestNet or somewhere else, you can force the CI to build and push a container image. This can be done by attaching a `push-image` label on your Pull Request. Next CI build will push the container image to our [container registry](../releases/README.md#container-images).
 
 ### TODO: Improvements to be added by the core team
 

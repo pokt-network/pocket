@@ -30,6 +30,13 @@ spec:
           image: client-image
           imagePullPolicy: IfNotPresent
           command: ["sleep", "infinity"]
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "4"
           env:
             - name: POCKET_P2P_IS_CLIENT_ONLY
               value: "true"
@@ -70,10 +77,13 @@ spec:
             - name: RPC_HOST
               value: v1-validator001
           volumeMounts:
+            # IMPROVE: should probably go in /etc/pocket and have Viper read from there as a default path
             - mountPath: /var/pocket/config
               name: config-volume
             - mountPath: /var/pocket/genesis
               name: genesis-volume
+            - mountPath: /home/root/.pocket
+              name: datadir
       volumes:
         - name: config-volume
           configMap:
@@ -83,3 +93,17 @@ spec:
           configMap:
             name: v1-localnet-genesis
             defaultMode: 420
+        - name: datadir
+          persistentVolumeClaim:
+            claimName: pocket-v1-cli-client-datadir
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pocket-v1-cli-client-datadir
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
