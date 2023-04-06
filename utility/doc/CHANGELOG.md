@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.34] - 2023-04-06
+## [0.0.0.35] - 2023-04-06
 
 - Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`
 - Added `GetPrevBlockByzantineValidators` and `ProposalBlockNotSet` errors
@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored functions for block creation and application to be more readable/modular
 - Added TODOs for future refactoring
 - Renamed `u` to `uow` for consistency
+- Added `stateHash` validation against `proposalBlock`
+- Added feature flag for `stateHash` validation (for testing purposes)
+- Updated tests accordingly
 
 ## [0.0.0.34] - 2023-04-06
 
