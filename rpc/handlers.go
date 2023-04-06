@@ -66,6 +66,53 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 	return nil
 }
 
+type AddressHeightParams struct {
+	Height  int64  `json:"height"`
+	Address string `json:"address"`
+}
+
+type Coin struct {
+	Amount string `json:"amount"`
+	Denom  string `json:"denom"`
+}
+
+type Account struct {
+	Address   string `json:"address"`
+	Coins     []Coin `json:"coins"`
+	PublicKey string `json:"public_key"`
+}
+
+func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
+	var params AddressHeightParams
+	if err := ctx.Bind(&params); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// get the account from the persistence module
+	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
+	persistenceRC, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	accBz, err := hex.DecodeString(params.Address)
+	if err != nil {
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+	height := params.Height
+	if height == 0 {
+		height = int64(currentHeight)
+	}
+	amount, err := persistenceRC.GetAccountAmount(accBz, height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, Account{
+		Address: params.Address,
+		Coins:   []Coin{{Amount: amount, Denom: "upokt"}},
+	})
+}
+
 func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params GetV1P2pStakedActorsAddressBookParams) error {
 	var height int64
 	var actors []Actor

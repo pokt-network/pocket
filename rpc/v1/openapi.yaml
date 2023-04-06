@@ -91,7 +91,29 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-
+  /v1/query/account:
+    post:
+      tags:
+        - query
+      requestBody:
+        description: Request account data at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryAddressHeight'
+              example:
+                address: da034209758b78eaea06dd99c07909ab54c99b45
+                height: 2
+        required: true
+      responses:
+        '200':
+          description: Returns account data at the specified height
+          content:
+            application/json:
+              scheme:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Failed to retrieve the specified account
   /v1/p2p/staked_actors_address_book:
     get:
       tags:
@@ -179,7 +201,42 @@ components:
           type: string
         service_url:
           type: string
-
+    Account:
+      type: object
+      required:
+        - address
+        - coins
+        - public_key
+      properties:
+        address:
+          type: string
+        coins:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coin'
+        public_key:
+          type: string
+    Coin:
+      type: object
+      required:
+        - amount
+        - denom
+      properties:
+        amount:
+          type: string
+        denom:
+          type: string
+    QueryAddressHeight:
+      type: object
+      required:
+        - height
+        - address
+      properties:
+        height:
+          type: integer
+          format: int64
+        address:
+          type: string
     P2PStakedActorsResponse:
       type: object
       required:
