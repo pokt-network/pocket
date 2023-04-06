@@ -119,7 +119,7 @@ func (uow *baseUtilityUnitOfWork) isProposalBlockSet() bool {
 }
 
 // processTransactionsFromProposalBlock processes the transactions from the proposal block.
-// It also removes the transactions from the mempool if they are already present.
+// It also removes the transactions from the mempool if they are also present.
 func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(txMempool mempool.TXMempool, txsBytes [][]byte) (err error) {
 	for index, txProtoBytes := range txsBytes {
 		tx, err := coreTypes.TxFromBytes(txProtoBytes)
