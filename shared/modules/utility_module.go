@@ -67,8 +67,7 @@ type UtilityUnitOfWork interface {
 type LeaderUtilityUnitOfWork interface {
 	UtilityUnitOfWork
 
-	// CreateProposalBlock reaps the mempool for txs to be proposed in a new block, and
-	// applies them to this context after validation.
+	// CreateProposalBlock reaps the mempool for txs to be proposed in a new block.
 	CreateProposalBlock(proposer []byte, maxTxBytes uint64) (stateHash string, txs [][]byte, err error)
 }
 
