@@ -6,6 +6,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
@@ -68,14 +69,16 @@ func TestUtilityUnitOfWork_SetAccountAmount(t *testing.T) {
 func TestUtilityUnitOfWork_AddPoolAmount(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	pool := getFirstTestingPool(t, uow)
+	addrBz, err := hex.DecodeString(pool.Address)
+	require.NoError(t, err)
 
 	initialAmount, err := utils.StringToBigInt(pool.GetAmount())
 	require.NoError(t, err)
 
 	addAmount := big.NewInt(1)
-	require.NoError(t, uow.addPoolAmount(pool.GetAddress(), addAmount), "add pool amount")
+	require.NoError(t, uow.addPoolAmount(addrBz, addAmount), "add pool amount")
 
-	afterAmount, err := uow.getPoolAmount(pool.GetAddress())
+	afterAmount, err := uow.getPoolAmount(addrBz)
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
@@ -84,13 +87,16 @@ func TestUtilityUnitOfWork_AddPoolAmount(t *testing.T) {
 
 func TestUtilityUnitOfWork_InsertPool(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
-	testPoolName := "TEST_POOL"
+
+	_, _, poolAddr := keygen.GetInstance().Next()
+	addrBz, err := hex.DecodeString(poolAddr)
+	require.NoError(t, err)
 
 	amount := big.NewInt(1000)
-	err := uow.insertPool(testPoolName, amount)
+	err = uow.insertPool(addrBz, amount)
 	require.NoError(t, err, "insert pool")
 
-	poolAmount, err := uow.getPoolAmount(testPoolName)
+	poolAmount, err := uow.getPoolAmount(addrBz)
 	require.NoError(t, err)
 	require.Equal(t, amount, poolAmount)
 }
@@ -98,14 +104,16 @@ func TestUtilityUnitOfWork_InsertPool(t *testing.T) {
 func TestUtilityUnitOfWork_SetPoolAmount(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	pool := getFirstTestingPool(t, uow)
+	addrBz, err := hex.DecodeString(pool.GetAddress())
+	require.NoError(t, err)
 
 	beforeAmount, err := utils.StringToBigInt(pool.GetAmount())
 	require.NoError(t, err)
 
 	expectedAfterAmount := big.NewInt(100)
-	require.NoError(t, uow.setPoolAmount(pool.GetAddress(), expectedAfterAmount), "set pool amount")
+	require.NoError(t, uow.setPoolAmount(addrBz, expectedAfterAmount), "set pool amount")
 
-	amount, err := uow.getPoolAmount(pool.GetAddress())
+	amount, err := uow.getPoolAmount(addrBz)
 	require.NoError(t, err)
 	require.NotEqual(t, beforeAmount, amount)
 	require.Equal(t, amount, expectedAfterAmount)
@@ -114,14 +122,16 @@ func TestUtilityUnitOfWork_SetPoolAmount(t *testing.T) {
 func TestUtilityUnitOfWork_SubPoolAmount(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 	pool := getFirstTestingPool(t, uow)
+	addrBz, err := hex.DecodeString(pool.GetAddress())
+	require.NoError(t, err)
 
 	beforeAmountBig := big.NewInt(1000000000000000)
-	require.NoError(t, uow.setPoolAmount(pool.GetAddress(), beforeAmountBig))
+	require.NoError(t, uow.setPoolAmount(addrBz, beforeAmountBig))
 
 	subAmount := big.NewInt(100)
-	require.NoError(t, uow.subPoolAmount(pool.GetAddress(), subAmount), "sub pool amount")
+	require.NoError(t, uow.subPoolAmount(addrBz, subAmount), "sub pool amount")
 
-	amount, err := uow.getPoolAmount(pool.GetAddress())
+	amount, err := uow.getPoolAmount(addrBz)
 	require.NoError(t, err)
 	require.NotEqual(t, beforeAmountBig, amount)
 

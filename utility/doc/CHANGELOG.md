@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.34] - 2023-04-06
+
+- Updated to reflect pools address changes
+
 ## [0.0.0.33] - 2023-03-30
 
 - Improved logging throughout the module

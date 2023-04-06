@@ -136,34 +136,34 @@ func (p *PostgresContext) updateMerkleTrees() (string, error) {
 		case appMerkleTree, valMerkleTree, fishMerkleTree, servicerMerkleTree:
 			actorType, ok := merkleTreeToActorTypeName[treeType]
 			if !ok {
-				return "", fmt.Errorf("no actor type found for merkle tree: %v\n", treeType)
+				return "", fmt.Errorf("no actor type found for merkle tree: %v", treeType)
 			}
 			if err := p.updateActorsTree(actorType); err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to update actors tree for treeType: %v, actorType: %v - %w", treeType, actorType, err)
 			}
 
 		// Account Merkle Trees
 		case accountMerkleTree:
 			if err := p.updateAccountTrees(); err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to update account trees - %w", err)
 			}
 		case poolMerkleTree:
 			if err := p.updatePoolTrees(); err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to update pool trees - %w", err)
 			}
 
 		// Data Merkle Trees
 		case transactionsMerkleTree:
 			if err := p.updateTransactionsTree(); err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to update transactions tree - %w", err)
 			}
 		case paramsMerkleTree:
 			if err := p.updateParamsTree(); err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to update params tree - %w", err)
 			}
 		case flagsMerkleTree:
 			if err := p.updateFlagsTree(); err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to update flags tree - %w", err)
 			}
 
 		// Default
@@ -284,7 +284,11 @@ func (p *PostgresContext) updatePoolTrees() error {
 	}
 
 	for _, pool := range pools {
-		bzAddr := []byte(pool.GetAddress())
+		bzAddr, err := hex.DecodeString(pool.GetAddress())
+		if err != nil {
+			return err
+		}
+
 		accBz, err := codec.GetCodec().Marshal(pool)
 		if err != nil {
 			return err
@@ -327,7 +331,7 @@ func (p *PostgresContext) updateParamsTree() error {
 
 	for _, param := range params {
 		paramBz, err := codec.GetCodec().Marshal(param)
-		paramKey := crypto.SHA3Hash(paramBz)
+		paramKey := crypto.SHA3Hash([]byte(param.Name))
 		if err != nil {
 			return err
 		}
@@ -347,7 +351,7 @@ func (p *PostgresContext) updateFlagsTree() error {
 
 	for _, flag := range flags {
 		flagBz, err := codec.GetCodec().Marshal(flag)
-		flagKey := crypto.SHA3Hash(flagBz)
+		flagKey := crypto.SHA3Hash([]byte(flag.Name))
 		if err != nil {
 			return err
 		}
