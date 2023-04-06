@@ -284,7 +284,11 @@ func (p *PostgresContext) updatePoolTrees() error {
 	}
 
 	for _, pool := range pools {
-		bzAddr := []byte(pool.GetAddress())
+		bzAddr, err := hex.DecodeString(pool.GetAddress())
+		if err != nil {
+			return err
+		}
+
 		accBz, err := codec.GetCodec().Marshal(pool)
 		if err != nil {
 			return err
