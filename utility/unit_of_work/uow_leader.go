@@ -54,7 +54,6 @@ func (uow *leaderUtilityUnitOfWork) CreateProposalBlock(proposer []byte, maxTxBy
 	}
 
 	log.Debug().Msg("computing state hash")
-	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
 	// Compute & return the new state hash
 	stateHash, err = uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {
