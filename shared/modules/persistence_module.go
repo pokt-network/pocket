@@ -75,10 +75,10 @@ type PersistenceWriteContext interface {
 	IndexTransaction(txResult TxResult) error
 
 	// Pool Operations
-	AddPoolAmount(name string, amount string) error
-	SubtractPoolAmount(name string, amount string) error
-	SetPoolAmount(name string, amount string) error
-	InsertPool(name string, amount string) error
+	AddPoolAmount(address []byte, amount string) error
+	SubtractPoolAmount(address []byte, amount string) error
+	SetPoolAmount(address []byte, amount string) error
+	InsertPool(address []byte, amount string) error
 
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error
@@ -141,7 +141,7 @@ type PersistenceReadContext interface {
 	// Pool Queries
 
 	// Returns "0" if the account does not exist
-	GetPoolAmount(name string, height int64) (amount string, err error)
+	GetPoolAmount(address []byte, height int64) (amount string, err error)
 	GetAllPools(height int64) ([]*coreTypes.Account, error)
 
 	// Account Queries

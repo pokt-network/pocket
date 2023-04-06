@@ -49,14 +49,14 @@ func (u *baseUtilityUnitOfWork) setAccountAmount(address []byte, amount *big.Int
 
 // Pools specific functionality
 
-func (u *baseUtilityUnitOfWork) insertPool(address string, amount *big.Int) types.Error {
+func (u *baseUtilityUnitOfWork) insertPool(address []byte, amount *big.Int) types.Error {
 	if err := u.persistenceRWContext.InsertPool(address, utils.BigIntToString(amount)); err != nil {
 		return types.ErrSetPool(address, err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) getPoolAmount(address string) (*big.Int, types.Error) {
+func (u *baseUtilityUnitOfWork) getPoolAmount(address []byte) (*big.Int, types.Error) {
 	amountStr, err := u.persistenceReadContext.GetPoolAmount(address, u.height)
 	if err != nil {
 		return nil, types.ErrGetPoolAmount(address, err)
@@ -68,21 +68,21 @@ func (u *baseUtilityUnitOfWork) getPoolAmount(address string) (*big.Int, types.E
 	return amount, nil
 }
 
-func (u *baseUtilityUnitOfWork) addPoolAmount(address string, amountToAdd *big.Int) types.Error {
+func (u *baseUtilityUnitOfWork) addPoolAmount(address []byte, amountToAdd *big.Int) types.Error {
 	if err := u.persistenceRWContext.AddPoolAmount(address, utils.BigIntToString(amountToAdd)); err != nil {
 		return types.ErrAddPoolAmount(address, err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) subPoolAmount(address string, amountToSub *big.Int) types.Error {
+func (u *baseUtilityUnitOfWork) subPoolAmount(address []byte, amountToSub *big.Int) types.Error {
 	if err := u.persistenceRWContext.SubtractPoolAmount(address, utils.BigIntToString(amountToSub)); err != nil {
 		return types.ErrSubPoolAmount(address, err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) setPoolAmount(address string, amount *big.Int) types.Error {
+func (u *baseUtilityUnitOfWork) setPoolAmount(address []byte, amount *big.Int) types.Error {
 	if err := u.persistenceRWContext.SetPoolAmount(address, utils.BigIntToString(amount)); err != nil {
 		return types.ErrSetPoolAmount(address, err)
 	}

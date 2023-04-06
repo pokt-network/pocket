@@ -2,6 +2,7 @@ package test_artifacts
 
 // Cross module imports are okay because this is only used for testing and not business logic
 import (
+	"encoding/hex"
 	"fmt"
 	"strconv"
 
@@ -60,7 +61,7 @@ func NewPools() (pools []*coreTypes.Account) {
 		}
 
 		pools = append(pools, &coreTypes.Account{
-			Address: coreTypes.Pools(value).Address(),
+			Address: hex.EncodeToString(coreTypes.Pools(value).Address()),
 			Amount:  amount,
 		})
 	}

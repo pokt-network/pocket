@@ -85,7 +85,7 @@ func (u *baseUtilityUnitOfWork) unbondUnstakingActors() (err typesUtil.Error) {
 		actorType := coreTypes.ActorType(actorTypeNum)
 
 		var readyToUnbond []*moduleTypes.UnstakingActor
-		var poolAddress string
+		var poolAddress []byte
 
 		var er error
 		switch actorType {

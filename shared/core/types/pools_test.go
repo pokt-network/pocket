@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/hex"
 	"errors"
 	"strings"
@@ -34,21 +35,21 @@ func TestPools_Address(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			name := tt.pn.FriendlyName()
-			want, err := convertStringToHex(name)
+			want, err := convertFriendlyNameToHexBytes(name)
 			require.NoError(t, err)
 
-			if got := tt.pn.Address(); got != want {
-				t.Errorf("Pools.Address() = %v, want %v", got, want)
+			if got := tt.pn.Address(); !bytes.Equal(got, want) {
+				t.Errorf("Pools.Address() = %v, want %v", string(got), string(want))
 			}
 		})
 	}
 }
 
-// convertStringToHex is the function used to opinionatedly convert a pool name into a valid address
+// convertFriendlyNameToHexBytes is the function used to opinionatedly convert a pool name into a valid address
 // this is done by encoding to hex and padding to 40 characters with zeros
-func convertStringToHex(s string) (string, error) {
-	if len(s) == 0 {
-		return "", nil
+func convertFriendlyNameToHexBytes(s string) ([]byte, error) {
+	if s == "" {
+		return []byte(""), nil
 	}
 	src := []byte(s)
 	dst := make([]byte, hex.EncodedLen(len(src)))
@@ -56,11 +57,11 @@ func convertStringToHex(s string) (string, error) {
 	encodedStr := string(dst)
 
 	if len(encodedStr) > 40 {
-		return "", errors.New("the resulting string is longer than 40 characters")
+		return []byte(""), errors.New("the resulting string is longer than 40 characters")
 	}
 
 	// Add zeros to the end of the encoded string until it reaches 40 characters
 	paddedStr := encodedStr + strings.Repeat("0", 40-len(encodedStr))
 
-	return paddedStr, nil
+	return []byte(paddedStr), nil
 }
