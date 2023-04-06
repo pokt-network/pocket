@@ -136,34 +136,34 @@ func (p *PostgresContext) updateMerkleTrees() (string, error) {
 		case appMerkleTree, valMerkleTree, fishMerkleTree, servicerMerkleTree:
 			actorType, ok := merkleTreeToActorTypeName[treeType]
 			if !ok {
-				return "", fmt.Errorf("no actor type found for merkle tree: %v\n", treeType)
+				return "", fmt.Errorf("no actor type found for merkle tree: %v", treeType)
 			}
 			if err := p.updateActorsTree(actorType); err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to update actors tree for treeType: %v, actorType: %v - %w", treeType, actorType, err)
 			}
 
 		// Account Merkle Trees
 		case accountMerkleTree:
 			if err := p.updateAccountTrees(); err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to update account trees - %w", err)
 			}
 		case poolMerkleTree:
 			if err := p.updatePoolTrees(); err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to update pool trees - %w", err)
 			}
 
 		// Data Merkle Trees
 		case transactionsMerkleTree:
 			if err := p.updateTransactionsTree(); err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to update transactions tree - %w", err)
 			}
 		case paramsMerkleTree:
 			if err := p.updateParamsTree(); err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to update params tree - %w", err)
 			}
 		case flagsMerkleTree:
 			if err := p.updateFlagsTree(); err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to update flags tree - %w", err)
 			}
 
 		// Default
