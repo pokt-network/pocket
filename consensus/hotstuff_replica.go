@@ -246,11 +246,13 @@ func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 		return err
 	}
 
-	// Apply all the transactions in the block and get the stateHash
-	stateHash, _, err := utilityUnitOfWork.ApplyBlock()
+	// Apply all the transactions in the block
+	err := utilityUnitOfWork.ApplyBlock()
 	if err != nil {
 		return err
 	}
+
+	stateHash := utilityUnitOfWork.GetStateHash()
 
 	if blockHeader.StateHash != stateHash {
 		return typesCons.ErrInvalidStateHash(blockHeader.StateHash, stateHash)
