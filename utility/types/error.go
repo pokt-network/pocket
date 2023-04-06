@@ -498,24 +498,24 @@ func ErrAddAccountAmount(err error) Error {
 	return NewError(CodeAddAccountAmountError, fmt.Sprintf("%s: %s", AddAccountAmountError, err.Error()))
 }
 
-func ErrAddPoolAmount(name string, err error) Error {
-	return NewError(CodeAddPoolAmountError, fmt.Sprintf("%s: pool: %s, %s", AddPoolAmountError, name, err.Error()))
+func ErrAddPoolAmount(address []byte, err error) Error {
+	return NewError(CodeAddPoolAmountError, fmt.Sprintf("%s: pool: %s, %s", AddPoolAmountError, hex.EncodeToString(address), err.Error()))
 }
 
-func ErrSubPoolAmount(name string, err error) Error {
-	return NewError(CodeSubPoolAmountError, fmt.Sprintf("%s: pool: %s, %s", SubPoolAmountError, name, err.Error()))
+func ErrSubPoolAmount(address []byte, err error) Error {
+	return NewError(CodeSubPoolAmountError, fmt.Sprintf("%s: pool: %s, %s", SubPoolAmountError, hex.EncodeToString(address), err.Error()))
 }
 
-func ErrSetPoolAmount(name string, err error) Error {
-	return NewError(CodeSetPoolAmountError, fmt.Sprintf("%s: pool: %s, %s", SetPoolAmountError, name, err.Error()))
+func ErrSetPoolAmount(address []byte, err error) Error {
+	return NewError(CodeSetPoolAmountError, fmt.Sprintf("%s: pool: %s, %s", SetPoolAmountError, hex.EncodeToString(address), err.Error()))
 }
 
-func ErrSetPool(name string, err error) Error {
-	return NewError(CodeSetPoolError, fmt.Sprintf("%s: pool: %s, %s", SetPoolError, name, err.Error()))
+func ErrSetPool(address []byte, err error) Error {
+	return NewError(CodeSetPoolError, fmt.Sprintf("%s: pool: %s, %s", SetPoolError, hex.EncodeToString(address), err.Error()))
 }
 
-func ErrGetPoolAmount(name string, err error) Error {
-	return NewError(CodeGetPoolAmountError, fmt.Sprintf("%s: pool: %s, %s", GetPoolAmountError, name, err.Error()))
+func ErrGetPoolAmount(address []byte, err error) Error {
+	return NewError(CodeGetPoolAmountError, fmt.Sprintf("%s: pool: %s, %s", GetPoolAmountError, hex.EncodeToString(address), err.Error()))
 }
 
 func ErrSetAccountAmount(err error) Error {

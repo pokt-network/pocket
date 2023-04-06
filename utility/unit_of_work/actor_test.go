@@ -376,7 +376,7 @@ func TestUtilityUnitOfWork_BeginUnstakingActorsPausedBefore_UnbondUnstakingActor
 		t.Run(fmt.Sprintf("%s.BeginUnstakingActorsPausedBefore", actorType.String()), func(t *testing.T) {
 			uow := newTestingUtilityUnitOfWork(t, 1)
 
-			var poolAddress string
+			var poolAddress []byte
 			var paramName1 string
 			var paramName2 string
 			switch actorType {
