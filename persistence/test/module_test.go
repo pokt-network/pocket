@@ -1,8 +1,10 @@
 package test
 
 import (
+	"encoding/hex"
 	"testing"
 
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	"github.com/stretchr/testify/require"
 )
 
@@ -10,7 +12,9 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	prepareAndCleanContext(t)
 
 	// variables for testing
-	poolName := "fake"
+	_, _, poolAddr := keygen.GetInstance().Next()
+	addrBz, err := hex.DecodeString(poolAddr)
+	require.NoError(t, err)
 	originalAmount := "15"
 	modifiedAmount := "10"
 	proposerAddr := []byte("proposerAddr")
@@ -21,7 +25,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	require.NoError(t, err)
 	defer context.Release()
 
-	require.NoError(t, context.InsertPool(poolName, originalAmount))
+	require.NoError(t, context.InsertPool(addrBz, originalAmount))
 	require.NoError(t, context.Commit(proposerAddr, quorumCert))
 
 	// verify the insert in the previously committed context worked
@@ -29,14 +33,14 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	require.NoError(t, err)
 	defer contextA.Release()
 
-	contextAOriginalAmount, err := contextA.GetPoolAmount(poolName, 0)
+	contextAOriginalAmount, err := contextA.GetPoolAmount(addrBz, 0)
 	require.NoError(t, err)
 	require.Equal(t, originalAmount, contextAOriginalAmount)
 
 	// modify write contextA but do not commit it
-	require.NoError(t, contextA.SetPoolAmount(poolName, modifiedAmount))
+	require.NoError(t, contextA.SetPoolAmount(addrBz, modifiedAmount))
 
-	contextAModifiedAmount, err := contextA.GetPoolAmount(poolName, 0)
+	contextAModifiedAmount, err := contextA.GetPoolAmount(addrBz, 0)
 	require.NoError(t, err)
 	require.Equal(t, modifiedAmount, contextAModifiedAmount)
 
@@ -46,7 +50,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	defer contextB.Release()
 
 	// verify context b is unchanged
-	contextBOriginalAmount, err := contextB.GetPoolAmount(poolName, 0)
+	contextBOriginalAmount, err := contextB.GetPoolAmount(addrBz, 0)
 	require.NoError(t, err)
 	require.NotEqual(t, modifiedAmount, contextBOriginalAmount)
 	require.Equal(t, contextAOriginalAmount, contextBOriginalAmount)
