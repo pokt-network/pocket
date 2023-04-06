@@ -358,7 +358,9 @@ func TestGetAllPools(t *testing.T) {
 		return db.AddPoolAmount(pool.GetAddress(), "10")
 	}
 
-	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 7)
+	// -1 because we don't count the "unspecified" pool (Pools_POOLS_UNSPECIFIED)
+	initialCount := len(coreTypes.Pools_value) - 1
+	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, initialCount)
 }
 
 func TestPoolsUpdatedAtHeight(t *testing.T) {
