@@ -46,6 +46,11 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 		}
 	}
 	for _, pool := range state.GetPools() {
+		// addrBz, err := hex.DecodeString(pool.GetAddress())
+		// if err != nil {
+		// 	m.logger.Fatal().Err(err).Str("address", pool.GetAddress()).Msg("an error occurred converting address to bytes")
+		// }
+		// err = rwCtx.InsertPool(hex.EncodeToString(addrBz), pool.GetAmount())
 		err = rwCtx.InsertPool(pool.GetAddress(), pool.GetAmount())
 		if err != nil {
 			m.logger.Fatal().Err(err).Str("address", pool.GetAddress()).Msg("an error occurred inserting an pool in the genesis state")
@@ -106,7 +111,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			if err != nil {
 				log.Fatalf("an error occurred inserting an %s in the genesis state: %s", saic.Name, err.Error())
 			}
-			if err = addValueToPool(saic.Pool.FriendlyName(), act.GetStakedAmount()); err != nil {
+			if err = addValueToPool(saic.Pool.Address(), act.GetStakedAmount()); err != nil {
 				log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", saic.Pool, err.Error())
 			}
 		}
