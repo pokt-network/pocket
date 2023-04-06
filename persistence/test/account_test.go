@@ -381,7 +381,7 @@ func TestGetAllPools(t *testing.T) {
 
 func TestPoolsUpdatedAtHeight(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
-	numPoolsInTestGenesis := len(coreTypes.Pools_value) - 1 // -1 because we don't count the "unspecified" pool (Pools_POOLS_UNSPECIFIED
+	numPoolsInTestGenesis := len(coreTypes.Pools_value) - 1 // -1 because we don't count the "unspecified" pool (Pools_POOLS_UNSPECIFIED)
 
 	// Check num Pools in genesis
 	accs, err := db.GetPoolsUpdated(0)
