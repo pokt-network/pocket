@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/hex"
 	"errors"
 	"strings"
@@ -37,7 +38,7 @@ func TestPools_Address(t *testing.T) {
 			want, err := convertFriendlyNameToHexBytes(name)
 			require.NoError(t, err)
 
-			if got := tt.pn.Address(); string(got) != string(want) {
+			if got := tt.pn.Address(); !bytes.Equal(got, want) {
 				t.Errorf("Pools.Address() = %v, want %v", string(got), string(want))
 			}
 		})
@@ -47,7 +48,7 @@ func TestPools_Address(t *testing.T) {
 // convertFriendlyNameToHexBytes is the function used to opinionatedly convert a pool name into a valid address
 // this is done by encoding to hex and padding to 40 characters with zeros
 func convertFriendlyNameToHexBytes(s string) ([]byte, error) {
-	if len(s) == 0 {
+	if s == "" {
 		return []byte(""), nil
 	}
 	src := []byte(s)
