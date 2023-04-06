@@ -10,7 +10,7 @@ on:
 
 jobs:
   review:
-    if: ${{ contains(github.event.*.labels.*.name, 'gpt review') }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'gpt review') }}
     runs-on: ubuntu-latest
     name: GPT Review
     steps:
