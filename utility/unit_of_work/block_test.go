@@ -40,7 +40,7 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 	_, _, err = uow.ApplyBlock()
 	require.Equal(t, err.Error(), utilTypes.ErrProposalBlockNotSet().Error())
 
-	err = uow.SetProposalBlock("computed_state_hash_placeholder", addrBz, [][]byte{txBz})
+	err = uow.SetProposalBlock(IgnoreProposalBlockCheckHash, addrBz, [][]byte{txBz})
 	require.NoError(t, err)
 
 	appHash, _, err := uow.ApplyBlock()
@@ -89,7 +89,7 @@ func TestUtilityUnitOfWork_BeginBlock(t *testing.T) {
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
 
-	er = uow.SetProposalBlock("computed_state_hash_placeholder", addrBz, [][]byte{txBz})
+	er = uow.SetProposalBlock(IgnoreProposalBlockCheckHash, addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 
 	_, _, er = uow.ApplyBlock()
@@ -117,7 +117,7 @@ func TestUtilityUnitOfWork_EndBlock(t *testing.T) {
 	proposerBeforeBalance, err := uow.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
-	er = uow.SetProposalBlock("computed_state_hash_placeholder", addrBz, [][]byte{txBz})
+	er = uow.SetProposalBlock(IgnoreProposalBlockCheckHash, addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 
 	_, _, er = uow.ApplyBlock()

@@ -1,6 +1,8 @@
 package unit_of_work
 
 import (
+	"fmt"
+
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -76,9 +78,22 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, 
 	log.Debug().Msg("computing state hash")
 	stateHash, err = uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
+		log.Fatal().Err(err).Bool("TODO", true).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return "", nil, utilTypes.ErrAppHash(err)
 	}
+
+	// IMPROVE: this acts as a feature flag to allow tests to ignore the check if needed, ideally the tests should have a way to determine
+	// the hash and set it into the proposal block it's currently hard to do because the state is different at every test run (non-determinism)
+	if uow.proposalStateHash != IgnoreProposalBlockCheckHash {
+		if uow.proposalStateHash != stateHash {
+			log.Fatal().Bool("TODO", true).
+				Str("proposalStateHash", uow.proposalStateHash).
+				Str("stateHash", stateHash).
+				Msg("State hash mismatch. TODO: Look into roll-backing the entire commit...")
+			return "", nil, utilTypes.ErrAppHash(fmt.Errorf("state hash mismatch: expected %s from the proposal, got %s", uow.proposalStateHash, stateHash))
+		}
+	}
+
 	log.Info().Str("state_hash", stateHash).Msgf("ApplyBlock succeeded!")
 
 	// return the app hash; consensus module will get the validator set directly
@@ -151,7 +166,7 @@ func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(txMempool
 
 		// TODO(#564): make sure that indexing is reversible in case of a rollback
 		if err := uow.persistenceRWContext.IndexTransaction(txResult); err != nil {
-			uow.logger.Fatal().Err(err).Msgf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
+			uow.logger.Fatal().Err(err).Msg("TODO(#327): We can apply the transaction but not index it. Crash the process for now")
 		}
 	}
 	return nil

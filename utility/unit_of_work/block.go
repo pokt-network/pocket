@@ -12,6 +12,10 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
+const (
+	IgnoreProposalBlockCheckHash = "0100000000000000000000000000000000000000000000000000000000000010"
+)
+
 func (uow *baseUtilityUnitOfWork) beginBlock() typesUtil.Error {
 	log := uow.logger.With().Fields(map[string]interface{}{
 		"source": "beginBlock",
