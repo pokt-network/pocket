@@ -95,6 +95,7 @@ paths:
     post:
       tags:
         - query
+      summary: Returns the data of the account specified at a given height
       requestBody:
         description: Request account data at the specified height, height = 0 is used as the latest
         content:
