@@ -53,6 +53,7 @@ paths:
               schema:
                 type: string
                 example: 1.0.0
+
   /v1/consensus/state:
     get:
       tags:
@@ -66,6 +67,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ConsensusState"
               example: { "height": 75016, "round": 0, "step": 3 }
+
   /v1/client/broadcast_tx_sync:
     post:
       tags:
@@ -91,6 +93,7 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+
   /v1/query/account:
     post:
       tags:
@@ -102,19 +105,61 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/QueryAddressHeight'
-              example:
-                address: da034209758b78eaea06dd99c07909ab54c99b45
-                height: 2
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              height: 0
         required: true
       responses:
-        '200':
+        "200":
           description: Returns account data at the specified height
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Account'
-        '400':
-          description: Failed to retrieve the specified account
+                $ref: "#/components/schemas/Account"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the account data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/accounts:
+    post:
+      tags:
+        - query
+      summary: Returns the paginated data of all accounts specified at a given height
+      requestBody:
+        description: Request all account data at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeightPaginated"
+            example:
+              height: 0
+              page: 1
+              per_page: 50
+        required: true
+      responses:
+        "200":
+          description: Returns account data for all accounts at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryAccountsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving accounts at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+
   /v1/p2p/staked_actors_address_book:
     get:
       tags:
@@ -235,9 +280,42 @@ components:
       properties:
         height:
           type: integer
-          format: int64
+          format: uint64
         address:
           type: string
+    QueryHeightPaginated:
+      type: object
+      required:
+        - height
+        - page
+        - per_page
+      properties:
+        height:
+          type: integer
+          format: uint64
+        page:
+          type: integer
+          format: uint64
+        per_page:
+          type: integer
+          format: uint64
+    QueryAccountsResponse:
+      type: object
+      required:
+        - result
+        - page
+        - total_pages
+      properties:
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        page:
+          type: integer
+          format: uint64
+        total_pages:
+          type: integer
+          format: uint64
     P2PStakedActorsResponse:
       type: object
       required:

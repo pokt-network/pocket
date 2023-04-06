@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"encoding/hex"
+	"math"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -66,25 +67,9 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 	return nil
 }
 
-type AddressHeightParams struct {
-	Height  int64  `json:"height"`
-	Address string `json:"address"`
-}
-
-type Coin struct {
-	Amount string `json:"amount"`
-	Denom  string `json:"denom"`
-}
-
-type Account struct {
-	Address   string `json:"address"`
-	Coins     []Coin `json:"coins"`
-	PublicKey string `json:"public_key"`
-}
-
 func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
-	var params AddressHeightParams
-	if err := ctx.Bind(&params); err != nil {
+	var body QueryAddressHeight
+	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
@@ -94,22 +79,63 @@ func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	accBz, err := hex.DecodeString(params.Address)
+	accBz, err := hex.DecodeString(body.Address)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
-	height := params.Height
+	height := body.Height
 	if height == 0 {
-		height = int64(currentHeight)
+		height = currentHeight
 	}
-	amount, err := persistenceRC.GetAccountAmount(accBz, height)
+	amount, err := persistenceRC.GetAccountAmount(accBz, int64(height))
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
 	return ctx.JSON(http.StatusOK, Account{
-		Address: params.Address,
+		Address: body.Address,
 		Coins:   []Coin{{Amount: amount, Denom: "upokt"}},
+	})
+}
+
+func (s *rpcServer) PostV1QueryAccounts(ctx echo.Context) error {
+	var body QueryHeightPaginated
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+	if body.Page == 0 || body.PerPage == 0 {
+		return ctx.String(http.StatusBadRequest, "page and per_page must be greater than 0")
+	}
+
+	// get the account from the persistence module
+	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
+	persistenceRC, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	height := body.Height
+	if height == 0 {
+		height = currentHeight
+	}
+	allAccounts, err := persistenceRC.GetAllAccounts(int64(height))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	totalPages := uint64(math.Ceil(float64(len(allAccounts)) / float64(body.PerPage)))
+	start := (body.Page - 1) * body.PerPage
+	end := (body.Page * body.PerPage) - 1
+	accounts := make([]Account, 0)
+	for i := start; i <= end; i++ {
+		accounts = append(accounts, Account{
+			Address: allAccounts[i].Address,
+			Coins:   []Coin{{Amount: allAccounts[i].Amount, Denom: "upokt"}},
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, QueryAccountsResponse{
+		Result:     accounts,
+		Page:       body.Page,
+		TotalPages: totalPages,
 	})
 }
 
