@@ -1,10 +1,13 @@
 package consensus
 
 import (
+	"fmt"
+
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var _ modules.ConsensusDebugModule = &consensusModule{}
@@ -79,4 +82,11 @@ func (m *consensusModule) GetLeaderForView(height, round uint64, step uint8) uin
 		return 0
 	}
 	return uint64(leaderId)
+}
+
+func (m *consensusModule) TriggerFSMTransition(any *anypb.Any) error {
+	fmt.Println("Triggering FSM transition with event message: ", any)
+	//return m.GetBus().GetStateMachineModule().SendEvent(event)
+	return m.HandleEvent(any)
+	//return nil
 }

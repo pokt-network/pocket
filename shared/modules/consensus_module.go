@@ -97,4 +97,6 @@ type ConsensusDebugModule interface {
 
 	// REFACTOR: This should accept typesCons.HotstuffStep and return typesCons.NodeId.
 	GetLeaderForView(height, round uint64, step uint8) (leaderId uint64)
+
+	TriggerFSMTransition(*anypb.Any) error
 }

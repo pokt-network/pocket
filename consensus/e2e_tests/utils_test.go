@@ -3,7 +3,6 @@ package e2e_tests
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"sort"
@@ -28,6 +27,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/utils"
+	"github.com/pokt-network/pocket/state_machine"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -109,6 +109,13 @@ func CreateTestConsensusPocketNode(
 	consensusModule, ok := consensusMod.(modules.ConsensusModule)
 	require.True(t, ok)
 
+	_, err = state_machine.Create(bus)
+	require.NoError(t, err)
+	//stateMachineModule, ok := stateMachineMod.(modules.StateMachineModule)
+	//require.True(t, ok)
+
+	//bus.RegisterModule(stateMachineMod)
+
 	runtimeMgr := (bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
@@ -117,7 +124,7 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
-	stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
+	//stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
 
 	for _, module := range []modules.Module{
 		p2pMock,
@@ -125,7 +132,7 @@ func CreateTestConsensusPocketNode(
 		telemetryMock,
 		loggerMock,
 		rpcMock,
-		stateMachineMock,
+		//stateMachineMock,
 	} {
 		bus.RegisterModule(module)
 	}
@@ -153,12 +160,19 @@ func GenerateBuses(t *testing.T, runtimeMgrs []*runtime.Manager) (buses []module
 }
 
 // CLEANUP: Reduce package scope visibility in the consensus test module
-func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
+func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) error {
 	for _, pocketNode := range pocketNodes {
 		go startNode(t, pocketNode)
 		startEvent := pocketNode.GetBus().GetBusEvent()
 		require.Equal(t, startEvent.GetContentType(), messaging.NodeStartedEventType)
+		if err := pocketNode.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
+			return err
+		}
+		if err := pocketNode.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_P2P_IsBootstrapped); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 /*** Node Visibility/Reflection Helpers ***/
@@ -265,6 +279,31 @@ func WaitForNetworkStateSyncEvents(
 	}
 
 	return waitForEventsInternal(clck, eventsChannel, messaging.StateSyncMessageContentType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
+}
+
+func WaitForNetworkFSMEvents(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	eventType coreTypes.StateMachineEvent,
+	errMsg string,
+	numExpectedMsgs int,
+	maxWaitTime time.Duration,
+	failOnExtraMessages bool,
+) (messages []*anypb.Any, err error) {
+	fmt.Println("GOKU yo")
+	includeFilter := func(anyMsg *anypb.Any) bool {
+		msg, err := codec.GetCodec().FromAny(anyMsg)
+		require.NoError(t, err)
+
+		stateTransitionMessage, ok := msg.(*messaging.StateMachineTransitionEvent) //messaging.StateMachineTransitionEvent
+		require.True(t, ok)
+		//fmt.Println("GOKHAN CHECKING: ", stateTransitionMessage)
+		return stateTransitionMessage.Event == string(eventType)
+		//return true
+	}
+
+	return waitForEventsInternal(clck, eventsChannel, messaging.StateMachineTransitionEventType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework
@@ -518,40 +557,104 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 	return rpcMock
 }
 
-func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *mockModules.MockStateMachineModule {
+/*
+func baseStateMachineMock(t *testing.T, eventsChannel modules.EventsChannel, bus modules.Bus) *mockModules.MockStateMachineModule {
 	ctrl := gomock.NewController(t)
 	stateMachineMock := mockModules.NewMockStateMachineModule(ctrl)
 	stateMachineMock.EXPECT().Start().Return(nil).AnyTimes()
 	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
 
-	consensusMod := bus.GetConsensusModule()
+	//consensusMod := bus.GetConsensusModule()
 
 	stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
-		switch coreTypes.StateMachineEvent(event) {
-		case coreTypes.StateMachineEvent_Consensus_IsUnsynced:
-			t.Logf("Mocked node is unsynced")
-			return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
-		case coreTypes.StateMachineEvent_Consensus_IsSyncing:
-			t.Logf("Mocked node is syncing")
-			maxHeight := consensusMod.GetAggregatedStateSyncMetadataMaxHeight()
-			// TECHDEBT(#352): The asynchronicity of this leads to a non-deterministic failing test.
-			// See this discussion for details: https://github.com/pokt-network/pocket/pull/528/files#r1150711575
-			consensusMod.SetHeight(maxHeight)
-			return nil
-		case coreTypes.StateMachineEvent_Consensus_IsSyncedValidator:
-			t.Logf("Mocked validator node is synced")
-			return nil
-		case coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator:
-			t.Logf("Mocked non-validator node is synced")
-			return nil
-		default:
-			log.Printf("Mocked node is not handling this event: %s", event)
-			return nil
+		//return consensusMod.TriggerFSMTransition(event)
+
+		//switch coreTypes.StateMachineEvent(event) {
+		// case coreTypes.StateMachineEvent_Consensus_IsUnsynced:
+		// 	t.Logf("Mocked GOKHAN node is unsynced")
+		// 	return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
+		// case coreTypes.StateMachineEvent_Consensus_IsSyncing:
+		// 	t.Logf("Mocked node is syncing")
+		// 	maxHeight := consensusMod.GetAggregatedStateSyncMetadataMaxHeight()
+		//TECHDEBT(#352): The asynchronicity of this leads to a non-deterministic failing test.
+		//See this discussion for details: https://github.com/pokt-network/pocket/pull/528/files#r1150711575
+		// 	consensusMod.SetHeight(maxHeight)
+		// 	return nil
+		// case coreTypes.StateMachineEvent_Consensus_IsSyncedValidator:
+		// 	t.Logf("Mocked validator node is synced")
+		// 	return nil
+		// case coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator:
+		// 	t.Logf("Mocked non-validator node is synced")
+		// 	return nil
+		// default:
+		// 	log.Printf("Mocked node is not handling this event: %s", event)
+		// 	return nil
+		// }
+
+		//var prevState string
+		var nextState string
+
+		if event == coreTypes.StateMachineEvent_Consensus_IsUnsynced {
+			nextState = string(coreTypes.StateMachineState_Consensus_SyncMode)
+		} else if event == coreTypes.StateMachineEvent_Consensus_IsSyncing {
+			nextState = string(coreTypes.StateMachineState_Consensus_Pacemaker)
 		}
+
+		msg := messaging.StateMachineTransitionEvent{
+			Event:    string(event),
+			NewState: nextState,
+		}
+
+		anyMsg, err := codec.GetCodec().ToAny(&msg)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("GOKU Pushing to shared event channel: ", event)
+
+		e := &messaging.PocketEnvelope{Content: anyMsg}
+		eventsChannel <- e
+
+		// eventsChannel <- e
+
+		//fmt.Println("Calling TriggerFSMTransitio")
+		//return consensusMod.TriggerFSMTransition(anyMsg)
+
+		return nil
 	}).AnyTimes()
 
 	return stateMachineMock
+}
+*/
+
+func waitForNodeToSync(t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	unsyncedNode *shared.Node) error {
+	consensusMod := unsyncedNode.GetBus().GetConsensusModule()
+
+	// 1) Wait for the unsynced events
+	errMsg := "FSM unsycned event retrieval error"
+	unsyncedEventMessages, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsUnsynced, errMsg, numValidators*(numValidators-1), 500, false)
+	require.NoError(t, err)
+
+	for _, message := range unsyncedEventMessages {
+		fmt.Println("Unsynced messages: ", message)
+	}
+
+	// Trigger it in the FSM via a method
+	consensusMod.TriggerFSMTransition(unsyncedEventMessages[0])
+
+	// 2) Wait for the syncing events
+	// errMsg = "FSM syncing Event retrieval error"
+	// syncingEventMessages, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncing, errMsg, 1, 500, false)
+	// require.NoError(t, err)
+
+	// for _, message := range syncingEventMessages {
+	// 	fmt.Println("Syncing messages: ", message)
+	// }
+	return nil
 }
 
 func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAgent {

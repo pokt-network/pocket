@@ -1,6 +1,8 @@
 package leader_election
 
 import (
+	"fmt"
+
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
@@ -60,6 +62,8 @@ func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(message *t
 
 	value := int64(message.Height) + int64(message.Round) + int64(message.Step) - 1
 	numVals := int64(len(vals))
+
+	fmt.Printf("electNextLeaderDeterministicRoundRobin: %v, nodeID: %d, leaderId: %d \n\n", message, m.GetBus().GetConsensusModule().GetNodeId(), value%numVals+1)
 
 	return typesCons.NodeId(value%numVals + 1), nil
 }

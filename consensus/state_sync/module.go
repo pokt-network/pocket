@@ -165,6 +165,11 @@ func (m *stateSync) StartSyncing() error {
 
 	m.logger.Debug().Msgf("Starting syncing, current height %d, aggregated maxHeight %d", current_height, m.aggregatedSyncMetadata.MaxHeight)
 
+	// TODO: Implement the business logic for this function
+	//mockSyncing()
+	//m.GetBus().GetConsensusModule().SetHeight(m.aggregatedSyncMetadata.MaxHeight)
+	//h, r, s := m.bus.GetConsensusModule().CurrentHeight(), m.bus.GetConsensusModule().CurrentRound(), uint8(m.bus.GetConsensusModule().CurrentStep())
+	//fmt.Printf("h: %d, r: %d, s:  %d, leaderId is set: %d", h, r, s, m.bus.GetConsensusModule().GetLeaderForView(h, r, s))
 	return nil
 }
 
