@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
-	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -310,20 +309,20 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	return nil
 }
 
-func isNodeLockedOnPastQC(justifyQC, lockedQC *types.QuorumCertificate) (bool, error) {
+func isNodeLockedOnPastQC(justifyQC, lockedQC *typesCons.QuorumCertificate) (bool, error) {
 	if isLockedOnPastHeight(justifyQC, lockedQC) {
-		return true, types.ErrNodeLockedPastHeight
+		return true, typesCons.ErrNodeLockedPastHeight
 	} else if isLockedOnCurrHeightAndPastRound(justifyQC, lockedQC) {
-		return true, types.ErrNodeLockedPastHeight
+		return true, typesCons.ErrNodeLockedPastHeight
 	}
 	return false, nil
 }
 
-func isLockedOnPastHeight(justifyQC, lockedQC *types.QuorumCertificate) bool {
+func isLockedOnPastHeight(justifyQC, lockedQC *typesCons.QuorumCertificate) bool {
 	return justifyQC.Height > lockedQC.Height
 }
 
-func isLockedOnCurrHeightAndPastRound(justifyQC, lockedQC *types.QuorumCertificate) bool {
+func isLockedOnCurrHeightAndPastRound(justifyQC, lockedQC *typesCons.QuorumCertificate) bool {
 	return justifyQC.Height == lockedQC.Height && justifyQC.Round > lockedQC.Round
 }
 
