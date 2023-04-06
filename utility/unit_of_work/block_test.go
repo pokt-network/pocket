@@ -37,15 +37,16 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	// calling ApplyBlock without having called SetProposalBlock first should fail with ErrProposalBlockNotSet
-	_, _, err = uow.ApplyBlock()
+	err = uow.ApplyBlock()
 	require.Equal(t, err.Error(), utilTypes.ErrProposalBlockNotSet().Error())
 
 	err = uow.SetProposalBlock(IgnoreProposalBlockCheckHash, addrBz, [][]byte{txBz})
 	require.NoError(t, err)
 
-	appHash, _, err := uow.ApplyBlock()
+	err = uow.ApplyBlock()
+	stateHash := uow.GetStateHash()
 	require.NoError(t, err)
-	require.NotNil(t, appHash)
+	require.NotNil(t, stateHash)
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
@@ -92,7 +93,7 @@ func TestUtilityUnitOfWork_BeginBlock(t *testing.T) {
 	er = uow.SetProposalBlock(IgnoreProposalBlockCheckHash, addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 
-	_, _, er = uow.ApplyBlock()
+	er = uow.ApplyBlock()
 	require.NoError(t, er)
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
@@ -120,7 +121,7 @@ func TestUtilityUnitOfWork_EndBlock(t *testing.T) {
 	er = uow.SetProposalBlock(IgnoreProposalBlockCheckHash, addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 
-	_, _, er = uow.ApplyBlock()
+	er = uow.ApplyBlock()
 	require.NoError(t, er)
 
 	feeBig, err := uow.getMessageSendFee()

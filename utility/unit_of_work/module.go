@@ -38,6 +38,8 @@ type baseUtilityUnitOfWork struct {
 	proposalStateHash    string
 	proposalProposerAddr []byte
 	proposalBlockTxs     [][]byte
+
+	stateHash string
 }
 
 func (uow *baseUtilityUnitOfWork) SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error {
@@ -47,39 +49,39 @@ func (uow *baseUtilityUnitOfWork) SetProposalBlock(blockHash string, proposerAdd
 	return nil
 }
 
-func (uow *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, err error) {
+func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 	log := uow.logger.With().Fields(map[string]interface{}{
 		"source": "ApplyBlock",
 	}).Logger()
 
 	log.Debug().Msg("checking if proposal block has been set")
 	if !uow.isProposalBlockSet() {
-		return "", nil, utilTypes.ErrProposalBlockNotSet()
+		return utilTypes.ErrProposalBlockNotSet()
 	}
 
 	// begin block lifecycle phase
 	log.Debug().Msg("calling beginBlock")
 	if err := uow.beginBlock(); err != nil {
-		return "", nil, err
+		return err
 	}
 
 	log.Debug().Msg("processing transactions from proposal block")
 	txMempool := uow.GetBus().GetUtilityModule().GetMempool()
 	if err := uow.processTransactionsFromProposalBlock(txMempool, uow.proposalBlockTxs); err != nil {
-		return "", nil, err
+		return err
 	}
 
 	// end block lifecycle phase
 	log.Debug().Msg("calling endBlock")
 	if err := uow.endBlock(uow.proposalProposerAddr); err != nil {
-		return "", nil, err
+		return err
 	}
 	// return the app hash (consensus module will get the validator set directly)
 	log.Debug().Msg("computing state hash")
-	stateHash, err = uow.persistenceRWContext.ComputeStateHash()
+	stateHash, err := uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {
 		log.Fatal().Err(err).Bool("TODO", true).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
-		return "", nil, utilTypes.ErrAppHash(err)
+		return utilTypes.ErrAppHash(err)
 	}
 
 	// IMPROVE: this acts as a feature flag to allow tests to ignore the check if needed, ideally the tests should have a way to determine
@@ -90,14 +92,15 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, 
 				Str("proposalStateHash", uow.proposalStateHash).
 				Str("stateHash", stateHash).
 				Msg("State hash mismatch. TODO: Look into roll-backing the entire commit...")
-			return "", nil, utilTypes.ErrAppHash(fmt.Errorf("state hash mismatch: expected %s from the proposal, got %s", uow.proposalStateHash, stateHash))
+			return utilTypes.ErrAppHash(fmt.Errorf("state hash mismatch: expected %s from the proposal, got %s", uow.proposalStateHash, stateHash))
 		}
 	}
 
 	log.Info().Str("state_hash", stateHash).Msgf("ApplyBlock succeeded!")
 
-	// return the app hash; consensus module will get the validator set directly
-	return stateHash, nil, nil
+	uow.stateHash = stateHash
+
+	return nil
 }
 
 // TODO(@deblasis): change tracking here
@@ -170,4 +173,9 @@ func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(txMempool
 		}
 	}
 	return nil
+}
+
+// GetStateHash returns the state hash of the unit of work. It is only available after the block has been applied.
+func (uow *baseUtilityUnitOfWork) GetStateHash() string {
+	return uow.stateHash
 }
