@@ -55,13 +55,16 @@ type UtilityUnitOfWork interface {
 	// ApplyBlock applies the context's in-memory proposed state (i.e. the txs in this context).
 	// Only intended to be used by the block verifiers (i.e. replicas).
 	// NOTE: this is called by the replica OR by the leader when `prepareQc` is not `nil`
-	ApplyBlock() (stateHash string, txs [][]byte, err error)
+	ApplyBlock() error
 
 	// Release releases this utility unit of work and any underlying contexts it references
 	Release() error
 
 	// Commit commits this utility unit of work along with any underlying contexts (e.g. persistenceContext) it references
 	Commit(quorumCert []byte) error
+
+	// GetStateHash returns the state hash of the current utility unit of work
+	GetStateHash() string
 }
 
 type LeaderUtilityUnitOfWork interface {
