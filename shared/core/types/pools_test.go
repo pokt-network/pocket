@@ -47,6 +47,7 @@ func TestPools_Address(t *testing.T) {
 
 // convertFriendlyNameToHexBytes is the function used to opinionatedly convert a pool name into a valid address
 // this is done by encoding to hex and padding to 40 characters with zeros
+// TODO: consider doing the same as V0 (https://github.com/pokt-network/pocket-core/blob/a109dfc03a13eec06413bf1eb7d17fe093f96842/x/auth/types/account.go#L320)
 func convertFriendlyNameToHexBytes(s string) ([]byte, error) {
 	if s == "" {
 		return []byte(""), nil
