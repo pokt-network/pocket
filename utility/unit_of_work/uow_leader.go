@@ -59,7 +59,7 @@ func (uow *leaderUtilityUnitOfWork) CreateProposalBlock(proposer []byte, maxTxBy
 	if err != nil {
 		log.Fatal().Bool("TODO", true).Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 	}
-	log.Info().Str("state_hash", stateHash).Msgf("Finished successfully")
+	log.Info().Str("state_hash", stateHash).Msg("Finished successfully")
 
 	return stateHash, txs, err
 }
