@@ -45,7 +45,6 @@ func (uow *baseUtilityUnitOfWork) SetProposalBlock(blockHash string, proposerAdd
 	return nil
 }
 
-// CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
 func (uow *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, err error) {
 	log := uow.logger.With().Fields(map[string]interface{}{
 		"source": "ApplyBlock",
@@ -73,7 +72,6 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() (stateHash string, txs [][]byte, 
 	if err := uow.endBlock(uow.proposalProposerAddr); err != nil {
 		return "", nil, err
 	}
-	// TODO(@deblasis): this should be from a ReadContext (the ephemeral/staging one)
 	// return the app hash (consensus module will get the validator set directly)
 	log.Debug().Msg("computing state hash")
 	stateHash, err = uow.persistenceRWContext.ComputeStateHash()
@@ -114,12 +112,14 @@ func (uow *baseUtilityUnitOfWork) Release() error {
 	return nil
 }
 
+// isProposalBlockSet returns true if the proposal block has been set.
+// TODO: it should also check that uow.proposalBlockTxs is not empty but if we do, tests fail.
 func (uow *baseUtilityUnitOfWork) isProposalBlockSet() bool {
 	return uow.proposalStateHash != "" && uow.proposalProposerAddr != nil
 }
 
 // processTransactionsFromProposalBlock processes the transactions from the proposal block.
-// It also removes the transactions from the mempool if they are already present.
+// It also removes the transactions from the mempool if they are also present.
 func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(txMempool mempool.TXMempool, txsBytes [][]byte) (err error) {
 	for index, txProtoBytes := range txsBytes {
 		tx, err := coreTypes.TxFromBytes(txProtoBytes)

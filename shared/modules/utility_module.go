@@ -42,9 +42,6 @@ type UnstakingActor interface {
 
 // CONSIDERATION: Consider removing `Utility` from `UtilityUnitOfWork` altogether
 
-// TECHDEBT(@deblasis): `CreateProposalBlock` and `ApplyBlock` should be be refactored into a
-// `GetProposalBlock` and `ApplyProposalBlock` functions
-
 // UtilityUnitOfWork is a unit of work (https://martinfowler.com/eaaCatalog/unitOfWork.html) that allows for atomicity and commit/rollback functionality
 type UtilityUnitOfWork interface {
 	IntegratableModule

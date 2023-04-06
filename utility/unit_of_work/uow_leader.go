@@ -58,7 +58,7 @@ func (uow *leaderUtilityUnitOfWork) CreateProposalBlock(proposer []byte, maxTxBy
 	// Compute & return the new state hash
 	stateHash, err = uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
+		log.Fatal().Bool("TODO", true).Err(err).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 	}
 	log.Info().Str("state_hash", stateHash).Msgf("Finished successfully")
 
@@ -109,7 +109,7 @@ func (uow *leaderUtilityUnitOfWork) reapMempool(txMempool mempool.TXMempool, max
 		// TODO(#564): make sure that indexing is reversible in case of a rollback
 		// Index the transaction
 		if err := uow.persistenceRWContext.IndexTransaction(txResult); err != nil {
-			uow.logger.Fatal().Err(err).Msgf("TODO(#327): The transaction can by hydrated but not indexed. Crash the process for now: %v\n", err)
+			uow.logger.Fatal().Bool("TODO", true).Err(err).Msgf("TODO(#327): The transaction can by hydrated but not indexed. Crash the process for now: %v\n", err)
 		}
 
 		txs = append(txs, txBz)
