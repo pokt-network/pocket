@@ -152,3 +152,4 @@ The following are some of the properties that a rollback mechanism must have:
 
 - I wonder if serialized, compressed and signed `Merkle Patricia Trie`s could be leveraged as a media for storing `Savepoint`s in a space-efficient and "blockchain-native" way 🤔.
 
+<!-- GITHUB_WIKI: persistence/savepoints_rollbacks -->
