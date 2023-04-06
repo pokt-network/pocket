@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -42,9 +43,11 @@ type persistenceModule struct {
 	// A list of all the merkle trees maintained by the persistence module that roll up into the state commitment.
 	stateTrees *stateTrees
 
-	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
-	// only one write context is allowed at a time
+	// Only one write context is allowed at a time
 	writeContext *PostgresContext
+
+	// A pool of connections to the postgres database
+	pool *pgxpool.Pool
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -73,14 +76,20 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 	persistenceCfg := runtimeMgr.GetConfig().Persistence
 	genesisState := runtimeMgr.GetGenesis()
 
-	conn, err := connectToDatabase(persistenceCfg)
+	pool, err := initializePool(persistenceCfg)
+	if err != nil {
+		return nil, err
+	}
+	m.pool = pool
+
+	conn, err := connectToPool(m.pool, persistenceCfg.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
 	if err := initializeDatabase(conn); err != nil {
 		return nil, err
 	}
-	conn.Close(context.TODO())
+	conn.Release()
 
 	// TODO: Follow the same pattern as txIndexer below for initializing the blockStore
 	blockStore, err := initializeBlockStore(persistenceCfg.BlockStorePath)
@@ -127,6 +136,7 @@ func (m *persistenceModule) Start() error {
 }
 
 func (m *persistenceModule) Stop() error {
+	m.pool.Close()
 	return m.blockStore.Stop()
 }
 
@@ -135,13 +145,17 @@ func (m *persistenceModule) GetModuleName() string {
 }
 
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
-	if m.writeContext != nil && m.writeContext.conn != nil && !m.writeContext.conn.IsClosed() {
-		return nil, fmt.Errorf("write context already exists")
+	if m.writeContext != nil && m.writeContext.isOpen() {
+		return nil, fmt.Errorf("cannot create a new write context if one already exists")
 	}
-	conn, err := connectToDatabase(m.config)
+
+	// Take one of the connections from the db pool
+	conn, err := connectToPool(m.pool, m.config.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
+
+	// Start a new database transaction
 	tx, err := conn.BeginTx(context.TODO(), pgx.TxOptions{
 		IsoLevel:       pgx.ReadUncommitted,
 		AccessMode:     pgx.ReadWrite,
@@ -152,14 +166,13 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	}
 
 	m.writeContext = &PostgresContext{
-		Height: height,
-		conn:   conn,
-		tx:     tx,
-
-		stateHash: "",
-
 		logger: m.logger,
+		Height: height,
 
+		conn: conn,
+		tx:   tx,
+
+		stateHash:  "",
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
 		stateTrees: m.stateTrees,
@@ -169,7 +182,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 }
 
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
-	conn, err := connectToDatabase(m.config)
+	conn, err := connectToPool(m.pool, m.config.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -183,14 +196,14 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	}
 
 	return &PostgresContext{
-		Height: height,
-		conn:   conn,
-		tx:     tx,
-
-		stateHash: "",
-
 		logger: m.logger,
 
+		Height: height,
+
+		conn: conn,
+		tx:   tx,
+
+		stateHash:  "",
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
 		stateTrees: m.stateTrees,
@@ -198,12 +211,15 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 }
 
 func (m *persistenceModule) ReleaseWriteContext() error {
-	if m.writeContext != nil {
-		if err := m.writeContext.resetContext(); err != nil {
-			logger.Global.Error().Err(err).Msg("Error releasing write context")
-		}
-		m.writeContext = nil
+	writeContext := m.writeContext
+	if writeContext == nil {
+		return nil
 	}
+	m.writeContext = nil
+	if !writeContext.isOpen() {
+		return nil
+	}
+	writeContext.Release()
 	return nil
 }
 
@@ -226,23 +242,24 @@ func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 //
 //	move the if logic out of this file.
 func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
-	checkContext, err := m.NewReadContext(-1)
+	readCtx, err := m.NewReadContext(-1)
 	if err != nil {
 		return false, err
 	}
-	defer checkContext.Close()
+	defer readCtx.Release()
 
-	blockHeight, err := checkContext.GetMaximumBlockHeight()
+	blockHeight, err := readCtx.GetMaximumBlockHeight()
 	if err != nil {
 		return true, nil
 	}
 
-	if blockHeight == 0 {
-		if err := m.clearAllState(nil); err != nil {
-			return false, err
-		}
-		return true, nil
+	if blockHeight > 0 {
+		return false, nil
 	}
 
-	return false, nil
+	if err := m.clearAllState(nil); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

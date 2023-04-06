@@ -11,7 +11,7 @@ import (
 )
 
 // This module is responsible for handling requests and business logic that advertises and shares
-// local state metadata with other peers synching to the latest block.
+// local state metadata with other peers syncing to the latest block.
 type StateSyncServerModule interface {
 	// Advertise (send) the local state sync metadata to the requesting peer
 	HandleStateSyncMetadataRequest(*typesCons.StateSyncMetadataRequest) error
@@ -28,20 +28,20 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Received StateSyncMetadataRequest %s", metadataReq)
 
 	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
-	lastPersistedBlockHeight := consensusMod.CurrentHeight() - 1
+	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(lastPersistedBlockHeight))
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(prevPersistedBlockHeight))
 	if err != nil {
 		return nil
 	}
-	defer persistenceContext.Close()
+	defer readCtx.Release()
 
-	maxHeight, err := persistenceContext.GetMaximumBlockHeight()
+	maxHeight, err := readCtx.GetMaximumBlockHeight()
 	if err != nil {
 		return err
 	}
 
-	minHeight, err := persistenceContext.GetMinimumBlockHeight()
+	minHeight, err := readCtx.GetMinimumBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -67,10 +67,10 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Received StateSync GetBlockRequest: %s", blockReq)
 
 	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
-	lastPersistedBlockHeight := consensusMod.CurrentHeight() - 1
+	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
-	if lastPersistedBlockHeight < blockReq.Height {
-		return fmt.Errorf("requested block height: %d is higher than current persisted block height: %d", blockReq.Height, lastPersistedBlockHeight)
+	if prevPersistedBlockHeight < blockReq.Height {
+		return fmt.Errorf("requested block height: %d is higher than current persisted block height: %d", blockReq.Height, prevPersistedBlockHeight)
 	}
 
 	// get block from the persistence module

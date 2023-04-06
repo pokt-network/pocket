@@ -376,8 +376,12 @@ test_hotstuff: ## Run all go unit tests related to hotstuff consensus
 	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Hotstuff
 
 .PHONY: test_pacemaker
-test_pacemaker: ## Run all go unit tests related to the hotstuff pacemaker
+test_pacemaker: ## Run all go unit tests related to hotstuff pacemaker
 	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Pacemaker
+
+.PHONY: test_statesync
+test_statesync: ## Run all go unit tests related to hotstuff statesync
+	go test -v ${VERBOSE_TEST} -count=1  -run StateSync ./consensus/e2e_tests
 
 .PHONY: test_vrf
 test_vrf: ## Run all go unit tests in the VRF library

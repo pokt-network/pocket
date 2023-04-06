@@ -188,7 +188,7 @@ func (u *baseUtilityUnitOfWork) prevBlockByzantineValidators() ([][]byte, error)
 
 // TODO: This has not been tested or investigated in detail
 func (u *baseUtilityUnitOfWork) revertLastSavePoint() typesUtil.Error {
-	// TODO: @deblasis
+	// TODO(@deblasis): Implement this
 	// if len(u.savePointsSet) == 0 {
 	// 	return typesUtil.ErrEmptySavePoints()
 	// }
@@ -204,7 +204,7 @@ func (u *baseUtilityUnitOfWork) revertLastSavePoint() typesUtil.Error {
 
 //nolint:unused // TODO: This has not been tested or investigated in detail
 func (u *baseUtilityUnitOfWork) newSavePoint(txHashBz []byte) typesUtil.Error {
-	// TODO: @deblasis
+	// TODO(@deblasis): Implement this
 	// if err := u.store.NewSavePoint(txHashBz); err != nil {
 	// 	return typesUtil.ErrNewSavePoint(err)
 	// }

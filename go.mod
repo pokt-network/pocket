@@ -39,7 +39,7 @@ require (
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/viper v1.13.0
-	go.uber.org/multierr v1.8.0
+	go.uber.org/multierr v1.9.0
 	golang.org/x/term v0.5.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.26.1

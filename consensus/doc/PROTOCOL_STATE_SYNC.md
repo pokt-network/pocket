@@ -4,7 +4,10 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
 
 - [Background](#background)
 - [State Sync - Peer Metadata](#state-sync---peer-metadata)
+- [State Sync - Peer Metadata Collection](#state-sync---peer-metadata-collection)
+  - [State Sync Lifecycle](#state-sync-lifecycle)
 - [State Sync - Operation Modes](#state-sync---operation-modes)
+  - [Unsynced Mode](#unsynced-mode)
   - [Sync Mode](#sync-mode)
   - [Synced Mode](#synced-mode)
   - [Pacemaker Mode](#pacemaker-mode)
@@ -32,21 +35,33 @@ State Sync is a protocol within a `Pocket` node that enables the download and ma
 
 A node participating in the `State Sync` protocol can act as both a _server_ and/or a _client_ to its `Network Peers`. A pre-requisite of the State Sync protocol is for the `P2P` module to maintain an active set of network peers, along with metadata corresponding to the persistence data they have available.
 
-Illustrative example of Peer Metadata related to State Sync (not a production interface):
+Illustrative example of Peer Metadata functions related to State Sync (not a production interface):
 
 ```golang
 type PeerSyncMetadata interface {
   // ...
   GetPeerID() string   // An ID (e.g. a derivative of a PublicKey) associated with the Peer
-  GetMaxHeight() int64 // The maximum height the peer has in its BlockStore
   GetMinHeight() int64 // The minimum height the peer has in the BlockStore
+  GetMaxHeight() int64 // The maximum height the peer has in its BlockStore
   // ...
 }
 ```
 
-This data can be collected through the `P2P` module during the `Churn Management Protocol`. It can also be abstracted to an `ask-response` cycle where the node continuously asks this meta-information of its active peers.
+## State Sync - Peer Metadata Collection
 
-The following is an illustrative example for a high-level understanding:
+Peer metadata can be collected through the `P2P` module during the `Churn Management Protocol`. It can also be abstracted to an `ask-response` cycle where the node continuously asks this metadata information to its active peers.
+
+Node gathers peer metadata from its peers in `StateSyncMetadataResponse` type, defined as the following:
+
+```golang
+type StateSyncMetadataResponse struct {
+    PeerAddress string
+	MinHeight   uint64
+	MaxHeight   uint64
+}
+```
+
+Node periodically requests peer metadata from active peers after starting, as a background process. The following is an illustrative example:
 
 ```mermaid
 sequenceDiagram
@@ -55,51 +70,93 @@ sequenceDiagram
     actor N as Node
     participant NP as Network Peer(s)
 
-    loop Churn Management
+    loop periodic sync
         N->>+NP: Are you alive? If so, what's your Peer Metadata?
         NP->>N: Yup, here's my Peer Metadata. What's yours?
+        N->>+N: Add metadata to local buffer
         N->>NP: ACK, here's mine. I'll ask again in a bit to make sure I'm up to date.
     end
 ```
 
-The aggregation and consumption of this peer-meta information enables the State Sync protocol by enabling the node to understand the globalized network state through sampling Peer Metadata in its local peer list.
+The aggregation and consumption of this peer-meta information enables the node to understand the global network state through sampling Peer Metadata in its local peer list. The Node aggregates the collected peer metadata to identify the `MaxHeight` and `MinHeight` in the global state.
 
-This gives a view into the data availability layer, with details of what data can be consumed from which peer (not a production interface):
+This gives a view into the data availability layer, with details of what data can be consumed from peer via:
 
 ```golang
-type PeerSyncAggregateMetadata interface {
+type StateSyncModule interface {
   // ...
-  GetPeerMetadata() []PeerSyncMeta // The current list of Peers and their known metadata
-  GetMaxPeerHeight() uint64  // The maximum height associated with all known Peers
+  GetAggregatedStateSyncMetadata() *StateSyncMetadataResponse // Aggregated metadata received from peers.
+  IsSynced() (bool, error)
+  StartSyncing() error
   // ...
 }
 ```
 
-Using the `PeerSyncAggregateMetadata`, a Node is able to compare its local `SyncState` against that of the Global Network that is visible to it (i.e. the world state).
+Using the aggregated `StateSyncMetadataResponse` returned by `GetAggregatedStateSyncMetadata()`, a node is able to compare its local state against that of the Global Network that is visible to it (i.e. the world state).
+
+### State Sync Lifecycle
+
+The Node bootstraps and collects state sync metadata from the rest of the network periodically, via a background process. This enables nodes to have an up-to-date view of the global state. Through periodic sync, the node collects received `StateSyncMetadataResponse`s in a buffer.
+
+For every new block and block proposal `Validator`s receive:
+
+- node checks block's and block proposal's validity and applies the block to its persistence if its valid.
+- if block is higher than node's current height, node checks if it is out of sync via `IsSynced()` function that compares node's local state and the global state by aggregating the collected metada responses.
+
+According to the result of the `IsSynced()` function:
+
+- If the node is out of sync, it runs `StartSyncing()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
+- If the node is in sync with its peers it rejects the block and/or block proposal.
+
+```mermaid
+flowchart TD
+    %% start
+    A[Node] --> B[Periodic <br> Sync]
+    A[Node] --> |New Block| C{IsSynced}
+
+    %% periodic snyc
+    B --> |Request <br> metadata| D[Peers]
+    D[Peers] --> |Collect metadata| B[Periodic <br> Sync]
+
+
+    %% is node sycnhed
+    C -->  |No| E[StartSyncing]
+    C -->  |Yes| F[Apply Block]
+
+    %% syncing
+    E --> |Request Blocks| D[Peers]
+    D[Peers] --> |Block| A[Node]
+
+```
 
 ## State Sync - Operation Modes
 
 State sync can be viewed as a state machine that transverses various modes the node can be in, including:
 
-1. Sync Mode
-2. Synced Mode
-3. Pacemaker Mode
-4. Server Mode
+1. Unsyched Mode
+2. Sync Mode
+3. Synced Mode
+4. Pacemaker Mode
+5. Server Mode
 
 The functionality of the node depends on the mode it is operating it. Note that `Server Mode` is not mutually exclusive to the others.
 
 For illustrative purposes below assume:
 
 - `localSyncState` is an object instance complying with the `PeerSyncMetadata` interface for the local node
-- `globalSyncMeta` is an object instance complying with the `PeerSyncAggregateMetadata` interface for the global network
+- `globalSyncMeta` is an object instance of `StateSyncMetadataResponse` complying with the `StateSyncModule` interface for the global network, which is returned by the `GetAggregatedStateSyncMetadata()` function.
+
+### Unsynced Mode
+
+The Node is in `Unsynced` mode if `localSyncState.MaxHeight < GlobalSyncMeta.Height`.
+
+In `Unsynced` Mode, node transitions to `Sync Mode` by sending `Consensus_IsSyncing` state transition event, to start catching up with the network.
 
 ### Sync Mode
 
-The Node is in `Sync` Mode if `localSyncState.MaxHeight < GlobalSyncMeta.Height`.
+In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `StartSyncing()` function to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
 
-In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
-
-Though it is unspecified whether or not a Node may make `GetBlock` requests in order or in parallel, the cryptographic restraints of block processing require the Node to call `ApplyBlock` sequentially until it is `Synced`.
+Though it is unspecified whether or not a Node may make `GetBlock` requests in order or in parallel, the cryptographic restraints of block processing require the Node to call `CommitBlock` sequentially until it is `Synced`.
 
 ### Synced Mode
 
@@ -109,7 +166,7 @@ In `SyncedMode`, the Node is caught up to the latest block (based on the visible
 
 ### Pacemaker Mode
 
-The Node is in `Pacemaker` mode if the Node is in `Synced` mode **and** is an active Validator at the current height.
+The Node is in `Pacemaker` mode if the Node is snyched **and** is an active Validator at the current height.
 
 In `Pacemaker` mode, the Node is actively participating in the HotPOKT lifecycle.
 
@@ -131,21 +188,22 @@ flowchart TD
 
     %% Is caught up?
     B --> |Yes| C{Is Validator?}
-    B --> |No| D[SyncMode]
+    B --> |No| E[UnsyncedMode]
+    E --> |Send | D[SyncMode]
 
-    %% Synching
+    %% Syncing
     D --> |Request blocks| Z[Peers]
 
     %% Is a validator?
-    C --> |No| E[Synched Mode]
-    C --> |Yes| F(Pacemaker Mode<br>*HotPOKT*)
-    E --> |Listen for<br>new blocks| Z[Peers]
+    C --> |No| F[Synced Mode]
+    C --> |Yes| G(Pacemaker Mode<br>*HotPOKT*)
+    F --> |Listen for<br>new blocks| Z[Peers]
 
     %% Loop back
     Z[Peers] --> |Blocks| A[StateSync]
 ```
 
-_IMPORTANT: `ApplyBlock` is implicit in the diagram above. If any blocks processed result in an invalid `AppHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._
+_IMPORTANT: `ApplyBlock` is implicit in the diagram above. If any blocks processed result in an invalid `StateHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._
 
 ## State Sync Designs
 
@@ -395,6 +453,6 @@ Aptos follow an **async "fire-and-forget"** pattern as can be seen [here](https:
 - [https://docs.chia.net/peer-protocol](https://docs.chia.net/peer-protocol)
   - A detailed list of the type of requests Chia uses for communication between peers
 - [https://docs.chia.net/node-syncing](https://docs.chia.net/node-syncing)
-  - An explanation of the configurations Chia exposes for node synching
+  - An explanation of the configurations Chia exposes for node syncing
 
 <!-- GITHUB_WIKI: consensus/state_sync_protocol -->

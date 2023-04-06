@@ -106,13 +106,13 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 		height = int64(s.GetBus().GetConsensusModule().CurrentHeight())
 	}
 
-	persistenceContext, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	defer persistenceContext.Close()
+	defer readCtx.Release()
 
-	protocolActorGetter := getProtocolActorGetter(persistenceContext, params)
+	protocolActorGetter := getProtocolActorGetter(readCtx, params)
 
 	protocolActors, err := protocolActorGetter(height)
 	if err != nil {

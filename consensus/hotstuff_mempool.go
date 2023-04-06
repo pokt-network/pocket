@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
 	mempool "github.com/pokt-network/pocket/shared/mempool/list"
@@ -154,7 +155,7 @@ func hashMsg(msg *typesCons.HotstuffMessage) string {
 	return crypto.GetHashStringFromBytes(msgBytes)
 }
 
+// TODO(#432): Potential place to check for double signing
 func onDuplicateMessageDetected(item *typesCons.HotstuffMessage) {
-	// TODO(#432): Potential place to check for double signing
-	log.Printf("duplicate message detected - hash: %s", hashMsg(item))
+	logger.Global.Info().Bool("TODO", true).Msgf("duplicate message detected - hash: %s", hashMsg(item))
 }
