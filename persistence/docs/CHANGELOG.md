@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.44] - 2023-04-06
+
+- Fixed flag/params keying
+- Updated pools read/write functions to use a real address, not a string that is named address and obviously is not hexadecimal
+- Updated tests
+
+## [0.0.0.43] - 2023-04-06
+
+- Added `SAVEPOINTS_ROLLBACKS.md` design document
+
 ## [0.0.0.42] - 2023-03-30
 
 - Replaced all `pgx.Conn` with `pgxpool.Conn` to use postgres connection pooling

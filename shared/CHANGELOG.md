@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.47] - 2023-04-04
+## [0.0.0.48] - 2023-04-06
 
 - Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`
+
+## [0.0.0.47] - 2023-04-06
+
+- Updated to reflect pools address changes
+- Added tests to catch, in a future-proof way, changes to our pools
+- Updated interfaces to use `[]byte` instead of `string` for `pool` addresses for consistency with `accounts` and because otherwise fuzzy tests would fail
 
 ## [0.0.0.46] - 2023-04-03
 

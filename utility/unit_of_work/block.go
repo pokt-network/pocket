@@ -60,14 +60,14 @@ func (uow *baseUtilityUnitOfWork) endBlock(proposer []byte) typesUtil.Error {
 }
 
 func (uow *baseUtilityUnitOfWork) handleProposerRewards(proposer []byte) typesUtil.Error {
-	feePoolName := coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName()
-	feesAndRewardsCollected, err := uow.getPoolAmount(feePoolName)
+	feePoolAddress := coreTypes.Pools_POOLS_FEE_COLLECTOR.Address()
+	feesAndRewardsCollected, err := uow.getPoolAmount(feePoolAddress)
 	if err != nil {
 		return err
 	}
 
 	// Nullify the rewards pool
-	if err := uow.setPoolAmount(feePoolName, big.NewInt(0)); err != nil {
+	if err := uow.setPoolAmount(feePoolAddress, big.NewInt(0)); err != nil {
 		return err
 	}
 
@@ -90,7 +90,7 @@ func (uow *baseUtilityUnitOfWork) handleProposerRewards(proposer []byte) typesUt
 	if err := uow.addAccountAmount(proposer, amountToProposer); err != nil {
 		return err
 	}
-	if err := uow.addPoolAmount(coreTypes.Pools_POOLS_DAO.FriendlyName(), amountToDAO); err != nil {
+	if err := uow.addPoolAmount(coreTypes.Pools_POOLS_DAO.Address(), amountToDAO); err != nil {
 		return err
 	}
 	return nil
@@ -104,22 +104,22 @@ func (uow *baseUtilityUnitOfWork) unbondUnstakingActors() (err typesUtil.Error) 
 		actorType := coreTypes.ActorType(actorTypeNum)
 
 		var readyToUnbond []*moduleTypes.UnstakingActor
-		var poolName string
+		var poolAddress []byte
 
 		var er error
 		switch actorType {
 		case coreTypes.ActorType_ACTOR_TYPE_APP:
 			readyToUnbond, er = uow.persistenceReadContext.GetAppsReadyToUnstake(uow.height, int32(coreTypes.StakeStatus_Unstaking))
-			poolName = coreTypes.Pools_POOLS_APP_STAKE.FriendlyName()
+			poolAddress = coreTypes.Pools_POOLS_APP_STAKE.Address()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			readyToUnbond, er = uow.persistenceReadContext.GetFishermenReadyToUnstake(uow.height, int32(coreTypes.StakeStatus_Unstaking))
-			poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
+			poolAddress = coreTypes.Pools_POOLS_FISHERMAN_STAKE.Address()
 		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 			readyToUnbond, er = uow.persistenceReadContext.GetServicersReadyToUnstake(uow.height, int32(coreTypes.StakeStatus_Unstaking))
-			poolName = coreTypes.Pools_POOLS_SERVICER_STAKE.FriendlyName()
+			poolAddress = coreTypes.Pools_POOLS_SERVICER_STAKE.Address()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			readyToUnbond, er = uow.persistenceReadContext.GetValidatorsReadyToUnstake(uow.height, int32(coreTypes.StakeStatus_Unstaking))
-			poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()
+			poolAddress = coreTypes.Pools_POOLS_VALIDATOR_STAKE.Address()
 		case coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED:
 			continue
 		}
@@ -140,7 +140,7 @@ func (uow *baseUtilityUnitOfWork) unbondUnstakingActors() (err typesUtil.Error) 
 				return typesUtil.ErrHexDecodeFromString(err)
 			}
 
-			if err := uow.subPoolAmount(poolName, stakeAmount); err != nil {
+			if err := uow.subPoolAmount(poolAddress, stakeAmount); err != nil {
 				return err
 			}
 			if err := uow.addAccountAmount(outputAddrBz, stakeAmount); err != nil {

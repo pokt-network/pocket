@@ -49,19 +49,17 @@ func (u *baseUtilityUnitOfWork) setAccountAmount(address []byte, amount *big.Int
 
 // Pools specific functionality
 
-// IMPROVE: Pool function should accept the actual pool types rather than the `FriendlyName` string
-
-func (u *baseUtilityUnitOfWork) insertPool(name string, amount *big.Int) types.Error {
-	if err := u.persistenceRWContext.InsertPool(name, utils.BigIntToString(amount)); err != nil {
-		return types.ErrSetPool(name, err)
+func (u *baseUtilityUnitOfWork) insertPool(address []byte, amount *big.Int) types.Error {
+	if err := u.persistenceRWContext.InsertPool(address, utils.BigIntToString(amount)); err != nil {
+		return types.ErrSetPool(address, err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) getPoolAmount(name string) (*big.Int, types.Error) {
-	amountStr, err := u.persistenceReadContext.GetPoolAmount(name, u.height)
+func (u *baseUtilityUnitOfWork) getPoolAmount(address []byte) (*big.Int, types.Error) {
+	amountStr, err := u.persistenceReadContext.GetPoolAmount(address, u.height)
 	if err != nil {
-		return nil, types.ErrGetPoolAmount(name, err)
+		return nil, types.ErrGetPoolAmount(address, err)
 	}
 	amount, err := utils.StringToBigInt(amountStr)
 	if err != nil {
@@ -70,23 +68,23 @@ func (u *baseUtilityUnitOfWork) getPoolAmount(name string) (*big.Int, types.Erro
 	return amount, nil
 }
 
-func (u *baseUtilityUnitOfWork) addPoolAmount(name string, amountToAdd *big.Int) types.Error {
-	if err := u.persistenceRWContext.AddPoolAmount(name, utils.BigIntToString(amountToAdd)); err != nil {
-		return types.ErrAddPoolAmount(name, err)
+func (u *baseUtilityUnitOfWork) addPoolAmount(address []byte, amountToAdd *big.Int) types.Error {
+	if err := u.persistenceRWContext.AddPoolAmount(address, utils.BigIntToString(amountToAdd)); err != nil {
+		return types.ErrAddPoolAmount(address, err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) subPoolAmount(name string, amountToSub *big.Int) types.Error {
-	if err := u.persistenceRWContext.SubtractPoolAmount(name, utils.BigIntToString(amountToSub)); err != nil {
-		return types.ErrSubPoolAmount(name, err)
+func (u *baseUtilityUnitOfWork) subPoolAmount(address []byte, amountToSub *big.Int) types.Error {
+	if err := u.persistenceRWContext.SubtractPoolAmount(address, utils.BigIntToString(amountToSub)); err != nil {
+		return types.ErrSubPoolAmount(address, err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) setPoolAmount(name string, amount *big.Int) types.Error {
-	if err := u.persistenceRWContext.SetPoolAmount(name, utils.BigIntToString(amount)); err != nil {
-		return types.ErrSetPoolAmount(name, err)
+func (u *baseUtilityUnitOfWork) setPoolAmount(address []byte, amount *big.Int) types.Error {
+	if err := u.persistenceRWContext.SetPoolAmount(address, utils.BigIntToString(amount)); err != nil {
+		return types.ErrSetPoolAmount(address, err)
 	}
 	return nil
 }
