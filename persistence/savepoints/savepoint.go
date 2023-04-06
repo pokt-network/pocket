@@ -165,7 +165,7 @@ func (*savepoint) GetParameter(paramName string, height int64) (any, error) {
 }
 
 // GetPoolAmount implements modules.PersistenceReadContext
-func (*savepoint) GetPoolAmount(name string, height int64) (amount string, err error) {
+func (*savepoint) GetPoolAmount(address []byte, height int64) (amount string, err error) {
 	panic("unimplemented")
 }
 
