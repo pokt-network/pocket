@@ -84,7 +84,7 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 		return utilTypes.ErrAppHash(err)
 	}
 
-	// IMPROVE: this acts as a feature flag to allow tests to ignore the check if needed, ideally the tests should have a way to determine
+	// IMPROVE(#655): this acts as a feature flag to allow tests to ignore the check if needed, ideally the tests should have a way to determine
 	// the hash and set it into the proposal block it's currently hard to do because the state is different at every test run (non-determinism)
 	if uow.proposalStateHash != IgnoreProposalBlockCheckHash {
 		if uow.proposalStateHash != stateHash {
