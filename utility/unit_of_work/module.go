@@ -67,7 +67,7 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 
 	log.Debug().Msg("processing transactions from proposal block")
 	txMempool := uow.GetBus().GetUtilityModule().GetMempool()
-	if err := uow.processTransactionsFromProposalBlock(txMempool, uow.proposalBlockTxs); err != nil {
+	if err := uow.processTransactionsFromProposalBlock(txMempool); err != nil {
 		return err
 	}
 
@@ -138,8 +138,8 @@ func (uow *baseUtilityUnitOfWork) isProposalBlockSet() bool {
 
 // processTransactionsFromProposalBlock processes the transactions from the proposal block.
 // It also removes the transactions from the mempool if they are also present.
-func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(txMempool mempool.TXMempool, txsBytes [][]byte) (err error) {
-	for index, txProtoBytes := range txsBytes {
+func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(txMempool mempool.TXMempool) (err error) {
+	for index, txProtoBytes := range uow.proposalBlockTxs {
 		tx, err := coreTypes.TxFromBytes(txProtoBytes)
 		if err != nil {
 			return err
