@@ -25,7 +25,6 @@ require (
 	github.com/foxcpp/go-mockdns v1.0.0
 	github.com/getkin/kin-openapi v0.107.0
 	github.com/hashicorp/vault/api v1.9.0
-	github.com/itchyny/gojq v0.12.12
 	github.com/jackc/pgconn v1.13.0
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
 	github.com/korovkin/limiter v0.0.0-20230307205149-3d4b2b34c99d
@@ -113,7 +112,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/ipfs/go-cid v0.3.2 // indirect
 	github.com/ipfs/go-log/v2 v2.5.1 // indirect
-	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/jackc/puddle/v2 v2.1.2 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jbenet/go-temp-err-catcher v0.1.0 // indirect
