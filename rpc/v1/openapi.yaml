@@ -111,7 +111,7 @@ paths:
           description: Returns account data at the specified height
           content:
             application/json:
-              scheme:
+              schema:
                 $ref: '#/components/schemas/Account'
         '400':
           description: Failed to retrieve the specified account
