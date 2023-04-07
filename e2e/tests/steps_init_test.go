@@ -1,25 +1,27 @@
-//go:build e2e
+// //go:build e2e
 
 package e2e
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	pocketLogger "github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/cucumber/godog"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
+	logger = pocketLogger.Global.CreateLoggerForModule("e2e")
+
 	// validatorKeys is hydrated by the clientset with credentials for all validators.
 	// validatorKeys maps validator IDs to their private key as a hex string.
 	validatorKeys map[string]string
@@ -45,12 +47,12 @@ const (
 func init() {
 	cs, err := getClientset()
 	if err != nil {
-		log.Fatalf("failed to get clientset: %w", err)
+		logger.Fatal().Err(err).Msg("failed to get clientset")
 	}
 	clientset = cs
 	vkmap, err := pocketk8s.FetchValidatorPrivateKeys(clientset)
 	if err != nil {
-		log.Fatalf("failed to get validator keys: %w", err)
+		logger.Fatal().Err(err).Msg("failed to get validator key map")
 	}
 	validatorKeys = vkmap
 }
@@ -187,11 +189,11 @@ func getPrivateKey(keyMap map[string]string, validatorId string) cryptoPocket.Pr
 	privHexString := keyMap[validatorId]
 	keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
 	if err != nil {
-		log.Fatalf("failed to extract keypair %w", err)
+		logger.Fatal().Err(err).Msg("failed to extract keypair")
 	}
 	privateKey, err := keyPair.Unarmour("")
 	if err != nil {
-		log.Fatalf("failed to extract keypair %w", err)
+		logger.Fatal().Err(err).Msg("failed to extract privkey")
 	}
 	return privateKey
 }
