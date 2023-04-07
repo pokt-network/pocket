@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.36] - 2023-04-07
+
+- Add wrapper functions for `GetParameter()`
+- Add generic governance parameter accessor functions `getParamOwner()` and `getGovParam()`
+- Refactor governance parameter accessor functions to use general wrapper functions
+- Clean up tests
+
 ## [0.0.0.35] - 2023-04-07
 
 - Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`

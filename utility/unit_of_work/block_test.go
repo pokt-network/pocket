@@ -54,7 +54,7 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 	// require.NoError(t, err)
 	// require.Equal(t, missed, 1)
 
-	feeBig, err := uow.getMessageSendFee()
+	feeBig, err := getGovParam[*big.Int](uow, utilTypes.MessageSendFee)
 	require.NoError(t, err)
 
 	expectedAmountSubtracted := big.NewInt(0).Add(amountSent, feeBig)
@@ -63,7 +63,7 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amountAfter, "unexpected after balance; expected %v got %v", expectedAfterBalance, amountAfter)
 
-	proposerCutPercentage, err := uow.getProposerPercentageOfFees()
+	proposerCutPercentage, err := getGovParam[int](uow, utilTypes.ProposerPercentageOfFeesParamName)
 	require.NoError(t, err)
 
 	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feeBig)
@@ -124,10 +124,10 @@ func TestUtilityUnitOfWork_EndBlock(t *testing.T) {
 	er = uow.ApplyBlock()
 	require.NoError(t, er)
 
-	feeBig, err := uow.getMessageSendFee()
+	feeBig, err := getGovParam[*big.Int](uow, utilTypes.MessageSendFee)
 	require.NoError(t, err)
 
-	proposerCutPercentage, err := uow.getProposerPercentageOfFees()
+	proposerCutPercentage, err := getGovParam[int](uow, utilTypes.ProposerPercentageOfFeesParamName)
 	require.NoError(t, err)
 
 	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feeBig)

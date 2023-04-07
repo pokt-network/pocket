@@ -263,13 +263,13 @@ func TestUtilityUnitOfWork_GetUnbondingHeight(t *testing.T) {
 			var err error
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
-				unstakingBlocks, err = uow.getAppUnstakingBlocks()
+				unstakingBlocks, err = getGovParam[int64](uow, typesUtil.AppUnstakingBlocksParamName)
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				unstakingBlocks, err = uow.getFishermanUnstakingBlocks()
+				unstakingBlocks, err = getGovParam[int64](uow, typesUtil.FishermanUnstakingBlocksParamName)
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-				unstakingBlocks, err = uow.getServicerUnstakingBlocks()
+				unstakingBlocks, err = getGovParam[int64](uow, typesUtil.ServicerUnstakingBlocksParamName)
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				unstakingBlocks, err = uow.getValidatorUnstakingBlocks()
+				unstakingBlocks, err = getGovParam[int64](uow, typesUtil.ValidatorUnstakingBlocksParamName)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
