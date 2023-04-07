@@ -27,7 +27,7 @@ As the POKT network scales, it will become increasingly important to test its te
 
 ## Purpose
 
-The purpose of this set of tests is to aid development efforts going forward with V1. This test suite should develop in lockstep with DevNet. Rapid iteration on DevNet will be crucial for a successful late-summer TestNet launch.
+The purpose of this set of tests is to aid development efforts going forward with V1. This test suite should develop in lockstep with DevNet. Rapid iteration on DevNet will be crucial for a smooth TestNet launch.
 
 ## Goals
 
