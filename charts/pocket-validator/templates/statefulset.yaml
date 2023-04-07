@@ -1,13 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "pocket-validator.fullname" . }}
   labels:
     {{- include "pocket-validator.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  replicas: 1 # One StatefulSet = 1 validator
   selector:
     matchLabels:
       {{- include "pocket-validator.selectorLabels" . | nindent 6 }}
@@ -27,24 +25,83 @@ spec:
       serviceAccountName: {{ include "pocket-validator.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z $(POSTGRES_HOST) $(POSTGRES_PORT); do echo waiting for postgres...; sleep 2; done;",
+            ]
+          env:
+            - name: POSTGRES_HOST
+              value: {{ include "pocket-validator.postgresqlHost" . }}
+            - name: POSTGRES_PORT
+              value: {{ include "pocket-validator.postgresqlPort" . }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: pocket-validator
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - pocket
+            - -config=/pocket/configs/config.json
+            - -genesis=/pocket/configs/genesis.json
           ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
-              protocol: TCP
+            - containerPort: 42069
+              name: consensus
+            - containerPort: 50832
+              name: rpc
+          env:
+            - name: POCKET_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.privateKeySecretKeyRef.name }}
+                  key: {{ .Values.privateKeySecretKeyRef.key }}
+            - name: POCKET_CONSENSUS_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.privateKeySecretKeyRef.name }}
+                  key: {{ .Values.privateKeySecretKeyRef.key }}
+            - name: POCKET_P2P_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.privateKeySecretKeyRef.name }}
+                  key: {{ .Values.privateKeySecretKeyRef.key }}
+            - name: POSTGRES_USER
+            {{ include "pocket-validator.postgresqlUserValueOrSecretRef" . | nindent 14 }}
+            - name: POSTGRES_PASSWORD
+            {{ include "pocket-validator.postgresqlPasswordSecretKeyRef" . | nindent 14 }}
+            - name: POSTGRES_HOST
+              value: {{ include "pocket-validator.postgresqlHost" . }}
+            - name: POSTGRES_PORT
+              value: {{ include "pocket-validator.postgresqlPort" . }}
+            - name: POSTGRES_DB
+              value: "postgres"
+            - name: POCKET_PERSISTENCE_POSTGRES_URL
+              value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+            - name: POCKET_PERSISTENCE_NODE_SCHEMA
+              value: {{ include "pocket-validator.postgresqlSchema" . }}
+            - name: POCKET_P2P_HOSTNAME
+              value: {{ include "pocket-validator.fullname" . }}
           livenessProbe:
             httpGet:
               path: /
-              port: http
+              port: rpc
           readinessProbe:
             httpGet:
               path: /
-              port: http
+              port: rpc
+          volumeMounts:
+            - name: config-volume
+              mountPath: /pocket/configs
+            - name: genesis-volume
+              mountPath: /pocket/configs/genesis.json
+              subPath: {{ if .Values.genesis.preProvisionedGenesis.enabled }}genesis.json{{ else }}{{ .Values.genesis.externalConfigMap.key }}{{ end }}
+            - name: validator-storage
+              mountPath: /pocket/validator
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
@@ -59,3 +116,18 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+      - name: config-volume
+        configMap:
+          name: {{ include "pocket-validator.fullname" . }}-config
+      - name: genesis-volume
+        configMap:
+          name: {{ include "pocket-validator.genesisConfigMap" . }}
+      - name: validator-storage
+      {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ default (printf "%s-%s" (include "pocket-validator.fullname" .) "data") .Values.persistence.existingClaim }}
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
+

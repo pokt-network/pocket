@@ -1,34 +1,156 @@
-# Default values for pocket-validator.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+## @section Global parameters
+## Please, note that this will override the parameters, including dependencies, configured to use the global value
+##
+global:
+  postgresql:
+    ## @param global.postgresql.service.ports.postgresql PostgreSQL service port (overrides `service.ports.postgresql`)
+    ##
+    service:
+      ports:
+        postgresql: "5432"
 
-replicaCount: 1
+postgresql:
+  # -- deploy postgresql database automatically. Refer to https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml for additional options.
+  enabled: true
+
+  # primary:
+  #   persistence:
+  #     size: 8Gi
+
+externalPostgresql:
+  # -- use external postgres database
+  enabled: false
+  # -- host of the external database
+  host: ""
+  # -- port of the external database
+  port: 5432
+  # -- name of the external database
+  database: ""
+  userSecretKeyRef:
+    # -- name of the Secret in the same namespace that contains the database user
+    name: ""
+    # -- key in the Secret that contains the database user
+    key: ""
+  passwordSecretKeyRef:
+    # -- name of the Secret in the same namespace that contains the database password
+    name: ""
+    # -- key in the Secret that contains the database password
+    key: ""
+
+persistence:
+  # -- enable persistent volume claim
+  enabled: true
+  # -- size of the persistent volume claim
+  size: 8Gi
+  # -- storage class of the persistent volume claim
+  storageClass: ""
+  # -- annotations of the persistent volume claim
+  annotations: {}
+  # -- persistent Volume Access Modes
+  accessModes:
+    - ReadWriteOnce
+  # -- selector to match an existing Persistent Volume
+  selector: {}
+  # -- persistent volume reclaim policy
+  reclaimPolicy: Delete
+  # -- name of an existing PVC to use for persistence
+  existingClaim: ""
+  # -- custom data source of the persistent volume claim
+  dataSource: {}
+
+privateKeySecretKeyRef:
+  # -- name of the Secret in the same namespace that contains the private key of the node
+  name: ""
+  # -- key in the Secret that contains the private key of the node
+  key: ""
+
+config:
+  root_directory: "/go/src/github.com/pocket-network"
+  private_key: "" # This value is needed but ignored - use privateKeySecretKeyRef instead
+  use_libp2p: false
+  consensus:
+    max_mempool_bytes: 500000000
+    pacemaker_config:
+      timeout_msec: 10000
+      manual: true
+      debug_time_between_steps_msec: 1000
+    private_key: "" # This value is needed but ignored - use privateKeySecretKeyRef instead
+  utility:
+    max_mempool_transaction_bytes: 1073741824
+    max_mempool_transactions: 9000
+  persistence:
+    postgres_url: "" # This value is needed but ignored - if you wish to connect to the external database, use externalPostgresql instead
+    node_schema: public
+    block_store_path: "/pocket/validator/block-store"
+    tx_indexer_path: "/pocket/validator/tx-indexer"
+    trees_store_dir: "/pocket/validator/trees"
+    max_conns_count: 50
+    min_conns_count: 1
+    max_conn_lifetime: 5m
+    max_conn_idle_time: 1m
+    health_check_period: 30s
+  p2p:
+    port: 42069
+    use_rain_tree: true
+    is_empty_connection_type: false
+    private_key: "" # This value is needed but ignored - use privateKeySecretKeyRef instead
+    max_mempool_count: 100000
+  telemetry:
+    enabled: true
+    address: 0.0.0.0:9000
+    endpoint: "/metrics"
+  logger:
+    level: debug
+    format: pretty
+  rpc:
+    enabled: true
+    port: "50832"
+    timeout: 30000
+    use_cors: false
+
+genesis:
+  preProvisionedGenesis:
+    # -- Use genesis file supplied by the Helm chart, of false refer to `genesis.externalConfigMap`
+    enabled: true
+    # -- Type of the genesis file to use, can be `devnet`, `testnet`, `mainnet`
+    type: devnet
+
+  externalConfigMap:
+    # -- Name of the ConfigMap that contains the genesis file, only used if `genesis.preProvisionedGenesis.enabled` is false
+    name: ""
+    # -- Key in the ConfigMap that contains the genesis file, only used if `genesis.preProvisionedGenesis.enabled` is false
+    key: ""
 
 image:
-  repository: nginx
+  # -- image repository
+  repository: ghcr.io/pokt-network/pocket-v1
+  # -- image pull policy
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  # -- image tag
+  tag: "latest"
 
+# -- image pull secrets
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # -- The name of the service account to use. If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# -- pod annotations
 podAnnotations: {}
 
-podSecurityContext: {}
+podSecurityContext:
+  {}
   # fsGroup: 2000
 
-securityContext: {}
+securityContext:
+  {}
   # capabilities:
   #   drop:
   #   - ALL
@@ -37,13 +159,24 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
+  # -- service annotations
+  annotations: {}
+  # -- service type
   type: ClusterIP
-  port: 80
+  ports:
+    # -- consensus port of the node
+    consensus: 42069
+    # -- rpc port of the node
+    rpc: 50832
+    # -- OpenTelemetry metrics port of the node
+    metrics: 9000
 
 ingress:
+  # -- enable ingress for RPC port
   enabled: false
   className: ""
-  annotations: {}
+  annotations:
+    {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
@@ -56,7 +189,9 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources: {}
+# -- resources limits and requests
+resources:
+  {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -67,13 +202,6 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
 
 nodeSelector: {}
 
