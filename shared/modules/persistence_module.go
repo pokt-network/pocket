@@ -128,6 +128,9 @@ type PersistenceWriteContext interface {
 }
 
 type PersistenceReadContext interface {
+	// StateTrees accessor
+	GetKVStores() (nodeStores, valueStores map[int]kvstore.BackupableKVStore)
+
 	// Context Operations
 	GetHeight() (int64, error) // Returns the height of the context
 	Release()                  // Releases the read context
