@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"sync"
 
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -14,7 +15,7 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
-type merkleTree float64
+type merkleTree int
 
 type stateTrees struct {
 	merkleTrees map[merkleTree]*smt.SparseMerkleTree
@@ -23,6 +24,23 @@ type stateTrees struct {
 	// and debugging purposes
 	nodeStores  map[merkleTree]kvstore.KVStore
 	valueStores map[merkleTree]kvstore.KVStore
+
+	m sync.Mutex
+}
+
+func (st *stateTrees) GetKVStores() (nodeStores, valueStores map[int]kvstore.BackupableKVStore) {
+	st.m.Lock()
+	defer st.m.Unlock()
+	nodeStores = make(map[int]kvstore.BackupableKVStore, len(st.nodeStores))
+	valueStores = make(map[int]kvstore.BackupableKVStore, len(st.valueStores))
+	for treeKey, nodeStore := range st.nodeStores {
+		nodeStores[int(treeKey)] = nodeStore.(kvstore.BackupableKVStore)
+	}
+
+	for treeKey, valueStore := range st.valueStores {
+		valueStores[int(treeKey)] = valueStore.(kvstore.BackupableKVStore)
+	}
+	return
 }
 
 // A list of Merkle Trees used to maintain the state hash.
@@ -85,6 +103,10 @@ var merkleTreeToActorTypeName = map[merkleTree]coreTypes.ActorType{
 	servicerMerkleTree: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
 }
 
+func GetMerkleTreeNameByValue(treeValue int) string {
+	return merkleTreeToString[merkleTree(treeValue)]
+}
+
 func newStateTrees(treesStoreDir string) (*stateTrees, error) {
 	if treesStoreDir == "" {
 		return newMemStateTrees()
@@ -96,6 +118,8 @@ func newStateTrees(treesStoreDir string) (*stateTrees, error) {
 		valueStores: make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
 	}
 
+	stateTrees.m.Lock()
+	defer stateTrees.m.Unlock()
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
 		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", treesStoreDir, merkleTreeToString[tree]))
 		if err != nil {
@@ -118,9 +142,11 @@ func newMemStateTrees() (*stateTrees, error) {
 		nodeStores:  make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
 		valueStores: make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
 	}
+	stateTrees.m.Lock()
+	defer stateTrees.m.Unlock()
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		nodeStore := kvstore.NewMemKVStore() // For testing, `smt.NewSimpleMap()` can be used as well
-		valueStore := kvstore.NewMemKVStore()
+		nodeStore := kvstore.NewMemKVStore(merkleTreeToString[tree]) // For testing, `smt.NewSimpleMap()` can be used as well
+		valueStore := kvstore.NewMemKVStore(merkleTreeToString[tree])
 		stateTrees.nodeStores[tree] = nodeStore
 		stateTrees.valueStores[tree] = valueStore
 		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
@@ -129,6 +155,8 @@ func newMemStateTrees() (*stateTrees, error) {
 }
 
 func (p *PostgresContext) updateMerkleTrees() (string, error) {
+	p.stateTrees.m.Lock()
+	defer p.stateTrees.m.Unlock()
 	// Update all the merkle trees
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {

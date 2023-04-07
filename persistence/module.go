@@ -233,7 +233,7 @@ func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 
 func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 	if blockStorePath == "" {
-		return kvstore.NewMemKVStore(), nil
+		return kvstore.NewMemKVStore("blockStore"), nil
 	}
 	return kvstore.NewKVStore(blockStorePath)
 }
