@@ -53,11 +53,10 @@ func (v *validatorPod) RunCommand(args ...string) (*commandResult, error) {
 	cmd := exec.Command("kubectl", args...)
 	r := &commandResult{}
 	out, err := cmd.Output()
+	v.result = r
+	r.Stdout = string(out)
 	if err != nil {
-		v.result = r
 		return r, err
 	}
-	r.Stdout = string(out)
-	v.result = r
 	return r, nil
 }

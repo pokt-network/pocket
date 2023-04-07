@@ -9,13 +9,13 @@ Feature: Validators Namespace
 
   Scenario: User Can Stake An Address 
     Given the user has a validator
-    When the user stakes their validator with 150000000001 POKT
+    When the user stakes their validator with amount 150000000001 POKT
     Then the user should be able to see standard output containing ""
     And the validator should have exited without error
 
   Scenario: User Can Unstake An Address
     Given the user has a validator
-    When the user stakes their validator with 150000000001 POKT
+    When the user stakes their validator with amount 150000000001 POKT
     Then the user should be able to see standard output containing ""
     Then the user should be able to unstake their validator 
     Then the user should be able to see standard output containing ""

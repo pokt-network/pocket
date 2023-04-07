@@ -21,7 +21,7 @@ import (
 
 var (
 	// validatorKeys is hydrated by the clientset with credentials for all validators.
-	// validatorKeys maps validator IDs to their private key. It is returned by the FetchValidatorPrivateKeys.
+	// validatorKeys maps validator IDs to their private key as a hex string.
 	validatorKeys map[string]string
 	// clientset is the kubernetes API we acquire from the user's $HOME/.kube/config
 	clientset *kubernetes.Clientset
@@ -32,6 +32,12 @@ var (
 	// validatorB maps to suffix ID 002
 	validatorB string = "002"
 	chainId           = "0001"
+)
+
+const (
+	// defines the host & port scheme that LocalNet uses for naming validators.
+	// e.g. v1-validator-001 thru v1-validator-
+	validatorServiceURLTmpl = "v1-validator%s:%d"
 )
 
 func init() {
@@ -69,7 +75,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the user should be able to see standard output containing "([^"]*)"$`, theUserShouldBeAbleToSeeStandardOutputContaining)
 	ctx.Step(`^the user has a validator$`, theUserHasAValidator)
 	ctx.Step(`^the validator should have exited without error$`, theValidatorShouldHaveExitedWithoutError)
-	ctx.Step(`^the user stakes their validator with (\d+) POKT$`, theUserStakesTheirValidatorWithPOKT)
+	ctx.Step(`^the user stakes their validator with amount (\d+) POKT$`, theUserStakesTheirValidatorWithAmountPOKT)
 	ctx.Step(`^the user should be able to unstake their validator$`, theUserShouldBeAbleToUnstakeTheirValidator)
 	ctx.Step(`^the user sends (\d+) POKT to another address$`, theUserSendsPOKTToAnotherAddress)
 }
@@ -77,7 +83,6 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 func theUserHasAValidator() error {
 	res, err := validator.RunCommand("help")
 	if err != nil {
-		log.Printf("validator error: %+v", err)
 		return err
 	}
 	validator.result = res
@@ -108,7 +113,7 @@ func theUserShouldBeAbleToSeeStandardOutputContaining(arg1 string) error {
 	return nil
 }
 
-func theUserStakesTheirValidatorWithPOKT(amount int) error {
+func theUserStakesTheirValidatorWithAmountPOKT(amount int) error {
 	return stakeValidator(fmt.Sprintf("%d", amount))
 }
 
@@ -131,21 +136,18 @@ func theUserSendsPOKTToAnotherAddress(amount int) error {
 	}
 	validator.RunCommand(args...)
 	res, err := validator.RunCommand(args...)
+	validator.result = res
 	if err != nil {
-		validator.result = res
 		return err
 	}
-	validator.result = res
 	return nil
 }
 
 // stakeValidator runs Validator stake command with the address, amount, chains..., and serviceURL provided
 func stakeValidator(amount string) error {
 	privateKey := getPrivateKey(validatorKeys, validatorA)
-	validatorServiceUrl := fmt.Sprintf("v1-validator%s:%d", validatorA, defaults.DefaultP2PPort)
+	validatorServiceUrl := fmt.Sprintf(validatorServiceURLTmpl, validatorA, defaults.DefaultP2PPort)
 	args := []string{
-		// NB: ignore passing a --pwd flag because
-		// validator keys have empty passwords
 		"--non_interactive=true",
 		"--remote_cli_url=" + rpcURL,
 		"Validator",
@@ -156,11 +158,10 @@ func stakeValidator(amount string) error {
 		validatorServiceUrl,
 	}
 	res, err := validator.RunCommand(args...)
+	validator.result = res
 	if err != nil {
-		validator.result = res
 		return err
 	}
-	validator.result = res
 	return nil
 }
 
@@ -175,11 +176,10 @@ func unstakeValidator() error {
 		privKey.Address().String(),
 	}
 	res, err := validator.RunCommand(args...)
+	validator.result = res
 	if err != nil {
-		validator.result = res
 		return err
 	}
-	validator.result = res
 	return nil
 }
 
