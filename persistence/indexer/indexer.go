@@ -94,7 +94,7 @@ func NewTxIndexer(databasePath string) (TxIndexer, error) {
 
 func NewMemTxIndexer() (TxIndexer, error) {
 	return &txIndexer{
-		db: kvstore.NewMemKVStore(),
+		db: kvstore.NewMemKVStore("txIndexer"),
 	}, nil
 }
 

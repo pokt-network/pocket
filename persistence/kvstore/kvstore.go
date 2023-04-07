@@ -4,7 +4,10 @@ package kvstore
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"log"
+	"strings"
 
 	"github.com/celestiaorg/smt"
 	badger "github.com/dgraph-io/badger/v3"
@@ -12,6 +15,7 @@ import (
 
 type KVStore interface {
 	smt.MapStore // Get, Set, Delete
+	BackupableKVStore
 
 	// Lifecycle methods
 	Stop() error
@@ -22,6 +26,11 @@ type KVStore interface {
 	GetAll(prefixKey []byte, descending bool) (keys, values [][]byte, err error)
 	Exists(key []byte) (bool, error)
 	ClearAll() error
+}
+
+type BackupableKVStore interface {
+	GetName() string
+	Backup(w io.Writer, since uint64) (uint64, error)
 }
 
 const (
@@ -39,7 +48,8 @@ var (
 )
 
 type badgerKVStore struct {
-	db *badger.DB
+	db   *badger.DB
+	name string
 }
 
 func NewKVStore(path string) (KVStore, error) {
@@ -47,15 +57,27 @@ func NewKVStore(path string) (KVStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &badgerKVStore{db: db}, nil
+
+	name, err := extractNameFromPath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return &badgerKVStore{
+		db:   db,
+		name: name,
+	}, nil
 }
 
-func NewMemKVStore() KVStore {
+func NewMemKVStore(name string) KVStore {
 	db, err := badger.Open(badgerOptions("").WithInMemory(true))
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &badgerKVStore{db: db}
+	return &badgerKVStore{
+		db:   db,
+		name: name,
+	}
 }
 
 func (store *badgerKVStore) Set(key, value []byte) error {
@@ -148,6 +170,15 @@ func (store *badgerKVStore) Stop() error {
 	return store.db.Close()
 }
 
+// Backup writes a backup of the database to the given writer.
+func (store *badgerKVStore) Backup(w io.Writer, since uint64) (uint64, error) {
+	return store.db.Backup(w, since)
+}
+
+func (store *badgerKVStore) GetName() string {
+	return store.name
+}
+
 // PrefixEndBytes returns the end byteslice for a noninclusive range
 // that would include all byte slices for which the input is the prefix
 func prefixEndBytes(prefix []byte) []byte {
@@ -170,4 +201,20 @@ func badgerOptions(path string) badger.Options {
 	opts := badger.DefaultOptions(path)
 	opts.Logger = nil // disable badger's logger since it's very noisy
 	return opts
+}
+
+func extractNameFromPath(path string) (string, error) {
+	if path == "" {
+		return "", fmt.Errorf("path is empty")
+	}
+
+	parts := strings.Split(path, "/")
+	nodesPart := parts[len(parts)-1]
+	name := strings.TrimSuffix(nodesPart, "_nodes")
+
+	if name == "" {
+		return "", fmt.Errorf("invalid path format, name not found in %s", path)
+	}
+
+	return name, nil
 }
