@@ -7,7 +7,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/genesis"
 )
 
-// init initializes a map that contains the metadata extracted from `gov.proto`.
+// init initializes a map that contains the metadata extracted from genesis.proto.
 // Since protobuf files do not change at runtime, it seems efficient to do it here.
 func init() {
 	GovParamMetadataMap = parseGovProto()
@@ -20,13 +20,12 @@ var (
 
 type GovParamMetadata struct {
 	PropertyName string
-	ParamName    string
 	ParamOwner   string
 	PoktType     string
 	GoType       string
 }
 
-// parseGovProto parses genesis.Params{} (generated from gov.proto) in order to extract metadata about its fields.
+// parseGovProto parses genesis.Params{} (generated from genesis.proto) in order to extract metadata about its fields.
 //
 // The metadata comes in the form of struct tags that we attached to gov.proto and also from the tags that protoc injects automatically.
 // Since currently we need to specify a mapping between the fields and a custom enum in the database (and potentially other things as well in the future),
@@ -45,14 +44,11 @@ func parseGovProto() (govParamMetadataMap map[string]GovParamMetadata) {
 		protoTag := field.Tag.Get("protobuf")
 		poktValType := extractStructTag(poktTag, "val_type=")
 		poktOwner := extractStructTag(poktTag, "owner=")
-		golangType := field.Type.Name() // Get string version of field's Golang type
 		protoName := extractStructTag(protoTag, "name=")
 		govParamMetadataMap[protoName] = GovParamMetadata{
 			PropertyName: field.Name,
-			ParamName:    protoName,
 			ParamOwner:   poktOwner,
 			PoktType:     poktValType,
-			GoType:       golangType,
 		}
 		GovParamMetadataKeys = append(GovParamMetadataKeys, protoName)
 	}
@@ -71,5 +67,5 @@ func extractStructTag(structTag, key string) string {
 		}
 		structTag = strings.TrimPrefix(structTag[i:], ",")
 	}
-	return ""
+	return "" // key not found
 }

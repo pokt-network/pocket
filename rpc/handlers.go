@@ -3,7 +3,6 @@ package rpc
 import (
 	"encoding/hex"
 	"net/http"
-	"sort"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
@@ -11,6 +10,8 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility"
 )
+
+// CONSIDER: Remove all the V1 prefixes from the RPC module
 
 func (s *rpcServer) GetV1Health(ctx echo.Context) error {
 	return ctx.NoContent(http.StatusOK)
@@ -51,33 +52,24 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 	})
 }
 
-func (s *rpcServer) GetV1QueryNodeParams(ctx echo.Context) error {
+func (s *rpcServer) GetV1QueryAllChainParams(ctx echo.Context) error {
 	currHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-	persistenceRC, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currHeight))
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currHeight))
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	paramValueMap, err := persistenceRC.GetAllParams()
+	paramSlice, err := readCtx.GetAllParams()
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	parameterKeyValues := make([]*paramValue, 0)
-	keys := make([]string, 0)
-	for key := range paramValueMap {
-		keys = append(keys, key)
+	resp := make([]Parameter, 0)
+	for i := 0; i < len(paramSlice); i++ {
+		resp = append(resp, Parameter{
+			ParameterName:  paramSlice[i][0],
+			ParameterValue: paramSlice[i][1],
+		})
 	}
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		val := paramValueMap[key]
-		parameterKeyValues = append(parameterKeyValues, &paramValue{ParamKey: key, ParamValue: val})
-	}
-	return ctx.JSON(200, parameterKeyValues)
-}
-
-type paramValue struct {
-	ParamKey   string `json:"param_key"`
-	ParamValue string `json:"param_value"`
+	return ctx.JSON(200, resp)
 }
 
 // Broadcast to the entire validator set

@@ -11,11 +11,11 @@ import (
 )
 
 func init() {
-	GovParams = generateParamConfigs()
+	govParamTypes = prepareGovParamParamTypesMap()
 }
 
 var (
-	GovParams map[string]int
+	govParamTypes map[string]int
 )
 
 const (
@@ -26,7 +26,7 @@ const (
 	STRING
 )
 
-func generateParamConfigs() map[string]int {
+func prepareGovParamParamTypesMap() map[string]int {
 	return map[string]int{
 		typesUtil.AppMinimumStakeParamName:                 BIGINT,
 		typesUtil.AppMaxChainsParamName:                    INT,
@@ -82,25 +82,25 @@ func generateParamConfigs() map[string]int {
 	}
 }
 
-func getGovParam[T *big.Int | int | int64 | []byte | string](u *baseUtilityUnitOfWork, paramName string) (i T, err typesUtil.Error) {
+func getGovParam[T *big.Int | int | int64 | []byte | string](uow *baseUtilityUnitOfWork, paramName string) (i T, err typesUtil.Error) {
 	switch tp := any(i).(type) {
 	case *big.Int:
-		v, er := u.getBigIntParam(paramName)
+		v, er := uow.getBigIntParam(paramName)
 		return any(v).(T), er
 	case int:
-		v, er := u.getIntParam(paramName)
+		v, er := uow.getIntParam(paramName)
 		return any(v).(T), er
 	case int64:
-		v, er := u.getInt64Param(paramName)
+		v, er := uow.getInt64Param(paramName)
 		return any(v).(T), er
 	case []byte:
-		v, er := u.getByteArrayParam(paramName)
+		v, er := uow.getByteArrayParam(paramName)
 		return any(v).(T), er
 	case string:
-		v, er := u.getStringParam(paramName)
+		v, er := uow.getStringParam(paramName)
 		return any(v).(T), er
 	default:
-		u.logger.Fatal().Msgf("unhandled parameter type: %T", tp)
+		uow.logger.Fatal().Msgf("unhandled parameter type: %T", tp)
 	}
 	return
 }

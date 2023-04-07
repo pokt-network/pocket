@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 )
 
 // TODO(#230): Remove these testing_artifacts when we nail down a design for parameter name sharing / owning
@@ -197,18 +199,13 @@ func TestGetAllParams(t *testing.T) {
 	err := db.InitGenesisParams(test_artifacts.DefaultParams())
 	require.NoError(t, err)
 
-	appMaxChain, err := db.GetStringParam(AppMaxChainsParamName, 0)
+	paramSlice, err := db.GetAllParams()
 	require.NoError(t, err)
 
-	minStake, err := db.GetStringParam(ServicerMinimumStakeParamName, 0)
-	require.NoError(t, err)
-
-	unstakeOwner, err := db.GetStringParam(ServicerUnstakingBlocksOwner, 0)
-	require.NoError(t, err)
-
-	paramNameValues, err := db.GetAllParams()
-	require.NoError(t, err)
-	require.Equal(t, paramNameValues[AppMaxChainsParamName], appMaxChain)
-	require.Equal(t, paramNameValues[ServicerMinimumStakeParamName], minStake)
-	require.Equal(t, paramNameValues[ServicerUnstakingBlocksOwner], unstakeOwner)
+	for _, paramName := range utils.GovParamMetadataKeys {
+		defaultParam, err := db.GetStringParam(paramName, 0)
+		require.NoError(t, err)
+		idx := slices.IndexFunc(paramSlice, func(s []string) bool { return s[0] == paramName })
+		require.Equal(t, paramSlice[idx][1], defaultParam)
+	}
 }

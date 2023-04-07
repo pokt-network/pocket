@@ -29,7 +29,7 @@ func TestUtilityUnitOfWork_GetGovParams(t *testing.T) {
 		}
 		defaultParam := reflect.ValueOf(defaultParams).MethodByName("Get" + utils.GovParamMetadataMap[paramName].PropertyName).Call([]reflect.Value{})[0].Interface()
 		require.NotNil(t, defaultParam)
-		switch id := GovParams[paramName]; id {
+		switch id := govParamTypes[paramName]; id {
 		case BIGINT:
 			gotParam, err := getGovParam[*big.Int](uow, paramName)
 			require.NoError(t, err)

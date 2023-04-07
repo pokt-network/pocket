@@ -191,7 +191,7 @@ func (p *PostgresContext) getFlagsUpdated(height int64) ([]*coreTypes.Flag, erro
 
 // GetAllParams returns a map of the current latest updated values for all parameters
 // and their values in the form map[parameterName] = parameterValue
-func (p *PostgresContext) GetAllParams() (map[string]string, error) {
+func (p *PostgresContext) GetAllParams() ([][]string, error) {
 	ctx, tx := p.getCtxAndTx()
 	// Get all the parameters in their most recently updated form
 	rows, err := tx.Query(ctx, p.getLatestParamsOrFlagsQuery(types.ParamsTableName))
@@ -199,15 +199,15 @@ func (p *PostgresContext) GetAllParams() (map[string]string, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	paramValueMap := make(map[string]string)
+	paramSlice := make([][]string, 0)
 	for rows.Next() {
 		var paramName, paramValue string
 		if err := rows.Scan(&paramName, &paramValue); err != nil {
 			return nil, err
 		}
-		paramValueMap[paramName] = paramValue
+		paramSlice = append(paramSlice, []string{paramName, paramValue})
 	}
-	return paramValueMap, nil
+	return paramSlice, nil
 }
 
 func (p *PostgresContext) getParamsOrFlagsUpdateAtHeightQuery(tableName string, height int64) string {

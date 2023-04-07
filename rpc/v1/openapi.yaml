@@ -130,7 +130,7 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-  /v1/query/nodeParams:
+  /v1/query/allChainParams:
     get:
       tags:
         - query
@@ -142,7 +142,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/NodeParamsResponse"
+                $ref: "#/components/schemas/AllChainParamsResponse"
         "500":
           description: An error occurred while retrieving the current node parameters
           content:
@@ -222,15 +222,15 @@ components:
     Parameter:
       type: object
       required:
-        - param_key
-        - param_value
+        - parameter_name
+        - parameter_value
       properties:
         parameter_name:
           type: "string"
         parameter_value:
           type: "string"
 
-    NodeParamsResponse:
+    AllChainParamsResponse:
       type: array
       items:
         $ref: "#/components/schemas/Parameter"
