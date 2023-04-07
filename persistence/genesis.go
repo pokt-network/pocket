@@ -16,15 +16,16 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	// REFACTOR: This business logic should probably live in `types/genesis.go`
 	//           and we need to add proper unit tests for it.`
 	poolValues := make(map[string]*big.Int, 0)
-	addValueToPool := func(poolName string, valueToAdd string) error {
+	addValueToPool := func(address []byte, valueToAdd string) error {
 		value, err := utils.StringToBigInt(valueToAdd)
 		if err != nil {
 			return err
 		}
-		if present := poolValues[poolName]; present == nil {
-			poolValues[poolName] = big.NewInt(0)
+		strAddr := hex.EncodeToString(address)
+		if present := poolValues[strAddr]; present == nil {
+			poolValues[strAddr] = big.NewInt(0)
 		}
-		poolValues[poolName].Add(poolValues[poolName], value)
+		poolValues[strAddr].Add(poolValues[strAddr], value)
 		return nil
 	}
 
@@ -45,7 +46,11 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 		}
 	}
 	for _, pool := range state.GetPools() {
-		err = rwCtx.InsertPool(pool.GetAddress(), pool.GetAmount()) // pool.GetAddress() returns the pool's semantic name
+		addrBz, err := hex.DecodeString(pool.GetAddress())
+		if err != nil {
+			m.logger.Fatal().Err(err).Str("address", pool.GetAddress()).Msg("an error occurred converting address to bytes")
+		}
+		err = rwCtx.InsertPool(addrBz, pool.GetAmount())
 		if err != nil {
 			m.logger.Fatal().Err(err).Str("address", pool.GetAddress()).Msg("an error occurred inserting an pool in the genesis state")
 		}
@@ -105,7 +110,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			if err != nil {
 				log.Fatalf("an error occurred inserting an %s in the genesis state: %s", saic.Name, err.Error())
 			}
-			if err = addValueToPool(saic.Pool.FriendlyName(), act.GetStakedAmount()); err != nil {
+			if err = addValueToPool(saic.Pool.Address(), act.GetStakedAmount()); err != nil {
 				log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", saic.Pool, err.Error())
 			}
 		}

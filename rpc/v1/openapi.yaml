@@ -94,6 +94,44 @@ paths:
             text/plain:
               example: "description of failure"
 
+  /v1/p2p/staked_actors_address_book:
+    get:
+      tags:
+        - p2p
+      summary: Returns the protocol actor address book
+      parameters:
+        - in: query
+          name: height
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+          description: The height the query will be executed on. By default it uses the current height of the consensus module. This may be the latest height if synched or an earlier height if synching.
+        - in: query
+          name: actor_type
+          required: false
+          schema:
+            $ref: "#/components/schemas/ActorTypesEnum"
+          description: The type of actor the address book will be populated with. By default it returns an address book for all protocol actors supported by the blockchain
+      responses:
+        "200":
+          description: Staked actors response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/P2PStakedActorsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the staked actors address book
+          content:
+            text/plain:
+              example: "description of failure"
+
   /v1/query/account:
     post:
       tags:
@@ -159,43 +197,20 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-
-  /v1/p2p/staked_actors_address_book:
+  /v1/query/allChainParams:
     get:
       tags:
-        - p2p
-      summary: Returns the protocol actor address book
-      parameters:
-        - in: query
-          name: height
-          required: false
-          schema:
-            type: integer
-            format: int64
-            minimum: 0
-          description: The height the query will be executed on. By default it uses the current height of the consensus module. This may be the latest height if synched or an earlier height if synching.
-        - in: query
-          name: actor_type
-          required: false
-          schema:
-            $ref: "#/components/schemas/ActorTypesEnum"
-          description: The type of actor the address book will be populated with. By default it returns an address book for all protocol actors supported by the blockchain
-
+        - query
+      summary: Returns the current values of all governance parameters
       responses:
         "200":
-          description: Staked actors response
+          description: Node parameters response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/P2PStakedActorsResponse"
-
-        "400":
-          description: Bad request
-          content:
-            text/plain:
-              example: "description of failure"
+                $ref: "#/components/schemas/AllChainParamsResponse"
         "500":
-          description: An error occurred while retrieving the staked actors address book
+          description: An error occurred while retrieving the current node parameters
           content:
             text/plain:
               example: "description of failure"
@@ -247,6 +262,7 @@ components:
           type: string
         service_url:
           type: string
+
     Account:
       type: object
       required:
@@ -316,6 +332,21 @@ components:
         total_pages:
           type: integer
           format: uint64
+    Parameter:
+      type: object
+      required:
+        - parameter_name
+        - parameter_value
+      properties:
+        parameter_name:
+          type: "string"
+        parameter_value:
+          type: "string"
+    AllChainParamsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/Parameter"
+
     P2PStakedActorsResponse:
       type: object
       required:

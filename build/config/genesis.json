@@ -4011,27 +4011,27 @@
   ],
   "pools": [
     {
-      "address": "DAO",
+      "address": "44414f0000000000000000000000000000000000",
       "amount": "100000000000000"
     },
     {
-      "address": "FeeCollector",
+      "address": "466565436f6c6c6563746f720000000000000000",
       "amount": "0"
     },
     {
-      "address": "AppStakePool",
+      "address": "4170705374616b65506f6f6c0000000000000000",
       "amount": "100000000000000"
     },
     {
-      "address": "ValidatorStakePool",
+      "address": "56616c696461746f725374616b65506f6f6c0000",
       "amount": "100000000000000"
     },
     {
-      "address": "ServicerStakePool",
+      "address": "53657276696365725374616b65506f6f6c000000",
       "amount": "100000000000000"
     },
     {
-      "address": "FishermanStakePool",
+      "address": "4669736865726d616e5374616b65506f6f6c0000",
       "amount": "100000000000000"
     }
   ],
