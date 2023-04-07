@@ -1,4 +1,4 @@
-# Pocket 1.0 E2E Testing Framework <!-- omit in toc -->
+# Pocket 1.0 Architecture Decision Record - E2E Testing Framework <!-- omit in toc -->
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -11,14 +11,14 @@
   - [Root Feature Example](#root-feature-example)
   - [Structure](#structure)
   - [PocketClient Interface](#pocketclient-interface)
-  - [**Dependencies**](#dependencies)
+  - [Dependencies](#dependencies)
 - [Rollout Plan](#rollout-plan)
 - [Decomposition](#decomposition)
-  - [**Step 0: E2E Test Harness with LocalNet**](#step-0-e2e-test-harness-with-localnet)
-  - [**Step 1.1: CI/CD Integration.**](#step-11-cicd-integration)
-  - [**Step 1.2: DevNet Integration**](#step-12-devnet-integration)
+  - [Step 0: E2E Test Harness with LocalNet](#step-0-e2e-test-harness-with-localnet)
+  - [Step 1.1: CI/CD Integration](#step-11-cicd-integration)
+  - [Step 1.2: DevNet Integration](#step-12-devnet-integration)
   - [Step 1.3 E2E Test Coverage](#step-13-e2e-test-coverage)
-  - [**Step 2.1: Byzantine Network Simulator**](#step-21-byzantine-network-simulator)
+  - [Step 2.1: Byzantine Network Simulator](#step-21-byzantine-network-simulator)
 - [Success Criteria](#success-criteria)
 
 ## Problem Statement
@@ -31,7 +31,7 @@ The purpose of this set of tests is to aid development efforts going forward wit
 
 ## Goals
 
-Stated goals from the original [GitHub ticket](https://github.com/pokt-network/pocket/issues/466) for #466:
+Stated goals from the original Github issue #466:
 
 - Create the foundation for a framework on which ALL future E2E automation will be built (e.g. including relays, state sync, etc...)
   - The current umbrella ticket will be used to link tickets expanding on this one’s features.
@@ -98,14 +98,11 @@ ctx.Step(`^the user runs the command "([^"]*)"$`, theUserRunsTheCommand)
 func theUserRunsTheCommand(cmd string) error {
     cmds := strings.Split(cmd, " ")
     result, err := validator.RunCommand(cmds...)
+    validator.result = result
     if err != nil {
-        validator.result = result
         return err
     }
-    if result.Err != nil {
-        return result.Err
-    }
-    return nil
+return nil
 }
 ```
 
@@ -135,7 +132,7 @@ type validatorPod struct {
     result *commandResult // stores the result of the last command that was run
 }
 
-// RunCommand runs a command on the v1-cli-client.
+// RunCommand runs a command on the pocket binary
 func (v *validatorPod) RunCommand(args ...string) (*commandResult, error) {
     base := []string{
         "exec", "-i", "deploy/pocket-v1-cli-client",
@@ -148,12 +145,11 @@ func (v *validatorPod) RunCommand(args ...string) (*commandResult, error) {
     cmd := exec.Command("kubectl", args...)
     r := &commandResult{}
     out, err := cmd.Output()
+    v.result = r
+    r.Stdout = string(out)
     if err != nil {
-        v.result = r
         return r, err
     }
-    r.Stdout = string(out)
-    v.result = r
     return r, nil
 }
 ```
@@ -180,14 +176,14 @@ flowchart TD
 
 - E2E scenarios only run once Kubectl is loaded. Multiple scenarios are run against the same cluster.
 
-### **Dependencies**
+### Dependencies
 
 - The `godog` dependency is added to the `go.mod`. It is used to run the Cucumber tests defined in `e2e/tests`.
 - E2E suite indirectly relies on specific pod names in the LocalNet configuration that will break tests if they’re changed.
 
 ## Rollout Plan
 
-To implement the current proposed solution, ticket [#466](https://github.com/pokt-network/pocket/issues/466) is decomposed into a multi-step plan that can be parallelized if necessary. The bare requirements of #466 focus around automating the end-to-end testing of the CLI, which will be achieved in the first ticket, but planning for and accomplishing the goals of the spirit of the ticket requires subsequent tickets to define.
+To implement the current proposed solution, issue #466 is decomposed into a multi-step plan that can be parallelized if necessary. The bare requirements of #466 focus around automating the end-to-end testing of the CLI, which will be achieved in the first ticket, but planning for and accomplishing the goals of the spirit of the ticket requires subsequent tickets to define.
 
 - Step 0 merges in a minimal test harness and the supporting documentation.
 - Support for the E2E suite is built into CI/CD and DevNet in step 1.X. Other developers can start adding tests as soon as Step 0 is merged.
@@ -198,23 +194,33 @@ To implement the current proposed solution, ticket [#466](https://github.com/pok
 
 This plan involves a phased approach to adding an end-to-end test suite. The parts can be broken down into smaller tasks that can be done in parallel in two places. The DevNet integration and Simulation network are not dependent on each other, nor are they dependent on CI/CD integration. Each step has a corresponding issue in Github with more detailed scope of work and acceptance criteria.
 
-### **Step 0: [E2E Test Harness with LocalNet](https://github.com/pokt-network/pocket/issues/580)**
+### Step 0: E2E Test Harness with LocalNet
+
+Issue #580
 
 This step covers the minimum acceptance criteria to run E2E tests against a LocalNet and documents how to work them into a development flow for the rest of the team.
 
-### **Step 1.1: [CI/CD Integration.](https://github.com/pokt-network/pocket/issues/581)**
+### Step 1.1: CI/CD Integration
+
+Issue #581
 
 Running the E2E tests regularly and for each new change is a large part of the value of these tests. This step explores adding E2E test runs on DevNet to an ArgoCD action that fires on merges to main and optional labels to PRs.
 
-### **Step 1.2: [DevNet Integration](https://github.com/pokt-network/pocket/issues/582)**
+### Step 1.2: DevNet Integration
+
+Issue #582
 
 DevNet integration is a key point towards rapid iteration in the larger work towards TestNet launch. This step is concerned with making the E2E tests run on DevNet.
 
-### Step 1.3 [E2E Test Coverage](https://github.com/pokt-network/pocket/issues/583)
+### Step 1.3 E2E Test Coverage
 
-Specific features laid out in [#602](https://github.com/pokt-network/pocket/issues/602) are detailed here. Measuring test coverage of the E2E suite as a whole is also explored.
+Issue #602
 
-### **Step 2.1: [Byzantine Network Simulator](https://github.com/pokt-network/pocket/issues/583)**
+Specific features laid out in issue #602 are detailed here. Measuring test coverage of the E2E suite as a whole is also explored.
+
+### Step 2.1: Byzantine Network Simulator
+
+Issue #583
 
 All of the above items set the ground work for a full network simulator that allows a configurable number of nodes or actor types (byzantine, validator, rational, liveness issues, etc…) and can spin up a network with them and run scenarios.
 

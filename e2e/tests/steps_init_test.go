@@ -28,27 +28,29 @@ var (
 	// validator holds command results between runs and reports errors to the test suite
 	validator = &validatorPod{}
 	// validatorA maps to suffix ID 001 of the kube pod that we use as our control agent
-	validatorA string = "001"
-	// validatorB maps to suffix ID 002
-	validatorB string = "002"
-	chainId           = "0001"
 )
 
 const (
 	// defines the host & port scheme that LocalNet uses for naming validators.
-	// e.g. v1-validator-001 thru v1-validator-
+	// e.g. v1-validator-001 thru v1-validator-999
 	validatorServiceURLTmpl = "v1-validator%s:%d"
+	// validatorA maps to suffix ID 001 and is also used by the cluster-manager
+	// though it has no special permissions.
+	validatorA = "001"
+	// validatorB maps to suffix ID 002 and receives POKT in the Send test.
+	validatorB = "002"
+	chainId    = "0001"
 )
 
 func init() {
 	cs, err := getClientset()
 	if err != nil {
-		log.Fatalf("failed to get clientset: %v", err)
+		log.Fatalf("failed to get clientset: %w", err)
 	}
 	clientset = cs
 	vkmap, err := pocketk8s.FetchValidatorPrivateKeys(clientset)
 	if err != nil {
-		log.Fatalf("failed to get validator keys: %v", err)
+		log.Fatalf("failed to get validator keys: %w", err)
 	}
 	validatorKeys = vkmap
 }
@@ -96,12 +98,9 @@ func theValidatorShouldHaveExitedWithoutError() error {
 func theUserRunsTheCommand(cmd string) error {
 	cmds := strings.Split(cmd, " ")
 	result, err := validator.RunCommand(cmds...)
+	validator.result = result
 	if err != nil {
 		return err
-	}
-	validator.result = result
-	if result.Err != nil {
-		return result.Err
 	}
 	return nil
 }
@@ -188,11 +187,11 @@ func getPrivateKey(keyMap map[string]string, validatorId string) cryptoPocket.Pr
 	privHexString := keyMap[validatorId]
 	keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
 	if err != nil {
-		log.Fatalf("failed to extract keypair %+v", err)
+		log.Fatalf("failed to extract keypair %w", err)
 	}
 	privateKey, err := keyPair.Unarmour("")
 	if err != nil {
-		log.Fatalf("failed to extract keypair %+v", err)
+		log.Fatalf("failed to extract keypair %w", err)
 	}
 	return privateKey
 }
