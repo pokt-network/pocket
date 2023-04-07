@@ -26,7 +26,7 @@ The code depends on a Kube config located at the `$HOME/.kube/config` default pa
 
 ### Build Tags
 
-Because the E2E tests depend on a Kubernetes environment to be available, the E2E tests package gets a build tag so the E2E tests are ignored unless the test command is run with -tags=e2e. Issue [#581](https://github.com/pokt-network/pocket/issues/581) covers running the E2E tests in the delivery pipeline. This also means the `develop_test` Make target won't run E2E tests.
+Because the E2E tests depend on a Kubernetes environment to be available, the E2E tests package gets a build tag so the E2E tests are ignored unless the test command is run with -tags=e2e. Issue #581 covers running the E2E tests in the delivery pipeline. This also means the `develop_test` Make target won't run E2E tests.
 
 ### Issue templates
 
