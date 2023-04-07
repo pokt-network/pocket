@@ -50,7 +50,7 @@ func (sm *savepointFactory) CreateSavepoint(height int64) (modules.PersistenceRe
 		return nil, fmt.Errorf("savepoint height %d does not match read context height %d", height, currentHeight)
 	}
 
-	nodeStores, valueStores := sm.readContext.GetKVStores()
+	nodeStores, valueStores := sm.readContext.GetBackupableKVStores()
 
 	nodeStoresTempDir, err := ioutil.TempDir("", "pocketv1-snapshot-nodestores-*")
 	if err != nil {

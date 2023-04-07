@@ -28,7 +28,7 @@ type stateTrees struct {
 	m sync.Mutex
 }
 
-func (st *stateTrees) GetKVStores() (nodeStores, valueStores map[int]kvstore.BackupableKVStore) {
+func (st *stateTrees) GetBackupableKVStores() (nodeStores, valueStores map[int]kvstore.BackupableKVStore) {
 	st.m.Lock()
 	defer st.m.Unlock()
 	nodeStores = make(map[int]kvstore.BackupableKVStore, len(st.nodeStores))

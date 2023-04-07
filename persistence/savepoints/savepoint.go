@@ -20,7 +20,7 @@ type savepoint struct {
 	valueStoresPath string
 }
 
-func (*savepoint) GetKVStores() (nodeStores map[int]kvstore.BackupableKVStore, valueStores map[int]kvstore.BackupableKVStore) {
+func (*savepoint) GetBackupableKVStores() (nodeStores map[int]kvstore.BackupableKVStore, valueStores map[int]kvstore.BackupableKVStore) {
 	// no-op
 	return nil, nil
 }
