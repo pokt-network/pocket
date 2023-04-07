@@ -2,7 +2,9 @@ package unit_of_work
 
 import (
 	"math/big"
+	"strings"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/utils"
@@ -12,6 +14,14 @@ import (
 
 func init() {
 	govParamTypes = prepareGovParamParamTypesMap()
+	for _, key := range utils.GovParamMetadataKeys {
+		if isOwner := strings.Contains(key, "_owner"); isOwner {
+			continue
+		}
+		if _, ok := govParamTypes[key]; !ok {
+			logger.Global.Fatal().Msgf("govParamTypes map does not contain: %s", key)
+		}
+	}
 }
 
 var (
@@ -59,6 +69,8 @@ func prepareGovParamParamTypesMap() map[string]int {
 		typesUtil.MessageSendFee:                           BIGINT,
 		typesUtil.MessageStakeFishermanFee:                 BIGINT,
 		typesUtil.MessageEditStakeFishermanFee:             BIGINT,
+		typesUtil.MessageUnstakeFishermanFee:               BIGINT,
+		typesUtil.MessagePauseFishermanFee:                 BIGINT,
 		typesUtil.MessageUnpauseFishermanFee:               BIGINT,
 		typesUtil.MessageFishermanPauseServicerFee:         BIGINT,
 		typesUtil.MessageTestScoreFee:                      BIGINT,

@@ -27,31 +27,31 @@ func TestUtilityUnitOfWork_GetGovParams(t *testing.T) {
 		if strings.Contains(paramName, "_owner") {
 			continue
 		}
-		defaultParam := reflect.ValueOf(defaultParams).MethodByName("Get" + utils.GovParamMetadataMap[paramName].PropertyName).Call([]reflect.Value{})[0].Interface()
-		require.NotNil(t, defaultParam)
+		defaultValueParam := reflect.ValueOf(defaultParams).MethodByName("Get" + utils.GovParamMetadataMap[paramName].PropertyName).Call([]reflect.Value{})[0].Interface()
+		require.NotNil(t, defaultValueParam)
 		switch id := govParamTypes[paramName]; id {
 		case BIGINT:
 			gotParam, err := getGovParam[*big.Int](uow, paramName)
 			require.NoError(t, err)
-			defaultValue, ok := defaultParam.(string)
+			defaultValue, ok := defaultValueParam.(string)
 			require.True(t, ok)
 			require.Equal(t, defaultValue, gotParam.String())
 		case INT:
 			gotParam, err := getGovParam[int](uow, paramName)
 			require.NoError(t, err)
-			defaultValue, ok := defaultParam.(int32)
+			defaultValue, ok := defaultValueParam.(int32)
 			require.True(t, ok)
 			require.Equal(t, int(defaultValue), gotParam)
 		case INT64:
 			gotParam, err := getGovParam[int64](uow, paramName)
 			require.NoError(t, err)
-			defaultValue, ok := defaultParam.(int32)
+			defaultValue, ok := defaultValueParam.(int32)
 			require.True(t, ok)
 			require.Equal(t, int64(defaultValue), gotParam)
 		case BYTES:
 			gotParam, er := getGovParam[[]byte](uow, paramName)
 			require.NoError(t, er)
-			defaultValue, ok := defaultParam.(string)
+			defaultValue, ok := defaultValueParam.(string)
 			require.True(t, ok)
 			defaultBz, err := hex.DecodeString(defaultValue)
 			require.NoError(t, err)
@@ -59,7 +59,7 @@ func TestUtilityUnitOfWork_GetGovParams(t *testing.T) {
 		case STRING:
 			gotParam, err := getGovParam[string](uow, paramName)
 			require.NoError(t, err)
-			defaultValue, ok := defaultParam.(string)
+			defaultValue, ok := defaultValueParam.(string)
 			require.True(t, ok)
 			require.Equal(t, defaultValue, gotParam)
 		default:

@@ -539,5 +539,5 @@ send_local_tx: ## A hardcoded send tx to make LocalNet debugging easier
 	go run -tags=debug app/client/*.go Account Send --non_interactive 00104055c00bed7c983a48aac7dc6335d7c607a7 00204737d2a165ebe4be3a7d5b0af905b0ea91d8 1000
 
 .PHONY: query_chain_params
-query_chain_params: ## A hardcoded NodeParams query to make LocalNet debugging easier
+query_chain_params: ## A hardcoded ChainParams query to make LocalNet debugging easier
 	go run app/client/main.go Query AllChainParams

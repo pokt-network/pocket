@@ -18,7 +18,7 @@ func init() {
 func NewQueryCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "Query",
-		Short:   "Commands related to querying the RPC server of the node",
+		Short:   "Commands related to querying on-chain data via the node's RPC server",
 		Aliases: []string{"query"},
 		Args:    cobra.ExactArgs(0),
 	}
