@@ -38,7 +38,7 @@ spec:
             - name: POSTGRES_HOST
               value: {{ include "pocket-validator.postgresqlHost" . }}
             - name: POSTGRES_PORT
-              value: {{ include "pocket-validator.postgresqlPort" . }}
+              value: {{ include "pocket-validator.postgresqlPort" . | quote }}
       containers:
         - name: pocket-validator
           securityContext:
@@ -59,17 +59,17 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.privateKeySecretKeyRef.name }}
-                  key: {{ .Values.privateKeySecretKeyRef.key }}
+                  key: {{ .Values.privateKeySecretKeyRef.key | quote }}
             - name: POCKET_CONSENSUS_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.privateKeySecretKeyRef.name }}
-                  key: {{ .Values.privateKeySecretKeyRef.key }}
+                  key: {{ .Values.privateKeySecretKeyRef.key | quote }}
             - name: POCKET_P2P_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.privateKeySecretKeyRef.name }}
-                  key: {{ .Values.privateKeySecretKeyRef.key }}
+                  key: {{ .Values.privateKeySecretKeyRef.key | quote }}
             - name: POSTGRES_USER
             {{ include "pocket-validator.postgresqlUserValueOrSecretRef" . | nindent 14 }}
             - name: POSTGRES_PASSWORD
@@ -77,9 +77,9 @@ spec:
             - name: POSTGRES_HOST
               value: {{ include "pocket-validator.postgresqlHost" . }}
             - name: POSTGRES_PORT
-              value: {{ include "pocket-validator.postgresqlPort" . }}
+              value: {{ include "pocket-validator.postgresqlPort" . | quote }}
             - name: POSTGRES_DB
-              value: "postgres"
+              value: {{ include "pocket-validator.postgresqlDatabase" . }}
             - name: POCKET_PERSISTENCE_POSTGRES_URL
               value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
             - name: POCKET_PERSISTENCE_NODE_SCHEMA
@@ -88,15 +88,16 @@ spec:
               value: {{ include "pocket-validator.fullname" . }}
           livenessProbe:
             httpGet:
-              path: /
+              path: /v1/health
               port: rpc
           readinessProbe:
             httpGet:
-              path: /
+              path: /v1/health
               port: rpc
           volumeMounts:
             - name: config-volume
-              mountPath: /pocket/configs
+              mountPath: /pocket/configs/config.json
+              subPath: config.json
             - name: genesis-volume
               mountPath: /pocket/configs/genesis.json
               subPath: {{ if .Values.genesis.preProvisionedGenesis.enabled }}genesis.json{{ else }}{{ .Values.genesis.externalConfigMap.key }}{{ end }}

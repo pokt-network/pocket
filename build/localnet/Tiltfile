@@ -52,26 +52,6 @@ def check_helm_dependencies_for_chart(path):
     if helm_dependencies_not_ok_count > 1:
         local("helm dependency update " + path)
 
-# Deploy dependencies (grafana, postgres, prometheus) and wire it up with localnet
-helm_repo(
-    "grafana",
-    "https://grafana.github.io/helm-charts",
-    resource_name="helm-repo-grafana",
-    labels=["helm"]
-)
-helm_repo(
-    "prometheus-community",
-    "https://prometheus-community.github.io/helm-charts",
-    resource_name="helm-repo-prometheus",
-    labels=["helm"]
-)
-helm_repo(
-    "bitnami",
-    "https://charts.bitnami.com/bitnami",
-    resource_name="helm-repo-bitnami",
-    labels=["helm"]
-)
-
 check_helm_dependencies_for_chart("dependencies")
 
 k8s_yaml(helm("dependencies", name="dependencies", namespace="default"))
@@ -79,7 +59,6 @@ k8s_resource("dependencies-prometheus-pushgateway", labels=["monitoring"])
 k8s_resource("dependencies-loki", labels=["monitoring"])
 k8s_resource("dependencies-prometheus-node-exporter", labels=["monitoring"])
 k8s_resource("dependencies-prometheus-alertmanager", labels=["monitoring"])
-k8s_resource("dependencies-postgresql", labels=["database"])
 k8s_resource("dependencies-grafana", labels=["monitoring"])
 k8s_resource("dependencies-kube-state-metrics", labels=["monitoring"])
 k8s_resource("dependencies-promtail", labels=["monitoring"])
@@ -124,8 +103,8 @@ WORKDIR /
     only=["./bin/pocket-linux"],
     entrypoint=[
         "/usr/local/bin/pocket",
-        "-config=/configs/config.json",
-        "-genesis=/genesis.json",
+        "-config=/pocket/configs/config.json",
+        "-genesis=/pocket/configs/genesis.json",
     ],
     live_update=[sync("bin/pocket-linux", "/usr/local/bin/pocket")],
 )
@@ -182,7 +161,21 @@ k8s_resource('pocket-v1-cluster-manager', labels=['cluster-manager'])
 check_helm_dependencies_for_chart(root_dir + "/charts/pocket-validator")
 for x in range(localnet_config["validators"]["count"]):
     validator_number = x + 1
-    print("Building validator %s" % validator_number)
+    formatted_validator_number = local('printf "%03d" ' + str(validator_number))
+
+    k8s_yaml(helm(root_dir + "/charts/pocket-validator",
+        name="validator-%s" % formatted_validator_number,
+        namespace="default",
+        set=[
+            "image.repository=validator-image",
+            "privateKeySecretKeyRef.name=v1-localnet-validators-private-keys",
+            "privateKeySecretKeyRef.key=%s" % formatted_validator_number,
+            "genesis.preProvisionedGenesis.enabled=false",
+            "genesis.externalConfigMap.name=v1-localnet-genesis",
+            "genesis.externalConfigMap.key=genesis.json",
+            "postgresql.primary.persistence.enabled=false",
+        ]
+    ))
 # k8s_yaml(
 #     [
 #         local(

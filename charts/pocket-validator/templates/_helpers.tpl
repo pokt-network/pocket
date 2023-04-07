@@ -89,7 +89,7 @@ Determine the PostgreSQL schema based on whether the subchart is enabled.
 */}}
 {{- define "pocket-validator.postgresqlDatabase" -}}
 {{- if .Values.postgresql.enabled -}}
-{{- "postgresql" -}}
+{{- "postgres" -}}
 {{- else -}}
 {{- .Values.externalPostgresql.database -}}
 {{- end -}}

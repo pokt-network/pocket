@@ -504,9 +504,8 @@ localnet_logs_validators_follow: ## Outputs logs from all validators and follows
 	kubectl logs -l v1-purpose=validator --all-containers=true --max-log-requests=1000 --tail=-1 -f
 
 .PHONY: localnet_down
-localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + postgres database)
+localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down`)
 	tilt down --file=build/localnet/Tiltfile
-	kubectl delete pvc --ignore-not-found=true data-dependencies-postgresql-0
 
 .PHONY: localnet_db_cli
 localnet_db_cli: ## Open a CLI to the local containerized postgres instancedb_cli:

@@ -15,7 +15,7 @@ spec:
       name: consensus
     - port: {{ .Values.service.ports.rpc }}
       name: rpc
-    - port: {{ .Values.service.ports.rpc }}
+    - port: {{ .Values.service.ports.metrics }}
       name: metrics
   selector:
     {{- include "pocket-validator.selectorLabels" . | nindent 4 }}

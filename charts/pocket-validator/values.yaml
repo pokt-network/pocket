@@ -13,9 +13,10 @@ postgresql:
   # -- deploy postgresql database automatically. Refer to https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml for additional options.
   enabled: true
 
-  # primary:
-  #   persistence:
-  #     size: 8Gi
+  primary:
+    persistence:
+      enabled: false
+      size: 8Gi
 
 externalPostgresql:
   # -- use external postgres database
@@ -59,9 +60,9 @@ persistence:
   dataSource: {}
 
 privateKeySecretKeyRef:
-  # -- name of the Secret in the same namespace that contains the private key of the node
+  # -- REQUIRED. Name of the Secret in the same namespace that contains the private key of the node
   name: ""
-  # -- key in the Secret that contains the private key of the node
+  # -- REQUIRED. Key in the Secret that contains the private key of the node
   key: ""
 
 config:
@@ -101,7 +102,7 @@ config:
     endpoint: "/metrics"
   logger:
     level: debug
-    format: pretty
+    format: json
   rpc:
     enabled: true
     port: "50832"
