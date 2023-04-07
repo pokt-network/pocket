@@ -632,19 +632,19 @@ func waitForNodeToSync(t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
 	unsyncedNode *shared.Node) error {
-	consensusMod := unsyncedNode.GetBus().GetConsensusModule()
-
+	//consensusMod := unsyncedNode.GetBus().GetConsensusModule()
+	fmt.Println("yo wait")
 	// 1) Wait for the unsynced events
-	errMsg := "FSM unsycned event retrieval error"
-	unsyncedEventMessages, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsUnsynced, errMsg, numValidators*(numValidators-1), 500, false)
-	require.NoError(t, err)
+	// errMsg := "FSM syncmode event retrieval error"
+	// unsyncedEventMessages, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncing, errMsg, 1, 500, false)
+	// require.NoError(t, err)
 
-	for _, message := range unsyncedEventMessages {
-		fmt.Println("Unsynced messages: ", message)
-	}
+	// for _, message := range unsyncedEventMessages {
+	// 	fmt.Println("Unsynced messages: ", message)
+	// }
 
 	// Trigger it in the FSM via a method
-	consensusMod.TriggerFSMTransition(unsyncedEventMessages[0])
+	//consensusMod.TriggerFSMTransition(unsyncedEventMessages[0])
 
 	// 2) Wait for the syncing events
 	// errMsg = "FSM syncing Event retrieval error"

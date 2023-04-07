@@ -200,6 +200,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
 	//TODO! add this check to all nodes tests
 	err := StartAllTestPocketNodes(t, pocketNodes)
+	fmt.Println("started all nodes")
 	require.NoError(t, err)
 
 	// Prepare leader info
@@ -231,15 +232,20 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 
 	}
 
+	fmt.Println("set heights")
+
 	// Debug message to start consensus by triggering first view change
-	for _, pocketNode := range pocketNodes {
+	for no, pocketNode := range pocketNodes {
 		TriggerNextView(t, pocketNode)
+		fmt.Println("triggered next view for ", no)
 	}
+
 	currentRound := testRound + 1
 
 	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderForView() function.
 	// Any node in pocketNodes mapping can be used to call GetLeaderForView() function.
 	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(testHeight, currentRound, testStep))
+	fmt.Println("leader id is ", leaderId)
 	leader := pocketNodes[leaderId]
 	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
 	require.NoError(t, err)
@@ -257,13 +263,14 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		Transactions: make([][]byte, 0),
 	}
 
+	fmt.Println("setting leader block")
 	leader.GetBus().GetConsensusModule().SetBlock(block)
 
 	// Assert that unsynced node has a different view of the network than the rest of the nodes
 	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 500, true)
 	require.NoError(t, err)
 
-	fmt.Println("\n\n New Round Messages received")
+	fmt.Println("\nNew Round Messages received")
 
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -288,21 +295,24 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
-	fmt.Println("\n\n Setting aggregated state sync metadata ")
-	unsyncedNode.GetBus().GetConsensusModule().SetAggregatedStateSyncMetadata(uint64(1), testHeight, string(leaderPK.Address()))
+	fmt.Println("Setting aggregated state sync metadata ")
+	unsyncedNode.GetBus().GetConsensusModule().PushStateSyncMetadata(uint64(1), testHeight)
 
+	fmt.Println("Broadcasting newRound msgs")
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)
 	}
-	//advanceTime(t, clockMock, 10*time.Millisecond)
 
-	err = waitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode)
-	require.NoError(t, err)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// 2. Propose
 	numExpectedMsgs := numValidators
 	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numExpectedMsgs, 500, true)
 	require.NoError(t, err)
+
+	// here the node must have send the getblock requests
+	// and received the requested blocks
+	// check the test channel if this happened
 
 	//advanceTime(t, clockMock, 10*time.Millisecond)
 	for nodeId, pocketNode := range pocketNodes {
@@ -317,6 +327,10 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId)
 	}
+
+	fmt.Println("\nWaiting for the node to sync")
+	waitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode)
+	require.NoError(t, err)
 }
 
 // TODO (#352) Implement these tests

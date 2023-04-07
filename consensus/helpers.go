@@ -44,24 +44,24 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 			return nil, err
 		}
 		if msg.GetPartialSignature() == nil {
-			m.logger.Warn().Fields(msgToLoggingFields(msg)).Msg("No partial signature found which should not happen...")
+			m.logger.Warn().Fields(hotstuffMsgToLoggingFields(msg)).Msg("No partial signature found which should not happen...")
 			continue
 		}
 		if msg.GetHeight() != height || msg.GetStep() != step || msg.GetRound() != round {
-			m.logger.Warn().Fields(msgToLoggingFields(msg)).Msg("Message in pool does not match (height, step, round) of QC being generated")
+			m.logger.Warn().Fields(hotstuffMsgToLoggingFields(msg)).Msg("Message in pool does not match (height, step, round) of QC being generated")
 			continue
 		}
 
 		ps := msg.GetPartialSignature()
 		if ps.Signature == nil || ps.Address == "" {
 
-			m.logger.Warn().Fields(msgToLoggingFields(msg)).Msg("Partial signature is incomplete which should not happen...")
+			m.logger.Warn().Fields(hotstuffMsgToLoggingFields(msg)).Msg("Partial signature is incomplete which should not happen...")
 			continue
 		}
 		pss = append(pss, msg.GetPartialSignature())
 	}
 
-	validators, err := m.getValidatorsAtHeight(height)
+	validators, err := m.GetValidatorsAtHeight(height)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signa
 }
 
 func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 		return
 	}
 
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
@@ -197,7 +197,7 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 		return
 	}
 
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
@@ -229,7 +229,7 @@ func (m *consensusModule) isReplica() bool {
 }
 
 func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error {
-	loggingFields := msgToLoggingFields(msg)
+	loggingFields := hotstuffMsgToLoggingFields(msg)
 	m.logger.Info().Fields(loggingFields).Msg("About to elect the next leader")
 
 	m.leaderId = nil
@@ -239,7 +239,7 @@ func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error 
 		return err
 	}
 	loggingFields["leaderId"] = leaderId
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
@@ -272,7 +272,7 @@ func (m *consensusModule) setLogPrefix(logPrefix string) {
 	})
 }
 
-func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
+func (m *consensusModule) GetValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err
@@ -281,17 +281,9 @@ func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Act
 	return readCtx.GetAllValidators(int64(height))
 }
 
-func msgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
-	return map[string]any{
-		"height": msg.GetHeight(),
-		"round":  msg.GetRound(),
-		"step":   msg.GetStep(),
-	}
-}
-
 // TODO: This is a temporary solution, cache this in Consensus module. This field will be populated once with a single query to the persistence module.
 func (m *consensusModule) IsValidator() (bool, error) {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return false, err
 	}
@@ -303,4 +295,20 @@ func (m *consensusModule) IsValidator() (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (m *consensusModule) statesSyncLogHelper(receiverPeerAddress string) map[string]any {
+	return map[string]any{
+		"height":              m.CurrentHeight(),
+		"senderPeerAddress":   m.GetNodeAddress(),
+		"receiverPeerAddress": receiverPeerAddress,
+	}
+}
+
+func hotstuffMsgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
+	return map[string]any{
+		"height": msg.GetHeight(),
+		"round":  msg.GetRound(),
+		"step":   msg.GetStep(),
+	}
 }

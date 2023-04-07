@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/consensus/pacemaker"
 	"github.com/pokt-network/pocket/consensus/state_sync"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
+	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -70,6 +71,12 @@ type consensusModule struct {
 	stateSync state_sync.StateSyncModule
 
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
+
+	// block resposnes received from peers are collected in this channel
+	blocksReceived chan *coreTypes.Block
+
+	// metadata resposnes received from peers are collected in this channel
+	MetadataReceived chan *types.StateSyncMetadataResponse
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -140,7 +147,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	}
 	address := privateKey.Address().String()
 
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return nil, err
 	}

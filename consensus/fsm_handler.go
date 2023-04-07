@@ -68,7 +68,9 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Node is in bootstrapped state, so it is out of sync, and transitions to unsynced")
 
-	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
+	//	m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
+
+	return nil
 }
 
 // HandleUnsynced handles FSM event Consensus_IsUnsynced, and Unsynced is the destination state.
@@ -86,7 +88,7 @@ func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEv
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Node is in Sync Mode, start syncing...")
 
-	return m.stateSync.StartSyncing()
+	return m.stateSync.Start()
 }
 
 // HandleSynced handles FSM event IsSyncedNonValidator for Non-Validators, and Synced is the destination state.

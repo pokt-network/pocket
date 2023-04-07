@@ -42,7 +42,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		}
 		return m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
 	case *typesCons.StateSyncMessage_MetadataRes:
-		return m.stateSync.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
+		return m.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
 	case *typesCons.StateSyncMessage_GetBlockReq:
 		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage MetadataReq")
 		if !m.stateSync.IsServerModEnabled() {
@@ -50,8 +50,27 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		}
 		return m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
 	case *typesCons.StateSyncMessage_GetBlockRes:
-		return m.stateSync.HandleGetBlockResponse(stateSyncMessage.GetGetBlockRes())
+		return m.HandleGetBlockResponse(stateSyncMessage.GetGetBlockRes())
 	default:
 		return fmt.Errorf("unspecified state sync message type")
 	}
+}
+
+// TODO(#352): Implement the business logic for this function
+func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
+	m.logger.Info().Fields(m.statesSyncLogHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse: %s", blockRes)
+
+	if blockRes.Block.BlockHeader.GetQuorumCertificate() == nil {
+		m.logger.Error().Err(typesCons.ErrNoQcInReceivedBlock).Msg(typesCons.DisregardBlock)
+		return typesCons.ErrNoQcInReceivedBlock
+	}
+
+	return nil
+}
+
+// TODO(#352): Implement the business logic for this function
+func (m *consensusModule) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
+	m.logger.Info().Fields(m.statesSyncLogHelper(metaDataRes.PeerAddress)).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
+
+	return nil
 }
