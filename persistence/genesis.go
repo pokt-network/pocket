@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"log"
 	"math/big"
-	"strings"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
@@ -158,14 +157,6 @@ func (p *PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Accoun
 	}
 	return
 }
-func (p *PostgresContext) GetAllAccountsJSON(height int64) (json string, err error) {
-	ctx, tx := p.getCtxAndTx()
-	err = tx.QueryRow(ctx, types.SelectJSON(types.Account.GetAllQuery(height))).Scan(&json)
-	if err != nil && strings.Contains(err.Error(), errCannotScanNULL) {
-		err = nil
-	}
-	return
-}
 
 // CLEANUP: Consolidate with GetAllAccounts.
 func (p *PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, err error) {
@@ -180,15 +171,6 @@ func (p *PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, 
 			return nil, err
 		}
 		accs = append(accs, pool)
-	}
-	return
-}
-
-func (p *PostgresContext) GetAllPoolsJSON(height int64) (json string, err error) {
-	ctx, tx := p.getCtxAndTx()
-	err = tx.QueryRow(ctx, types.SelectJSON(types.Pool.GetAllQuery(height))).Scan(&json)
-	if err != nil && strings.Contains(err.Error(), errCannotScanNULL) {
-		err = nil
 	}
 	return
 }

@@ -1,8 +1,6 @@
 package persistence
 
 import (
-	"strings"
-
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
@@ -36,15 +34,6 @@ func (p *PostgresContext) GetAllApps(height int64) (apps []*coreTypes.Actor, err
 	return
 }
 
-func (p *PostgresContext) GetAllAppsJSON(height int64) (json string, err error) {
-	ctx, tx := p.getCtxAndTx()
-	err = tx.QueryRow(ctx, types.SelectJSON(types.ApplicationActor.GetAllQuery(height))).Scan(&json)
-	if err != nil && strings.Contains(err.Error(), errCannotScanNULL) {
-		err = nil
-	}
-	return
-}
-
 func (p *PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Actor, err error) {
 	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.ValidatorActor.GetAllQuery(height))
@@ -68,15 +57,6 @@ func (p *PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Acto
 			return
 		}
 		vals = append(vals, actor)
-	}
-	return
-}
-
-func (p *PostgresContext) GetAllValidatorsJSON(height int64) (json string, err error) {
-	ctx, tx := p.getCtxAndTx()
-	err = tx.QueryRow(ctx, types.SelectJSON(types.ValidatorActor.GetAllQuery(height))).Scan(&json)
-	if err != nil && strings.Contains(err.Error(), errCannotScanNULL) {
-		err = nil
 	}
 	return
 }
@@ -107,15 +87,6 @@ func (p *PostgresContext) GetAllServicers(height int64) (sn []*coreTypes.Actor, 
 	return
 }
 
-func (p *PostgresContext) GetAllServicersJSON(height int64) (json string, err error) {
-	ctx, tx := p.getCtxAndTx()
-	err = tx.QueryRow(ctx, types.SelectJSON(types.ServicerActor.GetAllQuery(height))).Scan(&json)
-	if err != nil && strings.Contains(err.Error(), errCannotScanNULL) {
-		err = nil
-	}
-	return
-}
-
 func (p *PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, err error) {
 	ctx, tx := p.getCtxAndTx()
 	rows, err := tx.Query(ctx, types.FishermanActor.GetAllQuery(height))
@@ -138,15 +109,6 @@ func (p *PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, e
 			return
 		}
 		f = append(f, actor)
-	}
-	return
-}
-
-func (p *PostgresContext) GetAllFishermenJSON(height int64) (json string, err error) {
-	ctx, tx := p.getCtxAndTx()
-	err = tx.QueryRow(ctx, types.SelectJSON(types.FishermanActor.GetAllQuery(height))).Scan(&json)
-	if err != nil && strings.Contains(err.Error(), errCannotScanNULL) {
-		err = nil
 	}
 	return
 }

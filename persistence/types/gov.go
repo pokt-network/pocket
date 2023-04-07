@@ -108,14 +108,6 @@ func GetParamOrFlagQuery(tableName, flagName string, height int64) string {
 	return fmt.Sprintf(`SELECT %s FROM %s WHERE name='%s' AND height<=%d ORDER BY height DESC LIMIT 1`, fields, tableName, flagName, height)
 }
 
-func GetAllParamsOrFlagsJSONQuery(tableName string, height int64) string {
-	fields := "value"
-	if tableName == FlagsTableName {
-		fields += ",enabled"
-	}
-	return SelectJSON(fmt.Sprintf(`SELECT %s FROM %s WHERE height<=%d ORDER BY height DESC LIMIT 1`, fields, tableName, height))
-}
-
 // SupportedParamTypes represents the types currently supported for the `value` property in params and flags
 type SupportedParamTypes interface {
 	int | int32 | int64 | []byte | string

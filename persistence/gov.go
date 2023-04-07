@@ -60,7 +60,7 @@ func (p *PostgresContext) GetParameter(paramName string, height int64) (v any, e
 	case "[]uint8": // []byte
 		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
 	default:
-		return nil, fmt.Errorf("unhandled type for param: got %s.", paramType)
+		return nil, fmt.Errorf("unhandled type for param: got %s", paramType)
 	}
 	return v, err
 }
@@ -78,16 +78,6 @@ func (p *PostgresContext) GetStringParam(paramName string, height int64) (string
 func (p *PostgresContext) GetBytesParam(paramName string, height int64) (param []byte, err error) {
 	v, _, err := getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
 	return v, err
-}
-
-func (p *PostgresContext) GetAllParamsJSON(height int64) (string, error) {
-	ctx, tx := p.getCtxAndTx()
-	var paramsJSON string
-	err := tx.QueryRow(ctx, types.GetAllParamsOrFlagsJSONQuery(types.ParamsTableName, height)).Scan(&paramsJSON)
-	if err != nil && strings.Contains(err.Error(), errCannotScanNULL) {
-		err = nil
-	}
-	return paramsJSON, err
 }
 
 func (p *PostgresContext) SetParam(paramName string, value any) error {
@@ -109,16 +99,6 @@ func (p *PostgresContext) GetStringFlag(flagName string, height int64) (value st
 
 func (p *PostgresContext) GetBytesFlag(flagName string, height int64) (value []byte, enabled bool, err error) {
 	return getParamOrFlag[[]byte](p, types.FlagsTableName, flagName, height)
-}
-
-func (p *PostgresContext) GetAllFlagsJSON(height int64) (string, error) {
-	ctx, tx := p.getCtxAndTx()
-	var paramsJSON string
-	err := tx.QueryRow(ctx, types.GetAllParamsOrFlagsJSONQuery(types.FlagsTableName, height)).Scan(&paramsJSON)
-	if err != nil && strings.Contains(err.Error(), errCannotScanNULL) {
-		err = nil
-	}
-	return paramsJSON, err
 }
 
 func (p *PostgresContext) SetFlag(flagName string, value any, enabled bool) error {
