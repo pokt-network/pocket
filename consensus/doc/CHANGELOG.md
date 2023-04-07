@@ -7,15 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.44] - 2023-04-07
+## [0.0.0.43] - 2023-04-07
 
+- Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`
 - Updated to reflect the new `ApplyBlock` signature from `utilityUnitOfWork`
 - Updated to use `utilityUnitOfWork.GetStateHash()`
 - Removed duplicate import
-
-## [0.0.0.43] - 2023-04-04
-
-- Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`
 
 ## [0.0.0.42] - 2023-04-03
 
