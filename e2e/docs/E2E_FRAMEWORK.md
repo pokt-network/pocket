@@ -109,7 +109,7 @@ func theUserRunsTheCommand(cmd string) error {
 }
 ```
 
-- The above step definition function is incredibly powerful in that it allows the Validator to compose and execute commands on the Pod. The tests form this into a step definition for staking, unstaking, & help command validation, etc…
+- The above step definition function is incredibly powerful in that it allows the `Validator` to compose and execute commands on the `Pod`. The tests form this into a step definition for staking, unstaking, & help command validation, etc…
 - A developer define custom step definitions for specific behavior, but Gherkin tests can also invoke `theUserRunsTheCommand` to achieve almost any behavior. Test syntax can thus be highly flexible and scenarios should be designed with this in mind.
 
 ### Structure
