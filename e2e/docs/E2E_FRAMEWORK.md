@@ -204,15 +204,15 @@ This step covers the minimum acceptance criteria to run E2E tests against a Loca
 
 ### **Step 1.1: [CI/CD Integration.](https://github.com/pokt-network/pocket/issues/581)**
 
-Running the E2E tests regularly and for each new change is a large part of the value of these tests. This step explores adding E2E test runs on DevNet to an ArgoCD action that fires on code changes.
+Running the E2E tests regularly and for each new change is a large part of the value of these tests. This step explores adding E2E test runs on DevNet to an ArgoCD action that fires on merges to main and optional labels to PRs.
 
 ### **Step 1.2: [DevNet Integration](https://github.com/pokt-network/pocket/issues/582)**
 
-DevNet integration is a key point towards rapid iteration in the larger movement towards a late-summer TestNet launch. This step is concerned with making the E2E tests run on DevNet.
+DevNet integration is a key point towards rapid iteration in the larger work towards TestNet launch. This step is concerned with making the E2E tests run on DevNet.
 
 ### Step 1.3 [E2E Test Coverage](https://github.com/pokt-network/pocket/issues/583)
 
-Specific features laid out in https://github.com/pokt-network/pocket/issues/602 are detailed here. Measuring test coverage of the E2E suite as a whole is also explored.
+Specific features laid out in [#602](https://github.com/pokt-network/pocket/issues/602) are detailed here. Measuring test coverage of the E2E suite as a whole is also explored.
 
 ### **Step 2.1: [Byzantine Network Simulator](https://github.com/pokt-network/pocket/issues/583)**
 

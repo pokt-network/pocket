@@ -20,7 +20,8 @@ import (
 )
 
 var (
-	// validatorKeys is hydrated by the clientset with credentials for all validators
+	// validatorKeys is hydrated by the clientset with credentials for all validators.
+	// validatorKeys maps validator IDs to their private key. It is returned by the FetchValidatorPrivateKeys.
 	validatorKeys map[string]string
 	// clientset is the kubernetes API we acquire from the user's $HOME/.kube/config
 	clientset *kubernetes.Clientset
@@ -69,7 +70,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the user has a validator$`, theUserHasAValidator)
 	ctx.Step(`^the validator should have exited without error$`, theValidatorShouldHaveExitedWithoutError)
 	ctx.Step(`^the user stakes their validator with (\d+) POKT$`, theUserStakesTheirValidatorWithPOKT)
-	ctx.Step(`^the user should be able to unstake their wallet$`, theUserShouldBeAbleToUnstakeTheirWallet)
+	ctx.Step(`^the user should be able to unstake their validator$`, theUserShouldBeAbleToUnstakeTheirValidator)
 	ctx.Step(`^the user sends (\d+) POKT to another address$`, theUserSendsPOKTToAnotherAddress)
 }
 
@@ -91,7 +92,6 @@ func theUserRunsTheCommand(cmd string) error {
 	cmds := strings.Split(cmd, " ")
 	result, err := validator.RunCommand(cmds...)
 	if err != nil {
-		validator.result = result
 		return err
 	}
 	validator.result = result
@@ -112,7 +112,7 @@ func theUserStakesTheirValidatorWithPOKT(amount int) error {
 	return stakeValidator(fmt.Sprintf("%d", amount))
 }
 
-func theUserShouldBeAbleToUnstakeTheirWallet() error {
+func theUserShouldBeAbleToUnstakeTheirValidator() error {
 	return unstakeValidator()
 }
 
