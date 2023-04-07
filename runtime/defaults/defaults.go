@@ -63,12 +63,7 @@ var (
 	DefaultRPCTimeout = uint64(30000)
 
 	// keybase
-	DefaultKeybaseType     = types.KeybaseType_FILE
 	DefaultKeybaseFilePath = "" // set in init function
-	// vault
-	DefaultKeybaseVaultAddr      = ""
-	DefaultKeybaseVaultToken     = ""
-	DefaultKeybaseVaultMountPath = ""
 )
 
 var (

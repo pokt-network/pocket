@@ -4,6 +4,7 @@ package configs;
 
 option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
+// KeybaseConfig is the configuration for the Keybase. It is modular and can be configured to use either the File Keybase or the Hashicorp Vault Keybase.
 message KeybaseConfig {
 	oneof config {
 		KeybaseFileConfig file = 1;
@@ -14,16 +15,16 @@ message KeybaseConfig {
 
 // KeybaseFileConfig is the configuration for the File Keybase
 message KeybaseFileConfig {
-  // Path to the keybase file
+	// Path to the keybase file
 	string path = 1;
 }
 
 // KeybaseVaultConfig is the configuration for the Hashicorp Vault Keybase
 message KeybaseVaultConfig {
-    // Vault address
-	  string addr = 1;
-    // Vault token
-	  string token = 2;
-    // Vault mount path
-	  string mount_path = 3;
+		// Vault address
+		string addr = 1;
+		// Vault token
+		string token = 2;
+		// Vault mount path
+		string mount_path = 3;
 }

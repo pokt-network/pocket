@@ -191,7 +191,7 @@ func decoderConfig(dc *mapstructure.DecoderConfig) {
 }
 
 // decodeKeybaseConfig is a custom decode hook for KeybaseConfig due to the fact KeybaseConfig contains a generic(oneof) field.
-func decodeKeybaseConfig(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+func decodeKeybaseConfig(f, t reflect.Type, data interface{}) (interface{}, error) {
 	if t != reflect.TypeOf(KeybaseConfig{}) {
 		return data, nil
 	}
@@ -212,7 +212,9 @@ func decodeKeybaseConfig(f reflect.Type, t reflect.Type, data interface{}) (inte
 			if err != nil {
 				return nil, err
 			}
-			decoder.Decode(vaultConfig)
+			if err := decoder.Decode(vaultConfig); err != nil {
+				return nil, err
+			}
 			keybaseConfig.Config = &KeybaseConfig_Vault{Vault: keybaseVaultConfig}
 			return &keybaseConfig, nil // return early
 		}
@@ -222,7 +224,9 @@ func decodeKeybaseConfig(f reflect.Type, t reflect.Type, data interface{}) (inte
 		// check file **last** since it is the default
 		if fileConfig, ok := configMap["file"]; ok {
 			keybaseFileConfig := &KeybaseFileConfig{}
-			mapstructure.Decode(fileConfig, keybaseFileConfig)
+			if err := mapstructure.Decode(fileConfig, keybaseFileConfig); err != nil {
+				return nil, err
+			}
 			keybaseConfig.Config = &KeybaseConfig_File{File: keybaseFileConfig}
 			return &keybaseConfig, nil // return early
 		}

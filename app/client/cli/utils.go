@@ -14,7 +14,6 @@ import (
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
-	"github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -263,19 +262,22 @@ func attachKeybaseFlagsToSubcommands() []cmdOption {
 			if kbTypeStrFromCLI != "" {
 				// only set the keybase type if it was provided by the user
 				kbTypeStrFromCLI = strings.ToUpper(kbTypeStrFromCLI)
-				kbType, ok := types.KeybaseType_value[kbTypeStrFromCLI]
-				if !ok {
+				switch kbTypeStrFromCLI {
+				case "FILE":
+					viper.Set("keybase.config.file", map[string]interface{}{})
+				case "VAULT":
+					viper.Set("keybase.config.vault", map[string]interface{}{})
+				default:
 					return fmt.Errorf("invalid keybase type: %s", kbTypeStrFromCLI)
 				}
-				viper.Set("keybase.type", kbType)
 			}
-			if err := viper.BindPFlag("keybase.vault_addr", c.Flags().Lookup("vault-addr")); err != nil {
+			if err := viper.BindPFlag("keybase.config.vault.addr", c.Flags().Lookup("vault-addr")); err != nil {
 				return err
 			}
-			if err := viper.BindPFlag("keybase.vault_token", c.Flags().Lookup("vault-token")); err != nil {
+			if err := viper.BindPFlag("keybase.config.vault.token", c.Flags().Lookup("vault-token")); err != nil {
 				return err
 			}
-			if err := viper.BindPFlag("keybase.vault_mount_path", c.Flags().Lookup("vault-mount")); err != nil {
+			if err := viper.BindPFlag("keybase.config.vault.mountPath", c.Flags().Lookup("vault-mount")); err != nil {
 				return err
 			}
 

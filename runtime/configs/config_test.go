@@ -1,7 +1,6 @@
 package configs
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -9,12 +8,12 @@ import (
 )
 
 func createTempConfigFile(content string) (string, error) {
-	tmpfile, err := ioutil.TempFile("", "test_config_*.json")
+	tmpfile, err := os.CreateTemp("", "test_config_*.json")
 	if err != nil {
 		return "", err
 	}
 
-	if _, err := tmpfile.Write([]byte(content)); err != nil {
+	if _, err := tmpfile.WriteString(content); err != nil {
 		return "", err
 	}
 

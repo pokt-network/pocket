@@ -1,12 +1,16 @@
 package keybase
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/app/client/keybase/hashicorp"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/crypto"
+)
+
+const (
+	errInvalidKeybase = "invalid keybase configuration: %s"
 )
 
 // Keybase interface implements the CRUD operations for the keybase
@@ -53,13 +57,13 @@ type Keybase interface {
 // NewKeybase creates a new keybase based on the type and customized with the options provided
 func NewKeybase(conf *configs.KeybaseConfig) (Keybase, error) {
 	if conf == nil {
-		return nil, errors.New("keybase config is required")
+		return nil, fmt.Errorf(errInvalidKeybase, "a valid keybase configuration is required")
 	}
 	switch config := conf.Config.(type) {
 	case *configs.KeybaseConfig_File:
 		fileConfig := config.File
 		if fileConfig == nil || fileConfig.Path == "" {
-			return nil, errors.New("keybase path is required for file-based keybase")
+			return nil, fmt.Errorf(errInvalidKeybase, "keybase path is required for file-based keybase")
 		}
 		return NewBadgerKeybase(fileConfig.Path)
 
@@ -68,6 +72,6 @@ func NewKeybase(conf *configs.KeybaseConfig) (Keybase, error) {
 		return hashicorp.NewVaultKeybase(vaultConfig)
 
 	default:
-		return nil, errors.New("invalid keybase configuration: neither file nor vault configuration provided")
+		return nil, fmt.Errorf(errInvalidKeybase, "either file or vault configuration must be provided")
 	}
 }
