@@ -99,8 +99,8 @@ func theValidatorShouldHaveExitedWithoutError() error {
 
 func theUserRunsTheCommand(cmd string) error {
 	cmds := strings.Split(cmd, " ")
-	result, err := validator.RunCommand(cmds...)
-	validator.result = result
+	res, err := validator.RunCommand(cmds...)
+	validator.result = res
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,6 @@ func theUserSendsPOKTToAnotherAddress(amount int) error {
 		valB.Address().String(),
 		fmt.Sprintf("%d", amount),
 	}
-	validator.RunCommand(args...)
 	res, err := validator.RunCommand(args...)
 	validator.result = res
 	if err != nil {
