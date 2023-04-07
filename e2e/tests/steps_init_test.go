@@ -86,10 +86,10 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 func theUserHasAValidator() error {
 	res, err := validator.RunCommand("help")
+	validator.result = res
 	if err != nil {
 		return err
 	}
-	validator.result = res
 	return nil
 }
 
