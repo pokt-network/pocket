@@ -2,6 +2,7 @@ package savepoints
 
 import (
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
@@ -14,6 +15,14 @@ var (
 
 type savepoint struct {
 	height int64
+
+	nodeStoresPath  string
+	valueStoresPath string
+}
+
+func (*savepoint) GetKVStores() (nodeStores map[int]kvstore.BackupableKVStore, valueStores map[int]kvstore.BackupableKVStore) {
+	// no-op
+	return nil, nil
 }
 
 func (s *savepoint) Close() error {

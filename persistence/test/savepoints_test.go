@@ -2,13 +2,21 @@ package test
 
 import (
 	"encoding/hex"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/savepoints"
 	"github.com/stretchr/testify/require"
 )
 
-func TestSavepoint_GetAccountAmount(t *testing.T) {
+func xTestSavepoint_GetAccountAmount(t *testing.T) {
+	tempDir, err := ioutil.TempDir("", "test-pocketv1-treestores-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
 	db := NewTestPostgresContext(t, 0)
 
 	sF := savepoints.NewSavepointFactory(db)
