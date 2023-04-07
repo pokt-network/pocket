@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.49] - 2023-04-07
+
+- Removed `GetParameter()` from `PersistenceReadContext`
+- Add `gov_utils.go` to create a map of all metadata related to governance parameters
+
 ## [0.0.0.48] - 2023-04-07
 
 - Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`
