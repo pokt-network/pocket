@@ -94,6 +94,7 @@ func theUserRunsTheCommand(cmd string) error {
 		validator.result = result
 		return err
 	}
+	validator.result = result
 	if result.Err != nil {
 		return result.Err
 	}
