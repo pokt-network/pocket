@@ -95,7 +95,7 @@ func (u *baseUtilityUnitOfWork) handleStakeMessage(message *typesUtil.MessageSta
 		return err
 	}
 	// move funds from account to pool
-	if err := u.addPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
+	if err := u.addPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.Address(), amount); err != nil {
 		return err
 	}
 
@@ -154,7 +154,7 @@ func (u *baseUtilityUnitOfWork) handleEditStakeMessage(message *typesUtil.Messag
 		return err
 	}
 	// move funds from account to pool
-	if err := u.addPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
+	if err := u.addPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.Address(), amount); err != nil {
 		return err
 	}
 	switch message.ActorType {

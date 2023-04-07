@@ -84,7 +84,7 @@ func (u *baseUtilityUnitOfWork) burnValidator(addr []byte) typesUtil.Error {
 	}
 
 	// remove burnt stake amount from the pool
-	if err := u.subPoolAmount(actorPool.FriendlyName(), burnAmountTruncated); err != nil {
+	if err := u.subPoolAmount(actorPool.Address(), burnAmountTruncated); err != nil {
 		return err
 	}
 
