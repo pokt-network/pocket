@@ -86,7 +86,7 @@ func theUserHasAValidator() error {
 		return err
 	}
 	validator.result = res
-	return err
+	return nil
 }
 
 func theValidatorShouldHaveExitedWithoutError() error {
