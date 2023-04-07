@@ -19,7 +19,7 @@ func NewQueryCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "Query",
 		Short:   "Commands related to querying the RPC server of the node",
-		Aliases: []string{"sys"},
+		Aliases: []string{"query"},
 		Args:    cobra.ExactArgs(0),
 	}
 
@@ -34,7 +34,7 @@ func queryCommands() []*cobra.Command {
 			Use:     "AllChainParams",
 			Short:   "Get current values of all node parameters",
 			Long:    "Queries the node RPC to obtain the current values of all the governance parameters",
-			Aliases: []string{"allchainparams"},
+			Aliases: []string{"allparams"},
 			RunE: func(cmd *cobra.Command, args []string) error {
 				client, err := rpc.NewClientWithResponses(remoteCLIURL)
 				if err != nil {
