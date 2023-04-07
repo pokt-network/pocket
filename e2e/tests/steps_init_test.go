@@ -53,7 +53,7 @@ func init() {
 	validatorKeys = vkmap
 }
 
-// TestFeatures runs the e2e tests specifiedin any .features files in this directory
+// TestFeatures runs the e2e tests specified in any .features files in this directory
 // * This test suite assumes that a LocalNet is running that can be accessed by `kubectl`
 func TestFeatures(t *testing.T) {
 	suite := godog.TestSuite{
