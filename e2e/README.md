@@ -1,15 +1,12 @@
-# Pocket 1.0 E2E Testing Framework
+# POKT E2E Testing Document <!-- omit in toc -->
 
-<!-- TOC -->
+## Table of Contents <!-- omit in toc -->
 
-- [Pocket 1.0 E2E Testing Framework](#pocket-10-e2e-testing-framework)
-  - [Development](#development)
-    - [Typical Development Workflow](#typical-development-workflow)
-    - [Build Tags](#build-tags)
-    - [Issue templates](#issue-templates)
-  - [Implementation](#implementation)
-
-<!-- /TOC -->
+- [Development](#development)
+  - [Typical Development Workflow](#typical-development-workflow)
+  - [Build Tags](#build-tags)
+  - [Issue templates](#issue-templates)
+- [Implementation](#implementation)
 
 > tl; dr - `make localnet_up` and then `make test_e2e`
 

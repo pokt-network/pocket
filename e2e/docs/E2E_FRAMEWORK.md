@@ -1,31 +1,25 @@
-# Pocket 1.0 E2E Testing Framework
+# Pocket 1.0 E2E Testing Framework <!-- omit in toc -->
 
-## Table of Contents
+## Table of Contents <!-- omit in toc -->
 
-<!-- TOC -->
-
-- [Pocket 1.0 E2E Testing Framework](#pocket-10-e2e-testing-framework)
-  - [Table of Contents](#table-of-contents)
-  - [Problem Statement](#problem-statement)
-  - [Purpose](#purpose)
-  - [Goals](#goals)
-  - [Non-Goals](#non-goals)
-  - [Key Terms](#key-terms)
-  - [Proposed Solution](#proposed-solution)
-    - [Root Feature Example](#root-feature-example)
-    - [Structure](#structure)
-    - [PocketClient Interface](#pocketclient-interface)
-    - [**Dependencies**](#dependencies)
-  - [Rollout Plan](#rollout-plan)
-  - [Decomposition](#decomposition)
-    - [**Step 0: E2E Test Harness with LocalNet**](#step-0-e2e-test-harness-with-localnet)
-    - [**Step 1.1: CI/CD Integration.**](#step-11-cicd-integration)
-    - [**Step 1.2: DevNet Integration**](#step-12-devnet-integration)
-    - [Step 1.3 E2E Test Coverage](#step-13-e2e-test-coverage)
-    - [**Step 2.1: Byzantine Network Simulator**](#step-21-byzantine-network-simulator)
-  - [Success Criteria](#success-criteria)
-
-<!-- /TOC -->
+- [Problem Statement](#problem-statement)
+- [Purpose](#purpose)
+- [Goals](#goals)
+- [Non-Goals](#non-goals)
+- [Key Terms](#key-terms)
+- [Proposed Solution](#proposed-solution)
+  - [Root Feature Example](#root-feature-example)
+  - [Structure](#structure)
+  - [PocketClient Interface](#pocketclient-interface)
+  - [**Dependencies**](#dependencies)
+- [Rollout Plan](#rollout-plan)
+- [Decomposition](#decomposition)
+  - [**Step 0: E2E Test Harness with LocalNet**](#step-0-e2e-test-harness-with-localnet)
+  - [**Step 1.1: CI/CD Integration.**](#step-11-cicd-integration)
+  - [**Step 1.2: DevNet Integration**](#step-12-devnet-integration)
+  - [Step 1.3 E2E Test Coverage](#step-13-e2e-test-coverage)
+  - [**Step 2.1: Byzantine Network Simulator**](#step-21-byzantine-network-simulator)
+- [Success Criteria](#success-criteria)
 
 ## Problem Statement
 
