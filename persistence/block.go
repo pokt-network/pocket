@@ -26,6 +26,7 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 	}
 	return true, err
 }
+
 func (p *PostgresContext) GetMinimumBlockHeight() (latestHeight uint64, err error) {
 	ctx, tx := p.getCtxAndTx()
 

@@ -6,10 +6,9 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var _ modules.TxResult = &TxResult{}
+var _ coreTypes.TxResult = &TxResult{}
 
 func TxToTxResult(
 	tx *coreTypes.Transaction,
@@ -44,7 +43,7 @@ func (txr *TxResult) Bytes() ([]byte, error) {
 	return codec.GetCodec().Marshal(txr)
 }
 
-func (*TxResult) FromBytes(bz []byte) (modules.TxResult, error) {
+func (*TxResult) FromBytes(bz []byte) (coreTypes.TxResult, error) {
 	result := new(TxResult)
 	if err := codec.GetCodec().Unmarshal(bz, result); err != nil {
 		return nil, err

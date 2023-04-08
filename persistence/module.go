@@ -227,6 +227,10 @@ func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
 	return m.blockStore
 }
 
+func (m *persistenceModule) GetTxIndexer() indexer.TxIndexer {
+	return m.txIndexer
+}
+
 func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 	return m.writeContext
 }

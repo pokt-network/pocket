@@ -3,6 +3,7 @@ package modules
 //go:generate mockgen -source=$GOFILE -destination=./mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 import (
+	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -24,7 +25,8 @@ type PersistenceModule interface {
 	GetBlockStore() kvstore.KVStore
 	NewWriteContext() PersistenceRWContext
 
-	// Indexer Queries
+	// Indexer operations
+	GetTxIndexer() indexer.TxIndexer
 	TransactionExists(transactionHash string) (bool, error)
 
 	// Debugging / development only
@@ -73,7 +75,7 @@ type PersistenceWriteContext interface {
 
 	// Indexes the transaction using several different keys (for lookup purposes) in the key-value store
 	// that backs the transaction merkle tree.
-	IndexTransaction(txResult TxResult) error
+	IndexTransaction(txResult coreTypes.TxResult) error
 
 	// Pool Operations
 	AddPoolAmount(address []byte, amount string) error

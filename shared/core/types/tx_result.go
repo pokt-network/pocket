@@ -1,4 +1,4 @@
-package modules
+package types
 
 // TxResult is a hydrated/blown-up version of a `Transaction` proto`.
 //

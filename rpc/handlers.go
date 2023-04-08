@@ -6,16 +6,24 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"regexp"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
-	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
+
+var (
+	paramValueRegex *regexp.Regexp
+)
+
+func init() {
+	paramValueRegex = regexp.MustCompile(`value:"(.+)"`)
+}
 
 // CONSIDER: Remove all the V1 prefixes from the RPC module
 
@@ -149,19 +157,24 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 		sortDesc = false
 	}
 
-	txIndexer, err := indexer.NewMemTxIndexer()
+	txIndexer := s.GetBus().GetPersistenceModule().GetTxIndexer()
+	txResults, err := txIndexer.GetBySender(body.Address, sortDesc)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	txResults, err := txIndexer.GetByHeight(1, sortDesc)
-	if err != nil {
-		return ctx.String(http.StatusInternalServerError, err.Error())
-	}
-	fmt.Println(txResults)
+
 	totalPages := uint64(math.Ceil(float64(len(txResults)) / float64(body.PerPage)))
-	start := (body.Page - 1) * body.PerPage
+	//start := (body.Page - 1) * body.PerPage
 	end := (body.Page * body.PerPage) - 1
-	allTxs := make([]Transaction, 0)
+	totalTxs := int64(len(txResults))
+	fmt.Println(totalTxs)
+	if end >= totalTxs {
+		end = totalTxs
+	}
+
+	pageTxs := make([]Transaction, 0)
+	//for i := start; i < end; i++ {
+	//txResult := txResults[i]
 	for _, txResult := range txResults {
 		hashBz, err := txResult.Hash()
 		if err != nil {
@@ -176,7 +189,7 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 		if err != nil {
 			return ctx.String(http.StatusInternalServerError, err.Error())
 		}
-		allTxs = append(allTxs, Transaction{
+		pageTxs = append(pageTxs, Transaction{
 			Hash:   hexHashStr,
 			Height: txResult.GetHeight(),
 			Index:  txResult.GetIndex(),
@@ -192,14 +205,9 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 			StdTx: *stdTx,
 		})
 	}
-	totalTxs := int64(len(allTxs))
-
-	if end > totalTxs {
-		end = totalTxs
-	}
 
 	return ctx.JSON(http.StatusOK, QueryAccountTxsResponse{
-		Txs:        allTxs[start:end],
+		Txs:        pageTxs,
 		Page:       body.Page,
 		TotalTxs:   totalTxs,
 		TotalPages: totalPages,
@@ -293,12 +301,17 @@ func generateStdTx(txBz []byte, messageType string) (*StdTx, error) {
 		if err := anypb.UnmarshalTo(m); err != nil {
 			return nil, err
 		}
+		values := paramValueRegex.FindStringSubmatch(m.GetParameterValue().String())
+		value := ""
+		if len(values) > 1 {
+			value = values[1]
+		}
 		stdTx.Message = MessageChangeParameter{
 			Signer: hex.EncodeToString(m.GetSigner()),
 			Owner:  hex.EncodeToString(m.GetOwner()),
 			Parameter: Parameter{
 				ParameterName:  m.GetParameterKey(),
-				ParameterValue: m.GetParameterValue().String(),
+				ParameterValue: value,
 			},
 		}
 	default:
