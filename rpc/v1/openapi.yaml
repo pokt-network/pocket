@@ -197,6 +197,40 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+  /v1/query/accounttxs:
+    post:
+      tags:
+        - query
+      summary: Returns all transactions sent by the specified address paginated
+      requestBody:
+        description: Returns all transactions sent by the address provided; Max per_page=1000, can be sorted either asc or desc (default)
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryAddressPaginated"
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              page: 1
+              per_page: 1000
+              sort: desc
+        required: true
+      responses:
+        "200":
+          description: Returns the transaction list for the account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryAccountTxsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the transactions for the account
+          content:
+            text/plain:
+              example: "description of failure"
   /v1/query/allChainParams:
     get:
       tags:
@@ -246,6 +280,13 @@ components:
         step:
           type: integer
           format: int64
+    ActorTypesEnum:
+      type: string
+      enum:
+        - validator
+        - servicer
+        - fisherman
+        - application
     Actor:
       type: object
       required:
@@ -332,6 +373,235 @@ components:
         total_pages:
           type: integer
           format: uint64
+    QueryAddressPaginated:
+      type: object
+      required:
+        - address
+        - page
+        - per_page
+      properties:
+        address:
+          type: string
+        page:
+          type: integer
+          format: int64
+        per_page:
+          type: integer
+          format: int64
+        sort:
+          type: string
+    TxResult:
+      type: object
+      required:
+        - tx
+        - height
+        - index
+        - result_code
+        - error
+        - signer_addr
+        - recipient_addr
+        - message_type
+      properties:
+        tx:
+          type: string
+        height:
+          type: integer
+          format: int64
+        index:
+          type: integer
+          format: int32
+        result_code:
+          type: integer
+          format: int32
+        signer_addr:
+          type: string
+        recipient_addr:
+          type: string
+        message_type:
+          type: string
+    MessageSend:
+      type: object
+      required:
+        - from_addr
+        - to_addr
+        - amount
+        - denom
+      properties:
+        from_addr:
+          type: string
+        to_addr:
+          type: string
+        amount:
+          type: string
+        denom:
+          type: string
+    MessageStake:
+      type: object
+      required:
+        - actor_type
+        - public_key
+        - chains
+        - service_url
+        - output_address
+        - signer
+        - amount
+        - denom
+      properties:
+        actor_type:
+          $ref: "#/components/schemas/ActorTypesEnum"
+        public_key:
+          type: string
+        chains:
+          type: array
+          items:
+            type: string
+        service_url:
+          type: string
+        output_address:
+          type: string
+        signer:
+          type: string
+        amount:
+          type: string
+        denom:
+          type: string
+    MessageEditStake:
+      type: object
+      required:
+        - actor_type
+        - address
+        - chains
+        - service_url
+        - signer
+        - amount
+        - denom
+      properties:
+        actor_type:
+          $ref: "#/components/schemas/ActorTypesEnum"
+        address:
+          type: string
+        chains:
+          type: array
+          items:
+            type: string
+        service_url:
+          type: string
+        signer:
+          type: string
+        amount:
+          type: string
+        denom:
+          type: string
+    MessageUnstake:
+      type: object
+      required:
+        - actor_type
+        - address
+        - signer
+      properties:
+        actor_type:
+          $ref: "#/components/schemas/ActorTypesEnum"
+        address:
+          type: string
+        signer:
+          type: string
+    MessageUnpause:
+      type: object
+      required:
+        - actor_type
+        - address
+        - signer
+      properties:
+        actor_type:
+          $ref: "#/components/schemas/ActorTypesEnum"
+        address:
+          type: string
+        signer:
+          type: string
+    MessageChangeParameter:
+      type: object
+      required:
+        - signer
+        - owner
+        - parameter
+      properties:
+        signer:
+          type: string
+        owner:
+          type: string
+        parameter:
+          $ref: "#/components/schemas/Parameter"
+    Signature:
+      type: object
+      required:
+        - public_key
+        - signature
+      properties:
+        public_key:
+          type: string
+        signature:
+          type: string
+    StdTx:
+      type: object
+      required:
+        - message
+        - nonce
+        - signature
+      properties:
+        message:
+          oneOf:
+            - $ref: "#/components/schemas/MessageSend"
+            - $ref: "#/components/schemas/MessageStake"
+            - $ref: "#/components/schemas/MessageEditStake"
+            - $ref: "#/components/schemas/MessageUnstake"
+            - $ref: "#/components/schemas/MessageUnpause"
+            - $ref: "#/components/schemas/MessageChangeParameter"
+        nonce:
+          type: string
+        signature:
+          $ref: "#/components/schemas/Signature"
+    Transaction:
+      type: object
+      required:
+        - hash
+        - height
+        - index
+        - txResult
+        - stdTx
+      properties:
+        hash:
+          type: string
+        height:
+          type: integer
+          format: int64
+        index:
+          type: integer
+          format: int32
+        txResult:
+          $ref: "#/components/schemas/TxResult"
+        stdTx:
+          $ref: "#/components/schemas/StdTx"
+    QueryAccountTxsResponse:
+      type: object
+      required:
+        - txs
+        - total_txs
+        - page
+        - total_pages
+      properties:
+        txs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+        total_txs:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: uint64
     Parameter:
       type: object
       required:
@@ -360,14 +630,6 @@ components:
         height:
           type: integer
           format: int64
-
-    ActorTypesEnum:
-      type: string
-      enum:
-        - validator
-        - servicer
-        - fisherman
-        - application
 
   securitySchemes: {}
   links: {}
