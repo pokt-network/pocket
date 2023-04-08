@@ -302,16 +302,15 @@ func generateStdTx(txBz []byte, messageType string) (*StdTx, error) {
 			return nil, err
 		}
 		values := paramValueRegex.FindStringSubmatch(m.GetParameterValue().String())
-		value := ""
-		if len(values) > 1 {
-			value = values[1]
+		if len(values) < 2 {
+			return nil, fmt.Errorf("unable to extract parameter value: %s", m.GetParameterValue().String())
 		}
 		stdTx.Message = MessageChangeParameter{
 			Signer: hex.EncodeToString(m.GetSigner()),
 			Owner:  hex.EncodeToString(m.GetOwner()),
 			Parameter: Parameter{
 				ParameterName:  m.GetParameterKey(),
-				ParameterValue: value,
+				ParameterValue: values[1],
 			},
 		}
 	default:
