@@ -12,7 +12,6 @@ import (
 
 // HandleEvent handles FSM state transition events.
 func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
-	//fmt.Println("Event gokhan triggered")
 	m.m.Lock()
 	defer m.m.Unlock()
 

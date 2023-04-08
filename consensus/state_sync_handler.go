@@ -42,7 +42,8 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		}
 		return m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
 	case *typesCons.StateSyncMessage_MetadataRes:
-		return m.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
+		m.metadataReceived <- stateSyncMessage.GetMetadataRes()
+		return nil
 	case *typesCons.StateSyncMessage_GetBlockReq:
 		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage MetadataReq")
 		if !m.stateSync.IsServerModEnabled() {
@@ -50,27 +51,16 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		}
 		return m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
 	case *typesCons.StateSyncMessage_GetBlockRes:
-		return m.HandleGetBlockResponse(stateSyncMessage.GetGetBlockRes())
+		fmt.Println("Received block: ", stateSyncMessage.GetGetBlockRes().Block)
+		m.blocksReceived <- stateSyncMessage.GetGetBlockRes().Block
+		return nil
 	default:
 		return fmt.Errorf("unspecified state sync message type")
 	}
 }
 
-// TODO(#352): Implement the business logic for this function
-func (m *consensusModule) HandleGetBlockResponse(blockRes *typesCons.GetBlockResponse) error {
-	m.logger.Info().Fields(m.statesSyncLogHelper(blockRes.PeerAddress)).Msgf("Received StateSync GetBlockResponse: %s", blockRes)
-
-	if blockRes.Block.BlockHeader.GetQuorumCertificate() == nil {
-		m.logger.Error().Err(typesCons.ErrNoQcInReceivedBlock).Msg(typesCons.DisregardBlock)
-		return typesCons.ErrNoQcInReceivedBlock
-	}
-
-	return nil
-}
-
-// TODO(#352): Implement the business logic for this function
-func (m *consensusModule) HandleStateSyncMetadataResponse(metaDataRes *typesCons.StateSyncMetadataResponse) error {
-	m.logger.Info().Fields(m.statesSyncLogHelper(metaDataRes.PeerAddress)).Msgf("Received StateSync MetadataResponse: %s", metaDataRes)
-
-	return nil
+func (m *consensusModule) commitReceivedBlocks() {
+	// always runs in the backgroun of consensus module, like metadata request
+	// listen on the blocksReceived channel
+	// commit the block
 }

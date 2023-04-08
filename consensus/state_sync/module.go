@@ -1,10 +1,9 @@
 package state_sync
 
 import (
-	"sync"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -49,17 +48,8 @@ type stateSync struct {
 	bus    modules.Bus
 	logger *modules.Logger
 
-	m sync.RWMutex
-
 	logPrefix  string
 	serverMode bool
-
-	//targetBlockHeight uint64
-
-	// metadata buffer that is periodically updated
-	//aggregatedSyncMetadata *typesCons.StateSyncMetadataResponse
-	//syncMetadataBuffer     []*typesCons.StateSyncMetadataResponse
-
 }
 
 func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -77,6 +67,8 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 
 	m.serverMode = false
 
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
+
 	//	m.aggregatedSyncMetadata = &typesCons.StateSyncMetadataResponse{}
 
 	//	m.syncMetadataBuffer = make([]*typesCons.StateSyncMetadataResponse, 0)
@@ -85,9 +77,6 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 }
 
 func (m *stateSync) Start() error {
-	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
-	//get metadatas from metadata channel
-
 	consensusMod := m.bus.GetConsensusModule()
 	currentHeight := consensusMod.CurrentHeight()
 	_, maxHeight := consensusMod.GetAggregatedStateSyncMetadata()
@@ -107,51 +96,18 @@ func (m *stateSync) Start() error {
 		m.broadcastStateSyncMessage(stateSyncGetBlockMessage, i)
 
 		// wait for 5 seconds with a timer to receive the block.
-
 	}
 
-	return nil
+	return m.Stop()
 }
 
 /*
-// Start starts syncing the node with the network by requesting blocks.
-func (m *stateSync) StartSyncing() error {
-	//m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
-
-	//current_height := m.GetBus().GetConsensusModule().CurrentHeight()
-
-	for i := currentHeight; i < targetBlockHeight; i++ {
-		fmt.Println("Requesting block", i)
-
-	}
-
-	nodeAddress := consensusMod.GetNodeAddress()
-
-	// start requesting the missing blocks in the state
-	// fire and forget pattern, broadcasts to all peers
-	blockToRequest := m.state.height + 1
-	for i := blockToRequest; i <= m.state.endingHeight; i++ {
-		m.logger.Info().Msgf("Sync is requesting block: %d, starting height: %d, ending height: %d", i, m.state.startingHeight, m.state.endingHeight)
-		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-			Message: &typesCons.StateSyncMessage_GetBlockReq{
-				GetBlockReq: &typesCons.GetBlockRequest{
-					PeerAddress: nodeAddress,
-					Height:      i,
-				},
-			},
-		}
-		m.broadcastStateSyncMessage(stateSyncGetBlockMessage, i)
-	}
-
-	// Node periodically checks if its up to date by requesting metadata from its peers as an external process with periodicMetadataSync() function
-	//go m.periodicMetadataSync()
-
-	return nil
-}
+pocket.StateMachineTransitionEvent
 */
 
 func (m *stateSync) Stop() error {
-	return nil
+
+	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
 }
 
 func (m *stateSync) SetBus(pocketBus modules.Bus) {

@@ -64,9 +64,9 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := blockReq.PeerAddress
 
-	m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Received StateSync GetBlockRequest: %s", blockReq)
-
-	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
+	//m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Received StateSync GetBlockRequest: %s", blockReq)
+	m.logger.Info().Msg("Received StateSync GetBlockRequest")
+	//fmt.Printf("Received StateSync GetBlockRequest: %s \n", blockReq)
 	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
 	if prevPersistedBlockHeight < blockReq.Height {

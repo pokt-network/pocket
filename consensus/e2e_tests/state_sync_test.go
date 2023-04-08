@@ -198,9 +198,10 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	// Create & start test pocket nodes
 	eventsChannel := make(modules.EventsChannel, 100)
 	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+
 	//TODO! add this check to all nodes tests
 	err := StartAllTestPocketNodes(t, pocketNodes)
-	fmt.Println("started all nodes")
+	//fmt.Println("started all nodes")
 	require.NoError(t, err)
 
 	// Prepare leader info
@@ -295,8 +296,8 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
-	fmt.Println("Setting aggregated state sync metadata ")
-	unsyncedNode.GetBus().GetConsensusModule().PushStateSyncMetadata(uint64(1), testHeight)
+	//fmt.Println("Pushing aggregated state sync metadata ")
+	unsyncedNode.GetBus().GetConsensusModule().PushStateSyncMetadataResponse(uint64(1), testHeight)
 
 	fmt.Println("Broadcasting newRound msgs")
 	for _, message := range newRoundMessages {
@@ -305,31 +306,12 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// 2. Propose
 	numExpectedMsgs := numValidators
 	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numExpectedMsgs, 500, true)
 	require.NoError(t, err)
 
-	// here the node must have send the getblock requests
-	// and received the requested blocks
-	// check the test channel if this happened
-
-	//advanceTime(t, clockMock, 10*time.Millisecond)
-	for nodeId, pocketNode := range pocketNodes {
-		nodeState := GetConsensusNodeState(pocketNode)
-		fmt.Printf("Node state, node id: %d, height: %d, step: %s, round: %d, leaderId: %d \n", nodeId, nodeState.Height, typesCons.HotstuffStep(nodeState.Step), nodeState.Round, nodeState.LeaderId)
-		assertNodeConsensusView(t, nodeId,
-			typesCons.ConsensusNodeState{
-				Height: testHeight,
-				Step:   uint8(consensus.Prepare),
-				Round:  uint8(currentRound),
-			},
-			nodeState)
-		require.Equal(t, leaderId, nodeState.LeaderId)
-	}
-
-	fmt.Println("\nWaiting for the node to sync")
-	waitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode)
+	// Here node should have been transitioned to syncMode state
+	err = waitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, testHeight, 500)
 	require.NoError(t, err)
 }
 

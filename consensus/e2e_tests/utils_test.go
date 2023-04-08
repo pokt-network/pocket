@@ -298,7 +298,7 @@ func WaitForNetworkFSMEvents(
 
 		stateTransitionMessage, ok := msg.(*messaging.StateMachineTransitionEvent) //messaging.StateMachineTransitionEvent
 		require.True(t, ok)
-		//fmt.Println("GOKHAN CHECKING: ", stateTransitionMessage)
+
 		return stateTransitionMessage.Event == string(eventType)
 		//return true
 	}
@@ -453,6 +453,7 @@ func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *mockModules
 			eventsChannel <- e
 		}).
 		AnyTimes()
+	// CONSIDER: Adding a check to not to send message to itself
 	p2pMock.EXPECT().
 		Send(gomock.Any(), gomock.Any()).
 		Do(func(addr cryptoPocket.Address, msg *anypb.Any) {
@@ -631,29 +632,115 @@ func baseStateMachineMock(t *testing.T, eventsChannel modules.EventsChannel, bus
 func waitForNodeToSync(t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
-	unsyncedNode *shared.Node) error {
-	//consensusMod := unsyncedNode.GetBus().GetConsensusModule()
-	fmt.Println("yo wait")
-	// 1) Wait for the unsynced events
-	// errMsg := "FSM syncmode event retrieval error"
-	// unsyncedEventMessages, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncing, errMsg, 1, 500, false)
+	unsyncedNode *shared.Node,
+	allNodes IdToNodeMapping,
+	targetHeight uint64,
+	maxWaitTime time.Duration) error {
+
+	consensusMod := unsyncedNode.GetBus().GetConsensusModule()
+	currentHeight := consensusMod.CurrentHeight()
+
+	for i := currentHeight; i <= targetHeight; i++ {
+		blockRequest, err := waitForNodeToRequestMissingBlock(t, clck, eventsChannel, allNodes, currentHeight, targetHeight)
+		require.NoError(t, err)
+
+		blockResponse, err := waitForNodeToReceiveMissingBlock(t, clck, eventsChannel, allNodes, blockRequest)
+		require.NoError(t, err)
+
+		err = waitForNodeToCatchUp(t, clck, eventsChannel, unsyncedNode, blockResponse, targetHeight)
+		require.NoError(t, err)
+
+	}
+
+	return nil
+}
+
+func waitForNodeToRequestMissingBlock(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	allNodes IdToNodeMapping,
+	startingHeight uint64,
+	targetHeight uint64) (*anypb.Any, error) {
+
+	errMsg := "StateSync Get Block Request Messages"
+	numExpectedMsgs := numValidators
+
+	receivedRequests, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numExpectedMsgs, 500, true)
+	require.NoError(t, err)
+
+	// msg, err := codec.GetCodec().FromAny(receivedRequests[0])
 	// require.NoError(t, err)
 
-	// for _, message := range unsyncedEventMessages {
-	// 	fmt.Println("Unsynced messages: ", message)
-	// }
+	// stateSyncBlockReqMessage, ok := msg.(*typesCons.StateSyncMessage)
+	// require.True(t, ok)
 
-	// Trigger it in the FSM via a method
-	//consensusMod.TriggerFSMTransition(unsyncedEventMessages[0])
+	// blockReq := stateSyncBlockReqMessage.GetGetBlockReq()
+	// require.NotEmpty(t, blockReq)
 
-	// 2) Wait for the syncing events
-	// errMsg = "FSM syncing Event retrieval error"
-	// syncingEventMessages, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncing, errMsg, 1, 500, false)
+	// fmt.Println("Received GetBlockReq: ", blockReq)
+
+	return receivedRequests[0], nil
+}
+
+func waitForNodeToReceiveMissingBlock(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	allNodes IdToNodeMapping,
+	blockReq *anypb.Any) (*anypb.Any, error) {
+
+	// Get one of the requests as they are identical and send it to nodes
+
+	P2PBroadcast(t, allNodes, blockReq)
+	advanceTime(t, clck, 10*time.Millisecond)
+	numExpectedMsgs := numValidators - 1
+
+	errMsg := "StateSync Get Block Response Messages"
+	receivedResponses, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numExpectedMsgs, 500, false)
+	require.NoError(t, err)
+
+	// msg, err := codec.GetCodec().FromAny(receivedResponses[0])
 	// require.NoError(t, err)
 
-	// for _, message := range syncingEventMessages {
-	// 	fmt.Println("Syncing messages: ", message)
-	// }
+	// stateSyncBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
+	// require.True(t, ok)
+
+	// blockRes := stateSyncBlockResMessage.GetGetBlockRes()
+	// require.NotEmpty(t, blockRes)
+
+	// fmt.Println("Received GetBlockRes: ", blockRes)
+
+	return receivedResponses[0], nil
+}
+
+func waitForNodeToCatchUp(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	unsyncedNode *shared.Node,
+	blockResponse *anypb.Any,
+	targetHeight uint64) error {
+
+	P2PSend(t, unsyncedNode, blockResponse)
+	advanceTime(t, clck, 10*time.Millisecond)
+	numExpectedMsgs := 1
+
+	errMsg := "StateSync Sync Message"
+	fsmEventMsg, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, errMsg, numExpectedMsgs, 500, false)
+	require.NoError(t, err)
+
+	msg, err := codec.GetCodec().FromAny(fsmEventMsg[0])
+	require.NoError(t, err)
+
+	stateTransitionMessage, ok := msg.(*messaging.StateMachineTransitionEvent)
+	require.True(t, ok)
+
+	event := stateTransitionMessage.Event
+	fmt.Println("Received StateMachineTransitionEvent: ", event)
+
+	fmt.Println("Node height: ", unsyncedNode.GetBus().GetConsensusModule().CurrentHeight())
+
 	return nil
 }
 

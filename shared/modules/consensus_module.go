@@ -74,9 +74,6 @@ type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
 	GetAggregatedStateSyncMetadata() (minHeight, maxHeight uint64)
-
-	// IsSynced compares the persisted state with the aggregated state of the network. If the persisted state is behind the network state, i.e. that node is not synced, it will return false.
-	//IsSynced() (bool, error)
 }
 
 // ConsensusDebugModule exposes functionality used for testing & development purposes.
@@ -93,9 +90,7 @@ type ConsensusDebugModule interface {
 	SetUtilityUnitOfWork(UtilityUnitOfWork)
 
 	// SetAggregatedStateSyncMetadata is used to set peer's aggregated metadata in testing scenarios to simulate periodic metadata synchronization. It is not intended to be used outside of testing.
-	// TODO! remove peeraddress
-	//SetAggregatedStateSyncMetadata(minHeight, maxHeight)
-	PushStateSyncMetadata(minHeight, maxHeight uint64)
+	PushStateSyncMetadataResponse(minHeight, maxHeight uint64)
 
 	// REFACTOR: This should accept typesCons.HotstuffStep and return typesCons.NodeId.
 	GetLeaderForView(height, round uint64, step uint8) (leaderId uint64)

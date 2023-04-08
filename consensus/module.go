@@ -65,8 +65,8 @@ type consensusModule struct {
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	logger    *modules.Logger
-	logPrefix string
+	logger *modules.Logger
+	//logPrefix string
 
 	stateSync state_sync.StateSyncModule
 
@@ -76,7 +76,9 @@ type consensusModule struct {
 	blocksReceived chan *coreTypes.Block
 
 	// metadata resposnes received from peers are collected in this channel
-	MetadataReceived chan *types.StateSyncMetadataResponse
+	metadataReceived chan *types.StateSyncMetadataResponse
+
+	//debugBlockRequests chan *types.GetBlockRequest
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -161,6 +163,9 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	m.nodeId = valAddrToIdMap[address]
 	m.nodeAddress = address
 
+	m.metadataReceived = make(chan *types.StateSyncMetadataResponse, 1000)
+	m.blocksReceived = make(chan *coreTypes.Block, 1000)
+
 	m.initMessagesPool()
 
 	return m, nil
@@ -182,10 +187,6 @@ func (m *consensusModule) Start() error {
 	}
 
 	if err := m.paceMaker.Start(); err != nil {
-		return err
-	}
-
-	if err := m.stateSync.Start(); err != nil {
 		return err
 	}
 
