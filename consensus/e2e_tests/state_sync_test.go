@@ -185,7 +185,6 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
-
 	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
 	buses := GenerateBuses(t, runtimeMgrs)
 
@@ -194,7 +193,6 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
 
 	err := StartAllTestPocketNodes(t, pocketNodes)
-	//fmt.Println("started all nodes")
 	require.NoError(t, err)
 
 	// Prepare leader info
