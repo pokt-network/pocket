@@ -111,10 +111,6 @@ func CreateTestConsensusPocketNode(
 
 	_, err = state_machine.Create(bus)
 	require.NoError(t, err)
-	//stateMachineModule, ok := stateMachineMod.(modules.StateMachineModule)
-	//require.True(t, ok)
-
-	//bus.RegisterModule(stateMachineMod)
 
 	runtimeMgr := (bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
@@ -558,77 +554,10 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 	return rpcMock
 }
 
-/*
-func baseStateMachineMock(t *testing.T, eventsChannel modules.EventsChannel, bus modules.Bus) *mockModules.MockStateMachineModule {
-	ctrl := gomock.NewController(t)
-	stateMachineMock := mockModules.NewMockStateMachineModule(ctrl)
-	stateMachineMock.EXPECT().Start().Return(nil).AnyTimes()
-	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
-	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
-
-	//consensusMod := bus.GetConsensusModule()
-
-	stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
-		//return consensusMod.TriggerFSMTransition(event)
-
-		//switch coreTypes.StateMachineEvent(event) {
-		// case coreTypes.StateMachineEvent_Consensus_IsUnsynced:
-		// 	t.Logf("Mocked GOKHAN node is unsynced")
-		// 	return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
-		// case coreTypes.StateMachineEvent_Consensus_IsSyncing:
-		// 	t.Logf("Mocked node is syncing")
-		// 	maxHeight := consensusMod.GetAggregatedStateSyncMetadataMaxHeight()
-		//TECHDEBT(#352): The asynchronicity of this leads to a non-deterministic failing test.
-		//See this discussion for details: https://github.com/pokt-network/pocket/pull/528/files#r1150711575
-		// 	consensusMod.SetHeight(maxHeight)
-		// 	return nil
-		// case coreTypes.StateMachineEvent_Consensus_IsSyncedValidator:
-		// 	t.Logf("Mocked validator node is synced")
-		// 	return nil
-		// case coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator:
-		// 	t.Logf("Mocked non-validator node is synced")
-		// 	return nil
-		// default:
-		// 	log.Printf("Mocked node is not handling this event: %s", event)
-		// 	return nil
-		// }
-
-		//var prevState string
-		var nextState string
-
-		if event == coreTypes.StateMachineEvent_Consensus_IsUnsynced {
-			nextState = string(coreTypes.StateMachineState_Consensus_SyncMode)
-		} else if event == coreTypes.StateMachineEvent_Consensus_IsSyncing {
-			nextState = string(coreTypes.StateMachineState_Consensus_Pacemaker)
-		}
-
-		msg := messaging.StateMachineTransitionEvent{
-			Event:    string(event),
-			NewState: nextState,
-		}
-
-		anyMsg, err := codec.GetCodec().ToAny(&msg)
-		if err != nil {
-			return err
-		}
-
-		fmt.Println("GOKU Pushing to shared event channel: ", event)
-
-		e := &messaging.PocketEnvelope{Content: anyMsg}
-		eventsChannel <- e
-
-		// eventsChannel <- e
-
-		//fmt.Println("Calling TriggerFSMTransitio")
-		//return consensusMod.TriggerFSMTransition(anyMsg)
-
-		return nil
-	}).AnyTimes()
-
-	return stateMachineMock
-}
-*/
-
+// waitForNodeToSync waits for a node to sync to a target height
+// For every missing block for the unsynced node:
+// waits for the node to request a missing block,
+// then waits for the node to receive the missing block and catch up to the target height
 func waitForNodeToSync(t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
@@ -649,12 +578,13 @@ func waitForNodeToSync(t *testing.T,
 
 		err = waitForNodeToCatchUp(t, clck, eventsChannel, unsyncedNode, blockResponse, targetHeight)
 		require.NoError(t, err)
-
 	}
 
 	return nil
 }
 
+// TODO (#352): implement this function
+// waitForNodeToRequestMissingBlock waits for unsynced node to request missing block form the network
 func waitForNodeToRequestMissingBlock(
 	t *testing.T,
 	clck *clock.Mock,
@@ -663,26 +593,12 @@ func waitForNodeToRequestMissingBlock(
 	startingHeight uint64,
 	targetHeight uint64) (*anypb.Any, error) {
 
-	errMsg := "StateSync Get Block Request Messages"
-	numExpectedMsgs := numValidators
-
-	receivedRequests, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numExpectedMsgs, 500, true)
-	require.NoError(t, err)
-
-	// msg, err := codec.GetCodec().FromAny(receivedRequests[0])
-	// require.NoError(t, err)
-
-	// stateSyncBlockReqMessage, ok := msg.(*typesCons.StateSyncMessage)
-	// require.True(t, ok)
-
-	// blockReq := stateSyncBlockReqMessage.GetGetBlockReq()
-	// require.NotEmpty(t, blockReq)
-
-	// fmt.Println("Received GetBlockReq: ", blockReq)
-
-	return receivedRequests[0], nil
+	return &anypb.Any{}, nil
 }
 
+// TODO (#352): implement this function.
+// waitForNodeToReceiveMissingBlock requests block request of the unsynced node
+// for given node to node to catch up to the target height by sending the requested block.
 func waitForNodeToReceiveMissingBlock(
 	t *testing.T,
 	clck *clock.Mock,
@@ -690,30 +606,11 @@ func waitForNodeToReceiveMissingBlock(
 	allNodes IdToNodeMapping,
 	blockReq *anypb.Any) (*anypb.Any, error) {
 
-	// Get one of the requests as they are identical and send it to nodes
-
-	P2PBroadcast(t, allNodes, blockReq)
-	advanceTime(t, clck, 10*time.Millisecond)
-	numExpectedMsgs := numValidators - 1
-
-	errMsg := "StateSync Get Block Response Messages"
-	receivedResponses, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numExpectedMsgs, 500, false)
-	require.NoError(t, err)
-
-	// msg, err := codec.GetCodec().FromAny(receivedResponses[0])
-	// require.NoError(t, err)
-
-	// stateSyncBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
-	// require.True(t, ok)
-
-	// blockRes := stateSyncBlockResMessage.GetGetBlockRes()
-	// require.NotEmpty(t, blockRes)
-
-	// fmt.Println("Received GetBlockRes: ", blockRes)
-
-	return receivedResponses[0], nil
+	return &anypb.Any{}, nil
 }
 
+// TODO (#352): implement this function.
+// waitForNodeToCatchUp waits for given node to node to catch up to the target height by sending the requested block.
 func waitForNodeToCatchUp(
 	t *testing.T,
 	clck *clock.Mock,
@@ -721,25 +618,6 @@ func waitForNodeToCatchUp(
 	unsyncedNode *shared.Node,
 	blockResponse *anypb.Any,
 	targetHeight uint64) error {
-
-	P2PSend(t, unsyncedNode, blockResponse)
-	advanceTime(t, clck, 10*time.Millisecond)
-	numExpectedMsgs := 1
-
-	errMsg := "StateSync Sync Message"
-	fsmEventMsg, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, errMsg, numExpectedMsgs, 500, false)
-	require.NoError(t, err)
-
-	msg, err := codec.GetCodec().FromAny(fsmEventMsg[0])
-	require.NoError(t, err)
-
-	stateTransitionMessage, ok := msg.(*messaging.StateMachineTransitionEvent)
-	require.True(t, ok)
-
-	event := stateTransitionMessage.Event
-	fmt.Println("Received StateMachineTransitionEvent: ", event)
-
-	fmt.Println("Node height: ", unsyncedNode.GetBus().GetConsensusModule().CurrentHeight())
 
 	return nil
 }

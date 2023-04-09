@@ -16,7 +16,7 @@ type StateSyncServerModule interface {
 	// Advertise (send) the local state sync metadata to the requesting peer
 	HandleStateSyncMetadataRequest(*typesCons.StateSyncMetadataRequest) error
 
-	// Send the block being requested by the peer
+	// Advertise (send) the block being requested by the peer
 	HandleGetBlockRequest(*typesCons.GetBlockRequest) error
 }
 
@@ -25,7 +25,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := metadataReq.PeerAddress
 
-	m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Received StateSyncMetadataRequest %s", metadataReq)
+	m.logger.Info().Fields(m.StateSyncLogHelper(clientPeerAddress)).Msgf("Received StateSyncMetadataRequest %s", metadataReq)
 
 	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
 	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
@@ -64,9 +64,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := blockReq.PeerAddress
 
-	//m.logger.Info().Fields(m.logHelper(clientPeerAddress)).Msgf("Received StateSync GetBlockRequest: %s", blockReq)
-	m.logger.Info().Msg("Received StateSync GetBlockRequest")
-	//fmt.Printf("Received StateSync GetBlockRequest: %s \n", blockReq)
+	m.logger.Info().Fields(m.StateSyncLogHelper(clientPeerAddress)).Msgf("Received StateSync GetBlockRequest: %s", blockReq)
 	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
 	if prevPersistedBlockHeight < blockReq.Height {

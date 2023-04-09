@@ -66,19 +66,18 @@ type consensusModule struct {
 	leaderElectionMod leader_election.LeaderElectionModule
 
 	logger *modules.Logger
-	//logPrefix string
 
 	stateSync state_sync.StateSyncModule
 
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
 
-	// block resposnes received from peers are collected in this channel
+	// block responses received from peers are collected in this channel
 	blocksReceived chan *coreTypes.Block
 
-	// metadata resposnes received from peers are collected in this channel
+	// metadata responses received from peers are collected in this channel
 	metadataReceived chan *types.StateSyncMetadataResponse
 
-	//debugBlockRequests chan *types.GetBlockRequest
+	serverMode bool
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -133,9 +132,9 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	consensusCfg := runtimeMgr.GetConfig().Consensus
 
 	if consensusCfg.ServerModeEnabled {
-		if err := m.stateSync.EnableServerMode(); err != nil {
-			return nil, err
-		}
+		m.serverMode = true
+	} else {
+		m.serverMode = false
 	}
 
 	genesisState := runtimeMgr.GetGenesis()
@@ -193,6 +192,9 @@ func (m *consensusModule) Start() error {
 	if err := m.leaderElectionMod.Start(); err != nil {
 		return err
 	}
+
+	go m.metadataSyncLoop()
+	go m.commitReceivedBlocks()
 
 	return nil
 }
@@ -276,10 +278,6 @@ func (m *consensusModule) CurrentRound() uint64 {
 
 func (m *consensusModule) CurrentStep() uint64 {
 	return uint64(m.step)
-}
-
-func (m *consensusModule) EnableServerMode() {
-	m.stateSync.EnableServerMode()
 }
 
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...

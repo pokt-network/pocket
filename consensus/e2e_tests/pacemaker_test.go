@@ -34,7 +34,8 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	// Create & start test pocket nodes
 	eventsChannel := make(modules.EventsChannel, 100)
 	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-	StartAllTestPocketNodes(t, pocketNodes)
+	err := StartAllTestPocketNodes(t, pocketNodes)
+	require.NoError(t, err)
 
 	// Debug message to start consensus by triggering next view
 	for _, pocketNode := range pocketNodes {
@@ -46,7 +47,7 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 
 	// Verify consensus started - NewRound messages have an N^2 complexity.
 	numExpectedMsgs := numValidators * numValidators
-	_, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numExpectedMsgs, consensusMessageTimeoutMsec, true)
+	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numExpectedMsgs, consensusMessageTimeoutMsec, true)
 	require.NoError(t, err)
 
 	for pocketId, pocketNode := range pocketNodes {
@@ -139,7 +140,8 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	// Create & start test pocket nodes
 	eventsChannel := make(modules.EventsChannel, 100)
 	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
-	StartAllTestPocketNodes(t, pocketNodes)
+	err := StartAllTestPocketNodes(t, pocketNodes)
+	require.NoError(t, err)
 
 	// Starting point
 	testHeight := uint64(3)

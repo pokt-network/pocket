@@ -22,20 +22,18 @@ func (m *consensusModule) GetNodeAddress() string {
 	return m.nodeAddress
 }
 
-func (m *consensusModule) GetAggregatedStateSyncMetadata() (minHeight, maxHeight uint64) {
-	minHeight, maxHeight = 1, 1
+// TODO (#352): Implement this function, currently a placeholder.
+func (m *consensusModule) commitReceivedBlocks() {
+	// runs in the backgroun of consensus module
+	// listens on the blocksReceived channel
+	// commits the block
+	// sends the committed block information to the to sync's channel
+}
 
-	chanLen := len(m.metadataReceived)
-
-	for i := 0; i < chanLen; i++ {
-		metadata := <-m.metadataReceived
-		if metadata.MaxHeight > maxHeight {
-			maxHeight = metadata.MaxHeight
-		}
-		if metadata.MinHeight < minHeight {
-			minHeight = metadata.MinHeight
-		}
-	}
-
-	return minHeight, maxHeight
+// TODO (#352): Implement this function, currently a placeholder.
+// metadataSyncLoop periodically queries the network to see if it is behind
+func (m *consensusModule) metadataSyncLoop() {
+	// runs in the background of consensus module
+	// requests metadata from peers
+	// sends received metadata to the metadataReceived channel
 }

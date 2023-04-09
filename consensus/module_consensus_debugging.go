@@ -69,29 +69,9 @@ func (m *consensusModule) GetLeaderForView(height, round uint64, step uint8) uin
 }
 
 func (m *consensusModule) PushStateSyncMetadataResponse(minHeight, maxHeight uint64) {
-	//fmt.Println("push'layacak amk, size: ", len(m.metadataReceived))
 	m.metadataReceived <- &typesCons.StateSyncMetadataResponse{
 		PeerAddress: "",
 		MinHeight:   minHeight,
 		MaxHeight:   maxHeight,
 	}
-	//fmt.Println("push'landi amk, size: ", len(m.metadataReceived))
-	//return
 }
-
-// func (m *consensusModule) PushDebugStateSyncBlockRequest(blockReq *typesCons.GetBlockRequest) {
-// 	m.debugBlockRequests <- blockReq
-// }
-
-// func (m *consensusModule) SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64) {
-// 	m.stateSync.SetAggregatedMetadata(&typesCons.StateSyncMetadataResponse{
-// 		MinHeight:   minHeight,
-// 		MaxHeight:   maxHeight,
-// 		PeerAddress: peerAddress,
-// 	})
-// }
-
-// func (m *consensusModule) GetAggregatedStateSyncMetadataMaxHeight() (maxHeight uint64) {
-// 	metadata := m.GetAggregatedMetadata()
-// 	return metadata.MaxHeight
-// }

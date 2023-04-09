@@ -37,7 +37,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 	switch stateSyncMessage.Message.(type) {
 	case *typesCons.StateSyncMessage_MetadataReq:
 		m.logger.Info().Str("proto_type", "MetadataRequest").Msg("Handling StateSyncMessage MetadataReq")
-		if !m.stateSync.IsServerModEnabled() {
+		if !m.serverMode {
 			return fmt.Errorf("server module is not enabled")
 		}
 		return m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
@@ -46,7 +46,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		return nil
 	case *typesCons.StateSyncMessage_GetBlockReq:
 		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage MetadataReq")
-		if !m.stateSync.IsServerModEnabled() {
+		if !m.serverMode {
 			return fmt.Errorf("server module is not enabled")
 		}
 		return m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
@@ -57,10 +57,4 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 	default:
 		return fmt.Errorf("unspecified state sync message type")
 	}
-}
-
-func (m *consensusModule) commitReceivedBlocks() {
-	// always runs in the backgroun of consensus module, like metadata request
-	// listen on the blocksReceived channel
-	// commit the block
 }

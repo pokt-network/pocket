@@ -297,14 +297,6 @@ func (m *consensusModule) IsValidator() (bool, error) {
 	return false, nil
 }
 
-func (m *consensusModule) statesSyncLogHelper(receiverPeerAddress string) map[string]any {
-	return map[string]any{
-		"height":              m.CurrentHeight(),
-		"senderPeerAddress":   m.GetNodeAddress(),
-		"receiverPeerAddress": receiverPeerAddress,
-	}
-}
-
 func hotstuffMsgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
 	return map[string]any{
 		"height": msg.GetHeight(),

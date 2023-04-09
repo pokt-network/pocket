@@ -73,10 +73,9 @@ type ConsensusPacemaker interface {
 type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
-	GetAggregatedStateSyncMetadata() (minHeight, maxHeight uint64)
 }
 
-// ConsensusDebugModule exposes functionality used for testing & development purposes.
+// ConsensusDebugModule exposes fun ctionality used for testing & development purposes.
 // Not to be used in production.
 // TODO: Add a flag so this is not compiled in the prod binary.
 type ConsensusDebugModule interface {
@@ -89,7 +88,7 @@ type ConsensusDebugModule interface {
 
 	SetUtilityUnitOfWork(UtilityUnitOfWork)
 
-	// SetAggregatedStateSyncMetadata is used to set peer's aggregated metadata in testing scenarios to simulate periodic metadata synchronization. It is not intended to be used outside of testing.
+	// PushStateSyncMetadataResponse is used to set peer's aggregated metadata in testing scenarios to simulate periodic metadata synchronization. It is not intended to be used outside of testing.
 	PushStateSyncMetadataResponse(minHeight, maxHeight uint64)
 
 	// REFACTOR: This should accept typesCons.HotstuffStep and return typesCons.NodeId.
