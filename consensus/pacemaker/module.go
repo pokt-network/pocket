@@ -129,7 +129,6 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 		// 	return false, err
 		// }
-		fmt.Println("\n\nSending unsynched event")
 		return false, m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
 
 	}
