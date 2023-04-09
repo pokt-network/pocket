@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	shared "github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 )
 
@@ -186,7 +186,7 @@ func TestGetByRecipient(t *testing.T) {
 	require.Equal(t, 0, len(txResultsFromSenderBad))
 }
 
-func requireTxResultsEqual(t *testing.T, txR1, txR2 shared.TxResult) {
+func requireTxResultsEqual(t *testing.T, txR1, txR2 coreTypes.TxResult) {
 	bz, err := txR1.Bytes()
 	require.NoError(t, err)
 	bz2, err := txR2.Bytes()
@@ -196,7 +196,7 @@ func requireTxResultsEqual(t *testing.T, txR1, txR2 shared.TxResult) {
 
 // utility helpers
 
-func NewTestingTransactionResult(t *testing.T, height, index int) shared.TxResult {
+func NewTestingTransactionResult(t *testing.T, height, index int) coreTypes.TxResult {
 	testingTransaction := randLetterBytes()
 	resultCode, err := randomErr()
 	return &TxRes{

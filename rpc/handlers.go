@@ -7,9 +7,13 @@ import (
 	"math"
 	"net/http"
 	"regexp"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
+	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/pocket/utility"
 )
 
@@ -228,6 +232,68 @@ func (s *rpcServer) GetV1QueryAllChainParams(ctx echo.Context) error {
 		})
 	}
 	return ctx.JSON(200, resp)
+}
+
+func (s *rpcServer) PostV1QueryBalance(ctx echo.Context) error {
+	var body QueryAddressHeight
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// get the account from the persistence module
+	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	accBz, err := hex.DecodeString(body.Address)
+	if err != nil {
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+	height := body.Height
+	if height == 0 {
+		height = currentHeight
+	}
+	amountStr, err := readCtx.GetAccountAmount(accBz, int64(height))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	amount, err := strconv.ParseInt(amountStr, 10, 64)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, QueryBalanceResponse{
+		Balance: amount,
+	})
+}
+
+func (s *rpcServer) PostV1QueryBlock(ctx echo.Context) error {
+	var body QueryHeight
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// get the account from the persistence module
+	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
+	blockStore := s.GetBus().GetPersistenceModule().GetBlockStore()
+	height := uint64(body.Height)
+	if height == 0 {
+		height = currentHeight
+	}
+	blockBz, err := blockStore.Get(utils.HeightToBytes(height))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	block := new(coreTypes.Block)
+	if err := codec.GetCodec().Unmarshal(blockBz, block); err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	rpcBlock, err := blockToRPCBlock(block)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	return ctx.JSON(http.StatusOK, rpcBlock)
 }
 
 func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params GetV1P2pStakedActorsAddressBookParams) error {

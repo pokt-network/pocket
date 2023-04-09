@@ -248,87 +248,76 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+  /v1/query/balance:
+    post:
+      tags:
+        - query
+      summary: Returns the balance of the account at the specified height
+      requestBody:
+        description: Request account balance at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryAddressHeight'
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              height: 99
+        required: true
+      responses:
+        "200":
+          description: Returns account balance at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryBalanceResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the account balance at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/block:
+    post:
+      tags:
+        - query
+      summary: Returns the block structure at the specified height
+      requestBody:
+        description: Request the block at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryHeight'
+            example:
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns block structure at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryBlockResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the block structure at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
 
 externalDocs:
   description: Find out more about Pocket Network
   url: "https://pokt.network"
 components:
   schemas:
-    RawTXRequest:
-      type: object
-      required:
-        - address
-        - raw_hex_bytes
-      properties:
-        address:
-          type: string
-        raw_hex_bytes:
-          type: string
-    ConsensusState:
-      type: object
-      required:
-        - height
-        - round
-        - step
-      properties:
-        height:
-          type: integer
-          format: int64
-        round:
-          type: integer
-          format: int64
-        step:
-          type: integer
-          format: int64
-    ActorTypesEnum:
-      type: string
-      enum:
-        - validator
-        - servicer
-        - fisherman
-        - application
-    Actor:
-      type: object
-      required:
-        - type
-        - address
-        - public_key
-        - service_url
-      properties:
-        type:
-          $ref: "#/components/schemas/ActorTypesEnum"
-        address:
-          type: string
-        public_key:
-          type: string
-        service_url:
-          type: string
-
-    Account:
-      type: object
-      required:
-        - address
-        - coins
-        - public_key
-      properties:
-        address:
-          type: string
-        coins:
-          type: array
-          items:
-            $ref: '#/components/schemas/Coin'
-        public_key:
-          type: string
-    Coin:
-      type: object
-      required:
-        - amount
-        - denom
-      properties:
-        amount:
-          type: string
-        denom:
-          type: string
+    # Requests
     QueryAddressHeight:
       type: object
       required:
@@ -356,23 +345,6 @@ components:
         per_page:
           type: integer
           format: uint64
-    QueryAccountsResponse:
-      type: object
-      required:
-        - result
-        - page
-        - total_pages
-      properties:
-        result:
-          type: array
-          items:
-            $ref: '#/components/schemas/Account'
-        page:
-          type: integer
-          format: uint64
-        total_pages:
-          type: integer
-          format: uint64
     QueryAddressPaginated:
       type: object
       required:
@@ -390,34 +362,209 @@ components:
           format: int64
         sort:
           type: string
-    TxResult:
+    QueryHeight:
       type: object
       required:
-        - tx
         - height
-        - index
-        - result_code
-        - error
-        - signer_addr
-        - recipient_addr
-        - message_type
       properties:
-        tx:
-          type: string
         height:
           type: integer
           format: int64
-        index:
-          type: integer
-          format: int32
-        result_code:
-          type: integer
-          format: int32
-        signer_addr:
+    RawTXRequest:
+      type: object
+      required:
+        - address
+        - raw_hex_bytes
+      properties:
+        address:
           type: string
-        recipient_addr:
+        raw_hex_bytes:
           type: string
-        message_type:
+
+    # Responses
+    ConsensusState:
+      type: object
+      required:
+        - height
+        - round
+        - step
+      properties:
+        height:
+          type: integer
+          format: int64
+        round:
+          type: integer
+          format: int64
+        step:
+          type: integer
+          format: int64
+    QueryAccountsResponse:
+      type: object
+      required:
+        - result
+        - page
+        - total_pages
+      properties:
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        page:
+          type: integer
+          format: uint64
+        total_pages:
+          type: integer
+          format: uint64
+    QueryAccountTxsResponse:
+      type: object
+      required:
+        - txs
+        - total_txs
+        - page
+        - total_pages
+      properties:
+        txs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+        total_txs:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: uint64
+    AllChainParamsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/Parameter"
+    QueryBalanceResponse:
+      type: object
+      required:
+        - balance
+      properties:
+        balance:
+          type: integer
+          format: int64
+    QueryBlockResponse:
+      type: object
+      required:
+        - block
+      properties:
+        block:
+          $ref: "#/components/schemas/Block"
+    P2PStakedActorsResponse:
+      type: object
+      required:
+        - actors
+        - height
+      properties:
+        actors:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Actor"
+        height:
+          type: integer
+          format: int64
+
+    # Types
+    ActorTypesEnum:
+      type: string
+      enum:
+        - validator
+        - servicer
+        - fisherman
+        - application
+    Actor:
+      type: object
+      required:
+        - type
+        - address
+        - public_key
+        - service_url
+      properties:
+        type:
+          $ref: "#/components/schemas/ActorTypesEnum"
+        address:
+          type: string
+        public_key:
+          type: string
+        service_url:
+          type: string
+    Account:
+      type: object
+      required:
+        - address
+        - coins
+        - public_key
+      properties:
+        address:
+          type: string
+        coins:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coin'
+        public_key:
+          type: string
+    Block:
+      type: object
+      required:
+        - block_header
+        - transactions
+      properties:
+        block_header:
+          $ref: "#/components/schemas/BlockHeader"
+        transactions:
+          type: array
+          items:
+            type: string
+    BlockHeader:
+      type: object
+      required:
+        - height
+        - network_id
+        - state_hash
+        - prev_state_hash
+        - proposer_addr
+        - quorum_cert
+        - timestamp
+      properties:
+        height:
+          type: integer
+          format: int64
+        network_id:
+          type: string
+        state_hash:
+          type: string
+        prev_state_hash:
+          type: string
+        proposer_addr:
+          type: string
+        quorum_cert:
+          $ref: "#/components/schemas/QuorumCertificate"
+        timestamp:
+          type: string
+    Coin:
+      type: object
+      required:
+        - amount
+        - denom
+      properties:
+        amount:
+          type: string
+        denom:
+          type: string
+    Fee:
+      type: object
+      required:
+        - amount
+        - denom
+      properties:
+        amount:
+          type: string
+        denom:
           type: string
     MessageSend:
       type: object
@@ -531,6 +678,47 @@ components:
           type: string
         parameter:
           $ref: "#/components/schemas/Parameter"
+    Parameter:
+      type: object
+      required:
+        - parameter_name
+        - parameter_value
+      properties:
+        parameter_name:
+          type: "string"
+        parameter_value:
+          type: "string"
+    PartialSignature:
+      type: object
+      required:
+        - signature
+        - address
+      properties:
+        signature:
+          type: string
+        address:
+          type: string
+    QuorumCertificate:
+      type: object
+      required:
+        - height
+        - round
+        - step
+        - block
+        - threshold_sig
+      properties:
+        height:
+          type: integer
+          format: int64
+        round:
+          type: integer
+          format: int64
+        step:
+          type: string
+        block:
+          type: string
+        threshold_sig:
+          $ref: "#/components/schemas/ThresholdSignature"
     Signature:
       type: object
       required:
@@ -540,16 +728,6 @@ components:
         public_key:
           type: string
         signature:
-          type: string
-    Fee:
-      type: object
-      required:
-        - amount
-        - denom
-      properties:
-        amount:
-          type: string
-        denom:
           type: string
     StdTx:
       type: object
@@ -594,55 +772,44 @@ components:
           $ref: "#/components/schemas/TxResult"
         stdTx:
           $ref: "#/components/schemas/StdTx"
-    QueryAccountTxsResponse:
+    TxResult:
       type: object
       required:
-        - txs
-        - total_txs
-        - page
-        - total_pages
-      properties:
-        txs:
-          type: array
-          items:
-            $ref: "#/components/schemas/Transaction"
-        total_txs:
-          type: integer
-          format: int64
-        page:
-          type: integer
-          format: int64
-        total_pages:
-          type: integer
-          format: uint64
-    Parameter:
-      type: object
-      required:
-        - parameter_name
-        - parameter_value
-      properties:
-        parameter_name:
-          type: "string"
-        parameter_value:
-          type: "string"
-    AllChainParamsResponse:
-      type: array
-      items:
-        $ref: "#/components/schemas/Parameter"
-
-    P2PStakedActorsResponse:
-      type: object
-      required:
-        - actors
+        - tx
         - height
+        - index
+        - result_code
+        - error
+        - signer_addr
+        - recipient_addr
+        - message_type
       properties:
-        actors:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/Actor"
+        tx:
+          type: string
         height:
           type: integer
           format: int64
+        index:
+          type: integer
+          format: int32
+        result_code:
+          type: integer
+          format: int32
+        signer_addr:
+          type: string
+        recipient_addr:
+          type: string
+        message_type:
+          type: string
+    ThresholdSignature:
+      type: object
+      required:
+        - signatures
+      properties:
+        signatures:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartialSignature"
 
   securitySchemes: {}
   links: {}

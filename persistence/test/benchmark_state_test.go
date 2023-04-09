@@ -15,6 +15,7 @@ import (
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/indexer"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 )
@@ -71,7 +72,7 @@ func BenchmarkStateHash(b *testing.B) {
 						_, _, err := callRandomDatabaseModifierFunc(db, false)
 						require.NoError(b, err)
 					}
-					err := db.IndexTransaction(modules.TxResult(getRandomTxResult(height)))
+					err := db.IndexTransaction(coreTypes.TxResult(getRandomTxResult(height)))
 					require.NoError(b, err)
 				}
 				_, err := db.ComputeStateHash()

@@ -1,9 +1,11 @@
 package rpc
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 
+	conTypes "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -225,6 +227,60 @@ func generateStdTx(readCtx modules.PersistenceReadContext, txBz []byte, messageT
 	}
 
 	return &stdTx, nil
+}
+
+// blockToRPCBlock converts a block protobuf to the RPC block type
+func blockToRPCBlock(protoBlock *coreTypes.Block) (*Block, error) {
+	txs := make([]string, 0)
+	for _, txBz := range protoBlock.Transactions {
+		tx := base64.StdEncoding.EncodeToString(txBz)
+		txs = append(txs, tx)
+	}
+
+	qc := new(conTypes.QuorumCertificate)
+	if err := codec.GetCodec().Unmarshal(protoBlock.BlockHeader.GetQuorumCertificate(), qc); err != nil {
+		return nil, err
+	}
+	partialSigs := make([]PartialSignature, 0)
+	for _, sig := range qc.GetThresholdSignature().GetSignatures() {
+		ps := PartialSignature{
+			Signature: hex.EncodeToString(sig.GetSignature()),
+			Address:   sig.GetAddress(),
+		}
+		partialSigs = append(partialSigs, ps)
+	}
+
+	qcTxs := make([]string, 0)
+	for _, txBz := range qc.GetBlock().GetTransactions() {
+		tx := base64.StdEncoding.EncodeToString(txBz)
+		qcTxs = append(qcTxs, tx)
+	}
+
+	qcBlockBz, err := codec.GetCodec().Marshal(qc.GetBlock())
+	if err != nil {
+		return nil, err
+	}
+	qcBlock := base64.StdEncoding.EncodeToString(qcBlockBz)
+
+	return &Block{
+		BlockHeader: BlockHeader{
+			Height:        int64(protoBlock.BlockHeader.GetHeight()),
+			StateHash:     protoBlock.BlockHeader.GetStateHash(),
+			PrevStateHash: protoBlock.BlockHeader.GetPrevStateHash(),
+			ProposerAddr:  hex.EncodeToString(protoBlock.BlockHeader.GetProposerAddress()),
+			QuorumCert: QuorumCertificate{
+				Height: int64(qc.GetHeight()),
+				Round:  int64(qc.GetRound()),
+				Step:   qc.GetStep().String(),
+				Block:  qcBlock,
+				ThresholdSig: ThresholdSignature{
+					Signatures: partialSigs,
+				},
+			},
+			Timestamp: protoBlock.BlockHeader.GetTimestampt().AsTime().String(),
+		},
+		Transactions: txs,
+	}, nil
 }
 
 // protocolActorToRPCActorTypeEnum converts a protocol actor type to the rpc actor type enum
