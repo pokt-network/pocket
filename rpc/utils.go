@@ -1,0 +1,263 @@
+package rpc
+
+import (
+	"encoding/hex"
+	"fmt"
+
+	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/modules"
+	utilTypes "github.com/pokt-network/pocket/utility/types"
+)
+
+// calculateFee calculates the fee for a transaction given the actor type and message type
+func calculateFee(readCtx modules.PersistenceReadContext, actorType coreTypes.ActorType, messageType string) (string, error) {
+	height, err := readCtx.GetHeight()
+	if err != nil {
+		return "", err
+	}
+	if messageType == "MessageSend" {
+		return readCtx.GetStringParam(utilTypes.MessageSendFee, height)
+	}
+	if messageType == "MessageChangeParameter" {
+		return readCtx.GetStringParam(utilTypes.MessageChangeParameterFee, height)
+	}
+	switch actorType {
+	case coreTypes.ActorType_ACTOR_TYPE_APP:
+		switch messageType {
+		case "MessageStake":
+			return readCtx.GetStringParam(utilTypes.MessageStakeAppFee, height)
+		case "MessageEditStake":
+			return readCtx.GetStringParam(utilTypes.MessageEditStakeAppFee, height)
+		case "MessageUnstake":
+			return readCtx.GetStringParam(utilTypes.MessageUnstakeAppFee, height)
+		case "MessageUnpause":
+			return readCtx.GetStringParam(utilTypes.MessageUnpauseAppFee, height)
+		}
+	case coreTypes.ActorType_ACTOR_TYPE_FISH:
+		switch messageType {
+		case "MessageStake":
+			return readCtx.GetStringParam(utilTypes.MessageStakeFishermanFee, height)
+		case "MessageEditStake":
+			return readCtx.GetStringParam(utilTypes.MessageEditStakeFishermanFee, height)
+		case "MessageUnstake":
+			return readCtx.GetStringParam(utilTypes.MessageUnstakeFishermanFee, height)
+		case "MessageUnpause":
+			return readCtx.GetStringParam(utilTypes.MessageUnpauseFishermanFee, height)
+		}
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		switch messageType {
+		case "MessageStake":
+			return readCtx.GetStringParam(utilTypes.MessageStakeServicerFee, height)
+		case "MessageEditStake":
+			return readCtx.GetStringParam(utilTypes.MessageEditStakeServicerFee, height)
+		case "MessageUnstake":
+			return readCtx.GetStringParam(utilTypes.MessageUnstakeServicerFee, height)
+		case "MessageUnpause":
+			return readCtx.GetStringParam(utilTypes.MessageUnpauseServicerFee, height)
+		}
+	case coreTypes.ActorType_ACTOR_TYPE_VAL:
+		switch messageType {
+		case "MessageStake":
+			return readCtx.GetStringParam(utilTypes.MessageStakeValidatorFee, height)
+		case "MessageEditStake":
+			return readCtx.GetStringParam(utilTypes.MessageEditStakeValidatorFee, height)
+		case "MessageUnstake":
+			return readCtx.GetStringParam(utilTypes.MessageUnstakeValidatorFee, height)
+		case "MessageUnpause":
+			return readCtx.GetStringParam(utilTypes.MessageUnpauseValidatorFee, height)
+		}
+	default:
+		return "", fmt.Errorf("invalid actor type: %s", actorType.GetName())
+	}
+	return "", fmt.Errorf("unhandled message type: %s", messageType)
+}
+
+// generateStdTx generates a StdTx from a serialised byte slice of a Transaction protobuf and message type
+func generateStdTx(readCtx modules.PersistenceReadContext, txBz []byte, messageType string) (*StdTx, error) {
+	tx, err := coreTypes.TxFromBytes(txBz)
+	if err != nil {
+		return nil, err
+	}
+	sig := tx.GetSignature()
+	txMsg, err := tx.GetMessage()
+	if err != nil {
+		return nil, err
+	}
+	anypb, err := codec.GetCodec().ToAny(txMsg)
+	if err != nil {
+		return nil, err
+	}
+	stdTx := StdTx{
+		Nonce: tx.GetNonce(),
+		Signature: Signature{
+			PublicKey: hex.EncodeToString(sig.GetPublicKey()),
+			Signature: hex.EncodeToString(sig.GetSignature()),
+		},
+	}
+	switch messageType {
+	case "MessageSend":
+		m := new(utilTypes.MessageSend)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := calculateFee(readCtx, m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		stdTx.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		stdTx.Message = MessageSend{
+			FromAddr: hex.EncodeToString(m.GetFromAddress()),
+			ToAddr:   hex.EncodeToString(m.GetToAddress()),
+			Amount:   m.Amount,
+			Denom:    "upokt",
+		}
+	case "MessageStake":
+		m := new(utilTypes.MessageStake)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := calculateFee(readCtx, m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		stdTx.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		stdTx.Message = MessageStake{
+			ActorType:     protocolActorToRPCActorTypeEnum(m.GetActorType()),
+			PublicKey:     hex.EncodeToString(m.GetPublicKey()),
+			Chains:        m.GetChains(),
+			ServiceUrl:    m.GetServiceUrl(),
+			OutputAddress: hex.EncodeToString(m.GetOutputAddress()),
+			Signer:        hex.EncodeToString(m.GetSigner()),
+			Amount:        m.GetAmount(),
+			Denom:         "upokt",
+		}
+	case "MessageEditStake":
+		m := new(utilTypes.MessageEditStake)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := calculateFee(readCtx, m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		stdTx.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		stdTx.Message = MessageEditStake{
+			ActorType:  protocolActorToRPCActorTypeEnum(m.GetActorType()),
+			Chains:     m.GetChains(),
+			ServiceUrl: m.GetServiceUrl(),
+			Address:    hex.EncodeToString(m.GetAddress()),
+			Signer:     hex.EncodeToString(m.GetSigner()),
+			Amount:     m.GetAmount(),
+			Denom:      "upokt",
+		}
+	case "MessageUnstake":
+		m := new(utilTypes.MessageUnstake)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := calculateFee(readCtx, m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		stdTx.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		stdTx.Message = MessageUnstake{
+			ActorType: protocolActorToRPCActorTypeEnum(m.GetActorType()),
+			Address:   hex.EncodeToString(m.GetAddress()),
+			Signer:    hex.EncodeToString(m.GetSigner()),
+		}
+	case "MessageUnpause":
+		m := new(utilTypes.MessageUnpause)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := calculateFee(readCtx, m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		stdTx.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		stdTx.Message = MessageUnpause{
+			ActorType: protocolActorToRPCActorTypeEnum(m.GetActorType()),
+			Address:   hex.EncodeToString(m.GetAddress()),
+			Signer:    hex.EncodeToString(m.GetSigner()),
+		}
+	case "MessageChangeParameter":
+		m := new(utilTypes.MessageChangeParameter)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := calculateFee(readCtx, m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		stdTx.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		values := paramValueRegex.FindStringSubmatch(m.GetParameterValue().String())
+		if len(values) < 2 {
+			return nil, fmt.Errorf("unable to extract parameter value: %s", m.GetParameterValue().String())
+		}
+		stdTx.Message = MessageChangeParameter{
+			Signer: hex.EncodeToString(m.GetSigner()),
+			Owner:  hex.EncodeToString(m.GetOwner()),
+			Parameter: Parameter{
+				ParameterValue: values[1],
+			},
+		}
+	default:
+		return nil, fmt.Errorf("unknown message type: %s", messageType)
+	}
+
+	return &stdTx, nil
+}
+
+// protocolActorToRPCActorTypeEnum converts a protocol actor type to the rpc actor type enum
+func protocolActorToRPCActorTypeEnum(protocolActorType coreTypes.ActorType) ActorTypesEnum {
+	switch protocolActorType {
+	case coreTypes.ActorType_ACTOR_TYPE_APP:
+		return Application
+	case coreTypes.ActorType_ACTOR_TYPE_FISH:
+		return Fisherman
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+		return Servicer
+	case coreTypes.ActorType_ACTOR_TYPE_VAL:
+		return Validator
+	default:
+		panic("invalid actor type")
+	}
+}
+
+// getProtocolActorGetter returns the correct protocol actor getter function based on the actor type parameter
+func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, params GetV1P2pStakedActorsAddressBookParams) func(height int64) ([]*coreTypes.Actor, error) {
+	var protocolActorGetter = persistenceContext.GetAllStakedActors
+	if params.ActorType == nil {
+		return persistenceContext.GetAllStakedActors
+	}
+	switch *params.ActorType {
+	case Application:
+		protocolActorGetter = persistenceContext.GetAllApps
+	case Fisherman:
+		protocolActorGetter = persistenceContext.GetAllFishermen
+	case Servicer:
+		protocolActorGetter = persistenceContext.GetAllServicers
+	case Validator:
+		protocolActorGetter = persistenceContext.GetAllValidators
+	}
+	return protocolActorGetter
+}

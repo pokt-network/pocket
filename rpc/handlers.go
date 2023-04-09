@@ -10,16 +10,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
-	"github.com/pokt-network/pocket/shared/codec"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
-var (
-	paramValueRegex *regexp.Regexp
-)
+var paramValueRegex *regexp.Regexp
 
 func init() {
 	paramValueRegex = regexp.MustCompile(`value:"(.+)"`)
@@ -149,7 +143,7 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 	if body.PerPage > 1000 {
 		return ctx.String(http.StatusBadRequest, "per_page has a max value of 1000")
 	}
-	if body.Sort != nil && !(*body.Sort == "asc" || *body.Sort == "desc") {
+	if body.Sort != nil && *body.Sort != "asc" && *body.Sort != "desc" {
 		return ctx.String(http.StatusBadRequest, "sort must be either asc or desc")
 	}
 	sortDesc := true
@@ -157,35 +151,37 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 		sortDesc = false
 	}
 
+	currHeight := s.GetBus().GetConsensusModule().CurrentHeight()
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currHeight))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
 	txIndexer := s.GetBus().GetPersistenceModule().GetTxIndexer()
-	txResults, err := txIndexer.GetBySender(body.Address, sortDesc)
+	// TODO: Figure out how to query all transactions from an address
+	txResults, err := txIndexer.GetByHeight(3, sortDesc)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
 	totalPages := uint64(math.Ceil(float64(len(txResults)) / float64(body.PerPage)))
-	//start := (body.Page - 1) * body.PerPage
+	start := (body.Page - 1) * body.PerPage
 	end := (body.Page * body.PerPage) - 1
 	totalTxs := int64(len(txResults))
 	fmt.Println(totalTxs)
 	if end >= totalTxs {
-		end = totalTxs
+		end = totalTxs - 1
 	}
 
 	pageTxs := make([]Transaction, 0)
-	//for i := start; i < end; i++ {
-	//txResult := txResults[i]
-	for _, txResult := range txResults {
+	for i := start; i <= end; i++ {
+		txResult := txResults[i]
 		hashBz, err := txResult.Hash()
 		if err != nil {
 			return ctx.String(http.StatusInternalServerError, err.Error())
 		}
 		hexHashStr := hex.EncodeToString(hashBz)
 		txStr := base64.StdEncoding.EncodeToString(txResult.GetTx())
-		if err != nil {
-			return ctx.String(http.StatusInternalServerError, err.Error())
-		}
-		stdTx, err := generateStdTx(txResult.GetTx(), txResult.GetMessageType())
+		stdTx, err := generateStdTx(readCtx, txResult.GetTx(), txResult.GetMessageType())
 		if err != nil {
 			return ctx.String(http.StatusInternalServerError, err.Error())
 		}
@@ -212,112 +208,6 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 		TotalTxs:   totalTxs,
 		TotalPages: totalPages,
 	})
-}
-
-func generateStdTx(txBz []byte, messageType string) (*StdTx, error) {
-	tx, err := coreTypes.TxFromBytes(txBz)
-	if err != nil {
-		return nil, err
-	}
-	sig := tx.GetSignature()
-	txMsg, err := tx.GetMessage()
-	if err != nil {
-		return nil, err
-	}
-	anypb, err := codec.GetCodec().ToAny(txMsg)
-	if err != nil {
-		return nil, err
-	}
-	stdTx := StdTx{
-		Nonce: tx.GetNonce(),
-		Signature: Signature{
-			PublicKey: hex.EncodeToString(sig.GetPublicKey()),
-			Signature: hex.EncodeToString(sig.GetSignature()),
-		},
-	}
-	switch messageType {
-	case "MessageSend":
-		m := new(utilTypes.MessageSend)
-		if err := anypb.UnmarshalTo(m); err != nil {
-			return nil, err
-		}
-		stdTx.Message = MessageSend{
-			FromAddr: hex.EncodeToString(m.GetFromAddress()),
-			ToAddr:   hex.EncodeToString(m.GetToAddress()),
-			Amount:   m.Amount,
-			Denom:    "upokt",
-		}
-	case "MessageStake":
-		m := new(utilTypes.MessageStake)
-		if err := anypb.UnmarshalTo(m); err != nil {
-			return nil, err
-		}
-		stdTx.Message = MessageStake{
-			ActorType:     protocolActorToRPCActorTypeEnum(m.GetActorType()),
-			PublicKey:     hex.EncodeToString(m.GetPublicKey()),
-			Chains:        m.GetChains(),
-			ServiceUrl:    m.GetServiceUrl(),
-			OutputAddress: hex.EncodeToString(m.GetOutputAddress()),
-			Signer:        hex.EncodeToString(m.GetSigner()),
-			Amount:        m.GetAmount(),
-			Denom:         "upokt",
-		}
-	case "MessageEditStake":
-		m := new(utilTypes.MessageEditStake)
-		if err := anypb.UnmarshalTo(m); err != nil {
-			return nil, err
-		}
-		stdTx.Message = MessageEditStake{
-			ActorType:  protocolActorToRPCActorTypeEnum(m.GetActorType()),
-			Chains:     m.GetChains(),
-			ServiceUrl: m.GetServiceUrl(),
-			Address:    hex.EncodeToString(m.GetAddress()),
-			Signer:     hex.EncodeToString(m.GetSigner()),
-			Amount:     m.GetAmount(),
-			Denom:      "upokt",
-		}
-	case "MessageUnstake":
-		m := new(utilTypes.MessageUnstake)
-		if err := anypb.UnmarshalTo(m); err != nil {
-			return nil, err
-		}
-		stdTx.Message = MessageUnstake{
-			ActorType: protocolActorToRPCActorTypeEnum(m.GetActorType()),
-			Address:   hex.EncodeToString(m.GetAddress()),
-			Signer:    hex.EncodeToString(m.GetSigner()),
-		}
-	case "MessageUnpause":
-		m := new(utilTypes.MessageUnpause)
-		if err := anypb.UnmarshalTo(m); err != nil {
-			return nil, err
-		}
-		stdTx.Message = MessageUnpause{
-			ActorType: protocolActorToRPCActorTypeEnum(m.GetActorType()),
-			Address:   hex.EncodeToString(m.GetAddress()),
-			Signer:    hex.EncodeToString(m.GetSigner()),
-		}
-	case "MessageChangeParameter":
-		m := new(utilTypes.MessageChangeParameter)
-		if err := anypb.UnmarshalTo(m); err != nil {
-			return nil, err
-		}
-		values := paramValueRegex.FindStringSubmatch(m.GetParameterValue().String())
-		if len(values) < 2 {
-			return nil, fmt.Errorf("unable to extract parameter value: %s", m.GetParameterValue().String())
-		}
-		stdTx.Message = MessageChangeParameter{
-			Signer: hex.EncodeToString(m.GetSigner()),
-			Owner:  hex.EncodeToString(m.GetOwner()),
-			Parameter: Parameter{
-				ParameterName:  m.GetParameterKey(),
-				ParameterValue: values[1],
-			},
-		}
-	default:
-		return nil, fmt.Errorf("unknown message type: %s", messageType)
-	}
-
-	return &stdTx, nil
 }
 
 func (s *rpcServer) GetV1QueryAllChainParams(ctx echo.Context) error {
@@ -394,39 +284,4 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 	}
 
 	return nil
-}
-
-// protocolActorToRPCActorTypeEnum converts a protocol actor type to the rpc actor type enum
-func protocolActorToRPCActorTypeEnum(protocolActorType coreTypes.ActorType) ActorTypesEnum {
-	switch protocolActorType {
-	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		return Application
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		return Fisherman
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-		return Servicer
-	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		return Validator
-	default:
-		panic("invalid actor type")
-	}
-}
-
-// getProtocolActorGetter returns the correct protocol actor getter function based on the actor type parameter
-func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, params GetV1P2pStakedActorsAddressBookParams) func(height int64) ([]*coreTypes.Actor, error) {
-	var protocolActorGetter func(height int64) ([]*coreTypes.Actor, error) = persistenceContext.GetAllStakedActors
-	if params.ActorType == nil {
-		return persistenceContext.GetAllStakedActors
-	}
-	switch *params.ActorType {
-	case Application:
-		protocolActorGetter = persistenceContext.GetAllApps
-	case Fisherman:
-		protocolActorGetter = persistenceContext.GetAllFishermen
-	case Servicer:
-		protocolActorGetter = persistenceContext.GetAllServicers
-	case Validator:
-		protocolActorGetter = persistenceContext.GetAllValidators
-	}
-	return protocolActorGetter
 }

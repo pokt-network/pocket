@@ -541,13 +541,26 @@ components:
           type: string
         signature:
           type: string
+    Fee:
+      type: object
+      required:
+        - amount
+        - denom
+      properties:
+        amount:
+          type: string
+        denom:
+          type: string
     StdTx:
       type: object
       required:
+        - fee
         - message
         - nonce
         - signature
       properties:
+        fee:
+          $ref: "#/components/schemas/Fee"
         message:
           oneOf:
             - $ref: "#/components/schemas/MessageSend"
