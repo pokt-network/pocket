@@ -23,17 +23,17 @@ func (m *consensusModule) GetNodeAddress() string {
 }
 
 // TODO (#352): Implement this function, currently a placeholder.
+// commitReceivedBlocks commits the blocks received from the blocksReceived channel
 func (m *consensusModule) commitReceivedBlocks() {
-	// runs in the backgroun of consensus module
+	// runs as a background process in consensus module
 	// listens on the blocksReceived channel
 	// commits the block
-	// sends the committed block information to the to sync's channel
 }
 
 // TODO (#352): Implement this function, currently a placeholder.
 // metadataSyncLoop periodically queries the network to see if it is behind
 func (m *consensusModule) metadataSyncLoop() {
-	// runs in the background of consensus module
+	// runs as a background process in consensus module
 	// requests metadata from peers
 	// sends received metadata to the metadataReceived channel
 }

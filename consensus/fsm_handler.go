@@ -35,7 +35,7 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
 	fsm_state := msg.NewState
 
-	m.logger.Debug().Fields(messaging.TransitionEventToMap(msg)).Msg("Consensus Received state machine transition msg")
+	m.logger.Debug().Fields(messaging.TransitionEventToMap(msg)).Msg("Received state machine transition msg")
 
 	switch coreTypes.StateMachineState(fsm_state) {
 	case coreTypes.StateMachineState_P2P_Bootstrapped:
@@ -66,9 +66,6 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 // This is a transition mode from node bootstrapping to a node being out-of-sync.
 func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Node is in bootstrapped state, so it is out of sync, and transitions to unsynced")
-
-	//	m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
-
 	return nil
 }
 

@@ -75,7 +75,7 @@ type ConsensusStateSync interface {
 	GetNodeAddress() string
 }
 
-// ConsensusDebugModule exposes fun ctionality used for testing & development purposes.
+// ConsensusDebugModule exposes functionality used for testing & development purposes.
 // Not to be used in production.
 // TODO: Add a flag so this is not compiled in the prod binary.
 type ConsensusDebugModule interface {

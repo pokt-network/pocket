@@ -121,7 +121,6 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
-	//stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
 
 	for _, module := range []modules.Module{
 		p2pMock,
@@ -129,7 +128,6 @@ func CreateTestConsensusPocketNode(
 		telemetryMock,
 		loggerMock,
 		rpcMock,
-		//stateMachineMock,
 	} {
 		bus.RegisterModule(module)
 	}
@@ -276,31 +274,6 @@ func WaitForNetworkStateSyncEvents(
 	}
 
 	return waitForEventsInternal(clck, eventsChannel, messaging.StateSyncMessageContentType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
-}
-
-func WaitForNetworkFSMEvents(
-	t *testing.T,
-	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
-	eventType coreTypes.StateMachineEvent,
-	errMsg string,
-	numExpectedMsgs int,
-	maxWaitTime time.Duration,
-	failOnExtraMessages bool,
-) (messages []*anypb.Any, err error) {
-	fmt.Println("GOKU yo")
-	includeFilter := func(anyMsg *anypb.Any) bool {
-		msg, err := codec.GetCodec().FromAny(anyMsg)
-		require.NoError(t, err)
-
-		stateTransitionMessage, ok := msg.(*messaging.StateMachineTransitionEvent) //messaging.StateMachineTransitionEvent
-		require.True(t, ok)
-
-		return stateTransitionMessage.Event == string(eventType)
-		//return true
-	}
-
-	return waitForEventsInternal(clck, eventsChannel, messaging.StateMachineTransitionEventType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework

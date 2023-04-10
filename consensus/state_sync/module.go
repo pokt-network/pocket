@@ -54,12 +54,10 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 // TODO (#352): implement this function
 // Start performs state sync
 func (m *stateSync) Start() error {
-	// gets and aggregated received metadata in metadataReceived channel of consensus module,
-	// requests blocks starting from currentHeight to maxHeight via `broadcastStateSyncMessage()` function,
-	// waits received and committed block event in `blockReceived` channel for each block,
-	// once the event is received `blockReceived` channel, requests the next block.
-	// when all blocks are received and committed, stops the state sync process, by colling `m.Stop()` function.
-
+	// gets and aggregated all metadata collected in metadataReceived channel,
+	// requests missing blocks starting from its currentHeight to the aggregated metadata's maxHeight,
+	// once the requested block is received and committed by consensus module, sends the next request for the next block,
+	// when all blocks are received and committed, stops the state sync process by calling its `Stop()` function.
 	return nil
 }
 

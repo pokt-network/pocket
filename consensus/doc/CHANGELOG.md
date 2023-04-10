@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.44] - 2023-04-10
+
+- Introduced new helper functions for hotstuff for testing consensus stages: `waitForNewRound()`, `waitForPrepareProposal()`, `waitForPrepareVoteswaitForPreCommit()`, `waitForCommit()`, and `waitForDecide()` , and a wrapper function `waitForNextBlock()`.
+- Removed state machine mock in testing, and introduced actual state machine that starts with `StartAllTestPocketNodes()` function and added `generatePlaceholderBlock()` function
+- Introduced, as placeholders, new helper functions for testing state sync stages: `waitForNodeToRequestMissingBlock()`, `waitForNodeToReceiveMissingBlock()`, `waitForNodeToCatchUp()` and a wrapper function `waitForNodeToSync()`.
+- 
+
 ## [0.0.0.43] - 2023-04-07
 
 - Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`
