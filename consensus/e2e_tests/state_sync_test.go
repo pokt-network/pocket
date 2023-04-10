@@ -8,7 +8,6 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -89,7 +88,6 @@ func TestStateSync_ServerGetBlock_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	testHeight := uint64(5)
-
 	serverNode := pocketNodes[1]
 	serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
 
@@ -233,18 +231,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
 	require.NoError(t, err)
 
-	// Placeholder block
-	blockHeader := &coreTypes.BlockHeader{
-		Height:            testHeight,
-		StateHash:         stateHash,
-		PrevStateHash:     "",
-		ProposerAddress:   leaderPK.Address(),
-		QuorumCertificate: nil,
-	}
-	block := &coreTypes.Block{
-		BlockHeader:  blockHeader,
-		Transactions: make([][]byte, 0),
-	}
+	block := generatePlaceholderBlock(testHeight, leaderPK.Address())
 	leader.GetBus().GetConsensusModule().SetBlock(block)
 
 	// Assert that unsynced node has a different view of the network than the rest of the nodes
@@ -275,17 +262,16 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	}
 
 	unsyncedNode.GetBus().GetConsensusModule().PushStateSyncMetadataResponse(uint64(1), testHeight)
-
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)
 	}
-
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	numExpectedMsgs := numValidators
 	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numExpectedMsgs, 500, true)
 	require.NoError(t, err)
 
+	// TODO (#352) This function will be updated once state sync implementation is complete
 	err = waitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, testHeight, 500)
 	require.NoError(t, err)
 

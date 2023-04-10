@@ -8,7 +8,6 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -117,19 +116,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
 	require.NoError(t, err)
 
-	// Placeholder block
-	blockHeader := &coreTypes.BlockHeader{
-		Height:            testHeight,
-		StateHash:         stateHash,
-		PrevStateHash:     "",
-		ProposerAddress:   leaderPK.Address(),
-		QuorumCertificate: nil,
-	}
-	block := &coreTypes.Block{
-		BlockHeader:  blockHeader,
-		Transactions: make([][]byte, 0),
-	}
-
+	block := generatePlaceholderBlock(testHeight, leaderPK.Address())
 	leader.GetBus().GetConsensusModule().SetBlock(block)
 
 	// Set the leader to be in the highest round.

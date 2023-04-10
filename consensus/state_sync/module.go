@@ -58,8 +58,9 @@ func (m *stateSync) Start() error {
 	// requests blocks starting from currentHeight to maxHeight via `broadcastStateSyncMessage()` function,
 	// waits received and committed block event in `blockReceived` channel for each block,
 	// once the event is received `blockReceived` channel, requests the next block.
+	// when all blocks are received and committed, stops the state sync process, by colling `m.Stop()` function.
 
-	return m.Stop()
+	return nil
 }
 
 func (m *stateSync) Stop() error {

@@ -22,6 +22,7 @@ import (
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -806,8 +807,10 @@ func waitForDecide(t *testing.T,
 
 // waitForNodeToSync waits for a node to sync to a target height
 // For every missing block for the unsynced node:
-// waits for the node to request a missing block,
-// then waits for the node to receive the missing block and catch up to the target height
+//
+//	first, waits for the node to request a missing block via `waitForNodeToRequestMissingBlock()` function,
+//	then, waits for the node to receive the missing block via `waitForNodeToReceiveMissingBlock()` function,
+//	finally, wait for the node to catch up to the target height via ``waitForNodeToCatchUp()` function.
 func waitForNodeToSync(t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
@@ -870,6 +873,20 @@ func waitForNodeToCatchUp(
 	targetHeight uint64) error {
 
 	return nil
+}
+
+func generatePlaceholderBlock(height uint64, leaderAddrr crypto.Address) *coreTypes.Block {
+	blockHeader := &coreTypes.BlockHeader{
+		Height:            height,
+		StateHash:         stateHash,
+		PrevStateHash:     "",
+		ProposerAddress:   leaderAddrr,
+		QuorumCertificate: nil,
+	}
+	return &coreTypes.Block{
+		BlockHeader:  blockHeader,
+		Transactions: make([][]byte, 0),
+	}
 }
 
 func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAgent {
