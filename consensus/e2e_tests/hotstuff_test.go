@@ -40,7 +40,6 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	startingStep := uint8(consensus.NewRound)
 
 	decideProposal := waitForNextBlock(t, clockMock, eventsChannel, pocketNodes, startingHeight, startingStep, uint8(startingRound), numValidators, 500, true)
-	//require.NoError(t, err)
 
 	for _, message := range decideProposal {
 		P2PBroadcast(t, pocketNodes, message)

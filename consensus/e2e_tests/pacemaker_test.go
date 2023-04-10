@@ -46,22 +46,17 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	height := uint64(1)
 	step := uint8(consensus.NewRound)
 	round := uint8(0)
-
 	_ = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round, numValidators, consensusMessageTimeout, true)
-	//require.NoError(t, err)
 
 	// Force the pacemaker to time out
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
 	_ = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+1, numValidators, consensusMessageTimeout, true)
-	//require.NoError(t, err)
 
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
 	_ = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+2, numValidators, consensusMessageTimeout, true)
-	//require.NoError(t, err)
 
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
 	newRoundMessages := waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+3, numValidators, consensusMessageTimeout, true)
-	//require.NoError(t, err)
 
 	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(height, uint64(round+3), step))
 	_ = waitForPrepareProposal(t, clockMock, eventsChannel, pocketNodes, newRoundMessages, height, step+1, round+3, leaderId, numValidators, consensusMessageTimeout, true)

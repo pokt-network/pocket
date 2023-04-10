@@ -272,8 +272,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// TODO (#352) This function will be updated once state sync implementation is complete
-	err = waitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, testHeight)
-	require.NoError(t, err)
+	waitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, testHeight)
 
 	// TODO (#352) Add height check once state sync implmentation is complete
 }

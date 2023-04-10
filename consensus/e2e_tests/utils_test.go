@@ -790,7 +790,7 @@ func waitForNodeToSync(t *testing.T,
 	eventsChannel modules.EventsChannel,
 	unsyncedNode *shared.Node,
 	allNodes IdToNodeMapping,
-	targetHeight uint64) error {
+	targetHeight uint64) {
 
 	consensusMod := unsyncedNode.GetBus().GetConsensusModule()
 	currentHeight := consensusMod.CurrentHeight()
@@ -805,8 +805,6 @@ func waitForNodeToSync(t *testing.T,
 		err = waitForNodeToCatchUp(t, clck, eventsChannel, unsyncedNode, blockResponse, targetHeight)
 		require.NoError(t, err)
 	}
-
-	return nil
 }
 
 // TODO (#352): implement this function
