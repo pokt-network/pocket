@@ -35,7 +35,7 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 	serverNodePeerId := serverNode.GetBus().GetConsensusModule().GetNodeAddress()
 	serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
 
-	// We choose node 2 as the requester node.
+	// Choose node 2 as the requester node.
 	requesterNode := pocketNodes[2]
 	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 

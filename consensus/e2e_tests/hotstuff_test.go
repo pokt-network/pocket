@@ -52,10 +52,10 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 
 	// TODO(#615): Add QC verification here after valid block mocking is implemented with issue #352.
 	// Test state synchronisation's get block functionality
-	// At this stage, first round is finished, get block request for block height 1 must return non-nill block
+	// At this stage, first block is persisted, get block request for block height 1 must return non-nill block
 	serverNode := pocketNodes[1]
 
-	// We choose node 2 as the requester node.
+	// Choose node 2 as the requester node
 	requesterNode := pocketNodes[2]
 	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
@@ -76,7 +76,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	// Send get block request to the server node
 	P2PSend(t, serverNode, anyProto)
 
-	// Server node is waiting for the Get Block Request.
+	// Server node is waiting for the get block request message
 	numExpectedMsgs := 1
 	errMsg := "StateSync Get Block Request Message"
 	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 500, false)
