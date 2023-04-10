@@ -21,7 +21,7 @@ func (u *baseUtilityUnitOfWork) calculateAppSessionTokens(appStakeStr string) (s
 		return typesUtil.EmptyString, typesUtil.ErrStringToBigInt(er)
 	}
 
-	stakeToSessionTokensMultiplier, err := u.getAppSessionTokensMultiplier()
+	stakeToSessionTokensMultiplier, err := getGovParam[int](u, typesUtil.AppSessionTokensMultiplierParamName)
 	if err != nil {
 		return typesUtil.EmptyString, err
 	}

@@ -263,13 +263,13 @@ func TestUtilityUnitOfWork_GetUnbondingHeight(t *testing.T) {
 			var err error
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
-				unstakingBlocks, err = uow.getAppUnstakingBlocks()
+				unstakingBlocks, err = getGovParam[int64](uow, typesUtil.AppUnstakingBlocksParamName)
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				unstakingBlocks, err = uow.getFishermanUnstakingBlocks()
+				unstakingBlocks, err = getGovParam[int64](uow, typesUtil.FishermanUnstakingBlocksParamName)
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-				unstakingBlocks, err = uow.getServicerUnstakingBlocks()
+				unstakingBlocks, err = getGovParam[int64](uow, typesUtil.ServicerUnstakingBlocksParamName)
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				unstakingBlocks, err = uow.getValidatorUnstakingBlocks()
+				unstakingBlocks, err = getGovParam[int64](uow, typesUtil.ValidatorUnstakingBlocksParamName)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -376,24 +376,24 @@ func TestUtilityUnitOfWork_BeginUnstakingActorsPausedBefore_UnbondUnstakingActor
 		t.Run(fmt.Sprintf("%s.BeginUnstakingActorsPausedBefore", actorType.String()), func(t *testing.T) {
 			uow := newTestingUtilityUnitOfWork(t, 1)
 
-			var poolName string
+			var poolAddress []byte
 			var paramName1 string
 			var paramName2 string
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
-				poolName = coreTypes.Pools_POOLS_APP_STAKE.FriendlyName()
+				poolAddress = coreTypes.Pools_POOLS_APP_STAKE.Address()
 				paramName1 = typesUtil.AppMaxPauseBlocksParamName
 				paramName2 = typesUtil.AppUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
+				poolAddress = coreTypes.Pools_POOLS_FISHERMAN_STAKE.Address()
 				paramName1 = typesUtil.FishermanMaxPauseBlocksParamName
 				paramName2 = typesUtil.FishermanUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-				poolName = coreTypes.Pools_POOLS_SERVICER_STAKE.FriendlyName()
+				poolAddress = coreTypes.Pools_POOLS_SERVICER_STAKE.Address()
 				paramName1 = typesUtil.ServicerMaxPauseBlocksParamName
 				paramName2 = typesUtil.ServicerUnstakingBlocksParamName
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()
+				poolAddress = coreTypes.Pools_POOLS_VALIDATOR_STAKE.Address()
 				paramName1 = typesUtil.ValidatorMaxPausedBlocksParamName
 				paramName2 = typesUtil.ValidatorUnstakingBlocksParamName
 			default:
@@ -404,7 +404,7 @@ func TestUtilityUnitOfWork_BeginUnstakingActorsPausedBefore_UnbondUnstakingActor
 			require.NoError(t, er, "error setting max paused blocks")
 			er = uow.persistenceRWContext.SetParam(paramName2, unstakingBlocks)
 			require.NoError(t, er, "error setting max paused blocks")
-			er = uow.setPoolAmount(poolName, poolInitAMount)
+			er = uow.setPoolAmount(poolAddress, poolInitAMount)
 			require.NoError(t, er)
 
 			// Validate the actor is not unstaking
@@ -454,7 +454,7 @@ func TestUtilityUnitOfWork_BeginUnstakingActorsPausedBefore_UnbondUnstakingActor
 			uow = newTestingUtilityUnitOfWork(t, unbondingHeight)
 
 			// Before unbonding, the pool amount should be unchanged
-			amount, err := uow.getPoolAmount(poolName)
+			amount, err := uow.getPoolAmount(poolAddress)
 			require.NoError(t, err)
 			require.Equal(t, poolInitAMount, amount, "pool amount should be unchanged")
 
@@ -462,13 +462,13 @@ func TestUtilityUnitOfWork_BeginUnstakingActorsPausedBefore_UnbondUnstakingActor
 			require.NoError(t, err)
 
 			// Before unbonding, the money from the staked actor should go to the pool
-			amount, err = uow.getPoolAmount(poolName)
+			amount, err = uow.getPoolAmount(poolAddress)
 			require.NoError(t, err)
 
 			stakedAmount, err := utils.StringToBigInt(actor.StakedAmount)
 			require.NoError(t, err)
 			expectedAmount := big.NewInt(0).Sub(poolInitAMount, stakedAmount)
-			require.Equalf(t, expectedAmount, amount, "pool amount should be unchanged for %s", poolName)
+			require.Equalf(t, expectedAmount, amount, "pool amount should be unchanged for %s", poolAddress)
 
 			// Status should be changed from Unstaking to Unstaked
 			status, err = uow.getActorStatus(actorType, addrBz)

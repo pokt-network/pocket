@@ -11,6 +11,8 @@ import (
 	"github.com/pokt-network/pocket/utility"
 )
 
+// CONSIDER: Remove all the V1 prefixes from the RPC module
+
 func (s *rpcServer) GetV1Health(ctx echo.Context) error {
 	return ctx.NoContent(http.StatusOK)
 }
@@ -48,6 +50,26 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 		Round:  int64(consensus.CurrentRound()),
 		Step:   int64(consensus.CurrentStep()),
 	})
+}
+
+func (s *rpcServer) GetV1QueryAllChainParams(ctx echo.Context) error {
+	currHeight := s.GetBus().GetConsensusModule().CurrentHeight()
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currHeight))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	paramSlice, err := readCtx.GetAllParams()
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	resp := make([]Parameter, 0)
+	for i := 0; i < len(paramSlice); i++ {
+		resp = append(resp, Parameter{
+			ParameterName:  paramSlice[i][0],
+			ParameterValue: paramSlice[i][1],
+		})
+	}
+	return ctx.JSON(200, resp)
 }
 
 // Broadcast to the entire validator set

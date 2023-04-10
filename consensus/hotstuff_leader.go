@@ -399,7 +399,7 @@ func (m *consensusModule) prepareBlock(qc *typesCons.QuorumCertificate) (*coreTy
 	}
 
 	// Reap the mempool for transactions to be applied in this block
-	stateHash, txs, err := leaderUOW.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
+	stateHash, txs, err := leaderUOW.CreateProposalBlock(m.privateKey.Address(), maxTxBytes)
 
 	if err != nil {
 		return nil, err
