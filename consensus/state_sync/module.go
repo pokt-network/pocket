@@ -54,13 +54,15 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 // TODO (#352): implement this function
 // Start performs state sync
 func (m *stateSync) Start() error {
-	// gets and aggregated all metadata collected in metadataReceived channel,
-	// requests missing blocks starting from its currentHeight to the aggregated metadata's maxHeight,
+	// processes and aggregates all metadata collected in metadataReceived channel,
+	// requests missing blocks starting from its current height to the aggregated metadata's maxHeight,
 	// once the requested block is received and committed by consensus module, sends the next request for the next block,
 	// when all blocks are received and committed, stops the state sync process by calling its `Stop()` function.
 	return nil
 }
 
+// TODO (#352): check if node is a valdiator, if not send Consensus_IsSyncedNonValidator event
+// Stop stops the state sync process, and sends `Consensus_IsSyncedValidator` FSM event
 func (m *stateSync) Stop() error {
 
 	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)

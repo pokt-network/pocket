@@ -88,7 +88,7 @@ type ConsensusDebugModule interface {
 
 	SetUtilityUnitOfWork(UtilityUnitOfWork)
 
-	// PushStateSyncMetadataResponse is used to set peer's aggregated metadata in testing scenarios to simulate periodic metadata synchronization. It is not intended to be used outside of testing.
+	// PushStateSyncMetadataResponse is used to simulate metadata received metadata in testing scenarios. It is not intended to be used outside of testing.
 	PushStateSyncMetadataResponse(minHeight, maxHeight uint64)
 
 	// REFACTOR: This should accept typesCons.HotstuffStep and return typesCons.NodeId.

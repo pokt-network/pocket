@@ -31,7 +31,7 @@ func (m *consensusModule) commitReceivedBlocks() {
 }
 
 // TODO (#352): Implement this function, currently a placeholder.
-// metadataSyncLoop periodically queries the network to see if it is behind
+// metadataSyncLoop periodically sends metadata requests to its peers
 func (m *consensusModule) metadataSyncLoop() {
 	// runs as a background process in consensus module
 	// requests metadata from peers
