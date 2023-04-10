@@ -28,6 +28,7 @@ func NewQueryCommand() *cobra.Command {
 	return cmd
 }
 
+// TODO: (h5law) Split this into multiple functions to assign the relevent flags in batches
 func queryCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
@@ -41,21 +42,27 @@ func queryCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
-				response, err := client.GetV1QueryAllChainParams(cmd.Context())
+
+				body := rpc.QueryAddressHeight{
+					Address: args[1],
+					Height:  0, // TODO: Change when add flag
+				}
+
+				response, err := client.PostV1QueryAccount(cmd.Context(), body)
 				if err != nil {
 					return unableToConnectToRpc(err)
 				}
 				statusCode := response.StatusCode
-				body, err := io.ReadAll(response.Body)
+				resp, err := io.ReadAll(response.Body)
 				if err != nil {
 					logger.Global.Error().Err(err).Msg("Error reading response body")
 					return err
 				}
 				if statusCode == http.StatusOK {
-					fmt.Println(string(body))
+					fmt.Println(string(resp))
 					return nil
 				}
-				return rpcResponseCodeUnhealthy(statusCode, body)
+				return rpcResponseCodeUnhealthy(statusCode, resp)
 			},
 		},
 		{
