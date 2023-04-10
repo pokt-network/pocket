@@ -9,8 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.46] - 2023-04-10
 
-- Add `GetAllParams()` function to retrieve all governance parameters at their most current values
-- Generalise `GetParameter()` to be a wrapper function with a type parameter
+- Update `prepareBlock()` function to add processed transactions to the persisted block
 
 ## [0.0.0.45] - 2023-04-07
 
