@@ -1,4 +1,4 @@
-//go:build e2e
+// //go:build e2e
 
 package e2e
 
@@ -39,7 +39,7 @@ const (
 	// validatorA maps to suffix ID 001 and is also used by the cluster-manager
 	// though it has no special permissions.
 	validatorA = "001"
-	// validatorB maps to suffix ID 002 and receives POKT in the Send test.
+	// validatorB maps to suffix ID 002 and receives token in the Send test.
 	validatorB = "002"
 	chainId    = "0001"
 )
@@ -79,9 +79,9 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the user should be able to see standard output containing "([^"]*)"$`, theUserShouldBeAbleToSeeStandardOutputContaining)
 	ctx.Step(`^the user has a validator$`, theUserHasAValidator)
 	ctx.Step(`^the validator should have exited without error$`, theValidatorShouldHaveExitedWithoutError)
-	ctx.Step(`^the user stakes their validator with amount (\d+) POKT$`, theUserStakesTheirValidatorWithAmountPOKT)
+	ctx.Step(`^the user stakes their validator with amount (\d+) uPOKT$`, theUserStakesTheirValidatorWith)
 	ctx.Step(`^the user should be able to unstake their validator$`, theUserShouldBeAbleToUnstakeTheirValidator)
-	ctx.Step(`^the user sends (\d+) POKT to another address$`, theUserSendsPOKTToAnotherAddress)
+	ctx.Step(`^the user sends (\d+) uPOKT to another address$`, theUserSendsToAnotherAddress)
 }
 
 func theUserHasAValidator() error {
@@ -114,7 +114,7 @@ func theUserShouldBeAbleToSeeStandardOutputContaining(arg1 string) error {
 	return nil
 }
 
-func theUserStakesTheirValidatorWithAmountPOKT(amount int) error {
+func theUserStakesTheirValidatorWith(amount int) error {
 	return stakeValidator(fmt.Sprintf("%d", amount))
 }
 
@@ -122,8 +122,8 @@ func theUserShouldBeAbleToUnstakeTheirValidator() error {
 	return unstakeValidator()
 }
 
-// sends amount of POKT from v1-validator-001 to v1-validator-002
-func theUserSendsPOKTToAnotherAddress(amount int) error {
+// sends amount from v1-validator-001 to v1-validator-002
+func theUserSendsToAnotherAddress(amount int) error {
 	privateKey := getPrivateKey(validatorKeys, validatorA)
 	valB := getPrivateKey(validatorKeys, validatorB)
 	args := []string{
@@ -211,7 +211,7 @@ func getClientset() (*kubernetes.Clientset, error) {
 	}
 	clientset, err := kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get clientset from config: %w", err)
+		return nil, fmt.Errorf("failed to12gg get clientset from config: %w", err)
 	}
 	return clientset, nil
 }
