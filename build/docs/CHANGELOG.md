@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.31] - 2023-04-06
+
+- Updated `genesis.json` and `configs.yaml` to reflect pools address changes
+
+## [0.0.0.30] - 2023-03-31
+
+- Improve LocalNet documentation by adding a TLDR commands to provision LocalNet with `kind`.
+- Include `cluster-manager` to `-dev` flavor of container images.
+
 ## [0.0.0.29] - 2023-03-30
 
 - `cluster-manager` now waits for `v1-validator001` to be online AND responsive by checking the `/v1/health` endpoint (dogfooding)

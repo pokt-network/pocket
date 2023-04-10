@@ -10,6 +10,8 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -26,9 +28,6 @@ const (
 	Vote    = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_VOTE
 
 	ByzantineThreshold = float64(2) / float64(3)
-
-	HotstuffMessageContentType  = "consensus.HotstuffMessage"
-	StateSyncMessageContentType = "consensus.StateSyncMessage"
 )
 
 var HotstuffSteps = [...]typesCons.HotstuffStep{NewRound, Prepare, PreCommit, Commit, Decide}
@@ -265,11 +264,12 @@ func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error 
 
 /*** General Infrastructure Helpers ***/
 func (m *consensusModule) setLogPrefix(logPrefix string) {
-	logger.Global.UpdateFields(map[string]any{
-		"kind": logPrefix,
+	// TECHDEBT: Do not expose `zerolog` here.
+	m.logger = logger.Global.CreateLoggerForModule(modules.ConsensusModuleName)
+	m.logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
+		c = c.Interface("kind", logPrefix)
+		return c
 	})
-	// INVESTIGATE: Do we need to create a new logger here?
-	m.logger = logger.Global.CreateLoggerForModule("consensus")
 }
 
 func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
@@ -287,4 +287,20 @@ func msgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
 		"round":  msg.GetRound(),
 		"step":   msg.GetStep(),
 	}
+}
+
+// TODO: This is a temporary solution, cache this in Consensus module. This field will be populated once with a single query to the persistence module.
+func (m *consensusModule) IsValidator() (bool, error) {
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return false, err
+	}
+
+	for _, actor := range validators {
+		if actor.Address == m.nodeAddress {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.17] - 2023-04-07
+
+- Add `v1/query/allChainParams` endpoint and handler function to query all governance parameters
+
 ## [0.0.0.16] - 2023-03-30
 
 - Increase default pacemaker timeout from `5s` to `10s`

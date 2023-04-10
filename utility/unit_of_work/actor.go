@@ -126,7 +126,7 @@ func (u *baseUtilityUnitOfWork) getMaxAllowedPausedBlocks(actorType coreTypes.Ac
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	maxPausedBlocks, err := u.persistenceReadContext.GetIntParam(paramName, u.height)
+	maxPausedBlocks, err := u.getIntParam(paramName)
 	if err != nil {
 		return 0, typesUtil.ErrGetParam(paramName, err)
 	}
@@ -149,7 +149,7 @@ func (u *baseUtilityUnitOfWork) getMinRequiredPausedBlocks(actorType coreTypes.A
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	minPausedBlocks, er := u.persistenceReadContext.GetIntParam(paramName, u.height)
+	minPausedBlocks, er := u.getIntParam(paramName)
 	if er != nil {
 		return 0, typesUtil.ErrGetParam(paramName, er)
 	}
@@ -224,7 +224,7 @@ func (u *baseUtilityUnitOfWork) getMinRequiredStakeAmount(actorType coreTypes.Ac
 		return nil, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	minStake, er := u.persistenceReadContext.GetStringParam(paramName, u.height)
+	minStake, er := u.getStringParam(paramName)
 	if er != nil {
 		return nil, typesUtil.ErrGetParam(paramName, er)
 	}
@@ -252,7 +252,7 @@ func (u *baseUtilityUnitOfWork) getUnbondingHeight(actorType coreTypes.ActorType
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	unstakingBlocksPeriod, err := u.persistenceReadContext.GetIntParam(paramName, u.height)
+	unstakingBlocksPeriod, err := u.getIntParam(paramName)
 	if err != nil {
 		return 0, typesUtil.ErrGetParam(paramName, err)
 	}
@@ -273,7 +273,7 @@ func (u *baseUtilityUnitOfWork) getMaxAllowedChains(actorType coreTypes.ActorTyp
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
 
-	maxChains, err := u.persistenceReadContext.GetIntParam(paramName, u.height)
+	maxChains, err := u.getIntParam(paramName)
 	if err != nil {
 		return 0, typesUtil.ErrGetParam(paramName, err)
 	}

@@ -376,8 +376,12 @@ test_hotstuff: ## Run all go unit tests related to hotstuff consensus
 	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Hotstuff
 
 .PHONY: test_pacemaker
-test_pacemaker: ## Run all go unit tests related to the hotstuff pacemaker
+test_pacemaker: ## Run all go unit tests related to hotstuff pacemaker
 	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Pacemaker
+
+.PHONY: test_statesync
+test_statesync: ## Run all go unit tests related to hotstuff statesync
+	go test -v ${VERBOSE_TEST} -count=1  -run StateSync ./consensus/e2e_tests
 
 .PHONY: test_vrf
 test_vrf: ## Run all go unit tests in the VRF library
@@ -533,3 +537,7 @@ check_cross_module_imports: ## Lists cross-module imports
 .PHONY: send_local_tx
 send_local_tx: ## A hardcoded send tx to make LocalNet debugging easier
 	go run -tags=debug app/client/*.go Account Send --non_interactive 00104055c00bed7c983a48aac7dc6335d7c607a7 00204737d2a165ebe4be3a7d5b0af905b0ea91d8 1000
+
+.PHONY: query_chain_params
+query_chain_params: ## A hardcoded ChainParams query to make LocalNet debugging easier
+	go run app/client/main.go Query AllChainParams

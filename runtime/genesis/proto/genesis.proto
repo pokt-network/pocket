@@ -22,225 +22,225 @@ message GenesisState {
 }
 
 // TECHDEBT: Explore a more general purpose "feature flag" approach that makes it easy to add/remove
-// parametesr and add activation heights for them as well.
+// parameters and add activation heights for them as well.
 message Params {
-  //@gotags: pokt:"val_type=BIGINT"
+  //@gotags: pokt:"val_type=BIGINT,owner=blocks_per_session_owner"
   int32 blocks_per_session = 1;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=app_minimum_stake_owner"
   string app_minimum_stake = 2;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=app_max_chains_owner"
   int32 app_max_chains = 3;
-  //@gotags: pokt:"val_type=BIGINT"
+  //@gotags: pokt:"val_type=BIGINT,owner=app_session_tokens_multiplier_owner"
   int32 app_session_tokens_multiplier = 4;
-  //@gotags: pokt:"val_type=BIGINT"
+  //@gotags: pokt:"val_type=BIGINT,owner=app_unstaking_blocks_owner"
   int32 app_unstaking_blocks = 5;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=app_minimum_pause_blocks_owner"
   int32 app_minimum_pause_blocks = 6;
-  //@gotags: pokt:"val_type=BIGINT"
+  //@gotags: pokt:"val_type=BIGINT,owner=app_max_paused_blocks_owner"
   int32 app_max_pause_blocks = 7;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=servicer_minimum_stake_owner"
   string servicer_minimum_stake = 8;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=servicer_max_chains_owner"
   int32 servicer_max_chains = 9;
-  //@gotags: pokt:"val_type=BIGINT"
+  //@gotags: pokt:"val_type=BIGINT,owner=servicer_unstaking_blocks_owner"
   int32 servicer_unstaking_blocks = 10;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=servicer_minimum_pause_blocks_owner"
   int32 servicer_minimum_pause_blocks = 11;
-  //@gotags: pokt:"val_type=BIGINT"
+  //@gotags: pokt:"val_type=BIGINT,owner=servicer_max_paused_blocks_owner"
   int32 servicer_max_pause_blocks = 12;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=servicers_per_session_owner"
   int32 servicers_per_session = 13;
 
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=fisherman_minimum_stake_owner"
   string fisherman_minimum_stake = 14;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=fisherman_max_chains_owner"
   int32 fisherman_max_chains = 15;
-  //@gotags: pokt:"val_type=BIGINT"
+  //@gotags: pokt:"val_type=BIGINT,owner=fisherman_unstaking_blocks_owner"
   int32 fisherman_unstaking_blocks = 16;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=fisherman_minimum_pause_blocks_owner"
   int32 fisherman_minimum_pause_blocks = 17;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=fisherman_max_paused_blocks_owner"
   int32 fisherman_max_pause_blocks = 18;
 
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=validator_minimum_stake_owner"
   string validator_minimum_stake = 19;
-  //@gotags: pokt:"val_type=BIGINT"
+  //@gotags: pokt:"val_type=BIGINT,owner=validator_unstaking_blocks_owner"
   int32 validator_unstaking_blocks = 20;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=validator_minimum_pause_blocks_owner"
   int32 validator_minimum_pause_blocks = 21;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=validator_max_paused_blocks_owner"
   int32 validator_max_pause_blocks = 22;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=validator_maximum_missed_blocks_owner"
   int32 validator_maximum_missed_blocks = 23;
 
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=validator_max_evidence_age_in_blocks_owner"
   int32 validator_max_evidence_age_in_blocks = 24;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=proposer_percentage_of_fees_owner"
   int32 proposer_percentage_of_fees = 25;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=missed_blocks_burn_percentage_owner"
   int32 missed_blocks_burn_percentage = 26;
-  //@gotags: pokt:"val_type=SMALLINT"
+  //@gotags: pokt:"val_type=SMALLINT,owner=double_sign_burn_percentage_owner"
   int32 double_sign_burn_percentage = 27;
 
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_double_sign_fee_owner"
   string message_double_sign_fee = 28;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_send_fee_owner"
   string message_send_fee = 29;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_stake_fisherman_fee_owner"
   string message_stake_fisherman_fee = 30;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_edit_stake_fisherman_fee_owner"
   string message_edit_stake_fisherman_fee = 31;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_unstake_fisherman_fee_owner"
   string message_unstake_fisherman_fee = 32;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_pause_fisherman_fee_owner"
   string message_pause_fisherman_fee = 33;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_unpause_fisherman_fee_owner"
   string message_unpause_fisherman_fee = 34;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_fisherman_pause_servicer_fee_owner"
   string message_fisherman_pause_servicer_fee = 35;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_test_score_fee_owner"
   string message_test_score_fee = 36;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_prove_test_score_fee_owner"
   string message_prove_test_score_fee = 37;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_stake_app_fee_owner"
   string message_stake_app_fee = 38;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_edit_stake_app_fee_owner"
   string message_edit_stake_app_fee = 39;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_unstake_app_fee_owner"
   string message_unstake_app_fee = 40;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_pause_app_fee_owner"
   string message_pause_app_fee = 41;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_unpause_app_fee_owner"
   string message_unpause_app_fee = 42;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_stake_validator_fee_owner"
   string message_stake_validator_fee = 43;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_edit_stake_validator_fee_owner"
   string message_edit_stake_validator_fee = 44;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_unstake_validator_fee_owner"
   string message_unstake_validator_fee = 45;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_pause_validator_fee_owner"
   string message_pause_validator_fee = 46;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_unpause_validator_fee_owner"
   string message_unpause_validator_fee = 47;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_stake_servicer_fee_owner"
   string message_stake_servicer_fee = 48;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_edit_stake_servicer_fee_owner"
   string message_edit_stake_servicer_fee = 49;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_unstake_servicer_fee_owner"
   string message_unstake_servicer_fee = 50;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_pause_servicer_fee_owner"
   string message_pause_servicer_fee = 51;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_unpause_servicer_fee_owner"
   string message_unpause_servicer_fee = 52;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=message_change_parameter_fee_owner"
   string message_change_parameter_fee = 53;
 
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string acl_owner = 54;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string blocks_per_session_owner = 55;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string app_minimum_stake_owner = 56;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string app_max_chains_owner = 57;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string app_session_tokens_multiplier_owner = 58;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string app_unstaking_blocks_owner = 59;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string app_minimum_pause_blocks_owner = 60;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string app_max_paused_blocks_owner = 61;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string servicer_minimum_stake_owner = 62;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string servicer_max_chains_owner = 63;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string servicer_unstaking_blocks_owner = 64;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string servicer_minimum_pause_blocks_owner = 65;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string servicer_max_paused_blocks_owner = 66;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string servicers_per_session_owner = 67;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string fisherman_minimum_stake_owner = 68;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string fisherman_max_chains_owner = 69;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string fisherman_unstaking_blocks_owner = 70;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string fisherman_minimum_pause_blocks_owner = 71;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string fisherman_max_paused_blocks_owner = 72;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string validator_minimum_stake_owner = 73;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string validator_unstaking_blocks_owner = 74;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string validator_minimum_pause_blocks_owner = 75;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string validator_max_paused_blocks_owner = 76;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string validator_maximum_missed_blocks_owner = 77;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string validator_max_evidence_age_in_blocks_owner = 78;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string proposer_percentage_of_fees_owner = 79;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string missed_blocks_burn_percentage_owner = 80;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string double_sign_burn_percentage_owner = 81;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_double_sign_fee_owner = 82;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_send_fee_owner = 83;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_stake_fisherman_fee_owner = 84;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_edit_stake_fisherman_fee_owner = 85;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_unstake_fisherman_fee_owner = 86;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_pause_fisherman_fee_owner = 87;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_unpause_fisherman_fee_owner = 88;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_fisherman_pause_servicer_fee_owner = 89;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_test_score_fee_owner = 90;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_prove_test_score_fee_owner = 91;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_stake_app_fee_owner = 92;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_edit_stake_app_fee_owner = 93;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_unstake_app_fee_owner = 94;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_pause_app_fee_owner = 95;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_unpause_app_fee_owner = 96;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_stake_validator_fee_owner = 97;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_edit_stake_validator_fee_owner = 98;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_unstake_validator_fee_owner = 99;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_pause_validator_fee_owner = 100;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_unpause_validator_fee_owner = 101;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_stake_servicer_fee_owner = 102;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_edit_stake_servicer_fee_owner = 103;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_unstake_servicer_fee_owner = 104;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_pause_servicer_fee_owner = 105;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_unpause_servicer_fee_owner = 106;
-  //@gotags: pokt:"val_type=STRING"
+  //@gotags: pokt:"val_type=STRING,owner=acl_owner"
   string message_change_parameter_fee_owner = 107;
 }

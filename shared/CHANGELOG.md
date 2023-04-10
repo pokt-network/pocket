@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.46] - 2023-04-10
+## [0.0.0.50] - 2023-04-10
 
 - Added `modules.ModuleFactoryWithOptions` interface
 - Added factory interfaces:
@@ -16,6 +16,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `modules.FactoryWithRequiredAndOptions`
 - Embedded `ModuleFactoryWithOptions` in `Module` interface
 - Switched mock generation to use reflect mode for effected interfaces (embedders)
+
+## [0.0.0.49] - 2023-04-07
+
+- Removed `GetParameter()` from `PersistenceReadContext`
+- Add `gov_utils.go` to create a map of all metadata related to governance parameters
+
+## [0.0.0.48] - 2023-04-07
+
+- Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`
+- Added `GetStateHash` to `UtilityUnitOfWork`
+
+## [0.0.0.47] - 2023-04-06
+
+- Updated to reflect pools address changes
+- Added tests to catch, in a future-proof way, changes to our pools
+- Updated interfaces to use `[]byte` instead of `string` for `pool` addresses for consistency with `accounts` and because otherwise fuzzy tests would fail
+
+## [0.0.0.46] - 2023-04-03
+
+- Add `ConsensusStateSync` interface. It defines exported state sync functions in consensus module
+- Update `ConsensusDebugModule` with getter and setter function for state sync testing
+- Update FSM events `Consensus_IsSyncedValidator`, `Consensus_IsSyncedNonValidator` and state `Consensus_Pacemaker`
 
 ## [0.0.0.45] - 2023-03-30
 
