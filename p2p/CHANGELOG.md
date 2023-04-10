@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.37] - 2023-03-30
+## [0.0.0.38] - 2023-04-10
 
 - Switched mock generation to use reflect mode for effected interfaces (`modules.ModuleFactoryWithOptions` embedders)
+
+## [0.0.0.37] - 2023-03-30
+
+- Variable name and comment improvements
 
 ## [0.0.0.36] - 2023-03-24
 
@@ -105,6 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.19] - 2023-01-19
 
 - Rewrite `interface{}` to `any`
+
 ## [0.0.0.18] - 2023-01-11
 
 - Add a lock to the mempool to avoid parallel messages which has caused the node to crash in the past

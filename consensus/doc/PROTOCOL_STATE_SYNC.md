@@ -145,7 +145,7 @@ flowchart TD
     Z[Peers] --> |Blocks| A[StateSync]
 ```
 
-_IMPORTANT: `ApplyBlock` is implicit in the diagram above. If any blocks processed result in an invalid `AppHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._
+_IMPORTANT: `ApplyBlock` is implicit in the diagram above. If any blocks processed result in an invalid `StateHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._
 
 ## State Sync Designs
 
