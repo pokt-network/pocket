@@ -29,7 +29,7 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 				"height":       block.BlockHeader.Height,
 				"transactions": len(block.Transactions),
 			}).
-		Msgf("🧱🧱🧱 Committing block 🧱🧱🧱, Transactions:", block.Transactions)
+		Msg("🧱🧱🧱 Committing block 🧱🧱🧱")
 
 	return nil
 }
