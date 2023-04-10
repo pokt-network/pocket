@@ -326,7 +326,7 @@ components:
       properties:
         height:
           type: integer
-          format: uint64
+          format: int64
         address:
           type: string
     QueryHeightPaginated:
@@ -338,13 +338,13 @@ components:
       properties:
         height:
           type: integer
-          format: uint64
+          format: int64
         page:
           type: integer
-          format: uint64
+          format: int64
         per_page:
           type: integer
-          format: uint64
+          format: int64
     QueryAddressPaginated:
       type: object
       required:
@@ -411,10 +411,10 @@ components:
             $ref: '#/components/schemas/Account'
         page:
           type: integer
-          format: uint64
+          format: int64
         total_pages:
           type: integer
-          format: uint64
+          format: int64
     QueryAccountTxsResponse:
       type: object
       required:
@@ -435,7 +435,7 @@ components:
           format: int64
         total_pages:
           type: integer
-          format: uint64
+          format: int64
     AllChainParamsResponse:
       type: array
       items:

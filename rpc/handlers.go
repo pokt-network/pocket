@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"regexp"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -15,12 +14,6 @@ import (
 	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/pocket/utility"
 )
-
-var paramValueRegex *regexp.Regexp
-
-func init() {
-	paramValueRegex = regexp.MustCompile(`value:"(.+)"`)
-}
 
 // CONSIDER: Remove all the V1 prefixes from the RPC module
 
@@ -72,8 +65,8 @@ func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
 	}
 
 	// get the account from the persistence module
-	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -85,7 +78,7 @@ func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
 	if height == 0 {
 		height = currentHeight
 	}
-	amount, err := readCtx.GetAccountAmount(accBz, int64(height))
+	amount, err := readCtx.GetAccountAmount(accBz, height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -106,8 +99,8 @@ func (s *rpcServer) PostV1QueryAccounts(ctx echo.Context) error {
 	}
 
 	// get the account from the persistence module
-	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -115,13 +108,22 @@ func (s *rpcServer) PostV1QueryAccounts(ctx echo.Context) error {
 	if height == 0 {
 		height = currentHeight
 	}
-	allAccounts, err := readCtx.GetAllAccounts(int64(height))
+	allAccounts, err := readCtx.GetAllAccounts(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	totalPages := uint64(math.Ceil(float64(len(allAccounts)) / float64(body.PerPage)))
+
+	totalPages := int64(math.Ceil(float64(len(allAccounts)) / float64(body.PerPage)))
 	start := (body.Page - 1) * body.PerPage
+	if int(start) > len(allAccounts)-1 {
+		return ctx.String(http.StatusBadRequest, fmt.Sprintf("starting page too large: got %d, max: %d", body.Page, totalPages))
+	}
 	end := (body.Page * body.PerPage) - 1
+	totalAccounts := int64(len(allAccounts))
+	if end >= totalAccounts {
+		end = totalAccounts - 1
+	}
+
 	accounts := make([]Account, 0)
 	for i := start; i <= end; i++ {
 		accounts = append(accounts, Account{
@@ -156,8 +158,8 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 		sortDesc = false
 	}
 
-	currHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currHeight))
+	currHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currHeight)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -169,7 +171,7 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	totalPages := uint64(math.Ceil(float64(len(txResults)) / float64(body.PerPage)))
+	totalPages := int64(math.Ceil(float64(len(txResults)) / float64(body.PerPage)))
 	start := (body.Page - 1) * body.PerPage
 	if int(start) > len(txResults)-1 {
 		return ctx.String(http.StatusBadRequest, fmt.Sprintf("starting page too large: got %d, max: %d", body.Page, totalPages))
@@ -198,8 +200,8 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 }
 
 func (s *rpcServer) GetV1QueryAllChainParams(ctx echo.Context) error {
-	currHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currHeight))
+	currHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currHeight)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -223,8 +225,8 @@ func (s *rpcServer) PostV1QueryBalance(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -237,7 +239,7 @@ func (s *rpcServer) PostV1QueryBalance(ctx echo.Context) error {
 	if height == 0 {
 		height = currentHeight
 	}
-	amountStr, err := readCtx.GetAccountAmount(accBz, int64(height))
+	amountStr, err := readCtx.GetAccountAmount(accBz, height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}

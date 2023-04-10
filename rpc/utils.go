@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"regexp"
 
 	conTypes "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -11,6 +12,12 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
+
+var paramValueRegex *regexp.Regexp
+
+func init() {
+	paramValueRegex = regexp.MustCompile(`value:"(.+)"`)
+}
 
 // txResultToRPCTransaction converts the txResult protobuf into the RPC Transaction type
 func txResultToRPCTransaction(readCtx modules.PersistenceReadContext, txResult coreTypes.TxResult) (*Transaction, error) {
