@@ -48,24 +48,24 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	step := uint8(consensus.NewRound)
 	round := uint8(0)
 
-	_, err = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round, consensusMessageTimeout)
+	_, err = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round, numValidators, consensusMessageTimeout)
 	require.NoError(t, err)
 
 	// Force the pacemaker to time out
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
-	_, err = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+1, consensusMessageTimeout)
+	_, err = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+1, numValidators, consensusMessageTimeout)
 	require.NoError(t, err)
 
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
-	_, err = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+2, consensusMessageTimeout)
+	_, err = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+2, numValidators, consensusMessageTimeout)
 	require.NoError(t, err)
 
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
-	newRoundMessages, err := waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+3, consensusMessageTimeout)
+	newRoundMessages, err := waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+3, numValidators, consensusMessageTimeout)
 	require.NoError(t, err)
 
 	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(height, uint64(round+3), step))
-	_, err = waitForPrepare(t, clockMock, eventsChannel, pocketNodes, newRoundMessages, height, step+1, round+3, leaderId, consensusMessageTimeout)
+	_, err = waitForPrepareProposal(t, clockMock, eventsChannel, pocketNodes, newRoundMessages, height, step+1, round+3, leaderId, numValidators, consensusMessageTimeout)
 	require.NoError(t, err)
 }
 
@@ -149,11 +149,10 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	anyMsg, err := anypb.New(prepareProposal)
 	require.NoError(t, err)
 
-	P2PBroadcast(t, pocketNodes, anyMsg)
-
 	numExpectedMsgs := numValidators - 1   // -1 because one of the messages is a self proposal (leader to itself as a replica) that is not passed through the network
 	msgTimeout := paceMakerTimeoutMsec / 2 // /2 because we do not want the pacemaker to trigger a new timeout
-	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Vote, numExpectedMsgs, time.Duration(msgTimeout), true)
+
+	_, err = waitForPrepareVotes(t, clockMock, eventsChannel, pocketNodes, []*anypb.Any{anyMsg}, numExpectedMsgs, time.Duration(msgTimeout))
 	require.NoError(t, err)
 
 	// Check that all the nodes caught up to the leader's (i.e. the latest) round

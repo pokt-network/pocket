@@ -561,23 +561,27 @@ func waitForNextBlock(t *testing.T,
 	height uint64,
 	step uint8,
 	round uint8,
+	noOfExpectedMsgs int,
 	maxWaitTime time.Duration) ([]*anypb.Any, error) {
 
 	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(height, uint64(round), step))
 
-	newRoundMessages, err := waitForNewRound(t, clck, eventsChannel, pocketNodes, height, step, round, maxWaitTime)
+	newRoundMessages, err := waitForNewRound(t, clck, eventsChannel, pocketNodes, height, step, round, noOfExpectedMsgs, maxWaitTime)
 	require.NoError(t, err)
 
-	prepareProposal, err := waitForPrepare(t, clck, eventsChannel, pocketNodes, newRoundMessages, height, step+1, round, leaderId, maxWaitTime)
+	prepareProposal, err := waitForPrepareProposal(t, clck, eventsChannel, pocketNodes, newRoundMessages, height, step+1, round, leaderId, noOfExpectedMsgs, maxWaitTime)
 	require.NoError(t, err)
 
-	preCommitProposal, err := waitForPreCommit(t, clck, eventsChannel, pocketNodes, prepareProposal, height, step+2, round, leaderId, maxWaitTime)
+	prepareVotes, err := waitForPrepareVotes(t, clck, eventsChannel, pocketNodes, prepareProposal, noOfExpectedMsgs, maxWaitTime)
 	require.NoError(t, err)
 
-	commitProposal, err := waitForCommit(t, clck, eventsChannel, pocketNodes, preCommitProposal, height, step+3, round, leaderId, maxWaitTime)
+	preCommitProposal, err := waitForPreCommit(t, clck, eventsChannel, pocketNodes, prepareVotes, height, step+2, round, leaderId, noOfExpectedMsgs, maxWaitTime)
 	require.NoError(t, err)
 
-	decideProposal, err := waitForDecide(t, clck, eventsChannel, pocketNodes, commitProposal, height, step+4, round, leaderId, maxWaitTime)
+	commitProposal, err := waitForCommit(t, clck, eventsChannel, pocketNodes, preCommitProposal, height, step+3, round, leaderId, noOfExpectedMsgs, maxWaitTime)
+	require.NoError(t, err)
+
+	decideProposal, err := waitForDecide(t, clck, eventsChannel, pocketNodes, commitProposal, height, step+4, round, leaderId, noOfExpectedMsgs, maxWaitTime)
 	require.NoError(t, err)
 
 	return decideProposal, err
@@ -590,9 +594,10 @@ func waitForNewRound(t *testing.T,
 	height uint64,
 	step uint8,
 	round uint8,
+	noOfExpectedMsgs int,
 	maxWaitTime time.Duration) ([]*anypb.Any, error) {
 
-	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, maxWaitTime, true)
+	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.NewRound, consensus.Propose, noOfExpectedMsgs*noOfExpectedMsgs, maxWaitTime, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -610,7 +615,7 @@ func waitForNewRound(t *testing.T,
 	return newRoundMessages, nil
 }
 
-func waitForPrepare(t *testing.T,
+func waitForPrepareProposal(t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
 	pocketNodes IdToNodeMapping,
@@ -619,6 +624,7 @@ func waitForPrepare(t *testing.T,
 	step uint8,
 	round uint8,
 	leaderId typesCons.NodeId,
+	noOfExpectedMsgs int,
 	maxWaitTime time.Duration) ([]*anypb.Any, error) {
 
 	for _, message := range newRoundMessages {
@@ -626,7 +632,7 @@ func waitForPrepare(t *testing.T,
 	}
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	prepareProposal, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, maxWaitTime, true)
+	prepareProposal, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.Prepare, consensus.Propose, noOfExpectedMsgs, maxWaitTime, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -643,26 +649,38 @@ func waitForPrepare(t *testing.T,
 	return prepareProposal, nil
 }
 
-func waitForPreCommit(t *testing.T,
+func waitForPrepareVotes(t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
 	pocketNodes IdToNodeMapping,
 	prepareProposal []*anypb.Any,
-	height uint64,
-	step uint8,
-	round uint8,
-	leaderId typesCons.NodeId,
+	noOfExpectedMsgs int,
 	maxWaitTime time.Duration) ([]*anypb.Any, error) {
-
-	leader := pocketNodes[leaderId]
 
 	for _, message := range prepareProposal {
 		P2PBroadcast(t, pocketNodes, message)
 	}
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	prepareVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.Prepare, consensus.Vote, numValidators, maxWaitTime, true)
+	prepareVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.Prepare, consensus.Vote, noOfExpectedMsgs, maxWaitTime, true)
 	require.NoError(t, err)
+
+	return prepareVotes, nil
+}
+
+func waitForPreCommit(t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	pocketNodes IdToNodeMapping,
+	prepareVotes []*anypb.Any,
+	height uint64,
+	step uint8,
+	round uint8,
+	leaderId typesCons.NodeId,
+	noOfExpectedMsgs int,
+	maxWaitTime time.Duration) ([]*anypb.Any, error) {
+
+	leader := pocketNodes[leaderId]
 
 	for _, vote := range prepareVotes {
 		P2PSend(t, leader, vote)
@@ -695,6 +713,7 @@ func waitForCommit(t *testing.T,
 	step uint8,
 	round uint8,
 	leaderId typesCons.NodeId,
+	noOfExpectedMsgs int,
 	maxWaitTime time.Duration) ([]*anypb.Any, error) {
 
 	leader := pocketNodes[leaderId]
@@ -704,8 +723,7 @@ func waitForCommit(t *testing.T,
 	}
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	// 4. Commit
-	preCommitVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.PreCommit, consensus.Vote, numValidators, maxWaitTime, true)
+	preCommitVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.PreCommit, consensus.Vote, noOfExpectedMsgs, maxWaitTime, true)
 	require.NoError(t, err)
 
 	for _, vote := range preCommitVotes {
@@ -713,7 +731,7 @@ func waitForCommit(t *testing.T,
 	}
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	commitProposal, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.Commit, consensus.Propose, numValidators, maxWaitTime, true)
+	commitProposal, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.Commit, consensus.Propose, noOfExpectedMsgs, maxWaitTime, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -739,6 +757,7 @@ func waitForDecide(t *testing.T,
 	step uint8,
 	round uint8,
 	leaderId typesCons.NodeId,
+	noOfExpectedMsgs int,
 	maxWaitTime time.Duration) ([]*anypb.Any, error) {
 
 	leader := pocketNodes[leaderId]
@@ -748,8 +767,7 @@ func waitForDecide(t *testing.T,
 	}
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	// 5. Decide
-	commitVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.Commit, consensus.Vote, numValidators, maxWaitTime, true)
+	commitVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.Commit, consensus.Vote, noOfExpectedMsgs, maxWaitTime, true)
 	require.NoError(t, err)
 
 	for _, vote := range commitVotes {
@@ -757,7 +775,7 @@ func waitForDecide(t *testing.T,
 	}
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	decideProposal, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.Decide, consensus.Propose, numValidators, maxWaitTime, true)
+	decideProposal, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.Decide, consensus.Propose, noOfExpectedMsgs, maxWaitTime, true)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
