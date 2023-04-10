@@ -1,4 +1,4 @@
-// //go:build e2e
+//go:build e2e
 
 package e2e
 
@@ -39,7 +39,7 @@ const (
 	// validatorA maps to suffix ID 001 and is also used by the cluster-manager
 	// though it has no special permissions.
 	validatorA = "001"
-	// validatorB maps to suffix ID 002 and receives token in the Send test.
+	// validatorB maps to suffix ID 002 and receives in the Send test.
 	validatorB = "002"
 	chainId    = "0001"
 )
