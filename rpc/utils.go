@@ -12,8 +12,191 @@ import (
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
-// calculateFee calculates the fee for a transaction given the actor type and message type
-func calculateFee(readCtx modules.PersistenceReadContext, actorType coreTypes.ActorType, messageType string) (string, error) {
+// txResultToRPCTransaction converts the txResult protobuf into the RPC Transaction type
+func txResultToRPCTransaction(readCtx modules.PersistenceReadContext, txResult coreTypes.TxResult) (*Transaction, error) {
+	hashBz, err := txResult.Hash()
+	if err != nil {
+		return nil, err
+	}
+	hexHashStr := hex.EncodeToString(hashBz)
+	txStr := base64.StdEncoding.EncodeToString(txResult.GetTx())
+	stdTx, err := transactionBytesToRPCStdTx(readCtx, txResult.GetTx(), txResult.GetMessageType())
+	if err != nil {
+		return nil, err
+	}
+	return &Transaction{
+		Hash:   hexHashStr,
+		Height: txResult.GetHeight(),
+		Index:  txResult.GetIndex(),
+		TxResult: TxResult{
+			Tx:            txStr,
+			Height:        txResult.GetHeight(),
+			Index:         txResult.GetIndex(),
+			ResultCode:    txResult.GetResultCode(),
+			SignerAddr:    txResult.GetSignerAddr(),
+			RecipientAddr: txResult.GetRecipientAddr(),
+			MessageType:   txResult.GetMessageType(),
+		},
+		StdTx: *stdTx,
+	}, nil
+}
+
+// transactionBytesToRPCStdTx generates a StdTx from a serialised byte slice of a Transaction protobuf and message type
+func transactionBytesToRPCStdTx(readCtx modules.PersistenceReadContext, txBz []byte, messageType string) (*StdTx, error) {
+	tx, err := coreTypes.TxFromBytes(txBz)
+	if err != nil {
+		return nil, err
+	}
+	sig := tx.GetSignature()
+	txMsg, err := tx.GetMessage()
+	if err != nil {
+		return nil, err
+	}
+	anypb, err := codec.GetCodec().ToAny(txMsg)
+	if err != nil {
+		return nil, err
+	}
+	stdTx := StdTx{
+		Nonce: tx.GetNonce(),
+		Signature: Signature{
+			PublicKey: hex.EncodeToString(sig.GetPublicKey()),
+			Signature: hex.EncodeToString(sig.GetSignature()),
+		},
+	}
+	switch messageType {
+	case "MessageSend":
+		m := new(utilTypes.MessageSend)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := calculateMessageFeeForActor(readCtx, m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		stdTx.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		stdTx.Message = MessageSend{
+			FromAddr: hex.EncodeToString(m.GetFromAddress()),
+			ToAddr:   hex.EncodeToString(m.GetToAddress()),
+			Amount:   m.Amount,
+			Denom:    "upokt",
+		}
+	case "MessageStake":
+		m := new(utilTypes.MessageStake)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := calculateMessageFeeForActor(readCtx, m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		stdTx.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		stdTx.Message = MessageStake{
+			ActorType:     protocolActorToRPCActorTypeEnum(m.GetActorType()),
+			PublicKey:     hex.EncodeToString(m.GetPublicKey()),
+			Chains:        m.GetChains(),
+			ServiceUrl:    m.GetServiceUrl(),
+			OutputAddress: hex.EncodeToString(m.GetOutputAddress()),
+			Signer:        hex.EncodeToString(m.GetSigner()),
+			Amount:        m.GetAmount(),
+			Denom:         "upokt",
+		}
+	case "MessageEditStake":
+		m := new(utilTypes.MessageEditStake)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := calculateMessageFeeForActor(readCtx, m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		stdTx.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		stdTx.Message = MessageEditStake{
+			ActorType:  protocolActorToRPCActorTypeEnum(m.GetActorType()),
+			Chains:     m.GetChains(),
+			ServiceUrl: m.GetServiceUrl(),
+			Address:    hex.EncodeToString(m.GetAddress()),
+			Signer:     hex.EncodeToString(m.GetSigner()),
+			Amount:     m.GetAmount(),
+			Denom:      "upokt",
+		}
+	case "MessageUnstake":
+		m := new(utilTypes.MessageUnstake)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := calculateMessageFeeForActor(readCtx, m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		stdTx.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		stdTx.Message = MessageUnstake{
+			ActorType: protocolActorToRPCActorTypeEnum(m.GetActorType()),
+			Address:   hex.EncodeToString(m.GetAddress()),
+			Signer:    hex.EncodeToString(m.GetSigner()),
+		}
+	case "MessageUnpause":
+		m := new(utilTypes.MessageUnpause)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := calculateMessageFeeForActor(readCtx, m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		stdTx.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		stdTx.Message = MessageUnpause{
+			ActorType: protocolActorToRPCActorTypeEnum(m.GetActorType()),
+			Address:   hex.EncodeToString(m.GetAddress()),
+			Signer:    hex.EncodeToString(m.GetSigner()),
+		}
+	case "MessageChangeParameter":
+		m := new(utilTypes.MessageChangeParameter)
+		if err := anypb.UnmarshalTo(m); err != nil {
+			return nil, err
+		}
+		fee, err := calculateMessageFeeForActor(readCtx, m.GetActorType(), messageType)
+		if err != nil {
+			return nil, err
+		}
+		stdTx.Fee = Fee{
+			Amount: fee,
+			Denom:  "upokt",
+		}
+		values := paramValueRegex.FindStringSubmatch(m.GetParameterValue().String())
+		if len(values) < 2 {
+			return nil, fmt.Errorf("unable to extract parameter value: %s", m.GetParameterValue().String())
+		}
+		stdTx.Message = MessageChangeParameter{
+			Signer: hex.EncodeToString(m.GetSigner()),
+			Owner:  hex.EncodeToString(m.GetOwner()),
+			Parameter: Parameter{
+				ParameterValue: values[1],
+			},
+		}
+	default:
+		return nil, fmt.Errorf("unknown message type: %s", messageType)
+	}
+
+	return &stdTx, nil
+}
+
+// calculateMessageFeeForActor calculates the fee for a transaction given the actor type and message type
+func calculateMessageFeeForActor(readCtx modules.PersistenceReadContext, actorType coreTypes.ActorType, messageType string) (string, error) {
 	height, err := readCtx.GetHeight()
 	if err != nil {
 		return "", err
@@ -73,160 +256,6 @@ func calculateFee(readCtx modules.PersistenceReadContext, actorType coreTypes.Ac
 		return "", fmt.Errorf("invalid actor type: %s", actorType.GetName())
 	}
 	return "", fmt.Errorf("unhandled message type: %s", messageType)
-}
-
-// generateStdTx generates a StdTx from a serialised byte slice of a Transaction protobuf and message type
-func generateStdTx(readCtx modules.PersistenceReadContext, txBz []byte, messageType string) (*StdTx, error) {
-	tx, err := coreTypes.TxFromBytes(txBz)
-	if err != nil {
-		return nil, err
-	}
-	sig := tx.GetSignature()
-	txMsg, err := tx.GetMessage()
-	if err != nil {
-		return nil, err
-	}
-	anypb, err := codec.GetCodec().ToAny(txMsg)
-	if err != nil {
-		return nil, err
-	}
-	stdTx := StdTx{
-		Nonce: tx.GetNonce(),
-		Signature: Signature{
-			PublicKey: hex.EncodeToString(sig.GetPublicKey()),
-			Signature: hex.EncodeToString(sig.GetSignature()),
-		},
-	}
-	switch messageType {
-	case "MessageSend":
-		m := new(utilTypes.MessageSend)
-		if err := anypb.UnmarshalTo(m); err != nil {
-			return nil, err
-		}
-		fee, err := calculateFee(readCtx, m.GetActorType(), messageType)
-		if err != nil {
-			return nil, err
-		}
-		stdTx.Fee = Fee{
-			Amount: fee,
-			Denom:  "upokt",
-		}
-		stdTx.Message = MessageSend{
-			FromAddr: hex.EncodeToString(m.GetFromAddress()),
-			ToAddr:   hex.EncodeToString(m.GetToAddress()),
-			Amount:   m.Amount,
-			Denom:    "upokt",
-		}
-	case "MessageStake":
-		m := new(utilTypes.MessageStake)
-		if err := anypb.UnmarshalTo(m); err != nil {
-			return nil, err
-		}
-		fee, err := calculateFee(readCtx, m.GetActorType(), messageType)
-		if err != nil {
-			return nil, err
-		}
-		stdTx.Fee = Fee{
-			Amount: fee,
-			Denom:  "upokt",
-		}
-		stdTx.Message = MessageStake{
-			ActorType:     protocolActorToRPCActorTypeEnum(m.GetActorType()),
-			PublicKey:     hex.EncodeToString(m.GetPublicKey()),
-			Chains:        m.GetChains(),
-			ServiceUrl:    m.GetServiceUrl(),
-			OutputAddress: hex.EncodeToString(m.GetOutputAddress()),
-			Signer:        hex.EncodeToString(m.GetSigner()),
-			Amount:        m.GetAmount(),
-			Denom:         "upokt",
-		}
-	case "MessageEditStake":
-		m := new(utilTypes.MessageEditStake)
-		if err := anypb.UnmarshalTo(m); err != nil {
-			return nil, err
-		}
-		fee, err := calculateFee(readCtx, m.GetActorType(), messageType)
-		if err != nil {
-			return nil, err
-		}
-		stdTx.Fee = Fee{
-			Amount: fee,
-			Denom:  "upokt",
-		}
-		stdTx.Message = MessageEditStake{
-			ActorType:  protocolActorToRPCActorTypeEnum(m.GetActorType()),
-			Chains:     m.GetChains(),
-			ServiceUrl: m.GetServiceUrl(),
-			Address:    hex.EncodeToString(m.GetAddress()),
-			Signer:     hex.EncodeToString(m.GetSigner()),
-			Amount:     m.GetAmount(),
-			Denom:      "upokt",
-		}
-	case "MessageUnstake":
-		m := new(utilTypes.MessageUnstake)
-		if err := anypb.UnmarshalTo(m); err != nil {
-			return nil, err
-		}
-		fee, err := calculateFee(readCtx, m.GetActorType(), messageType)
-		if err != nil {
-			return nil, err
-		}
-		stdTx.Fee = Fee{
-			Amount: fee,
-			Denom:  "upokt",
-		}
-		stdTx.Message = MessageUnstake{
-			ActorType: protocolActorToRPCActorTypeEnum(m.GetActorType()),
-			Address:   hex.EncodeToString(m.GetAddress()),
-			Signer:    hex.EncodeToString(m.GetSigner()),
-		}
-	case "MessageUnpause":
-		m := new(utilTypes.MessageUnpause)
-		if err := anypb.UnmarshalTo(m); err != nil {
-			return nil, err
-		}
-		fee, err := calculateFee(readCtx, m.GetActorType(), messageType)
-		if err != nil {
-			return nil, err
-		}
-		stdTx.Fee = Fee{
-			Amount: fee,
-			Denom:  "upokt",
-		}
-		stdTx.Message = MessageUnpause{
-			ActorType: protocolActorToRPCActorTypeEnum(m.GetActorType()),
-			Address:   hex.EncodeToString(m.GetAddress()),
-			Signer:    hex.EncodeToString(m.GetSigner()),
-		}
-	case "MessageChangeParameter":
-		m := new(utilTypes.MessageChangeParameter)
-		if err := anypb.UnmarshalTo(m); err != nil {
-			return nil, err
-		}
-		fee, err := calculateFee(readCtx, m.GetActorType(), messageType)
-		if err != nil {
-			return nil, err
-		}
-		stdTx.Fee = Fee{
-			Amount: fee,
-			Denom:  "upokt",
-		}
-		values := paramValueRegex.FindStringSubmatch(m.GetParameterValue().String())
-		if len(values) < 2 {
-			return nil, fmt.Errorf("unable to extract parameter value: %s", m.GetParameterValue().String())
-		}
-		stdTx.Message = MessageChangeParameter{
-			Signer: hex.EncodeToString(m.GetSigner()),
-			Owner:  hex.EncodeToString(m.GetOwner()),
-			Parameter: Parameter{
-				ParameterValue: values[1],
-			},
-		}
-	default:
-		return nil, fmt.Errorf("unknown message type: %s", messageType)
-	}
-
-	return &stdTx, nil
 }
 
 // blockToRPCBlock converts a block protobuf to the RPC block type

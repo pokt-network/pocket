@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"math"
@@ -63,6 +62,8 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 		Step:   int64(consensus.CurrentStep()),
 	})
 }
+
+// Queries
 
 func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
 	var body QueryAddressHeight
@@ -160,8 +161,9 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+
+	// TODO: (h5law) figure out how to query all transactions from an address
 	txIndexer := s.GetBus().GetPersistenceModule().GetTxIndexer()
-	// TODO: Figure out how to query all transactions from an address
 	txResults, err := txIndexer.GetByHeight(3, sortDesc)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -169,41 +171,22 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 
 	totalPages := uint64(math.Ceil(float64(len(txResults)) / float64(body.PerPage)))
 	start := (body.Page - 1) * body.PerPage
+	if int(start) > len(txResults)-1 {
+		return ctx.String(http.StatusBadRequest, fmt.Sprintf("starting page too large: got %d, max: %d", body.Page, totalPages))
+	}
 	end := (body.Page * body.PerPage) - 1
 	totalTxs := int64(len(txResults))
-	fmt.Println(totalTxs)
 	if end >= totalTxs {
 		end = totalTxs - 1
 	}
 
 	pageTxs := make([]Transaction, 0)
 	for i := start; i <= end; i++ {
-		txResult := txResults[i]
-		hashBz, err := txResult.Hash()
+		rpcTx, err := txResultToRPCTransaction(readCtx, txResults[i])
 		if err != nil {
 			return ctx.String(http.StatusInternalServerError, err.Error())
 		}
-		hexHashStr := hex.EncodeToString(hashBz)
-		txStr := base64.StdEncoding.EncodeToString(txResult.GetTx())
-		stdTx, err := generateStdTx(readCtx, txResult.GetTx(), txResult.GetMessageType())
-		if err != nil {
-			return ctx.String(http.StatusInternalServerError, err.Error())
-		}
-		pageTxs = append(pageTxs, Transaction{
-			Hash:   hexHashStr,
-			Height: txResult.GetHeight(),
-			Index:  txResult.GetIndex(),
-			TxResult: TxResult{
-				Tx:            txStr,
-				Height:        txResult.GetHeight(),
-				Index:         txResult.GetIndex(),
-				ResultCode:    txResult.GetResultCode(),
-				SignerAddr:    txResult.GetSignerAddr(),
-				RecipientAddr: txResult.GetRecipientAddr(),
-				MessageType:   txResult.GetMessageType(),
-			},
-			StdTx: *stdTx,
-		})
+		pageTxs = append(pageTxs, *rpcTx)
 	}
 
 	return ctx.JSON(http.StatusOK, QueryAccountTxsResponse{
@@ -240,12 +223,12 @@ func (s *rpcServer) PostV1QueryBalance(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// get the account from the persistence module
 	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+
 	accBz, err := hex.DecodeString(body.Address)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, err.Error())
@@ -274,13 +257,14 @@ func (s *rpcServer) PostV1QueryBlock(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// get the account from the persistence module
 	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-	blockStore := s.GetBus().GetPersistenceModule().GetBlockStore()
 	height := uint64(body.Height)
 	if height == 0 {
 		height = currentHeight
 	}
+
+	// TODO: (h5law) figure out how to get transactions from the block protobuf
+	blockStore := s.GetBus().GetPersistenceModule().GetBlockStore()
 	blockBz, err := blockStore.Get(utils.HeightToBytes(height))
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -293,6 +277,7 @@ func (s *rpcServer) PostV1QueryBlock(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+
 	return ctx.JSON(http.StatusOK, rpcBlock)
 }
 
