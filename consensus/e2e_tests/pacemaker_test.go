@@ -59,6 +59,7 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	_ = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+2, numValidators, consensusMessageTimeout, true)
 
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
+       // Wait for the round=3 to succeed
 	newRoundMessages := waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+3, numValidators, consensusMessageTimeout, true)
 
 	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(height, uint64(round+3), step))
