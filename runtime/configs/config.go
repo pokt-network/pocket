@@ -28,7 +28,7 @@ type Config struct {
 	Telemetry   *TelemetryConfig   `json:"telemetry"`
 	Logger      *LoggerConfig      `json:"logger"`
 	RPC         *RPCConfig         `json:"rpc"`
-	Keybase     *KeybaseConfig     `json:"keybase"`
+	Keybase     *KeybaseConfig     `json:"keybase"` // Determines and configures which keybase to use, `file` or `vault`. IMPROVE(#626): See for rationale around proto design. We have proposed a better config design, but did not implement it due to viper limitations
 }
 
 // ParseConfig parses the config file and returns a Config struct
