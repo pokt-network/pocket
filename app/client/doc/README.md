@@ -36,8 +36,7 @@ Command tree available [here](./commands/client.md)
 
 ## Debug Subcommands
 
-The debug command is terminal utility and set of sub-commands for rapid development and debugging of Pocket validators. It is only built in development and testing binaries and is not included in public release versions.
-
+The debug command is terminal utility and set of sub-commands for rapid development and debugging of Pocket validators.
 If `debug` is run with no arguments, it drops the user into an interactive prompt session where they can trigger multiple debug message transmissions from the client binary.
 
 ```bash
