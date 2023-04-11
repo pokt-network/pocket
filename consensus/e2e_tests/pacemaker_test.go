@@ -51,6 +51,7 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 
 	// Force the pacemaker to time out
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
+       // Wait for the round=1 to fail
 	_ = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+1, numValidators, consensusMessageTimeout, true)
 
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
