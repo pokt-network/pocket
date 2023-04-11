@@ -9,7 +9,6 @@ import (
 	"github.com/pokt-network/pocket/consensus/pacemaker"
 	"github.com/pokt-network/pocket/consensus/state_sync"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
-	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -25,6 +24,7 @@ import (
 
 var _ modules.ConsensusModule = &consensusModule{}
 
+// TODO: This should be configurable
 const (
 	metadataChannelSize = 1000
 	blocksChannelSize   = 1000
@@ -77,10 +77,10 @@ type consensusModule struct {
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
 
 	// block responses received from peers are collected in this channel
-	blocksReceived chan *types.GetBlockResponse
+	blocksReceived chan *typesCons.GetBlockResponse
 
 	// metadata responses received from peers are collected in this channel
-	metadataReceived chan *types.StateSyncMetadataResponse
+	metadataReceived chan *typesCons.StateSyncMetadataResponse
 
 	serverModeEnabled bool
 }
@@ -163,8 +163,8 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	m.nodeId = valAddrToIdMap[address]
 	m.nodeAddress = address
 
-	m.metadataReceived = make(chan *types.StateSyncMetadataResponse, metadataChannelSize)
-	m.blocksReceived = make(chan *types.GetBlockResponse, blocksChannelSize)
+	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
+	m.blocksReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
 
 	m.initMessagesPool()
 

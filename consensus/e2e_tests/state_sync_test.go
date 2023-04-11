@@ -1,6 +1,7 @@
 package e2e_tests
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -261,7 +262,16 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
-	unsyncedNode.GetBus().GetConsensusModule().PushStateSyncMetadataResponse(uint64(1), testHeight)
+	//unsyncedNode.GetBus().GetConsensusModule().PushStateSyncMetadataResponse(uint64(1), testHeight)
+	metadataReceived := &typesCons.StateSyncMetadataResponse{
+		PeerAddress: "",
+		MinHeight:   uint64(1),
+		MaxHeight:   testHeight,
+	}
+
+	consensusModImpl := GetConsensusModImpl(unsyncedNode)
+	consensusModImpl.MethodByName("PushStateSyncMetadataResponse").Call([]reflect.Value{reflect.ValueOf(metadataReceived)})
+
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)
 	}
@@ -272,7 +282,8 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// TODO(#352): This function will be updated once state sync implementation is complete
-	waitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, testHeight)
+	err = waitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, testHeight)
+	require.NoError(t, err)
 
 	// TODO(#352): Add height check once state sync implmentation is complete
 }

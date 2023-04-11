@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// TODO (#609): GetNodeState is currently exposed publicly so it can be accessed via reflection in tests. Refactor to use the test-only package and remove reflection
+// TODO(#609): GetNodeState is currently exposed publicly so it can be accessed via reflection in tests. Refactor to use the test-only package and remove reflection
 func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	leaderId := typesCons.NodeId(0)
 	if m.leaderId != nil {

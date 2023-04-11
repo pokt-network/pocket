@@ -89,7 +89,8 @@ type ConsensusDebugModule interface {
 	SetUtilityUnitOfWork(UtilityUnitOfWork)
 
 	// PushStateSyncMetadataResponse is used to simulate metadata received metadata in testing scenarios. It is not intended to be used outside of testing.
-	PushStateSyncMetadataResponse(minHeight, maxHeight uint64)
+	//PushStateSyncMetadataResponse(minHeight, maxHeight uint64)
+	//PushStateSyncMetadataResponse(typesCons.StateSyncMetadataResponse)
 
 	// REFACTOR: This should accept typesCons.HotstuffStep and return typesCons.NodeId.
 	GetLeaderForView(height, round uint64, step uint8) (leaderId uint64)

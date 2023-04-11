@@ -68,10 +68,7 @@ func (m *consensusModule) GetLeaderForView(height, round uint64, step uint8) uin
 	return uint64(leaderId)
 }
 
-func (m *consensusModule) PushStateSyncMetadataResponse(minHeight, maxHeight uint64) {
-	m.metadataReceived <- &typesCons.StateSyncMetadataResponse{
-		PeerAddress: "",
-		MinHeight:   minHeight,
-		MaxHeight:   maxHeight,
-	}
+// TODO(#609): Refactor to use the test-only package and remove reflection
+func (m *consensusModule) PushStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) {
+	m.metadataReceived <- metadataRes
 }
