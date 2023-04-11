@@ -65,15 +65,15 @@ jobs:
         if: ${{ failure() && env.TARGET_GOLANG_VERSION == matrix.go }}
         run: |
           jq --argjson fail_tests "$(jq -c -r 'select(.Action == "fail") | select(.Test) | .Test' test_results.json | jq -R -s -c -r 'split("\n") | map(select(length>0))')" 'select(.Test as $t | ($fail_tests | arrays)[] | select($t == .)) | select(.Output) | .Output' test_results.json | jq -r | sed ':a;N;$!ba;s/\n\n/\n/g' > test_failures.json
-          ls -la test_failures.json
           cat test_failures.json
+          exit 1
       - name: Upload test results
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: actions/upload-artifact@v3
         with:
           name: test-results
           path: |
-            test_results.json
+            test_*.json
       - name: Annotate tests on GitHub
         # Only annotate if the test failed on target version to avoid duplicated annotations on GitHub.
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}

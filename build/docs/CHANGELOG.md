@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.31] - 2023-04-11
+
+- Changed LocalNet validators to use the new `pocket-validator` helm chart instead of templating the manifests with `sed`.
+- Each validator now has it's own postgres instance (as a helm chart dependency), which allows for clean scale up/down of the validators.
+- Cleaned up old manifests and scripts that are no longer needed.
+
 ## [0.0.0.30] - 2023-03-31
 
 - Improve LocalNet documentation by adding a TLDR commands to provision LocalNet with `kind`.
@@ -14,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.29] - 2023-03-30
 
-- `cluster-manager` now waits for `validator-001-pocket-validator` to be online AND responsive by checking the `/v1/health` endpoint (dogfooding)
+- `cluster-manager` now waits for `v1-validator001` to be online AND responsive by checking the `/v1/health` endpoint (dogfooding)
 - `cluster-manager` skips auto staking for the validators that are already staked in genesis
 
 ## [0.0.0.28] - 2023-03-30
@@ -78,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `docker-compose` to name the deployment as `pocket-v1` instead of `deployments` (default is the containing folder name)
 - Introduced the `cluster-manager`, which is a standalone microservice in the K8S LocalNet that takes care of (for now) automatically staking/unstaking nodes that are added/removed from the deployment
 - Updated manifests and K8S resources to reflect the new `cluster-manager` addition
-- In K8S LocalNet, the `cli-client` now waits for `validator-001-pocket-validator` since its required for address book sourcing
+- In K8S LocalNet, the `cli-client` now waits for `v1-validator001` since its required for address book sourcing
 - Added labels in `Tiltfile` to group resources
 
 ## [0.0.0.15] - 2023-02-17
