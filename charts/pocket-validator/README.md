@@ -92,8 +92,8 @@ Validator for Pocket Network - decentralized blockchain infrastructure
 | podAnnotations | object | `{}` | pod annotations |
 | podSecurityContext | object | `{}` |  |
 | postgresql.enabled | bool | `true` | deploy postgresql database automatically. Refer to https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml for additional options. |
-| postgresql.primary.persistence.enabled | bool | `false` |  |
-| postgresql.primary.persistence.size | string | `"8Gi"` |  |
+| postgresql.primary.persistence.enabled | bool | `false` | enable persistent volume claim for PostgreSQL |
+| postgresql.primary.persistence.size | string | `"8Gi"` | size of the persistent volume claim for PostgreSQL |
 | privateKeySecretKeyRef.key | string | `""` | REQUIRED. Key in the Secret that contains the private key of the node |
 | privateKeySecretKeyRef.name | string | `""` | REQUIRED. Name of the Secret in the same namespace that contains the private key of the node |
 | resources | object | `{}` | resources limits and requests |
