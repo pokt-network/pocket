@@ -82,9 +82,9 @@ func init() {
 // write a function handler to match for it in `handleSelect`.
 func NewDebugSubCommands() []*cobra.Command {
 	commands := make([]*cobra.Command, len(items))
-	for idx, debugCmd := range items {
+	for idx, promptItem := range items {
 		commands[idx] = &cobra.Command{
-			Use: debugCmd,
+			Use: promptItem,
 			Run: func(cmd *cobra.Command, args []string) {
 				// TECHDEBT: this is to keep backwards compatibility with localnet
 				configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
@@ -124,7 +124,8 @@ func NewDebugSubCommands() []*cobra.Command {
 				if err := p2pMod.Start(); err != nil {
 					logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
 				}
-				handleSelect(cmd, debugCmd)
+
+				handleSelect(cmd, promptItem)
 			},
 			ValidArgs: items,
 		}
