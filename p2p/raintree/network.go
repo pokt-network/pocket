@@ -171,6 +171,7 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return nil
 	}
 
+	fmt.Println("OLSH networkSendInternal")
 	bus.
 		GetTelemetryModule().
 		GetEventMetricsAgent().

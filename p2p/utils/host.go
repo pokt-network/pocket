@@ -90,11 +90,13 @@ func Libp2pSendToPeer(host libp2pHost.Host, data []byte, peer typesP2P.Peer) err
 		return fmt.Errorf("opening stream: %w", err)
 	}
 
-	if _, err = stream.Write(data); err != nil {
+	if n, err := stream.Write(data); err != nil {
 		return multierr.Append(
 			fmt.Errorf("writing to stream: %w", err),
 			stream.Reset(),
 		)
+	} else {
+		fmt.Println("OLSH Libp2pSendToPeer Bytes written", n)
 	}
 
 	return stream.CloseWrite()
