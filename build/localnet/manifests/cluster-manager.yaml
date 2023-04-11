@@ -20,5 +20,5 @@ spec:
         - cluster-manager
       env:
         - name: RPC_HOST
-          value: validator-001-pocket-validator
+          value: pocket-validators
   serviceAccountName: cluster-manager-account

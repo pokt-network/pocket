@@ -75,7 +75,7 @@ spec:
               value: validator1
               # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
             - name: RPC_HOST
-              value: validator-001-pocket-validator
+              value: pocket-validators
           volumeMounts:
             # IMPROVE: should probably go in /etc/pocket and have Viper read from there as a default path
             - mountPath: /var/pocket/config
