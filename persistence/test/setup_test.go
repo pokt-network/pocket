@@ -53,8 +53,10 @@ var (
 	genesisStateNumServicers    = 1
 	genesisStateNumApplications = 1
 	genesisStateNumFishermen    = 1
+
+	// Initialized in TestMain
+	testPersistenceMod modules.PersistenceModule
 )
-var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 
 // See https://github.com/ory/dockertest as reference for the template of this code
 // Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md

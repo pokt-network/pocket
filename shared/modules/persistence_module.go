@@ -54,6 +54,7 @@ type PersistenceRWContext interface {
 //   - Decouple functions that can be split into two or more independent behaviours (e.g. `SetAppStatusAndUnstakingHeightIfPausedBefore`)
 //   - Rename `Unstaking` to `Unbonding` where appropriate
 //   - convert address and public key to string from bytes
+//   - Remove `height` from all write context functions because it should only write at the height it was initiated in
 
 // PersistenceWriteContext has no use-case independent of `PersistenceRWContext`, but is a useful abstraction
 type PersistenceWriteContext interface {
@@ -130,6 +131,7 @@ type PersistenceWriteContext interface {
 
 type PersistenceReadContext interface {
 	// Context Operations
+	// TECHDEBT: Remove this function since read contexts are height agnostic - it's an accessor to the state of the blockchain at any height.
 	GetHeight() (int64, error) // Returns the height of the context
 	Release()                  // Releases the read context
 
@@ -150,6 +152,9 @@ type PersistenceReadContext interface {
 	// Returns "0" if the account does not exist
 	GetAccountAmount(address []byte, height int64) (string, error)
 	GetAllAccounts(height int64) ([]*coreTypes.Account, error)
+
+	// Actor Queries
+	// GetActor( address []byte, height int64) (*coreTypes.Actor, error)
 
 	// App Queries
 	GetAllApps(height int64) ([]*coreTypes.Actor, error)

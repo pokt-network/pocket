@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/shared/core/types";
+
+import "actor.proto";
+
+// TECHDEBT: Do we need backwards with v0? https://docs.pokt.network/supported-blockchains/
+enum RelayChain {
+    UNSPECIFIED_RELAY_CHAIN = 0;
+    ETHEREUM = 1;
+    POLYGON = 2;
+    // TODO: Add all the other chains we need
+}
+
+message Session {
+    string id = 1;
+    int64 height = 2;
+    RelayChain relay_chain = 3; // CONSIDERATION: Will we ever want to support more than one relay chain?
+    string geo_zone = 4;
+    core.Actor application = 5;
+    repeated core.Actor servicers = 6;
+    repeated core.Actor fishermen = 7;
+}

@@ -3,6 +3,7 @@ package modules
 //go:generate mockgen -source=$GOFILE -destination=./mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 import (
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/mempool"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -29,6 +30,10 @@ type UtilityModule interface {
 	// It is useful for handling messages from the utility module's of other nodes that do not directly affect the state.
 	// IMPROVE: Find opportunities to break this apart as the module matures.
 	HandleUtilityMessage(*anypb.Any) error
+
+	// Return a pseudo-random session object for the given application address, session height, relay chain and geo zones
+	// using on-chain data as he entropy source.
+	GetSession(appAddr string, sessionHeight int64, relayChain coreTypes.RelayChain, geoZone string) (*coreTypes.Session, error)
 }
 
 // TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead

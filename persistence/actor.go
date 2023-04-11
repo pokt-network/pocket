@@ -113,7 +113,7 @@ func (p *PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, e
 	return
 }
 
-// IMPROVE: This is a proof of concept. Ideally we should have a single query that returns all actors.
+// OPTIMIZE: Ideally we should have a single query that returns all actors.
 func (p *PostgresContext) GetAllStakedActors(height int64) (allActors []*coreTypes.Actor, err error) {
 	type actorGetter func(height int64) ([]*coreTypes.Actor, error)
 	actorGetters := []actorGetter{p.GetAllValidators, p.GetAllServicers, p.GetAllFishermen, p.GetAllApps}

@@ -4,114 +4,85 @@ package utility
 // and need to be revisited before any implementation commences.
 
 import (
-	"encoding/binary"
+	"fmt"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
 )
 
 // TODO: When implementing please review if block height tolerance (+,-1) is included in the session protocol: pokt-network/pocket-core#1464 CC @Olshansk
 
-// REFACTOR: Move these into `utility/types` and consider creating an enum
-type RelayChain string
-type GeoZone string
-
-type Session interface {
-	NewSession(sessionHeight int64, relayChain RelayChain, geoZone GeoZone, application *coreTypes.Actor) (Session, types.Error)
-	GetSessionID() []byte             // the identifier of the dispatched session
-	GetSessionHeight() int64          // the block height when the session started
-	GetRelayChain() RelayChain        // the web3 chain identifier
-	GetGeoZone() GeoZone              // the geo-location zone where the application is intending to operate during the session
-	GetApplication() *coreTypes.Actor // the Application consuming the web3 access
-	GetServicers() []*coreTypes.Actor // the Servicers providing Web3 to the application
-	GetFishermen() []*coreTypes.Actor // the Fishermen monitoring the servicers
+type sessionHydrator struct {
+	logger  modules.Logger
+	session *coreTypes.Session
+	readCtx modules.PersistenceReadContext
 }
 
-var _ Session = &session{}
-
-type session struct {
-	sessionId   []byte
-	height      int64
-	relayChain  RelayChain
-	geoZone     GeoZone
-	application *coreTypes.Actor
-	servicers   []*coreTypes.Actor
-	fishermen   []*coreTypes.Actor
-}
-
-func (*session) NewSession(
-	sessionHeight int64,
-	relayChain RelayChain,
-	geoZone GeoZone,
-	application *coreTypes.Actor,
-) (Session, types.Error) {
-	s := &session{
-		height:      sessionHeight,
-		relayChain:  relayChain,
-		geoZone:     geoZone,
-		application: application,
-	}
-
-	// TODO: make these configurable or based on governance params
-	numServicers := 1
-	numFisherman := 1
-
-	var err types.Error
-	if s.servicers, err = s.selectSessionServicers(numServicers); err != nil {
+func (m *utilityModule) GetSession(appAddr string, height int64, relayChain coreTypes.RelayChain, geoZone string) (*coreTypes.Session, error) {
+	persistenceModule := m.GetBus().GetPersistenceModule()
+	readCtx, err := persistenceModule.NewReadContext(height)
+	if err != nil {
 		return nil, err
 	}
-	if s.fishermen, err = s.selectSessionFishermen(numFisherman); err != nil {
+	defer readCtx.Release()
+
+	session := &coreTypes.Session{
+		Height:     height,
+		RelayChain: relayChain,
+		GeoZone:    geoZone,
+	}
+
+	sessionHydrator := &sessionHydrator{
+		logger:  m.logger.With().Str("source", "sessionHydrator").Logger(),
+		session: session,
+		readCtx: readCtx,
+	}
+
+	if err := sessionHydrator.hydrateSessionId(); err != nil {
 		return nil, err
 	}
-	if s.sessionId, err = s.getSessionId(); err != nil {
+
+	if err := sessionHydrator.hydrateSessionApplication(); err != nil {
 		return nil, err
 	}
-	return s, nil
+
+	if err := sessionHydrator.hydrateSessionServicers(); err != nil {
+		return nil, err
+	}
+
+	if err := sessionHydrator.hydrateSessionFishermen(); err != nil {
+		return nil, err
+	}
+
+	return sessionHydrator.session, nil
 }
 
-func (s *session) GetSessionID() []byte {
-	return s.sessionId
-}
-
-func (s *session) GetSessionHeight() int64 {
-	return s.height
-}
-
-func (s *session) GetRelayChain() RelayChain {
-	return s.relayChain
-}
-
-func (s *session) GetGeoZone() GeoZone {
-	return s.geoZone
-}
-
-func (s *session) GetApplication() *coreTypes.Actor {
-	return s.application
-}
-
-func (s *session) GetFishermen() []*coreTypes.Actor {
-	return s.fishermen
-}
-
-func (s *session) GetServicers() []*coreTypes.Actor {
-	return s.servicers
+func getSessionHeight(readCtx modules.PersistenceReadContext, blockHeight int64) (int64, error) {
+	return blockHeight, nil
 }
 
 // use the seed information to determine a SHA3Hash that is used to find the closest N actors based
 // by comparing the sessionKey with the actors' public key
-func (s *session) getSessionId() ([]byte, types.Error) {
-	sessionHeightBz := make([]byte, 8)
-	binary.LittleEndian.PutUint64(sessionHeightBz, uint64(s.height))
+func (s *sessionHydrator) hydrateSessionId() error {
+	s.readCtx.GetAppExists()
+	// sessionIdBz := make([]byte, 8)
+	// binary.LittleEndian.PutUint64(sessionHeightBz, uint64(s.height))
 
-	blockHashBz := []byte("get block hash bytes at s.sessionHeight from persistence module")
+	// blockHashBz := []byte("get block hash bytes at s.sessionHeight from persistence module")
 
-	appPubKey, err := crypto.NewPublicKey(s.application.GetPublicKey())
-	if err != nil {
-		return nil, types.ErrNewPublicKeyFromBytes(err)
-	}
+	// appPubKey, err := crypto.NewPublicKey(s.application.GetPublicKey())
+	// if err != nil {
+	// 	return nil, types.ErrNewPublicKeyFromBytes(err)
+	// }
 
-	return concat(sessionHeightBz, blockHashBz, []byte(s.geoZone), []byte(s.relayChain), appPubKey.Bytes()), nil
+	// return concat(sessionHeightBz, blockHashBz, []byte(s.geoZone), []byte(s.relayChain), appPubKey.Bytes()), nil
+	return nil
+}
+
+func (s *sessionHydrator) hydrateSessionApplication() error {
+	// IMPORTANT: This function is for behaviour illustrative purposes only and implementation may differ.
+	return nil
 }
 
 // uses the current 'world state' to determine the servicers in the session
@@ -121,9 +92,47 @@ func (s *session) getSessionId() ([]byte, types.Error) {
 //   - staked for relay-chain
 //
 // 2) calls `pseudoRandomSelection(servicers, numberOfNodesPerSession)`
-func (s *session) selectSessionServicers(numServicers int) ([]*coreTypes.Actor, types.Error) {
-	// IMPORTANT: This function is for behaviour illustrative purposes only and implementation may differ.
-	return nil, nil
+func (s *sessionHydrator) hydrateSessionServicers() error {
+	// number of servicers per session at this height
+	numServicers, err := s.readCtx.GetIntParam(types.ServicersPerSessionParamName, s.session.Height)
+	if err != nil {
+		return err
+	}
+	// s.session.Servicers = make([]*coreTypes.Actor, numServicers)
+
+	// returns all the staked servicers at this session height
+	servicers, err := s.readCtx.GetAllServicers(s.session.Height)
+	if err != nil {
+		return err
+	}
+
+	// OPTIMIZE: Update the persistence module to allow for querying for filtered servicers directly
+	// Determine the servicers for this session
+	candidateServicers := make([]*coreTypes.Actor, 0)
+	for _, servicer := range servicers {
+		// Sanity check the servicer is not paused or unstaking
+		if servicer.PausedHeight == -1 || servicer.UnstakingHeight == -1 {
+			return fmt.Errorf("selectSessionServicers should not have encountered a paused or unstaking servicer: %s", servicer.Address)
+		}
+
+		// TODO_IN_THIS_COMMIT: if servicer.GeoZone includes session.GeoZone
+
+		// OPTIMIZE: If this was a map, we could have avoided the loop over chains
+		var chain string
+		for _, chain = range servicer.Chains {
+			// TODO_IN_THIS_COMMIT: Change actor chains to use the enum
+			if chain != string(s.session.RelayChain) {
+				chain = ""
+				continue
+			}
+		}
+		if chain != "" {
+			candidateServicers = append(candidateServicers, servicer)
+		}
+	}
+
+	s.session.Servicers = s.pseudoRandomSelection(candidateServicers, numServicers)
+	return nil
 }
 
 // uses the current 'world state' to determine the fishermen in the session
@@ -133,9 +142,9 @@ func (s *session) selectSessionServicers(numServicers int) ([]*coreTypes.Actor, 
 //   - staked for relay-chain
 //
 // 2) calls `pseudoRandomSelection(fishermen, numberOfFishPerSession)`
-func (s *session) selectSessionFishermen(numFishermen int) ([]*coreTypes.Actor, types.Error) {
+func (s *sessionHydrator) hydrateSessionFishermen() error {
 	// IMPORTANT: This function is for behaviour illustrative purposes only and implementation may differ.
-	return nil, nil
+	return nil
 }
 
 // 1) passed an ordered list of the public keys of actors and number of nodes
@@ -147,16 +156,17 @@ func (s *session) selectSessionFishermen(numFishermen int) ([]*coreTypes.Actor, 
 // A) pseudo-random selection only works if each iteration is re-randomized
 //
 //	or it would be subject to lexicographical proximity bias attacks
-//
-//nolint:unused // This is a demonstratable function
-func (s *session) pseudoRandomSelection(orderedListOfPublicKeys []string, numActorsToSelect int) []*coreTypes.Actor {
-	// IMPORTANT: This function is for behaviour illustrative purposes only and implementation may differ.
-	return nil
+func (s *sessionHydrator) pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int) []*coreTypes.Actor {
+	if numTarget < len(candidates) {
+		s.logger.Warn().Msgf("pseudoRandomSelection: numTarget (%d) is less than the number of candidates (%d)", numTarget, len(candidates))
+	}
+	// TODO_IN_THIS_COMMIT: Actually implement this
+	return candidates[:numTarget]
 }
 
-func concat(b ...[]byte) (result []byte) {
-	for _, bz := range b {
-		result = append(result, bz...)
-	}
-	return result
-}
+// func concat(b ...[]byte) (result []byte) {
+// 	for _, bz := range b {
+// 		result = append(result, bz...)
+// 	}
+// 	return result
+// }
