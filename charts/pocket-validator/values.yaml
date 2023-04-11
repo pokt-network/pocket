@@ -15,7 +15,9 @@ postgresql:
 
   primary:
     persistence:
+      # -- enable persistent volume claim for PostgreSQL
       enabled: false
+      # -- size of the persistent volume claim for PostgreSQL
       size: 8Gi
 
 externalPostgresql:
