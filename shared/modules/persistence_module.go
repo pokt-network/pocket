@@ -154,7 +154,7 @@ type PersistenceReadContext interface {
 	GetAllAccounts(height int64) ([]*coreTypes.Account, error)
 
 	// Actor Queries
-	// GetActor( address []byte, height int64) (*coreTypes.Actor, error)
+	GetActor(actorType coreTypes.ActorType, address []byte, height int64) (*coreTypes.Actor, error)
 
 	// App Queries
 	GetAllApps(height int64) ([]*coreTypes.Actor, error)

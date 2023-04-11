@@ -1,9 +1,29 @@
 package persistence
 
 import (
+	"fmt"
+
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
+
+// TODO_IN_THIS_COMMIT: Add tests for this function
+func (p *PostgresContext) GetActor(actorType coreTypes.ActorType, address []byte, height int64) (*coreTypes.Actor, error) {
+	var schema types.ProtocolActorSchema
+	switch actorType {
+	case types.ApplicationActor.GetActorType():
+		schema = types.ApplicationActor
+	case types.ServicerActor.GetActorType():
+		schema = types.ServicerActor
+	case types.FishermanActor.GetActorType():
+		schema = types.FishermanActor
+	case types.ValidatorActor.GetActorType():
+		schema = types.FishermanActor
+	default:
+		return nil, fmt.Errorf("invalid actor type: %s", actorType)
+	}
+	return p.getActor(schema, address, height)
+}
 
 // TODO (#399): All of the functions below following a structure similar to `GetAll<Actor>`
 // can easily be refactored and condensed into a single function using a generic type or a common

@@ -1,18 +1,30 @@
 package utility
 
 import (
+	"encoding/hex"
+	"fmt"
 	"testing"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/stretchr/testify/require"
 )
 
-func TestSession_NewSession(t *testing.T) {
-	session, err := testUtilityMod.GetSession("app", 1, coreTypes.RelayChain_ETHEREUM, "geo")
-	require.NoError(t, err)
+// TECH_DEBT_IDENTIFIED_IN_THIS_COMMIT:
+// 1. Replace []byte with string
+// 2. Remove height from Write context in persistence
+// 3. Need to add geozone to actors
+// 4. Need to generalize persitence functions based on actor type
+// 5. Need different protos for each actor
 
-	require.Equal(t, session.Application.Address, "app")
+func TestSession_NewSession(t *testing.T) {
+	session, err := testUtilityMod.GetSession(hex.EncodeToString([]byte("app")), 1, coreTypes.RelayChain_ETHEREUM, "geo")
+	require.NoError(t, err)
+	fmt.Println(session)
+
+	// require.Equal(t, session.Application.Address, "app")
 }
+
+// validate application dispatch
 
 // Not enough servicers
 

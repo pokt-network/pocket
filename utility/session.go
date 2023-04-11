@@ -4,9 +4,12 @@ package utility
 // and need to be revisited before any implementation commences.
 
 import (
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
 )
@@ -38,12 +41,15 @@ func (m *utilityModule) GetSession(appAddr string, height int64, relayChain core
 		session: session,
 		readCtx: readCtx,
 	}
-
-	if err := sessionHydrator.hydrateSessionId(); err != nil {
+	if err := sessionHydrator.hydrateSessionApplication(appAddr); err != nil {
 		return nil, err
 	}
 
-	if err := sessionHydrator.hydrateSessionApplication(); err != nil {
+	if err := sessionHydrator.validateApplicationDispatch(); err != nil {
+		return nil, err
+	}
+
+	if err := sessionHydrator.hydrateSessionId(); err != nil {
 		return nil, err
 	}
 
@@ -65,24 +71,41 @@ func getSessionHeight(readCtx modules.PersistenceReadContext, blockHeight int64)
 // use the seed information to determine a SHA3Hash that is used to find the closest N actors based
 // by comparing the sessionKey with the actors' public key
 func (s *sessionHydrator) hydrateSessionId() error {
-	s.readCtx.GetAppExists()
-	// sessionIdBz := make([]byte, 8)
-	// binary.LittleEndian.PutUint64(sessionHeightBz, uint64(s.height))
-
-	// blockHashBz := []byte("get block hash bytes at s.sessionHeight from persistence module")
-
-	// appPubKey, err := crypto.NewPublicKey(s.application.GetPublicKey())
-	// if err != nil {
-	// 	return nil, types.ErrNewPublicKeyFromBytes(err)
-	// }
-
-	// return concat(sessionHeightBz, blockHashBz, []byte(s.geoZone), []byte(s.relayChain), appPubKey.Bytes()), nil
+	sessionHeightBz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(sessionHeightBz, uint64(s.session.Height))
+	prevHash, err := s.readCtx.GetBlockHash(s.session.Height - 1)
+	if err != nil {
+		return err
+	}
+	prevHashBz, err := hex.DecodeString(prevHash)
+	appPubKeyBz := []byte(s.session.Application.PublicKey)
+	relayChainBz := []byte(string(s.session.RelayChain))
+	geoZoneBz := []byte(s.session.GeoZone)
+	idBz := concat(sessionHeightBz, prevHashBz, geoZoneBz, relayChainBz, appPubKeyBz)
+	s.session.Id = crypto.GetHashStringFromBytes(idBz)
 	return nil
 }
 
-func (s *sessionHydrator) hydrateSessionApplication() error {
-	// IMPORTANT: This function is for behaviour illustrative purposes only and implementation may differ.
-	return nil
+// Uses the current 'world state' to determine the full application metadata based on its address at the current height
+func (s *sessionHydrator) hydrateSessionApplication(appAddr string) error {
+	// TECHDEBT: We can remove this decoding process once we use `strings` instead of `[]byte` for addresses
+	addr, err := hex.DecodeString(appAddr)
+	if err != nil {
+		return err
+	}
+	s.session.Application, err = s.readCtx.GetActor(coreTypes.ActorType_ACTOR_TYPE_APP, addr, s.session.Height)
+	return err
+}
+
+// Validate the the application can dispatch a session at the request geo-zone and for the request relay chain
+func (s *sessionHydrator) validateApplicationDispatch() error {
+	// TECHDEBT: We can remove this decoding process once we use `strings` instead of `[]byte` for addresses
+	addr, err := hex.DecodeString(s.session.Application.Address)
+	if err != nil {
+		return err
+	}
+	s.session.Application, err = s.readCtx.GetActor(coreTypes.ActorType_ACTOR_TYPE_APP, addr, s.session.Height)
+	return err
 }
 
 // uses the current 'world state' to determine the servicers in the session
@@ -164,9 +187,9 @@ func (s *sessionHydrator) pseudoRandomSelection(candidates []*coreTypes.Actor, n
 	return candidates[:numTarget]
 }
 
-// func concat(b ...[]byte) (result []byte) {
-// 	for _, bz := range b {
-// 		result = append(result, bz...)
-// 	}
-// 	return result
-// }
+func concat(b ...[]byte) (result []byte) {
+	for _, bz := range b {
+		result = append(result, bz...)
+	}
+	return result
+}

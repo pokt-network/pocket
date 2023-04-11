@@ -45,7 +45,12 @@ func TestMain(m *testing.M) {
 	}
 
 	testPersistenceMod = newTestPersistenceModule(bus)
+	testPersistenceMod.Start()
+	defer testPersistenceMod.Stop()
+
 	testUtilityMod = newTestUtilityModule(bus)
+	testUtilityMod.Start()
+	defer testUtilityMod.Stop()
 
 	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
