@@ -7,7 +7,7 @@ import (
 )
 
 // SendStateSyncMessage sends a state sync message after converting to any proto, to the given peer
-func (m *stateSync) SendStateSyncMessage(msg *typesCons.StateSyncMessage, dst cryptoPocket.Address, height uint64) error {
+func (m *stateSync) sendStateSyncMessage(msg *typesCons.StateSyncMessage, dst cryptoPocket.Address) error {
 	anyMsg, err := anypb.New(msg)
 	if err != nil {
 		return err
@@ -19,7 +19,7 @@ func (m *stateSync) SendStateSyncMessage(msg *typesCons.StateSyncMessage, dst cr
 	return nil
 }
 
-func (m *stateSync) StateSyncLogHelper(receiverPeerAddress string) map[string]any {
+func (m *stateSync) stateSyncLogHelper(receiverPeerAddress string) map[string]any {
 	consensusMod := m.GetBus().GetConsensusModule()
 
 	return map[string]any{

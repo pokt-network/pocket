@@ -43,27 +43,27 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 
 	// Advance time by an amount shorter than the pacemaker timeout
 	advanceTime(t, clockMock, 10*time.Millisecond)
-	height := uint64(1)
-	step := uint8(consensus.NewRound)
-	round := uint8(0)
-       // Wait for the round=0 to fail
-	_ = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round, numValidators, consensusMessageTimeout, true)
+
+	//_ = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, 1, uint8(consensus.NewRound), 0, numValidators, consensusMessageTimeout, true)
+	_ = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, nil, 1, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, consensusMessageTimeout, true)
 
 	// Force the pacemaker to time out
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
-       // Wait for the round=1 to fail
-	_ = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+1, numValidators, consensusMessageTimeout, true)
+	// Wait for the round=1 to fail
+	_ = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, nil, 1, uint8(consensus.NewRound), 1, 0, numValidators*numValidators, consensusMessageTimeout, true)
 
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
-       // Wait for the round=2 to fail    
-	_ = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+2, numValidators, consensusMessageTimeout, true)
+	// Wait for the round=2 to fail
+	_ = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, nil, 1, uint8(consensus.NewRound), 2, 0, numValidators*numValidators, consensusMessageTimeout, true)
 
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
-       // Wait for the round=3 to succeed
-	newRoundMessages := waitForNewRound(t, clockMock, eventsChannel, pocketNodes, height, step, round+3, numValidators, consensusMessageTimeout, true)
+	// Wait for the round=3 to succeed
+	newRoundMessages := waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, nil, 1, uint8(consensus.NewRound), 3, 0, numValidators*numValidators, consensusMessageTimeout, true)
 
-	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(height, uint64(round+3), step))
-	_ = waitForPrepareProposal(t, clockMock, eventsChannel, pocketNodes, newRoundMessages, height, step+1, round+3, leaderId, numValidators, consensusMessageTimeout, true)
+	// Get the expected leader id for round=3
+	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(1, 3, uint8(consensus.NewRound)))
+	_ = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, newRoundMessages, 1, uint8(consensus.Prepare), 3, leaderId, numValidators, consensusMessageTimeout, true)
+
 	require.NoError(t, err)
 }
 
@@ -105,12 +105,11 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	}
 
 	// Prepare leader info
-	leaderElectionStep := consensus.Prepare
 	leaderRound := uint64(6)
 
 	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderForView() function.
 	// Any node in pocketNodes mapping can be used to call GetLeaderForView() function.
-	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(testHeight, leaderRound, uint8(leaderElectionStep)))
+	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(testHeight, leaderRound, uint8(consensus.Prepare)))
 	leader := pocketNodes[leaderId]
 	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
 	require.NoError(t, err)
@@ -127,7 +126,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	prepareProposal := &typesCons.HotstuffMessage{
 		Type:          consensus.Propose,
 		Height:        testHeight,
-		Step:          consensus.Prepare, // typesCons.HotstuffStep(testStep),
+		Step:          consensus.Prepare,
 		Round:         leaderRound,
 		Block:         block,
 		Justification: nil,
@@ -138,7 +137,9 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	numExpectedMsgs := numValidators - 1   // -1 because one of the messages is a self proposal (leader to itself as a replica) that is not passed through the network
 	msgTimeout := paceMakerTimeoutMsec / 2 // /2 because we do not want the pacemaker to trigger a new timeout
 
-	_ = waitForPrepareVotes(t, clockMock, eventsChannel, pocketNodes, []*anypb.Any{anyMsg}, numExpectedMsgs, time.Duration(msgTimeout), true)
+	//_ = waitForPrepareVotes(t, clockMock, eventsChannel, pocketNodes, []*anypb.Any{anyMsg}, numExpectedMsgs, time.Duration(msgTimeout), true)
+	_ = waitForVotes(t, clockMock, eventsChannel, pocketNodes, []*anypb.Any{anyMsg}, numExpectedMsgs, 2, time.Duration(msgTimeout), true)
+
 	require.NoError(t, err)
 
 	// Check that all the nodes caught up to the leader's (i.e. the latest) round

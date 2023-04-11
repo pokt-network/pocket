@@ -25,6 +25,11 @@ import (
 
 var _ modules.ConsensusModule = &consensusModule{}
 
+const (
+	metadataChannelSize = 1000
+	blocksChannelSize   = 1000
+)
+
 type consensusModule struct {
 	base_modules.IntegratableModule
 
@@ -72,12 +77,12 @@ type consensusModule struct {
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
 
 	// block responses received from peers are collected in this channel
-	blocksReceived chan *coreTypes.Block
+	blocksReceived chan *types.GetBlockResponse
 
 	// metadata responses received from peers are collected in this channel
 	metadataReceived chan *types.StateSyncMetadataResponse
 
-	serverMode bool
+	serverModeEnabled bool
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -131,11 +136,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 
 	consensusCfg := runtimeMgr.GetConfig().Consensus
 
-	if consensusCfg.ServerModeEnabled {
-		m.serverMode = true
-	} else {
-		m.serverMode = false
-	}
+	m.serverModeEnabled = consensusCfg.ServerModeEnabled
 
 	genesisState := runtimeMgr.GetGenesis()
 	if err := m.ValidateGenesis(genesisState); err != nil {
@@ -148,7 +149,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	}
 	address := privateKey.Address().String()
 
-	validators, err := m.GetValidatorsAtHeight(m.CurrentHeight())
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return nil, err
 	}
@@ -162,8 +163,8 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	m.nodeId = valAddrToIdMap[address]
 	m.nodeAddress = address
 
-	m.metadataReceived = make(chan *types.StateSyncMetadataResponse, 1000)
-	m.blocksReceived = make(chan *coreTypes.Block, 1000)
+	m.metadataReceived = make(chan *types.StateSyncMetadataResponse, metadataChannelSize)
+	m.blocksReceived = make(chan *types.GetBlockResponse, blocksChannelSize)
 
 	m.initMessagesPool()
 
@@ -194,7 +195,7 @@ func (m *consensusModule) Start() error {
 	}
 
 	go m.metadataSyncLoop()
-	go m.commitReceivedBlocks()
+	go m.blockApplicationLoop()
 
 	return nil
 }

@@ -82,7 +82,7 @@ func (m *consensusModule) IsPrepareQCNil() bool {
 func (m *consensusModule) GetPrepareQC() (*anypb.Any, error) {
 	anyProto, err := anypb.New(m.prepareQC)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert paceMaker message to proto: %s", err)
+		return nil, fmt.Errorf("failed to convert paceMaker message to proto: %w", err)
 	}
 	return anyProto, nil
 }

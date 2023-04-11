@@ -37,22 +37,23 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 	switch stateSyncMessage.Message.(type) {
 	case *typesCons.StateSyncMessage_MetadataReq:
 		m.logger.Info().Str("proto_type", "MetadataRequest").Msg("Handling StateSyncMessage MetadataReq")
-		if !m.serverMode {
+		if !m.serverModeEnabled {
 			return fmt.Errorf("server module is not enabled")
 		}
 		return m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
 	case *typesCons.StateSyncMessage_MetadataRes:
+		m.logger.Info().Str("proto_type", "MetadataResponse").Msg("Handling StateSyncMessage MetadataRes")
 		m.metadataReceived <- stateSyncMessage.GetMetadataRes()
 		return nil
 	case *typesCons.StateSyncMessage_GetBlockReq:
-		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage MetadataReq")
-		if !m.serverMode {
+		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage GetBlockRequest")
+		if !m.serverModeEnabled {
 			return fmt.Errorf("server module is not enabled")
 		}
 		return m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
 	case *typesCons.StateSyncMessage_GetBlockRes:
-		fmt.Println("Received block: ", stateSyncMessage.GetGetBlockRes().Block)
-		m.blocksReceived <- stateSyncMessage.GetGetBlockRes().Block
+		m.logger.Info().Str("proto_type", "GetBlockResponse").Msg("Handling StateSyncMessage GetBlockResponse")
+		m.blocksReceived <- stateSyncMessage.GetGetBlockRes()
 		return nil
 	default:
 		return fmt.Errorf("unspecified state sync message type")

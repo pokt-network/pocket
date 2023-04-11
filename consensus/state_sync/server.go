@@ -25,7 +25,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := metadataReq.PeerAddress
 
-	m.logger.Info().Fields(m.StateSyncLogHelper(clientPeerAddress)).Msgf("Received StateSyncMetadataRequest %s", metadataReq)
+	m.logger.Info().Fields(m.stateSyncLogHelper(clientPeerAddress)).Msgf("Received StateSyncMetadataRequest %s", metadataReq)
 
 	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
 	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
@@ -56,7 +56,7 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 		},
 	}
 
-	return m.SendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress), m.bus.GetConsensusModule().CurrentHeight())
+	return m.sendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress))
 }
 
 func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
@@ -64,7 +64,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := blockReq.PeerAddress
 
-	m.logger.Info().Fields(m.StateSyncLogHelper(clientPeerAddress)).Msgf("Received StateSync GetBlockRequest: %s", blockReq)
+	m.logger.Info().Fields(m.stateSyncLogHelper(clientPeerAddress)).Msgf("Received StateSync GetBlockRequest")
 	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
 	if prevPersistedBlockHeight < blockReq.Height {
@@ -86,7 +86,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 		},
 	}
 
-	return m.SendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress), blockReq.Height)
+	return m.sendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress))
 }
 
 // Get a block from persistence module given block height

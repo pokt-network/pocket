@@ -267,17 +267,17 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	numExpectedMsgs := numValidators
-	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numExpectedMsgs, 500, true)
+	// 2. Propose
+	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 500, true)
 	require.NoError(t, err)
 
-	// TODO (#352) This function will be updated once state sync implementation is complete
+	// TODO(#352): This function will be updated once state sync implementation is complete
 	waitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, testHeight)
 
-	// TODO (#352) Add height check once state sync implmentation is complete
+	// TODO(#352): Add height check once state sync implmentation is complete
 }
 
-// TODO (#352) Implement these tests
+// TODO(#352): Implement these tests
 
 func TestStateSync_UnsyncedPeerSyncsABlock_Success(t *testing.T) {
 	t.Skip()

@@ -1,10 +1,8 @@
 package state_sync
 
 import (
-	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -15,9 +13,6 @@ const (
 type StateSyncModule interface {
 	modules.Module
 	StateSyncServerModule
-
-	SendStateSyncMessage(msg *typesCons.StateSyncMessage, nodeAddress cryptoPocket.Address, height uint64) error
-	StateSyncLogHelper(receiverPeerAddress string) map[string]any
 }
 
 var (
@@ -29,8 +24,6 @@ var (
 type stateSync struct {
 	bus    modules.Bus
 	logger *modules.Logger
-
-	logPrefix string
 }
 
 func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -51,7 +44,7 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	return m, nil
 }
 
-// TODO (#352): implement this function
+// TODO(#352): implement this function
 // Start performs state sync
 func (m *stateSync) Start() error {
 	// processes and aggregates all metadata collected in metadataReceived channel,
@@ -61,7 +54,7 @@ func (m *stateSync) Start() error {
 	return nil
 }
 
-// TODO (#352): check if node is a valdiator, if not send Consensus_IsSyncedNonValidator event
+// TODO(#352): check if node is a valdiator, if not send Consensus_IsSyncedNonValidator event
 // Stop stops the state sync process, and sends `Consensus_IsSyncedValidator` FSM event
 func (m *stateSync) Stop() error {
 
@@ -81,8 +74,4 @@ func (m *stateSync) GetBus() modules.Bus {
 
 func (m *stateSync) GetModuleName() string {
 	return stateSyncModuleName
-}
-
-func (m *stateSync) SetLogPrefix(logPrefix string) {
-	m.logPrefix = logPrefix
 }

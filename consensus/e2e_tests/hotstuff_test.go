@@ -34,19 +34,16 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// Set starting height, round and step of the test.
-	startingHeight := uint64(1)
-	startingRound := uint64(0)
-	startingStep := uint8(consensus.NewRound)
-
-	decideProposal := waitForNextBlock(t, clockMock, eventsChannel, pocketNodes, startingHeight, startingStep, uint8(startingRound), numValidators, 500, true)
+	decideProposal := waitForNextBlock(t, clockMock, eventsChannel, pocketNodes, 1, uint8(consensus.NewRound), 0, 500, true)
 
 	for _, message := range decideProposal {
 		P2PBroadcast(t, pocketNodes, message)
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	_ = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, startingHeight+1, startingStep, uint8(startingRound), numValidators, 500, true)
+	//_ = waitForNewRound(t, clockMock, eventsChannel, pocketNodes, 2, uint8(consensus.NewRound), 0, numValidators, 500, true)
+	_ = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, nil, 2, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, 500, true)
+
 	require.NoError(t, err)
 
 	// TODO(#615): Add QC verification here after valid block mocking is implemented with issue #352.
