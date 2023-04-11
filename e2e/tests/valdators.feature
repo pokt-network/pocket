@@ -26,3 +26,9 @@ Feature: Validators Namespace
     When the user sends 150000000 uPOKT to another address
     Then the user should be able to see standard output containing ""
     And the validator should have exited without error
+
+  Scenario: User Wants To View Debug Subcommands 
+    Given the user has a validator
+    When the user runs the command "debug --help"
+    Then the user should be able to see standard output containing "Available Commands:"
+    And the validator should have exited without error
