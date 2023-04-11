@@ -8,7 +8,7 @@ metadata:
     prometheus.io/port: "9000"
 spec:
   selector:
-    v1-purpose: validator
+    pokt.network/purpose: validator
   ports:
     - port: 50832
       targetPort: 50832

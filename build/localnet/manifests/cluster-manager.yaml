@@ -4,13 +4,13 @@ metadata:
   name: pocket-v1-cluster-manager
 spec:
   initContainers:
-    - name: wait-for-v1-validator001
+    - name: wait-for-validator-001-pocket-validator
       image: busybox
       command:
         [
           "sh",
           "-c",
-          'until wget -q -O - "http://v1-validator001:50832/v1/health" --timeout=2 --tries=2 --spider >/dev/null 2>&1; do echo waiting for v1-validator001 to be online and healthy...; sleep 2; done;',
+          'until wget -q -O - "http://validator-001-pocket-validator:50832/v1/health" --timeout=2 --tries=2 --spider >/dev/null 2>&1; do echo waiting for validator-001-pocket-validator to be online and healthy...; sleep 2; done;',
         ]
   containers:
     - name: cluster-manager
@@ -18,4 +18,7 @@ spec:
       imagePullPolicy: IfNotPresent
       args:
         - cluster-manager
+      env:
+        - name: RPC_HOST
+          value: validator-001-pocket-validator
   serviceAccountName: cluster-manager-account

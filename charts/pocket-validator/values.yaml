@@ -67,7 +67,7 @@ privateKeySecretKeyRef:
 
 config:
   root_directory: "/go/src/github.com/pocket-network"
-  private_key: "" # This value is needed but ignored - use privateKeySecretKeyRef instead
+  private_key: "" # @ignored This value is needed but ignored - use privateKeySecretKeyRef instead
   use_libp2p: false
   consensus:
     max_mempool_bytes: 500000000
@@ -75,13 +75,13 @@ config:
       timeout_msec: 10000
       manual: true
       debug_time_between_steps_msec: 1000
-    private_key: "" # This value is needed but ignored - use privateKeySecretKeyRef instead
+    private_key: "" # @ignored This value is needed but ignored - use privateKeySecretKeyRef instead
   utility:
     max_mempool_transaction_bytes: 1073741824
     max_mempool_transactions: 9000
   persistence:
-    postgres_url: "" # This value is needed but ignored - if you wish to connect to the external database, use externalPostgresql instead
-    node_schema: public
+    postgres_url: "" # @ignored This value is needed but ignored - if you wish to connect to the external database, use externalPostgresql instead
+    node_schema: validator
     block_store_path: "/pocket/validator/block-store"
     tx_indexer_path: "/pocket/validator/tx-indexer"
     trees_store_dir: "/pocket/validator/trees"
@@ -94,7 +94,7 @@ config:
     port: 42069
     use_rain_tree: true
     is_empty_connection_type: false
-    private_key: "" # This value is needed but ignored - use privateKeySecretKeyRef instead
+    private_key: "" # @ignored This value is needed but ignored - use privateKeySecretKeyRef instead
     max_mempool_count: 100000
   telemetry:
     enabled: true
