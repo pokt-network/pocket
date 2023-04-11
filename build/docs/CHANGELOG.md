@@ -7,15 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.31] - 2023-04-11
+## [0.0.0.33] - 2023-04-11
 
 - Changed LocalNet validators to use the new `pocket-validator` helm chart instead of templating the manifests with `sed`.
 - Each validator now has it's own postgres instance (as a helm chart dependency), which allows for clean scale up/down of the validators.
 - Cleaned up old manifests and scripts that are no longer needed.
 
+## [0.0.0.32] - 2023-04-10
+
+- Adds e2e-tests button to Tiltfile
+
+## [0.0.0.31] - 2023-04-06
+
+- Updated `genesis.json` and `configs.yaml` to reflect pools address changes
+
 ## [0.0.0.30] - 2023-03-31
 
-- Improve LocalNet documentation by adding a TLDR commands to provision LocalNet with `kind`.
 - Include `cluster-manager` to `-dev` flavor of container images.
 
 ## [0.0.0.29] - 2023-03-30

@@ -9,6 +9,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,12 +36,17 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 	proposerBeforeBalance, err := uow.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
-	err = uow.SetProposalBlock("", addrBz, [][]byte{txBz})
+	// calling ApplyBlock without having called SetProposalBlock first should fail with ErrProposalBlockNotSet
+	err = uow.ApplyBlock()
+	require.Equal(t, err.Error(), utilTypes.ErrProposalBlockNotSet().Error())
+
+	err = uow.SetProposalBlock(IgnoreProposalBlockCheckHash, addrBz, [][]byte{txBz})
 	require.NoError(t, err)
 
-	appHash, _, err := uow.ApplyBlock()
+	err = uow.ApplyBlock()
+	stateHash := uow.GetStateHash()
 	require.NoError(t, err)
-	require.NotNil(t, appHash)
+	require.NotNil(t, stateHash)
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
@@ -48,7 +54,7 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 	// require.NoError(t, err)
 	// require.Equal(t, missed, 1)
 
-	feeBig, err := uow.getMessageSendFee()
+	feeBig, err := getGovParam[*big.Int](uow, utilTypes.MessageSendFee)
 	require.NoError(t, err)
 
 	expectedAmountSubtracted := big.NewInt(0).Add(amountSent, feeBig)
@@ -57,7 +63,7 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amountAfter, "unexpected after balance; expected %v got %v", expectedAfterBalance, amountAfter)
 
-	proposerCutPercentage, err := uow.getProposerPercentageOfFees()
+	proposerCutPercentage, err := getGovParam[int](uow, utilTypes.ProposerPercentageOfFeesParamName)
 	require.NoError(t, err)
 
 	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feeBig)
@@ -70,7 +76,6 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference, "unexpected before / after balance difference")
-
 }
 
 func TestUtilityUnitOfWork_BeginBlock(t *testing.T) {
@@ -85,10 +90,10 @@ func TestUtilityUnitOfWork_BeginBlock(t *testing.T) {
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
 
-	er = uow.SetProposalBlock("", addrBz, [][]byte{txBz})
+	er = uow.SetProposalBlock(IgnoreProposalBlockCheckHash, addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 
-	_, _, er = uow.ApplyBlock()
+	er = uow.ApplyBlock()
 	require.NoError(t, er)
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
@@ -96,7 +101,6 @@ func TestUtilityUnitOfWork_BeginBlock(t *testing.T) {
 	// missed, err := ctx.getValidatorMissedBlocks(byzantine.Address)
 	// require.NoError(t, err)
 	// require.Equal(t, missed, 1)
-
 }
 
 func TestUtilityUnitOfWork_EndBlock(t *testing.T) {
@@ -114,16 +118,16 @@ func TestUtilityUnitOfWork_EndBlock(t *testing.T) {
 	proposerBeforeBalance, err := uow.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
-	er = uow.SetProposalBlock("", addrBz, [][]byte{txBz})
+	er = uow.SetProposalBlock(IgnoreProposalBlockCheckHash, addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 
-	_, _, er = uow.ApplyBlock()
+	er = uow.ApplyBlock()
 	require.NoError(t, er)
 
-	feeBig, err := uow.getMessageSendFee()
+	feeBig, err := getGovParam[*big.Int](uow, utilTypes.MessageSendFee)
 	require.NoError(t, err)
 
-	proposerCutPercentage, err := uow.getProposerPercentageOfFees()
+	proposerCutPercentage, err := getGovParam[int](uow, utilTypes.ProposerPercentageOfFeesParamName)
 	require.NoError(t, err)
 
 	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feeBig)
@@ -135,5 +139,4 @@ func TestUtilityUnitOfWork_EndBlock(t *testing.T) {
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference)
-
 }

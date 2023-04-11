@@ -10,6 +10,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +25,7 @@ func TestUtilityUnitOfWork_AnteHandleMessage(t *testing.T) {
 	msg, err := uow.anteHandleMessage(tx)
 	require.NoError(t, err)
 	require.Equal(t, signer.Address().Bytes(), msg.GetSigner())
-	feeBig, err := uow.getMessageSendFee()
+	feeBig, err := getGovParam[*big.Int](uow, typesUtil.MessageSendFee)
 	require.NoError(t, err)
 
 	expectedAfterBalance := big.NewInt(0).Sub(startingBalance, feeBig)
@@ -41,7 +42,7 @@ func TestUtilityUnitOfWork_ApplyTransaction(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int32(0), txResult.GetResultCode())
 	require.Equal(t, "", txResult.GetError())
-	feeBig, err := uow.getMessageSendFee()
+	feeBig, err := getGovParam[*big.Int](uow, typesUtil.MessageSendFee)
 	require.NoError(t, err)
 
 	expectedAmountSubtracted := amount.Add(amount, feeBig)

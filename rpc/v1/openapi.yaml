@@ -91,7 +91,6 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-
   /v1/p2p/staked_actors_address_book:
     get:
       tags:
@@ -128,6 +127,24 @@ paths:
               example: "description of failure"
         "500":
           description: An error occurred while retrieving the staked actors address book
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/allChainParams:
+    get:
+      tags:
+        - query
+      summary: Returns the current values of all governance parameters
+
+      responses:
+        "200":
+          description: Node parameters response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AllChainParamsResponse"
+        "500":
+          description: An error occurred while retrieving the current node parameters
           content:
             text/plain:
               example: "description of failure"
@@ -201,6 +218,22 @@ components:
         - servicer
         - fisherman
         - application
+
+    Parameter:
+      type: object
+      required:
+        - parameter_name
+        - parameter_value
+      properties:
+        parameter_name:
+          type: "string"
+        parameter_value:
+          type: "string"
+
+    AllChainParamsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/Parameter"
 
   securitySchemes: {}
   links: {}

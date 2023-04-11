@@ -34,6 +34,15 @@ docker_check:
 	fi; \
 	}
 
+# Internal helper target - check if kubectl is installed.
+kubectl_check:
+	{ \
+	if ( ! ( command -v kubectl >/dev/null )); then \
+		echo "Seems like you don't have Kubectl installed. Make sure you review docs/development/README.md before continuing"; \
+		exit 1; \
+	fi; \
+	}
+
 .PHONY: prompt_user
 # Internal helper target - prompt the user before continuing
 prompt_user:
@@ -50,7 +59,6 @@ protoc_check: ## Checks if protoc is installed
 		echo "Follow instructions to install 'protoc': https://grpc.io/docs/protoc-installation/"; \
 	fi; \
 	}
-
 
 .PHONY: go_vet
 go_vet: ## Run `go vet` on all files in the current project
@@ -335,6 +343,10 @@ generate_node_state_machine_diagram: ## (Re)generates the Node State Machine dia
 test_all: ## Run all go unit tests
 	go test -p 1 -count=1 ./...
 
+.PHONY: test_e2e
+test_e2e: kubectl_check ## Run all E2E tests
+	go test ${VERBOSE_TEST} ./e2e/tests/... -tags=e2e
+
 .PHONY: test_all_with_json_coverage
 test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, output results & coverage into json & coverage files
 	go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out | tee test_results.json | jq
@@ -536,3 +548,7 @@ check_cross_module_imports: ## Lists cross-module imports
 .PHONY: send_local_tx
 send_local_tx: ## A hardcoded send tx to make LocalNet debugging easier
 	go run -tags=debug app/client/*.go Account Send --non_interactive 00104055c00bed7c983a48aac7dc6335d7c607a7 00204737d2a165ebe4be3a7d5b0af905b0ea91d8 1000
+
+.PHONY: query_chain_params
+query_chain_params: ## A hardcoded ChainParams query to make LocalNet debugging easier
+	go run app/client/main.go Query AllChainParams

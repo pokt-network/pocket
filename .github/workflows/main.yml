@@ -141,7 +141,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
+          # NB: Uncomment below if arm64 build is needed; arm64 builds are off by default because build times are significant.
+          platforms: linux/amd64 #,linux/arm64 
           file: build/Dockerfile.${{ matrix.osType }}.${{ matrix.imageType }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
