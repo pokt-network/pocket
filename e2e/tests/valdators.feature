@@ -32,3 +32,9 @@ Feature: Validators Namespace
     When the user runs the command "debug --help"
     Then the user should be able to see standard output containing "Available Commands:"
     And the validator should have exited without error
+
+  Scenario: User Wants To Trigger A View Change
+    Given the user has a validator
+    When the user runs the command "debug TriggerNextView"
+    Then the user should be able to see standard output containing "NOOP"
+    And the validator should have exited without error
