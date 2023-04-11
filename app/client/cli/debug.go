@@ -85,7 +85,7 @@ func NewDebugSubCommands() []*cobra.Command {
 	for idx, promptItem := range items {
 		commands[idx] = &cobra.Command{
 			Use: promptItem,
-			Run: func(cmd *cobra.Command, args []string) {
+			PersistentPreRun: func(cmd *cobra.Command, args []string) {
 				// TECHDEBT: this is to keep backwards compatibility with localnet
 				configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
 
@@ -120,12 +120,12 @@ func NewDebugSubCommands() []*cobra.Command {
 				if err != nil {
 					logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
 				}
-
 				if err := p2pMod.Start(); err != nil {
 					logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
 				}
-
-				handleSelect(cmd, promptItem)
+			},
+			Run: func(cmd *cobra.Command, args []string) {
+				handleSelect(cmd, cmd.Use)
 			},
 			ValidArgs: items,
 		}
