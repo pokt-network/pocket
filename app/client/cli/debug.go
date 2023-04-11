@@ -56,15 +56,9 @@ type cliContextKey string
 
 const busCLICtxKey = "bus"
 
-// DISCUSS: Okay so this subcommand is not working when passed as a single command
-// I'm getting an error "server module is not enabled" when I try to run any subcommand
-// But normal debug UI prompt-triggered events are working and do not error
-// I can only think that it's something to do with a context or something that I'm missing.
-
 func init() {
 	dbg := NewDebugCommand()
 	dbg.AddCommand(NewDebugSubCommands()...)
-
 	rootCmd.AddCommand(dbg)
 
 	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
@@ -76,8 +70,60 @@ func init() {
 	rpcHost = runtime.GetEnv("RPC_HOST", validator1Endpoint)
 }
 
+// NewDebugCommand returns the cobra CLI for the Debug command.
+func NewDebugCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "debug",
+		Short: "Debug utility for rapid development",
+		Args:  cobra.MaximumNArgs(0),
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+
+			// TECHDEBT: this is to keep backwards compatibility with localnet
+			configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
+
+			runtimeMgr := runtime.NewManagerFromFiles(
+				configPath, genesisPath,
+				runtime.WithClientDebugMode(),
+				runtime.WithRandomPK(),
+			)
+
+			bus := runtimeMgr.GetBus()
+			modulesRegistry := bus.GetModulesRegistry()
+
+			rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
+
+			addressBookProvider := rpcABP.NewRPCPeerstoreProvider(
+				rpcABP.WithP2PConfig(
+					runtimeMgr.GetConfig().P2P,
+				),
+				rpcABP.WithCustomRPCURL(rpcURL),
+			)
+			modulesRegistry.RegisterModule(addressBookProvider)
+
+			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
+				rpcCHP.WithCustomRPCURL(rpcURL),
+			)
+			modulesRegistry.RegisterModule(currentHeightProvider)
+
+			setValueInCLIContext(cmd, busCLICtxKey, bus)
+
+			// TECHDEBT: simplify after P2P module consolidation.
+			var err error
+			p2pMod, err = getP2PModule(runtimeMgr)
+			if err != nil {
+				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
+			}
+
+			if err := p2pMod.Start(); err != nil {
+				logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
+			}
+		},
+		RunE: runDebug,
+	}
+}
+
 // NewDebugSubCommands builds out the list of debug subcommands by matching the
-// handleSelect dispatch to the appropriate string.
+// handleSelect dispatch to the appropriate command.
 // * To add a debug subcommand, you must add it to the `items` array and then
 // write a function handler to match for it in `handleSelect`.
 func NewDebugSubCommands() []*cobra.Command {
@@ -131,58 +177,6 @@ func NewDebugSubCommands() []*cobra.Command {
 		}
 	}
 	return commands
-}
-
-// NewDebugCommand returns the cobra CLI for the Debug command.
-func NewDebugCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:   "debug",
-		Short: "Debug utility for rapid development",
-		Args:  cobra.MaximumNArgs(0),
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-
-			// TECHDEBT: this is to keep backwards compatibility with localnet
-			configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
-
-			runtimeMgr := runtime.NewManagerFromFiles(
-				configPath, genesisPath,
-				runtime.WithClientDebugMode(),
-				runtime.WithRandomPK(),
-			)
-
-			bus := runtimeMgr.GetBus()
-			modulesRegistry := bus.GetModulesRegistry()
-
-			rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
-
-			addressBookProvider := rpcABP.NewRPCPeerstoreProvider(
-				rpcABP.WithP2PConfig(
-					runtimeMgr.GetConfig().P2P,
-				),
-				rpcABP.WithCustomRPCURL(rpcURL),
-			)
-			modulesRegistry.RegisterModule(addressBookProvider)
-
-			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
-				rpcCHP.WithCustomRPCURL(rpcURL),
-			)
-			modulesRegistry.RegisterModule(currentHeightProvider)
-
-			setValueInCLIContext(cmd, busCLICtxKey, bus)
-
-			// TECHDEBT: simplify after P2P module consolidation.
-			var err error
-			p2pMod, err = getP2PModule(runtimeMgr)
-			if err != nil {
-				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
-			}
-
-			if err := p2pMod.Start(); err != nil {
-				logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
-			}
-		},
-		RunE: runDebug,
-	}
 }
 
 func runDebug(cmd *cobra.Command, args []string) (err error) {
