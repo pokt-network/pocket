@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.46] - 2023-04-10
+## [0.0.0.46] - 2023-04-11
 
 - Update `prepareBlock()` function to add processed transactions to the persisted block
 
