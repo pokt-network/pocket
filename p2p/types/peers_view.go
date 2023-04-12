@@ -102,6 +102,13 @@ func (view *sortedPeersView) init(startAddr crypto.Address, pstore Peerstore) *s
 // sortAddrs sorts addresses in `sortedAddrs` lexicographically then shifts
 // `startAddr` to the first index, moving any preceding values to the end
 // of the list; effectively preserving the order by "wrapping around".
+//
+//	self addr: "D",
+//	initial:   "BACEDF",
+//	sorted:    "ABCDEF",
+//	shifted:   "DEFABC",
+//
+// See the relevant tests for more examples.
 func (view *sortedPeersView) sortAddrs(startAddr crypto.Address) {
 	sort.Strings(view.sortedAddrs)
 
@@ -118,6 +125,10 @@ func (view *sortedPeersView) sortAddrs(startAddr crypto.Address) {
 // getAddrIndex returns the sortedAddrs index at which the given address is stored
 // or at which to insert it if not present.
 func (view *sortedPeersView) getAddrIndex(addr crypto.Address) int {
+	// sort.Search uses binary search to find the smallest index in `view.sortedAddrs`
+	// at which the given function returns `true`.
+	// (i.e.: where does the address order start to "wrap-around"?)
+	// (see: https://pkg.go.dev/sort#Search)
 	wrapIdx := sort.Search(len(view.sortedAddrs), func(visitIdx int) bool {
 		return view.sortedAddrs[visitIdx] < view.sortedAddrs[0]
 	})
