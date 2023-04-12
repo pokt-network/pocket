@@ -18,13 +18,13 @@ func TestSortedPeersView_Add_Remove(t *testing.T) {
 		expectedAddrs string
 	}{
 		{
-			name:          "highest self address",
+			name:          "lowest self address",
 			selfAddr:      "A",
 			addAddrs:      "BC",
 			expectedAddrs: "ABC",
 		},
 		{
-			name:          "lowest self address",
+			name:          "highest self address",
 			selfAddr:      "C",
 			addAddrs:      "AB",
 			expectedAddrs: "CAB",
@@ -101,6 +101,62 @@ func TestSortedPeersView_Add_Remove(t *testing.T) {
 
 func TestSortedPeersView_Remove(t *testing.T) {
 	t.Skip("TECHDEBT(#554): test that this method works as expected when target peer/addr is not in the list!")
+}
+
+func TestSortedPeersView(t *testing.T) {
+	testCases := []struct {
+		name              string
+		selfAddr          string
+		initialAddrs      string
+		expectedSortOrder string
+	}{
+		{
+			name:              "lowest self address",
+			selfAddr:          "A",
+			initialAddrs:      "BDCEA",
+			expectedSortOrder: "ABCDE",
+		},
+		{
+			name:              "highest self address",
+			selfAddr:          "E",
+			initialAddrs:      "BDCEA",
+			expectedSortOrder: "EABCD",
+		},
+		{
+			name:              "middle self address",
+			selfAddr:          "C",
+			initialAddrs:      "BDCEA",
+			expectedSortOrder: "CDEAB",
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			selfAddr := cryptoPocket.Address(testCase.selfAddr)
+
+			pstore := make(PeerAddrMap)
+			var initialPeers []Peer
+			initialAddrs := fromCharAddrs(testCase.initialAddrs)
+			for _, addr := range initialAddrs {
+				peer := &NetworkPeer{Address: cryptoPocket.AddressFromString(addr)}
+				initialPeers = append(initialPeers, peer)
+				err := pstore.AddPeer(peer)
+				require.NoError(t, err)
+			}
+
+			view := NewSortedPeersView(selfAddr, pstore)
+			require.ElementsMatchf(t, initialAddrs, view.sortedAddrs, "initial addresses don't match")
+			require.ElementsMatchf(t, initialPeers, view.sortedPeers, "initial peers don't match")
+
+			var actualPeersStr string
+			for _, peer := range view.sortedPeers {
+				actualPeersStr += string(peer.GetAddress().Bytes())
+			}
+
+			actualAddrsStr := toCharAddrs(view.sortedAddrs)
+			require.Equal(t, testCase.expectedSortOrder, actualAddrsStr, "resulting addresses don't match")
+			require.Equal(t, testCase.expectedSortOrder, actualPeersStr, "resulting addresses don't match")
+		})
+	}
 }
 
 // fromCharAddrs converts each char in charAddrs into a serialized pokt address
