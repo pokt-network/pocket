@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"encoding/hex"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -109,10 +110,10 @@ func (s *rpcServer) PostV1QueryAccounts(ctx echo.Context) error {
 	}
 
 	start, end, totalPages, err := getPageIndexes(len(allAccounts), int(body.Page), int(body.PerPage))
-	if err != nil {
+	if err != nil && !errors.Is(err, errNoItems) {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
-	if totalPages == 0 {
+	if totalPages == 0 || errors.Is(err, errNoItems) {
 		return ctx.JSON(http.StatusOK, QueryAccountsResponse{})
 	}
 
@@ -147,12 +148,6 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 		sortDesc = false
 	}
 
-	currHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currHeight)
-	if err != nil {
-		return ctx.String(http.StatusInternalServerError, err.Error())
-	}
-
 	// TODO: (h5law) figure out how to query all transactions from an address
 	txIndexer := s.GetBus().GetPersistenceModule().GetTxIndexer()
 	txResults, err := txIndexer.GetBySender(body.Address, sortDesc)
@@ -161,16 +156,16 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 	}
 
 	start, end, totalPages, err := getPageIndexes(len(txResults), int(body.Page), int(body.PerPage))
-	if err != nil {
+	if err != nil && !errors.Is(err, errNoItems) {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
-	if totalPages == 0 {
+	if totalPages == 0 || errors.Is(err, errNoItems) {
 		return ctx.JSON(http.StatusOK, QueryAccountTxsResponse{})
 	}
 
 	pageTxs := make([]Transaction, 0)
 	for i := start; i <= end; i++ {
-		rpcTx, err := txResultToRPCTransaction(readCtx, txResults[i])
+		rpcTx, err := s.txResultToRPCTransaction(txResults[i])
 		if err != nil {
 			return ctx.String(http.StatusInternalServerError, err.Error())
 		}
@@ -248,7 +243,7 @@ func (s *rpcServer) PostV1QueryBlock(ctx echo.Context) error {
 	// Get latest stored block height
 	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight() - 1
 	height := uint64(body.Height)
-	if height == 0 {
+	if height == 0 || height > currentHeight {
 		height = currentHeight
 	}
 
@@ -262,7 +257,7 @@ func (s *rpcServer) PostV1QueryBlock(ctx echo.Context) error {
 	if err := codec.GetCodec().Unmarshal(blockBz, block); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	rpcBlock, err := blockToRPCBlock(block)
+	rpcBlock, err := s.blockToRPCBlock(block)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}

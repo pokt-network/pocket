@@ -706,6 +706,7 @@ components:
         - step
         - block
         - threshold_sig
+        - transactions
       properties:
         height:
           type: integer
@@ -719,6 +720,10 @@ components:
           type: string
         threshold_sig:
           $ref: "#/components/schemas/ThresholdSignature"
+        transactions:
+          type: array
+          items:
+            type: string
     Signature:
       type: object
       required:

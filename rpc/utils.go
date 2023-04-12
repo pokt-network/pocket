@@ -14,7 +14,10 @@ import (
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
-var paramValueRegex *regexp.Regexp
+var (
+	paramValueRegex *regexp.Regexp
+	errNoItems      = fmt.Errorf("no items found")
+)
 
 func init() {
 	paramValueRegex = regexp.MustCompile(`value:"(.+)"`)
@@ -22,7 +25,7 @@ func init() {
 
 func getPageIndexes(totalItems, page, per_page int) (startIdx, endIdx, totalPages int, err error) {
 	if totalItems == 0 {
-		err = fmt.Errorf("no items found")
+		err = errNoItems
 		return
 	}
 	if page == 0 || per_page == 0 {
@@ -45,14 +48,14 @@ func getPageIndexes(totalItems, page, per_page int) (startIdx, endIdx, totalPage
 }
 
 // txResultToRPCTransaction converts the txResult protobuf into the RPC Transaction type
-func txResultToRPCTransaction(readCtx modules.PersistenceReadContext, txResult coreTypes.TxResult) (*Transaction, error) {
+func (s *rpcServer) txResultToRPCTransaction(txResult coreTypes.TxResult) (*Transaction, error) {
 	hashBz, err := txResult.Hash()
 	if err != nil {
 		return nil, err
 	}
 	hexHashStr := hex.EncodeToString(hashBz)
 	txStr := base64.StdEncoding.EncodeToString(txResult.GetTx())
-	stdTx, err := transactionBytesToRPCStdTx(readCtx, txResult.GetTx(), txResult.GetMessageType())
+	stdTx, err := s.transactionBytesToRPCStdTx(txResult.GetTx(), txResult.GetMessageType())
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +77,7 @@ func txResultToRPCTransaction(readCtx modules.PersistenceReadContext, txResult c
 }
 
 // transactionBytesToRPCStdTx generates a StdTx from a serialised byte slice of a Transaction protobuf and message type
-func transactionBytesToRPCStdTx(readCtx modules.PersistenceReadContext, txBz []byte, messageType string) (*StdTx, error) {
+func (s *rpcServer) transactionBytesToRPCStdTx(txBz []byte, messageType string) (*StdTx, error) {
 	tx, err := coreTypes.TxFromBytes(txBz)
 	if err != nil {
 		return nil, err
@@ -101,7 +104,7 @@ func transactionBytesToRPCStdTx(readCtx modules.PersistenceReadContext, txBz []b
 		if err := anypb.UnmarshalTo(m); err != nil {
 			return nil, err
 		}
-		fee, err := calculateMessageFeeForActor(readCtx, m.GetActorType(), messageType)
+		fee, err := s.calculateMessageFeeForActor(m.GetActorType(), messageType)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +123,7 @@ func transactionBytesToRPCStdTx(readCtx modules.PersistenceReadContext, txBz []b
 		if err := anypb.UnmarshalTo(m); err != nil {
 			return nil, err
 		}
-		fee, err := calculateMessageFeeForActor(readCtx, m.GetActorType(), messageType)
+		fee, err := s.calculateMessageFeeForActor(m.GetActorType(), messageType)
 		if err != nil {
 			return nil, err
 		}
@@ -143,7 +146,7 @@ func transactionBytesToRPCStdTx(readCtx modules.PersistenceReadContext, txBz []b
 		if err := anypb.UnmarshalTo(m); err != nil {
 			return nil, err
 		}
-		fee, err := calculateMessageFeeForActor(readCtx, m.GetActorType(), messageType)
+		fee, err := s.calculateMessageFeeForActor(m.GetActorType(), messageType)
 		if err != nil {
 			return nil, err
 		}
@@ -165,7 +168,7 @@ func transactionBytesToRPCStdTx(readCtx modules.PersistenceReadContext, txBz []b
 		if err := anypb.UnmarshalTo(m); err != nil {
 			return nil, err
 		}
-		fee, err := calculateMessageFeeForActor(readCtx, m.GetActorType(), messageType)
+		fee, err := s.calculateMessageFeeForActor(m.GetActorType(), messageType)
 		if err != nil {
 			return nil, err
 		}
@@ -183,7 +186,7 @@ func transactionBytesToRPCStdTx(readCtx modules.PersistenceReadContext, txBz []b
 		if err := anypb.UnmarshalTo(m); err != nil {
 			return nil, err
 		}
-		fee, err := calculateMessageFeeForActor(readCtx, m.GetActorType(), messageType)
+		fee, err := s.calculateMessageFeeForActor(m.GetActorType(), messageType)
 		if err != nil {
 			return nil, err
 		}
@@ -201,7 +204,7 @@ func transactionBytesToRPCStdTx(readCtx modules.PersistenceReadContext, txBz []b
 		if err := anypb.UnmarshalTo(m); err != nil {
 			return nil, err
 		}
-		fee, err := calculateMessageFeeForActor(readCtx, m.GetActorType(), messageType)
+		fee, err := s.calculateMessageFeeForActor(m.GetActorType(), messageType)
 		if err != nil {
 			return nil, err
 		}
@@ -228,8 +231,9 @@ func transactionBytesToRPCStdTx(readCtx modules.PersistenceReadContext, txBz []b
 }
 
 // calculateMessageFeeForActor calculates the fee for a transaction given the actor type and message type
-func calculateMessageFeeForActor(readCtx modules.PersistenceReadContext, actorType coreTypes.ActorType, messageType string) (string, error) {
-	height, err := readCtx.GetHeight()
+func (s *rpcServer) calculateMessageFeeForActor(actorType coreTypes.ActorType, messageType string) (string, error) {
+	height := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return "", err
 	}
@@ -291,7 +295,7 @@ func calculateMessageFeeForActor(readCtx modules.PersistenceReadContext, actorTy
 }
 
 // blockToRPCBlock converts a block protobuf to the RPC block type
-func blockToRPCBlock(protoBlock *coreTypes.Block) (*Block, error) {
+func (s *rpcServer) blockToRPCBlock(protoBlock *coreTypes.Block) (*Block, error) {
 	txs := make([]string, 0)
 	for _, txBz := range protoBlock.Transactions {
 		tx := base64.StdEncoding.EncodeToString(txBz)
@@ -337,6 +341,7 @@ func blockToRPCBlock(protoBlock *coreTypes.Block) (*Block, error) {
 				ThresholdSig: ThresholdSignature{
 					Signatures: partialSigs,
 				},
+				Transactions: qcTxs,
 			},
 			Timestamp: protoBlock.BlockHeader.GetTimestampt().AsTime().String(),
 		},
