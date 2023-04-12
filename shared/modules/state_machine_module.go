@@ -1,6 +1,6 @@
 package modules
 
-//go:generate mockgen -source=$GOFILE -destination=./mocks/state_machine_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+//go:generate mockgen -destination=./mocks/state_machine_module_mock.go github.com/pokt-network/pocket/shared/modules StateMachineModule
 
 import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"

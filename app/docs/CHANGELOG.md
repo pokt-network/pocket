@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.6] - 2023-04-10
+
+- Makes Account sub-command respect non-interactive flag
+
 ## [0.0.0.5] - 2023-03-24
 
 - The debug CLI now updates its peerstore mimicking the behavior of the validators via `sendConsensusNewHeightEventToP2PModule`.

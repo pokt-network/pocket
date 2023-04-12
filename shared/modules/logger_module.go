@@ -1,6 +1,7 @@
 package modules
 
-//go:generate mockgen -source=$GOFILE -destination=./mocks/logger_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+//go:generate mockgen -destination=./mocks/logger_module_mock.go github.com/pokt-network/pocket/shared/modules LoggerModule
+
 import (
 	"github.com/rs/zerolog"
 )
