@@ -23,34 +23,16 @@ const (
 )
 
 var (
-	testUtilityMod modules.UtilityModule
-
-	// DISCUSS_IN_THIS_COMMIT(#261): We used to think that utility shouldn't have any dependencies on persistence, but
-	// mocking everything in `persistence_module` seems complex when all we want is just a configuration/state using a certain genesis
-	// config or runtime environment.
-	testPersistenceMod modules.PersistenceModule
+	dbURL string
+	// testUtilityMod modules.UtilityModule
+	// NB: Note that the utility module has a direct dependence on the implementation of the persistence
+	// module in unit tests. This is not ideal but makes development much more efficient.
+	// testPersistenceMod modules.PersistenceModule
 )
 
-// func NewTestingMempool(_ *testing.T) mempool.TXMempool {
-// 	return utilTypes.NewTxFIFOMempool(1000000, 1000)
-// }
-
 func TestMain(m *testing.M) {
-	pool, resource, dbURL := test_artifacts.SetupPostgresDocker()
-
-	runtimeCfg := newTestRuntimeConfig(dbURL)
-	bus, err := runtime.CreateBus(runtimeCfg)
-	if err != nil {
-		log.Fatalf("Error creating bus: %s", err)
-	}
-
-	testPersistenceMod = newTestPersistenceModule(bus)
-	testPersistenceMod.Start()
-	defer testPersistenceMod.Stop()
-
-	testUtilityMod = newTestUtilityModule(bus)
-	testUtilityMod.Start()
-	defer testUtilityMod.Stop()
+	pool, resource, url := test_artifacts.SetupPostgresDocker()
+	dbURL = url
 
 	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
@@ -108,7 +90,14 @@ func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
 	return persistenceMod.(modules.PersistenceModule)
 }
 
-func newTestRuntimeConfig(databaseURL string) *runtime.Manager {
+// REFACTOR: This should be in a shared testing package
+func newTestRuntimeConfig(
+	databaseURL string,
+	numValidators int,
+	numServicers int,
+	numApplications int,
+	numFisherman int,
+) *runtime.Manager {
 	cfg := &configs.Config{
 		Utility: &configs.UtilityConfig{
 			MaxMempoolTransactionBytes: 1000000,
@@ -128,10 +117,10 @@ func newTestRuntimeConfig(databaseURL string) *runtime.Manager {
 		},
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(
-		testingValidatorCount,
-		testingServicerCount,
-		testingApplicationCount,
-		testingFishermenCount,
+		numValidators,
+		numServicers,
+		numApplications,
+		numFisherman,
 	)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
 	return runtimeCfg

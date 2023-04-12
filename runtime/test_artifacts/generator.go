@@ -16,17 +16,21 @@ import (
 
 // IMPROVE: Generate a proper genesis suite in the future.
 func NewGenesisState(numValidators, numServicers, numApplications, numFisherman int) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
-	apps, appsPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications)
+	apps, appPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications)
 	vals, validatorPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_VAL, numValidators)
-	servicers, snPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicers)
+	servicers, servicerPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicers)
 	fish, fishPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFisherman)
+
+	numActors := numValidators + numServicers + numApplications + numFisherman
+	allActorsKeys := append(append(append(validatorPrivateKeys, servicerPrivateKeys...), fishPrivateKeys...), appPrivateKeys...)
+	allActorAccounts := NewAccounts(numActors, allActorsKeys...)
 
 	genesisState = &genesis.GenesisState{
 		GenesisTime:   timestamppb.Now(),
 		ChainId:       DefaultChainID,
 		MaxBlockBytes: DefaultMaxBlockBytes,
 		Pools:         NewPools(),
-		Accounts:      NewAccounts(numValidators+numServicers+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...), // TODO(olshansky): clean this up
+		Accounts:      allActorAccounts,
 		Applications:  apps,
 		Validators:    vals,
 		Servicers:     servicers,
@@ -35,6 +39,7 @@ func NewGenesisState(numValidators, numServicers, numApplications, numFisherman 
 	}
 
 	// TODO: Generalize this to all actors and not just validators
+	// TECHDEBT: Not using the private keys of other actors
 	return genesisState, validatorPrivateKeys
 }
 

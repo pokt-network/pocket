@@ -1,10 +1,10 @@
 package utility
 
 import (
-	"encoding/hex"
-	"fmt"
 	"testing"
 
+	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/stretchr/testify/require"
 )
@@ -17,12 +17,63 @@ import (
 // 5. Need different protos for each actor
 
 func TestSession_NewSession(t *testing.T) {
-	session, err := testUtilityMod.GetSession(hex.EncodeToString([]byte("app")), 1, coreTypes.RelayChain_ETHEREUM, "geo")
+	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
+	defer teardownDeterministicKeygen()
+
+	runtimeCfg := newTestRuntimeConfig(dbURL, 5, 1, 1, 1)
+	bus, err := runtime.CreateBus(runtimeCfg)
 	require.NoError(t, err)
-	fmt.Println(session)
+
+	testPersistenceMod := newTestPersistenceModule(bus)
+	testPersistenceMod.Start()
+	defer testPersistenceMod.Stop()
+
+	testUtilityMod := newTestUtilityModule(bus)
+	testUtilityMod.Start()
+	defer testUtilityMod.Stop()
+
+	/// The actual tests
+
+	// Loop over these
+	app := runtimeCfg.GetGenesis().Applications[0]
+	height := int64(1)
+	relayChain := coreTypes.RelayChain_ETHEREUM
+	geoZone := "geo"
+
+	session, err := testUtilityMod.GetSession(app.Address, height, relayChain, geoZone)
+	require.NoError(t, err)
+	require.Equal(t, "61bf17f4c2b7b381095b1be393d58412e863f18497e8a4308bfbff356df25971", session.Id)
+	require.Equal(t, height, session.Height)
+	require.Equal(t, relayChain, session.RelayChain)
+	require.Equal(t, geoZone, session.GeoZone)
+	require.Equal(t, session.Application.Address, app.Address)
+	require.Equal(t, "servicer", session.Servicers[0].Address)
+	require.Equal(t, "fisherman", session.Fishermen[0].Address)
 
 	// require.Equal(t, session.Application.Address, "app")
 }
+
+func TestSession_SessionHeight(t *testing.T) {
+
+	// BlocksPerSessionParamName = 4
+	// blockHeigh = 4
+	// % 4 = 0
+	// % 4 = prevSessionHeight
+	// % 4 = nextSessionHeight
+
+	// What if session height changes mid session
+	//
+
+	// testUtilityMod := newTestUtilityModule(bus)
+	// testUtilityMod.Start()
+	// defer testUtilityMod.Stop()
+
+	// BlocksPerSessionParamName
+}
+
+// not enough servicers to choose from
+
+// no fisherman available
 
 // validate application dispatch
 

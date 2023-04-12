@@ -134,7 +134,7 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 	candidateServicers := make([]*coreTypes.Actor, 0)
 	for _, servicer := range servicers {
 		// Sanity check the servicer is not paused or unstaking
-		if servicer.PausedHeight == -1 || servicer.UnstakingHeight == -1 {
+		if !(servicer.PausedHeight == -1 && servicer.UnstakingHeight == -1) {
 			return fmt.Errorf("selectSessionServicers should not have encountered a paused or unstaking servicer: %s", servicer.Address)
 		}
 
@@ -180,8 +180,9 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 //
 //	or it would be subject to lexicographical proximity bias attacks
 func (s *sessionHydrator) pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int) []*coreTypes.Actor {
-	if numTarget < len(candidates) {
-		s.logger.Warn().Msgf("pseudoRandomSelection: numTarget (%d) is less than the number of candidates (%d)", numTarget, len(candidates))
+	if numTarget > len(candidates) {
+		s.logger.Warn().Msgf("pseudoRandomSelection: numTarget (%d) is greater than the number of candidates (%d)", numTarget, len(candidates))
+		return candidates
 	}
 	// TODO_IN_THIS_COMMIT: Actually implement this
 	return candidates[:numTarget]
