@@ -19,7 +19,6 @@ require (
 
 require (
 	github.com/benbjohnson/clock v1.3.0
-	github.com/celestiaorg/smt v0.2.1-0.20220414134126-dba215ccb884
 	github.com/cucumber/godog v0.12.6
 	github.com/deepmap/oapi-codegen v1.12.4
 	github.com/dgraph-io/badger/v3 v3.2103.2
@@ -36,6 +35,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/multiformats/go-multiaddr v0.8.0
+	github.com/pokt-network/smt v0.4.0
 	github.com/quasilyte/go-ruleguard/dsl v0.3.21
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.6.0
