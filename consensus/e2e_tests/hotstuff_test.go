@@ -37,7 +37,8 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	block := waitForNextBlock(t, clockMock, eventsChannel, pocketNodes, 1, 0, 500, true)
 	require.Equal(t, uint64(1), block.BlockHeader.Height)
 
-	_, err = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, nil, 2, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, 500, true)
+	// Expecting NewRound messages for height=2 to be sent after a block is committed
+	_, err = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, 2, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, 500, true)
 	require.NoError(t, err)
 
 	// TODO(#615): Add QC verification here after valid block mocking is implemented with issue #352.

@@ -262,9 +262,8 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
-	//unsyncedNode.GetBus().GetConsensusModule().PushStateSyncMetadataResponse(uint64(1), testHeight)
 	metadataReceived := &typesCons.StateSyncMetadataResponse{
-		PeerAddress: "",
+		PeerAddress: "unused_peer_addr_in_tests",
 		MinHeight:   uint64(1),
 		MaxHeight:   testHeight,
 	}
