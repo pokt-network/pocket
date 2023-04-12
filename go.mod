@@ -4,7 +4,7 @@ go 1.18
 
 // See the following link for reasoning on why we need the replacement:
 // https://discuss.dgraph.io/t/error-mremap-size-mismatch-on-arm64/15333/8
-replace github.com/dgraph-io/ristretto v0.1.0 => github.com/46bit/ristretto v0.1.0-with-arm-fix
+//replace github.com/dgraph-io/ristretto v0.1.0 => github.com/46bit/ristretto v0.1.0-with-arm-fix
 
 require (
 	github.com/ProtonMail/go-ecvrf v0.0.1
