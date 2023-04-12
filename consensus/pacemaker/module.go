@@ -120,18 +120,8 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// 2. If node is synced, node must reject the proposal because proposal is not valid.
 	if msg.Height > currentHeight {
 		m.logger.Info().Msgf("⚠️ [WARN] ⚠️ Node at height %d < message height %d", currentHeight, msg.Height)
-		isSynced, err := m.GetBus().GetConsensusModule().IsSynced()
-		if err != nil {
-			return false, err
-		}
-
-		if !isSynced {
-			err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
-			return false, err
-		}
-
-		return false, nil
-
+		err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
+		return false, err
 	}
 
 	// TODO(olshansky): This code branch is a result of the optimization in the leader

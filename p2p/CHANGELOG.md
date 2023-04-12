@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.40] - 2023-03-31
+## [0.0.0.41] - 2023-04-12
 
 - Moved peer & url conversion utils to `p2p/utils` package
 - Refactor `getPeerIP` to use `net.DefaultResolver` for easier testing
@@ -21,13 +21,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added libp2p `host.Host` mock generator
 - Refactor raintree constructor function signature to use new `RainTreeConfig` struct
 
-## [0.0.0.39] - 2023-03-31
+## [0.0.0.40] - 2023-04-12
 
 - Wrap IPv6 address in square brackets as per RFC3986 §3.2.2
 
-## [0.0.0.38] - 2023-03-31
+## [0.0.0.39] - 2023-04-12
 
 - Improve URL validation and error handling in Libp2pMultiaddrFromServiceURL function
+
+## [0.0.0.38] - 2023-04-10
+
+- Switched mock generation to use reflect mode for effected interfaces (`modules.ModuleFactoryWithOptions` embedders)
 
 ## [0.0.0.37] - 2023-03-30
 

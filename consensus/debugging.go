@@ -4,9 +4,10 @@ import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// TODO (#609): GetNodeState is currently exposed publicly so it can be accessed via reflection in tests. Refactor to use the test-only package and remove reflection
+// TODO(#609): GetNodeState is currently exposed publicly so it can be accessed via reflection in tests. Refactor to use the test-only package and remove reflection
 func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	leaderId := typesCons.NodeId(0)
 	if m.leaderId != nil {
@@ -107,8 +108,14 @@ func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage
 			continue
 		}
 		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
-		if err := m.stateSync.SendStateSyncMessage(stateSyncGetBlockMessage, valAddress, requestHeight); err != nil {
+
+		anyMsg, err := anypb.New(stateSyncGetBlockMessage)
+		if err != nil {
 			m.logger.Error().Err(err).Str("proto_type", "GetBlockRequest").Msg("failed to send StateSyncMessage")
+		}
+
+		if err := m.GetBus().GetP2PModule().Send(valAddress, anyMsg); err != nil {
+			m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
 		}
 	}
 }
@@ -116,7 +123,6 @@ func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage
 // requests metadata from all validators
 func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMessage) {
 	currentHeight := m.CurrentHeight()
-	requestHeight := currentHeight - 1
 	peerAddress := m.GetNodeAddress()
 
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
@@ -137,9 +143,14 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 			continue
 		}
 		valAddress := cryptoPocket.AddressFromString(val.GetAddress())
-		if err := m.stateSync.SendStateSyncMessage(stateSyncMetaDataReqMessage, valAddress, requestHeight); err != nil {
-			m.logger.Error().Err(err).Str("proto_type", "StateSyncMetadataRequest").Msg("failed to send StateSyncMessage")
+
+		anyMsg, err := anypb.New(stateSyncMetaDataReqMessage)
+		if err != nil {
+			m.logger.Error().Err(err).Str("proto_type", "GetMetadataRequest").Msg("failed to send StateSyncMessage")
+		}
+
+		if err := m.GetBus().GetP2PModule().Send(valAddress, anyMsg); err != nil {
+			m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
 		}
 	}
-
 }
