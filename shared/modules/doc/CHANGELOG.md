@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.11] - 2023-04-11
+## [0.0.0.11] - 2023-04-12
 
 - `Consensus` - Updated debug interface functions: added `PushStateSyncMetadataResponse()`, removed `SetAggregatedStateSyncMetadata()` and `GetAggregatedStateSyncMetadataMaxHeight()`
 
