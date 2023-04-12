@@ -11,6 +11,7 @@ import (
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	connmgr "github.com/libp2p/go-libp2p/p2p/net/connmgr"
 	"github.com/multiformats/go-multiaddr"
+	"github.com/rs/zerolog"
 	"go.uber.org/multierr"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -350,7 +351,7 @@ func (m *p2pModule) isClientDebugMode() bool {
 // handleStream is called each time a peer establishes a new stream with this
 // module's libp2p `host.Host`.
 func (m *p2pModule) handleStream(stream libp2pNetwork.Stream) {
-	fmt.Println("OLSH handleStream")
+	m.logger.Debug().Msg("handling incoming stream")
 	peer, err := utils.PeerFromLibp2pStream(stream)
 	if err != nil {
 		m.logger.Error().Err(err).
@@ -383,14 +384,35 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 		m.logger.Debug().Err(err).Msg("setting stream read deadline")
 	}
 
+	// debug logging: stream scope stats
+	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.27.0/core/network#StreamScope)
+	// TECHDEBT: `logger.Global` is not a `*module.Logger`
+	_logger := m.logger.Level(zerolog.DebugLevel)
+	if err := utils.LogScopeStatFactory(
+		&_logger,
+		"stream scope (read-side)",
+	)(stream.Scope()); err != nil {
+		m.logger.Debug().Err(err).Msg("logging stream scope stats")
+	}
+	// ---
+
 	data, err := io.ReadAll(stream)
 	if err != nil {
 		m.logger.Error().Err(err).Msg("reading from stream")
 		if err := stream.Reset(); err != nil {
-			m.logger.Debug().Err(err).Msg("resetting stream")
+			m.logger.Debug().Err(err).Msg("resetting stream (read-side)")
 		}
 		return
 	}
+
+	// debug logging
+	remotePeer, err := utils.PeerFromLibp2pStream(stream)
+	if err != nil {
+		m.logger.Debug().Err(err).Msg("getting remote remotePeer")
+	} else {
+		utils.LogIncomingMsg(m.logger, m.cfg.Hostname, remotePeer)
+	}
+	// ---
 
 	if err := m.handleNetworkData(data); err != nil {
 		m.logger.Error().Err(err).Msg("handling network data")

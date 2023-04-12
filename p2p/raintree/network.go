@@ -5,6 +5,7 @@ import (
 	"log"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
@@ -19,7 +20,6 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	telemetry "github.com/pokt-network/pocket/telemetry"
-	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -44,7 +44,9 @@ type rainTreeNetwork struct {
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	host libp2pHost.Host
 	// selfAddr is the pocket address representing this host.
-	selfAddr              cryptoPocket.Address
+	selfAddr cryptoPocket.Address
+	// hostname is the network hostname from the config
+	hostname              string
 	peersManager          *rainTreePeersManager
 	pstoreProvider        peerstore_provider.PeerstoreProvider
 	currentHeightProvider providers.CurrentHeightProvider
@@ -68,6 +70,7 @@ func (*rainTreeNetwork) Create(bus modules.Bus, netCfg RainTreeConfig) (typesP2P
 	n := &rainTreeNetwork{
 		host:                  netCfg.Host,
 		selfAddr:              netCfg.Addr,
+		hostname:              p2pCfg.Hostname,
 		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
 		pstoreProvider:        netCfg.PeerstoreProvider,
 		currentHeightProvider: netCfg.CurrentHeightProvider,
@@ -160,6 +163,9 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return fmt.Errorf("no known peer with pokt address %s", address)
 	}
 
+	// debug logging
+	utils.LogOutgoingMsg(n.logger, n.hostname, peer)
+
 	if err := utils.Libp2pSendToPeer(n.host, data, peer); err != nil {
 		n.logger.Debug().Err(err).Msg("from libp2pSendInternal")
 		return err
@@ -171,7 +177,6 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return nil
 	}
 
-	fmt.Println("OLSH networkSendInternal")
 	bus.
 		GetTelemetryModule().
 		GetEventMetricsAgent().

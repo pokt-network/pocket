@@ -2,7 +2,6 @@ package shared
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/pokt-network/pocket/consensus"
@@ -157,9 +156,12 @@ func (m *Node) GetBus() modules.Bus {
 // TECHDEBT: The `shared` package has dependencies on types in the individual modules.
 // TODO: Move all message types this is dependant on to the `messaging` package
 func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
-
 	contentType := message.GetContentType()
-	fmt.Println("OLSH handleEvent", message, contentType)
+	logger.Global.Debug().Fields(map[string]any{
+		"message":     message,
+		"contentType": contentType,
+	}).Msg("node handling event")
+
 	switch contentType {
 	case messaging.NodeStartedEventType:
 		logger.Global.Info().Msg("Received NodeStartedEvent")
