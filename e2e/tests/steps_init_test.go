@@ -211,7 +211,7 @@ func getClientset() (*kubernetes.Clientset, error) {
 	}
 	clientset, err := kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to12gg get clientset from config: %w", err)
+		return nil, fmt.Errorf("failed to get clientset from config: %w", err)
 	}
 	return clientset, nil
 }
