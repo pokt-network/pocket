@@ -8,6 +8,7 @@ type Module interface {
 	InitializableModule
 	IntegratableModule
 	InterruptableModule
+	ModuleFactoryWithOptions
 }
 
 // IntegratableModule is a module that integrates with the bus.

@@ -1,6 +1,6 @@
 package modules
 
-//go:generate mockgen -source=$GOFILE -destination=./mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+//go:generate mockgen -destination=./mocks/utility_module_mock.go github.com/pokt-network/pocket/shared/modules UtilityModule,UnstakingActor,UtilityUnitOfWork,LeaderUtilityUnitOfWork,ReplicaUtilityUnitOfWork
 
 import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"

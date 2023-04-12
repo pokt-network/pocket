@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.38] - 2023-04-10
+
+- Switched mock generation to use reflect mode for effected interfaces (`modules.ModuleFactoryWithOptions` embedders)
+
 ## [0.0.0.37] - 2023-03-30
 
 - Variable name and comment improvements

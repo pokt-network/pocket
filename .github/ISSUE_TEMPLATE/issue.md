@@ -70,6 +70,7 @@ assignees: ""
 - [ ] **New tests or benchmarks**: `make ...`
 - [ ] **All tests**: `make test_all`
 - [ ] **LocalNet**: verify a `LocalNet` is still functioning correctly by following the instructions at [docs/development/README.md](https://github.com/pokt-network/pocket/tree/main/docs/development)
+- [ ] ***k8s LocalNet**: verify a `k8s LocalNet` is still functioning correctly by following the instructions [here](https://github.com/pokt-network/pocket/blob/main/build/localnet/README.md)
 
 ---
 
