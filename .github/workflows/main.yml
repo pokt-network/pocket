@@ -29,9 +29,8 @@ jobs:
     name: Go ${{ matrix.go }} test
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - run: git log --oneline --decorate --graph
+      - run: echo "${{github.sha}}"
       - name: Setup go
         uses: actions/setup-go@v3
         with:
@@ -127,8 +126,7 @@ jobs:
             type=semver,pattern={{major}}${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
             type=ref,event=branch${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
             type=ref,event=pr${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
-            type=sha${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
-            type=sha,format=long${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
+            type=raw,sha-${{github.sha}}${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
             type=raw,value=latest,enable={{is_default_branch}}${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
