@@ -29,8 +29,13 @@ jobs:
     name: Go ${{ matrix.go }} test
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - run: git log --oneline --decorate --graph
       - run: echo "${{github.sha}}"
+      - run: echo $GITHUB_SHA
+      - run: echo "${{ toJson(github) }}"
+      - run: env
       - name: Setup go
         uses: actions/setup-go@v3
         with:
