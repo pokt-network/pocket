@@ -85,7 +85,9 @@ spec:
             - name: POCKET_PERSISTENCE_NODE_SCHEMA
               value: {{ include "pocket-validator.postgresqlSchema" . }}
             - name: POCKET_P2P_HOSTNAME
-              value: {{ include "pocket-validator.fullname" . }}
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           livenessProbe:
             httpGet:
               path: /v1/health
