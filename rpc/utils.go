@@ -296,10 +296,43 @@ func (s *rpcServer) calculateMessageFeeForActor(actorType coreTypes.ActorType, m
 
 // blockToRPCBlock converts a block protobuf to the RPC block type
 func (s *rpcServer) blockToRPCBlock(protoBlock *coreTypes.Block) (*Block, error) {
-	txs := make([]string, 0)
-	for _, txBz := range protoBlock.Transactions {
-		tx := base64.StdEncoding.EncodeToString(txBz)
-		txs = append(txs, tx)
+	txs := make([]Transaction, 0)
+
+	/* TODO: Figure out why the txHash is not found in the indexer
+	for _, txBz := range protoBlock.GetTransactions() {
+		tx := new(coreTypes.Transaction)
+		if err := codec.GetCodec().Unmarshal(txBz, tx); err != nil {
+			return nil, err
+		}
+		hash, err := tx.Hash()
+		if err != nil {
+			return nil, err
+		}
+		hashBz, err := hex.DecodeString(hash)
+		if err != nil {
+			return nil, err
+		}
+		txResult, err := s.GetBus().GetPersistenceModule().GetTxIndexer().GetByHash(hashBz)
+		if err != nil {
+			return nil, err
+		}
+		rpcTx, err := s.txResultToRPCTransaction(txResult)
+		if err != nil {
+			return nil, err
+		}
+	}
+	*/
+
+	txResults, err := s.GetBus().GetPersistenceModule().GetTxIndexer().GetByHeight(int64(protoBlock.BlockHeader.GetHeight()), true)
+	if err != nil {
+		return nil, err
+	}
+	for _, txResult := range txResults {
+		rpcTx, err := s.txResultToRPCTransaction(txResult)
+		if err != nil {
+			return nil, err
+		}
+		txs = append(txs, *rpcTx)
 	}
 
 	qc := new(conTypes.QuorumCertificate)

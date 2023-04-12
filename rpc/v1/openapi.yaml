@@ -519,7 +519,7 @@ components:
         transactions:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/Transaction"
     BlockHeader:
       type: object
       required:
