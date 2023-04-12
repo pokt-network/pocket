@@ -40,7 +40,7 @@ type PeerSyncMeta interface {
 }
 
 // LEGACY interface definition
-// TODO (#352): delete this once state sync module is ready.
+// TODO(#352): delete this once state sync module is ready.
 type StateSyncModuleLEGACY interface {
 	// -- Constructor Setter Functions --
 
