@@ -26,27 +26,27 @@ var expectedGenesis = &genesis.GenesisState{
 	MaxBlockBytes: 4000000,
 	Pools: []*types.Account{
 		{
-			Address: "DAO",
+			Address: "44414f0000000000000000000000000000000000",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "FeeCollector",
+			Address: "466565436f6c6c6563746f720000000000000000",
 			Amount:  "0",
 		},
 		{
-			Address: "AppStakePool",
+			Address: "4170705374616b65506f6f6c0000000000000000",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "ValidatorStakePool",
+			Address: "56616c696461746f725374616b65506f6f6c0000",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "ServicerStakePool",
+			Address: "53657276696365725374616b65506f6f6c000000",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "FishermanStakePool",
+			Address: "4669736865726d616e5374616b65506f6f6c0000",
 			Amount:  "100000000000000",
 		},
 	},

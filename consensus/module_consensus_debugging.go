@@ -54,3 +54,29 @@ func (m *consensusModule) SetBlock(block *coreTypes.Block) {
 func (m *consensusModule) SetUtilityUnitOfWork(utilityUnitOfWork modules.UtilityUnitOfWork) {
 	m.utilityUnitOfWork = utilityUnitOfWork
 }
+
+func (m *consensusModule) SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64, peerAddress string) {
+	m.stateSync.SetAggregatedMetadata(&typesCons.StateSyncMetadataResponse{
+		MinHeight:   minHeight,
+		MaxHeight:   maxHeight,
+		PeerAddress: peerAddress,
+	})
+}
+
+func (m *consensusModule) GetAggregatedStateSyncMetadataMaxHeight() (maxHeight uint64) {
+	metadata := m.stateSync.GetAggregatedMetadata()
+	return metadata.MaxHeight
+}
+
+func (m *consensusModule) GetLeaderForView(height, round uint64, step uint8) uint64 {
+	msg := &typesCons.HotstuffMessage{
+		Height: height,
+		Round:  round,
+		Step:   typesCons.HotstuffStep(step),
+	}
+	leaderId, err := m.leaderElectionMod.ElectNextLeader(msg)
+	if err != nil {
+		return 0
+	}
+	return uint64(leaderId)
+}

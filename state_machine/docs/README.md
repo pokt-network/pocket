@@ -7,11 +7,14 @@
 This document outlines the purpose of this module, its components and how they all interact with the other modules.
 
 ## Contents <!-- omit in toc -->
+
 - [Overview](#overview)
 - [Code Structure](#code-structure)
 - [High Level Architecture](#high-level-architecture)
   - [FSM primer](#fsm-primer)
-- [Current State Machine Definition](#current-state-machine-definition)
+- [State Machine States, Events and Lifecycle](#state-machine-states-events-and-lifecycle)
+  - [Startup](#startup)
+  - [Consensus](#consensus)
 
 ## Overview
 
@@ -52,10 +55,27 @@ These are the main building blocks:
 - **State**: A state is a string that represents a state that the FSM can be in. For example, the state `stopped` can be used to represent a state where the node is not running.
 - **Callback**: A callback is a function that is called when a transition occurs. For example, a callback can be used to log the transition or to perform some other action. Various types of callbacks essentially drive behaviour **WHEN** they are called and help build more complex behaviours like transition cancelling, etc. See the core FSM library documentation for more details.
 
-## Current State Machine Definition
+## State Machine States, Events and Lifecycle
 
-A diagram of the current state machine definition can be found [here](state-machine.diagram.md)
-If you make any changes to it, you can re-generate it via:
+### Startup
+
+- **Initialization**: A node always starts in the `Stopped` state. Once it `Start`s, it transitions to `P2P_Bootstrapping`.
+- **P2P Bootstrapping**: The P2P module handles `P2P_Bootstrapping` -> fills the peer address book -> triggers a `P2P_IsBootstrapped` event -> transitions to `P2P_Bootstrapped`.
+
+### Consensus
+
+- **P2P_Bootstrapped**: The Consensus module handles `P2P_Bootstrapped` -> triggers a `Consensus_IsUnsynced` event -> transitions to `Consensus_Unsynced`.
+- **Consensus_Unsynced**: Node is out of sync, the Consensus module sends `Consensus_IsSyncing` event -> transitions to `Consensus_SyncMode` to start syncing with the rest of the network.
+- **Consensus_SyncMode**: The Consensus module runs `StartSyncing()` and requests blocks one by one from peers in its address book.
+- **Node finishes syncing**: When node completes syncing:
+  - if the node is a validator, the Consensus module sends `Consensus_IsSyncedValidator` event -> transitions to `Consensus_Pacemaker`.
+  - if the node is not a validator, the Consensus module sends `Consensus_IsSyncedNonValidator` event -> transitions to `Consensus_Synced`.
+- **Consensus_Pacemaker**: Node participates in the block generation process. If node receives a block proposal with height higher than its current height, the Consensus Module sends `Consensus_IsUnsynced` event -> transitions to `Consensus_Unsynced`.
+- **Consensus_Synced**: Currently, the Consensus module never sends `Consensus_IsSyncedValidator` event, and non-validator node always stays in `Consensus_SyncMode`.
+
+A diagram of the current state machine definition can be found [here](state-machine.diagram.md).
+
+_NOTE:_ If you make changes to the state machine by changing states, events, or state transitions, you can re-generate the state machine diagram via:
 
 ```bash
 make generate_node_state_machine_diagram

@@ -34,26 +34,34 @@ func NewNodeFSM(callbacks *fsm.Callbacks, options ...func(*fsm.FSM)) *fsm.FSM {
 				Dst: string(coreTypes.StateMachineState_P2P_Bootstrapped),
 			},
 			{
-				Name: string(coreTypes.StateMachineEvent_Consensus_IsUnsynched),
-				Src: []string{
-					string(coreTypes.StateMachineState_P2P_Bootstrapped),
-				},
-				Dst: string(coreTypes.StateMachineState_Consensus_Unsynched),
-			},
-			{
 				Name: string(coreTypes.StateMachineEvent_Consensus_IsSyncing),
 				Src: []string{
-					string(coreTypes.StateMachineState_Consensus_Unsynched),
+					string(coreTypes.StateMachineState_Consensus_Unsynced),
 				},
 				Dst: string(coreTypes.StateMachineState_Consensus_SyncMode),
 			},
 			{
-				Name: string(coreTypes.StateMachineEvent_Consensus_IsCaughtUp),
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator),
 				Src: []string{
-					string(coreTypes.StateMachineState_P2P_Bootstrapped),
+					string(coreTypes.StateMachineState_Consensus_SyncMode),
+				},
+				Dst: string(coreTypes.StateMachineState_Consensus_Pacemaker),
+			},
+			{
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator),
+				Src: []string{
 					string(coreTypes.StateMachineState_Consensus_SyncMode),
 				},
 				Dst: string(coreTypes.StateMachineState_Consensus_Synced),
+			},
+			{
+				Name: string(coreTypes.StateMachineEvent_Consensus_IsUnsynced),
+				Src: []string{
+					string(coreTypes.StateMachineState_Consensus_Pacemaker),
+					string(coreTypes.StateMachineState_Consensus_Synced),
+					string(coreTypes.StateMachineState_P2P_Bootstrapped),
+				},
+				Dst: string(coreTypes.StateMachineState_Consensus_Unsynced),
 			},
 		},
 		cb,

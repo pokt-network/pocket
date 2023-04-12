@@ -6,32 +6,32 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, peerId cryptoPocket.Address, height uint64) error {
+func (m *stateSync) SendStateSyncMessage(stateSyncMsg *typesCons.StateSyncMessage, peerAddress cryptoPocket.Address, height uint64) error {
 	anyMsg, err := anypb.New(stateSyncMsg)
 	if err != nil {
 		return err
 	}
 
-	m.logger.Info().Fields(m.logHelper(string(peerId))).Msg("Sending StateSync Message")
-	return m.sendToPeer(anyMsg, peerId)
+	m.logger.Info().Fields(m.logHelper(peerAddress.ToString())).Msg("Sending StateSync Message")
+	return m.sendToPeer(anyMsg, peerAddress)
 }
 
-// Helper function for sending state sync messages
-func (m *stateSync) sendToPeer(msg *anypb.Any, peerId cryptoPocket.Address) error {
-	if err := m.GetBus().GetP2PModule().Send(peerId, msg); err != nil {
+// Helper function for messages to the peers
+func (m *stateSync) sendToPeer(msg *anypb.Any, peerAddress cryptoPocket.Address) error {
+	if err := m.GetBus().GetP2PModule().Send(peerAddress, msg); err != nil {
 		m.logger.Error().Msgf(typesCons.ErrSendMessage.Error(), err)
 		return err
 	}
 	return nil
 }
 
-func (m *stateSync) logHelper(receiverPeerId string) map[string]any {
+func (m *stateSync) logHelper(receiverPeerAddress string) map[string]any {
 	consensusMod := m.GetBus().GetConsensusModule()
 
 	return map[string]any{
-		"height":         consensusMod.CurrentHeight(),
-		"senderPeerId":   consensusMod.GetNodeAddress(),
-		"receiverPeerId": receiverPeerId,
+		"height":              consensusMod.CurrentHeight(),
+		"senderPeerAddress":   consensusMod.GetNodeAddress(),
+		"receiverPeerAddress": receiverPeerAddress,
 	}
 
 }

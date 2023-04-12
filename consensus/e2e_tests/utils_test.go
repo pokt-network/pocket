@@ -3,6 +3,7 @@ package e2e_tests
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"reflect"
 	"sort"
@@ -100,7 +101,6 @@ func CreateTestConsensusPocketNode(
 	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
 ) *shared.Node {
-	// persistence is a dependency of consensus, so we need to create it first
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
 	bus.RegisterModule(persistenceMock)
 
@@ -117,15 +117,15 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
-	stateMachineMock := baseStateMachineMock(t, eventsChannel)
+	stateMachineMock := baseStateMachineMock(t, eventsChannel, bus)
 
 	for _, module := range []modules.Module{
-		stateMachineMock,
 		p2pMock,
 		utilityMock,
 		telemetryMock,
 		loggerMock,
 		rpcMock,
+		stateMachineMock,
 	} {
 		bus.RegisterModule(module)
 	}
@@ -240,7 +240,7 @@ func WaitForNetworkConsensusEvents(
 	}
 
 	errMsg := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(msgType)])
-	return waitForEventsInternal(clck, eventsChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clck, eventsChannel, messaging.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // IMPROVE: Consider unifying this function with WaitForNetworkConsensusEvents
@@ -251,7 +251,7 @@ func WaitForNetworkStateSyncEvents(
 	eventsChannel modules.EventsChannel,
 	errMsg string,
 	numExpectedMsgs int,
-	millis time.Duration,
+	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
 ) (messages []*anypb.Any, err error) {
 	includeFilter := func(anyMsg *anypb.Any) bool {
@@ -264,7 +264,7 @@ func WaitForNetworkStateSyncEvents(
 		return true
 	}
 
-	return waitForEventsInternal(clck, eventsChannel, consensus.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clck, eventsChannel, messaging.StateSyncMessageContentType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework
@@ -335,7 +335,7 @@ loop:
 			if numRemainingMsgs == 0 {
 				break loop
 			} else if numRemainingMsgs > 0 {
-				return expectedMsgs, fmt.Errorf("Missing '%s' messages; %d expected but %d received. (%s) \n\t DO_NOT_SKIP_ME(#462): Consider increasing `maxWaitTimeMillis` as a workaround", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
+				return expectedMsgs, fmt.Errorf("Missing '%s' messages; %d expected but %d received. (%s) \n\t DO_NOT_SKIP_ME(#462): Consider increasing `maxWaitTime` as a workaround", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			} else {
 				return expectedMsgs, fmt.Errorf("Too many '%s' messages; %d expected but %d received. (%s)", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			}
@@ -459,12 +459,16 @@ func baseLeaderUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.Genesis
 	rwContextMock.EXPECT().Release().AnyTimes()
 
 	utilityLeaderUnitOfWorkMock.EXPECT().
-		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).
+		CreateProposalBlock(gomock.Any(), maxTxBytes).
 		Return(stateHash, make([][]byte, 0), nil).
 		AnyTimes()
 	utilityLeaderUnitOfWorkMock.EXPECT().
 		ApplyBlock().
-		Return(stateHash, make([][]byte, 0), nil).
+		Return(nil).
+		AnyTimes()
+	utilityLeaderUnitOfWorkMock.EXPECT().
+		GetStateHash().
+		Return(stateHash).
 		AnyTimes()
 	utilityLeaderUnitOfWorkMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	utilityLeaderUnitOfWorkMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
@@ -484,7 +488,11 @@ func baseReplicaUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.Genesi
 
 	utilityReplicaUnitOfWorkMock.EXPECT().
 		ApplyBlock().
-		Return(stateHash, make([][]byte, 0), nil).
+		Return(nil).
+		AnyTimes()
+	utilityReplicaUnitOfWorkMock.EXPECT().
+		GetStateHash().
+		Return(stateHash).
 		AnyTimes()
 	utilityReplicaUnitOfWorkMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	utilityReplicaUnitOfWorkMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
@@ -518,12 +526,38 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 	return rpcMock
 }
 
-func baseStateMachineMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockStateMachineModule {
+func baseStateMachineMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *mockModules.MockStateMachineModule {
 	ctrl := gomock.NewController(t)
 	stateMachineMock := mockModules.NewMockStateMachineModule(ctrl)
 	stateMachineMock.EXPECT().Start().Return(nil).AnyTimes()
 	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
+
+	consensusMod := bus.GetConsensusModule()
+
+	stateMachineMock.EXPECT().SendEvent(gomock.Any()).DoAndReturn(func(event coreTypes.StateMachineEvent, args ...any) error {
+		switch coreTypes.StateMachineEvent(event) {
+		case coreTypes.StateMachineEvent_Consensus_IsUnsynced:
+			t.Logf("Mocked node is unsynced")
+			return bus.GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
+		case coreTypes.StateMachineEvent_Consensus_IsSyncing:
+			t.Logf("Mocked node is syncing")
+			maxHeight := consensusMod.GetAggregatedStateSyncMetadataMaxHeight()
+			// TECHDEBT(#352): The asynchronicity of this leads to a non-deterministic failing test.
+			// See this discussion for details: https://github.com/pokt-network/pocket/pull/528/files#r1150711575
+			consensusMod.SetHeight(maxHeight)
+			return nil
+		case coreTypes.StateMachineEvent_Consensus_IsSyncedValidator:
+			t.Logf("Mocked validator node is synced")
+			return nil
+		case coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator:
+			t.Logf("Mocked non-validator node is synced")
+			return nil
+		default:
+			log.Printf("Mocked node is not handling this event: %s", event)
+			return nil
+		}
+	}).AnyTimes()
 
 	return stateMachineMock
 }

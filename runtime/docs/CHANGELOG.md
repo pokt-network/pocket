@@ -7,9 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.29] - 2023-03-31
+## [0.0.0.32] - 2023-04-12
 
 - Removed `runtime/configs.Config#UseLibp2p` field
+
+## [0.0.0.31] - 2023-04-11
+
+- Add comment regarding KeybaseConfig proto design.
+
+## [0.0.0.30] - 2023-04-07
+
+- Update `genesis.proto` to add `owner` tags to all governance parameters
+
+## [0.0.0.29] - 2023-04-06
+
+- Updated to reflect pools address changes
 
 ## [0.0.0.28] - 2023-03-30
 
