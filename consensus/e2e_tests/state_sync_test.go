@@ -115,8 +115,7 @@ func TestStateSync_ServerGetBlock_Success(t *testing.T) {
 
 	// Start waiting for the get block request on server node, expect to return error
 	errMsg := "StateSync Get Block Request Message"
-	numExpectedMsgs := 1
-	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 500, false)
+	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 500, false)
 	require.NoError(t, err)
 
 	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
@@ -173,10 +172,9 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	// Send get block request to the server node
 	P2PSend(t, serverNode, anyProto)
 
-	numExpectedMsgs := 1
 	// Start waiting for the get block request on server node, expect to return error
 	errMsg := "StateSync Get Block Request Message"
-	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 500, false)
+	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 500, false)
 	require.Error(t, err)
 }
 
@@ -268,6 +266,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		MaxHeight:   testHeight,
 	}
 
+	// Simulate state sync metadata response by pushing metadata to the unsynced node's consensus module
 	consensusModImpl := GetConsensusModImpl(unsyncedNode)
 	consensusModImpl.MethodByName("PushStateSyncMetadataResponse").Call([]reflect.Value{reflect.ValueOf(metadataReceived)})
 
@@ -281,7 +280,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// TODO(#352): This function will be updated once state sync implementation is complete
-	err = waitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, testHeight)
+	err = WaitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, testHeight)
 	require.NoError(t, err)
 
 	// TODO(#352): Add height check once state sync implmentation is complete

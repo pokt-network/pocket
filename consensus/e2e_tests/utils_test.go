@@ -537,7 +537,7 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 	return rpcMock
 }
 
-func waitForNextBlock(
+func WaitForNextBlock(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
@@ -549,44 +549,52 @@ func waitForNextBlock(
 ) *coreTypes.Block {
 	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(height, uint64(round), uint8(consensus.NewRound)))
 
+	// 1. NewRound
 	newRoundMessages, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.NewRound), round, 0, numValidators*numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, newRoundMessages, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
+	// 2. Prepare
 	prepareProposals, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.Prepare), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, prepareProposals, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	prepareVotes, err := waitForVotes(t, clck, eventsChannel, pocketNodes, numValidators, 2, maxWaitTime, failOnExtraMessages)
+	// wait for prepare votes
+	prepareVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, 2, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, prepareVotes, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
+	// 3. PreCommit
 	preCommitProposals, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.PreCommit), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, preCommitProposals, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	preCommitVotes, err := waitForVotes(t, clck, eventsChannel, pocketNodes, numValidators, 3, maxWaitTime, failOnExtraMessages)
+	// wait for preCommit votes
+	preCommitVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, 3, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, preCommitVotes, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	commitProposal, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.Commit), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
+	// 4. Commit
+	commitProposals, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.Commit), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
-	broadcastMessages(t, commitProposal, pocketNodes)
+	broadcastMessages(t, commitProposals, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	commitVotes, err := waitForVotes(t, clck, eventsChannel, pocketNodes, numValidators, 4, maxWaitTime, failOnExtraMessages)
+	// wait for commit votes
+	commitVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, 4, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, commitVotes, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	decideProposal, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.Decide), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
+	// 5. Decide
+	decideProposals, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.Decide), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
-	broadcastMessages(t, decideProposal, pocketNodes)
+	broadcastMessages(t, decideProposals, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	blockStore := pocketNodes[1].GetBus().GetPersistenceModule().GetBlockStore()
@@ -643,37 +651,22 @@ func waitForProposalMsgs(
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
 	}
-
 	return proposalMsgs, nil
 }
 
-func waitForVotes(
-	t *testing.T,
-	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
-	pocketNodes IdToNodeMapping,
-	//	prepareProposal []*anypb.Any,
-	numExpectedMsgs int,
-	step int,
-	maxWaitTime time.Duration,
-	failOnExtraMessages bool,
-) ([]*anypb.Any, error) {
-
-	// for _, message := range prepareProposal {
-	// 	P2PBroadcast(t, pocketNodes, message)
-	// }
-	// advanceTime(t, clck, 10*time.Millisecond)
-
-	return WaitForNetworkConsensusEvents(t, clck, eventsChannel, typesCons.HotstuffStep(step), consensus.Vote, numExpectedMsgs, maxWaitTime, failOnExtraMessages)
+func broadcastMessages(t *testing.T, msgs []*anypb.Any, pocketNodes IdToNodeMapping) {
+	for _, message := range msgs {
+		P2PBroadcast(t, pocketNodes, message)
+	}
 }
 
-// waitForNodeToSync waits for a node to sync to a target height
+// WaitForNodeToSync waits for a node to sync to a target height
 // For every missing block for the unsynced node:
 //
 //	first, waits for the node to request a missing block via `waitForNodeToRequestMissingBlock()` function,
 //	then, waits for the node to receive the missing block via `waitForNodeToReceiveMissingBlock()` function,
 //	finally, wait for the node to catch up to the target height via `waitForNodeToCatchUp()` function.
-func waitForNodeToSync(
+func WaitForNodeToSync(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
@@ -681,7 +674,6 @@ func waitForNodeToSync(
 	allNodes IdToNodeMapping,
 	targetHeight uint64,
 ) error {
-
 	currentHeight := unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 
 	for i := currentHeight; i <= targetHeight; i++ {
@@ -700,14 +692,7 @@ func waitForNodeToSync(
 			return err
 		}
 	}
-
 	return nil
-}
-
-func broadcastMessages(t *testing.T, msgs []*anypb.Any, pocketNodes IdToNodeMapping) {
-	for _, message := range msgs {
-		P2PBroadcast(t, pocketNodes, message)
-	}
 }
 
 // TODO(#352): implement this function.

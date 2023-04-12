@@ -34,7 +34,8 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	block := waitForNextBlock(t, clockMock, eventsChannel, pocketNodes, 1, 0, 500, true)
+	// Wait for nodes to reach height=1 by generating a block
+	block := WaitForNextBlock(t, clockMock, eventsChannel, pocketNodes, 1, 0, 500, true)
 	require.Equal(t, uint64(1), block.BlockHeader.Height)
 
 	// Expecting NewRound messages for height=2 to be sent after a block is committed
