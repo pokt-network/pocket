@@ -90,12 +90,14 @@ func (view *sortedPeersView) init(startAddr crypto.Address, pstore Peerstore) *s
 		view.sortedAddrs[i] = peer.GetAddress().String()
 	}
 
+	// sort sortedAddrs
+	view.sortAddrs(startAddr)
+
 	// Copying sortedPeers, preserving the sort order of sortedAddrs.
 	for i := 0; i < len(view.sortedAddrs); i++ {
 		view.sortedPeers[i] = pstore.GetPeerFromString(view.sortedAddrs[i])
 	}
 
-	view.sortAddrs(startAddr)
 	return view
 }
 
