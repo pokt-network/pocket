@@ -9,7 +9,6 @@ import (
 	"github.com/libp2p/go-libp2p"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
-	connmgr "github.com/libp2p/go-libp2p/p2p/net/connmgr"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
 	"go.uber.org/multierr"
@@ -321,18 +320,10 @@ func (m *p2pModule) setupHost() (err error) {
 		opts = append(opts, m.listenAddrs)
 	}
 
-	cm, err := connmgr.NewConnManager(0, 1)
-
-	// cm, _ := connmgr.NewConnManager(2, 10, opts)
-	opts = append(opts, libp2p.ConnectionManager(cm))
 	m.host, err = libp2p.New(opts...)
 	if err != nil {
 		return fmt.Errorf("unable to create libp2p host: %w", err)
 	}
-
-	// libp2p.ConnectionManager(
-	// 	libp2p.ConnectionManagerWithMaxPeers(maxOutboundConns),
-	// )
 
 	// TECHDEBT(#609): use `StringArrayLogMarshaler` post test-utilities refactor.
 	addrStrs := make(map[int]string)
@@ -405,6 +396,10 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 		return
 	}
 
+	if err := stream.Reset(); err != nil {
+		m.logger.Debug().Err(err).Msg("resetting stream (read-side)")
+	}
+
 	// debug logging
 	remotePeer, err := utils.PeerFromLibp2pStream(stream)
 	if err != nil {
@@ -416,13 +411,6 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 
 	if err := m.handleNetworkData(data); err != nil {
 		m.logger.Error().Err(err).Msg("handling network data")
-	}
-
-	// if err := stream.CloseRead(); err != nil {
-	// 	m.logger.Debug().Err(err).Msg("closing read stream")
-	// }
-	if err := stream.Reset(); err != nil {
-		m.logger.Debug().Err(err).Msg("closing read stream")
 	}
 }
 
