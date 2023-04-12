@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math"
 	"regexp"
 
 	conTypes "github.com/pokt-network/pocket/consensus/types"
@@ -17,6 +18,30 @@ var paramValueRegex *regexp.Regexp
 
 func init() {
 	paramValueRegex = regexp.MustCompile(`value:"(.+)"`)
+}
+
+func getPageIndexes(totalItems, page, per_page int) (startIdx, endIdx, totalPages int, err error) {
+	if totalItems == 0 {
+		err = fmt.Errorf("no items found")
+		return
+	}
+	if page == 0 || per_page == 0 {
+		err = fmt.Errorf("page and per_page must both be greater than 0")
+		return
+	}
+
+	totalPages = int(math.Ceil(float64(totalItems) / float64(per_page)))
+	startIdx = (page - 1) * per_page
+	if startIdx > totalItems-1 {
+		err = fmt.Errorf("starting page too high: got %d, total pages: %d", page, totalPages)
+		return
+	}
+	endIdx = (page * per_page) - 1
+	if endIdx >= totalItems {
+		endIdx = totalItems - 1 //  Last Index
+	}
+
+	return startIdx, endIdx, totalPages, nil
 }
 
 // txResultToRPCTransaction converts the txResult protobuf into the RPC Transaction type

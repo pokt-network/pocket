@@ -249,6 +249,25 @@ func attachChildPwdFlagToSubcommands() []cmdOption {
 	}}
 }
 
+func attachHeightFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().Int64Var(&height, "height", 0, "block height to query, (default = 0, latest)")
+	}}
+}
+
+func attachPaginationFlagsToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().Int64Var(&page, "page", 1, "page number to return of paginated query")
+		c.Flags().Int64Var(&per_page, "per_page", 1000, "number of results to show per page in a paginated query")
+	}}
+}
+
+func attachSortFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&sort, "sort", "desc", "order to sort results in  ('asc' or default 'desc')")
+	}}
+}
+
 func attachKeybaseFlagsToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
 		c.Flags().StringVar(&kbTypeStrFromCLI, "keybase", "", "keybase type used by the cmd, options are: file, vault")
