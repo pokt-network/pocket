@@ -41,8 +41,8 @@ var (
 	StakeToUpdate        = utils.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
 
 	DefaultStakeStatus     = int32(coreTypes.StakeStatus_Staked)
-	DefaultPauseHeight     = int64(-1) // pauseHeight=-1 means not paused
-	DefaultUnstakingHeight = int64(-1) // pauseHeight=-1 means not unstaking
+	DefaultPauseHeight     = int64(-1) // pauseHeight=-1 implies not paused
+	DefaultUnstakingHeight = int64(-1) // unstakingHeight=-1 implies not unstaking
 
 	OlshanskyURL    = "https://olshansky.info"
 	OlshanskyChains = []string{"OLSH"}

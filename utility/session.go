@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -135,7 +136,7 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 	for _, servicer := range servicers {
 		// Sanity check the servicer is not paused or unstaking
 		if !(servicer.PausedHeight == -1 && servicer.UnstakingHeight == -1) {
-			return fmt.Errorf("selectSessionServicers should not have encountered a paused or unstaking servicer: %s", servicer.Address)
+			return fmt.Errorf("hydrateSessionServicers should not have encountered a paused or unstaking servicer: %s", servicer.Address)
 		}
 
 		// TODO_IN_THIS_COMMIT: if servicer.GeoZone includes session.GeoZone
@@ -144,7 +145,13 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 		var chain string
 		for _, chain = range servicer.Chains {
 			// TODO_IN_THIS_COMMIT: Change actor chains to use the enum
-			if chain != string(s.session.RelayChain) {
+
+			// quick hack
+			chainNum, _ := strconv.Atoi(chain)
+			enumNum := int(s.session.RelayChain)
+			// fmt.Println("OLSH", i)
+
+			if chainNum != enumNum {
 				chain = ""
 				continue
 			}
@@ -166,7 +173,50 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 //
 // 2) calls `pseudoRandomSelection(fishermen, numberOfFishPerSession)`
 func (s *sessionHydrator) hydrateSessionFishermen() error {
-	// IMPORTANT: This function is for behaviour illustrative purposes only and implementation may differ.
+	// number of fisherman per session at this height
+	numFishermen, err := s.readCtx.GetIntParam(types.FishermanPerSessionParamName, s.session.Height)
+	if err != nil {
+		return err
+	}
+
+	// returns all the staked fisherman at this session height
+	fishermen, err := s.readCtx.GetAllFishermen(s.session.Height)
+	if err != nil {
+		return err
+	}
+
+	// OPTIMIZE: Update the persistence module to allow for querying for filtered fishermen directly
+	// Determine the fishermen for this session
+	candidateFishermen := make([]*coreTypes.Actor, 0)
+	for _, fisherman := range fishermen {
+		// Sanity check the fisherman is not paused or unstaking
+		if !(fisherman.PausedHeight == -1 && fisherman.UnstakingHeight == -1) {
+			return fmt.Errorf("hydrateSessionFishermen should not have encountered a paused or unstaking fisherman: %s", fisherman.Address)
+		}
+
+		// TODO_IN_THIS_COMMIT: if sfisherman.GeoZone includes session.GeoZone
+
+		// OPTIMIZE: If this was a map, we could have avoided the loop over chains
+		var chain string
+		for _, chain = range fisherman.Chains {
+			// TODO_IN_THIS_COMMIT: Change actor chains to use the enum
+
+			// quick hack
+			chainNum, _ := strconv.Atoi(chain)
+			enumNum := int(s.session.RelayChain)
+			// fmt.Println("OLSH", i)
+
+			if chainNum != enumNum {
+				chain = ""
+				continue
+			}
+		}
+		if chain != "" {
+			candidateFishermen = append(candidateFishermen, fisherman)
+		}
+	}
+
+	s.session.Fishermen = s.pseudoRandomSelection(candidateFishermen, numFishermen)
 	return nil
 }
 

@@ -47,7 +47,7 @@ func TestSession_NewSession(t *testing.T) {
 	require.Equal(t, relayChain, session.RelayChain)
 	require.Equal(t, geoZone, session.GeoZone)
 	require.Equal(t, session.Application.Address, app.Address)
-	require.Equal(t, "servicer", session.Servicers[0].Address)
+	require.Equal(t, "c7832263600476fd6ff4c5cb0a86080d0e5f48b2", session.Servicers[0].Address)
 	require.Equal(t, "fisherman", session.Fishermen[0].Address)
 
 	// require.Equal(t, session.Application.Address, "app")

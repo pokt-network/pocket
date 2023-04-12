@@ -41,6 +41,7 @@ func TestInsertParams(t *testing.T) {
 				"('fisherman_unstaking_blocks', -1, 'BIGINT', 2016)," +
 				"('fisherman_minimum_pause_blocks', -1, 'SMALLINT', 4)," +
 				"('fisherman_max_pause_blocks', -1, 'SMALLINT', 672)," +
+				"('fisherman_per_session', -1, 'SMALLINT', 1)," +
 				"('validator_minimum_stake', -1, 'STRING', '15000000000')," +
 				"('validator_unstaking_blocks', -1, 'BIGINT', 2016)," +
 				"('validator_minimum_pause_blocks', -1, 'SMALLINT', 4)," +
@@ -95,6 +96,7 @@ func TestInsertParams(t *testing.T) {
 				"('fisherman_unstaking_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('fisherman_minimum_pause_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('fisherman_max_paused_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
+				"('fisherman_per_session_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('validator_minimum_stake_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('validator_unstaking_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
 				"('validator_minimum_pause_blocks_owner', -1, 'STRING', 'da034209758b78eaea06dd99c07909ab54c99b45')," +
