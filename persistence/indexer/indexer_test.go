@@ -186,7 +186,7 @@ func TestGetByRecipient(t *testing.T) {
 	require.Equal(t, 0, len(txResultsFromSenderBad))
 }
 
-func requireTxResultsEqual(t *testing.T, txR1, txR2 coreTypes.TxResult) {
+func requireTxResultsEqual(t *testing.T, txR1, txR2 *coreTypes.TxResult) {
 	bz, err := txR1.Bytes()
 	require.NoError(t, err)
 	bz2, err := txR2.Bytes()
@@ -196,10 +196,10 @@ func requireTxResultsEqual(t *testing.T, txR1, txR2 coreTypes.TxResult) {
 
 // utility helpers
 
-func NewTestingTransactionResult(t *testing.T, height, index int) coreTypes.TxResult {
+func NewTestingTransactionResult(t *testing.T, height, index int) *coreTypes.TxResult {
 	testingTransaction := randLetterBytes()
 	resultCode, err := randomErr()
-	return &TxRes{
+	return &coreTypes.TxResult{
 		Tx:            testingTransaction,
 		Height:        int64(height),
 		Index:         int32(index),
