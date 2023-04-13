@@ -28,7 +28,7 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	selfAddr := selfPeer.GetAddress()
 
 	expectedPStoreSize := 0
-	pstore := getPeerstore(nil, expectedPStoreSize)
+	pstore := getPeerstore(t, expectedPStoreSize)
 	peers := pstore.GetPeerList()
 	for _, peer := range peers {
 		libp2pPeerInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
@@ -52,7 +52,14 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	peerstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-	network, err := NewRainTreeNetwork(host, selfAddr, busMock, peerstoreProviderMock, currentHeightProviderMock)
+	netCfg := RainTreeConfig{
+		Host:                  host,
+		Addr:                  selfAddr,
+		PeerstoreProvider:     peerstoreProviderMock,
+		CurrentHeightProvider: currentHeightProviderMock,
+	}
+
+	network, err := NewRainTreeNetwork(busMock, netCfg)
 	require.NoError(t, err)
 
 	rainTreeNet := network.(*rainTreeNetwork)
@@ -93,7 +100,7 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	// Start with a peerstore which contains self and some number of peers: the
 	// initial value of `expectedPStoreSize`.
 	expectedPStoreSize := 3
-	pstore := getPeerstore(nil, expectedPStoreSize)
+	pstore := getPeerstore(t, expectedPStoreSize)
 
 	selfPeer, host := newTestPeer(t)
 	selfAddr := selfPeer.GetAddress()
@@ -107,8 +114,14 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	busMock := mockBus(ctrl)
 	peerstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
+	netCfg := RainTreeConfig{
+		Host:                  host,
+		Addr:                  selfAddr,
+		PeerstoreProvider:     peerstoreProviderMock,
+		CurrentHeightProvider: currentHeightProviderMock,
+	}
 
-	network, err := NewRainTreeNetwork(host, selfAddr, busMock, peerstoreProviderMock, currentHeightProviderMock)
+	network, err := NewRainTreeNetwork(busMock, netCfg)
 	require.NoError(t, err)
 	rainTree := network.(*rainTreeNetwork)
 

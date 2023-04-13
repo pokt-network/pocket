@@ -27,17 +27,17 @@ type VerificationKey ecvrf.PublicKey
 type VRFProof []byte  // A proof to verify that VRFOutput belongs to a certain publicKey.
 type VRFOutput []byte // Uniformally distributed output that can be normalized to be used in a binomial distribution.
 
-func CreateVRFRandReader(lastBlockHash string, privKey crypto.PrivateKey) (io.Reader, error) {
+func CreateVRFRandReader(prevBlockHash string, privKey crypto.PrivateKey) (io.Reader, error) {
 	if privKey == nil {
 		return nil, ErrNilPrivateKey
 	}
 
-	if len(lastBlockHash) < crypto.SeedSize/2 {
-		return nil, ErrBadAppHashLength(crypto.SeedSize)
+	if len(prevBlockHash) < crypto.SeedSize/2 {
+		return nil, ErrBadStateHashLength(crypto.SeedSize)
 	}
 
 	privKeySeed := privKey.Seed()[:crypto.SeedSize/2]
-	blockHashSeed := lastBlockHash[:crypto.SeedSize/2]
+	blockHashSeed := prevBlockHash[:crypto.SeedSize/2]
 
 	seed := make([]byte, crypto.SeedSize)
 	copy(seed, privKeySeed)

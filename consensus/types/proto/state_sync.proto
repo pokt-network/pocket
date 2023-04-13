@@ -46,7 +46,7 @@ message StateSyncMessage {
 // NOT USED: This gRPC interface is **not being used at the moment**. It is in place simply as a
 // guideline of what how the types in this file could be used if a direct synchronous communication
 // between nodes were implemented. Furthermore, since the message types are used for asynchronous
-// state synching between nodes, it will enable most of the underlying business logic to be reused.
+// state syncing between nodes, it will enable most of the underlying business logic to be reused.
 service StateSyncService {
     rpc GetStateSyncMetadata (StateSyncMetadataRequest) returns (StateSyncMetadataResponse);
     rpc GetBlock (GetBlockRequest) returns (GetBlockResponse);

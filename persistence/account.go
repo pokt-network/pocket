@@ -41,30 +41,30 @@ func (p *PostgresContext) GetAccountsUpdated(height int64) (accounts []*coreType
 
 // --- Pool Functions ---
 
-func (p *PostgresContext) InsertPool(name, amount string) error {
-	return p.insertAccount(types.Pool, name, amount)
+func (p *PostgresContext) InsertPool(address []byte, amount string) error {
+	return p.insertAccount(types.Pool, hex.EncodeToString(address), amount)
 }
 
-func (p *PostgresContext) GetPoolAmount(name string, height int64) (amount string, err error) {
-	return p.getAccountAmount(types.Pool, name, height)
+func (p *PostgresContext) GetPoolAmount(address []byte, height int64) (amount string, err error) {
+	return p.getAccountAmount(types.Pool, hex.EncodeToString(address), height)
 }
 
-func (p *PostgresContext) AddPoolAmount(name, amount string) error {
-	return p.operationAccountAmount(types.Pool, name, amount, func(orig, delta *big.Int) error {
+func (p *PostgresContext) AddPoolAmount(address []byte, amount string) error {
+	return p.operationAccountAmount(types.Pool, hex.EncodeToString(address), amount, func(orig, delta *big.Int) error {
 		orig.Add(orig, delta)
 		return nil
 	})
 }
 
-func (p *PostgresContext) SubtractPoolAmount(name, amount string) error {
-	return p.operationAccountAmount(types.Pool, name, amount, func(orig, delta *big.Int) error {
+func (p *PostgresContext) SubtractPoolAmount(address []byte, amount string) error {
+	return p.operationAccountAmount(types.Pool, hex.EncodeToString(address), amount, func(orig, delta *big.Int) error {
 		orig.Sub(orig, delta)
 		return nil
 	})
 }
 
-func (p *PostgresContext) SetPoolAmount(name, amount string) error {
-	return p.operationAccountAmount(types.Pool, name, amount, func(orig, amount *big.Int) error {
+func (p *PostgresContext) SetPoolAmount(address []byte, amount string) error {
+	return p.operationAccountAmount(types.Pool, hex.EncodeToString(address), amount, func(orig, amount *big.Int) error {
 		orig.Set(amount)
 		return nil
 	})

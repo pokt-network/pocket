@@ -7,9 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.44] - 2023-03-28
+## [0.0.0.51] - 2023-04-13
 
 - Removed *temporary* `shared/p2p` package; consolidated into `p2p`
+
+## [0.0.0.50] - 2023-04-10
+
+- Added `modules.ModuleFactoryWithOptions` interface
+- Added factory interfaces:
+    - `modules.FactoryWithRequired`
+    - `modules.FactoryWithOptions`
+    - `modules.FactoryWithRequiredAndOptions`
+- Embedded `ModuleFactoryWithOptions` in `Module` interface
+- Switched mock generation to use reflect mode for effected interfaces (embedders)
+
+## [0.0.0.49] - 2023-04-07
+
+- Removed `GetParameter()` from `PersistenceReadContext`
+- Add `gov_utils.go` to create a map of all metadata related to governance parameters
+
+## [0.0.0.48] - 2023-04-07
+
+- Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`
+- Added `GetStateHash` to `UtilityUnitOfWork`
+
+## [0.0.0.47] - 2023-04-06
+
+- Updated to reflect pools address changes
+- Added tests to catch, in a future-proof way, changes to our pools
+- Updated interfaces to use `[]byte` instead of `string` for `pool` addresses for consistency with `accounts` and because otherwise fuzzy tests would fail
+
+## [0.0.0.46] - 2023-04-03
+
+- Add `ConsensusStateSync` interface. It defines exported state sync functions in consensus module
+- Update `ConsensusDebugModule` with getter and setter function for state sync testing
+- Update FSM events `Consensus_IsSyncedValidator`, `Consensus_IsSyncedNonValidator` and state `Consensus_Pacemaker`
+
+## [0.0.0.45] - 2023-03-30
+
+- Add a deadline to the primary event handling to get visibility into concurrency issues
+
+## [0.0.0.44] - 2023-03-28
+
+- Add UnmarshalJSON to KeyPair to unmarshal public key correctly
 
 ## [0.0.0.43] - 2023-03-26
 
@@ -26,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.41] - 2023-03-21
 
-- Added *temporary* `shared/p2p` package to hold P2P interfaces common to both legacy and libp2p modules
+- Added _temporary_ `shared/p2p` package to hold P2P interfaces common to both legacy and libp2p modules
 - Added `Peerstore` interface
 - Added `Peer` and `PeerList` and interfaces
 - Moved `typesP2P.AddrBookMap` to `sharedP2P.PeerAddrMap` and refactor to implement the new `Peerstore` interface

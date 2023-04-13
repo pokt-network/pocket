@@ -1,6 +1,9 @@
 package shared
 
 import (
+	"context"
+	"time"
+
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
@@ -13,10 +16,12 @@ import (
 	"github.com/pokt-network/pocket/state_machine"
 	"github.com/pokt-network/pocket/telemetry"
 	"github.com/pokt-network/pocket/utility"
+	"go.uber.org/multierr"
 )
 
 const (
-	mainModuleName = "main"
+	mainModuleName       = "main"
+	eventHandlingTimeout = 30 * time.Second // see usage for a description
 )
 
 type Node struct {
@@ -101,11 +106,33 @@ func (node *Node) Start() error {
 
 	logger.Global.Info().Msg("About to start pocket node main loop...")
 
-	// While loop lasting throughout the entire lifecycle of the node to handle asynchronous events
+	// A while loop lasting throughout the entire lifecycle of the node to handle asynchronous events
+	// send between modules or external participants.
 	for {
+		//
 		event := node.GetBus().GetBusEvent()
-		if err := node.handleEvent(event); err != nil {
-			logger.Global.Error().Err(err).Msg("Error handling event")
+		clock := node.GetBus().GetRuntimeMgr().GetClock()
+		ctx, cancel := clock.WithTimeout(context.TODO(), eventHandlingTimeout)
+
+		// `node.handleEvent`` is a blocking call, and the entrypoint into all the operations inside the node.
+		// It is run in a goroutine to allow setting a deadline for message handling and get visibility into
+		// bugs/issue including deadlocks and other concurrency issues.
+		go func() {
+			if err := node.handleEvent(event); err != nil {
+				logger.Global.Error().Err(err).Msg("Error handling event")
+			}
+			cancel()
+		}()
+
+		// Block the node event handler from continuing until the event has been handled or the deadline has been reached.
+		select {
+		case <-ctx.Done():
+			if ctx.Err() == context.DeadlineExceeded {
+				logger.Global.Error().Msgf("Event handling timed out: %v", event)
+				cancel()
+			}
+		case <-clock.After(eventHandlingTimeout + 1*time.Second):
+			cancel()
 		}
 	}
 }
@@ -130,22 +157,32 @@ func (m *Node) GetBus() modules.Bus {
 // TODO: Move all message types this is dependant on to the `messaging` package
 func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	contentType := message.GetContentType()
+	logger.Global.Debug().Fields(map[string]any{
+		"message":     message,
+		"contentType": contentType,
+	}).Msg("node handling event")
+
 	switch contentType {
 	case messaging.NodeStartedEventType:
 		logger.Global.Info().Msg("Received NodeStartedEvent")
 		if err := node.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
 			return err
 		}
-	case consensus.HotstuffMessageContentType:
+	case messaging.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
-	case consensus.StateSyncMessageContentType:
+	case messaging.StateSyncMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
 	case messaging.TxGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleUtilityMessage(message.Content)
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
-	case messaging.ConsensusNewHeightEventType, messaging.StateMachineTransitionEventType:
+	case messaging.ConsensusNewHeightEventType:
 		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
+	case messaging.StateMachineTransitionEventType:
+		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
+		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
+		// TODO: Remove this lib once we move to Go 1.2
+		return multierr.Combine(err_consensus, err_p2p)
 	default:
 		logger.Global.Warn().Msgf("Unsupported message content type: %s", contentType)
 	}

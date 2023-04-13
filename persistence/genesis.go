@@ -16,35 +16,41 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	// REFACTOR: This business logic should probably live in `types/genesis.go`
 	//           and we need to add proper unit tests for it.`
 	poolValues := make(map[string]*big.Int, 0)
-	addValueToPool := func(poolName string, valueToAdd string) error {
+	addValueToPool := func(address []byte, valueToAdd string) error {
 		value, err := utils.StringToBigInt(valueToAdd)
 		if err != nil {
 			return err
 		}
-		if present := poolValues[poolName]; present == nil {
-			poolValues[poolName] = big.NewInt(0)
+		strAddr := hex.EncodeToString(address)
+		if present := poolValues[strAddr]; present == nil {
+			poolValues[strAddr] = big.NewInt(0)
 		}
-		poolValues[poolName].Add(poolValues[poolName], value)
+		poolValues[strAddr].Add(poolValues[strAddr], value)
 		return nil
 	}
 
-	rwContext, err := m.NewRWContext(0)
+	rwCtx, err := m.NewRWContext(0)
 	if err != nil {
 		m.logger.Fatal().Err(err).Msg("an error occurred creating the rwContext for the genesis state")
 	}
+	// NB: Not calling `defer rwCtx.Release()` because we `Commit`, which releases the tx below
 
 	for _, acc := range state.GetAccounts() {
 		addrBz, err := hex.DecodeString(acc.GetAddress())
 		if err != nil {
 			m.logger.Fatal().Err(err).Str("address", acc.GetAddress()).Msg("an error occurred converting address to bytes")
 		}
-		err = rwContext.SetAccountAmount(addrBz, acc.GetAmount())
+		err = rwCtx.SetAccountAmount(addrBz, acc.GetAmount())
 		if err != nil {
 			m.logger.Fatal().Err(err).Str("address", acc.GetAddress()).Msg("an error occurred inserting an acc in the genesis state")
 		}
 	}
 	for _, pool := range state.GetPools() {
-		err = rwContext.InsertPool(pool.GetAddress(), pool.GetAmount()) // pool.GetAddress() returns the pool's semantic name
+		addrBz, err := hex.DecodeString(pool.GetAddress())
+		if err != nil {
+			m.logger.Fatal().Err(err).Str("address", pool.GetAddress()).Msg("an error occurred converting address to bytes")
+		}
+		err = rwCtx.InsertPool(addrBz, pool.GetAmount())
 		if err != nil {
 			m.logger.Fatal().Err(err).Str("address", pool.GetAddress()).Msg("an error occurred inserting an pool in the genesis state")
 		}
@@ -60,27 +66,27 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			Name:   "app",
 			Getter: state.GetApplications,
 			InsertFn: func(address, publicKey, output []byte, paused bool, status int32, serviceURL, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error {
-				return rwContext.InsertApp(address, publicKey, output, paused, status, stakedTokens, chains, pausedHeight, unstakingHeight)
+				return rwCtx.InsertApp(address, publicKey, output, paused, status, stakedTokens, chains, pausedHeight, unstakingHeight)
 			},
 			Pool: coreTypes.Pools_POOLS_APP_STAKE,
 		},
 		{
 			Name:     "servicer",
 			Getter:   state.GetServicers,
-			InsertFn: rwContext.InsertServicer,
+			InsertFn: rwCtx.InsertServicer,
 			Pool:     coreTypes.Pools_POOLS_SERVICER_STAKE,
 		},
 		{
 			Name:     "fisherman",
 			Getter:   state.GetFishermen,
-			InsertFn: rwContext.InsertFisherman,
+			InsertFn: rwCtx.InsertFisherman,
 			Pool:     coreTypes.Pools_POOLS_FISHERMAN_STAKE,
 		},
 		{
 			Name:   "validator",
 			Getter: state.GetValidators,
 			InsertFn: func(address, publicKey, output []byte, paused bool, status int32, serviceURL, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error {
-				return rwContext.InsertValidator(address, publicKey, output, paused, status, serviceURL, stakedTokens, pausedHeight, unstakingHeight)
+				return rwCtx.InsertValidator(address, publicKey, output, paused, status, serviceURL, stakedTokens, pausedHeight, unstakingHeight)
 			},
 			Pool: coreTypes.Pools_POOLS_VALIDATOR_STAKE,
 		},
@@ -104,22 +110,22 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			if err != nil {
 				log.Fatalf("an error occurred inserting an %s in the genesis state: %s", saic.Name, err.Error())
 			}
-			if err = addValueToPool(saic.Pool.FriendlyName(), act.GetStakedAmount()); err != nil {
+			if err = addValueToPool(saic.Pool.Address(), act.GetStakedAmount()); err != nil {
 				log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", saic.Pool, err.Error())
 			}
 		}
 	}
 
-	if err = rwContext.InitGenesisParams(state.Params); err != nil {
+	if err = rwCtx.InitGenesisParams(state.Params); err != nil {
 		log.Fatalf("an error occurred initializing params: %s", err.Error())
 	}
 
-	if err = rwContext.InitFlags(); err != nil { // TODO (Team) use flags from genesis file not hardcoded
+	if err = rwCtx.InitFlags(); err != nil { // TODO (Team) use flags from genesis file not hardcoded
 		m.logger.Fatal().Err(err).Msg("an error occurred initializing flags")
 	}
 
 	// Updates all the merkle trees
-	stateHash, err := rwContext.ComputeStateHash()
+	stateHash, err := rwCtx.ComputeStateHash()
 	if err != nil {
 		m.logger.Fatal().Err(err).Msg("an error occurred updating the app hash during genesis")
 	}
@@ -127,7 +133,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 
 	// This updates the DB, blockstore, and commits the genesis state.
 	// Note that the `quorumCert for genesis` is nil.
-	if err = rwContext.Commit(nil, nil); err != nil {
+	if err = rwCtx.Commit(nil, nil); err != nil {
 		m.logger.Fatal().Err(err).Msg("an error occurred committing the genesis state to the DB")
 	}
 }

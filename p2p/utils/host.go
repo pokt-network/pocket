@@ -8,6 +8,7 @@ import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	"go.uber.org/multierr"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 )
@@ -85,17 +86,31 @@ func Libp2pSendToPeer(host libp2pHost.Host, data []byte, peer typesP2P.Peer) err
 		return err
 	}
 
+	// debug logging: network resource scope stats
+	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.27.0/core/network#ResourceManager)
+	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.27.0/core/network#ResourceScopeViewer)
+	logScope := LogScopeStatFactory(&logger.Global.Logger, "host transient resource scope")
+	err = host.Network().ResourceManager().ViewTransient(logScope)
+	if err != nil {
+		logger.Global.Debug().Err(err).Msg("logging resource scope stats")
+	}
+
 	stream, err := host.NewStream(ctx, peerInfo.ID, protocol.PoktProtocolID)
 	if err != nil {
 		return fmt.Errorf("opening stream: %w", err)
 	}
 
-	if _, err = stream.Write(data); err != nil {
+	if n, err := stream.Write(data); err != nil {
 		return multierr.Append(
 			fmt.Errorf("writing to stream: %w", err),
 			stream.Reset(),
 		)
+	} else {
+		logger.Global.Debug().Int("bytes", n).Msg("written to peer stream")
 	}
 
-	return stream.CloseWrite()
+	// MUST USE `streamClose` NOT `stream.CloswWrite`; otherwise, outbound streams
+	// will accumulate until resource limits are hit; e.g.:
+	// > "opening stream: stream-3478: transient: cannot reserve outbound stream: resource limit exceeded"
+	return stream.Close()
 }

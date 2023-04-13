@@ -26,27 +26,27 @@ var expectedGenesis = &genesis.GenesisState{
 	MaxBlockBytes: 4000000,
 	Pools: []*types.Account{
 		{
-			Address: "DAO",
+			Address: "44414f0000000000000000000000000000000000",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "FeeCollector",
+			Address: "466565436f6c6c6563746f720000000000000000",
 			Amount:  "0",
 		},
 		{
-			Address: "AppStakePool",
+			Address: "4170705374616b65506f6f6c0000000000000000",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "ValidatorStakePool",
+			Address: "56616c696461746f725374616b65506f6f6c0000",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "ServicerStakePool",
+			Address: "53657276696365725374616b65506f6f6c000000",
 			Amount:  "100000000000000",
 		},
 		{
-			Address: "FishermanStakePool",
+			Address: "4669736865726d616e5374616b65506f6f6c0000",
 			Amount:  "100000000000000",
 		},
 	},
@@ -4153,7 +4153,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 		genesisReader io.Reader
 		options       []func(*Manager)
 	}
-
+	defaultCfg := configs.NewDefaultConfig()
 	buildConfigBytes, err := os.ReadFile("../build/config/config1.json")
 	if err != nil {
 		require.NoError(t, err)
@@ -4184,7 +4184,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						PrivateKey:      "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 						MaxMempoolBytes: 500000000,
 						PacemakerConfig: &configs.PacemakerConfig{
-							TimeoutMsec:               5000,
+							TimeoutMsec:               10000,
 							Manual:                    true,
 							DebugTimeBetweenStepsMsec: 1000,
 						},
@@ -4200,11 +4200,11 @@ func TestNewManagerFromReaders(t *testing.T) {
 						BlockStorePath:    "/var/blockstore",
 						TxIndexerPath:     "",
 						TreesStoreDir:     "/var/trees",
-						MaxConnsCount:     8,
-						MinConnsCount:     0,
-						MaxConnLifetime:   "1h",
-						MaxConnIdleTime:   "30m",
-						HealthCheckPeriod: "5m",
+						MaxConnsCount:     50,
+						MinConnsCount:     1,
+						MaxConnLifetime:   "5m",
+						MaxConnIdleTime:   "1m",
+						HealthCheckPeriod: "30s",
 					},
 					P2P: &configs.P2PConfig{
 						PrivateKey:      "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
@@ -4229,6 +4229,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						Timeout: 30000,
 						UseCors: false,
 					},
+					Keybase: defaultCfg.Keybase,
 				},
 				genesisState: expectedGenesis,
 				clock:        clock.New(),
@@ -4262,6 +4263,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						ConnectionType:  configTypes.ConnectionType_TCPConnection,
 						MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
 					},
+					Keybase: defaultCfg.Keybase,
 				},
 				genesisState: expectedGenesis,
 				clock:        clock.New(),

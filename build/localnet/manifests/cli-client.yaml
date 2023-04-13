@@ -76,7 +76,10 @@ spec:
               # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
             - name: RPC_HOST
               value: v1-validator001
+            - name: POCKET_P2P_HOSTNAME
+              value: "127.0.0.1"
           volumeMounts:
+            # IMPROVE: should probably go in /etc/pocket and have Viper read from there as a default path
             - mountPath: /var/pocket/config
               name: config-volume
             - mountPath: /var/pocket/genesis

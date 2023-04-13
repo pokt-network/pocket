@@ -40,13 +40,13 @@ func (*persistencePeerstoreProvider) GetModuleName() string {
 }
 
 func (pabp *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
-	persistenceReadContext, err := pabp.GetBus().GetPersistenceModule().NewReadContext(int64(height))
+	readCtx, err := pabp.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	defer persistenceReadContext.Close()
+	defer readCtx.Release()
 
-	validators, err := persistenceReadContext.GetAllValidators(int64(height))
+	validators, err := readCtx.GetAllValidators(int64(height))
 	if err != nil {
 		return nil, err
 	}

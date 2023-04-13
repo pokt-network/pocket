@@ -1,6 +1,6 @@
 package peerstore_provider
 
-//go:generate mockgen -source=$GOFILE -destination=../../types/mocks/peerstore_provider_mock.go -package=mock_types github.com/pokt-network/pocket/p2p/types PeerstoreProvider
+//go:generate mockgen -destination=../../types/mocks/peerstore_provider_mock.go -package=mock_types github.com/pokt-network/pocket/p2p/providers/peerstore_provider PeerstoreProvider
 
 import (
 	"go.uber.org/multierr"

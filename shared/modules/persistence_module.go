@@ -1,6 +1,6 @@
 package modules
 
-//go:generate mockgen -source=$GOFILE -destination=./mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+//go:generate mockgen -destination=./mocks/persistence_module_mock.go github.com/pokt-network/pocket/shared/modules PersistenceModule,PersistenceRWContext,PersistenceReadContext,PersistenceWriteContext
 
 import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -60,9 +60,9 @@ type PersistenceWriteContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
-	Release() error
+	Release()
 
-	// Commits the current context (height, hash, transactions, etc...) to disk (i.e. finality).
+	// Commits (and releases) the current context to disk (i.e. finality).
 	Commit(proposerAddr, quorumCert []byte) error
 
 	// Indexer Operations
@@ -76,10 +76,10 @@ type PersistenceWriteContext interface {
 	IndexTransaction(txResult TxResult) error
 
 	// Pool Operations
-	AddPoolAmount(name string, amount string) error
-	SubtractPoolAmount(name string, amount string) error
-	SetPoolAmount(name string, amount string) error
-	InsertPool(name string, amount string) error
+	AddPoolAmount(address []byte, amount string) error
+	SubtractPoolAmount(address []byte, amount string) error
+	SetPoolAmount(address []byte, amount string) error
+	InsertPool(address []byte, amount string) error
 
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error
@@ -131,7 +131,7 @@ type PersistenceWriteContext interface {
 type PersistenceReadContext interface {
 	// Context Operations
 	GetHeight() (int64, error) // Returns the height of the context
-	Close() error              // Closes the read context
+	Release()                  // Releases the read context
 
 	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries
@@ -142,7 +142,7 @@ type PersistenceReadContext interface {
 	// Pool Queries
 
 	// Returns "0" if the account does not exist
-	GetPoolAmount(name string, height int64) (amount string, err error)
+	GetPoolAmount(address []byte, height int64) (amount string, err error)
 	GetAllPools(height int64) ([]*coreTypes.Account, error)
 
 	// Account Queries
@@ -196,7 +196,7 @@ type PersistenceReadContext interface {
 	GetIntParam(paramName string, height int64) (int, error)
 	GetStringParam(paramName string, height int64) (string, error)
 	GetBytesParam(paramName string, height int64) ([]byte, error)
-	GetParameter(paramName string, height int64) (any, error)
+	GetAllParams() ([][]string, error)
 
 	// Flags
 	GetIntFlag(paramName string, height int64) (int, bool, error)

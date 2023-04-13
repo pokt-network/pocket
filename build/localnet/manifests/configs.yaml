@@ -8,11 +8,10 @@ data:
     {
       "root_directory": "/go/src/github.com/pocket-network",
       "private_key": "",
-      "use_libp2p": false,
       "consensus": {
         "max_mempool_bytes": 500000000,
         "pacemaker_config": {
-          "timeout_msec": 5000,
+          "timeout_msec": 10000,
           "manual": true,
           "debug_time_between_steps_msec": 1000
         },
@@ -28,14 +27,15 @@ data:
         "block_store_path": "/validator-storage/blockstore",
         "tx_indexer_path": "",
         "trees_store_dir": "/validator-storage/trees",
-        "max_conns_count": 8,
-        "min_conns_count": 0,
-        "max_conn_lifetime": "1h",
-        "max_conn_idle_time": "30m",
-        "health_check_period": "5m"
+        "max_conns_count": 50,
+        "min_conns_count": 1,
+        "max_conn_lifetime": "5m",
+        "max_conn_idle_time": "1m",
+        "health_check_period": "30s"
       },
       "p2p": {
         "port": 42069,
+        "hostname": "",
         "use_rain_tree": true,
         "is_empty_connection_type": false,
         "private_key": "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
@@ -4074,27 +4074,27 @@ data:
       ],
       "pools": [
         {
-          "address": "DAO",
+          "address": "44414f0000000000000000000000000000000000",
           "amount": "100000000000000"
         },
         {
-          "address": "FeeCollector",
+          "address": "466565436f6c6c6563746f720000000000000000",
           "amount": "0"
         },
         {
-          "address": "AppStakePool",
+          "address": "4170705374616b65506f6f6c0000000000000000",
           "amount": "100000000000000"
         },
         {
-          "address": "ValidatorStakePool",
+          "address": "56616c696461746f725374616b65506f6f6c0000",
           "amount": "100000000000000"
         },
         {
-          "address": "ServicerStakePool",
+          "address": "53657276696365725374616b65506f6f6c000000",
           "amount": "100000000000000"
         },
         {
-          "address": "FishermanStakePool",
+          "address": "4669736865726d616e5374616b65506f6f6c0000",
           "amount": "100000000000000"
         }
       ],

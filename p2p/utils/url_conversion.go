@@ -131,9 +131,6 @@ func newResolvePeerIPErr(hostname string, err error) error {
 }
 
 func getPeerIP(hostname string) (net.IP, error) {
-	// TECHDEBT(#595): receive `ctx` from caller.
-	ctx := context.Background()
-
 	// Attempt to parse peer hostname as an IP address.
 	// (see: https://pkg.go.dev/net#ParseIP)
 	peerIP := net.ParseIP(hostname)
@@ -144,7 +141,8 @@ func getPeerIP(hostname string) (net.IP, error) {
 	// CONSIDERATION: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
 	// I attempted using `/dns4/.../tcp/...` and go this error:
 	// > failed to listen on any addresses: [can only dial TCP over IPv4 or IPv6]
-	addrs, err := net.DefaultResolver.LookupHost(ctx, hostname)
+	// TECHDEBT(#595): receive `ctx` from caller.
+	addrs, err := net.DefaultResolver.LookupHost(context.TODO(), hostname)
 	if err != nil {
 		return nil, newResolvePeerIPErr(hostname, err)
 	}
@@ -193,7 +191,7 @@ func getPeerIP(hostname string) (net.IP, error) {
 
 // stringLogArrayMarshaler implements the `zerolog.LogArrayMarshaler` interface
 // to marshal an array of strings for use with zerolog.
-// TECHDEBT(#609): move to test common utilities.
+// TECHDEBT(#609): move & de-duplicate
 type stringLogArrayMarshaler struct {
 	strs []string
 }

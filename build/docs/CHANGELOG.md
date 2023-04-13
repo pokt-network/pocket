@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.33] - 2023-04-13
+
+- Removed runtime/configs.Config#UseLibp2p field
+- Use pod IP for validator DNS resolution tilt localnet
+- Add `LIBP2P_DEBUG` env var
+
+## [0.0.0.32] - 2023-04-10
+
+- Adds e2e-tests button to Tiltfile
+
+## [0.0.0.31] - 2023-04-06
+
+- Updated `genesis.json` and `configs.yaml` to reflect pools address changes
+
+## [0.0.0.30] - 2023-03-31
+
+- Include `cluster-manager` to `-dev` flavor of container images.
+
+## [0.0.0.29] - 2023-03-30
+
+- `cluster-manager` now waits for `v1-validator001` to be online AND responsive by checking the `/v1/health` endpoint (dogfooding)
+- `cluster-manager` skips auto staking for the validators that are already staked in genesis
+
+## [0.0.0.28] - 2023-03-30
+
+- Update `pacemaker_timeout` from 5 to 10 seconds to make the logging output less noisy during development
+- Updated configurations related to postgres connection pooling
+
+## [0.0.0.27] - 2023-03-28
+
+- Silence gopls build error about missing DebugKeybaseBackup
+
+## [0.0.0.26] - 2023-03-28
+
+- Make k8s distribution recommendation more opinionated
+
 ## [0.0.0.25] - 2023-03-24
 
 - Introduced a new binary that's used to check if the debug_keybase.bak is up to date with the private-keys.yaml file and to update it if it's not.

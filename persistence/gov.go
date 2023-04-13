@@ -3,41 +3,15 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
-	"reflect"
 	"strconv"
-	"strings"
 
+	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/modules"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
 )
-
-// TODO : Deprecate these two constants when we change the persistenceRWContext interface to pass the `paramName`
-const (
-	BlocksPerSessionParamName    = "blocks_per_session"
-	ServicersPerSessionParamName = "servicers_per_session"
-)
-
-// Mapping of parameter names and their stringified type names
-var parameterNameTypeMap = make(map[string]string)
-
-// Using the json tag of the fields in the Params struct to extract the name of the
-// parameters and build a mapping in memory of the types associated to each parameter
-// name according to the struct generated from: persistence_genesis.proto
-func init() {
-	fields := reflect.VisibleFields(reflect.TypeOf(genesis.Params{}))
-	// Loop through struct fields to build parameterNameTypeMap
-	for _, field := range fields {
-		if !field.IsExported() {
-			continue
-		}
-		json := field.Tag.Get("json") // Match the json tag of field: json:"paramName,omitempty"
-		paramName := strings.Split(json, ",")[0]
-		typ := field.Type.Name() // Get string version of field's type
-		parameterNameTypeMap[paramName] = typ
-	}
-}
 
 func (p *PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	ctx, tx := p.getCtxAndTx()
@@ -48,21 +22,21 @@ func (p *PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	return err
 }
 
-// Match paramName against the ParameterNameTypeMap struct and call the proper
-// getter function getParamOrFlag[int | string | byte] and return its values
-func (p *PostgresContext) GetParameter(paramName string, height int64) (v any, err error) {
-	paramType := parameterNameTypeMap[paramName]
-	switch paramType {
-	case "int", "int32", "int64":
-		v, _, err = getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
-	case "string":
-		v, _, err = getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
-	case "[]uint8": // []byte
-		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
+func GetParameter[T int | string | []byte](p modules.PersistenceReadContext, paramName string, height int64) (i T, err error) {
+	switch tp := any(i).(type) {
+	case int:
+		v, er := p.GetIntParam(paramName, height)
+		return any(v).(T), er
+	case string:
+		v, er := p.GetStringParam(paramName, height)
+		return any(v).(T), er
+	case []byte:
+		v, er := p.GetBytesParam(paramName, height)
+		return any(v).(T), er
 	default:
-		return nil, fmt.Errorf("unhandled type for param: got %s.", paramType)
+		logger.Global.Fatal().Msgf("unhandled type for param (%s): got %s.", paramName, tp)
 	}
-	return v, err
+	return
 }
 
 func (p *PostgresContext) GetIntParam(paramName string, height int64) (int, error) {
@@ -215,11 +189,41 @@ func (p *PostgresContext) getFlagsUpdated(height int64) ([]*coreTypes.Flag, erro
 	return flagSlice, nil
 }
 
+// GetAllParams returns a map of the current latest updated values for all parameters
+// and their values in the form map[parameterName] = parameterValue
+func (p *PostgresContext) GetAllParams() ([][]string, error) {
+	ctx, tx := p.getCtxAndTx()
+	// Get all the parameters in their most recently updated form
+	rows, err := tx.Query(ctx, p.getLatestParamsOrFlagsQuery(types.ParamsTableName))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	paramSlice := make([][]string, 0)
+	for rows.Next() {
+		var paramName, paramValue string
+		if err := rows.Scan(&paramName, &paramValue); err != nil {
+			return nil, err
+		}
+		paramSlice = append(paramSlice, []string{paramName, paramValue})
+	}
+	return paramSlice, nil
+}
+
 func (p *PostgresContext) getParamsOrFlagsUpdateAtHeightQuery(tableName string, height int64) string {
 	fields := "name,value"
 	if tableName == types.FlagsTableName {
 		fields += ",enabled"
 	}
 	// Build correct query to get all Params/Flags at certain height ordered by their name values
-	return fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d ORDER BY name ASC`, fields, tableName, height)
+	return fmt.Sprintf("SELECT %s FROM %s WHERE height=%d ORDER BY name ASC", fields, tableName, height)
+}
+
+func (p *PostgresContext) getLatestParamsOrFlagsQuery(tableName string) string {
+	fields := "name,value"
+	if tableName == types.FlagsTableName {
+		fields += ",enabled"
+	}
+	// Return a query to select all params or queries but only the most recent update for each
+	return fmt.Sprintf("SELECT DISTINCT ON (name) %s FROM %s ORDER BY name ASC,%s.height DESC", fields, tableName, tableName)
 }

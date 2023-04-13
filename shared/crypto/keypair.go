@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/gob"
+	"encoding/json"
 )
 
 // Gob Encoding is used to serialise the data to store the KeyPairs in the BadgerDB database
@@ -43,11 +44,11 @@ var _ KeyPair = &encKeyPair{}
 // encKeyPair struct stores the public key and the passphrase encrypted private key
 // The encrypted private key is stored as a JSON string with the fields needed to decrypt the key
 type encKeyPair struct {
-	PublicKey     PublicKey
-	PrivKeyArmour string
+	PublicKey     PublicKey `json:"public_key"`
+	PrivKeyArmour string    `json:"priv_key_armour"`
 }
 
-// newKeyPair Generates a new KeyPair interface given the public key and armoured private key
+// newKeyPair Generate a new KeyPair struct given the public key and armoured private key
 func newKeyPair(pub PublicKey, priv string) KeyPair {
 	return &encKeyPair{
 		PublicKey:     pub,
@@ -132,6 +133,26 @@ func (kp *encKeyPair) Unmarshal(bz []byte) error {
 		return err
 	}
 	*kp = keyPair
+	return nil
+}
+
+// UnmarshalJSON Unmarshals a JSON string into an encKeyPair struct
+func (ekp *encKeyPair) UnmarshalJSON(data []byte) error {
+	type Alias encKeyPair
+	aux := &struct {
+		PublicKey string `json:"public_key"`
+		*Alias
+	}{
+		Alias: (*Alias)(ekp),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	pubKey, err := NewPublicKey(aux.PublicKey)
+	if err != nil {
+		return err
+	}
+	ekp.PublicKey = pubKey
 	return nil
 }
 

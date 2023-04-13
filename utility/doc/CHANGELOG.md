@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.36] - 2023-04-07
+
+- Add wrapper functions for `GetParameter()`
+- Add generic governance parameter accessor functions `getParamOwner()` and `getGovParam()`
+- Refactor governance parameter accessor functions to use general wrapper functions
+- Clean up tests
+
+## [0.0.0.35] - 2023-04-07
+
+- Renamed `CreateAndApplyProposalBlock` to `CreateProposalBlock`
+- Added `GetPrevBlockByzantineValidators` and `ProposalBlockNotSet` errors
+- Instrumented `CreateProposalBlock` and `ApplyBlock` with log statements
+- Refactored functions for block creation and application to be more readable/modular
+- Added TODOs for future refactoring
+- Renamed `u` to `uow` for consistency
+- Added `stateHash` validation against `proposalBlock`
+- Added feature flag for `stateHash` validation (for testing purposes)
+- Updated tests accordingly
+
+## [0.0.0.34] - 2023-04-06
+
+- Updated to reflect pools address changes
+
+## [0.0.0.33] - 2023-03-30
+
+- Improved logging throughout the module
+
 ## [0.0.0.32] - 2023-03-26
 
 - Refactored `utilityContext` into `utilityUnitOfWork`

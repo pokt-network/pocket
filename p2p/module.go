@@ -10,7 +10,7 @@ import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
-	"go.uber.org/multierr"
+	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -44,20 +44,26 @@ var _ modules.P2PModule = &p2pModule{}
 type p2pModule struct {
 	base_modules.IntegratableModule
 
-	address               cryptoPocket.Address
-	logger                *modules.Logger
-	cfg                   *configs.P2PConfig
-	bootstrapNodes        []string
+	address        cryptoPocket.Address
+	logger         *modules.Logger
+	options        []modules.ModuleOption
+	cfg            *configs.P2PConfig
+	bootstrapNodes []string
+	identity       libp2p.Option
+	listenAddrs    libp2p.Option
+
+	// Assigned during creation via `#setupDependencies()`.
 	currentHeightProvider providers.CurrentHeightProvider
 	pstoreProvider        providers.PeerstoreProvider
-	identity              libp2p.Option
-	listenAddrs           libp2p.Option
+
+	// Assigned during `#Start()`. TLDR; `host` listens on instantiation.
+	// and `network` depends on `host`.
+	network typesP2P.Network
 	// host represents a libp2p network node, it encapsulates a libp2p peerstore
 	// & connection manager. `libp2p.New` configures and starts listening
-	// according to options.
+	// according to options. Assigned via `#Start()` (starts on instantiation).
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
-	host    libp2pHost.Host
-	network typesP2P.Network
+	host libp2pHost.Host
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -104,7 +110,8 @@ func (m *p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 	}
 	m.identity = libp2p.Identity(libp2pPrivKey)
 
-	for _, option := range options {
+	m.options = options
+	for _, option := range m.options {
 		option(m)
 	}
 
@@ -136,6 +143,8 @@ func (m *p2pModule) GetModuleName() string {
 	return modules.P2PModuleName
 }
 
+// Start instantiates and assigns `m.host`, unless one already exists, and
+// `m.network` (which depends on `m.host` as a required config field).
 func (m *p2pModule) Start() (err error) {
 	m.GetBus().
 		GetTelemetryModule().
@@ -145,11 +154,24 @@ func (m *p2pModule) Start() (err error) {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
+	// TECHDEBT: reconsider if this is acceptable as more `modules.ModuleOption`s
+	// become supported. At time of writing, `WithHost()` is the only option
+	// and it is only used in tests.
+	// Re-evaluate options in case there is a `WithHost` option which would
+	// assign`m.host`.
+	for _, option := range m.options {
+		option(m)
+	}
+
 	// Return early if host has already been started (e.g. via `WithHostOption`)
 	if m.host == nil {
-		if err = m.startHost(); err != nil {
-			return fmt.Errorf("starting libp2pHost: %w", err)
+		if err = m.setupHost(); err != nil {
+			return fmt.Errorf("setting up libp2pHost: %w", err)
 		}
+	}
+
+	if err := m.setupNetwork(); err != nil {
+		return fmt.Errorf("setting up network: %w", err)
 	}
 
 	// Don't handle incoming streams in client debug mode.
@@ -204,8 +226,7 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }
 
-// setupDependencies sets up the module's current height and peerstore
-// providers, and the network.
+// setupDependencies sets up the module's current height and peerstore providers.
 func (m *p2pModule) setupDependencies() error {
 	if err := m.setupCurrentHeightProvider(); err != nil {
 		return err
@@ -215,9 +236,6 @@ func (m *p2pModule) setupDependencies() error {
 		return err
 	}
 
-	if err := m.setupNetwork(); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -236,8 +254,7 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 	var ok bool
 	m.pstoreProvider, ok = pstoreProviderModule.(providers.PeerstoreProvider)
 	if !ok {
-		typeErr := fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
-		return multierr.Append(err, typeErr)
+		return fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
 	}
 	return nil
 }
@@ -260,8 +277,7 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 	var ok bool
 	m.currentHeightProvider, ok = currentHeightProviderModule.(providers.CurrentHeightProvider)
 	if !ok {
-		typeErr := fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
-		return multierr.Append(err, typeErr)
+		return fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
 	}
 	return nil
 }
@@ -270,11 +286,13 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 func (m *p2pModule) setupNetwork() (err error) {
 	if m.cfg.UseRainTree {
 		m.network, err = raintree.NewRainTreeNetwork(
-			m.host,
-			m.address,
 			m.GetBus(),
-			m.pstoreProvider,
-			m.currentHeightProvider,
+			raintree.RainTreeConfig{
+				Host:                  m.host,
+				Addr:                  m.address,
+				PeerstoreProvider:     m.pstoreProvider,
+				CurrentHeightProvider: m.currentHeightProvider,
+			},
 		)
 	} else {
 		m.network, err = stdnetwork.NewNetwork(
@@ -286,9 +304,9 @@ func (m *p2pModule) setupNetwork() (err error) {
 	return err
 }
 
-// startHost creates a new libp2p host and assignes it to `m.host`, if one does
-// not already exist. Libp2p host starts listening upon instantiation.
-func (m *p2pModule) startHost() (err error) {
+// setupHost creates a new libp2p host and assignes it to `m.host`. Libp2p host
+// starts listening upon instantiation.
+func (m *p2pModule) setupHost() (err error) {
 	opts := []libp2p.Option{
 		// Explicitly specify supported transport security options (noise, TLS)
 		// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.3#DefaultSecurity)
@@ -331,6 +349,7 @@ func (m *p2pModule) isClientDebugMode() bool {
 // handleStream is called each time a peer establishes a new stream with this
 // module's libp2p `host.Host`.
 func (m *p2pModule) handleStream(stream libp2pNetwork.Stream) {
+	m.logger.Debug().Msg("handling incoming stream")
 	peer, err := utils.PeerFromLibp2pStream(stream)
 	if err != nil {
 		m.logger.Error().Err(err).
@@ -346,7 +365,7 @@ func (m *p2pModule) handleStream(stream libp2pNetwork.Stream) {
 	if err := m.network.AddPeer(peer); err != nil {
 		m.logger.Error().Err(err).
 			Str("address", peer.GetAddress().String()).
-			Msg("adding remote peer to address book")
+			Msg("adding remote peer to network")
 	}
 
 	go m.readStream(stream)
@@ -363,21 +382,42 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 		m.logger.Debug().Err(err).Msg("setting stream read deadline")
 	}
 
+	// debug logging: stream scope stats
+	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.27.0/core/network#StreamScope)
+	// TECHDEBT: `logger.Global` is not a `*module.Logger`
+	_logger := m.logger.Level(zerolog.DebugLevel)
+	if err := utils.LogScopeStatFactory(
+		&_logger,
+		"stream scope (read-side)",
+	)(stream.Scope()); err != nil {
+		m.logger.Debug().Err(err).Msg("logging stream scope stats")
+	}
+	// ---
+
 	data, err := io.ReadAll(stream)
 	if err != nil {
 		m.logger.Error().Err(err).Msg("reading from stream")
 		if err := stream.Reset(); err != nil {
-			m.logger.Debug().Err(err).Msg("resetting stream")
+			m.logger.Debug().Err(err).Msg("resetting stream (read-side)")
 		}
 		return
 	}
 
-	if err := m.handleNetworkData(data); err != nil {
-		m.logger.Error().Err(err).Msg("handling network data")
+	if err := stream.Reset(); err != nil {
+		m.logger.Debug().Err(err).Msg("resetting stream (read-side)")
 	}
 
-	if err := stream.CloseRead(); err != nil {
-		m.logger.Debug().Err(err).Msg("closing read stream")
+	// debug logging
+	remotePeer, err := utils.PeerFromLibp2pStream(stream)
+	if err != nil {
+		m.logger.Debug().Err(err).Msg("getting remote remotePeer")
+	} else {
+		utils.LogIncomingMsg(m.logger, m.cfg.Hostname, remotePeer)
+	}
+	// ---
+
+	if err := m.handleNetworkData(data); err != nil {
+		m.logger.Error().Err(err).Msg("handling network data")
 	}
 }
 
@@ -403,13 +443,12 @@ func (m *p2pModule) handleNetworkData(data []byte) error {
 	event := messaging.PocketEnvelope{
 		Content: networkMessage.Content,
 	}
-
 	m.GetBus().PublishEventToBus(&event)
 	return nil
 }
 
 // getMultiaddr returns a multiaddr constructed from the `hostname` and `port`
-// in the P2P config which pas provided upon creation.
+// in the P2P config which was provided upon creation.
 func (m *p2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
 	// TECHDEBT: as soon as we add support for multiple transports
 	// (i.e. not just TCP), we'll need to do something else.

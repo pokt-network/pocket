@@ -34,6 +34,15 @@ docker_check:
 	fi; \
 	}
 
+# Internal helper target - check if kubectl is installed.
+kubectl_check:
+	{ \
+	if ( ! ( command -v kubectl >/dev/null )); then \
+		echo "Seems like you don't have Kubectl installed. Make sure you review docs/development/README.md before continuing"; \
+		exit 1; \
+	fi; \
+	}
+
 .PHONY: prompt_user
 # Internal helper target - prompt the user before continuing
 prompt_user:
@@ -42,6 +51,14 @@ prompt_user:
 .PHONY: warn_destructive
 warn_destructive: ## Print WARNING to the user
 	@echo "This is a destructive action that will affect docker resources outside the scope of this repo!"
+
+.PHONY: protoc_check
+protoc_check: ## Checks if protoc is installed
+	{ \
+	if ! command -v protoc >/dev/null; then \
+		echo "Follow instructions to install 'protoc': https://grpc.io/docs/protoc-installation/"; \
+	fi; \
+	}
 
 .PHONY: go_vet
 go_vet: ## Run `go vet` on all files in the current project
@@ -57,30 +74,29 @@ go_staticcheck: ## Run `go staticcheck` on all files in the current project
 	fi; \
 	}
 
+GODOC_PORT ?= 6060
 .PHONY: go_doc
-# INCOMPLETE: Generate documentation for the current project using `godo`
-go_doc:
+go_doc: # INCOMPLETE: [WIP] Generate documentation for the current project using `godo`
 	{ \
 	if command -v godoc >/dev/null; then \
-		echo "Visit http://localhost:6060/pkg/github.com/pokt-network/pocket"; \
-		godoc -http=localhost:6060  -goroot=${PWD}/..; \
+		echo "Visit http://localhost:${GODOC_PORT}/pkg/github.com/pokt-network/pocket"; \
+		godoc -http=localhost:${GODOC_PORT}  -goroot=${PWD}/..; \
 	else \
 		echo "Install with 'go install golang.org/x/tools/cmd/godoc@latest'"; \
 	fi; \
 	}
 
 .PHONY: go_protoc-go-inject-tag
-### Checks if protoc-go-inject-tag is installed
-go_protoc-go-inject-tag:
+go_protoc-go-inject-tag: ## Checks if protoc-go-inject-tag is installed
 	{ \
 	if ! command -v protoc-go-inject-tag >/dev/null; then \
 		echo "Install with 'go install github.com/favadi/protoc-go-inject-tag@latest'"; \
 	fi; \
 	}
 
+
 .PHONY: go_oapi-codegen
-### Checks if oapi-codegen is installed
-go_oapi-codegen:
+go_oapi-codegen: ## Checks if oapi-codegen is installed
 	{ \
 	if ! command -v oapi-codegen >/dev/null; then \
 		echo "Install with 'go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0'"; \
@@ -110,6 +126,7 @@ install_cli_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag'
 
 .PHONY: develop_start
 develop_start: ## Run all of the make commands necessary to develop on the project
+		make protoc_check && \
 		make docker_loki_check && \
 		make clean_mocks && \
 		make protogen_clean && make protogen_local && \
@@ -326,6 +343,10 @@ generate_node_state_machine_diagram: ## (Re)generates the Node State Machine dia
 test_all: ## Run all go unit tests
 	go test -p 1 -count=1 ./...
 
+.PHONY: test_e2e
+test_e2e: kubectl_check ## Run all E2E tests
+	go test ${VERBOSE_TEST} ./e2e/tests/... -tags=e2e
+
 .PHONY: test_all_with_json_coverage
 test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, output results & coverage into json & coverage files
 	go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out | tee test_results.json | jq
@@ -367,8 +388,12 @@ test_hotstuff: ## Run all go unit tests related to hotstuff consensus
 	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Hotstuff
 
 .PHONY: test_pacemaker
-test_pacemaker: ## Run all go unit tests related to the hotstuff pacemaker
+test_pacemaker: ## Run all go unit tests related to hotstuff pacemaker
 	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Pacemaker
+
+.PHONY: test_statesync
+test_statesync: ## Run all go unit tests related to hotstuff statesync
+	go test -v ${VERBOSE_TEST} -count=1  -run StateSync ./consensus/e2e_tests
 
 .PHONY: test_vrf
 test_vrf: ## Run all go unit tests in the VRF library
@@ -524,3 +549,7 @@ check_cross_module_imports: ## Lists cross-module imports
 .PHONY: send_local_tx
 send_local_tx: ## A hardcoded send tx to make LocalNet debugging easier
 	go run -tags=debug app/client/*.go Account Send --non_interactive 00104055c00bed7c983a48aac7dc6335d7c607a7 00204737d2a165ebe4be3a7d5b0af905b0ea91d8 1000
+
+.PHONY: query_chain_params
+query_chain_params: ## A hardcoded ChainParams query to make LocalNet debugging easier
+	go run app/client/main.go Query AllChainParams

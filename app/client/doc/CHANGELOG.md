@@ -7,9 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.24] - 2023-03-28
+## [0.0.0.28] - 2023-04-13
 
 - Refactor debug CLI post P2P module re-consolidation
+
+## [0.0.0.27] - 2023-04-07
+
+- Add Query Command
+- Add AllChainParams subcommand to query governance parameters
+
+## [0.0.0.26] - 2023-03-30
+
+- Make `PromptPrintNodeState` the first prompt in debug mode
+- Minor cleanup to documentation related to CLI modes
+- Fixed one logging statement
+
+## [0.0.0.25] - 2023-03-28
+
+- Introduces hashicorp vault keybase to allow for the use of a vault server to store keypairs
+
+## [0.0.0.24] - 2023-03-28
+
+- Automatic import reorder
 
 ## [0.0.0.23] - 2023-03-21
 

@@ -150,7 +150,7 @@ func prepareDNSResolverMock(t *testing.T, serviceURLs []string) (done func()) {
 	zones := make(map[string]mockdns.Zone)
 	for i, u := range serviceURLs {
 		// Perpend `scheme://` as serviceURLs are currently scheme-less.
-		// Required to for parsing to produce useful results.
+		// Required for parsing to produce useful results.
 		// (see: https://pkg.go.dev/net/url@go1.20.2#URL)
 		serviceURL, err := url.Parse(fmt.Sprintf("scheme://%s", u))
 		require.NoError(t, err)
@@ -286,19 +286,19 @@ func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus) *mockModul
 func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisState *genesis.GenesisState) *mockModules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 
-	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
-	readContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
+	persistenceModuleMock := mockModules.NewMockPersistenceModule(ctrl)
+	readCtxMock := mockModules.NewMockPersistenceReadContext(ctrl)
 
-	readContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
-	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(readContextMock, nil).AnyTimes()
-	readContextMock.EXPECT().Close().Return(nil).AnyTimes()
+	readCtxMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	persistenceModuleMock.EXPECT().NewReadContext(gomock.Any()).Return(readCtxMock, nil).AnyTimes()
+	readCtxMock.EXPECT().Release().AnyTimes()
 
-	persistenceMock.EXPECT().GetBus().Return(busMock).AnyTimes()
-	persistenceMock.EXPECT().SetBus(busMock).AnyTimes()
-	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
-	busMock.RegisterModule(persistenceMock)
+	persistenceModuleMock.EXPECT().GetBus().Return(busMock).AnyTimes()
+	persistenceModuleMock.EXPECT().SetBus(busMock).AnyTimes()
+	persistenceModuleMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
+	busMock.RegisterModule(persistenceModuleMock)
 
-	return persistenceMock
+	return persistenceModuleMock
 }
 
 // Telemetry mock - Needed to help with proper counts for number of expected network writes

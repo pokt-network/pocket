@@ -40,7 +40,7 @@ type PeerSyncMeta interface {
 }
 
 // LEGACY interface definition
-// TODO: this must be deleted once state sync module is ready.
+// TODO(#352): delete this once state sync module is ready.
 type StateSyncModuleLEGACY interface {
 	// -- Constructor Setter Functions --
 
@@ -50,7 +50,7 @@ type StateSyncModuleLEGACY interface {
 	// - Consensus Module Replica Path
 	//   - Prepare Block:  utilityUnitOfWork.SetProposalBlock(block)
 	//   - Apply Block:    utilityUnitOfWork.ApplyBlock(block)
-	//   - Validate Block: utilityUnitOfWork.AppHash == Block.AppHash
+	//   - Validate Block: utilityUnitOfWork.StateHash == Block.StateHash
 	//   - Store Block:    consensusModule.CommitBlock()
 	HandleStateSyncMessage(msg BlockResponseMessage)
 
