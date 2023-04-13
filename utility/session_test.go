@@ -38,10 +38,6 @@ func TestSession_NewSession(t *testing.T) {
 func TestSession_SessionHeight(t *testing.T) {
 	_, _, persistenceMod := prepareEnvironment(t, 5, 1, 1, 1)
 
-	readCtx, err := persistenceMod.NewReadContext(-1)
-	require.NoError(t, err)
-	defer readCtx.Release()
-
 	writeCtx, err := persistenceMod.NewRWContext(0)
 	require.NoError(t, err)
 	defer writeCtx.Release()
@@ -96,7 +92,6 @@ func TestSession_SessionHeight(t *testing.T) {
 			require.Equal(t, tt.wantSessionNumber, sessionNumber)
 		})
 	}
-
 }
 
 // not enough servicers to choose from
