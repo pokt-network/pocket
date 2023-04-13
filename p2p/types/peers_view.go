@@ -138,6 +138,9 @@ func (view *sortedPeersView) getAddrIndex(addr crypto.Address) int {
 	frontAddrs := view.sortedAddrs[:wrapIdx]
 	backAddrs := view.sortedAddrs[wrapIdx:]
 	i := sort.SearchStrings(frontAddrs, addr.String())
+	// index 0 means "before the self addr". In that case we need to consider
+	// backAddrs because, by definition, all of its values are "smaller"
+	// than self addr.
 	if i == 0 {
 		i = sort.SearchStrings(backAddrs, addr.String())
 		i += len(frontAddrs)
