@@ -153,7 +153,7 @@ For example:
 
 Configurations can be changed in helm charts where network protocol actor configs are maintained. You can find them in [this directory](../../charts).
 
-`config.json` file is created using the `config` section content in`values.yaml`. For example, you can find the configuration for a validator [here](../../charts/pocket-validator/values.yaml#70).
+`config.json` file is created using the `config` section content in`values.yaml`. For example, you can find the configuration for a validator [here](../../charts/pocket/values.yaml#70).
 
 If you need to add a new parameter – feel free to modify the section in place. Some of the parameters that contain secrets (e.g. private key), are stored in Secrets object and injected as environment variables.
 

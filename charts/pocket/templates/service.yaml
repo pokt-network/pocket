@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "pocket-validator.fullname" . }}
+  name: {{ include "pocket.fullname" . }}
   labels:
-    {{- include "pocket-validator.labels" . | nindent 4 }}
+    {{- include "pocket.labels" . | nindent 4 }}
   {{- with .Values.service.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -18,4 +18,4 @@ spec:
     - port: {{ .Values.service.ports.metrics }}
       name: metrics
   selector:
-    {{- include "pocket-validator.selectorLabels" . | nindent 4 }}
+    {{- include "pocket.selectorLabels" . | nindent 4 }}

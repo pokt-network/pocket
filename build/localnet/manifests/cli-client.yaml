@@ -17,13 +17,13 @@ spec:
     spec:
       serviceAccountName: debug-client-account
       initContainers:
-        - name: wait-for-validator-001-pocket-validator
+        - name: wait-for-validator-001-pocket
           image: busybox
           command:
             [
               "sh",
               "-c",
-              'until wget -q -O - "http://validator-001-pocket-validator:50832/v1/health" --timeout=2 --tries=2 --spider >/dev/null 2>&1; do echo waiting for validator-001-pocket-validator to be online and healthy...; sleep 2; done;',
+              'until wget -q -O - "http://validator-001-pocket:50832/v1/health" --timeout=2 --tries=2 --spider >/dev/null 2>&1; do echo waiting for validator-001-pocket to be online and healthy...; sleep 2; done;',
             ]
       containers:
         - name: pocket
@@ -75,7 +75,7 @@ spec:
               value: validator1
               # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
             - name: RPC_HOST
-              value: pocket-validators
+              value: pockets
           volumeMounts:
             # IMPROVE: should probably go in /etc/pocket and have Viper read from there as a default path
             - mountPath: /var/pocket/config
@@ -87,7 +87,7 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            name: validator-001-pocket-validator-config
+            name: validator-001-pocket-config
             defaultMode: 420
         - name: genesis-volume
           configMap:

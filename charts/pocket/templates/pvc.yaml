@@ -2,9 +2,9 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: {{ include "pocket-validator.fullname" . }}-data
+  name: {{ include "pocket.fullname" . }}-data
   labels:
-    {{- include "pocket-validator.labels" . | nindent 4 }}
+    {{- include "pocket.labels" . | nindent 4 }}
   {{- with .Values.persistence.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}

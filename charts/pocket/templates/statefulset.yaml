@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "pocket-validator.fullname" . }}
+  name: {{ include "pocket.fullname" . }}
   labels:
-    {{- include "pocket-validator.labels" . | nindent 4 }}
+    {{- include "pocket.labels" . | nindent 4 }}
 spec:
   replicas: 1 # One StatefulSet = 1 validator
   selector:
     matchLabels:
-      {{- include "pocket-validator.selectorLabels" . | nindent 6 }}
+      {{- include "pocket.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -16,13 +16,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "pocket-validator.selectorLabels" . | nindent 8 }}
+        {{- include "pocket.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "pocket-validator.serviceAccountName" . }}
+      serviceAccountName: {{ include "pocket.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
@@ -36,11 +36,11 @@ spec:
             ]
           env:
             - name: POSTGRES_HOST
-              value: {{ include "pocket-validator.postgresqlHost" . }}
+              value: {{ include "pocket.postgresqlHost" . }}
             - name: POSTGRES_PORT
-              value: {{ include "pocket-validator.postgresqlPort" . | quote }}
+              value: {{ include "pocket.postgresqlPort" . | quote }}
       containers:
-        - name: pocket-validator
+        - name: pocket
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -71,19 +71,19 @@ spec:
                   name: {{ .Values.privateKeySecretKeyRef.name }}
                   key: {{ .Values.privateKeySecretKeyRef.key | quote }}
             - name: POSTGRES_USER
-            {{ include "pocket-validator.postgresqlUserValueOrSecretRef" . | nindent 14 }}
+            {{ include "pocket.postgresqlUserValueOrSecretRef" . | nindent 14 }}
             - name: POSTGRES_PASSWORD
-            {{ include "pocket-validator.postgresqlPasswordSecretKeyRef" . | nindent 14 }}
+            {{ include "pocket.postgresqlPasswordSecretKeyRef" . | nindent 14 }}
             - name: POSTGRES_HOST
-              value: {{ include "pocket-validator.postgresqlHost" . }}
+              value: {{ include "pocket.postgresqlHost" . }}
             - name: POSTGRES_PORT
-              value: {{ include "pocket-validator.postgresqlPort" . | quote }}
+              value: {{ include "pocket.postgresqlPort" . | quote }}
             - name: POSTGRES_DB
-              value: {{ include "pocket-validator.postgresqlDatabase" . }}
+              value: {{ include "pocket.postgresqlDatabase" . }}
             - name: POCKET_PERSISTENCE_POSTGRES_URL
               value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
             - name: POCKET_PERSISTENCE_NODE_SCHEMA
-              value: {{ include "pocket-validator.postgresqlSchema" . }}
+              value: {{ include "pocket.postgresqlSchema" . }}
             - name: POCKET_P2P_HOSTNAME
               valueFrom:
                 fieldRef:
@@ -122,14 +122,14 @@ spec:
       volumes:
       - name: config-volume
         configMap:
-          name: {{ include "pocket-validator.fullname" . }}-config
+          name: {{ include "pocket.fullname" . }}-config
       - name: genesis-volume
         configMap:
-          name: {{ include "pocket-validator.genesisConfigMap" . }}
+          name: {{ include "pocket.genesisConfigMap" . }}
       - name: validator-storage
       {{- if .Values.persistence.enabled }}
         persistentVolumeClaim:
-          claimName: {{ default (printf "%s-%s" (include "pocket-validator.fullname" .) "data") .Values.persistence.existingClaim }}
+          claimName: {{ default (printf "%s-%s" (include "pocket.fullname" .) "data") .Values.persistence.existingClaim }}
       {{- else }}
         emptyDir: {}
       {{- end }}

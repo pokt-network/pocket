@@ -4,7 +4,7 @@
   </a>
 </div>
 
-# pocket-validator
+# pocket
 
 Validator for Pocket Network - decentralized blockchain infrastructure
 
