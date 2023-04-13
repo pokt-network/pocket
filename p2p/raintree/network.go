@@ -5,6 +5,7 @@ import (
 	"log"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
+	"go.uber.org/multierr"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/pokt-network/pocket/logger"
@@ -316,17 +317,17 @@ func (n *rainTreeNetwork) setupPeerManager(pstore typesP2P.Peerstore) (err error
 	return err
 }
 
-func (cfg RainTreeConfig) isValid() error {
+func (cfg RainTreeConfig) isValid() (err error) {
 	if cfg.Host == nil {
-		return fmt.Errorf("host not configured")
+		err = multierr.Append(err, fmt.Errorf("host not configured"))
 	}
 
 	if cfg.PeerstoreProvider == nil {
-		return fmt.Errorf("peerstore provider not configured")
+		err = multierr.Append(err, fmt.Errorf("peerstore provider not configured"))
 	}
 
 	if cfg.CurrentHeightProvider == nil {
-		return fmt.Errorf("current height provider not configured")
+		err = multierr.Append(err, fmt.Errorf("current height provider not configured"))
 	}
-	return nil
+	return err
 }
