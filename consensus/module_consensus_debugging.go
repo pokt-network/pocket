@@ -72,3 +72,12 @@ func (m *consensusModule) GetLeaderForView(height, round uint64, step uint8) uin
 func (m *consensusModule) PushStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) {
 	m.metadataReceived <- metadataRes
 }
+
+// func (m *consensusModule) WaitForFSMSyncedEvent() coreTypes.StateMachineEvent {
+// 	event := <-m.DebugFSMEventsChannel
+// 	return event
+// }
+
+// func (m *consensusModule) PushDebugFSMSyncedEvent(event coreTypes.StateMachineEvent) {
+// 	m.DebugFSMEventsChannel <- event
+// }

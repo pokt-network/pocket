@@ -35,4 +35,7 @@ type Bus interface {
 
 	// Runtime
 	GetRuntimeMgr() RuntimeMgr
+
+	// Debug
+	SetEventBus(channel EventsChannel)
 }

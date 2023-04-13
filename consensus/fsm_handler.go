@@ -35,6 +35,9 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
 	fsm_state := msg.NewState
 
+	// publishing FSM event
+	//m.publishFSMEvent(msg)
+
 	m.logger.Debug().Fields(messaging.TransitionEventToMap(msg)).Msg("Received state machine transition msg")
 
 	switch coreTypes.StateMachineState(fsm_state) {
@@ -84,7 +87,11 @@ func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEv
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Node is in Sync Mode, starting to sync...")
 
-	return m.stateSync.Start()
+	aggregatedMetadata := m.getAggregatedStateSyncMetadata()
+	m.stateSync.Set(&aggregatedMetadata)
+
+	go m.stateSync.Start()
+	return nil
 }
 
 // HandleSynced handles FSM event IsSyncedNonValidator for Non-Validators, and Synced is the destination state.
