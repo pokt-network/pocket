@@ -114,9 +114,9 @@ func CreateTestConsensusPocketNode(
 	consensusModule, ok := consensusMod.(modules.ConsensusModule)
 	require.True(t, ok)
 
-	_, err = state_machine.Create(bus)
+	_, err = state_machine.Create(bus, state_machine.WithDebugEventsChannel(eventsChannel))
 	require.NoError(t, err)
-	//bus.RegisterModule(stateMachineModule)
+	// bus.RegisterModule(stateMachineModule)
 
 	fmt.Println("Events channel: ", eventsChannel)
 

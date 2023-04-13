@@ -14,7 +14,7 @@ func (m *consensusModule) publishNewHeightEvent(height uint64) {
 	}
 	m.GetBus().PublishEventToBus(newHeightEvent)
 
-	fmt.Println("Node address: %s, Event bus in consensus publishNewHeightEvent: ", m.GetNodeAddress(), m.GetBus().GetEventBus())
+	fmt.Printf("Node address: %s, Event bus in consensus publishNewHeightEvent: %v\n", m.GetNodeAddress(), m.GetBus().GetEventBus())
 }
 
 // func (m *consensusModule) publishFSMEvent(msg *messaging.StateMachineTransitionEvent) {

@@ -19,7 +19,8 @@ type stateMachineModule struct {
 	base_modules.InterruptableModule
 
 	*fsm.FSM
-	logger *modules.Logger
+	logger        *modules.Logger
+	debugChannels []modules.EventsChannel
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -28,7 +29,8 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 
 func (*stateMachineModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &stateMachineModule{
-		logger: logger.Global.CreateLoggerForModule(modules.StateMachineModuleName),
+		logger:        logger.Global.CreateLoggerForModule(modules.StateMachineModuleName),
+		debugChannels: make([]modules.EventsChannel, 0),
 	}
 
 	m.FSM = NewNodeFSM(&fsm.Callbacks{
@@ -48,6 +50,9 @@ func (*stateMachineModule) Create(bus modules.Bus, options ...modules.ModuleOpti
 			}
 			fmt.Println("Event bus in state machine: ", bus.GetEventBus())
 			bus.PublishEventToBus(newStateMachineTransitionEvent)
+			for _, channel := range m.debugChannels {
+				channel <- newStateMachineTransitionEvent
+			}
 		},
 	})
 
@@ -74,6 +79,17 @@ func WithCustomStateMachine(stateMachine *fsm.FSM) modules.ModuleOption {
 	return func(m modules.InitializableModule) {
 		if m, ok := m.(*stateMachineModule); ok {
 			m.FSM = stateMachine
+		}
+	}
+}
+
+// TODO_IN_THIS_COMMIT(gohkan): make sure to document that this is used for debugging purposes.
+// We do not want to ever mock the FSM in unit tests because it drives the nodes state and must
+// be use as is. However, we need to capture the events form a variety of different nodes.
+func WithDebugEventsChannel(eventsChannel modules.EventsChannel) modules.ModuleOption {
+	return func(m modules.InitializableModule) {
+		if m, ok := m.(*stateMachineModule); ok {
+			m.debugChannels = append(m.debugChannels, eventsChannel)
 		}
 	}
 }
