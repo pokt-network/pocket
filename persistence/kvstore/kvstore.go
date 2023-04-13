@@ -6,8 +6,8 @@ import (
 	"errors"
 	"log"
 
-	"github.com/celestiaorg/smt"
 	badger "github.com/dgraph-io/badger/v3"
+	"github.com/pokt-network/smt"
 )
 
 type KVStore interface {

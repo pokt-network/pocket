@@ -4199,7 +4199,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						PostgresUrl:       "postgres://postgres:postgres@pocket-db:5432/postgres",
 						NodeSchema:        "node1",
 						BlockStorePath:    "/var/blockstore",
-						TxIndexerPath:     "",
+						TxIndexerPath:     "/var/txindexer",
 						TreesStoreDir:     "/var/trees",
 						MaxConnsCount:     50,
 						MinConnsCount:     1,

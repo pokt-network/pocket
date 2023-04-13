@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -108,7 +109,7 @@ func (p *PostgresContext) Release() {
 }
 
 // INVESTIGATE(#361): Revisit if is used correctly in the context of the lifecycle of a persistenceContext and a utilityUnitOfWork
-func (p *PostgresContext) IndexTransaction(txResult modules.TxResult) error {
+func (p *PostgresContext) IndexTransaction(txResult *coreTypes.TxResult) error {
 	return p.txIndexer.Index(txResult)
 }
 
