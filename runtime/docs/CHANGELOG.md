@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.32] - 2023-04-13
+
+- Add persistent txIndexerPaths to node configs and update tests
+
 ## [0.0.0.31] - 2023-04-11
 
 - Add comment regarding KeybaseConfig proto design.
