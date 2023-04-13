@@ -48,7 +48,7 @@ func getPageIndexes(totalItems, page, per_page int) (startIdx, endIdx, totalPage
 }
 
 // txResultToRPCTransaction converts the txResult protobuf into the RPC Transaction type
-func (s *rpcServer) txResultToRPCTransaction(txResult coreTypes.TxResult) (*Transaction, error) {
+func (s *rpcServer) txResultToRPCTransaction(txResult *coreTypes.TxResult) (*Transaction, error) {
 	hashBz, err := txResult.Hash()
 	if err != nil {
 		return nil, err
