@@ -1,11 +1,13 @@
 package utils
 
 import (
+	"net"
+
 	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/rs/zerolog"
+
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/rs/zerolog"
-	"net"
 )
 
 type scopeCallback func(scope network.ResourceScope) error
