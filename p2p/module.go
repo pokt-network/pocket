@@ -46,6 +46,7 @@ type p2pModule struct {
 
 	address        cryptoPocket.Address
 	logger         *modules.Logger
+	options        []modules.ModuleOption
 	cfg            *configs.P2PConfig
 	bootstrapNodes []string
 	identity       libp2p.Option
@@ -109,7 +110,8 @@ func (m *p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 	}
 	m.identity = libp2p.Identity(libp2pPrivKey)
 
-	for _, option := range options {
+	m.options = options
+	for _, option := range m.options {
 		option(m)
 	}
 
@@ -151,6 +153,15 @@ func (m *p2pModule) Start() (err error) {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME,
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
+
+	// TECHDEBT: reconsider if this is acceptable as more `modules.ModuleOption`s
+	// become supported. At time of writing, `WithHost()` is the only option
+	// and it is only used in tests.
+	// Re-evaluate options in case there is a `WithHost` option which would
+	// assign`m.host`.
+	for _, option := range m.options {
+		option(m)
+	}
 
 	// Return early if host has already been started (e.g. via `WithHostOption`)
 	if m.host == nil {

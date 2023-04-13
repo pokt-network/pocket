@@ -16,6 +16,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
@@ -149,6 +150,62 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 	}
 }
 
+func TestP2pModule_WithHostOption_Restart(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	privKey := cryptoPocket.GetPrivKeySeed(1)
+	mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
+	mockBus := createMockBus(t, mockRuntimeMgr)
+
+	genesisStateMock := createMockGenesisState(keys)
+	persistenceMock := preparePersistenceMock(t, mockBus, genesisStateMock)
+	mockBus.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
+
+	consensusModuleMock := mockModules.NewMockConsensusModule(ctrl)
+	consensusModuleMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
+	mockBus.EXPECT().GetConsensusModule().Return(consensusModuleMock).AnyTimes()
+
+	telemetryModuleMock := baseTelemetryMock(t, nil)
+	mockBus.EXPECT().GetTelemetryModule().Return(telemetryModuleMock).AnyTimes()
+
+	mockRuntimeMgr.EXPECT().GetConfig().Return(&configs.Config{
+		PrivateKey: privKey.String(),
+		P2P: &configs.P2PConfig{
+			PrivateKey: privKey.String(),
+		},
+	}).AnyTimes()
+	mockBus.EXPECT().GetRuntimeMgr().Return(mockRuntimeMgr).AnyTimes()
+
+	peer := &typesP2P.NetworkPeer{
+		PublicKey:  privKey.PublicKey(),
+		Address:    privKey.Address(),
+		ServiceURL: testLocalServiceURL,
+	}
+
+	mockNetHost := newLibp2pMockNetHost(t, privKey, peer)
+	p2pMod, err := Create(mockBus, WithHostOption(mockNetHost))
+	require.NoError(t, err)
+
+	mod, ok := p2pMod.(*p2pModule)
+	require.Truef(t, ok, "unknown module type: %T", mod)
+
+	// start the module; should not create a new host
+	err = mod.Start()
+	require.NoError(t, err)
+
+	// assert initial host matches the one provided via `WithHost`
+	require.Equal(t, mockNetHost, mod.host, "initial hosts don't match")
+
+	// stop the module; destroys module's host
+	err = mod.Stop()
+	require.NoError(t, err)
+
+	// assert host matches still after restart
+	err = mod.Start()
+	require.NoError(t, err)
+	require.Equal(t, mockNetHost, mod.host, "post-restart hosts don't match")
+}
+
 // TECHDEBT(#609): move & de-duplicate
 func newLibp2pMockNetHost(t *testing.T, privKey cryptoPocket.PrivateKey, peer *typesP2P.NetworkPeer) libp2pHost.Host {
 	libp2pPrivKey, err := libp2pCrypto.UnmarshalEd25519PrivateKey(privKey.Bytes())
@@ -162,4 +219,37 @@ func newLibp2pMockNetHost(t *testing.T, privKey cryptoPocket.PrivateKey, peer *t
 	require.NoError(t, err)
 
 	return host
+}
+
+// TECHDEBT(#609): move & de-duplicate
+func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockTelemetryModule {
+	ctrl := gomock.NewController(t)
+	telemetryMock := mockModules.NewMockTelemetryModule(ctrl)
+	timeSeriesAgentMock := baseTelemetryTimeSeriesAgentMock(t)
+	eventMetricsAgentMock := baseTelemetryEventMetricsAgentMock(t)
+
+	telemetryMock.EXPECT().Start().Return(nil).AnyTimes()
+	telemetryMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
+	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
+	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
+
+	return telemetryMock
+}
+
+// TECHDEBT(#609): move & de-duplicate
+func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAgent {
+	ctrl := gomock.NewController(t)
+	timeSeriesAgentMock := mockModules.NewMockTimeSeriesAgent(ctrl)
+	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
+	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
+	return timeSeriesAgentMock
+}
+
+// TECHDEBT(#609): move & de-duplicate
+func baseTelemetryEventMetricsAgentMock(t *testing.T) *mockModules.MockEventMetricsAgent {
+	ctrl := gomock.NewController(t)
+	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	return eventMetricsAgentMock
 }
