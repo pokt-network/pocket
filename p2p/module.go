@@ -11,7 +11,6 @@ import (
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
-	"go.uber.org/multierr"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -244,8 +243,7 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 	var ok bool
 	m.pstoreProvider, ok = pstoreProviderModule.(providers.PeerstoreProvider)
 	if !ok {
-		typeErr := fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
-		return multierr.Append(err, typeErr)
+		return fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
 	}
 	return nil
 }
@@ -268,8 +266,7 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 	var ok bool
 	m.currentHeightProvider, ok = currentHeightProviderModule.(providers.CurrentHeightProvider)
 	if !ok {
-		typeErr := fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
-		return multierr.Append(err, typeErr)
+		return fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
 	}
 	return nil
 }
