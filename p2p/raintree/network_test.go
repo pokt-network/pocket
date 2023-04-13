@@ -28,7 +28,7 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	selfAddr := selfPeer.GetAddress()
 
 	expectedPStoreSize := 0
-	pstore := getPeerstore(nil, expectedPStoreSize)
+	pstore := getPeerstore(t, expectedPStoreSize)
 	peers := pstore.GetPeerList()
 	for _, peer := range peers {
 		libp2pPeerInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
@@ -100,7 +100,7 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	// Start with a peerstore which contains self and some number of peers: the
 	// initial value of `expectedPStoreSize`.
 	expectedPStoreSize := 3
-	pstore := getPeerstore(nil, expectedPStoreSize)
+	pstore := getPeerstore(t, expectedPStoreSize)
 
 	selfPeer, host := newTestPeer(t)
 	selfAddr := selfPeer.GetAddress()
