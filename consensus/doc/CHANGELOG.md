@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.46] - 2023-04-13
+
+- Debug logging improvements
+
 ## [0.0.0.45] - 2023-04-12
 
 - Added new helper functions for testing hotstuff consensus stages: `waitForNewRound()`, `waitForPrepareProposal()`, `waitForPrepareVoteswaitForPreCommit()`, `waitForCommit()`, and `waitForDecide()` , and a wrapper function `waitForNextBlock()`.

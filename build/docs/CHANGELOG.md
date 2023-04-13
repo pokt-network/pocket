@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.33] - 2023-04-13
+
+- Removed runtime/configs.Config#UseLibp2p field
+- Use pod IP for validator DNS resolution tilt localnet
+- Add `LIBP2P_DEBUG` env var
+
 ## [0.0.0.32] - 2023-04-10
 
 - Adds e2e-tests button to Tiltfile
