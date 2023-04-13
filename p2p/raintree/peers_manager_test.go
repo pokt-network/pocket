@@ -125,9 +125,8 @@ func TestRainTree_Peerstore_HandleUpdate(t *testing.T) {
 
 func BenchmarkPeerstoreUpdates(b *testing.B) {
 	ctrl := gomock.NewController(gomock.TestReporter(b))
-	addr, err := cryptoPocket.GenerateAddress()
+	pubKey, err := cryptoPocket.GeneratePublicKey()
 	require.NoError(b, err)
-
 	testCases := []ExpectedRainTreeNetworkConfig{
 		// Small
 		{9, 2},
@@ -146,16 +145,26 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 		n := testCase.numNodes
 		b.Run(fmt.Sprintf("n=%d", n), func(b *testing.B) {
 			pstore := getPeerstore(nil, n-1)
-			err := pstore.AddPeer(&typesP2P.NetworkPeer{Address: addr})
+			err := pstore.AddPeer(&typesP2P.NetworkPeer{
+				Address:    pubKey.Address(),
+				PublicKey:  pubKey,
+				ServiceURL: testLocalServiceURL,
+			})
 			require.NoError(b, err)
 
 			mockBus := mockBus(ctrl)
 			pstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 			currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
+
+			libp2pPStore, err := pstoremem.NewPeerstore()
+			require.NoError(b, err)
+
 			hostMock := mocksP2P.NewMockHost(ctrl)
+			hostMock.EXPECT().Peerstore().Return(libp2pPStore).AnyTimes()
+
 			netCfg := RainTreeConfig{
 				Host:                  hostMock,
-				Addr:                  addr,
+				Addr:                  pubKey.Address(),
 				PeerstoreProvider:     pstoreProviderMock,
 				CurrentHeightProvider: currentHeightProviderMock,
 			}
@@ -169,13 +178,17 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 
 			require.Equal(b, n, network.GetPeerstore().Size())
 			require.Equal(b, n, len(peersManagerStateView.GetAddrs()))
-			require.ElementsMatchf(b, pstore.GetPeerList(), peersManagerStateView.GetAddrs(), "peers don't match")
+			require.ElementsMatchf(b, pstore.GetPeerList(), peersManagerStateView.GetPeers(), "peers don't match")
 			require.Equal(b, testCase.numExpectedLevels, int(actualMaxNumLevels))
 
 			for i := 0; i < numAddressesToBeAdded; i++ {
-				newAddr, err := cryptoPocket.GenerateAddress()
+				newPubKey, err := cryptoPocket.GeneratePublicKey()
 				require.NoError(b, err)
-				err = rainTree.AddPeer(&typesP2P.NetworkPeer{Address: newAddr})
+				err = rainTree.AddPeer(&typesP2P.NetworkPeer{
+					Address:    newPubKey.Address(),
+					PublicKey:  newPubKey,
+					ServiceURL: testLocalServiceURL,
+				})
 				require.NoError(b, err)
 			}
 

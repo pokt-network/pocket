@@ -434,8 +434,8 @@ benchmark_sortition: ## Benchmark the Sortition library
 	go test ${VERBOSE_TEST} -bench=. -run ^# ./consensus/leader_election/sortition
 
 .PHONY: benchmark_p2p_addrbook
-benchmark_p2p_addrbook: ## Benchmark all P2P addr book related tests
-	go test ${VERBOSE_TEST} -bench=. -run BenchmarkAddrBook -count=1 ./p2p/...
+benchmark_p2p_peerstore: ## Run P2P peerstore benchmarks
+	go test ${VERBOSE_TEST} -bench=. -run BenchmarkPeerstore -count=1 ./p2p/...
 
 ### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
 # TODO          - General Purpose catch-all.
