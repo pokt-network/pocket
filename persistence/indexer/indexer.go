@@ -6,12 +6,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/pokt-network/pocket/shared/codec"
-	shared "github.com/pokt-network/pocket/shared/modules"
-
 	"github.com/jordanorelli/lexnum"
 	"github.com/pokt-network/pocket/persistence/kvstore"
-	"github.com/pokt-network/pocket/shared/crypto"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 // Interface
@@ -20,19 +17,19 @@ import (
 type TxIndexer interface {
 	// `Index` analyzes, indexes and stores a single transaction result.
 	// `Index` indexes by `(hash, height, sender, recipient)`
-	Index(result shared.TxResult) error
+	Index(result *coreTypes.TxResult) error
 
 	// `GetByHash` returns the transaction specified by the hash if indexed or nil otherwise
-	GetByHash(hash []byte) (shared.TxResult, error)
+	GetByHash(hash []byte) (*coreTypes.TxResult, error)
 
 	// `GetByHeight` returns all transactions specified by height or nil if there are no transactions at that height; may be ordered descending/ascending
-	GetByHeight(height int64, descending bool) ([]shared.TxResult, error)
+	GetByHeight(height int64, descending bool) ([]*coreTypes.TxResult, error)
 
 	// `GetBySender` returns all transactions signed by *sender*; may be ordered descending/ascending
-	GetBySender(sender string, descending bool) ([]shared.TxResult, error)
+	GetBySender(sender string, descending bool) ([]*coreTypes.TxResult, error)
 
 	// GetByRecipient returns all transactions *sent to address*; may be ordered descending/ascending
-	GetByRecipient(recipient string, descending bool) ([]shared.TxResult, error)
+	GetByRecipient(recipient string, descending bool) ([]*coreTypes.TxResult, error)
 
 	// Close stops the underlying db connection
 	Close() error
@@ -40,7 +37,6 @@ type TxIndexer interface {
 
 // Implementation
 var _ TxIndexer = &txIndexer{}
-var _ shared.TxResult = &TxRes{}
 
 const (
 	hashPrefix      = 'h'
@@ -52,30 +48,6 @@ const (
 // =,- are the default parameters in the [example repository](https://github.com/jordanorelli/lexnum#example)
 // INVESTIGATE: We can research to see if there are more optimal parameters
 var elenEncoder = lexnum.NewEncoder('=', '-')
-
-func (x *TxRes) Bytes() ([]byte, error) {
-	return codec.GetCodec().Marshal(x)
-}
-
-func (*TxRes) FromBytes(bz []byte) (shared.TxResult, error) {
-	result := new(TxRes)
-	if err := codec.GetCodec().Unmarshal(bz, result); err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-func (x *TxRes) Hash() ([]byte, error) {
-	bz, err := x.Bytes()
-	if err != nil {
-		return nil, err
-	}
-	return x.HashFromBytes(bz)
-}
-
-func (x *TxRes) HashFromBytes(bz []byte) ([]byte, error) {
-	return crypto.SHA3Hash(bz), nil
-}
 
 type txIndexer struct {
 	db kvstore.KVStore
@@ -98,7 +70,7 @@ func NewMemTxIndexer() (TxIndexer, error) {
 	}, nil
 }
 
-func (indexer *txIndexer) Index(result shared.TxResult) error {
+func (indexer *txIndexer) Index(result *coreTypes.TxResult) error {
 	bz, err := result.Bytes()
 	if err != nil {
 		return err
@@ -123,19 +95,19 @@ func (indexer *txIndexer) Index(result shared.TxResult) error {
 	return nil
 }
 
-func (indexer *txIndexer) GetByHash(hash []byte) (shared.TxResult, error) {
+func (indexer *txIndexer) GetByHash(hash []byte) (*coreTypes.TxResult, error) {
 	return indexer.get(indexer.hashKey(hash))
 }
 
-func (indexer *txIndexer) GetByHeight(height int64, descending bool) ([]shared.TxResult, error) {
+func (indexer *txIndexer) GetByHeight(height int64, descending bool) ([]*coreTypes.TxResult, error) {
 	return indexer.getAll(indexer.heightKey(height), descending)
 }
 
-func (indexer *txIndexer) GetBySender(sender string, descending bool) ([]shared.TxResult, error) {
+func (indexer *txIndexer) GetBySender(sender string, descending bool) ([]*coreTypes.TxResult, error) {
 	return indexer.getAll(indexer.senderKey(sender), descending)
 }
 
-func (indexer *txIndexer) GetByRecipient(recipient string, descending bool) ([]shared.TxResult, error) {
+func (indexer *txIndexer) GetByRecipient(recipient string, descending bool) ([]*coreTypes.TxResult, error) {
 	return indexer.getAll(indexer.recipientKey(recipient), descending)
 }
 
@@ -145,28 +117,27 @@ func (indexer *txIndexer) Close() error {
 
 // kv helper functions
 
-func (indexer *txIndexer) getAll(prefix []byte, descending bool) (result []shared.TxResult, err error) {
+func (indexer *txIndexer) getAll(prefix []byte, descending bool) (result []*coreTypes.TxResult, err error) {
 	_, hashKeys, err := indexer.db.GetAll(prefix, descending)
 	if err != nil {
 		return nil, err
 	}
 	for _, hashKey := range hashKeys {
-		var txResult shared.TxResult
-		txResult, err = indexer.get(hashKey)
+		txResult, err := indexer.get(hashKey)
 		if err != nil {
-			return
+			return nil, err
 		}
 		result = append(result, txResult)
 	}
 	return
 }
 
-func (indexer *txIndexer) get(key []byte) (shared.TxResult, error) {
+func (indexer *txIndexer) get(key []byte) (*coreTypes.TxResult, error) {
 	bz, err := indexer.db.Get(key)
 	if err != nil {
 		return nil, err
 	}
-	return new(TxRes).FromBytes(bz)
+	return new(coreTypes.TxResult).FromBytes(bz)
 }
 
 // index helper functions

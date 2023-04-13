@@ -73,7 +73,7 @@ type PersistenceWriteContext interface {
 
 	// Indexes the transaction using several different keys (for lookup purposes) in the key-value store
 	// that backs the transaction merkle tree.
-	IndexTransaction(txResult TxResult) error
+	IndexTransaction(txResult *coreTypes.TxResult) error
 
 	// Pool Operations
 	AddPoolAmount(address []byte, amount string) error
