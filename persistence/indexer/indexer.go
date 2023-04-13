@@ -75,10 +75,7 @@ func (indexer *txIndexer) Index(result *coreTypes.TxResult) error {
 	if err != nil {
 		return err
 	}
-	hash, err := result.HashFromBytes(bz)
-	if err != nil {
-		return err
-	}
+	hash := result.HashFromBytes(bz)
 	hashKey, err := indexer.indexByHash(hash, bz)
 	if err != nil {
 		return err
