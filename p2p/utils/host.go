@@ -110,7 +110,7 @@ func Libp2pSendToPeer(host libp2pHost.Host, data []byte, peer typesP2P.Peer) err
 	}
 
 	// MUST USE `streamClose` NOT `stream.CloswWrite`; otherwise, outbound streams
-	// will accumulate until resource limits are hit (e.g.):
+	// will accumulate until resource limits are hit; e.g.:
 	// > "opening stream: stream-3478: transient: cannot reserve outbound stream: resource limit exceeded"
 	return stream.Close()
 }

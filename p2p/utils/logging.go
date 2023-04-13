@@ -14,7 +14,9 @@ type scopeCallback func(scope network.ResourceScope) error
 // to the debug level of the provided logger.
 // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.27.0/core/network#ScopeStat)
 // (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.27.0/core/network#ResourceScope)
-// TECHDEBT: would be nice to receive either a pocket logger object instead.
+// TECHDEBT: would prefer receive a pocket logger object instead.
+// Typical calls would pass either `logger.Global` or a `*modules.Logger` which
+// are disparate types.
 func LogScopeStatFactory(logger *zerolog.Logger, msg string) scopeCallback {
 	return func(scope network.ResourceScope) error {
 		stat := scope.Stat()

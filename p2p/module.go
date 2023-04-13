@@ -216,8 +216,7 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }
 
-// setupDependencies sets up the module's current height and peerstore
-// providers, and the network.
+// setupDependencies sets up the module's current height and peerstore providers.
 func (m *p2pModule) setupDependencies() error {
 	if err := m.setupCurrentHeightProvider(); err != nil {
 		return err
@@ -297,8 +296,8 @@ func (m *p2pModule) setupNetwork() (err error) {
 	return err
 }
 
-// setupHost creates a new libp2p host and assignes it to `m.host`, if one does
-// not already exist. Libp2p host starts listening upon instantiation.
+// setupHost creates a new libp2p host and assignes it to `m.host`. Libp2p host
+// starts listening upon instantiation.
 func (m *p2pModule) setupHost() (err error) {
 	opts := []libp2p.Option{
 		// Explicitly specify supported transport security options (noise, TLS)
@@ -441,7 +440,7 @@ func (m *p2pModule) handleNetworkData(data []byte) error {
 }
 
 // getMultiaddr returns a multiaddr constructed from the `hostname` and `port`
-// in the P2P config which pas provided upon creation.
+// in the P2P config which was provided upon creation.
 func (m *p2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
 	// TECHDEBT: as soon as we add support for multiple transports
 	// (i.e. not just TCP), we'll need to do something else.

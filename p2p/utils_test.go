@@ -150,7 +150,7 @@ func prepareDNSResolverMock(t *testing.T, serviceURLs []string) (done func()) {
 	zones := make(map[string]mockdns.Zone)
 	for i, u := range serviceURLs {
 		// Perpend `scheme://` as serviceURLs are currently scheme-less.
-		// Required to for parsing to produce useful results.
+		// Required for parsing to produce useful results.
 		// (see: https://pkg.go.dev/net/url@go1.20.2#URL)
 		serviceURL, err := url.Parse(fmt.Sprintf("scheme://%s", u))
 		require.NoError(t, err)
