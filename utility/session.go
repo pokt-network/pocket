@@ -65,8 +65,18 @@ func (m *utilityModule) GetSession(appAddr string, height int64, relayChain core
 	return sessionHydrator.session, nil
 }
 
-func getSessionHeight(readCtx modules.PersistenceReadContext, blockHeight int64) (int64, error) {
-	return blockHeight, nil
+// getSessionHeight returns the height at which the session started given the current block height
+func (s *sessionHydrator) getSessionHeight(readCtx modules.PersistenceReadContext, blockHeight int64) (int64, error) {
+	numBlocksPerSession, err := readCtx.GetIntParam(types.BlocksPerSessionParamName, blockHeight)
+	if err != nil {
+		return 0, err
+	}
+
+	numBlocksAheadOfSession := blockHeight % int64(numBlocksPerSession)
+	if numBlocksAheadOfSession == 0 {
+		return blockHeight, nil
+	}
+	return (blockHeight - numBlocksAheadOfSession), nil
 }
 
 // use the seed information to determine a SHA3Hash that is used to find the closest N actors based

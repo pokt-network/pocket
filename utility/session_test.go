@@ -3,8 +3,6 @@ package utility
 import (
 	"testing"
 
-	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/stretchr/testify/require"
 )
@@ -17,22 +15,7 @@ import (
 // 5. Need different protos for each actor
 
 func TestSession_NewSession(t *testing.T) {
-	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
-	defer teardownDeterministicKeygen()
-
-	runtimeCfg := newTestRuntimeConfig(dbURL, 5, 1, 1, 1)
-	bus, err := runtime.CreateBus(runtimeCfg)
-	require.NoError(t, err)
-
-	testPersistenceMod := newTestPersistenceModule(bus)
-	testPersistenceMod.Start()
-	defer testPersistenceMod.Stop()
-
-	testUtilityMod := newTestUtilityModule(bus)
-	testUtilityMod.Start()
-	defer testUtilityMod.Stop()
-
-	/// The actual tests
+	runtimeCfg, utilityMod, _ := prepareEnvironment(t, 5, 1, 1, 1)
 
 	// Loop over these
 	app := runtimeCfg.GetGenesis().Applications[0]
@@ -40,20 +23,19 @@ func TestSession_NewSession(t *testing.T) {
 	relayChain := coreTypes.RelayChain_ETHEREUM
 	geoZone := "geo"
 
-	session, err := testUtilityMod.GetSession(app.Address, height, relayChain, geoZone)
+	session, err := utilityMod.GetSession(app.Address, height, relayChain, geoZone)
 	require.NoError(t, err)
-	require.Equal(t, "61bf17f4c2b7b381095b1be393d58412e863f18497e8a4308bfbff356df25971", session.Id)
+	require.Equal(t, "8b50d1f751029a06d0b860e3b900163b3c6532fc48df2e11f848600019df5483", session.Id)
 	require.Equal(t, height, session.Height)
 	require.Equal(t, relayChain, session.RelayChain)
 	require.Equal(t, geoZone, session.GeoZone)
 	require.Equal(t, session.Application.Address, app.Address)
 	require.Equal(t, "c7832263600476fd6ff4c5cb0a86080d0e5f48b2", session.Servicers[0].Address)
 	require.Equal(t, "fisherman", session.Fishermen[0].Address)
-
-	// require.Equal(t, session.Application.Address, "app")
 }
 
 func TestSession_SessionHeight(t *testing.T) {
+	// for i := 0; i < 100; i++ {
 
 	// BlocksPerSessionParamName = 4
 	// blockHeigh = 4

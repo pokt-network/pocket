@@ -9,25 +9,13 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	"github.com/pokt-network/pocket/shared/modules"
-)
-
-const (
-	testingValidatorCount   = 5
-	testingServicerCount    = 1
-	testingApplicationCount = 1
-	testingFishermenCount   = 1
-
-	testNonce  = "defaultNonceString"
-	testSchema = "test_schema"
+	"github.com/stretchr/testify/require"
 )
 
 var (
 	dbURL string
-	// testUtilityMod modules.UtilityModule
-	// NB: Note that the utility module has a direct dependence on the implementation of the persistence
-	// module in unit tests. This is not ideal but makes development much more efficient.
-	// testPersistenceMod modules.PersistenceModule
 )
 
 func TestMain(m *testing.M) {
@@ -38,41 +26,6 @@ func TestMain(m *testing.M) {
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
 	os.Exit(exitCode)
 }
-
-// func newTestingUtilityUnitOfWork(t *testing.T, height int64, options ...func(*baseUtilityUnitOfWork)) *baseUtilityUnitOfWork {
-// 	rwCtx, err := testPersistenceMod.NewRWContext(height)
-// 	require.NoError(t, err)
-
-// 	// TECHDEBT: Move the internal of cleanup into a separate function and call this in the
-// 	// beginning of every test. This (the current implementation) is an issue because if we call
-// 	// `NewTestingUtilityContext` more than once in a single test, we create unnecessary calls to clean.
-// 	t.Cleanup(func() {
-// 		err := testPersistenceMod.ReleaseWriteContext()
-// 		require.NoError(t, err)
-// 		err = testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
-// 			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
-// 			Message: nil,
-// 		})
-// 		require.NoError(t, err)
-// 		// TODO: May need to run `bus.GetUtilityModule().GetMempool().Clear()` here
-// 	})
-
-// 	uow := &baseUtilityUnitOfWork{
-// 		logger: logger.Global.CreateLoggerForModule(modules.UtilityModuleName),
-// 		height: height,
-// 		// TODO(@deblasis): Refactor this
-// 		persistenceRWContext:   rwCtx,
-// 		persistenceReadContext: rwCtx,
-// 	}
-
-// 	uow.SetBus(testPersistenceMod.GetBus())
-
-// 	for _, option := range options {
-// 		option(uow)
-// 	}
-
-// 	return uow
-// }
 
 func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
 	utilityMod, err := Create(bus)
@@ -90,12 +43,39 @@ func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
 	return persistenceMod.(modules.PersistenceModule)
 }
 
+func prepareEnvironment(
+	t *testing.T,
+	numValidators,
+	numServicers,
+	numApplications,
+	numFisherman int,
+) (*runtime.Manager, modules.UtilityModule, modules.PersistenceModule) {
+	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
+
+	runtimeCfg := newTestRuntimeConfig(numValidators, numServicers, numApplications, numFisherman)
+	bus, err := runtime.CreateBus(runtimeCfg)
+	require.NoError(t, err)
+
+	testPersistenceMod := newTestPersistenceModule(bus)
+	testPersistenceMod.Start()
+
+	testUtilityMod := newTestUtilityModule(bus)
+	testUtilityMod.Start()
+
+	t.Cleanup(func() {
+		teardownDeterministicKeygen()
+		testPersistenceMod.Stop()
+		testUtilityMod.Stop()
+	})
+
+	return runtimeCfg, testUtilityMod, testPersistenceMod
+}
+
 // REFACTOR: This should be in a shared testing package
 func newTestRuntimeConfig(
-	databaseURL string,
-	numValidators int,
-	numServicers int,
-	numApplications int,
+	numValidators,
+	numServicers,
+	numApplications,
 	numFisherman int,
 ) *runtime.Manager {
 	cfg := &configs.Config{
@@ -104,8 +84,8 @@ func newTestRuntimeConfig(
 			MaxMempoolTransactions:     1000,
 		},
 		Persistence: &configs.PersistenceConfig{
-			PostgresUrl:       databaseURL,
-			NodeSchema:        testSchema,
+			PostgresUrl:       dbURL,
+			NodeSchema:        "test_schema",
 			BlockStorePath:    "", // in memory
 			TxIndexerPath:     "", // in memory
 			TreesStoreDir:     "", // in memory
