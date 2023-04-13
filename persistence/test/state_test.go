@@ -7,10 +7,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/stretchr/testify/require"
 )
@@ -29,7 +27,7 @@ type TestReplayableOperation struct {
 }
 type TestReplayableTransaction struct {
 	operations []*TestReplayableOperation
-	txResult   modules.TxResult
+	txResult   *coreTypes.TxResult
 }
 
 type TestReplayableBlock struct {
@@ -74,7 +72,7 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		require.NoError(t, err)
 
 		txBz := []byte("a tx, i am, which set the app stake amount to " + stakeAmountStr)
-		txResult := indexer.TxRes{
+		txResult := &coreTypes.TxResult{
 			Tx:            txBz,
 			Height:        height,
 			Index:         0,
@@ -85,7 +83,7 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 			MessageType:   "TODO",
 		}
 
-		err = db.IndexTransaction(modules.TxResult(&txResult))
+		err = db.IndexTransaction(txResult)
 		require.NoError(t, err)
 
 		// Update the state hash
@@ -158,7 +156,7 @@ func TestStateHash_ReplayingRandomTransactionsIsDeterministic(t *testing.T) {
 						}
 					}
 
-					txResult := modules.TxResult(getRandomTxResult(height))
+					txResult := getRandomTxResult(height)
 					err := db.IndexTransaction(txResult)
 					require.NoError(t, err)
 
