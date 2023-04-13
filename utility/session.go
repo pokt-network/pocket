@@ -42,6 +42,7 @@ func (m *utilityModule) GetSession(appAddr string, height int64, relayChain core
 		session: session,
 		readCtx: readCtx,
 	}
+
 	if err := sessionHydrator.hydrateSessionApplication(appAddr); err != nil {
 		return nil, err
 	}
@@ -66,17 +67,19 @@ func (m *utilityModule) GetSession(appAddr string, height int64, relayChain core
 }
 
 // getSessionHeight returns the height at which the session started given the current block height
-func (s *sessionHydrator) getSessionHeight(readCtx modules.PersistenceReadContext, blockHeight int64) (int64, error) {
+func getSessionHeight(readCtx modules.PersistenceReadContext, blockHeight int64) (int64, int64, error) {
 	numBlocksPerSession, err := readCtx.GetIntParam(types.BlocksPerSessionParamName, blockHeight)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
 	numBlocksAheadOfSession := blockHeight % int64(numBlocksPerSession)
+	sessionNumber := int64(blockHeight / int64(numBlocksPerSession))
+	fmt.Println("OLSH", blockHeight, int64(numBlocksPerSession), numBlocksAheadOfSession, 4%5)
 	if numBlocksAheadOfSession == 0 {
-		return blockHeight, nil
+		return blockHeight, sessionNumber, nil
 	}
-	return (blockHeight - numBlocksAheadOfSession), nil
+	return (blockHeight - numBlocksAheadOfSession), sessionNumber, nil
 }
 
 // use the seed information to determine a SHA3Hash that is used to find the closest N actors based
@@ -132,7 +135,6 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 	if err != nil {
 		return err
 	}
-	// s.session.Servicers = make([]*coreTypes.Actor, numServicers)
 
 	// returns all the staked servicers at this session height
 	servicers, err := s.readCtx.GetAllServicers(s.session.Height)
