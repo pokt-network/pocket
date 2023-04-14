@@ -22,21 +22,20 @@ func (m *consensusModule) GetNodeAddress() string {
 	return m.nodeAddress
 }
 
-// IsSynced implements the interface function for checking if the node is synced with the network.
-func (m *consensusModule) IsSynced() (bool, error) {
-	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight - 1)) // Unknown height
-	if err != nil {
-		return false, err
-	}
-	defer readCtx.Release()
+// TODO(#352): Implement this function, currently a placeholder.
+// commitReceivedBlocks commits the blocks received from the blocksReceived channel
+// it is intended to be run as a background process
+func (m *consensusModule) blockApplicationLoop() {
+	// runs as a background process in consensus module
+	// listens on the blocksReceived channel
+	// commits the received block
+}
 
-	maxPersistedHeight, err := readCtx.GetMaximumBlockHeight()
-	if err != nil {
-		return false, err
-	}
-
-	maxSeenHeight := m.stateSync.GetAggregatedMetadata().MaxHeight
-
-	return maxPersistedHeight == maxSeenHeight, nil
+// TODO(#352): Implement this function, currently a placeholder.
+// metadataSyncLoop periodically sends metadata requests to its peers
+// it is intended to be run as a background process
+func (m *consensusModule) metadataSyncLoop() {
+	// runs as a background process in consensus module
+	// requests metadata from peers
+	// sends received metadata to the metadataReceived channel
 }

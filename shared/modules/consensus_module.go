@@ -1,6 +1,6 @@
 package modules
 
-//go:generate mockgen -source=$GOFILE -destination=./mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+//go:generate mockgen -destination=./mocks/consensus_module_mock.go github.com/pokt-network/pocket/shared/modules ConsensusModule,ConsensusPacemaker,ConsensusStateSync,ConsensusDebugModule
 
 import (
 	"github.com/pokt-network/pocket/shared/core/types"
@@ -73,9 +73,6 @@ type ConsensusPacemaker interface {
 type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
-
-	// IsSynced compares the persisted state with the aggregated state of the network. If the persisted state is behind the network state, i.e. that node is not synced, it will return false.
-	IsSynced() (bool, error)
 }
 
 // ConsensusDebugModule exposes functionality used for testing & development purposes.
@@ -90,10 +87,6 @@ type ConsensusDebugModule interface {
 	SetBlock(*types.Block)
 
 	SetUtilityUnitOfWork(UtilityUnitOfWork)
-
-	// SetAggregatedStateSyncMetadata is used to set peer's aggregated metadata in testing scenarios to simulate periodic metadata synchronization. It is not intended to be used outside of testing.
-	SetAggregatedStateSyncMetadata(minHeight, maxHeight uint64, peerAddress string)
-	GetAggregatedStateSyncMetadataMaxHeight() (minHeight uint64)
 
 	// REFACTOR: This should accept typesCons.HotstuffStep and return typesCons.NodeId.
 	GetLeaderForView(height, round uint64, step uint8) (leaderId uint64)

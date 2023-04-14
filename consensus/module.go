@@ -24,6 +24,12 @@ import (
 
 var _ modules.ConsensusModule = &consensusModule{}
 
+// TODO: This should be configurable
+const (
+	metadataChannelSize = 1000
+	blocksChannelSize   = 1000
+)
+
 type consensusModule struct {
 	base_modules.IntegratableModule
 
@@ -31,6 +37,8 @@ type consensusModule struct {
 
 	consCfg      *configs.ConsensusConfig
 	genesisState *genesis.GenesisState
+
+	logger *modules.Logger
 
 	// m is a mutex used to control synchronization when multiple goroutines are accessing the struct and its fields / properties.
 	//
@@ -45,7 +53,7 @@ type consensusModule struct {
 	step   typesCons.HotstuffStep
 	block  *coreTypes.Block // The current block being proposed / voted on; it has not been committed to finality
 	// TODO(#315): Move the statefulness of `TxResult` to the persistence module
-	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
+	TxResults []coreTypes.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
 	prepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	lockedQC  *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
@@ -64,12 +72,17 @@ type consensusModule struct {
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	logger    *modules.Logger
-	logPrefix string
-
 	stateSync state_sync.StateSyncModule
 
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
+
+	// block responses received from peers are collected in this channel
+	blocksReceived chan *typesCons.GetBlockResponse
+
+	// metadata responses received from peers are collected in this channel
+	metadataReceived chan *typesCons.StateSyncMetadataResponse
+
+	serverModeEnabled bool
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -123,11 +136,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 
 	consensusCfg := runtimeMgr.GetConfig().Consensus
 
-	if consensusCfg.ServerModeEnabled {
-		if err := m.stateSync.EnableServerMode(); err != nil {
-			return nil, err
-		}
-	}
+	m.serverModeEnabled = consensusCfg.ServerModeEnabled
 
 	genesisState := runtimeMgr.GetGenesis()
 	if err := m.ValidateGenesis(genesisState); err != nil {
@@ -154,6 +163,9 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	m.nodeId = valAddrToIdMap[address]
 	m.nodeAddress = address
 
+	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
+	m.blocksReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
+
 	m.initMessagesPool()
 
 	return m, nil
@@ -178,13 +190,12 @@ func (m *consensusModule) Start() error {
 		return err
 	}
 
-	if err := m.stateSync.Start(); err != nil {
-		return err
-	}
-
 	if err := m.leaderElectionMod.Start(); err != nil {
 		return err
 	}
+
+	go m.metadataSyncLoop()
+	go m.blockApplicationLoop()
 
 	return nil
 }
@@ -268,10 +279,6 @@ func (m *consensusModule) CurrentRound() uint64 {
 
 func (m *consensusModule) CurrentStep() uint64 {
 	return uint64(m.step)
-}
-
-func (m *consensusModule) EnableServerMode() {
-	m.stateSync.EnableServerMode()
 }
 
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...

@@ -38,7 +38,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// DISCUSS: Do we need to pause for `MinBlockFreqMSec` here to let more transactions or should we stick with optimistic responsiveness?
 
 	if err := m.didReceiveEnoughMessageForStep(NewRound); err != nil {
-		m.logger.Info().Fields(msgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
+		m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
 	}
 
@@ -114,7 +114,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	}
 
 	if err := m.didReceiveEnoughMessageForStep(Prepare); err != nil {
-		m.logger.Info().Fields(msgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
+		m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
 	}
 
@@ -165,7 +165,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 	}
 
 	if err := m.didReceiveEnoughMessageForStep(PreCommit); err != nil {
-		m.logger.Info().Fields(msgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
+		m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
 	}
 
@@ -216,7 +216,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	}
 
 	if err := m.didReceiveEnoughMessageForStep(Commit); err != nil {
-		m.logger.Info().Fields(msgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
+		m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
 	}
 

@@ -4,12 +4,12 @@ import (
 	"crypto/sha256"
 	"runtime/debug"
 
-	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/utils"
+	"github.com/pokt-network/smt"
 )
 
 // A list of functions to clear data from the DB not associated with protocol actors

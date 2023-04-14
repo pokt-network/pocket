@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.33] - 2023-04-11
+## [0.0.0.34] - 2023-04-13
 
 - Changed LocalNet validators to use the new `pocket-validator` helm chart instead of templating the manifests with `sed`.
 - Each validator now has it's own postgres instance (as a helm chart dependency), which allows for clean scale up/down of the validators.
 - Cleaned up old manifests and scripts that are no longer needed.
 - Changed LocalNet documentation to reflect the new changes.
+
+## [0.0.0.33] - 2023-04-13
+
+- Add persistent txIndexerPath to node configs
 
 ## [0.0.0.32] - 2023-04-10
 

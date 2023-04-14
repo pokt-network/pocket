@@ -44,18 +44,18 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 			return nil, err
 		}
 		if msg.GetPartialSignature() == nil {
-			m.logger.Warn().Fields(msgToLoggingFields(msg)).Msg("No partial signature found which should not happen...")
+			m.logger.Warn().Fields(hotstuffMsgToLoggingFields(msg)).Msg("No partial signature found which should not happen...")
 			continue
 		}
 		if msg.GetHeight() != height || msg.GetStep() != step || msg.GetRound() != round {
-			m.logger.Warn().Fields(msgToLoggingFields(msg)).Msg("Message in pool does not match (height, step, round) of QC being generated")
+			m.logger.Warn().Fields(hotstuffMsgToLoggingFields(msg)).Msg("Message in pool does not match (height, step, round) of QC being generated")
 			continue
 		}
 
 		ps := msg.GetPartialSignature()
 		if ps.Signature == nil || ps.Address == "" {
 
-			m.logger.Warn().Fields(msgToLoggingFields(msg)).Msg("Partial signature is incomplete which should not happen...")
+			m.logger.Warn().Fields(hotstuffMsgToLoggingFields(msg)).Msg("Partial signature is incomplete which should not happen...")
 			continue
 		}
 		pss = append(pss, msg.GetPartialSignature())
@@ -229,7 +229,7 @@ func (m *consensusModule) isReplica() bool {
 }
 
 func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error {
-	loggingFields := msgToLoggingFields(msg)
+	loggingFields := hotstuffMsgToLoggingFields(msg)
 	m.logger.Info().Fields(loggingFields).Msg("About to elect the next leader")
 
 	m.leaderId = nil
@@ -281,14 +281,6 @@ func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Act
 	return readCtx.GetAllValidators(int64(height))
 }
 
-func msgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
-	return map[string]any{
-		"height": msg.GetHeight(),
-		"round":  msg.GetRound(),
-		"step":   msg.GetStep(),
-	}
-}
-
 // TODO: This is a temporary solution, cache this in Consensus module. This field will be populated once with a single query to the persistence module.
 func (m *consensusModule) IsValidator() (bool, error) {
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
@@ -303,4 +295,12 @@ func (m *consensusModule) IsValidator() (bool, error) {
 	}
 
 	return false, nil
+}
+
+func hotstuffMsgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
+	return map[string]any{
+		"height": msg.GetHeight(),
+		"round":  msg.GetRound(),
+		"step":   msg.GetStep(),
+	}
 }

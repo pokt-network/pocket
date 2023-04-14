@@ -15,7 +15,7 @@ type HotstuffMessageHandler interface {
 
 func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) error {
 	// IMPROVE: Add source of message here
-	loggingFields := msgToLoggingFields(msg)
+	loggingFields := hotstuffMsgToLoggingFields(msg)
 
 	m.logger.Debug().Fields(loggingFields).Msg("Received hotstuff msg...")
 
