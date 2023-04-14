@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.44] - 2023-04-14
+
+-  Log warnings in `handleStateSyncMessage()` 
+
 ## [0.0.0.46] - 2023-04-13
 
 - Utilise the `TxResult` protobuf from `shared/core/types`
