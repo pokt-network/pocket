@@ -12,9 +12,7 @@ Validator for Pocket Network - decentralized blockchain infrastructure
 
 ### Private key
 
-In order to use this chart, you must have a Pocket Network wallet with a private key (make sure you made a backup!).
-If you do not have a private key, you can create one by following the instructions [here](https://docs.pokt.network/pokt/wallets/#create-wallet).
-This helm chart assumes user utilizes Kubernetes Secret to store the private key for an additional layer of protection. The key should not be protected with password.
+This helm chart assumes the user utilizes Kubernetes Secret to store the private key for an additional layer of protection. The key should not be protected with a password.
 
 Here is an example of the private key stored in a Kubernetes Secret:
 
