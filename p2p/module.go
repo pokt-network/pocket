@@ -72,6 +72,7 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 
 // WithHostOption associates an existing (i.e. "started") libp2p `host.Host`
 // with this module, instead of creating a new one on `#Start()`.
+// Primarily intended for testing.
 func WithHostOption(host libp2pHost.Host) modules.ModuleOption {
 	return func(m modules.InitializableModule) {
 		mod, ok := m.(*p2pModule)
