@@ -41,7 +41,6 @@ libp2p/types/mocks/*
 persistence/types/mocks/*
 !persistence/types/mocks/mocks.go
 
-
 # TODO(team): Does the `types` directory contain generated or raw type files?
 # types/
 
@@ -72,6 +71,7 @@ build/config/gen*.json
 # Binary downloads and manipulations by helm
 **/charts
 **/tmpcharts
+!/charts
 
 # Ignored generated files by build
 bin/*
@@ -87,7 +87,6 @@ localnet_config.yaml
 
 # Local files created during https://github.com/pokt-network/pocket/wiki creation
 tools/wiki
-
 
 # ignore highest precedence config file read by default
 /config.json
