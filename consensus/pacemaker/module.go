@@ -133,7 +133,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	}
 
 	// Message is from the past
-	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) || (msg.Round >= currentRound && msg.Step < currentStep) {
+	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
 		m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round)
 		return false, nil
 	}

@@ -41,8 +41,9 @@ func TestMain(m *testing.M) {
 // TODO(integration): These are temporary variables used in the prototype integration phase that
 // will need to be parameterized later once the test framework design matures.
 const (
-	numValidators = 4
-	stateHash     = "42"
+	numValidators      = 4
+	stateHash          = "42"
+	stateSyncUtilCalls = 100
 )
 
 var maxTxBytes = defaults.DefaultConsensusMaxMempoolBytes
@@ -499,7 +500,9 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesi
 				}
 				return baseReplicaUtilityUnitOfWorkMock(t, genesisState), nil
 			}).
-		MaxTimes(4)
+		// For state sync tests we call NewUnitOfWork is called more than 4 times. Therefore, we need to increase this number.
+		// TODO:  Update this value properly
+		MaxTimes(4 * stateSyncUtilCalls)
 	utilityMock.EXPECT().GetModuleName().Return(modules.UtilityModuleName).AnyTimes()
 
 	return utilityMock

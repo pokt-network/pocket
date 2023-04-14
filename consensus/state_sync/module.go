@@ -15,8 +15,6 @@ const (
 	committedBlockHeightChannelSize = 100
 )
 
-// type FSMEventsChannel chan *coreTypes.StateMachineEvent
-
 type StateSyncModule interface {
 	modules.Module
 	StateSyncServerModule
@@ -59,7 +57,6 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
 	m.committedBlockHeightChannel = make(chan uint64, committedBlockHeightChannelSize)
-	//m.FSMEventsChannel = make(chan coreTypes.StateMachineEvent, 100)
 
 	return m, nil
 }
@@ -110,28 +107,20 @@ func (m *stateSync) Start() error {
 
 		// broadcast the get block request message to all validators
 		for _, val := range m.validators {
-			fmt.Printf("Sending state sync message %s to: %s \n", stateSyncGetBlockMessage, val.GetAddress())
 			if err := m.sendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress())); err != nil {
 				return err
 			}
 		}
 
-		fmt.Println("waiting for block to be received and committed by consensus module")
-
 		// wait for the block to be received and committed by consensus module
 		receivedBlockHeight := <-m.committedBlockHeightChannel
-		fmt.Println("received and persisted block height: ", receivedBlockHeight)
+		// TODO!: do we need to do this check? It should not happen
 		if receivedBlockHeight != consensusMod.CurrentHeight() {
-			fmt.Println("This should not happen?")
 			return fmt.Errorf("received block height %d is not equal to current height %d", receivedBlockHeight, currentHeight)
 		}
 		//timer to check if block is received and committed
-
 		currentHeight = consensusMod.CurrentHeight()
-
 	}
-
-	fmt.Println("state sync is completed, currentHeight is: ", currentHeight)
 	// syncing is complete, stop the state sync module
 	return m.Stop()
 }
@@ -139,6 +128,7 @@ func (m *stateSync) Start() error {
 // TODO(#352): check if node is a valdiator, if not send Consensus_IsSyncedNonValidator event
 // Stop stops the state sync process, and sends `Consensus_IsSyncedValidator` FSM event
 func (m *stateSync) Stop() error {
+	m.logger.Info().Msg("Stop state sync moudule")
 	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
 }
 
