@@ -1,0 +1,14 @@
+
+syntax = "proto3";
+
+package configs;
+
+option go_package = "github.com/pokt-network/pocket/runtime/configs";
+
+// FishermanConfig defines the configuration for the node acting as a fisherman. Fishermen grade and enforce the quality of the Web3 access provided by Servicers
+// TODO(0xbigboss): Add fields
+message FishermanConfig {
+  // Enabled defines whether or not the node is a fisherman.
+  bool enabled = 1;
+  // INVESTIGATE(0xbigboss): what makes sense here? a public address? tuning parameters? chains?
+}

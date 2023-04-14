@@ -90,3 +90,5 @@ tools/wiki
 
 # ignore highest precedence config file read by default
 /config.json
+
+/var

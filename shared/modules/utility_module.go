@@ -40,6 +40,9 @@ type UtilityModule interface {
 	// relay chain and geo zones using on-chain data as the source of entropy. Sessions can be returned for
 	// any previous height or at most 1 block height into the future.
 	GetSession(appAddr string, sessionHeight int64, relayChain string, geoZone string) (*coreTypes.Session, error)
+
+	// GetActorModules returns the utility module's actor modules
+	GetActorModules() []Module
 }
 
 // TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead

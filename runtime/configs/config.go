@@ -3,6 +3,7 @@ package configs
 import (
 	"encoding/json"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -29,6 +30,10 @@ type Config struct {
 	Logger      *LoggerConfig      `json:"logger"`
 	RPC         *RPCConfig         `json:"rpc"`
 	Keybase     *KeybaseConfig     `json:"keybase"` // Determines and configures which keybase to use, `file` or `vault`. IMPROVE(#626): See for rationale around proto design. We have proposed a better config design, but did not implement it due to viper limitations
+	Validator   *ValidatorConfig   `json:"validator"`
+	Servicer    *ServicerConfig    `json:"servicer"`
+	Fisherman   *FishermanConfig   `json:"fisherman"`
+	Portal      *PortalConfig      `json:"portal"`
 }
 
 // ParseConfig parses the config file and returns a Config struct
@@ -153,6 +158,11 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			VaultToken:     defaults.DefaultKeybaseVaultToken,
 			VaultMountPath: defaults.DefaultKeybaseVaultMountPath,
 		},
+		Validator: &ValidatorConfig{},
+		Servicer:  &ServicerConfig{},
+		Fisherman: &FishermanConfig{},
+		Portal:    &PortalConfig{},
+		// TODO: application actor specific config
 	}
 
 	for _, option := range options {
@@ -180,4 +190,27 @@ func WithNodeSchema(schema string) func(*Config) {
 	return func(cfg *Config) {
 		cfg.Persistence.NodeSchema = schema
 	}
+}
+
+// CreateTempConfig creates a temporary config for testing purposes only
+func CreateTempConfig(cfg *Config) (*Config, error) {
+	tmpfile, err := os.CreateTemp("", "test_config_*.json")
+	if err != nil {
+		return nil, err
+	}
+
+	content, err := json.Marshal(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := tmpfile.Write(content); err != nil {
+		return nil, err
+	}
+
+	if err := tmpfile.Close(); err != nil {
+		return nil, err
+	}
+
+	return ParseConfig(tmpfile.Name()), nil
 }
