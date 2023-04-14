@@ -10,7 +10,6 @@ import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
-	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -72,6 +71,7 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 
 // WithHostOption associates an existing (i.e. "started") libp2p `host.Host`
 // with this module, instead of creating a new one on `#Start()`.
+// Primarily intended for testing.
 func WithHostOption(host libp2pHost.Host) modules.ModuleOption {
 	return func(m modules.InitializableModule) {
 		mod, ok := m.(*p2pModule)
@@ -154,17 +154,16 @@ func (m *p2pModule) Start() (err error) {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	// TECHDEBT: reconsider if this is acceptable as more `modules.ModuleOption`s
-	// become supported. At time of writing, `WithHost()` is the only option
-	// and it is only used in tests.
-	// Re-evaluate options in case there is a `WithHost` option which would
-	// assign`m.host`.
-	for _, option := range m.options {
-		option(m)
-	}
-
 	// Return early if host has already been started (e.g. via `WithHostOption`)
 	if m.host == nil {
+		// Libp2p host providea via `WithHost()` option are destroyed when
+		// `#Stop()`ing the module. Therefore, a new one must be created.
+		// The new host may be configured differently that which was provided
+		// originally in `WithHost()`.
+		if len(m.options) != 0 {
+			m.logger.Warn().Msg("creating new libp2p host")
+		}
+
 		if err = m.setupHost(); err != nil {
 			return fmt.Errorf("setting up libp2pHost: %w", err)
 		}
@@ -251,11 +250,12 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 		m.logger.Debug().Msg("loaded persistence peerstore...")
 	}
 
-	var ok bool
-	m.pstoreProvider, ok = pstoreProviderModule.(providers.PeerstoreProvider)
+	pstoreProvider, ok := pstoreProviderModule.(providers.PeerstoreProvider)
 	if !ok {
 		return fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
 	}
+	m.pstoreProvider = pstoreProvider
+
 	return nil
 }
 
@@ -274,11 +274,12 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 
 	m.logger.Debug().Msg("loaded current height provider")
 
-	var ok bool
-	m.currentHeightProvider, ok = currentHeightProviderModule.(providers.CurrentHeightProvider)
+	currentHeightProvider, ok := currentHeightProviderModule.(providers.CurrentHeightProvider)
 	if !ok {
 		return fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
 	}
+	m.currentHeightProvider = currentHeightProvider
+
 	return nil
 }
 
@@ -307,6 +308,8 @@ func (m *p2pModule) setupNetwork() (err error) {
 // setupHost creates a new libp2p host and assignes it to `m.host`. Libp2p host
 // starts listening upon instantiation.
 func (m *p2pModule) setupHost() (err error) {
+	m.logger.Debug().Msg("creating new libp2p host")
+
 	opts := []libp2p.Option{
 		// Explicitly specify supported transport security options (noise, TLS)
 		// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.3#DefaultSecurity)
@@ -384,10 +387,8 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 
 	// debug logging: stream scope stats
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.27.0/core/network#StreamScope)
-	// TECHDEBT: `logger.Global` is not a `*module.Logger`
-	_logger := m.logger.Level(zerolog.DebugLevel)
 	if err := utils.LogScopeStatFactory(
-		&_logger,
+		&logger.Global.Logger,
 		"stream scope (read-side)",
 	)(stream.Scope()); err != nil {
 		m.logger.Debug().Err(err).Msg("logging stream scope stats")

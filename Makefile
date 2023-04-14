@@ -289,9 +289,6 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 	$(PROTOC_SHARED) -I=./runtime/genesis/proto  --go_out=./runtime/genesis ./runtime/genesis/proto/*.proto
 	protoc-go-inject-tag -input="./runtime/genesis/*.pb.go"
 
-	# Persistence
-	$(PROTOC_SHARED) -I=./persistence/indexer/proto 	--go_out=./persistence/indexer ./persistence/indexer/proto/*.proto
-
 	# Utility
 	$(PROTOC_SHARED) -I=./utility/types/proto --go_out=./utility/types ./utility/types/proto/*.proto
 
