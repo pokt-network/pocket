@@ -7,7 +7,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"strconv"
+	"math/rand"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -23,7 +23,7 @@ type sessionHydrator struct {
 	readCtx modules.PersistenceReadContext
 }
 
-func (m *utilityModule) GetSession(appAddr string, height int64, relayChain coreTypes.RelayChain, geoZone string) (*coreTypes.Session, error) {
+func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geoZone string) (*coreTypes.Session, error) {
 	persistenceModule := m.GetBus().GetPersistenceModule()
 	readCtx, err := persistenceModule.NewReadContext(height)
 	if err != nil {
@@ -156,14 +156,7 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 		// OPTIMIZE: If this was a map, we could have avoided the loop over chains
 		var chain string
 		for _, chain = range servicer.Chains {
-			// TODO_IN_THIS_COMMIT: Change actor chains to use the enum
-
-			// quick hack
-			chainNum, _ := strconv.Atoi(chain)
-			enumNum := int(s.session.RelayChain)
-			// fmt.Println("OLSH", i)
-
-			if chainNum != enumNum {
+			if chain != s.session.RelayChain {
 				chain = ""
 				continue
 			}
@@ -173,7 +166,7 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 		}
 	}
 
-	s.session.Servicers = s.pseudoRandomSelection(candidateServicers, numServicers)
+	s.session.Servicers = s.pseudoRandomSelection(candidateServicers, int64(numServicers))
 	return nil
 }
 
@@ -211,14 +204,7 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 		// OPTIMIZE: If this was a map, we could have avoided the loop over chains
 		var chain string
 		for _, chain = range fisherman.Chains {
-			// TODO_IN_THIS_COMMIT: Change actor chains to use the enum
-
-			// quick hack
-			chainNum, _ := strconv.Atoi(chain)
-			enumNum := int(s.session.RelayChain)
-			// fmt.Println("OLSH", i)
-
-			if chainNum != enumNum {
+			if chain != s.session.RelayChain {
 				chain = ""
 				continue
 			}
@@ -228,7 +214,7 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 		}
 	}
 
-	s.session.Fishermen = s.pseudoRandomSelection(candidateFishermen, numFishermen)
+	s.session.Fishermen = s.pseudoRandomSelection(candidateFishermen, int64(numFishermen))
 	return nil
 }
 
@@ -241,13 +227,44 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 // A) pseudo-random selection only works if each iteration is re-randomized
 //
 //	or it would be subject to lexicographical proximity bias attacks
-func (s *sessionHydrator) pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int) []*coreTypes.Actor {
+func (s *sessionHydrator) pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, sessionId []byte) []*coreTypes.Actor {
+	// If there aren't enough candidates, return all of them
 	if numTarget > len(candidates) {
 		s.logger.Warn().Msgf("pseudoRandomSelection: numTarget (%d) is greater than the number of candidates (%d)", numTarget, len(candidates))
 		return candidates
 	}
-	// TODO_IN_THIS_COMMIT: Actually implement this
-	return candidates[:numTarget]
+
+	// Take the first 8 bytes of sessionId to use as the seed
+	seed := int64(binary.BigEndian.Uint64(sessionId[:8]))
+
+	// Retrieve the indices for the candidates
+	actors := make([]*coreTypes.Actor, 0)
+	uniqueIndices := uniqueRandomIndices(seed, int64(len(candidates)), int64(numTarget))
+	for idx := range uniqueIndices {
+		actors = append(actors, candidates[idx])
+	}
+
+	return actors
+}
+
+func uniqueRandomIndices(seed, maxIndex, numIndices int64) map[int64]struct{} {
+	// This should never happen
+	if numIndices > maxIndex {
+		panic(fmt.Sprintf("uniqueRandomIndices: numIndices (%d) is greater than maxIndex (%d)", numIndices, maxIndex))
+	}
+
+	// create a new random source with the seed
+	randSrc := rand.NewSource(seed)
+
+	// initialize a map to capture the indicesMap we'll return
+	indicesMap := make(map[int64]struct{}, maxIndex)
+
+	// The random source could potentially return duplicates, so while loop until we have enough unique indices
+	for int64(len(indicesMap)) < numIndices {
+		indicesMap[randSrc.Int63()%int64(maxIndex)] = struct{}{}
+	}
+
+	return indicesMap
 }
 
 func concat(b ...[]byte) (result []byte) {

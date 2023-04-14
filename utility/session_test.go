@@ -3,22 +3,14 @@ package utility
 import (
 	"testing"
 
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
 
-// TECH_DEBT_IDENTIFIED_IN_THIS_COMMIT:
-// 1. Replace []byte with string
-// 2. Remove height from Write context in persistence
-// 3. Need to add geozone to actors
-// 4. Need to generalize persitence functions based on actor type
-// 5. Need different protos for each actor
-
-func TestSession_NewSession(t *testing.T) {
+func TestSession_NewSession_SimpleCase(t *testing.T) {
 	height := int64(1)
-	relayChain := coreTypes.RelayChain_ETHEREUM
-	geoZone := "geo"
+	relayChain := "0001"
+	geoZone := "unused_geo"
 
 	runtimeCfg, utilityMod, _ := prepareEnvironment(t, 5, 1, 1, 1)
 	require.Len(t, runtimeCfg.GetGenesis().Applications, 1)
@@ -35,7 +27,83 @@ func TestSession_NewSession(t *testing.T) {
 	require.Equal(t, "a6e7b6810df8120580f2a81710e228f454f99c97", session.Fishermen[0].Address)
 }
 
-func TestSession_SessionHeight(t *testing.T) {
+// dispatching session in the future
+// dispatching session in the past
+
+// not enough servicers to choose from
+// no fisherman available
+// validate application dispatch
+
+func TestSession_ServicersAndFishermanCount(t *testing.T) {
+	// Prepare an environment with lots of servicers and fisherman
+	_, _, persistenceMod := prepareEnvironment(t, 5, 100, 1, 100)
+
+	writeCtx, err := persistenceMod.NewRWContext(0)
+	require.NoError(t, err)
+	defer writeCtx.Release()
+
+	tests := []struct {
+		name                   string
+		numServicersPerSession int64
+		numFishermanPerSession int64
+		wantServicerCount      int64
+		wantFishermanCount     int64
+	}{
+		{
+			name:                   "block is at start of first session",
+			numServicersPerSession: 5,
+			numFishermanPerSession: 5,
+			wantServicerCount:      5,
+			wantFishermanCount:     1,
+		},
+		{
+			name:                   "block is right before start of first session",
+			numServicersPerSession: 5,
+			numFishermanPerSession: 4,
+			wantServicerCount:      0,
+			wantFishermanCount:     0,
+		},
+		{
+			name:                   "block is right after start of first session",
+			numServicersPerSession: 5,
+			numFishermanPerSession: 6,
+			wantServicerCount:      5,
+			wantFishermanCount:     1,
+		},
+		{
+			name:                   "block is at start of second session",
+			numServicersPerSession: 5,
+			numFishermanPerSession: 10,
+			wantServicerCount:      10,
+			wantFishermanCount:     2,
+		},
+		// Not enough servicers in region
+		// Not enough fisherman in region
+		// Not enough servicers per chain
+		// Not enough fisherman per chain
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			writeCtx.SetParam(types.BlocksPerSessionParamName, tt.numBlocksPerSession)
+			// require.NoError(t, writeCtx.Commit([]byte(""), []byte("")))
+			sessionHeight, sessionNumber, err := getSessionHeight(writeCtx, tt.haveBlockHeight)
+			require.NoError(t, err)
+			require.Equal(t, tt.wantSessionHeight, sessionHeight)
+			require.Equal(t, tt.wantSessionNumber, sessionNumber)
+		})
+	}
+}
+
+// generate session id
+
+func TestSession_ServicersAndFishermanRandomness(t *testing.T) {
+	// validate entropy and randomness
+	// different height
+	// different chain
+}
+
+func TestSession_SessionHeightAndNumber_StaticBlocksPerSession(t *testing.T) {
 	_, _, persistenceMod := prepareEnvironment(t, 5, 1, 1, 1)
 
 	writeCtx, err := persistenceMod.NewRWContext(0)
@@ -94,40 +162,37 @@ func TestSession_SessionHeight(t *testing.T) {
 	}
 }
 
-// not enough servicers to choose from
+func TestSession_SessionHeightAndNumber_DynamicBlocksPerSession(t *testing.T) {
 
-// no fisherman available
+}
 
-// validate application dispatch
+func TestSession_MatchNewSession(t *testing.T) {
+}
 
-// Not enough servicers
+func TestSession_RelayChainVariability(t *testing.T) {
+	// invalid relay chain
+	// valid relay chain
 
-// What if someone paused mid session?
+}
 
-// stake a new servicer -> do I get them?
+// Potential: Changing num blocks per session must wait until current session ends -> easily fixes things
+// New servicers / fisherman -> need to wait until current session ends -> easily fixes things
 
-// Invalid application
+func TestSession_ActorReplacement(t *testing.T) {
+	// What if a servicers/fisherman paused mid session?
+	// -> Need to replace them
 
-// Not enough servicers in region
+	// What if a new servicers/fisherman staked mid session?
+	// -> They could potentially get selected
+}
 
-// No fisherman available
-
-// Check session block height
+func TestSession_InvalidApplication(t *testing.T) {
+	// TODO: What if the application pauses mid session?
+	// TODO: What if the application has no stake?
+}
 
 // Configurable number of geo zones per session
 // above max
 // below max
 // at max
-
-// invalid relay chain
-// valid relay chain
 // application is not staked for relay chain
-
-// dispatching session in the future
-// dispatching session in the past
-
-// generate session id
-// validate entropy and randomness
-
-func TestSession_MatchNewSession(t *testing.T) {
-}
