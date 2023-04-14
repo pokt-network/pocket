@@ -83,10 +83,10 @@ func (indexer *txIndexer) Index(result *coreTypes.TxResult) error {
 	if err := indexer.indexByHeightAndIndex(result.GetHeight(), result.GetIndex(), hashKey); err != nil {
 		return err
 	}
-	if err := indexer.indexBySender(result.GetSignerAddr(), hashKey); err != nil {
+	if err := indexer.indexBySenderHeightAndBlockIndex(result.GetSignerAddr(), result.GetHeight(), result.GetIndex(), hashKey); err != nil {
 		return err
 	}
-	if err := indexer.indexByRecipient(result.GetRecipientAddr(), hashKey); err != nil {
+	if err := indexer.indexByRecipientHeightAndBlockIndex(result.GetRecipientAddr(), result.GetHeight(), result.GetIndex(), hashKey); err != nil {
 		return err
 	}
 	return nil
@@ -148,15 +148,18 @@ func (indexer *txIndexer) indexByHeightAndIndex(height int64, index int32, bz []
 	return indexer.db.Set(indexer.heightAndIndexKey(height, index), bz)
 }
 
-func (indexer *txIndexer) indexBySender(sender string, bz []byte) error {
-	return indexer.db.Set(indexer.senderKey(sender), bz)
+func (indexer *txIndexer) indexBySenderHeightAndBlockIndex(sender string, height int64, blockIndex int32, bz []byte) error {
+	if sender == "" {
+		return nil
+	}
+	return indexer.db.Set(indexer.senderHeightAndBlockIndexKey(sender, height, blockIndex), bz)
 }
 
-func (indexer *txIndexer) indexByRecipient(recipient string, bz []byte) error {
+func (indexer *txIndexer) indexByRecipientHeightAndBlockIndex(recipient string, height int64, blockIndex int32, bz []byte) error {
 	if recipient == "" {
 		return nil
 	}
-	return indexer.db.Set(indexer.recipientKey(recipient), bz)
+	return indexer.db.Set(indexer.recipientHeightAndBlockIndexKey(recipient, height, blockIndex), bz)
 }
 
 // key helper functions
@@ -174,11 +177,25 @@ func (indexer *txIndexer) heightKey(height int64) []byte {
 }
 
 func (indexer *txIndexer) senderKey(address string) []byte {
-	return indexer.key(senderPrefix, address)
+	return indexer.key(senderPrefix, address+"/")
+}
+
+func (indexer *txIndexer) senderHeightAndBlockIndexKey(address string, height int64, blockIndex int32) []byte {
+	key := indexer.senderKey(address)
+	key = append(key, []byte(elenEncoder.EncodeInt(int(height))+"/")...)
+	key = append(key, []byte(elenEncoder.EncodeInt(int(blockIndex)))...)
+	return key
 }
 
 func (indexer *txIndexer) recipientKey(address string) []byte {
-	return indexer.key(recipientPrefix, address)
+	return indexer.key(recipientPrefix, address+"/")
+}
+
+func (indexer *txIndexer) recipientHeightAndBlockIndexKey(address string, height int64, blockIndex int32) []byte {
+	key := indexer.recipientKey(address)
+	key = append(key, []byte(elenEncoder.EncodeInt(int(height))+"/")...)
+	key = append(key, []byte(elenEncoder.EncodeInt(int(blockIndex)))...)
+	return key
 }
 
 func (indexer *txIndexer) key(prefix rune, postfix string) []byte {
