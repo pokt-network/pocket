@@ -152,15 +152,15 @@ func (m *consensusModule) verifyBlock(block *coreTypes.Block) error {
 		return err
 	}
 
-	// leaderIdInt, err := m.GetNodeIdFromNodeAddress(string(block.BlockHeader.ProposerAddress))
-	// if err != nil {
-	// 	m.logger.Error().Err(err).Msg("Could not get leader id from leader address")
-	// 	return err
-	// }
+	leaderIdInt, err := m.GetNodeIdFromNodeAddress(string(block.BlockHeader.ProposerAddress))
+	if err != nil {
+		m.logger.Error().Err(err).Msg("Could not get leader id from leader address")
+		return err
+	}
 
-	// leaderId := typesCons.NodeId(leaderIdInt)
-	// m.leaderId = &leaderId
-	// m.logger.Info().Msgf("verifyBlock, leaderId is: %d", leaderId)
+	leaderId := typesCons.NodeId(leaderIdInt)
+	m.leaderId = &leaderId
+	m.logger.Info().Msgf("verifyBlock, leaderId is: %d", leaderId)
 	return nil
 }
 

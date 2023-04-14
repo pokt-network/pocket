@@ -106,5 +106,14 @@ func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionE
 	m.logger.Debug().Msg("Validator node is Synced and in Pacemaker mode. It will stay in this mode until it receives a new block proposal that has a higher height than the current block height")
 	// validator receives a new block proposal, and it understands that it doesn't have block and it transitions to unsycnhed state
 	// transitioning out of this state happens when a new block proposal is received by the hotstuff_replica
+
+	// valdiator node receives nodeID after reaching pacemaker.
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return err
+	}
+	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
+	m.nodeId = valAddrToIdMap[m.nodeAddress]
+	fmt.Println("now my node id is", m.nodeId)
 	return nil
 }
