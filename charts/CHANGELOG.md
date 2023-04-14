@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.1] - 2023-04-11
+## [0.0.0.1] - 2023-04-14
 
 - Introduced `pocket-validator` helm chart.
 
