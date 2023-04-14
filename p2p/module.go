@@ -10,7 +10,6 @@ import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
-	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -386,10 +385,8 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 
 	// debug logging: stream scope stats
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.27.0/core/network#StreamScope)
-	// TECHDEBT: `logger.Global` is not a `*module.Logger`
-	_logger := m.logger.Level(zerolog.DebugLevel)
 	if err := utils.LogScopeStatFactory(
-		&_logger,
+		&logger.Global.Logger,
 		"stream scope (read-side)",
 	)(stream.Scope()); err != nil {
 		m.logger.Debug().Err(err).Msg("logging stream scope stats")
