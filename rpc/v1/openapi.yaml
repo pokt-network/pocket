@@ -238,13 +238,13 @@ paths:
       summary: Returns the current values of all governance parameters
       responses:
         "200":
-          description: Node parameters response
+          description: Returns all the chain parameters
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AllChainParamsResponse"
         "500":
-          description: An error occurred while retrieving the current node parameters
+          description: An error occurred while retrieving the current chain parameters
           content:
             text/plain:
               example: "description of failure"
@@ -411,6 +411,85 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+  /v1/query/height:
+    get:
+      tags:
+        - query
+      summary: Returns the current block height
+      responses:
+        "200":
+          description: Returns the current height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryHeight"
+        "500":
+          description: An error occurred while retrieving the current height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/param:
+    post:
+      tags:
+        - query
+      requestBody:
+        description: Request the value of the specified chain parameter at the given height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryParameter"
+            example:
+              param: blocks_per_session
+              height: 2
+        required: true
+      responses:
+        "200":
+          description: Returns the value of the parameter at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Parameter"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the parameter
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/tx:
+    post:
+      tags:
+        - query
+      summary: Returns the transaction by its hash
+      requestBody:
+        description: Request a transaction from its hash
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHash"
+            example:
+              hash: c05a67912d84860ff5db13e29b453c578c3fc0c95333f6a4987b2060f56639b6
+        required: true
+      responses:
+        "200":
+          description: Returns the transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the transaction
+          content:
+            text/plain:
+              example: "description of failure"
   /v1/query/unconfirmedtx:
     post:
       tags:
@@ -427,7 +506,7 @@ paths:
         required: true
       responses:
         "200":
-          description: Returns the unconfirmed transactions in the mempool
+          description: Returns the unconfirmed transaction from the mempool
           content:
             application/json:
               schema:
@@ -472,6 +551,37 @@ paths:
               example: "description of failure"
         "500":
           description: An error occurred while retrieving the transactions in the mempool
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/upgrade:
+    post:
+      tags:
+        - query
+      summary: Returns the upgrade information for the specified height
+      requestBody:
+        description: Request the upgrade information for the specified height, height = 0 is used as latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeight"
+            example:
+              height: 5
+        required: true
+      responses:
+        "200":
+          description: Returns the upgrade information for the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryUpgradeResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the update information
           content:
             text/plain:
               example: "description of failure"
@@ -557,6 +667,17 @@ components:
           format: int64
         sort:
           type: string
+    QueryParameter:
+      type: object
+      required:
+        - param_name
+        - height
+      properties:
+        param_name:
+          type: string
+        height:
+          type: integer
+          format: int64
     RawTXRequest:
       type: object
       required:
@@ -728,6 +849,17 @@ components:
         total_pages:
           type: integer
           format: int64
+    QueryUpgradeResponse:
+      type: object
+      required:
+        - height
+        - version
+      properties:
+        height:
+          type: integer
+          format: int64
+        version:
+          type: string
     P2PStakedActorsResponse:
       type: object
       required:

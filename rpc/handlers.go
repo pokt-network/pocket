@@ -12,7 +12,6 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/utils"
-	"github.com/pokt-network/pocket/utility"
 	"golang.org/x/exp/slices"
 )
 
@@ -145,11 +144,9 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
-	if body.Sort != nil && *body.Sort != "asc" && *body.Sort != "desc" {
-		return ctx.String(http.StatusBadRequest, "sort must be either asc or desc")
-	}
+	sort := checkSort(*body.Sort)
 	sortDesc := true
-	if body.Sort != nil && *body.Sort == "asc" {
+	if sort == "asc" {
 		sortDesc = false
 	}
 
@@ -380,11 +377,9 @@ func (s *rpcServer) PostV1QueryBlocktxs(ctx echo.Context) error {
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
-	if body.Sort != nil && *body.Sort != "asc" && *body.Sort != "desc" {
-		return ctx.String(http.StatusBadRequest, "sort must be either asc or desc")
-	}
+	sort := checkSort(*body.Sort)
 	sortDesc := true
-	if body.Sort != nil && *body.Sort == "asc" {
+	if sort == "asc" {
 		sortDesc = false
 	}
 
@@ -433,6 +428,73 @@ func (s *rpcServer) PostV1QueryBlocktxs(ctx echo.Context) error {
 		Page:         body.Page,
 		TotalPages:   int64(totalPages),
 	})
+}
+
+func (s *rpcServer) GetV1QueryHeight(ctx echo.Context) error {
+	// Get latest stored block height
+	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+
+	return ctx.JSON(http.StatusOK, QueryHeight{
+		Height: int64(currentHeight),
+	})
+}
+
+func (s *rpcServer) PostV1QueryParam(ctx echo.Context) error {
+	var body QueryParameter
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := body.Height
+	if height == 0 || height > currentHeight {
+		height = currentHeight
+	}
+
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	paramValue, err := readCtx.GetStringParam(body.ParamName, height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, Parameter{
+		ParameterName:  body.ParamName,
+		ParameterValue: paramValue,
+	})
+}
+
+func (s *rpcServer) PostV1QueryTx(ctx echo.Context) error {
+	var body QueryHash
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	hashBz, err := hex.DecodeString(body.Hash)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	txIndexer := s.GetBus().GetPersistenceModule().GetTxIndexer()
+	txResult, err := txIndexer.GetByHash(hashBz)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	rpcTx, err := s.txResultToRPCTransaction(txResult)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, rpcTx)
 }
 
 func (s *rpcServer) PostV1QueryUnconfirmedtx(ctx echo.Context) error {
@@ -485,6 +547,37 @@ func (s *rpcServer) PostV1QueryUnconfirmedtxs(ctx echo.Context) error {
 	})
 }
 
+func (s *rpcServer) PostV1QueryUpgrade(ctx echo.Context) error {
+	var body QueryHeight
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := body.Height
+	if height == 0 || height > currentHeight {
+		height = currentHeight
+	}
+	reatCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	version, err := reatCtx.GetVersionAtHeight(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, QueryUpgradeResponse{
+		Height:  height,
+		Version: version,
+	})
+}
+
 func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params GetV1P2pStakedActorsAddressBookParams) error {
 	var height int64
 	var actors []Actor
@@ -523,20 +616,4 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 	}
 
 	return ctx.JSON(http.StatusOK, response)
-}
-
-// Broadcast to the entire validator set
-func (s *rpcServer) broadcastMessage(msgBz []byte) error {
-	utilityMsg, err := utility.PrepareTxGossipMessage(msgBz)
-	if err != nil {
-		s.logger.Error().Err(err).Msg("Failed to prepare transaction gossip message")
-		return err
-	}
-
-	if err := s.GetBus().GetP2PModule().Broadcast(utilityMsg); err != nil {
-		s.logger.Error().Err(err).Msg("Failed to broadcast utility message")
-		return err
-	}
-
-	return nil
 }

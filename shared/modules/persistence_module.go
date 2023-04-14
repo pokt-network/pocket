@@ -135,6 +135,9 @@ type PersistenceReadContext interface {
 	GetHeight() (int64, error) // Returns the height of the context
 	Release()                  // Releases the read context
 
+	// Version queries
+	GetVersionAtHeight(height int64) (string, error)
+
 	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries
 	GetMaximumBlockHeight() (uint64, error)    // Returns the height of the latest block in the persistence layer

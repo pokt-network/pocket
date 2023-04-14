@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"strings"
 
 	conTypes "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/utility"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -21,6 +23,33 @@ var (
 
 func init() {
 	paramValueRegex = regexp.MustCompile(`value:"(.+)"`)
+}
+
+// Broadcast to the entire validator set
+func (s *rpcServer) broadcastMessage(msgBz []byte) error {
+	utilityMsg, err := utility.PrepareTxGossipMessage(msgBz)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("Failed to prepare transaction gossip message")
+		return err
+	}
+
+	if err := s.GetBus().GetP2PModule().Broadcast(utilityMsg); err != nil {
+		s.logger.Error().Err(err).Msg("Failed to broadcast utility message")
+		return err
+	}
+
+	return nil
+}
+
+func checkSort(sort string) string {
+	switch strings.ToLower(sort) {
+	case "asc":
+		return "asc"
+	case "desc":
+		return "desc"
+	default:
+		return "desc"
+	}
 }
 
 func getPageIndexes(totalItems, page, per_page int) (startIdx, endIdx, totalPages int, err error) {
