@@ -35,9 +35,6 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
 	fsm_state := msg.NewState
 
-	// publishing FSM event
-	//m.publishFSMEvent(msg)
-
 	m.logger.Debug().Fields(messaging.TransitionEventToMap(msg)).Msg("Received state machine transition msg")
 
 	switch coreTypes.StateMachineState(fsm_state) {

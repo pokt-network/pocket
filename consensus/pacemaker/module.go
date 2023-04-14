@@ -143,10 +143,6 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		return true, nil
 	}
 
-	// if msg.Step < currentStep {
-	// 	return false, nil
-	// }
-
 	// pacemaker catch up! Node is synced to the right height, but on a previous step/round so we just jump to the latest state.
 	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {
 		m.logger.Info().Msg(pacemakerCatchupLog(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))

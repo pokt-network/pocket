@@ -15,8 +15,6 @@ import (
 )
 
 func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
-	//t.Skip()
-
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
@@ -43,6 +41,7 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
 	// Test MetaData Req
+
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_MetadataReq{
 			MetadataReq: &typesCons.StateSyncMetadataRequest{
@@ -50,6 +49,7 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 			},
 		},
 	}
+
 	anyProto, err := anypb.New(stateSyncMetaDataReqMessage)
 	require.NoError(t, err)
 
@@ -70,10 +70,10 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 	metaDataRes := stateSyncMetaDataResMessage.GetMetadataRes()
 	require.NotEmpty(t, metaDataRes)
 
-	require.Equal(t, uint64(4), metaDataRes.MaxHeight)
+	lastPersistedHeight := testHeight - 1
+	require.Equal(t, lastPersistedHeight, metaDataRes.MaxHeight)
 	require.Equal(t, uint64(1), metaDataRes.MinHeight)
 	require.Equal(t, serverNodePeerId, metaDataRes.PeerAddress)
-
 }
 
 func TestStateSync_ServerGetBlock_Success(t *testing.T) {

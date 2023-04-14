@@ -726,7 +726,7 @@ func WaitForNodeToSync(
 
 	for currentHeight < targetHeight {
 		// waiting for unsynced node to request missing block
-		blockRequest, err := waitForNodeToRequestMissingBlock(t, clck, eventsChannel, currentHeight, targetHeight)
+		blockRequest, err := waitForNodeToRequestMissingBlock(t, clck, eventsChannel)
 		require.NoError(t, err)
 
 		// broadcast requeust to all nodes
@@ -734,7 +734,7 @@ func WaitForNodeToSync(
 		advanceTime(t, clck, 10*time.Millisecond)
 
 		// receiving replies from all nodes
-		blockResponse, err := waitForNodesToReplyToBlockRequest(t, clck, eventsChannel, blockRequest)
+		blockResponse, err := waitForNodesToReplyToBlockRequest(t, clck, eventsChannel)
 		require.NoError(t, err)
 
 		// sending block response to unsynced node
@@ -742,12 +742,13 @@ func WaitForNodeToSync(
 		advanceTime(t, clck, 10*time.Millisecond)
 
 		// waiting for node to catch the global height
-		err = waitForNodeToCatchUpHeight(t, clck, eventsChannel, unsyncedNode, allNodes, blockResponse, currentHeight+1)
+		err = waitForNodeToCatchUpHeight(t, clck, eventsChannel, allNodes, currentHeight+1)
 		require.NoError(t, err)
 
 		advanceTime(t, clck, 10*time.Millisecond)
 
-		err = waitForNodeToCatchupStep(t, clck, eventsChannel, unsyncedNode, allNodes, blockResponse, currentHeight+1)
+		//waiting for node to catch the same step
+		err = waitForNodeToCatchupStep(t, clck, eventsChannel, allNodes, currentHeight+1)
 		require.NoError(t, err)
 
 		currentHeight = unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
@@ -755,46 +756,40 @@ func WaitForNodeToSync(
 	return nil
 }
 
-// TODO(#352): implement this function.
 // waitForNodeToRequestMissingBlock waits for unsynced node to request missing block form the network
 func waitForNodeToRequestMissingBlock(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
-	startingHeight uint64,
-	targetHeight uint64,
 ) (*anypb.Any, error) {
 
 	errMsg := "StateSync Block Request Messages"
 	msgs, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numValidators, 250, true)
 	require.NoError(t, err)
-	return msgs[0], nil
+
+	return msgs[0], err
 }
 
-// TODO(#352): implement this function.
 // waitForNodeToReceiveMissingBlock requests block request of the unsynced node
 // for given node to node to catch up to the target height by sending the requested block.
 func waitForNodesToReplyToBlockRequest(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
-	blockReq *anypb.Any,
 ) (*anypb.Any, error) {
 	errMsg := "StateSync Block Response Messages"
 	msgs, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numValidators-1, 250, true)
 	require.NoError(t, err)
-	return msgs[0], nil
+
+	return msgs[0], err
 }
 
-// TODO(#352): implement this function.
 // waitForNodeToCatchUp waits for given node to node to catch up to the target height by sending the requested block.
 func waitForNodeToCatchUpHeight(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
-	unsyncedNode *shared.Node,
 	allNodes IdToNodeMapping,
-	blockResponse *anypb.Any,
 	targetHeight uint64,
 ) error {
 	// wait for unsynced node to send StateMachineEvent_Consensus_IsSyncedValidator event
@@ -805,6 +800,7 @@ func waitForNodeToCatchUpHeight(
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertHeight(t, nodeId, targetHeight, nodeState.Height)
 	}
+
 	return err
 }
 
@@ -812,9 +808,7 @@ func waitForNodeToCatchupStep(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
-	unsyncedNode *shared.Node,
 	allNodes IdToNodeMapping,
-	blockResponse *anypb.Any,
 	targetHeight uint64,
 ) error {
 	// Unsynced node sends new round messages to the rest of the network
@@ -834,15 +828,13 @@ func waitForNodeToCatchupStep(
 	broadcastMessages(t, newRoundMessages, allNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	for nodeId, pocketNode := range allNodes {
-		nodeState := GetConsensusNodeState(pocketNode)
-		assertHeight(t, nodeId, targetHeight, nodeState.Height)
-	}
+	// round := GetConsensusNodeState(allNodes[0]).Round
 
-	// prepareProposals, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 500, true)
-	// require.NoError(t, err)
-	// broadcastMessages(t, prepareProposals, allNodes)
-	// advanceTime(t, clck, 10*time.Millisecond)
+	// for nodeId, pocketNode := range allNodes {
+	// 	nodeState := GetConsensusNodeState(pocketNode)
+	// 	assertHeight(t, nodeId, targetHeight, nodeState.Height)
+	// 	assertHeight(t, nodeId, round, nodeState)
+	// }
 
 	return nil
 }

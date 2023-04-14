@@ -83,9 +83,8 @@ func WithCustomStateMachine(stateMachine *fsm.FSM) modules.ModuleOption {
 	}
 }
 
-// TODO_IN_THIS_COMMIT(gohkan): make sure to document that this is used for debugging purposes.
-// We do not want to ever mock the FSM in unit tests because it drives the nodes state and must
-// be use as is. However, we need to capture the events form a variety of different nodes.
+// WithDebugEventsChannel is only used for testing purposes. It allows us to capture the events
+// from the FSM and publish them to debug channel for testing.
 func WithDebugEventsChannel(eventsChannel modules.EventsChannel) modules.ModuleOption {
 	return func(m modules.InitializableModule) {
 		if m, ok := m.(*stateMachineModule); ok {
