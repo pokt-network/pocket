@@ -719,8 +719,6 @@ func WaitForNodeToSync(
 	allNodes IdToNodeMapping,
 	targetHeight uint64,
 ) error {
-
-	// TODO! fix error handling
 	currentHeight := unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 
 	for currentHeight < targetHeight {
@@ -804,7 +802,6 @@ func waitForNodeToCatchUpHeight(
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertHeight(t, nodeId, targetHeight, nodeState.Height)
 	}
-
 	return err
 }
 
@@ -838,6 +835,11 @@ func waitForNodeToCatchupStep(
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertHeight(t, nodeId, targetHeight, nodeState.Height)
 	}
+
+	// prepareProposals, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 500, true)
+	// require.NoError(t, err)
+	// broadcastMessages(t, prepareProposals, allNodes)
+	// advanceTime(t, clck, 10*time.Millisecond)
 
 	return nil
 }

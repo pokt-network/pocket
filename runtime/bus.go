@@ -54,10 +54,6 @@ func (m *bus) PublishEventToBus(e *messaging.PocketEnvelope) {
 	m.channel <- e
 }
 
-// func (m *bus) SetEventBus(channel modules.EventsChannel) {
-// 	m.channel = channel
-// }
-
 func (m *bus) GetBusEvent() *messaging.PocketEnvelope {
 	e := <-m.channel
 	return e
