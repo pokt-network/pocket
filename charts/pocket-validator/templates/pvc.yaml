@@ -1,0 +1,34 @@
+{{- if and .Values.persistence.enabled (not .Values.persistence.existingClaim) -}}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "pocket-validator.fullname" . }}-data
+  labels:
+    {{- include "pocket-validator.labels" . | nindent 4 }}
+  {{- with .Values.persistence.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+  {{- range .Values.persistence.accessModes }}
+    - {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size | quote }}
+  {{- with .Values.persistence.selector }}
+  selector:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.persistence.dataSource }}
+  dataSource:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if .Values.persistence.storageClass }}
+  storageClass: {{ .Values.persistence.storageClass | quote }}
+  {{ else }}
+  storageClass: ""
+  {{- end }}
+  persistentVolumeReclaimPolicy: {{ .Values.persistence.reclaimPolicy | quote }}
+{{- end -}}

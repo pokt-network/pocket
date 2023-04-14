@@ -1,0 +1,31 @@
+name: Generate helm docs
+on:
+  pull_request:
+    paths:
+      - "charts/**/README.md.gotmpl"
+      - "charts/**/values.yaml"
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Install helm-docs
+        uses: envoy/install-helm-docs@v1.0.0
+        with:
+          # Helm Docs Version to install (Mandatory)
+          version: 1.11.0
+      - name: Generate helm docs
+        run: helm-docs --chart-search-root=charts
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+          if [[ -n $(git status --porcelain) ]]; then
+            git add .
+            git commit -m "add generated helm docs"
+            git push
+          else
+            echo "No changes detected, skipping commit and push."
+          fi

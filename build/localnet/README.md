@@ -151,7 +151,13 @@ For example:
 
 ## How to change configuration files
 
-Currently, we provide [a config file](./manifests/configs.yaml) that is shared between all validators and a pocket client. We make use of `pocket` client feature that allows us to override configuration via environment variables. You can check a [validator template](./templates/v1-validator-template.yaml.tpl) as a reference.
+Configurations can be changed in helm charts where network protocol actor configs are maintained. You can find them in [this directory](../../charts).
+
+`config.json` file is created using the `config` section content in`values.yaml`. For example, you can find the configuration for a validator [here](../../charts/pocket-validator/values.yaml#70).
+
+If you need to add a new parameter – feel free to modify the section in place. Some of the parameters that contain secrets (e.g. private key), are stored in Secrets object and injected as environment variables.
+
+Please refer to helm charts documentation for more details.
 
 ## How does it work?
 
@@ -205,12 +211,9 @@ build/localnet
 │   │   ├── dashboards.yml
 │   │   └── datasources.yml
 │   └── values.yaml # Configuration values that override the default values of the dependencies, this allows us to connect dependencies together and make them available to our LocalNet services
-├── manifests # Static YAML Kubernetes manifests that are consumed by `tilt`
-│   ├── cli-client.yaml # Pod that has the latest binary of the pocket client. Makefile targets run CLI in this pod.
-│   ├── configs.yaml # Location of the config files (default configs for all validators and a genesis file) that are shared across all actors
-│   ├── network.yaml # Networking configuration that is shared between different actors, currently a Service that points to all validators
-│   └── private-keys.yaml # Pre-generated private keys with a semantic format for easier development
-└── templates # Templates for Kubernetes manifests that are consumed by `tilt`
-    ├── v1-validator-template.sh # Shell script that generates Kubenetes manifests for validators, consumed by `tilt`
-    └── v1-validator-template.yaml.tpl # Template for a single validator, consumed by `v1-validator-template.sh`
+└── manifests # Static YAML Kubernetes manifests that are consumed by `tilt`
+    ├── cli-client.yaml # Pod that has the latest binary of the pocket client. Makefile targets run CLI in this pod.
+    ├── configs.yaml # Location of the config files (default configs for all validators and a genesis file) that are shared across all actors
+    ├── network.yaml # Networking configuration that is shared between different actors, currently a Service that points to all validators
+    └── private-keys.yaml # Pre-generated private keys with a semantic format for easier development
 ```
