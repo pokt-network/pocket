@@ -14,13 +14,13 @@ import (
 // local state metadata with other peers syncing to the latest block.
 type StateSyncServerModule interface {
 	// Advertise (send) the local state sync metadata to the requesting peer
-	HandleStateSyncMetadataRequest(*typesCons.StateSyncMetadataRequest) error
+	HandleStateSyncMetadataRequest(*typesCons.StateSyncMetadataRequest)
 
 	// Advertise (send) the block being requested by the peer
-	HandleGetBlockRequest(*typesCons.GetBlockRequest) error
+	HandleGetBlockRequest(*typesCons.GetBlockRequest)
 }
 
-func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) error {
+func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) {
 	consensusMod := m.GetBus().GetConsensusModule()
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := metadataReq.PeerAddress
@@ -32,18 +32,22 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(prevPersistedBlockHeight))
 	if err != nil {
-		return nil
+		m.logger.Err(err).Msg("Error creating read context")
+		return
 	}
+
 	defer readCtx.Release()
 
 	maxHeight, err := readCtx.GetMaximumBlockHeight()
 	if err != nil {
-		return err
+		m.logger.Err(err).Msg("Error getting max height")
+		return
 	}
 
 	minHeight, err := readCtx.GetMinimumBlockHeight()
 	if err != nil {
-		return err
+		m.logger.Err(err).Msg("Error getting min height")
+		return
 	}
 
 	stateSyncMessage := typesCons.StateSyncMessage{
@@ -56,10 +60,14 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 		},
 	}
 
-	return m.sendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress))
+	err = m.sendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress))
+	if err != nil {
+		m.logger.Err(err).Msg("Error sending state sync message")
+		return
+	}
 }
 
-func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
+func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) {
 	consensusMod := m.GetBus().GetConsensusModule()
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := blockReq.PeerAddress
@@ -68,13 +76,15 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
 	if prevPersistedBlockHeight < blockReq.Height {
-		return fmt.Errorf("requested block height: %d is higher than current persisted block height: %d", blockReq.Height, prevPersistedBlockHeight)
+		m.logger.Err(fmt.Errorf("requested block height: %d is higher than current persisted block height: %d", blockReq.Height, prevPersistedBlockHeight))
+		return
 	}
 
 	// get block from the persistence module
 	block, err := m.getBlockAtHeight(blockReq.Height)
 	if err != nil {
-		return err
+		m.logger.Err(err).Msg("Error getting block")
+		return
 	}
 
 	stateSyncMessage := typesCons.StateSyncMessage{
@@ -86,7 +96,11 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 		},
 	}
 
-	return m.sendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress))
+	err = m.sendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress))
+	if err != nil {
+		m.logger.Err(err).Msg("Error sending state sync message")
+		return
+	}
 }
 
 // Get a block from persistence module given block height

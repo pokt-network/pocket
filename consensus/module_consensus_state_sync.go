@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const metadataSyncPeriod = 30 * time.Second // TODO: Make this configurable
+const metadataSyncPeriod = 60 * time.Second // TODO: Make this configurable
 
 var _ modules.ConsensusStateSync = &consensusModule{}
 
@@ -38,7 +38,7 @@ func (m *consensusModule) GetNodeAddress() string {
 func (m *consensusModule) blockApplicationLoop() {
 	for blockResponse := range m.blocksReceived {
 		block := blockResponse.Block
-		fmt.Println("New block is received!", block)
+		fmt.Println("New block is received!")
 		maxPersistedHeight, err := m.maxPersistedBlockHeight()
 		if err != nil {
 			m.logger.Err(err).Msg("couldn't query max persisted height")
@@ -67,7 +67,7 @@ func (m *consensusModule) blockApplicationLoop() {
 			m.logger.Err(err).Msg("failed to apply and commit block")
 			continue
 		}
-		fmt.Println("Applied block: ", block)
+		//fmt.Println("Applied block: ", block)
 		m.stateSync.CommittedBlock(m.CurrentHeight())
 	}
 
