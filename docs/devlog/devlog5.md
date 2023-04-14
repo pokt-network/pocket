@@ -15,6 +15,8 @@
 - [External Contributions ⭐](#external-contributions-)
 - [Upcoming Iteration 🗓️](#upcoming-iteration-️)
 - [Feedback and Open Discussion 💡](#feedback-and-open-discussion-)
+  - [Q: Does any other blockchain use PostGres as part of their state layer? I was excited to be able to query the state of the blockchain using SQL.](#q-does-any-other-blockchain-use-postgres-as-part-of-their-state-layer-i-was-excited-to-be-able-to-query-the-state-of-the-blockchain-using-sql)
+  - [Q: Once we have gone through testnet/localnet, etc. and are running nodes on mainnet, is the intention for them to be run on a Kubernetes cluster, or is this only for devnet purposes?](#q-once-we-have-gone-through-testnetlocalnet-etc-and-are-running-nodes-on-mainnet-is-the-intention-for-them-to-be-run-on-a-kubernetes-cluster-or-is-this-only-for-devnet-purposes)
 - [Contribute to V1 🧑‍💻](#contribute-to-v1-)
 - [About Pocket Network 💙](#about-pocket-network-)
 
@@ -78,13 +80,13 @@
 
 ## Feedback and Open Discussion 💡
 
-### Q: Does any other blockchain use PostGres as part of their state layer? I was excited to be able to query the state of the blockchain using SQL. 
+### Q: Does any other blockchain use PostGres as part of their state layer? I was excited to be able to query the state of the blockchain using SQL.
 
-A: Last we checked the answer was no :) however, if you look at the Cosmos SDK they spent a lot of time looking into it, but it was too difficult to integrate into their legacy infrastructure, similar to Celestia's intention to build their own Merkle Trees but ultimately using IAVL. Newer systems like Aptos or Espresso Systems might have taken a similar approach to us, but we would have to double check. 
+A: Last we checked the answer was no :) however, if you look at the Cosmos SDK they spent a lot of time looking into it, but it was too difficult to integrate into their legacy infrastructure, similar to Celestia's intention to build their own Merkle Trees but ultimately using IAVL. Newer systems like Aptos or Espresso Systems might have taken a similar approach to us, but we would have to double check.
 
 ### Q: Once we have gone through testnet/localnet, etc. and are running nodes on mainnet, is the intention for them to be run on a Kubernetes cluster, or is this only for devnet purposes?
 
-A: We have no expectations for the node runners to all utilize Kubernetes. Docker images are container images that can run on any container platform and we are going to supply binaries as well. We will also have documentation on how to spin up simple versions of Kubernetes that can run on one machine and Kubernetes operator to help configure and provision in an automated fashion.   
+A: We have no expectations for the node runners to all utilize Kubernetes. Docker images are container images that can run on any container platform and we are going to supply binaries as well. We will also have documentation on how to spin up simple versions of Kubernetes that can run on one machine and Kubernetes operator to help configure and provision in an automated fashion.
 
 ---
 
@@ -106,4 +108,4 @@ Pocket Network is a blockchain data platform, built for applications, that uses 
 - [Discord](https://discord.gg/pokt)
 - [Twitter](https://twitter.com/POKTnetwork)
 
-<!-- GITHUB_WIKI: devlog/2023_03_09 -->
+<!-- GITHUB_WIKI: devlog/2023_03_21 -->
