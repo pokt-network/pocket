@@ -304,3 +304,18 @@ func hotstuffMsgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
 		"step":   msg.GetStep(),
 	}
 }
+
+func (m *consensusModule) maxPersistedBlockHeight() (uint64, error) {
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(m.CurrentHeight()))
+	if err != nil {
+		return 0, err
+	}
+	defer readCtx.Release()
+
+	maxHeight, err := readCtx.GetMaximumBlockHeight()
+	if err != nil {
+		return 0, err
+	}
+
+	return maxHeight, nil
+}

@@ -64,13 +64,9 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 func (m *stateSync) Set(aggregatedMetaData *typesCons.StateSyncMetadataResponse) {
 	m.logger.Info().Msg("State Sync Module Set")
 	m.aggregatedMetaData = aggregatedMetaData
-
-	// return
 }
 
-// TODO(#352): implement this function
 // Start performs state sync
-
 // processes and aggregates all metadata collected in metadataReceived channel,
 // requests missing blocks starting from its current height to the aggregated metadata's maxHeight,
 // once the requested block is received and committed by consensus module, sends the next request for the next block,
