@@ -347,6 +347,7 @@ func (s *rpcServer) blockToRPCBlock(protoBlock *coreTypes.Block) (*Block, error)
 	return &Block{
 		BlockHeader: BlockHeader{
 			Height:        int64(protoBlock.BlockHeader.GetHeight()),
+			NetworkId:     protoBlock.BlockHeader.GetNetworkId(),
 			StateHash:     protoBlock.BlockHeader.GetStateHash(),
 			PrevStateHash: protoBlock.BlockHeader.GetPrevStateHash(),
 			ProposerAddr:  hex.EncodeToString(protoBlock.BlockHeader.GetProposerAddress()),

@@ -9,6 +9,8 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/utils"
+	"github.com/spf13/viper"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (p *persistenceModule) TransactionExists(transactionHash string) (bool, error) {
@@ -81,13 +83,21 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 		txs[i] = txResult.GetTx()
 	}
 
+	// Retrieve the network id from the config
+	networkId := viper.GetString("network_id")
+
+	// Get the current timestamp
+	timestamp := timestamppb.Now()
+
 	// Preapre the block proto
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            uint64(p.Height),
+		NetworkId:         networkId,
 		StateHash:         p.stateHash,
 		PrevStateHash:     prevBlockHash,
 		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,
+		Timestampt:        timestamp,
 	}
 	block := &coreTypes.Block{
 		BlockHeader:  blockHeader,

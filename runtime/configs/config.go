@@ -20,6 +20,7 @@ type Config struct {
 	PrivateKey      string `json:"private_key"` // INVESTIGATE(#150): better architecture for key management (keybase, keyfiles, etc.)
 	ClientDebugMode bool   `json:"client_debug_mode"`
 	UseLibP2P       bool   `json:"use_lib_p2p"` // Determines if `root/libp2p` or `root/p2p` should be used as the p2p module
+	NetworkId       string `json:"network_id"`
 
 	Consensus   *ConsensusConfig   `json:"consensus"`
 	Utility     *UtilityConfig     `json:"utility"`
@@ -106,6 +107,7 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 	cfg := &Config{
 		RootDirectory: defaults.DefaultRootDirectory,
 		UseLibP2P:     defaults.DefaultUseLibp2p,
+		NetworkId:     defaults.DefaultNetworkID,
 		Consensus: &ConsensusConfig{
 			MaxMempoolBytes: defaults.DefaultConsensusMaxMempoolBytes,
 			PacemakerConfig: &PacemakerConfig{
