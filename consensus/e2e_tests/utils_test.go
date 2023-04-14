@@ -257,6 +257,7 @@ func WaitForNetworkConsensusEvents(
 
 		hotstuffMessage, ok := msg.(*typesCons.HotstuffMessage)
 		require.True(t, ok)
+		//fmt.Println("hotstuff msg:", hotstuffMessage.Block)
 
 		return hotstuffMessage.Type == msgType && hotstuffMessage.Step == step
 	}
@@ -718,34 +719,37 @@ func WaitForNodeToSync(
 	allNodes IdToNodeMapping,
 	targetHeight uint64,
 ) error {
-	// first block to request
+
+	// TODO! fix error handling
 	currentHeight := unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 
-	fmt.Println("unsyncedNode address:", unsyncedNode.GetP2PAddress())
-
-	for i := currentHeight; i <= targetHeight; i++ {
-
-		fmt.Println("Waiting for the node to request missing block for height:", currentHeight)
+	for currentHeight < targetHeight {
+		// waiting for unsynced node to request missing block
 		blockRequest, err := waitForNodeToRequestMissingBlock(t, clck, eventsChannel, currentHeight, targetHeight)
-		if err != nil {
-			return err
-		}
+		require.NoError(t, err)
 
 		// broadcast requeust to all nodes
 		P2PBroadcast(t, allNodes, blockRequest)
 		advanceTime(t, clck, 10*time.Millisecond)
 
-		fmt.Println("Receiving replies from all nodes for Block height:", currentHeight)
+		// receiving replies from all nodes
 		blockResponse, err := waitForNodesToReplyToBlockRequest(t, clck, eventsChannel, blockRequest)
-		if err != nil {
-			return err
-		}
+		require.NoError(t, err)
 
-		fmt.Println("calling waitForNodeToCatchUp for Block height:", currentHeight)
-		err = waitForNodeToCatchUp(t, clck, eventsChannel, unsyncedNode, blockResponse, currentHeight+1)
-		if err != nil {
-			return err
-		}
+		// sending block response to unsynced node
+		P2PSend(t, unsyncedNode, blockResponse)
+		advanceTime(t, clck, 10*time.Millisecond)
+
+		// waiting for node to catch the global height
+		err = waitForNodeToCatchUpHeight(t, clck, eventsChannel, unsyncedNode, allNodes, blockResponse, currentHeight+1)
+		require.NoError(t, err)
+
+		advanceTime(t, clck, 10*time.Millisecond)
+
+		err = waitForNodeToCatchupStep(t, clck, eventsChannel, unsyncedNode, allNodes, blockResponse, currentHeight+1)
+		require.NoError(t, err)
+
+		currentHeight = unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 	}
 	return nil
 }
@@ -763,13 +767,6 @@ func waitForNodeToRequestMissingBlock(
 	errMsg := "StateSync Block Request Messages"
 	msgs, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numValidators, 250, true)
 	require.NoError(t, err)
-
-	msg, err := codec.GetCodec().FromAny(msgs[0])
-	require.NoError(t, err)
-	stateSyncBlockReqMessage, ok := msg.(*typesCons.StateSyncMessage)
-	require.True(t, ok)
-	blockReq := stateSyncBlockReqMessage.GetGetBlockReq()
-	require.NotEmpty(t, blockReq)
 	return msgs[0], nil
 }
 
@@ -780,46 +777,67 @@ func waitForNodesToReplyToBlockRequest(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
-	//allNodes IdToNodeMapping,
 	blockReq *anypb.Any,
 ) (*anypb.Any, error) {
 	errMsg := "StateSync Block Response Messages"
 	msgs, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numValidators-1, 250, true)
 	require.NoError(t, err)
-
-	// msg, err := codec.GetCodec().FromAny(msgs[0])
-	// require.NoError(t, err)
-	// stateSyncBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
-	// require.True(t, ok)
-	// blockRes := stateSyncBlockResMessage.GetGetBlockRes()
-	// require.NotEmpty(t, blockReq)
-
 	return msgs[0], nil
 }
 
 // TODO(#352): implement this function.
 // waitForNodeToCatchUp waits for given node to node to catch up to the target height by sending the requested block.
-func waitForNodeToCatchUp(
+func waitForNodeToCatchUpHeight(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
 	unsyncedNode *shared.Node,
+	allNodes IdToNodeMapping,
 	blockResponse *anypb.Any,
 	targetHeight uint64,
 ) error {
+	// wait for unsynced node to send StateMachineEvent_Consensus_IsSyncedValidator event
+	_, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "synced event", 1, 500, false)
+	require.NoError(t, err)
 
-	fmt.Println("Sending block response to unsynced node: ", blockResponse)
-	P2PSend(t, unsyncedNode, blockResponse)
+	for nodeId, pocketNode := range allNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		assertHeight(t, nodeId, targetHeight, nodeState.Height)
+	}
+
+	return err
+}
+
+func waitForNodeToCatchupStep(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	unsyncedNode *shared.Node,
+	allNodes IdToNodeMapping,
+	blockResponse *anypb.Any,
+	targetHeight uint64,
+) error {
+	// Unsynced node sends new round messages to the rest of the network
+	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.NewRound, consensus.Propose, numValidators, 500, true)
+	require.NoError(t, err)
+	P2PBroadcast(t, allNodes, newRoundMessages[0])
 	advanceTime(t, clck, 10*time.Millisecond)
 
-	// Try to listen on the channel that state machine uses
-	//stateMachineEventChannel := unsyncedNode.GetBus().GetEventBus()
-	//fmt.Println("channel size", len(stateMachineEventChannel))
-	//fsmEventMsg, err := WaitForNetworkFSMEvents(t, clck, stateMachineEventChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "synced event", 1, 500, false)
+	for _, pocketNode := range allNodes {
+		TriggerNextView(t, pocketNode)
+	}
+	advanceTime(t, clck, 10*time.Millisecond)
 
-	fsmEventMsg, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "synced event", 1, 500, false)
+	// 1. NewRound
+	newRoundMessages, err = WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 500, true)
 	require.NoError(t, err)
-	fmt.Println("fsmEventMsg:", fsmEventMsg)
+	broadcastMessages(t, newRoundMessages, allNodes)
+	advanceTime(t, clck, 10*time.Millisecond)
+
+	for nodeId, pocketNode := range allNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		assertHeight(t, nodeId, targetHeight, nodeState.Height)
+	}
 
 	return nil
 }

@@ -133,7 +133,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	}
 
 	// Message is from the past
-	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
+	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) || (msg.Round >= currentRound && msg.Step < currentStep) {
 		m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round)
 		return false, nil
 	}
@@ -142,6 +142,10 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	if msg.Height == currentHeight && msg.Step == currentStep && msg.Round == currentRound {
 		return true, nil
 	}
+
+	// if msg.Step < currentStep {
+	// 	return false, nil
+	// }
 
 	// pacemaker catch up! Node is synced to the right height, but on a previous step/round so we just jump to the latest state.
 	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {

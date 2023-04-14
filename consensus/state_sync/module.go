@@ -131,7 +131,7 @@ func (m *stateSync) Start() error {
 
 	}
 
-	fmt.Println("state sync is completed")
+	fmt.Println("state sync is completed, currentHeight is: ", currentHeight)
 	// syncing is complete, stop the state sync module
 	return m.Stop()
 }

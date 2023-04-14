@@ -1,7 +1,6 @@
 package e2e_tests
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -279,8 +278,6 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	consensusModImpl := GetConsensusModImpl(unsyncedNode)
 	consensusModImpl.MethodByName("PushStateSyncMetadataResponse").Call([]reflect.Value{reflect.ValueOf(metadataReceived)})
 
-	fmt.Println("pushed the metadata")
-
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)
 	}
@@ -293,8 +290,57 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	// TODO(#352): This function will be updated once state sync implementation is complete
 	err = WaitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, testHeight)
 	require.NoError(t, err)
+	//require.Equal(t, unsyncedNode.GetBus().GetConsensusModule().CurrentHeight(), testHeight)
 
-	// TODO(#352): Add height check once state sync implmentation is complete
+	// for nodeId, pocketNode := range pocketNodes {
+	// 	nodeState := GetConsensusNodeState(pocketNode)
+	// 	assertHeight(t, nodeId, testHeight, nodeState.Height)
+	// }
+
+	// advanceTime(t, clockMock, 10*time.Millisecond)
+
+	// // Unsyned node sends new round messages to the rest of the network
+	// newRoundMessages, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators, 500, true)
+	// require.NoError(t, err)
+
+	// for _, message := range newRoundMessages {
+	// 	//fmt.Println("message: ", message)
+	// 	P2PBroadcast(t, pocketNodes, message)
+	// }
+	// advanceTime(t, clockMock, 10*time.Millisecond)
+
+	// for nodeId, pocketNode := range pocketNodes {
+	// 	nodeState := GetConsensusNodeState(pocketNode)
+	// 	assertHeight(t, nodeId, testHeight, nodeState.Height)
+	// }
+
+	// for _, pocketNode := range pocketNodes {
+	// 	TriggerNextView(t, pocketNode)
+	// }
+	// advanceTime(t, clockMock, 10*time.Millisecond)
+
+	// newRoundMessages, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 500, true)
+	// require.NoError(t, err)
+
+	//PROBLEM
+	/*
+		for _, message := range newRoundMessages {
+			//fmt.Println("NEWROUND message: ", message)
+			P2PBroadcast(t, pocketNodes, message)
+		}
+		advanceTime(t, clockMock, 10*time.Millisecond)
+	*/
+	// // 2. Propose
+	// _, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 500, true)
+	// require.NoError(t, err)
+
+	// for nodeId, pocketNode := range pocketNodes {
+	// 	nodeState := GetConsensusNodeState(pocketNode)
+	// 	fmt.Println("Node state is h s r: ", nodeState.Height, nodeState.Step, nodeState.Round, "leader is: ", nodeState.LeaderId)
+	// 	//fmt.Println("Leader is: ", nodeState.LeaderId)
+	// 	assertHeight(t, nodeId, testHeight, nodeState.Height)
+	// }
+
 }
 
 // TODO(#352): Implement these tests
