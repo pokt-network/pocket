@@ -250,11 +250,12 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 		m.logger.Debug().Msg("loaded persistence peerstore...")
 	}
 
-	var ok bool
-	m.pstoreProvider, ok = pstoreProviderModule.(providers.PeerstoreProvider)
+	pstoreProvider, ok := pstoreProviderModule.(providers.PeerstoreProvider)
 	if !ok {
 		return fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
 	}
+	m.pstoreProvider = pstoreProvider
+
 	return nil
 }
 
@@ -273,11 +274,12 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 
 	m.logger.Debug().Msg("loaded current height provider")
 
-	var ok bool
-	m.currentHeightProvider, ok = currentHeightProviderModule.(providers.CurrentHeightProvider)
+	currentHeightProvider, ok := currentHeightProviderModule.(providers.CurrentHeightProvider)
 	if !ok {
 		return fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
 	}
+	m.currentHeightProvider = currentHeightProvider
+
 	return nil
 }
 
