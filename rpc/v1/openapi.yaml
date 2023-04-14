@@ -142,7 +142,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/QueryAddressHeight'
+              $ref: "#/components/schemas/QueryAddressHeight"
             example:
               address: da034209758b78eaea06dd99c07909ab54c99b45
               height: 0
@@ -170,7 +170,7 @@ paths:
         - query
       summary: Returns the paginated data of all accounts specified at a given height
       requestBody:
-        description: Request all account data at the specified height, height = 0 is used as the latest
+        description: Request all account data at the specified height, height = 0 is used as the latest; Max per_page=1000
         content:
           application/json:
             schema:
@@ -248,6 +248,72 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+  /v1/query/app:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the specific app address at a given height
+      requestBody:
+        description: Request application data at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryAddressHeight"
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns application data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/App"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the application data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  # TODO: (h5law) Think of an equivalent to staking status
+  /v1/query/apps:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the all apps at the specified height
+      requestBody:
+        description: Request all application data at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeightPaginated"
+            example:
+              height: 0
+              page: 1
+              per_page: 50
+        required: true
+      responses:
+        "200":
+          description: Returns application data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryAppsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving all application data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
   /v1/query/balance:
     post:
       tags:
@@ -290,7 +356,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/QueryHeight'
+              $ref: "#/components/schemas/QueryHeight"
             example:
               height: 0
         required: true
@@ -308,6 +374,104 @@ paths:
               example: "description of failure"
         "500":
           description: An error occurred while retrieving the block structure at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/blocktxs:
+    post:
+      tags:
+        - query
+      summary: Returns all the transactions in the block at the specified height
+      requestBody:
+        description: Request the transactions in the block at the specified height, height = 0 is used as the latest; Max per_page=1000, can be sorted either asc or desc (default)
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeightPaginated"
+            example:
+              height: 0
+              page: 1
+              per_page: 1000
+              sort: desc
+        required: true
+      responses:
+        "200":
+          description: Returns all transactions in the block at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryTxsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the block transactions at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/unconfirmedtx:
+    post:
+      tags:
+        - query
+      summary: Returns the unconfirmed transaction by its hash from mempool
+      requestBody:
+        description: Request an unconfirmed transaction currently in the mempool from its hash
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHash"
+            example:
+              hash: c05a67912d84860ff5db13e29b453c578c3fc0c95333f6a4987b2060f56639b6
+        required: true
+      responses:
+        "200":
+          description: Returns the unconfirmed transactions in the mempool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the transaction from the mempool
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/unconfirmedtxs:
+    post:
+      tags:
+        - query
+      summary: Returns all unconfirmed transactions handled by the mempool
+      requestBody:
+        description: Request the unconfirmed transactions currently in the mempool
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryPaginated"
+            example:
+              page: 1
+              per_page: 1000
+              sort: desc
+        required: true
+      responses:
+        "200":
+          description: Returns all the unconfirmed transactions in the mempool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryTxsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the transactions in the mempool
           content:
             text/plain:
               example: "description of failure"
@@ -329,22 +493,6 @@ components:
           format: int64
         address:
           type: string
-    QueryHeightPaginated:
-      type: object
-      required:
-        - height
-        - page
-        - per_page
-      properties:
-        height:
-          type: integer
-          format: int64
-        page:
-          type: integer
-          format: int64
-        per_page:
-          type: integer
-          format: int64
     QueryAddressPaginated:
       type: object
       required:
@@ -362,6 +510,31 @@ components:
           format: int64
         sort:
           type: string
+    QueryHeightPaginated:
+      type: object
+      required:
+        - height
+        - page
+        - per_page
+      properties:
+        height:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        per_page:
+          type: integer
+          format: int64
+        sort:
+          type: string
+    QueryHash:
+      type: object
+      required:
+        - hash
+      properties:
+        hash:
+          type: string
     QueryHeight:
       type: object
       required:
@@ -370,6 +543,20 @@ components:
         height:
           type: integer
           format: int64
+    QueryPaginated:
+      type: object
+      required:
+        - page
+        - per_page
+      properties:
+        page:
+          type: integer
+          format: int64
+        per_page:
+          type: integer
+          format: int64
+        sort:
+          type: string
     RawTXRequest:
       type: object
       required:
@@ -382,6 +569,54 @@ components:
           type: string
 
     # Responses
+    Account:
+      type: object
+      required:
+        - address
+        - coins
+      properties:
+        address:
+          type: string
+        coins:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coin'
+    AllChainParamsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/Parameter"
+    App:
+      type: object
+      required:
+        - address
+        - actor_type
+        - public_key
+        - chains
+        - staked_amount
+        - paused_height
+        - unstaking_height
+        - output_addr
+      properties:
+        address:
+          type: string
+        actor_type:
+          $ref: "#/components/schemas/ActorTypesEnum"
+        public_key:
+          type: string
+        chains:
+          type: array
+          items:
+            type: string
+        staked_amount:
+          type: string
+        paused_height:
+          type: integer
+          format: int64
+        unstaking_height:
+          type: integer
+          format: int64
+        output_addr:
+          type: string
     ConsensusState:
       type: object
       required:
@@ -436,10 +671,27 @@ components:
         total_pages:
           type: integer
           format: int64
-    AllChainParamsResponse:
-      type: array
-      items:
-        $ref: "#/components/schemas/Parameter"
+    QueryAppsResponse:
+      type: object
+      required:
+        - apps
+        - total_apps
+        - page
+        - total_pages
+      properties:
+        apps:
+          type: array
+          items:
+            $ref: "#/components/schemas/App"
+        total_apps:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
     QueryBalanceResponse:
       type: object
       required:
@@ -455,6 +707,27 @@ components:
       properties:
         block:
           $ref: "#/components/schemas/Block"
+    QueryTxsResponse:
+      type: object
+      required:
+        - transactions
+        - total_txs
+        - page
+        - total_pages
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+        total_txs:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
     P2PStakedActorsResponse:
       type: object
       required:
@@ -492,21 +765,6 @@ components:
         public_key:
           type: string
         service_url:
-          type: string
-    Account:
-      type: object
-      required:
-        - address
-        - coins
-        - public_key
-      properties:
-        address:
-          type: string
-        coins:
-          type: array
-          items:
-            $ref: '#/components/schemas/Coin'
-        public_key:
           type: string
     Block:
       type: object

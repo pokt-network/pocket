@@ -98,6 +98,32 @@ func (g *GenericFIFOSet[TIdx, TData]) Remove(item TData) {
 	}
 }
 
+func (g *GenericFIFOSet[TIdx, TData]) GetAll() (v []TData) {
+	g.m.Lock()
+	defer g.m.Unlock()
+
+	values := make([]TData, 0)
+	for e := g.queue.Front(); e != nil; e = e.Next() {
+		values = append(values, e.Value.(TData))
+	}
+
+	return values
+}
+
+func (g *GenericFIFOSet[TIdx, TData]) Get(index TIdx) (v TData) {
+	g.m.Lock()
+	defer g.m.Unlock()
+
+	for e := g.queue.Front(); e != nil; e = e.Next() {
+		fmt.Println(g.indexerFn(e.Value.(TData)))
+		if g.indexerFn(e.Value.(TData)) == index {
+			return e.Value.(TData)
+		}
+	}
+
+	return
+}
+
 func (g *GenericFIFOSet[TIdx, TData]) Len() int {
 	g.m.Lock()
 	defer g.m.Unlock()

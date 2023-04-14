@@ -13,6 +13,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/pocket/utility"
+	"golang.org/x/exp/slices"
 )
 
 // CONSIDER: Remove all the V1 prefixes from the RPC module
@@ -69,6 +70,10 @@ func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
 	if currentHeight > 0 {
 		currentHeight -= 1
 	}
+	height := body.Height
+	if height == 0 {
+		height = currentHeight
+	}
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -76,10 +81,6 @@ func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
 	accBz, err := hex.DecodeString(body.Address)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, err.Error())
-	}
-	height := body.Height
-	if height == 0 {
-		height = currentHeight
 	}
 	amount, err := readCtx.GetAccountAmount(accBz, height)
 	if err != nil {
@@ -103,13 +104,13 @@ func (s *rpcServer) PostV1QueryAccounts(ctx echo.Context) error {
 	if currentHeight > 0 {
 		currentHeight -= 1
 	}
-	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
-	if err != nil {
-		return ctx.String(http.StatusInternalServerError, err.Error())
-	}
 	height := body.Height
 	if height == 0 {
 		height = currentHeight
+	}
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	allAccounts, err := readCtx.GetAllAccounts(height)
 	if err != nil {
@@ -125,10 +126,10 @@ func (s *rpcServer) PostV1QueryAccounts(ctx echo.Context) error {
 	}
 
 	accounts := make([]Account, 0)
-	for i := start; i <= end; i++ {
+	for _, account := range allAccounts[start : end+1] {
 		accounts = append(accounts, Account{
-			Address: allAccounts[i].Address,
-			Coins:   []Coin{{Amount: allAccounts[i].Amount, Denom: "upokt"}},
+			Address: account.Address,
+			Coins:   []Coin{{Amount: account.Amount, Denom: "upokt"}},
 		})
 	}
 
@@ -144,14 +145,11 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
-	if body.PerPage > 1000 {
-		return ctx.String(http.StatusBadRequest, "per_page has a max value of 1000")
-	}
 	if body.Sort != nil && *body.Sort != "asc" && *body.Sort != "desc" {
 		return ctx.String(http.StatusBadRequest, "sort must be either asc or desc")
 	}
 	sortDesc := true
-	if *body.Sort == "asc" {
+	if body.Sort != nil && *body.Sort == "asc" {
 		sortDesc = false
 	}
 
@@ -170,8 +168,8 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 	}
 
 	pageTxs := make([]Transaction, 0)
-	for i := start; i <= end; i++ {
-		rpcTx, err := s.txResultToRPCTransaction(txResults[i])
+	for _, txResult := range txResults[start : end+1] {
+		rpcTx, err := s.txResultToRPCTransaction(txResult)
 		if err != nil {
 			return ctx.String(http.StatusInternalServerError, err.Error())
 		}
@@ -210,6 +208,101 @@ func (s *rpcServer) GetV1QueryAllChainParams(ctx echo.Context) error {
 	return ctx.JSON(200, resp)
 }
 
+func (s *rpcServer) PostV1QueryApp(ctx echo.Context) error {
+	var body QueryAddressHeight
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := body.Height
+	if height == 0 {
+		height = currentHeight
+	}
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	allApps, err := readCtx.GetAllApps(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	idx := slices.IndexFunc(allApps, func(app *coreTypes.Actor) bool { return app.Address == body.Address })
+	if idx == -1 {
+		return ctx.String(http.StatusBadRequest, fmt.Sprintf("no app found with address: %s", body.Address))
+	}
+
+	return ctx.JSON(http.StatusOK, App{
+		Address:         allApps[idx].Address,
+		ActorType:       protocolActorToRPCActorTypeEnum(allApps[idx].ActorType),
+		PublicKey:       allApps[idx].PublicKey,
+		Chains:          allApps[idx].Chains,
+		StakedAmount:    allApps[idx].StakedAmount,
+		PausedHeight:    allApps[idx].PausedHeight,
+		UnstakingHeight: allApps[idx].UnstakingHeight,
+		OutputAddr:      allApps[idx].Output,
+	})
+}
+
+func (s *rpcServer) PostV1QueryApps(ctx echo.Context) error {
+	var body QueryHeightPaginated
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := body.Height
+	if height == 0 {
+		height = currentHeight
+	}
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	allApps, err := readCtx.GetAllApps(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	start, end, totalPages, err := getPageIndexes(len(allApps), int(body.Page), int(body.PerPage))
+	if err != nil && !errors.Is(err, errNoItems) {
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+	if totalPages == 0 || errors.Is(err, errNoItems) {
+		return ctx.JSON(http.StatusOK, QueryAppsResponse{})
+	}
+
+	rpcApps := make([]App, 0)
+	for _, app := range allApps[start : end+1] {
+		rpcApps = append(rpcApps, App{
+			Address:         app.Address,
+			ActorType:       protocolActorToRPCActorTypeEnum(app.ActorType),
+			PublicKey:       app.PublicKey,
+			Chains:          app.Chains,
+			StakedAmount:    app.StakedAmount,
+			PausedHeight:    app.PausedHeight,
+			UnstakingHeight: app.UnstakingHeight,
+			OutputAddr:      app.Output,
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, QueryAppsResponse{
+		Apps:       rpcApps,
+		TotalApps:  int64(len(allApps)),
+		Page:       body.Page,
+		TotalPages: int64(totalPages),
+	})
+}
+
 func (s *rpcServer) PostV1QueryBalance(ctx echo.Context) error {
 	var body QueryAddressHeight
 	if err := ctx.Bind(&body); err != nil {
@@ -221,6 +314,10 @@ func (s *rpcServer) PostV1QueryBalance(ctx echo.Context) error {
 	if currentHeight > 0 {
 		currentHeight -= 1
 	}
+	height := body.Height
+	if height == 0 {
+		height = currentHeight
+	}
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -229,10 +326,6 @@ func (s *rpcServer) PostV1QueryBalance(ctx echo.Context) error {
 	accBz, err := hex.DecodeString(body.Address)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, err.Error())
-	}
-	height := body.Height
-	if height == 0 {
-		height = currentHeight
 	}
 	amountStr, err := readCtx.GetAccountAmount(accBz, height)
 	if err != nil {
@@ -267,7 +360,6 @@ func (s *rpcServer) PostV1QueryBlock(ctx echo.Context) error {
 	blockStore := s.GetBus().GetPersistenceModule().GetBlockStore()
 	blockBz, err := blockStore.Get(utils.HeightToBytes(height))
 	if err != nil {
-		fmt.Println(height, utils.HeightToBytes(height))
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -281,6 +373,116 @@ func (s *rpcServer) PostV1QueryBlock(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, rpcBlock)
+}
+
+func (s *rpcServer) PostV1QueryBlocktxs(ctx echo.Context) error {
+	var body QueryHeightPaginated
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+	if body.Sort != nil && *body.Sort != "asc" && *body.Sort != "desc" {
+		return ctx.String(http.StatusBadRequest, "sort must be either asc or desc")
+	}
+	sortDesc := true
+	if body.Sort != nil && *body.Sort == "asc" {
+		sortDesc = false
+	}
+
+	// Get latest stored block height
+	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := uint64(body.Height)
+	if height == 0 || height > currentHeight {
+		height = currentHeight
+	}
+
+	blockStore := s.GetBus().GetPersistenceModule().GetBlockStore()
+	blockBz, err := blockStore.Get(utils.HeightToBytes(height))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	block := new(coreTypes.Block)
+	if err := codec.GetCodec().Unmarshal(blockBz, block); err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	rpcBlock, err := s.blockToRPCBlock(block)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	allTxs := rpcBlock.Transactions
+	if sortDesc {
+		for i, j := 0, len(allTxs)-1; i < j; i, j = i+1, j-1 {
+			allTxs[i], allTxs[j] = allTxs[j], allTxs[i]
+		}
+	}
+
+	start, end, totalPages, err := getPageIndexes(len(allTxs), int(body.Page), int(body.PerPage))
+	if err != nil && !errors.Is(err, errNoItems) {
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+	if totalPages == 0 || errors.Is(err, errNoItems) {
+		return ctx.JSON(http.StatusOK, QueryTxsResponse{})
+	}
+
+	return ctx.JSON(http.StatusOK, QueryTxsResponse{
+		Transactions: allTxs[start : end+1],
+		TotalTxs:     int64(len(allTxs)),
+		Page:         body.Page,
+		TotalPages:   int64(totalPages),
+	})
+}
+
+func (s *rpcServer) PostV1QueryUnconfirmedtx(ctx echo.Context) error {
+	var body QueryHash
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	mempool := s.GetBus().GetUtilityModule().GetMempool()
+	uncTx := mempool.Get(body.Hash)
+	if uncTx == nil {
+		return ctx.String(http.StatusBadRequest, fmt.Sprintf("hash not found in mempool: %s", body.Hash))
+	}
+
+	rpcUncTxs, err := s.txProtoBytesToRPCTransactions([][]byte{uncTx})
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, rpcUncTxs[0])
+}
+
+func (s *rpcServer) PostV1QueryUnconfirmedtxs(ctx echo.Context) error {
+	var body QueryPaginated
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	mempool := s.GetBus().GetUtilityModule().GetMempool()
+	uncTxs := mempool.GetAll()
+
+	start, end, totalPages, err := getPageIndexes(len(uncTxs), int(body.Page), int(body.PerPage))
+	if err != nil && !errors.Is(err, errNoItems) {
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+	if totalPages == 0 || errors.Is(err, errNoItems) {
+		return ctx.JSON(http.StatusOK, QueryTxsResponse{})
+	}
+
+	rpcUncTxs, err := s.txProtoBytesToRPCTransactions(uncTxs[start : end+1])
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, QueryTxsResponse{
+		Transactions: rpcUncTxs,
+		TotalTxs:     int64(len(uncTxs)),
+		Page:         body.Page,
+		TotalPages:   int64(totalPages),
+	})
 }
 
 func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params GetV1P2pStakedActorsAddressBookParams) error {

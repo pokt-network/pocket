@@ -75,6 +75,16 @@ func (t *txFIFOMempool) TxsBytesTotal() uint64 {
 	return t.txsBytesTotal
 }
 
+// GetAll returns all the txs in the mempool
+func (t *txFIFOMempool) GetAll() [][]byte {
+	return t.g.GetAll()
+}
+
+// Get returns the tx from the mempool with the given hash
+func (t *txFIFOMempool) Get(hash string) []byte {
+	return t.g.Get(hash)
+}
+
 func NewTxFIFOMempool(maxTxsBytesTotal uint64, maxTxs uint32) *txFIFOMempool {
 	txFIFOMempool := &txFIFOMempool{
 		m:                sync.Mutex{},

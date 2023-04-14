@@ -28,6 +28,10 @@ func getPageIndexes(totalItems, page, per_page int) (startIdx, endIdx, totalPage
 		err = errNoItems
 		return
 	}
+	if per_page > 1000 {
+		err = fmt.Errorf("per_page has a max value of 1000")
+		return
+	}
 	if page == 0 || per_page == 0 {
 		err = fmt.Errorf("page and per_page must both be greater than 0")
 		return
@@ -49,18 +53,14 @@ func getPageIndexes(totalItems, page, per_page int) (startIdx, endIdx, totalPage
 
 // txResultToRPCTransaction converts the txResult protobuf into the RPC Transaction type
 func (s *rpcServer) txResultToRPCTransaction(txResult *coreTypes.TxResult) (*Transaction, error) {
-	hashBz, err := txResult.Hash()
-	if err != nil {
-		return nil, err
-	}
-	hexHashStr := hex.EncodeToString(hashBz)
+	hash := coreTypes.TxHash(txResult.GetTx())
 	txStr := base64.StdEncoding.EncodeToString(txResult.GetTx())
 	stdTx, err := s.transactionBytesToRPCStdTx(txResult.GetTx(), txResult.GetMessageType())
 	if err != nil {
 		return nil, err
 	}
 	return &Transaction{
-		Hash:   hexHashStr,
+		Hash:   hash,
 		Height: txResult.GetHeight(),
 		Index:  txResult.GetIndex(),
 		TxResult: TxResult{
@@ -294,29 +294,40 @@ func (s *rpcServer) calculateMessageFeeForActor(actorType coreTypes.ActorType, m
 	return "", fmt.Errorf("unhandled message type: %s", messageType)
 }
 
-// blockToRPCBlock converts a block protobuf to the RPC block type
-func (s *rpcServer) blockToRPCBlock(protoBlock *coreTypes.Block) (*Block, error) {
-	txs := make([]Transaction, 0)
-
-	uow, err := s.GetBus().GetUtilityModule().NewUnitOfWork(int64(protoBlock.BlockHeader.GetHeight()))
+// txProtoBytesToRPCTransactions converts a slice of serialised Transaction protobufs to a slice of RPC transactions
+func (s *rpcServer) txProtoBytesToRPCTransactions(txProtoBytes [][]byte) ([]Transaction, error) {
+	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
+	uow, err := s.GetBus().GetUtilityModule().NewUnitOfWork(int64(currentHeight))
 	if err != nil {
 		return nil, err
 	}
 	defer uow.Release()
-	for idx, txBz := range protoBlock.GetTransactions() {
+
+	txs := make([]Transaction, 0)
+	for idx, txBz := range txProtoBytes {
 		tx := new(coreTypes.Transaction)
 		if err := codec.GetCodec().Unmarshal(txBz, tx); err != nil {
 			return nil, err
 		}
 		txResult, er := uow.HydrateTxResult(tx, idx)
 		if er != nil {
-			return nil, err
+			return nil, er
 		}
 		rpcTx, err := s.txResultToRPCTransaction(txResult)
 		if err != nil {
 			return nil, err
 		}
 		txs = append(txs, *rpcTx)
+	}
+
+	return txs, nil
+}
+
+// blockToRPCBlock converts a block protobuf to the RPC block type
+func (s *rpcServer) blockToRPCBlock(protoBlock *coreTypes.Block) (*Block, error) {
+	txs, err := s.txProtoBytesToRPCTransactions(protoBlock.GetTransactions())
+	if err != nil {
+		return nil, err
 	}
 
 	qc := new(conTypes.QuorumCertificate)
