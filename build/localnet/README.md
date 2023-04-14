@@ -151,7 +151,13 @@ For example:
 
 ## How to change configuration files
 
-Configuration can be changed in helm charts we maintain for our network protocol actors. You can find them in [this directory](../../charts). `config.json` file is created using the `config` section content in the `values.yaml` file. For example, you can find configuration for validator [here](../../charts/pocket-validator/values.yaml#70). If you need to add a new parameter – feel free to modify that section. Some of the parameters that contain secrets, for example, a private key, are stored in Secrets object and injected as environment variables. Please refer to helm charts documentation for more details.
+Configurations can be changed in helm charts where network protocol actor configs are maintained. You can find them in [this directory](../../charts).
+
+`config.json` file is created using the `config` section content in`values.yaml`. For example, you can find the configuration for a validator [here](../../charts/pocket-validator/values.yaml#70).
+
+If you need to add a new parameter – feel free to modify the section in place. Some of the parameters that contain secrets (e.g. private key), are stored in Secrets object and injected as environment variables.
+
+Please refer to helm charts documentation for more details.
 
 ## How does it work?
 
