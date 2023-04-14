@@ -94,7 +94,7 @@ func prepareGovParamParamTypesMap() map[string]int {
 	}
 }
 
-func getGovParam[T *big.Int | int | int64 | []byte | string](uow *baseUtilityUnitOfWork, paramName string) (i T, err typesUtil.Error) {
+func getGovParam[T *big.Int | int | int64 | []byte | string](uow *baseUtilityUnitOfWork, paramName string) (i T, err coreTypes.Error) {
 	switch tp := any(i).(type) {
 	case *big.Int:
 		v, er := uow.getBigIntParam(paramName)
@@ -117,38 +117,38 @@ func getGovParam[T *big.Int | int | int64 | []byte | string](uow *baseUtilityUni
 	return
 }
 
-func (u *baseUtilityUnitOfWork) updateParam(paramName string, value any) typesUtil.Error {
+func (u *baseUtilityUnitOfWork) updateParam(paramName string, value any) coreTypes.Error {
 	switch t := value.(type) {
 	case *wrapperspb.Int32Value:
 		if err := u.persistenceRWContext.SetParam(paramName, (int(t.Value))); err != nil {
-			return typesUtil.ErrUpdateParam(err)
+			return coreTypes.ErrUpdateParam(err)
 		}
 		return nil
 	case *wrapperspb.StringValue:
 		if err := u.persistenceRWContext.SetParam(paramName, t.Value); err != nil {
-			return typesUtil.ErrUpdateParam(err)
+			return coreTypes.ErrUpdateParam(err)
 		}
 		return nil
 	case *wrapperspb.BytesValue:
 		if err := u.persistenceRWContext.SetParam(paramName, t.Value); err != nil {
-			return typesUtil.ErrUpdateParam(err)
+			return coreTypes.ErrUpdateParam(err)
 		}
 		return nil
 	default:
 		break
 	}
 	u.logger.Fatal().Msgf("unhandled value type %T for %v", value, value)
-	return typesUtil.ErrUnknownParam(paramName)
+	return coreTypes.ErrUnknownParam(paramName)
 }
 
-func (u *baseUtilityUnitOfWork) getParamOwner(paramName string) ([]byte, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getParamOwner(paramName string) ([]byte, coreTypes.Error) {
 	if paramOwner := utils.GovParamMetadataMap[paramName].ParamOwner; paramOwner != "" {
 		return u.getByteArrayParam(paramOwner)
 	}
-	return nil, typesUtil.ErrUnknownParam(paramName)
+	return nil, coreTypes.ErrUnknownParam(paramName)
 }
 
-func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreTypes.ActorType) (amount *big.Int, err typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreTypes.ActorType) (amount *big.Int, err coreTypes.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:
 		return getGovParam[*big.Int](u, typesUtil.MessageSendFee)
@@ -163,7 +163,7 @@ func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreType
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			return getGovParam[*big.Int](u, typesUtil.MessageStakeValidatorFee)
 		default:
-			return nil, typesUtil.ErrUnknownActorType(actorType.String())
+			return nil, coreTypes.ErrUnknownActorType(actorType.String())
 		}
 	case *typesUtil.MessageEditStake:
 		switch actorType {
@@ -176,7 +176,7 @@ func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreType
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			return getGovParam[*big.Int](u, typesUtil.MessageEditStakeValidatorFee)
 		default:
-			return nil, typesUtil.ErrUnknownActorType(actorType.String())
+			return nil, coreTypes.ErrUnknownActorType(actorType.String())
 		}
 	case *typesUtil.MessageUnstake:
 		switch actorType {
@@ -189,7 +189,7 @@ func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreType
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			return getGovParam[*big.Int](u, typesUtil.MessageUnstakeValidatorFee)
 		default:
-			return nil, typesUtil.ErrUnknownActorType(actorType.String())
+			return nil, coreTypes.ErrUnknownActorType(actorType.String())
 		}
 	case *typesUtil.MessageUnpause:
 		switch actorType {
@@ -202,63 +202,63 @@ func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreType
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			return getGovParam[*big.Int](u, typesUtil.MessageUnpauseValidatorFee)
 		default:
-			return nil, typesUtil.ErrUnknownActorType(actorType.String())
+			return nil, coreTypes.ErrUnknownActorType(actorType.String())
 		}
 	case *typesUtil.MessageChangeParameter:
 		return getGovParam[*big.Int](u, typesUtil.MessageChangeParameterFee)
 	default:
-		return nil, typesUtil.ErrUnknownMessage(x)
+		return nil, coreTypes.ErrUnknownMessage(x)
 	}
 }
 
-func (u *baseUtilityUnitOfWork) getMessageChangeParameterSignerCandidates(msg *typesUtil.MessageChangeParameter) ([][]byte, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getMessageChangeParameterSignerCandidates(msg *typesUtil.MessageChangeParameter) ([][]byte, coreTypes.Error) {
 	owner, err := u.getParamOwner(msg.ParameterKey)
 	if err != nil {
-		return nil, typesUtil.ErrGetParam(msg.ParameterKey, err)
+		return nil, coreTypes.ErrGetParam(msg.ParameterKey, err)
 	}
 	return [][]byte{owner}, nil
 }
 
-func (u *baseUtilityUnitOfWork) getBigIntParam(paramName string) (*big.Int, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getBigIntParam(paramName string) (*big.Int, coreTypes.Error) {
 	value, err := persistence.GetParameter[string](u.persistenceReadContext, paramName, u.height)
 	if err != nil {
-		return nil, typesUtil.ErrGetParam(paramName, err)
+		return nil, coreTypes.ErrGetParam(paramName, err)
 	}
 	amount, err := utils.StringToBigInt(value)
 	if err != nil {
-		return nil, typesUtil.ErrStringToBigInt(err)
+		return nil, coreTypes.ErrStringToBigInt(err)
 	}
 	return amount, nil
 }
 
-func (u *baseUtilityUnitOfWork) getIntParam(paramName string) (int, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getIntParam(paramName string) (int, coreTypes.Error) {
 	value, err := persistence.GetParameter[int](u.persistenceReadContext, paramName, u.height)
 	if err != nil {
-		return 0, typesUtil.ErrGetParam(paramName, err)
+		return 0, coreTypes.ErrGetParam(paramName, err)
 	}
 	return value, nil
 }
 
-func (u *baseUtilityUnitOfWork) getInt64Param(paramName string) (int64, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getInt64Param(paramName string) (int64, coreTypes.Error) {
 	value, err := persistence.GetParameter[int](u.persistenceReadContext, paramName, u.height)
 	if err != nil {
-		return 0, typesUtil.ErrGetParam(paramName, err)
+		return 0, coreTypes.ErrGetParam(paramName, err)
 	}
 	return int64(value), nil
 }
 
-func (u *baseUtilityUnitOfWork) getByteArrayParam(paramName string) ([]byte, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getByteArrayParam(paramName string) ([]byte, coreTypes.Error) {
 	value, err := persistence.GetParameter[[]byte](u.persistenceReadContext, paramName, u.height)
 	if err != nil {
-		return nil, typesUtil.ErrGetParam(paramName, err)
+		return nil, coreTypes.ErrGetParam(paramName, err)
 	}
 	return value, nil
 }
 
-func (u *baseUtilityUnitOfWork) getStringParam(paramName string) (string, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getStringParam(paramName string) (string, coreTypes.Error) {
 	value, err := persistence.GetParameter[string](u.persistenceReadContext, paramName, u.height)
 	if err != nil {
-		return "", typesUtil.ErrGetParam(paramName, err)
+		return "", coreTypes.ErrGetParam(paramName, err)
 	}
 	return value, nil
 }

@@ -3,6 +3,7 @@ package modules
 //go:generate mockgen -destination=./mocks/utility_module_mock.go github.com/pokt-network/pocket/shared/modules UtilityModule,UnstakingActor,UtilityUnitOfWork,LeaderUtilityUnitOfWork,ReplicaUtilityUnitOfWork
 
 import (
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/mempool"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -51,6 +52,9 @@ type UtilityUnitOfWork interface {
 	// For example, it can be use during state sync to set a proposed state transition before validation.
 	// TODO: Investigate a way to potentially simplify the interface by removing this function.
 	SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error
+
+	// HydrateTxResult hydrates a Transaction protobuf, with its index in the block returning a TxResult protobuf
+	HydrateTxResult(tx *coreTypes.Transaction, index int) (*coreTypes.TxResult, coreTypes.Error)
 
 	// ApplyBlock applies the context's in-memory proposed state (i.e. the txs in this context).
 	// Only intended to be used by the block verifiers (i.e. replicas).

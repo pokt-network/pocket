@@ -38,7 +38,7 @@ func TestUtilityUnitOfWork_ApplyTransaction(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 
 	tx, startingBalance, amount, signer := newTestingTransaction(t, uow)
-	txResult, err := uow.hydrateTxResult(tx, 0)
+	txResult, err := uow.HydrateTxResult(tx, 0)
 	require.NoError(t, err)
 	require.Equal(t, int32(0), txResult.GetResultCode())
 	require.Equal(t, "", txResult.GetError())

@@ -1,8 +1,12 @@
 package mempool
 
+import (
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+)
+
 type TXMempool interface {
 	Contains(hash string) bool
-	AddTx(tx []byte) error
+	AddTx(tx []byte) coreTypes.Error
 	RemoveTx(tx []byte) error
 
 	Clear()

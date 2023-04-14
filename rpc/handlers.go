@@ -3,6 +3,7 @@ package rpc
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -63,8 +64,11 @@ func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// get the account from the persistence module
+	// Get latest stored block height
 	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -94,8 +98,11 @@ func (s *rpcServer) PostV1QueryAccounts(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// get the account from the persistence module
+	// Get latest stored block height
 	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -148,7 +155,6 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 		sortDesc = false
 	}
 
-	// TODO: (h5law) figure out how to query all transactions from an address
 	txIndexer := s.GetBus().GetPersistenceModule().GetTxIndexer()
 	txResults, err := txIndexer.GetBySender(body.Address, sortDesc)
 	if err != nil {
@@ -181,8 +187,12 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 }
 
 func (s *rpcServer) GetV1QueryAllChainParams(ctx echo.Context) error {
-	currHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currHeight)
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -206,7 +216,11 @@ func (s *rpcServer) PostV1QueryBalance(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
+	// Get latest stored block height
 	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -241,7 +255,10 @@ func (s *rpcServer) PostV1QueryBlock(ctx echo.Context) error {
 	}
 
 	// Get latest stored block height
-	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight() - 1
+	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
 	height := uint64(body.Height)
 	if height == 0 || height > currentHeight {
 		height = currentHeight
@@ -250,6 +267,7 @@ func (s *rpcServer) PostV1QueryBlock(ctx echo.Context) error {
 	blockStore := s.GetBus().GetPersistenceModule().GetBlockStore()
 	blockBz, err := blockStore.Get(utils.HeightToBytes(height))
 	if err != nil {
+		fmt.Println(height, utils.HeightToBytes(height))
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
