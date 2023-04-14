@@ -20,20 +20,29 @@ It works like a black-box that takes the current environment/machine and therefo
 This module includes the following components:
 
 - **Config**
+  As the name says, it includes, in the form of properties, module-specific configurations.
 
-  As the name says, it includes, in the form of properties, module specific configurations.
-
-  It also has a `Base` configuration that is supposed to contain more cross-functional settings that cannot really find place in module-specific "subconfigs" (as another way to define module-specific configurations).
+  It also has a `Base` configuration that is supposed to contain more cross-functional settings that cannot really find a place in module-specific "subconfigs" (as another way to define module-specific configurations).
 
   Configuration can be supplied via JSON file but also via environment variables ([12 factor app](https://12factor.net/)).
 
-  The naming convention is as follow:
+  The naming convention is as follows:
 
   `POCKET_[module][configuration key]`
 
   So, for example, if you want to override the default RPC port we would use:
 
   > POCKET_RPC_PORT=yourport
+
+  The `config.json` file is resolved by the [`ParseConfig`](../configs/config.go#L35) function in the `configs` package. It takes an optional `cfgFile` parameter. If a file path is provided, it will attempt to read the configuration from the file at the specified path. If no file path is provided, it will search for the configuration file in the following locations:
+
+  - `/etc/pocket/`
+  - `$HOME/.pocket`
+  - The working directory
+
+  The file should be named `config` with a `.json` extension.
+
+  If no `config.json` file is found or provided, the application will use default configuration values.
 
 - **Genesis**
 

@@ -2,6 +2,7 @@ package test_artifacts
 
 // Cross module imports are okay because this is only used for testing and not business logic
 import (
+	"encoding/hex"
 	"fmt"
 	"strconv"
 
@@ -49,17 +50,19 @@ func NewDefaultConfigs(privateKeys []string) (cfgs []*configs.Config) {
 
 // REFACTOR: Test artifact generator should reflect the sum of the initial account values to populate the initial pool values
 func NewPools() (pools []*coreTypes.Account) {
-	for _, name := range coreTypes.Pools_name {
-		if name == coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName() {
-			pools = append(pools, &coreTypes.Account{
-				Address: name,
-				Amount:  "0",
-			})
+	for _, value := range coreTypes.Pools_value {
+		if value == int32(coreTypes.Pools_POOLS_UNSPECIFIED) {
 			continue
 		}
+
+		amount := DefaultAccountAmountString
+		if value == int32(coreTypes.Pools_POOLS_FEE_COLLECTOR) {
+			amount = "0"
+		}
+
 		pools = append(pools, &coreTypes.Account{
-			Address: name,
-			Amount:  DefaultAccountAmountString,
+			Address: hex.EncodeToString(coreTypes.Pools(value).Address()),
+			Amount:  amount,
 		})
 	}
 	return

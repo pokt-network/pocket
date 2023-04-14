@@ -6,7 +6,6 @@ import (
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -16,7 +15,7 @@ import (
 //
 // IMPROVE: hydration should accept and return the same type (i.e. TxResult) so there may be opportunity
 // to refactor this in the future.
-func (u *baseUtilityUnitOfWork) hydrateTxResult(tx *coreTypes.Transaction, index int) (modules.TxResult, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) hydrateTxResult(tx *coreTypes.Transaction, index int) (*coreTypes.TxResult, typesUtil.Error) {
 	msg, err := u.anteHandleMessage(tx)
 	if err != nil {
 		return nil, err
@@ -82,7 +81,7 @@ func (u *baseUtilityUnitOfWork) anteHandleMessage(tx *coreTypes.Transaction) (ty
 	if err := u.setAccountAmount(address, accountAmount); err != nil {
 		return nil, err
 	}
-	if err := u.addPoolAmount(coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName(), fee); err != nil {
+	if err := u.addPoolAmount(coreTypes.Pools_POOLS_FEE_COLLECTOR.Address(), fee); err != nil {
 		return nil, err
 	}
 

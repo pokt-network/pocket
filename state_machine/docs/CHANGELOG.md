@@ -7,13 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2023-04-03
+
+- Clarify state transitions in README
+
+## [0.0.0.3] - 2023-04-03
+
+- Update state machine states: `Stopped`, `P2P_Bootstrapping`, `P2P_Bootstrapped`, `Consensus_Unsynced`, `Consensus_SyncMode`, `Consensus_Synced`, `Consensus_Pacemaker`.
+- Update state transition events: `Start`, `P2P_IsBootstrapped`, `Consensus_IsUnsynced`, `Consensus_IsSyncing`, `Consensus_IsCaughtUpValidator`, `Consensus_IsCaughtUpNonValidator`, `Consensus_IsUnsynced`.
+
 ## [0.0.0.2] - 2023-02-24
 
 - Update logger value references with pointers
 
 ## [0.0.0.1] - 2023-02-17
 
-- Introduced this `CHANGELOG.md` and  `README.md`
+- Introduced this `CHANGELOG.md` and `README.md`
 - Added `StateMachineModule` implementation with a POC of the finite state machine that will be used to manage the node lifecycle
 - Added `StateMachine` diagram generator (linked in README.md)
 - Integrated the `StateMachine` with the `bus` to propagate `StateMachineTransitionEvent` events whenever they occur

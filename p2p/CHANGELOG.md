@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.40] - 2023-03-28
+## [0.0.0.42] - 2023-04-14
 
 - Added a test which asserts that transport encryption is required (i.e. unencrypted connections are refused)
 
-## [0.0.0.39] - 2023-03-28
+## [0.0.0.41] - 2023-04-14
 
 - Moved peer & url conversion utils to `p2p/utils` package
 - Refactor `getPeerIP` to use `net.DefaultResolver` for easier testing
@@ -23,14 +23,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `Trnasport` interface and implementations
 - Removed `ConnectionFactory` type and related members
 - Added libp2p `host.Host` mock generator
+- Refactor raintree constructor function signature to use new `RainTreeConfig` struct
 
-## [0.0.0.38] - 2023-03-23
+## [0.0.0.40] - 2023-04-12
 
 - Wrap IPv6 address in square brackets as per RFC3986 §3.2.2
 
-## [0.0.0.37] - 2023-03-22
+## [0.0.0.39] - 2023-04-12
 
 - Improve URL validation and error handling in Libp2pMultiaddrFromServiceURL function
+
+## [0.0.0.38] - 2023-04-10
+
+- Switched mock generation to use reflect mode for effected interfaces (`modules.ModuleFactoryWithOptions` embedders)
+
+## [0.0.0.37] - 2023-03-30
+
+- Variable name and comment improvements
 
 ## [0.0.0.36] - 2023-03-24
 
@@ -126,6 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.19] - 2023-01-19
 
 - Rewrite `interface{}` to `any`
+
 ## [0.0.0.18] - 2023-01-11
 
 - Add a lock to the mempool to avoid parallel messages which has caused the node to crash in the past

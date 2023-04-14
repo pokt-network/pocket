@@ -26,20 +26,19 @@ For example, `X.Y.Z[-<pre_release_tag][+branch_name][+short_hash][+dirty]` is th
 
 ## Container Images
 
-Our images are hosted on Github's Container Registry (GHCR) and are available at `ghcr.io/poktnetwork/pocket-v1`. You can find the list of latest images [here](https://github.com/pokt-network/pocket/pkgs/container/pocket-v1).
+Our images are hosted on GitHub’s Container Registry (GHCR) and are available at `ghcr.io/poktnetwork/pocket-v1`. You can find the list of latest images [here](https://github.com/pokt-network/pocket/pkgs/container/pocket-v1).
 
 ### Tags
 
-Code built from the default branch (i.e. `main`) is tagged as `latest`.
+Code built from the default branch (i.e., `main`) is tagged as `latest`.
 
-Code built from commits in Pull Requests, is tagged as `pr-<number>`, as well as `sha-<7 digit sha>`.
+Code built from commits in Pull Requests, is tagged as `pr-<number>`, as well as `sha-<7 digit sha>`. You can optionally build an image from a Pull Request by attaching a `push-image` label to the pull request to force CI to upload a container image from a non-main branch.
 
-Once releases are managed, they will be tagged with the version number (e.g. `v0.0.1-alpha.pre.1`).
+Once releases are managed, they will be tagged with the version number (e.g., `v0.0.1-alpha.pre.1`).
 
 ### Extended images with additional tooling
 
 Extended images with additional tooling are built to aid in troubleshoot and debugging. The extended image is formatted as `<tag>-dev`. For example, `latest-dev`, or `pr-123-dev`.
-
 ## [TODO] Magefile build system
 
 Once the V1 implementation reaches the stage of testable binaries, we are looking to use [Mage](https://magefile.org/) which is being tracked in [pocket/issues/43](https://github.com/pokt-network/pocket/issues/43) that'll inject a version with the `-version` flag.

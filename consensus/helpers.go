@@ -3,12 +3,15 @@ package consensus
 // TODO: Split this file into multiple helpers (e.g. signatures.go, hotstuff_helpers.go, etc...)
 import (
 	"encoding/base64"
+	"fmt"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -25,9 +28,6 @@ const (
 	Vote    = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_VOTE
 
 	ByzantineThreshold = float64(2) / float64(3)
-
-	HotstuffMessageContentType  = "consensus.HotstuffMessage"
-	StateSyncMessageContentType = "consensus.StateSyncMessage"
 )
 
 var HotstuffSteps = [...]typesCons.HotstuffStep{NewRound, Prepare, PreCommit, Commit, Decide}
@@ -44,40 +44,18 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 			return nil, err
 		}
 		if msg.GetPartialSignature() == nil {
-
-			m.logger.Warn().Fields(
-				map[string]any{
-					"height": msg.GetHeight(),
-					"step":   msg.GetStep(),
-					"round":  msg.GetRound(),
-				},
-			).Msg("No partial signature found which should not happen...")
-
+			m.logger.Warn().Fields(hotstuffMsgToLoggingFields(msg)).Msg("No partial signature found which should not happen...")
 			continue
 		}
 		if msg.GetHeight() != height || msg.GetStep() != step || msg.GetRound() != round {
-
-			m.logger.Warn().Fields(
-				map[string]any{
-					"height": msg.GetHeight(),
-					"step":   msg.GetStep(),
-					"round":  msg.GetRound(),
-				},
-			).Msg("Message in pool does not match (height, step, round) of QC being generated")
-
+			m.logger.Warn().Fields(hotstuffMsgToLoggingFields(msg)).Msg("Message in pool does not match (height, step, round) of QC being generated")
 			continue
 		}
 
 		ps := msg.GetPartialSignature()
 		if ps.Signature == nil || ps.Address == "" {
 
-			m.logger.Warn().Fields(
-				map[string]any{
-					"height": msg.GetHeight(),
-					"step":   msg.GetStep(),
-					"round":  msg.GetRound(),
-				},
-			).Msg("Partial signature is incomplete which should not happen...")
+			m.logger.Warn().Fields(hotstuffMsgToLoggingFields(msg)).Msg("Partial signature is incomplete which should not happen...")
 			continue
 		}
 		pss = append(pss, msg.GetPartialSignature())
@@ -88,7 +66,8 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		return nil, err
 	}
 
-	if err := m.isOptimisticThresholdMet(len(pss), validators); err != nil {
+	numPartialSignatures := len(pss)
+	if err := m.validateOptimisticThresholdMet(numPartialSignatures, validators); err != nil {
 		return nil, err
 	}
 
@@ -142,13 +121,14 @@ func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.Hotstuff
 	if err != nil {
 		return err
 	}
-	return m.isOptimisticThresholdMet(int(m.hotstuffMempool[step].Size()), validators)
+	numMessages := int(m.hotstuffMempool[step].Size())
+	return m.validateOptimisticThresholdMet(numMessages, validators)
 }
 
-func (m *consensusModule) isOptimisticThresholdMet(numSignatures int, validators []*coreTypes.Actor) error {
-	numValidators := len(validators)
-	if !(float64(numSignatures) > ByzantineThreshold*float64(numValidators)) {
-		return typesCons.ErrByzantineThresholdCheck(numSignatures, ByzantineThreshold*float64(numValidators))
+func (m *consensusModule) validateOptimisticThresholdMet(num int, currentValidators []*coreTypes.Actor) error {
+	numValidators := len(currentValidators)
+	if !(float64(num) > ByzantineThreshold*float64(numValidators)) {
+		return typesCons.ErrByzantineThresholdCheck(num, ByzantineThreshold*float64(numValidators))
 	}
 	return nil
 }
@@ -164,17 +144,15 @@ func protoHash(m proto.Message) string {
 /*** P2P Helpers ***/
 
 func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
-	m.logger.Info().Fields(
-		map[string]any{
-			"node_id": m.leaderId,
-			"height":  msg.GetHeight(),
-			"step":    msg.GetStep(),
-			"round":   msg.GetRound(),
-		},
-	).Msg("✉️ Sending message ✉️")
+	leaderId := m.leaderId
+
+	loggingFields := hotstuffMsgToLoggingFields(msg)
+	loggingFields["src"] = m.nodeId
+	loggingFields["dst"] = leaderId
+	m.logger.Debug().Fields(loggingFields).Msg("✉️ About to try sending hotstuff message ✉️")
 
 	// TODO: This can happen due to a race condition with the pacemaker.
-	if m.leaderId == nil {
+	if leaderId == nil {
 		m.logger.Error().Msg(typesCons.ErrNilLeaderId.Error())
 		return
 	}
@@ -189,10 +167,10 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
-
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 
-	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(idToValAddrMap[*m.leaderId]), anyConsensusMessage); err != nil {
+	leaderAddr := cryptoPocket.AddressFromString(idToValAddrMap[*leaderId])
+	if err := m.GetBus().GetP2PModule().Send(leaderAddr, anyConsensusMessage); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
 		return
 	}
@@ -201,13 +179,7 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 // Star-like (O(n)) broadcast - send to all nodes directly
 // INVESTIGATE: Re-evaluate if we should be using our structured broadcast (RainTree O(log3(n))) algorithm instead
 func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
-	m.logger.Info().Fields(
-		map[string]any{
-			"height": m.CurrentHeight(),
-			"step":   m.step,
-			"round":  m.round,
-		},
-	).Msg("📣 Broadcasting message 📣")
+	m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msg("📣 Broadcasting message 📣")
 
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
@@ -246,53 +218,35 @@ func (m *consensusModule) isReplica() bool {
 	return !m.IsLeader()
 }
 
-func (m *consensusModule) clearLeader() {
-	m.logPrefix = DefaultLogPrefix
+func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error {
+	loggingFields := hotstuffMsgToLoggingFields(msg)
+	m.logger.Info().Fields(loggingFields).Msg("About to elect the next leader")
+
 	m.leaderId = nil
-}
-
-func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) error {
-	leaderId, err := m.leaderElectionMod.ElectNextLeader(message)
+	leaderId, err := m.leaderElectionMod.ElectNextLeader(msg)
 	if err != nil || leaderId == 0 {
-
-		m.logger.Error().Err(err).Fields(
-			map[string]any{
-				"leaderId": leaderId,
-				"height":   m.height,
-				"round":    m.round,
-			},
-		).Msg("leader election failed: Validator cannot take part in consensus")
-
-		m.clearLeader()
+		m.logger.Error().Err(err).Fields(loggingFields).Msg("leader election failed; validator cannot take part in consensus...")
 		return err
 	}
-	m.leaderId = &leaderId
-
+	loggingFields["leaderId"] = leaderId
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
-
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
+	leader, ok := idToValAddrMap[leaderId]
+	if !ok {
+		return fmt.Errorf("could not find leader with id %d in the validator map", leaderId)
+	}
+	loggingFields["leader"] = leader
 
+	m.leaderId = &leaderId
 	if m.IsLeader() {
 		m.setLogPrefix("LEADER")
-		m.logger.Info().Fields(
-			map[string]any{
-				"leaderId": idToValAddrMap[*m.leaderId],
-				"height":   m.height,
-				"round":    m.round,
-			},
-		).Msg("👑 I am the leader 👑")
+		m.logger.Info().Fields(loggingFields).Msg("👑 I am the leader 👑")
 	} else {
 		m.setLogPrefix("REPLICA")
-		m.logger.Info().Fields(
-			map[string]any{
-				"leaderId": idToValAddrMap[*m.leaderId],
-				"height":   m.height,
-				"round":    m.round,
-			},
-		).Msg("🙇 Elected leader 🙇")
+		m.logger.Info().Fields(loggingFields).Msg("🙇 Elected leader 🙇")
 	}
 
 	return nil
@@ -300,19 +254,43 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 /*** General Infrastructure Helpers ***/
 func (m *consensusModule) setLogPrefix(logPrefix string) {
-	logger.Global.UpdateFields(map[string]any{
-		"kind": logPrefix,
+	// TECHDEBT: Do not expose `zerolog` here.
+	m.logger = logger.Global.CreateLoggerForModule(modules.ConsensusModuleName)
+	m.logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
+		c = c.Interface("kind", logPrefix)
+		return c
 	})
-	// INVESTIGATE: Do we need to create a new logger here?
-	m.logger = logger.Global.CreateLoggerForModule("consensus")
 }
 
 func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
-	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	defer persistenceReadContext.Close()
+	defer readCtx.Release()
+	return readCtx.GetAllValidators(int64(height))
+}
 
-	return persistenceReadContext.GetAllValidators(int64(height))
+// TODO: This is a temporary solution, cache this in Consensus module. This field will be populated once with a single query to the persistence module.
+func (m *consensusModule) IsValidator() (bool, error) {
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return false, err
+	}
+
+	for _, actor := range validators {
+		if actor.Address == m.nodeAddress {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func hotstuffMsgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
+	return map[string]any{
+		"height": msg.GetHeight(),
+		"round":  msg.GetRound(),
+		"step":   typesCons.StepToString[msg.GetStep()],
+	}
 }

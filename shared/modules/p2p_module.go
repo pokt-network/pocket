@@ -1,6 +1,6 @@
 package modules
 
-//go:generate mockgen -source=$GOFILE -destination=./mocks/p2p_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+//go:generate mockgen -destination=./mocks/p2p_module_mock.go github.com/pokt-network/pocket/shared/modules P2PModule
 
 import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"

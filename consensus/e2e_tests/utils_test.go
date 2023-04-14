@@ -22,11 +22,13 @@ import (
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/utils"
+	"github.com/pokt-network/pocket/state_machine"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -59,7 +61,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 			PrivateKey:      config.PrivateKey,
 			MaxMempoolBytes: maxTxBytes,
 			PacemakerConfig: &configs.PacemakerConfig{
-				TimeoutMsec:               5000,
+				TimeoutMsec:               10000,
 				Manual:                    false,
 				DebugTimeBetweenStepsMsec: 0,
 			},
@@ -100,7 +102,6 @@ func CreateTestConsensusPocketNode(
 	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
 ) *shared.Node {
-	// persistence is a dependency of consensus, so we need to create it first
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
 	bus.RegisterModule(persistenceMock)
 
@@ -108,6 +109,9 @@ func CreateTestConsensusPocketNode(
 	require.NoError(t, err)
 	consensusModule, ok := consensusMod.(modules.ConsensusModule)
 	require.True(t, ok)
+
+	_, err = state_machine.Create(bus)
+	require.NoError(t, err)
 
 	runtimeMgr := (bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
@@ -117,10 +121,8 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
-	stateMachineMock := baseStateMachineMock(t, eventsChannel)
 
 	for _, module := range []modules.Module{
-		stateMachineMock,
 		p2pMock,
 		utilityMock,
 		telemetryMock,
@@ -153,12 +155,20 @@ func GenerateBuses(t *testing.T, runtimeMgrs []*runtime.Manager) (buses []module
 }
 
 // CLEANUP: Reduce package scope visibility in the consensus test module
-func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
+func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) error {
 	for _, pocketNode := range pocketNodes {
 		go startNode(t, pocketNode)
 		startEvent := pocketNode.GetBus().GetBusEvent()
 		require.Equal(t, startEvent.GetContentType(), messaging.NodeStartedEventType)
+		stateMachine := pocketNode.GetBus().GetStateMachineModule()
+		if err := stateMachine.SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
+			return err
+		}
+		if err := stateMachine.SendEvent(coreTypes.StateMachineEvent_P2P_IsBootstrapped); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 /*** Node Visibility/Reflection Helpers ***/
@@ -240,7 +250,7 @@ func WaitForNetworkConsensusEvents(
 	}
 
 	errMsg := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(msgType)])
-	return waitForEventsInternal(clck, eventsChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clck, eventsChannel, messaging.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // IMPROVE: Consider unifying this function with WaitForNetworkConsensusEvents
@@ -251,7 +261,7 @@ func WaitForNetworkStateSyncEvents(
 	eventsChannel modules.EventsChannel,
 	errMsg string,
 	numExpectedMsgs int,
-	millis time.Duration,
+	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
 ) (messages []*anypb.Any, err error) {
 	includeFilter := func(anyMsg *anypb.Any) bool {
@@ -264,7 +274,7 @@ func WaitForNetworkStateSyncEvents(
 		return true
 	}
 
-	return waitForEventsInternal(clck, eventsChannel, consensus.StateSyncMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clck, eventsChannel, messaging.StateSyncMessageContentType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework
@@ -335,7 +345,7 @@ loop:
 			if numRemainingMsgs == 0 {
 				break loop
 			} else if numRemainingMsgs > 0 {
-				return expectedMsgs, fmt.Errorf("Missing '%s' messages; %d expected but %d received. (%s) \n\t DO_NOT_SKIP_ME(#462): Consider increasing `maxWaitTimeMillis` as a workaround", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
+				return expectedMsgs, fmt.Errorf("Missing '%s' messages; %d expected but %d received. (%s) \n\t DO_NOT_SKIP_ME(#462): Consider increasing `maxWaitTime` as a workaround", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			} else {
 				return expectedMsgs, fmt.Errorf("Too many '%s' messages; %d expected but %d received. (%s)", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			}
@@ -354,7 +364,6 @@ loop:
 func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *mockModules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
-	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
 	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
 
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
@@ -394,13 +403,9 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 		return 0, nil
 	}).AnyTimes()
 
-	// The persistence context should usually be accessed via the utility module within the context
-	// of the consensus module. This one is only used when loading the initial consensus module
-	// state; hence the `-1` expectation in the call above.
-	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
-	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().Release().AnyTimes()
 
 	return persistenceMock
 }
@@ -419,6 +424,7 @@ func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *mockModules
 			eventsChannel <- e
 		}).
 		AnyTimes()
+	// CONSIDERATION: Adding a check to not to send message to itself
 	p2pMock.EXPECT().
 		Send(gomock.Any(), gomock.Any()).
 		Do(func(addr cryptoPocket.Address, msg *anypb.Any) {
@@ -458,23 +464,26 @@ func baseLeaderUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.Genesis
 	ctrl := gomock.NewController(t)
 	utilityLeaderUnitOfWorkMock := mockModules.NewMockLeaderUtilityUnitOfWork(ctrl)
 
-	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
-	persistenceContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
-	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
+	rwContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
+	rwContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	rwContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
+	rwContextMock.EXPECT().Release().AnyTimes()
 
 	utilityLeaderUnitOfWorkMock.EXPECT().
-		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).
+		CreateProposalBlock(gomock.Any(), maxTxBytes).
 		Return(stateHash, make([][]byte, 0), nil).
 		AnyTimes()
 	utilityLeaderUnitOfWorkMock.EXPECT().
 		ApplyBlock().
-		Return(stateHash, make([][]byte, 0), nil).
+		Return(nil).
+		AnyTimes()
+	utilityLeaderUnitOfWorkMock.EXPECT().
+		GetStateHash().
+		Return(stateHash).
 		AnyTimes()
 	utilityLeaderUnitOfWorkMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	utilityLeaderUnitOfWorkMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
 	utilityLeaderUnitOfWorkMock.EXPECT().Release().Return(nil).AnyTimes()
-
-	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
 
 	return utilityLeaderUnitOfWorkMock
 }
@@ -483,19 +492,22 @@ func baseReplicaUtilityUnitOfWorkMock(t *testing.T, genesisState *genesis.Genesi
 	ctrl := gomock.NewController(t)
 	utilityReplicaUnitOfWorkMock := mockModules.NewMockReplicaUtilityUnitOfWork(ctrl)
 
-	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
-	persistenceContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
-	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
+	rwContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
+	rwContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	rwContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
+	rwContextMock.EXPECT().Release().AnyTimes()
 
 	utilityReplicaUnitOfWorkMock.EXPECT().
 		ApplyBlock().
-		Return(stateHash, make([][]byte, 0), nil).
+		Return(nil).
+		AnyTimes()
+	utilityReplicaUnitOfWorkMock.EXPECT().
+		GetStateHash().
+		Return(stateHash).
 		AnyTimes()
 	utilityReplicaUnitOfWorkMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	utilityReplicaUnitOfWorkMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
 	utilityReplicaUnitOfWorkMock.EXPECT().Release().Return(nil).AnyTimes()
-
-	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
 
 	return utilityReplicaUnitOfWorkMock
 }
@@ -525,14 +537,218 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 	return rpcMock
 }
 
-func baseStateMachineMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockStateMachineModule {
-	ctrl := gomock.NewController(t)
-	stateMachineMock := mockModules.NewMockStateMachineModule(ctrl)
-	stateMachineMock.EXPECT().Start().Return(nil).AnyTimes()
-	stateMachineMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
-	stateMachineMock.EXPECT().GetModuleName().Return(modules.StateMachineModuleName).AnyTimes()
+func WaitForNextBlock(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	pocketNodes IdToNodeMapping,
+	height uint64,
+	round uint8,
+	maxWaitTime time.Duration,
+	failOnExtraMessages bool,
+) *coreTypes.Block {
+	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(height, uint64(round), uint8(consensus.NewRound)))
 
-	return stateMachineMock
+	// 1. NewRound
+	newRoundMessages, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.NewRound), round, 0, numValidators*numValidators, maxWaitTime, failOnExtraMessages)
+	require.NoError(t, err)
+	broadcastMessages(t, newRoundMessages, pocketNodes)
+	advanceTime(t, clck, 10*time.Millisecond)
+
+	// 2. Prepare
+	prepareProposals, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.Prepare), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
+	require.NoError(t, err)
+	broadcastMessages(t, prepareProposals, pocketNodes)
+	advanceTime(t, clck, 10*time.Millisecond)
+
+	// wait for prepare votes
+	prepareVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, 2, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
+	require.NoError(t, err)
+	broadcastMessages(t, prepareVotes, pocketNodes)
+	advanceTime(t, clck, 10*time.Millisecond)
+
+	// 3. PreCommit
+	preCommitProposals, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.PreCommit), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
+	require.NoError(t, err)
+	broadcastMessages(t, preCommitProposals, pocketNodes)
+	advanceTime(t, clck, 10*time.Millisecond)
+
+	// wait for preCommit votes
+	preCommitVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, 3, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
+	require.NoError(t, err)
+	broadcastMessages(t, preCommitVotes, pocketNodes)
+	advanceTime(t, clck, 10*time.Millisecond)
+
+	// 4. Commit
+	commitProposals, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.Commit), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
+	require.NoError(t, err)
+	broadcastMessages(t, commitProposals, pocketNodes)
+	advanceTime(t, clck, 10*time.Millisecond)
+
+	// wait for commit votes
+	commitVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, 4, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
+	require.NoError(t, err)
+	broadcastMessages(t, commitVotes, pocketNodes)
+	advanceTime(t, clck, 10*time.Millisecond)
+
+	// 5. Decide
+	decideProposals, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.Decide), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
+	require.NoError(t, err)
+	broadcastMessages(t, decideProposals, pocketNodes)
+	advanceTime(t, clck, 10*time.Millisecond)
+
+	blockStore := pocketNodes[1].GetBus().GetPersistenceModule().GetBlockStore()
+	heightBytes := utils.HeightToBytes(height)
+
+	blockBytes, err := blockStore.Get(heightBytes)
+	require.NoError(t, err)
+
+	var block coreTypes.Block
+	err = codec.GetCodec().Unmarshal(blockBytes, &block)
+	require.NoError(t, err)
+
+	return &block
+}
+
+func waitForProposalMsgs(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	pocketNodes IdToNodeMapping,
+	height uint64,
+	step uint8,
+	round uint8,
+	leaderId typesCons.NodeId,
+	numExpectedMsgs int,
+	maxWaitTime time.Duration,
+	failOnExtraMessages bool,
+) ([]*anypb.Any, error) {
+
+	proposalMsgs, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, typesCons.HotstuffStep(step), consensus.Propose, numExpectedMsgs, maxWaitTime, failOnExtraMessages)
+	if err != nil {
+		return nil, err
+	}
+
+	for nodeId, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		if (typesCons.HotstuffStep(step) == consensus.Decide) && (nodeId == leaderId) {
+			assertNodeConsensusView(t, nodeId,
+				typesCons.ConsensusNodeState{
+					Height: height + 1,
+					Step:   1,
+					Round:  round,
+				},
+				nodeState)
+			require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId, "Leader should be empty")
+			continue
+		}
+		assertNodeConsensusView(t, nodeId,
+			typesCons.ConsensusNodeState{
+				Height: height,
+				Step:   step,
+				Round:  round,
+			},
+			nodeState)
+		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
+	}
+	return proposalMsgs, nil
+}
+
+func broadcastMessages(t *testing.T, msgs []*anypb.Any, pocketNodes IdToNodeMapping) {
+	for _, message := range msgs {
+		P2PBroadcast(t, pocketNodes, message)
+	}
+}
+
+// WaitForNodeToSync waits for a node to sync to a target height
+// For every missing block for the unsynced node:
+//
+//	first, waits for the node to request a missing block via `waitForNodeToRequestMissingBlock()` function,
+//	then, waits for the node to receive the missing block via `waitForNodeToReceiveMissingBlock()` function,
+//	finally, wait for the node to catch up to the target height via `waitForNodeToCatchUp()` function.
+func WaitForNodeToSync(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	unsyncedNode *shared.Node,
+	allNodes IdToNodeMapping,
+	targetHeight uint64,
+) error {
+	currentHeight := unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
+
+	for i := currentHeight; i <= targetHeight; i++ {
+		blockRequest, err := waitForNodeToRequestMissingBlock(t, clck, eventsChannel, allNodes, currentHeight, targetHeight)
+		if err != nil {
+			return err
+		}
+
+		blockResponse, err := waitForNodeToReceiveMissingBlock(t, clck, eventsChannel, allNodes, blockRequest)
+		if err != nil {
+			return err
+		}
+
+		err = waitForNodeToCatchUp(t, clck, eventsChannel, unsyncedNode, blockResponse, targetHeight)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// TODO(#352): implement this function.
+// waitForNodeToRequestMissingBlock waits for unsynced node to request missing block form the network
+func waitForNodeToRequestMissingBlock(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	allNodes IdToNodeMapping,
+	startingHeight uint64,
+	targetHeight uint64,
+) (*anypb.Any, error) {
+
+	return &anypb.Any{}, nil
+}
+
+// TODO(#352): implement this function.
+// waitForNodeToReceiveMissingBlock requests block request of the unsynced node
+// for given node to node to catch up to the target height by sending the requested block.
+func waitForNodeToReceiveMissingBlock(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	allNodes IdToNodeMapping,
+	blockReq *anypb.Any,
+) (*anypb.Any, error) {
+
+	return &anypb.Any{}, nil
+}
+
+// TODO(#352): implement this function.
+// waitForNodeToCatchUp waits for given node to node to catch up to the target height by sending the requested block.
+func waitForNodeToCatchUp(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	unsyncedNode *shared.Node,
+	blockResponse *anypb.Any,
+	targetHeight uint64,
+) error {
+
+	return nil
+}
+
+func generatePlaceholderBlock(height uint64, leaderAddrr crypto.Address) *coreTypes.Block {
+	blockHeader := &coreTypes.BlockHeader{
+		Height:            height,
+		StateHash:         stateHash,
+		PrevStateHash:     "",
+		ProposerAddress:   leaderAddrr,
+		QuorumCertificate: nil,
+	}
+	return &coreTypes.Block{
+		BlockHeader:  blockHeader,
+		Transactions: make([][]byte, 0),
+	}
 }
 
 func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAgent {

@@ -53,6 +53,7 @@ services:
       - "seccomp:unconfined"
     environment:
       - POCKET_RPC_USE_CORS=true
+      - LIBP2P_DEBUG=info
     # Uncomment to enable the pprof server
     #  - PPROF_ENABLED=true
     # Uncomment to enable DLV debugging
@@ -155,7 +156,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT_5432:-0.0.0.0:5432}:5432"
     volumes:
       - ${PWD}/build/sql:/tmp/scripts
       - db:/var/lib/postgresql/data
@@ -175,7 +176,7 @@ services:
       - ${PWD}/build/pgadmin/servers.json:/pgadmin4/servers.json:ro
       - ${PWD}/build/pgadmin/pgpass:/pgpass
     ports:
-      - "5050:5050"
+      - "${PGADMIN_PORT_5050:-0.0.0.0:5050}:5050"
 
   vm:
     logging: *loki-logging
@@ -183,7 +184,7 @@ services:
     image: victoriametrics/victoria-metrics
     restart: unless-stopped
     ports:
-      - "8428:8428"
+      - "${VICTORIA_PORT_8428:-0.0.0.0:8428}:8428"
     volumes:
       - vm:/storage
       - ./telemetry/victoria-metrics:/configs
@@ -209,7 +210,7 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT_3000:-0.0.0.0:3000}:3000"
     volumes:
       - grafanadata:/var/lib/grafana
       - ./telemetry/grafana/provisioning/:/etc/grafana/provisioning/
@@ -223,7 +224,7 @@ services:
     expose:
       - 3100
     ports:
-      - "3100:3100"
+      - "${LOKI_PORT_3100:-0.0.0.0:3100}:3100"
     restart: unless-stopped
     volumes:
       - ./telemetry/loki/config.yaml:/etc/loki/local-config.yaml

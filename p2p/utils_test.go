@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/url"
 	"sort"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -24,7 +25,6 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -78,6 +78,7 @@ type TestNetworkSimulationConfig map[string]struct {
 }
 
 // CLEANUP: This could (should?) be a codebase-wide shared test helper
+// TECHDEBT: rename `validatorId()` to `serviceURL()`
 func validatorId(i int) string {
 	return fmt.Sprintf(serviceURLFormat, i)
 }
@@ -150,7 +151,7 @@ func prepareDNSResolverMock(t *testing.T, serviceURLs []string) (done func()) {
 	zones := make(map[string]mockdns.Zone)
 	for i, u := range serviceURLs {
 		// Perpend `scheme://` as serviceURLs are currently scheme-less.
-		// Required to for parsing to produce useful results.
+		// Required for parsing to produce useful results.
 		// (see: https://pkg.go.dev/net/url@go1.20.2#URL)
 		serviceURL, err := url.Parse(fmt.Sprintf("scheme://%s", u))
 		require.NoError(t, err)
@@ -191,13 +192,20 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 	copy(valKeys, keys[:numValidators])
 	mockGenesisState := createMockGenesisState(valKeys)
 	for i := range mockRuntimeMgrs {
+		serviceURL := validatorId(i + 1)
+		hostname, portStr, err := net.SplitHostPort(serviceURL)
+		require.NoError(t, err)
+
+		port, err := strconv.Atoi(portStr)
+		require.NoError(t, err)
+
 		cfg := &configs.Config{
 			RootDirectory: "",
 			PrivateKey:    valKeys[i].String(),
 			P2P: &configs.P2PConfig{
-				Hostname:       validatorId(i + 1),
+				Hostname:       hostname,
 				PrivateKey:     valKeys[i].String(),
-				Port:           defaults.DefaultP2PPort,
+				Port:           uint32(port),
 				UseRainTree:    true,
 				ConnectionType: types.ConnectionType_EmptyConnection,
 			},
@@ -286,19 +294,19 @@ func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus) *mockModul
 func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisState *genesis.GenesisState) *mockModules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 
-	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
-	readContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
+	persistenceModuleMock := mockModules.NewMockPersistenceModule(ctrl)
+	readCtxMock := mockModules.NewMockPersistenceReadContext(ctrl)
 
-	readContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
-	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(readContextMock, nil).AnyTimes()
-	readContextMock.EXPECT().Close().Return(nil).AnyTimes()
+	readCtxMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	persistenceModuleMock.EXPECT().NewReadContext(gomock.Any()).Return(readCtxMock, nil).AnyTimes()
+	readCtxMock.EXPECT().Release().AnyTimes()
 
-	persistenceMock.EXPECT().GetBus().Return(busMock).AnyTimes()
-	persistenceMock.EXPECT().SetBus(busMock).AnyTimes()
-	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
-	busMock.RegisterModule(persistenceMock)
+	persistenceModuleMock.EXPECT().GetBus().Return(busMock).AnyTimes()
+	persistenceModuleMock.EXPECT().SetBus(busMock).AnyTimes()
+	persistenceModuleMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
+	busMock.RegisterModule(persistenceModuleMock)
 
-	return persistenceMock
+	return persistenceModuleMock
 }
 
 // Telemetry mock - Needed to help with proper counts for number of expected network writes

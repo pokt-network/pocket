@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.11] - 2023-04-12
+
+- `Consensus` - Updated debug interface functions: added `PushStateSyncMetadataResponse()`, removed `SetAggregatedStateSyncMetadata()` and `GetAggregatedStateSyncMetadataMaxHeight()`
+
+
+## [0.0.0.10] - 2023-03-30
+
+- `Consensus` - improved documentation for supporting interfaces
+- `Consensus` - Consolidated `ResetRound`, `ResetForNewHeight` `ClearLeaderMessagesPool`
+- `Persistence` - Consolidated `Close` and `Release` and avoid returning an `error
+
+## [0.0.0.9] - 2023-03-29
+
+- Improved README.md
+- Improved GoDoc comments
+
 ## [0.0.0.8] - 2023-02-21
 
 - Rename ServiceNode Actor Type Name to Servicer

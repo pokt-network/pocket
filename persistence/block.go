@@ -51,12 +51,14 @@ func (p *PostgresContext) GetBlockHash(height int64) (string, error) {
 	return blockHash, nil
 }
 
+// TODO: Consider removing this function and using `Height` directly
 func (p *PostgresContext) GetHeight() (int64, error) {
 	return p.Height, nil
 }
 
 // Creates a block protobuf object using the schema defined in the persistence module
 func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTypes.Block, error) {
+	// Retrieve the previous block hash
 	var prevBlockHash string
 	if p.Height != 0 {
 		var err error
@@ -66,6 +68,19 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 		}
 	}
 
+	// Retrieve the indexed transactions at the current height
+	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
+	if err != nil {
+		return nil, err
+	}
+
+	// Retrieve the transactions from the txResults
+	txs := make([][]byte, len(txResults))
+	for i, txResult := range txResults {
+		txs[i] = txResult.GetTx()
+	}
+
+	// Preapre the block proto
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            uint64(p.Height),
 		StateHash:         p.stateHash,
@@ -74,8 +89,11 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 		QuorumCertificate: quorumCert,
 	}
 	block := &coreTypes.Block{
-		BlockHeader: blockHeader,
+		BlockHeader:  blockHeader,
+		Transactions: txs,
 	}
+
+	p.logger.Info().Uint64("height", block.BlockHeader.Height).Msg("Storing block in block store.")
 
 	return block, nil
 }

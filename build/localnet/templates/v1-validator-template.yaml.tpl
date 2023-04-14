@@ -64,7 +64,9 @@ spec:
             - name: POCKET_PERSISTENCE_NODE_SCHEMA
               value: validator${VALIDATOR_NUMBER}
             - name: POCKET_P2P_HOSTNAME
-              value: "v1-validator${VALIDATOR_NUMBER}"
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           volumeMounts:
             - name: config-volume
               mountPath: /configs

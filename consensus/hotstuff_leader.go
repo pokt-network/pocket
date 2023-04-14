@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"errors"
+	"fmt"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -9,8 +10,6 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
-
-// CONSOLIDATE: Last/Prev & AppHash/StateHash/BlockHash
 
 type HotstuffLeaderMessageHandler struct{}
 
@@ -39,7 +38,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// DISCUSS: Do we need to pause for `MinBlockFreqMSec` here to let more transactions or should we stick with optimistic responsiveness?
 
 	if err := m.didReceiveEnoughMessageForStep(NewRound); err != nil {
-		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(NewRound, err.Error()))
+		m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
 	}
 
@@ -75,13 +74,12 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	} else {
 		// Leader acts like a replica if `prepareQC` is not `nil`
 		// TODO: Do we need to call `validateProposal` here similar to how replicas does it
+		if err := m.applyBlock(highPrepareQC.Block); err != nil {
+			m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())
+			m.paceMaker.InterruptRound("failed to apply block")
+			return
+		}
 		m.block = highPrepareQC.Block
-	}
-
-	if err := m.applyBlock(m.block); err != nil {
-		m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())
-		m.paceMaker.InterruptRound("failed to apply block")
-		return
 	}
 
 	m.step = Prepare
@@ -116,7 +114,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	}
 
 	if err := m.didReceiveEnoughMessageForStep(Prepare); err != nil {
-		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(Prepare, err.Error()))
+		m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
 	}
 
@@ -167,7 +165,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 	}
 
 	if err := m.didReceiveEnoughMessageForStep(PreCommit); err != nil {
-		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(PreCommit, err.Error()))
+		m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
 	}
 
@@ -218,7 +216,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	}
 
 	if err := m.didReceiveEnoughMessageForStep(Commit); err != nil {
-		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(Commit, err.Error()))
+		m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msgf("⏳ Waiting ⏳for more messages; %s", err.Error())
 		return
 	}
 
@@ -388,15 +386,21 @@ func (m *consensusModule) prepareBlock(qc *typesCons.QuorumCertificate) (*coreTy
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
 
+	utilityUnitOfWork := m.utilityUnitOfWork
+	if utilityUnitOfWork == nil {
+		return nil, fmt.Errorf("utility unit of work is nil")
+	}
+
 	maxTxBytes := m.consCfg.MaxMempoolBytes
 
-	leaderUOW, ok := m.utilityUnitOfWork.(modules.LeaderUtilityUnitOfWork)
+	leaderUOW, ok := utilityUnitOfWork.(modules.LeaderUtilityUnitOfWork)
 	if !ok {
 		return nil, errors.New("invalid utility unitOfWork, should be of type LeaderUtilityUnitOfWork")
 	}
 
 	// Reap the mempool for transactions to be applied in this block
-	stateHash, txs, err := leaderUOW.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
+	stateHash, txs, err := leaderUOW.CreateProposalBlock(m.privateKey.Address(), maxTxBytes)
+
 	if err != nil {
 		return nil, err
 	}
@@ -406,6 +410,7 @@ func (m *consensusModule) prepareBlock(qc *typesCons.QuorumCertificate) (*coreTy
 	if err != nil {
 		return nil, err
 	}
+	defer readCtx.Release()
 
 	prevBlockHash, err := readCtx.GetBlockHash(prevHeight)
 	if err != nil {
@@ -431,7 +436,7 @@ func (m *consensusModule) prepareBlock(qc *typesCons.QuorumCertificate) (*coreTy
 	}
 
 	// Set the proposal block in the persistence context
-	if err := m.utilityUnitOfWork.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err := utilityUnitOfWork.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return nil, err
 	}
 

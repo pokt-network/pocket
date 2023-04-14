@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
@@ -157,7 +158,7 @@ func TestAccountsUpdatedAtHeight(t *testing.T) {
 	require.Equal(t, numAccsInTestGenesis+1, len(accs))
 
 	// Close context at height 0 without committing new account
-	require.NoError(t, db.Close())
+	db.Release()
 	// start a new context at height 1
 	db = NewTestPostgresContext(t, 1)
 
@@ -220,7 +221,10 @@ func FuzzPoolAmount(f *testing.F) {
 	numOperationTypes := len(operations)
 
 	pool := newTestPool(nil)
-	err := db.SetPoolAmount(pool.Address, DefaultAccountAmount)
+	addrBz, err := hex.DecodeString(pool.Address)
+	require.NoError(f, err)
+
+	err = db.SetPoolAmount(addrBz, DefaultAccountAmount)
 	require.NoError(f, err)
 	expectedAmount := big.NewInt(DefaultAccountBig.Int64())
 
@@ -235,29 +239,29 @@ func FuzzPoolAmount(f *testing.F) {
 
 		switch op {
 		case "AddAmount":
-			originalAmountBig, err := db.GetPoolAmount(pool.Address, db.Height)
+			originalAmountBig, err := db.GetPoolAmount(addrBz, db.Height)
 			require.NoError(t, err)
 
 			originalAmount, err := utils.StringToBigInt(originalAmountBig)
 			require.NoError(t, err)
 
-			err = db.AddPoolAmount(pool.Address, deltaString)
+			err = db.AddPoolAmount(addrBz, deltaString)
 			require.NoError(t, err)
 
 			expectedAmount.Add(originalAmount, delta)
 		case "SubAmount":
-			originalAmountBig, err := db.GetPoolAmount(pool.Address, db.Height)
+			originalAmountBig, err := db.GetPoolAmount(addrBz, db.Height)
 			require.NoError(t, err)
 
 			originalAmount, err := utils.StringToBigInt(originalAmountBig)
 			require.NoError(t, err)
 
-			err = db.SubtractPoolAmount(pool.Address, deltaString)
+			err = db.SubtractPoolAmount(addrBz, deltaString)
 			require.NoError(t, err)
 
 			expectedAmount.Sub(originalAmount, delta)
 		case "SetAmount":
-			err := db.SetPoolAmount(pool.Address, deltaString)
+			err := db.SetPoolAmount(addrBz, deltaString)
 			require.NoError(t, err)
 
 			expectedAmount = delta
@@ -267,7 +271,7 @@ func FuzzPoolAmount(f *testing.F) {
 			t.Errorf("Unexpected operation fuzzing operation %s", op)
 		}
 
-		currentAmount, err := db.GetPoolAmount(pool.Address, db.Height)
+		currentAmount, err := db.GetPoolAmount(addrBz, db.Height)
 		require.NoError(t, err)
 		require.Equal(t, utils.BigIntToString(expectedAmount), currentAmount, fmt.Sprintf("unexpected amount after %s", op))
 	})
@@ -275,8 +279,11 @@ func FuzzPoolAmount(f *testing.F) {
 
 func TestDefaultNonExistentPoolAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
+	_, _, poolAddr := keygen.GetInstance().Next()
+	addrBz, err := hex.DecodeString(poolAddr)
+	require.NoError(t, err)
 
-	poolAmount, err := db.GetPoolAmount("some_pool_name", db.Height)
+	poolAmount, err := db.GetPoolAmount(addrBz, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, "0", poolAmount)
 }
@@ -285,17 +292,19 @@ func TestSetPoolAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 	pool := newTestPool(t)
 
-	err := db.SetPoolAmount(pool.Address, DefaultStake)
+	addrBz, err := hex.DecodeString(pool.Address)
+	require.NoError(t, err)
+	err = db.SetPoolAmount(addrBz, DefaultStake)
 	require.NoError(t, err)
 
-	poolAmount, err := db.GetPoolAmount(pool.Address, db.Height)
+	poolAmount, err := db.GetPoolAmount(addrBz, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, DefaultStake, poolAmount, "unexpected amount")
 
-	err = db.SetPoolAmount(pool.Address, StakeToUpdate)
+	err = db.SetPoolAmount(addrBz, StakeToUpdate)
 	require.NoError(t, err)
 
-	poolAmount, err = db.GetPoolAmount(pool.Address, db.Height)
+	poolAmount, err = db.GetPoolAmount(addrBz, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, StakeToUpdate, poolAmount, "unexpected amount after second set")
 }
@@ -304,14 +313,16 @@ func TestAddPoolAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 	pool := newTestPool(t)
 
-	err := db.SetPoolAmount(pool.Address, DefaultStake)
+	addrBz, err := hex.DecodeString(pool.Address)
+	require.NoError(t, err)
+	err = db.SetPoolAmount(addrBz, DefaultStake)
 	require.NoError(t, err)
 
 	amountToAddBig := big.NewInt(100)
-	err = db.AddPoolAmount(pool.Address, utils.BigIntToString(amountToAddBig))
+	err = db.AddPoolAmount(addrBz, utils.BigIntToString(amountToAddBig))
 	require.NoError(t, err)
 
-	poolAmount, err := db.GetPoolAmount(pool.Address, db.Height)
+	poolAmount, err := db.GetPoolAmount(addrBz, db.Height)
 	require.NoError(t, err)
 
 	poolAmountBig := (&big.Int{}).Add(DefaultStakeBig, amountToAddBig)
@@ -323,14 +334,17 @@ func TestAddPoolAmount(t *testing.T) {
 func TestSubPoolAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 	pool := newTestPool(t)
-	err := db.SetPoolAmount(pool.Address, DefaultStake)
+
+	addrBz, err := hex.DecodeString(pool.Address)
+	require.NoError(t, err)
+	err = db.SetPoolAmount(addrBz, DefaultStake)
 	require.NoError(t, err)
 
 	amountToSubBig := big.NewInt(100)
-	err = db.SubtractPoolAmount(pool.Address, utils.BigIntToString(amountToSubBig))
+	err = db.SubtractPoolAmount(addrBz, utils.BigIntToString(amountToSubBig))
 	require.NoError(t, err)
 
-	poolAmount, err := db.GetPoolAmount(pool.Address, db.Height)
+	poolAmount, err := db.GetPoolAmount(addrBz, db.Height)
 	require.NoError(t, err)
 
 	poolAmountBig := (&big.Int{}).Sub(DefaultStakeBig, amountToSubBig)
@@ -355,15 +369,19 @@ func TestGetAllPools(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
 	updatePool := func(db *persistence.PostgresContext, pool *coreTypes.Account) error {
-		return db.AddPoolAmount(pool.GetAddress(), "10")
+		addrBz, err := hex.DecodeString(pool.Address)
+		require.NoError(t, err)
+		return db.AddPoolAmount(addrBz, "10")
 	}
 
-	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 7)
+	// -1 because we don't count the "unspecified" pool (Pools_POOLS_UNSPECIFIED)
+	initialCount := len(coreTypes.Pools_value) - 1
+	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, initialCount)
 }
 
 func TestPoolsUpdatedAtHeight(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
-	numPoolsInTestGenesis := 7
+	numPoolsInTestGenesis := len(coreTypes.Pools_value) - 1 // -1 because we don't count the "unspecified" pool (Pools_POOLS_UNSPECIFIED)
 
 	// Check num Pools in genesis
 	accs, err := db.GetPoolsUpdated(0)
@@ -380,7 +398,7 @@ func TestPoolsUpdatedAtHeight(t *testing.T) {
 	require.Equal(t, numPoolsInTestGenesis+1, len(accs))
 
 	// Close context at height 0 without committing new Pool
-	require.NoError(t, db.Close())
+	db.Release()
 	// start a new context at height 1
 	db = NewTestPostgresContext(t, 1)
 
@@ -422,7 +440,8 @@ func createAndInsertNewAccount(db *persistence.PostgresContext) (*coreTypes.Acco
 
 func createAndInsertNewPool(db *persistence.PostgresContext) (*coreTypes.Account, error) {
 	pool := newTestPool(nil)
-	return &pool, db.SetPoolAmount(pool.Address, DefaultAccountAmount)
+	addrBz, _ := hex.DecodeString(pool.Address)
+	return &pool, db.SetPoolAmount(addrBz, DefaultAccountAmount)
 }
 
 // TODO(olshansky): consolidate newTestAccount and newTestPool into one function

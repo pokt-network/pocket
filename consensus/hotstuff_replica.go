@@ -1,14 +1,13 @@
 package consensus
 
 import (
+	"fmt"
+
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
-	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
-
-// CONSOLIDATE: Terminology of `appHash` and `stateHash`
 
 type HotstuffReplicaMessageHandler struct{}
 
@@ -237,19 +236,26 @@ func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 // This helper applies the block metadata to the utility & persistence layers
 func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 	blockHeader := block.BlockHeader
+	utilityUnitOfWork := m.utilityUnitOfWork
+	if utilityUnitOfWork == nil {
+		return fmt.Errorf("utility unit of work is nil")
+	}
+
 	// Set the proposal block in the persistence context
-	if err := m.utilityUnitOfWork.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err := utilityUnitOfWork.SetProposalBlock(blockHeader.StateHash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return err
 	}
 
-	// Apply all the transactions in the block and get the stateHash
-	stateHash, _, err := m.utilityUnitOfWork.ApplyBlock()
+	// Apply all the transactions in the block
+	err := utilityUnitOfWork.ApplyBlock()
 	if err != nil {
 		return err
 	}
 
+	stateHash := utilityUnitOfWork.GetStateHash()
+
 	if blockHeader.StateHash != stateHash {
-		return typesCons.ErrInvalidAppHash(blockHeader.StateHash, stateHash)
+		return typesCons.ErrInvalidStateHash(blockHeader.StateHash, stateHash)
 	}
 
 	return nil
@@ -298,27 +304,27 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 		}
 		numValid++
 	}
-	if err := m.isOptimisticThresholdMet(numValid, validators); err != nil {
+	if err := m.validateOptimisticThresholdMet(numValid, validators); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func isNodeLockedOnPastQC(justifyQC, lockedQC *types.QuorumCertificate) (bool, error) {
+func isNodeLockedOnPastQC(justifyQC, lockedQC *typesCons.QuorumCertificate) (bool, error) {
 	if isLockedOnPastHeight(justifyQC, lockedQC) {
-		return true, types.ErrNodeLockedPastHeight
+		return true, typesCons.ErrNodeLockedPastHeight
 	} else if isLockedOnCurrHeightAndPastRound(justifyQC, lockedQC) {
-		return true, types.ErrNodeLockedPastHeight
+		return true, typesCons.ErrNodeLockedPastHeight
 	}
 	return false, nil
 }
 
-func isLockedOnPastHeight(justifyQC, lockedQC *types.QuorumCertificate) bool {
+func isLockedOnPastHeight(justifyQC, lockedQC *typesCons.QuorumCertificate) bool {
 	return justifyQC.Height > lockedQC.Height
 }
 
-func isLockedOnCurrHeightAndPastRound(justifyQC, lockedQC *types.QuorumCertificate) bool {
+func isLockedOnCurrHeightAndPastRound(justifyQC, lockedQC *typesCons.QuorumCertificate) bool {
 	return justifyQC.Height == lockedQC.Height && justifyQC.Round > lockedQC.Round
 }
 

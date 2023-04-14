@@ -14,7 +14,7 @@ import (
 // IMPROVE: Need to add more logging to this function.
 // INCOMPLETE: handleByzantineValidators is a WIP and needs to be fully designed, implemented, tested and documented
 func (u *baseUtilityUnitOfWork) handleByzantineValidators(prevBlockByzantineValidators [][]byte) typesUtil.Error {
-	maxMissedBlocks, err := u.getValidatorMaxMissedBlocks()
+	maxMissedBlocks, err := getGovParam[int](u, typesUtil.ValidatorMaximumMissedBlocksParamName)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (u *baseUtilityUnitOfWork) burnValidator(addr []byte) typesUtil.Error {
 		return err
 	}
 
-	burnPercent, err := u.getMissedBlocksBurnPercentage()
+	burnPercent, err := getGovParam[int](u, typesUtil.MissedBlocksBurnPercentageParamName)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (u *baseUtilityUnitOfWork) burnValidator(addr []byte) typesUtil.Error {
 	}
 
 	// remove burnt stake amount from the pool
-	if err := u.subPoolAmount(actorPool.FriendlyName(), burnAmountTruncated); err != nil {
+	if err := u.subPoolAmount(actorPool.Address(), burnAmountTruncated); err != nil {
 		return err
 	}
 
@@ -95,7 +95,7 @@ func (u *baseUtilityUnitOfWork) burnValidator(addr []byte) typesUtil.Error {
 	}
 
 	// Need to check if the actor needs to be unstaked
-	minRequiredStake, err := u.getValidatorMinimumStake()
+	minRequiredStake, err := getGovParam[*big.Int](u, typesUtil.ValidatorMinimumStakeParamName)
 	if err != nil {
 		return err
 	}

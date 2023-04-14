@@ -94,7 +94,7 @@ sequenceDiagram
 When applying the block during the `NEWROUND` message shown above, the majority of the flow is similar between the _leader_ and the _replica_ with one of the major differences being a call to the `Utility` module as seen below.
 
 - `ApplyBlock` - Uses the existing set of transactions to validate & propose
-- `CreateAndApplyProposalBlock` - Reaps the mempool for a new set of transaction to validate and propose
+- `CreateProposalBlock` - Reaps the mempool for a new set of transaction to validate and propose
 
 ```mermaid
 graph TD
@@ -115,14 +115,14 @@ graph TD
     I[Is prepareQC.view > lockedQC.view] --> |"No<br>(lockedQC.block)"| Z
     I[Is prepareQC.view > lockedQC.view] --> |"Yes<br>(prepareQC.block)"| Z
 
-    H[CreateAndApplyProposalBlock]
+    H[CreateProposalBlock]
     Z[ApplyBlock]
 ```
 
 As either the _leader_ or _replica_, the following steps are followed to apply the proposal transactions in the block.
 
 1. Update the `UtilityUnitOfWork` with the proposed block
-2. Call either `ApplyBlock` or `CreateAndApplyProposalBlock` based on the flow above
+2. Call either `ApplyBlock` or `CreateProposalBlock` based on the flow above
 
 ```mermaid
 sequenceDiagram
@@ -130,12 +130,12 @@ sequenceDiagram
     participant C as Consensus
     participant U as Utility
 
-        %% Update the proposal in the utility context
+        %% Update the proposal in the utility unit of work
         C->>+U: SetProposalBlock(hash, proposer, txs)
         U->>-C: err_code
 
         %% Apply the block to the local proposal state
-        C->>+U: ApplyBlock / CreateAndApplyProposalBlock
+        C->>+U: ApplyBlock / CreateProposalBlock
         U->>-C: err_code
 ```
 

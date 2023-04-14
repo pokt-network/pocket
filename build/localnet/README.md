@@ -2,9 +2,10 @@
 
 This guide shows how to deploy a LocalNet using [pocket-operator](https://github.com/pokt-network/pocket-operator).
 
+- [TLDR](#tldr)
 - [Dependencies](#dependencies)
   - [Choosing Kubernetes Distribution](#choosing-kubernetes-distribution)
-  - [Enabling Kubernetes For Docker Desktop](#enabling-kubernetes-for-docker-desktop)
+    - [How to create Kind Kubernetes cluster](#how-to-create-kind-kubernetes-cluster)
 - [LocalNet](#localnet)
   - [Starting LocalNet](#starting-localnet)
   - [Viewing Logs](#viewing-logs)
@@ -24,29 +25,49 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
   - [Full Cleanup](#full-cleanup)
 - [Code Structure](#code-structure)
 
+
+## TLDR
+
+If you feel adventurous, and you know what you're doing, here is a rapid guide to start LocalNet:
+
+1. Install Docker
+2. Install Kind (e.g., `brew install kind`)
+3. Create Kind cluster (e.g., `kind create cluster`)
+4. Start LocalNet (e.g., `make localnet_up`)
+
+Otherwise, please continue with the full guide.
+
 ## Dependencies
 
-All necessary dependencies, except Kubernetes cluster, are installed automatically when running `make install_cli_deps`. The following dependencies are required:
+All necessary dependencies, except Docker and Kubernetes cluster, are installed automatically when running `make install_cli_deps`. The following dependencies are required for LocalNet to function:
 
 1. [tilt](https://docs.tilt.dev/install.html)
-2. `Kubernetes cluster`: refer to [Choosing Kubernetes Distribution](#choosing-kubernetes-distribution) section for more details.
-3. `kubectl`: CLI is required and should be configured to access the cluster. This should happen automatically if using Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc.
-4. [helm](https://helm.sh/docs/intro/install): required to template the yaml manifests for the dependencies (e.g. postgres, grafana). Installation instructions available .
+2. [Docker](https://docs.docker.com/engine/install/) or [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+3. `Kubernetes cluster`: refer to [Choosing Kubernetes Distribution](#choosing-kubernetes-distribution) section for more details.
+4. `kubectl`: CLI is required and should be configured to access the cluster. This should happen automatically if using Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc.
+5. [helm](https://helm.sh/docs/intro/install): required to template the YAML manifests for the dependencies (e.g., Postgres, Grafana). Installation instructions available.
 
 ### Choosing Kubernetes Distribution
 
-While any Kubernetes distribution should work, we verified that LocalNet works on:
+While [any Kubernetes distribution](https://docs.tilt.dev/choosing_clusters.html) should work, we've had success and recommend to use [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation). To run Kind Kubernetes clusters, you need to have [Docker](https://www.docker.com/products/docker-desktop/) installed.
 
-- [Rancher Desktop](https://rancherdesktop.io/), which is GUI powered by a popular distribution `k3s`.
-- [kind](https://kind.sigs.k8s.io/) - official Kubernetes distribution that runs inside docker containers.
+#### How to create Kind Kubernetes cluster
 
-Here is a list of alternative set ups that should work: https://docs.tilt.dev/choosing_clusters.html
+Kind depends solely on Docker. To install Kind, follow [this page](https://kind.sigs.k8s.io/docs/user/quick-start/#installation).
 
-### Enabling Kubernetes For Docker Desktop
+Create a new cluster:
 
-You may need to manually enable Kubernetes if using Docker Desktop:
+```bash
+kind create cluster
+```
 
-![Docker desktop kubernetes](https://user-images.githubusercontent.com/1892194/216165581-1372e2b8-c630-4211-8ced-5ec59b129330.png)
+Make sure your Kubernetes context is pointed to new kind cluster:
+
+```bash
+kubectl config current-context
+```
+
+should return `kind-kind`. Now you can start LocalNet!
 
 ## LocalNet
 
@@ -110,7 +131,7 @@ make localnet_client_debug
 
 ### Addresses and keys on LocalNet
 
-You can find private keys and addresses for all actors in the [private-keys.yaml](./manifests/private-keys.yaml) file. They have been pre-generated and follow a specific pattern - they start with pre-determined numbers for easier troubleshooting and debugging.
+You can find private keys and addresses for all actors in the [private-keys.yaml](./manifests/private-keys.yaml) file. They have been pre-generated and follow a specific pattern – they start with pre-determined numbers for easier troubleshooting and debugging.
 
 Addresses begin with `YYYXX` number, where `YYY` is a number of an actor and `XX` is [a type of actor](../../shared/core/types/proto/actor.proto#L7).
 
