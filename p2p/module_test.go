@@ -200,10 +200,10 @@ func TestP2pModule_WithHostOption_Restart(t *testing.T) {
 	err = mod.Stop()
 	require.NoError(t, err)
 
-	// assert host matches still after restart
+	// assert host does *not* match after restart
 	err = mod.Start()
 	require.NoError(t, err)
-	require.Equal(t, mockNetHost, mod.host, "post-restart hosts don't match")
+	require.NotEqual(t, mockNetHost, mod.host, "post-restart hosts don't match")
 }
 
 // TECHDEBT(#609): move & de-duplicate

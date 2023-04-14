@@ -155,17 +155,16 @@ func (m *p2pModule) Start() (err error) {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	// TECHDEBT: reconsider if this is acceptable as more `modules.ModuleOption`s
-	// become supported. At time of writing, `WithHost()` is the only option
-	// and it is only used in tests.
-	// Re-evaluate options in case there is a `WithHost` option which would
-	// assign`m.host`.
-	for _, option := range m.options {
-		option(m)
-	}
-
 	// Return early if host has already been started (e.g. via `WithHostOption`)
 	if m.host == nil {
+		// Libp2p host providea via `WithHost()` option are destroyed when
+		// `#Stop()`ing the module. Therefore, a new one must be created.
+		// The new host may be configured differently that which was provided
+		// originally in `WithHost()`.
+		if len(m.options) != 0 {
+			m.logger.Warn().Msg("creating new libp2p host")
+		}
+
 		if err = m.setupHost(); err != nil {
 			return fmt.Errorf("setting up libp2pHost: %w", err)
 		}
@@ -308,6 +307,8 @@ func (m *p2pModule) setupNetwork() (err error) {
 // setupHost creates a new libp2p host and assignes it to `m.host`. Libp2p host
 // starts listening upon instantiation.
 func (m *p2pModule) setupHost() (err error) {
+	m.logger.Debug().Msg("creating new libp2p host")
+
 	opts := []libp2p.Option{
 		// Explicitly specify supported transport security options (noise, TLS)
 		// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.26.3#DefaultSecurity)
