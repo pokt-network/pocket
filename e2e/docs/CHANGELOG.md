@@ -28,4 +28,4 @@ Adds Stake, Unstake, & Send Tests [#653](https://github.com/pokt-network/pocket/
 
 Hello Changelog
 
-<!-- GITHUB_WIKI: changelog/build -->
+<!-- GITHUB_WIKI: changelog/e2e -->
