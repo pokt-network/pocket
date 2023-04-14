@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.33] - 2023-04-13
+## [0.0.0.34] - 2023-04-14
 
 - Removed runtime/configs.Config#UseLibp2p field
 - Use pod IP for validator DNS resolution tilt localnet
 - Add `LIBP2P_DEBUG` env var
+
+## [0.0.0.33] - 2023-04-13
+
+- Add persistent txIndexerPath to node configs
 
 ## [0.0.0.32] - 2023-04-10
 

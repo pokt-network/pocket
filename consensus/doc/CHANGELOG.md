@@ -7,16 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.46] - 2023-04-13
+## [0.0.0.47] - 2023-04-14
 
 - Debug logging improvements
+
+## [0.0.0.46] - 2023-04-13
+
+- Utilise the `TxResult` protobuf from `shared/core/types`
 
 ## [0.0.0.45] - 2023-04-12
 
 - Added new helper functions for testing hotstuff consensus stages: `waitForNewRound()`, `waitForPrepareProposal()`, `waitForPrepareVoteswaitForPreCommit()`, `waitForCommit()`, and `waitForDecide()` , and a wrapper function `waitForNextBlock()`.
 - Removed state machine mock in testing, and introduced actual state machine that starts with `StartAllTestPocketNodes()` function and added `generatePlaceholderBlock()` function
 - Added, new helper functions for testing state sync stages: `waitForNodeToRequestMissingBlock()`, `waitForNodeToReceiveMissingBlock()`, `waitForNodeToCatchUp()` and a wrapper function `waitForNodeToSync()` currently as placeholders.
-  
+
 ## [0.0.0.44] - 2023-04-12
 
 - Updated `handleStateSyncMessage()` to log warnings if server mode is not enabled
