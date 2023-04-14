@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/url"
 	"sort"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -24,7 +25,6 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -78,6 +78,7 @@ type TestNetworkSimulationConfig map[string]struct {
 }
 
 // CLEANUP: This could (should?) be a codebase-wide shared test helper
+// TECHDEBT: rename `validatorId()` to `serviceURL()`
 func validatorId(i int) string {
 	return fmt.Sprintf(serviceURLFormat, i)
 }
@@ -191,13 +192,20 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 	copy(valKeys, keys[:numValidators])
 	mockGenesisState := createMockGenesisState(valKeys)
 	for i := range mockRuntimeMgrs {
+		serviceURL := validatorId(i + 1)
+		hostname, portStr, err := net.SplitHostPort(serviceURL)
+		require.NoError(t, err)
+
+		port, err := strconv.Atoi(portStr)
+		require.NoError(t, err)
+
 		cfg := &configs.Config{
 			RootDirectory: "",
 			PrivateKey:    valKeys[i].String(),
 			P2P: &configs.P2PConfig{
-				Hostname:       validatorId(i + 1),
+				Hostname:       hostname,
 				PrivateKey:     valKeys[i].String(),
-				Port:           defaults.DefaultP2PPort,
+				Port:           uint32(port),
 				UseRainTree:    true,
 				ConnectionType: types.ConnectionType_EmptyConnection,
 			},
