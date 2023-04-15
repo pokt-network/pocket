@@ -6,7 +6,6 @@ option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
 import "actor.proto";
 
-
 message Session {
     string id = 1;
     int64 height = 2;
@@ -16,3 +15,14 @@ message Session {
     repeated core.Actor servicers = 6;
     repeated core.Actor fishermen = 7;
 }
+
+// TECH_DEBT_IDENTIFIED_IN_THIS_COMMIT:
+// 1. Replace []byte with string
+// 2. Remove height from Write context in persistence
+// 3. Need to add geozone to actors
+// 4. Need to generalize persitence functions based on actor type
+// 5. Need different protos for each actor
+// OPTIMIZE: Query the postgres DB directly to retrieve the hydrated actors
+// - requires new endpoints and such
+// 6. How to define geozone (uber h3, postgis, aws regions, etc...)?
+// 7. How to define relay chains (enum, string, backwards compatability, etc...)?

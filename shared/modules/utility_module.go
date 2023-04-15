@@ -13,7 +13,6 @@ const (
 )
 
 // TECHDEBT: Replace []byte with semantic type (addresses, transactions, etc...)
-
 type UtilityModule interface {
 	Module
 
@@ -33,7 +32,7 @@ type UtilityModule interface {
 
 	// Return a pseudo-random session object for the given application address, session height, relay chain and geo zones
 	// using on-chain data as he entropy source.
-	GetSession(appAddr string, sessionHeight int64, relayChain coreTypes.RelayChain, geoZone string) (*coreTypes.Session, error)
+	GetSession(appAddr string, sessionHeight int64, relayChain string, geoZone string) (*coreTypes.Session, error)
 }
 
 // TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead

@@ -3,6 +3,7 @@ package utility
 import (
 	"testing"
 
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +19,7 @@ func TestSession_NewSession_SimpleCase(t *testing.T) {
 
 	session, err := utilityMod.GetSession(app.Address, height, relayChain, geoZone)
 	require.NoError(t, err)
-	require.Equal(t, "8b50d1f751029a06d0b860e3b900163b3c6532fc48df2e11f848600019df5483", session.Id)
+	require.Equal(t, "3545185ff1519bf7706ec8f828d16525830d3c0dcc2425c40db597ee6b67b8bc", session.Id)
 	require.Equal(t, height, session.Height)
 	require.Equal(t, relayChain, session.RelayChain)
 	require.Equal(t, geoZone, session.GeoZone)
@@ -34,48 +35,59 @@ func TestSession_NewSession_SimpleCase(t *testing.T) {
 // no fisherman available
 // validate application dispatch
 
-func TestSession_ServicersAndFishermanCount(t *testing.T) {
-	// Prepare an environment with lots of servicers and fisherman
-	_, _, persistenceMod := prepareEnvironment(t, 5, 100, 1, 100)
+// invalid app
+// unstaked app
+// non-existent app
 
-	writeCtx, err := persistenceMod.NewRWContext(0)
-	require.NoError(t, err)
-	defer writeCtx.Release()
+// invalid chain
+// unused chain
+// non-existent chain
+
+// invalid geozone
+// unused geozone
+// non-existent geozone
+
+func TestSession_ServicersAndFishermanCount(t *testing.T) {
+	numServicers := 100
+	numFishermen := 100
+	// Prepare an environment with lots of servicers and fisherman
+	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, numServicers, 1, numFishermen)
+
+	app := runtimeCfg.GetGenesis().Applications[0]
+
+	// height := int64(1)
+	relayChain := "0001"
+	geoZone := "unused_geo"
+
+	// defer writeCtx.Release()
 
 	tests := []struct {
 		name                   string
 		numServicersPerSession int64
 		numFishermanPerSession int64
-		wantServicerCount      int64
-		wantFishermanCount     int64
+		wantServicerCount      int
+		wantFishermanCount     int
 	}{
 		{
-			name:                   "block is at start of first session",
-			numServicersPerSession: 5,
-			numFishermanPerSession: 5,
-			wantServicerCount:      5,
-			wantFishermanCount:     1,
+			name:                   "not enough actors to choose from (> 100)",
+			numServicersPerSession: int64(numServicers) * 10,
+			numFishermanPerSession: int64(numFishermen) * 10,
+			wantServicerCount:      numServicers,
+			wantFishermanCount:     numFishermen,
 		},
 		{
-			name:                   "block is right before start of first session",
-			numServicersPerSession: 5,
-			numFishermanPerSession: 4,
-			wantServicerCount:      0,
-			wantFishermanCount:     0,
+			name:                   "too many actors to choose from (< 100)",
+			numServicersPerSession: int64(numServicers) / 2,
+			numFishermanPerSession: int64(numFishermen) / 2,
+			wantServicerCount:      numServicers / 2,
+			wantFishermanCount:     numFishermen / 2,
 		},
 		{
-			name:                   "block is right after start of first session",
-			numServicersPerSession: 5,
-			numFishermanPerSession: 6,
-			wantServicerCount:      5,
-			wantFishermanCount:     1,
-		},
-		{
-			name:                   "block is at start of second session",
-			numServicersPerSession: 5,
-			numFishermanPerSession: 10,
-			wantServicerCount:      10,
-			wantFishermanCount:     2,
+			name:                   "same number of servicers and fisherman",
+			numServicersPerSession: int64(numServicers),
+			numFishermanPerSession: int64(numFishermen),
+			wantServicerCount:      numServicers,
+			wantFishermanCount:     numFishermen,
 		},
 		// Not enough servicers in region
 		// Not enough fisherman in region
@@ -85,12 +97,29 @@ func TestSession_ServicersAndFishermanCount(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			writeCtx.SetParam(types.BlocksPerSessionParamName, tt.numBlocksPerSession)
-			// require.NoError(t, writeCtx.Commit([]byte(""), []byte("")))
-			sessionHeight, sessionNumber, err := getSessionHeight(writeCtx, tt.haveBlockHeight)
+			err := persistenceMod.HandleDebugMessage(&messaging.DebugMessage{
+				Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
+				Message: nil,
+			})
 			require.NoError(t, err)
-			require.Equal(t, tt.wantSessionHeight, sessionHeight)
-			require.Equal(t, tt.wantSessionNumber, sessionNumber)
+			writeCtx, err := persistenceMod.NewRWContext(1)
+			require.NoError(t, err)
+			defer writeCtx.Release()
+
+			err = writeCtx.SetParam(types.ServicersPerSessionParamName, tt.numServicersPerSession)
+			require.NoError(t, err)
+			writeCtx.SetParam(types.FishermanPerSessionParamName, tt.numFishermanPerSession)
+			require.NoError(t, err)
+
+			err = writeCtx.Commit([]byte(""), []byte(""))
+			require.NoError(t, err)
+
+			session, err := utilityMod.GetSession(app.Address, 2, relayChain, geoZone)
+
+			// require.NoError(t, writeCtx.Commit([]byte(""), []byte("")))
+			require.NoError(t, err)
+			require.Equal(t, tt.wantServicerCount, len(session.Servicers))
+			require.Equal(t, tt.wantFishermanCount, len(session.Fishermen))
 		})
 	}
 }
@@ -152,8 +181,10 @@ func TestSession_SessionHeightAndNumber_StaticBlocksPerSession(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			writeCtx.SetParam(types.BlocksPerSessionParamName, tt.numBlocksPerSession)
+			err := writeCtx.SetParam(types.BlocksPerSessionParamName, tt.numBlocksPerSession)
+			require.NoError(t, err)
 			// require.NoError(t, writeCtx.Commit([]byte(""), []byte("")))
+
 			sessionHeight, sessionNumber, err := getSessionHeight(writeCtx, tt.haveBlockHeight)
 			require.NoError(t, err)
 			require.Equal(t, tt.wantSessionHeight, sessionHeight)
@@ -175,9 +206,6 @@ func TestSession_RelayChainVariability(t *testing.T) {
 
 }
 
-// Potential: Changing num blocks per session must wait until current session ends -> easily fixes things
-// New servicers / fisherman -> need to wait until current session ends -> easily fixes things
-
 func TestSession_ActorReplacement(t *testing.T) {
 	// What if a servicers/fisherman paused mid session?
 	// -> Need to replace them
@@ -190,6 +218,9 @@ func TestSession_InvalidApplication(t *testing.T) {
 	// TODO: What if the application pauses mid session?
 	// TODO: What if the application has no stake?
 }
+
+// Potential: Changing num blocks per session must wait until current session ends -> easily fixes things
+// New servicers / fisherman -> need to wait until current session ends -> easily fixes things
 
 // Configurable number of geo zones per session
 // above max

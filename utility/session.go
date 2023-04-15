@@ -1,14 +1,12 @@
 package utility
 
-// IMPORTANT: The interface and implementation defined in this file are for illustrative purposes only
-// and need to be revisited before any implementation commences.
-
 import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"math/rand"
 
+	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -18,8 +16,15 @@ import (
 // TODO: When implementing please review if block height tolerance (+,-1) is included in the session protocol: pokt-network/pocket-core#1464 CC @Olshansk
 
 type sessionHydrator struct {
-	logger  modules.Logger
+	logger modules.Logger
+
+	// the session being hydrated and returned
 	session *coreTypes.Session
+
+	// A helper that keeps a hex decoded copy of `session.Id`
+	sessionIdBz []byte
+
+	// Caches the read context to avoid opening too many during session hydration
 	readCtx modules.PersistenceReadContext
 }
 
@@ -75,7 +80,6 @@ func getSessionHeight(readCtx modules.PersistenceReadContext, blockHeight int64)
 
 	numBlocksAheadOfSession := blockHeight % int64(numBlocksPerSession)
 	sessionNumber := int64(blockHeight / int64(numBlocksPerSession))
-	fmt.Println("OLSH", blockHeight, int64(numBlocksPerSession), numBlocksAheadOfSession, 4%5)
 	if numBlocksAheadOfSession == 0 {
 		return blockHeight, sessionNumber, nil
 	}
@@ -95,8 +99,8 @@ func (s *sessionHydrator) hydrateSessionId() error {
 	appPubKeyBz := []byte(s.session.Application.PublicKey)
 	relayChainBz := []byte(string(s.session.RelayChain))
 	geoZoneBz := []byte(s.session.GeoZone)
-	idBz := concat(sessionHeightBz, prevHashBz, geoZoneBz, relayChainBz, appPubKeyBz)
-	s.session.Id = crypto.GetHashStringFromBytes(idBz)
+	s.sessionIdBz = concat(sessionHeightBz, prevHashBz, geoZoneBz, relayChainBz, appPubKeyBz)
+	s.session.Id = crypto.GetHashStringFromBytes(s.sessionIdBz)
 	return nil
 }
 
@@ -166,7 +170,7 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 		}
 	}
 
-	s.session.Servicers = s.pseudoRandomSelection(candidateServicers, int64(numServicers))
+	s.session.Servicers = pseudoRandomSelection(candidateServicers, numServicers, s.sessionIdBz)
 	return nil
 }
 
@@ -214,23 +218,15 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 		}
 	}
 
-	s.session.Fishermen = s.pseudoRandomSelection(candidateFishermen, int64(numFishermen))
+	s.session.Fishermen = pseudoRandomSelection(candidateFishermen, numFishermen, s.sessionIdBz)
 	return nil
 }
 
-// 1) passed an ordered list of the public keys of actors and number of nodes
-// 2) pseudo-insert the session `key` string into the list and find the first actor directly below
-// 3) newKey = Hash( key + actor1PublicKey )
-// 4) repeat steps 2 and 3 until all N actor are found
-// FAQ:
-// Q) why do we hash to find a newKey between every actor selection?
-// A) pseudo-random selection only works if each iteration is re-randomized
-//
-//	or it would be subject to lexicographical proximity bias attacks
-func (s *sessionHydrator) pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, sessionId []byte) []*coreTypes.Actor {
+// TODO_IN_THIS_COMMIT: Deterministic randomness algorithm
+func pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, sessionId []byte) []*coreTypes.Actor {
 	// If there aren't enough candidates, return all of them
 	if numTarget > len(candidates) {
-		s.logger.Warn().Msgf("pseudoRandomSelection: numTarget (%d) is greater than the number of candidates (%d)", numTarget, len(candidates))
+		logger.Global.Warn().Msgf("pseudoRandomSelection: numTarget (%d) is greater than the number of candidates (%d)", numTarget, len(candidates))
 		return candidates
 	}
 
