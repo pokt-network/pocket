@@ -210,3 +210,19 @@ func (m *consensusModule) getAggregatedStateSyncMetadata() typesCons.StateSyncMe
 		MaxHeight:   maxHeight,
 	}
 }
+
+func (m *consensusModule) aggragateHigherMsgHeights() uint64 {
+	chanLen := len(m.higherMsgHeights)
+
+	maxHeight := uint64(1)
+
+	for i := 0; i < chanLen; i++ {
+		metadata := <-m.metadataReceived
+		if metadata.MaxHeight > maxHeight {
+			maxHeight = metadata.MaxHeight
+		}
+	}
+
+	fmt.Println("aggragateHigherMsgHeights maxHeight: ", maxHeight)
+	return maxHeight
+}

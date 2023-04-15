@@ -138,6 +138,24 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		return false, nil
 	}
 
+	// Pacemaker shouldn't move from e.g. (24, 0, 1) to (24, 3, 8) because when it moves to that step, the block should not be nil.
+	// because it will return ErrNilBlockVote error for CreateVoteMessage / CreateProposeMessage (?)
+	// so if pacemaker moves to (24, 3, 8) but it will be nil if it moves to that step.
+	if msg.Step > currentStep {
+		return false, nil
+	}
+
+	// it shouldn't move to (13, 2, 12) to (13, 1, 12), this causes re-leader election, and that round no blocks are generated.
+	// if that block contains staking transaction, that peer will never be added to the network. and will never sync.
+	if msg.Round == currentRound && msg.Step < currentStep {
+		return false, nil
+	}
+
+	// // (8, 2, 6) to (8, 1, 7) shouldn't happen, because it will cause re-leader election, and that round no blocks are generated.
+	// if msg.Round > currentRound && msg.Step < currentStep {
+	// 	return false, nil
+	// }
+
 	// Everything checks out!
 	if msg.Height == currentHeight && msg.Step == currentStep && msg.Round == currentRound {
 		return true, nil
