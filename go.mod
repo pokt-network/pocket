@@ -18,7 +18,6 @@ require (
 	github.com/cucumber/godog v0.12.6
 	github.com/deepmap/oapi-codegen v1.12.4
 	github.com/dgraph-io/badger/v3 v3.2103.2
-	github.com/fatih/structs v1.1.0
 	github.com/foxcpp/go-mockdns v1.0.0
 	github.com/getkin/kin-openapi v0.107.0
 	github.com/hashicorp/vault/api v1.9.0
