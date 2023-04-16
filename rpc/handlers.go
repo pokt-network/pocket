@@ -47,17 +47,14 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 	return nil
 }
 
+// DISCUSSION: This may need to be changed when the GetSession function is actually implemented
 func (s *rpcServer) PostV1ClientDispatch(ctx echo.Context) error {
 	var body DispatchRequest
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	addrBz, err := hex.DecodeString(body.AppAddress)
-	if err != nil {
-		return ctx.String(http.StatusInternalServerError, err.Error())
-	}
-	session, err := s.GetBus().GetUtilityModule().DispatchSession(addrBz, body.Chain, body.Geozone, body.SessionHeight)
+	session, err := s.GetBus().GetUtilityModule().GetSession(body.AppAddress, body.SessionHeight, body.Chain, body.Geozone)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -78,13 +75,112 @@ func (s *rpcServer) PostV1ClientDispatch(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, Session{
-		SessionId:   hex.EncodeToString(session.GetSessionID()),
-		Height:      session.GetSessionHeight(),
+		SessionId:   session.GetId(),
+		Height:      session.GetHeight(),
 		Chain:       string(session.GetRelayChain()),
 		Geozone:     string(session.GetGeoZone()),
 		Application: rpcApp,
 		Servicers:   rpcServicers,
 		Fishermen:   rpcFishermen,
+	})
+}
+
+// DISCUSSION: This may need to be changed when the SendRelay function is actually implemented
+func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
+	var body RelayRequest
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Parse body into the protobuf messages
+	chain := &coreTypes.Identifiable{
+		Id:   body.Meta.Chain.Id,
+		Name: body.Meta.Chain.Name,
+	}
+	geozone := &coreTypes.Identifiable{
+		Id:   body.Meta.Geozone.Id,
+		Name: body.Meta.Geozone.Name,
+	}
+	aat := &coreTypes.AAT{
+		Version:              body.Meta.Token.Version,
+		ApplicationPublicKey: body.Meta.Token.AppPubKey,
+		ClientPublicKey:      body.Meta.Token.ClientPubKey,
+		ApplicationSignature: body.Meta.Token.AppSignature,
+	}
+	relayMeta := &coreTypes.RelayMeta{
+		BlockHeight:       body.Meta.BlockHeight,
+		ServicerPublicKey: body.Meta.ServicerPubKey,
+		RelayChain:        chain,
+		GeoZone:           geozone,
+		Token:             aat,
+		Signature:         body.Meta.Signature,
+	}
+
+	payload := &coreTypes.RelayPayload{
+		Data:     body.Payload.Data,
+		Method:   body.Payload.Method,
+		HttpPath: body.Payload.Path,
+	}
+
+	headers := make(map[string]string)
+	for _, header := range body.Payload.Headers {
+		headers[header.Name] = header.Value
+	}
+	payload.Headers = headers
+
+	relayRequest := &coreTypes.Relay{
+		Payload: payload,
+		Meta:    relayMeta,
+	}
+
+	relayResponse, err := s.GetBus().GetUtilityModule().SendRelay(relayRequest)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, RelayResponse{
+		Payload:           relayResponse.Payload,
+		ServicerSignature: relayResponse.ServicerSignature,
+	})
+}
+
+// DISCUSSION: This may need to be changed when the SendRelay function is actually implemented
+func (s *rpcServer) PostV1ClientChallenge(ctx echo.Context) error {
+	var body ChallengeRequest
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Parse body into the protobuf messages
+	majorityResponses := make([]*coreTypes.RelayResponse, 0)
+	for _, resp := range body.MajorityResponses {
+		relayResponse := &coreTypes.RelayResponse{
+			Payload:           resp.Payload,
+			ServicerSignature: resp.ServicerSignature,
+		}
+		majorityResponses = append(majorityResponses, relayResponse)
+	}
+
+	minorityResponse := &coreTypes.RelayResponse{
+		Payload:           body.MinorityResponse.Payload,
+		ServicerSignature: body.MinorityResponse.ServicerSignature,
+	}
+
+	challenge := &coreTypes.Challenge{
+		SessionId:         body.SessionId,
+		Address:           body.Address,
+		ServicerPublicKey: body.ServicerPubKey,
+		MinorityResponse:  minorityResponse,
+		MajorityResponses: majorityResponses,
+	}
+
+	challengeResponse, err := s.GetBus().GetUtilityModule().HandleChallenge(challenge)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, "bad request")
+	}
+
+	return ctx.JSON(http.StatusOK, ChallengeResponse{
+		Response: challengeResponse.Response,
 	})
 }
 

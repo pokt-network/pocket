@@ -23,6 +23,15 @@ type UtilityModule interface {
 	// HandleTransaction does basic `Transaction` validation & adds it to the utility's module mempool if valid
 	HandleTransaction(tx []byte) error
 
+	// GetSession creates a new session for the app and returns the session data
+	GetSession(appAddr string, sessionHeight int64, relayChain string, geoZone string) (*coreTypes.Session, error) // TODO: Implement this
+
+	// SendRelay sends a relay to the specified chain returning the response
+	SendRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) // TODO: Implement this
+
+	// HandleChallenge handles a challenge request from a node returning the response
+	HandleChallenge(challenge *coreTypes.Challenge) (*coreTypes.ChallengeResponse, error) // TODO: Implement this
+
 	// GetMempool returns the utility module's mempool of transactions gossiped throughout the network
 	GetMempool() mempool.TXMempool
 
@@ -30,10 +39,6 @@ type UtilityModule interface {
 	// It is useful for handling messages from the utility module's of other nodes that do not directly affect the state.
 	// IMPROVE: Find opportunities to break this apart as the module matures.
 	HandleUtilityMessage(*anypb.Any) error
-
-	// DispatchSession creates a new session for the app and returns the session key and the
-	// servicers that will be used to handle the session
-	DispatchSession(appAddr []byte, chainId, geozone string, sessionBlockHeight int64) (Session, error)
 }
 
 // TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead

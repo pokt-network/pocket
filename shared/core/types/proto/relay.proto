@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/shared/core/types";
+
+message Relay {
+    RelayPayload payload = 1;
+    RelayMeta meta = 2;
+}
+
+message RelayPayload {
+    string data = 1;
+    string method = 2;
+    string http_path = 3;
+    map<string, string> headers = 4;
+}
+
+message RelayMeta {
+    int64 block_height = 1;
+    string servicer_public_key = 2;
+    Identifiable relay_chain = 3;
+    Identifiable geo_zone = 4;
+    AAT token = 5;
+    string signature = 6;
+}
+
+message RelayResponse {
+    string payload = 1;
+    string servicer_signature = 2;
+}
+
+message AAT {
+    string version = 1;
+    string application_public_key = 2;
+    string client_public_key = 3;
+    string application_signature = 4;
+}
+
+message Identifiable {
+    string id = 1;
+    string name = 2;
+}

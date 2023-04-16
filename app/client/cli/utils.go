@@ -268,24 +268,6 @@ func attachSortFlagToSubcommands() []cmdOption {
 	}}
 }
 
-func attachChainFlagToSubcommands() []cmdOption {
-	return []cmdOption{func(c *cobra.Command) {
-		c.Flags().StringVar(&chain, "chain", "", "relay chain to query")
-	}}
-}
-
-func attachGeoZoneFlagToSubcommands() []cmdOption {
-	return []cmdOption{func(c *cobra.Command) {
-		c.Flags().StringVar(&geozone, "geozone", "", "geozone for the session")
-	}}
-}
-
-func attachSessionHeightFlagToSubcommands() []cmdOption {
-	return []cmdOption{func(c *cobra.Command) {
-		c.Flags().Int64Var(&sessionHeight, "session_height", 0, "height to use for the session")
-	}}
-}
-
 func attachKeybaseFlagsToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
 		c.Flags().StringVar(&kbTypeStrFromCLI, "keybase", "", "keybase type used by the cmd, options are: file, vault")

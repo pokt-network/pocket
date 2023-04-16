@@ -122,6 +122,64 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+  /v1/client/relay:
+    post:
+      tags:
+        - client
+      summary: Sends a challenge request to the network to service the RPC request
+      requestBody:
+        description: Request a relay to be sent on behalf of your application
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RelayRequest"
+        required: true
+      responses:
+        "200":
+          description: Relay request response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelayResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while sending the relay request to the network
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/client/challenge:
+    post:
+      tags:
+        - client
+      summary: Sends a relay request to the network to for invalid data returned from an RPC request
+      requestBody:
+        description: Request a challenge for invalid data returned from an RPC request
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChallengeRequest"
+        required: true
+      responses:
+        "200":
+          description: Challenge request response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while sending the challenge request to the network
+          content:
+            text/plain:
+              example: "description of failure"
 
   /v1/p2p/staked_actors_address_book:
     get:
@@ -878,6 +936,27 @@ externalDocs:
 components:
   schemas:
     # Requests
+    ChallengeRequest:
+      type: object
+      required:
+        - majority_responses
+        - minority_response
+        - address
+        - servicer_pub_key
+        - session_id
+      properties:
+        majority_responses:
+          type: array
+          items:
+            $ref: "#/components/schemas/RelayResponse"
+        minority_response:
+          $ref: "#/components/schemas/RelayResponse"
+        address:
+          type: string
+        servicer_pub_key:
+          type: string
+        session_id:
+          type: string
     DispatchRequest:
       type: object
       required:
@@ -991,6 +1070,16 @@ components:
           type: string
         raw_hex_bytes:
           type: string
+    RelayRequest:
+      type: object
+      required:
+        - payload
+        - meta
+      properties:
+        payload:
+          $ref: "#/components/schemas/Payload"
+        meta:
+          $ref: "#/components/schemas/RelayRequestMeta"
 
     # Responses
     Account:
@@ -1009,6 +1098,29 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/Parameter"
+    ChallengeResponse:
+      type: object
+      required:
+        - response
+      properties:
+        response:
+          type: string
+    ConsensusState:
+      type: object
+      required:
+        - height
+        - round
+        - step
+      properties:
+        height:
+          type: integer
+          format: int64
+        round:
+          type: integer
+          format: int64
+        step:
+          type: integer
+          format: int64
     ProtocolActor:
       type: object
       required:
@@ -1044,22 +1156,6 @@ components:
           format: int64
         output_addr:
           type: string
-    ConsensusState:
-      type: object
-      required:
-        - height
-        - round
-        - step
-      properties:
-        height:
-          type: integer
-          format: int64
-        round:
-          type: integer
-          format: int64
-        step:
-          type: integer
-          format: int64
     P2PStakedActorsResponse:
       type: object
       required:
@@ -1263,6 +1359,16 @@ components:
         total_pages:
           type: integer
           format: int64
+    RelayResponse:
+      type: object
+      required:
+        - payload
+        - servicer_signature
+      properties:
+        payload:
+          type: string
+        servicer_signature:
+          type: string
     Session:
       type: object
       required:
@@ -1295,6 +1401,22 @@ components:
             $ref: "#/components/schemas/ProtocolActor"
 
     # Types
+    AAT:
+      type: object
+      required:
+        - version
+        - app_pub_key
+        - client_pub_key
+        - app_signature
+      properties:
+        version:
+          type: string
+        app_pub_key:
+          type: string
+        client_pub_key:
+          type: string
+        app_signature:
+          type: string
     ActorTypesEnum:
       type: string
       enum:
@@ -1375,6 +1497,30 @@ components:
         amount:
           type: string
         denom:
+          type: string
+    Header:
+      type: object
+      required:
+        - name
+        - value
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+    Headers:
+      type: array
+      items:
+        $ref: "#/components/schemas/Header"
+    Identifiable:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
           type: string
     MessageSend:
       type: object
@@ -1508,6 +1654,22 @@ components:
           type: string
         address:
           type: string
+    Payload:
+      type: object
+      required:
+        - data
+        - method
+        - path
+        - headers
+      properties:
+        data:
+          type: string
+        method:
+          type: string
+        path:
+          type: string
+        headers:
+          $ref: "#/components/schemas/Headers"
     Pool:
       type: object
       required:
@@ -1550,6 +1712,29 @@ components:
           type: array
           items:
             type: string
+    RelayRequestMeta:
+      type: object
+      required:
+        - block_height
+        - servicer_pub_key
+        - chain
+        - geozone
+        - token
+        - signature
+      properties:
+        block_height:
+          type: integer
+          format: int64
+        servicer_pub_key:
+          type: string
+        chain:
+          $ref: "#/components/schemas/Identifiable"
+        geozone:
+          $ref: "#/components/schemas/Identifiable"
+        token:
+          $ref: "#/components/schemas/AAT"
+        signature:
+          type: string
     Signature:
       type: object
       required:

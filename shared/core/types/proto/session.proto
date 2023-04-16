@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/shared/core/types";
+
+import "actor.proto";
+
+message Session {
+    string id = 1;
+    int64 height = 2;
+    string relay_chain = 3;
+    string geo_zone = 4;
+    core.Actor application = 5;
+    repeated core.Actor servicers = 6;
+    repeated core.Actor fishermen = 7;
+}
