@@ -345,7 +345,7 @@ func (s *rpcServer) txProtoBytesToRPCTransactions(txProtoBytes [][]byte) ([]Tran
 	if err != nil {
 		return nil, err
 	}
-	defer uow.Release()
+	defer uow.Release() //nolint:errcheck // We only need to make sure the UOW is released
 
 	txs := make([]Transaction, 0)
 	for idx, txBz := range txProtoBytes {

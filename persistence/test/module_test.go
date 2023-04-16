@@ -112,6 +112,7 @@ func TestPersistenceContextMultipleParallelReads(t *testing.T) {
 	readContext3.Release()
 }
 
+//nolint:gocritic // This is a helper function for a test not a test itself
 func prepareAndCleanContext(t *testing.T) {
 	// Cleanup context after the test
 	t.Cleanup(clearAllState)

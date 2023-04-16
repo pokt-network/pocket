@@ -11,7 +11,7 @@ import (
 )
 
 // TODO: Implement this
-func (u *utilityModule) GetSession(appAddr string, sessionHeight int64, relayChain string, geoZone string) (*coreTypes.Session, error) {
+func (u *utilityModule) GetSession(appAddr string, sessionHeight int64, relayChain, geoZone string) (*coreTypes.Session, error) {
 	return nil, nil
 }
 

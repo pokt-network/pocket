@@ -59,8 +59,8 @@ func (s *rpcServer) PostV1ClientDispatch(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	app := session.GetApplication()
-	rpcApp := protocolActorToRPCProtocolActor(app)
+	application := session.GetApplication()
+	rpcApp := protocolActorToRPCProtocolActor(application)
 
 	rpcServicers := make([]ProtocolActor, 0)
 	for _, serv := range session.GetServicers() {
@@ -71,7 +71,7 @@ func (s *rpcServer) PostV1ClientDispatch(ctx echo.Context) error {
 	rpcFishermen := make([]ProtocolActor, 0)
 	for _, fm := range session.GetFishermen() {
 		actor := protocolActorToRPCProtocolActor(fm)
-		rpcServicers = append(rpcFishermen, actor)
+		rpcFishermen = append(rpcFishermen, actor)
 	}
 
 	return ctx.JSON(http.StatusOK, Session{
@@ -366,12 +366,12 @@ func (s *rpcServer) PostV1QueryApp(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	app, err := readCtx.GetApp(addrBz, height)
+	application, err := readCtx.GetApp(addrBz, height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	actor := protocolActorToRPCProtocolActor(app)
+	actor := protocolActorToRPCProtocolActor(application)
 	return ctx.JSON(http.StatusOK, actor)
 }
 
