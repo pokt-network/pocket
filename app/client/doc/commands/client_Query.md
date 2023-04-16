@@ -36,6 +36,7 @@ Commands related to querying on-chain data via the node's RPC server
 * [client Query Servicer](client_Query_Servicer.md)	 - Get the servicer data of an address at a specified height
 * [client Query Servicers](client_Query_Servicers.md)	 - Get all the data of all servicers the specified height
 * [client Query Supply](client_Query_Supply.md)	 - Get the token supply data from each pool at a specified height
+* [client Query SupportedChains](client_Query_SupportedChains.md)	 - Get the supported chains at a specified height
 * [client Query Transaction](client_Query_Transaction.md)	 - Get the transaction data the hash provided
 * [client Query UnconfirmedTransaction](client_Query_UnconfirmedTransaction.md)	 - Get the unconfirmed transaction data the hash provided
 * [client Query UnconfirmedTxs](client_Query_UnconfirmedTxs.md)	 - Get all the unconfirmed transaction data from the mempool

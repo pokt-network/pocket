@@ -136,7 +136,10 @@ type PersistenceReadContext interface {
 	Release()                  // Releases the read context
 
 	// Version queries
-	GetVersionAtHeight(height int64) (string, error)
+	GetVersionAtHeight(height int64) (string, error) // TODO: Implement this
+
+	// Supported Chains Queries
+	GetSupportedChains(height int64) ([]string, error) // TODO: Implement this
 
 	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries

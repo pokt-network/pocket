@@ -620,6 +620,37 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+  /v1/query/supportedchains:
+    post:
+      tags:
+        - query
+      summary: Returns the supported chains at the specified height
+      requestBody:
+        description: Request the supported chains at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeight"
+            example:
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns the supported chains list at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuerySupportedChainsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the supported chains at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
   /v1/query/tx:
     post:
       tags:
@@ -1110,6 +1141,15 @@ components:
             $ref: "#/components/schemas/Pool"
         total:
           $ref: "#/components/schemas/Coin"
+    QuerySupportedChainsResponse:
+      type: object
+      required:
+        - supported_chains
+      properties:
+        supported_chains:
+          type: array
+          items:
+            type: string
     QueryTxsResponse:
       type: object
       required:

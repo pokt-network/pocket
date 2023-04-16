@@ -718,6 +718,36 @@ func (s *rpcServer) PostV1QuerySupply(ctx echo.Context) error {
 	})
 }
 
+func (s *rpcServer) PostV1QuerySupportedchains(ctx echo.Context) error {
+	var body QueryHeight
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := body.Height
+	if height == 0 || height > currentHeight {
+		height = currentHeight
+	}
+
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	chains, err := readCtx.GetSupportedChains(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, QuerySupportedChainsResponse{
+		SupportedChains: chains,
+	})
+}
+
 func (s *rpcServer) PostV1QueryTx(ctx echo.Context) error {
 	var body QueryHash
 	if err := ctx.Bind(&body); err != nil {
