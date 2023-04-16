@@ -85,11 +85,11 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	m.logger.Debug().Msg("Node is in Sync Mode, starting to sync...")
 
 	aggregatedMetadata := m.getAggregatedStateSyncMetadata()
-	higherMsgHeight := m.aggragateHigherMsgHeights()
+	//higherMsgHeight := m.aggragateHigherMsgHeights()
 
-	if higherMsgHeight > aggregatedMetadata.MaxHeight {
-		aggregatedMetadata.MaxHeight = higherMsgHeight
-	}
+	// if higherMsgHeight > aggregatedMetadata.MaxHeight {
+	// 	aggregatedMetadata.MaxHeight = higherMsgHeight
+	// }
 
 	m.stateSync.Set(&aggregatedMetadata)
 

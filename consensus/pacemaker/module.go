@@ -141,9 +141,9 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	// Pacemaker shouldn't move from e.g. (24, 0, 1) to (24, 3, 8) because when it moves to that step, the block should not be nil.
 	// because it will return ErrNilBlockVote error for CreateVoteMessage / CreateProposeMessage (?)
 	// so if pacemaker moves to (24, 3, 8) but it will be nil if it moves to that step.
-	if msg.Step > currentStep {
-		return false, nil
-	}
+	// if msg.Step > currentStep {
+	// 	return false, nil
+	// }
 
 	// it shouldn't move to (13, 2, 12) to (13, 1, 12), this causes re-leader election, and that round no blocks are generated.
 	// if that block contains staking transaction, that peer will never be added to the network. and will never sync.
@@ -169,6 +169,8 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 		// TODO: Add tests for this. When we catch up to a later step, the leader is still the same.
 		// However, when we catch up to a later round, the leader at the same height will be different.
+		fmt.Println("YO!, isleaderset: ", consensusMod.IsLeaderSet(), " currentRound: ", currentRound, " msg.Round: ", msg.Round, " currentStep: ", currentStep, " msg.Step: ", msg.Step, " msg.Height: ", msg.Height, " currentHeight: ", currentHeight)
+
 		if currentRound != msg.Round || !consensusMod.IsLeaderSet() {
 			anyProto, err := anypb.New(msg)
 			if err != nil {

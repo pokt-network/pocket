@@ -13,7 +13,7 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 	// m.m.Lock()
 	// defer m.m.Unlock()
 
-	m.logger.Info().Msg("Handling StateSyncMessage")
+	//m.logger.Info().Msg("Handling StateSyncMessage")
 
 	switch stateSyncMessageAny.MessageName() {
 	case messaging.StateSyncMessageContentType:

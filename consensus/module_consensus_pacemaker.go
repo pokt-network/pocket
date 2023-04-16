@@ -62,6 +62,7 @@ func (m *consensusModule) IsLeaderSet() bool {
 }
 
 func (m *consensusModule) NewLeader(msg *anypb.Any) error {
+	fmt.Println("NewLeader is going to elect new leader for msg: ", msg.String())
 	msgCodec, err := codec.GetCodec().FromAny(msg)
 	if err != nil {
 		return err

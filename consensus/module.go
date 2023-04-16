@@ -83,7 +83,7 @@ type consensusModule struct {
 	metadataReceived chan *typesCons.StateSyncMetadataResponse
 
 	// channel to send messages with heights higher than current height of the node, to be utlized by the state sync module, fsm handles the aggregatation
-	higherMsgHeights chan uint64
+	//higherMsgHeights chan uint64
 
 	serverModeEnabled bool
 }
@@ -265,6 +265,8 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if !ok {
 			return fmt.Errorf("failed to cast message to HotstuffMessage")
 		}
+
+		fmt.Println("Received message: ", hotstuffMessage)
 		return m.handleHotstuffMessage(hotstuffMessage)
 
 	default:

@@ -93,7 +93,7 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 		Transactions: txs,
 	}
 
-	p.logger.Info().Uint64("height", block.BlockHeader.Height).Msg("Storing block in block store.")
+	//p.logger.Info().Uint64("height", block.BlockHeader.Height).Msg("Storing block in block store.")
 
 	return block, nil
 }
