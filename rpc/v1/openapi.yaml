@@ -269,7 +269,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/App"
+                $ref: "#/components/schemas/ProtocolActor"
         "400":
           description: Bad request
           content:
@@ -411,6 +411,71 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+  /v1/query/fisherman:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the specific fisherman address at a given height
+      requestBody:
+        description: Request fisherman data at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryAddressHeight"
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns fisherman data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProtocolActor"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the fisherman data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/fishermen:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the all fishermen at the specified height
+      requestBody:
+        description: Request all fishermen data at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeightPaginated"
+            example:
+              height: 0
+              page: 1
+              per_page: 50
+        required: true
+      responses:
+        "200":
+          description: Returns all fishermen data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryFishermenResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving all fishermen data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
   /v1/query/height:
     get:
       tags:
@@ -456,6 +521,102 @@ paths:
               example: "description of failure"
         "500":
           description: An error occurred while retrieving the parameter
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/servicer:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the specific servicer address at a given height
+      requestBody:
+        description: Request servicer data at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryAddressHeight"
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns servicer data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProtocolActor"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the servicer data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/servicers:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the all servicers at the specified height
+      requestBody:
+        description: Request all servicers data at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeightPaginated"
+            example:
+              height: 0
+              page: 1
+              per_page: 50
+        required: true
+      responses:
+        "200":
+          description: Returns all servicers data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryServicersResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving all servicers data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/supply:
+    post:
+      tags:
+        - query
+      summary: Returns the token supply at the specified height
+      requestBody:
+        description: Request the token supply data at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeight"
+            example:
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns the token supply data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuerySupplyResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the token supply data at the specified height
           content:
             text/plain:
               example: "description of failure"
@@ -585,6 +746,71 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+  /v1/query/validator:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the specific validator address at a given height
+      requestBody:
+        description: Request validator data at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryAddressHeight"
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns validator data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProtocolActor"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the validator data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/validators:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the all validators at the specified height
+      requestBody:
+        description: Request all validators data at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeightPaginated"
+            example:
+              height: 0
+              page: 1
+              per_page: 50
+        required: true
+      responses:
+        "200":
+          description: Returns all validators data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryValidatorsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving all validators data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
 
 externalDocs:
   description: Find out more about Pocket Network
@@ -706,7 +932,7 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/Parameter"
-    App:
+    ProtocolActor:
       type: object
       required:
         - address
@@ -728,6 +954,8 @@ components:
           type: array
           items:
             type: string
+        service_url:
+          type: string
         staked_amount:
           type: string
         paused_height:
@@ -803,7 +1031,7 @@ components:
         apps:
           type: array
           items:
-            $ref: "#/components/schemas/App"
+            $ref: "#/components/schemas/ProtocolActor"
         total_apps:
           type: integer
           format: int64
@@ -828,6 +1056,60 @@ components:
       properties:
         block:
           $ref: "#/components/schemas/Block"
+    QueryFishermenResponse:
+      type: object
+      required:
+        - fishermen
+        - total_fishermen
+        - page
+        - total_pages
+      properties:
+        fishermen:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProtocolActor"
+        total_fishermen:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
+    QueryServicersResponse:
+      type: object
+      required:
+        - servicers
+        - total_servicers
+        - page
+        - total_pages
+      properties:
+        servicers:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProtocolActor"
+        total_servicers:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
+    QuerySupplyResponse:
+      type: object
+      required:
+        - pools
+        - total
+      properties:
+        pools:
+          type: array
+          items:
+            $ref: "#/components/schemas/Pool"
+        total:
+          $ref: "#/components/schemas/Coin"
     QueryTxsResponse:
       type: object
       required:
@@ -860,6 +1142,27 @@ components:
           format: int64
         version:
           type: string
+    QueryValidatorsResponse:
+      type: object
+      required:
+        - validators
+        - total_validators
+        - page
+        - total_pages
+      properties:
+        validators:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProtocolActor"
+        total_validators:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
     P2PStakedActorsResponse:
       type: object
       required:
@@ -1087,6 +1390,22 @@ components:
         signature:
           type: string
         address:
+          type: string
+    Pool:
+      type: object
+      required:
+        - address
+        - name
+        - amount
+        - denom
+      properties:
+        address:
+          type: string
+        name:
+          type: string
+        amount:
+          type: string
+        denom:
           type: string
     QuorumCertificate:
       type: object

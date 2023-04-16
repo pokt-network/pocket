@@ -72,10 +72,11 @@ func TestUpdateFisherman(t *testing.T) {
 	addrBz, err := hex.DecodeString(fisherman.Address)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, chains, err := db.GetFisherman(addrBz, 0)
+	fisher, err := db.GetFisherman(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, DefaultChains, chains, "default chains incorrect for current height")
-	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for current height")
+	require.NotNil(t, fisher)
+	require.Equal(t, DefaultChains, fisher.Chains, "default chains incorrect for current height")
+	require.Equal(t, DefaultStake, fisher.StakedAmount, "default stake incorrect for current height")
 
 	db.Height = 1
 
@@ -84,15 +85,17 @@ func TestUpdateFisherman(t *testing.T) {
 	err = db.UpdateFisherman(addrBz, fisherman.ServiceUrl, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, chains, err = db.GetFisherman(addrBz, 0)
+	fisher, err = db.GetFisherman(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, DefaultChains, chains, "default chains incorrect for previous height")
-	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for previous height")
+	require.NotNil(t, fisher)
+	require.Equal(t, DefaultChains, fisher.Chains, "default chains incorrect for current height")
+	require.Equal(t, DefaultStake, fisher.StakedAmount, "default stake incorrect for current height")
 
-	_, _, stakedTokens, _, _, _, _, chains, err = db.GetFisherman(addrBz, 1)
+	fisher, err = db.GetFisherman(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, ChainsToUpdate, chains, "chains not updated for current height")
-	require.Equal(t, StakeToUpdate, stakedTokens, "stake not updated for current height")
+	require.NotNil(t, fisher)
+	require.Equal(t, ChainsToUpdate, fisher.Chains, "chains not updated for current height")
+	require.Equal(t, StakeToUpdate, fisher.StakedAmount, "stake not updated for current height")
 }
 
 func TestGetFishermenReadyToUnstake(t *testing.T) {
@@ -192,16 +195,18 @@ func TestSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
 	err = db.SetFishermanPauseHeight(addrBz, pauseHeight)
 	require.NoError(t, err)
 
-	_, _, _, _, _, fishermanPausedHeight, _, _, err := db.GetFisherman(addrBz, db.Height)
+	fisher, err := db.GetFisherman(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, pauseHeight, fishermanPausedHeight, "pause height not updated")
+	require.NotNil(t, fisher)
+	require.Equal(t, pauseHeight, fisher.PausedHeight, "pause height not updated")
 
 	err = db.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pauseHeight+1, unstakingHeight, -1 /*unused*/)
 	require.NoError(t, err)
 
-	_, _, _, _, _, _, fishermanUnstakingHeight, _, err := db.GetFisherman(addrBz, db.Height)
+	fisher, err = db.GetFisherman(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, unstakingHeight, fishermanUnstakingHeight, "unstaking height was not set correctly")
+	require.NotNil(t, fisher)
+	require.Equal(t, unstakingHeight, fisher.UnstakingHeight, "unstaking height was not set correctly")
 }
 
 func TestGetFishermanOutputAddress(t *testing.T) {
@@ -272,34 +277,5 @@ func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*core
 }
 
 func getTestFisherman(db *persistence.PostgresContext, address []byte) (*coreTypes.Actor, error) {
-	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetFisherman(address, db.Height)
-	if err != nil {
-		return nil, err
-	}
-
-	operatorAddr, err := hex.DecodeString(operator)
-	if err != nil {
-		return nil, err
-	}
-
-	operatorPubKey, err := hex.DecodeString(publicKey)
-	if err != nil {
-		return nil, err
-	}
-
-	outputAddr, err := hex.DecodeString(outputAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	return &coreTypes.Actor{
-		Address:         hex.EncodeToString(operatorAddr),
-		PublicKey:       hex.EncodeToString(operatorPubKey),
-		Chains:          chains,
-		ServiceUrl:      serviceURL,
-		StakedAmount:    stakedTokens,
-		PausedHeight:    pauseHeight,
-		UnstakingHeight: unstakingHeight,
-		Output:          hex.EncodeToString(outputAddr),
-	}, nil
+	return db.GetFisherman(address, db.Height)
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/http"
 	"strconv"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/utils"
-	"golang.org/x/exp/slices"
 )
 
 // CONSIDER: Remove all the V1 prefixes from the RPC module
@@ -225,24 +225,24 @@ func (s *rpcServer) PostV1QueryApp(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	allApps, err := readCtx.GetAllApps(height)
+	addrBz, err := hex.DecodeString(body.Address)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	idx := slices.IndexFunc(allApps, func(app *coreTypes.Actor) bool { return app.Address == body.Address })
-	if idx == -1 {
-		return ctx.String(http.StatusBadRequest, fmt.Sprintf("no app found with address: %s", body.Address))
+	app, err := readCtx.GetApp(addrBz, height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.JSON(http.StatusOK, App{
-		Address:         allApps[idx].Address,
-		ActorType:       protocolActorToRPCActorTypeEnum(allApps[idx].ActorType),
-		PublicKey:       allApps[idx].PublicKey,
-		Chains:          allApps[idx].Chains,
-		StakedAmount:    allApps[idx].StakedAmount,
-		PausedHeight:    allApps[idx].PausedHeight,
-		UnstakingHeight: allApps[idx].UnstakingHeight,
-		OutputAddr:      allApps[idx].Output,
+	return ctx.JSON(http.StatusOK, ProtocolActor{
+		Address:         app.Address,
+		ActorType:       protocolActorToRPCActorTypeEnum(app.ActorType),
+		PublicKey:       app.PublicKey,
+		Chains:          app.Chains,
+		StakedAmount:    app.StakedAmount,
+		PausedHeight:    app.PausedHeight,
+		UnstakingHeight: app.UnstakingHeight,
+		OutputAddr:      app.Output,
 	})
 }
 
@@ -278,9 +278,9 @@ func (s *rpcServer) PostV1QueryApps(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, QueryAppsResponse{})
 	}
 
-	rpcApps := make([]App, 0)
+	rpcApps := make([]ProtocolActor, 0)
 	for _, app := range allApps[start : end+1] {
-		rpcApps = append(rpcApps, App{
+		rpcApps = append(rpcApps, ProtocolActor{
 			Address:         app.Address,
 			ActorType:       protocolActorToRPCActorTypeEnum(app.ActorType),
 			PublicKey:       app.PublicKey,
@@ -430,6 +430,103 @@ func (s *rpcServer) PostV1QueryBlocktxs(ctx echo.Context) error {
 	})
 }
 
+func (s *rpcServer) PostV1QueryFisherman(ctx echo.Context) error {
+	var body QueryAddressHeight
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := body.Height
+	if height == 0 {
+		height = currentHeight
+	}
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	addrBz, err := hex.DecodeString(body.Address)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	fisherman, err := readCtx.GetFisherman(addrBz, height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, ProtocolActor{
+		Address:         fisherman.Address,
+		ActorType:       protocolActorToRPCActorTypeEnum(fisherman.ActorType),
+		PublicKey:       fisherman.PublicKey,
+		Chains:          fisherman.Chains,
+		ServiceUrl:      &fisherman.ServiceUrl,
+		StakedAmount:    fisherman.StakedAmount,
+		PausedHeight:    fisherman.PausedHeight,
+		UnstakingHeight: fisherman.UnstakingHeight,
+		OutputAddr:      fisherman.Output,
+	})
+}
+
+func (s *rpcServer) PostV1QueryFishermen(ctx echo.Context) error {
+	var body QueryHeightPaginated
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := body.Height
+	if height == 0 {
+		height = currentHeight
+	}
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	allFishermen, err := readCtx.GetAllFishermen(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	start, end, totalPages, err := getPageIndexes(len(allFishermen), int(body.Page), int(body.PerPage))
+	if err != nil && !errors.Is(err, errNoItems) {
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+	if totalPages == 0 || errors.Is(err, errNoItems) {
+		return ctx.JSON(http.StatusOK, QueryFishermenResponse{})
+	}
+
+	rpcFishermen := make([]ProtocolActor, 0)
+	for _, fm := range allFishermen[start : end+1] {
+		rpcFishermen = append(rpcFishermen, ProtocolActor{
+			Address:         fm.Address,
+			ActorType:       protocolActorToRPCActorTypeEnum(fm.ActorType),
+			PublicKey:       fm.PublicKey,
+			Chains:          fm.Chains,
+			ServiceUrl:      &fm.ServiceUrl,
+			StakedAmount:    fm.StakedAmount,
+			PausedHeight:    fm.PausedHeight,
+			UnstakingHeight: fm.UnstakingHeight,
+			OutputAddr:      fm.Output,
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, QueryFishermenResponse{
+		Fishermen:      rpcFishermen,
+		TotalFishermen: int64(len(allFishermen)),
+		Page:           body.Page,
+		TotalPages:     int64(totalPages),
+	})
+}
+
 func (s *rpcServer) GetV1QueryHeight(ctx echo.Context) error {
 	// Get latest stored block height
 	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
@@ -470,6 +567,154 @@ func (s *rpcServer) PostV1QueryParam(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, Parameter{
 		ParameterName:  body.ParamName,
 		ParameterValue: paramValue,
+	})
+}
+
+func (s *rpcServer) PostV1QueryServicer(ctx echo.Context) error {
+	var body QueryAddressHeight
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := body.Height
+	if height == 0 {
+		height = currentHeight
+	}
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	addrBz, err := hex.DecodeString(body.Address)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	servicer, err := readCtx.GetServicer(addrBz, height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, ProtocolActor{
+		Address:         servicer.Address,
+		ActorType:       protocolActorToRPCActorTypeEnum(servicer.ActorType),
+		PublicKey:       servicer.PublicKey,
+		Chains:          servicer.Chains,
+		ServiceUrl:      &servicer.ServiceUrl,
+		StakedAmount:    servicer.StakedAmount,
+		PausedHeight:    servicer.PausedHeight,
+		UnstakingHeight: servicer.UnstakingHeight,
+		OutputAddr:      servicer.Output,
+	})
+}
+
+func (s *rpcServer) PostV1QueryServicers(ctx echo.Context) error {
+	var body QueryHeightPaginated
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := body.Height
+	if height == 0 {
+		height = currentHeight
+	}
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	allServicers, err := readCtx.GetAllServicers(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	start, end, totalPages, err := getPageIndexes(len(allServicers), int(body.Page), int(body.PerPage))
+	if err != nil && !errors.Is(err, errNoItems) {
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+	if totalPages == 0 || errors.Is(err, errNoItems) {
+		return ctx.JSON(http.StatusOK, QueryServicersResponse{})
+	}
+
+	rpcServicers := make([]ProtocolActor, 0)
+	for _, serv := range allServicers[start : end+1] {
+		rpcServicers = append(rpcServicers, ProtocolActor{
+			Address:         serv.Address,
+			ActorType:       protocolActorToRPCActorTypeEnum(serv.ActorType),
+			PublicKey:       serv.PublicKey,
+			Chains:          serv.Chains,
+			ServiceUrl:      &serv.ServiceUrl,
+			StakedAmount:    serv.StakedAmount,
+			PausedHeight:    serv.PausedHeight,
+			UnstakingHeight: serv.UnstakingHeight,
+			OutputAddr:      serv.Output,
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, QueryServicersResponse{
+		Servicers:      rpcServicers,
+		TotalServicers: int64(len(allServicers)),
+		Page:           body.Page,
+		TotalPages:     int64(totalPages),
+	})
+}
+
+func (s *rpcServer) PostV1QuerySupply(ctx echo.Context) error {
+	var body QueryHeight
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := body.Height
+	if height == 0 || height > currentHeight {
+		height = currentHeight
+	}
+
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	pools, err := readCtx.GetAllPools(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	rpcPools := make([]Pool, 0)
+	total := new(big.Int)
+	for _, pool := range pools {
+		name := coreTypes.PoolAddressToFriendlyName(pool.Address)
+		amount, success := new(big.Int).SetString(pool.Amount, 10)
+		if !success {
+			return ctx.String(http.StatusInternalServerError, "failed to convert amount to big.Int")
+		}
+		total = total.Add(total, amount)
+		rpcPools = append(rpcPools, Pool{
+			Address: pool.Address,
+			Name:    name,
+			Amount:  pool.Amount,
+			Denom:   "upokt",
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, QuerySupplyResponse{
+		Pools: rpcPools,
+		Total: Coin{
+			Amount: total.String(),
+			Denom:  "upokt",
+		},
 	})
 }
 
@@ -575,6 +820,103 @@ func (s *rpcServer) PostV1QueryUpgrade(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, QueryUpgradeResponse{
 		Height:  height,
 		Version: version,
+	})
+}
+
+func (s *rpcServer) PostV1QueryValidator(ctx echo.Context) error {
+	var body QueryAddressHeight
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := body.Height
+	if height == 0 {
+		height = currentHeight
+	}
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	addrBz, err := hex.DecodeString(body.Address)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	validator, err := readCtx.GetValidator(addrBz, height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, ProtocolActor{
+		Address:         validator.Address,
+		ActorType:       protocolActorToRPCActorTypeEnum(validator.ActorType),
+		PublicKey:       validator.PublicKey,
+		Chains:          validator.Chains,
+		ServiceUrl:      &validator.ServiceUrl,
+		StakedAmount:    validator.StakedAmount,
+		PausedHeight:    validator.PausedHeight,
+		UnstakingHeight: validator.UnstakingHeight,
+		OutputAddr:      validator.Output,
+	})
+}
+
+func (s *rpcServer) PostV1QueryValidators(ctx echo.Context) error {
+	var body QueryHeightPaginated
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Get latest stored block height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	height := body.Height
+	if height == 0 {
+		height = currentHeight
+	}
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	allValidators, err := readCtx.GetAllValidators(height)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	start, end, totalPages, err := getPageIndexes(len(allValidators), int(body.Page), int(body.PerPage))
+	if err != nil && !errors.Is(err, errNoItems) {
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+	if totalPages == 0 || errors.Is(err, errNoItems) {
+		return ctx.JSON(http.StatusOK, QueryValidatorsResponse{})
+	}
+
+	rpcValidators := make([]ProtocolActor, 0)
+	for _, val := range allValidators[start : end+1] {
+		rpcValidators = append(rpcValidators, ProtocolActor{
+			Address:         val.Address,
+			ActorType:       protocolActorToRPCActorTypeEnum(val.ActorType),
+			PublicKey:       val.PublicKey,
+			Chains:          val.Chains,
+			ServiceUrl:      &val.ServiceUrl,
+			StakedAmount:    val.StakedAmount,
+			PausedHeight:    val.PausedHeight,
+			UnstakingHeight: val.UnstakingHeight,
+			OutputAddr:      val.Output,
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, QueryValidatorsResponse{
+		Validators:      rpcValidators,
+		TotalValidators: int64(len(allValidators)),
+		Page:            body.Page,
+		TotalPages:      int64(totalPages),
 	})
 }
 

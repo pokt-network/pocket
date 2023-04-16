@@ -26,6 +26,15 @@ func init() {
 	}
 }
 
+func PoolAddressToFriendlyName(address string) string {
+	for k, v := range poolAddresses {
+		if string(v) == address {
+			return k.FriendlyName()
+		}
+	}
+	return ""
+}
+
 func (pn Pools) FriendlyName() string {
 	return poolFriendlyNames[pn]
 }

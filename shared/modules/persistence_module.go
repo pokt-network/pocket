@@ -157,6 +157,7 @@ type PersistenceReadContext interface {
 	GetAllAccounts(height int64) ([]*coreTypes.Account, error)
 
 	// App Queries
+	GetApp(address []byte, height int64) (*coreTypes.Actor, error)
 	GetAllApps(height int64) ([]*coreTypes.Actor, error)
 	GetAppExists(address []byte, height int64) (exists bool, err error)
 	GetAppStakeAmount(height int64, address []byte) (string, error)
@@ -166,6 +167,7 @@ type PersistenceReadContext interface {
 	GetAppOutputAddress(operator []byte, height int64) (output []byte, err error)
 
 	// Servicer Queries
+	GetServicer(address []byte, height int64) (*coreTypes.Actor, error)
 	GetAllServicers(height int64) ([]*coreTypes.Actor, error)
 	GetServicerExists(address []byte, height int64) (exists bool, err error)
 	GetServicerStakeAmount(height int64, address []byte) (string, error)
@@ -176,6 +178,7 @@ type PersistenceReadContext interface {
 	GetServicerCount(chain string, height int64) (int, error)
 
 	// Fisherman Queries
+	GetFisherman(address []byte, height int64) (*coreTypes.Actor, error)
 	GetAllFishermen(height int64) ([]*coreTypes.Actor, error)
 	GetFishermanExists(address []byte, height int64) (exists bool, err error)
 	GetFishermanStakeAmount(height int64, address []byte) (string, error)
@@ -185,6 +188,7 @@ type PersistenceReadContext interface {
 	GetFishermanOutputAddress(operator []byte, height int64) (output []byte, err error)
 
 	// Validator Queries
+	GetValidator(address []byte, height int64) (*coreTypes.Actor, error)
 	GetAllValidators(height int64) ([]*coreTypes.Actor, error)
 	GetValidatorExists(address []byte, height int64) (exists bool, err error)
 	GetValidatorStakeAmount(height int64, address []byte) (string, error)

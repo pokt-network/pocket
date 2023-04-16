@@ -72,10 +72,11 @@ func TestUpdateServicer(t *testing.T) {
 	addrBz, err := hex.DecodeString(servicer.Address)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, chains, err := db.GetServicer(addrBz, 0)
+	serv, err := db.GetServicer(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, DefaultChains, chains, "default chains incorrect for current height")
-	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for current height")
+	require.NotNil(t, serv)
+	require.Equal(t, DefaultChains, serv.Chains, "default chains incorrect for current height")
+	require.Equal(t, DefaultStake, serv.StakedAmount, "default stake incorrect for current height")
 
 	db.Height = 1
 
@@ -84,15 +85,17 @@ func TestUpdateServicer(t *testing.T) {
 	err = db.UpdateServicer(addrBz, servicer.ServiceUrl, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, chains, err = db.GetServicer(addrBz, 0)
+	serv, err = db.GetServicer(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, DefaultChains, chains, "default chains incorrect for previous height")
-	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for previous height")
+	require.NotNil(t, serv)
+	require.Equal(t, DefaultChains, serv.Chains, "default chains incorrect for current height")
+	require.Equal(t, DefaultStake, serv.StakedAmount, "default stake incorrect for current height")
 
-	_, _, stakedTokens, _, _, _, _, chains, err = db.GetServicer(addrBz, 1)
+	serv, err = db.GetServicer(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, ChainsToUpdate, chains, "chains not updated for current height")
-	require.Equal(t, StakeToUpdate, stakedTokens, "stake not updated for current height")
+	require.NotNil(t, serv)
+	require.Equal(t, ChainsToUpdate, serv.Chains, "chains not updated for current height")
+	require.Equal(t, StakeToUpdate, serv.StakedAmount, "stake not updated for current height")
 }
 
 func TestGetServicersReadyToUnstake(t *testing.T) {
@@ -194,16 +197,18 @@ func TestSetServicerPauseHeightAndUnstakeLater(t *testing.T) {
 	err = db.SetServicerPauseHeight(addrBz, pauseHeight)
 	require.NoError(t, err)
 
-	_, _, _, _, _, servicerPausedHeight, _, _, err := db.GetServicer(addrBz, db.Height)
+	serv, err := db.GetServicer(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, pauseHeight, servicerPausedHeight, "pause height not updated")
+	require.NotNil(t, serv)
+	require.Equal(t, pauseHeight, serv.PausedHeight, "pause height not updated")
 
 	err = db.SetServicerStatusAndUnstakingHeightIfPausedBefore(pauseHeight+1, unstakingHeight, -1 /*unused*/)
 	require.NoError(t, err)
 
-	_, _, _, _, _, _, servicerUnstakingHeight, _, err := db.GetServicer(addrBz, db.Height)
+	serv, err = db.GetServicer(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, unstakingHeight, servicerUnstakingHeight, "unstaking height was not set correctly")
+	require.NotNil(t, serv)
+	require.Equal(t, unstakingHeight, serv.UnstakingHeight, "unstaking height was not set correctly")
 }
 
 func TestGetServicerOutputAddress(t *testing.T) {
@@ -274,34 +279,5 @@ func createAndInsertDefaultTestServicer(db *persistence.PostgresContext) (*coreT
 }
 
 func getTestServicer(db *persistence.PostgresContext, address []byte) (*coreTypes.Actor, error) {
-	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetServicer(address, db.Height)
-	if err != nil {
-		return nil, err
-	}
-
-	operatorAddr, err := hex.DecodeString(operator)
-	if err != nil {
-		return nil, err
-	}
-
-	operatorPubKey, err := hex.DecodeString(publicKey)
-	if err != nil {
-		return nil, err
-	}
-
-	outputAddr, err := hex.DecodeString(outputAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	return &coreTypes.Actor{
-		Address:         hex.EncodeToString(operatorAddr),
-		PublicKey:       hex.EncodeToString(operatorPubKey),
-		Chains:          chains,
-		ServiceUrl:      serviceURL,
-		StakedAmount:    stakedTokens,
-		PausedHeight:    pauseHeight,
-		UnstakingHeight: unstakingHeight,
-		Output:          hex.EncodeToString(outputAddr),
-	}, nil
+	return db.GetServicer(address, db.Height)
 }

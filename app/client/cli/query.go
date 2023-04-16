@@ -201,6 +201,41 @@ func queryHeightCommands() []*cobra.Command {
 			},
 		},
 		{
+			Use:     "Fisherman <address> [--height]",
+			Short:   "Get the fisherman data of an address at a specified height",
+			Long:    "Queries the node RPC to obtain the fisherman data of the speicifed address at the given height",
+			Args:    cobra.ExactArgs(1),
+			Aliases: []string{"fisherman"},
+			RunE: func(cmd *cobra.Command, args []string) error {
+				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				if err != nil {
+					return err
+				}
+
+				body := rpc.QueryAddressHeight{
+					Address: args[0],
+					Height:  height,
+				}
+
+				response, err := client.PostV1QueryFisherman(cmd.Context(), body)
+				if err != nil {
+					return unableToConnectToRpc(err)
+				}
+				statusCode := response.StatusCode
+				resp, err := io.ReadAll(response.Body)
+				if err != nil {
+					logger.Global.Error().Err(err).Msg("Error reading response body")
+					return err
+				}
+				if statusCode == http.StatusOK {
+					fmt.Println(string(resp))
+					return nil
+				}
+
+				return rpcResponseCodeUnhealthy(statusCode, resp)
+			},
+		},
+		{
 			Use:     "Param <parameter_name> [--height]",
 			Short:   "Get the value of the parameter at the specified height",
 			Long:    "Queries the node RPC to obtain the value of the specified parameter",
@@ -236,6 +271,75 @@ func queryHeightCommands() []*cobra.Command {
 			},
 		},
 		{
+			Use:     "Servicer <address> [--height]",
+			Short:   "Get the servicer data of an address at a specified height",
+			Long:    "Queries the node RPC to obtain the servicer data of the speicifed address at the given height",
+			Args:    cobra.ExactArgs(1),
+			Aliases: []string{"servicer"},
+			RunE: func(cmd *cobra.Command, args []string) error {
+				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				if err != nil {
+					return err
+				}
+
+				body := rpc.QueryAddressHeight{
+					Address: args[0],
+					Height:  height,
+				}
+
+				response, err := client.PostV1QueryServicer(cmd.Context(), body)
+				if err != nil {
+					return unableToConnectToRpc(err)
+				}
+				statusCode := response.StatusCode
+				resp, err := io.ReadAll(response.Body)
+				if err != nil {
+					logger.Global.Error().Err(err).Msg("Error reading response body")
+					return err
+				}
+				if statusCode == http.StatusOK {
+					fmt.Println(string(resp))
+					return nil
+				}
+
+				return rpcResponseCodeUnhealthy(statusCode, resp)
+			},
+		},
+		{
+			Use:     "Supply [--height]",
+			Short:   "Get the token supply data from each pool at a specified height",
+			Long:    "Queries the node RPC to obtain the token supply data of the pools at the given height",
+			Args:    cobra.ExactArgs(0),
+			Aliases: []string{"supply"},
+			RunE: func(cmd *cobra.Command, args []string) error {
+				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				if err != nil {
+					return err
+				}
+
+				body := rpc.QueryHeight{
+					Height: height,
+				}
+
+				response, err := client.PostV1QuerySupply(cmd.Context(), body)
+				if err != nil {
+					return unableToConnectToRpc(err)
+				}
+				statusCode := response.StatusCode
+				resp, err := io.ReadAll(response.Body)
+				if err != nil {
+					logger.Global.Error().Err(err).Msg("Error reading response body")
+					return err
+				}
+				if statusCode == http.StatusOK {
+					fmt.Println(string(resp))
+					return nil
+				}
+
+				return rpcResponseCodeUnhealthy(statusCode, resp)
+			},
+		},
+		{
 			Use:     "Upgrade [--height]",
 			Short:   "Get the upgrade version at the specified height",
 			Long:    "Queries the node RPC to obtain the upgrade version for the specified height",
@@ -252,6 +356,41 @@ func queryHeightCommands() []*cobra.Command {
 				}
 
 				response, err := client.PostV1QueryUpgrade(cmd.Context(), body)
+				if err != nil {
+					return unableToConnectToRpc(err)
+				}
+				statusCode := response.StatusCode
+				resp, err := io.ReadAll(response.Body)
+				if err != nil {
+					logger.Global.Error().Err(err).Msg("Error reading response body")
+					return err
+				}
+				if statusCode == http.StatusOK {
+					fmt.Println(string(resp))
+					return nil
+				}
+
+				return rpcResponseCodeUnhealthy(statusCode, resp)
+			},
+		},
+		{
+			Use:     "Validator <address> [--height]",
+			Short:   "Get the validator data of an address at a specified height",
+			Long:    "Queries the node RPC to obtain the validator data of the speicifed address at the given height",
+			Args:    cobra.ExactArgs(1),
+			Aliases: []string{"validator"},
+			RunE: func(cmd *cobra.Command, args []string) error {
+				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				if err != nil {
+					return err
+				}
+
+				body := rpc.QueryAddressHeight{
+					Address: args[0],
+					Height:  height,
+				}
+
+				response, err := client.PostV1QueryValidator(cmd.Context(), body)
 				if err != nil {
 					return unableToConnectToRpc(err)
 				}
@@ -331,6 +470,114 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 				}
 
 				response, err := client.PostV1QueryApps(cmd.Context(), body)
+				if err != nil {
+					return unableToConnectToRpc(err)
+				}
+				statusCode := response.StatusCode
+				resp, err := io.ReadAll(response.Body)
+				if err != nil {
+					logger.Global.Error().Err(err).Msg("Error reading response body")
+					return err
+				}
+				if statusCode == http.StatusOK {
+					fmt.Println(string(resp))
+					return nil
+				}
+
+				return rpcResponseCodeUnhealthy(statusCode, resp)
+			},
+		},
+		{
+			Use:     "Fishermen [--height] [--page] [--per_page]",
+			Short:   "Get all the data of all fishermen the specified height",
+			Long:    "Queries the node RPC to obtain the paginated data for all fishermen at the given height",
+			Args:    cobra.ExactArgs(0),
+			Aliases: []string{"fishermen"},
+			RunE: func(cmd *cobra.Command, args []string) error {
+				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				if err != nil {
+					return err
+				}
+
+				body := rpc.QueryHeightPaginated{
+					Height:  height,
+					Page:    page,
+					PerPage: per_page,
+				}
+
+				response, err := client.PostV1QueryFishermen(cmd.Context(), body)
+				if err != nil {
+					return unableToConnectToRpc(err)
+				}
+				statusCode := response.StatusCode
+				resp, err := io.ReadAll(response.Body)
+				if err != nil {
+					logger.Global.Error().Err(err).Msg("Error reading response body")
+					return err
+				}
+				if statusCode == http.StatusOK {
+					fmt.Println(string(resp))
+					return nil
+				}
+
+				return rpcResponseCodeUnhealthy(statusCode, resp)
+			},
+		},
+		{
+			Use:     "Servicers [--height] [--page] [--per_page]",
+			Short:   "Get all the data of all servicers the specified height",
+			Long:    "Queries the node RPC to obtain the paginated data for all servicers at the given height",
+			Args:    cobra.ExactArgs(0),
+			Aliases: []string{"servicers"},
+			RunE: func(cmd *cobra.Command, args []string) error {
+				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				if err != nil {
+					return err
+				}
+
+				body := rpc.QueryHeightPaginated{
+					Height:  height,
+					Page:    page,
+					PerPage: per_page,
+				}
+
+				response, err := client.PostV1QueryServicers(cmd.Context(), body)
+				if err != nil {
+					return unableToConnectToRpc(err)
+				}
+				statusCode := response.StatusCode
+				resp, err := io.ReadAll(response.Body)
+				if err != nil {
+					logger.Global.Error().Err(err).Msg("Error reading response body")
+					return err
+				}
+				if statusCode == http.StatusOK {
+					fmt.Println(string(resp))
+					return nil
+				}
+
+				return rpcResponseCodeUnhealthy(statusCode, resp)
+			},
+		},
+		{
+			Use:     "Validators [--height] [--page] [--per_page]",
+			Short:   "Get all the data of all validators the specified height",
+			Long:    "Queries the node RPC to obtain the paginated data for all validators at the given height",
+			Args:    cobra.ExactArgs(0),
+			Aliases: []string{"validators"},
+			RunE: func(cmd *cobra.Command, args []string) error {
+				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				if err != nil {
+					return err
+				}
+
+				body := rpc.QueryHeightPaginated{
+					Height:  height,
+					Page:    page,
+					PerPage: per_page,
+				}
+
+				response, err := client.PostV1QueryValidators(cmd.Context(), body)
 				if err != nil {
 					return unableToConnectToRpc(err)
 				}

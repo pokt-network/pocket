@@ -1,22 +1,22 @@
-## client Query UnconfirmedTxs
+## client Query Validators
 
-Get all the unconfirmed transaction data from the mempool
+Get all the data of all validators the specified height
 
 ### Synopsis
 
-Queries the node RPC to obtain the paginated data for all unconfirmed transactions from the mempool
+Queries the node RPC to obtain the paginated data for all validators at the given height
 
 ```
-client Query UnconfirmedTxs [--page] [--per_page] [--sort] [flags]
+client Query Validators [--height] [--page] [--per_page] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help           help for UnconfirmedTxs
+      --height int     block height to query, (default = 0, latest)
+  -h, --help           help for Validators
       --page int       page number to return of paginated query (default 1)
       --per_page int   number of results to show per page in a paginated query (default 1000)
-      --sort string    order to sort results in  ('asc' or default 'desc') (default "desc")
 ```
 
 ### Options inherited from parent commands
