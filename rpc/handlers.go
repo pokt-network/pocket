@@ -47,6 +47,47 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 	return nil
 }
 
+func (s *rpcServer) PostV1ClientDispatch(ctx echo.Context) error {
+	var body DispatchRequest
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	addrBz, err := hex.DecodeString(body.AppAddress)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	session, err := s.GetBus().GetUtilityModule().DispatchSession(addrBz, body.Chain, body.Geozone, body.SessionHeight)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	app := session.GetApplication()
+	rpcApp := protocolActorToRPCProtocolActor(app)
+
+	rpcServicers := make([]ProtocolActor, 0)
+	for _, serv := range session.GetServicers() {
+		actor := protocolActorToRPCProtocolActor(serv)
+		rpcServicers = append(rpcServicers, actor)
+	}
+
+	rpcFishermen := make([]ProtocolActor, 0)
+	for _, fm := range session.GetFishermen() {
+		actor := protocolActorToRPCProtocolActor(fm)
+		rpcServicers = append(rpcFishermen, actor)
+	}
+
+	return ctx.JSON(http.StatusOK, Session{
+		SessionId:   hex.EncodeToString(session.GetSessionID()),
+		Height:      session.GetSessionHeight(),
+		Chain:       string(session.GetRelayChain()),
+		Geozone:     string(session.GetGeoZone()),
+		Application: rpcApp,
+		Servicers:   rpcServicers,
+		Fishermen:   rpcFishermen,
+	})
+}
+
 func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 	consensus := s.GetBus().GetConsensusModule()
 	return ctx.JSON(200, ConsensusState{
@@ -234,16 +275,8 @@ func (s *rpcServer) PostV1QueryApp(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.JSON(http.StatusOK, ProtocolActor{
-		Address:         app.Address,
-		ActorType:       protocolActorToRPCActorTypeEnum(app.ActorType),
-		PublicKey:       app.PublicKey,
-		Chains:          app.Chains,
-		StakedAmount:    app.StakedAmount,
-		PausedHeight:    app.PausedHeight,
-		UnstakingHeight: app.UnstakingHeight,
-		OutputAddr:      app.Output,
-	})
+	actor := protocolActorToRPCProtocolActor(app)
+	return ctx.JSON(http.StatusOK, actor)
 }
 
 func (s *rpcServer) PostV1QueryApps(ctx echo.Context) error {
@@ -280,16 +313,8 @@ func (s *rpcServer) PostV1QueryApps(ctx echo.Context) error {
 
 	rpcApps := make([]ProtocolActor, 0)
 	for _, app := range allApps[start : end+1] {
-		rpcApps = append(rpcApps, ProtocolActor{
-			Address:         app.Address,
-			ActorType:       protocolActorToRPCActorTypeEnum(app.ActorType),
-			PublicKey:       app.PublicKey,
-			Chains:          app.Chains,
-			StakedAmount:    app.StakedAmount,
-			PausedHeight:    app.PausedHeight,
-			UnstakingHeight: app.UnstakingHeight,
-			OutputAddr:      app.Output,
-		})
+		actor := protocolActorToRPCProtocolActor(app)
+		rpcApps = append(rpcApps, actor)
 	}
 
 	return ctx.JSON(http.StatusOK, QueryAppsResponse{
@@ -459,17 +484,8 @@ func (s *rpcServer) PostV1QueryFisherman(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.JSON(http.StatusOK, ProtocolActor{
-		Address:         fisherman.Address,
-		ActorType:       protocolActorToRPCActorTypeEnum(fisherman.ActorType),
-		PublicKey:       fisherman.PublicKey,
-		Chains:          fisherman.Chains,
-		ServiceUrl:      &fisherman.ServiceUrl,
-		StakedAmount:    fisherman.StakedAmount,
-		PausedHeight:    fisherman.PausedHeight,
-		UnstakingHeight: fisherman.UnstakingHeight,
-		OutputAddr:      fisherman.Output,
-	})
+	actor := protocolActorToRPCProtocolActor(fisherman)
+	return ctx.JSON(http.StatusOK, actor)
 }
 
 func (s *rpcServer) PostV1QueryFishermen(ctx echo.Context) error {
@@ -506,17 +522,8 @@ func (s *rpcServer) PostV1QueryFishermen(ctx echo.Context) error {
 
 	rpcFishermen := make([]ProtocolActor, 0)
 	for _, fm := range allFishermen[start : end+1] {
-		rpcFishermen = append(rpcFishermen, ProtocolActor{
-			Address:         fm.Address,
-			ActorType:       protocolActorToRPCActorTypeEnum(fm.ActorType),
-			PublicKey:       fm.PublicKey,
-			Chains:          fm.Chains,
-			ServiceUrl:      &fm.ServiceUrl,
-			StakedAmount:    fm.StakedAmount,
-			PausedHeight:    fm.PausedHeight,
-			UnstakingHeight: fm.UnstakingHeight,
-			OutputAddr:      fm.Output,
-		})
+		actor := protocolActorToRPCProtocolActor(fm)
+		rpcFishermen = append(rpcFishermen, actor)
 	}
 
 	return ctx.JSON(http.StatusOK, QueryFishermenResponse{
@@ -599,17 +606,8 @@ func (s *rpcServer) PostV1QueryServicer(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.JSON(http.StatusOK, ProtocolActor{
-		Address:         servicer.Address,
-		ActorType:       protocolActorToRPCActorTypeEnum(servicer.ActorType),
-		PublicKey:       servicer.PublicKey,
-		Chains:          servicer.Chains,
-		ServiceUrl:      &servicer.ServiceUrl,
-		StakedAmount:    servicer.StakedAmount,
-		PausedHeight:    servicer.PausedHeight,
-		UnstakingHeight: servicer.UnstakingHeight,
-		OutputAddr:      servicer.Output,
-	})
+	actor := protocolActorToRPCProtocolActor(servicer)
+	return ctx.JSON(http.StatusOK, actor)
 }
 
 func (s *rpcServer) PostV1QueryServicers(ctx echo.Context) error {
@@ -646,17 +644,8 @@ func (s *rpcServer) PostV1QueryServicers(ctx echo.Context) error {
 
 	rpcServicers := make([]ProtocolActor, 0)
 	for _, serv := range allServicers[start : end+1] {
-		rpcServicers = append(rpcServicers, ProtocolActor{
-			Address:         serv.Address,
-			ActorType:       protocolActorToRPCActorTypeEnum(serv.ActorType),
-			PublicKey:       serv.PublicKey,
-			Chains:          serv.Chains,
-			ServiceUrl:      &serv.ServiceUrl,
-			StakedAmount:    serv.StakedAmount,
-			PausedHeight:    serv.PausedHeight,
-			UnstakingHeight: serv.UnstakingHeight,
-			OutputAddr:      serv.Output,
-		})
+		actor := protocolActorToRPCProtocolActor(serv)
+		rpcServicers = append(rpcServicers, actor)
 	}
 
 	return ctx.JSON(http.StatusOK, QueryServicersResponse{
@@ -882,17 +871,8 @@ func (s *rpcServer) PostV1QueryValidator(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.JSON(http.StatusOK, ProtocolActor{
-		Address:         validator.Address,
-		ActorType:       protocolActorToRPCActorTypeEnum(validator.ActorType),
-		PublicKey:       validator.PublicKey,
-		Chains:          validator.Chains,
-		ServiceUrl:      &validator.ServiceUrl,
-		StakedAmount:    validator.StakedAmount,
-		PausedHeight:    validator.PausedHeight,
-		UnstakingHeight: validator.UnstakingHeight,
-		OutputAddr:      validator.Output,
-	})
+	actor := protocolActorToRPCProtocolActor(validator)
+	return ctx.JSON(http.StatusOK, actor)
 }
 
 func (s *rpcServer) PostV1QueryValidators(ctx echo.Context) error {
@@ -929,17 +909,8 @@ func (s *rpcServer) PostV1QueryValidators(ctx echo.Context) error {
 
 	rpcValidators := make([]ProtocolActor, 0)
 	for _, val := range allValidators[start : end+1] {
-		rpcValidators = append(rpcValidators, ProtocolActor{
-			Address:         val.Address,
-			ActorType:       protocolActorToRPCActorTypeEnum(val.ActorType),
-			PublicKey:       val.PublicKey,
-			Chains:          val.Chains,
-			ServiceUrl:      &val.ServiceUrl,
-			StakedAmount:    val.StakedAmount,
-			PausedHeight:    val.PausedHeight,
-			UnstakingHeight: val.UnstakingHeight,
-			OutputAddr:      val.Output,
-		})
+		actor := protocolActorToRPCProtocolActor(val)
+		rpcValidators = append(rpcValidators, actor)
 	}
 
 	return ctx.JSON(http.StatusOK, QueryValidatorsResponse{

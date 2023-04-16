@@ -30,6 +30,10 @@ type UtilityModule interface {
 	// It is useful for handling messages from the utility module's of other nodes that do not directly affect the state.
 	// IMPROVE: Find opportunities to break this apart as the module matures.
 	HandleUtilityMessage(*anypb.Any) error
+
+	// DispatchSession creates a new session for the app and returns the session key and the
+	// servicers that will be used to handle the session
+	DispatchSession(appAddr []byte, chainId, geozone string, sessionBlockHeight int64) (Session, error)
 }
 
 // TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead

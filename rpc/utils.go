@@ -80,6 +80,21 @@ func getPageIndexes(totalItems, page, per_page int) (startIdx, endIdx, totalPage
 	return startIdx, endIdx, totalPages, nil
 }
 
+// protocolActorToRPCProtocolActor converts the coreTypes.Actor to an RPC ProtocolActor
+func protocolActorToRPCProtocolActor(actor *coreTypes.Actor) ProtocolActor {
+	return ProtocolActor{
+		Address:         actor.Address,
+		ActorType:       protocolActorToRPCActorTypeEnum(actor.ActorType),
+		PublicKey:       actor.PublicKey,
+		Chains:          actor.Chains,
+		ServiceUrl:      actor.ServiceUrl,
+		StakedAmount:    actor.StakedAmount,
+		PausedHeight:    actor.PausedHeight,
+		UnstakingHeight: actor.UnstakingHeight,
+		OutputAddr:      actor.Output,
+	}
+}
+
 // txResultToRPCTransaction converts the txResult protobuf into the RPC Transaction type
 func (s *rpcServer) txResultToRPCTransaction(txResult *coreTypes.TxResult) (*Transaction, error) {
 	hash := coreTypes.TxHash(txResult.GetTx())
