@@ -147,14 +147,14 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// it shouldn't move to (13, 2, 12) to (13, 1, 12), this causes re-leader election, and that round no blocks are generated.
 	// if that block contains staking transaction, that peer will never be added to the network. and will never sync.
-	if msg.Round == currentRound && msg.Step < currentStep {
-		return false, nil
-	}
-
-	// // (8, 2, 6) to (8, 1, 7) shouldn't happen, because it will cause re-leader election, and that round no blocks are generated.
-	// if msg.Round > currentRound && msg.Step < currentStep {
+	// if msg.Round == currentRound && msg.Step < currentStep {
 	// 	return false, nil
 	// }
+
+	// (8, 2, 6) to (8, 1, 7) shouldn't happen, because it will cause re-leader election, and that round no blocks are generated.
+	if msg.Round > currentRound && msg.Step < currentStep {
+		return false, nil
+	}
 
 	// Everything checks out!
 	if msg.Height == currentHeight && msg.Step == currentStep && msg.Round == currentRound {

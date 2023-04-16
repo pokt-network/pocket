@@ -94,6 +94,17 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 		return
 	}
 
+	// if replica is syncing up:
+	// it is possible for it to have missed the newround, and m.block can be empty.
+	// here if that is the case,  first few steps might have been empty.
+	//so we need to set the block, and refresh utility context
+	if m.block == nil {
+		m.block = msg.GetBlock()
+		if err := m.refreshUtilityUnitOfWork(); err != nil {
+			m.logger.Error().Err(err).Msg("Could not refresh utility context")
+		}
+	}
+
 	m.step = Commit
 	m.prepareQC = quorumCert // INVESTIGATE: Why are we never using this for validation?
 
@@ -121,6 +132,17 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Commit).Error())
 		m.paceMaker.InterruptRound("invalid quorum certificate")
 		return
+	}
+
+	// if replica is syncing up:
+	// it is possible for it to have missed the newround, and m.block can be empty.
+	// here if that is the case,  first few steps might have been empty.
+	//so we need to set the block, and refresh utility context
+	if m.block == nil {
+		m.block = msg.GetBlock()
+		if err := m.refreshUtilityUnitOfWork(); err != nil {
+			m.logger.Error().Err(err).Msg("Could not refresh utility context")
+		}
 	}
 
 	m.step = Decide
@@ -157,6 +179,18 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 		m.logger.Error().Err(err).Msg("Failed to convert the quorum certificate to bytes")
 		return
 	}
+
+	// if replica is syncing up:
+	// it is possible for it to have missed the newround, and m.block can be empty.
+	// here if that is the case,  first few steps might have been empty.
+	//so we need to set the block, and refresh utility context
+	if m.block == nil {
+		m.block = msg.GetBlock()
+		if err := m.refreshUtilityUnitOfWork(); err != nil {
+			m.logger.Error().Err(err).Msg("Could not refresh utility context")
+		}
+	}
+
 	m.block.BlockHeader.QuorumCertificate = quorumCertBytes
 
 	if err := m.commitBlock(m.block); err != nil {

@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const metadataSyncPeriod = 60 * time.Second // TODO: Make this configurable
+const metadataSyncPeriod = 30 * time.Second // TODO: Make this configurable
 
 var _ modules.ConsensusStateSync = &consensusModule{}
 
