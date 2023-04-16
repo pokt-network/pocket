@@ -85,12 +85,6 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	m.logger.Debug().Msg("Node is in Sync Mode, starting to sync...")
 
 	aggregatedMetadata := m.getAggregatedStateSyncMetadata()
-	//higherMsgHeight := m.aggragateHigherMsgHeights()
-
-	// if higherMsgHeight > aggregatedMetadata.MaxHeight {
-	// 	aggregatedMetadata.MaxHeight = higherMsgHeight
-	// }
-
 	m.stateSync.Set(&aggregatedMetadata)
 
 	go m.stateSync.Start()
@@ -113,14 +107,19 @@ func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionE
 	// validator receives a new block proposal, and it understands that it doesn't have block and it transitions to unsycnhed state
 	// transitioning out of this state happens when a new block proposal is received by the hotstuff_replica
 
-	// valdiator node receives nodeID after reaching pacemaker.
-	// TODO! check, is this the best place?
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-	if err != nil {
-		return err
+	// TODO move this check to a more proper place
+	// a validator who just bootstrapped, synced to the rest of the network and reached pacemaker mode, its consensus module doesn't have a valid nodeId set yet.
+	// therefore, it's node id should be assigned.
+	if m.nodeId == 0 {
+		// valdiator node receives nodeID after reaching pacemaker.
+		validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+		if err != nil {
+			return err
+		}
+		valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
+		m.nodeId = valAddrToIdMap[m.nodeAddress]
+		fmt.Println("now my node id is", m.nodeId)
 	}
-	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
-	m.nodeId = valAddrToIdMap[m.nodeAddress]
-	fmt.Println("now my node id is", m.nodeId)
+
 	return nil
 }

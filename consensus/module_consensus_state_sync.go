@@ -2,7 +2,6 @@ package consensus
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -38,14 +37,15 @@ func (m *consensusModule) GetNodeAddress() string {
 func (m *consensusModule) blockApplicationLoop() {
 	for blockResponse := range m.blocksReceived {
 		block := blockResponse.Block
-		fmt.Println("New block is received!")
+		m.logger.Info().Msgf("New block, at height %d is received!", block.BlockHeader.Height)
+
 		maxPersistedHeight, err := m.maxPersistedBlockHeight()
 		if err != nil {
 			m.logger.Err(err).Msg("couldn't query max persisted height")
 			continue
 		}
 
-		fmt.Println("Now going to decide if I should apply it")
+		//fmt.Println("Now going to decide if I should apply it")
 		if block.BlockHeader.Height <= maxPersistedHeight {
 			m.logger.Info().Msgf("Received block with height: %d, but node already persisted blocks until height: %d, so node will not apply this block", block.BlockHeader.Height, maxPersistedHeight)
 			continue
@@ -54,20 +54,18 @@ func (m *consensusModule) blockApplicationLoop() {
 			continue
 		}
 
-		fmt.Println("Now going to verify block")
 		err = m.verifyBlock(block)
 		if err != nil {
 			m.logger.Err(err).Msg("failed to verify block")
 			continue
 		}
 
-		fmt.Println("Now going to apply and commit block")
 		err = m.applyAndCommitBlock(block)
 		if err != nil {
 			m.logger.Err(err).Msg("failed to apply and commit block")
 			continue
 		}
-		//fmt.Println("Applied block: ", block)
+		m.logger.Info().Msgf("Block, at height %d is committed!", block.BlockHeader.Height)
 		m.stateSync.CommittedBlock(m.CurrentHeight())
 	}
 
@@ -76,9 +74,6 @@ func (m *consensusModule) blockApplicationLoop() {
 // metadataSyncLoop periodically sends metadata requests to its peers
 // it is intended to be run as a background process
 func (m *consensusModule) metadataSyncLoop() error {
-	// if m.ctx != nil {
-	// 	m.logger.Warn().Msg("metadataSyncLoop is already running. Cancelling the previous context...")
-	// }
 	ctx := context.TODO()
 
 	ticker := time.NewTicker(metadataSyncPeriod)
@@ -139,14 +134,11 @@ func (m *consensusModule) verifyBlock(block *coreTypes.Block) error {
 		return err
 	}
 
-	m.logger.Info().Msg("verifyBlock, validating Quroum Certificate")
-
 	if err := m.validateQuorumCertificate(&qc); err != nil {
 		m.logger.Error().Err(err).Msg("Couldn't apply block, invalid QC")
 		return err
 	}
 
-	m.logger.Info().Msg("verifyBlock, QC is valid, refreshing utility context")
 	if err := m.refreshUtilityUnitOfWork(); err != nil {
 		m.logger.Error().Err(err).Msg("Could not refresh utility context")
 		return err
@@ -160,14 +152,10 @@ func (m *consensusModule) verifyBlock(block *coreTypes.Block) error {
 
 	leaderId := typesCons.NodeId(leaderIdInt)
 	m.leaderId = &leaderId
-	m.logger.Info().Msgf("verifyBlock, leaderId is: %d", leaderId)
 	return nil
 }
 
 func (m *consensusModule) applyAndCommitBlock(block *coreTypes.Block) error {
-	m.logger.Info().Msgf("applying and committing the block at height %d", block.BlockHeader.Height)
-
-	// TODO: uncomment following. In this PR test blocks don't have a valid QC, therefore commented out to let the tests pass
 	if err := m.applyBlock(block); err != nil {
 		m.logger.Error().Err(err).Msg("Could not apply block, invalid QC")
 		return err
@@ -210,19 +198,3 @@ func (m *consensusModule) getAggregatedStateSyncMetadata() typesCons.StateSyncMe
 		MaxHeight:   maxHeight,
 	}
 }
-
-// func (m *consensusModule) aggragateHigherMsgHeights() uint64 {
-// 	chanLen := len(m.higherMsgHeights)
-
-// 	maxHeight := uint64(1)
-
-// 	for i := 0; i < chanLen; i++ {
-// 		metadata := <-m.metadataReceived
-// 		if metadata.MaxHeight > maxHeight {
-// 			maxHeight = metadata.MaxHeight
-// 		}
-// 	}
-
-// 	fmt.Println("aggragateHigherMsgHeights maxHeight: ", maxHeight)
-// 	return maxHeight
-// }

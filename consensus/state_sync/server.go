@@ -25,13 +25,12 @@ func (m *stateSync) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateS
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := metadataReq.PeerAddress
 
-	m.logger.Info().Fields(m.stateSyncLogHelper(clientPeerAddress)).Msgf("Received StateSyncMetadataRequest %s", metadataReq)
+	m.logger.Info().Fields(m.stateSyncLogHelper(clientPeerAddress)).Msgf("Handling StateSync MetadataRequest")
 
 	// current height is the height of the block that is being processed, so we need to subtract 1 for the last finalized block
 	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
-	//currentRound := consensusMod.CurrentHeight()
 
-	// TODO! check if we need to send currentRound here? probably better
+	// TODO check if we need to send currentRound here rather than prevPersistedBlockHeight
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(prevPersistedBlockHeight))
 	if err != nil {
 		m.logger.Err(err).Msg("Error creating read context")
@@ -73,7 +72,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) {
 	serverNodePeerAddress := consensusMod.GetNodeAddress()
 	clientPeerAddress := blockReq.PeerAddress
 
-	m.logger.Info().Fields(m.stateSyncLogHelper(clientPeerAddress)).Msgf("Received StateSync GetBlockRequest")
+	m.logger.Info().Fields(m.stateSyncLogHelper(clientPeerAddress)).Msgf("Handling StateSync GetBlockRequest")
 	prevPersistedBlockHeight := consensusMod.CurrentHeight() - 1
 
 	if prevPersistedBlockHeight < blockReq.Height {

@@ -82,9 +82,6 @@ type consensusModule struct {
 	// metadata responses received from peers are collected in this channel
 	metadataReceived chan *typesCons.StateSyncMetadataResponse
 
-	// channel to send messages with heights higher than current height of the node, to be utlized by the state sync module, fsm handles the aggregatation
-	//higherMsgHeights chan uint64
-
 	serverModeEnabled bool
 }
 

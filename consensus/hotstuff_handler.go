@@ -22,10 +22,6 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	// Pacemaker - Liveness & safety checks
 	if shouldHandle, err := m.paceMaker.ShouldHandleMessage(msg); !shouldHandle {
 		m.logger.Debug().Fields(loggingFields).Msg("Not handling hotstuff msg...")
-		// we need to sync until this height before missing this round, maybe for few more times
-		// if msg.Height > m.CurrentHeight() {
-		// 	m.higherMsgHeights <- msg.Height
-		// }
 		return err
 	}
 
