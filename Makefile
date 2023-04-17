@@ -289,9 +289,6 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 	$(PROTOC_SHARED) -I=./runtime/genesis/proto  --go_out=./runtime/genesis ./runtime/genesis/proto/*.proto
 	protoc-go-inject-tag -input="./runtime/genesis/*.pb.go"
 
-	# Persistence
-	$(PROTOC_SHARED) -I=./persistence/indexer/proto 	--go_out=./persistence/indexer ./persistence/indexer/proto/*.proto
-
 	# Utility
 	$(PROTOC_SHARED) -I=./utility/types/proto --go_out=./utility/types ./utility/types/proto/*.proto
 
@@ -516,9 +513,8 @@ localnet_logs_validators_follow: ## Outputs logs from all validators and follows
 	kubectl logs -l v1-purpose=validator --all-containers=true --max-log-requests=1000 --tail=-1 -f
 
 .PHONY: localnet_down
-localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + postgres database)
+localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down`)
 	tilt down --file=build/localnet/Tiltfile
-	kubectl delete pvc --ignore-not-found=true data-dependencies-postgresql-0
 
 .PHONY: localnet_db_cli
 localnet_db_cli: ## Open a CLI to the local containerized postgres instancedb_cli:

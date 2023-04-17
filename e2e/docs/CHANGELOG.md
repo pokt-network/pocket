@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.3] - 2023-04-14
+
+- Changed validator DNS names to match new naming convention
+- Changed `RPC_HOST` default value to `pocket-validators` which randomly resolves to one of the validators
+
 ## [0.0.0.2] - 2023-04-10
 
 Documentation updates
@@ -23,4 +28,4 @@ Adds Stake, Unstake, & Send Tests [#653](https://github.com/pokt-network/pocket/
 
 Hello Changelog
 
-<!-- GITHUB_WIKI: changelog/build -->
+<!-- GITHUB_WIKI: changelog/e2e -->

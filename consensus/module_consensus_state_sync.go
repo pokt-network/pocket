@@ -31,7 +31,7 @@ func (m *consensusModule) GetNodeAddress() string {
 	return m.nodeAddress
 }
 
-// commitReceivedBlocks commits the blocks received from the blocksReceived channel
+// blockApplicationLoop commits the blocks received from the blocksReceived channel
 // it runs as a background process in consensus module
 // listens on the blocksReceived channel, verifies and commits the received block
 func (m *consensusModule) blockApplicationLoop() {

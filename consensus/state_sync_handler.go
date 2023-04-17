@@ -38,7 +38,8 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 	case *typesCons.StateSyncMessage_MetadataReq:
 		m.logger.Info().Str("proto_type", "MetadataRequest").Msg("Handling StateSyncMessage MetadataReq")
 		if !m.serverModeEnabled {
-			return fmt.Errorf("server module is not enabled")
+			m.logger.Warn().Msg("Node's server module is not enabled")
+			return nil
 		}
 		go m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
 		return nil
@@ -49,7 +50,8 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 	case *typesCons.StateSyncMessage_GetBlockReq:
 		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage GetBlockRequest")
 		if !m.serverModeEnabled {
-			return fmt.Errorf("server module is not enabled")
+			m.logger.Warn().Msg("Node's server module is not enabled")
+			return nil
 		}
 		go m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
 		return nil

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.51] - 2023-04-13
+
+- Consolidate all the `TxResult` protobufs and interfaces into a common protobuf located in `shared/core/types`
+
 ## [0.0.0.50] - 2023-04-10
 
 - Added `modules.ModuleFactoryWithOptions` interface
