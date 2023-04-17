@@ -13,6 +13,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
+	"k8s.io/client-go/rest"
 
 	"github.com/cucumber/godog"
 	"k8s.io/client-go/kubernetes"
@@ -207,11 +208,27 @@ func getClientset() (*kubernetes.Clientset, error) {
 	kubeConfigPath := filepath.Join(userHomeDir, ".kube", "config")
 	kubeConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build kubeconfig: %w", err)
+		logger.Info().Msgf("no default kubeconfig at %s; attempting to load InClusterConfig", kubeConfigPath)
+		// try getting an incluser-config because home dir failed
+		config := inClusterConfig()
+		clientset, err := kubernetes.NewForConfig(config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get clientset from config: %w", err)
+		}
+		return clientset, nil
 	}
+	logger.Info().Msgf("e2e tests loaded default kubeconfig located at %s", kubeConfigPath)
 	clientset, err := kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get clientset from config: %w", err)
 	}
 	return clientset, nil
+}
+
+func inClusterConfig() *rest.Config {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		logger.Fatal().AnErr("inClusterConfig", err)
+	}
+	return config
 }

@@ -7,6 +7,7 @@
   - [Build Tags](#build-tags)
   - [Issue templates](#issue-templates)
 - [Implementation](#implementation)
+- [DevNet Integration](#devnet-integration)
 
 > tl; dr - `make localnet_up` and then `make test_e2e`
 
@@ -67,3 +68,9 @@ flowchart TD
         Runner[E2E Test Runner]
     end
 ```
+
+## DevNet Integration
+
+If a PR is labeled with `e2e-devnet-test` then ArgoCD creates an ephemeral test environment from that PR's copy of the code and then runs the E2E test suite on the validators in that environment.
+
+The results are communicated back to Github by .... // TODO IN THIS COMMIT.
