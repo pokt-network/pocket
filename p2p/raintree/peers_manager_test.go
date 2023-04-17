@@ -3,7 +3,6 @@ package raintree
 import (
 	"encoding/hex"
 	"fmt"
-	"net"
 	"net/url"
 	"strings"
 	"testing"
@@ -14,6 +13,7 @@ import (
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/pokt-network/pocket/internal/testutil"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -340,22 +340,6 @@ func mockAlphabetValidatorServiceURLsDNS(t *testing.T) (done func()) {
 			A: []string{fmt.Sprintf("10.0.0.%d", i+1)},
 		}
 	}
-	return prepareDNSMock(zones)
-}
 
-// TECHDEBT(#609): de-duplicate / refactor `prepaand reDNSMock` & `noopLogger`.
-func prepareDNSMock(zones map[string]mockdns.Zone) (done func()) {
-	srv, _ := mockdns.NewServerWithLogger(zones, noopLogger{}, false)
-	srv.PatchNet(net.DefaultResolver)
-	return func() {
-		_ = srv.Close()
-		mockdns.UnpatchNet(net.DefaultResolver)
-	}
-}
-
-// noopLogger implements go-mockdns's `mockdns.Logger` interface.
-type noopLogger struct{}
-
-func (nl noopLogger) Printf(format string, args ...interface{}) {
-	// noop
+	return testutil.PrepareDNSMock(zones)
 }
