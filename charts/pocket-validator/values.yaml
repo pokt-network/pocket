@@ -92,6 +92,7 @@ config:
     max_conn_idle_time: 1m
     health_check_period: 30s
   p2p:
+    hostname: ""
     port: 42069
     use_rain_tree: true
     is_empty_connection_type: false
