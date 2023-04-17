@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.42] - 2023-04-14
+## [0.0.0.42] - 2023-04-17
 
 - Added a test which asserts that transport encryption is required (i.e. unencrypted connections are refused)
 
-## [0.0.0.41] - 2023-04-14
+## [0.0.0.41] - 2023-04-17
 
 - Moved peer & url conversion utils to `p2p/utils` package
 - Refactor `getPeerIP` to use `net.DefaultResolver` for easier testing
