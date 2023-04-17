@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.42] - 2023-04-17
+## [0.0.0.43] - 2023-04-17
 
 - Add test to exercise `sortedPeersView#Add()` and `#Remove()`
 - Fix raintree add/remove index
+
+## [0.0.0.42] - 2023-04-17
+
+- Added a test which asserts that transport encryption is required (i.e. unencrypted connections are refused)
 
 ## [0.0.0.41] - 2023-04-17
 
