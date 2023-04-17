@@ -26,9 +26,8 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- if .Values.persistence.storageClass }}
-  storageClass: {{ .Values.persistence.storageClass | quote }}
+  storageClassName: {{ .Values.persistence.storageClass | quote }}
   {{ else }}
-  storageClass: ""
+  storageClassName: ""
   {{- end }}
-  persistentVolumeReclaimPolicy: {{ .Values.persistence.reclaimPolicy | quote }}
 {{- end -}}
