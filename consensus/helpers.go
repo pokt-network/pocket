@@ -230,7 +230,6 @@ func (m *consensusModule) isReplica() bool {
 
 func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error {
 	loggingFields := hotstuffMsgToLoggingFields(msg)
-	m.logger.Info().Fields(loggingFields).Msg("About to elect the next leader")
 
 	m.leaderId = nil
 	leaderId, err := m.leaderElectionMod.ElectNextLeader(msg)
