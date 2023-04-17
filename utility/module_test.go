@@ -49,10 +49,11 @@ func prepareEnvironment(
 	numServicers,
 	numApplications,
 	numFisherman int,
+	genesisOpts ...test_artifacts.GenesisOption,
 ) (*runtime.Manager, modules.UtilityModule, modules.PersistenceModule) {
 	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
 
-	runtimeCfg := newTestRuntimeConfig(numValidators, numServicers, numApplications, numFisherman)
+	runtimeCfg := newTestRuntimeConfig(numValidators, numServicers, numApplications, numFisherman, genesisOpts...)
 	bus, err := runtime.CreateBus(runtimeCfg)
 	require.NoError(t, err)
 
@@ -77,6 +78,7 @@ func newTestRuntimeConfig(
 	numServicers,
 	numApplications,
 	numFisherman int,
+	genesisOpts ...test_artifacts.GenesisOption,
 ) *runtime.Manager {
 	cfg := &configs.Config{
 		Utility: &configs.UtilityConfig{
@@ -101,6 +103,7 @@ func newTestRuntimeConfig(
 		numServicers,
 		numApplications,
 		numFisherman,
+		genesisOpts...,
 	)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
 	return runtimeCfg

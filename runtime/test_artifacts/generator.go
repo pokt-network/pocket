@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
@@ -19,10 +20,10 @@ type GenesisOption func(*genesis.GenesisState)
 
 // IMPROVE: Generate a proper genesis suite in the future.
 func NewGenesisState(numValidators, numServicers, numApplications, numFisherman int, genesisOpts ...GenesisOption) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
-	applications, appPrivateKeys := newActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications)
-	validators, validatorPrivateKeys := newActors(coreTypes.ActorType_ACTOR_TYPE_VAL, numValidators)
-	servicers, servicerPrivateKeys := newActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicers)
-	fishermen, fishPrivateKeys := newActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFisherman)
+	applications, appPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications, DefaultChains)
+	validators, validatorPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_VAL, numValidators, nil)
+	servicers, servicerPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicers, DefaultChains)
+	fishermen, fishPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFisherman, DefaultChains)
 
 	allActorsKeys := append(append(append(validatorPrivateKeys, servicerPrivateKeys...), fishPrivateKeys...), appPrivateKeys...)
 	allActorAccounts := newAccountsWithKeys(allActorsKeys)
@@ -126,11 +127,12 @@ func newAccounts(numActors int) (accounts []*coreTypes.Account) {
 	return accounts
 }
 
-// TECHDEBT: Current implementation of `newActors` will result in non-unique ServiceURLs if called
+// TECHDEBT: Current implementation of `NewActors` will result in non-unique ServiceURLs if called
 // more than once.
-func newActors(actorType coreTypes.ActorType, numActors int) (actors []*coreTypes.Actor, privateKeys []string) {
-	chains := DefaultChains
+func NewActors(actorType coreTypes.ActorType, numActors int, chains []string) (actors []*coreTypes.Actor, privateKeys []string) {
+	// If the actor type is a validator, the chains must be nil since they are chain agnostic
 	if actorType == coreTypes.ActorType_ACTOR_TYPE_VAL {
+		logger.Global.Warn().Msgf("validator actors should not have chains but a list was provided: %v", chains)
 		chains = nil
 	}
 	for i := 0; i < numActors; i++ {

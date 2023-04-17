@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"crypto/sha256"
-	"fmt"
 	"runtime/debug"
 
 	"github.com/pokt-network/pocket/persistence/types"
@@ -23,7 +22,6 @@ var nonActorClearFunctions = []func() string{
 }
 
 func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMessage) error {
-	fmt.Println("HERE")
 	switch debugMessage.Action {
 	case messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		m.showLatestBlockInStore(debugMessage)
