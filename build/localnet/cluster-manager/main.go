@@ -66,11 +66,7 @@ func main() {
 			continue
 		}
 
-		// logger.Info().Str("validator", service.Name).Msg("Validator event")
-		// logger.Info().Str("validatorKeysMap", string(validatorKeysMap)).Msg("Validator event")
-
 		validatorId := extractValidatorId(service.Name)
-		logger.Info().Str("validator", service.Name).Str("validatorId", validatorId).Msg("Validator event")
 		privateKey := getPrivateKey(validatorKeysMap, validatorId)
 
 		switch event.Type {
