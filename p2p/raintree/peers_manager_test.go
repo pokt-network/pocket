@@ -127,6 +127,7 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 	ctrl := gomock.NewController(gomock.TestReporter(b))
 	pubKey, err := cryptoPocket.GeneratePublicKey()
 	require.NoError(b, err)
+
 	testCases := []ExpectedRainTreeNetworkConfig{
 		// Small
 		{9, 2},
