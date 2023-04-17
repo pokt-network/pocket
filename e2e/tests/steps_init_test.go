@@ -34,8 +34,8 @@ var (
 
 const (
 	// defines the host & port scheme that LocalNet uses for naming validators.
-	// e.g. v1-validator-001 thru v1-validator-999
-	validatorServiceURLTmpl = "v1-validator%s:%d"
+	// e.g. validator-001 thru validator-999
+	validatorServiceURLTmpl = "validator-%s-pocket-validator:%d"
 	// validatorA maps to suffix ID 001 and is also used by the cluster-manager
 	// though it has no special permissions.
 	validatorA = "001"
@@ -122,7 +122,7 @@ func theUserShouldBeAbleToUnstakeTheirValidator() error {
 	return unstakeValidator()
 }
 
-// sends amount from v1-validator-001 to v1-validator-002
+// sends amount from validator-001 to validator-002
 func theUserSendsToAnotherAddress(amount int) error {
 	privateKey := getPrivateKey(validatorKeys, validatorA)
 	valB := getPrivateKey(validatorKeys, validatorB)
