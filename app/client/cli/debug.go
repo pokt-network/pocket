@@ -6,20 +6,20 @@ import (
 	"os"
 
 	"github.com/manifoldco/promptui"
-	"github.com/pokt-network/pocket/libp2p"
+	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	rpcABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
-	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // TECHDEBT: Lowercase variables / constants that do not need to be exported.
@@ -105,11 +105,15 @@ func NewDebugCommand() *cobra.Command {
 
 			setValueInCLIContext(cmd, busCLICtxKey, bus)
 
-			// TECHDEBT: simplify after P2P module consolidation.
-			var err error
-			p2pMod, err = getP2PModule(runtimeMgr)
+			mod, err := p2p.Create(bus)
 			if err != nil {
 				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
+			}
+
+			var ok bool
+			p2pMod, ok = mod.(modules.P2PModule)
+			if !ok {
+				logger.Global.Fatal().Msgf("unexpected P2P module type: %T", mod)
 			}
 
 			if err := p2pMod.Start(); err != nil {
@@ -265,7 +269,7 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 }
 
 // fetchPeerstore retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
-func fetchPeerstore(cmd *cobra.Command) (sharedP2P.Peerstore, error) {
+func fetchPeerstore(cmd *cobra.Command) (typesP2P.Peerstore, error) {
 	bus, ok := getValueFromCLIContext[modules.Bus](cmd, busCLICtxKey)
 	if !ok || bus == nil {
 		return nil, errors.New("retrieving bus from CLI context")
@@ -291,22 +295,6 @@ func fetchPeerstore(cmd *cobra.Command) (sharedP2P.Peerstore, error) {
 		return nil, errors.New("sending consensus new height event")
 	}
 	return pstore, nil
-}
-
-func getP2PModule(runtimeMgr *runtime.Manager) (p2pModule modules.P2PModule, err error) {
-	bus := runtimeMgr.GetBus()
-
-	var mod modules.Module
-	if runtimeMgr.GetConfig().UseLibP2P {
-		mod, err = libp2p.Create(bus)
-	} else {
-		mod, err = p2p.Create(bus)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return mod.(modules.P2PModule), nil
 }
 
 // sendConsensusNewHeightEventToP2PModule mimicks the consensus module sending a ConsensusNewHeightEvent to the p2p module

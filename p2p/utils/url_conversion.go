@@ -1,6 +1,7 @@
-package network
+package utils
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 	"math/big"
@@ -137,17 +138,16 @@ func getPeerIP(hostname string) (net.IP, error) {
 		return peerIP, nil
 	}
 
-	// CONSIDER: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
+	// CONSIDERATION: using a `/dns<4 or 6>/<hostname>` multiaddr instead of resolving here.
 	// I attempted using `/dns4/.../tcp/...` and go this error:
 	// > failed to listen on any addresses: [can only dial TCP over IPv4 or IPv6]
-	addrs, err := net.LookupHost(hostname)
+	// TECHDEBT(#595): receive `ctx` from caller.
+	addrs, err := net.DefaultResolver.LookupHost(context.TODO(), hostname)
 	if err != nil {
 		return nil, newResolvePeerIPErr(hostname, err)
 	}
 
-	// CONSIDER: which address(es) should we use when multiple
-	// are provided in a DNS response?
-	// CONSIDER: preferring IPv6 responses when resolving DNS.
+	// CONSIDERATION: preferring IPv6 responses when resolving DNS.
 	// Return first address which is a parsable IP address.
 	var (
 		validIPs    []net.IP
@@ -191,6 +191,7 @@ func getPeerIP(hostname string) (net.IP, error) {
 
 // stringLogArrayMarshaler implements the `zerolog.LogArrayMarshaler` interface
 // to marshal an array of strings for use with zerolog.
+// TECHDEBT(#609): move & de-duplicate
 type stringLogArrayMarshaler struct {
 	strs []string
 }
