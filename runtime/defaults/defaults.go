@@ -27,7 +27,7 @@ const (
 	DefaultBusBufferSize            = 100
 	DefaultRPCHost                  = "localhost"
 	Validator1EndpointDockerCompose = "node1.consensus"
-	Validator1EndpointK8S           = "v1-validator001"
+	Validator1EndpointK8S           = "validator-001-pocket-validator"
 )
 
 var (

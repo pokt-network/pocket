@@ -33,7 +33,7 @@ var (
 )
 
 func init() {
-	rpcURL = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "v1-validator001"), defaults.DefaultRPCPort)
+	rpcURL = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "validator-001-pocket-validator"), defaults.DefaultRPCPort)
 }
 
 func main() {
@@ -66,7 +66,11 @@ func main() {
 			continue
 		}
 
+		// logger.Info().Str("validator", service.Name).Msg("Validator event")
+		// logger.Info().Str("validatorKeysMap", string(validatorKeysMap)).Msg("Validator event")
+
 		validatorId := extractValidatorId(service.Name)
+		logger.Info().Str("validator", service.Name).Str("validatorId", validatorId).Msg("Validator event")
 		privateKey := getPrivateKey(validatorKeysMap, validatorId)
 
 		switch event.Type {
@@ -77,7 +81,7 @@ func main() {
 				continue
 			}
 
-			validatorServiceUrl := fmt.Sprintf("v1-validator%s:%d", validatorId, defaults.DefaultP2PPort)
+			validatorServiceUrl := fmt.Sprintf("validator-%s-pocket-validator:%d", validatorId, defaults.DefaultP2PPort)
 			if err := stakeValidator(privateKey, autoStakeAmount, autoStakeChains, validatorServiceUrl); err != nil {
 				logger.Err(err).Msg("Error staking validator")
 			}
