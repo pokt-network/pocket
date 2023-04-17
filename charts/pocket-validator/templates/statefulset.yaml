@@ -35,6 +35,10 @@ spec:
               "until nc -z $(POSTGRES_HOST) $(POSTGRES_PORT); do echo waiting for postgres...; sleep 2; done;",
             ]
           env:
+            - name: POCKET_P2P_HOSTNAME
+              valueFrom:
+                  fieldRef:
+                    fieldPath: status.podIP
             - name: POSTGRES_HOST
               value: {{ include "pocket-validator.postgresqlHost" . }}
             - name: POSTGRES_PORT

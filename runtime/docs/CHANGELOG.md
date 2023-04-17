@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.33] - 2023-04-17
+
+- Removed `runtime/configs.Config#UseLibp2p` field
+
 ## [0.0.0.32] - 2023-04-13
 
 - Add persistent txIndexerPaths to node configs and update tests
