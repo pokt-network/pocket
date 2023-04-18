@@ -1,10 +1,12 @@
 package utility
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -42,6 +44,70 @@ func TestSession_GetSession_SingleFishermanSingleServicerBaseCase(t *testing.T) 
 	require.Equal(t, servicer.Address, session.Servicers[0].Address)
 	require.Len(t, session.Fishermen, numFishermen)
 	require.Equal(t, fish.Address, session.Fishermen[0].Address)
+}
+
+func TestSession_GetSession_InvalidApplication(t *testing.T) {
+	runtimeCfg, utilityMod, _ := prepareEnvironment(t, 5, 1, 1, 1)
+
+	// Verify there's only 1 app
+	require.Len(t, runtimeCfg.GetGenesis().Applications, 1)
+	app := runtimeCfg.GetGenesis().Applications[0]
+
+	// Create a new app address
+	pk, _ := crypto.GeneratePrivateKey()
+	addr := pk.Address().String()
+
+	// Verify that the one app in the genesis is not the one we just generated
+	require.NotEqual(t, app.Address, addr)
+
+	// Expect an error
+	_, err := utilityMod.GetSession(addr, 1, test_artifacts.DefaultChains[0], "unused_geo")
+	require.Error(t, err)
+}
+
+func TestSession_GetSession_InvalidFutureSession(t *testing.T) {
+	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, 1, 1, 1)
+
+	relayChain := test_artifacts.DefaultChains[0]
+	geoZone := "unused_geo"
+	app := runtimeCfg.GetGenesis().Applications[0]
+
+	latestCommitted := int64(0)
+
+	// Successfully get a session at height=1
+	session, err := utilityMod.GetSession(app.Address, latestCommitted+1, relayChain, geoZone)
+	require.NoError(t, err)
+	require.Equal(t, latestCommitted+1, session.Height)
+
+	// Expect an error for a few heights into the future
+	for height := latestCommitted + 2; height < 10; height++ {
+		_, err := utilityMod.GetSession(app.Address, height, relayChain, geoZone)
+		require.Error(t, err)
+	}
+
+	// Commit new blocks for all the heights that failed above
+	for ; latestCommitted < 10; latestCommitted++ {
+		writeCtx, err := persistenceMod.NewRWContext(latestCommitted + 1)
+		require.NoError(t, err)
+		err = writeCtx.Commit([]byte(fmt.Sprintf("proposer_height_%d", latestCommitted)), []byte(fmt.Sprintf("quorum_cert_height_%d", latestCommitted)))
+		require.NoError(t, err)
+		writeCtx.Release()
+	}
+
+	// Expect no errors since those blocks exist now
+	// Note that we can get the session for latest_committed + 1
+	for height := int64(1); height <= latestCommitted+1; height++ {
+		_, err := utilityMod.GetSession(app.Address, height, relayChain, geoZone)
+		require.NoError(t, err)
+	}
+
+	// Verify that latestCommitted + 2 fails
+	_, err = utilityMod.GetSession(app.Address, latestCommitted+2, relayChain, geoZone)
+	require.Error(t, err)
+}
+
+func TestSession_GetSession_ApplicationUnbonds(t *testing.T) {
+	// TODO: What if an Application unbonds (unstaking period elapses) mid session?
 }
 
 func TestSession_GetSession_ServicersAndFishermenCounts_TotalAvailability(t *testing.T) {
@@ -166,7 +232,7 @@ func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *tes
 			wantFishermanCount: numFishermenPerSession / 2,
 		},
 		{
-			name:               "chain3 has no servicers and fishermen",
+			name:               "chn3 has no servicers and fishermen",
 			chain:              "chn3",
 			wantServicerCount:  0,
 			wantFishermanCount: 0,
@@ -259,71 +325,38 @@ func TestSession_GetSession_SessionHeightAndNumber_StaticBlocksPerSession(t *tes
 	}
 }
 
-// TODO: Different blocks per session
-// What if we change the num blocks -> gets complex
-// -> Need to enforce waiting until the end of the current sessions
+func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
+	// Prepare an environment with a lot of servicers and fishermen
+	// numServicers := 100
+	// numFishermen := 100
+	// runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, numServicers, 1, numFishermen)
 
-// Not enough servicers in region
-// Not enough fisherman in region
-
-// func TestSession_NewSession_BaseCase(t *testing.T) {
-
-// dispatching session in the future
-// dispatching session in the past
-
-// validate application dispatch
-
-// invalid app
-// unstaked app
-// non-existent app
-
-// invalid chain
-// unused chain
-// non-existent chain
-
-// invalid geozone
-// unused geozone
-// non-existent geozone
-
-// generate session id
-
-func TestSession_ServicersAndFishermanRandomness(t *testing.T) {
 	// validate entropy and randomness
 	// different height
 	// different chain
 }
 
-func TestSession_SessionHeightAndNumber_DynamicBlocksPerSession(t *testing.T) {
-
+func TestSession_GetSession_ServicersAndFishermenCounts_GeoZoneAvailability(t *testing.T) {
+	// TODO: Once GeoZones are implemented, the tests need to be added as well
+	// Cases: Invalid, unused, non-existent, empty, insufficiently complete, etc...
 }
 
-func TestSession_MatchNewSession(t *testing.T) {
+func TestSession_GetSession_ActorReplacement(t *testing.T) {
+	// TODO: Since sessions last multiple blocks, we need to design what happens when an actor is (un)jailed, (un)stakes, (un)bonds, (un)pauses
+	// mid session. There are open design questions that need to be made.
 }
 
-func TestSession_RelayChainVariability(t *testing.T) {
-	// invalid relay chain
-	// valid relay chain
-
+func TestSession_GetSession_SessionHeightAndNumber_ModifiedBlocksPerSession(t *testing.T) {
+	// RESEARCH: Need to design what happens (actor replacement, session numbers, etc...) when the number
+	// of blocks per session changes mid session. For example, all existing sessions could go to completion
+	// until the new parameter takes effect. There are open design questions that need to be made.
 }
 
-func TestSession_ActorReplacement(t *testing.T) {
-	// What if a servicers/fisherman paused mid session?
-	// -> Need to replace them
+// TODO: Different blocks per session
+// What if we change the num blocks -> gets complex
+// -> Need to enforce waiting until the end of the current sessions
 
-	// What if a new servicers/fisherman staked mid session?
-	// -> They could potentially get selected
-}
+// func TestSession_NewSession_BaseCase(t *testing.T) {
 
-func TestSession_InvalidApplication(t *testing.T) {
-	// TODO: What if the application pauses mid session?
-	// TODO: What if the application has no stake?
-}
-
-// Potential: Changing num blocks per session must wait until current session ends -> easily fixes things
-// New servicers / fisherman -> need to wait until current session ends -> easily fixes things
-
-// Configurable number of geo zones per session
-// above max
-// below max
-// at max
-// application is not staked for relay chain
+// dispatching session in the future
+// dispatching session in the past
