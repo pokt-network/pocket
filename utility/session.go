@@ -13,7 +13,8 @@ import (
 	"github.com/pokt-network/pocket/utility/types"
 )
 
-// TODO: When implementing please review if block height tolerance (+,-1) is included in the session protocol: pokt-network/pocket-core#1464 CC @Olshansk
+// OPTIMIZE: Postgres uses `Twisted Mersenne Twister (TMT)` randomness algorithm. We could potentially look into changing everything a single
+// SQL query but need to make sure that it can be implemented in a platform agnostic way.
 
 type sessionHydrator struct {
 	logger modules.Logger
@@ -155,7 +156,7 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 			return fmt.Errorf("hydrateSessionServicers should not have encountered a paused or unstaking servicer: %s", servicer.Address)
 		}
 
-		// TODO_IN_THIS_COMMIT: if servicer.GeoZone includes session.GeoZone
+		// TODO(#XXX): Add GeoZone filtering
 
 		// OPTIMIZE: If this was a map, we could have avoided the loop over chains
 		var chain string
@@ -222,7 +223,9 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 	return nil
 }
 
-// TODO_IN_THIS_COMMIT: Deterministic randomness algorithm
+// pseudoRandomSelection returns a random subset of the candidates.
+// TECHDEBT: We are using a `Go` native implementation for a pseudo-random number generator. In order
+// for it to be language agnostic, a general purpose algorithm needs ot be used.
 func pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, sessionId []byte) []*coreTypes.Actor {
 	// If there aren't enough candidates, return all of them
 	if numTarget > len(candidates) {
@@ -231,7 +234,7 @@ func pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, session
 	}
 
 	// Take the first 8 bytes of sessionId to use as the seed
-	seed := int64(binary.BigEndian.Uint64(sessionId[:8]))
+	seed := int64(binary.BigEndian.Uint64(crypto.SHA3Hash(sessionId)[:8]))
 
 	// Retrieve the indices for the candidates
 	actors := make([]*coreTypes.Actor, 0)
@@ -243,6 +246,9 @@ func pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, session
 	return actors
 }
 
+// uniqueRandomIndices returns a map of `numIndices` unique random numbers less than `maxIndex`
+// seeded by `seed`.
+// NB: A map pointing to empty structs is used to simulate set behaviour.
 func uniqueRandomIndices(seed, maxIndex, numIndices int64) map[int64]struct{} {
 	// This should never happen
 	if numIndices > maxIndex {

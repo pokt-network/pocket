@@ -9,7 +9,9 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/utility/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gonum.org/v1/gonum/stat/combin"
 )
 
 // TECHDEBT: Geozones are not current implemented, used or tested
@@ -327,13 +329,120 @@ func TestSession_GetSession_SessionHeightAndNumber_StaticBlocksPerSession(t *tes
 
 func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 	// Prepare an environment with a lot of servicers and fishermen
-	// numServicers := 100
-	// numFishermen := 100
-	// runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, numServicers, 1, numFishermen)
+	numServicers := 1000
+	numFishermen := 1000 // make them equal for simplicity
+	numServicersPerSession := 10
+	numFishermenPerSession := 10 // make them equal for simplicity
 
-	// validate entropy and randomness
-	// different height
-	// different chain
+	// Determine probability of overlap using combinatorics
+	numChoices := combin.GeneralizedBinomial(float64(numServicers), float64(numServicersPerSession))          // numServicers C numServicersPerSession
+	numChoicesRemaining := combin.GeneralizedBinomial(float64(numServicers), float64(numServicersPerSession)) // (numServicers - numServicersPerSession) C numServicersPerSession
+	probabilityOfOverlap := (numChoices - numChoicesRemaining) / numChoices
+
+	numApplications := 3
+	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, numServicers, numApplications, numFishermen)
+
+	// Set the number of servicers and fishermen per session
+	writeCtx, err := persistenceMod.NewRWContext(1)
+	require.NoError(t, err)
+	err = writeCtx.SetParam(types.ServicersPerSessionParamName, numServicersPerSession)
+	require.NoError(t, err)
+	err = writeCtx.SetParam(types.FishermanPerSessionParamName, numFishermenPerSession)
+	require.NoError(t, err)
+	err = writeCtx.Commit([]byte(fmt.Sprintf("proposer_height_%d", 1)), []byte(fmt.Sprintf("quorum_cert_height_%d", 1)))
+	require.NoError(t, err)
+	writeCtx.Release()
+
+	// Keep the relay chain and geoZone static, but vary the app and height to verify that the servicers and fishermen vary
+	relayChain := test_artifacts.DefaultChains[0]
+	geoZone := "unused_geo"
+
+	// Sanity check we have 3 apps
+	require.Len(t, runtimeCfg.GetGenesis().Applications, numApplications)
+	app1 := runtimeCfg.GetGenesis().Applications[0]
+	app2 := runtimeCfg.GetGenesis().Applications[1]
+	app3 := runtimeCfg.GetGenesis().Applications[2]
+
+	var app1PrevServicers, app2PrevServicers, app3PrevServicers []*coreTypes.Actor
+	var app1PrevFishermen, app2PrevFishermen, app3PrevFishermen []*coreTypes.Actor
+
+	// Commit new blocks for all the heights that failed above
+	for height := int64(2); height < 10; height++ {
+		session1, err := utilityMod.GetSession(app1.Address, height, relayChain, geoZone)
+		require.NoError(t, err)
+		session2, err := utilityMod.GetSession(app2.Address, height, relayChain, geoZone)
+		require.NoError(t, err)
+		session3, err := utilityMod.GetSession(app3.Address, height, relayChain, geoZone)
+		require.NoError(t, err)
+
+		// All the sessions have the same number of servicers
+		require.Equal(t, len(session1.Servicers), numServicersPerSession)
+		require.Equal(t, len(session1.Servicers), len(session2.Servicers))
+		require.Equal(t, len(session1.Servicers), len(session3.Servicers))
+
+		// All the sessions have the same number of fishermen
+		require.Equal(t, len(session1.Fishermen), numFishermenPerSession)
+		require.Equal(t, len(session1.Fishermen), len(session2.Fishermen))
+		require.Equal(t, len(session1.Fishermen), len(session3.Fishermen))
+
+		// Assert different services between apps
+		assertActorsDifference(t, session1.Servicers, session2.Servicers, probabilityOfOverlap)
+		assertActorsDifference(t, session1.Servicers, session3.Servicers, probabilityOfOverlap)
+
+		// Assert different fishermen between apps
+		assertActorsDifference(t, session1.Fishermen, session2.Fishermen, probabilityOfOverlap)
+		assertActorsDifference(t, session1.Fishermen, session3.Fishermen, probabilityOfOverlap)
+
+		// Assert different servicers between heights for the same app
+		assertActorsDifference(t, app1PrevServicers, session1.Servicers, probabilityOfOverlap)
+		assertActorsDifference(t, app2PrevServicers, session2.Servicers, probabilityOfOverlap)
+		assertActorsDifference(t, app3PrevServicers, session3.Servicers, probabilityOfOverlap)
+
+		// Assert different fishermen between heights for the same app
+		assertActorsDifference(t, app1PrevFishermen, session1.Fishermen, probabilityOfOverlap)
+		assertActorsDifference(t, app2PrevFishermen, session2.Fishermen, probabilityOfOverlap)
+		assertActorsDifference(t, app3PrevFishermen, session3.Fishermen, probabilityOfOverlap)
+
+		app1PrevServicers = session1.Servicers
+		app2PrevServicers = session2.Servicers
+		app3PrevServicers = session3.Servicers
+		app1PrevFishermen = session1.Fishermen
+		app2PrevFishermen = session2.Fishermen
+		app3PrevFishermen = session3.Fishermen
+
+		// Advance block height
+		writeCtx, err := persistenceMod.NewRWContext(height)
+		require.NoError(t, err)
+		err = writeCtx.Commit([]byte(fmt.Sprintf("proposer_height_%d", height)), []byte(fmt.Sprintf("quorum_cert_height_%d", height)))
+		require.NoError(t, err)
+		writeCtx.Release()
+
+	}
+	// different height -> different actors
+}
+
+func assertActorsDifference(t *testing.T, actors1, actors2 []*coreTypes.Actor, maxSimilarityThreshold float64) {
+	slice1 := actorsToAdds(actors1)
+	slice2 := actorsToAdds(actors2)
+	var commonCount int
+	for _, s1 := range slice1 {
+		for _, s2 := range slice2 {
+			if s1 == s2 {
+				commonCount++
+				break
+			}
+		}
+	}
+	maxCommonCount := int(maxSimilarityThreshold * float64(len(slice1)))
+	assert.LessOrEqual(t, commonCount, maxCommonCount, "Slices have more similarity than expected: %v vs max %v", slice1, slice2)
+}
+
+func actorsToAdds(actors []*coreTypes.Actor) []string {
+	addresses := make([]string, len(actors))
+	for i, actor := range actors {
+		addresses[i] = actor.Address
+	}
+	return addresses
 }
 
 func TestSession_GetSession_ServicersAndFishermenCounts_GeoZoneAvailability(t *testing.T) {
@@ -351,12 +460,3 @@ func TestSession_GetSession_SessionHeightAndNumber_ModifiedBlocksPerSession(t *t
 	// of blocks per session changes mid session. For example, all existing sessions could go to completion
 	// until the new parameter takes effect. There are open design questions that need to be made.
 }
-
-// TODO: Different blocks per session
-// What if we change the num blocks -> gets complex
-// -> Need to enforce waiting until the end of the current sessions
-
-// func TestSession_NewSession_BaseCase(t *testing.T) {
-
-// dispatching session in the future
-// dispatching session in the past
