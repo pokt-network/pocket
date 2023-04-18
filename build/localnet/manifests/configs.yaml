@@ -4124,7 +4124,7 @@ data:
         }
       ],
       "params": {
-        "blocks_per_session": 4,
+        "blocks_per_session": 1,
         "app_minimum_stake": "15000000000",
         "app_max_chains": 15,
         "app_session_tokens_multiplier": 100,

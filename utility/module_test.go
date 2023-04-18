@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 )
@@ -62,6 +63,13 @@ func prepareEnvironment(
 
 	testUtilityMod := newTestUtilityModule(bus)
 	testUtilityMod.Start()
+
+	// Reset to genesis
+	err = testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
+		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
+		Message: nil,
+	})
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		teardownDeterministicKeygen()

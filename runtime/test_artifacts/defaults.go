@@ -28,7 +28,7 @@ var (
 
 func DefaultParams() *genesis.Params {
 	return &genesis.Params{
-		BlocksPerSession:                      4,
+		BlocksPerSession:                      1,
 		AppMinimumStake:                       utils.BigIntToString(big.NewInt(15000000000)),
 		AppMaxChains:                          15,
 		AppSessionTokensMultiplier:            100,

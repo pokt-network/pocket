@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"math"
 	"math/rand"
 
 	"github.com/pokt-network/pocket/logger"
@@ -20,6 +21,9 @@ import (
 // sessionHydrator is an internal structure used to prepare a Session returned by `GetSession` below
 type sessionHydrator struct {
 	logger modules.Logger
+
+	// The height of the request for which the session is being hydrated
+	blockHeight int64
 
 	// The session being hydrated and returned
 	session *coreTypes.Session
@@ -46,9 +50,10 @@ func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geo
 	}
 
 	sessionHydrator := &sessionHydrator{
-		logger:  m.logger.With().Str("source", "sessionHydrator").Logger(),
-		session: session,
-		readCtx: readCtx,
+		logger:      m.logger.With().Str("source", "sessionHydrator").Logger(),
+		blockHeight: height,
+		session:     session,
+		readCtx:     readCtx,
 	}
 
 	if err := sessionHydrator.hydrateSessionHeight(height); err != nil {
@@ -101,7 +106,8 @@ func (s *sessionHydrator) hydrateSessionHeight(blockHeight int64) error {
 func (s *sessionHydrator) hydrateSessionId() error {
 	sessionHeightBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(sessionHeightBz, uint64(s.session.SessionHeight))
-	prevHash, err := s.readCtx.GetBlockHash(s.session.SessionHeight - 1)
+	prevHashHeight := int64(math.Max(float64(s.session.SessionHeight)-1, 0))
+	prevHash, err := s.readCtx.GetBlockHash(prevHashHeight)
 	if err != nil {
 		return err
 	}
@@ -125,15 +131,17 @@ func (s *sessionHydrator) hydrateSessionApplication(appAddr string) error {
 	return err
 }
 
-// Validate the the application can dispatch a session at the request geo-zone and for the request relay chain
+// Validate the the application can dispatch a session at the requested geo-zone and for the request relay chain
 func (s *sessionHydrator) validateApplicationDispatch() error {
+	// if s.session.Application.Chains {
 	// TECHDEBT: We can remove this decoding process once we use `strings` instead of `[]byte` for addresses
-	addr, err := hex.DecodeString(s.session.Application.Address)
-	if err != nil {
-		return err
-	}
-	s.session.Application, err = s.readCtx.GetActor(coreTypes.ActorType_ACTOR_TYPE_APP, addr, s.session.SessionHeight)
-	return err
+	// addr, err := hex.DecodeString(s.session.Application.Address)
+	// if err != nil {
+	// 	return err
+	// }
+	// s.session.Application, err = s.readCtx.GetActor(coreTypes.ActorType_ACTOR_TYPE_APP, addr, s.session.SessionHeight)
+	// return err
+	return nil
 }
 
 // uses the current 'world state' to determine the servicers in the session

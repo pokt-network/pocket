@@ -2,6 +2,7 @@ package utility
 
 import (
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
@@ -23,7 +24,7 @@ func TestSession_GetSession_SingleFishermanSingleServicerBaseCase(t *testing.T) 
 	geoZone := "unused_geo"
 	numFishermen := 1
 	numServicers := 1
-	expectedSessionId := "3545185ff1519bf7706ec8f828d16525830d3c0dcc2425c40db597ee6b67b8bc" // needs to be manually updated if business logic changes
+	expectedSessionId := "5acf559f1a3faf3bea7eb692fe51bc1e2e5fb687ede0a6daa7d42399da4aa82b" // needs to be manually updated if business logic changes
 
 	runtimeCfg, utilityMod, _ := prepareEnvironment(t, 5, numServicers, 1, numFishermen)
 
@@ -264,8 +265,8 @@ func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *tes
 		t.Run(tt.name, func(t *testing.T) {
 			session, err := utilityMod.GetSession(app.Address, 2, tt.chain, geoZone)
 			require.NoError(t, err)
-			require.Equal(t, tt.wantServicerCount, len(session.Servicers))
-			require.Equal(t, tt.wantFishermanCount, len(session.Fishermen))
+			require.Len(t, session.Servicers, tt.wantServicerCount)
+			require.Len(t, session.Fishermen, tt.wantFishermanCount)
 		})
 	}
 }
@@ -273,59 +274,69 @@ func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *tes
 func TestSession_GetSession_SessionHeightAndNumber_StaticBlocksPerSession(t *testing.T) {
 	_, _, persistenceMod := prepareEnvironment(t, 5, 1, 1, 1)
 
+	// Note that we are using an ephemeral write context at the genesis block (height=0).
+	// This cannot be committed but useful for the test.
 	writeCtx, err := persistenceMod.NewRWContext(0)
 	require.NoError(t, err)
 	defer writeCtx.Release()
 
 	s := &sessionHydrator{
 		session: &coreTypes.Session{},
+		readCtx: writeCtx,
 	}
 
 	tests := []struct {
-		name                string
-		numBlocksPerSession int64
-		haveBlockHeight     int64
-		wantSessionHeight   int64
-		wantSessionNumber   int64
+		name                   string
+		setNumBlocksPerSession int64
+		provideBlockHeight     int64
+		wantSessionHeight      int64
+		wantSessionNumber      int64
 	}{
 		{
-			name:                "block is at start of first session",
-			numBlocksPerSession: 5,
-			haveBlockHeight:     5,
-			wantSessionHeight:   5,
-			wantSessionNumber:   1,
+			name:                   "genesis block",
+			setNumBlocksPerSession: 5,
+			provideBlockHeight:     0,
+			wantSessionHeight:      0,
+			wantSessionNumber:      0,
 		},
 		{
-			name:                "block is right before start of first session",
-			numBlocksPerSession: 5,
-			haveBlockHeight:     4,
-			wantSessionHeight:   0,
-			wantSessionNumber:   0,
+			name:                   "block is at start of first session",
+			setNumBlocksPerSession: 5,
+			provideBlockHeight:     5,
+			wantSessionHeight:      5,
+			wantSessionNumber:      1,
 		},
 		{
-			name:                "block is right after start of first session",
-			numBlocksPerSession: 5,
-			haveBlockHeight:     6,
-			wantSessionHeight:   5,
-			wantSessionNumber:   1,
+			name:                   "block is right before start of first session",
+			setNumBlocksPerSession: 5,
+			provideBlockHeight:     4,
+			wantSessionHeight:      0,
+			wantSessionNumber:      0,
 		},
 		{
-			name:                "block is at start of second session",
-			numBlocksPerSession: 5,
-			haveBlockHeight:     10,
-			wantSessionHeight:   10,
-			wantSessionNumber:   2,
+			name:                   "block is right after start of first session",
+			setNumBlocksPerSession: 5,
+			provideBlockHeight:     6,
+			wantSessionHeight:      5,
+			wantSessionNumber:      1,
+		},
+		{
+			name:                   "block is at start of second session",
+			setNumBlocksPerSession: 5,
+			provideBlockHeight:     10,
+			wantSessionHeight:      10,
+			wantSessionNumber:      2,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := writeCtx.SetParam(types.BlocksPerSessionParamName, tt.numBlocksPerSession)
+			err := writeCtx.SetParam(types.BlocksPerSessionParamName, tt.setNumBlocksPerSession)
 			require.NoError(t, err)
 
-			err = s.hydrateSessionHeight(tt.haveBlockHeight)
+			err = s.hydrateSessionHeight(tt.provideBlockHeight)
 			require.NoError(t, err)
-			require.Equal(t, tt.numBlocksPerSession, s.session.NumSessionBlocks)
+			require.Equal(t, tt.setNumBlocksPerSession, s.session.NumSessionBlocks)
 			require.Equal(t, tt.wantSessionHeight, s.session.SessionHeight)
 			require.Equal(t, tt.wantSessionNumber, s.session.SessionNumber)
 		})
@@ -340,8 +351,8 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 	numFishermenPerSession := 10 // make them equal for simplicity
 
 	// Determine probability of overlap using combinatorics
-	numChoices := combin.GeneralizedBinomial(float64(numServicers), float64(numServicersPerSession))          // numServicers C numServicersPerSession
-	numChoicesRemaining := combin.GeneralizedBinomial(float64(numServicers), float64(numServicersPerSession)) // (numServicers - numServicersPerSession) C numServicersPerSession
+	numChoices := combin.GeneralizedBinomial(float64(numServicers), float64(numServicersPerSession))                                 // numServicers C numServicersPerSession
+	numChoicesRemaining := combin.GeneralizedBinomial(float64(numServicers-numServicersPerSession), float64(numServicersPerSession)) // (numServicers - numServicersPerSession) C numServicersPerSession
 	probabilityOfOverlap := (numChoices - numChoicesRemaining) / numChoices
 
 	numApplications := 3
@@ -381,12 +392,12 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 		require.NoError(t, err)
 
 		// All the sessions have the same number of servicers
-		require.Equal(t, len(session1.Servicers), numServicersPerSession)
+		require.Len(t, session1.Servicers, numServicersPerSession)
 		require.Equal(t, len(session1.Servicers), len(session2.Servicers))
 		require.Equal(t, len(session1.Servicers), len(session3.Servicers))
 
 		// All the sessions have the same number of fishermen
-		require.Equal(t, len(session1.Fishermen), numFishermenPerSession)
+		require.Len(t, session1.Fishermen, numFishermenPerSession)
 		require.Equal(t, len(session1.Fishermen), len(session2.Fishermen))
 		require.Equal(t, len(session1.Fishermen), len(session3.Fishermen))
 
@@ -427,7 +438,7 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 func assertActorsDifference(t *testing.T, actors1, actors2 []*coreTypes.Actor, maxSimilarityThreshold float64) {
 	slice1 := actorsToAdds(actors1)
 	slice2 := actorsToAdds(actors2)
-	var commonCount int
+	var commonCount float64
 	for _, s1 := range slice1 {
 		for _, s2 := range slice2 {
 			if s1 == s2 {
@@ -436,7 +447,7 @@ func assertActorsDifference(t *testing.T, actors1, actors2 []*coreTypes.Actor, m
 			}
 		}
 	}
-	maxCommonCount := int(maxSimilarityThreshold * float64(len(slice1)))
+	maxCommonCount := math.Round(maxSimilarityThreshold * float64(len(slice1)))
 	assert.LessOrEqual(t, commonCount, maxCommonCount, "Slices have more similarity than expected: %v vs max %v", slice1, slice2)
 }
 
