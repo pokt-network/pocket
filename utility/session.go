@@ -13,22 +13,25 @@ import (
 	"github.com/pokt-network/pocket/utility/types"
 )
 
-// OPTIMIZE: Postgres uses `Twisted Mersenne Twister (TMT)` randomness algorithm. We could potentially look into changing everything a single
-// SQL query but need to make sure that it can be implemented in a platform agnostic way.
+// OPTIMIZE: Postgres uses a `Twisted Mersenne Twister (TMT)` randomness algorithm.
+// We could potentially look into changing everything a single SQL query but need to
+// make sure that it can be implemented in a platform agnostic way.
 
+// sessionHydrator is an internal structure used to prepare a Session returned by `GetSession` below
 type sessionHydrator struct {
 	logger modules.Logger
 
-	// the session being hydrated and returned
+	// The session being hydrated and returned
 	session *coreTypes.Session
 
-	// A helper that keeps a hex decoded copy of `session.Id`
-	sessionIdBz []byte
-
-	// Caches the read context to avoid opening too many during session hydration
+	// Caches a readCtx to avoid draining to many connections to the database
 	readCtx modules.PersistenceReadContext
+
+	// A redundant helper that keeps a hex decoded copy of `session.Id`
+	sessionIdBz []byte
 }
 
+// GetSession is an implementation of the exposed `UtilityModule.GetSession` function
 func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geoZone string) (*coreTypes.Session, error) {
 	persistenceModule := m.GetBus().GetPersistenceModule()
 	readCtx, err := persistenceModule.NewReadContext(height)
@@ -38,7 +41,6 @@ func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geo
 	defer readCtx.Release()
 
 	session := &coreTypes.Session{
-		Height:     height,
 		RelayChain: relayChain,
 		GeoZone:    geoZone,
 	}
@@ -47,6 +49,10 @@ func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geo
 		logger:  m.logger.With().Str("source", "sessionHydrator").Logger(),
 		session: session,
 		readCtx: readCtx,
+	}
+
+	if err := sessionHydrator.hydrateSessionHeight(height); err != nil {
+		return nil, err
 	}
 
 	if err := sessionHydrator.hydrateSessionApplication(appAddr); err != nil {
@@ -72,27 +78,30 @@ func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geo
 	return sessionHydrator.session, nil
 }
 
-// getSessionHeight returns the height at which the session started given the current block height
-func getSessionHeight(readCtx modules.PersistenceReadContext, blockHeight int64) (int64, int64, error) {
-	numBlocksPerSession, err := readCtx.GetIntParam(types.BlocksPerSessionParamName, blockHeight)
+// hydrateSessionHeight returns the height at which the session started given the current block height
+func (s *sessionHydrator) hydrateSessionHeight(blockHeight int64) error {
+	numBlocksPerSession, err := s.readCtx.GetIntParam(types.BlocksPerSessionParamName, blockHeight)
 	if err != nil {
-		return 0, 0, err
+		return err
 	}
+	s.session.NumSessionBlocks = int64(numBlocksPerSession)
 
 	numBlocksAheadOfSession := blockHeight % int64(numBlocksPerSession)
-	sessionNumber := int64(blockHeight / int64(numBlocksPerSession))
+	s.session.SessionNumber = int64(blockHeight / int64(numBlocksPerSession))
 	if numBlocksAheadOfSession == 0 {
-		return blockHeight, sessionNumber, nil
+		s.session.SessionHeight = blockHeight
+	} else {
+		s.session.SessionHeight = blockHeight - numBlocksAheadOfSession
 	}
-	return (blockHeight - numBlocksAheadOfSession), sessionNumber, nil
+	return nil
 }
 
 // use the seed information to determine a SHA3Hash that is used to find the closest N actors based
 // by comparing the sessionKey with the actors' public key
 func (s *sessionHydrator) hydrateSessionId() error {
 	sessionHeightBz := make([]byte, 8)
-	binary.LittleEndian.PutUint64(sessionHeightBz, uint64(s.session.Height))
-	prevHash, err := s.readCtx.GetBlockHash(s.session.Height - 1)
+	binary.LittleEndian.PutUint64(sessionHeightBz, uint64(s.session.SessionHeight))
+	prevHash, err := s.readCtx.GetBlockHash(s.session.SessionHeight - 1)
 	if err != nil {
 		return err
 	}
@@ -112,7 +121,7 @@ func (s *sessionHydrator) hydrateSessionApplication(appAddr string) error {
 	if err != nil {
 		return err
 	}
-	s.session.Application, err = s.readCtx.GetActor(coreTypes.ActorType_ACTOR_TYPE_APP, addr, s.session.Height)
+	s.session.Application, err = s.readCtx.GetActor(coreTypes.ActorType_ACTOR_TYPE_APP, addr, s.session.SessionHeight)
 	return err
 }
 
@@ -123,7 +132,7 @@ func (s *sessionHydrator) validateApplicationDispatch() error {
 	if err != nil {
 		return err
 	}
-	s.session.Application, err = s.readCtx.GetActor(coreTypes.ActorType_ACTOR_TYPE_APP, addr, s.session.Height)
+	s.session.Application, err = s.readCtx.GetActor(coreTypes.ActorType_ACTOR_TYPE_APP, addr, s.session.SessionHeight)
 	return err
 }
 
@@ -136,13 +145,13 @@ func (s *sessionHydrator) validateApplicationDispatch() error {
 // 2) calls `pseudoRandomSelection(servicers, numberOfNodesPerSession)`
 func (s *sessionHydrator) hydrateSessionServicers() error {
 	// number of servicers per session at this height
-	numServicers, err := s.readCtx.GetIntParam(types.ServicersPerSessionParamName, s.session.Height)
+	numServicers, err := s.readCtx.GetIntParam(types.ServicersPerSessionParamName, s.session.SessionHeight)
 	if err != nil {
 		return err
 	}
 
 	// returns all the staked servicers at this session height
-	servicers, err := s.readCtx.GetAllServicers(s.session.Height)
+	servicers, err := s.readCtx.GetAllServicers(s.session.SessionHeight)
 	if err != nil {
 		return err
 	}
@@ -184,13 +193,13 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 // 2) calls `pseudoRandomSelection(fishermen, numberOfFishPerSession)`
 func (s *sessionHydrator) hydrateSessionFishermen() error {
 	// number of fisherman per session at this height
-	numFishermen, err := s.readCtx.GetIntParam(types.FishermanPerSessionParamName, s.session.Height)
+	numFishermen, err := s.readCtx.GetIntParam(types.FishermanPerSessionParamName, s.session.SessionHeight)
 	if err != nil {
 		return err
 	}
 
 	// returns all the staked fisherman at this session height
-	fishermen, err := s.readCtx.GetAllFishermen(s.session.Height)
+	fishermen, err := s.readCtx.GetAllFishermen(s.session.SessionHeight)
 	if err != nil {
 		return err
 	}

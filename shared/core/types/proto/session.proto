@@ -6,23 +6,20 @@ option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
 import "actor.proto";
 
+// A deterministic pseudo-random structure that pairs applications to a set of servicers and fishermen
+// using on-chain data as a source of entropy
 message Session {
-    string id = 1;
-    int64 height = 2;
-    string relay_chain = 3; // CONSIDERATION: Should we add a `RelayChain` enum and use it across the board? // TECHDEBT: Do we need backwards with v0? https://docs.pokt.network/supported-blockchains/
-    string geo_zone = 4;
-    core.Actor application = 5;
-    repeated core.Actor servicers = 6;
-    repeated core.Actor fishermen = 7;
+    string id = 1; // a universally unique ID for the session
+    int64 session_number = 2; // a monotonically increasing number representing the # on the chain
+    int64 session_height = 3; // the block height at which this session started
+    int64 num_session_blocks = 4; // the number of blocks the session is valid from
+     // CONSIDERATION: Should we add a `RelayChain` enum and use it across the board?
+     // CONSIDERATION: Should a single session support multiple relay chains?
+     // TECHDEBT: Do we need backwards with v0? https://docs.pokt.network/supported-blockchains/
+    string relay_chain = 5; // the relay chain the session is valid for
+    // CONSIDERATION: Should a single session support multiple geo zones?
+    string geo_zone = 6; // the target geographic region where the actors are present
+    core.Actor application = 7; // the application that is being served
+    repeated core.Actor servicers = 8; // the set of servicers that are serving the application
+    repeated core.Actor fishermen = 9; // the set of fishermen that are fishing for servicers
 }
-
-// TECH_DEBT_IDENTIFIED_IN_THIS_COMMIT:
-// 1. Replace []byte with string
-// 2. Remove height from Write context in persistence
-// 3. Need to add geozone to actors
-// 4. Need to generalize persitence functions based on actor type
-// 5. Need different protos for each actor
-// OPTIMIZE: Query the postgres DB directly to retrieve the hydrated actors
-// - requires new endpoints and such
-// 6. How to define geozone (uber h3, postgis, aws regions, etc...)?
-// 7. How to define relay chains (enum, string, backwards compatability, etc...)?

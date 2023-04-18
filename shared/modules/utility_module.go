@@ -30,8 +30,9 @@ type UtilityModule interface {
 	// IMPROVE: Find opportunities to break this apart as the module matures.
 	HandleUtilityMessage(*anypb.Any) error
 
-	// Return a pseudo-random session object for the given application address, session height, relay chain and geo zones
-	// using on-chain data as he entropy source.
+	// GetSession returns a deterministic pseudo-random session object for the given application address, session height,
+	// relay chain and geo zones using on-chain data as the source of entropy. Sessions can be returned for
+	// any previous height or at most 1 block height into the future.
 	GetSession(appAddr string, sessionHeight int64, relayChain string, geoZone string) (*coreTypes.Session, error)
 }
 

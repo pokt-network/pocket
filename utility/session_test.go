@@ -38,7 +38,7 @@ func TestSession_GetSession_SingleFishermanSingleServicerBaseCase(t *testing.T) 
 	session, err := utilityMod.GetSession(app.Address, height, relayChain, geoZone)
 	require.NoError(t, err)
 	require.Equal(t, expectedSessionId, session.Id)
-	require.Equal(t, height, session.Height)
+	require.Equal(t, height, session.SessionHeight)
 	require.Equal(t, relayChain, session.RelayChain)
 	require.Equal(t, geoZone, session.GeoZone)
 	require.Equal(t, app.Address, session.Application.Address)
@@ -79,7 +79,7 @@ func TestSession_GetSession_InvalidFutureSession(t *testing.T) {
 	// Successfully get a session at height=1
 	session, err := utilityMod.GetSession(app.Address, latestCommitted+1, relayChain, geoZone)
 	require.NoError(t, err)
-	require.Equal(t, latestCommitted+1, session.Height)
+	require.Equal(t, latestCommitted+1, session.SessionHeight)
 
 	// Expect an error for a few heights into the future
 	for height := latestCommitted + 2; height < 10; height++ {
@@ -277,6 +277,10 @@ func TestSession_GetSession_SessionHeightAndNumber_StaticBlocksPerSession(t *tes
 	require.NoError(t, err)
 	defer writeCtx.Release()
 
+	s := &sessionHydrator{
+		session: &coreTypes.Session{},
+	}
+
 	tests := []struct {
 		name                string
 		numBlocksPerSession int64
@@ -319,10 +323,11 @@ func TestSession_GetSession_SessionHeightAndNumber_StaticBlocksPerSession(t *tes
 			err := writeCtx.SetParam(types.BlocksPerSessionParamName, tt.numBlocksPerSession)
 			require.NoError(t, err)
 
-			sessionHeight, sessionNumber, err := getSessionHeight(writeCtx, tt.haveBlockHeight)
+			err = s.hydrateSessionHeight(tt.haveBlockHeight)
 			require.NoError(t, err)
-			require.Equal(t, tt.wantSessionHeight, sessionHeight)
-			require.Equal(t, tt.wantSessionNumber, sessionNumber)
+			require.Equal(t, tt.numBlocksPerSession, s.session.NumSessionBlocks)
+			require.Equal(t, tt.wantSessionHeight, s.session.SessionHeight)
+			require.Equal(t, tt.wantSessionNumber, s.session.SessionNumber)
 		})
 	}
 }
@@ -416,9 +421,7 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 		err = writeCtx.Commit([]byte(fmt.Sprintf("proposer_height_%d", height)), []byte(fmt.Sprintf("quorum_cert_height_%d", height)))
 		require.NoError(t, err)
 		writeCtx.Release()
-
 	}
-	// different height -> different actors
 }
 
 func assertActorsDifference(t *testing.T, actors1, actors2 []*coreTypes.Actor, maxSimilarityThreshold float64) {
