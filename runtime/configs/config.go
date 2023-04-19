@@ -105,11 +105,7 @@ func setViperDefaults(cfg *Config) {
 func NewDefaultConfig(options ...func(*Config)) *Config {
 	cfg := &Config{
 		RootDirectory: defaults.DefaultRootDirectory,
-<<<<<<< HEAD
-		UseLibP2P:     defaults.DefaultUseLibp2p,
 		NetworkId:     defaults.DefaultNetworkID,
-=======
->>>>>>> main
 		Consensus: &ConsensusConfig{
 			MaxMempoolBytes: defaults.DefaultConsensusMaxMempoolBytes,
 			PacemakerConfig: &PacemakerConfig{
