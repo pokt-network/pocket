@@ -14,10 +14,6 @@ import (
 	"github.com/pokt-network/pocket/utility/types"
 )
 
-// OPTIMIZE: Postgres uses a `Twisted Mersenne Twister (TMT)` randomness algorithm.
-// We could potentially look into changing everything a single SQL query but need to
-// make sure that it can be implemented in a platform agnostic way.
-
 // sessionHydrator is an internal structure used to prepare a Session returned by `GetSession` below
 type sessionHydrator struct {
 	logger modules.Logger
@@ -28,10 +24,10 @@ type sessionHydrator struct {
 	// The session being hydrated and returned
 	session *coreTypes.Session
 
-	// Caches a readCtx to avoid draining to many connections to the database
+	// Caches a readCtx to avoid draining too many connections to the database
 	readCtx modules.PersistenceReadContext
 
-	// A redundant helper that keeps a hex decoded copy of `session.Id`
+	// A redundant helper that maintains a hex decoded copy of `session.Id` used for session hydration
 	sessionIdBz []byte
 }
 
@@ -64,11 +60,11 @@ func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geo
 		return nil, err
 	}
 
-	if err := sessionHydrator.validateApplicationDispatch(); err != nil {
+	if err := sessionHydrator.validateApplicationSession(); err != nil {
 		return nil, err
 	}
 
-	if err := sessionHydrator.hydrateSessionId(); err != nil {
+	if err := sessionHydrator.hydrateSessionID(); err != nil {
 		return nil, err
 	}
 
@@ -83,44 +79,22 @@ func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geo
 	return sessionHydrator.session, nil
 }
 
-// hydrateSessionHeight returns the height at which the session started given the current block height
+// hydrateSessionHeight hydrates the height at which the session started given the current block height
 func (s *sessionHydrator) hydrateSessionHeight(blockHeight int64) error {
 	numBlocksPerSession, err := s.readCtx.GetIntParam(types.BlocksPerSessionParamName, blockHeight)
 	if err != nil {
 		return err
 	}
-	s.session.NumSessionBlocks = int64(numBlocksPerSession)
-
 	numBlocksAheadOfSession := blockHeight % int64(numBlocksPerSession)
+
+	s.session.NumSessionBlocks = int64(numBlocksPerSession)
 	s.session.SessionNumber = int64(blockHeight / int64(numBlocksPerSession))
-	if numBlocksAheadOfSession == 0 {
-		s.session.SessionHeight = blockHeight
-	} else {
-		s.session.SessionHeight = blockHeight - numBlocksAheadOfSession
-	}
+	s.session.SessionHeight = blockHeight - numBlocksAheadOfSession
 	return nil
 }
 
-// use the seed information to determine a SHA3Hash that is used to find the closest N actors based
-// by comparing the sessionKey with the actors' public key
-func (s *sessionHydrator) hydrateSessionId() error {
-	sessionHeightBz := make([]byte, 8)
-	binary.LittleEndian.PutUint64(sessionHeightBz, uint64(s.session.SessionHeight))
-	prevHashHeight := int64(math.Max(float64(s.session.SessionHeight)-1, 0))
-	prevHash, err := s.readCtx.GetBlockHash(prevHashHeight)
-	if err != nil {
-		return err
-	}
-	prevHashBz, err := hex.DecodeString(prevHash)
-	appPubKeyBz := []byte(s.session.Application.PublicKey)
-	relayChainBz := []byte(string(s.session.RelayChain))
-	geoZoneBz := []byte(s.session.GeoZone)
-	s.sessionIdBz = concat(sessionHeightBz, prevHashBz, geoZoneBz, relayChainBz, appPubKeyBz)
-	s.session.Id = crypto.GetHashStringFromBytes(s.sessionIdBz)
-	return nil
-}
-
-// Uses the current 'world state' to determine the full application metadata based on its address at the current height
+// hydrateSessionApplication hydrates the full Application actor based on the address the session is being
+// dispatched for.
 func (s *sessionHydrator) hydrateSessionApplication(appAddr string) error {
 	// TECHDEBT: We can remove this decoding process once we use `strings` instead of `[]byte` for addresses
 	addr, err := hex.DecodeString(appAddr)
@@ -131,8 +105,8 @@ func (s *sessionHydrator) hydrateSessionApplication(appAddr string) error {
 	return err
 }
 
-// Validate the the application can dispatch a session at the requested geo-zone and for the request relay chain
-func (s *sessionHydrator) validateApplicationDispatch() error {
+// validateApplicationSession validates that the application can dispatch a session at the requested geo zone and for the request relay chain
+func (s *sessionHydrator) validateApplicationSession() error {
 	// if s.session.Application.Chains {
 	// TECHDEBT: We can remove this decoding process once we use `strings` instead of `[]byte` for addresses
 	// addr, err := hex.DecodeString(s.session.Application.Address)
@@ -144,13 +118,29 @@ func (s *sessionHydrator) validateApplicationDispatch() error {
 	return nil
 }
 
-// uses the current 'world state' to determine the servicers in the session
-// 1) get an ordered list of the public keys of servicers who are:
-//   - actively staked
-//   - staked within geo-zone (or closest geo-zones)
-//   - staked for relay-chain
-//
-// 2) calls `pseudoRandomSelection(servicers, numberOfNodesPerSession)`
+// hydrateSessionID use both session and on-chain data to determine a unique session ID
+func (s *sessionHydrator) hydrateSessionID() error {
+	sessionHeightBz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(sessionHeightBz, uint64(s.session.SessionHeight))
+
+	prevHashHeight := int64(math.Max(float64(s.session.SessionHeight)-1, 0))
+	prevHash, err := s.readCtx.GetBlockHash(prevHashHeight)
+	if err != nil {
+		return err
+	}
+	prevHashBz, err := hex.DecodeString(prevHash)
+
+	appPubKeyBz := []byte(s.session.Application.PublicKey)
+	relayChainBz := []byte(string(s.session.RelayChain))
+	geoZoneBz := []byte(s.session.GeoZone)
+
+	s.sessionIdBz = concat(sessionHeightBz, prevHashBz, geoZoneBz, relayChainBz, appPubKeyBz)
+	s.session.Id = crypto.GetHashStringFromBytes(s.sessionIdBz)
+
+	return nil
+}
+
+// hydrateSessionServicers
 func (s *sessionHydrator) hydrateSessionServicers() error {
 	// number of servicers per session at this height
 	numServicers, err := s.readCtx.GetIntParam(types.ServicersPerSessionParamName, s.session.SessionHeight)
@@ -164,18 +154,17 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 		return err
 	}
 
-	// OPTIMIZE: Update the persistence module to allow for querying for filtered servicers directly
-	// Determine the servicers for this session
+	// OPTIMIZE: Consider updating the persistence module so a single SQL query can retrieve all of the actors at once.
 	candidateServicers := make([]*coreTypes.Actor, 0)
 	for _, servicer := range servicers {
-		// Sanity check the servicer is not paused or unstaking
+		// Sanity check the servicer is not paused, jailed or unstaking
 		if !(servicer.PausedHeight == -1 && servicer.UnstakingHeight == -1) {
 			return fmt.Errorf("hydrateSessionServicers should not have encountered a paused or unstaking servicer: %s", servicer.Address)
 		}
 
-		// TODO(#XXX): Add GeoZone filtering
+		// TODO(#XXX): Filter by geo-zone
 
-		// OPTIMIZE: If this was a map, we could have avoided the loop over chains
+		// OPTIMIZE: If this was a map[string]struct{}, we could have avoided the loop
 		var chain string
 		for _, chain = range servicer.Chains {
 			if chain != s.session.RelayChain {
@@ -212,18 +201,17 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 		return err
 	}
 
-	// OPTIMIZE: Update the persistence module to allow for querying for filtered fishermen directly
-	// Determine the fishermen for this session
+	// OPTIMIZE: Consider updating the persistence module so a single SQL query can retrieve all of the actors at once.
 	candidateFishermen := make([]*coreTypes.Actor, 0)
 	for _, fisherman := range fishermen {
-		// Sanity check the fisherman is not paused or unstaking
+		// Sanity check the fisherman is not paused, jailed or unstaking
 		if !(fisherman.PausedHeight == -1 && fisherman.UnstakingHeight == -1) {
 			return fmt.Errorf("hydrateSessionFishermen should not have encountered a paused or unstaking fisherman: %s", fisherman.Address)
 		}
 
-		// TODO_IN_THIS_COMMIT: if sfisherman.GeoZone includes session.GeoZone
+		// TODO(#XXX): Filter by geo-zone
 
-		// OPTIMIZE: If this was a map, we could have avoided the loop over chains
+		// OPTIMIZE: If this was a map[string]struct{}, we could have avoided the loop
 		var chain string
 		for _, chain = range fisherman.Chains {
 			if chain != s.session.RelayChain {
@@ -262,6 +250,10 @@ func pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, session
 
 	return actors
 }
+
+// OPTIMIZE: Postgres uses a `Twisted Mersenne Twister (TMT)` randomness algorithm.
+// We could potentially look into changing everything into a single SQL query but
+// would nee dto verify that it can be implemented in a platform agnostic way.
 
 // uniqueRandomIndices returns a map of `numIndices` unique random numbers less than `maxIndex`
 // seeded by `seed`.

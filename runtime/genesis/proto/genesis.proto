@@ -23,7 +23,6 @@ message GenesisState {
 
 // TECHDEBT: Explore a more general purpose "feature flag" approach that makes it easy to add/remove
 // parameters and add activation heights for them as well.
-// n
 message Params {
   //@gotags: pokt:"val_type=BIGINT,owner=blocks_per_session_owner"
   int32 blocks_per_session = 1;

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.49] - 2023-04-18
+
+- Implemented a new `GetActor` persistence modular functoin
+- Added `fisherman_per_session` parameter
+- Minor code and comment cleanup
+
 ## [0.0.0.49] - 2023-04-14
 
 - Index transactions in the `TxIndexer` by sender and recipient using the height and block index of the transactions

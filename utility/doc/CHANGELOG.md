@@ -7,10 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.38] - 2023-04-18
+
+- Introduced testing helper to test the `UtilityModule` interface implementation
+- Implemented the `GetSession` function from the Utility module interface
+- Added a `sessionHydrator` structure used to populate a new session
+
 ## [0.0.0.37] - 2023-04-13
 
 - Remove utility specific `TxResult` protobuf and interface
-- Utlise the `TxResult` protobuf in `shared/core/types`
+- Utilize the `TxResult` protobuf in `shared/core/types`
 
 ## [0.0.0.36] - 2023-04-07
 

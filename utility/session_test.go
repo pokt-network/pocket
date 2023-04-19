@@ -36,10 +36,13 @@ func TestSession_GetSession_SingleFishermanSingleServicerBaseCase(t *testing.T) 
 	require.Len(t, runtimeCfg.GetGenesis().Servicers, 1)
 	servicer := runtimeCfg.GetGenesis().Servicers[0]
 
+	// Verify some of the session defaults
 	session, err := utilityMod.GetSession(app.Address, height, relayChain, geoZone)
 	require.NoError(t, err)
 	require.Equal(t, expectedSessionId, session.Id)
 	require.Equal(t, height, session.SessionHeight)
+	require.Equal(t, int64(1), session.SessionNumber)
+	require.Equal(t, int64(1), session.NumSessionBlocks)
 	require.Equal(t, relayChain, session.RelayChain)
 	require.Equal(t, geoZone, session.GeoZone)
 	require.Equal(t, app.Address, session.Application.Address)
@@ -57,60 +60,59 @@ func TestSession_GetSession_InvalidApplication(t *testing.T) {
 	app := runtimeCfg.GetGenesis().Applications[0]
 
 	// Create a new app address
-	pk, _ := crypto.GeneratePrivateKey()
-	addr := pk.Address().String()
+	pk, err := crypto.GeneratePrivateKey()
+	require.NoError(t, err)
 
 	// Verify that the one app in the genesis is not the one we just generated
+	addr := pk.Address().String()
 	require.NotEqual(t, app.Address, addr)
 
-	// Expect an error
-	_, err := utilityMod.GetSession(addr, 1, test_artifacts.DefaultChains[0], "unused_geo")
+	// Expect an error trying to get a session for a non-existent application
+	_, err = utilityMod.GetSession(addr, 1, test_artifacts.DefaultChains[0], "unused_geo")
 	require.Error(t, err)
 }
 
 func TestSession_GetSession_InvalidFutureSession(t *testing.T) {
 	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, 1, 1, 1)
 
+	// Test parameters
 	relayChain := test_artifacts.DefaultChains[0]
 	geoZone := "unused_geo"
 	app := runtimeCfg.GetGenesis().Applications[0]
 
-	latestCommitted := int64(0)
+	// Local variable to keep track of the height we're getting a session for
+	currentHeight := int64(0)
 
-	// Successfully get a session at height=1
-	session, err := utilityMod.GetSession(app.Address, latestCommitted+1, relayChain, geoZone)
+	// Successfully get a session for 1 block ahead of the latest committed height
+	session, err := utilityMod.GetSession(app.Address, currentHeight+1, relayChain, geoZone)
 	require.NoError(t, err)
-	require.Equal(t, latestCommitted+1, session.SessionHeight)
+	require.Equal(t, currentHeight+1, session.SessionHeight)
 
 	// Expect an error for a few heights into the future
-	for height := latestCommitted + 2; height < 10; height++ {
+	for height := currentHeight + 2; height < 10; height++ {
 		_, err := utilityMod.GetSession(app.Address, height, relayChain, geoZone)
 		require.Error(t, err)
 	}
 
 	// Commit new blocks for all the heights that failed above
-	for ; latestCommitted < 10; latestCommitted++ {
-		writeCtx, err := persistenceMod.NewRWContext(latestCommitted + 1)
+	for ; currentHeight < 10; currentHeight++ {
+		writeCtx, err := persistenceMod.NewRWContext(currentHeight + 1)
 		require.NoError(t, err)
-		err = writeCtx.Commit([]byte(fmt.Sprintf("proposer_height_%d", latestCommitted)), []byte(fmt.Sprintf("quorum_cert_height_%d", latestCommitted)))
+		err = writeCtx.Commit([]byte(fmt.Sprintf("proposer_height_%d", currentHeight)), []byte(fmt.Sprintf("quorum_cert_height_%d", currentHeight)))
 		require.NoError(t, err)
 		writeCtx.Release()
 	}
 
 	// Expect no errors since those blocks exist now
 	// Note that we can get the session for latest_committed + 1
-	for height := int64(1); height <= latestCommitted+1; height++ {
+	for height := int64(1); height <= currentHeight+1; height++ {
 		_, err := utilityMod.GetSession(app.Address, height, relayChain, geoZone)
 		require.NoError(t, err)
 	}
 
-	// Verify that latestCommitted + 2 fails
-	_, err = utilityMod.GetSession(app.Address, latestCommitted+2, relayChain, geoZone)
+	// Verify that currentHeight + 2 fails
+	_, err = utilityMod.GetSession(app.Address, currentHeight+2, relayChain, geoZone)
 	require.Error(t, err)
-}
-
-func TestSession_GetSession_ApplicationUnbonds(t *testing.T) {
-	// TODO: What if an Application unbonds (unstaking period elapses) mid session?
 }
 
 func TestSession_GetSession_ServicersAndFishermenCounts_TotalAvailability(t *testing.T) {
@@ -164,6 +166,7 @@ func TestSession_GetSession_ServicersAndFishermenCounts_TotalAvailability(t *tes
 		},
 	}
 
+	// Test constant parameters
 	updateParamsHeight := int64(1)
 	querySessionHeight := int64(2)
 
@@ -173,12 +176,14 @@ func TestSession_GetSession_ServicersAndFishermenCounts_TotalAvailability(t *tes
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Reset to genesis
 			err := persistenceMod.HandleDebugMessage(&messaging.DebugMessage{
 				Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 				Message: nil,
 			})
 			require.NoError(t, err)
 
+			// Update the number of servicers and fishermen per session gov params
 			writeCtx, err := persistenceMod.NewRWContext(updateParamsHeight)
 			require.NoError(t, err)
 			defer writeCtx.Release()
@@ -190,6 +195,7 @@ func TestSession_GetSession_ServicersAndFishermenCounts_TotalAvailability(t *tes
 			err = writeCtx.Commit([]byte("empty_proposed_addr"), []byte("empty_quorum_cert"))
 			require.NoError(t, err)
 
+			// Verify that the session is populated with the correct number of actors
 			session, err := utilityMod.GetSession(app.Address, querySessionHeight, relayChain, geoZone)
 			require.NoError(t, err)
 			require.Equal(t, tt.wantServicerCount, len(session.Servicers))
@@ -199,6 +205,7 @@ func TestSession_GetSession_ServicersAndFishermenCounts_TotalAvailability(t *tes
 }
 
 func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *testing.T) {
+	// Test constant parameters
 	numServicersPerSession := 10
 	numFishermenPerSession := 2
 
@@ -210,12 +217,15 @@ func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *tes
 	servicersChain2, servicerKeysChain2 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicersPerSession/2, []string{"chn2"})
 	fishermenChain1, fishermenKeysChain1 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFishermenPerSession/2, []string{"chn2"})
 
+	//nolint:gocritic // intentionally not appending result to a new slice
 	actors := append(servicersChain1, append(servicersChain2, append(fishermenChain1, fishermenChain2...)...)...)
+	//nolint:gocritic // intentionally not appending result to a new slice
 	keys := append(servicerKeysChain1, append(servicerKeysChain2, append(fishermenKeysChain1, fishermenKeysChain2...)...)...)
 
+	// Prepare the environment
 	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, 0, 1, 0, test_artifacts.WithActors(actors, keys))
 
-	// Vary the chains and check the number of fishermen and servicers returned for each one
+	// Vary the chain and check the number of fishermen and servicers returned for each one
 	tests := []struct {
 		name               string
 		chain              string
@@ -242,12 +252,14 @@ func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *tes
 		},
 	}
 
+	// Reset to genesis
 	err := persistenceMod.HandleDebugMessage(&messaging.DebugMessage{
 		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 		Message: nil,
 	})
 	require.NoError(t, err)
 
+	// Update the number of servicers and fishermen per session gov params
 	writeCtx, err := persistenceMod.NewRWContext(1)
 	require.NoError(t, err)
 	err = writeCtx.SetParam(types.ServicersPerSessionParamName, numServicersPerSession)
@@ -258,6 +270,7 @@ func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *tes
 	require.NoError(t, err)
 	defer writeCtx.Release()
 
+	// Test parameters
 	app := runtimeCfg.GetGenesis().Applications[0]
 	geoZone := "unused_geo"
 
@@ -272,6 +285,7 @@ func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *tes
 }
 
 func TestSession_GetSession_SessionHeightAndNumber_StaticBlocksPerSession(t *testing.T) {
+	// Prepare the environment
 	_, _, persistenceMod := prepareEnvironment(t, 5, 1, 1, 1)
 
 	// Note that we are using an ephemeral write context at the genesis block (height=0).
@@ -349,21 +363,25 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 	numFishermen := 1000 // make them equal for simplicity
 	numServicersPerSession := 10
 	numFishermenPerSession := 10 // make them equal for simplicity
+	numApplications := 3
+	numBlocksPerSession := 2 // expect a different every other height
 
 	// Determine probability of overlap using combinatorics
-	numChoices := combin.GeneralizedBinomial(float64(numServicers), float64(numServicersPerSession))                                 // numServicers C numServicersPerSession
-	numChoicesRemaining := combin.GeneralizedBinomial(float64(numServicers-numServicersPerSession), float64(numServicersPerSession)) // (numServicers - numServicersPerSession) C numServicersPerSession
+	numChoices := combin.GeneralizedBinomial(float64(numServicers), float64(numServicersPerSession))                                 // (numServicers) C (numServicersPerSession)
+	numChoicesRemaining := combin.GeneralizedBinomial(float64(numServicers-numServicersPerSession), float64(numServicersPerSession)) // (numServicers - numServicersPerSession) C (numServicersPerSession)
 	probabilityOfOverlap := (numChoices - numChoicesRemaining) / numChoices
 
-	numApplications := 3
+	// Prepare the environment
 	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, numServicers, numApplications, numFishermen)
 
-	// Set the number of servicers and fishermen per session
+	// Set the number of servicers and fishermen per session gov params
 	writeCtx, err := persistenceMod.NewRWContext(1)
 	require.NoError(t, err)
 	err = writeCtx.SetParam(types.ServicersPerSessionParamName, numServicersPerSession)
 	require.NoError(t, err)
 	err = writeCtx.SetParam(types.FishermanPerSessionParamName, numFishermenPerSession)
+	require.NoError(t, err)
+	err = writeCtx.SetParam(types.BlocksPerSessionParamName, numBlocksPerSession)
 	require.NoError(t, err)
 	err = writeCtx.Commit([]byte(fmt.Sprintf("proposer_height_%d", 1)), []byte(fmt.Sprintf("quorum_cert_height_%d", 1)))
 	require.NoError(t, err)
@@ -379,8 +397,12 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 	app2 := runtimeCfg.GetGenesis().Applications[1]
 	app3 := runtimeCfg.GetGenesis().Applications[2]
 
+	// Keep track of the actors from the session at the previous height to verify a delta
 	var app1PrevServicers, app2PrevServicers, app3PrevServicers []*coreTypes.Actor
 	var app1PrevFishermen, app2PrevFishermen, app3PrevFishermen []*coreTypes.Actor
+
+	// The number of blocks to increase until we expect a different set of servicers and fishermen; see numBlocksPerSession
+	numBlocksUntilChange := 0
 
 	// Commit new blocks for all the heights that failed above
 	for height := int64(2); height < 10; height++ {
@@ -409,22 +431,40 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 		assertActorsDifference(t, session1.Fishermen, session2.Fishermen, probabilityOfOverlap)
 		assertActorsDifference(t, session1.Fishermen, session3.Fishermen, probabilityOfOverlap)
 
-		// Assert different servicers between heights for the same app
-		assertActorsDifference(t, app1PrevServicers, session1.Servicers, probabilityOfOverlap)
-		assertActorsDifference(t, app2PrevServicers, session2.Servicers, probabilityOfOverlap)
-		assertActorsDifference(t, app3PrevServicers, session3.Servicers, probabilityOfOverlap)
+		if numBlocksUntilChange == 0 {
+			// Assert different servicers between heights for the same app
+			assertActorsDifference(t, app1PrevServicers, session1.Servicers, probabilityOfOverlap)
+			assertActorsDifference(t, app2PrevServicers, session2.Servicers, probabilityOfOverlap)
+			assertActorsDifference(t, app3PrevServicers, session3.Servicers, probabilityOfOverlap)
 
-		// Assert different fishermen between heights for the same app
-		assertActorsDifference(t, app1PrevFishermen, session1.Fishermen, probabilityOfOverlap)
-		assertActorsDifference(t, app2PrevFishermen, session2.Fishermen, probabilityOfOverlap)
-		assertActorsDifference(t, app3PrevFishermen, session3.Fishermen, probabilityOfOverlap)
+			// Assert different fishermen between heights for the same app
+			assertActorsDifference(t, app1PrevFishermen, session1.Fishermen, probabilityOfOverlap)
+			assertActorsDifference(t, app2PrevFishermen, session2.Fishermen, probabilityOfOverlap)
+			assertActorsDifference(t, app3PrevFishermen, session3.Fishermen, probabilityOfOverlap)
 
-		app1PrevServicers = session1.Servicers
-		app2PrevServicers = session2.Servicers
-		app3PrevServicers = session3.Servicers
-		app1PrevFishermen = session1.Fishermen
-		app2PrevFishermen = session2.Fishermen
-		app3PrevFishermen = session3.Fishermen
+			// Store the new servicers and fishermen for the next height
+			app1PrevServicers = session1.Servicers
+			app2PrevServicers = session2.Servicers
+			app3PrevServicers = session3.Servicers
+			app1PrevFishermen = session1.Fishermen
+			app2PrevFishermen = session2.Fishermen
+			app3PrevFishermen = session3.Fishermen
+
+			// Reset the number of blocks until we expect a different set of servicers and fishermen
+			numBlocksUntilChange = numBlocksPerSession - 1
+		} else {
+			// Assert the same servicers between heights for the same app
+			require.ElementsMatch(t, app1PrevServicers, session1.Servicers)
+			require.ElementsMatch(t, app2PrevServicers, session2.Servicers)
+			require.ElementsMatch(t, app3PrevServicers, session3.Servicers)
+
+			// Assert the same fishermen between heights for the same app
+			require.ElementsMatch(t, app1PrevFishermen, session1.Fishermen)
+			require.ElementsMatch(t, app2PrevFishermen, session2.Fishermen)
+			require.ElementsMatch(t, app3PrevFishermen, session3.Fishermen)
+
+			numBlocksUntilChange--
+		}
 
 		// Advance block height
 		writeCtx, err := persistenceMod.NewRWContext(height)
@@ -433,6 +473,26 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 		require.NoError(t, err)
 		writeCtx.Release()
 	}
+}
+
+func TestSession_GetSession_ApplicationUnbonds(t *testing.T) {
+	// TODO: What if an Application unbonds (unstaking period elapses) mid session?
+}
+
+func TestSession_GetSession_ServicersAndFishermenCounts_GeoZoneAvailability(t *testing.T) {
+	// TODO: Once GeoZones are implemented, the tests need to be added as well
+	// Cases: Invalid, unused, non-existent, empty, insufficiently complete, etc...
+}
+
+func TestSession_GetSession_ActorReplacement(t *testing.T) {
+	// TODO: Since sessions last multiple blocks, we need to design what happens when an actor is (un)jailed, (un)stakes, (un)bonds, (un)pauses
+	// mid session. There are open design questions that need to be made.
+}
+
+func TestSession_GetSession_SessionHeightAndNumber_ModifiedBlocksPerSession(t *testing.T) {
+	// RESEARCH: Need to design what happens (actor replacement, session numbers, etc...) when the number
+	// of blocks per session changes mid session. For example, all existing sessions could go to completion
+	// until the new parameter takes effect. There are open design questions that need to be made.
 }
 
 func assertActorsDifference(t *testing.T, actors1, actors2 []*coreTypes.Actor, maxSimilarityThreshold float64) {
@@ -457,20 +517,4 @@ func actorsToAdds(actors []*coreTypes.Actor) []string {
 		addresses[i] = actor.Address
 	}
 	return addresses
-}
-
-func TestSession_GetSession_ServicersAndFishermenCounts_GeoZoneAvailability(t *testing.T) {
-	// TODO: Once GeoZones are implemented, the tests need to be added as well
-	// Cases: Invalid, unused, non-existent, empty, insufficiently complete, etc...
-}
-
-func TestSession_GetSession_ActorReplacement(t *testing.T) {
-	// TODO: Since sessions last multiple blocks, we need to design what happens when an actor is (un)jailed, (un)stakes, (un)bonds, (un)pauses
-	// mid session. There are open design questions that need to be made.
-}
-
-func TestSession_GetSession_SessionHeightAndNumber_ModifiedBlocksPerSession(t *testing.T) {
-	// RESEARCH: Need to design what happens (actor replacement, session numbers, etc...) when the number
-	// of blocks per session changes mid session. For example, all existing sessions could go to completion
-	// until the new parameter takes effect. There are open design questions that need to be made.
 }

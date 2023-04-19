@@ -18,7 +18,7 @@ import (
 
 type GenesisOption func(*genesis.GenesisState)
 
-// IMPROVE: Generate a proper genesis suite in the future.
+// IMPROVE: Extend the utilities here into a proper genesis suite in the future.
 func NewGenesisState(numValidators, numServicers, numApplications, numFisherman int, genesisOpts ...GenesisOption) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
 	applications, appPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications, DefaultChains)
 	validators, validatorPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_VAL, numValidators, nil)
@@ -116,6 +116,7 @@ func newAccountsWithKeys(privateKeys []string) (accounts []*coreTypes.Account) {
 	return accounts
 }
 
+//nolint:unused
 func newAccounts(numActors int) (accounts []*coreTypes.Account) {
 	for i := 0; i < numActors; i++ {
 		_, _, addr := keygen.GetInstance().Next()

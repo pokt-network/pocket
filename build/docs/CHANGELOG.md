@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.36] - 2023-04-18
+
+- Added a `fisherman_per_session` governance parameter
+- Updated the default `blocks_per_session` from `4` to `1`
+
 ## [0.0.0.35] - 2023-04-17
 
 - Removed runtime/configs.Config#UseLibp2p field

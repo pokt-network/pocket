@@ -44,9 +44,10 @@ func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
 	return persistenceMod.(modules.PersistenceModule)
 }
 
+// Prepares a runtime environment for testing along with a genesis state, a persistence module and a utility module
 func prepareEnvironment(
 	t *testing.T,
-	numValidators,
+	numValidators, // nolint:unparam // we are not currently modifying parameter but want to keep it modifiable in the future
 	numServicers,
 	numApplications,
 	numFisherman int,
@@ -59,12 +60,14 @@ func prepareEnvironment(
 	require.NoError(t, err)
 
 	testPersistenceMod := newTestPersistenceModule(bus)
-	testPersistenceMod.Start()
+	err = testPersistenceMod.Start()
+	require.NoError(t, err)
 
 	testUtilityMod := newTestUtilityModule(bus)
-	testUtilityMod.Start()
+	err = testUtilityMod.Start()
+	require.NoError(t, err)
 
-	// Reset to genesis
+	// Reset database to genesis before every test
 	err = testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
 		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 		Message: nil,
@@ -73,8 +76,10 @@ func prepareEnvironment(
 
 	t.Cleanup(func() {
 		teardownDeterministicKeygen()
-		testPersistenceMod.Stop()
-		testUtilityMod.Stop()
+		err := testPersistenceMod.Stop()
+		require.NoError(t, err)
+		err = testUtilityMod.Stop()
+		require.NoError(t, err)
 	})
 
 	return runtimeCfg, testUtilityMod, testPersistenceMod

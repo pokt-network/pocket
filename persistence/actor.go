@@ -7,7 +7,6 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
-// TODO_IN_THIS_COMMIT: Add tests for this function
 func (p *PostgresContext) GetActor(actorType coreTypes.ActorType, address []byte, height int64) (*coreTypes.Actor, error) {
 	var schema types.ProtocolActorSchema
 	switch actorType {
@@ -133,7 +132,7 @@ func (p *PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, e
 	return
 }
 
-// OPTIMIZE: Ideally we should have a single query that returns all actors.
+// OPTIMIZE: There is an opportunity to have one SQL query returning all the actorsp
 func (p *PostgresContext) GetAllStakedActors(height int64) (allActors []*coreTypes.Actor, err error) {
 	type actorGetter func(height int64) ([]*coreTypes.Actor, error)
 	actorGetters := []actorGetter{p.GetAllValidators, p.GetAllServicers, p.GetAllFishermen, p.GetAllApps}
