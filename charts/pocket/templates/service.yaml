@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "pocket.fullname" . }}
+  name: {{ if .Values.service.nameOverride }}{{ .Values.service.nameOverride }}{{ else }}{{ include "pocket.fullname" . }}{{ end }}
   labels:
     {{- include "pocket.labels" . | nindent 4 }}
   {{- with .Values.service.annotations }}
