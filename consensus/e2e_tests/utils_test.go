@@ -103,10 +103,6 @@ func CreateTestConsensusPocketNode(
 	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
 ) *shared.Node {
-	fmt.Println("before: ", bus.GetEventBus())
-	//bus.SetEventBus(eventsChannel)
-	//fmt.Println("after: ", bus.GetEventBus())
-
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
 	bus.RegisterModule(persistenceMock)
 
@@ -117,9 +113,6 @@ func CreateTestConsensusPocketNode(
 
 	_, err = state_machine.Create(bus, state_machine.WithDebugEventsChannel(eventsChannel))
 	require.NoError(t, err)
-	// bus.RegisterModule(stateMachineModule)
-
-	fmt.Println("Events channel: ", eventsChannel)
 
 	runtimeMgr := (bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
@@ -164,10 +157,9 @@ func GenerateBuses(t *testing.T, runtimeMgrs []*runtime.Manager) (buses []module
 
 // CLEANUP: Reduce package scope visibility in the consensus test module
 func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) error {
-	for id, pocketNode := range pocketNodes {
+	for _, pocketNode := range pocketNodes {
 		go startNode(t, pocketNode)
 		startEvent := pocketNode.GetBus().GetBusEvent()
-		fmt.Printf("ID: %d, Start event: %s \n", id, startEvent)
 		require.Equal(t, messaging.NodeStartedEventType, startEvent.GetContentType())
 		stateMachine := pocketNode.GetBus().GetStateMachineModule()
 		if err := stateMachine.SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
@@ -220,14 +212,12 @@ func triggerDebugMessage(t *testing.T, node *shared.Node, action messaging.Debug
 func P2PBroadcast(_ *testing.T, nodes IdToNodeMapping, any *anypb.Any) {
 	e := &messaging.PocketEnvelope{Content: any}
 	for _, node := range nodes {
-		fmt.Printf("Publishing this event: %s, to: %s \n", e, node.GetP2PAddress())
 		node.GetBus().PublishEventToBus(e)
 	}
 }
 
 func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 	e := &messaging.PocketEnvelope{Content: any}
-	fmt.Printf("Publishing this event: %s, to: %s \n", e, node.GetP2PAddress())
 	node.GetBus().PublishEventToBus(e)
 }
 
@@ -250,15 +240,12 @@ func WaitForNetworkConsensusEvents(
 	millis time.Duration,
 	failOnExtraMessages bool,
 ) (messages []*anypb.Any, err error) {
-	fmt.Println("Starting to wait for Consensus events on channel: ", eventsChannel)
-
 	includeFilter := func(anyMsg *anypb.Any) bool {
 		msg, err := codec.GetCodec().FromAny(anyMsg)
 		require.NoError(t, err)
 
 		hotstuffMessage, ok := msg.(*typesCons.HotstuffMessage)
 		require.True(t, ok)
-		//fmt.Println("hotstuff msg:", hotstuffMessage.Block)
 
 		return hotstuffMessage.Type == msgType && hotstuffMessage.Step == step
 	}
@@ -278,10 +265,7 @@ func WaitForNetworkStateSyncEvents(
 	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
 ) (messages []*anypb.Any, err error) {
-	fmt.Println("Starting to wait for State Sync events on channel: ", eventsChannel)
-
 	includeFilter := func(anyMsg *anypb.Any) bool {
-		fmt.Println("Received this message gok", anyMsg)
 		msg, err := codec.GetCodec().FromAny(anyMsg)
 		require.NoError(t, err)
 
@@ -304,14 +288,11 @@ func WaitForNetworkFSMEvents(
 	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
 ) (messages []*anypb.Any, err error) {
-	fmt.Println("Starting to wait for FSM events on channel: ", eventsChannel)
-
 	includeFilter := func(anyMsg *anypb.Any) bool {
-		fmt.Println("Received FSM event: ", anyMsg)
 		msg, err := codec.GetCodec().FromAny(anyMsg)
 		require.NoError(t, err)
 
-		stateTransitionMessage, ok := msg.(*messaging.StateMachineTransitionEvent) //messaging.StateMachineTransitionEvent
+		stateTransitionMessage, ok := msg.(*messaging.StateMachineTransitionEvent)
 		require.True(t, ok)
 
 		return stateTransitionMessage.Event == string(eventType)
@@ -721,7 +702,7 @@ func WaitForNodeToSync(
 	unsyncedNode *shared.Node,
 	allNodes IdToNodeMapping,
 	targetHeight uint64,
-) error {
+) {
 	currentHeight := unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 
 	for currentHeight < targetHeight {
@@ -745,15 +726,8 @@ func WaitForNodeToSync(
 		err = waitForNodeToCatchUpHeight(t, clck, eventsChannel, allNodes, currentHeight+1)
 		require.NoError(t, err)
 
-		advanceTime(t, clck, 10*time.Millisecond)
-
-		//waiting for node to catch the same step
-		err = waitForNodeToCatchupStep(t, clck, eventsChannel, allNodes, currentHeight+1)
-		require.NoError(t, err)
-
 		currentHeight = unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 	}
-	return nil
 }
 
 // waitForNodeToRequestMissingBlock waits for unsynced node to request missing block form the network
@@ -802,41 +776,6 @@ func waitForNodeToCatchUpHeight(
 	}
 
 	return err
-}
-
-func waitForNodeToCatchupStep(
-	t *testing.T,
-	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
-	allNodes IdToNodeMapping,
-	targetHeight uint64,
-) error {
-	// Unsynced node sends new round messages to the rest of the network
-	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.NewRound, consensus.Propose, numValidators, 500, true)
-	require.NoError(t, err)
-	P2PBroadcast(t, allNodes, newRoundMessages[0])
-	advanceTime(t, clck, 10*time.Millisecond)
-
-	for _, pocketNode := range allNodes {
-		TriggerNextView(t, pocketNode)
-	}
-	advanceTime(t, clck, 10*time.Millisecond)
-
-	// 1. NewRound
-	newRoundMessages, err = WaitForNetworkConsensusEvents(t, clck, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 500, true)
-	require.NoError(t, err)
-	broadcastMessages(t, newRoundMessages, allNodes)
-	advanceTime(t, clck, 10*time.Millisecond)
-
-	// round := GetConsensusNodeState(allNodes[0]).Round
-
-	// for nodeId, pocketNode := range allNodes {
-	// 	nodeState := GetConsensusNodeState(pocketNode)
-	// 	assertHeight(t, nodeId, targetHeight, nodeState.Height)
-	// 	assertHeight(t, nodeId, round, nodeState)
-	// }
-
-	return nil
 }
 
 func generatePlaceholderBlock(height uint64, leaderAddrr crypto.Address) *coreTypes.Block {

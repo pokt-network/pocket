@@ -1,8 +1,6 @@
 package consensus
 
 import (
-	"fmt"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -72,7 +70,6 @@ func (m *consensusModule) GetLeaderForView(height, round uint64, step uint8) uin
 
 // TODO(#609): Refactor to use the test-only package and remove reflection
 func (m *consensusModule) PushStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) {
-	fmt.Println("metadata is: ", metadataRes)
 	m.metadataReceived <- metadataRes
 }
 

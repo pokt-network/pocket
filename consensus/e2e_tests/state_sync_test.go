@@ -77,7 +77,6 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 }
 
 func TestStateSync_ServerGetBlock_Success(t *testing.T) {
-
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
@@ -136,8 +135,6 @@ func TestStateSync_ServerGetBlock_Success(t *testing.T) {
 }
 
 func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
-	//t.Skip()
-
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
@@ -183,7 +180,6 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	errMsg := "StateSync Get Block Request Message"
 	_, err = WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 500, false)
 	require.Error(t, err)
-
 }
 
 func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
@@ -201,9 +197,9 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// Prepare leader info
-	testHeight := uint64(3)
-	testRound := uint64(0)
-	testStep := uint8(consensus.NewRound)
+	//testHeight := uint64(3)
+	//testRound := uint64(0)
+	//testStep := uint8(consensus.NewRound)
 
 	// Prepare unsynced node info
 	unsyncedNode := pocketNodes[2]
@@ -215,12 +211,12 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		if id == unsyncedNodeId {
 			pocketNode.GetBus().GetConsensusModule().SetHeight(unsyncedNodeHeight)
 		} else {
-			pocketNode.GetBus().GetConsensusModule().SetHeight(testHeight)
+			pocketNode.GetBus().GetConsensusModule().SetHeight(uint64(3))
 		}
-		pocketNode.GetBus().GetConsensusModule().SetStep(testStep)
-		pocketNode.GetBus().GetConsensusModule().SetRound(testRound)
+		pocketNode.GetBus().GetConsensusModule().SetStep(uint8(consensus.NewRound))
+		pocketNode.GetBus().GetConsensusModule().SetRound(uint64(0))
 
-		utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(testHeight))
+		utilityUnitOfWork, err := pocketNode.GetBus().GetUtilityModule().NewUnitOfWork(int64(3))
 		require.NoError(t, err)
 		pocketNode.GetBus().GetConsensusModule().SetUtilityUnitOfWork(utilityUnitOfWork)
 	}
@@ -229,16 +225,16 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	for _, pocketNode := range pocketNodes {
 		TriggerNextView(t, pocketNode)
 	}
-	currentRound := testRound + 1
+	//currentRound := testRound + 1
 
 	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderForView() function.
 	// Any node in pocketNodes mapping can be used to call GetLeaderForView() function.
-	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(testHeight, currentRound, testStep))
+	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(uint64(3), uint64(1), uint8(consensus.NewRound)))
 	leader := pocketNodes[leaderId]
 	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
 	require.NoError(t, err)
 
-	block := generatePlaceholderBlock(testHeight, leaderPK.Address())
+	block := generatePlaceholderBlock(3, leaderPK.Address())
 	leader.GetBus().GetConsensusModule().SetBlock(block)
 
 	// Assert that unsynced node has a different view of the network than the rest of the nodes
@@ -251,16 +247,16 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 			assertNodeConsensusView(t, nodeId,
 				typesCons.ConsensusNodeState{
 					Height: unsyncedNodeHeight,
-					Step:   testStep,
-					Round:  uint8(currentRound),
+					Step:   uint8(consensus.NewRound),
+					Round:  uint8(1),
 				},
 				nodeState)
 		} else {
 			assertNodeConsensusView(t, nodeId,
 				typesCons.ConsensusNodeState{
-					Height: testHeight,
-					Step:   testStep,
-					Round:  uint8(currentRound),
+					Height: uint64(3),
+					Step:   uint8(consensus.NewRound),
+					Round:  uint8(1),
 				},
 				nodeState)
 		}
@@ -268,11 +264,10 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
-	maxPersistedHeight := testHeight - 1
 	metadataReceived := &typesCons.StateSyncMetadataResponse{
 		PeerAddress: "unused_peer_addr_in_tests",
 		MinHeight:   uint64(1),
-		MaxHeight:   maxPersistedHeight,
+		MaxHeight:   uint64(2), // node height - 1
 	}
 
 	// Simulate state sync metadata response by pushing metadata to the unsynced node's consensus module
@@ -288,8 +283,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 500, true)
 	require.NoError(t, err)
 
-	// TODO(#352): This function will be updated once state sync implementation is complete
-	err = WaitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, testHeight)
+	WaitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, 3)
 	require.NoError(t, err)
 }
 

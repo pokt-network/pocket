@@ -1,8 +1,6 @@
 package consensus
 
 import (
-	"fmt"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -25,13 +23,8 @@ func (m *consensusModule) GetNodeAddress() string {
 	return m.nodeAddress
 }
 
-// TODO(#352): Implement this function, currently a placeholder.
-// commitReceivedBlocks commits the blocks received from the blocksReceived channel
+// blockApplicationLoop commits the blocks received from the blocksReceived channel
 // it is intended to be run as a background process
-
-// runs as a background process in consensus module
-// listens on the blocksReceived channel
-// commits the received block
 func (m *consensusModule) blockApplicationLoop() {
 	for blockResponse := range m.blocksReceived {
 		block := blockResponse.Block
@@ -60,7 +53,6 @@ func (m *consensusModule) blockApplicationLoop() {
 			m.logger.Err(err).Msg("failed to apply and commit block")
 			return
 		}
-		fmt.Println("Applied block: ", block)
 		m.stateSync.CommittedBlock(m.CurrentHeight())
 	}
 

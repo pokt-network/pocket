@@ -19,6 +19,7 @@ type StateSyncModule interface {
 
 	Set(aggregatedMetaData *typesCons.StateSyncMetadataResponse)
 	CommittedBlock(uint64)
+	StartSyncing()
 }
 
 var (
@@ -62,6 +63,13 @@ func (m *stateSync) Set(aggregatedMetaData *typesCons.StateSyncMetadataResponse)
 	m.aggregatedMetaData = aggregatedMetaData
 }
 
+func (m *stateSync) StartSyncing() {
+	err := m.Start()
+	if err != nil {
+		m.logger.Error().Err(err).Msg("couldn't start state sync")
+	}
+}
+
 // Start performs state sync process, starting from the consensus module's current height to the aggragated metadata height
 func (m *stateSync) Start() error {
 	consensusMod := m.bus.GetConsensusModule()
@@ -73,7 +81,7 @@ func (m *stateSync) Start() error {
 	}
 	defer readCtx.Release()
 
-	//get the current validators
+	// get the current validators
 	m.validators, err = readCtx.GetAllValidators(int64(currentHeight))
 	if err != nil {
 		return err
