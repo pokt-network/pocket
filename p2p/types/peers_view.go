@@ -61,7 +61,8 @@ func (view *sortedPeersView) GetPeers() PeerList {
 // Searches from index 1 because index 0 is self by convention and the rest of
 // the slice is sorted.
 func (view *sortedPeersView) Add(peer Peer) {
-	i := sort.SearchStrings(view.sortedAddrs[1:], peer.GetAddress().String())
+	i := view.getAddrIndex(peer.GetAddress())
+
 	view.sortedAddrs = insertElementAtIndex(view.sortedAddrs, peer.GetAddress().String(), i)
 	view.sortedPeers = insertElementAtIndex(view.sortedPeers, peer, i)
 }
@@ -70,7 +71,7 @@ func (view *sortedPeersView) Add(peer Peer) {
 // Searches from index 1 because index 0 is self by convention and the rest of
 // the slice is sorted.
 func (view *sortedPeersView) Remove(addr crypto.Address) {
-	i := sort.SearchStrings(view.sortedAddrs[1:], addr.String())
+	i := view.getAddrIndex(addr)
 	if i == len(view.sortedAddrs) {
 		logger.Global.Debug().
 			Str("pokt_addr", addr.String()).
@@ -89,18 +90,27 @@ func (view *sortedPeersView) init(startAddr crypto.Address, pstore Peerstore) *s
 		view.sortedAddrs[i] = peer.GetAddress().String()
 	}
 
+	// sort sortedAddrs
+	view.sortAddrs(startAddr)
+
 	// Copying sortedPeers, preserving the sort order of sortedAddrs.
 	for i := 0; i < len(view.sortedAddrs); i++ {
 		view.sortedPeers[i] = pstore.GetPeerFromString(view.sortedAddrs[i])
 	}
 
-	view.sortAddrs(startAddr)
 	return view
 }
 
-// sortAddrs sorts addresses in `sortedAddrs` lexicographically but then `startAddr`
-// is moved to be first in the list. This makes RainTree propagation easier to
-// compute and interpret.
+// sortAddrs sorts addresses in `sortedAddrs` lexicographically then shifts
+// `startAddr` to the first index, moving any preceding values to the end
+// of the list; effectively preserving the order by "wrapping around".
+//
+//	self addr: "D",
+//	initial:   "BACEDF",
+//	sorted:    "ABCDEF",
+//	shifted:   "DEFABC",
+//
+// See the relevant tests for more examples.
 func (view *sortedPeersView) sortAddrs(startAddr crypto.Address) {
 	sort.Strings(view.sortedAddrs)
 
@@ -112,4 +122,28 @@ func (view *sortedPeersView) sortAddrs(startAddr crypto.Address) {
 			Msg("self address not found in peerstore so this client can send messages but does not propagate them")
 	}
 	view.sortedAddrs = append(view.sortedAddrs[i:len(view.sortedAddrs)], view.sortedAddrs[0:i]...)
+}
+
+// getAddrIndex returns the sortedAddrs index at which the given address is stored
+// or at which to insert it if not present.
+func (view *sortedPeersView) getAddrIndex(addr crypto.Address) int {
+	// sort.Search uses binary search to find the smallest index in `view.sortedAddrs`
+	// at which the given function returns `true`.
+	// (i.e.: where does the address order start to "wrap-around"?)
+	// (see: https://pkg.go.dev/sort#Search)
+	wrapIdx := sort.Search(len(view.sortedAddrs), func(visitIdx int) bool {
+		return view.sortedAddrs[visitIdx] < view.sortedAddrs[0]
+	})
+
+	frontAddrs := view.sortedAddrs[:wrapIdx]
+	backAddrs := view.sortedAddrs[wrapIdx:]
+	i := sort.SearchStrings(frontAddrs, addr.String())
+	// index 0 means "before the self addr". In that case we need to consider
+	// backAddrs because, by definition, all of its values are "smaller"
+	// than self addr.
+	if i == 0 {
+		i = sort.SearchStrings(backAddrs, addr.String())
+		i += len(frontAddrs)
+	}
+	return i
 }
