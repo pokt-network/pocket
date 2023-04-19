@@ -225,10 +225,12 @@ func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *tes
 	servicersChain2, servicerKeysChain2 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicersPerSession/2, []string{"chn2"})
 	fishermenChain1, fishermenKeysChain1 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFishermenPerSession/2, []string{"chn2"})
 
+	application, applicationKey := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, 1, []string{"chn1", "chn2", "chn3"})
+
 	//nolint:gocritic // intentionally not appending result to a new slice
-	actors := append(servicersChain1, append(servicersChain2, append(fishermenChain1, fishermenChain2...)...)...)
+	actors := append(application, append(servicersChain1, append(servicersChain2, append(fishermenChain1, fishermenChain2...)...)...)...)
 	//nolint:gocritic // intentionally not appending result to a new slice
-	keys := append(servicerKeysChain1, append(servicerKeysChain2, append(fishermenKeysChain1, fishermenKeysChain2...)...)...)
+	keys := append(applicationKey, append(servicerKeysChain1, append(servicerKeysChain2, append(fishermenKeysChain1, fishermenKeysChain2...)...)...)...)
 
 	// Prepare the environment
 	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, 0, 1, 0, test_artifacts.WithActors(actors, keys))
