@@ -14,7 +14,7 @@ import (
 var rpcURL string
 
 func init() {
-	rpcURL = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "pockets"), defaults.DefaultRPCPort)
+	rpcURL = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "pocket-validators"), defaults.DefaultRPCPort)
 }
 
 // cliPath is the path of the binary installed and is set by the Tiltfile
