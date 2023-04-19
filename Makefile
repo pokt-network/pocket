@@ -253,7 +253,7 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
-	$(eval DIRS = p2p libp2p persistence)
+	$(eval DIRS = p2p persistence)
 	for dir in $(DIRS); do \
 		echo "Processing $$dir mocks..."; \
         find $$dir/types/mocks -type f ! -name "mocks.go" -exec rm {} \;; \
@@ -431,8 +431,8 @@ benchmark_sortition: ## Benchmark the Sortition library
 	go test ${VERBOSE_TEST} -bench=. -run ^# ./consensus/leader_election/sortition
 
 .PHONY: benchmark_p2p_addrbook
-benchmark_p2p_addrbook: ## Benchmark all P2P addr book related tests
-	go test ${VERBOSE_TEST} -bench=. -run BenchmarkAddrBook -count=1 ./p2p/...
+benchmark_p2p_peerstore: ## Run P2P peerstore benchmarks
+	go test ${VERBOSE_TEST} -bench=. -run BenchmarkPeerstore -count=1 ./p2p/...
 
 ### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
 # TODO          - General Purpose catch-all.

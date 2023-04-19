@@ -50,12 +50,11 @@ func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) error {
 
 func (m *consensusModule) printNodeState(_ *messaging.DebugMessage) {
 	state := m.GetNodeState()
-	m.logger.Debug().
-		Fields(map[string]any{
-			"step":   state.Step,
-			"height": state.Height,
-			"round":  state.Round,
-		}).Msg("Node state")
+	m.logger.Debug().Fields(map[string]any{
+		"step":   typesCons.StepToString[typesCons.HotstuffStep(state.Step)],
+		"height": state.Height,
+		"round":  state.Round,
+	}).Msg("Node state")
 }
 
 func (m *consensusModule) triggerNextView(_ *messaging.DebugMessage) {
