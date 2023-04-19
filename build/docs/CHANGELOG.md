@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.37] - 2023-04-24
+
+- E2E tests use in-cluster config on DevNet if `$HOME/.kube` does not exist
+
 ## [0.0.0.36] - 2023-04-19
 
 - Changed validator DNS names to match new naming convention (again, helm chart was renamed)
