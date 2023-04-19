@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.49] - 2023-04-19
+
+- Add state sync channels `blocksReceived` and `metadataReceived`
+- 
+
 ## [0.0.0.48] - 2023-04-17
 
 - Debug logging improvements

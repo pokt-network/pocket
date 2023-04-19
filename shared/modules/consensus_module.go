@@ -73,6 +73,7 @@ type ConsensusPacemaker interface {
 type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
+	IsValidator() (bool, error)
 }
 
 // ConsensusDebugModule exposes functionality used for testing & development purposes.

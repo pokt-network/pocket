@@ -1,8 +1,6 @@
 package state_sync
 
 import (
-	"fmt"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -55,28 +53,17 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	bus.RegisterModule(m)
 
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
-
 	m.committedBlockHeightChannel = make(chan uint64, committedBlockHeightChannelSize)
 
 	return m, nil
 }
 
 func (m *stateSync) Set(aggregatedMetaData *typesCons.StateSyncMetadataResponse) {
-	m.logger.Info().Msg("State Sync Module Set")
 	m.aggregatedMetaData = aggregatedMetaData
-
-	// return
 }
 
-// TODO(#352): implement this function
-// Start performs state sync
-
-// processes and aggregates all metadata collected in metadataReceived channel,
-// requests missing blocks starting from its current height to the aggregated metadata's maxHeight,
-// once the requested block is received and committed by consensus module, sends the next request for the next block,
-// when all blocks are received and committed, stops the state sync process by calling its `Stop()` function.
+// Start performs state sync process, starting from the consensus module's current height to the aggragated metadata height
 func (m *stateSync) Start() error {
-
 	consensusMod := m.bus.GetConsensusModule()
 	currentHeight := consensusMod.CurrentHeight()
 	nodeAddress := consensusMod.GetNodeAddress()
@@ -92,6 +79,7 @@ func (m *stateSync) Start() error {
 		return err
 	}
 
+	// start requesting blocks from the current height to the aggregated metadata height
 	for currentHeight <= m.aggregatedMetaData.MaxHeight {
 		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.aggregatedMetaData.MaxHeight)
 
@@ -112,24 +100,29 @@ func (m *stateSync) Start() error {
 			}
 		}
 
-		// wait for the block to be received and committed by consensus module
-		receivedBlockHeight := <-m.committedBlockHeightChannel
-		// TODO!: do we need to do this check? It should not happen
-		if receivedBlockHeight != consensusMod.CurrentHeight() {
-			return fmt.Errorf("received block height %d is not equal to current height %d", receivedBlockHeight, currentHeight)
-		}
-		//timer to check if block is received and committed
+		// wait for the requested block to be received and committed by consensus module
+		<-m.committedBlockHeightChannel
+
+		// requested block is received and committed, continue to the next block from the current height
 		currentHeight = consensusMod.CurrentHeight()
 	}
 	// syncing is complete, stop the state sync module
 	return m.Stop()
 }
 
-// TODO(#352): check if node is a valdiator, if not send Consensus_IsSyncedNonValidator event
 // Stop stops the state sync process, and sends `Consensus_IsSyncedValidator` FSM event
 func (m *stateSync) Stop() error {
-	m.logger.Info().Msg("Stop state sync moudule")
-	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
+	// check if the node is a validator
+	isValidator, err := m.bus.GetConsensusModule().IsValidator()
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info().Msg("Syncing is complete!")
+	if isValidator {
+		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
+	}
+	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator)
 }
 
 func (m *stateSync) SetBus(pocketBus modules.Bus) {
