@@ -12,6 +12,7 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
+	"golang.org/x/exp/slices"
 )
 
 // sessionHydrator is an internal structure used to prepare a Session returned by `GetSession` below
@@ -107,14 +108,18 @@ func (s *sessionHydrator) hydrateSessionApplication(appAddr string) error {
 
 // validateApplicationSession validates that the application can dispatch a session at the requested geo zone and for the request relay chain
 func (s *sessionHydrator) validateApplicationSession() error {
-	// if s.session.Application.Chains {
-	// TECHDEBT: We can remove this decoding process once we use `strings` instead of `[]byte` for addresses
-	// addr, err := hex.DecodeString(s.session.Application.Address)
-	// if err != nil {
-	// 	return err
-	// }
-	// s.session.Application, err = s.readCtx.GetActor(coreTypes.ActorType_ACTOR_TYPE_APP, addr, s.session.SessionHeight)
-	// return err
+	// TODO(#XXX): Filter by geo-zone
+	app := s.session.Application
+
+	if !slices.Contains(app.Chains, s.session.RelayChain) {
+		return fmt.Errorf("application %s does not stake for relay chain %s", app.Address, s.session.RelayChain)
+	}
+
+	if !(app.PausedHeight == -1 && app.UnstakingHeight == -1) {
+		return fmt.Errorf("application %s is either unstaked or paused", app.Address)
+	}
+
+	// TODO: Consider what else we should validate for here
 	return nil
 }
 
@@ -140,7 +145,7 @@ func (s *sessionHydrator) hydrateSessionID() error {
 	return nil
 }
 
-// hydrateSessionServicers
+// hydrateSessionServicers finds the servicers that are staked at the session height and populates the session with them
 func (s *sessionHydrator) hydrateSessionServicers() error {
 	// number of servicers per session at this height
 	numServicers, err := s.readCtx.GetIntParam(types.ServicersPerSessionParamName, s.session.SessionHeight)
@@ -181,13 +186,7 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 	return nil
 }
 
-// uses the current 'world state' to determine the fishermen in the session
-// 1) get an ordered list of the public keys of fishermen who are:
-//   - actively staked
-//   - staked within geo-zone  (or closest geo-zones)
-//   - staked for relay-chain
-//
-// 2) calls `pseudoRandomSelection(fishermen, numberOfFishPerSession)`
+// hydrateSessionFishermen finds the fishermen that are staked at the session height and populates the session with them
 func (s *sessionHydrator) hydrateSessionFishermen() error {
 	// number of fisherman per session at this height
 	numFishermen, err := s.readCtx.GetIntParam(types.FishermanPerSessionParamName, s.session.SessionHeight)

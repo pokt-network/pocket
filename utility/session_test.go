@@ -52,7 +52,7 @@ func TestSession_GetSession_SingleFishermanSingleServicerBaseCase(t *testing.T) 
 	require.Equal(t, fish.Address, session.Fishermen[0].Address)
 }
 
-func TestSession_GetSession_InvalidApplication(t *testing.T) {
+func TestSession_GetSession_ApplicationInvalid(t *testing.T) {
 	runtimeCfg, utilityMod, _ := prepareEnvironment(t, 5, 1, 1, 1)
 
 	// Verify there's only 1 app
@@ -66,6 +66,14 @@ func TestSession_GetSession_InvalidApplication(t *testing.T) {
 	// Verify that the one app in the genesis is not the one we just generated
 	addr := pk.Address().String()
 	require.NotEqual(t, app.Address, addr)
+
+	// Expect no error trying to get a session for the real application
+	_, err = utilityMod.GetSession(app.Address, 1, test_artifacts.DefaultChains[0], "unused_geo")
+	require.NoError(t, err)
+
+	// Expect an error trying to get a session for an unstaked chain
+	_, err = utilityMod.GetSession(addr, 1, "chain", "unused_geo")
+	require.Error(t, err)
 
 	// Expect an error trying to get a session for a non-existent application
 	_, err = utilityMod.GetSession(addr, 1, test_artifacts.DefaultChains[0], "unused_geo")
