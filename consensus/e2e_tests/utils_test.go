@@ -691,8 +691,8 @@ func broadcastMessages(t *testing.T, msgs []*anypb.Any, pocketNodes IdToNodeMapp
 // WaitForNodeToSync waits for a node to sync to a target height
 // For every missing block for the unsynced node:
 //
-//	first, waits for the node to request a missing block via `waitForNodeToRequestMissingBlock()` function,
-//	then, waits for the node to receive the missing block via `waitForNodeToReceiveMissingBlock()` function,
+//	first, waits for the unsyced node to request a missing block via `waitForNodeToRequestMissingBlock()` function,
+//	then, waits for other nodes to send the requested block via `waitForNodesToReplyToBlockRequest()` function,
 //	finally, wait for the node to catch up to the target height via `waitForNodeToCatchUp()` function.
 func WaitForNodeToSync(
 	t *testing.T,
@@ -743,7 +743,7 @@ func waitForNodeToRequestMissingBlock(
 	return msgs[0], err
 }
 
-// waitForNodeToReceiveMissingBlock waits for nodes to send back requested block
+// waitForNodesToReplyToBlockRequest waits for nodes to send back requested block
 func waitForNodesToReplyToBlockRequest(
 	t *testing.T,
 	clck *clock.Mock,
@@ -756,7 +756,7 @@ func waitForNodesToReplyToBlockRequest(
 	return msgs[0], err
 }
 
-// waitForNodeToCatchUp waits for node to node to catch up to the target height
+// waitForNodeToCatchUp waits for unsynced node to catch up to the target height
 func waitForNodeToCatchUp(
 	t *testing.T,
 	clck *clock.Mock,
@@ -768,7 +768,7 @@ func waitForNodeToCatchUp(
 	_, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "synced event", 1, 500, false)
 	require.NoError(t, err)
 
-	// assure all nodes are at same height
+	// ensure all nodes are at same height
 	for nodeId, pocketNode := range allNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertHeight(t, nodeId, targetHeight, nodeState.Height)

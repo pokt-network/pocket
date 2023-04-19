@@ -81,7 +81,7 @@ func WithCustomStateMachine(stateMachine *fsm.FSM) modules.ModuleOption {
 	}
 }
 
-// WithDebugEventsChannel is only used for testing purposes. It allows us to capture the events
+// WithDebugEventsChannel is used for testing purposes. It allows us to capture the events
 // from the FSM and publish them to debug channel for testing.
 func WithDebugEventsChannel(eventsChannel modules.EventsChannel) modules.ModuleOption {
 	return func(m modules.InitializableModule) {
