@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const metadataSyncPeriod = 30 * time.Second // TODO: Make this configurable
+const metadataSyncPeriod = 45 * time.Second // TODO: Make this configurable
 
 var _ modules.ConsensusStateSync = &consensusModule{}
 
@@ -45,7 +45,6 @@ func (m *consensusModule) blockApplicationLoop() {
 			continue
 		}
 
-		//fmt.Println("Now going to decide if I should apply it")
 		if block.BlockHeader.Height <= maxPersistedHeight {
 			m.logger.Info().Msgf("Received block with height: %d, but node already persisted blocks until height: %d, so node will not apply this block", block.BlockHeader.Height, maxPersistedHeight)
 			continue

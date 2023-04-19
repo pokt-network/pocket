@@ -139,9 +139,9 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	}
 
 	// Pacemaker shouldn't catch to higher round (8, 2, 6) to (8, 1, 7) shouldn't happen, because it will cause re-leader election, and that round no blocks are generated.
-	if msg.Round > currentRound && msg.Step < currentStep {
-		return false, nil
-	}
+	// if msg.Round > currentRound && msg.Step < currentStep {
+	// 	return false, nil
+	// }
 
 	// Everything checks out!
 	if msg.Height == currentHeight && msg.Step == currentStep && msg.Round == currentRound {
