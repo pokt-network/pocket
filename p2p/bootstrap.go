@@ -11,9 +11,9 @@ import (
 
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
 	rpcABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime/defaults"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 // configureBootstrapNodes parses the bootstrap nodes from the config and validates them
@@ -43,7 +43,7 @@ func (m *p2pModule) configureBootstrapNodes() error {
 
 // bootstrap attempts to bootstrap from a bootstrap node
 func (m *p2pModule) bootstrap() error {
-	var pstore sharedP2P.Peerstore
+	var pstore typesP2P.Peerstore
 
 	for _, bootstrapNode := range m.bootstrapNodes {
 		m.logger.Info().Str("endpoint", bootstrapNode).Msg("Attempting to bootstrap from bootstrap node")
