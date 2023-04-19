@@ -27,7 +27,5 @@ spec:
   {{- end }}
   {{- if .Values.persistence.storageClass }}
   storageClassName: {{ .Values.persistence.storageClass | quote }}
-  {{ else }}
-  storageClassName: ""
   {{- end }}
 {{- end -}}

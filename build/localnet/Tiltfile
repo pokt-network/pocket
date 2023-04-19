@@ -168,6 +168,7 @@ for x in range(localnet_config["validators"]["count"]):
         name="validator-%s" % formatted_validator_number,
         namespace="default",
         set=[
+            "global.postgresql.auth.postgresPassword=LocalNetPassword",
             "image.repository=validator-image",
             "privateKeySecretKeyRef.name=v1-localnet-validators-private-keys",
             "privateKeySecretKeyRef.key=%s" % formatted_validator_number,
