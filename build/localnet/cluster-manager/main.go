@@ -20,6 +20,7 @@ import (
 )
 
 const cliPath = "/usr/local/bin/client"
+const validatorServiceUrlFormat = "validator-%s-pocket-validator:%d"
 
 var (
 	rpcURL string
@@ -33,7 +34,7 @@ var (
 )
 
 func init() {
-	rpcURL = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "validator-001-pocket-validator"), defaults.DefaultRPCPort)
+	rpcURL = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", defaults.Validator1EndpointK8S), defaults.DefaultRPCPort)
 }
 
 func main() {
@@ -77,7 +78,7 @@ func main() {
 				continue
 			}
 
-			validatorServiceUrl := fmt.Sprintf("validator-%s-pocket-validator:%d", validatorId, defaults.DefaultP2PPort)
+			validatorServiceUrl := fmt.Sprintf(validatorServiceUrlFormat, validatorId, defaults.DefaultP2PPort)
 			if err := stakeValidator(privateKey, autoStakeAmount, autoStakeChains, validatorServiceUrl); err != nil {
 				logger.Err(err).Msg("Error staking validator")
 			}
