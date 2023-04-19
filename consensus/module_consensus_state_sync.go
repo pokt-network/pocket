@@ -34,11 +34,8 @@ func (m *consensusModule) blockApplicationLoop() {
 			return
 		}
 
-		if block.BlockHeader.Height <= maxPersistedHeight {
-			m.logger.Info().Msgf("Received block with height: %d, but node already persisted blocks until height: %d, so node will not apply this block", block.BlockHeader.Height, maxPersistedHeight)
-			return
-		} else if block.BlockHeader.Height > m.CurrentHeight() {
-			m.logger.Info().Msgf("Received block with height %d, but node's last persisted height is: %d, so node will not apply this block", block.BlockHeader.Height, maxPersistedHeight)
+		if block.BlockHeader.Height <= maxPersistedHeight || block.BlockHeader.Height > m.CurrentHeight() {
+			m.logger.Info().Msgf("Received block at height: %d, but node will not apply this block", block.BlockHeader.Height)
 			return
 		}
 
@@ -87,27 +84,14 @@ func (m *consensusModule) verifyBlock(block *coreTypes.Block) error {
 }
 
 func (m *consensusModule) applyAndCommitBlock(block *coreTypes.Block) error {
-	m.logger.Info().Msgf("applying and committing the block at height %d", block.BlockHeader.Height)
-
-	// TODO: uncomment following. In this PR test blocks don't have a valid QC, therefore commented out to let the tests pass
-	// if err := m.applyBlock(block); err != nil {
-	// 	m.logger.Error().Err(err).Msg("Could not apply block, invalid QC")
-	// 	return err
-	// }
-
+	// TODO(#352): call m.applyBlock(block) function before  m.commitBlock(block). In this PR testing blocks don't have a valid QC, therefore commented out to let the tests pass.
 	if err := m.commitBlock(block); err != nil {
 		m.logger.Error().Err(err).Msg("Could not commit block, invalid QC")
 		return err
 	}
-
 	m.paceMaker.NewHeight()
 
-	maxPersistedHeight, err := m.maxPersistedBlockHeight()
-	if err != nil {
-		return err
-	}
-
-	m.logger.Info().Msgf("Block is Committed, maxPersistedHeight is: %d, current height is :%d", maxPersistedHeight, m.height)
+	m.logger.Info().Msgf("New block is committed, current height is :%d", m.height)
 	return nil
 }
 

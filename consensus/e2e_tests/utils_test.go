@@ -481,9 +481,8 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesi
 				}
 				return baseReplicaUtilityUnitOfWorkMock(t, genesisState), nil
 			}).
-		// For state sync tests we call NewUnitOfWork is called more than 4 times. Therefore, we need to increase this number.
-		// TODO:  Update this value properly
-		MaxTimes(4 * stateSyncUtilCalls)
+		// For state sync tests we call NewUnitOfWork is called more than once per node. stateSyncUtilCalls is set to relatively bigger number to avoid flakiness
+		MaxTimes(stateSyncUtilCalls)
 	utilityMock.EXPECT().GetModuleName().Return(modules.UtilityModuleName).AnyTimes()
 
 	return utilityMock
@@ -710,20 +709,20 @@ func WaitForNodeToSync(
 		blockRequest, err := waitForNodeToRequestMissingBlock(t, clck, eventsChannel)
 		require.NoError(t, err)
 
-		// broadcast requeust to all nodes
+		// broadcast requests to all nodes
 		P2PBroadcast(t, allNodes, blockRequest)
 		advanceTime(t, clck, 10*time.Millisecond)
 
-		// receiving replies from all nodes
+		// wait to receive replies from all nodes
 		blockResponse, err := waitForNodesToReplyToBlockRequest(t, clck, eventsChannel)
 		require.NoError(t, err)
 
-		// sending block response to unsynced node
+		// send block response to the unsynced node
 		P2PSend(t, unsyncedNode, blockResponse)
 		advanceTime(t, clck, 10*time.Millisecond)
 
 		// waiting for node to catch the global height
-		err = waitForNodeToCatchUpHeight(t, clck, eventsChannel, allNodes, currentHeight+1)
+		err = waitForNodeToCatchUp(t, clck, eventsChannel, allNodes, currentHeight+1)
 		require.NoError(t, err)
 
 		currentHeight = unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
@@ -744,8 +743,7 @@ func waitForNodeToRequestMissingBlock(
 	return msgs[0], err
 }
 
-// waitForNodeToReceiveMissingBlock requests block request of the unsynced node
-// for given node to node to catch up to the target height by sending the requested block.
+// waitForNodeToReceiveMissingBlock waits for nodes to send back requested block
 func waitForNodesToReplyToBlockRequest(
 	t *testing.T,
 	clck *clock.Mock,
@@ -758,8 +756,8 @@ func waitForNodesToReplyToBlockRequest(
 	return msgs[0], err
 }
 
-// waitForNodeToCatchUp waits for given node to node to catch up to the target height by sending the requested block.
-func waitForNodeToCatchUpHeight(
+// waitForNodeToCatchUp waits for node to node to catch up to the target height
+func waitForNodeToCatchUp(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
@@ -770,6 +768,7 @@ func waitForNodeToCatchUpHeight(
 	_, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "synced event", 1, 500, false)
 	require.NoError(t, err)
 
+	// assure all nodes are at same height
 	for nodeId, pocketNode := range allNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		assertHeight(t, nodeId, targetHeight, nodeState.Height)

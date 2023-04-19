@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	stateSyncModuleName             = "stateSyncModule"
-	committedBlockHeightChannelSize = 100
+	stateSyncModuleName       = "stateSyncModule"
+	committedBlocsChannelSize = 100
 )
 
 type StateSyncModule interface {
@@ -29,19 +29,20 @@ var (
 )
 
 type stateSync struct {
-	bus                         modules.Bus
-	logger                      *modules.Logger
-	validators                  []*coreTypes.Actor
-	aggregatedMetaData          *typesCons.StateSyncMetadataResponse
-	committedBlockHeightChannel chan uint64
+	bus                    modules.Bus
+	logger                 *modules.Logger
+	validators             []*coreTypes.Actor
+	aggregatedMetaData     *typesCons.StateSyncMetadataResponse
+	committedBlocksChannel chan uint64
 }
 
 func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return new(stateSync).Create(bus, options...)
 }
 
+// CommittedBlock is called by the consensus module when a block received by the network is committed by blockApplicationLoop() function
 func (m *stateSync) CommittedBlock(height uint64) {
-	m.committedBlockHeightChannel <- height
+	m.committedBlocksChannel <- height
 }
 
 func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -54,7 +55,7 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	bus.RegisterModule(m)
 
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
-	m.committedBlockHeightChannel = make(chan uint64, committedBlockHeightChannelSize)
+	m.committedBlocksChannel = make(chan uint64, committedBlocsChannelSize)
 
 	return m, nil
 }
@@ -87,7 +88,7 @@ func (m *stateSync) Start() error {
 		return err
 	}
 
-	// start requesting blocks from the current height to the aggregated metadata height
+	// requests blocks from the current height to the aggregated metadata height
 	for currentHeight <= m.aggregatedMetaData.MaxHeight {
 		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.aggregatedMetaData.MaxHeight)
 
@@ -109,12 +110,12 @@ func (m *stateSync) Start() error {
 		}
 
 		// wait for the requested block to be received and committed by consensus module
-		<-m.committedBlockHeightChannel
+		<-m.committedBlocksChannel
 
 		// requested block is received and committed, continue to the next block from the current height
 		currentHeight = consensusMod.CurrentHeight()
 	}
-	// syncing is complete, stop the state sync module
+	// syncing is complete and all requested blocks are committed, stop the state sync module
 	return m.Stop()
 }
 
@@ -125,8 +126,8 @@ func (m *stateSync) Stop() error {
 	if err != nil {
 		return err
 	}
-
 	m.logger.Info().Msg("Syncing is complete!")
+
 	if isValidator {
 		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
 	}

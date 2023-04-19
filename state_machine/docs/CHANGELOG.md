@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.4] - 2023-04-14
+## [0.0.0.4] - 2023-04-19
 
-- Add `WithDebugEventsChannel()` to be used in testing
+- Add `WithDebugEventsChannel()` function to be used in testing
   
 ## [0.0.0.4] - 2023-04-03
 

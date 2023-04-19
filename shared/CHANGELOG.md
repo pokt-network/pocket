@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.52] - 2023-04-19
+
+- Exported `IsValidator()` function in `ConsensusStateSync` interface 
+
 ## [0.0.0.52] - 2023-04-17
 
 - Removed *temporary* `shared/p2p` package; consolidated into `p2p`

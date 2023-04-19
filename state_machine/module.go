@@ -2,7 +2,6 @@ package state_machine
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/looplab/fsm"
 	"github.com/pokt-network/pocket/logger"
@@ -48,7 +47,6 @@ func (*stateMachineModule) Create(bus modules.Bus, options ...modules.ModuleOpti
 			if err != nil {
 				m.logger.Fatal().Err(err).Msg("failed to pack state machine transition event")
 			}
-			fmt.Println("Event bus in state machine: ", bus.GetEventBus())
 			bus.PublishEventToBus(newStateMachineTransitionEvent)
 			for _, channel := range m.debugChannels {
 				channel <- newStateMachineTransitionEvent

@@ -28,20 +28,17 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 	err := StartAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
-	testHeight := uint64(4)
-
 	// Choose node 1 as the server node
 	// Set server node's height to test height.
 	serverNode := pocketNodes[1]
 	serverNodePeerId := serverNode.GetBus().GetConsensusModule().GetNodeAddress()
-	serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
+	serverNode.GetBus().GetConsensusModule().SetHeight(uint64(4))
 
 	// Choose node 2 as the requester node.
 	requesterNode := pocketNodes[2]
 	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
 	// Test MetaData Req
-
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_MetadataReq{
 			MetadataReq: &typesCons.StateSyncMetadataRequest{
@@ -49,7 +46,6 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 			},
 		},
 	}
-
 	anyProto, err := anypb.New(stateSyncMetaDataReqMessage)
 	require.NoError(t, err)
 
@@ -70,8 +66,7 @@ func TestStateSync_ServerGetMetaDataReq_Success(t *testing.T) {
 	metaDataRes := stateSyncMetaDataResMessage.GetMetadataRes()
 	require.NotEmpty(t, metaDataRes)
 
-	lastPersistedHeight := testHeight - 1
-	require.Equal(t, lastPersistedHeight, metaDataRes.MaxHeight)
+	require.Equal(t, uint64(3), metaDataRes.MaxHeight) // 3 because node sends the last persisted height
 	require.Equal(t, uint64(1), metaDataRes.MinHeight)
 	require.Equal(t, serverNodePeerId, metaDataRes.PeerAddress)
 }
@@ -91,9 +86,8 @@ func TestStateSync_ServerGetBlock_Success(t *testing.T) {
 	err := StartAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
-	testHeight := uint64(5)
 	serverNode := pocketNodes[1]
-	serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
+	serverNode.GetBus().GetConsensusModule().SetHeight(uint64(5))
 
 	// Choose node 2 as the requester node
 	requesterNode := pocketNodes[2]
@@ -149,23 +143,19 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 	err := StartAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
-	testHeight := uint64(5)
-
 	serverNode := pocketNodes[1]
-	serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
+	serverNode.GetBus().GetConsensusModule().SetHeight(uint64(5))
 
 	// Choose node 2 as the requester node
 	requesterNode := pocketNodes[2]
 	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
 	// Failing Test
-	// Get Block Req is current block height + 1
-	requestHeight := testHeight + 1
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
 			GetBlockReq: &typesCons.GetBlockRequest{
 				PeerAddress: requesterNodePeerAddress,
-				Height:      requestHeight,
+				Height:      uint64(6), // 6 because node ask for the next block
 			},
 		},
 	}
@@ -196,11 +186,6 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	err := StartAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
-	// Prepare leader info
-	//testHeight := uint64(3)
-	//testRound := uint64(0)
-	//testStep := uint8(consensus.NewRound)
-
 	// Prepare unsynced node info
 	unsyncedNode := pocketNodes[2]
 	unsyncedNodeId := typesCons.NodeId(2)
@@ -225,7 +210,6 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	for _, pocketNode := range pocketNodes {
 		TriggerNextView(t, pocketNode)
 	}
-	//currentRound := testRound + 1
 
 	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderForView() function.
 	// Any node in pocketNodes mapping can be used to call GetLeaderForView() function.
@@ -267,7 +251,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	metadataReceived := &typesCons.StateSyncMetadataResponse{
 		PeerAddress: "unused_peer_addr_in_tests",
 		MinHeight:   uint64(1),
-		MaxHeight:   uint64(2), // node height - 1
+		MaxHeight:   uint64(2), // 2 because unsynced node last persisted height 2
 	}
 
 	// Simulate state sync metadata response by pushing metadata to the unsynced node's consensus module
