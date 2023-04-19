@@ -2,10 +2,6 @@ module github.com/pokt-network/pocket
 
 go 1.18
 
-// See the following link for reasoning on why we need the replacement:
-// https://discuss.dgraph.io/t/error-mremap-size-mismatch-on-arm64/15333/8
-replace github.com/dgraph-io/ristretto v0.1.0 => github.com/46bit/ristretto v0.1.0-with-arm-fix
-
 require (
 	github.com/ProtonMail/go-ecvrf v0.0.1
 	github.com/golang/mock v1.6.0
@@ -19,7 +15,6 @@ require (
 
 require (
 	github.com/benbjohnson/clock v1.3.0
-	github.com/celestiaorg/smt v0.2.1-0.20220414134126-dba215ccb884
 	github.com/cucumber/godog v0.12.6
 	github.com/deepmap/oapi-codegen v1.12.4
 	github.com/dgraph-io/badger/v3 v3.2103.2
@@ -31,11 +26,11 @@ require (
 	github.com/korovkin/limiter v0.0.0-20230307205149-3d4b2b34c99d
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/libp2p/go-libp2p v0.25.1
-	github.com/libp2p/go-libp2p-pubsub v0.9.2
 	github.com/looplab/fsm v1.0.1
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/multiformats/go-multiaddr v0.8.0
+	github.com/pokt-network/smt v0.4.0
 	github.com/quasilyte/go-ruleguard/dsl v0.3.21
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.6.0
@@ -114,7 +109,6 @@ require (
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.1 // indirect
 	github.com/huin/goupnp v1.0.3 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect

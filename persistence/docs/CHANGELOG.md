@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.49] - 2023-04-14
+
+- Index transactions in the `TxIndexer` by sender and recipient using the height and block index of the transactions
+
+## [0.0.0.48] - 2023-04-13
+
+- Remove persistent specific `TxResult` protobuf and interface
+- Utlise the `TxResult` protobuf in `shared/core/types`
+
+## [0.0.0.47] - 2023-04-13
+
+- Update imports to use `pokt-network/smt` instead of the archived `celestiaorg/smt`
+
 ## [0.0.0.46] - 2023-04-12
 
 - Update `prepareBlock()` function to add processed transactions to the persisted block

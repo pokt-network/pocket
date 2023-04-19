@@ -5,7 +5,6 @@ import (
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 	"github.com/stretchr/testify/require"
 )
 
@@ -59,12 +58,12 @@ func Test_getPeerListDelta(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			before := make(sharedP2P.PeerList, len(tt.args.before))
+			before := make(typesP2P.PeerList, len(tt.args.before))
 			for i, peer := range tt.args.before {
 				before[i] = peer
 			}
 
-			after := make(sharedP2P.PeerList, len(tt.args.after))
+			after := make(typesP2P.PeerList, len(tt.args.after))
 			for i, peer := range tt.args.after {
 				after[i] = peer
 			}

@@ -253,7 +253,7 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
-	$(eval DIRS = p2p libp2p persistence)
+	$(eval DIRS = p2p persistence)
 	for dir in $(DIRS); do \
 		echo "Processing $$dir mocks..."; \
         find $$dir/types/mocks -type f ! -name "mocks.go" -exec rm {} \;; \
@@ -288,9 +288,6 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 	$(PROTOC) -I=./runtime/configs/proto	-I=./runtime/configs/types/proto     				--go_out=./runtime/configs      ./runtime/configs/proto/*.proto
 	$(PROTOC_SHARED) -I=./runtime/genesis/proto  --go_out=./runtime/genesis ./runtime/genesis/proto/*.proto
 	protoc-go-inject-tag -input="./runtime/genesis/*.pb.go"
-
-	# Persistence
-	$(PROTOC_SHARED) -I=./persistence/indexer/proto 	--go_out=./persistence/indexer ./persistence/indexer/proto/*.proto
 
 	# Utility
 	$(PROTOC_SHARED) -I=./utility/types/proto --go_out=./utility/types ./utility/types/proto/*.proto
@@ -434,8 +431,8 @@ benchmark_sortition: ## Benchmark the Sortition library
 	go test ${VERBOSE_TEST} -bench=. -run ^# ./consensus/leader_election/sortition
 
 .PHONY: benchmark_p2p_addrbook
-benchmark_p2p_addrbook: ## Benchmark all P2P addr book related tests
-	go test ${VERBOSE_TEST} -bench=. -run BenchmarkAddrBook -count=1 ./p2p/...
+benchmark_p2p_peerstore: ## Run P2P peerstore benchmarks
+	go test ${VERBOSE_TEST} -bench=. -run BenchmarkPeerstore -count=1 ./p2p/...
 
 ### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
 # TODO          - General Purpose catch-all.
@@ -516,9 +513,8 @@ localnet_logs_validators_follow: ## Outputs logs from all validators and follows
 	kubectl logs -l v1-purpose=validator --all-containers=true --max-log-requests=1000 --tail=-1 -f
 
 .PHONY: localnet_down
-localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + postgres database)
+localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down`)
 	tilt down --file=build/localnet/Tiltfile
-	kubectl delete pvc --ignore-not-found=true data-dependencies-postgresql-0
 
 .PHONY: localnet_db_cli
 localnet_db_cli: ## Open a CLI to the local containerized postgres instancedb_cli:

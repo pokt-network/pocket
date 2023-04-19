@@ -6,15 +6,15 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
-var _ sharedP2P.PeerManager = &rainTreePeersManager{}
+var _ typesP2P.PeerManager = &rainTreePeersManager{}
 
 // rainTreePeersManager is in charge of handling operations on peers (like adding/removing them) within an Peerstore
 type rainTreePeersManager struct {
-	*sharedP2P.SortedPeerManager
+	*typesP2P.SortedPeerManager
 
 	maxLevelsMutex sync.Mutex
 	maxNumLevels   uint32
@@ -33,8 +33,8 @@ func newPeersManagerWithPeerstoreProvider(selfAddr cryptoPocket.Address, pstoreP
 // it also takes care of keeping the Peerstore sorted and indexed for fast access
 //
 // If `isDynamic` is false, the rainTreePeersManager will not handle addressBook changes, it will only be used for querying the Peerstore
-func newPeersManager(selfAddr cryptoPocket.Address, pstore sharedP2P.Peerstore, isDynamic bool) (*rainTreePeersManager, error) {
-	sortedPM, err := sharedP2P.NewSortedPeerManager(selfAddr, pstore, isDynamic)
+func newPeersManager(selfAddr cryptoPocket.Address, pstore typesP2P.Peerstore, isDynamic bool) (*rainTreePeersManager, error) {
+	sortedPM, err := typesP2P.NewSortedPeerManager(selfAddr, pstore, isDynamic)
 	if err != nil {
 		return nil, err
 	}
@@ -50,12 +50,12 @@ func newPeersManager(selfAddr cryptoPocket.Address, pstore sharedP2P.Peerstore, 
 	return pm, nil
 }
 
-func (pm *rainTreePeersManager) HandleEvent(evt sharedP2P.PeerManagerEvent) {
+func (pm *rainTreePeersManager) HandleEvent(evt typesP2P.PeerManagerEvent) {
 	pm.SortedPeerManager.HandleEvent(evt)
 	pm.updateMaxNumLevels()
 }
 
-func (pm *rainTreePeersManager) GetPeersView() sharedP2P.PeersView {
+func (pm *rainTreePeersManager) GetPeersView() typesP2P.PeersView {
 	return pm.SortedPeerManager.GetPeersView()
 }
 
@@ -66,7 +66,7 @@ func (pm *rainTreePeersManager) GetMaxNumLevels() uint32 {
 	return pm.maxNumLevels
 }
 
-func (pm *rainTreePeersManager) getPeersViewWithLevels() (view sharedP2P.PeersView, level uint32) {
+func (pm *rainTreePeersManager) getPeersViewWithLevels() (view typesP2P.PeersView, level uint32) {
 	return pm.GetPeersView(), pm.GetMaxNumLevels()
 }
 

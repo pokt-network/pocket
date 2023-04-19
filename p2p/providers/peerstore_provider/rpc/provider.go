@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
-	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime"
@@ -17,7 +16,6 @@ import (
 	"github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 var (
@@ -37,14 +35,11 @@ type rpcPeerstoreProvider struct {
 	rpcURL    string
 	p2pCfg    *configs.P2PConfig
 	rpcClient *rpc.ClientWithResponses
-
-	connFactory typesP2P.ConnectionFactory
 }
 
 func NewRPCPeerstoreProvider(options ...modules.ModuleOption) *rpcPeerstoreProvider {
 	rabp := &rpcPeerstoreProvider{
-		rpcURL:      fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
-		connFactory: transport.CreateDialer,                                        // default connection factory, overridable with WithConnectionFactory()
+		rpcURL: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
 	}
 
 	for _, o := range options {
@@ -68,7 +63,7 @@ func (*rpcPeerstoreProvider) GetModuleName() string {
 	return peerstore_provider.ModuleName
 }
 
-func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (sharedP2P.Peerstore, error) {
+func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
 
@@ -99,19 +94,11 @@ func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (sha
 	return peerstore_provider.ActorsToPeerstore(rabp, coreActors)
 }
 
-func (rabp *rpcPeerstoreProvider) GetConnFactory() typesP2P.ConnectionFactory {
-	return rabp.connFactory
-}
-
 func (rabp *rpcPeerstoreProvider) GetP2PConfig() *configs.P2PConfig {
 	if rabp.p2pCfg == nil {
 		return rabp.GetBus().GetRuntimeMgr().GetConfig().P2P
 	}
 	return rabp.p2pCfg
-}
-
-func (rabp *rpcPeerstoreProvider) SetConnectionFactory(connFactory typesP2P.ConnectionFactory) {
-	rabp.connFactory = connFactory
 }
 
 func (rabp *rpcPeerstoreProvider) initRPCClient() {
