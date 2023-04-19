@@ -31,7 +31,6 @@ jobs:
         run: echo "all=$(git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | xargs)" >> $GITHUB_OUTPUT
 
   validate:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'cl validate') }}
     runs-on: ubuntu-latest
     # require the first job to have ran
     needs: changedfiles
@@ -52,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     # require the validate job to have ran
     needs: validate
-    if: always()
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'cl validate') }}
     steps:
       - name: Verify changelogs Failed - Create review comment
         if: ${{ contains(needs.validate.outputs.all, 'failed') }}
