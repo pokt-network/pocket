@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.36] - 2023-04-18
+## [0.0.0.36] - 2023-04-19
 
 - Changed the way `cluster-manager` looks up the new validators to be staked.
 
