@@ -45,6 +45,7 @@ privateKeySecretKeyRef:
 | config.consensus.private_key | string | `""` |  |
 | config.logger.format | string | `"json"` |  |
 | config.logger.level | string | `"debug"` |  |
+| config.p2p.hostname | string | `""` |  |
 | config.p2p.is_empty_connection_type | bool | `false` |  |
 | config.p2p.max_mempool_count | int | `100000` |  |
 | config.p2p.port | int | `42069` |  |
@@ -69,7 +70,6 @@ privateKeySecretKeyRef:
 | config.telemetry.address | string | `"0.0.0.0:9000"` |  |
 | config.telemetry.enabled | bool | `true` |  |
 | config.telemetry.endpoint | string | `"/metrics"` |  |
-| config.use_libp2p | bool | `false` |  |
 | config.utility.max_mempool_transaction_bytes | int | `1073741824` |  |
 | config.utility.max_mempool_transactions | int | `9000` |  |
 | externalPostgresql.database | string | `""` | name of the external database |

@@ -7,12 +7,16 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
+	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/pokt-network/pocket/p2p/protocol"
 )
 
 // TODO(#314): Add the tooling and instructions on how to generate unit tests in this file.
@@ -215,6 +219,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	// Configure & prepare test module
 	numValidators := len(networkSimulationConfig)
 	runtimeConfigs := createMockRuntimeMgrs(t, numValidators)
+	genesisMock := runtimeConfigs[0].GetGenesis()
 	busMocks := createMockBuses(t, runtimeConfigs)
 
 	valIds := make([]string, 0, numValidators)
@@ -228,14 +233,14 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		return iId < jId
 	})
 
+	prepareDNSResolverMock(t, valIds)
+
 	// Create connection and bus mocks along with a shared WaitGroup to track the number of expected
 	// reads and writes throughout the mocked local network
 	var wg sync.WaitGroup
-	connMocks := make(map[string]typesP2P.Transport)
-	count := 0
-	for _, valId := range valIds {
+	for i, valId := range valIds {
 		expectedCall := networkSimulationConfig[valId]
-		expectedReads := expectedCall.numNetworkReads + 1
+		expectedReads := expectedCall.numNetworkReads
 		expectedWrites := expectedCall.numNetworkWrites
 
 		log.Printf("[valId: %s] expected reads: %d\n", valId, expectedReads)
@@ -243,43 +248,50 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		wg.Add(expectedReads)
 		wg.Add(expectedWrites)
 
-		connMocks[valId] = prepareConnMock(t, valId, &wg, expectedCall.numNetworkReads)
-		persistenceMock := preparePersistenceMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
-		consensusMock := prepareConsensusMock(t, busMocks[count])
-		telemetryMock := prepareTelemetryMock(t, busMocks[count], valId, &wg, expectedWrites)
+		persistenceMock := preparePersistenceMock(t, busMocks[i], genesisMock)
+		consensusMock := prepareConsensusMock(t, busMocks[i])
+		telemetryMock := prepareTelemetryMock(t, busMocks[i], valId, &wg, expectedWrites)
 
-		prepareBusMock(busMocks[count], persistenceMock, consensusMock, telemetryMock)
-
-		count++
+		prepareBusMock(busMocks[i], persistenceMock, consensusMock, telemetryMock)
 	}
 
+	libp2pMockNet := mocknet.New()
+	defer func() {
+		err := libp2pMockNet.Close()
+		require.NoError(t, err)
+	}()
+
 	// Inject the connection and bus mocks into the P2P modules
-	p2pModules := createP2PModules(t, busMocks)
-	for validatorId, p2pMod := range p2pModules {
-		p2pMod.listener = connMocks[validatorId]
+	p2pModules := createP2PModules(t, busMocks, libp2pMockNet)
+
+	for serviceURL, p2pMod := range p2pModules {
 		err := p2pMod.Start()
 		require.NoError(t, err)
 
-		for _, peer := range p2pMod.network.GetPeerstore().GetPeerList() {
-			netPeer, ok := peer.(*typesP2P.NetworkPeer)
-			require.True(t, ok, "unexpected `peer` type: %T", peer)
-			netPeer.Transport = connMocks[peer.GetServiceURL()]
-		}
+		sURL := strings.Clone(serviceURL)
+		mod := *p2pMod
+		p2pMod.host.SetStreamHandler(protocol.PoktProtocolID, func(stream libp2pNetwork.Stream) {
+			log.Printf("[valID: %s] Read\n", sURL)
+			(&mod).handleStream(stream)
+			wg.Done()
+		})
 	}
 
 	// Wait for completion
 	defer waitForNetworkSimulationCompletion(t, &wg)
+	t.Cleanup(func() {
+		// Stop all p2p modules
+		for _, p2pMod := range p2pModules {
+			err := p2pMod.Stop()
+			require.NoError(t, err)
+		}
+	})
 
 	// Send the first message (by the originator) to trigger a RainTree broadcast
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
 	require.NoError(t, p2pMod.Broadcast(p))
 
-	// Stop all p2p modules outside of loop
-	for _, p2pMod := range p2pModules {
-		err := p2pMod.Stop()
-		require.NoError(t, err)
-	}
 }
 
 func extractNumericId(valId string) int64 {

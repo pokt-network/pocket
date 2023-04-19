@@ -1,8 +1,6 @@
-package p2p
+package types
 
 import (
-	"io"
-
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
@@ -10,9 +8,6 @@ type Peer interface {
 	GetAddress() crypto.Address
 	GetPublicKey() crypto.PublicKey
 	GetServiceURL() string
-
-	// TECHDEBT(#576): move this to some new `ConnManager` interface.
-	GetStream() io.ReadWriteCloser
 }
 
 // PeerList is a convenience type for operating on a slice of `Peer`s.

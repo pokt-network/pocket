@@ -2,10 +2,10 @@ package raintree
 
 import (
 	"github.com/golang/mock/gomock"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/runtime/configs"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	sharedP2P "github.com/pokt-network/pocket/shared/p2p"
 )
 
 func mockBus(ctrl *gomock.Controller) *mockModules.MockBus {
@@ -20,7 +20,7 @@ func mockBus(ctrl *gomock.Controller) *mockModules.MockBus {
 	return busMock
 }
 
-func mockPeerstoreProvider(ctrl *gomock.Controller, pstore sharedP2P.Peerstore) *mocksP2P.MockPeerstoreProvider {
+func mockPeerstoreProvider(ctrl *gomock.Controller, pstore typesP2P.Peerstore) *mocksP2P.MockPeerstoreProvider {
 	peerstoreProviderMock := mocksP2P.NewMockPeerstoreProvider(ctrl)
 	peerstoreProviderMock.EXPECT().GetStakedPeerstoreAtHeight(gomock.Any()).Return(pstore, nil).AnyTimes()
 	return peerstoreProviderMock

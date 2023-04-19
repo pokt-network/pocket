@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.2] - 2023-04-14
+## [0.0.0.3] - 2023-04-19
 
 - Rename `pocket-validator` to `pocket`, as we are not going to ship different artifacts, but will have just one.
 
-## [0.0.0.1] - 2023-04-11
+## [0.0.0.2] - 2023-04-17
+
+- Removed `runtime/configs.Config#UseLibp2p` field
+- Set validator `POCKET_P2P_HOSTNAME` env var to the pod IP
+- Set validator `p2p.hostname` config value to empty string so that the env var applies
+
+## [0.0.0.1] - 2023-04-14
 
 - Introduced `pocket-validator` helm chart.
 
