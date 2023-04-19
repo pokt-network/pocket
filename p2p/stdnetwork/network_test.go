@@ -2,20 +2,19 @@ package stdnetwork
 
 import (
 	"fmt"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
-	"github.com/stretchr/testify/require"
-
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mock_types "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/p2p/utils"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/stretchr/testify/require"
 )
 
 // https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2

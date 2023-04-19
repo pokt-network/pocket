@@ -9,12 +9,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cucumber/godog"
 	pocketLogger "github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
-
-	"github.com/cucumber/godog"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )

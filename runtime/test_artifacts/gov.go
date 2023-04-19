@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	"github.com/pokt-network/pocket/runtime/genesis"
-
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
 )

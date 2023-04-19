@@ -12,13 +12,12 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoremem"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
-	"github.com/stretchr/testify/require"
-
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/runtime/configs"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/stretchr/testify/require"
 )
 
 const (

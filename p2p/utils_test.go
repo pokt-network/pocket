@@ -16,8 +16,6 @@ import (
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
-	"github.com/stretchr/testify/require"
-
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -32,6 +30,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/telemetry"
+	"github.com/stretchr/testify/require"
 )
 
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~

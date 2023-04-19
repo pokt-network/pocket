@@ -14,11 +14,9 @@ import (
 	"math/big"
 	"strings"
 
-	"golang.org/x/exp/rand"
-
 	"github.com/pokt-network/pocket/consensus/leader_election/vrf"
 	"github.com/pokt-network/pocket/logger"
-
+	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/stat/distuv"
 )
 

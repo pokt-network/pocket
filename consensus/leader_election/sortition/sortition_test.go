@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/consensus/leader_election/vrf"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

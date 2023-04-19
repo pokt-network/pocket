@@ -13,10 +13,9 @@ import (
 
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
-
-	"github.com/pokt-network/pocket/p2p/protocol"
 )
 
 // TODO(#314): Add the tooling and instructions on how to generate unit tests in this file.

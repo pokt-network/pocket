@@ -9,8 +9,6 @@ import (
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
-	"github.com/stretchr/testify/require"
-
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -18,6 +16,7 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/stretchr/testify/require"
 )
 
 // TECHDEBT(#609): move & de-dup.

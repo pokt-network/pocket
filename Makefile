@@ -111,8 +111,12 @@ go_clean_deps: ## Runs `go mod tidy` && `go mod vendor`
 go_lint: ## Run all linters that are triggered by the CI pipeline
 	docker run -t --rm -v $(shell pwd):/app -w /app golangci/golangci-lint:v1.51.1 golangci-lint run -v --timeout 2m
 
-.PHONY: gofmt
-gofmt: ## Format all the .go files in the project in place.
+.PHONY: go_imports
+go_imports: ## Group imports using rinchsan/gosimports
+	find . -name \*.go -not -path vendor  -exec gosimports -w {} \;
+
+.PHONY: go_fmt
+go_fmt: ## Format all the .go files in the project in place.
 	gofmt -w -s .
 
 .PHONY: install_cli_deps
@@ -121,6 +125,7 @@ install_cli_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag'
 	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
 	go install "github.com/favadi/protoc-go-inject-tag@latest"
 	go install "github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0"
+	go install github.com/rinchsan/gosimports/cmd/gosimports@latest
 	curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
 	curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 

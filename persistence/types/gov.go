@@ -3,12 +3,12 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/utils"
 	"log"
 	"reflect"
 	"strings"
 
 	"github.com/pokt-network/pocket/runtime/genesis"
+	"github.com/pokt-network/pocket/shared/utils"
 )
 
 const (

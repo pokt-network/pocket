@@ -6,7 +6,6 @@ import (
 
 	"github.com/pokt-network/pocket/app/client/cli"
 	"github.com/pokt-network/pocket/logger"
-
 	"github.com/spf13/cobra/doc"
 )
 

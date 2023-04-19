@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
-
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/providers"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
