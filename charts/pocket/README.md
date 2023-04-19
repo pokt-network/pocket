@@ -118,6 +118,7 @@ privateKeySecretKeyRef:
 | resources | object | `{}` | resources limits and requests |
 | securityContext | object | `{}` |  |
 | service.annotations | object | `{}` | service annotations |
+| service.nameOverride | string | `""` |  |
 | service.ports.consensus | int | `42069` | consensus port of the node |
 | service.ports.metrics | int | `9000` | OpenTelemetry metrics port of the node |
 | service.ports.rpc | int | `50832` | rpc port of the node |
