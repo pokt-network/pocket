@@ -2,9 +2,9 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: {{ include "pocket-validator.fullname" . }}-data
+  name: {{ include "pocket.fullname" . }}-data
   labels:
-    {{- include "pocket-validator.labels" . | nindent 4 }}
+    {{- include "pocket.labels" . | nindent 4 }}
   {{- with .Values.persistence.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -26,9 +26,6 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- if .Values.persistence.storageClass }}
-  storageClass: {{ .Values.persistence.storageClass | quote }}
-  {{ else }}
-  storageClass: ""
+  storageClassName: {{ .Values.persistence.storageClass | quote }}
   {{- end }}
-  persistentVolumeReclaimPolicy: {{ .Values.persistence.reclaimPolicy | quote }}
 {{- end -}}

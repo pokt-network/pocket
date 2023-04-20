@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2023-04-19
+
+- Changed validator DNS names to match new naming convention (again, helm chart was renamed)
+
 ## [0.0.0.3] - 2023-04-14
 
 - Changed validator DNS names to match new naming convention
