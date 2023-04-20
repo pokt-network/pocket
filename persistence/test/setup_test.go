@@ -362,6 +362,7 @@ func resetStateToGenesis() {
 	}
 }
 
+// TECHDEBT: Make sure all tests run `t.Cleanup(clearAllState)`
 // This is necessary for unit tests that are dependant on a completely clear state when starting
 func clearAllState() {
 	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {

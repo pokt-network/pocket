@@ -108,7 +108,6 @@ func (s *sessionHydrator) hydrateSessionApplication(appAddr string) error {
 
 // validateApplicationSession validates that the application can dispatch a session at the requested geo zone and for the request relay chain
 func (s *sessionHydrator) validateApplicationSession() error {
-	// TODO(#XXX): Filter by geo-zone
 	app := s.session.Application
 
 	if !slices.Contains(app.Chains, s.session.RelayChain) {
@@ -119,7 +118,9 @@ func (s *sessionHydrator) validateApplicationSession() error {
 		return fmt.Errorf("application %s is either unstaked or paused", app.Address)
 	}
 
-	// TODO: Consider what else we should validate for here
+	// TODO(#697): Filter by geo-zone
+
+	// INVESTIGATE: Consider what else we should validate for here
 	return nil
 }
 
@@ -167,7 +168,7 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 			return fmt.Errorf("hydrateSessionServicers should not have encountered a paused or unstaking servicer: %s", servicer.Address)
 		}
 
-		// TODO(#XXX): Filter by geo-zone
+		// TODO(#697): Filter by geo-zone
 
 		// OPTIMIZE: If this was a map[string]struct{}, we could have avoided the loop
 		var chain string
@@ -188,13 +189,13 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 
 // hydrateSessionFishermen finds the fishermen that are staked at the session height and populates the session with them
 func (s *sessionHydrator) hydrateSessionFishermen() error {
-	// number of fisherman per session at this height
+	// number of fishermen per session at this height
 	numFishermen, err := s.readCtx.GetIntParam(types.FishermanPerSessionParamName, s.session.SessionHeight)
 	if err != nil {
 		return err
 	}
 
-	// returns all the staked fisherman at this session height
+	// returns all the staked fishermen at this session height
 	fishermen, err := s.readCtx.GetAllFishermen(s.session.SessionHeight)
 	if err != nil {
 		return err
@@ -202,24 +203,24 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 
 	// OPTIMIZE: Consider updating the persistence module so a single SQL query can retrieve all of the actors at once.
 	candidateFishermen := make([]*coreTypes.Actor, 0)
-	for _, fisherman := range fishermen {
-		// Sanity check the fisherman is not paused, jailed or unstaking
-		if !(fisherman.PausedHeight == -1 && fisherman.UnstakingHeight == -1) {
-			return fmt.Errorf("hydrateSessionFishermen should not have encountered a paused or unstaking fisherman: %s", fisherman.Address)
+	for _, fisher := range fishermen {
+		// Sanity check the fisher is not paused, jailed or unstaking
+		if !(fisher.PausedHeight == -1 && fisher.UnstakingHeight == -1) {
+			return fmt.Errorf("hydrateSessionFishermen should not have encountered a paused or unstaking fisherman: %s", fisher.Address)
 		}
 
-		// TODO(#XXX): Filter by geo-zone
+		// TODO(#697): Filter by geo-zone
 
 		// OPTIMIZE: If this was a map[string]struct{}, we could have avoided the loop
 		var chain string
-		for _, chain = range fisherman.Chains {
+		for _, chain = range fisher.Chains {
 			if chain != s.session.RelayChain {
 				chain = ""
 				continue
 			}
 		}
 		if chain != "" {
-			candidateFishermen = append(candidateFishermen, fisherman)
+			candidateFishermen = append(candidateFishermen, fisher)
 		}
 	}
 
@@ -228,7 +229,7 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 }
 
 // pseudoRandomSelection returns a random subset of the candidates.
-// TECHDEBT: We are using a `Go` native implementation for a pseudo-random number generator. In order
+// ADR/TECHDEBT: We are using a `Go` native implementation for a pseudo-random number generator. In order
 // for it to be language agnostic, a general purpose algorithm needs ot be used.
 func pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, sessionId []byte) []*coreTypes.Actor {
 	// If there aren't enough candidates, return all of them
