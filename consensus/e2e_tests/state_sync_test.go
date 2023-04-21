@@ -125,7 +125,6 @@ func TestStateSync_ServerGetBlock_Success(t *testing.T) {
 	require.NotEmpty(t, getBlockRes)
 
 	require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
-
 }
 
 func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
