@@ -149,7 +149,9 @@ func newAccounts(numActors int) (accounts []*coreTypes.Account) {
 func NewActors(actorType coreTypes.ActorType, numActors int, chains []string) (actors []*coreTypes.Actor, privateKeys []string) {
 	// If the actor type is a validator, the chains must be nil since they are chain agnostic
 	if actorType == coreTypes.ActorType_ACTOR_TYPE_VAL {
-		logger.Global.Warn().Msgf("validator actors should not have chains but a list was provided: %v", chains)
+		logger.Global.Warn().
+			Array("chains", logger.StringLogArrayMarshaler{Strings: chains}).
+			Msg("validator actors should not have chains but a list was provided.")
 		chains = nil
 	}
 	for i := 0; i < numActors; i++ {
