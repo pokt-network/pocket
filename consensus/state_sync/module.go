@@ -102,6 +102,7 @@ func (m *stateSync) Start() error {
 		}
 
 		// broadcast the get block request message to all validators
+		// use raintree broadcast
 		for _, val := range m.validators {
 			if err := m.sendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress())); err != nil {
 				return err
