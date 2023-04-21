@@ -58,6 +58,7 @@ func NewTxIndexer(databasePath string) (TxIndexer, error) {
 		return NewMemTxIndexer()
 	}
 
+	// TODO_IN_THIS_COMMIT replace with a postgres KV store
 	db, err := kvstore.NewKVStore(databasePath)
 	return &txIndexer{
 		db: db,

@@ -33,7 +33,7 @@ type persistenceModule struct {
 	genesisState *genesis.GenesisState
 
 	// A key-value store mapping heights to blocks. Needed for block synchronization.
-	blockStore kvstore.KVStore
+	blockStore kvstore.KVStore // TODO_IN_THIS_COMMIT: create module with Postgres KV store instead of badger KV
 
 	// A tx indexer (i.e. key-value store) mapping transaction hashes to transactions. Needed for
 	// avoiding tx replays attacks, and is also used as the backing database for the transaction

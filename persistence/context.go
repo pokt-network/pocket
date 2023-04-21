@@ -27,9 +27,11 @@ type PostgresContext struct {
 	tx   pgx.Tx
 
 	stateHash string
-	// TECHDEBT(#361): These three values are pointers to objects maintained by the PersistenceModule.
-	//                 Need to simply access them via the bus.
+
+	// TECHDEBT(#361): These three values are pointers to objects maintained by the PersistenceModule; should simply access them via bus.
+	// TODO_IN_THIS_COMMIT: This can be pointed at theh POSTGRES KV STORE once implemented.
 	blockStore kvstore.KVStore
+
 	txIndexer  indexer.TxIndexer
 	stateTrees *stateTrees
 }

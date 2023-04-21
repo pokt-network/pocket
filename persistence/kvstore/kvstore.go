@@ -12,7 +12,6 @@ import (
 
 type KVStore interface {
 	smt.MapStore // Get, Set, Delete
-
 	// Lifecycle methods
 	Stop() error
 
