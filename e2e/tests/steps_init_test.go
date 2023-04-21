@@ -35,7 +35,7 @@ var (
 const (
 	// defines the host & port scheme that LocalNet uses for naming validators.
 	// e.g. validator-001 thru validator-999
-	validatorServiceURLTmpl = "validator-%s-pocket-validator:%d"
+	validatorServiceURLTmpl = "validator-%s-pocket:%d"
 	// validatorA maps to suffix ID 001 and is also used by the cluster-manager
 	// though it has no special permissions.
 	validatorA = "001"

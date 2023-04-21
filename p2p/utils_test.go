@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"net/url"
 	"sort"
 	"strconv"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/foxcpp/go-mockdns"
 	"github.com/golang/mock/gomock"
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
@@ -142,45 +140,6 @@ func setupMockNetPeers(t *testing.T, netMock mocknet.Mocknet, numPeers int) (pee
 	require.NoError(t, err)
 
 	return peerIDs
-}
-
-// TECHDEBT(#609): this is one of a few places where we could de-duplicate test
-// code if we had a conventional place to store packages intended for import
-// only into tests.
-func prepareDNSResolverMock(t *testing.T, serviceURLs []string) (done func()) {
-	zones := make(map[string]mockdns.Zone)
-	for i, u := range serviceURLs {
-		// Perpend `scheme://` as serviceURLs are currently scheme-less.
-		// Required for parsing to produce useful results.
-		// (see: https://pkg.go.dev/net/url@go1.20.2#URL)
-		serviceURL, err := url.Parse(fmt.Sprintf("scheme://%s", u))
-		require.NoError(t, err)
-
-		ipStr := fmt.Sprintf("10.0.0.%d", i+1)
-
-		if i >= 254 {
-			panic(fmt.Sprintf("would generate invalid IPv4 address: %s", ipStr))
-		}
-
-		zones[fmt.Sprintf("%s.", serviceURL.Hostname())] = mockdns.Zone{
-			A: []string{ipStr},
-		}
-	}
-
-	srv, _ := mockdns.NewServerWithLogger(zones, noopLogger{}, false)
-	srv.PatchNet(net.DefaultResolver)
-	return func() {
-		_ = srv.Close()
-		mockdns.UnpatchNet(net.DefaultResolver)
-	}
-}
-
-// NB: default logging behavior is too noisy.
-// noopLogger implements go-mockdns's `mockdns.Logger` interface.
-type noopLogger struct{}
-
-func (nl noopLogger) Printf(format string, args ...interface{}) {
-	// noop
 }
 
 // createMockRuntimeMgrs creates `numValidators` instances of mocked `RuntimeMgr` that are essentially

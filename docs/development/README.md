@@ -279,6 +279,8 @@ Pocket
 │   ├── docs                          # Links to V1 Protocol implementation documentation (excluding the protocol specification)
 ├── consensus                         # Implementation of the Consensus module
 ├── docs                              # Links to V1 Protocol implementation documentation (excluding the protocol specification)
+├── internal                          # Internal package following the convention established in Go 1.4: https://go.dev/doc/go1.4#internalpackages
+│   └── testutil                      # Internal package for reusable and/or common test code
 ├── logger                            # Implementation of the Logger module
 ├── p2p                               # Implementation of the P2P module
 ├── persistence                       # Implementation of the Persistence module
