@@ -736,7 +736,7 @@ func waitForNodeToRequestMissingBlock(
 	eventsChannel modules.EventsChannel,
 ) (*anypb.Any, error) {
 
-	errMsg := "StateSync Block Request Messages"
+	errMsg := "Error waiting for StateSync Block Request Messages"
 	msgs, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numValidators, 250, true)
 	require.NoError(t, err)
 
