@@ -214,7 +214,7 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 }
 
 // pseudoRandomSelection returns a random subset of the candidates.
-// ADR/TECHDEBT: We are using a `Go` native implementation for a pseudo-random number generator. In order
+// DECIDE: We are using a `Go` native implementation for a pseudo-random number generator. In order
 // for it to be language agnostic, a general purpose algorithm needs ot be used.
 func pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, sessionId []byte) []*coreTypes.Actor {
 	// If there aren't enough candidates, return all of them

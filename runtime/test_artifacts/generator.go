@@ -19,7 +19,16 @@ import (
 type GenesisOption func(*genesis.GenesisState)
 
 // IMPROVE: Extend the utilities here into a proper genesis suite in the future.
-func NewGenesisState(numValidators, numServicers, numApplications, numFisherman int, genesisOpts ...GenesisOption) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
+func NewGenesisState(
+	numValidators,
+	numServicers,
+	numApplications,
+	numFisherman int,
+	genesisOpts ...GenesisOption,
+) (
+	genesisState *genesis.GenesisState,
+	validatorPrivateKeys []string,
+) {
 	applications, appPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications, DefaultChains)
 	validators, validatorPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_VAL, numValidators, nil)
 	servicers, servicerPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicers, DefaultChains)
@@ -72,13 +81,20 @@ func WithActors(actors []*coreTypes.Actor, actorKeys []string) func(*genesis.Gen
 
 func NewDefaultConfigs(privateKeys []string) (cfgs []*configs.Config) {
 	for i, pk := range privateKeys {
-		postgresSchema := "node" + strconv.Itoa(i+1)
 		cfgs = append(cfgs, configs.NewDefaultConfig(
 			configs.WithPK(pk),
-			configs.WithNodeSchema(postgresSchema),
+			configs.WithNodeSchema(getPostgresSchema(i+1)),
 		))
 	}
 	return cfgs
+}
+
+// TECHDEBT: This is used for the `node_schema` field in `PersistenceConfig` and enables
+// different nodes sharing the same database while being isolated from each other.
+// The naming convention should be changed to be more reflective of the node (e.g. <actor_type>_<address>),
+// which would require all related tooling and documentation to be updated as well.
+func getPostgresSchema(i int) string {
+	return "node" + strconv.Itoa(i)
 }
 
 func NewPools() (pools []*coreTypes.Account) {
@@ -116,7 +132,7 @@ func newAccountsWithKeys(privateKeys []string) (accounts []*coreTypes.Account) {
 	return accounts
 }
 
-//nolint:unused
+//nolint:unused // useful if we want to generate accounts with random keys
 func newAccounts(numActors int) (accounts []*coreTypes.Account) {
 	for i := 0; i < numActors; i++ {
 		_, _, addr := keygen.GetInstance().Next()

@@ -436,7 +436,7 @@ benchmark_p2p_peerstore: ## Run P2P peerstore benchmarks
 
 ### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
 # TODO          - General Purpose catch-all.
-# ADR           - A TODO that will require a full on ADR in the future
+# DECIDE        - A TODO indicating we need to make a decision and document it using an ADR in the future; https://github.com/pokt-network/pocket-network-protocol/tree/main/ADRs
 # TECHDEBT      - Not a great implementation, but we need to fix it later.
 # IMPROVE       - A nice to have, but not a priority. It's okay if we never get to this.
 # OPTIMIZE      - An opportunity for performance improvement if/when it's necessary
