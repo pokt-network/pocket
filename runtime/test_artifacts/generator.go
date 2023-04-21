@@ -163,7 +163,14 @@ func NewActors(actorType coreTypes.ActorType, numActors int, chains []string) (a
 	return actors, privateKeys
 }
 
-func NewDefaultActor(actorType coreTypes.ActorType, serviceURL string, chains []string) (actor *coreTypes.Actor, privateKey string) {
+func NewDefaultActor(
+	actorType coreTypes.ActorType,
+	serviceURL string,
+	chains []string,
+) (
+	actor *coreTypes.Actor,
+	privateKey string,
+) {
 	privKey, pubKey, addr := keygen.GetInstance().Next()
 	return &coreTypes.Actor{
 		ActorType:       actorType,
