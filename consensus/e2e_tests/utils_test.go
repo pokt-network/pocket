@@ -691,7 +691,7 @@ func broadcastMessages(t *testing.T, msgs []*anypb.Any, pocketNodes IdToNodeMapp
 // WaitForNodeToSync waits for a node to sync to a target height
 // For every missing block for the unsynced node:
 //
-//	first, waits for the unsyced node to request a missing block via `waitForNodeToRequestMissingBlock()` function,
+//	first, waits for the unsynced node to request a missing block via `waitForNodeToRequestMissingBlock()` function,
 //	then, waits for other nodes to send the requested block via `waitForNodesToReplyToBlockRequest()` function,
 //	finally, wait for the node to catch up to the target height via `waitForNodeToCatchUp()` function.
 func WaitForNodeToSync(
