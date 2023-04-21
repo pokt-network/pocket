@@ -39,8 +39,7 @@ func (m *consensusModule) blockApplicationLoop() {
 			return
 		}
 
-		err = m.verifyBlock(block)
-		if err != nil {
+		if err = m.verifyBlock(block); err != nil
 			m.logger.Err(err).Msg("failed to verify block")
 			return
 		}
