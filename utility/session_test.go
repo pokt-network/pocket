@@ -233,7 +233,7 @@ func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *tes
 	keys := append(applicationKey, append(servicerKeysChain1, append(servicerKeysChain2, append(fishermenKeysChain1, fishermenKeysChain2...)...)...)...)
 
 	// Prepare the environment
-	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, 0, 1, 0, test_artifacts.WithActors(actors, keys))
+	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, 0, 0, 0, test_artifacts.WithActors(actors, keys))
 
 	// Vary the chain and check the number of fishermen and servicers returned for each one
 	tests := []struct {
@@ -358,7 +358,8 @@ func TestSession_GetSession_SessionHeightAndNumber_StaticBlocksPerSession(t *tes
 			err := writeCtx.SetParam(types.BlocksPerSessionParamName, tt.setNumBlocksPerSession)
 			require.NoError(t, err)
 
-			err = s.hydrateSessionHeight(tt.provideBlockHeight)
+			s.blockHeight = tt.provideBlockHeight
+			err = s.hydrateSessionMetadata()
 			require.NoError(t, err)
 			require.Equal(t, tt.setNumBlocksPerSession, s.session.NumSessionBlocks)
 			require.Equal(t, tt.wantSessionHeight, s.session.SessionHeight)

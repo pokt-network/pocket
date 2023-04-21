@@ -15,24 +15,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// sessionHydrator is an internal structure used to prepare a Session returned by `GetSession` below
-type sessionHydrator struct {
-	logger modules.Logger
-
-	// The height of the request for which the session is being hydrated
-	blockHeight int64
-
-	// The session being hydrated and returned
-	session *coreTypes.Session
-
-	// Caches a readCtx to avoid draining too many connections to the database
-	readCtx modules.PersistenceReadContext
-
-	// A redundant helper that maintains a hex decoded copy of `session.Id` used for session hydration
-	sessionIdBz []byte
-}
-
-// GetSession is an implementation of the exposed `UtilityModule.GetSession` function
+// GetSession implements of the exposed `UtilityModule.GetSession` function
 func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geoZone string) (*coreTypes.Session, error) {
 	persistenceModule := m.GetBus().GetPersistenceModule()
 	readCtx, err := persistenceModule.NewReadContext(height)
@@ -48,54 +31,69 @@ func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geo
 
 	sessionHydrator := &sessionHydrator{
 		logger:      m.logger.With().Str("source", "sessionHydrator").Logger(),
-		blockHeight: height,
 		session:     session,
+		blockHeight: height,
 		readCtx:     readCtx,
 	}
 
-	if err := sessionHydrator.hydrateSessionHeight(height); err != nil {
-		return nil, err
+	if err := sessionHydrator.hydrateSessionMetadata(); err != nil {
+		return nil, fmt.Errorf("failed to hydrate session metadata: %w", err)
 	}
 
 	if err := sessionHydrator.hydrateSessionApplication(appAddr); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to hydrate session application: %w", err)
 	}
 
 	if err := sessionHydrator.validateApplicationSession(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to validate application session: %w", err)
 	}
 
 	if err := sessionHydrator.hydrateSessionID(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to hydrate session ID: %w", err)
 	}
 
 	if err := sessionHydrator.hydrateSessionServicers(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to hydrate session servicers: %w", err)
 	}
 
 	if err := sessionHydrator.hydrateSessionFishermen(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to hydrate session fishermen: %w", err)
 	}
 
 	return sessionHydrator.session, nil
 }
 
-// hydrateSessionHeight hydrates the height at which the session started given the current block height
-func (s *sessionHydrator) hydrateSessionHeight(blockHeight int64) error {
-	numBlocksPerSession, err := s.readCtx.GetIntParam(types.BlocksPerSessionParamName, blockHeight)
+type sessionHydrator struct {
+	logger modules.Logger
+
+	// The session being hydrated and returned
+	session *coreTypes.Session
+
+	// The height at which the request is being made to get session information
+	blockHeight int64
+
+	// Caches a readCtx to avoid draining too many connections to the database
+	readCtx modules.PersistenceReadContext
+
+	// A redundant helper that maintains a hex decoded copy of `session.Id` used for session hydration
+	sessionIdBz []byte
+}
+
+// hydrateSessionMetadata hydrates the height at which the session started, its number, and the number of blocks per session
+func (s *sessionHydrator) hydrateSessionMetadata() error {
+	numBlocksPerSession, err := s.readCtx.GetIntParam(types.BlocksPerSessionParamName, s.blockHeight)
 	if err != nil {
 		return err
 	}
-	numBlocksAheadOfSession := blockHeight % int64(numBlocksPerSession)
+	numBlocksAheadOfSession := s.blockHeight % int64(numBlocksPerSession)
 
 	s.session.NumSessionBlocks = int64(numBlocksPerSession)
-	s.session.SessionNumber = int64(blockHeight / int64(numBlocksPerSession))
-	s.session.SessionHeight = blockHeight - numBlocksAheadOfSession
+	s.session.SessionNumber = int64(s.blockHeight / int64(numBlocksPerSession))
+	s.session.SessionHeight = s.blockHeight - numBlocksAheadOfSession
 	return nil
 }
 
-// hydrateSessionApplication hydrates the full Application actor based on the address the session is being
-// dispatched for.
+// hydrateSessionApplication hydrates the full Application actor based on the address provided
 func (s *sessionHydrator) hydrateSessionApplication(appAddr string) error {
 	// TECHDEBT: We can remove this decoding process once we use `strings` instead of `[]byte` for addresses
 	addr, err := hex.DecodeString(appAddr)
@@ -106,7 +104,7 @@ func (s *sessionHydrator) hydrateSessionApplication(appAddr string) error {
 	return err
 }
 
-// validateApplicationSession validates that the application can dispatch a session at the requested geo zone and for the request relay chain
+// validateApplicationSession validates that the application can have a valid session for the provided relay chain and geo zone
 func (s *sessionHydrator) validateApplicationSession() error {
 	app := s.session.Application
 
@@ -120,7 +118,8 @@ func (s *sessionHydrator) validateApplicationSession() error {
 
 	// TODO(#697): Filter by geo-zone
 
-	// INVESTIGATE: Consider what else we should validate for here
+	// INVESTIGATE: Consider what else we should validate for here (e.g. Application stake amount, etc.)
+
 	return nil
 }
 
@@ -171,14 +170,7 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 		// TODO(#697): Filter by geo-zone
 
 		// OPTIMIZE: If this was a map[string]struct{}, we could have avoided the loop
-		var chain string
-		for _, chain = range servicer.Chains {
-			if chain != s.session.RelayChain {
-				chain = ""
-				continue
-			}
-		}
-		if chain != "" {
+		if slices.Contains(servicer.Chains, s.session.RelayChain) {
 			candidateServicers = append(candidateServicers, servicer)
 		}
 	}
@@ -212,14 +204,7 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 		// TODO(#697): Filter by geo-zone
 
 		// OPTIMIZE: If this was a map[string]struct{}, we could have avoided the loop
-		var chain string
-		for _, chain = range fisher.Chains {
-			if chain != s.session.RelayChain {
-				chain = ""
-				continue
-			}
-		}
-		if chain != "" {
+		if slices.Contains(fisher.Chains, s.session.RelayChain) {
 			candidateFishermen = append(candidateFishermen, fisher)
 		}
 	}

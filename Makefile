@@ -472,6 +472,13 @@ TODO_KEYWORDS = -e "TODO" -e "ADR" -e "TECHDEBT" -e "IMPROVE" -e "OPTIMIZE" -e "
 todo_list: ## List all the TODOs in the project (excludes vendor and prototype directories)
 	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS}  .
 
+
+TODO_SEARCH ?= $(shell pwd)
+
+.PHONY: todo_search
+todo_search: ## List all the TODOs in a specific directory specific by `TODO_SEARCH`
+	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} ${TODO_SEARCH}
+
 .PHONY: todo_count
 todo_count: ## Print a count of all the TODOs in the project
 	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} . | wc -l
