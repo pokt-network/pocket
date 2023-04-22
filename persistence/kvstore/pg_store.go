@@ -22,9 +22,7 @@ func (p *PostgresKV) Get(key []byte) ([]byte, error) {
 	}
 	defer conn.Conn().Close(ctx)
 
-	fmt.Printf("kv store connected to pool %+v", conn)
-
-	return nil, fmt.Errorf("not implemented") // TODO: Implement
+	row := conn.QueryRow(ctx, "SELECT FROM transactions WHERE key=$1", key)
 }
 
 // Set ...
@@ -58,7 +56,28 @@ func (p *PostgresKV) Set(key []byte, value []byte) error {
 
 // Delete ...
 func (p *PostgresKV) Delete(key []byte) error {
-	panic("not implemented") // TODO: Implement
+	ctx := context.TODO()
+	conn, err := p.Pool.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Conn().Close(ctx)
+
+	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+
+	res, err := tx.Exec(ctx, "DELETE FROM transactions ($1);", key)
+	if err != nil {
+		return err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Lifecycle methods
