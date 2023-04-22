@@ -284,7 +284,7 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-  /v1/query/accounttxs:
+  /v1/query/account_txs:
     post:
       tags:
         - query
@@ -318,7 +318,7 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-  /v1/query/allChainParams:
+  /v1/query/all_chain_params:
     get:
       tags:
         - query
@@ -464,7 +464,7 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-  /v1/query/blocktxs:
+  /v1/query/block_txs:
     post:
       tags:
         - query
@@ -707,7 +707,7 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-  /v1/query/supportedchains:
+  /v1/query/supported_chains:
     post:
       tags:
         - query
@@ -769,7 +769,7 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-  /v1/query/unconfirmedtx:
+  /v1/query/unconfirmed_tx:
     post:
       tags:
         - query
@@ -800,7 +800,7 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-  /v1/query/unconfirmedtxs:
+  /v1/query/unconfirmed_txs:
     post:
       tags:
         - query

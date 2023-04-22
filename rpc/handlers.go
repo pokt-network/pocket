@@ -280,7 +280,7 @@ func (s *rpcServer) PostV1QueryAccounts(ctx echo.Context) error {
 	})
 }
 
-func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
+func (s *rpcServer) PostV1QueryAccountTxs(ctx echo.Context) error {
 	var body QueryAddressPaginated
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
@@ -499,7 +499,7 @@ func (s *rpcServer) PostV1QueryBlock(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, rpcBlock)
 }
 
-func (s *rpcServer) PostV1QueryBlocktxs(ctx echo.Context) error {
+func (s *rpcServer) PostV1QueryBlockTxs(ctx echo.Context) error {
 	var body QueryHeightPaginated
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
@@ -814,7 +814,7 @@ func (s *rpcServer) PostV1QuerySupply(ctx echo.Context) error {
 	})
 }
 
-func (s *rpcServer) PostV1QuerySupportedchains(ctx echo.Context) error {
+func (s *rpcServer) PostV1QuerySupportedChains(ctx echo.Context) error {
 	var body QueryHeight
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
@@ -869,7 +869,7 @@ func (s *rpcServer) PostV1QueryTx(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, rpcTx)
 }
 
-func (s *rpcServer) PostV1QueryUnconfirmedtx(ctx echo.Context) error {
+func (s *rpcServer) PostV1QueryUnconfirmedTx(ctx echo.Context) error {
 	var body QueryHash
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
@@ -889,7 +889,7 @@ func (s *rpcServer) PostV1QueryUnconfirmedtx(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, rpcUncTxs[0])
 }
 
-func (s *rpcServer) PostV1QueryUnconfirmedtxs(ctx echo.Context) error {
+func (s *rpcServer) PostV1QueryUnconfirmedTxs(ctx echo.Context) error {
 	var body QueryPaginated
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")

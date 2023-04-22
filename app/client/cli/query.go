@@ -355,7 +355,7 @@ func queryHeightCommands() []*cobra.Command {
 					Height: height,
 				}
 
-				response, err := client.PostV1QuerySupportedchains(cmd.Context(), body)
+				response, err := client.PostV1QuerySupportedChains(cmd.Context(), body)
 				if err != nil {
 					return unableToConnectToRpc(err)
 				}
@@ -655,7 +655,7 @@ func queryHeightPaginatedSortedCommands() []*cobra.Command {
 					Sort:    &sort,
 				}
 
-				response, err := client.PostV1QueryBlocktxs(cmd.Context(), body)
+				response, err := client.PostV1QueryBlockTxs(cmd.Context(), body)
 				if err != nil {
 					return unableToConnectToRpc(err)
 				}
@@ -699,7 +699,7 @@ func queryPaginatedSortedCommands() []*cobra.Command {
 					Sort:    &sort,
 				}
 
-				response, err := client.PostV1QueryAccounttxs(cmd.Context(), body)
+				response, err := client.PostV1QueryAccountTxs(cmd.Context(), body)
 				if err != nil {
 					return unableToConnectToRpc(err)
 				}
@@ -735,7 +735,7 @@ func queryPaginatedSortedCommands() []*cobra.Command {
 					Sort:    &sort,
 				}
 
-				response, err := client.PostV1QueryUnconfirmedtxs(cmd.Context(), body)
+				response, err := client.PostV1QueryUnconfirmedTxs(cmd.Context(), body)
 				if err != nil {
 					return unableToConnectToRpc(err)
 				}
@@ -864,7 +864,7 @@ func queryCommands() []*cobra.Command {
 					Hash: args[0],
 				}
 
-				response, err := client.PostV1QueryUnconfirmedtx(cmd.Context(), body)
+				response, err := client.PostV1QueryUnconfirmedTx(cmd.Context(), body)
 				if err != nil {
 					return unableToConnectToRpc(err)
 				}
