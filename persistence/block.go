@@ -87,6 +87,7 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 	networkId := viper.GetString("network_id")
 
 	// Get the current timestamp
+	// TECHDEBT: This will lead to different timestamp in each node's block store because `prepareBlock` is called locally. Needs to be revisisted and decided on a proper implementation.
 	timestamp := timestamppb.Now()
 
 	// Preapre the block proto
