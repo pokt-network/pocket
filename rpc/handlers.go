@@ -36,7 +36,7 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "cannot decode tx bytes")
 	}
 
-	if err = s.GetBus().GetUtilityModule().HandleTransaction(txBz); err != nil {
+	if err := s.GetBus().GetUtilityModule().HandleTransaction(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 

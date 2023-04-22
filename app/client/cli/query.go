@@ -85,7 +85,7 @@ func queryHeightCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -120,7 +120,7 @@ func queryHeightCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -155,7 +155,7 @@ func queryHeightCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -189,7 +189,7 @@ func queryHeightCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -224,7 +224,7 @@ func queryHeightCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -259,7 +259,7 @@ func queryHeightCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -294,7 +294,7 @@ func queryHeightCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -328,7 +328,7 @@ func queryHeightCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -362,7 +362,7 @@ func queryHeightCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -396,7 +396,7 @@ func queryHeightCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -431,7 +431,7 @@ func queryHeightCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -474,7 +474,7 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -510,7 +510,7 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -546,7 +546,7 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -582,7 +582,7 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -618,7 +618,7 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -662,7 +662,7 @@ func queryHeightPaginatedSortedCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -706,7 +706,7 @@ func queryPaginatedSortedCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -742,7 +742,7 @@ func queryPaginatedSortedCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -804,7 +804,7 @@ func queryCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				body, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -837,7 +837,7 @@ func queryCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
@@ -871,7 +871,7 @@ func queryCommands() []*cobra.Command {
 				statusCode := response.StatusCode
 				resp, err := io.ReadAll(response.Body)
 				if err != nil {
-					logger.Global.Error().Err(err).Msg("Error reading response body")
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
 					return err
 				}
 				if statusCode == http.StatusOK {
