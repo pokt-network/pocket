@@ -51,16 +51,22 @@ func ParseConfig(cfgFile string) *Config {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
+	verbose := viper.GetBool("verbose")
+
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok && cfgFile == "" {
-			log.Default().Printf("No config provided, using defaults")
+			if verbose {
+				log.Default().Printf("No config provided, using defaults")
+			}
 		} else {
 			// TODO: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
 			log.Fatalf("[ERROR] fatal error reading config file %s", err.Error())
 		}
 	} else {
 		// TODO: This is a log call to avoid import cycles. Refactor logger_config.proto to avoid this.
-		log.Default().Printf("Using config file: %s", viper.ConfigFileUsed())
+		if verbose {
+			log.Default().Printf("Using config file: %s", viper.ConfigFileUsed())
+		}
 	}
 
 	decoderConfig := func(dc *mapstructure.DecoderConfig) {
