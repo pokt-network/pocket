@@ -2,6 +2,7 @@ package types
 
 var poolFriendlyNames map[Pools]string
 var poolAddresses map[Pools][]byte
+var poolAddressToFriendlyName map[string]string
 
 func init() {
 	poolFriendlyNames = map[Pools]string{
@@ -24,15 +25,24 @@ func init() {
 		Pools_POOLS_SERVICER_STAKE:  []byte("53657276696365725374616b65506f6f6c000000"),
 		Pools_POOLS_FISHERMAN_STAKE: []byte("4669736865726d616e5374616b65506f6f6c0000"),
 	}
+
+	poolAddressToFriendlyName = map[string]string{
+		"": "",
+		"44414f0000000000000000000000000000000000": "DAO",
+		"466565436f6c6c6563746f720000000000000000": "FeeCollector",
+		"4170705374616b65506f6f6c0000000000000000": "AppStakePool",
+		"56616c696461746f725374616b65506f6f6c0000": "ValidatorStakePool",
+		"53657276696365725374616b65506f6f6c000000": "ServicerStakePool",
+		"4669736865726d616e5374616b65506f6f6c0000": "FishermanStakePool",
+	}
 }
 
 func PoolAddressToFriendlyName(address string) string {
-	for k, v := range poolAddresses {
-		if string(v) == address {
-			return k.FriendlyName()
-		}
+	name, ok := poolAddressToFriendlyName[address]
+	if !ok {
+		return ""
 	}
-	return ""
+	return name
 }
 
 func (pn Pools) FriendlyName() string {
