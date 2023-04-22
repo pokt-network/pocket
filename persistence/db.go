@@ -107,6 +107,7 @@ func connectToPool(pool *pgxpool.Pool, nodeSchema string) (*pgxpool.Conn, error)
 
 // TODO(#77): Enable proper up and down migrations
 func initializeDatabase(conn *pgxpool.Conn) error {
+	// TODO: IN THIS COMMIT initialize key value store if it doesn't exist
 	// Initialize the tables if they don't already exist
 	if err := initializeAllTables(context.TODO(), conn); err != nil {
 		return fmt.Errorf("unable to initialize tables: %v", err)
@@ -128,12 +129,25 @@ func initializeAllTables(ctx context.Context, db *pgxpool.Conn) error {
 		return err
 	}
 
+	if err := initializeKVTables(ctx, db); err != nil {
+		fmt.Printf("[ERROR] remove before commit - failed to init KV tables: %+v", err)
+		return err
+	}
+
 	for _, actor := range protocolActorSchemas {
 		if err := initializeProtocolActorTables(ctx, db, actor); err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+func initializeKVTables(ctx context.Context, db *pgxpool.Conn) error {
+	// TODO abstract this out to config values like the other setup functions
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, "transactions", "(key TEXT, value TEXT);")); err != nil {
+		return err
+	}
 	return nil
 }
 

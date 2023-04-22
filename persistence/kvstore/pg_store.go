@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -19,17 +20,40 @@ func (p *PostgresKV) Get(key []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Conn().Close(ctx)
 
 	fmt.Printf("kv store connected to pool %+v", conn)
-
-	defer conn.Conn().Close(ctx)
 
 	return nil, fmt.Errorf("not implemented") // TODO: Implement
 }
 
 // Set ...
 func (p *PostgresKV) Set(key []byte, value []byte) error {
-	panic("not implemented") // TODO: Implement
+	ctx := context.TODO()
+	conn, err := p.Pool.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Conn().Close(ctx)
+
+	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+
+	res, err := tx.Exec(ctx, "INSERT INTO transactions values ($1, $2)", key, value)
+	if err != nil {
+		return err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	fmt.Printf("inserted %d", res.RowsAffected())
+	fmt.Printf("res#String: %v", res.String)
+
+	return nil
 }
 
 // Delete ...
