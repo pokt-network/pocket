@@ -63,8 +63,8 @@ func queryHeightCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
 			Use:     "Account <address> [--height]",
-			Short:   "Get the account data of an address at a specified height",
-			Long:    "Queries the node RPC to obtain the account data of the speicifed account at the given height",
+			Short:   "Get the account data of an address",
+			Long:    "Queries the node RPC to obtain the account data of the speicifed account at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"account"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -98,8 +98,8 @@ func queryHeightCommands() []*cobra.Command {
 		},
 		{
 			Use:     "App <address> [--height]",
-			Short:   "Get the app data of an address at a specified height",
-			Long:    "Queries the node RPC to obtain the app data of the speicifed address at the given height",
+			Short:   "Get the app data of an address",
+			Long:    "Queries the node RPC to obtain the app data of the speicifed address at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"app"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -133,8 +133,8 @@ func queryHeightCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Balance <address> [--height]",
-			Short:   "Get the balance of an address at a specified height",
-			Long:    "Queries the node RPC to obtain the balance of the account at the given height",
+			Short:   "Get the balance of an address",
+			Long:    "Queries the node RPC to obtain the balance of the account at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"balance"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -168,8 +168,8 @@ func queryHeightCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Block [--height]",
-			Short:   "Get the block data of the specified height",
-			Long:    "Queries the node RPC to obtain the block data at the given height",
+			Short:   "Get the block data",
+			Long:    "Queries the node RPC to obtain the block data at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"block"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -202,8 +202,8 @@ func queryHeightCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Fisherman <address> [--height]",
-			Short:   "Get the fisherman data of an address at a specified height",
-			Long:    "Queries the node RPC to obtain the fisherman data of the speicifed address at the given height",
+			Short:   "Get the fisherman data of an address",
+			Long:    "Queries the node RPC to obtain the fisherman data of the speicifed address at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"fisherman"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -237,8 +237,8 @@ func queryHeightCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Param <parameter_name> [--height]",
-			Short:   "Get the value of the parameter at the specified height",
-			Long:    "Queries the node RPC to obtain the value of the specified parameter",
+			Short:   "Get the value of the parameter",
+			Long:    "Queries the node RPC to obtain the value of the specified parameter at the given (or latest if unspecified) height",
 			Aliases: []string{"param"},
 			Args:    cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -272,8 +272,8 @@ func queryHeightCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Servicer <address> [--height]",
-			Short:   "Get the servicer data of an address at a specified height",
-			Long:    "Queries the node RPC to obtain the servicer data of the speicifed address at the given height",
+			Short:   "Get the servicer data of an address",
+			Long:    "Queries the node RPC to obtain the servicer data of the speicifed address at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"servicer"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -307,8 +307,8 @@ func queryHeightCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Supply [--height]",
-			Short:   "Get the token supply data from each pool at a specified height",
-			Long:    "Queries the node RPC to obtain the token supply data of the pools at the given height",
+			Short:   "Get the token supply data from each pool",
+			Long:    "Queries the node RPC to obtain the token supply data of the pools at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"supply"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -341,8 +341,8 @@ func queryHeightCommands() []*cobra.Command {
 		},
 		{
 			Use:     "SupportedChains [--height]",
-			Short:   "Get the supported chains at a specified height",
-			Long:    "Queries the node RPC to obtain the supported chains at the given height",
+			Short:   "Get the supported chains",
+			Long:    "Queries the node RPC to obtain the supported chains at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"supportedchains"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -375,8 +375,8 @@ func queryHeightCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Upgrade [--height]",
-			Short:   "Get the upgrade version at the specified height",
-			Long:    "Queries the node RPC to obtain the upgrade version for the specified height",
+			Short:   "Get the upgrade version",
+			Long:    "Queries the node RPC to obtain the upgrade version for the given (or latest if unspecified) height",
 			Aliases: []string{"param"},
 			Args:    cobra.ExactArgs(0),
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -409,8 +409,8 @@ func queryHeightCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Validator <address> [--height]",
-			Short:   "Get the validator data of an address at a specified height",
-			Long:    "Queries the node RPC to obtain the validator data of the speicifed address at the given height",
+			Short:   "Get the validator data of an address",
+			Long:    "Queries the node RPC to obtain the validator data of the speicifed address at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"validator"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -451,8 +451,8 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
 			Use:     "Accounts [--height] [--page] [--per_page]",
-			Short:   "Get the account data of all accounts the specified height",
-			Long:    "Queries the node RPC to obtain the paginated data for all accounts at the given height",
+			Short:   "Get the account data of all accounts",
+			Long:    "Queries the node RPC to obtain the paginated data for all accounts at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"accounts"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -487,8 +487,8 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Apps [--height] [--page] [--per_page]",
-			Short:   "Get all the data of all apps the specified height",
-			Long:    "Queries the node RPC to obtain the paginated data for all apps at the given height",
+			Short:   "Get all the data of all apps",
+			Long:    "Queries the node RPC to obtain the paginated data for all apps at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"apps"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -523,8 +523,8 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Fishermen [--height] [--page] [--per_page]",
-			Short:   "Get all the data of all fishermen the specified height",
-			Long:    "Queries the node RPC to obtain the paginated data for all fishermen at the given height",
+			Short:   "Get all the data of all fishermen",
+			Long:    "Queries the node RPC to obtain the paginated data for all fishermen at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"fishermen"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -559,8 +559,8 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Servicers [--height] [--page] [--per_page]",
-			Short:   "Get all the data of all servicers the specified height",
-			Long:    "Queries the node RPC to obtain the paginated data for all servicers at the given height",
+			Short:   "Get all the data of all servicers",
+			Long:    "Queries the node RPC to obtain the paginated data for all servicers at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"servicers"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -595,8 +595,8 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Validators [--height] [--page] [--per_page]",
-			Short:   "Get all the data of all validators the specified height",
-			Long:    "Queries the node RPC to obtain the paginated data for all validators at the given height",
+			Short:   "Get all the data of all validators",
+			Long:    "Queries the node RPC to obtain the paginated data for all validators at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"validators"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -638,8 +638,8 @@ func queryHeightPaginatedSortedCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
 			Use:     "BlockTxs [--height] [--page] [--per_page] [--sort]",
-			Short:   "Get all the transactions in the block with the specified height",
-			Long:    "Queries the node RPC to obtain the paginated transactions in the block at the given height",
+			Short:   "Get all the transactions in the block",
+			Long:    "Queries the node RPC to obtain the paginated transactions in the block at the given (or latest if unspecified) height",
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"blocktxs"},
 			RunE: func(cmd *cobra.Command, args []string) error {
