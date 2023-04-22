@@ -6,6 +6,7 @@ option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
 import "actor.proto";
 
+// TODO(#683): Replace the session structure with the data type updated in #683
 message Session {
     string id = 1;
     int64 height = 2;
