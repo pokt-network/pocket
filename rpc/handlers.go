@@ -281,11 +281,7 @@ func (s *rpcServer) PostV1QueryAccounttxs(ctx echo.Context) error {
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
-	sort := checkSort(*body.Sort)
-	sortDesc := true
-	if sort == "asc" {
-		sortDesc = false
-	}
+	sortDesc := checkSortDesc(*body.Sort)
 
 	txIndexer := s.GetBus().GetPersistenceModule().GetTxIndexer()
 	txResults, err := txIndexer.GetBySender(body.Address, sortDesc)
@@ -498,11 +494,7 @@ func (s *rpcServer) PostV1QueryBlocktxs(ctx echo.Context) error {
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
-	sort := checkSort(*body.Sort)
-	sortDesc := true
-	if sort == "asc" {
-		sortDesc = false
-	}
+	sortDesc := checkSortDesc(*body.Sort)
 
 	// Get latest stored block height
 	height := uint64(body.Height)

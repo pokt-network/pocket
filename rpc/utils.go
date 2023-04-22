@@ -45,12 +45,12 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 	return nil
 }
 
-// checkSort ensures that either "asc" or "desc" (default) is used as a sort string
-func checkSort(sort string) string {
+// checkSortDesc takes a sort string and returns whether to sort descending or not
+func checkSortDesc(sort string) bool {
 	if strings.ToLower(sort) == "asc" {
-		return "asc"
+		return false // asc
 	}
-	return "desc"
+	return true // desc
 }
 
 // getPageIndexes calculates the indexes for the page requested reading the number of items specified
