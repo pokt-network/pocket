@@ -21,7 +21,7 @@ func (p *PostgresContext) GetVersionAtHeight(height int64) (string, error) {
 
 // TODO: Implement this function
 func (p *PostgresContext) GetSupportedChains(height int64) ([]string, error) {
-	// This is a placeholder function for the RPC endpoint "v1/query/upgrade"
+	// This is a placeholder function for the RPC endpoint "v1/query/supportedchains"
 	return []string{}, nil
 }
 
