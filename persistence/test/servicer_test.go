@@ -35,17 +35,17 @@ func TestGetServicerUpdatedAtHeight(t *testing.T) {
 func TestInsertServicerAndExists(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
-	servicer, err := createAndInsertDefaultTestServicer(db)
+	defaultServicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
 	db.Height = 1
 
-	servicer2, err := createAndInsertDefaultTestServicer(db)
+	defaultServicer2, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	addrBz, err := hex.DecodeString(servicer.Address)
+	addrBz, err := hex.DecodeString(defaultServicer.Address)
 	require.NoError(t, err)
-	addrBz2, err := hex.DecodeString(servicer2.Address)
+	addrBz2, err := hex.DecodeString(defaultServicer2.Address)
 	require.NoError(t, err)
 
 	exists, err := db.GetServicerExists(addrBz, 0)
@@ -66,57 +66,57 @@ func TestInsertServicerAndExists(t *testing.T) {
 func TestUpdateServicer(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
-	servicer, err := createAndInsertDefaultTestServicer(db)
+	defaultServicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	addrBz, err := hex.DecodeString(servicer.Address)
+	addrBz, err := hex.DecodeString(defaultServicer.Address)
 	require.NoError(t, err)
 
-	serv, err := db.GetServicer(addrBz, 0)
+	servicer, err := db.GetServicer(addrBz, 0)
 	require.NoError(t, err)
-	require.NotNil(t, serv)
-	require.Equal(t, DefaultChains, serv.Chains, "default chains incorrect for current height")
-	require.Equal(t, DefaultStake, serv.StakedAmount, "default stake incorrect for current height")
+	require.NotNil(t, servicer)
+	require.Equal(t, DefaultChains, servicer.Chains, "default chains incorrect for current height")
+	require.Equal(t, DefaultStake, servicer.StakedAmount, "default stake incorrect for current height")
 
 	db.Height = 1
 
 	require.NotEqual(t, DefaultStake, StakeToUpdate)   // sanity check to make sure the tests are correct
 	require.NotEqual(t, DefaultChains, ChainsToUpdate) // sanity check to make sure the tests are correct
-	err = db.UpdateServicer(addrBz, servicer.ServiceUrl, StakeToUpdate, ChainsToUpdate)
+	err = db.UpdateServicer(addrBz, defaultServicer.ServiceUrl, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
 
-	serv, err = db.GetServicer(addrBz, 0)
+	servicer, err = db.GetServicer(addrBz, 0)
 	require.NoError(t, err)
-	require.NotNil(t, serv)
-	require.Equal(t, DefaultChains, serv.Chains, "default chains incorrect for current height")
-	require.Equal(t, DefaultStake, serv.StakedAmount, "default stake incorrect for current height")
+	require.NotNil(t, servicer)
+	require.Equal(t, DefaultChains, servicer.Chains, "default chains incorrect for current height")
+	require.Equal(t, DefaultStake, servicer.StakedAmount, "default stake incorrect for current height")
 
-	serv, err = db.GetServicer(addrBz, 1)
+	servicer, err = db.GetServicer(addrBz, 1)
 	require.NoError(t, err)
-	require.NotNil(t, serv)
-	require.Equal(t, ChainsToUpdate, serv.Chains, "chains not updated for current height")
-	require.Equal(t, StakeToUpdate, serv.StakedAmount, "stake not updated for current height")
+	require.NotNil(t, servicer)
+	require.Equal(t, ChainsToUpdate, servicer.Chains, "chains not updated for current height")
+	require.Equal(t, StakeToUpdate, servicer.StakedAmount, "stake not updated for current height")
 }
 
 func TestGetServicersReadyToUnstake(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
-	servicer, err := createAndInsertDefaultTestServicer(db)
+	defaultServicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	servicer2, err := createAndInsertDefaultTestServicer(db)
+	defaultServicer2, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	servicer3, err := createAndInsertDefaultTestServicer(db)
+	defaultServicer3, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	addrBz, err := hex.DecodeString(servicer.Address)
+	addrBz, err := hex.DecodeString(defaultServicer.Address)
 	require.NoError(t, err)
 
-	addrBz2, err := hex.DecodeString(servicer2.Address)
+	addrBz2, err := hex.DecodeString(defaultServicer2.Address)
 	require.NoError(t, err)
 
-	addrBz3, err := hex.DecodeString(servicer3.Address)
+	addrBz3, err := hex.DecodeString(defaultServicer3.Address)
 	require.NoError(t, err)
 
 	// Unstake servicer at height 0
@@ -133,22 +133,22 @@ func TestGetServicersReadyToUnstake(t *testing.T) {
 	unstakingServicers, err := db.GetServicersReadyToUnstake(0, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingServicers), "wrong number of actors ready to unstake at height 0")
-	require.Equal(t, servicer.Address, unstakingServicers[0].Address, "unexpected servicerlication actor returned")
+	require.Equal(t, defaultServicer.Address, unstakingServicers[0].Address, "unexpected servicerlication actor returned")
 
 	// Check unstaking servicers at height 1
 	unstakingServicers, err = db.GetServicersReadyToUnstake(1, int32(coreTypes.StakeStatus_Unstaking))
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingServicers), "wrong number of actors ready to unstake at height 1")
-	require.ElementsMatch(t, []string{servicer2.Address, servicer3.Address}, []string{unstakingServicers[0].Address, unstakingServicers[1].Address})
+	require.ElementsMatch(t, []string{defaultServicer2.Address, defaultServicer3.Address}, []string{unstakingServicers[0].Address, unstakingServicers[1].Address})
 }
 
 func TestGetServicerStatus(t *testing.T) {
 	db := NewTestPostgresContext(t, 1)
 
-	servicer, err := createAndInsertDefaultTestServicer(db)
+	defaultServicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	addrBz, err := hex.DecodeString(servicer.Address)
+	addrBz, err := hex.DecodeString(defaultServicer.Address)
 	require.NoError(t, err)
 
 	// Check status before the servicer exists
@@ -165,10 +165,10 @@ func TestGetServicerStatus(t *testing.T) {
 func TestGetServicerPauseHeightIfExists(t *testing.T) {
 	db := NewTestPostgresContext(t, 1)
 
-	servicer, err := createAndInsertDefaultTestServicer(db)
+	defaultServicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
-	addrBz, err := hex.DecodeString(servicer.Address)
+	addrBz, err := hex.DecodeString(defaultServicer.Address)
 	require.NoError(t, err)
 
 	// Check pause height when servicer does not exist
@@ -185,30 +185,30 @@ func TestGetServicerPauseHeightIfExists(t *testing.T) {
 func TestSetServicerPauseHeightAndUnstakeLater(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
-	servicer, err := createAndInsertDefaultTestServicer(db)
+	defaultServicer, err := createAndInsertDefaultTestServicer(db)
 	require.NoError(t, err)
 
 	pauseHeight := int64(1)
 	unstakingHeight := pauseHeight + 10
 
-	addrBz, err := hex.DecodeString(servicer.Address)
+	addrBz, err := hex.DecodeString(defaultServicer.Address)
 	require.NoError(t, err)
 
 	err = db.SetServicerPauseHeight(addrBz, pauseHeight)
 	require.NoError(t, err)
 
-	serv, err := db.GetServicer(addrBz, 0)
+	servicer, err := db.GetServicer(addrBz, 0)
 	require.NoError(t, err)
-	require.NotNil(t, serv)
-	require.Equal(t, pauseHeight, serv.PausedHeight, "pause height not updated")
+	require.NotNil(t, servicer)
+	require.Equal(t, pauseHeight, servicer.PausedHeight, "pause height not updated")
 
 	err = db.SetServicerStatusAndUnstakingHeightIfPausedBefore(pauseHeight+1, unstakingHeight, -1 /*unused*/)
 	require.NoError(t, err)
 
-	serv, err = db.GetServicer(addrBz, 0)
+	servicer, err = db.GetServicer(addrBz, 0)
 	require.NoError(t, err)
-	require.NotNil(t, serv)
-	require.Equal(t, unstakingHeight, serv.UnstakingHeight, "unstaking height was not set correctly")
+	require.NotNil(t, servicer)
+	require.Equal(t, unstakingHeight, servicer.UnstakingHeight, "unstaking height was not set correctly")
 }
 
 func TestGetServicerOutputAddress(t *testing.T) {
