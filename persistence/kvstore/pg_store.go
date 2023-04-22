@@ -1,11 +1,30 @@
 package kvstore
 
-// PostgresKV implements the KVStore interface.
-type PostgresKV struct{}
+import (
+	"context"
+	"fmt"
 
-// Get ...
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+// PostgresKV implements the KVStore interface.
+type PostgresKV struct {
+	Pool *pgxpool.Pool
+}
+
+// Get returns the value at a given key or an error.
 func (p *PostgresKV) Get(key []byte) ([]byte, error) {
-	panic("not implemented") // TODO: Implement
+	ctx := context.TODO()
+	conn, err := p.Pool.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("kv store connected to pool %+v", conn)
+
+	defer conn.Conn().Close(ctx)
+
+	return nil, fmt.Errorf("not implemented") // TODO: Implement
 }
 
 // Set ...

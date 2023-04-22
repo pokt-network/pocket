@@ -91,17 +91,20 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 	}
 	conn.Release()
 
-	// TODO: Follow the same pattern as txIndexer below for initializing the blockStore
-	blockStore, err := initializeBlockStore(persistenceCfg.BlockStorePath)
+	// TODO IN THIS COMMIT block store should take a pool connection?
+
+	blockStore, err := initializeBlockStore(pool)
 	if err != nil {
 		return nil, err
 	}
 
+	// TODO IN THIS COMMIT make new tx indexer take a pg kv store
 	txIndexer, err := indexer.NewTxIndexer(persistenceCfg.TxIndexerPath)
 	if err != nil {
 		return nil, err
 	}
 
+	// TODO IN THIS COMMIT make newStateTrees accept a PG KV store
 	stateTrees, err := newStateTrees(persistenceCfg.TreesStoreDir)
 	if err != nil {
 		return nil, err
@@ -231,11 +234,16 @@ func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 	return m.writeContext
 }
 
-func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
-	if blockStorePath == "" {
+func initializeBlockStore(pool *pgxpool.Pool) (kvstore.KVStore, error) {
+	if pool == nil {
 		return kvstore.NewMemKVStore(), nil
 	}
-	return kvstore.NewKVStore(blockStorePath)
+
+	pgkv := &kvstore.PostgresKV{
+		Pool: pool,
+	}
+
+	return pgkv, nil
 }
 
 // HACK(olshansky): Simplify and externalize the logic for whether genesis should be populated and

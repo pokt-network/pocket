@@ -49,6 +49,8 @@ func (uow *baseUtilityUnitOfWork) SetProposalBlock(blockHash string, proposerAdd
 	return nil
 }
 
+// TODO_IN_THIS_COMMIT Ensure that this works with PG KV store
+
 func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 	log := uow.logger.With().Fields(map[string]interface{}{
 		"source": "ApplyBlock",
@@ -76,6 +78,7 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 	if err := uow.endBlock(uow.proposalProposerAddr); err != nil {
 		return err
 	}
+
 	// return the app hash (consensus module will get the validator set directly)
 	log.Debug().Msg("computing state hash")
 	stateHash, err := uow.persistenceRWContext.ComputeStateHash()
