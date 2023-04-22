@@ -16,6 +16,10 @@ import (
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
+const (
+	maxPerPage = 1000
+)
+
 var (
 	paramValueRegex *regexp.Regexp
 	errNoItems      = fmt.Errorf("no items found")
@@ -41,6 +45,7 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 	return nil
 }
 
+// checkSort ensures that either "asc" or "desc" (default) is used as a sort string
 func checkSort(sort string) string {
 	if strings.ToLower(sort) == "asc" {
 		return "asc"
@@ -48,13 +53,14 @@ func checkSort(sort string) string {
 	return "desc"
 }
 
+// getPageIndexes calculates the indexes for the page requested reading the number of items specified
 func getPageIndexes(totalItems, page, per_page int) (startIdx, endIdx, totalPages int, err error) {
 	if totalItems == 0 {
 		err = errNoItems
 		return
 	}
-	if per_page > 1000 {
-		err = fmt.Errorf("per_page has a max value of 1000")
+	if per_page > maxPerPage {
+		err = fmt.Errorf("per_page has a max value of %d", maxPerPage)
 		return
 	}
 	if page == 0 || per_page == 0 {
@@ -435,11 +441,7 @@ func protocolActorToRPCActorTypeEnum(protocolActorType coreTypes.ActorType) Acto
 }
 
 // getProtocolActorGetter returns the correct protocol actor getter function based on the actor type parameter
-func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, params GetV1P2pStakedActorsAddressBookParams) func(height int64) ([]*coreTypes.Actor, error) {
-	var protocolActorGetter = persistenceContext.GetAllStakedActors
-	if params.ActorType == nil {
-		return persistenceContext.GetAllStakedActors
-	}
+func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, params GetV1P2pStakedActorsAddressBookParams) (protocolActorGetter func(height int64) ([]*coreTypes.Actor, error)) {
 	switch *params.ActorType {
 	case Application:
 		protocolActorGetter = persistenceContext.GetAllApps
@@ -449,6 +451,8 @@ func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, p
 		protocolActorGetter = persistenceContext.GetAllServicers
 	case Validator:
 		protocolActorGetter = persistenceContext.GetAllValidators
+	default:
+		protocolActorGetter = persistenceContext.GetAllStakedActors
 	}
 	return protocolActorGetter
 }

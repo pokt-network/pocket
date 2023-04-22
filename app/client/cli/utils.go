@@ -257,8 +257,8 @@ func attachHeightFlagToSubcommands() []cmdOption {
 
 func attachPaginationFlagsToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
-		c.Flags().Int64Var(&page, "page", 1, "page number to return of paginated query")
-		c.Flags().Int64Var(&per_page, "per_page", 1000, "number of results to show per page in a paginated query")
+		c.Flags().Int64Var(&page, "page", 1, "page number to return of paginated query (default 1)")
+		c.Flags().Int64Var(&per_page, "per_page", 1000, "number of results to show per page in a paginated query (default 1000, max=1000)")
 	}}
 }
 
