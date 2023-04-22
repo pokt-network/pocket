@@ -115,7 +115,6 @@ func (g *GenericFIFOSet[TIdx, TData]) Get(index TIdx) (v TData) {
 	defer g.m.Unlock()
 
 	for e := g.queue.Front(); e != nil; e = e.Next() {
-		fmt.Println(g.indexerFn(e.Value.(TData)))
 		if g.indexerFn(e.Value.(TData)) == index {
 			return e.Value.(TData)
 		}
