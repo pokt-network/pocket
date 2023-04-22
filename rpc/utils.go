@@ -47,10 +47,7 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 
 // checkSortDesc takes a sort string and returns whether to sort descending or not
 func checkSortDesc(sort string) bool {
-	if strings.ToLower(sort) == "asc" {
-		return false // asc
-	}
-	return true // desc
+	return !strings.EqualFold(sort, "asc")
 }
 
 // getPageIndexes calculates the indexes for the page requested reading the number of items specified
