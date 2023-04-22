@@ -9,7 +9,6 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/utils"
-	"github.com/spf13/viper"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -82,9 +81,6 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 	for i, txResult := range txResults {
 		txs[i] = txResult.GetTx()
 	}
-
-	// Retrieve the network id from the config
-	networkId := viper.GetString("network_id")
 
 	// Get the current timestamp
 	// TECHDEBT: This will lead to different timestamp in each node's block store because `prepareBlock` is called locally. Needs to be revisisted and decided on a proper implementation.

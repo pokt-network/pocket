@@ -20,6 +20,8 @@ var (
 	_ modules.PersistenceModule = &persistenceModule{}
 
 	_ modules.PersistenceRWContext = &PostgresContext{}
+
+	networkId string
 )
 
 // TODO: convert address and public key to string not bytes in all account and actor functions
@@ -73,6 +75,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 
 	runtimeMgr := bus.GetRuntimeMgr()
 
+	networkId = runtimeMgr.GetConfig().NetworkId
 	persistenceCfg := runtimeMgr.GetConfig().Persistence
 	genesisState := runtimeMgr.GetGenesis()
 
