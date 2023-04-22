@@ -42,14 +42,10 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 }
 
 func checkSort(sort string) string {
-	switch strings.ToLower(sort) {
-	case "asc":
+	if strings.ToLower(sort) == "asc" {
 		return "asc"
-	case "desc":
-		return "desc"
-	default:
-		return "desc"
 	}
+	return "desc"
 }
 
 func getPageIndexes(totalItems, page, per_page int) (startIdx, endIdx, totalPages int, err error) {
