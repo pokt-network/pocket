@@ -63,14 +63,14 @@ func (s *rpcServer) PostV1ClientDispatch(ctx echo.Context) error {
 	rpcApp := protocolActorToRPCProtocolActor(application)
 
 	rpcServicers := make([]ProtocolActor, 0)
-	for _, serv := range session.GetServicers() {
-		actor := protocolActorToRPCProtocolActor(serv)
+	for _, servicer := range session.GetServicers() {
+		actor := protocolActorToRPCProtocolActor(servicer)
 		rpcServicers = append(rpcServicers, actor)
 	}
 
 	rpcFishermen := make([]ProtocolActor, 0)
-	for _, fm := range session.GetFishermen() {
-		actor := protocolActorToRPCProtocolActor(fm)
+	for _, fisher := range session.GetFishermen() {
+		actor := protocolActorToRPCProtocolActor(fisher)
 		rpcFishermen = append(rpcFishermen, actor)
 	}
 
@@ -144,7 +144,7 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 	})
 }
 
-// DISCUSSION: This may need to be changed when the SendRelay function is actually implemented
+// DISCUSSION: This may need to be changed when the HandleChallenge function is actually implemented
 func (s *rpcServer) PostV1ClientChallenge(ctx echo.Context) error {
 	var body ChallengeRequest
 	if err := ctx.Bind(&body); err != nil {
@@ -214,6 +214,8 @@ func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
+
 	accBz, err := hex.DecodeString(body.Address)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, err.Error())
@@ -248,6 +250,8 @@ func (s *rpcServer) PostV1QueryAccounts(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
+
 	allAccounts, err := readCtx.GetAllAccounts(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -324,6 +328,8 @@ func (s *rpcServer) GetV1QueryAllChainParams(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
+
 	paramSlice, err := readCtx.GetAllParams()
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -357,6 +363,7 @@ func (s *rpcServer) PostV1QueryApp(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
 
 	addrBz, err := hex.DecodeString(body.Address)
 	if err != nil {
@@ -390,6 +397,8 @@ func (s *rpcServer) PostV1QueryApps(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
+
 	allApps, err := readCtx.GetAllApps(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -436,6 +445,7 @@ func (s *rpcServer) PostV1QueryBalance(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
 
 	accBz, err := hex.DecodeString(body.Address)
 	if err != nil {
@@ -562,6 +572,7 @@ func (s *rpcServer) PostV1QueryFisherman(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
 
 	addrBz, err := hex.DecodeString(body.Address)
 	if err != nil {
@@ -595,6 +606,8 @@ func (s *rpcServer) PostV1QueryFishermen(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
+
 	allFishermen, err := readCtx.GetAllFishermen(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -609,8 +622,8 @@ func (s *rpcServer) PostV1QueryFishermen(ctx echo.Context) error {
 	}
 
 	rpcFishermen := make([]ProtocolActor, 0)
-	for _, fm := range allFishermen[start : end+1] {
-		actor := protocolActorToRPCProtocolActor(fm)
+	for _, fisher := range allFishermen[start : end+1] {
+		actor := protocolActorToRPCProtocolActor(fisher)
 		rpcFishermen = append(rpcFishermen, actor)
 	}
 
@@ -654,6 +667,8 @@ func (s *rpcServer) PostV1QueryParam(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
+
 	paramValue, err := readCtx.GetStringParam(body.ParamName, height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -684,6 +699,7 @@ func (s *rpcServer) PostV1QueryServicer(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
 
 	addrBz, err := hex.DecodeString(body.Address)
 	if err != nil {
@@ -717,6 +733,8 @@ func (s *rpcServer) PostV1QueryServicers(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
+
 	allServicers, err := readCtx.GetAllServicers(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -731,8 +749,8 @@ func (s *rpcServer) PostV1QueryServicers(ctx echo.Context) error {
 	}
 
 	rpcServicers := make([]ProtocolActor, 0)
-	for _, serv := range allServicers[start : end+1] {
-		actor := protocolActorToRPCProtocolActor(serv)
+	for _, servicer := range allServicers[start : end+1] {
+		actor := protocolActorToRPCProtocolActor(servicer)
 		rpcServicers = append(rpcServicers, actor)
 	}
 
@@ -763,6 +781,8 @@ func (s *rpcServer) PostV1QuerySupply(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
+
 	pools, err := readCtx.GetAllPools(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -813,6 +833,8 @@ func (s *rpcServer) PostV1QuerySupportedchains(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
+
 	chains, err := readCtx.GetSupportedChains(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -947,6 +969,7 @@ func (s *rpcServer) PostV1QueryValidator(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
 
 	addrBz, err := hex.DecodeString(body.Address)
 	if err != nil {
@@ -980,6 +1003,8 @@ func (s *rpcServer) PostV1QueryValidators(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
+
 	allValidators, err := readCtx.GetAllValidators(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
