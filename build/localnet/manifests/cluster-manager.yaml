@@ -4,13 +4,13 @@ metadata:
   name: pocket-v1-cluster-manager
 spec:
   initContainers:
-    - name: wait-for-validator-001-pocket-validator
+    - name: wait-for-validator-001-pocket
       image: busybox
       command:
         [
           "sh",
           "-c",
-          'until wget -q -O - "http://validator-001-pocket-validator:50832/v1/health" --timeout=2 --tries=2 --spider >/dev/null 2>&1; do echo waiting for validator-001-pocket-validator to be online and healthy...; sleep 2; done;',
+          'until wget -q -O - "http://validator-001-pocket:50832/v1/health" --timeout=2 --tries=2 --spider >/dev/null 2>&1; do echo waiting for validator-001-pocket to be online and healthy...; sleep 2; done;',
         ]
   containers:
     - name: cluster-manager
