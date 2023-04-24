@@ -515,20 +515,20 @@ localnet_shell: ## Opens a shell in the pod that has the `client` cli available.
 
 .PHONY: localnet_logs_validators
 localnet_logs_validators: ## Outputs logs from all validators
-	kubectl logs -l v1-purpose=validator --all-containers=true --tail=-1
+	kubectl logs -l "pokt.network/purpose=validator" --all-containers=true --tail=-1
 
 .PHONY: localnet_logs_validators_follow
 localnet_logs_validators_follow: ## Outputs logs from all validators and follows them (i.e. tail)
-	kubectl logs -l v1-purpose=validator --all-containers=true --max-log-requests=1000 --tail=-1 -f
+	kubectl logs -l "pokt.network/purpose=validator" --all-containers=true --max-log-requests=1000 --tail=-1 -f
 
 .PHONY: localnet_down
 localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down`)
 	tilt down --file=build/localnet/Tiltfile
 
 .PHONY: localnet_db_cli
-localnet_db_cli: ## Open a CLI to the local containerized postgres instancedb_cli:
+localnet_db_cli: ## Open a CLI to the local containerized postgres instance of validator 001:
 	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
-	kubectl exec -it services/dependencies-postgresql -- bash -c "psql postgresql://postgres:LocalNetPassword@localhost"
+	kubectl exec -it validator-001-postgresql-0 -- bash -c "psql postgresql://postgres:LocalNetPassword@localhost"
 
 .PHONY: check_cross_module_imports
 check_cross_module_imports: ## Lists cross-module imports
