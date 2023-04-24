@@ -60,11 +60,10 @@ func (m *p2pModule) bootstrap() error {
 	return nil
 }
 
-// boostrapFromServiceURL fetches the peerstore of the peer at `serviceURL and
-// adds it to this host's peerstore after performing a health check.
+// bootstrapFromRPC fetches the peerstore of the peer at `serviceURL` via RPC
+// and adds it to this host's peerstore after performing a health check.
 // TECHDEBT(SOLID): refactor; this method has more than one reason to change
-func (m *p2pModule) bootstrapFromServiceURL(serviceURL string) {
-	// NB: no need closure `serviceURL` as long as it remains a value type
+func (m *p2pModule) bootstrapFromRPC(serviceURL string) {
 	m.logger.Info().Str("endpoint", serviceURL).Msg("Attempting to bootstrap from bootstrap node")
 
 	client, err := rpc.NewClientWithResponses(serviceURL)
