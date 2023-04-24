@@ -38,9 +38,6 @@ func init() {
 }
 
 func main() {
-	// track validators in a map so we can access them through kube
-	validators := make(map[string]*k8s.Service)
-
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err.Error())
@@ -85,13 +82,11 @@ func main() {
 			if err := stakeValidator(privateKey, autoStakeAmount, autoStakeChains, validatorServiceUrl); err != nil {
 				logger.Err(err).Msg("Error staking validator")
 			}
-			validators[service.Name] = service
 		case watch.Deleted:
 			logger.Info().Str("validator", service.Name).Msg("Validator deleted from the cluster")
 			if err := unstakeValidator(privateKey); err != nil {
 				logger.Err(err).Msg("Error unstaking validator")
 			}
-			delete(validators, service.Name)
 		}
 	}
 }
