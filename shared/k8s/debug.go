@@ -3,7 +3,6 @@ package k8s
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/pokt-network/pocket/logger"
@@ -46,7 +45,7 @@ func getNamespace() (string, error) {
 	nsFile := "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
 
 	if _, err := os.Stat(nsFile); err == nil {
-		nsBytes, err := ioutil.ReadFile(nsFile)
+		nsBytes, err := os.ReadFile(nsFile)
 		if err != nil {
 			return "", fmt.Errorf("could not read namespace file: %v", err)
 		}
