@@ -517,9 +517,9 @@ localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down`)
 	tilt down --file=build/localnet/Tiltfile
 
 .PHONY: localnet_db_cli
-localnet_db_cli: ## Open a CLI to the local containerized postgres instancedb_cli:
+localnet_db_cli: ## Open a CLI to the local containerized postgres instance of validator 001:
 	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
-	kubectl exec -it services/dependencies-postgresql -- bash -c "psql postgresql://postgres:LocalNetPassword@localhost"
+	kubectl exec -it validator-001-postgresql-0 -- bash -c "psql postgresql://postgres:LocalNetPassword@localhost"
 
 .PHONY: check_cross_module_imports
 check_cross_module_imports: ## Lists cross-module imports
