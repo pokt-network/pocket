@@ -8,12 +8,12 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
 	rpcPSP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime/defaults"
+	"github.com/pokt-network/pocket/shared/utils"
 )
 
 // configureBootstrapNodes parses the bootstrap nodes from the config and validates them
@@ -43,20 +43,18 @@ func (m *p2pModule) configureBootstrapNodes() error {
 
 // bootstrap attempts to bootstrap from a bootstrap node
 func (m *p2pModule) bootstrap() error {
-	var wg sync.WaitGroup
+	limiter := utils.NewLimiter(int(m.cfg.MaxBootstrapConcurrency))
 
 	for _, serviceURL := range m.bootstrapNodes {
-		wg.Add(1)
-
 		// concurrent bootstrapping
-		// TECHDEBT: add maximum bootstrapping concurrency to P2P config
-		go m.bootstrapFromServiceURL(serviceURL)
+		// TECHDEBT(#595): add ctx to interface methods and propagate down.
+		limiter.Go(context.TODO(), func() {
+			m.bootstrapFromRPC(strings.Clone(serviceURL))
+		})
 	}
-	wg.Wait()
 
-	if m.network.GetPeerstore().Size() == 0 {
-		return fmt.Errorf("bootstrap failed")
-	}
+	limiter.Close()
+
 	return nil
 }
 
