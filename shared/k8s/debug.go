@@ -11,7 +11,7 @@ import (
 )
 
 //nolint:gosec // G101 Not a credential
-const privateKeysSecretResourceName = "v1-localnet-validators-private-keys"
+const privateKeysSecretResourceName = "validators-private-keys"
 
 var CurrentNamespace = ""
 
