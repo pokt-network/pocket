@@ -209,7 +209,6 @@ func getClientset() (*kubernetes.Clientset, error) {
 	kubeConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	if err != nil {
 		logger.Info().Msgf("no default kubeconfig at %s; attempting to load InClusterConfig", kubeConfigPath)
-		// try getting an incluser-config because home dir failed
 		config := inClusterConfig()
 		clientset, err := kubernetes.NewForConfig(config)
 		if err != nil {
