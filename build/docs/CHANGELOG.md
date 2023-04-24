@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.37] - 2023-04-24
 
-- E2E tests use in-cluster config on DevNet if `$HOME/.kube` does not exist
+- Adds kubectl to dev Dockerfile image
 
 ## [0.0.0.36] - 2023-04-19
 
