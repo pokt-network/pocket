@@ -37,13 +37,13 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 		wantErr            bool
 	}{
 		{
-			name:               "unset boostrap nodes should yield no error and return DefaultP2PBootstrapNodes",
+			name:               "unset bootstrap nodes should yield no error and return DefaultP2PBootstrapNodes",
 			args:               args{},
 			wantErr:            false,
 			wantBootstrapNodes: defaultBootstrapNodes,
 		},
 		{
-			name: "empty string boostrap nodes should yield no error and return DefaultP2PBootstrapNodes",
+			name: "empty string bootstrap nodes should yield no error and return DefaultP2PBootstrapNodes",
 			args: args{
 				initialBootstrapNodesCsv: "",
 			},
@@ -51,7 +51,7 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 			wantBootstrapNodes: defaultBootstrapNodes,
 		},
 		{
-			name: "untrimmed empty string boostrap nodes should yield no error and return DefaultP2PBootstrapNodes",
+			name: "untrimmed empty string bootstrap nodes should yield no error and return DefaultP2PBootstrapNodes",
 			args: args{
 				initialBootstrapNodesCsv: "     ",
 			},
@@ -59,7 +59,7 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 			wantBootstrapNodes: defaultBootstrapNodes,
 		},
 		{
-			name: "untrimmed string boostrap nodes should yield no error and return the trimmed urls",
+			name: "untrimmed string bootstrap nodes should yield no error and return the trimmed urls",
 			args: args{
 				initialBootstrapNodesCsv: "     http://somenode:50832  ,  http://someothernode:50832  ",
 			},
