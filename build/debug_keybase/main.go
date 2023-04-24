@@ -65,7 +65,9 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	kb, err := keybase.NewKeybase(&configs.KeybaseConfig{})
+	kb, err := keybase.NewKeybase(&configs.KeybaseConfig{
+		FilePath: tmpDir,
+	})
 	if err != nil {
 		panic(err)
 	}
