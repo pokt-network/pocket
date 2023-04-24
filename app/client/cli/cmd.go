@@ -18,6 +18,7 @@ var (
 	dataDir        string
 	configPath     string
 	nonInteractive bool
+	verbose        bool
 	cfg            *configs.Config
 )
 
@@ -29,6 +30,11 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&dataDir, "data_dir", defaults.DefaultRootDirectory, "Path to store pocket related data (keybase etc.)")
 	rootCmd.PersistentFlags().StringVar(&configPath, "config", "", "Path to config")
 	if err := viper.BindPFlag("root_directory", rootCmd.PersistentFlags().Lookup("data_dir")); err != nil {
+		panic(err)
+	}
+
+	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Show verbose output")
+	if err := viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose")); err != nil {
 		panic(err)
 	}
 }

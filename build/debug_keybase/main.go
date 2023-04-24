@@ -52,7 +52,7 @@ func main() {
 }
 
 func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
-	fmt.Println("⚙️ Initializing debug Keybase...")
+	fmt.Println("⚙️  Initializing debug Keybase...")
 
 	validatorKeysPairMap, err := parseValidatorPrivateKeysFromEmbeddedYaml(privateKeysYamlBytes)
 	if err != nil {
@@ -77,7 +77,7 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 	}
 
 	// Add validator addresses if not present
-	fmt.Println("✍️ Debug keybase initializing... Adding all the validator keys")
+	fmt.Println("✍️  Debug keybase initializing... Adding all the validator keys")
 
 	// Use writebatch to speed up bulk insert
 	wb := db.NewWriteBatch()
@@ -130,7 +130,7 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 
 	fmt.Println("✅ Keybase initialized!")
 
-	fmt.Println("⚙️ Creating a dump of the Keybase...")
+	fmt.Println("⚙️  Creating a dump of the Keybase...")
 	backupFile, err := os.Create(targetFilePath)
 	if err != nil {
 		panic(err)
