@@ -117,6 +117,11 @@ func initializeDatabase(conn *pgxpool.Conn) error {
 
 // TODO(#77): Delete all the `initializeAllTables` calls once proper migrations are implemented.
 func initializeAllTables(ctx context.Context, db *pgxpool.Conn) error {
+	if err := initializeKVTables(ctx, db); err != nil {
+		fmt.Printf("[ERROR] remove before commit - failed to init KV tables: %+v", err)
+		return err
+	}
+
 	if err := initializeAccountTables(ctx, db); err != nil {
 		return err
 	}
@@ -126,11 +131,6 @@ func initializeAllTables(ctx context.Context, db *pgxpool.Conn) error {
 	}
 
 	if err := initializeBlockTables(ctx, db); err != nil {
-		return err
-	}
-
-	if err := initializeKVTables(ctx, db); err != nil {
-		fmt.Printf("[ERROR] remove before commit - failed to init KV tables: %+v", err)
 		return err
 	}
 
