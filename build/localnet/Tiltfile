@@ -159,15 +159,16 @@ k8s_resource('pocket-v1-cli-client', labels=['client'])
 k8s_yaml(['manifests/cluster-manager.yaml'])
 k8s_resource('pocket-v1-cluster-manager', labels=['cluster-manager'])
 
-check_helm_dependencies_for_chart(root_dir + "/charts/pocket-validator")
+check_helm_dependencies_for_chart(root_dir + "/charts/pocket")
 for x in range(localnet_config["validators"]["count"]):
     validator_number = x + 1
     formatted_validator_number = local('printf "%03d" ' + str(validator_number))
 
-    k8s_yaml(helm(root_dir + "/charts/pocket-validator",
+    k8s_yaml(helm(root_dir + "/charts/pocket",
         name="validator-%s" % formatted_validator_number,
         namespace="default",
         set=[
+            "global.postgresql.auth.postgresPassword=LocalNetPassword",
             "image.repository=validator-image",
             "privateKeySecretKeyRef.name=v1-localnet-validators-private-keys",
             "privateKeySecretKeyRef.key=%s" % formatted_validator_number,

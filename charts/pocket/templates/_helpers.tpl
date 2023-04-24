@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "pocket-validator.name" -}}
+{{- define "pocket.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "pocket-validator.fullname" -}}
+{{- define "pocket.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "pocket-validator.chart" -}}
+{{- define "pocket.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "pocket-validator.labels" -}}
-helm.sh/chart: {{ include "pocket-validator.chart" . }}
-{{ include "pocket-validator.selectorLabels" . }}
+{{- define "pocket.labels" -}}
+helm.sh/chart: {{ include "pocket.chart" . }}
+{{ include "pocket.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,8 +45,8 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "pocket-validator.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "pocket-validator.name" . }}
+{{- define "pocket.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "pocket.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 pokt.network/purpose: validator
 {{- end }}
@@ -54,9 +54,9 @@ pokt.network/purpose: validator
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "pocket-validator.serviceAccountName" -}}
+{{- define "pocket.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "pocket-validator.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "pocket.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
@@ -65,7 +65,7 @@ Create the name of the service account to use
 {{/*
 Determine the PostgreSQL hostname based on whether the subchart is enabled.
 */}}
-{{- define "pocket-validator.postgresqlHost" -}}
+{{- define "pocket.postgresqlHost" -}}
 {{- if .Values.postgresql.enabled -}}
 {{- printf "%s-%s" .Release.Name "postgresql" -}}
 {{- else -}}
@@ -76,7 +76,7 @@ Determine the PostgreSQL hostname based on whether the subchart is enabled.
 {{/*
 Determine the PostgreSQL port based on whether the subchart is enabled.
 */}}
-{{- define "pocket-validator.postgresqlPort" -}}
+{{- define "pocket.postgresqlPort" -}}
 {{- if .Values.postgresql.enabled -}}
 {{- .Values.global.postgresql.service.ports.postgresql | toString -}}
 {{- else -}}
@@ -87,7 +87,7 @@ Determine the PostgreSQL port based on whether the subchart is enabled.
 {{/*
 Determine the PostgreSQL schema based on whether the subchart is enabled.
 */}}
-{{- define "pocket-validator.postgresqlDatabase" -}}
+{{- define "pocket.postgresqlDatabase" -}}
 {{- if .Values.postgresql.enabled -}}
 {{- "postgres" -}}
 {{- else -}}
@@ -98,14 +98,14 @@ Determine the PostgreSQL schema based on whether the subchart is enabled.
 {{/*
 Determine the PostgreSQL schema based on whether the subchart is enabled.
 */}}
-{{- define "pocket-validator.postgresqlSchema" -}}
+{{- define "pocket.postgresqlSchema" -}}
 {{- .Values.config.persistence.node_schema -}}
 {{- end -}}
 
 {{/*
 Determine the PostgreSQL user SecretKeyRef based on whether the subchart is enabled.
 */}}
-{{- define "pocket-validator.postgresqlUserValueOrSecretRef" -}}
+{{- define "pocket.postgresqlUserValueOrSecretRef" -}}
 {{- if .Values.postgresql.enabled -}}
 value: postgres
 {{- else -}}
@@ -119,7 +119,7 @@ valueFrom:
 {{/*
 Determine the PostgreSQL password SecretKeyRef based on whether the subchart is enabled.
 */}}
-{{- define "pocket-validator.postgresqlPasswordSecretKeyRef" -}}
+{{- define "pocket.postgresqlPasswordSecretKeyRef" -}}
 {{- if .Values.postgresql.enabled -}}
 valueFrom:
   secretKeyRef:
@@ -136,9 +136,9 @@ valueFrom:
 {{/*
 Determine the genesis ConfigMap based on whether pre-provisioned genesis is enabled.
 */}}
-{{- define "pocket-validator.genesisConfigMap" -}}
+{{- define "pocket.genesisConfigMap" -}}
 {{- if .Values.genesis.preProvisionedGenesis.enabled -}}
-{{- printf "%s-%s" (include "pocket-validator.fullname" .) "genesis" -}}
+{{- printf "%s-%s" (include "pocket.fullname" .) "genesis" -}}
 {{- else -}}
 {{- .Values.genesis.externalConfigMap.name -}}
 {{- end -}}
