@@ -11,7 +11,7 @@ import (
 	"sync"
 
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
-	rpcABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
+	rpcPSP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime/defaults"
 )
@@ -78,11 +78,11 @@ func (m *p2pModule) bootstrapFromServiceURL(serviceURL string) {
 	}
 
 	// fetch `serviceURL`'s  peerstore
-	pstoreProvider := rpcABP.NewRPCPeerstoreProvider(
-		rpcABP.WithP2PConfig(
+	pstoreProvider := rpcPSP.NewRPCPeerstoreProvider(
+		rpcPSP.WithP2PConfig(
 			m.GetBus().GetRuntimeMgr().GetConfig().P2P,
 		),
-		rpcABP.WithCustomRPCURL(serviceURL),
+		rpcPSP.WithCustomRPCURL(serviceURL),
 	)
 
 	currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(rpcCHP.WithCustomRPCURL(serviceURL))
