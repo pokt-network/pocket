@@ -29,7 +29,7 @@ func init() {
 func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
 	validatorKeysMap := make(map[string]string)
 
-	privateKeysSecret, err := clientset.CoreV1().Secrets("default").Get(context.TODO(), privateKeysSecretResourceName, metav1.GetOptions{})
+	privateKeysSecret, err := clientset.CoreV1().Secrets(CurrentNamespace).Get(context.TODO(), privateKeysSecretResourceName, metav1.GetOptions{})
 	if err != nil {
 		panic(err)
 	}
