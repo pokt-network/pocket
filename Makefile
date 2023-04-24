@@ -506,11 +506,11 @@ localnet_shell: ## Opens a shell in the pod that has the `client` cli available.
 
 .PHONY: localnet_logs_validators
 localnet_logs_validators: ## Outputs logs from all validators
-	kubectl logs -l v1-purpose=validator --all-containers=true --tail=-1
+	kubectl logs -l "pokt.network/purpose=validator" --all-containers=true --tail=-1
 
 .PHONY: localnet_logs_validators_follow
 localnet_logs_validators_follow: ## Outputs logs from all validators and follows them (i.e. tail)
-	kubectl logs -l v1-purpose=validator --all-containers=true --max-log-requests=1000 --tail=-1 -f
+	kubectl logs -l "pokt.network/purpose=validator" --all-containers=true --max-log-requests=1000 --tail=-1 -f
 
 .PHONY: localnet_down
 localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down`)
