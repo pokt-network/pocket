@@ -721,7 +721,7 @@ func queryPaginatedSortedCommands() []*cobra.Command {
 			Use:     "UnconfirmedTxs [--page] [--per_page] [--sort]",
 			Short:   "Get all the unconfirmed transaction data from the mempool",
 			Long:    "Queries the node RPC to obtain the paginated data for all unconfirmed transactions from the mempool",
-			Args:    cobra.ExactArgs(1),
+			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"unconfirmedtxs"},
 			RunE: func(cmd *cobra.Command, args []string) error {
 				client, err := rpc.NewClientWithResponses(remoteCLIURL)
@@ -765,6 +765,7 @@ func queryCommands() []*cobra.Command {
 			Short:   "Get current values of all node parameters",
 			Long:    "Queries the node RPC to obtain the current values of all the governance parameters",
 			Aliases: []string{"allparams"},
+			Args:    cobra.ExactArgs(0),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				client, err := rpc.NewClientWithResponses(remoteCLIURL)
 				if err != nil {
@@ -792,6 +793,7 @@ func queryCommands() []*cobra.Command {
 			Short:   "Get current block height",
 			Long:    "Queries the node RPC to obtain the current block height",
 			Aliases: []string{"height"},
+			Args:    cobra.ExactArgs(0),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				client, err := rpc.NewClientWithResponses(remoteCLIURL)
 				if err != nil {
