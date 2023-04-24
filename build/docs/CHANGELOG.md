@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.38] - 2023-04-24
+
+- Changed the name of the secret that holds private keys so it will be the same across local and dev networks.
+- Moved `regexp.MustCompile` into `init()` to avoid recompiling the regex on every call (requested in previus PR)
+
 ## [0.0.0.37] - 2023-04-24
 
 - Adds kubectl to dev Dockerfile image
