@@ -25,7 +25,7 @@ const testIP6ServiceURL = "[2a00:1450:4005:802::2004]:8080"
 var testLocalServiceURL = fmt.Sprintf("127.0.0.1:%d", defaults.DefaultP2PPort)
 
 func TestLibp2pNetwork_AddPeer(t *testing.T) {
-	p2pNet := newTestLibp2pNetwork(t)
+	p2pNet := newTestNetwork(t)
 	libp2pPStore := p2pNet.host.Peerstore()
 
 	// NB: assert initial state
@@ -73,7 +73,7 @@ func TestLibp2pNetwork_AddPeer(t *testing.T) {
 }
 
 func TestLibp2pNetwork_RemovePeer(t *testing.T) {
-	p2pNet := newTestLibp2pNetwork(t)
+	p2pNet := newTestNetwork(t)
 	peerstore := p2pNet.host.Peerstore()
 
 	// NB: assert initial state
@@ -107,7 +107,7 @@ func TestLibp2pNetwork_RemovePeer(t *testing.T) {
 }
 
 // TECHDEBT(#609): move & de-duplicate
-func newTestLibp2pNetwork(t *testing.T) *network {
+func newTestNetwork(t *testing.T) *network {
 	ctrl := gomock.NewController(t)
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
