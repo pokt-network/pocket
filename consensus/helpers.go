@@ -271,22 +271,6 @@ func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Act
 	return readCtx.GetAllValidators(int64(height))
 }
 
-// TODO: This is a temporary solution, cache this in Consensus module. This field will be populated once with a single query to the persistence module.
-func (m *consensusModule) IsValidator() (bool, error) {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-	if err != nil {
-		return false, err
-	}
-
-	for _, actor := range validators {
-		if actor.Address == m.nodeAddress {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
 func hotstuffMsgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
 	return map[string]any{
 		"height": msg.GetHeight(),

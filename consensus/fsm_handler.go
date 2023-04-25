@@ -84,7 +84,10 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	m.logger.Debug().Msg("Node is in Sync Mode, starting to sync...")
 
 	aggregatedMetadata := m.getAggregatedStateSyncMetadata()
+	m.logger.Debug().Msg("Setting metadata! is ")
 	m.stateSync.SetAggregatedMetadata(&aggregatedMetadata)
+
+	m.logger.Debug().Msg("CALLING NOW is in Sync Mode, starting to sync...")
 
 	go m.stateSync.StartSyncing()
 

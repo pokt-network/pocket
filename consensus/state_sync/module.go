@@ -31,7 +31,6 @@ var (
 type stateSync struct {
 	bus                    modules.Bus
 	logger                 *modules.Logger
-	validators             []*coreTypes.Actor
 	aggregatedMetaData     *typesCons.StateSyncMetadataResponse
 	committedBlocksChannel chan uint64
 }
@@ -82,8 +81,8 @@ func (m *stateSync) Start() error {
 	}
 	defer readCtx.Release()
 
-	// get the current validators
-	m.validators, err = readCtx.GetAllValidators(int64(currentHeight))
+	//get the current validators
+	validators, err := readCtx.GetAllValidators(int64(currentHeight))
 	if err != nil {
 		return err
 	}
@@ -103,7 +102,7 @@ func (m *stateSync) Start() error {
 		}
 
 		// broadcast the get block request message to all validators
-		for _, val := range m.validators {
+		for _, val := range validators {
 			if err := m.sendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress())); err != nil {
 				return err
 			}
@@ -122,7 +121,10 @@ func (m *stateSync) Start() error {
 // Stop stops the state sync process, and sends `Consensus_IsSyncedValidator` FSM event
 func (m *stateSync) Stop() error {
 	// check if the node is a validator
-	isValidator, err := m.bus.GetConsensusModule().IsValidator()
+	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
+	nodeAddress := m.bus.GetConsensusModule().GetNodeAddress()
+	isValidator, err := m.bus.GetPersistenceModule().IsValidator(int64(currentHeight), nodeAddress)
+
 	if err != nil {
 		return err
 	}

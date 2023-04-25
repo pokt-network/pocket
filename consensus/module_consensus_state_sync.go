@@ -100,8 +100,10 @@ func (m *consensusModule) applyAndCommitBlock(block *coreTypes.Block) error {
 
 func (m *consensusModule) getAggregatedStateSyncMetadata() typesCons.StateSyncMetadataResponse {
 	minHeight, maxHeight := uint64(1), uint64(1)
+	chanLen := len(m.metadataReceived)
 
-	for metadata := range m.metadataReceived {
+	for i := 0; i < chanLen; i++ {
+		metadata := <-m.metadataReceived
 		if metadata.MaxHeight > maxHeight {
 			maxHeight = metadata.MaxHeight
 		}

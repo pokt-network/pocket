@@ -29,6 +29,9 @@ type PersistenceModule interface {
 
 	// Debugging / development only
 	HandleDebugMessage(*messaging.DebugMessage) error
+
+	// Checks whether given node is validator in the given height
+	IsValidator(height int64, address string) (bool, error)
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.

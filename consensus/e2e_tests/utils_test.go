@@ -394,8 +394,8 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
-
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
+	persistenceMock.EXPECT().IsValidator(gomock.Any(), gomock.Any()).Return(true, nil).AnyTimes()
 
 	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
 
