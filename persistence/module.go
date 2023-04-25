@@ -148,6 +148,8 @@ func (m *persistenceModule) GetModuleName() string {
 }
 
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
+	m.logger.Info().Msg("NEW RW CONTEXT")
+
 	if m.writeContext != nil && m.writeContext.isOpen() {
 		return nil, fmt.Errorf("cannot create a new write context if one already exists")
 	}
@@ -155,6 +157,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	// Take one of the connections from the db pool
 	conn, err := connectToPool(m.pool, m.config.GetNodeSchema())
 	if err != nil {
+		m.logger.Info().Msgf("FAILED TO GET POOL %s", err)
 		return nil, err
 	}
 
@@ -165,6 +168,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		DeferrableMode: pgx.Deferrable, // INVESTIGATE: Research if this should be `Deferrable`
 	})
 	if err != nil {
+		m.logger.Info().Msgf("FAILED TO TRANSACTION FROM POOL %s", err)
 		return nil, err
 	}
 
@@ -180,6 +184,8 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		txIndexer:  m.txIndexer,
 		stateTrees: m.stateTrees,
 	}
+
+	m.logger.Info().Msgf("WRITE CONTEXT %+v", m.writeContext)
 
 	return m.writeContext, nil
 }
