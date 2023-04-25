@@ -70,58 +70,6 @@ func init() {
 	rpcHost = runtime.GetEnv("RPC_HOST", validator1Endpoint)
 }
 
-// NewDebugCommand returns the cobra CLI for the Debug command.
-func NewDebugCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:   "debug",
-		Short: "Debug utility for rapid development",
-		Args:  cobra.MaximumNArgs(0),
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-
-			// TECHDEBT: this is to keep backwards compatibility with localnet
-			configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
-
-			runtimeMgr := runtime.NewManagerFromFiles(
-				configPath, genesisPath,
-				runtime.WithClientDebugMode(),
-				runtime.WithRandomPK(),
-			)
-
-			bus := runtimeMgr.GetBus()
-			modulesRegistry := bus.GetModulesRegistry()
-
-			rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
-
-			addressBookProvider := rpcABP.NewRPCPeerstoreProvider(
-				rpcABP.WithP2PConfig(
-					runtimeMgr.GetConfig().P2P,
-				),
-				rpcABP.WithCustomRPCURL(rpcURL),
-			)
-			modulesRegistry.RegisterModule(addressBookProvider)
-
-			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
-				rpcCHP.WithCustomRPCURL(rpcURL),
-			)
-			modulesRegistry.RegisterModule(currentHeightProvider)
-
-			setValueInCLIContext(cmd, busCLICtxKey, bus)
-
-			// TECHDEBT: simplify after P2P module consolidation.
-			var err error
-			p2pMod, err = getP2PModule(runtimeMgr)
-			if err != nil {
-				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
-			}
-
-			if err := p2pMod.Start(); err != nil {
-				logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
-			}
-		},
-		RunE: runDebug,
-	}
-}
-
 // NewDebugSubCommands builds out the list of debug subcommands by matching the
 // handleSelect dispatch to the appropriate command.
 // * To add a debug subcommand, you must add it to the `items` array and then
@@ -132,43 +80,7 @@ func NewDebugSubCommands() []*cobra.Command {
 		commands[idx] = &cobra.Command{
 			Use: promptItem,
 			PersistentPreRun: func(cmd *cobra.Command, args []string) {
-				// TECHDEBT: this is to keep backwards compatibility with localnet
-				configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
-
-				runtimeMgr := runtime.NewManagerFromFiles(
-					configPath, genesisPath,
-					runtime.WithClientDebugMode(),
-					runtime.WithRandomPK(),
-				)
-
-				bus := runtimeMgr.GetBus()
-				modulesRegistry := bus.GetModulesRegistry()
-				rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
-
-				addressBookProvider := rpcABP.NewRPCPeerstoreProvider(
-					rpcABP.WithP2PConfig(
-						runtimeMgr.GetConfig().P2P,
-					),
-					rpcABP.WithCustomRPCURL(rpcURL),
-				)
-				modulesRegistry.RegisterModule(addressBookProvider)
-
-				currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
-					rpcCHP.WithCustomRPCURL(rpcURL),
-				)
-				modulesRegistry.RegisterModule(currentHeightProvider)
-
-				setValueInCLIContext(cmd, busCLICtxKey, bus)
-
-				// TECHDEBT: simplify after P2P module consolidation.
-				var err error
-				p2pMod, err = getP2PModule(runtimeMgr)
-				if err != nil {
-					logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
-				}
-				if err := p2pMod.Start(); err != nil {
-					logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
-				}
+				persistentPreRun(cmd, args)
 			},
 			Run: func(cmd *cobra.Command, args []string) {
 				handleSelect(cmd, cmd.Use)
@@ -186,52 +98,56 @@ func NewDebugCommand() *cobra.Command {
 		Short: "Debug utility for rapid development",
 		Args:  cobra.MaximumNArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-
-			// TECHDEBT: this is to keep backwards compatibility with localnet
-			configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
-
-			runtimeMgr := runtime.NewManagerFromFiles(
-				configPath, genesisPath,
-				runtime.WithClientDebugMode(),
-				runtime.WithRandomPK(),
-			)
-
-			bus := runtimeMgr.GetBus()
-			modulesRegistry := bus.GetModulesRegistry()
-
-			rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
-
-			addressBookProvider := rpcABP.NewRPCPeerstoreProvider(
-				rpcABP.WithP2PConfig(
-					runtimeMgr.GetConfig().P2P,
-				),
-				rpcABP.WithCustomRPCURL(rpcURL),
-			)
-			modulesRegistry.RegisterModule(addressBookProvider)
-
-			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
-				rpcCHP.WithCustomRPCURL(rpcURL),
-			)
-			modulesRegistry.RegisterModule(currentHeightProvider)
-
-			setValueInCLIContext(cmd, busCLICtxKey, bus)
-
-			mod, err := p2p.Create(bus)
-			if err != nil {
-				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
-			}
-
-			var ok bool
-			p2pMod, ok = mod.(modules.P2PModule)
-			if !ok {
-				logger.Global.Fatal().Msgf("unexpected P2P module type: %T", mod)
-			}
-
-			if err := p2pMod.Start(); err != nil {
-				logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
-			}
+			persistentPreRun(cmd, args)
 		},
 		RunE: runDebug,
+	}
+}
+
+// persistentPreRun is called by both debug and debug sub-commands before runs
+func persistentPreRun(cmd *cobra.Command, args []string) {
+	// TECHDEBT: this is to keep backwards compatibility with localnet
+	configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
+
+	runtimeMgr := runtime.NewManagerFromFiles(
+		configPath, genesisPath,
+		runtime.WithClientDebugMode(),
+		runtime.WithRandomPK(),
+	)
+
+	bus := runtimeMgr.GetBus()
+	modulesRegistry := bus.GetModulesRegistry()
+
+	rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
+
+	addressBookProvider := rpcABP.NewRPCPeerstoreProvider(
+		rpcABP.WithP2PConfig(
+			runtimeMgr.GetConfig().P2P,
+		),
+		rpcABP.WithCustomRPCURL(rpcURL),
+	)
+	modulesRegistry.RegisterModule(addressBookProvider)
+
+	currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
+		rpcCHP.WithCustomRPCURL(rpcURL),
+	)
+	modulesRegistry.RegisterModule(currentHeightProvider)
+
+	setValueInCLIContext(cmd, busCLICtxKey, bus)
+
+	mod, err := p2p.Create(bus)
+	if err != nil {
+		logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
+	}
+
+	var ok bool
+	p2pMod, ok = mod.(modules.P2PModule)
+	if !ok {
+		logger.Global.Fatal().Msgf("unexpected P2P module type: %T", mod)
+	}
+
+	if err := p2pMod.Start(); err != nil {
+		logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
 	}
 }
 
