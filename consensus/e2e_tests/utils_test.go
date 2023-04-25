@@ -41,9 +41,8 @@ func TestMain(m *testing.M) {
 // TODO(integration): These are temporary variables used in the prototype integration phase that
 // will need to be parameterized later once the test framework design matures.
 const (
-	numValidators      = 4
-	stateHash          = "42"
-	stateSyncUtilCalls = 100
+	numValidators = 4
+	stateHash     = "42"
 )
 
 var maxTxBytes = defaults.DefaultConsensusMaxMempoolBytes
@@ -481,9 +480,8 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesi
 				}
 				return baseReplicaUtilityUnitOfWorkMock(t, genesisState), nil
 			}).
-		// For state sync tests we call NewUnitOfWork is called more than once per node. stateSyncUtilCalls is set to relatively bigger number to avoid flakiness
-		MaxTimes(stateSyncUtilCalls)
-		// AnyTimes()
+		AnyTimes()
+
 	utilityMock.EXPECT().GetModuleName().Return(modules.UtilityModuleName).AnyTimes()
 
 	return utilityMock
@@ -707,23 +705,23 @@ func WaitForNodeToSync(
 
 	for currentHeight < targetHeight {
 		// waiting for unsynced node to request missing block
-		blockRequest, err := waitForNodeToRequestMissingBlock(t, clck, eventsChannel)
+		blockRequests, err := waitForNodeToRequestMissingBlock(t, clck, eventsChannel)
 		require.NoError(t, err)
 
-		// broadcast requests to all nodes
-		P2PBroadcast(t, allNodes, blockRequest)
+		// broadcast one of the requests to all nodes
+		P2PBroadcast(t, allNodes, blockRequests[0])
 		advanceTime(t, clck, 10*time.Millisecond)
 
 		// wait to receive replies from all nodes
-		blockResponse, err := waitForNodesToReplyToBlockRequest(t, clck, eventsChannel)
+		blockResponses, err := waitForNodesToReplyToBlockRequest(t, clck, eventsChannel)
 		require.NoError(t, err)
 
-		// send block response to the unsynced node
-		P2PSend(t, unsyncedNode, blockResponse)
+		// send one of the block responses to the unsynced node
+		P2PSend(t, unsyncedNode, blockResponses[0])
 		advanceTime(t, clck, 10*time.Millisecond)
 
-		// waiting for node to catch the global height
-		err = waitForNodeToCatchUp(t, clck, eventsChannel, allNodes, currentHeight+1)
+		// waiting for node to reach to the next height (currentHeight + 1)
+		err = waitForNodeToCatchUp(t, clck, eventsChannel, unsyncedNode, currentHeight+1)
 		require.NoError(t, err)
 
 		currentHeight = unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
@@ -735,13 +733,13 @@ func waitForNodeToRequestMissingBlock(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
-) (*anypb.Any, error) {
+) ([]*anypb.Any, error) {
 
 	errMsg := "Error waiting for StateSync Block Request Messages"
 	msgs, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numValidators, 250, true)
 	require.NoError(t, err)
 
-	return msgs[0], err
+	return msgs, err
 }
 
 // waitForNodesToReplyToBlockRequest waits for nodes to send back requested block
@@ -749,12 +747,12 @@ func waitForNodesToReplyToBlockRequest(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
-) (*anypb.Any, error) {
+) ([]*anypb.Any, error) {
 	errMsg := "StateSync Block Response Messages"
 	msgs, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numValidators-1, 250, true)
 	require.NoError(t, err)
 
-	return msgs[0], err
+	return msgs, err
 }
 
 // waitForNodeToCatchUp waits for unsynced node to catch up to the target height
@@ -762,18 +760,16 @@ func waitForNodeToCatchUp(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
-	allNodes IdToNodeMapping,
+	unsyncedNode *shared.Node,
 	targetHeight uint64,
 ) error {
 	// wait for unsynced node to send StateMachineEvent_Consensus_IsSyncedValidator event
 	_, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "synced event", 1, 500, false)
 	require.NoError(t, err)
 
-	// ensure all nodes are at same height
-	for nodeId, pocketNode := range allNodes {
-		nodeState := GetConsensusNodeState(pocketNode)
-		assertHeight(t, nodeId, targetHeight, nodeState.Height)
-	}
+	// ensure unsynced node caught up to the target height
+	nodeState := GetConsensusNodeState(unsyncedNode)
+	assertHeight(t, typesCons.NodeId(unsyncedNode.GetBus().GetConsensusModule().GetNodeId()), targetHeight, nodeState.Height)
 
 	return err
 }

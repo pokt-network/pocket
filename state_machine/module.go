@@ -18,7 +18,8 @@ type stateMachineModule struct {
 	base_modules.InterruptableModule
 
 	*fsm.FSM
-	logger        *modules.Logger
+	logger *modules.Logger
+	// debugChannels is only used for testing purposes, events pushed to it are emitted in testing
 	debugChannels []modules.EventsChannel
 }
 

@@ -34,6 +34,7 @@ func (m *consensusModule) blockApplicationLoop() {
 			return
 		}
 
+		// TODO: rather than discarding these blocks, push them into a channel to process them later
 		if block.BlockHeader.Height <= maxPersistedHeight {
 			m.logger.Info().Msgf("Received block at height %d, discarding as it has already been persisted", block.BlockHeader.Height)
 			return
@@ -82,6 +83,7 @@ func (m *consensusModule) maxPersistedBlockHeight() (uint64, error) {
 	return maxHeight, nil
 }
 
+// TODO(#352): add quorum certificate validation for the block
 func (m *consensusModule) validateBlock(block *coreTypes.Block) error {
 	return nil
 }
