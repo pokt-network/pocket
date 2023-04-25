@@ -26,7 +26,10 @@ import (
 var (
 	_ typesP2P.Network           = &rainTreeNetwork{}
 	_ modules.IntegratableModule = &rainTreeNetwork{}
+	_ rainTreeFactory            = &rainTreeNetwork{}
 )
+
+type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Network, RainTreeConfig]
 
 type RainTreeConfig struct {
 	Addr                  cryptoPocket.Address

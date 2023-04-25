@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.53] - 2023-04-25
+## [0.0.0.54] - 2023-04-25
 
 - Made `cluster-manager` aware of kubernetes namespace in which it is running
+
+## [0.0.0.53] - 2023-04-19
+
+- Updated shared module README
 
 ## [0.0.0.52] - 2023-04-17
 
