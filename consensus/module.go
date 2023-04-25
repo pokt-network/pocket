@@ -77,7 +77,7 @@ type consensusModule struct {
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
 
 	// block responses received from peers are collected in this channel
-	blocksReceived chan *typesCons.GetBlockResponse
+	blocksResponsesReceived chan *typesCons.GetBlockResponse
 
 	// metadata responses received from peers are collected in this channel
 	metadataReceived chan *typesCons.StateSyncMetadataResponse
@@ -164,7 +164,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	m.nodeAddress = address
 
 	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
-	m.blocksReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
+	m.blocksResponsesReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
 
 	m.initMessagesPool()
 

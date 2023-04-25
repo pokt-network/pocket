@@ -17,8 +17,8 @@ type StateSyncModule interface {
 	modules.Module
 	StateSyncServerModule
 
-	Set(aggregatedMetaData *typesCons.StateSyncMetadataResponse)
-	CommittedBlock(uint64)
+	SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyncMetadataResponse)
+	CommittedBlock(height uint64)
 	StartSyncing()
 }
 
@@ -60,7 +60,7 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	return m, nil
 }
 
-func (m *stateSync) Set(aggregatedMetaData *typesCons.StateSyncMetadataResponse) {
+func (m *stateSync) SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyncMetadataResponse) {
 	m.aggregatedMetaData = aggregatedMetaData
 }
 

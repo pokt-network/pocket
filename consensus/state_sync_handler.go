@@ -55,7 +55,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		return m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
 	case *typesCons.StateSyncMessage_GetBlockRes:
 		m.logger.Info().Str("proto_type", "GetBlockResponse").Msg("Handling StateSyncMessage GetBlockResponse")
-		m.blocksReceived <- stateSyncMessage.GetGetBlockRes()
+		m.blocksResponsesReceived <- stateSyncMessage.GetGetBlockRes()
 		return nil
 	default:
 		return fmt.Errorf("unspecified state sync message type")

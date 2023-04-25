@@ -483,6 +483,7 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesi
 			}).
 		// For state sync tests we call NewUnitOfWork is called more than once per node. stateSyncUtilCalls is set to relatively bigger number to avoid flakiness
 		MaxTimes(stateSyncUtilCalls)
+		// AnyTimes()
 	utilityMock.EXPECT().GetModuleName().Return(modules.UtilityModuleName).AnyTimes()
 
 	return utilityMock

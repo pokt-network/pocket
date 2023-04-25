@@ -23,10 +23,10 @@ func (m *consensusModule) GetNodeAddress() string {
 	return m.nodeAddress
 }
 
-// blockApplicationLoop commits the blocks received from the blocksReceived channel
+// blockApplicationLoop commits the blocks received from the blocksResponsesReceived channel
 // it is intended to be run as a background process
 func (m *consensusModule) blockApplicationLoop() {
-	for blockResponse := range m.blocksReceived {
+	for blockResponse := range m.blocksResponsesReceived {
 		block := blockResponse.Block
 		maxPersistedHeight, err := m.maxPersistedBlockHeight()
 		if err != nil {
@@ -34,18 +34,22 @@ func (m *consensusModule) blockApplicationLoop() {
 			return
 		}
 
-		if block.BlockHeader.Height <= maxPersistedHeight || block.BlockHeader.Height > m.CurrentHeight() {
-			m.logger.Info().Msgf("Received block at height: %d, but node will not apply this block", block.BlockHeader.Height)
+		if block.BlockHeader.Height <= maxPersistedHeight {
+			m.logger.Info().Msgf("Received block at height %d, discarding as it has already been persisted", block.BlockHeader.Height)
 			return
 		}
 
-		if err = m.verifyBlock(block); err != nil
-			m.logger.Err(err).Msg("failed to verify block")
+		if block.BlockHeader.Height > m.CurrentHeight() {
+			m.logger.Info().Msgf("Received block at height %d, discarding as it is higher than the current height", block.BlockHeader.Height)
 			return
 		}
 
-		err = m.applyAndCommitBlock(block)
-		if err != nil {
+		if err = m.validateBlock(block); err != nil {
+			m.logger.Err(err).Msg("failed to validate block")
+			return
+		}
+
+		if err = m.applyAndCommitBlock(block); err != nil {
 			m.logger.Err(err).Msg("failed to apply and commit block")
 			return
 		}
@@ -78,7 +82,7 @@ func (m *consensusModule) maxPersistedBlockHeight() (uint64, error) {
 	return maxHeight, nil
 }
 
-func (m *consensusModule) verifyBlock(block *coreTypes.Block) error {
+func (m *consensusModule) validateBlock(block *coreTypes.Block) error {
 	return nil
 }
 
@@ -97,10 +101,7 @@ func (m *consensusModule) applyAndCommitBlock(block *coreTypes.Block) error {
 func (m *consensusModule) getAggregatedStateSyncMetadata() typesCons.StateSyncMetadataResponse {
 	minHeight, maxHeight := uint64(1), uint64(1)
 
-	chanLen := len(m.metadataReceived)
-
-	for i := 0; i < chanLen; i++ {
-		metadata := <-m.metadataReceived
+	for metadata := range m.metadataReceived {
 		if metadata.MaxHeight > maxHeight {
 			maxHeight = metadata.MaxHeight
 		}
