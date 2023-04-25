@@ -1,5 +1,5 @@
 apiVersion: v2
-name: pocket-validator
+name: pocket
 description: Validator for Pocket Network - decentralized blockchain infrastructure
 home: https://pokt.network
 sources:

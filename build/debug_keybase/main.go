@@ -11,6 +11,7 @@ import (
 
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
 )
@@ -52,7 +53,7 @@ func main() {
 }
 
 func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
-	fmt.Println("⚙️ Initializing debug Keybase...")
+	fmt.Println("⚙️  Initializing debug Keybase...")
 
 	validatorKeysPairMap, err := parseValidatorPrivateKeysFromEmbeddedYaml(privateKeysYamlBytes)
 	if err != nil {
@@ -65,7 +66,9 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	kb, err := keybase.NewKeybase(&configs.KeybaseConfig{})
+	kb, err := keybase.NewKeybase(&configs.KeybaseConfig{
+		FilePath: defaults.DefaultRootDirectory + "/keys",
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -75,7 +78,7 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 	}
 
 	// Add validator addresses if not present
-	fmt.Println("✍️ Debug keybase initializing... Adding all the validator keys")
+	fmt.Println("✍️  Debug keybase initializing... Adding all the validator keys")
 
 	// Use writebatch to speed up bulk insert
 	wb := db.NewWriteBatch()
@@ -128,7 +131,7 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 
 	fmt.Println("✅ Keybase initialized!")
 
-	fmt.Println("⚙️ Creating a dump of the Keybase...")
+	fmt.Println("⚙️  Creating a dump of the Keybase...")
 	backupFile, err := os.Create(targetFilePath)
 	if err != nil {
 		panic(err)
