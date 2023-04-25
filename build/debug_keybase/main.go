@@ -11,6 +11,7 @@ import (
 
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
 )
@@ -59,14 +60,8 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 		panic(err)
 	}
 
-	tmpDir, err := os.MkdirTemp("/tmp", "pocket_debug_keybase_*")
-	if err != nil {
-		panic(err)
-	}
-	defer os.RemoveAll(tmpDir)
-
 	kb, err := keybase.NewKeybase(&configs.KeybaseConfig{
-		FilePath: tmpDir,
+		FilePath: defaults.DefaultRootDirectory + "/keys",
 	})
 	if err != nil {
 		panic(err)
