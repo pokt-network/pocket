@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/libp2p/go-libp2p"
@@ -305,7 +306,7 @@ func (m *p2pModule) setupNetwork() (err error) {
 	return err
 }
 
-// setupHost creates a new libp2p host and assignes it to `m.host`. Libp2p host
+// setupHost creates a new libp2p host and assigns it to `m.host`. Libp2p host
 // starts listening upon instantiation.
 func (m *p2pModule) setupHost() (err error) {
 	m.logger.Debug().Msg("creating new libp2p host")
@@ -336,9 +337,9 @@ func (m *p2pModule) setupHost() (err error) {
 	}
 
 	// TECHDEBT(#609): use `StringArrayLogMarshaler` post test-utilities refactor.
-	addrStrs := make(map[int]string)
+	addrStrs := make(map[string]string)
 	for i, addr := range libp2pHost.InfoFromHost(m.host).Addrs {
-		addrStrs[i] = addr.String()
+		addrStrs[strconv.Itoa(i)] = addr.String()
 	}
 	m.logger.Info().Fields(addrStrs).Msg("Listening for incoming connections...")
 	return nil

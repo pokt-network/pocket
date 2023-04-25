@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.45] - 2023-04-24
+
+- Refactored P2P bootstrapping to its own go routine
+- Always bootstrap peerstore to discover non-staked P2P participants
+
 ## [0.0.0.44] - 2023-04-20
 
 - Refactor `mockdns` test helpers
