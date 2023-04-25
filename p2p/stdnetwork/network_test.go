@@ -107,7 +107,7 @@ func TestLibp2pNetwork_RemovePeer(t *testing.T) {
 }
 
 // TECHDEBT(#609): move & de-duplicate
-func newTestNetwork(t *testing.T) *network {
+func newTestNetwork(t *testing.T) *router {
 	ctrl := gomock.NewController(t)
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
@@ -137,7 +137,7 @@ func newTestNetwork(t *testing.T) *network {
 	)
 	require.NoError(t, err)
 
-	libp2pNet, ok := p2pNetwork.(*network)
+	libp2pNet, ok := p2pNetwork.(*router)
 	require.Truef(t, ok, "unexpected p2pNetwork type: %T", p2pNetwork)
 
 	return libp2pNet

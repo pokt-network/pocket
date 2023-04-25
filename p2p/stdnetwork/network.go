@@ -16,11 +16,11 @@ import (
 )
 
 var (
-	_ typesP2P.Network           = &network{}
-	_ modules.IntegratableModule = &network{}
+	_ typesP2P.Network           = &router{}
+	_ modules.IntegratableModule = &router{}
 )
 
-type network struct {
+type router struct {
 	host   libp2pHost.Host
 	pstore typesP2P.Peerstore
 
@@ -28,7 +28,7 @@ type network struct {
 }
 
 func NewNetwork(host libp2pHost.Host, pstoreProvider providers.PeerstoreProvider, currentHeightProvider providers.CurrentHeightProvider) (typesP2P.Network, error) {
-	networkLogger := logger.Global.CreateLoggerForModule("network")
+	networkLogger := logger.Global.CreateLoggerForModule("router")
 	networkLogger.Info().Msg("Initializing stdnetwork")
 
 	pstore, err := pstoreProvider.GetStakedPeerstoreAtHeight(currentHeightProvider.CurrentHeight())
@@ -36,17 +36,17 @@ func NewNetwork(host libp2pHost.Host, pstoreProvider providers.PeerstoreProvider
 		return nil, err
 	}
 
-	return &network{
+	return &router{
 		host:   host,
 		logger: networkLogger,
 		pstore: pstore,
 	}, nil
 }
 
-func (n *network) NetworkBroadcast(data []byte) error {
-	for _, peer := range n.pstore.GetPeerList() {
-		if err := utils.Libp2pSendToPeer(n.host, data, peer); err != nil {
-			n.logger.Error().
+func (rtr *router) NetworkBroadcast(data []byte) error {
+	for _, peer := range rtr.pstore.GetPeerList() {
+		if err := utils.Libp2pSendToPeer(rtr.host, data, peer); err != nil {
+			rtr.logger.Error().
 				Err(err).
 				Bool("TODO", true).
 				Str("pokt address", peer.GetAddress().String()).
@@ -57,47 +57,47 @@ func (n *network) NetworkBroadcast(data []byte) error {
 	return nil
 }
 
-func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) error {
-	peer := n.pstore.GetPeer(address)
+func (rtr *router) NetworkSend(data []byte, address cryptoPocket.Address) error {
+	peer := rtr.pstore.GetPeer(address)
 	if peer == nil {
 		return fmt.Errorf("peer with address %s not in peerstore", address)
 	}
 
-	if err := utils.Libp2pSendToPeer(n.host, data, peer); err != nil {
+	if err := utils.Libp2pSendToPeer(rtr.host, data, peer); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (n *network) HandleNetworkData(data []byte) ([]byte, error) {
+func (rtr *router) HandleNetworkData(data []byte) ([]byte, error) {
 	return data, nil // intentional passthrough
 }
 
-func (n *network) GetPeerstore() typesP2P.Peerstore {
-	return n.pstore
+func (rtr *router) GetPeerstore() typesP2P.Peerstore {
+	return rtr.pstore
 }
 
-func (n *network) AddPeer(peer typesP2P.Peer) error {
+func (rtr *router) AddPeer(peer typesP2P.Peer) error {
 	// Noop if peer with the pokt address already exists in the peerstore.
 	// TECHDEBT: add method(s) to update peers.
-	if p := n.pstore.GetPeer(peer.GetAddress()); p != nil {
+	if p := rtr.pstore.GetPeer(peer.GetAddress()); p != nil {
 		return nil
 	}
 
-	if err := utils.AddPeerToLibp2pHost(n.host, peer); err != nil {
+	if err := utils.AddPeerToLibp2pHost(rtr.host, peer); err != nil {
 		return err
 	}
 
-	return n.pstore.AddPeer(peer)
+	return rtr.pstore.AddPeer(peer)
 }
 
-func (n *network) RemovePeer(peer typesP2P.Peer) error {
-	if err := utils.RemovePeerFromLibp2pHost(n.host, peer); err != nil {
+func (rtr *router) RemovePeer(peer typesP2P.Peer) error {
+	if err := utils.RemovePeerFromLibp2pHost(rtr.host, peer); err != nil {
 		return err
 	}
 
-	return n.pstore.RemovePeer(peer.GetAddress())
+	return rtr.pstore.RemovePeer(peer.GetAddress())
 }
 
-func (n *network) GetBus() modules.Bus  { return nil }
-func (n *network) SetBus(_ modules.Bus) {}
+func (rtr *router) GetBus() modules.Bus  { return nil }
+func (rtr *router) SetBus(_ modules.Bus) {}
