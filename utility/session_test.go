@@ -507,8 +507,8 @@ func TestSession_GetSession_SessionHeightAndNumber_ModifiedBlocksPerSession(t *t
 }
 
 func assertActorsDifference(t *testing.T, actors1, actors2 []*coreTypes.Actor, maxSimilarityThreshold float64) {
-	slice1 := actorsToAdds(actors1)
-	slice2 := actorsToAdds(actors2)
+	slice1 := actorsToAddrs(actors1)
+	slice2 := actorsToAddrs(actors2)
 	var commonCount float64
 	for _, s1 := range slice1 {
 		for _, s2 := range slice2 {
@@ -522,7 +522,7 @@ func assertActorsDifference(t *testing.T, actors1, actors2 []*coreTypes.Actor, m
 	assert.LessOrEqual(t, commonCount, maxCommonCount, "Slices have more similarity than expected: %v vs max %v", slice1, slice2)
 }
 
-func actorsToAdds(actors []*coreTypes.Actor) []string {
+func actorsToAddrs(actors []*coreTypes.Actor) []string {
 	addresses := make([]string, len(actors))
 	for i, actor := range actors {
 		addresses[i] = actor.Address
