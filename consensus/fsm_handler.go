@@ -84,10 +84,12 @@ func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEv
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Node is in Sync Mode, starting to sync...")
 
-	aggregatedMetadata := m.getAggregatedStateSyncMetadata()
+	//TODO! check me
+	// aggregatedMetadata := m.getAggregatedStateSyncMetadata()
+	aggregatedMetadata := &typesCons.StateSyncMetadataResponse{}
 	m.stateSync.Set(&aggregatedMetadata)
 
-	go m.stateSync.Start()
+	// go m.stateSync.Start()
 	return nil
 }
 

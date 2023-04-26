@@ -194,7 +194,9 @@ func (m *consensusModule) Start() error {
 		return err
 	}
 
+	// state sync backgroun processes
 	go m.metadataSyncLoop()
+	go m.blockSyncLoop()
 	go m.blockApplicationLoop()
 
 	return nil
