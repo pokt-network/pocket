@@ -238,7 +238,9 @@ func pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, session
 
 // OPTIMIZE: Postgres uses a `Twisted Mersenne Twister (TMT)` randomness algorithm.
 // We could potentially look into changing everything into a single SQL query but
-// would nee dto verify that it can be implemented in a platform agnostic way.
+// OPTIMIZE: Postgres uses a `Twisted Mersenne Twister (TMT)` randomness algorithm.
+// We could potentially look into changing everything into a single SQL query but
+// would need to verify that it can be implemented in a platform agnostic way.
 
 // uniqueRandomIndices returns a map of `numIndices` unique random numbers less than `maxIndex`
 // seeded by `seed`.
