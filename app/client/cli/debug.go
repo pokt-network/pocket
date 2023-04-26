@@ -105,7 +105,7 @@ func NewDebugCommand() *cobra.Command {
 }
 
 // persistentPreRun is called by both debug and debug sub-commands before runs
-func persistentPreRun(cmd *cobra.Command, args []string) {
+func persistentPreRun(cmd *cobra.Command, _ []string) {
 	// TECHDEBT: this is to keep backwards compatibility with localnet
 	configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
 
