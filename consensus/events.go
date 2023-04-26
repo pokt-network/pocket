@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
@@ -11,4 +12,13 @@ func (m *consensusModule) publishNewHeightEvent(height uint64) {
 		m.logger.Fatal().Err(err).Msg("Failed to pack consensus new height event")
 	}
 	m.GetBus().PublishEventToBus(newHeightEvent)
+}
+
+// publishStateSyncBlockCommittedEvent
+func (m *consensusModule) publishStateSyncBlockCommittedEvent(height uint64) {
+	stateSyncBlockCommittedEvent, err := messaging.PackMessage(&types.StateSyncBlockCommittedEvent{Height: height})
+	if err != nil {
+		m.logger.Fatal().Err(err).Msg("Failed to pack state sync committed block event")
+	}
+	m.GetBus().PublishEventToBus(stateSyncBlockCommittedEvent)
 }

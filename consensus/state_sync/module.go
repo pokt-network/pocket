@@ -1,16 +1,23 @@
 package state_sync
 
 import (
+	"fmt"
+	"time"
+
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
 	stateSyncModuleName       = "stateSyncModule"
 	committedBlocsChannelSize = 100
+	blockWaitingPeriod        = 30 * time.Second
 )
 
 type StateSyncModule interface {
@@ -18,8 +25,8 @@ type StateSyncModule interface {
 	StateSyncServerModule
 
 	SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyncMetadataResponse)
-	CommittedBlock(height uint64)
 	StartSyncing()
+	HandleStateSyncBlockCommittedEvent(message *anypb.Any) error
 }
 
 var (
@@ -39,9 +46,23 @@ func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.
 	return new(stateSync).Create(bus, options...)
 }
 
-// CommittedBlock is called by the consensus module when a block received by the network is committed by blockApplicationLoop() function
-func (m *stateSync) CommittedBlock(height uint64) {
-	m.committedBlocksChannel <- height
+func (m *stateSync) HandleStateSyncBlockCommittedEvent(event *anypb.Any) error {
+	evt, err := codec.GetCodec().FromAny(event)
+	if err != nil {
+		return err
+	}
+
+	switch event.MessageName() {
+
+	case messaging.StateSyncBlockCommittedEventType:
+		newCommitBlockEvent, ok := evt.(*typesCons.StateSyncBlockCommittedEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast event to StateSyncBlockCommittedEvent")
+		}
+
+		m.committedBlocksChannel <- newCommitBlockEvent.Height
+	}
+	return nil
 }
 
 func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {

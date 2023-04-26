@@ -54,9 +54,9 @@ func (m *consensusModule) blockApplicationLoop() {
 			m.logger.Err(err).Msg("failed to apply and commit block")
 			return
 		}
-		m.stateSync.CommittedBlock(m.CurrentHeight())
-	}
+		m.publishStateSyncBlockCommittedEvent(block.BlockHeader.Height)
 
+	}
 }
 
 // TODO(#352): Implement this function, currently a placeholder.

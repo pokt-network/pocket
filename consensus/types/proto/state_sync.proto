@@ -43,6 +43,10 @@ message StateSyncMessage {
     }
 }
 
+message StateSyncBlockCommittedEvent {
+    uint64 height = 1;
+}
+
 // NOT USED: This gRPC interface is **not being used at the moment**. It is in place simply as a
 // guideline of what how the types in this file could be used if a direct synchronous communication
 // between nodes were implemented. Furthermore, since the message types are used for asynchronous
