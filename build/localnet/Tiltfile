@@ -155,7 +155,7 @@ k8s_yaml(
 )
 
 k8s_yaml(["manifests/cli-client.yaml"])
-k8s_resource('pocket-v1-cli-client', labels=['client'])
+k8s_resource('deploy/dev-cli-client', labels=['client'])
 k8s_yaml(['manifests/cluster-manager.yaml'])
 k8s_resource('pocket-v1-cluster-manager', labels=['cluster-manager'])
 

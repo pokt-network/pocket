@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	// rpcURL of the pod that the test harness drives
+	// rpcURL used by targetPod to build commands
 	rpcURL string
-	// targetPod is the kube pod that drives E2E tests
+	// targetPod is the kube pod that executes calls to the pocket binary under test
 	targetPod = "deploy/dev-cli-client"
 )
 
