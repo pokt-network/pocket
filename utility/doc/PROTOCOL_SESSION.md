@@ -15,7 +15,7 @@ GetSession(appAddr string, sessionHeight int64, relayChain string, geoZone strin
 
 ## Session Creation Flow
 
-The following is a simplified flow of the session creation flow for illustrative purposes only.
+The following is a simplification of the session creation flow for illustrative purposes only.
 
 See [session.go](../session.go) and [session_test.go](../session_test.go) for the full implementation.
 

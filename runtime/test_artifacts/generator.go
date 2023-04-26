@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
@@ -13,7 +15,6 @@ import (
 	"github.com/pokt-network/pocket/shared/core/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type GenesisOption func(*genesis.GenesisState)

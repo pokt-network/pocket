@@ -7,12 +7,13 @@ import (
 	"math"
 	"math/rand"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
-	"golang.org/x/exp/slices"
 )
 
 // GetSession implements of the exposed `UtilityModule.GetSession` function
@@ -112,7 +113,7 @@ func (s *sessionHydrator) validateApplicationSession() error {
 		return fmt.Errorf("application %s does not stake for relay chain %s", app.Address, s.session.RelayChain)
 	}
 
-	if !(app.PausedHeight == -1 && app.UnstakingHeight == -1) {
+	if app.PausedHeight == -1 || app.UnstakingHeight == -1 {
 		return fmt.Errorf("application %s is either unstaked or paused", app.Address)
 	}
 
@@ -167,9 +168,9 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 			return fmt.Errorf("hydrateSessionServicers should not have encountered a paused or unstaking servicer: %s", servicer.Address)
 		}
 
-		// TODO(#697): Filter by geo-zone
+		// TECHDEBT(#697): Filter by geo-zone
 
-		// OPTIMIZE: If this was a map[string]struct{}, we could have avoided the loop
+		// OPTIMIZE: If `servicer.Chains` was a map[string]struct{}, we could eliminate `slices.Contains()`'s loop
 		if slices.Contains(servicer.Chains, s.session.RelayChain) {
 			candidateServicers = append(candidateServicers, servicer)
 		}
@@ -215,7 +216,7 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 
 // pseudoRandomSelection returns a random subset of the candidates.
 // DECIDE: We are using a `Go` native implementation for a pseudo-random number generator. In order
-// for it to be language agnostic, a general purpose algorithm needs ot be used.
+// for it to be language agnostic, a general purpose algorithm MUST be used.
 func pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, sessionId []byte) []*coreTypes.Actor {
 	// If there aren't enough candidates, return all of them
 	if numTarget > len(candidates) {
