@@ -15,7 +15,7 @@ import (
 	"gonum.org/v1/gonum/stat/combin"
 )
 
-// TECHDEBT: Geozones are not current implemented, used or tested
+// TECHDEBT(#697): Geozones are not current implemented, used or tested
 
 func TestSession_GetSession_SingleFishermanSingleServicerBaseCase(t *testing.T) {
 	// Test parameters
@@ -125,9 +125,9 @@ func TestSession_GetSession_InvalidFutureSession(t *testing.T) {
 
 func TestSession_GetSession_ServicersAndFishermenCounts_TotalAvailability(t *testing.T) {
 	// Prepare an environment with a lot of servicers and fishermen
-	numServicers := 100
-	numFishermen := 100
-	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, numServicers, 1, numFishermen)
+	numStakedServicers := 100
+	numStakedFishermen := 100
+	runtimeCfg, utilityMod, persistenceMod := prepareEnvironment(t, 5, numStakedServicers, 1, numStakedFishermen)
 
 	// Vary the number of actors per session using gov params and check that the session is populated with the correct number of actorss
 	tests := []struct {
@@ -139,42 +139,42 @@ func TestSession_GetSession_ServicersAndFishermenCounts_TotalAvailability(t *tes
 	}{
 		{
 			name:                   "more actors per session than available in network",
-			numServicersPerSession: int64(numServicers) * 10,
-			numFishermanPerSession: int64(numFishermen) * 10,
-			wantServicerCount:      numServicers,
-			wantFishermanCount:     numFishermen,
+			numServicersPerSession: int64(numStakedServicers) * 10,
+			numFishermanPerSession: int64(numStakedFishermen) * 10,
+			wantServicerCount:      numStakedServicers,
+			wantFishermanCount:     numStakedFishermen,
 		},
 		{
 			name:                   "less actors per session than available in network",
-			numServicersPerSession: int64(numServicers) / 2,
-			numFishermanPerSession: int64(numFishermen) / 2,
-			wantServicerCount:      numServicers / 2,
-			wantFishermanCount:     numFishermen / 2,
+			numServicersPerSession: int64(numStakedServicers) / 2,
+			numFishermanPerSession: int64(numStakedFishermen) / 2,
+			wantServicerCount:      numStakedServicers / 2,
+			wantFishermanCount:     numStakedFishermen / 2,
 		},
 		{
 			name:                   "same number of actors per session as available in network",
-			numServicersPerSession: int64(numServicers),
-			numFishermanPerSession: int64(numFishermen),
-			wantServicerCount:      numServicers,
-			wantFishermanCount:     numFishermen,
+			numServicersPerSession: int64(numStakedServicers),
+			numFishermanPerSession: int64(numStakedFishermen),
+			wantServicerCount:      numStakedServicers,
+			wantFishermanCount:     numStakedFishermen,
 		},
 		{
 			name:                   "more than enough servicers but not enough fishermen",
-			numServicersPerSession: int64(numServicers) / 2,
-			numFishermanPerSession: int64(numFishermen) * 10,
-			wantServicerCount:      numServicers / 2,
-			wantFishermanCount:     numFishermen,
+			numServicersPerSession: int64(numStakedServicers) / 2,
+			numFishermanPerSession: int64(numStakedFishermen) * 10,
+			wantServicerCount:      numStakedServicers / 2,
+			wantFishermanCount:     numStakedFishermen,
 		},
 		{
 			name:                   "more than enough fishermen but not enough servicers",
-			numServicersPerSession: int64(numServicers) * 10,
-			numFishermanPerSession: int64(numFishermen) / 2,
-			wantServicerCount:      numServicers,
-			wantFishermanCount:     numFishermen / 2,
+			numServicersPerSession: int64(numStakedServicers) * 10,
+			numFishermanPerSession: int64(numStakedFishermen) / 2,
+			wantServicerCount:      numStakedServicers,
+			wantFishermanCount:     numStakedFishermen / 2,
 		},
 	}
 
-	// Test constant parameters
+	// Constant parameters for testing
 	updateParamsHeight := int64(1)
 	querySessionHeight := int64(2)
 
@@ -213,17 +213,17 @@ func TestSession_GetSession_ServicersAndFishermenCounts_TotalAvailability(t *tes
 }
 
 func TestSession_GetSession_ServicersAndFishermenCounts_ChainAvailability(t *testing.T) {
-	// Test constant parameters
+	// Constant parameters for testing
 	numServicersPerSession := 10
 	numFishermenPerSession := 2
 
 	// Make sure there are MORE THAN ENOUGH servicers and fishermen in the network for each session for chain 1
 	servicersChain1, servicerKeysChain1 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicersPerSession*2, []string{"chn1"})
-	fishermenChain2, fishermenKeysChain2 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFishermenPerSession*2, []string{"chn1"})
+	fishermenChain1, fishermenKeysChain1 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFishermenPerSession*2, []string{"chn1"})
 
 	// Make sure there are NOT ENOUGH servicers and fishermen in the network for each session for chain 2
 	servicersChain2, servicerKeysChain2 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicersPerSession/2, []string{"chn2"})
-	fishermenChain1, fishermenKeysChain1 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFishermenPerSession/2, []string{"chn2"})
+	fishermenChain2, fishermenKeysChain2 := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFishermenPerSession/2, []string{"chn2"})
 
 	application, applicationKey := test_artifacts.NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, 1, []string{"chn1", "chn2", "chn3"})
 
@@ -378,8 +378,10 @@ func TestSession_GetSession_ServicersAndFishermanEntropy(t *testing.T) {
 	numBlocksPerSession := 2 // expect a different every other height
 
 	// Determine probability of overlap using combinatorics
-	numChoices := combin.GeneralizedBinomial(float64(numServicers), float64(numServicersPerSession))                                 // (numServicers) C (numServicersPerSession)
-	numChoicesRemaining := combin.GeneralizedBinomial(float64(numServicers-numServicersPerSession), float64(numServicersPerSession)) // (numServicers - numServicersPerSession) C (numServicersPerSession)
+	// numChoices = (numServicers) C (numServicersPerSession)
+	numChoices := combin.GeneralizedBinomial(float64(numServicers), float64(numServicersPerSession))
+	// numChoicesRemaining = (numServicers - numServicersPerSession) C (numServicersPerSession)
+	numChoicesRemaining := combin.GeneralizedBinomial(float64(numServicers-numServicersPerSession), float64(numServicersPerSession))
 	probabilityOfOverlap := (numChoices - numChoicesRemaining) / numChoices
 
 	// Prepare the environment
@@ -491,7 +493,7 @@ func TestSession_GetSession_ApplicationUnbonds(t *testing.T) {
 }
 
 func TestSession_GetSession_ServicersAndFishermenCounts_GeoZoneAvailability(t *testing.T) {
-	// TODO(#697): Once GeoZones are implemented, the tests need to be added as well
+	// TECHDEBT(#697): Once GeoZones are implemented, the tests need to be added as well
 	// Cases: Invalid, unused, non-existent, empty, insufficiently complete, etc...
 }
 
