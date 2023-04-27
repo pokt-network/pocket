@@ -3,7 +3,7 @@
 - [Interface](#interface)
 - [Session Creation Flow](#session-creation-flow)
 
-_WIP: Run `TODO_SEARCH=utility/session_ make todo*search` to identify all the WIP related to session generation.*
+*WIP: Run `TODO*SEARCH=utility/session* make todo*search` to identify all the WIP related to session generation.\*
 
 ## Interface
 
