@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.37] - 2023-04-27
+## [0.0.0.38] - 2023-04-27
 
 - Added a `fisherman_per_session` governance parameter
 - Updated the default `blocks_per_session` from `4` to `1`
