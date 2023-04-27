@@ -96,7 +96,7 @@ func (s *sessionHydrator) hydrateSessionMetadata() error {
 
 // hydrateSessionApplication hydrates the full Application actor based on the address provided
 func (s *sessionHydrator) hydrateSessionApplication(appAddr string) error {
-	// TECHDEBT: We can remove this decoding process once we use `strings` instead of `[]byte` for addresses
+	// TECHDEBT(#706): We can remove this decoding process once we use `strings` instead of `[]byte` for addresses
 	addr, err := hex.DecodeString(appAddr)
 	if err != nil {
 		return err
