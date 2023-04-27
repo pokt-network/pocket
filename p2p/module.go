@@ -365,11 +365,14 @@ func (m *p2pModule) handleStream(stream libp2pNetwork.Stream) {
 		return
 	}
 
-	if err := m.network.AddPeer(peer); err != nil {
-		m.logger.Error().Err(err).
-			Str("address", peer.GetAddress().String()).
-			Msg("adding remote peer to network")
-	}
+	// TODO_THIS_COMMIT: remove - pocket peerstore is only for peers which
+	// will be messaged directly (i.e. not broadcast)
+	//
+	//if err := m.network.AddPeer(peer); err != nil {
+	//	m.logger.Error().Err(err).
+	//		Str("address", peer.GetAddress().String()).
+	//		Msg("adding remote peer to network")
+	//}
 
 	go m.readStream(stream)
 }
