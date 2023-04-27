@@ -82,7 +82,7 @@ func WithHostOption(host libp2pHost.Host) modules.ModuleOption {
 }
 
 func (m *p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	logger.Global.Debug().Msg("Creating libp2p-backed network module")
+	logger.Global.Debug().Msg("Creating P2P module")
 	*m = p2pModule{
 		cfg:    bus.GetRuntimeMgr().GetConfig().P2P,
 		logger: logger.Global.CreateLoggerForModule(modules.P2PModuleName),
