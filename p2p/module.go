@@ -55,8 +55,8 @@ type p2pModule struct {
 	pstoreProvider        providers.PeerstoreProvider
 
 	// Assigned during `#Start()`. TLDR; `host` listens on instantiation.
-	// and `network` depends on `host`.
-	network typesP2P.Router
+	// and `router` depends on `host`.
+	router typesP2P.Router
 	// host represents a libp2p network node, it encapsulates a libp2p peerstore
 	// & connection manager. `libp2p.New` configures and starts listening
 	// according to options. Assigned via `#Start()` (starts on instantiation).
@@ -143,7 +143,7 @@ func (m *p2pModule) GetModuleName() string {
 }
 
 // Start instantiates and assigns `m.host`, unless one already exists, and
-// `m.network` (which depends on `m.host` as a required config field).
+// `m.router` (which depends on `m.host` as a required config field).
 func (m *p2pModule) Start() (err error) {
 	m.GetBus().
 		GetTelemetryModule().
@@ -169,7 +169,7 @@ func (m *p2pModule) Start() (err error) {
 	}
 
 	if err := m.setupNetwork(); err != nil {
-		return fmt.Errorf("setting up network: %w", err)
+		return fmt.Errorf("setting up router: %w", err)
 	}
 
 	// Don't handle incoming streams in client debug mode.
@@ -203,7 +203,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 	}
 	m.logger.Info().Msg("broadcasting message to network")
 
-	return m.network.Broadcast(data)
+	return m.router.Broadcast(data)
 }
 
 func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
@@ -216,7 +216,7 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 		return err
 	}
 
-	return m.network.Send(data, addr)
+	return m.router.Send(data, addr)
 }
 
 // TECHDEBT(#348): Define what the node identity is throughout the codebase
@@ -282,9 +282,9 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 	return nil
 }
 
-// setupNetwork instantiates the configured network implementation.
+// setupNetwork instantiates the configured router implementation.
 func (m *p2pModule) setupNetwork() (err error) {
-	m.network, err = raintree.NewRainTreeNetwork(
+	m.router, err = raintree.NewRainTreeNetwork(
 		m.GetBus(),
 		raintree.RainTreeConfig{
 			Host:                  m.host,
@@ -356,10 +356,10 @@ func (m *p2pModule) handleStream(stream libp2pNetwork.Stream) {
 		return
 	}
 
-	if err := m.network.AddPeer(peer); err != nil {
+	if err := m.router.AddPeer(peer); err != nil {
 		m.logger.Error().Err(err).
 			Str("address", peer.GetAddress().String()).
-			Msg("adding remote peer to network")
+			Msg("adding remote peer to router")
 	}
 
 	go m.readStream(stream)
@@ -416,7 +416,7 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 // handleNetworkData passes a network message to the configured
 // `Router`implementation for routing.
 func (m *p2pModule) handleNetworkData(data []byte) error {
-	appMsgData, err := m.network.HandleNetworkData(data)
+	appMsgData, err := m.router.HandleNetworkData(data)
 	if err != nil {
 		return err
 	}
