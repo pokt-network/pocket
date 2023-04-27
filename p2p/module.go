@@ -20,7 +20,6 @@ import (
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	persABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/raintree"
-	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -285,23 +284,15 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 
 // setupNetwork instantiates the configured network implementation.
 func (m *p2pModule) setupNetwork() (err error) {
-	if m.cfg.UseRainTree {
-		m.network, err = raintree.NewRainTreeNetwork(
-			m.GetBus(),
-			raintree.RainTreeConfig{
-				Host:                  m.host,
-				Addr:                  m.address,
-				PeerstoreProvider:     m.pstoreProvider,
-				CurrentHeightProvider: m.currentHeightProvider,
-			},
-		)
-	} else {
-		m.network, err = stdnetwork.NewNetwork(
-			m.host,
-			m.pstoreProvider,
-			m.currentHeightProvider,
-		)
-	}
+	m.network, err = raintree.NewRainTreeNetwork(
+		m.GetBus(),
+		raintree.RainTreeConfig{
+			Host:                  m.host,
+			Addr:                  m.address,
+			PeerstoreProvider:     m.pstoreProvider,
+			CurrentHeightProvider: m.currentHeightProvider,
+		},
+	)
 	return err
 }
 
