@@ -20,7 +20,7 @@ import (
 // TECHDEBT(#609): move & de-dup.
 var testLocalServiceURL = fmt.Sprintf("127.0.0.1:%d", defaults.DefaultP2PPort)
 
-func TestRainTreeNetwork_AddPeer(t *testing.T) {
+func TestRainTreeRouter_AddPeer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	// Start with a peerstore containing self.
@@ -52,14 +52,14 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	peerstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-	netCfg := RainTreeConfig{
+	rtCfg := RainTreeConfig{
 		Host:                  host,
 		Addr:                  selfAddr,
 		PeerstoreProvider:     peerstoreProviderMock,
 		CurrentHeightProvider: currentHeightProviderMock,
 	}
 
-	router, err := NewRainTreeRouter(busMock, netCfg)
+	router, err := NewRainTreeRouter(busMock, rtCfg)
 	require.NoError(t, err)
 
 	rtRouter := router.(*rainTreeRouter)
@@ -94,7 +94,7 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	require.Equal(t, peerToAdd, router.GetPeerstore().GetPeer(peerToAdd.GetAddress()), "Peerstore does not contain added peer")
 }
 
-func TestRainTreeNetwork_RemovePeer(t *testing.T) {
+func TestRainTreeRouter_RemovePeer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	// Start with a peerstore which contains self and some number of peers: the
@@ -114,16 +114,16 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 	busMock := mockBus(ctrl)
 	peerstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
-	netCfg := RainTreeConfig{
+	rtCfg := RainTreeConfig{
 		Host:                  host,
 		Addr:                  selfAddr,
 		PeerstoreProvider:     peerstoreProviderMock,
 		CurrentHeightProvider: currentHeightProviderMock,
 	}
 
-	network, err := NewRainTreeRouter(busMock, netCfg)
+	router, err := NewRainTreeRouter(busMock, rtCfg)
 	require.NoError(t, err)
-	rainTree := network.(*rainTreeRouter)
+	rainTree := router.(*rainTreeRouter)
 
 	// Ensure expected starting size / lengths are consistent.
 	peerAddrs, peers := getPeersViewParts(rainTree.peersManager)
