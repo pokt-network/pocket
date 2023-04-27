@@ -5,7 +5,8 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
 - [Background](#background)
 - [State Sync - Peer Metadata](#state-sync---peer-metadata)
 - [State Sync - Peer Metadata Collection](#state-sync---peer-metadata-collection)
-  - [State Sync Lifecycle](#state-sync-lifecycle)
+  - [Passive State Sync](#passive-state-sync)
+  - [Active State Sync](#active-state-sync)
 - [State Sync - Operation Modes](#state-sync---operation-modes)
   - [Unsynced Mode](#unsynced-mode)
   - [Sync Mode](#sync-mode)
@@ -94,16 +95,16 @@ type StateSyncModule interface {
 
 Using the aggregated `StateSyncMetadataResponse` returned by `GetAggregatedStateSyncMetadata()`, a node is able to compare its local state against that of the Global Network that is visible to it (i.e. the world state).
 
-### State Sync Lifecycle
+### Passive State Sync
 
+
+### Active State Sync
 The Node bootstraps and collects state sync metadata from the rest of the network periodically, via a background process. This enables nodes to have an up-to-date view of the global state. Through periodic sync, the node collects received `StateSyncMetadataResponse`s in a buffer.
 
 For every new block and block proposal `Validator`s receive:
 
 - node checks block's and block proposal's validity and applies the block to its persistence if its valid.
-- if block is higher than node's current height, node checks if it is out of sync via `IsSynced()` function that compares node's local state and the global state by aggregating the collected metada responses.
-
-According to the result of the `IsSynced()` function:
+- if block is higher than node's current height, node sends `unsynced` event to the FSM.
 
 - If the node is out of sync, it runs `StartSyncing()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
 - If the node is in sync with its peers it rejects the block and/or block proposal.

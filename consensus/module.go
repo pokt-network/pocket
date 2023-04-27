@@ -194,7 +194,6 @@ func (m *consensusModule) Start() error {
 		return err
 	}
 
-	go m.metadataSyncLoop()
 	go m.blockApplicationLoop()
 
 	return nil

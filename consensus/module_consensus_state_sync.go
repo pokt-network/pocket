@@ -23,7 +23,7 @@ func (m *consensusModule) GetNodeAddress() string {
 	return m.nodeAddress
 }
 
-// blockApplicationLoop commits the blocks received from the blocksResponsesReceived channel
+// blockApplicationLoop commits the blocks received from the blocksResponsesReceived channel in passive state sync process
 // it is intended to be run as a background process
 func (m *consensusModule) blockApplicationLoop() {
 	for blockResponse := range m.blocksResponsesReceived {
@@ -57,15 +57,6 @@ func (m *consensusModule) blockApplicationLoop() {
 		m.publishStateSyncBlockCommittedEvent(block.BlockHeader.Height)
 
 	}
-}
-
-// TODO(#352): Implement this function, currently a placeholder.
-// metadataSyncLoop periodically sends metadata requests to its peers
-// it is intended to be run as a background process
-func (m *consensusModule) metadataSyncLoop() {
-	// runs as a background process in consensus module
-	// requests metadata from peers
-	// sends received metadata to the metadataReceived channel
 }
 
 func (m *consensusModule) maxPersistedBlockHeight() (uint64, error) {

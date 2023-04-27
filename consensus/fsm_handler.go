@@ -83,13 +83,20 @@ func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEv
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Node is in Sync Mode, starting to sync...")
 
-	aggregatedMetadata := m.getAggregatedStateSyncMetadata()
-	m.logger.Debug().Msg("Setting metadata! is ")
-	m.stateSync.SetAggregatedMetadata(&aggregatedMetadata)
+	isValidator, err := m.GetBus().GetPersistenceModule().IsValidator(int64(m.height), m.GetNodeAddress())
+	if err != nil {
+		m.logger.Err(err).Msg("failed to check if the node is a validator")
+		return err
+	}
 
-	m.logger.Debug().Msg("CALLING NOW is in Sync Mode, starting to sync...")
-
-	go m.stateSync.StartSyncing()
+	// if the node is validator, start active state sync with CatchToHeight
+	// else, node will always stay in sync mode, and it will catch up to the final state with passive state sync
+	if isValidator {
+		m.logger.Debug().Msg("Validator node is starting active state sync")
+		aggregatedMetadata := m.getAggregatedStateSyncMetadata()
+		m.stateSync.SetAggregatedMetadata(&aggregatedMetadata)
+		go m.stateSync.CatchToHeight()
+	}
 
 	return nil
 }

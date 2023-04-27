@@ -2,6 +2,7 @@ package consensus
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 // DISCUSS: Should these functions return an error?
@@ -22,6 +23,11 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	// Pacemaker - Liveness & safety checks
 	if shouldHandle, err := m.paceMaker.ShouldHandleMessage(msg); !shouldHandle {
 		m.logger.Debug().Fields(loggingFields).Msg("Not handling hotstuff msg...")
+		if msg.Height > m.height {
+			m.stateSync.SetActiveSyncHeight(msg.Height)
+			err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
+			return err
+		}
 		return err
 	}
 

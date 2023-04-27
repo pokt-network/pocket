@@ -25,8 +25,11 @@ type StateSyncModule interface {
 	StateSyncServerModule
 
 	SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyncMetadataResponse)
-	StartSyncing()
+	//StartSyncing()
 	HandleStateSyncBlockCommittedEvent(message *anypb.Any) error
+	// active state sync
+	CatchToHeight()
+	SetActiveSyncHeight(height uint64)
 }
 
 var (
@@ -40,6 +43,7 @@ type stateSync struct {
 	logger                 *modules.Logger
 	aggregatedMetaData     *typesCons.StateSyncMetadataResponse
 	committedBlocksChannel chan uint64
+	activeSyncHeight       uint64
 }
 
 func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -47,6 +51,7 @@ func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.
 }
 
 func (m *stateSync) HandleStateSyncBlockCommittedEvent(event *anypb.Any) error {
+	fmt.Println("newHeightEvent: ", event)
 	evt, err := codec.GetCodec().FromAny(event)
 	if err != nil {
 		return err
@@ -84,77 +89,47 @@ func (m *stateSync) SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyn
 	m.aggregatedMetaData = aggregatedMetaData
 }
 
-func (m *stateSync) StartSyncing() {
-	err := m.Start()
-	if err != nil {
-		m.logger.Error().Err(err).Msg("couldn't start state sync")
+func (m *stateSync) SetActiveSyncHeight(height uint64) {
+	if height > m.activeSyncHeight {
+		fmt.Println("SETTING from", m.activeSyncHeight, "to", height, "height")
+		m.activeSyncHeight = height
 	}
 }
 
-// Start performs state sync process, starting from the consensus module's current height to the aggragated metadata height
+// func (m *stateSync) StartSyncing() {
+// 	err := m.Start()
+// 	if err != nil {
+// 		m.logger.Error().Err(err).Msg("couldn't start state sync")
+// 	}
+// }
+
+// Start performs passive state sync process, starting from the consensus module's current height to the aggragated metadata height
 func (m *stateSync) Start() error {
-	consensusMod := m.bus.GetConsensusModule()
-	currentHeight := consensusMod.CurrentHeight()
-	nodeAddress := consensusMod.GetNodeAddress()
-	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
-	if err != nil {
-		return err
-	}
-	defer readCtx.Release()
+	go m.metadataSyncLoop()
+	go m.blockRequestLoop()
 
-	//get the current validators
-	validators, err := readCtx.GetAllValidators(int64(currentHeight))
-	if err != nil {
-		return err
-	}
-
-	// requests blocks from the current height to the aggregated metadata height
-	for currentHeight <= m.aggregatedMetaData.MaxHeight {
-		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.aggregatedMetaData.MaxHeight)
-
-		// form the get block request message
-		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-			Message: &typesCons.StateSyncMessage_GetBlockReq{
-				GetBlockReq: &typesCons.GetBlockRequest{
-					PeerAddress: nodeAddress,
-					Height:      currentHeight,
-				},
-			},
-		}
-
-		// broadcast the get block request message to all validators
-		for _, val := range validators {
-			if err := m.sendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress())); err != nil {
-				return err
-			}
-		}
-
-		// wait for the requested block to be received and committed by consensus module
-		<-m.committedBlocksChannel
-
-		// requested block is received and committed, continue to the next block from the current height
-		currentHeight = consensusMod.CurrentHeight()
-	}
-	// syncing is complete and all requested blocks are committed, stop the state sync module
-	return m.Stop()
+	return nil
 }
 
 // Stop stops the state sync process, and sends `Consensus_IsSyncedValidator` FSM event
 func (m *stateSync) Stop() error {
 	// check if the node is a validator
-	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
-	nodeAddress := m.bus.GetConsensusModule().GetNodeAddress()
-	isValidator, err := m.bus.GetPersistenceModule().IsValidator(int64(currentHeight), nodeAddress)
+	// currentHeight := m.bus.GetConsensusModule().CurrentHeight()
+	// nodeAddress := m.bus.GetConsensusModule().GetNodeAddress()
+	// isValidator, err := m.bus.GetPersistenceModule().IsValidator(int64(currentHeight), nodeAddress)
 
-	if err != nil {
-		return err
-	}
-	m.logger.Info().Msg("Syncing is complete!")
+	// if err != nil {
+	// 	return err
+	// }
+	// m.logger.Info().Msg("Syncing is complete!")
 
-	if isValidator {
-		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
-	}
-	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator)
+	// if isValidator {
+	// 	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
+	// }
+	// return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator)
+
+	// TODO! check what else needs to be done here
+	return nil
 }
 
 func (m *stateSync) SetBus(pocketBus modules.Bus) {
@@ -170,4 +145,89 @@ func (m *stateSync) GetBus() modules.Bus {
 
 func (m *stateSync) GetModuleName() string {
 	return stateSyncModuleName
+}
+
+// TODO(#352): Implement this function, currently a placeholder.
+// metadataSyncLoop periodically sends metadata requests to its peers
+// it is intended to be run as a background process
+func (m *stateSync) metadataSyncLoop() {
+	// runs as a background process
+	// requests metadata from peers
+	// sends received metadata to the metadataReceived channel
+}
+
+func (m *stateSync) blockRequestLoop() {
+	// runs as a background process
+	// requests blocks from the current height to the aggregated metadata height
+	// sends received blocks to the blockReceived channel
+}
+
+// CatchToHeight performs active state sync
+// TODO! check what to do with returning error
+func (m *stateSync) CatchToHeight() {
+	consensusMod := m.bus.GetConsensusModule()
+	currentHeight := consensusMod.CurrentHeight()
+	nodeAddress := consensusMod.GetNodeAddress()
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	if err != nil {
+		m.logger.Err(err).Msg("failed to create read context for persistence module")
+		return
+	}
+	defer readCtx.Release()
+
+	//get the current validators
+	validators, err := readCtx.GetAllValidators(int64(currentHeight))
+	if err != nil {
+		m.logger.Err(err).Msg("failed to get all validators from persistence module")
+		return
+	}
+
+	// requests blocks from the current height to the aggregated metadata height
+	for currentHeight <= m.activeSyncHeight {
+		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.activeSyncHeight)
+
+		// form the get block request message
+		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+			Message: &typesCons.StateSyncMessage_GetBlockReq{
+				GetBlockReq: &typesCons.GetBlockRequest{
+					PeerAddress: nodeAddress,
+					Height:      currentHeight,
+				},
+			},
+		}
+
+		// broadcast the get block request message to all validators
+		for _, val := range validators {
+			if err := m.sendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress())); err != nil {
+				m.logger.Err(err).Msg("failed to send state sync message")
+				return
+			}
+		}
+
+		// wait for the requested block to be received and committed by consensus module
+		<-m.committedBlocksChannel
+
+		// requested block is received and committed, continue to the next block from the current height
+		currentHeight = consensusMod.CurrentHeight()
+		fmt.Println("Current Height is Now: ", currentHeight)
+	}
+
+	// syncing is complete and all requested blocks are committed send validator synced event to the FSM
+	// isValidator, err := m.bus.GetPersistenceModule().IsValidator(int64(currentHeight), nodeAddress)
+	// if err != nil {
+	// 	m.logger.Err(err).Msg("failed to check if the node is a validator")
+	// }
+
+	m.logger.Info().Msg("Active syncing is complete!")
+
+	// var event coreTypes.StateMachineEvent
+	// if isValidator {
+	//  event := coreTypes.StateMachineEvent_Consensus_IsSyncedValidator
+	// } else {
+	// 	 event = coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator
+	// }
+
+	if err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator); err != nil {
+		m.logger.Err(err).Msg("failed to send IsSyncedValidator event to the FSM")
+	}
 }

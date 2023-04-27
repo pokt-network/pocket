@@ -265,6 +265,9 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	// 2. Propose
 	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 500, true)
 	require.NoError(t, err)
+	// Wait for nodes to reach height=1 by generating a block
+	// block = WaitForNextBlock(t, clockMock, eventsChannel, pocketNodes, 1, 0, 500, true)
+	// require.Equal(t, uint64(3), block.BlockHeader.Height)
 
 	WaitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, 3)
 	require.NoError(t, err)

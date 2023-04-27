@@ -128,6 +128,7 @@ func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.Hotstuff
 func (m *consensusModule) validateOptimisticThresholdMet(num int, currentValidators []*coreTypes.Actor) error {
 	numValidators := len(currentValidators)
 	if !(float64(num) > ByzantineThreshold*float64(numValidators)) {
+		fmt.Println("Calculating validators current len of vals is: ", numValidators)
 		return typesCons.ErrByzantineThresholdCheck(num, ByzantineThreshold*float64(numValidators))
 	}
 	return nil
