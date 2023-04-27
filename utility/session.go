@@ -136,6 +136,9 @@ func (s *sessionHydrator) hydrateSessionID() error {
 	}
 	prevHashBz, err := hex.DecodeString(prevHash)
 
+	if err != nil {
+		return err
+	}
 	appPubKeyBz := []byte(s.session.Application.PublicKey)
 	relayChainBz := []byte(string(s.session.RelayChain))
 	geoZoneBz := []byte(s.session.GeoZone)
@@ -225,6 +228,7 @@ func pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, session
 	}
 
 	// Take the first 8 bytes of sessionId to use as the seed
+	// NB: There is specific reason why `BigEndian` was chosen over `LittleEndian` in this specific context.
 	seed := int64(binary.BigEndian.Uint64(crypto.SHA3Hash(sessionId)[:8]))
 
 	// Retrieve the indices for the candidates
@@ -243,6 +247,7 @@ func pseudoRandomSelection(candidates []*coreTypes.Actor, numTarget int, session
 
 // uniqueRandomIndices returns a map of `numIndices` unique random numbers less than `maxIndex`
 // seeded by `seed`.
+// panics if `numIndicies > maxIndex` since that code path SHOULD never be executed.
 // NB: A map pointing to empty structs is used to simulate set behaviour.
 func uniqueRandomIndices(seed, maxIndex, numIndices int64) map[int64]struct{} {
 	// This should never happen
