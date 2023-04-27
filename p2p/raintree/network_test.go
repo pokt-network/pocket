@@ -59,10 +59,10 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 		CurrentHeightProvider: currentHeightProviderMock,
 	}
 
-	network, err := NewRainTreeNetwork(busMock, netCfg)
+	router, err := NewRainTreeNetwork(busMock, netCfg)
 	require.NoError(t, err)
 
-	rainTreeNet := network.(*rainTreeNetwork)
+	rtRouter := router.(*rainTreeRouter)
 
 	privKey, err := cryptoPocket.GeneratePrivateKey()
 	require.NoError(t, err)
@@ -73,14 +73,14 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	}
 
 	// Add peerToAdd.
-	err = rainTreeNet.AddPeer(peerToAdd)
+	err = rtRouter.AddPeer(peerToAdd)
 	require.NoError(t, err)
 	expectedPStoreSize++
 
-	peerAddrs, peers := getPeersViewParts(rainTreeNet.peersManager)
+	peerAddrs, peers := getPeersViewParts(rtRouter.peersManager)
 
 	// Ensure size / lengths are consistent.
-	require.Equal(t, expectedPStoreSize, network.GetPeerstore().Size())
+	require.Equal(t, expectedPStoreSize, router.GetPeerstore().Size())
 	require.Equal(t, expectedPStoreSize, len(peerAddrs))
 	require.Equal(t, expectedPStoreSize, len(peers))
 
@@ -90,8 +90,8 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 	require.ElementsMatch(t, []string{selfAddr.String(), peerToAdd.GetAddress().String()}, peerAddrs, "addresses do not match")
 	require.ElementsMatch(t, []*typesP2P.NetworkPeer{selfPeer, peerToAdd}, peers, "peers do not match")
 
-	require.Equal(t, selfPeer, network.GetPeerstore().GetPeer(selfAddr), "Peerstore does not contain self")
-	require.Equal(t, peerToAdd, network.GetPeerstore().GetPeer(peerToAdd.GetAddress()), "Peerstore does not contain added peer")
+	require.Equal(t, selfPeer, router.GetPeerstore().GetPeer(selfAddr), "Peerstore does not contain self")
+	require.Equal(t, peerToAdd, router.GetPeerstore().GetPeer(peerToAdd.GetAddress()), "Peerstore does not contain added peer")
 }
 
 func TestRainTreeNetwork_RemovePeer(t *testing.T) {
@@ -123,7 +123,7 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 
 	network, err := NewRainTreeNetwork(busMock, netCfg)
 	require.NoError(t, err)
-	rainTree := network.(*rainTreeNetwork)
+	rainTree := network.(*rainTreeRouter)
 
 	// Ensure expected starting size / lengths are consistent.
 	peerAddrs, peers := getPeersViewParts(rainTree.peersManager)

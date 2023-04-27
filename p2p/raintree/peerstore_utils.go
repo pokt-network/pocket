@@ -13,14 +13,14 @@ const (
 	floatPrecision            = float64(0.0000001)
 )
 
-func (n *rainTreeNetwork) getPeerstoreSize(level uint32, height uint64) int {
+func (n *rainTreeRouter) getPeerstoreSize(level uint32, height uint64) int {
 	peersView, maxNumLevels := n.peersManager.getPeersViewWithLevels()
 
 	// if we are propagating a message from a previous height, we need to instantiate an ephemeral rainTreePeersManager (without add/remove)
 	if height < n.currentHeightProvider.CurrentHeight() {
 		peersMgr, err := newPeersManagerWithPeerstoreProvider(n.selfAddr, n.pstoreProvider, height)
 		if err != nil {
-			n.logger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork rainTreePeersManager")
+			n.logger.Fatal().Err(err).Msg("Error initializing rainTreeRouter rainTreePeersManager")
 		}
 		peersView, maxNumLevels = peersMgr.getPeersViewWithLevels()
 	}
@@ -30,7 +30,7 @@ func (n *rainTreeNetwork) getPeerstoreSize(level uint32, height uint64) int {
 }
 
 // getTargetsAtLevel returns the targets for a given level
-func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
+func (n *rainTreeRouter) getTargetsAtLevel(level uint32) []target {
 	height := n.currentHeightProvider.CurrentHeight()
 	pstoreSizeAtHeight := n.getPeerstoreSize(level, height)
 	firstTarget := n.getTarget(firstMsgTargetPercentage, pstoreSizeAtHeight, level)
@@ -49,7 +49,7 @@ func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 	return []target{firstTarget, secondTarget}
 }
 
-func (n *rainTreeNetwork) getTarget(targetPercentage float64, pstoreSize int, level uint32) target {
+func (n *rainTreeRouter) getTarget(targetPercentage float64, pstoreSize int, level uint32) target {
 	i := int(targetPercentage * float64(pstoreSize))
 	peersView := n.peersManager.GetPeersView()
 	serviceURL := peersView.GetPeers()[i].GetServiceURL()

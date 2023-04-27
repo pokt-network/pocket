@@ -24,9 +24,9 @@ import (
 )
 
 var (
-	_ typesP2P.Router            = &rainTreeNetwork{}
-	_ modules.IntegratableModule = &rainTreeNetwork{}
-	_ rainTreeFactory            = &rainTreeNetwork{}
+	_ typesP2P.Router            = &rainTreeRouter{}
+	_ modules.IntegratableModule = &rainTreeRouter{}
+	_ rainTreeFactory            = &rainTreeRouter{}
 )
 
 type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, RainTreeConfig]
@@ -38,7 +38,7 @@ type RainTreeConfig struct {
 	Host                  libp2pHost.Host
 }
 
-type rainTreeNetwork struct {
+type rainTreeRouter struct {
 	base_modules.IntegratableModule
 
 	logger *modules.Logger
@@ -58,12 +58,12 @@ type rainTreeNetwork struct {
 }
 
 func NewRainTreeNetwork(bus modules.Bus, cfg RainTreeConfig) (typesP2P.Router, error) {
-	return new(rainTreeNetwork).Create(bus, cfg)
+	return new(rainTreeRouter).Create(bus, cfg)
 }
 
-func (*rainTreeNetwork) Create(bus modules.Bus, netCfg RainTreeConfig) (typesP2P.Router, error) {
+func (*rainTreeRouter) Create(bus modules.Bus, netCfg RainTreeConfig) (typesP2P.Router, error) {
 	networkLogger := logger.Global.CreateLoggerForModule("network")
-	networkLogger.Info().Msg("Initializing rainTreeNetwork")
+	networkLogger.Info().Msg("Initializing rainTreeRouter")
 
 	if err := netCfg.isValid(); err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (*rainTreeNetwork) Create(bus modules.Bus, netCfg RainTreeConfig) (typesP2P
 
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
 
-	n := &rainTreeNetwork{
+	n := &rainTreeRouter{
 		host:                  netCfg.Host,
 		selfAddr:              netCfg.Addr,
 		hostname:              p2pCfg.Hostname,
@@ -90,14 +90,14 @@ func (*rainTreeNetwork) Create(bus modules.Bus, netCfg RainTreeConfig) (typesP2P
 }
 
 // NetworkBroadcast implements the respective member of `typesP2P.Router`.
-func (n *rainTreeNetwork) Broadcast(data []byte) error {
+func (n *rainTreeRouter) Broadcast(data []byte) error {
 	return n.broadcastAtLevel(data, n.peersManager.GetMaxNumLevels(), crypto.GetNonce())
 }
 
 // broadcastAtLevel recursively sends to both left and right target peers
 // from the starting level, demoting until level == 0.
 // (see: https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p)
-func (n *rainTreeNetwork) broadcastAtLevel(data []byte, level uint32, nonce uint64) error {
+func (n *rainTreeRouter) broadcastAtLevel(data []byte, level uint32, nonce uint64) error {
 	// This is handled either by the cleanup layer or redundancy layer
 	if level == 0 {
 		return nil
@@ -129,7 +129,7 @@ func (n *rainTreeNetwork) broadcastAtLevel(data []byte, level uint32, nonce uint
 
 // demote broadcasts to the decremented level's targets.
 // (see: https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p)
-func (n *rainTreeNetwork) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {
+func (n *rainTreeRouter) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {
 	if rainTreeMsg.Level > 0 {
 		if err := n.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return err
@@ -139,7 +139,7 @@ func (n *rainTreeNetwork) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {
 }
 
 // NetworkSend implements the respective member of `typesP2P.Router`.
-func (n *rainTreeNetwork) Send(data []byte, address cryptoPocket.Address) error {
+func (n *rainTreeRouter) Send(data []byte, address cryptoPocket.Address) error {
 	msg := &typesP2P.RainTreeMessage{
 		Level: 0, // Direct send that does not need to be propagated
 		Data:  data,
@@ -155,7 +155,7 @@ func (n *rainTreeNetwork) Send(data []byte, address cryptoPocket.Address) error 
 }
 
 // sendInternal sends `data` to the peer at pokt `address` if not self.
-func (n *rainTreeNetwork) sendInternal(data []byte, address cryptoPocket.Address) error {
+func (n *rainTreeRouter) sendInternal(data []byte, address cryptoPocket.Address) error {
 	// TODO: How should we handle this?
 	if n.selfAddr.Equals(address) {
 		n.logger.Debug().Str("pokt_addr", address.String()).Msg("attempted to send to self")
@@ -194,7 +194,7 @@ func (n *rainTreeNetwork) sendInternal(data []byte, address cryptoPocket.Address
 }
 
 // HandleNetworkData implements the respective member of `typesP2P.Router`.
-func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
+func (n *rainTreeRouter) HandleNetworkData(data []byte) ([]byte, error) {
 	blockHeightInt := n.GetBus().GetConsensusModule().CurrentHeight()
 	blockHeight := fmt.Sprintf("%d", blockHeightInt)
 
@@ -253,12 +253,12 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 }
 
 // GetPeerstore implements the respective member of `typesP2P.Router`.
-func (n *rainTreeNetwork) GetPeerstore() typesP2P.Peerstore {
+func (n *rainTreeRouter) GetPeerstore() typesP2P.Peerstore {
 	return n.peersManager.GetPeerstore()
 }
 
 // AddPeer implements the respective member of `typesP2P.Router`.
-func (n *rainTreeNetwork) AddPeer(peer typesP2P.Peer) error {
+func (n *rainTreeRouter) AddPeer(peer typesP2P.Peer) error {
 	// Noop if peer with the same pokt address exists in the peerstore.
 	// TECHDEBT: add method(s) to update peers.
 	if p := n.peersManager.GetPeerstore().GetPeer(peer.GetAddress()); p != nil {
@@ -278,7 +278,7 @@ func (n *rainTreeNetwork) AddPeer(peer typesP2P.Peer) error {
 	return nil
 }
 
-func (n *rainTreeNetwork) RemovePeer(peer typesP2P.Peer) error {
+func (n *rainTreeRouter) RemovePeer(peer typesP2P.Peer) error {
 	n.peersManager.HandleEvent(
 		typesP2P.PeerManagerEvent{
 			EventType: typesP2P.RemovePeerEventType,
@@ -290,7 +290,7 @@ func (n *rainTreeNetwork) RemovePeer(peer typesP2P.Peer) error {
 
 // Size returns the number of peers the network is aware of and would attempt to
 // broadcast to.
-func (n *rainTreeNetwork) Size() int {
+func (n *rainTreeRouter) Size() int {
 	return n.peersManager.GetPeerstore().Size()
 }
 
@@ -299,7 +299,7 @@ func shouldSendToTarget(target target) bool {
 	return !target.isSelf
 }
 
-func (n *rainTreeNetwork) setupDependencies() error {
+func (n *rainTreeRouter) setupDependencies() error {
 	pstore, err := n.pstoreProvider.GetStakedPeerstoreAtHeight(n.currentHeightProvider.CurrentHeight())
 	if err != nil {
 		return err
@@ -315,7 +315,7 @@ func (n *rainTreeNetwork) setupDependencies() error {
 	return nil
 }
 
-func (n *rainTreeNetwork) setupPeerManager(pstore typesP2P.Peerstore) (err error) {
+func (n *rainTreeRouter) setupPeerManager(pstore typesP2P.Peerstore) (err error) {
 	n.peersManager, err = newPeersManager(n.selfAddr, pstore, true)
 	return err
 }

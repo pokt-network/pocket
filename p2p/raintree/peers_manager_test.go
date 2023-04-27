@@ -106,7 +106,7 @@ func TestRainTree_Peerstore_HandleUpdate(t *testing.T) {
 			network, err := NewRainTreeNetwork(mockBus, netCfg)
 			require.NoError(t, err)
 
-			rainTree := network.(*rainTreeNetwork)
+			rainTree := network.(*rainTreeRouter)
 
 			peersManagerStateView, actualMaxNumLevels := rainTree.peersManager.getPeersViewWithLevels()
 
@@ -173,7 +173,7 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 			network, err := NewRainTreeNetwork(mockBus, netCfg)
 			require.NoError(b, err)
 
-			rainTree := network.(*rainTreeNetwork)
+			rainTree := network.(*rainTreeRouter)
 
 			peersManagerStateView, actualMaxNumLevels := rainTree.peersManager.getPeersViewWithLevels()
 
@@ -296,7 +296,7 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 
 	network, err := NewRainTreeNetwork(busMock, netCfg)
 	require.NoError(t, err)
-	rainTree := network.(*rainTreeNetwork)
+	rainTree := network.(*rainTreeRouter)
 
 	rainTree.SetBus(busMock)
 

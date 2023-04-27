@@ -18,7 +18,7 @@ type target struct {
 	isSelf                bool
 }
 
-func (t target) DebugString(n *rainTreeNetwork) string {
+func (t target) DebugString(n *rainTreeRouter) string {
 	s := strings.Builder{}
 	s.WriteString("[")
 	peersManagerStateView := n.peersManager.GetPeersView()
