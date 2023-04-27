@@ -216,7 +216,7 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 		return err
 	}
 
-	return m.network.NetworkSend(data, addr)
+	return m.network.Send(data, addr)
 }
 
 // TECHDEBT(#348): Define what the node identity is throughout the codebase

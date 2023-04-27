@@ -139,7 +139,7 @@ func (n *rainTreeNetwork) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {
 }
 
 // NetworkSend implements the respective member of `typesP2P.Router`.
-func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address) error {
+func (n *rainTreeNetwork) Send(data []byte, address cryptoPocket.Address) error {
 	msg := &typesP2P.RainTreeMessage{
 		Level: 0, // Direct send that does not need to be propagated
 		Data:  data,

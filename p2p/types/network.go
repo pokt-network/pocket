@@ -13,7 +13,7 @@ type Router interface {
 	modules.IntegratableModule
 
 	Broadcast(data []byte) error
-	NetworkSend(data []byte, address cryptoPocket.Address) error
+	Send(data []byte, address cryptoPocket.Address) error
 
 	// Address book helpers
 	// TECHDEBT: simplify - remove `GetPeerstore`
