@@ -48,8 +48,8 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 }
 
 // DISCUSSION: This may need to be changed when the GetSession function is actually implemented
-func (s *rpcServer) PostV1ClientDispatch(ctx echo.Context) error {
-	var body DispatchRequest
+func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
+	var body SessionRequest
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}

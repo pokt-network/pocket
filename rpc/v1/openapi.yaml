@@ -93,17 +93,17 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-  /v1/client/dispatch:
+  /v1/client/get_session:
     post:
       tags:
         - client
-      summary: Sends a dispatch request to the network and get the nodes that will be servicing your requests for the session
+      summary: Sends a session request to the network and get the nodes that will be servicing your requests for the session
       requestBody:
         description: Request the nodes that will be servicing the requests in your session
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DispatchRequest"
+              $ref: "#/components/schemas/SessionRequest"
         required: true
       responses:
         "200":
@@ -118,7 +118,7 @@ paths:
             text/plain:
               example: "description of failure"
         "500":
-          description: An error occurred while sending the dispatch request to the network
+          description: An error occurred while sending the session request to the network
           content:
             text/plain:
               example: "description of failure"
@@ -957,23 +957,6 @@ components:
           type: string
         session_id:
           type: string
-    DispatchRequest:
-      type: object
-      required:
-        - app_address
-        - chain
-        - geozone
-        - session_height
-      properties:
-        app_address:
-          type: string
-        chain:
-          type: string
-        geozone:
-          type: string
-        session_height:
-          type: integer
-          format: int64
     QueryAddressHeight:
       type: object
       required:
@@ -1080,6 +1063,23 @@ components:
           $ref: "#/components/schemas/Payload"
         meta:
           $ref: "#/components/schemas/RelayRequestMeta"
+    SessionRequest:
+      type: object
+      required:
+        - app_address
+        - chain
+        - geozone
+        - session_height
+      properties:
+        app_address:
+          type: string
+        chain:
+          type: string
+        geozone:
+          type: string
+        session_height:
+          type: integer
+          format: int64
 
     # Responses
     Account:
