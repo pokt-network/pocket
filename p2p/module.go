@@ -155,10 +155,10 @@ func (m *p2pModule) Start() (err error) {
 
 	// Return early if host has already been started (e.g. via `WithHostOption`)
 	if m.host == nil {
-		// Libp2p host providea via `WithHost()` option are destroyed when
+		// Libp2p hosts provided via `WithHost()` option are destroyed when
 		// `#Stop()`ing the module. Therefore, a new one must be created.
-		// The new host may be configured differently that which was provided
-		// originally in `WithHost()`.
+		// The new host may be configured differently than that which was
+		// provided originally in `WithHost()`.
 		if len(m.options) != 0 {
 			m.logger.Warn().Msg("creating new libp2p host")
 		}
