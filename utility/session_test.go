@@ -24,7 +24,8 @@ func TestSession_GetSession_SingleFishermanSingleServicerBaseCase(t *testing.T) 
 	geoZone := "unused_geo"
 	numFishermen := 1
 	numServicers := 1
-	expectedSessionId := "5acf559f1a3faf3bea7eb692fe51bc1e2e5fb687ede0a6daa7d42399da4aa82b" // needs to be manually updated if business logic changes
+	// needs to be manually updated if business logic changes
+	expectedSessionId := "5acf559f1a3faf3bea7eb692fe51bc1e2e5fb687ede0a6daa7d42399da4aa82b"
 
 	runtimeCfg, utilityMod, _ := prepareEnvironment(t, 5, numServicers, 1, numFishermen)
 
@@ -32,7 +33,7 @@ func TestSession_GetSession_SingleFishermanSingleServicerBaseCase(t *testing.T) 
 	require.Len(t, runtimeCfg.GetGenesis().Applications, 1)
 	app := runtimeCfg.GetGenesis().Applications[0]
 	require.Len(t, runtimeCfg.GetGenesis().Fishermen, 1)
-	fish := runtimeCfg.GetGenesis().Fishermen[0]
+	fisher := runtimeCfg.GetGenesis().Fishermen[0]
 	require.Len(t, runtimeCfg.GetGenesis().Servicers, 1)
 	servicer := runtimeCfg.GetGenesis().Servicers[0]
 
@@ -49,7 +50,7 @@ func TestSession_GetSession_SingleFishermanSingleServicerBaseCase(t *testing.T) 
 	require.Len(t, session.Servicers, numServicers)
 	require.Equal(t, servicer.Address, session.Servicers[0].Address)
 	require.Len(t, session.Fishermen, numFishermen)
-	require.Equal(t, fish.Address, session.Fishermen[0].Address)
+	require.Equal(t, fisher.Address, session.Fishermen[0].Address)
 }
 
 func TestSession_GetSession_ApplicationInvalid(t *testing.T) {

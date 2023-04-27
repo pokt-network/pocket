@@ -113,7 +113,7 @@ func (s *sessionHydrator) validateApplicationSession() error {
 		return fmt.Errorf("application %s does not stake for relay chain %s", app.Address, s.session.RelayChain)
 	}
 
-	if app.PausedHeight == -1 || app.UnstakingHeight == -1 {
+	if app.PausedHeight != -1 || app.UnstakingHeight != -1 {
 		return fmt.Errorf("application %s is either unstaked or paused", app.Address)
 	}
 
@@ -167,7 +167,7 @@ func (s *sessionHydrator) hydrateSessionServicers() error {
 	candidateServicers := make([]*coreTypes.Actor, 0)
 	for _, servicer := range servicers {
 		// Sanity check the servicer is not paused, jailed or unstaking
-		if !(servicer.PausedHeight == -1 && servicer.UnstakingHeight == -1) {
+		if servicer.PausedHeight != -1 || servicer.UnstakingHeight != -1 {
 			return fmt.Errorf("hydrateSessionServicers should not have encountered a paused or unstaking servicer: %s", servicer.Address)
 		}
 
@@ -201,7 +201,7 @@ func (s *sessionHydrator) hydrateSessionFishermen() error {
 	candidateFishermen := make([]*coreTypes.Actor, 0)
 	for _, fisher := range fishermen {
 		// Sanity check the fisher is not paused, jailed or unstaking
-		if !(fisher.PausedHeight == -1 && fisher.UnstakingHeight == -1) {
+		if fisher.PausedHeight != -1 || fisher.UnstakingHeight != -1 {
 			return fmt.Errorf("hydrateSessionFishermen should not have encountered a paused or unstaking fisherman: %s", fisher.Address)
 		}
 
