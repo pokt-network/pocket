@@ -114,7 +114,7 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 
 	for _, target := range n.getTargetsAtLevel(level) {
 		if shouldSendToTarget(target) {
-			if err = n.networkSendInternal(msgBz, target.address); err != nil {
+			if err = n.sendInternal(msgBz, target.address); err != nil {
 				n.logger.Error().Err(err).Msg("sending to peer during broadcast")
 			}
 		}
@@ -151,11 +151,11 @@ func (n *rainTreeNetwork) Send(data []byte, address cryptoPocket.Address) error 
 		return err
 	}
 
-	return n.networkSendInternal(bz, address)
+	return n.sendInternal(bz, address)
 }
 
-// networkSendInternal sends `data` to the peer at pokt `address` if not self.
-func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.Address) error {
+// sendInternal sends `data` to the peer at pokt `address` if not self.
+func (n *rainTreeNetwork) sendInternal(data []byte, address cryptoPocket.Address) error {
 	// TODO: How should we handle this?
 	if n.selfAddr.Equals(address) {
 		n.logger.Debug().Str("pokt_addr", address.String()).Msg("attempted to send to self")
