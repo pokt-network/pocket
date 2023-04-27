@@ -491,7 +491,7 @@ func TestSession_GetSession_ApplicationUnbonds(t *testing.T) {
 }
 
 func TestSession_GetSession_ServicersAndFishermenCounts_GeoZoneAvailability(t *testing.T) {
-	// TODO: Once GeoZones are implemented, the tests need to be added as well
+	// TODO(#697): Once GeoZones are implemented, the tests need to be added as well
 	// Cases: Invalid, unused, non-existent, empty, insufficiently complete, etc...
 }
 
