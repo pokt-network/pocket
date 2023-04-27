@@ -33,9 +33,11 @@ type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, RainTreeConfig
 
 type RainTreeConfig struct {
 	Addr                  cryptoPocket.Address
-	PeerstoreProvider     providers.PeerstoreProvider
 	CurrentHeightProvider providers.CurrentHeightProvider
 	Host                  libp2pHost.Host
+	Hostname              string
+	MaxMempoolCount       uint64
+	PeerstoreProvider     providers.PeerstoreProvider
 }
 
 type rainTreeRouter struct {
@@ -61,23 +63,21 @@ func NewRainTreeRouter(bus modules.Bus, cfg RainTreeConfig) (typesP2P.Router, er
 	return new(rainTreeRouter).Create(bus, cfg)
 }
 
-func (*rainTreeRouter) Create(bus modules.Bus, rtCfg RainTreeConfig) (typesP2P.Router, error) {
+func (*rainTreeRouter) Create(bus modules.Bus, cfg RainTreeConfig) (typesP2P.Router, error) {
 	routerLogger := logger.Global.CreateLoggerForModule("router")
 	routerLogger.Info().Msg("Initializing rainTreeRouter")
 
-	if err := rtCfg.isValid(); err != nil {
+	if err := cfg.isValid(); err != nil {
 		return nil, err
 	}
 
-	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
-
 	rtr := &rainTreeRouter{
-		host:                  rtCfg.Host,
-		selfAddr:              rtCfg.Addr,
-		hostname:              p2pCfg.Hostname,
-		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
-		pstoreProvider:        rtCfg.PeerstoreProvider,
-		currentHeightProvider: rtCfg.CurrentHeightProvider,
+		host:                  cfg.Host,
+		selfAddr:              cfg.Addr,
+		hostname:              cfg.Hostname,
+		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(cfg.MaxMempoolCount)),
+		pstoreProvider:        cfg.PeerstoreProvider,
+		currentHeightProvider: cfg.CurrentHeightProvider,
 		logger:                routerLogger,
 	}
 	rtr.SetBus(bus)

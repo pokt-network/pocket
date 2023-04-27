@@ -287,10 +287,12 @@ func (m *p2pModule) setupRouter() (err error) {
 	m.router, err = raintree.NewRainTreeRouter(
 		m.GetBus(),
 		raintree.RainTreeConfig{
-			Host:                  m.host,
 			Addr:                  m.address,
-			PeerstoreProvider:     m.pstoreProvider,
 			CurrentHeightProvider: m.currentHeightProvider,
+			Host:                  m.host,
+			Hostname:              m.cfg.Hostname,
+			MaxMempoolCount:       m.cfg.MaxMempoolCount,
+			PeerstoreProvider:     m.pstoreProvider,
 		},
 	)
 	return err
