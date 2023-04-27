@@ -61,23 +61,23 @@ func NewRainTreeNetwork(bus modules.Bus, cfg RainTreeConfig) (typesP2P.Router, e
 	return new(rainTreeRouter).Create(bus, cfg)
 }
 
-func (*rainTreeRouter) Create(bus modules.Bus, netCfg RainTreeConfig) (typesP2P.Router, error) {
+func (*rainTreeRouter) Create(bus modules.Bus, rtCfg RainTreeConfig) (typesP2P.Router, error) {
 	networkLogger := logger.Global.CreateLoggerForModule("network")
 	networkLogger.Info().Msg("Initializing rainTreeRouter")
 
-	if err := netCfg.isValid(); err != nil {
+	if err := rtCfg.isValid(); err != nil {
 		return nil, err
 	}
 
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
 
 	rtr := &rainTreeRouter{
-		host:                  netCfg.Host,
-		selfAddr:              netCfg.Addr,
+		host:                  rtCfg.Host,
+		selfAddr:              rtCfg.Addr,
 		hostname:              p2pCfg.Hostname,
 		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
-		pstoreProvider:        netCfg.PeerstoreProvider,
-		currentHeightProvider: netCfg.CurrentHeightProvider,
+		pstoreProvider:        rtCfg.PeerstoreProvider,
+		currentHeightProvider: rtCfg.CurrentHeightProvider,
 		logger:                networkLogger,
 	}
 	rtr.SetBus(bus)
