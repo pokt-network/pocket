@@ -29,7 +29,7 @@ var (
 	_ rainTreeFactory            = &rainTreeRouter{}
 )
 
-type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, RainTreeConfig]
+type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, *RainTreeConfig]
 
 type RainTreeConfig struct {
 	Addr                  cryptoPocket.Address
@@ -59,11 +59,11 @@ type rainTreeRouter struct {
 	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 }
 
-func NewRainTreeRouter(bus modules.Bus, cfg RainTreeConfig) (typesP2P.Router, error) {
+func NewRainTreeRouter(bus modules.Bus, cfg *RainTreeConfig) (typesP2P.Router, error) {
 	return new(rainTreeRouter).Create(bus, cfg)
 }
 
-func (*rainTreeRouter) Create(bus modules.Bus, cfg RainTreeConfig) (typesP2P.Router, error) {
+func (*rainTreeRouter) Create(bus modules.Bus, cfg *RainTreeConfig) (typesP2P.Router, error) {
 	routerLogger := logger.Global.CreateLoggerForModule("router")
 	routerLogger.Info().Msg("Initializing rainTreeRouter")
 

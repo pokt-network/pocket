@@ -96,7 +96,7 @@ func TestRainTree_Peerstore_HandleUpdate(t *testing.T) {
 			libp2pMockNet, err := mocknet.WithNPeers(1)
 			require.NoError(t, err)
 
-			rtCfg := RainTreeConfig{
+			rtCfg := &RainTreeConfig{
 				Host:                  libp2pMockNet.Hosts()[0],
 				Addr:                  pubKey.Address(),
 				PeerstoreProvider:     pstoreProviderMock,
@@ -163,7 +163,7 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 			hostMock := mocksP2P.NewMockHost(ctrl)
 			hostMock.EXPECT().Peerstore().Return(libp2pPStore).AnyTimes()
 
-			rtCfg := RainTreeConfig{
+			rtCfg := &RainTreeConfig{
 				Host:                  hostMock,
 				Addr:                  pubKey.Address(),
 				PeerstoreProvider:     pstoreProviderMock,
@@ -287,7 +287,7 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 	hostMock := mocksP2P.NewMockHost(ctrl)
 	hostMock.EXPECT().Peerstore().Return(libp2pPStore).AnyTimes()
 
-	rtCfg := RainTreeConfig{
+	rtCfg := &RainTreeConfig{
 		Host:                  hostMock,
 		Addr:                  []byte{expectedMsgProp.orig},
 		PeerstoreProvider:     pstoreProviderMock,

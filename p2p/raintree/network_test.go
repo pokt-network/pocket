@@ -52,7 +52,7 @@ func TestRainTreeRouter_AddPeer(t *testing.T) {
 	peerstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-	rtCfg := RainTreeConfig{
+	rtCfg := &RainTreeConfig{
 		Host:                  host,
 		Addr:                  selfAddr,
 		PeerstoreProvider:     peerstoreProviderMock,
@@ -114,7 +114,7 @@ func TestRainTreeRouter_RemovePeer(t *testing.T) {
 	busMock := mockBus(ctrl)
 	peerstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
-	rtCfg := RainTreeConfig{
+	rtCfg := &RainTreeConfig{
 		Host:                  host,
 		Addr:                  selfAddr,
 		PeerstoreProvider:     peerstoreProviderMock,
