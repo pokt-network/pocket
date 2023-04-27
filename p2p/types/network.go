@@ -9,7 +9,7 @@ import (
 
 // TECHDEBT(olshansky): When we delete `stdnetwork` and only go with `raintree`, this interface
 // can be simplified greatly.
-type Network interface {
+type Router interface {
 	modules.IntegratableModule
 
 	NetworkBroadcast(data []byte) error

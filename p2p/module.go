@@ -56,7 +56,7 @@ type p2pModule struct {
 
 	// Assigned during `#Start()`. TLDR; `host` listens on instantiation.
 	// and `network` depends on `host`.
-	network typesP2P.Network
+	network typesP2P.Router
 	// host represents a libp2p network node, it encapsulates a libp2p peerstore
 	// & connection manager. `libp2p.New` configures and starts listening
 	// according to options. Assigned via `#Start()` (starts on instantiation).
@@ -414,7 +414,7 @@ func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
 }
 
 // handleNetworkData passes a network message to the configured
-// `Network`implementation for routing.
+// `Router`implementation for routing.
 func (m *p2pModule) handleNetworkData(data []byte) error {
 	appMsgData, err := m.network.HandleNetworkData(data)
 	if err != nil {
