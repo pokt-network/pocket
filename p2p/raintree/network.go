@@ -91,13 +91,13 @@ func (*rainTreeNetwork) Create(bus modules.Bus, netCfg RainTreeConfig) (typesP2P
 
 // NetworkBroadcast implements the respective member of `typesP2P.Router`.
 func (n *rainTreeNetwork) Broadcast(data []byte) error {
-	return n.networkBroadcastAtLevel(data, n.peersManager.GetMaxNumLevels(), crypto.GetNonce())
+	return n.broadcastAtLevel(data, n.peersManager.GetMaxNumLevels(), crypto.GetNonce())
 }
 
-// networkBroadcastAtLevel recursively sends to both left and right target peers
+// broadcastAtLevel recursively sends to both left and right target peers
 // from the starting level, demoting until level == 0.
 // (see: https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p)
-func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, nonce uint64) error {
+func (n *rainTreeNetwork) broadcastAtLevel(data []byte, level uint32, nonce uint64) error {
 	// This is handled either by the cleanup layer or redundancy layer
 	if level == 0 {
 		return nil
@@ -131,7 +131,7 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 // (see: https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p)
 func (n *rainTreeNetwork) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {
 	if rainTreeMsg.Level > 0 {
-		if err := n.networkBroadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
+		if err := n.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return err
 		}
 	}
@@ -220,7 +220,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	// Continue RainTree propagation
 	if rainTreeMsg.Level > 0 {
-		if err := n.networkBroadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
+		if err := n.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return nil, err
 		}
 	}
