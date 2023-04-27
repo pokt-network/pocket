@@ -168,7 +168,7 @@ func (m *p2pModule) Start() (err error) {
 		}
 	}
 
-	if err := m.setupNetwork(); err != nil {
+	if err := m.setupRouter(); err != nil {
 		return fmt.Errorf("setting up router: %w", err)
 	}
 
@@ -282,8 +282,8 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 	return nil
 }
 
-// setupNetwork instantiates the configured router implementation.
-func (m *p2pModule) setupNetwork() (err error) {
+// setupRouter instantiates the configured router implementation.
+func (m *p2pModule) setupRouter() (err error) {
 	m.router, err = raintree.NewRainTreeNetwork(
 		m.GetBus(),
 		raintree.RainTreeConfig{
