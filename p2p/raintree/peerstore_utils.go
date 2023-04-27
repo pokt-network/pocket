@@ -13,14 +13,14 @@ const (
 	floatPrecision            = float64(0.0000001)
 )
 
-func (n *rainTreeRouter) getPeerstoreSize(level uint32, height uint64) int {
-	peersView, maxNumLevels := n.peersManager.getPeersViewWithLevels()
+func (rtr *rainTreeRouter) getPeerstoreSize(level uint32, height uint64) int {
+	peersView, maxNumLevels := rtr.peersManager.getPeersViewWithLevels()
 
 	// if we are propagating a message from a previous height, we need to instantiate an ephemeral rainTreePeersManager (without add/remove)
-	if height < n.currentHeightProvider.CurrentHeight() {
-		peersMgr, err := newPeersManagerWithPeerstoreProvider(n.selfAddr, n.pstoreProvider, height)
+	if height < rtr.currentHeightProvider.CurrentHeight() {
+		peersMgr, err := newPeersManagerWithPeerstoreProvider(rtr.selfAddr, rtr.pstoreProvider, height)
 		if err != nil {
-			n.logger.Fatal().Err(err).Msg("Error initializing rainTreeRouter rainTreePeersManager")
+			rtr.logger.Fatal().Err(err).Msg("Error initializing rainTreeRouter rainTreePeersManager")
 		}
 		peersView, maxNumLevels = peersMgr.getPeersViewWithLevels()
 	}
@@ -30,13 +30,13 @@ func (n *rainTreeRouter) getPeerstoreSize(level uint32, height uint64) int {
 }
 
 // getTargetsAtLevel returns the targets for a given level
-func (n *rainTreeRouter) getTargetsAtLevel(level uint32) []target {
-	height := n.currentHeightProvider.CurrentHeight()
-	pstoreSizeAtHeight := n.getPeerstoreSize(level, height)
-	firstTarget := n.getTarget(firstMsgTargetPercentage, pstoreSizeAtHeight, level)
-	secondTarget := n.getTarget(secondMsgTargetPercentage, pstoreSizeAtHeight, level)
+func (rtr *rainTreeRouter) getTargetsAtLevel(level uint32) []target {
+	height := rtr.currentHeightProvider.CurrentHeight()
+	pstoreSizeAtHeight := rtr.getPeerstoreSize(level, height)
+	firstTarget := rtr.getTarget(firstMsgTargetPercentage, pstoreSizeAtHeight, level)
+	secondTarget := rtr.getTarget(secondMsgTargetPercentage, pstoreSizeAtHeight, level)
 
-	n.logger.Debug().Fields(
+	rtr.logger.Debug().Fields(
 		map[string]any{
 			"firstTarget":  firstTarget.serviceURL,
 			"secondTarget": secondTarget.serviceURL,
@@ -49,9 +49,9 @@ func (n *rainTreeRouter) getTargetsAtLevel(level uint32) []target {
 	return []target{firstTarget, secondTarget}
 }
 
-func (n *rainTreeRouter) getTarget(targetPercentage float64, pstoreSize int, level uint32) target {
+func (rtr *rainTreeRouter) getTarget(targetPercentage float64, pstoreSize int, level uint32) target {
 	i := int(targetPercentage * float64(pstoreSize))
-	peersView := n.peersManager.GetPeersView()
+	peersView := rtr.peersManager.GetPeersView()
 	serviceURL := peersView.GetPeers()[i].GetServiceURL()
 
 	target := target{
@@ -70,12 +70,12 @@ func (n *rainTreeRouter) getTarget(targetPercentage float64, pstoreSize int, lev
 	}
 
 	addrStr := peersView.GetAddrs()[i]
-	if addr := n.GetPeerstore().GetPeerFromString(addrStr); addr != nil {
+	if addr := rtr.GetPeerstore().GetPeerFromString(addrStr); addr != nil {
 		target.address = addr.GetAddress()
 		return target
 	}
 
-	n.logger.Debug().Str("address", addrStr).Msg("address not found in Peerstore")
+	rtr.logger.Debug().Str("address", addrStr).Msg("address not found in Peerstore")
 
 	return target
 }

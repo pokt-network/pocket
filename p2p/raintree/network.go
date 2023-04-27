@@ -71,7 +71,7 @@ func (*rainTreeRouter) Create(bus modules.Bus, netCfg RainTreeConfig) (typesP2P.
 
 	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
 
-	n := &rainTreeRouter{
+	rtr := &rainTreeRouter{
 		host:                  netCfg.Host,
 		selfAddr:              netCfg.Addr,
 		hostname:              p2pCfg.Hostname,
@@ -80,24 +80,24 @@ func (*rainTreeRouter) Create(bus modules.Bus, netCfg RainTreeConfig) (typesP2P.
 		currentHeightProvider: netCfg.CurrentHeightProvider,
 		logger:                networkLogger,
 	}
-	n.SetBus(bus)
+	rtr.SetBus(bus)
 
-	if err := n.setupDependencies(); err != nil {
+	if err := rtr.setupDependencies(); err != nil {
 		return nil, err
 	}
 
-	return typesP2P.Router(n), nil
+	return typesP2P.Router(rtr), nil
 }
 
 // NetworkBroadcast implements the respective member of `typesP2P.Router`.
-func (n *rainTreeRouter) Broadcast(data []byte) error {
-	return n.broadcastAtLevel(data, n.peersManager.GetMaxNumLevels(), crypto.GetNonce())
+func (rtr *rainTreeRouter) Broadcast(data []byte) error {
+	return rtr.broadcastAtLevel(data, rtr.peersManager.GetMaxNumLevels(), crypto.GetNonce())
 }
 
 // broadcastAtLevel recursively sends to both left and right target peers
 // from the starting level, demoting until level == 0.
 // (see: https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p)
-func (n *rainTreeRouter) broadcastAtLevel(data []byte, level uint32, nonce uint64) error {
+func (rtr *rainTreeRouter) broadcastAtLevel(data []byte, level uint32, nonce uint64) error {
 	// This is handled either by the cleanup layer or redundancy layer
 	if level == 0 {
 		return nil
@@ -112,16 +112,16 @@ func (n *rainTreeRouter) broadcastAtLevel(data []byte, level uint32, nonce uint6
 		return err
 	}
 
-	for _, target := range n.getTargetsAtLevel(level) {
+	for _, target := range rtr.getTargetsAtLevel(level) {
 		if shouldSendToTarget(target) {
-			if err = n.sendInternal(msgBz, target.address); err != nil {
-				n.logger.Error().Err(err).Msg("sending to peer during broadcast")
+			if err = rtr.sendInternal(msgBz, target.address); err != nil {
+				rtr.logger.Error().Err(err).Msg("sending to peer during broadcast")
 			}
 		}
 	}
 
-	if err = n.demote(msg); err != nil {
-		n.logger.Error().Err(err).Msg("demoting self during RainTree message propagation")
+	if err = rtr.demote(msg); err != nil {
+		rtr.logger.Error().Err(err).Msg("demoting self during RainTree message propagation")
 	}
 
 	return nil
@@ -129,9 +129,9 @@ func (n *rainTreeRouter) broadcastAtLevel(data []byte, level uint32, nonce uint6
 
 // demote broadcasts to the decremented level's targets.
 // (see: https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p)
-func (n *rainTreeRouter) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {
+func (rtr *rainTreeRouter) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {
 	if rainTreeMsg.Level > 0 {
-		if err := n.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
+		if err := rtr.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return err
 		}
 	}
@@ -139,7 +139,7 @@ func (n *rainTreeRouter) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {
 }
 
 // NetworkSend implements the respective member of `typesP2P.Router`.
-func (n *rainTreeRouter) Send(data []byte, address cryptoPocket.Address) error {
+func (rtr *rainTreeRouter) Send(data []byte, address cryptoPocket.Address) error {
 	msg := &typesP2P.RainTreeMessage{
 		Level: 0, // Direct send that does not need to be propagated
 		Data:  data,
@@ -151,32 +151,32 @@ func (n *rainTreeRouter) Send(data []byte, address cryptoPocket.Address) error {
 		return err
 	}
 
-	return n.sendInternal(bz, address)
+	return rtr.sendInternal(bz, address)
 }
 
 // sendInternal sends `data` to the peer at pokt `address` if not self.
-func (n *rainTreeRouter) sendInternal(data []byte, address cryptoPocket.Address) error {
+func (rtr *rainTreeRouter) sendInternal(data []byte, address cryptoPocket.Address) error {
 	// TODO: How should we handle this?
-	if n.selfAddr.Equals(address) {
-		n.logger.Debug().Str("pokt_addr", address.String()).Msg("attempted to send to self")
+	if rtr.selfAddr.Equals(address) {
+		rtr.logger.Debug().Str("pokt_addr", address.String()).Msg("attempted to send to self")
 		return nil
 	}
 
-	peer := n.peersManager.GetPeerstore().GetPeer(address)
+	peer := rtr.peersManager.GetPeerstore().GetPeer(address)
 	if peer == nil {
 		return fmt.Errorf("no known peer with pokt address %s", address)
 	}
 
 	// debug logging
-	utils.LogOutgoingMsg(n.logger, n.hostname, peer)
+	utils.LogOutgoingMsg(rtr.logger, rtr.hostname, peer)
 
-	if err := utils.Libp2pSendToPeer(n.host, data, peer); err != nil {
-		n.logger.Debug().Err(err).Msg("from libp2pSendInternal")
+	if err := utils.Libp2pSendToPeer(rtr.host, data, peer); err != nil {
+		rtr.logger.Debug().Err(err).Msg("from libp2pSendInternal")
 		return err
 	}
 
 	// A bus is not available In client debug mode
-	bus := n.GetBus()
+	bus := rtr.GetBus()
 	if bus == nil {
 		return nil
 	}
@@ -194,11 +194,11 @@ func (n *rainTreeRouter) sendInternal(data []byte, address cryptoPocket.Address)
 }
 
 // HandleNetworkData implements the respective member of `typesP2P.Router`.
-func (n *rainTreeRouter) HandleNetworkData(data []byte) ([]byte, error) {
-	blockHeightInt := n.GetBus().GetConsensusModule().CurrentHeight()
+func (rtr *rainTreeRouter) HandleNetworkData(data []byte) ([]byte, error) {
+	blockHeightInt := rtr.GetBus().GetConsensusModule().CurrentHeight()
 	blockHeight := fmt.Sprintf("%d", blockHeightInt)
 
-	n.GetBus().
+	rtr.GetBus().
 		GetTelemetryModule().
 		GetEventMetricsAgent().
 		EmitEvent(
@@ -214,13 +214,13 @@ func (n *rainTreeRouter) HandleNetworkData(data []byte) ([]byte, error) {
 
 	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
-		n.logger.Error().Err(err).Msg("Error decoding network message")
+		rtr.logger.Error().Err(err).Msg("Error decoding network message")
 		return nil, err
 	}
 
 	// Continue RainTree propagation
 	if rainTreeMsg.Level > 0 {
-		if err := n.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
+		if err := rtr.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return nil, err
 		}
 	}
@@ -228,9 +228,9 @@ func (n *rainTreeRouter) HandleNetworkData(data []byte) ([]byte, error) {
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
-	if contains := n.nonceDeduper.Contains(rainTreeMsg.Nonce); contains {
+	if contains := rtr.nonceDeduper.Contains(rainTreeMsg.Nonce); contains {
 		log.Printf("RainTree message with nonce %d already processed, skipping\n", rainTreeMsg.Nonce)
-		n.GetBus().
+		rtr.GetBus().
 			GetTelemetryModule().
 			GetEventMetricsAgent().
 			EmitEvent(
@@ -244,7 +244,7 @@ func (n *rainTreeRouter) HandleNetworkData(data []byte) ([]byte, error) {
 	}
 
 	// Add the nonce to the deduper
-	if err := n.nonceDeduper.Push(rainTreeMsg.Nonce); err != nil {
+	if err := rtr.nonceDeduper.Push(rainTreeMsg.Nonce); err != nil {
 		return nil, err
 	}
 
@@ -253,23 +253,23 @@ func (n *rainTreeRouter) HandleNetworkData(data []byte) ([]byte, error) {
 }
 
 // GetPeerstore implements the respective member of `typesP2P.Router`.
-func (n *rainTreeRouter) GetPeerstore() typesP2P.Peerstore {
-	return n.peersManager.GetPeerstore()
+func (rtr *rainTreeRouter) GetPeerstore() typesP2P.Peerstore {
+	return rtr.peersManager.GetPeerstore()
 }
 
 // AddPeer implements the respective member of `typesP2P.Router`.
-func (n *rainTreeRouter) AddPeer(peer typesP2P.Peer) error {
+func (rtr *rainTreeRouter) AddPeer(peer typesP2P.Peer) error {
 	// Noop if peer with the same pokt address exists in the peerstore.
 	// TECHDEBT: add method(s) to update peers.
-	if p := n.peersManager.GetPeerstore().GetPeer(peer.GetAddress()); p != nil {
+	if p := rtr.peersManager.GetPeerstore().GetPeer(peer.GetAddress()); p != nil {
 		return nil
 	}
 
-	if err := utils.AddPeerToLibp2pHost(n.host, peer); err != nil {
+	if err := utils.AddPeerToLibp2pHost(rtr.host, peer); err != nil {
 		return err
 	}
 
-	n.peersManager.HandleEvent(
+	rtr.peersManager.HandleEvent(
 		typesP2P.PeerManagerEvent{
 			EventType: typesP2P.AddPeerEventType,
 			Peer:      peer,
@@ -278,8 +278,8 @@ func (n *rainTreeRouter) AddPeer(peer typesP2P.Peer) error {
 	return nil
 }
 
-func (n *rainTreeRouter) RemovePeer(peer typesP2P.Peer) error {
-	n.peersManager.HandleEvent(
+func (rtr *rainTreeRouter) RemovePeer(peer typesP2P.Peer) error {
+	rtr.peersManager.HandleEvent(
 		typesP2P.PeerManagerEvent{
 			EventType: typesP2P.RemovePeerEventType,
 			Peer:      peer,
@@ -290,8 +290,8 @@ func (n *rainTreeRouter) RemovePeer(peer typesP2P.Peer) error {
 
 // Size returns the number of peers the network is aware of and would attempt to
 // broadcast to.
-func (n *rainTreeRouter) Size() int {
-	return n.peersManager.GetPeerstore().Size()
+func (rtr *rainTreeRouter) Size() int {
+	return rtr.peersManager.GetPeerstore().Size()
 }
 
 // shouldSendToTarget returns false if target is self.
@@ -299,24 +299,24 @@ func shouldSendToTarget(target target) bool {
 	return !target.isSelf
 }
 
-func (n *rainTreeRouter) setupDependencies() error {
-	pstore, err := n.pstoreProvider.GetStakedPeerstoreAtHeight(n.currentHeightProvider.CurrentHeight())
+func (rtr *rainTreeRouter) setupDependencies() error {
+	pstore, err := rtr.pstoreProvider.GetStakedPeerstoreAtHeight(rtr.currentHeightProvider.CurrentHeight())
 	if err != nil {
 		return err
 	}
 
-	if err := n.setupPeerManager(pstore); err != nil {
+	if err := rtr.setupPeerManager(pstore); err != nil {
 		return err
 	}
 
-	if err := utils.PopulateLibp2pHost(n.host, pstore); err != nil {
+	if err := utils.PopulateLibp2pHost(rtr.host, pstore); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (n *rainTreeRouter) setupPeerManager(pstore typesP2P.Peerstore) (err error) {
-	n.peersManager, err = newPeersManager(n.selfAddr, pstore, true)
+func (rtr *rainTreeRouter) setupPeerManager(pstore typesP2P.Peerstore) (err error) {
+	rtr.peersManager, err = newPeersManager(rtr.selfAddr, pstore, true)
 	return err
 }
 
