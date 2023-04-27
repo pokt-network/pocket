@@ -62,8 +62,8 @@ func NewRainTreeNetwork(bus modules.Bus, cfg RainTreeConfig) (typesP2P.Router, e
 }
 
 func (*rainTreeRouter) Create(bus modules.Bus, rtCfg RainTreeConfig) (typesP2P.Router, error) {
-	networkLogger := logger.Global.CreateLoggerForModule("network")
-	networkLogger.Info().Msg("Initializing rainTreeRouter")
+	routerLogger := logger.Global.CreateLoggerForModule("router")
+	routerLogger.Info().Msg("Initializing rainTreeRouter")
 
 	if err := rtCfg.isValid(); err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func (*rainTreeRouter) Create(bus modules.Bus, rtCfg RainTreeConfig) (typesP2P.R
 		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(p2pCfg.MaxMempoolCount)),
 		pstoreProvider:        rtCfg.PeerstoreProvider,
 		currentHeightProvider: rtCfg.CurrentHeightProvider,
-		logger:                networkLogger,
+		logger:                routerLogger,
 	}
 	rtr.SetBus(bus)
 
