@@ -57,7 +57,7 @@ type rainTreeRouter struct {
 	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 }
 
-func NewRainTreeNetwork(bus modules.Bus, cfg RainTreeConfig) (typesP2P.Router, error) {
+func NewRainTreeRouter(bus modules.Bus, cfg RainTreeConfig) (typesP2P.Router, error) {
 	return new(rainTreeRouter).Create(bus, cfg)
 }
 

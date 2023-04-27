@@ -103,7 +103,7 @@ func TestRainTree_Peerstore_HandleUpdate(t *testing.T) {
 				CurrentHeightProvider: currentHeightProviderMock,
 			}
 
-			network, err := NewRainTreeNetwork(mockBus, netCfg)
+			network, err := NewRainTreeRouter(mockBus, netCfg)
 			require.NoError(t, err)
 
 			rainTree := network.(*rainTreeRouter)
@@ -137,7 +137,7 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 		// {1000000000, 19},
 	}
 
-	// the test will add this arbitrary number of addresses after the initial initialization (done via NewRainTreeNetwork)
+	// the test will add this arbitrary number of addresses after the initial initialization (done via NewRainTreeRouter)
 	// this is to add extra subsequent work that -should- grow linearly and it's actually going to test AddressBook updates
 	// not simply initializations.
 	numAddressesToBeAdded := 1000
@@ -170,7 +170,7 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 				CurrentHeightProvider: currentHeightProviderMock,
 			}
 
-			network, err := NewRainTreeNetwork(mockBus, netCfg)
+			network, err := NewRainTreeRouter(mockBus, netCfg)
 			require.NoError(b, err)
 
 			rainTree := network.(*rainTreeRouter)
@@ -294,7 +294,7 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 		CurrentHeightProvider: currentHeightProviderMock,
 	}
 
-	network, err := NewRainTreeNetwork(busMock, netCfg)
+	network, err := NewRainTreeRouter(busMock, netCfg)
 	require.NoError(t, err)
 	rainTree := network.(*rainTreeRouter)
 

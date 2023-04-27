@@ -284,7 +284,7 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 
 // setupRouter instantiates the configured router implementation.
 func (m *p2pModule) setupRouter() (err error) {
-	m.router, err = raintree.NewRainTreeNetwork(
+	m.router, err = raintree.NewRainTreeRouter(
 		m.GetBus(),
 		raintree.RainTreeConfig{
 			Host:                  m.host,

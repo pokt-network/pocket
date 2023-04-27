@@ -59,7 +59,7 @@ func TestRainTreeNetwork_AddPeer(t *testing.T) {
 		CurrentHeightProvider: currentHeightProviderMock,
 	}
 
-	router, err := NewRainTreeNetwork(busMock, netCfg)
+	router, err := NewRainTreeRouter(busMock, netCfg)
 	require.NoError(t, err)
 
 	rtRouter := router.(*rainTreeRouter)
@@ -121,7 +121,7 @@ func TestRainTreeNetwork_RemovePeer(t *testing.T) {
 		CurrentHeightProvider: currentHeightProviderMock,
 	}
 
-	network, err := NewRainTreeNetwork(busMock, netCfg)
+	network, err := NewRainTreeRouter(busMock, netCfg)
 	require.NoError(t, err)
 	rainTree := network.(*rainTreeRouter)
 
