@@ -10,8 +10,12 @@ import (
 	"github.com/pokt-network/pocket/runtime/defaults"
 )
 
-// rpcURL of the pod that the test harness drives
-var rpcURL string
+var (
+	// rpcURL used by targetPod to build commands
+	rpcURL string
+	// targetPod is the kube pod that executes calls to the pocket binary under test
+	targetPod = "deploy/dev-cli-client"
+)
 
 func init() {
 	rpcURL = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "pocket-validators"), defaults.DefaultRPCPort)
@@ -40,10 +44,10 @@ type validatorPod struct {
 	result *commandResult // stores the result of the last command that was run
 }
 
-// RunCommand runs a command on the pocket binary
+// RunCommand runs a command on a target kube pod
 func (v *validatorPod) RunCommand(args ...string) (*commandResult, error) {
 	base := []string{
-		"exec", "-i", "deploy/pocket-v1-cli-client",
+		"exec", "-i", targetPod,
 		"--container", "pocket",
 		"--", cliPath,
 		"--non_interactive=true",
