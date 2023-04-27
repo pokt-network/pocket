@@ -203,7 +203,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 	}
 	m.logger.Info().Msg("broadcasting message to network")
 
-	return m.network.NetworkBroadcast(data)
+	return m.network.Broadcast(data)
 }
 
 func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {

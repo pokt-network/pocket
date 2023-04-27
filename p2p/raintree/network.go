@@ -90,7 +90,7 @@ func (*rainTreeNetwork) Create(bus modules.Bus, netCfg RainTreeConfig) (typesP2P
 }
 
 // NetworkBroadcast implements the respective member of `typesP2P.Router`.
-func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
+func (n *rainTreeNetwork) Broadcast(data []byte) error {
 	return n.networkBroadcastAtLevel(data, n.peersManager.GetMaxNumLevels(), crypto.GetNonce())
 }
 

@@ -12,7 +12,7 @@ import (
 type Router interface {
 	modules.IntegratableModule
 
-	NetworkBroadcast(data []byte) error
+	Broadcast(data []byte) error
 	NetworkSend(data []byte, address cryptoPocket.Address) error
 
 	// Address book helpers
