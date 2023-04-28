@@ -23,8 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `NewRainTreeNetwork()` to `NewRainTreeRouter()`
 - Refactored peers_manager_test.go
 - Refactored network_test.go
-- Simplified p2p module/router config handoff 
+- Simplified p2p module/router config handoff
 - Updated debug logging
+
+## [0.0.0.46] - 2023-04-27
+
+- Removed unneeded `stdnetwork` package
+- Removed unneeded `use_rain_tree` P2P config field
 
 ## [0.0.0.46] - 2023-04-27
 
