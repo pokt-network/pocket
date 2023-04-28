@@ -20,6 +20,7 @@ var (
 	dbURL string
 )
 
+// NB: `TestMain` serves all tests in the immediate `utility` package and not its children
 func TestMain(m *testing.M) {
 	pool, resource, url := test_artifacts.SetupPostgresDocker()
 	dbURL = url
