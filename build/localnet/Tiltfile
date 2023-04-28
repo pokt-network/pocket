@@ -155,7 +155,7 @@ k8s_yaml(
 )
 
 k8s_yaml(["manifests/cli-client.yaml"])
-k8s_resource('pocket-v1-cli-client', labels=['client'])
+k8s_resource('dev-cli-client', labels=['client'])
 k8s_yaml(['manifests/cluster-manager.yaml'])
 k8s_resource('pocket-v1-cluster-manager', labels=['cluster-manager'])
 
@@ -170,7 +170,7 @@ for x in range(localnet_config["validators"]["count"]):
         set=[
             "global.postgresql.auth.postgresPassword=LocalNetPassword",
             "image.repository=validator-image",
-            "privateKeySecretKeyRef.name=v1-localnet-validators-private-keys",
+            "privateKeySecretKeyRef.name=validators-private-keys",
             "privateKeySecretKeyRef.key=%s" % formatted_validator_number,
             "genesis.preProvisionedGenesis.enabled=false",
             "genesis.externalConfigMap.name=v1-localnet-genesis",

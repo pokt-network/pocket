@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.6] - 2023-04-26
+
+- Standardizes the kube pod name that E2E tests use
+
+## [0.0.0.5] - 2023-04-24
+
+- Attempts to fetch an in-cluster kubeconfig for E2E tests if none is found in `$HOME/.kube`
+
 ## [0.0.0.4] - 2023-04-19
 
 - Changed validator DNS names to match new naming convention (again, helm chart was renamed)

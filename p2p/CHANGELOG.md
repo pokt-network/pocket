@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.49] - 2023-04-28
+
+- Extracted a couple of shared helpers (e.g. `stringLogArrayMarshaler`, `MarshalZerologArray`)
+
+## [0.0.0.48] - 2023-04-27
+
+- Renamed `Network` interface to `Router`
+- Shortened `Router#NetworkBroadcast` to `#Broadcast`
+- Shortened `Router#NetworkSend` to `#Send`
+- Shortened `Router#networkSendInternal` to `#sendInternal`
+- Shortened `Router#networkBroadcastAtLevel` to `#broadcastAtLevel`
+- Renamed `rainTreeNetwork` to `rainTreeRouter`
+- Renamed `rainTreeNetwork` method receivers
+- Renamed `p2pModule#network` to `#router`
+- Renamed `p2pModule#setupNetwork()` to `#setupRouter()`
+- Renamed config var in `rainTreeRouter#Create`
+- Renamed router logger
+- Renamed `NewRainTreeNetwork()` to `NewRainTreeRouter()`
+- Refactored peers_manager_test.go
+- Refactored network_test.go
+- Simplified p2p module/router config handoff
+- Updated debug logging
+
+## [0.0.0.47] - 2023-04-27
+
+- Removed unneeded `stdnetwork` package
+- Removed unneeded `use_rain_tree` P2P config field
+
+## [0.0.0.46] - 2023-04-27
+
+- Removed unneeded `stdnetwork` package
+- Removed unneeded `use_rain_tree` P2P config field
+
+## [0.0.0.45] - 2023-04-25
+
+- Added rainTeeFactory type & compile-time enforcement
+
 ## [0.0.0.44] - 2023-04-20
 
 - Refactor `mockdns` test helpers

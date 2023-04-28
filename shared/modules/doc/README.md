@@ -50,6 +50,7 @@ A base module is a module that implements a common interface, exposing the most 
 ```bash
 ├── base_modules            # All the base modules are defined here
 ├── doc                     # Documentation for the modules
+├── factory.go              # Factory interfaces (generic & module specific)
 ├── mocks                   # Mocks of the modules will be generated in this folder
 ├── module.go               # Common interfaces for the modules
 ├── [moduleName]_module.go  # These files contain module interface definitions
@@ -67,20 +68,22 @@ You might notice that these files include `go:generate` directives, these are us
 Module creation uses a typical constructor pattern signature `Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error)` where `options ...modules.ModuleOption` is an optional variadic argument that allows for the passing of options to the module.
 This is useful to configure the module at creation time and it's usually used during prototyping and in "sub-modules" that don't have a specific configuration file and where adding it would add unnecessary complexity and overhead. If a module has a lot of `ModuleOption`s, at that point a configuration file might be advisable.
 
-Currently, module creation is not embedded or enforced in the interface to prevent the initializer from having to use
-clunky creation syntax -> `modPackage.new(module).Create(bus modules.Bus)` rather `modPackage.Create(bus modules.Bus)`
+To formalize the module creation convention, we've introduced a set of factory interfaces in [`shared/modules/factory.go`](https://github.com/pokt-network/pocket/tree/main/shared/modules/factory.go).
+These interfaces allow for more flexible module (or "sub-module"; see: [`RainTreeFactory`](https://github.com/pokt-network/pocket/tree/main/p2p/raintree/network.go)) creation and configuration, while maintaining a clear and concise API.
 
-This is done to optimize for code clarity rather than creation signature enforceability but **may change in the future**.
+- `ModuleFactoryWithOptions`: Specialized factory interface for modules conforming to the "typical" signature above. Useful when creating modules that only require optional runtime configurations.
+- `FactoryWithConfig`: A generic type, used to create a module with a specific configuration type.
+- `FactoryWithOptions`: The generic form used to define `ModuleFactoryWithConfig`.
+- `FactoryWithConfigAndOptions`: Another generic type which combines the capabilities of the previous two. Suitable for creating modules that require both specific configuration and optional runtime configurations.
 
-```golang
-newModule, err := newModule.Create(bus modules.Bus)
+Module creation utilizes the factory interfaces defined above.
+Depending on your module's requirements, you can choose the most suitable factory interface for your module (or "sub-module").
 
-if err != nil {
-	// handle error
-}
-```
+For examples of (sub-)modules that implement `ModuleFactoryWithConfig`, see:
 
-For an example of a module that uses a `ModuleOption`, you can search for `WithCustomRPCURL` within the codebase. The code might have changed since this document was written so we are referring to the commit hash [19bf4d3f](https://github.com/pokt-network/pocket/tree/19bf4d3f6507f5d406d9fafdb69b81359bccf110).
+- [`p2pModule`](https://github.com/pokt-network/pocket/tree/main/p2p/module.go) - `WithHostOption`
+- [`rpcCurrentHeightProvider`](https://github.com/pokt-network/pocket/tree/main/p2p/providers/current_height_provider/rpc/provider.go) - `WithCustomRPCURL`
+
 
 Essentially the `ModuleOption` sets a custom RPC URL for the module at runtime.
 

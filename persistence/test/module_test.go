@@ -9,7 +9,8 @@ import (
 )
 
 func TestPersistenceContextParallelReadWrite(t *testing.T) {
-	prepareAndCleanContext(t)
+	clearAllState()
+	t.Cleanup(clearAllState)
 
 	// variables for testing
 	_, _, poolAddr := keygen.GetInstance().Next()
@@ -57,7 +58,8 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 }
 
 func TestPersistenceContextTwoWritesErrors(t *testing.T) {
-	prepareAndCleanContext(t)
+	clearAllState()
+	t.Cleanup(clearAllState)
 
 	// Opening up first write context succeeds
 	rwCtx1, err := testPersistenceMod.NewRWContext(0)
@@ -74,7 +76,8 @@ func TestPersistenceContextTwoWritesErrors(t *testing.T) {
 }
 
 func TestPersistenceContextSequentialWrites(t *testing.T) {
-	prepareAndCleanContext(t)
+	clearAllState()
+	t.Cleanup(clearAllState)
 
 	// Opening up first write context succeeds
 	writeContext1, err := testPersistenceMod.NewRWContext(0)
@@ -93,7 +96,8 @@ func TestPersistenceContextSequentialWrites(t *testing.T) {
 }
 
 func TestPersistenceContextMultipleParallelReads(t *testing.T) {
-	prepareAndCleanContext(t)
+	clearAllState()
+	t.Cleanup(clearAllState)
 
 	// Opening up first read context succeeds
 	readContext1, err := testPersistenceMod.NewReadContext(0)
@@ -110,12 +114,4 @@ func TestPersistenceContextMultipleParallelReads(t *testing.T) {
 	readContext1.Release()
 	readContext2.Release()
 	readContext3.Release()
-}
-
-//nolint:gocritic // This is a helper function for a test not a test itself
-func prepareAndCleanContext(t *testing.T) {
-	// Cleanup context after the test
-	t.Cleanup(clearAllState)
-
-	clearAllState()
 }

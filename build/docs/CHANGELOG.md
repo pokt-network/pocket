@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.39] - 2023-04-28
+
+- Added a `fisherman_per_session` governance parameter
+- Updated the default `blocks_per_session` from `4` to `1`
+
+## [0.0.0.38] - 2023-04-28
+
+- Removed unused `tmpDir` in `debug_keybase` package
+- Changed the name of the secret that holds private keys so it will be the same across local and dev networks.
+- Moved `regexp.MustCompile` into `init()` to avoid recompiling the regex on every call (requested in previus PR)
+
+## [0.0.0.37] - 2023-04-24
+
+- Adds kubectl to dev Dockerfile image
+
 ## [0.0.0.36] - 2023-04-19
 
 - Changed validator DNS names to match new naming convention (again, helm chart was renamed)

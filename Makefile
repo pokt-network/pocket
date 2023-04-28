@@ -436,8 +436,10 @@ benchmark_p2p_peerstore: ## Run P2P peerstore benchmarks
 
 ### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
 # TODO          - General Purpose catch-all.
+# DECIDE        - A TODO indicating we need to make a decision and document it using an ADR in the future; https://github.com/pokt-network/pocket-network-protocol/tree/main/ADRs
 # TECHDEBT      - Not a great implementation, but we need to fix it later.
 # IMPROVE       - A nice to have, but not a priority. It's okay if we never get to this.
+# OPTIMIZE      - An opportunity for performance improvement if/when it's necessary
 # DISCUSS       - Probably requires a lengthy offline discussion to understand next steps.
 # INCOMPLETE    - A change which was out of scope of a specific PR but needed to be documented.
 # INVESTIGATE   - TBD what was going on, but needed to continue moving and not get distracted.
@@ -453,7 +455,7 @@ benchmark_p2p_peerstore: ## Run P2P peerstore benchmarks
 # BUG           - There is a known existing bug in this code
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH" -e "BUG"
+TODO_KEYWORDS = -e "TODO" -e "DECIDE" -e "TECHDEBT" -e "IMPROVE" -e "OPTIMIZE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH" -e "BUG"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;
@@ -469,6 +471,13 @@ TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE
 .PHONY: todo_list
 todo_list: ## List all the TODOs in the project (excludes vendor and prototype directories)
 	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS}  .
+
+
+TODO_SEARCH ?= $(shell pwd)
+
+.PHONY: todo_search
+todo_search: ## List all the TODOs in a specific directory specific by `TODO_SEARCH`
+	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} ${TODO_SEARCH}
 
 .PHONY: todo_count
 todo_count: ## Print a count of all the TODOs in the project
@@ -498,28 +507,28 @@ localnet_up: ## Starts up a k8s LocalNet with all necessary dependencies (tl;dr 
 
 .PHONY: localnet_client_debug
 localnet_client_debug: ## Opens a `client debug` cli to interact with blockchain (e.g. change pacemaker mode, reset to genesis, etc). Though the node binary updates automatiacally on every code change (i.e. hot reloads), if client is already open you need to re-run this command to execute freshly compiled binary.
-	kubectl exec -it deploy/pocket-v1-cli-client --container pocket -- client debug
+	kubectl exec -it deploy/dev-cli-client --container pocket -- client debug
 
 .PHONY: localnet_shell
 localnet_shell: ## Opens a shell in the pod that has the `client` cli available. The binary updates automatically whenever the code changes (i.e. hot reloads).
-	kubectl exec -it deploy/pocket-v1-cli-client --container pocket -- /bin/bash
+	kubectl exec -it deploy/dev-cli-client --container pocket -- /bin/bash
 
 .PHONY: localnet_logs_validators
 localnet_logs_validators: ## Outputs logs from all validators
-	kubectl logs -l v1-purpose=validator --all-containers=true --tail=-1
+	kubectl logs -l "pokt.network/purpose=validator" --all-containers=true --tail=-1
 
 .PHONY: localnet_logs_validators_follow
 localnet_logs_validators_follow: ## Outputs logs from all validators and follows them (i.e. tail)
-	kubectl logs -l v1-purpose=validator --all-containers=true --max-log-requests=1000 --tail=-1 -f
+	kubectl logs -l "pokt.network/purpose=validator" --all-containers=true --max-log-requests=1000 --tail=-1 -f
 
 .PHONY: localnet_down
 localnet_down: ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down`)
 	tilt down --file=build/localnet/Tiltfile
 
 .PHONY: localnet_db_cli
-localnet_db_cli: ## Open a CLI to the local containerized postgres instancedb_cli:
+localnet_db_cli: ## Open a CLI to the local containerized postgres instance of validator 001:
 	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
-	kubectl exec -it services/dependencies-postgresql -- bash -c "psql postgresql://postgres:LocalNetPassword@localhost"
+	kubectl exec -it validator-001-postgresql-0 -- bash -c "psql postgresql://postgres:LocalNetPassword@localhost"
 
 .PHONY: check_cross_module_imports
 check_cross_module_imports: ## Lists cross-module imports

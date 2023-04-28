@@ -1,9 +1,28 @@
 package persistence
 
 import (
+	"fmt"
+
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
+
+func (p *PostgresContext) GetActor(actorType coreTypes.ActorType, address []byte, height int64) (*coreTypes.Actor, error) {
+	var schema types.ProtocolActorSchema
+	switch actorType {
+	case types.ApplicationActor.GetActorType():
+		schema = types.ApplicationActor
+	case types.ServicerActor.GetActorType():
+		schema = types.ServicerActor
+	case types.FishermanActor.GetActorType():
+		schema = types.FishermanActor
+	case types.ValidatorActor.GetActorType():
+		schema = types.FishermanActor
+	default:
+		return nil, fmt.Errorf("invalid actor type: %s", actorType)
+	}
+	return p.getActor(schema, address, height)
+}
 
 // TODO (#399): All of the functions below following a structure similar to `GetAll<Actor>`
 // can easily be refactored and condensed into a single function using a generic type or a common
@@ -113,7 +132,7 @@ func (p *PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, e
 	return
 }
 
-// IMPROVE: This is a proof of concept. Ideally we should have a single query that returns all actors.
+// OPTIMIZE: There is an opportunity to have one SQL query returning all the actorsp
 func (p *PostgresContext) GetAllStakedActors(height int64) (allActors []*coreTypes.Actor, err error) {
 	type actorGetter func(height int64) ([]*coreTypes.Actor, error)
 	actorGetters := []actorGetter{p.GetAllValidators, p.GetAllServicers, p.GetAllFishermen, p.GetAllApps}
