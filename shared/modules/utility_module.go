@@ -22,9 +22,6 @@ type UtilityModule interface {
 	// HandleTransaction does basic `Transaction` validation & adds it to the utility's module mempool if valid
 	HandleTransaction(tx []byte) error
 
-	// GetSession creates a new session for the app and returns the session data
-	GetSession(appAddr string, sessionHeight int64, relayChain string, geoZone string) (*coreTypes.Session, error) // TODO: Implement this
-
 	// SendRelay sends a relay to the specified chain returning the response
 	SendRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) // TODO: Implement this
 
