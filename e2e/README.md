@@ -7,6 +7,7 @@
   - [Build Tags](#build-tags)
   - [Issue templates](#issue-templates)
 - [Implementation](#implementation)
+- [E2E Tests in DevNet](#e2e-tests-in-devnet)
 
 > tl; dr - `make localnet_up` and then `make test_e2e`
 
@@ -67,3 +68,12 @@ flowchart TD
         Runner[E2E Test Runner]
     end
 ```
+
+## E2E Tests in DevNet
+
+- Attaching the `e2e-devnet-test` label causes Argo to provision a fresh DevNet with default configs, genesis, and validator private keys.
+- The provisioned DevNet will be named `devnet-issue-XXX`. You can see the results of the E2E tests by examining the logs of the namespace.
+- You must remote in to the DevNet cluster to see the results of the test (TODO: Issue #XXX - Add Argo Workflows support for reporting DevNet E2E test results).
+- The pod's Status will be listed as Complete or Errored and it's name takes the form of `dev-e2e-tests-sha-XXXXXXX-dev-XXXXX`.
+- A pod will be created for each job run, which should happen on any subsequent commits.
+- The `protocol-infra` repository contains the `devnet-configs` directory which declares the default setup for each DevNet.
