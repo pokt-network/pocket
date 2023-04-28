@@ -59,34 +59,58 @@ The `Network Module` is where [RainTree](https://github.com/pokt-network/pocket/
 
 ```bash
 p2p
-├── README.md                               # Self link to this README
-├── transport.go                            # Varying implementations of the `Transport` (e.g. TCP, Passthrough) for network communication
-├── module.go                               # The implementation of the P2P Interface
+├── background
+│   ├── kad_discovery_baseline_test.go  # Libp2p peer discovery via kademalia baseline example
+│   ├── router.go                       # `BackgroundRouter` implementation of `Router` interface
+│   └── router_test.go                  # `BackgroundRouter` functional tests
+├── bootstrap.go                              # `p2pModule` bootstrap related method(s)
+├── CHANGELOG.md
+├── event_handler.go
+├── module.go                                 # `p2pModule` definition
+├── module_raintree_test.go                   # `p2pModule` & `RainTreeRouter` functional tests (routing)
+├── module_test.go                            # `p2pModule` & `RainTreeRouter` integration tests
+├── peer_test.go                              # `PeerList` unit test(s)
+├── protocol
+│   └── protocol.go                     # Common, pokt protocol-specific constants
+├── providers
+│   ├── current_height_provider
+│   ├── peerstore_provider
+│   └── providers.go
 ├── raintree
-│   ├── addrbook_utils.go             # AddrBook utilities
-│   ├── peers_manager.go              # peersManager implementation
-│   ├── peers_manager_test.go         # peersManager unit tests
-│   ├── network_test.go               # network unit tests
-│   ├── network.go                    # Implementation of the Network interface using RainTree's specification
-│   ├── utils.go
-│   └── types
-│       └── proto
-│           └── raintree.proto
-├── raintree_integration_test.go            # RainTree unit tests
-├── raintree_integration_utils_test.go      # Test suite for RainTree
-├── stdnetwork                              # This can eventually be deprecated once raintree is verified.
-│   └── network.go                    # Implementation of the Network interface using Golang's std networking lib
-├── telemetry
-│   ├── metrics.go
+│   ├── nonce_deduper.go
+│   ├── nonce_deduper_test.go
+│   ├── peers_manager.go              # `rainTreePeersManager` implementation of `PeersManager` interface
+│   ├── peers_manager_test.go
+│   ├── peerstore_utils.go            # Raintree routing helpers
+│   ├── router.go                     # `RainTreeRouter` implementation of `Router` interface
+│   ├── router_test.go                # `RainTreeRouter` functional tests
+│   ├── target.go                     # `target` definition
+│   ├── types
+│   │   └── proto
+│   │       └── raintree.proto
+│   └── utils_test.go
+├── README.md
+├── transport_encryption_test.go            # Libp2p transport security integration test
 ├── types
-│   ├── addr_book.go                  # addrBook definition
-│   ├── addr_book_map.go              # addrBookMap definition
-│   ├── addr_list.go                  # addrList definition
-│   ├── network.go                    # Network Interface definition
-│   ├── network_peer.go               # networkPeer definition
-│   ├── proto                         # Proto3 messages for generated types
-│   ├── target.go                     # target definition
-└── utils.go
+│   ├── errors.go
+│   ├── libp2p_mocks.go
+│   ├── mocks
+│   ├── network_peer.go               # `NetworkPeer` implementation of `Peer` interface
+│   ├── peer.go                       # `Peer` interface & `PeerList` definitions
+│   ├── peer_manager.go               # `PeerManager` interface & `SortedPeerManager` implementation definitions
+│   ├── peerstore.go                  # `Peerstore` interface & `PeerAddrMap` implementation definitions
+│   ├── peers_view.go                 # `PeersView` interface & `sortedPeersView` implementation definitions
+│   ├── peers_view_test.go
+│   ├── raintree.pb.go
+│   └── router.go                     # `Router` interface definition
+├── utils
+│   ├── config.go                     # `RouterConfig` definition
+│   ├── host.go                       # Helpers for working with libp2p hosts
+│   ├── logging.go                    # Helpers for logging
+│   ├── peer_conversion.go            # Helpers for converting between "native" and libp2p peer representations
+│   ├── url_conversion.go             # Helpers for converting between  "native" and libp2p network address representations
+│   └── url_conversion_test.go
+└── utils_test.go
 ```
 
 ## Testing
