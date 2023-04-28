@@ -23,7 +23,7 @@ func init() {
 		CurrentNamespace = "default"
 	}
 
-	logger.Global.Info().Str("namespace", CurrentNamespace).Msg("using namespace")
+	logger.Global.Info().Str("namespace", CurrentNamespace).Msg("got new namespace")
 }
 
 func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
