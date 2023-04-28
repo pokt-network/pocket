@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.38] - 2023-04-25
+## [0.0.0.38] - 2023-04-28
 
 - Removed unused `tmpDir` in `debug_keybase` package
 - Changed the name of the secret that holds private keys so it will be the same across local and dev networks.
