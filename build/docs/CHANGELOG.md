@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.39] - 2023-04-28
+
+- Added a `fisherman_per_session` governance parameter
+- Updated the default `blocks_per_session` from `4` to `1`
+
 ## [0.0.0.38] - 2023-04-28
 
 - Removed unused `tmpDir` in `debug_keybase` package

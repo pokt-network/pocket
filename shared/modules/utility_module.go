@@ -3,6 +3,7 @@ package modules
 //go:generate mockgen -destination=./mocks/utility_module_mock.go github.com/pokt-network/pocket/shared/modules UtilityModule,UnstakingActor,UtilityUnitOfWork,LeaderUtilityUnitOfWork,ReplicaUtilityUnitOfWork
 
 import (
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/mempool"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -12,7 +13,6 @@ const (
 )
 
 // TECHDEBT: Replace []byte with semantic type (addresses, transactions, etc...)
-
 type UtilityModule interface {
 	Module
 
@@ -29,6 +29,11 @@ type UtilityModule interface {
 	// It is useful for handling messages from the utility module's of other nodes that do not directly affect the state.
 	// IMPROVE: Find opportunities to break this apart as the module matures.
 	HandleUtilityMessage(*anypb.Any) error
+
+	// GetSession returns a deterministic pseudo-random session object for the given application address, session height,
+	// relay chain and geo zones using on-chain data as the source of entropy. Sessions can be returned for
+	// any previous height or at most 1 block height into the future.
+	GetSession(appAddr string, sessionHeight int64, relayChain string, geoZone string) (*coreTypes.Session, error)
 }
 
 // TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead

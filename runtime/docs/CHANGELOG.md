@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.36] - 2023-04-28
+
+- Consolidated files for defaults together
+- Updated `BlocksPerSession` default to 1
+- Added an ability to add options to the `NewGenesisState` helper for more thorough testing
+
 ## [0.0.0.35] - 2023-04-27
 
 - Removed unneeded `use_rain_tree` P2P config field
