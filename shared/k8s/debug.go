@@ -19,7 +19,7 @@ func init() {
 	var err error
 	CurrentNamespace, err = getNamespace()
 	if err != nil {
-		logger.Global.Err(err).Msg("could not get namespace, using default")
+		logger.Global.Err(err).Msg("could not get namespace, using \"default\"")
 		CurrentNamespace = "default"
 	}
 
