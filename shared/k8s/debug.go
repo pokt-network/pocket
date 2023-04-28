@@ -22,8 +22,8 @@ func init() {
 	var err error
 	CurrentNamespace, err = getNamespace()
 	if err != nil {
-		logger.Global.Err(err).Msg("could not get namespace, using \"default\"")
-		CurrentNamespace = "default"
+		logger.Global.Err(err).Msg("could not get namespace, using \"" + defaultNamespace + "\"")
+		CurrentNamespace = defaultNamespace
 	}
 
 	logger.Global.Info().Str("namespace", CurrentNamespace).Msg("got new namespace")
@@ -45,13 +45,15 @@ func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]stri
 }
 
 func getNamespace() (string, error) {
-	if _, err := os.Stat(kubernetesServiceAccountNamespaceFile); err == nil {
-		nsBytes, err := os.ReadFile(kubernetesServiceAccountNamespaceFile)
-		if err != nil {
-			return "", fmt.Errorf("could not read namespace file: %v", err)
-		}
-		return string(nsBytes), nil
+	_, err := os.Stat(kubernetesServiceAccountNamespaceFile)
+	if err != nil {
+		return defaultNamespace, nil
 	}
 
-	return "default", nil
+	nsBytes, err := os.ReadFile(kubernetesServiceAccountNamespaceFile)
+	if err != nil {
+		return "", fmt.Errorf("could not read namespace file: %v", err)
+	}
+
+	return string(nsBytes), nil
 }
