@@ -7,6 +7,12 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+var validatorServiceNamePatternRegex = &regexp.Regexp{}
+
+func init() {
+	validatorServiceNamePatternRegex = regexp.MustCompile(`validator-(\d+)-pocket`)
+}
+
 func isValidator(service *v1.Service) bool {
 	return service.Labels["pokt.network/purpose"] == "validator"
 }
@@ -15,11 +21,7 @@ func isValidator(service *v1.Service) bool {
 //
 // it follows the pattern defined in the pocket helm chart.
 func extractValidatorId(validatorName string) string {
-	if len(validatorName) >= 3 {
-		re := regexp.MustCompile(`validator-(\d+)-pocket`)
-		return re.FindStringSubmatch(validatorName)[1]
-	}
-	return validatorName
+	return validatorServiceNamePatternRegex.FindStringSubmatch(validatorName)[1]
 }
 
 // TODO: Create a type for `validatorKeyMap` and document what the expected key-value types contain

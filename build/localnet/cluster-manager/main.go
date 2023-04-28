@@ -52,7 +52,7 @@ func main() {
 		panic(err)
 	}
 
-	watcher, err := clientset.CoreV1().Services("default").Watch(context.TODO(), metav1.ListOptions{})
+	watcher, err := clientset.CoreV1().Services(pocketk8s.CurrentNamespace).Watch(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}

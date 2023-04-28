@@ -98,4 +98,4 @@ Pocket Network is a blockchain data platform, built for applications, that uses 
 - [Discord](https://discord.gg/pokt)
 - [Twitter](https://twitter.com/POKTnetwork)
 
-<!-- GITHUB_WIKI: devlog/2023_03_21 -->
+<!-- GITHUB_WIKI: devlog/2023_04_04 -->
