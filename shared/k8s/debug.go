@@ -1,3 +1,4 @@
+// // CONSIDERATION: Add a debug tag
 package k8s
 
 import (
@@ -12,6 +13,8 @@ import (
 
 //nolint:gosec // G101 Not a credential
 const privateKeysSecretResourceName = "validators-private-keys"
+const kubernetesServiceAccountNamespaceFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+const defaultNamespace = "default"
 
 var CurrentNamespace = ""
 
@@ -42,10 +45,8 @@ func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]stri
 }
 
 func getNamespace() (string, error) {
-	nsFile := "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-
-	if _, err := os.Stat(nsFile); err == nil {
-		nsBytes, err := os.ReadFile(nsFile)
+	if _, err := os.Stat(kubernetesServiceAccountNamespaceFile); err == nil {
+		nsBytes, err := os.ReadFile(kubernetesServiceAccountNamespaceFile)
 		if err != nil {
 			return "", fmt.Errorf("could not read namespace file: %v", err)
 		}
