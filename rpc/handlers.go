@@ -75,13 +75,15 @@ func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, Session{
-		SessionId:   session.GetId(),
-		Height:      session.GetHeight(),
-		Chain:       string(session.GetRelayChain()),
-		Geozone:     string(session.GetGeoZone()),
-		Application: rpcApp,
-		Servicers:   rpcServicers,
-		Fishermen:   rpcFishermen,
+		SessionId:        session.GetId(),
+		SessionNumber:    session.GetSessionNumber(),
+		SessionHeight:    session.GetSessionHeight(),
+		NumSessionBlocks: session.GetNumSessionBlocks(),
+		Chain:            string(session.GetRelayChain()),
+		Geozone:          string(session.GetGeoZone()),
+		Application:      rpcApp,
+		Servicers:        rpcServicers,
+		Fishermen:        rpcFishermen,
 	})
 }
 

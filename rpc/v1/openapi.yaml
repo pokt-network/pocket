@@ -1373,7 +1373,9 @@ components:
       type: object
       required:
         - session_id
-        - height
+        - session_number
+        - session_height
+        - num_session_blocks
         - chain
         - geozone
         - application
@@ -1382,7 +1384,13 @@ components:
       properties:
         session_id:
           type: string
-        height:
+        session_number:
+          type: integer
+          format: int64
+        session_height:
+          type: integer
+          format: int64
+        num_session_blocks:
           type: integer
           format: int64
         chain:
