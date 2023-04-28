@@ -455,7 +455,7 @@ benchmark_p2p_peerstore: ## Run P2P peerstore benchmarks
 # BUG           - There is a known existing bug in this code
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "ADR" -e "TECHDEBT" -e "IMPROVE" -e "OPTIMIZE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH" -e "BUG"
+TODO_KEYWORDS = -e "TODO" -e "DECIDE" -e "TECHDEBT" -e "IMPROVE" -e "OPTIMIZE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH" -e "BUG"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;
