@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.40] - 2023-05-01
+
+- Updated Dockerfiles using outdated go version to 1.19
+
 ## [0.0.0.39] - 2023-04-28
 
 - Added a `fisherman_per_session` governance parameter
