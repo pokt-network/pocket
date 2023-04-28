@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.35] - 2023-04-27
+
+- Removed unneeded `use_rain_tree` P2P config field
+
 ## [0.0.0.34] - 2023-04-19
 
 - Changed `Validator1EndpointK8S` which now reflects the new value.

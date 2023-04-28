@@ -165,7 +165,6 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 				Hostname:       hostname,
 				PrivateKey:     valKeys[i].String(),
 				Port:           uint32(port),
-				UseRainTree:    true,
 				ConnectionType: types.ConnectionType_EmptyConnection,
 			},
 		}

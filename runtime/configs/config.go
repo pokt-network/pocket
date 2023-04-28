@@ -128,7 +128,6 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 		},
 		P2P: &P2PConfig{
 			Port:            defaults.DefaultP2PPort,
-			UseRainTree:     defaults.DefaultP2PUseRainTree,
 			ConnectionType:  defaults.DefaultP2PConnectionType,
 			MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
 		},
