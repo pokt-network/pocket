@@ -8,7 +8,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: v1-localnet-validators-private-keys
+  name: validators-private-keys
   namespace: default
 type: Opaque
 stringData:

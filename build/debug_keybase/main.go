@@ -60,12 +60,6 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 		panic(err)
 	}
 
-	tmpDir, err := os.MkdirTemp("/tmp", "pocket_debug_keybase_*")
-	if err != nil {
-		panic(err)
-	}
-	defer os.RemoveAll(tmpDir)
-
 	kb, err := keybase.NewKeybase(&configs.KeybaseConfig{
 		FilePath: defaults.DefaultRootDirectory + "/keys",
 	})

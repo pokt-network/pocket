@@ -57,8 +57,9 @@ type cliContextKey string
 const busCLICtxKey = "bus"
 
 func init() {
-	debugCmd := NewDebugCommand()
-	rootCmd.AddCommand(debugCmd)
+	dbg := NewDebugCommand()
+	dbg.AddCommand(NewDebugSubCommands()...)
+	rootCmd.AddCommand(dbg)
 
 	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
 	validator1Endpoint := defaults.Validator1EndpointDockerCompose
@@ -69,58 +70,94 @@ func init() {
 	rpcHost = runtime.GetEnv("RPC_HOST", validator1Endpoint)
 }
 
+// NewDebugSubCommands builds out the list of debug subcommands by matching the
+// handleSelect dispatch to the appropriate command.
+// * To add a debug subcommand, you must add it to the `items` array and then
+// write a function handler to match for it in `handleSelect`.
+func NewDebugSubCommands() []*cobra.Command {
+	commands := make([]*cobra.Command, len(items))
+	for idx, promptItem := range items {
+		commands[idx] = &cobra.Command{
+			Use: promptItem,
+			PersistentPreRun: func(cmd *cobra.Command, args []string) {
+				persistentPreRun(cmd, args)
+			},
+			Run: func(cmd *cobra.Command, args []string) {
+				handleSelect(cmd, cmd.Use)
+			},
+			ValidArgs: items,
+		}
+	}
+	return commands
+}
+
+// NewDebugCommand returns the cobra CLI for the Debug command.
 func NewDebugCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "debug",
 		Short: "Debug utility for rapid development",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.MaximumNArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-
-			// TECHDEBT: this is to keep backwards compatibility with localnet
-			configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
-
-			runtimeMgr := runtime.NewManagerFromFiles(
-				configPath, genesisPath,
-				runtime.WithClientDebugMode(),
-				runtime.WithRandomPK(),
-			)
-
-			bus := runtimeMgr.GetBus()
-			modulesRegistry := bus.GetModulesRegistry()
-
-			rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
-
-			addressBookProvider := rpcABP.NewRPCPeerstoreProvider(
-				rpcABP.WithP2PConfig(
-					runtimeMgr.GetConfig().P2P,
-				),
-				rpcABP.WithCustomRPCURL(rpcURL),
-			)
-			modulesRegistry.RegisterModule(addressBookProvider)
-
-			currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
-				rpcCHP.WithCustomRPCURL(rpcURL),
-			)
-			modulesRegistry.RegisterModule(currentHeightProvider)
-
-			setValueInCLIContext(cmd, busCLICtxKey, bus)
-
-			mod, err := p2p.Create(bus)
-			if err != nil {
-				logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
-			}
-
-			var ok bool
-			p2pMod, ok = mod.(modules.P2PModule)
-			if !ok {
-				logger.Global.Fatal().Msgf("unexpected P2P module type: %T", mod)
-			}
-
-			if err := p2pMod.Start(); err != nil {
-				logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
-			}
+			persistentPreRun(cmd, args)
 		},
 		RunE: runDebug,
+	}
+}
+
+// persistentPreRun is called by both debug and debug sub-commands before runs
+func persistentPreRun(cmd *cobra.Command, _ []string) {
+	// TECHDEBT: this is to keep backwards compatibility with localnet
+	configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
+	rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
+
+	runtimeMgr := runtime.NewManagerFromFiles(
+		configPath, genesisPath,
+		runtime.WithClientDebugMode(),
+		runtime.WithRandomPK(),
+	)
+
+	bus := runtimeMgr.GetBus()
+	setValueInCLIContext(cmd, busCLICtxKey, bus)
+
+	setupPeerstoreProvider(*runtimeMgr, rpcURL)
+	setupCurrentHeightProvider(*runtimeMgr, rpcURL)
+	setupAndStartP2PModule(*runtimeMgr)
+}
+
+func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) {
+	bus := rm.GetBus()
+	modulesRegistry := bus.GetModulesRegistry()
+	pstoreProvider := rpcABP.NewRPCPeerstoreProvider(
+		rpcABP.WithP2PConfig(rm.GetConfig().P2P),
+		rpcABP.WithCustomRPCURL(rpcURL),
+	)
+	modulesRegistry.RegisterModule(pstoreProvider)
+}
+
+func setupCurrentHeightProvider(rm runtime.Manager, rpcURL string) {
+	bus := rm.GetBus()
+	modulesRegistry := bus.GetModulesRegistry()
+	currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
+		rpcCHP.WithCustomRPCURL(rpcURL),
+	)
+	modulesRegistry.RegisterModule(currentHeightProvider)
+}
+
+func setupAndStartP2PModule(rm runtime.Manager) {
+	bus := rm.GetBus()
+	mod, err := p2p.Create(bus)
+	if err != nil {
+		logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
+	}
+
+	var ok bool
+	p2pMod, ok = mod.(modules.P2PModule)
+	if !ok {
+		logger.Global.Fatal().Msgf("unexpected P2P module type: %T", mod)
+	}
+
+	if err := p2pMod.Start(); err != nil {
+		logger.Global.Fatal().Err(err).Msg("Failed to start p2p module")
 	}
 }
 
