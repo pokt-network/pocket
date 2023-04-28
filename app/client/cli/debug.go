@@ -108,6 +108,7 @@ func NewDebugCommand() *cobra.Command {
 func persistentPreRun(cmd *cobra.Command, _ []string) {
 	// TECHDEBT: this is to keep backwards compatibility with localnet
 	configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
+	rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
 
 	runtimeMgr := runtime.NewManagerFromFiles(
 		configPath, genesisPath,
@@ -116,25 +117,34 @@ func persistentPreRun(cmd *cobra.Command, _ []string) {
 	)
 
 	bus := runtimeMgr.GetBus()
+	setValueInCLIContext(cmd, busCLICtxKey, bus)
+
+	setupPeerstoreProvider(*runtimeMgr, rpcURL)
+	setupCurrentHeightProvider(*runtimeMgr, rpcURL)
+	setupAndStartP2PModule(*runtimeMgr)
+}
+
+func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) {
+	bus := rm.GetBus()
 	modulesRegistry := bus.GetModulesRegistry()
-
-	rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
-
-	addressBookProvider := rpcABP.NewRPCPeerstoreProvider(
-		rpcABP.WithP2PConfig(
-			runtimeMgr.GetConfig().P2P,
-		),
+	pstoreProvider := rpcABP.NewRPCPeerstoreProvider(
+		rpcABP.WithP2PConfig(rm.GetConfig().P2P),
 		rpcABP.WithCustomRPCURL(rpcURL),
 	)
-	modulesRegistry.RegisterModule(addressBookProvider)
+	modulesRegistry.RegisterModule(pstoreProvider)
+}
 
+func setupCurrentHeightProvider(rm runtime.Manager, rpcURL string) {
+	bus := rm.GetBus()
+	modulesRegistry := bus.GetModulesRegistry()
 	currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
 		rpcCHP.WithCustomRPCURL(rpcURL),
 	)
 	modulesRegistry.RegisterModule(currentHeightProvider)
+}
 
-	setValueInCLIContext(cmd, busCLICtxKey, bus)
-
+func setupAndStartP2PModule(rm runtime.Manager) {
+	bus := rm.GetBus()
 	mod, err := p2p.Create(bus)
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
