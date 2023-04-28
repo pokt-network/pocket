@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pocket-v1-cli-client
+  name: dev-cli-client
   namespace: default
   labels:
     app: v1-cli-client
@@ -99,12 +99,12 @@ spec:
             defaultMode: 420
         - name: datadir
           persistentVolumeClaim:
-            claimName: pocket-v1-cli-client-datadir
+            claimName: dev-cli-client-datadir
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: pocket-v1-cli-client-datadir
+  name: dev-cli-client-datadir
 spec:
   accessModes:
     - ReadWriteOnce
