@@ -286,7 +286,7 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 func (m *p2pModule) setupRouter() (err error) {
 	m.router, err = raintree.NewRainTreeRouter(
 		m.GetBus(),
-		&raintree.RainTreeConfig{
+		&utils.RouterConfig{
 			Addr:                  m.address,
 			CurrentHeightProvider: m.currentHeightProvider,
 			Host:                  m.host,

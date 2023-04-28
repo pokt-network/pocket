@@ -5,7 +5,6 @@ import (
 	"log"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
-	"go.uber.org/multierr"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/pokt-network/pocket/logger"
@@ -29,16 +28,7 @@ var (
 	_ rainTreeFactory            = &rainTreeRouter{}
 )
 
-type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, *RainTreeConfig]
-
-type RainTreeConfig struct {
-	Addr                  cryptoPocket.Address
-	CurrentHeightProvider providers.CurrentHeightProvider
-	Host                  libp2pHost.Host
-	Hostname              string
-	MaxMempoolCount       uint64
-	PeerstoreProvider     providers.PeerstoreProvider
-}
+type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, *utils.RouterConfig]
 
 type rainTreeRouter struct {
 	base_modules.IntegratableModule
@@ -59,15 +49,15 @@ type rainTreeRouter struct {
 	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 }
 
-func NewRainTreeRouter(bus modules.Bus, cfg *RainTreeConfig) (typesP2P.Router, error) {
+func NewRainTreeRouter(bus modules.Bus, cfg *utils.RouterConfig) (typesP2P.Router, error) {
 	return new(rainTreeRouter).Create(bus, cfg)
 }
 
-func (*rainTreeRouter) Create(bus modules.Bus, cfg *RainTreeConfig) (typesP2P.Router, error) {
+func (*rainTreeRouter) Create(bus modules.Bus, cfg *utils.RouterConfig) (typesP2P.Router, error) {
 	routerLogger := logger.Global.CreateLoggerForModule("router")
 	routerLogger.Info().Msg("Initializing rainTreeRouter")
 
-	if err := cfg.isValid(); err != nil {
+	if err := cfg.IsValid(); err != nil {
 		return nil, err
 	}
 
@@ -317,20 +307,5 @@ func (rtr *rainTreeRouter) setupDependencies() error {
 
 func (rtr *rainTreeRouter) setupPeerManager(pstore typesP2P.Peerstore) (err error) {
 	rtr.peersManager, err = newPeersManager(rtr.selfAddr, pstore, true)
-	return err
-}
-
-func (cfg RainTreeConfig) isValid() (err error) {
-	if cfg.Host == nil {
-		err = multierr.Append(err, fmt.Errorf("host not configured"))
-	}
-
-	if cfg.PeerstoreProvider == nil {
-		err = multierr.Append(err, fmt.Errorf("peerstore provider not configured"))
-	}
-
-	if cfg.CurrentHeightProvider == nil {
-		err = multierr.Append(err, fmt.Errorf("current height provider not configured"))
-	}
 	return err
 }
