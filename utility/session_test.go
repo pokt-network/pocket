@@ -5,14 +5,15 @@ import (
 	"math"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"gonum.org/v1/gonum/stat/combin"
+
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/utility/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"gonum.org/v1/gonum/stat/combin"
 )
 
 // TECHDEBT(#697): Geozones are not current implemented, used or tested
