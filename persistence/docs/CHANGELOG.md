@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.49] - 2023-04-18
+## [0.0.0.50] - 2023-04-28
 
 - Implemented a new `GetActor` persistence modular functoin
 - Added `fisherman_per_session` parameter

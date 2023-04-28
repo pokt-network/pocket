@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.38] - 2023-04-18
+## [0.0.0.38] - 2023-04-28
 
 - Introduced testing helper to test the `UtilityModule` interface implementation
 - Implemented the `GetSession` function from the Utility module interface
