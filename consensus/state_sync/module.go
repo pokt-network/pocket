@@ -184,7 +184,8 @@ func (m *stateSync) CatchToHeight() {
 
 	// requests blocks from the current height to the aggregated metadata height
 	for currentHeight <= m.activeSyncHeight {
-		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.activeSyncHeight)
+		//m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d, nodeId: %d", currentHeight, m.activeSyncHeight, m.bus.GetConsensusModule().GetNodeId())
+		fmt.Printf("Sync is requesting block: %d, ending height: %d, nodeId: %d \n", currentHeight, m.activeSyncHeight, m.bus.GetConsensusModule().GetNodeId())
 
 		// form the get block request message
 		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{

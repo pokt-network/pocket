@@ -24,7 +24,12 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	if shouldHandle, err := m.paceMaker.ShouldHandleMessage(msg); !shouldHandle {
 		m.logger.Debug().Fields(loggingFields).Msg("Not handling hotstuff msg...")
 		if msg.Height > m.height {
-			m.stateSync.SetActiveSyncHeight(msg.Height)
+			//m.stateSync.SetActiveSyncHeight(msg.Height)
+			if msg.Step == Decide {
+				m.stateSync.SetActiveSyncHeight(msg.Height)
+			} else {
+				m.stateSync.SetActiveSyncHeight(msg.Height - 1)
+			}
 			err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
 			return err
 		}

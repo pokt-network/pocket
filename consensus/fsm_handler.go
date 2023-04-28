@@ -93,8 +93,8 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	// else, node will always stay in sync mode, and it will catch up to the final state with passive state sync
 	if isValidator {
 		m.logger.Debug().Msg("Validator node is starting active state sync")
-		aggregatedMetadata := m.getAggregatedStateSyncMetadata()
-		m.stateSync.SetAggregatedMetadata(&aggregatedMetadata)
+		//aggregatedMetadata := m.getAggregatedStateSyncMetadata()
+		//m.stateSync.SetAggregatedMetadata(&aggregatedMetadata)
 		go m.stateSync.CatchToHeight()
 	}
 
