@@ -58,7 +58,7 @@ type StateSyncModuleLEGACY interface {
 	// - Retrieve a list of active peers with their metadata (identified and retrieved through P2P's `Churn Management`)
 	GetPeerMetadata(GetPeerSyncMeta func() (peers []PeerSyncMeta, err error))
 
-	// `NetworkSend` function contract:
+	// `typesP2P.Router#Send()` function contract:
 	// - sends data to an address via P2P network
 	NetworkSend(NetworkSend func(data []byte, address cryptoPocket.Address) error)
 
@@ -91,10 +91,10 @@ type StateSyncModuleLEGACY interface {
 	// An eligible peer is when `PeerMeta.MinHeight <= blockHeight <= PeerMeta.MaxHeight`
 	GetRandomEligiblePeersForHeight(blockHeight int64) (eligiblePeer PeerSyncMeta, err error)
 
-	// Uses `NetworkSend` to send a `BlockRequestMessage` to a specific peer
+	// Uses `typesP2P.Router#Send()` to send a `BlockRequestMessage` to a specific peer
 	SendBlockRequest(peerId string) error
 
-	// Uses 'NetworkSend' to send a `BlockResponseMessage` to a specific peer
+	// Uses 'typesP2P.Router#Send()' to send a `BlockResponseMessage` to a specific peer
 	// This function is used in 'ServerMode()'
 	HandleBlockRequest(message BlockRequestMessage) error
 

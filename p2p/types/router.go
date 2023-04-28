@@ -9,11 +9,11 @@ import (
 
 // TECHDEBT(olshansky): When we delete `stdnetwork` and only go with `raintree`, this interface
 // can be simplified greatly.
-type Network interface {
+type Router interface {
 	modules.IntegratableModule
 
-	NetworkBroadcast(data []byte) error
-	NetworkSend(data []byte, address cryptoPocket.Address) error
+	Broadcast(data []byte) error
+	Send(data []byte, address cryptoPocket.Address) error
 
 	// Address book helpers
 	// TECHDEBT: simplify - remove `GetPeerstore`
