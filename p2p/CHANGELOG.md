@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.46] - 2023-04-27
+
+- Removed unneeded `stdnetwork` package
+- Removed unneeded `use_rain_tree` P2P config field
+
 ## [0.0.0.45] - 2023-04-25
 
 - Added rainTeeFactory type & compile-time enforcement
