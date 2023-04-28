@@ -17,6 +17,7 @@ import (
 )
 
 // GetSession implements of the exposed `UtilityModule.GetSession` function
+// TECHDEBT(#519): Add custom error types depending on the type of issue that occurred and assert on them in the unit tests.
 func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geoZone string) (*coreTypes.Session, error) {
 	persistenceModule := m.GetBus().GetPersistenceModule()
 	readCtx, err := persistenceModule.NewReadContext(height)

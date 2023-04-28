@@ -30,8 +30,6 @@ See [session.go](../session.go) and [session_test.go](../session_test.go) for th
 
 ```mermaid
 sequenceDiagram
-    autonumber
-
     %% The `Querier` is anyone (app or not) that asks to retrieve session metadata
     actor Q AS Querier
 
