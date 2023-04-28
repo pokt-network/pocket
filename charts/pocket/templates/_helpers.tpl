@@ -48,7 +48,7 @@ Selector labels
 {{- define "pocket.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "pocket.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-pokt.network/purpose: validator
+pokt.network/purpose: {{ .Values.nodeType }}
 {{- end }}
 
 {{/*
