@@ -11,6 +11,8 @@ localnet_config_path = root_dir + "/localnet_config.yaml"
 # Create localnet config file from defaults, and if some default configuration doesn't exist in it - populate with default values
 localnet_config_defaults = {
     "validators": {"count": 4},
+    "servicers": {"count": 1},
+    "fishermen": {"count": 1},
     "full_nodes": {"count": 1}
 }
 
@@ -58,7 +60,7 @@ def check_helm_dependencies_for_chart(path):
 
 check_helm_dependencies_for_chart("dependencies")
 
-k8s_yaml(helm("dependencies", name="dependencies", namespace="default"))
+k8s_yaml(helm("dependencies", name="dependencies"))
 k8s_resource("dependencies-prometheus-pushgateway", labels=["monitoring"])
 k8s_resource("dependencies-loki", labels=["monitoring"])
 k8s_resource("dependencies-prometheus-node-exporter", labels=["monitoring"])
@@ -161,32 +163,83 @@ k8s_resource('dev-cli-client', labels=['client'])
 k8s_yaml(['manifests/cluster-manager.yaml'])
 k8s_resource('pocket-v1-cluster-manager', labels=['cluster-manager'])
 
-check_helm_dependencies_for_chart(root_dir + "/charts/pocket")
+chart_dir = root_dir + "/charts/pocket"
+check_helm_dependencies_for_chart(chart_dir)
+
+actor_number = 0
+
+def formatted_actor_number(n):
+    return local('printf "%03d" ' + str(n))
 
 # Provisions validators
 for x in range(localnet_config["validators"]["count"]):
-    validator_number = x + 1
-    formatted_validator_number = local('printf "%03d" ' + str(validator_number))
+    actor_number = actor_number + 1
+    formatted_number = formatted_actor_number(actor_number)
 
-    k8s_yaml(helm(root_dir + "/charts/pocket",
-        name="validator-%s" % formatted_validator_number,
-        namespace="default",
+    k8s_yaml(helm(chart_dir,
+        name="validator-%s-pocket" % formatted_number,
         set=[
             "global.postgresql.auth.postgresPassword=LocalNetPassword",
             "image.repository=pocket-image",
             "privateKeySecretKeyRef.name=validators-private-keys",
-            "privateKeySecretKeyRef.key=%s" % formatted_validator_number,
+            "privateKeySecretKeyRef.key=%s" % formatted_number,
             "genesis.preProvisionedGenesis.enabled=false",
             "genesis.externalConfigMap.name=v1-localnet-genesis",
             "genesis.externalConfigMap.key=genesis.json",
             "postgresql.primary.persistence.enabled=false",
             "nodeType=validator",
-        ]
-    ))
+        ],
+        values=[chart_dir + "/pocket-validator-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-validator-overrides.yaml") else [],))
+
+    k8s_resource("validator-%s-pocket" % formatted_number, labels=['pocket-validators'])
+
+for x in range(localnet_config["servicers"]["count"]):
+    actor_number = actor_number + 1
+    formatted_number = formatted_actor_number(actor_number)
+
+    k8s_yaml(helm(chart_dir,
+        name="servicer-%s-pocket" % formatted_number,
+        set=[
+            "global.postgresql.auth.postgresPassword=LocalNetPassword",
+            "image.repository=pocket-image",
+            "privateKeySecretKeyRef.name=v1-localnet-validators-private-keys",
+            "privateKeySecretKeyRef.key=%s" % formatted_number,
+            "genesis.preProvisionedGenesis.enabled=false",
+            "genesis.externalConfigMap.name=v1-localnet-genesis",
+            "genesis.externalConfigMap.key=genesis.json",
+            "postgresql.primary.persistence.enabled=false",
+            "config.servicer.enabled=true",
+            "nodeType=servicer",
+        ],
+        values=[chart_dir + "/pocket-servicer-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-servicer-overrides.yaml") else [],))
+
+    k8s_resource("servicer-%s-pocket" % formatted_number, labels=['pocket-servicers'])
+
+for x in range(localnet_config["fishermen"]["count"]):
+    actor_number = actor_number + 1
+    formatted_number = formatted_actor_number(actor_number)
+
+    k8s_yaml(helm(chart_dir,
+        name="fisherman-%s-pocket" % formatted_number,
+        set=[
+            "global.postgresql.auth.postgresPassword=LocalNetPassword",
+            "image.repository=pocket-image",
+            "privateKeySecretKeyRef.name=misc-private-keys",
+            "privateKeySecretKeyRef.key=%s" % formatted_number,
+            "genesis.preProvisionedGenesis.enabled=false",
+            "genesis.externalConfigMap.name=v1-localnet-genesis",
+            "genesis.externalConfigMap.key=genesis.json",
+            "postgresql.primary.persistence.enabled=false",
+            "config.fisherman.enabled=true",
+            "nodeType=fisherman",
+        ],
+        values=[chart_dir + "/pocket-fisherman-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-fisherman-overrides.yaml") else [],))
+
+    k8s_resource("fisherman-%s-pocket" % formatted_number, labels=['pocket-fishermen'])
 
 # Provisions full nodes
 for x in range(localnet_config["full_nodes"]["count"]):
-    node_number = x + 1
+    actor_number = actor_number + 1
     formatted_node_number = local('printf "%03d" ' + str(node_number))
 
     k8s_yaml(helm(root_dir + "/charts/pocket",
@@ -202,8 +255,10 @@ for x in range(localnet_config["full_nodes"]["count"]):
             "genesis.externalConfigMap.key=genesis.json",
             "postgresql.primary.persistence.enabled=false",
             "nodeType=full",
-        ]
-    ))
+        ],
+        values=[chart_dir + "/pocket-full-node-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-full-node-overrides.yaml") else [],))
+
+    k8s_resource("full-node-%s-pocket" % formatted_number, labels=['pocket-full-nodes'])
 
 # Exposes grafana
 k8s_resource(

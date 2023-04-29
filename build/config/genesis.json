@@ -4095,27 +4095,27 @@
   ],
   "servicers": [
     {
-      "address": "43d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
-      "public_key": "16cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d75a998b",
+      "address": "00604d18001a2012830b93efcc23100450e5a512",
+      "public_key": "6ac62bddc541432cff818a02bab732f815ef2e6f7099e7dddc793d62d482b451",
       "chains": ["0001"],
-      "service_url": "node1.consensus:42069",
+      "service_url": "node1.servicer:42069",
       "staked_amount": "1000000000000",
       "paused_height": -1,
       "unstaking_height": -1,
-      "output": "43d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
+      "output": "00604d18001a2012830b93efcc23100450e5a512",
       "actor_type": 2
     }
   ],
   "fishermen": [
     {
-      "address": "9ba047197ec043665ad3f81278ab1f5d3eaf6b8b",
-      "public_key": "68efd26af01692fcd77dc135ca1de69ede464e8243e6832bd6c37f282db8c9cb",
+      "address": "00504987d4b181c1e97b1da9af42f3db733b1ff4",
+      "public_key": "2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
       "chains": ["0001"],
-      "service_url": "node1.consensus:42069",
+      "service_url": "node1.fisherman:42069",
       "staked_amount": "1000000000000",
       "paused_height": -1,
       "unstaking_height": -1,
-      "output": "9ba047197ec043665ad3f81278ab1f5d3eaf6b8b",
+      "output": "00504987d4b181c1e97b1da9af42f3db733b1ff4",
       "actor_type": 3
     }
   ],

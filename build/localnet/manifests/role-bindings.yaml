@@ -2,7 +2,6 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: private-keys-viewer-binding
-  namespace: default
 subjects:
   - kind: ServiceAccount
     name: debug-client-account
@@ -19,7 +18,6 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: services-watcher-binding
-  namespace: default
 subjects:
   - kind: ServiceAccount
     name: cluster-manager-account

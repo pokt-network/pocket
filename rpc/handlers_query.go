@@ -693,3 +693,12 @@ func (s *rpcServer) PostV1QueryValidators(ctx echo.Context) error {
 		TotalPages:      int64(totalPages),
 	})
 }
+
+func (s *rpcServer) GetV1QueryNodeRoles(ctx echo.Context) error {
+	actorModules := s.GetBus().GetUtilityModule().GetActorModules()
+	roles := make([]string, 0)
+	for _, m := range actorModules {
+		roles = append(roles, m.GetModuleName())
+	}
+	return ctx.JSON(200, roles)
+}

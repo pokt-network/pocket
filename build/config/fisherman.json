@@ -1,0 +1,57 @@
+{
+  "root_directory": "/go/src/github.com/pocket-network",
+  "private_key": "90ccfd6ba76d876e02ba09440af67582e0f4a37cbda2ce4c30b251132b670eda2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
+  "use_lib_p2p": false,
+  "consensus": {
+    "max_mempool_bytes": 500000000,
+    "pacemaker_config": {
+      "timeout_msec": 10000,
+      "manual": true,
+      "debug_time_between_steps_msec": 1000
+    },
+    "private_key": "90ccfd6ba76d876e02ba09440af67582e0f4a37cbda2ce4c30b251132b670eda2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
+    "server_mode_enabled": true
+  },
+  "utility": {
+    "max_mempool_transaction_bytes": 1073741824,
+    "max_mempool_transactions": 9000
+  },
+  "persistence": {
+    "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
+    "node_schema": "fisherman",
+    "block_store_path": "/var/blockstore",
+    "tx_indexer_path": "/var/txindexer",
+    "trees_store_dir": "/var/trees",
+    "max_conns_count": 50,
+    "min_conns_count": 1,
+    "max_conn_lifetime": "5m",
+    "max_conn_idle_time": "1m",
+    "health_check_period": "30s"
+  },
+  "p2p": {
+    "hostname": "node1.fisherman",
+    "port": 42069,
+    "use_rain_tree": true,
+    "is_empty_connection_type": false,
+    "private_key": "90ccfd6ba76d876e02ba09440af67582e0f4a37cbda2ce4c30b251132b670eda2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
+    "max_mempool_count": 100000
+  },
+  "telemetry": {
+    "enabled": true,
+    "address": "0.0.0.0:9000",
+    "endpoint": "/metrics"
+  },
+  "logger": {
+    "level": "debug",
+    "format": "pretty"
+  },
+  "rpc": {
+    "enabled": true,
+    "port": 50832,
+    "timeout": 30000,
+    "use_cors": false
+  },
+  "fisherman": {
+    "enabled": true
+  }
+}
