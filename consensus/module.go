@@ -82,6 +82,8 @@ type consensusModule struct {
 	// metadata responses received from peers are collected in this channel
 	metadataReceived chan *typesCons.StateSyncMetadataResponse
 
+	wg sync.WaitGroup
+
 	serverModeEnabled bool
 }
 
@@ -194,12 +196,23 @@ func (m *consensusModule) Start() error {
 		return err
 	}
 
-	go m.blockApplicationLoop()
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		m.blockApplicationLoop()
+	}()
 
 	return nil
 }
 
 func (m *consensusModule) Stop() error {
+	close(m.metadataReceived)
+	close(m.blocksResponsesReceived)
+	m.stateSync.Stop()
+
+	// wait for the block application loop to finish
+	m.wg.Wait()
+
 	return nil
 }
 

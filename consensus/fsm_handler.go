@@ -54,7 +54,6 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 
 	default:
 		m.logger.Warn().Msgf("Consensus module not handling this event: %s", msg.Event)
-
 	}
 
 	return nil
@@ -90,12 +89,10 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	}
 
 	// if the node is validator, start active state sync with CatchToHeight
-	// else, node will always stay in sync mode, and it will catch up to the final state with passive state sync
+	// if the node is not valdiator, it will always stay in the sync mode, and it will eventually catch up to the final state with passive state sync
 	if isValidator {
 		m.logger.Debug().Msg("Validator node is starting active state sync")
-		//aggregatedMetadata := m.getAggregatedStateSyncMetadata()
-		//m.stateSync.SetAggregatedMetadata(&aggregatedMetadata)
-		go m.stateSync.CatchToHeight()
+		go m.stateSync.CatchMsgHeight()
 	}
 
 	return nil

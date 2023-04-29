@@ -23,8 +23,10 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	// Pacemaker - Liveness & safety checks
 	if shouldHandle, err := m.paceMaker.ShouldHandleMessage(msg); !shouldHandle {
 		m.logger.Debug().Fields(loggingFields).Msg("Not handling hotstuff msg...")
+		// if message height is higher than node's current height, node need to start active syncing
 		if msg.Height > m.height {
-			//m.stateSync.SetActiveSyncHeight(msg.Height)
+			// if the message is a decide message (which is the final consensus cycle), set active sync height to message height (because this means block is finalized and persisted),
+			// else, set active sync height to message height - 1.
 			if msg.Step == Decide {
 				m.stateSync.SetActiveSyncHeight(msg.Height)
 			} else {
