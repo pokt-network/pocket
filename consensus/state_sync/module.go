@@ -19,6 +19,7 @@ const (
 	stateSyncModuleName       = "stateSyncModule"
 	committedBlocsChannelSize = 100
 	blockWaitingPeriod        = 30 * time.Second
+	metadataChannelSize       = 1000
 )
 
 type StateSyncModule interface {
@@ -26,8 +27,13 @@ type StateSyncModule interface {
 	StateSyncServerModule
 
 	HandleStateSyncBlockCommittedEvent(message *anypb.Any) error
-	CatchMsgHeight()
+	HandleStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse)
+
+	// SetActiveSyncHeight sets the active sync height
 	SetActiveSyncHeight(height uint64)
+
+	// CatchMsgHeight starts active state sync from current height to activeSyncHeight
+	CatchMsgHeight()
 }
 
 var (
@@ -42,28 +48,13 @@ type stateSync struct {
 	committedBlocksChannel chan uint64
 	activeSyncHeight       uint64
 	wg                     sync.WaitGroup
+
+	// metadata responses received from peers are collected in this channel
+	metadataReceived chan *typesCons.StateSyncMetadataResponse
 }
 
 func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return new(stateSync).Create(bus, options...)
-}
-
-func (m *stateSync) HandleStateSyncBlockCommittedEvent(event *anypb.Any) error {
-	evt, err := codec.GetCodec().FromAny(event)
-	if err != nil {
-		return err
-	}
-
-	switch event.MessageName() {
-	case messaging.StateSyncBlockCommittedEventType:
-		newCommitBlockEvent, ok := evt.(*typesCons.StateSyncBlockCommittedEvent)
-		if !ok {
-			return fmt.Errorf("failed to cast event to StateSyncBlockCommittedEvent")
-		}
-
-		m.committedBlocksChannel <- newCommitBlockEvent.Height
-	}
-	return nil
 }
 
 func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -77,6 +68,7 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 	m.committedBlocksChannel = make(chan uint64, committedBlocsChannelSize)
+	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
 
 	return m, nil
 }
@@ -104,7 +96,7 @@ func (m *stateSync) Start() error {
 
 // Stop stops the state sync process, and sends `Consensus_IsSyncedValidator` FSM event
 func (m *stateSync) Stop() error {
-	// Wait for the goroutines to stop
+	close(m.metadataReceived)
 	m.wg.Wait()
 	return nil
 }
@@ -124,8 +116,30 @@ func (m *stateSync) GetModuleName() string {
 	return stateSyncModuleName
 }
 
+func (m *stateSync) HandleStateSyncBlockCommittedEvent(event *anypb.Any) error {
+	evt, err := codec.GetCodec().FromAny(event)
+	if err != nil {
+		return err
+	}
+
+	switch event.MessageName() {
+	case messaging.StateSyncBlockCommittedEventType:
+		newCommitBlockEvent, ok := evt.(*typesCons.StateSyncBlockCommittedEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast event to StateSyncBlockCommittedEvent")
+		}
+
+		m.committedBlocksChannel <- newCommitBlockEvent.Height
+	}
+	return nil
+}
+
+func (m *stateSync) HandleStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) {
+	m.metadataReceived <- metadataRes
+}
+
 // TODO(#352): Implement this function, currently a placeholder.
-// metadataSyncLoop periodically sends metadata requests to its peers
+// metadataSyncLoop periodically sends metadata requests to its peers, as part of passive state sync process
 func (m *stateSync) metadataSyncLoop() {
 	// runs as a background process
 	// requests metadata from peers
@@ -133,9 +147,10 @@ func (m *stateSync) metadataSyncLoop() {
 }
 
 // TODO(#352): Implement this function, currently a placeholder.
-// blockRequestLoop periodically sends metadata requests to its peers
+// blockRequestLoop periodically sends metadata requests to its peers, as part of passive state sync process
 func (m *stateSync) blockRequestLoop() {
 	// runs as a background process
+	// aggregates metadata in the metadataReceived channel
 	// requests blocks from the current height to the aggregated metadata height
 	// sends received blocks to the blockReceived channel
 }

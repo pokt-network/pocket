@@ -70,5 +70,6 @@ func (m *consensusModule) GetLeaderForView(height, round uint64, step uint8) uin
 
 // TODO(#609): Refactor to use the test-only package and remove reflection
 func (m *consensusModule) PushStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) {
-	m.metadataReceived <- metadataRes
+	//m.metadataReceived <- metadataRes
+	m.stateSync.HandleStateSyncMetadataResponse(metadataRes)
 }

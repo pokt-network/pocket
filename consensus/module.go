@@ -25,10 +25,7 @@ import (
 var _ modules.ConsensusModule = &consensusModule{}
 
 // TODO: This should be configurable
-const (
-	metadataChannelSize = 1000
-	blocksChannelSize   = 1000
-)
+const blocksChannelSize = 1000
 
 type consensusModule struct {
 	base_modules.IntegratableModule
@@ -80,8 +77,9 @@ type consensusModule struct {
 	blocksResponsesReceived chan *typesCons.GetBlockResponse
 
 	// metadata responses received from peers are collected in this channel
-	metadataReceived chan *typesCons.StateSyncMetadataResponse
+	// metadataReceived chan *typesCons.StateSyncMetadataResponse
 
+	// wait group to wait for blockApplicationLoop() to finish
 	wg sync.WaitGroup
 
 	serverModeEnabled bool
@@ -165,7 +163,6 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	m.nodeId = valAddrToIdMap[address]
 	m.nodeAddress = address
 
-	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
 	m.blocksResponsesReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
 
 	m.initMessagesPool()
@@ -206,7 +203,6 @@ func (m *consensusModule) Start() error {
 }
 
 func (m *consensusModule) Stop() error {
-	close(m.metadataReceived)
 	close(m.blocksResponsesReceived)
 	m.stateSync.Stop()
 

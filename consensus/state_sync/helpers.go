@@ -28,3 +28,24 @@ func (m *stateSync) stateSyncLogHelper(receiverPeerAddress string) map[string]an
 		"receiverPeerAddress": receiverPeerAddress,
 	}
 }
+
+// func (m *stateSync) getAggregatedStateSyncMetadata() *typesCons.StateSyncMetadataResponse {
+// 	minHeight, maxHeight := uint64(1), uint64(1)
+// 	chanLen := len(m.metadataReceived)
+
+// 	for i := 0; i < chanLen; i++ {
+// 		metadata := <-m.metadataReceived
+// 		if metadata.MaxHeight > maxHeight {
+// 			maxHeight = metadata.MaxHeight
+// 		}
+// 		if metadata.MinHeight < minHeight {
+// 			minHeight = metadata.MinHeight
+// 		}
+// 	}
+
+// 	return &typesCons.StateSyncMetadataResponse{
+// 		PeerAddress: "unused_aggregated_metadata_address",
+// 		MinHeight:   minHeight,
+// 		MaxHeight:   maxHeight,
+// 	}
+// }

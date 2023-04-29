@@ -74,8 +74,8 @@ func (m *consensusModule) maxPersistedBlockHeight() (uint64, error) {
 	return maxHeight, nil
 }
 
-// TODO(#352): add quorum certificate validation for the block
 func (m *consensusModule) validateBlock(block *coreTypes.Block) error {
+	// TODO(#352): add quorum certificate validation for the block
 	return nil
 }
 
@@ -89,25 +89,4 @@ func (m *consensusModule) applyAndCommitBlock(block *coreTypes.Block) error {
 
 	m.logger.Info().Msgf("New block is committed, current height is :%d", m.height)
 	return nil
-}
-
-func (m *consensusModule) getAggregatedStateSyncMetadata() typesCons.StateSyncMetadataResponse {
-	minHeight, maxHeight := uint64(1), uint64(1)
-	chanLen := len(m.metadataReceived)
-
-	for i := 0; i < chanLen; i++ {
-		metadata := <-m.metadataReceived
-		if metadata.MaxHeight > maxHeight {
-			maxHeight = metadata.MaxHeight
-		}
-		if metadata.MinHeight < minHeight {
-			minHeight = metadata.MinHeight
-		}
-	}
-
-	return typesCons.StateSyncMetadataResponse{
-		PeerAddress: "unused_aggregated_metadata_address",
-		MinHeight:   minHeight,
-		MaxHeight:   maxHeight,
-	}
 }
