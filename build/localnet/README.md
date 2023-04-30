@@ -161,16 +161,22 @@ Please refer to helm charts documentation for more details.
 
 ### Overriding default values for localnet with Tilt
 
-You may also create a `pocket-overrides.yaml` in the `charts/pocket` directory and override the default values.
+You may also create a overrides YAML file in the `charts/pocket` directory and override the default values for the various actors.
+
+Override files supported:
+
+- pocket-fisherman-overrides.yaml
+- pocket-servicer-overrides.yaml
+- pocket-validator-overrides.yaml
 
 ```sh
-touch charts/pocket/pocket-overrides.yaml
+touch charts/pocket/pocket-validator-overrides.yaml
 ```
 
-For example, to enable CORS for the RPC server, you can run the following command.
+For example, to enable CORS for the RPC server, you can run the following command. Note, this overrides config.json **for all** validators in localnet.
 
 ```yaml
-cat <<EOF > charts/pocket/pocket-overrides.yaml
+cat <<EOF > charts/pocket/pocket-validator-overrides.yaml
 config:
   rpc:
     use_cors: true
