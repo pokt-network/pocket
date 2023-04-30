@@ -178,6 +178,7 @@ func (m *stateSync) StartActiveSync() {
 	for currentHeight <= m.activeSyncHeight {
 		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.activeSyncHeight)
 
+		// TODO: consider rerequesting the block if it is not received after a certain amount of time
 		// form the get block request message
 		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 			Message: &typesCons.StateSyncMessage_GetBlockReq{
@@ -196,6 +197,7 @@ func (m *stateSync) StartActiveSync() {
 			}
 		}
 
+		// TODO: consider removing wating on  the committedBlocksChannel for block to be received
 		// wait for the requested block to be received and committed by consensus module
 		<-m.committedBlocksChannel
 

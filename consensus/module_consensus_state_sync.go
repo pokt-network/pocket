@@ -33,12 +33,12 @@ func (m *consensusModule) blockApplicationLoop() {
 			return
 		}
 
-		// TODO: rather than discarding these blocks, push them into a channel to process them later
 		if block.BlockHeader.Height <= maxPersistedHeight {
 			m.logger.Info().Msgf("Received block at height %d, discarding as it has already been persisted", block.BlockHeader.Height)
 			return
 		}
 
+		// TODO: do not discard future blocks, consider adding them back into a channel to enable processing them later.
 		if block.BlockHeader.Height > m.CurrentHeight() {
 			m.logger.Info().Msgf("Received block at height %d, discarding as it is higher than the current height", block.BlockHeader.Height)
 			return
