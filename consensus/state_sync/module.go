@@ -32,8 +32,8 @@ type StateSyncModule interface {
 	// SetActiveSyncHeight sets the active sync height
 	SetActiveSyncHeight(height uint64)
 
-	// CatchMsgHeight starts active state sync from current height to activeSyncHeight
-	CatchMsgHeight()
+	// StartActiveSync starts active state sync from current height to activeSyncHeight
+	StartActiveSync()
 }
 
 var (
@@ -155,8 +155,8 @@ func (m *stateSync) blockRequestLoop() {
 	// sends received blocks to the blockReceived channel
 }
 
-// CatchMsgHeight performs active state sync, starting from the consensus module's current height to the activeSyncHeight
-func (m *stateSync) CatchMsgHeight() {
+// StartActiveSync performs active state sync, starting from the consensus module's current height to the activeSyncHeight
+func (m *stateSync) StartActiveSync() {
 	consensusMod := m.bus.GetConsensusModule()
 	currentHeight := consensusMod.CurrentHeight()
 	nodeAddress := consensusMod.GetNodeAddress()

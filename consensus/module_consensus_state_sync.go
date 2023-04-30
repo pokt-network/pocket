@@ -23,8 +23,7 @@ func (m *consensusModule) GetNodeAddress() string {
 	return m.nodeAddress
 }
 
-// blockApplicationLoop commits the blocks received from the blocksResponsesReceived channel in passive state sync process
-// it is intended to be run as a background process
+// blockApplicationLoop commits the blocks received from the blocksResponsesReceived channel in state sync processes
 func (m *consensusModule) blockApplicationLoop() {
 	for blockResponse := range m.blocksResponsesReceived {
 		block := blockResponse.Block
