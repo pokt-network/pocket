@@ -204,7 +204,9 @@ func (m *consensusModule) Start() error {
 
 func (m *consensusModule) Stop() error {
 	close(m.blocksResponsesReceived)
-	m.stateSync.Stop()
+	if err := m.stateSync.Stop(); err != nil {
+		return err
+	}
 
 	// wait for the block application loop to finish
 	m.wg.Wait()

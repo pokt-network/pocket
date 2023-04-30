@@ -124,8 +124,7 @@ func (m *stateSync) HandleStateSyncBlockCommittedEvent(event *anypb.Any) error {
 		return err
 	}
 
-	switch event.MessageName() {
-	case messaging.StateSyncBlockCommittedEventType:
+	if event.MessageName() == messaging.StateSyncBlockCommittedEventType {
 		newCommitBlockEvent, ok := evt.(*typesCons.StateSyncBlockCommittedEvent)
 		if !ok {
 			return fmt.Errorf("failed to cast event to StateSyncBlockCommittedEvent")
@@ -169,7 +168,7 @@ func (m *stateSync) StartActiveSync() {
 	}
 	defer readCtx.Release()
 
-	//get the current validators
+	// get the current validators
 	validators, err := readCtx.GetAllValidators(int64(currentHeight))
 	if err != nil {
 		m.logger.Err(err).Msg("failed to get all validators from persistence module")

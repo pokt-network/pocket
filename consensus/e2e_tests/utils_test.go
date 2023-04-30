@@ -763,7 +763,7 @@ func waitForNodeToCatchUp(
 	unsyncedNode *shared.Node,
 	targetHeight uint64,
 ) error {
-	//wait for unsynced node to send StateMachineEvent_Consensus_IsSyncedValidator event
+	// wait for unsynced node to send StateMachineEvent_Consensus_IsSyncedValidator event
 	_, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "synced event", 1, 500, false)
 	require.NoError(t, err)
 
