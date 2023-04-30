@@ -767,23 +767,7 @@ func waitForNodeToCatchUp(
 	_, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "synced event", 1, 500, false)
 	require.NoError(t, err)
 
-	/*
-			includeFilter := func(anyEvent *anypb.Any) bool {
-				msg, err := codec.GetCodec().FromAny(anyEvent)
-				require.NoError(t, err)
-
-				_, ok := msg.(*typesCons.StateSyncBlockCommittedEvent)
-				require.True(t, ok)
-
-				return true
-			}
-
-		fmt.Println("starting to wait for new event")
-		_, err := waitForEventsInternal(clck, eventsChannel, messaging.StateSyncBlockCommittedEventType, 1, 500, nil, "err", false)
-		require.NoError(t, err)
-	*/
-
-	// ensure unsynced node caught up to the target height
+	// check if unsynced node has caught up to the target height
 	nodeState := GetConsensusNodeState(unsyncedNode)
 	assertHeight(t, typesCons.NodeId(unsyncedNode.GetBus().GetConsensusModule().GetNodeId()), targetHeight, nodeState.Height)
 

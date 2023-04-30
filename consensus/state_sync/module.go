@@ -47,7 +47,9 @@ type stateSync struct {
 	logger                 *modules.Logger
 	committedBlocksChannel chan uint64
 	activeSyncHeight       uint64
-	wg                     sync.WaitGroup
+
+	// wait group to wait for metadataSyncLoop() and blockRequestLoop() to finish
+	wg sync.WaitGroup
 
 	// metadata responses received from peers are collected in this channel
 	metadataReceived chan *typesCons.StateSyncMetadataResponse
@@ -79,7 +81,7 @@ func (m *stateSync) SetActiveSyncHeight(height uint64) {
 	}
 }
 
-// Start performs passive state sync process, starting from the consensus module's current height to the aggragated metadata height
+// Start performs passive state sync process, by running metadataSyncLoop() and blockRequestLoop() as background processes for the lifetime of the node
 func (m *stateSync) Start() error {
 	m.wg.Add(2)
 	go func() {
@@ -94,7 +96,7 @@ func (m *stateSync) Start() error {
 	return nil
 }
 
-// Stop stops the state sync process, and sends `Consensus_IsSyncedValidator` FSM event
+// Stop stops the passive state sync process, when node is shutting down
 func (m *stateSync) Stop() error {
 	close(m.metadataReceived)
 	m.wg.Wait()

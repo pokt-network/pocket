@@ -154,7 +154,7 @@ func TestStateSync_ServerGetBlock_FailNonExistingBlock(t *testing.T) {
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
 			GetBlockReq: &typesCons.GetBlockRequest{
 				PeerAddress: requesterNodePeerAddress,
-				Height:      uint64(6), // 6 because node ask for the next block
+				Height:      uint64(6), // 6 because node asks for the next block
 			},
 		},
 	}
@@ -250,7 +250,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	metadataReceived := &typesCons.StateSyncMetadataResponse{
 		PeerAddress: "unused_peer_addr_in_tests",
 		MinHeight:   uint64(1),
-		MaxHeight:   uint64(2), // 2 because unsynced node last persisted height 2
+		MaxHeight:   uint64(2), // 2 because unsynced node's last persisted height is 2
 	}
 
 	// Simulate state sync metadata response by pushing metadata to the unsynced node's consensus module
@@ -265,9 +265,6 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	// 2. Propose
 	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 500, true)
 	require.NoError(t, err)
-	// Wait for nodes to reach height=1 by generating a block
-	// block = WaitForNextBlock(t, clockMock, eventsChannel, pocketNodes, 1, 0, 500, true)
-	// require.Equal(t, uint64(3), block.BlockHeader.Height)
 
 	WaitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, 3)
 	require.NoError(t, err)

@@ -89,7 +89,7 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	}
 
 	// if the node is validator, start active state sync with StartActiveSync
-	// if the node is not valdiator, it will always stay in the sync mode, and it will eventually catch up to the final state with passive state sync
+	// if the node is not validator, it will always stay in the sync mode, and it will eventually catch up to the final state with passive state sync
 	if isValidator {
 		m.logger.Debug().Msg("Validator node is starting active state sync")
 		go m.stateSync.StartActiveSync()
@@ -101,6 +101,7 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 // HandleSynced handles FSM event IsSyncedNonValidator for Non-Validators, and Synced is the destination state.
 // Currently, FSM never transition to this state and a non-validator node always stays in syncmode.
 // CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state.
+// TODO: Add check that this never happens when IsValidator() is false, i.e. node is not validator.
 func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Non-validator node is in Synced mode")
 	return nil
@@ -110,5 +111,7 @@ func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEven
 // Execution of this state means the validator node is synced.
 func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Validator node is Synced and in Pacemaker mode. It will stay in this mode until it receives a new block proposal that has a higher height than the current block height")
+	// validator receives a new block proposal, and it understands that it doesn't have block and it transitions to unsycnhed state
+	// transitioning out of this state happens when a new block proposal is received by the hotstuff_replica
 	return nil
 }

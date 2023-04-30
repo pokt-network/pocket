@@ -47,7 +47,6 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		return m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
 	case *typesCons.StateSyncMessage_MetadataRes:
 		m.logger.Info().Str("proto_type", "MetadataResponse").Msg("Handling StateSyncMessage MetadataRes")
-		//m.metadataReceived <- stateSyncMessage.GetMetadataRes()
 		m.stateSync.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
 		return nil
 	case *typesCons.StateSyncMessage_GetBlockReq:
