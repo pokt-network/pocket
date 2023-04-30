@@ -13,7 +13,7 @@ ENV PATH $PATH:$HOME/.local/bin
 ### Install dependencies
 # Debian packages
 RUN apt-get update -qq && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential zip wget ca-certificates curl net-tools dnsutils && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential zip wget ca-certificates curl net-tools dnsutils kubernetes-client vim && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt
 
 # protoc

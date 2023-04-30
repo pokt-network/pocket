@@ -12,7 +12,6 @@ import (
 
 	"github.com/multiformats/go-multiaddr"
 	"github.com/pokt-network/pocket/logger"
-	"github.com/rs/zerolog"
 )
 
 const (
@@ -183,23 +182,8 @@ func getPeerIP(hostname string) (net.IP, error) {
 	logger.Global.Warn().Msg("resolved multiple addresses but only using one. See ticket #557 for more details")
 	logger.Global.Warn().
 		Str("hostname", hostname).
-		Array("resolved", stringLogArrayMarshaler{strs: addrs}).
+		Array("resolved", logger.StringLogArrayMarshaler{Strings: addrs}).
 		IPAddr("using", peerIP)
 
 	return peerIP, nil
-}
-
-// stringLogArrayMarshaler implements the `zerolog.LogArrayMarshaler` interface
-// to marshal an array of strings for use with zerolog.
-// TECHDEBT(#609): move & de-duplicate
-type stringLogArrayMarshaler struct {
-	strs []string
-}
-
-// MarshalZerologArray implements the respective `zerolog.LogArrayMarshaler`
-// interface member.
-func (marshaler stringLogArrayMarshaler) MarshalZerologArray(arr *zerolog.Array) {
-	for _, str := range marshaler.strs {
-		arr.Str(str)
-	}
 }

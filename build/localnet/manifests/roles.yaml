@@ -6,7 +6,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
-    resourceNames: ["v1-localnet-validators-private-keys"]
+    resourceNames: ["validators-private-keys"]
     verbs: ["get"]
 ---
 kind: Role

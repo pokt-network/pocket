@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.49] - 2023-04-19
+## [0.0.0.50] - 2023-04-30
 
-- Added state sync channels `blocksReceived` and `metadataReceived`, implemented `blockApplicationLoop()`, state sync functions `Start()` and `Stop()`
+- Added two state sync modes: active and passive, updated state sync readme
+- Added state sync channels `blocksReceived` and `metadataReceived`, implemented `blockApplicationLoop()`, passive state sync functions `Start()` and `Stop()`, and active state sync function `StartActiveSync()`
 - Implemented `WaitForNetworkFSMEvents()` function in test utils
+
+## [0.0.0.49] - 2023-04-27
+
+- Updated comments following P2P refactor
 
 ## [0.0.0.48] - 2023-04-17
 

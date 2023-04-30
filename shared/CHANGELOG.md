@@ -7,13 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.56] - 2023-04-30
+
+- Added `IsValidator()` function in `ConsensusStateSync` interface 
+  
+## [0.0.0.55] - 2023-04-28
+
+- Added a new `Session` protobuf
+- Added a `GetActor` function to the Persistence module interface
+- Added a `GetSession` function to the Utility module interface
+
+## [0.0.0.54] - 2023-04-28
+
+- Made `cluster-manager` aware of kubernetes namespace in which it is running
+
 ## [0.0.0.53] - 2023-04-19
 
-- Exported `IsValidator()` function in `ConsensusStateSync` interface 
+- Updated shared module README
 
 ## [0.0.0.52] - 2023-04-17
 
-- Removed *temporary* `shared/p2p` package; consolidated into `p2p`
+- Removed _temporary_ `shared/p2p` package; consolidated into `p2p`
 
 ## [0.0.0.51] - 2023-04-13
 
@@ -23,9 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `modules.ModuleFactoryWithOptions` interface
 - Added factory interfaces:
-    - `modules.FactoryWithRequired`
-    - `modules.FactoryWithOptions`
-    - `modules.FactoryWithRequiredAndOptions`
+  - `modules.FactoryWithRequired`
+  - `modules.FactoryWithOptions`
+  - `modules.FactoryWithRequiredAndOptions`
 - Embedded `ModuleFactoryWithOptions` in `Module` interface
 - Switched mock generation to use reflect mode for effected interfaces (embedders)
 

@@ -157,7 +157,7 @@ func TestP2pModule_WithHostOption_Restart(t *testing.T) {
 	mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
 	mockBus := createMockBus(t, mockRuntimeMgr)
 
-	genesisStateMock := createMockGenesisState(keys)
+	genesisStateMock := createMockGenesisState(nil)
 	persistenceMock := preparePersistenceMock(t, mockBus, genesisStateMock)
 	mockBus.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 

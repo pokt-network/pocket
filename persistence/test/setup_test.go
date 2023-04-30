@@ -41,8 +41,8 @@ var (
 	StakeToUpdate        = utils.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
 
 	DefaultStakeStatus     = int32(coreTypes.StakeStatus_Staked)
-	DefaultPauseHeight     = int64(-1) // pauseHeight=-1 means not paused
-	DefaultUnstakingHeight = int64(-1) // pauseHeight=-1 means not unstaking
+	DefaultPauseHeight     = int64(-1) // pauseHeight=-1 implies not paused
+	DefaultUnstakingHeight = int64(-1) // unstakingHeight=-1 implies not unstaking
 
 	OlshanskyURL    = "https://olshansky.info"
 	OlshanskyChains = []string{"OLSH"}
@@ -53,8 +53,10 @@ var (
 	genesisStateNumServicers    = 1
 	genesisStateNumApplications = 1
 	genesisStateNumFishermen    = 1
+
+	// Initialized in TestMain
+	testPersistenceMod modules.PersistenceModule
 )
-var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 
 // See https://github.com/ory/dockertest as reference for the template of this code
 // Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
@@ -360,6 +362,7 @@ func resetStateToGenesis() {
 	}
 }
 
+// TECHDEBT: Make sure all tests run `t.Cleanup(clearAllState)`
 // This is necessary for unit tests that are dependant on a completely clear state when starting
 func clearAllState() {
 	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {

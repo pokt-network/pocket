@@ -4,7 +4,7 @@
 BRANCH_CHANGED_FILES=($@)
 
 # Initialise arrays and script wide variables
-IGNORE_DIRS=(".github" ".githooks" "docs" "bin")
+IGNORE_DIRS=(".github" ".githooks" "docs" "bin" "internal")
 MODULES_EDITED=() # Modules are considered top-level directories directly under root
 MODULES_MISSING_CHANGELOG=()
 CHANGELOG_FILES=() # Full paths to CHANGELOG.md files

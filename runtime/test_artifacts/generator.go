@@ -6,108 +6,175 @@ import (
 	"fmt"
 	"strconv"
 
+	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
+	"github.com/pokt-network/pocket/shared/core/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// IMPROVE: Generate a proper genesis suite in the future.
-func NewGenesisState(numValidators, numServicers, numApplications, numFisherman int) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
-	apps, appsPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications)
-	vals, validatorPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_VAL, numValidators)
-	servicers, snPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicers)
-	fish, fishPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFisherman)
+type GenesisOption func(*genesis.GenesisState)
+
+// IMPROVE: Extend the utilities here into a proper genesis suite in the future.
+func NewGenesisState(
+	numValidators,
+	numServicers,
+	numApplications,
+	numFisherman int,
+	genesisOpts ...GenesisOption,
+) (
+	genesisState *genesis.GenesisState,
+	validatorPrivateKeys []string,
+) {
+	applications, appPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications, DefaultChains)
+	validators, validatorPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_VAL, numValidators, nil)
+	servicers, servicerPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICER, numServicers, DefaultChains)
+	fishermen, fishPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFisherman, DefaultChains)
+
+	allActorsKeys := append(append(append(validatorPrivateKeys, servicerPrivateKeys...), fishPrivateKeys...), appPrivateKeys...)
+	allActorAccounts := newAccountsWithKeys(allActorsKeys)
 
 	genesisState = &genesis.GenesisState{
 		GenesisTime:   timestamppb.Now(),
 		ChainId:       DefaultChainID,
 		MaxBlockBytes: DefaultMaxBlockBytes,
 		Pools:         NewPools(),
-		Accounts:      NewAccounts(numValidators+numServicers+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...), // TODO(olshansky): clean this up
-		Applications:  apps,
-		Validators:    vals,
+		Accounts:      allActorAccounts,
+		Applications:  applications,
+		Validators:    validators,
 		Servicers:     servicers,
-		Fishermen:     fish,
+		Fishermen:     fishermen,
 		Params:        DefaultParams(),
 	}
 
-	// TODO: Generalize this to all actors and not just validators
+	for _, o := range genesisOpts {
+		o(genesisState)
+	}
+
+	// TECHDEBT: Generalize this to all actors and not just validators
 	return genesisState, validatorPrivateKeys
+}
+
+func WithActors(actors []*coreTypes.Actor, actorKeys []string) func(*genesis.GenesisState) {
+	return func(genesis *genesis.GenesisState) {
+		newActorAccounts := newAccountsWithKeys(actorKeys)
+		genesis.Accounts = append(genesis.Accounts, newActorAccounts...)
+		for _, actor := range actors {
+			switch actor.ActorType {
+			case types.ActorType_ACTOR_TYPE_APP:
+				genesis.Applications = append(genesis.Applications, actor)
+			case coreTypes.ActorType_ACTOR_TYPE_VAL:
+				genesis.Validators = append(genesis.Validators, actor)
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
+				genesis.Servicers = append(genesis.Servicers, actor)
+			case coreTypes.ActorType_ACTOR_TYPE_FISH:
+				genesis.Fishermen = append(genesis.Fishermen, actor)
+			default:
+				panic(fmt.Sprintf("invalid actor type: %s", actor.ActorType))
+			}
+		}
+	}
 }
 
 func NewDefaultConfigs(privateKeys []string) (cfgs []*configs.Config) {
 	for i, pk := range privateKeys {
 		cfgs = append(cfgs, configs.NewDefaultConfig(
 			configs.WithPK(pk),
-			configs.WithNodeSchema("node"+strconv.Itoa(i+1)),
+			configs.WithNodeSchema(getPostgresSchema(i+1)),
 		))
 	}
-	return
+	return cfgs
 }
 
-// REFACTOR: Test artifact generator should reflect the sum of the initial account values to populate the initial pool values
+// TECHDEBT: This is used for the `node_schema` field in `PersistenceConfig` and enables
+// different nodes sharing the same database while being isolated from each other.
+// The naming convention should be changed to be more reflective of the node (e.g. <actor_type>_<address>),
+// which would require all related tooling and documentation to be updated as well.
+func getPostgresSchema(i int) string {
+	return "node" + strconv.Itoa(i)
+}
+
 func NewPools() (pools []*coreTypes.Account) {
 	for _, value := range coreTypes.Pools_value {
 		if value == int32(coreTypes.Pools_POOLS_UNSPECIFIED) {
 			continue
 		}
 
+		// TECHDEBT: Test artifact should reflect the sum of the initial account values
+		// rather than be set to `DefaultAccountAmountString`
 		amount := DefaultAccountAmountString
 		if value == int32(coreTypes.Pools_POOLS_FEE_COLLECTOR) {
-			amount = "0"
+			amount = "0" // fees are empty at genesis
 		}
 
+		poolAddr := hex.EncodeToString(coreTypes.Pools(value).Address())
+
 		pools = append(pools, &coreTypes.Account{
-			Address: hex.EncodeToString(coreTypes.Pools(value).Address()),
+			Address: poolAddr,
 			Amount:  amount,
 		})
 	}
-	return
+	return pools
 }
 
-func NewAccounts(n int, privateKeys ...string) (accounts []*coreTypes.Account) {
-	for i := 0; i < n; i++ {
-		_, _, addr := keygen.GetInstance().Next()
-		if privateKeys != nil {
-			pk, _ := crypto.NewPrivateKey(privateKeys[i])
-			addr = pk.Address().String()
-		}
+func newAccountsWithKeys(privateKeys []string) (accounts []*coreTypes.Account) {
+	for _, pk := range privateKeys {
+		pk, _ := crypto.NewPrivateKey(pk)
+		addr := pk.Address().String()
 		accounts = append(accounts, &coreTypes.Account{
 			Address: addr,
 			Amount:  DefaultAccountAmountString,
 		})
 	}
-	return
+	return accounts
 }
 
-// TODO: The current implementation of NewActors  will have overlapping `ServiceUrl` for different
-//
-//	types of actors which needs to be fixed.
-func NewActors(actorType coreTypes.ActorType, n int) (actors []*coreTypes.Actor, privateKeys []string) {
-	for i := 0; i < n; i++ {
+//nolint:unused // useful if we want to generate accounts with random keys
+func newAccounts(numActors int) (accounts []*coreTypes.Account) {
+	for i := 0; i < numActors; i++ {
+		_, _, addr := keygen.GetInstance().Next()
+		accounts = append(accounts, &coreTypes.Account{
+			Address: addr,
+			Amount:  DefaultAccountAmountString,
+		})
+	}
+	return accounts
+}
+
+// TECHDEBT: Current implementation of `NewActors` will result in non-unique ServiceURLs if called
+// more than once.
+func NewActors(actorType coreTypes.ActorType, numActors int, chains []string) (actors []*coreTypes.Actor, privateKeys []string) {
+	// If the actor type is a validator, the chains must be nil since they are chain agnostic
+	if actorType == coreTypes.ActorType_ACTOR_TYPE_VAL {
+		logger.Global.Warn().
+			Array("chains", logger.StringLogArrayMarshaler{Strings: chains}).
+			Msg("validator actors should not have chains but a list was provided.")
+		chains = nil
+	}
+	for i := 0; i < numActors; i++ {
 		serviceURL := getServiceURL(i + 1)
-		actor, pk := NewDefaultActor(int32(actorType), serviceURL)
+		actor, pk := NewDefaultActor(actorType, serviceURL, chains)
 		actors = append(actors, actor)
 		privateKeys = append(privateKeys, pk)
 	}
-
-	return
+	return actors, privateKeys
 }
 
-func getServiceURL(n int) string {
-	return fmt.Sprintf(ServiceURLFormat, n)
-}
-
-func NewDefaultActor(actorType int32, serviceURL string) (actor *coreTypes.Actor, privateKey string) {
+func NewDefaultActor(
+	actorType coreTypes.ActorType,
+	serviceURL string,
+	chains []string,
+) (
+	actor *coreTypes.Actor,
+	privateKey string,
+) {
 	privKey, pubKey, addr := keygen.GetInstance().Next()
-	chains := DefaultChains
-	if actorType == int32(coreTypes.ActorType_ACTOR_TYPE_VAL) {
-		chains = nil
-	}
 	return &coreTypes.Actor{
+		ActorType:       actorType,
 		Address:         addr,
 		PublicKey:       pubKey,
 		Chains:          chains,
@@ -116,6 +183,9 @@ func NewDefaultActor(actorType int32, serviceURL string) (actor *coreTypes.Actor
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          addr,
-		ActorType:       coreTypes.ActorType(actorType),
 	}, privKey
+}
+
+func getServiceURL(n int) string {
+	return fmt.Sprintf(ServiceURLFormat, n)
 }
