@@ -37,8 +37,7 @@ State Sync is a protocol within a `Pocket` node that enables the download and ma
 The Pocket network node includes two distinct types of state sync processes: **Passive State Sync** and **Active State Sync**. 
 
 ## Passive State Sync 
-In passive state synchronization, the Pocket node consistently communicates with the its peers in the network to stay updated with the latest global state. It does this by sending periodic `PeerSyncMetadata` to gather network state and and by requesting missing blocks via `GetBlock` requests and processing the incoming blocks. This approach makes sure that the node has the latest information on the network's state, allowing it to function efficiently. Both validator and non-validator nodes performs passive state sync. Passive state synchronization ensures that all nodes in the network will eventually be synchronized.
-
+In passive state synchronization, the Pocket node consistently communicates with its peers in the network to stay updated with the latest global state. It does this by sending periodic `PeerSyncMetadata` requests to gather network state, and, by periodically requesting missing blocks with `GetBlock` requests. This approach makes sure that the node has the latest information on the network's state. Both validator and non-validator nodes perform passive state sync. Passive state synchronization ensures that all nodes in the network will eventually be synchronized.
 
 ### Peer Metadata
 
@@ -88,25 +87,15 @@ sequenceDiagram
     end
 ```
 
-The aggregation and consumption of this peer-meta information enables the node to understand the global network state through sampling Peer Metadata in its local peer list. The Node aggregates the collected peer metadata to identify the `MaxHeight` and `MinHeight` in the global state.
-
-This gives a view into the data availability layer, with details of what data can be consumed from peer via (not a production interface):
-
-```golang
-type StateSyncModule interface {
-  // ...
-  getAggregatedStateSyncMetadata() *StateSyncMetadataResponse  // Get aggregated metadata received from peers.
-  // ...
-}
-```
+The aggregation and consumption of this peer-meta information enables the node to understand the global network state through sampling Peer Metadata in its local peer list. The Node aggregates the collected peer metadata to identify the `MaxHeight` and `MinHeight` in the global state. This gives a view into the data availability layer.
 
 Using the aggregated `StateSyncMetadataResponse` returned by `getAggregatedStateSyncMetadata()`, a Pocket node is able to compare its local state against that of the Global Network that is visible to it (i.e. the world state).
 
 ### Passive State Sync Lifecycle
-Passive state sync is performed by Pocket node via two background process; first one is `metadataSyncLoop()` that peridoically requests peer metadata, and, the second one `blockRequestLoop()` that peridoically requests missing blocks using collected peer metadata.
+Passive state sync is performed by the Pocket node via two background processes; first process is `metadataSyncLoop()` that peridoically requests peer metadata, and, second process is   `blockRequestLoop()` that peridoically requests missing blocks using collected peer metadata.
 
 
-The Pocket Node bootstraps and collects state sync metadata from the rest of the network periodically with `metadataSyncLoop()`.  Through periodic metadata collection, the node collects received `StateSyncMetadataResponse`s in the `metadataReceived` channel. The Pocket Node periodically consumes metadata collected in the `metadataReceived` channel. This enables nodes to have an up-to-date view of the global state. If the global state is higher than the node's local state, the Pocket Node requests missing blocks from its peers via the `blockRequestLoop()`.
+The Pocket Node bootstraps and collects state sync metadata from the rest of the network periodically with `metadataSyncLoop()`.  Through periodic metadata collection, the node collects received `StateSyncMetadataResponse`s in the `metadataReceived` channel. The Pocket Node periodically consumes all metadata collected in the `metadataReceived` channel. This enables nodes to have an up-to-date view of the global state. If the global state is higher than the node's local state, the Pocket Node requests missing blocks from its peers via the `blockRequestLoop()`.
 
 
 ```mermaid
@@ -128,7 +117,7 @@ flowchart TD
 
 ## Active State Sync 
 
-Active state sync is a process in which a validator Pocket node initiates a state sync process if it receives a hotstuff message with a height higher than its current height. Upon receiving this message, the node initiates a state sync process by sending `GetBlock` requests to request any missing blocks between its current height and the height of the received message. This allows the node to synchronize with the rest of the network before waiting for passive state sync to kick in.
+Active state sync is a process in which a validator Pocket node initiates a state sync process if it receives a Hotstuff message with a height higher than its current height. Upon receiving this message, node initiates the active state sync process by sending `GetBlock` requests via `StartActiveSync()` to request any missing blocks between its current height and the height of the received message. This allows the node to synchronize with the rest of the network before waiting for periodic passive state sync to kick in.
 
 
 ### Active State Sync Lifecycle
@@ -158,7 +147,7 @@ flowchart TD
 
 State sync can be viewed as a state machine that transverses various modes the node can be in, including:
 
-1. Unsyced Mode
+1. Unsynced Mode
 2. Sync Mode
 3. Synced Mode
 4. Pacemaker Mode
@@ -230,9 +219,6 @@ flowchart TD
 ```
 
 _IMPORTANT: `ApplyBlock` is implicit in the diagram above. If any blocks processed result in an invalid `StateHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._****
-
-
-
 
 ## State Sync Designs
 
