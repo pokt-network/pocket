@@ -59,6 +59,19 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 		return
 	}
 
+	// if replica is syncing up:
+	// it is possible for it to have missed the newround, and m.block can be empty.
+	// here if that is the case, first few steps might have been empty.
+	//so we need to refresh utility context
+	if m.utilityUnitOfWork == nil {
+		// Clear the previous utility unitOfWork, if it exists, and create a new one
+		if err := m.refreshUtilityUnitOfWork(); err != nil {
+			m.logger.Error().Err(err).Msg("Could not refresh utility unitOfWork")
+			return
+		}
+
+	}
+
 	block := msg.GetBlock()
 	if err := m.applyBlock(block); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())

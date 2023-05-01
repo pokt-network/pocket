@@ -57,7 +57,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		return nil
 	case *typesCons.StateSyncMessage_GetBlockRes:
 		m.logger.Info().Str("proto_type", "GetBlockResponse").Msg("Handling StateSyncMessage GetBlockResponse")
-		fmt.Println("Pushing block to blocksReceived channel, for height: ", stateSyncMessage.GetGetBlockRes().Block.BlockHeader.Height)
+		//fmt.Println("Pushing block to blocksReceived channel, for height: ", stateSyncMessage.GetGetBlockRes().Block.BlockHeader.Height)
 		m.blocksReceived <- stateSyncMessage.GetGetBlockRes()
 		return nil
 	default:

@@ -61,8 +61,8 @@ func (view *sortedPeersView) GetPeers() PeerList {
 // Searches from index 1 because index 0 is self by convention and the rest of
 // the slice is sorted.
 func (view *sortedPeersView) Add(peer Peer) {
-	i := view.getAddrIndex(peer.GetAddress())
-
+	i := sort.SearchStrings(view.sortedAddrs[1:], peer.GetAddress().String())
+	//i := view.getAddrIndex(peer.GetAddress())
 	view.sortedAddrs = insertElementAtIndex(view.sortedAddrs, peer.GetAddress().String(), i)
 	view.sortedPeers = insertElementAtIndex(view.sortedPeers, peer, i)
 }

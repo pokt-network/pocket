@@ -194,7 +194,9 @@ func (m *consensusModule) Start() error {
 		return err
 	}
 
+	// state sync backgroun processes
 	go m.metadataSyncLoop()
+	go m.blockSyncLoop()
 	go m.blockApplicationLoop()
 
 	return nil
@@ -263,7 +265,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 			return fmt.Errorf("failed to cast message to HotstuffMessage")
 		}
 
-		fmt.Println("Received message: ", hotstuffMessage)
+		//fmt.Println("Received message: ", hotstuffMessage)
 		return m.handleHotstuffMessage(hotstuffMessage)
 
 	default:

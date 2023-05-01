@@ -1,12 +1,9 @@
 package state_sync
 
 import (
-	"fmt"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -30,9 +27,9 @@ var (
 )
 
 type stateSync struct {
-	bus                         modules.Bus
-	logger                      *modules.Logger
-	validators                  []*coreTypes.Actor
+	bus    modules.Bus
+	logger *modules.Logger
+	//validators                  []*coreTypes.Actor
 	aggregatedMetaData          *typesCons.StateSyncMetadataResponse
 	committedBlockHeightChannel chan uint64
 }
@@ -73,51 +70,55 @@ func (m *stateSync) Set(aggregatedMetaData *typesCons.StateSyncMetadataResponse)
 // when all blocks are received and committed, stops the state sync process by calling its `Stop()` function.
 func (m *stateSync) Start() error {
 
-	consensusMod := m.bus.GetConsensusModule()
-	currentHeight := consensusMod.CurrentHeight()
-	nodeAddress := consensusMod.GetNodeAddress()
-	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
-	if err != nil {
-		return err
-	}
-	defer readCtx.Release()
+	// consensusMod := m.bus.GetConsensusModule()
+	// currentHeight := consensusMod.CurrentHeight()
+	// nodeAddress := consensusMod.GetNodeAddress()
+	// readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	// if err != nil {
+	// 	return err
+	// }
+	// defer readCtx.Release()
 
-	//get the current validators
-	m.validators, err = readCtx.GetAllValidators(int64(currentHeight))
-	if err != nil {
-		return err
-	}
+	// //get the current validators
+	// m.validators, err = readCtx.GetAllValidators(int64(currentHeight))
+	// if err != nil {
+	// 	return err
+	// }
 
-	for currentHeight <= m.aggregatedMetaData.MaxHeight {
-		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.aggregatedMetaData.MaxHeight)
+	// for currentHeight <= m.aggregatedMetaData.MaxHeight {
+	// 	m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.aggregatedMetaData.MaxHeight)
 
-		// form the get block request message
-		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-			Message: &typesCons.StateSyncMessage_GetBlockReq{
-				GetBlockReq: &typesCons.GetBlockRequest{
-					PeerAddress: nodeAddress,
-					Height:      currentHeight,
-				},
-			},
-		}
+	// 	// form the get block request message
+	// 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+	// 		Message: &typesCons.StateSyncMessage_GetBlockReq{
+	// 			GetBlockReq: &typesCons.GetBlockRequest{
+	// 				PeerAddress: nodeAddress,
+	// 				Height:      currentHeight,
+	// 			},
+	// 		},
+	// 	}
 
-		// broadcast the get block request message to all validators
-		for _, val := range m.validators {
-			if err := m.sendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress())); err != nil {
-				return err
-			}
-		}
+	// 	// broadcast the get block request message to all validators
+	// 	// use raintree broadcast
+	// 	for _, val := range m.validators {
+	// 		if err := m.sendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress())); err != nil {
+	// 			return err
+	// 		}
+	// 	}
 
-		// wait for the block to be received and committed by consensus module
-		receivedBlockHeight := <-m.committedBlockHeightChannel
-		// TODO!: do we need to do this check? It should not happen
-		if receivedBlockHeight != consensusMod.CurrentHeight() {
-			return fmt.Errorf("received block height %d is not equal to current height %d", receivedBlockHeight, currentHeight)
-		}
-		//timer to check if block is received and committed
-		currentHeight = consensusMod.CurrentHeight()
-	}
+	// 	// wait for the block to be received and committed by consensus module
+	// 	receivedBlockHeight := <-m.committedBlockHeightChannel
+	// 	// TODO!: do we need to do this check? It should not happen
+	// 	if receivedBlockHeight != consensusMod.CurrentHeight() {
+	// 		return fmt.Errorf("received block height %d is not equal to current height %d", receivedBlockHeight, currentHeight)
+	// 	}
+	// 	//timer to check if block is received and committed
+	// 	currentHeight = consensusMod.CurrentHeight()
+	// }
 	// syncing is complete, stop the state sync module
+
+	// wait for consensus new height events until WHEN????
+
 	return m.Stop()
 }
 

@@ -1,8 +1,6 @@
 package leader_election
 
 import (
-	"fmt"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
@@ -60,8 +58,6 @@ func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(msg *types
 		return typesCons.NodeId(0), err
 	}
 
-	//value := int64(message.Height) + int64(message.Round) + int64(message.Step) - 1
-	fmt.Println("About to elect the next leader for height: ", msg.Height, ", round:", msg.Round, ", step:", msg.Step)
 	value := int64(msg.Height) + int64(msg.Round) - 1
 	numVals := int64(len(vals))
 

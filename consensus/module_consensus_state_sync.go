@@ -12,7 +12,10 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const metadataSyncPeriod = 30 * time.Second // TODO: Make this configurable
+const (
+	metadataSyncPeriod = 45 * time.Second // TODO: Make this configurable
+	blockSyncPeriod    = 45 * time.Second // TODO: Make this configurable
+)
 
 var _ modules.ConsensusStateSync = &consensusModule{}
 
@@ -45,7 +48,6 @@ func (m *consensusModule) blockApplicationLoop() {
 			continue
 		}
 
-		//fmt.Println("Now going to decide if I should apply it")
 		if block.BlockHeader.Height <= maxPersistedHeight {
 			m.logger.Info().Msgf("Received block with height: %d, but node already persisted blocks until height: %d, so node will not apply this block", block.BlockHeader.Height, maxPersistedHeight)
 			continue
@@ -68,12 +70,27 @@ func (m *consensusModule) blockApplicationLoop() {
 		m.logger.Info().Msgf("Block, at height %d is committed!", block.BlockHeader.Height)
 		m.stateSync.CommittedBlock(m.CurrentHeight())
 	}
+}
 
+func (m *consensusModule) blockSyncLoop() {
+	ctx := context.TODO()
+
+	ticker := time.NewTicker(blockSyncPeriod)
+	for {
+		select {
+		case <-ticker.C:
+			m.logger.Info().Msg("Background metadata sync check triggered")
+			m.sendBlockRequests()
+
+		case <-ctx.Done():
+			ticker.Stop()
+		}
+	}
 }
 
 // metadataSyncLoop periodically sends metadata requests to its peers
 // it is intended to be run as a background process
-func (m *consensusModule) metadataSyncLoop() error {
+func (m *consensusModule) metadataSyncLoop() {
 	ctx := context.TODO()
 
 	ticker := time.NewTicker(metadataSyncPeriod)
@@ -85,11 +102,11 @@ func (m *consensusModule) metadataSyncLoop() error {
 
 		case <-ctx.Done():
 			ticker.Stop()
-			return nil
 		}
 	}
 }
 
+// sendMetadataRequests sends metadata requests to its peers
 func (m *consensusModule) sendMetadataRequests() error {
 	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_MetadataReq{
@@ -117,6 +134,43 @@ func (m *consensusModule) sendMetadataRequests() error {
 	}
 
 	return nil
+}
+
+// sendBlockRequests sends block requests to its peers
+func (m *consensusModule) sendBlockRequests() {
+
+	aggregatedMetadata := m.getAggregatedStateSyncMetadata()
+	requestHeight := m.CurrentHeight()
+	targetHeight := aggregatedMetadata.MaxHeight
+
+	for requestHeight < targetHeight {
+		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+			Message: &typesCons.StateSyncMessage_GetBlockReq{
+				GetBlockReq: &typesCons.GetBlockRequest{
+					PeerAddress: m.nodeAddress,
+					Height:      requestHeight,
+				},
+			},
+		}
+
+		validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+		if err != nil {
+			m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
+		}
+
+		for _, val := range validators {
+
+			anyMsg, err := anypb.New(stateSyncGetBlockMessage)
+			if err != nil {
+				return
+			}
+			if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyMsg); err != nil {
+				m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
+				return
+			}
+		}
+	}
+
 }
 
 // TODO! If verify block tries to verify, state sync tests will fail as state sync blocks are empty.
