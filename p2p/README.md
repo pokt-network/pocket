@@ -4,6 +4,7 @@ This document is meant to be a supplement to the living specification of [1.0 Po
 
 ## Table of Contents <!-- omit in toc -->
 
+- [Definitions](#definitions)
 - [Interface](#interface)
 - [Implementation](#implementation)
   - [Code Architecture - P2P Module](#code-architecture---p2p-module)
@@ -14,6 +15,24 @@ This document is meant to be a supplement to the living specification of [1.0 Po
   - [RainTree testing framework](#raintree-testing-framework)
     - [Helpers](#helpers)
     - [Test Generators](#test-generators)
+
+## Definitions
+
+### "gossip"
+
+When used generally, shorthand for "message propogation"; **not to be confused with "gossipsub"**.
+
+### "gossipsub"
+
+A specific ["pubsub"](https://pkg.go.dev/github.com/libp2p/go-libp2p-pubsub) router implementation / protocol which uses information (referred to internally as 'gossip', **distinct from our definition**) about which peers have seen which messages to facilitate "gossip" (as per our definition).
+
+### "raintree gossip"
+
+A "gossip" protocol (and implementation) which uses the raintree algorithm for peer selection. Used between all staked actors to optimize for "gossip" speed.
+
+### "background gossip"
+
+A "gossip" protocol (implementation TBD) which facilitates "gossip" to all P2P participants, including non-staked actors (e.g. full-nodes).
 
 ## Interface
 
