@@ -74,6 +74,103 @@ flowchart TD
 _DISCUSS(team): If you feel this needs a diagram, please reach out to the team for additional details._
 _TODO(olshansky, BenVan): Link to RainTree visualizations once it is complete._
 
+### Message Propagation
+
+Given `Local P2P Module` has a message that it needs to propagate:
+
+1a. `Raintree Router` selects targets from the `Pokt Peerstore`, **which only includes staked actors**
+
+1b. `Background Router` selects targets from the libp2p `Peerstore`, **which includes all P2P participants**
+
+2. Libp2p `Host` manages opens and closes streams to targeted peers on behalf of the routers
+
+2. `Remote P2P module`'s (i.e. receiver’s) `handleStream` is called (having been registered via `setStreamHandler()`)
+
+3a. `handleStream` propagates message via `Raintree Router`
+
+3b.  `handleStream` propagates message via `Background Router`
+
+4a. Repeat step 1a from `Remote P2P Module`'s perspective targeting its next peers
+
+4b. Repeat step 1b from `Remote P2P Module`'s perspective targeting its next peers
+
+```mermaid
+flowchart TD
+  subgraph lMod[Local P2P Module]
+    subgraph lHost[Libp2p `Host`]
+    end
+    subgraph lRT[Raintree Router]
+      subgraph lRTPS[Raintree Peerstore]
+        lStakedPS([staked actors only])
+      end
+
+      subgraph lPM[PeerManager]
+      end
+      lPM --> lRTPS
+    end
+
+    subgraph lBG[Background Router]
+      subgraph lBGPS[Background Peerstore]
+        lNetPS([all P2P participants])
+      end
+
+      subgraph lGossipSub[GossipSub]
+      end
+
+      subgraph lDHT[Kademlia DHT]
+      end
+
+      lGossipSub --> lBGPS
+      lDHT --> lBGPS
+    end
+
+    lRT --1a--> lHost
+    lBG --1b--> lHost
+  end
+
+subgraph rMod[Remote P2P Module]
+subgraph rHost[Libp2p `Host`]
+end
+subgraph rRT[Raintree Router]
+subgraph rPS[Raintree Peerstore]
+rStakedPS([staked actors only])
+end
+
+subgraph rPM[PeerManager]
+end
+
+rPM --> rStakedPS
+end
+
+subgraph rBG[Background Router]
+subgraph rBGPS[Background Peerstore]
+rNetPS([arr P2P participants])
+end
+
+subgraph rGossipSub[GossipSub]
+end
+
+subgraph rDHT[Kademlia DHT]
+end
+
+rGossipSub --> rBGPS
+rDHT --> rBGPS
+end
+
+rHost -. "setStreamHandler()" .-> hs[[handleStream]]
+hs --3a--> rRT
+hs --3b--> rBG
+rBG  --"4a (cont. propagation)"--> rHost
+linkStyle 11 stroke:#ff3
+rRT  --"4b (cont. propagation)"--> rHost
+linkStyle 12 stroke:#ff3
+end
+
+lHost --2--> rHost
+```
+
+The `Network Module` is where [RainTree](https://github.com/pokt-network/pocket/files/9853354/raintree.pdf) (or the simpler basic approach) is implemented. See `raintree/network.go` for the specific implementation of RainTree, but please refer to the [specifications](https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p) for more details.
+
 ### Code Organization
 
 ```bash
