@@ -33,6 +33,7 @@ const (
 	FishermanUnstakingBlocksParamName    = "fisherman_unstaking_blocks"
 	FishermanMinimumPauseBlocksParamName = "fisherman_minimum_pause_blocks"
 	FishermanMaxPauseBlocksParamName     = "fisherman_max_pause_blocks"
+	FishermanPerSessionParamName         = "fisherman_per_session"
 
 	// Validator actor gov params
 	ValidatorMinimumStakeParamName        = "validator_minimum_stake"
@@ -113,6 +114,7 @@ const (
 	FishermanUnstakingBlocksOwner    = "fisherman_unstaking_blocks_owner"
 	FishermanMinimumPauseBlocksOwner = "fisherman_minimum_pause_blocks_owner"
 	FishermanMaxPausedBlocksOwner    = "fisherman_max_paused_blocks_owner"
+	FishermanPerSessionOwner         = "fisherman_per_session_owner"
 
 	ValidatorMinimumStakeOwner           = "validator_minimum_stake_owner"
 	ValidatorUnstakingBlocksOwner        = "validator_unstaking_blocks_owner"

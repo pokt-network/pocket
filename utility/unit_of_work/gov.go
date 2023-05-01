@@ -65,6 +65,7 @@ func prepareGovParamParamTypesMap() map[string]int {
 		typesUtil.FishermanUnstakingBlocksParamName:        INT64,
 		typesUtil.FishermanMinimumPauseBlocksParamName:     INT,
 		typesUtil.FishermanMaxPauseBlocksParamName:         INT,
+		typesUtil.FishermanPerSessionParamName:             INT,
 		typesUtil.MessageDoubleSignFee:                     BIGINT,
 		typesUtil.MessageSendFee:                           BIGINT,
 		typesUtil.MessageStakeFishermanFee:                 BIGINT,

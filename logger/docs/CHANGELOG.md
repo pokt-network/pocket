@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.10] - 2023-04-28
+
+- Extracted a couple of shared helpers (e.g. `stringLogArrayMarshaler`, `MarshalZerologArray`)
+- Updated documentation on how to build a context specific logger
+
 ## [0.0.0.9] - 2023-02-28
 
 - Removed the unused `bus` from the `logger` struct

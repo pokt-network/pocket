@@ -13,6 +13,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
+	"k8s.io/client-go/rest"
 
 	"github.com/cucumber/godog"
 	"k8s.io/client-go/kubernetes"
@@ -35,7 +36,7 @@ var (
 const (
 	// defines the host & port scheme that LocalNet uses for naming validators.
 	// e.g. validator-001 thru validator-999
-	validatorServiceURLTmpl = "validator-%s-pocket-validator:%d"
+	validatorServiceURLTmpl = "validator-%s-pocket:%d"
 	// validatorA maps to suffix ID 001 and is also used by the cluster-manager
 	// though it has no special permissions.
 	validatorA = "001"
@@ -207,11 +208,26 @@ func getClientset() (*kubernetes.Clientset, error) {
 	kubeConfigPath := filepath.Join(userHomeDir, ".kube", "config")
 	kubeConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build kubeconfig: %w", err)
+		logger.Info().Msgf("no default kubeconfig at %s; attempting to load InClusterConfig", kubeConfigPath)
+		config := inClusterConfig()
+		clientset, err := kubernetes.NewForConfig(config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get clientset from config: %w", err)
+		}
+		return clientset, nil
 	}
+	logger.Info().Msgf("e2e tests loaded default kubeconfig located at %s", kubeConfigPath)
 	clientset, err := kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get clientset from config: %w", err)
 	}
 	return clientset, nil
+}
+
+func inClusterConfig() *rest.Config {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		logger.Fatal().AnErr("inClusterConfig", err)
+	}
+	return config
 }

@@ -23,7 +23,7 @@
 ## Current Iteration 🗓️
 
 - Duration: March 8 to 21st 2023
-- [Backlog](https://github.com/orgs/pokt-network/projects/142/views/12?layout=table&filterQuery=iteration%3A%22Iteration+12%22)
+- [Backlog](https://github.com/orgs/pokt-network/projects/142/views/12?layout=table&filterQuery=iteration%3A%22Iteration+13%22)
 
 ## Iteration Goals 🎯
 
@@ -98,4 +98,4 @@ Pocket Network is a blockchain data platform, built for applications, that uses 
 - [Discord](https://discord.gg/pokt)
 - [Twitter](https://twitter.com/POKTnetwork)
 
-<!-- GITHUB_WIKI: devlog/2023_03_21 -->
+<!-- GITHUB_WIKI: devlog/2023_04_04 -->

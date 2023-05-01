@@ -163,6 +163,7 @@ securityContext:
   # runAsUser: 1000
 
 service:
+  nameOverride: ""
   # -- service annotations
   annotations: {}
   # -- service type
