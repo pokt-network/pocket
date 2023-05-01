@@ -177,7 +177,9 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 	go func() {
 		// wait for hosts to listen and peer discovery
 		bootstrapWaitgroup.Wait()
-		// NB: `bootstrapWaitgroup` isn't quite sufficient; I suspect the DHT
+		// INVESTIGATE: look for a more idiomatic way to wait for DHT peer discovery to complete
+		//
+		// `bootstrapWaitgroup` isn't quite sufficient; I suspect the DHT
 		// needs more time but am unaware of a notify/notifee interface (or
 		// something similar) at that level.
 		time.Sleep(time.Millisecond * 250)
