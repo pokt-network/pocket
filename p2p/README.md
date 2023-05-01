@@ -40,15 +40,15 @@ This module aims to implement the interface specified in `pocket/shared/modules/
 
 ## Implementation
 
-### Code Architecture - P2P Module
+### P2P Module Architecture
 
 ```mermaid
 flowchart TD
     subgraph P2P["P2P Module"]
-        L(Listener)
+        L(Host)
         H(Handler)
         B(Bus)
-        NM(Network Module)
+        NM(Routers)
         L --> H
         H <--> NM
     end
@@ -67,12 +67,12 @@ flowchart TD
     class PN pocket_network
 ```
 
+`Routers` is where [RainTree](https://github.com/pokt-network/pocket/files/9853354/raintree.pdf) (or the simpler basic approach) is implemented. See `raintree/router.go` for the specific implementation of RainTree, but please refer to the [specifications](https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p) for more details.
+
 ### Code Architecture - Network Module
 
 _DISCUSS(team): If you feel this needs a diagram, please reach out to the team for additional details._
 _TODO(olshansky, BenVan): Link to RainTree visualizations once it is complete._
-
-The `Network Module` is where [RainTree](https://github.com/pokt-network/pocket/files/9853354/raintree.pdf) (or the simpler basic approach) is implemented. See `raintree/network.go` for the specific implementation of RainTree, but please refer to the [specifications](https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p) for more details.
 
 ### Code Organization
 
