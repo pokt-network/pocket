@@ -24,6 +24,7 @@ var (
 	_ modules.IntegratableModule = &backgroundRouter{}
 )
 
+// backgroundRouter implements `typesP2P.Router` for use with all P2P participants.
 type backgroundRouter struct {
 	base_modules.IntegratableModule
 
@@ -46,6 +47,8 @@ type backgroundRouter struct {
 	pstore       typesP2P.Peerstore
 }
 
+// NewBackgroundRouter returns a `backgroundRouter` as a `typesP2P.Router`
+// interface using the given configuration.
 func NewBackgroundRouter(bus modules.Bus, cfg *utils.RouterConfig) (typesP2P.Router, error) {
 	// TECHDEBT(#595): add ctx to interface methods and propagate down.
 	ctx := context.TODO()
@@ -106,11 +109,13 @@ func NewBackgroundRouter(bus modules.Bus, cfg *utils.RouterConfig) (typesP2P.Rou
 	return rtr, nil
 }
 
+// Broadcast implements the respective `typesP2P.Router` interface  method.
 func (rtr *backgroundRouter) Broadcast(data []byte) error {
 	// TECHDEBT(#595): add ctx to interface methods and propagate down.
 	return rtr.topic.Publish(context.TODO(), data)
 }
 
+// Send implements the respective `typesP2P.Router` interface  method.
 func (rtr *backgroundRouter) Send(data []byte, address cryptoPocket.Address) error {
 	peer := rtr.pstore.GetPeer(address)
 	if peer == nil {
@@ -123,14 +128,17 @@ func (rtr *backgroundRouter) Send(data []byte, address cryptoPocket.Address) err
 	return nil
 }
 
+// HandleNetworkData implements the respective `typesP2P.Router` interface  method.
 func (rtr *backgroundRouter) HandleNetworkData(data []byte) ([]byte, error) {
 	return data, nil // intentional passthrough
 }
 
+// GetPeerstore implements the respective `typesP2P.Router` interface  method.
 func (rtr *backgroundRouter) GetPeerstore() typesP2P.Peerstore {
 	return rtr.pstore
 }
 
+// AddPeer implements the respective `typesP2P.Router` interface  method.
 func (rtr *backgroundRouter) AddPeer(peer typesP2P.Peer) error {
 	// Noop if peer with the pokt address already exists in the peerstore.
 	// TECHDEBT: add method(s) to update peers.
@@ -145,6 +153,7 @@ func (rtr *backgroundRouter) AddPeer(peer typesP2P.Peer) error {
 	return rtr.pstore.AddPeer(peer)
 }
 
+// RemovePeer implements the respective `typesP2P.Router` interface  method.
 func (rtr *backgroundRouter) RemovePeer(peer typesP2P.Peer) error {
 	if err := utils.RemovePeerFromLibp2pHost(rtr.host, peer); err != nil {
 		return err
