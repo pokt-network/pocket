@@ -69,7 +69,7 @@ flowchart TD
 
 `Routers` is where [RainTree](https://github.com/pokt-network/pocket/files/9853354/raintree.pdf) (or the simpler basic approach) is implemented. See `raintree/router.go` for the specific implementation of RainTree, but please refer to the [specifications](https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p) for more details.
 
-### Code Architecture - Network Module
+### Raintree Router Architecture
 
 _DISCUSS(team): If you feel this needs a diagram, please reach out to the team for additional details._
 _TODO(olshansky, BenVan): Link to RainTree visualizations once it is complete._
