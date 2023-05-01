@@ -10,6 +10,7 @@ import (
 	"github.com/golang/mock/gomock"
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
+	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/multiformats/go-multiaddr"
@@ -124,10 +125,11 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 		ctx = context.Background()
 		mu  sync.Mutex
 		// map used as a set to collect IDs of peers which have received a message
-		seenMessages = make(map[string]struct{})
-		wg           = sync.WaitGroup{}
-		done         = make(chan struct{}, 1)
-		testTimeout  = time.After(testTimeoutDuration)
+		seenMessages       = make(map[string]struct{})
+		bootstrapWaitgroup = sync.WaitGroup{}
+		broadcastWaitgroup = sync.WaitGroup{}
+		broadcastDone      = make(chan struct{}, 1)
+		testTimeout        = time.After(testTimeoutDuration)
 		// NB: peerIDs are stringified
 		actualPeerIDs   []string
 		expectedPeerIDs = make([]string, numPeers)
@@ -137,14 +139,15 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 
 	// setup 4 libp2p hosts to listen for incoming streams from the test backgroundRouter
 	for i := 0; i < numPeers; i++ {
-		wg.Add(1)
+		broadcastWaitgroup.Add(1)
+		bootstrapWaitgroup.Add(1)
 
 		privKey, selfPeer := newTestPeer(t)
 		host := newTestHost(t, libp2pMockNet, privKey)
 		testHosts = append(testHosts, host)
 		expectedPeerIDs[i] = host.ID().String()
 		rtr := newRouterWithSelfPeerAndHost(t, selfPeer, host)
-		go readSubscription(t, ctx, &wg, rtr, &mu, seenMessages)
+		go readSubscription(t, ctx, &broadcastWaitgroup, rtr, &mu, seenMessages)
 	}
 
 	// bootstrap off of arbitrary testHost
@@ -160,11 +163,24 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 	err := libp2pMockNet.LinkAll()
 	require.NoError(t, err)
 
+	// setup notifee/notify BEFORE bootstrapping
+	notifee := &libp2pNetwork.NotifyBundle{
+		ConnectedF: func(_ libp2pNetwork.Network, _ libp2pNetwork.Conn) {
+			t.Logf("connected!")
+			bootstrapWaitgroup.Done()
+		},
+	}
+	testRouter.host.Network().Notify(notifee)
+
 	bootstrap(t, ctx, testHosts)
 
 	go func() {
 		// wait for hosts to listen and peer discovery
-		time.Sleep(time.Second * 2)
+		bootstrapWaitgroup.Wait()
+		// NB: `bootstrapWaitgroup` isn't quite sufficient; I suspect the DHT
+		// needs more time but am unaware of a notify/notifee interface (or
+		// something similar) at that level.
+		time.Sleep(time.Millisecond * 250)
 
 		// broadcast message
 		t.Log("broadcasting...")
@@ -174,11 +190,11 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 
 	// wait concurrently
 	go func() {
-		wg.Wait()
-		done <- struct{}{}
+		broadcastWaitgroup.Wait()
+		broadcastDone <- struct{}{}
 	}()
 
-	// waitgroup done or timeout
+	// waitgroup broadcastDone or timeout
 	select {
 	case <-testTimeout:
 		t.Fatalf(
@@ -186,7 +202,7 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 			len(seenMessages),
 			numPeers,
 		)
-	case <-done:
+	case <-broadcastDone:
 	}
 
 	actualPeerIDs = testutil.GetKeys[string](seenMessages)
