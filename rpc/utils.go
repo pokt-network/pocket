@@ -415,7 +415,7 @@ func (s *rpcServer) blockToRPCBlock(protoBlock *coreTypes.Block) (*Block, error)
 				},
 				Transactions: qcTxs,
 			},
-			Timestamp: protoBlock.BlockHeader.GetTimestampt().AsTime().String(),
+			Timestamp: protoBlock.BlockHeader.GetTimestamp().AsTime().String(),
 		},
 		Transactions: txs,
 	}, nil

@@ -32,6 +32,8 @@ type PostgresContext struct {
 	blockStore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
 	stateTrees *stateTrees
+
+	networkId string
 }
 
 func (p *PostgresContext) NewSavePoint(bytes []byte) error {

@@ -89,12 +89,12 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 	// Preapre the block proto
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            uint64(p.Height),
-		NetworkId:         networkId,
+		NetworkId:         p.networkId,
 		StateHash:         p.stateHash,
 		PrevStateHash:     prevBlockHash,
 		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,
-		Timestampt:        timestamp,
+		Timestamp:         timestamp,
 	}
 	block := &coreTypes.Block{
 		BlockHeader:  blockHeader,
