@@ -109,8 +109,8 @@ func (p *PostgresContext) Release() {
 }
 
 // INVESTIGATE(#361): Revisit if is used correctly in the context of the lifecycle of a persistenceContext and a utilityUnitOfWork
-func (p *PostgresContext) IndexTransaction(txResult *coreTypes.TxResult) error {
-	return p.txIndexer.Index(txResult)
+func (p *PostgresContext) IndexTransaction(idxTx *coreTypes.IndexedTransaction) error {
+	return p.txIndexer.Index(idxTx)
 }
 
 func (p *PostgresContext) isOpen() bool {

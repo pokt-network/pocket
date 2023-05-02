@@ -42,11 +42,11 @@ func FuzzTxIndexer(f *testing.F) {
 		// get index
 		heightResult, err := indexer.GetByHeight(height, isDescending)
 		require.NoError(t, err)
-		// the new txResult is appended to the # of results currently at that height
+		// the new idxTx is appended to the # of results currently at that height
 		// this means the 'index' of the transaction within the block is len(heightResults)
 		heightIndex := len(heightResult)
 		// create new testing tx
-		tx := NewTestingTransactionResult(t, int(height), heightIndex)
+		tx := NewTestingIndexedTransaction(t, int(height), heightIndex)
 		// by sender
 		sender := tx.GetSignerAddr()
 		senderResult, err := indexer.GetBySender(sender, true)
@@ -57,30 +57,29 @@ func FuzzTxIndexer(f *testing.F) {
 		recipientResult, err := indexer.GetByRecipient(recipient, true)
 		require.NoError(t, err)
 		recipientIndex := len(recipientResult)
-		hash, err := tx.Hash()
-		require.NoError(t, err)
+		hash := tx.HashFromBytes(tx.GetTx())
 		require.NoError(t, indexer.Index(tx))
 		switch op {
 		case "GetByHash":
-			txResult, err := indexer.GetByHash(hash)
+			idxTx, err := indexer.GetByHash(hash)
 			require.NoError(t, err)
-			requireTxResultsEqual(t, tx, txResult)
+			requireIdxTxsEqual(t, tx, idxTx)
 		case "GetByHeight":
-			txResult, err := indexer.GetByHeight(height, isDescending)
+			idxTx, err := indexer.GetByHeight(height, isDescending)
 			require.NoError(t, err)
 			if isDescending {
-				requireTxResultsEqual(t, tx, txResult[0])
+				requireIdxTxsEqual(t, tx, idxTx[0])
 			} else {
-				requireTxResultsEqual(t, tx, txResult[heightIndex])
+				requireIdxTxsEqual(t, tx, idxTx[heightIndex])
 			}
 		case "GetBySender":
-			txResult, err := indexer.GetBySender(sender, true)
+			idxTx, err := indexer.GetBySender(sender, true)
 			require.NoError(t, err)
-			requireTxResultsEqual(t, tx, txResult[senderIndex])
+			requireIdxTxsEqual(t, tx, idxTx[senderIndex])
 		case "GetByRecipient":
-			txResult, err := indexer.GetByRecipient(recipient, true)
+			idxTx, err := indexer.GetByRecipient(recipient, true)
 			require.NoError(t, err)
-			requireTxResultsEqual(t, tx, txResult[recipientIndex])
+			requireIdxTxsEqual(t, tx, idxTx[recipientIndex])
 		default:
 			t.Errorf("Unexpected operation fuzzing operation %s", op)
 		}
@@ -91,102 +90,100 @@ func TestGetByHash(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
 	defer closeIndexer(t, txIndexer)
 	// setup 2 transactions
-	txResult := NewTestingTransactionResult(t, 0, 0)
+	idxTx := NewTestingIndexedTransaction(t, 0, 0)
 	require.NoError(t, err)
-	txResult2 := NewTestingTransactionResult(t, 0, 1)
+	idxTx2 := NewTestingIndexedTransaction(t, 0, 1)
 	require.NoError(t, err)
 	// index 2 transactions
-	err = txIndexer.Index(txResult)
+	err = txIndexer.Index(idxTx)
 	require.NoError(t, err)
-	err = txIndexer.Index(txResult2)
+	err = txIndexer.Index(idxTx2)
 	require.NoError(t, err)
 	// check indexing/get by hash
-	hash, err := txResult.Hash()
+	hash := idxTx.HashFromBytes(idxTx.GetTx())
+	idxTxFromHash, err := txIndexer.GetByHash(hash)
 	require.NoError(t, err)
-	txResultFromHash, err := txIndexer.GetByHash(hash)
-	require.NoError(t, err)
-	requireTxResultsEqual(t, txResult, txResultFromHash)
+	requireIdxTxsEqual(t, idxTx, idxTxFromHash)
 	// check indexing/get by hash 2
-	hash2, err := txResult2.Hash()
+	hash2 := idxTx2.HashFromBytes(idxTx2.GetTx())
+	idxTxFromHash2, err := txIndexer.GetByHash(hash2)
 	require.NoError(t, err)
-	txResultFromHash2, err := txIndexer.GetByHash(hash2)
-	require.NoError(t, err)
-	requireTxResultsEqual(t, txResult2, txResultFromHash2)
+	requireIdxTxsEqual(t, idxTx2, idxTxFromHash2)
 }
 
 func TestGetByHeight(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
 	defer closeIndexer(t, txIndexer)
 	// setup 3 transactions
-	txResult := NewTestingTransactionResult(t, 0, 0)
+	idxTx := NewTestingIndexedTransaction(t, 0, 0)
 	require.NoError(t, err)
-	txResult2 := NewTestingTransactionResult(t, 0, 1)
+	idxTx2 := NewTestingIndexedTransaction(t, 0, 1)
 	require.NoError(t, err)
-	txResult3 := NewTestingTransactionResult(t, 1, 0)
+	idxTx3 := NewTestingIndexedTransaction(t, 1, 0)
 	require.NoError(t, err)
 	// index all 3 transactions
-	err = txIndexer.Index(txResult)
+	err = txIndexer.Index(idxTx)
 	require.NoError(t, err)
-	err = txIndexer.Index(txResult2)
+	err = txIndexer.Index(idxTx2)
 	require.NoError(t, err)
-	err = txIndexer.Index(txResult3)
+	err = txIndexer.Index(idxTx3)
 	require.NoError(t, err)
 	// check indexing/get by height
-	txResultsFromHeight, err := txIndexer.GetByHeight(0, false)
+	idxTxsFromHeight, err := txIndexer.GetByHeight(0, false)
 	require.NoError(t, err)
-	txResultsFromHeight1, err := txIndexer.GetByHeight(1, false)
+	idxTxsFromHeight1, err := txIndexer.GetByHeight(1, false)
 	require.NoError(t, err)
 	expectedNumOfTxsAtHeight0 := 2
 	expectedNumOfTxsAtHeight1 := 1
-	require.Equal(t, expectedNumOfTxsAtHeight0, len(txResultsFromHeight))
-	require.Equal(t, expectedNumOfTxsAtHeight1, len(txResultsFromHeight1))
+	require.Equal(t, expectedNumOfTxsAtHeight0, len(idxTxsFromHeight))
+	require.Equal(t, expectedNumOfTxsAtHeight1, len(idxTxsFromHeight1))
 }
 
 func TestGetBySender(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
 	defer closeIndexer(t, txIndexer)
 	// setup transaction
-	txResult := NewTestingTransactionResult(t, 1, 0)
+	idxTx := NewTestingIndexedTransaction(t, 1, 0)
 	require.NoError(t, err)
 	// index transaction
-	err = txIndexer.Index(txResult)
+	err = txIndexer.Index(idxTx)
 	require.NoError(t, err)
 	// check indexing by sender / recipient
-	sender := txResult.GetSignerAddr()
+	sender := idxTx.GetSignerAddr()
 	require.NoError(t, err)
-	txResultsFromSender, err := txIndexer.GetBySender(sender, false)
+	idxTxsFromSender, err := txIndexer.GetBySender(sender, false)
 	require.NoError(t, err)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(txResultsFromSender))
-	requireTxResultsEqual(t, txResult, txResultsFromSender[0])
+	require.Equal(t, 1, len(idxTxsFromSender))
+	requireIdxTxsEqual(t, idxTx, idxTxsFromSender[0])
 	// ensure it's not indexed elsewhere
-	txResultsFromRecipientBad, err := txIndexer.GetByRecipient(sender, false)
+	idxTxsFromRecipientBad, err := txIndexer.GetByRecipient(sender, false)
 	require.NoError(t, err)
-	require.Equal(t, 0, len(txResultsFromRecipientBad))
+	require.Equal(t, 0, len(idxTxsFromRecipientBad))
 }
 
 func TestGetByRecipient(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
 	defer closeIndexer(t, txIndexer)
 	// setup tx
-	txResult := NewTestingTransactionResult(t, 1, 0)
+	idxTx := NewTestingIndexedTransaction(t, 1, 0)
 	require.NoError(t, err)
 	// index transactions
-	err = txIndexer.Index(txResult)
+	err = txIndexer.Index(idxTx)
 	require.NoError(t, err)
-	recipient := txResult.GetRecipientAddr()
+	recipient := idxTx.GetRecipientAddr()
 	require.NoError(t, err)
-	txResultsFromRecipient, err := txIndexer.GetByRecipient(recipient, false)
+	idxTxsFromRecipient, err := txIndexer.GetByRecipient(recipient, false)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(txResultsFromRecipient))
-	requireTxResultsEqual(t, txResult, txResultsFromRecipient[0])
+	require.Equal(t, 1, len(idxTxsFromRecipient))
+	requireIdxTxsEqual(t, idxTx, idxTxsFromRecipient[0])
 	// ensure it's not indexed elsewhere
-	txResultsFromSenderBad, err := txIndexer.GetBySender(recipient, false)
+	idxTxsFromSenderBad, err := txIndexer.GetBySender(recipient, false)
 	require.NoError(t, err)
-	require.Equal(t, 0, len(txResultsFromSenderBad))
+	require.Equal(t, 0, len(idxTxsFromSenderBad))
 }
 
-func requireTxResultsEqual(t *testing.T, txR1, txR2 *coreTypes.TxResult) {
+func requireIdxTxsEqual(t *testing.T, txR1, txR2 *coreTypes.IndexedTransaction) {
 	bz, err := txR1.Bytes()
 	require.NoError(t, err)
 	bz2, err := txR2.Bytes()
@@ -196,10 +193,10 @@ func requireTxResultsEqual(t *testing.T, txR1, txR2 *coreTypes.TxResult) {
 
 // utility helpers
 
-func NewTestingTransactionResult(t *testing.T, height, index int) *coreTypes.TxResult {
+func NewTestingIndexedTransaction(t *testing.T, height, index int) *coreTypes.IndexedTransaction {
 	testingTransaction := randLetterBytes()
 	resultCode, err := randomErr()
-	return &coreTypes.TxResult{
+	return &coreTypes.IndexedTransaction{
 		Tx:            testingTransaction,
 		Height:        int64(height),
 		Index:         int32(index),
