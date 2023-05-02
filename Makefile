@@ -319,11 +319,11 @@ generate_rpc_openapi: go_oapi-codegen ## (Re)generates the RPC server and client
 	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
 	echo "OpenAPI client and server generated"
 
-SWAGGER_PORT=8080
+SWAGGER_PORT=127.0.0.1:8080
 .PHONY: swagger-ui
 swagger-ui: ## Starts a local Swagger UI instance for the RPC API
 	echo "Attempting to start Swagger UI at http://localhost:8080"
-	docker run --rm -p $(SWAGGER_PORT):8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
+	docker run --name pocket-swagger-ui --rm -p $(SWAGGER_PORT):8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
 
 .PHONY: generate_cli_commands_docs
 generate_cli_commands_docs: ## (Re)generates the CLI commands docs (this is meant to be called by CI)

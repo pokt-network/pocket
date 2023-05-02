@@ -884,6 +884,33 @@ func queryCommands() []*cobra.Command {
 				return rpcResponseCodeUnhealthy(statusCode, resp)
 			},
 		},
+		{
+			Use:     "NodeRoles",
+			Short:   "Get current the node roles",
+			Long:    "Queries the node RPC to returns the type of utility actor(s) running on the node",
+			Aliases: []string{"noderoles"},
+			RunE: func(cmd *cobra.Command, args []string) error {
+				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				if err != nil {
+					return err
+				}
+				response, err := client.GetV1QueryNodeRoles(cmd.Context())
+				if err != nil {
+					return unableToConnectToRpc(err)
+				}
+				statusCode := response.StatusCode
+				body, err := io.ReadAll(response.Body)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "❌ Error reading response body: %s\n", err.Error())
+					return err
+				}
+				if statusCode == http.StatusOK {
+					fmt.Println(string(body))
+					return nil
+				}
+				return rpcResponseCodeUnhealthy(statusCode, body)
+			},
+		},
 	}
 	return cmds
 }
