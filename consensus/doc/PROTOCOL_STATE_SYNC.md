@@ -70,7 +70,7 @@ type StateSyncMetadataResponse struct {
 }
 ```
 
-Node periodically requests peer metadata from active peers after starting through the `metadataSyncLoop()` as a background process. The following is an illustrative example:
+Node periodically requests peer metadata from active peers after starting the `metadataSyncLoop()` as a background process. The following is an illustrative example:
 
 ```mermaid
 sequenceDiagram
