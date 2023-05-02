@@ -22,10 +22,10 @@ type UtilityModule interface {
 	// HandleTransaction does basic `Transaction` validation & adds it to the utility's module mempool if valid
 	HandleTransaction(tx []byte) error
 
-	// SendRelay sends a relay to the specified chain returning the response
-	SendRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) // TODO: Implement this
+	// HandleRelay process the relay to the specified chain if this node is a servicer
+	HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) // TODO: Implement this
 
-	// HandleChallenge handles a challenge request from a node returning the response
+	// HandleChallenge handles a challenge request from an application unhappy with the response
 	HandleChallenge(challenge *coreTypes.Challenge) (*coreTypes.ChallengeResponse, error) // TODO: Implement this
 
 	// GetMempool returns the utility module's mempool of transactions gossiped throughout the network
@@ -63,7 +63,7 @@ type UtilityUnitOfWork interface {
 	// TODO: Investigate a way to potentially simplify the interface by removing this function.
 	SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error
 
-	// HydrateTxResult hydrates a Transaction protobuf, with its index in the block returning a TxResult protobuf
+	// HydrateTxResult hydrates a Transaction structure, with its index in the block returning a TxResult structure
 	HydrateTxResult(tx *coreTypes.Transaction, index int) (*coreTypes.TxResult, coreTypes.Error)
 
 	// ApplyBlock applies the context's in-memory proposed state (i.e. the txs in this context).

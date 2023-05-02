@@ -73,7 +73,7 @@ func queryHeightCommands() []*cobra.Command {
 					return err
 				}
 
-				body := rpc.QueryAddressHeight{
+				body := rpc.QueryAccountHeight{
 					Address: args[0],
 					Height:  height,
 				}
@@ -108,7 +108,7 @@ func queryHeightCommands() []*cobra.Command {
 					return err
 				}
 
-				body := rpc.QueryAddressHeight{
+				body := rpc.QueryAccountHeight{
 					Address: args[0],
 					Height:  height,
 				}
@@ -143,7 +143,7 @@ func queryHeightCommands() []*cobra.Command {
 					return err
 				}
 
-				body := rpc.QueryAddressHeight{
+				body := rpc.QueryAccountHeight{
 					Address: args[0],
 					Height:  height,
 				}
@@ -212,7 +212,7 @@ func queryHeightCommands() []*cobra.Command {
 					return err
 				}
 
-				body := rpc.QueryAddressHeight{
+				body := rpc.QueryAccountHeight{
 					Address: args[0],
 					Height:  height,
 				}
@@ -282,7 +282,7 @@ func queryHeightCommands() []*cobra.Command {
 					return err
 				}
 
-				body := rpc.QueryAddressHeight{
+				body := rpc.QueryAccountHeight{
 					Address: args[0],
 					Height:  height,
 				}
@@ -419,7 +419,7 @@ func queryHeightCommands() []*cobra.Command {
 					return err
 				}
 
-				body := rpc.QueryAddressHeight{
+				body := rpc.QueryAccountHeight{
 					Address: args[0],
 					Height:  height,
 				}
@@ -692,7 +692,7 @@ func queryPaginatedSortedCommands() []*cobra.Command {
 					return err
 				}
 
-				body := rpc.QueryAddressPaginated{
+				body := rpc.QueryAccountPaginated{
 					Address: args[0],
 					Page:    page,
 					PerPage: per_page,

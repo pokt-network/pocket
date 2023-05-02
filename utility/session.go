@@ -17,7 +17,7 @@ import (
 )
 
 // TODO: Implement this
-func (u *utilityModule) SendRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
+func (u *utilityModule) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
 	return nil, nil
 }
 

@@ -14,10 +14,16 @@ import (
 	"github.com/pokt-network/pocket/shared/utils"
 )
 
-// Queries
+// This file contains the handlers for the v1/query path in the RPC specification
+// It pertains to all the user facing/public RPC endpoints to query the pocket
+// network, its actors and state.
+
+const (
+	denom = "upokt"
+)
 
 func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
-	var body QueryAddressHeight
+	var body QueryAccountHeight
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
@@ -48,7 +54,7 @@ func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
 
 	return ctx.JSON(http.StatusOK, Account{
 		Address: body.Address,
-		Coins:   []Coin{{Amount: amount, Denom: "upokt"}},
+		Coins:   []Coin{{Amount: amount, Denom: denom}},
 	})
 }
 
@@ -90,7 +96,7 @@ func (s *rpcServer) PostV1QueryAccounts(ctx echo.Context) error {
 	for _, account := range allAccounts[start : end+1] {
 		accounts = append(accounts, Account{
 			Address: account.Address,
-			Coins:   []Coin{{Amount: account.Amount, Denom: "upokt"}},
+			Coins:   []Coin{{Amount: account.Amount, Denom: denom}},
 		})
 	}
 
@@ -102,7 +108,7 @@ func (s *rpcServer) PostV1QueryAccounts(ctx echo.Context) error {
 }
 
 func (s *rpcServer) PostV1QueryAccountTxs(ctx echo.Context) error {
-	var body QueryAddressPaginated
+	var body QueryAccountPaginated
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
@@ -122,9 +128,9 @@ func (s *rpcServer) PostV1QueryAccountTxs(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, QueryAccountTxsResponse{})
 	}
 
-	pageTxs := make([]Transaction, 0)
+	pageTxs := make([]TxResult, 0)
 	for _, txResult := range txResults[start : end+1] {
-		rpcTx, err := s.txResultToRPCTransaction(txResult)
+		rpcTx, err := s.txResultToRPCTxResult(txResult)
 		if err != nil {
 			return ctx.String(http.StatusInternalServerError, err.Error())
 		}
@@ -151,22 +157,22 @@ func (s *rpcServer) GetV1QueryAllChainParams(ctx echo.Context) error {
 	}
 	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
 
-	paramSlice, err := readCtx.GetAllParams()
+	paramsSlice, err := readCtx.GetAllParams()
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	resp := make([]Parameter, 0)
-	for i := 0; i < len(paramSlice); i++ {
+	for i := 0; i < len(paramsSlice); i++ {
 		resp = append(resp, Parameter{
-			ParameterName:  paramSlice[i][0],
-			ParameterValue: paramSlice[i][1],
+			ParameterName:  paramsSlice[i][0],
+			ParameterValue: paramsSlice[i][1],
 		})
 	}
 	return ctx.JSON(200, resp)
 }
 
 func (s *rpcServer) PostV1QueryApp(ctx echo.Context) error {
-	var body QueryAddressHeight
+	var body QueryAccountHeight
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
@@ -233,11 +239,7 @@ func (s *rpcServer) PostV1QueryApps(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, QueryAppsResponse{})
 	}
 
-	rpcApps := make([]ProtocolActor, 0)
-	for _, app := range allApps[start : end+1] {
-		actor := protocolActorToRPCProtocolActor(app)
-		rpcApps = append(rpcApps, actor)
-	}
+	rpcApps := protocolActorToRPCProtocolActors(allApps[start : end+1])
 
 	return ctx.JSON(http.StatusOK, QueryAppsResponse{
 		Apps:       rpcApps,
@@ -248,7 +250,7 @@ func (s *rpcServer) PostV1QueryApps(ctx echo.Context) error {
 }
 
 func (s *rpcServer) PostV1QueryBalance(ctx echo.Context) error {
-	var body QueryAddressHeight
+	var body QueryAccountHeight
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
@@ -375,7 +377,7 @@ func (s *rpcServer) PostV1QueryBlockTxs(ctx echo.Context) error {
 }
 
 func (s *rpcServer) PostV1QueryFisherman(ctx echo.Context) error {
-	var body QueryAddressHeight
+	var body QueryAccountHeight
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
@@ -442,11 +444,7 @@ func (s *rpcServer) PostV1QueryFishermen(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, QueryFishermenResponse{})
 	}
 
-	rpcFishermen := make([]ProtocolActor, 0)
-	for _, fisher := range allFishermen[start : end+1] {
-		actor := protocolActorToRPCProtocolActor(fisher)
-		rpcFishermen = append(rpcFishermen, actor)
-	}
+	rpcFishermen := protocolActorToRPCProtocolActors(allFishermen[start : end+1])
 
 	return ctx.JSON(http.StatusOK, QueryFishermenResponse{
 		Fishermen:      rpcFishermen,
@@ -502,7 +500,7 @@ func (s *rpcServer) PostV1QueryParam(ctx echo.Context) error {
 }
 
 func (s *rpcServer) PostV1QueryServicer(ctx echo.Context) error {
-	var body QueryAddressHeight
+	var body QueryAccountHeight
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
@@ -569,11 +567,7 @@ func (s *rpcServer) PostV1QueryServicers(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, QueryServicersResponse{})
 	}
 
-	rpcServicers := make([]ProtocolActor, 0)
-	for _, servicer := range allServicers[start : end+1] {
-		actor := protocolActorToRPCProtocolActor(servicer)
-		rpcServicers = append(rpcServicers, actor)
-	}
+	rpcServicers := protocolActorToRPCProtocolActors(allServicers[start : end+1])
 
 	return ctx.JSON(http.StatusOK, QueryServicersResponse{
 		Servicers:      rpcServicers,
@@ -622,7 +616,7 @@ func (s *rpcServer) PostV1QuerySupply(ctx echo.Context) error {
 			Address: pool.Address,
 			Name:    name,
 			Amount:  pool.Amount,
-			Denom:   "upokt",
+			Denom:   denom,
 		})
 	}
 
@@ -630,7 +624,7 @@ func (s *rpcServer) PostV1QuerySupply(ctx echo.Context) error {
 		Pools: rpcPools,
 		Total: Coin{
 			Amount: total.String(),
-			Denom:  "upokt",
+			Denom:  denom,
 		},
 	})
 }
@@ -682,7 +676,7 @@ func (s *rpcServer) PostV1QueryTx(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	rpcTx, err := s.txResultToRPCTransaction(txResult)
+	rpcTx, err := s.txResultToRPCTxResult(txResult)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -702,7 +696,7 @@ func (s *rpcServer) PostV1QueryUnconfirmedTx(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, fmt.Sprintf("hash not found in mempool: %s", body.Hash))
 	}
 
-	rpcUncTxs, err := s.txProtoBytesToRPCTransactions([][]byte{uncTx})
+	rpcUncTxs, err := s.txProtoBytesToRPCTxResults([][]byte{uncTx})
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -727,7 +721,7 @@ func (s *rpcServer) PostV1QueryUnconfirmedTxs(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, QueryTxsResponse{})
 	}
 
-	rpcUncTxs, err := s.txProtoBytesToRPCTransactions(uncTxs[start : end+1])
+	rpcUncTxs, err := s.txProtoBytesToRPCTxResults(uncTxs[start : end+1])
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -772,7 +766,7 @@ func (s *rpcServer) PostV1QueryUpgrade(ctx echo.Context) error {
 }
 
 func (s *rpcServer) PostV1QueryValidator(ctx echo.Context) error {
-	var body QueryAddressHeight
+	var body QueryAccountHeight
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
@@ -839,11 +833,7 @@ func (s *rpcServer) PostV1QueryValidators(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, QueryValidatorsResponse{})
 	}
 
-	rpcValidators := make([]ProtocolActor, 0)
-	for _, val := range allValidators[start : end+1] {
-		actor := protocolActorToRPCProtocolActor(val)
-		rpcValidators = append(rpcValidators, actor)
-	}
+	rpcValidators := protocolActorToRPCProtocolActors(allValidators[start : end+1])
 
 	return ctx.JSON(http.StatusOK, QueryValidatorsResponse{
 		Validators:      rpcValidators,

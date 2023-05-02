@@ -80,7 +80,8 @@ func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
 	})
 }
 
-// DISCUSSION: This may need to be changed when the SendRelay function is actually implemented
+// TECHDEBT: This will need to be changed when the HandleRelay function is actually implemented
+// because it copies data structures from v0. For example, AATs are no longer necessary in v1.
 func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 	var body RelayRequest
 	if err := ctx.Bind(&body); err != nil {
@@ -128,7 +129,7 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 		Meta:    relayMeta,
 	}
 
-	relayResponse, err := s.GetBus().GetUtilityModule().SendRelay(relayRequest)
+	relayResponse, err := s.GetBus().GetUtilityModule().HandleRelay(relayRequest)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -139,7 +140,8 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 	})
 }
 
-// DISCUSSION: This may need to be changed when the HandleChallenge function is actually implemented
+// TECHDEBT: This will need to be changed when the HandleChallenge function is actually implemented
+// because it copies data structures from v0
 func (s *rpcServer) PostV1ClientChallenge(ctx echo.Context) error {
 	var body ChallengeRequest
 	if err := ctx.Bind(&body); err != nil {

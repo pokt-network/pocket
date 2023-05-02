@@ -99,7 +99,7 @@ paths:
         - client
       summary: Sends a session request to the network and get the nodes that will be servicing your requests for the session
       requestBody:
-        description: Request the nodes that will be servicing the requests in your session
+        description: Retrieve the list of actors involved in servicing and verifying a session
         content:
           application/json:
             schema:
@@ -107,7 +107,7 @@ paths:
         required: true
       responses:
         "200":
-          description: Session servicer response
+          description: Session response
           content:
             application/json:
               schema:
@@ -126,7 +126,7 @@ paths:
     post:
       tags:
         - client
-      summary: Sends a challenge request to the network to service the RPC request
+      summary: Sends a relay to the servicer to receive a response
       requestBody:
         description: Request a relay to be sent on behalf of your application
         content:
@@ -155,7 +155,7 @@ paths:
     post:
       tags:
         - client
-      summary: Sends a relay request to the network to for invalid data returned from an RPC request
+      summary: Sends a challenge request to the network
       requestBody:
         description: Request a challenge for invalid data returned from an RPC request
         content:
@@ -229,7 +229,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/QueryAddressHeight"
+              $ref: "#/components/schemas/QueryAccountHeight"
             example:
               address: da034209758b78eaea06dd99c07909ab54c99b45
               height: 0
@@ -294,7 +294,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/QueryAddressPaginated"
+              $ref: "#/components/schemas/QueryAccountPaginated"
             example:
               address: da034209758b78eaea06dd99c07909ab54c99b45
               page: 1
@@ -345,7 +345,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/QueryAddressHeight"
+              $ref: "#/components/schemas/QueryAccountHeight"
             example:
               address: da034209758b78eaea06dd99c07909ab54c99b45
               height: 0
@@ -367,7 +367,9 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-  # TODO: (h5law) Think of an equivalent to staking status
+  # TODO: (h5law) Determine a parameter to give the request that differentiates
+  # the staking status of an app and returns only that type of staked application
+  # This will be equivalent to the `staking_status` field from the V0 RPC spec
   /v1/query/apps:
     post:
       tags:
@@ -411,7 +413,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/QueryAddressHeight'
+              $ref: '#/components/schemas/QueryAccountHeight'
             example:
               address: da034209758b78eaea06dd99c07909ab54c99b45
               height: 99
@@ -508,7 +510,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/QueryAddressHeight"
+              $ref: "#/components/schemas/QueryAccountHeight"
             example:
               address: da034209758b78eaea06dd99c07909ab54c99b45
               height: 0
@@ -621,7 +623,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/QueryAddressHeight"
+              $ref: "#/components/schemas/QueryAccountHeight"
             example:
               address: da034209758b78eaea06dd99c07909ab54c99b45
               height: 0
@@ -758,7 +760,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Transaction"
+                $ref: "#/components/schemas/TxResult"
         "400":
           description: Bad request
           content:
@@ -789,7 +791,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Transaction"
+                $ref: "#/components/schemas/TxResult"
         "400":
           description: Bad request
           content:
@@ -874,7 +876,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/QueryAddressHeight"
+              $ref: "#/components/schemas/QueryAccountHeight"
             example:
               address: da034209758b78eaea06dd99c07909ab54c99b45
               height: 0
@@ -957,7 +959,7 @@ components:
           type: string
         session_id:
           type: string
-    QueryAddressHeight:
+    QueryAccountHeight:
       type: object
       required:
         - height
@@ -968,7 +970,7 @@ components:
           format: int64
         address:
           type: string
-    QueryAddressPaginated:
+    QueryAccountPaginated:
       type: object
       required:
         - address
@@ -1197,7 +1199,7 @@ components:
         txs:
           type: array
           items:
-            $ref: "#/components/schemas/Transaction"
+            $ref: "#/components/schemas/TxResult"
         total_txs:
           type: integer
           format: int64
@@ -1317,7 +1319,7 @@ components:
         transactions:
           type: array
           items:
-            $ref: "#/components/schemas/Transaction"
+            $ref: "#/components/schemas/TxResult"
         total_txs:
           type: integer
           format: int64
@@ -1459,7 +1461,7 @@ components:
         transactions:
           type: array
           items:
-            $ref: "#/components/schemas/Transaction"
+            $ref: "#/components/schemas/TxResult"
     BlockHeader:
       type: object
       required:
@@ -1753,7 +1755,7 @@ components:
           type: string
         signature:
           type: string
-    StdTx:
+    TxMessage:
       type: object
       required:
         - fee
@@ -1781,8 +1783,7 @@ components:
         - hash
         - height
         - index
-        - txResult
-        - stdTx
+        - txMsg
       properties:
         hash:
           type: string
@@ -1792,10 +1793,8 @@ components:
         index:
           type: integer
           format: int32
-        txResult:
-          $ref: "#/components/schemas/TxResult"
-        stdTx:
-          $ref: "#/components/schemas/StdTx"
+        txMsg:
+          $ref: "#/components/schemas/TxMessage"
     TxResult:
       type: object
       required:
@@ -1809,7 +1808,7 @@ components:
         - message_type
       properties:
         tx:
-          type: string
+          $ref: "#/components/schemas/Transaction"
         height:
           type: integer
           format: int64

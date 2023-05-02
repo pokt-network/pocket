@@ -29,7 +29,7 @@ func init() {
 	paramValueRegex = regexp.MustCompile(`value:"(.+)"`)
 }
 
-// Broadcast to the entire validator set
+// Broadcast to the entire network
 func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 	utilityMsg, err := utility.PrepareTxGossipMessage(msgBz)
 	if err != nil {
@@ -94,47 +94,54 @@ func protocolActorToRPCProtocolActor(actor *coreTypes.Actor) ProtocolActor {
 	}
 }
 
-// txResultToRPCTransaction converts the txResult protobuf into the RPC Transaction type
-func (s *rpcServer) txResultToRPCTransaction(txResult *coreTypes.TxResult) (*Transaction, error) {
+// protocolActorToRPCProtocolActors converts the coreTypes.Actor to an RPC ProtocolActor
+func protocolActorToRPCProtocolActors(actors []*coreTypes.Actor) []ProtocolActor {
+	rpcActors := make([]ProtocolActor, 0)
+	for _, actor := range actors {
+		rpcActors = append(rpcActors, protocolActorToRPCProtocolActor(actor))
+	}
+	return rpcActors
+}
+
+// txResultToRPCTxResult converts the txResult protobuf into the RPC TxResult type
+func (s *rpcServer) txResultToRPCTxResult(txResult *coreTypes.TxResult) (*TxResult, error) {
 	hash := coreTypes.TxHash(txResult.GetTx())
-	txStr := base64.StdEncoding.EncodeToString(txResult.GetTx())
-	stdTx, err := s.transactionBytesToRPCStdTx(txResult.GetTx(), txResult.GetMessageType())
+	txMsg, err := s.txBytesToRPCTxMsg(txResult.GetTx(), txResult.GetMessageType())
 	if err != nil {
 		return nil, err
 	}
-	return &Transaction{
-		Hash:   hash,
-		Height: txResult.GetHeight(),
-		Index:  txResult.GetIndex(),
-		TxResult: TxResult{
-			Tx:            txStr,
-			Height:        txResult.GetHeight(),
-			Index:         txResult.GetIndex(),
-			ResultCode:    txResult.GetResultCode(),
-			SignerAddr:    txResult.GetSignerAddr(),
-			RecipientAddr: txResult.GetRecipientAddr(),
-			MessageType:   txResult.GetMessageType(),
+	return &TxResult{
+		Tx: Transaction{
+			Hash:   hash,
+			Height: txResult.GetHeight(),
+			Index:  txResult.GetIndex(),
+			TxMsg:  *txMsg,
 		},
-		StdTx: *stdTx,
+		Height:        txResult.GetHeight(),
+		Index:         txResult.GetIndex(),
+		ResultCode:    txResult.GetResultCode(),
+		SignerAddr:    txResult.GetSignerAddr(),
+		RecipientAddr: txResult.GetRecipientAddr(),
+		MessageType:   txResult.GetMessageType(),
 	}, nil
 }
 
-// transactionBytesToRPCStdTx generates a StdTx from a serialised byte slice of a Transaction protobuf and message type
-func (s *rpcServer) transactionBytesToRPCStdTx(txBz []byte, messageType string) (*StdTx, error) {
+// txBytesToRPCTxMsg generates a TxMessage from a serialised byte slice of a Transaction protobuf and message type
+func (s *rpcServer) txBytesToRPCTxMsg(txBz []byte, messageType string) (*TxMessage, error) {
 	tx, err := coreTypes.TxFromBytes(txBz)
 	if err != nil {
 		return nil, err
 	}
 	sig := tx.GetSignature()
-	txMsg, err := tx.GetMessage()
+	msg, err := tx.GetMessage()
 	if err != nil {
 		return nil, err
 	}
-	anypb, err := codec.GetCodec().ToAny(txMsg)
+	anypb, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
 		return nil, err
 	}
-	stdTx := StdTx{
+	txMsg := &TxMessage{
 		Nonce: tx.GetNonce(),
 		Signature: Signature{
 			PublicKey: hex.EncodeToString(sig.GetPublicKey()),
@@ -151,11 +158,11 @@ func (s *rpcServer) transactionBytesToRPCStdTx(txBz []byte, messageType string) 
 		if err != nil {
 			return nil, err
 		}
-		stdTx.Fee = Fee{
+		txMsg.Fee = Fee{
 			Amount: fee,
 			Denom:  "upokt",
 		}
-		stdTx.Message = MessageSend{
+		txMsg.Message = MessageSend{
 			FromAddr: hex.EncodeToString(m.GetFromAddress()),
 			ToAddr:   hex.EncodeToString(m.GetToAddress()),
 			Amount:   m.Amount,
@@ -170,11 +177,11 @@ func (s *rpcServer) transactionBytesToRPCStdTx(txBz []byte, messageType string) 
 		if err != nil {
 			return nil, err
 		}
-		stdTx.Fee = Fee{
+		txMsg.Fee = Fee{
 			Amount: fee,
 			Denom:  "upokt",
 		}
-		stdTx.Message = MessageStake{
+		txMsg.Message = MessageStake{
 			ActorType:     protocolActorToRPCActorTypeEnum(m.GetActorType()),
 			PublicKey:     hex.EncodeToString(m.GetPublicKey()),
 			Chains:        m.GetChains(),
@@ -193,11 +200,11 @@ func (s *rpcServer) transactionBytesToRPCStdTx(txBz []byte, messageType string) 
 		if err != nil {
 			return nil, err
 		}
-		stdTx.Fee = Fee{
+		txMsg.Fee = Fee{
 			Amount: fee,
 			Denom:  "upokt",
 		}
-		stdTx.Message = MessageEditStake{
+		txMsg.Message = MessageEditStake{
 			ActorType:  protocolActorToRPCActorTypeEnum(m.GetActorType()),
 			Chains:     m.GetChains(),
 			ServiceUrl: m.GetServiceUrl(),
@@ -215,11 +222,11 @@ func (s *rpcServer) transactionBytesToRPCStdTx(txBz []byte, messageType string) 
 		if err != nil {
 			return nil, err
 		}
-		stdTx.Fee = Fee{
+		txMsg.Fee = Fee{
 			Amount: fee,
 			Denom:  "upokt",
 		}
-		stdTx.Message = MessageUnstake{
+		txMsg.Message = MessageUnstake{
 			ActorType: protocolActorToRPCActorTypeEnum(m.GetActorType()),
 			Address:   hex.EncodeToString(m.GetAddress()),
 			Signer:    hex.EncodeToString(m.GetSigner()),
@@ -233,11 +240,11 @@ func (s *rpcServer) transactionBytesToRPCStdTx(txBz []byte, messageType string) 
 		if err != nil {
 			return nil, err
 		}
-		stdTx.Fee = Fee{
+		txMsg.Fee = Fee{
 			Amount: fee,
 			Denom:  "upokt",
 		}
-		stdTx.Message = MessageUnpause{
+		txMsg.Message = MessageUnpause{
 			ActorType: protocolActorToRPCActorTypeEnum(m.GetActorType()),
 			Address:   hex.EncodeToString(m.GetAddress()),
 			Signer:    hex.EncodeToString(m.GetSigner()),
@@ -251,7 +258,7 @@ func (s *rpcServer) transactionBytesToRPCStdTx(txBz []byte, messageType string) 
 		if err != nil {
 			return nil, err
 		}
-		stdTx.Fee = Fee{
+		txMsg.Fee = Fee{
 			Amount: fee,
 			Denom:  "upokt",
 		}
@@ -259,7 +266,7 @@ func (s *rpcServer) transactionBytesToRPCStdTx(txBz []byte, messageType string) 
 		if len(values) < 2 {
 			return nil, fmt.Errorf("unable to extract parameter value: %s", m.GetParameterValue().String())
 		}
-		stdTx.Message = MessageChangeParameter{
+		txMsg.Message = MessageChangeParameter{
 			Signer: hex.EncodeToString(m.GetSigner()),
 			Owner:  hex.EncodeToString(m.GetOwner()),
 			Parameter: Parameter{
@@ -270,7 +277,7 @@ func (s *rpcServer) transactionBytesToRPCStdTx(txBz []byte, messageType string) 
 		return nil, fmt.Errorf("unknown message type: %s", messageType)
 	}
 
-	return &stdTx, nil
+	return txMsg, nil
 }
 
 // calculateMessageFeeForActor calculates the fee for a transaction given the actor type and message type
@@ -337,8 +344,8 @@ func (s *rpcServer) calculateMessageFeeForActor(actorType coreTypes.ActorType, m
 	return "", fmt.Errorf("unhandled message type: %s", messageType)
 }
 
-// txProtoBytesToRPCTransactions converts a slice of serialised Transaction protobufs to a slice of RPC transactions
-func (s *rpcServer) txProtoBytesToRPCTransactions(txProtoBytes [][]byte) ([]Transaction, error) {
+// txProtoBytesToRPCTxResults converts a slice of serialised Transaction protobufs to a slice of RPC TxResults
+func (s *rpcServer) txProtoBytesToRPCTxResults(txProtoBytes [][]byte) ([]TxResult, error) {
 	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
 	uow, err := s.GetBus().GetUtilityModule().NewUnitOfWork(int64(currentHeight))
 	if err != nil {
@@ -346,7 +353,7 @@ func (s *rpcServer) txProtoBytesToRPCTransactions(txProtoBytes [][]byte) ([]Tran
 	}
 	defer uow.Release() //nolint:errcheck // We only need to make sure the UOW is released
 
-	txs := make([]Transaction, 0)
+	txs := make([]TxResult, 0)
 	for idx, txBz := range txProtoBytes {
 		tx := new(coreTypes.Transaction)
 		if err := codec.GetCodec().Unmarshal(txBz, tx); err != nil {
@@ -356,7 +363,7 @@ func (s *rpcServer) txProtoBytesToRPCTransactions(txProtoBytes [][]byte) ([]Tran
 		if er != nil {
 			return nil, er
 		}
-		rpcTx, err := s.txResultToRPCTransaction(txResult)
+		rpcTx, err := s.txResultToRPCTxResult(txResult)
 		if err != nil {
 			return nil, err
 		}
@@ -368,7 +375,7 @@ func (s *rpcServer) txProtoBytesToRPCTransactions(txProtoBytes [][]byte) ([]Tran
 
 // blockToRPCBlock converts a block protobuf to the RPC block type
 func (s *rpcServer) blockToRPCBlock(protoBlock *coreTypes.Block) (*Block, error) {
-	txs, err := s.txProtoBytesToRPCTransactions(protoBlock.GetTransactions())
+	txs, err := s.txProtoBytesToRPCTxResults(protoBlock.GetTransactions())
 	if err != nil {
 		return nil, err
 	}
