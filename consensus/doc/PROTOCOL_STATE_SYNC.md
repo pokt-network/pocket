@@ -37,6 +37,7 @@ State Sync is a protocol within a `Pocket` node that enables the download and ma
 The Pocket network node includes two distinct types of state sync processes: **Passive State Sync** and **Active State Sync**. 
 
 ## Passive State Sync 
+
 In passive state synchronization, the Pocket node consistently communicates with its peers in the network to stay updated with the latest global state. It does this by sending periodic `PeerSyncMetadata` requests to gather network state, and, by periodically requesting missing blocks with `GetBlock` requests. This approach makes sure that the node has the latest information on the network's state. Both validator and non-validator nodes perform passive state sync. Passive state synchronization ensures that all nodes in the network will eventually be synchronized.
 
 ### Peer Metadata
