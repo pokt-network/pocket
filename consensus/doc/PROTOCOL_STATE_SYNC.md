@@ -92,6 +92,7 @@ The aggregation and consumption of this peer-meta information enables the node t
 Using the aggregated `StateSyncMetadataResponse` returned by `getAggregatedStateSyncMetadata()`, a Pocket node is able to compare its local state against that of the Global Network that is visible to it (i.e. the world state).
 
 ### Passive State Sync Lifecycle
+
 Passive state sync is performed by the Pocket node via two background processes; first process is `metadataSyncLoop()` that peridoically requests peer metadata, and, second process is   `blockRequestLoop()` that peridoically requests missing blocks using collected peer metadata.
 
 
