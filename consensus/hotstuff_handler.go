@@ -32,8 +32,7 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 			} else {
 				m.stateSync.SetActiveSyncHeight(msg.Height - 1)
 			}
-			err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
-			return err
+			return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
 		}
 		return err
 	}
