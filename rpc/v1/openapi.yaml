@@ -122,6 +122,7 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+  # TODO: Update this handler and its schemas when the HandleRelay function has been implemented
   /v1/client/relay:
     post:
       tags:
@@ -151,6 +152,7 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+  # TODO: Update this handler and its schemas when the HandleChallenge function has been implemented
   /v1/client/challenge:
     post:
       tags:
@@ -1798,7 +1800,6 @@ components:
     TxResult:
       type: object
       required:
-        - tx
         - height
         - index
         - result_code
@@ -1806,9 +1807,8 @@ components:
         - signer_addr
         - recipient_addr
         - message_type
+        - tx
       properties:
-        tx:
-          $ref: "#/components/schemas/Transaction"
         height:
           type: integer
           format: int64
@@ -1824,6 +1824,8 @@ components:
           type: string
         message_type:
           type: string
+        tx:
+          $ref: "#/components/schemas/Transaction"
     ThresholdSignature:
       type: object
       required:
