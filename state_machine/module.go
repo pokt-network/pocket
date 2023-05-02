@@ -49,6 +49,7 @@ func (*stateMachineModule) Create(bus modules.Bus, options ...modules.ModuleOpti
 				m.logger.Fatal().Err(err).Msg("failed to pack state machine transition event")
 			}
 			bus.PublishEventToBus(newStateMachineTransitionEvent)
+			// TECHDEBT: used for debugging purposes only
 			for _, channel := range m.debugChannels {
 				channel <- newStateMachineTransitionEvent
 			}
