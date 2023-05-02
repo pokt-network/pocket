@@ -156,7 +156,6 @@ func (m *Node) GetBus() modules.Bus {
 // TECHDEBT: The `shared` package has dependencies on types in the individual modules.
 // TODO: Move all message types this is dependant on to the `messaging` package
 func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
-	//fmt.Printf("Node: %s, inside handleEvent, with message: %s, bus: %s\n", node.p2pAddress, message, node.bus.GetEventBus())
 	contentType := message.GetContentType()
 	logger.Global.Debug().Fields(map[string]any{
 		"message":     message,
@@ -171,7 +170,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		}
 	case messaging.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
-	case messaging.StateSyncMessageContentType:
+	case messaging.StateSyncMessageContentType, messaging.StateSyncBlockCommittedEventType:
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
 	case messaging.TxGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleUtilityMessage(message.Content)

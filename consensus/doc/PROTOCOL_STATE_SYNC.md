@@ -3,9 +3,12 @@
 _NOTE: This document makes some assumption of P2P implementation details, so please see [p2p](../../p2p/README.md) for the latest source of truth._
 
 - [Background](#background)
-- [State Sync - Peer Metadata](#state-sync---peer-metadata)
-- [State Sync - Peer Metadata Collection](#state-sync---peer-metadata-collection)
-  - [State Sync Lifecycle](#state-sync-lifecycle)
+- [Passive State Sync](#passive-state-sync)
+  - [Peer Metadata](#peer-metadata)
+  - [Peer Metadata Collection](#peer-metadata-collection)
+  - [Passive State Sync Lifecycle](#passive-state-sync-lifecycle)
+- [Active State Sync](#active-state-sync)
+  - [Active State Sync Lifecycle](#active-state-sync-lifecycle)
 - [State Sync - Operation Modes](#state-sync---operation-modes)
   - [Unsynced Mode](#unsynced-mode)
   - [Sync Mode](#sync-mode)
@@ -29,9 +32,14 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
 
 ## Background
 
-State Sync is a protocol within a `Pocket` node that enables the download and maintenance of the latest world state. This protocol enables network actors to participate in network activities (like _Consensus_ or _Web3 Provisioning & Access_) in present time, by ensuring the synchronization of the individual node with the collective network.
+State Sync is a protocol within a `Pocket` node that enables the download and maintenance of the latest world state. This protocol enables network actors to participate in network activities (like _Consensus_ or _Web3 Provisioning & Access_) in present time, by ensuring the synchronization of the individual node with the collective network. 
 
-## State Sync - Peer Metadata
+The Pocket network node includes two distinct types of state sync processes: **Passive State Sync** and **Active State Sync**. 
+
+## Passive State Sync 
+In passive state synchronization, the Pocket node consistently communicates with its peers in the network to stay updated with the latest global state. It does this by sending periodic `PeerSyncMetadata` requests to gather network state, and, by periodically requesting missing blocks with `GetBlock` requests. This approach makes sure that the node has the latest information on the network's state. Both validator and non-validator nodes perform passive state sync. Passive state synchronization ensures that all nodes in the network will eventually be synchronized.
+
+### Peer Metadata
 
 A node participating in the `State Sync` protocol can act as both a _server_ and/or a _client_ to its `Network Peers`. A pre-requisite of the State Sync protocol is for the `P2P` module to maintain an active set of network peers, along with metadata corresponding to the persistence data they have available.
 
@@ -47,7 +55,8 @@ type PeerSyncMetadata interface {
 }
 ```
 
-## State Sync - Peer Metadata Collection
+
+### Peer Metadata Collection
 
 Peer metadata can be collected through the `P2P` module during the `Churn Management Protocol`. It can also be abstracted to an `ask-response` cycle where the node continuously asks this metadata information to its active peers.
 
@@ -61,7 +70,7 @@ type StateSyncMetadataResponse struct {
 }
 ```
 
-Node periodically requests peer metadata from active peers after starting, as a background process. The following is an illustrative example:
+Node periodically requests peer metadata from active peers after starting through the `metadataSyncLoop()` as a background process. The following is an illustrative example:
 
 ```mermaid
 sequenceDiagram
@@ -78,62 +87,67 @@ sequenceDiagram
     end
 ```
 
-The aggregation and consumption of this peer-meta information enables the node to understand the global network state through sampling Peer Metadata in its local peer list. The Node aggregates the collected peer metadata to identify the `MaxHeight` and `MinHeight` in the global state.
+The aggregation and consumption of this peer-meta information enables the node to understand the global network state through sampling Peer Metadata in its local peer list. The Node aggregates the collected peer metadata to identify the `MaxHeight` and `MinHeight` in the global state. This gives a view into the data availability layer.
 
-This gives a view into the data availability layer, with details of what data can be consumed from peer via:
+Using the aggregated `StateSyncMetadataResponse` returned by `getAggregatedStateSyncMetadata()`, a Pocket node is able to compare its local state against that of the Global Network that is visible to it (i.e. the world state).
 
-```golang
-type StateSyncModule interface {
-  // ...
-  GetAggregatedStateSyncMetadata() *StateSyncMetadataResponse // Aggregated metadata received from peers.
-  IsSynced() (bool, error)
-  StartSyncing() error
-  // ...
-}
-```
+### Passive State Sync Lifecycle
+Passive state sync is performed by the Pocket node via two background processes; first process is `metadataSyncLoop()` that peridoically requests peer metadata, and, second process is   `blockRequestLoop()` that peridoically requests missing blocks using collected peer metadata.
 
-Using the aggregated `StateSyncMetadataResponse` returned by `GetAggregatedStateSyncMetadata()`, a node is able to compare its local state against that of the Global Network that is visible to it (i.e. the world state).
 
-### State Sync Lifecycle
+The Pocket Node bootstraps and collects state sync metadata from the rest of the network periodically with `metadataSyncLoop()`.  Through periodic metadata collection, the node collects received `StateSyncMetadataResponse`s in the `metadataReceived` channel. The Pocket Node periodically consumes all metadata collected in the `metadataReceived` channel. This enables nodes to have an up-to-date view of the global state. If the global state is higher than the node's local state, the Pocket Node requests missing blocks from its peers via the `blockRequestLoop()`.
 
-The Node bootstraps and collects state sync metadata from the rest of the network periodically, via a background process. This enables nodes to have an up-to-date view of the global state. Through periodic sync, the node collects received `StateSyncMetadataResponse`s in a buffer.
-
-For every new block and block proposal `Validator`s receive:
-
-- node checks block's and block proposal's validity and applies the block to its persistence if its valid.
-- if block is higher than node's current height, node checks if it is out of sync via `IsSynced()` function that compares node's local state and the global state by aggregating the collected metada responses.
-
-According to the result of the `IsSynced()` function:
-
-- If the node is out of sync, it runs `StartSyncing()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
-- If the node is in sync with its peers it rejects the block and/or block proposal.
 
 ```mermaid
 flowchart TD
     %% start
-    A[Node] --> B[Periodic <br> Sync]
-    A[Node] --> |New Block| C{IsSynced}
+    A[Node] --> B[Bootstrap]
+    B --> C[Passive <br> State Sync]
 
-    %% periodic snyc
-    B --> |Request <br> metadata| D[Peers]
-    D[Peers] --> |Collect metadata| B[Periodic <br> Sync]
+    %% periodic metadata snyc
+    C --> |Request <br> metadata| D[Peers]
+    D[Peers] --> |Collect <br> metadata| C[Passive <br> State Sync]
+
+    %% periodic block snyc
+    C --> |Request <br> blocks| E[Peers]
+    E[Peers] --> |Collect <br> blocks| C[Passive <br> State Sync]
+```
 
 
-    %% is node sycnhed
-    C -->  |No| E[StartSyncing]
-    C -->  |Yes| F[Apply Block]
+
+## Active State Sync 
+
+Active state sync is a process in which a validator Pocket node initiates a state sync process if it receives a Hotstuff message with a height higher than its current height. Upon receiving this message, node initiates the active state sync process by sending `GetBlock` requests via `StartActiveSync()` to request any missing blocks between its current height and the height of the received message. This allows the node to synchronize with the rest of the network before waiting for periodic passive state sync to kick in.
+
+
+### Active State Sync Lifecycle
+
+For every new block and block proposal `Validator`s receive:
+
+- Node checks block's and block proposal's validity and applies the block to its persistence if its valid.
+- If block proposal height is higher than node's current height, node sends `unsynced` event to the FSM.
+- Node's FSM triggers active state sync via `StartActiveSync()` function. Node requests blocks one by one starting from its current height to the block proposal height.
+
+```mermaid
+flowchart TD
+    %% start
+    A[Peers] --> |Higher Block <br> Proposal| B[Node]
+    B[Node] --> |unsynced event| C[FSM]
+    C -->  D[Active State Sync]
 
     %% syncing
-    E --> |Request Blocks| D[Peers]
-    D[Peers] --> |Block| A[Node]
-
+    D --> |Request <br> blocks| E[Peers]
+    E[Peers] --> |Collect <br> blocks| D[Active State Sync]
+    D --> |synced event| C[Node]
 ```
+
+
 
 ## State Sync - Operation Modes
 
 State sync can be viewed as a state machine that transverses various modes the node can be in, including:
 
-1. Unsyched Mode
+1. Unsynced Mode
 2. Sync Mode
 3. Synced Mode
 4. Pacemaker Mode
@@ -144,23 +158,24 @@ The functionality of the node depends on the mode it is operating it. Note that 
 For illustrative purposes below assume:
 
 - `localSyncState` is an object instance complying with the `PeerSyncMetadata` interface for the local node
-- `globalSyncMeta` is an object instance of `StateSyncMetadataResponse` complying with the `StateSyncModule` interface for the global network, which is returned by the `GetAggregatedStateSyncMetadata()` function.
+- `globalSyncMeta` is an object instance of `StateSyncMetadataResponse` complying with the `StateSyncModule` interface for the global network, which is returned by the `getAggregatedStateSyncMetadata()` function for passive state sync.
+- `activeSyncHeight` is the height of the received block proposal with higher height.
 
 ### Unsynced Mode
 
-The Node is in `Unsynced` mode if `localSyncState.MaxHeight < GlobalSyncMeta.Height`.
+The Node is in `Unsynced` mode if `localSyncState.MaxHeight < GlobalSyncMeta.Height` or `localSyncState.MaxHeight < activeSyncHeight`.
 
 In `Unsynced` Mode, node transitions to `Sync Mode` by sending `Consensus_IsSyncing` state transition event, to start catching up with the network.
 
 ### Sync Mode
 
-In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `StartSyncing()` function to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
+In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `blockRequestLoop()` for passive state sync and via `StartActiveSync()` function for active state sync, to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
 
 Though it is unspecified whether or not a Node may make `GetBlock` requests in order or in parallel, the cryptographic restraints of block processing require the Node to call `CommitBlock` sequentially until it is `Synced`.
 
 ### Synced Mode
 
-The Node is in `Synced` mode if `localSyncState.Height == globalSyncMeta.MaxHeight`.
+The Node is in `Synced` mode if `localSyncState.Height == globalSyncMeta.MaxHeight` and `localSyncState.MaxHeight == activeSyncHeight`.
 
 In `SyncedMode`, the Node is caught up to the latest block (based on the visible view of the network) and relies on new blocks to be propagated via the P2P network every time the Validators finalize a new block during the consensus lifecycle.
 
@@ -168,7 +183,7 @@ In `SyncedMode`, the Node is caught up to the latest block (based on the visible
 
 The Node is in `Pacemaker` mode if the Node is snyched **and** is an active Validator at the current height.
 
-In `Pacemaker` mode, the Node is actively participating in the HotPOKT lifecycle.
+In `Pacemaker` mode, the Node is actively participating in the HotPOKT consensus lifecycle.
 
 ### Server Mode
 
@@ -203,7 +218,7 @@ flowchart TD
     Z[Peers] --> |Blocks| A[StateSync]
 ```
 
-_IMPORTANT: `ApplyBlock` is implicit in the diagram above. If any blocks processed result in an invalid `StateHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._
+_IMPORTANT: `ApplyBlock` is implicit in the diagram above. If any blocks processed result in an invalid `StateHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._****
 
 ## State Sync Designs
 

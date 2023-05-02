@@ -25,10 +25,7 @@ import (
 var _ modules.ConsensusModule = &consensusModule{}
 
 // TODO: This should be configurable
-const (
-	metadataChannelSize = 1000
-	blocksChannelSize   = 1000
-)
+const blocksChannelSize = 1000
 
 type consensusModule struct {
 	base_modules.IntegratableModule
@@ -77,10 +74,13 @@ type consensusModule struct {
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
 
 	// block responses received from peers are collected in this channel
-	blocksReceived chan *typesCons.GetBlockResponse
+	blocksResponsesReceived chan *typesCons.GetBlockResponse
 
 	// metadata responses received from peers are collected in this channel
-	metadataReceived chan *typesCons.StateSyncMetadataResponse
+	// metadataReceived chan *typesCons.StateSyncMetadataResponse
+
+	// wait group to wait for blockApplicationLoop() to finish
+	wg sync.WaitGroup
 
 	serverModeEnabled bool
 }
@@ -163,8 +163,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	m.nodeId = valAddrToIdMap[address]
 	m.nodeAddress = address
 
-	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
-	m.blocksReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
+	m.blocksResponsesReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
 
 	m.initMessagesPool()
 
@@ -194,15 +193,24 @@ func (m *consensusModule) Start() error {
 		return err
 	}
 
-	// state sync backgroun processes
-	go m.metadataSyncLoop()
-	go m.blockSyncLoop()
-	go m.blockApplicationLoop()
+	m.wg.Add(1)
+	go func() {
+		defer m.wg.Done()
+		m.blockApplicationLoop()
+	}()
 
 	return nil
 }
 
 func (m *consensusModule) Stop() error {
+	close(m.blocksResponsesReceived)
+	if err := m.stateSync.Stop(); err != nil {
+		return err
+	}
+
+	// wait for the block application loop to finish
+	m.wg.Wait()
+
 	return nil
 }
 

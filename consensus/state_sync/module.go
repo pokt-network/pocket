@@ -1,23 +1,39 @@
 package state_sync
 
 import (
+	"fmt"
+	"sync"
+	"time"
+
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
-	stateSyncModuleName             = "stateSyncModule"
-	committedBlockHeightChannelSize = 100
+	stateSyncModuleName       = "stateSyncModule"
+	committedBlocsChannelSize = 100
+	blockWaitingPeriod        = 30 * time.Second
+	metadataChannelSize       = 1000
 )
 
 type StateSyncModule interface {
 	modules.Module
 	StateSyncServerModule
 
-	Set(aggregatedMetaData *typesCons.StateSyncMetadataResponse)
-	CommittedBlock(uint64)
+	HandleStateSyncBlockCommittedEvent(message *anypb.Any) error
+	HandleStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse)
+
+	// SetActiveSyncHeight sets the active sync height
+	SetActiveSyncHeight(height uint64)
+
+	// StartActiveSync starts active state sync from current height to activeSyncHeight
+	StartActiveSync()
 }
 
 var (
@@ -27,19 +43,20 @@ var (
 )
 
 type stateSync struct {
-	bus    modules.Bus
-	logger *modules.Logger
-	//validators                  []*coreTypes.Actor
-	aggregatedMetaData          *typesCons.StateSyncMetadataResponse
-	committedBlockHeightChannel chan uint64
+	bus                    modules.Bus
+	logger                 *modules.Logger
+	committedBlocksChannel chan uint64
+	activeSyncHeight       uint64
+
+	// wait group to wait for metadataSyncLoop() and blockRequestLoop() to finish
+	wg sync.WaitGroup
+
+	// metadata responses received from peers are collected in this channel
+	metadataReceived chan *typesCons.StateSyncMetadataResponse
 }
 
 func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return new(stateSync).Create(bus, options...)
-}
-
-func (m *stateSync) CommittedBlock(height uint64) {
-	m.committedBlockHeightChannel <- height
 }
 
 func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -52,81 +69,38 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	bus.RegisterModule(m)
 
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
-
-	m.committedBlockHeightChannel = make(chan uint64, committedBlockHeightChannelSize)
+	m.committedBlocksChannel = make(chan uint64, committedBlocsChannelSize)
+	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
 
 	return m, nil
 }
 
-func (m *stateSync) Set(aggregatedMetaData *typesCons.StateSyncMetadataResponse) {
-	m.logger.Info().Msg("State Sync Module Set")
-	m.aggregatedMetaData = aggregatedMetaData
+func (m *stateSync) SetActiveSyncHeight(height uint64) {
+	if height > m.activeSyncHeight {
+		m.activeSyncHeight = height
+	}
 }
 
-// Start performs state sync
-// processes and aggregates all metadata collected in metadataReceived channel,
-// requests missing blocks starting from its current height to the aggregated metadata's maxHeight,
-// once the requested block is received and committed by consensus module, sends the next request for the next block,
-// when all blocks are received and committed, stops the state sync process by calling its `Stop()` function.
+// Start performs passive state sync process, by running metadataSyncLoop() and blockRequestLoop() as background processes for the lifetime of the node
 func (m *stateSync) Start() error {
+	m.wg.Add(2)
+	go func() {
+		defer m.wg.Done()
+		m.metadataSyncLoop()
+	}()
+	go func() {
+		defer m.wg.Done()
+		m.blockRequestLoop()
+	}()
 
-	// consensusMod := m.bus.GetConsensusModule()
-	// currentHeight := consensusMod.CurrentHeight()
-	// nodeAddress := consensusMod.GetNodeAddress()
-	// readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
-	// if err != nil {
-	// 	return err
-	// }
-	// defer readCtx.Release()
-
-	// //get the current validators
-	// m.validators, err = readCtx.GetAllValidators(int64(currentHeight))
-	// if err != nil {
-	// 	return err
-	// }
-
-	// for currentHeight <= m.aggregatedMetaData.MaxHeight {
-	// 	m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.aggregatedMetaData.MaxHeight)
-
-	// 	// form the get block request message
-	// 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-	// 		Message: &typesCons.StateSyncMessage_GetBlockReq{
-	// 			GetBlockReq: &typesCons.GetBlockRequest{
-	// 				PeerAddress: nodeAddress,
-	// 				Height:      currentHeight,
-	// 			},
-	// 		},
-	// 	}
-
-	// 	// broadcast the get block request message to all validators
-	// 	// use raintree broadcast
-	// 	for _, val := range m.validators {
-	// 		if err := m.sendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress())); err != nil {
-	// 			return err
-	// 		}
-	// 	}
-
-	// 	// wait for the block to be received and committed by consensus module
-	// 	receivedBlockHeight := <-m.committedBlockHeightChannel
-	// 	// TODO!: do we need to do this check? It should not happen
-	// 	if receivedBlockHeight != consensusMod.CurrentHeight() {
-	// 		return fmt.Errorf("received block height %d is not equal to current height %d", receivedBlockHeight, currentHeight)
-	// 	}
-	// 	//timer to check if block is received and committed
-	// 	currentHeight = consensusMod.CurrentHeight()
-	// }
-	// syncing is complete, stop the state sync module
-
-	// wait for consensus new height events until WHEN????
-
-	return m.Stop()
+	return nil
 }
 
-// TODO(#352): check if node is a valdiator, if not send Consensus_IsSyncedNonValidator event
-// Stop stops the state sync process, and sends `Consensus_IsSyncedValidator` FSM event
+// Stop stops the passive state sync process, when node is shutting down
 func (m *stateSync) Stop() error {
-	m.logger.Info().Msg("Stop state sync moudule")
-	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
+	close(m.metadataReceived)
+	m.wg.Wait()
+	return nil
 }
 
 func (m *stateSync) SetBus(pocketBus modules.Bus) {
@@ -142,4 +116,99 @@ func (m *stateSync) GetBus() modules.Bus {
 
 func (m *stateSync) GetModuleName() string {
 	return stateSyncModuleName
+}
+
+func (m *stateSync) HandleStateSyncBlockCommittedEvent(event *anypb.Any) error {
+	evt, err := codec.GetCodec().FromAny(event)
+	if err != nil {
+		return err
+	}
+
+	if event.MessageName() == messaging.StateSyncBlockCommittedEventType {
+		newCommitBlockEvent, ok := evt.(*typesCons.StateSyncBlockCommittedEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast event to StateSyncBlockCommittedEvent")
+		}
+
+		m.committedBlocksChannel <- newCommitBlockEvent.Height
+	}
+	return nil
+}
+
+func (m *stateSync) HandleStateSyncMetadataResponse(metadataRes *typesCons.StateSyncMetadataResponse) {
+	m.metadataReceived <- metadataRes
+}
+
+// TODO(#352): Implement this function, currently a placeholder.
+// metadataSyncLoop periodically sends metadata requests to its peers, as part of passive state sync process
+func (m *stateSync) metadataSyncLoop() {
+	// runs as a background process
+	// requests metadata from peers
+	// sends received metadata to the metadataReceived channel
+}
+
+// TODO(#352): Implement this function, currently a placeholder.
+// blockRequestLoop periodically sends metadata requests to its peers, as part of passive state sync process
+func (m *stateSync) blockRequestLoop() {
+	// runs as a background process
+	// aggregates metadata in the metadataReceived channel
+	// requests blocks from the current height to the aggregated metadata height
+	// sends received blocks to the blockReceived channel
+}
+
+// StartActiveSync performs active state sync, starting from the consensus module's current height to the activeSyncHeight
+func (m *stateSync) StartActiveSync() {
+	consensusMod := m.bus.GetConsensusModule()
+	currentHeight := consensusMod.CurrentHeight()
+	nodeAddress := consensusMod.GetNodeAddress()
+	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
+	if err != nil {
+		m.logger.Err(err).Msg("failed to create read context for persistence module")
+		return
+	}
+	defer readCtx.Release()
+
+	// get the current validators
+	validators, err := readCtx.GetAllValidators(int64(currentHeight))
+	if err != nil {
+		m.logger.Err(err).Msg("failed to get all validators from persistence module")
+		return
+	}
+
+	// requests blocks from the current height to the aggregated metadata height
+	for currentHeight <= m.activeSyncHeight {
+		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.activeSyncHeight)
+
+		// TODO: consider rerequesting the block if it is not received after a certain amount of time
+		// form the get block request message
+		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+			Message: &typesCons.StateSyncMessage_GetBlockReq{
+				GetBlockReq: &typesCons.GetBlockRequest{
+					PeerAddress: nodeAddress,
+					Height:      currentHeight,
+				},
+			},
+		}
+
+		// broadcast the get block request message to all validators
+		for _, val := range validators {
+			if err := m.sendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress())); err != nil {
+				m.logger.Err(err).Msg("failed to send block request message")
+				return
+			}
+		}
+
+		// TODO: consider removing wating on  the committedBlocksChannel for block to be received
+		// wait for the requested block to be received and committed by consensus module
+		<-m.committedBlocksChannel
+
+		// requested block is received and committed, continue to the next block from the current height
+		currentHeight = consensusMod.CurrentHeight()
+	}
+
+	m.logger.Info().Msg("Active syncing is complete!")
+
+	if err = m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator); err != nil {
+		m.logger.Err(err).Msg("failed to send IsSyncedValidator event to the FSM")
+	}
 }

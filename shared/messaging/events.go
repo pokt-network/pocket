@@ -7,8 +7,9 @@ const (
 	StateMachineTransitionEventType = "pocket.StateMachineTransitionEvent"
 
 	// Consensus
-	HotstuffMessageContentType  = "consensus.HotstuffMessage"
-	StateSyncMessageContentType = "consensus.StateSyncMessage"
+	HotstuffMessageContentType       = "consensus.HotstuffMessage"
+	StateSyncMessageContentType      = "consensus.StateSyncMessage"
+	StateSyncBlockCommittedEventType = "consensus.StateSyncBlockCommittedEvent"
 
 	// Utility
 	TxGossipMessageContentType = "utility.TxGossipMessage"

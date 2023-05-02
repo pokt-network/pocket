@@ -26,8 +26,11 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 		if !ok {
 			return fmt.Errorf("failed to cast message to StateSyncMessage")
 		}
-
 		return m.handleStateSyncMessage(stateSyncMessage)
+
+	case messaging.StateSyncBlockCommittedEventType:
+		return m.stateSync.HandleStateSyncBlockCommittedEvent(stateSyncMessageAny)
+
 	default:
 		return typesCons.ErrUnknownStateSyncMessageType(stateSyncMessageAny.MessageName())
 	}
@@ -45,7 +48,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		return nil
 	case *typesCons.StateSyncMessage_MetadataRes:
 		m.logger.Info().Str("proto_type", "MetadataResponse").Msg("Handling StateSyncMessage MetadataRes")
-		m.metadataReceived <- stateSyncMessage.GetMetadataRes()
+		m.stateSync.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
 		return nil
 	case *typesCons.StateSyncMessage_GetBlockReq:
 		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage GetBlockRequest")
@@ -57,8 +60,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		return nil
 	case *typesCons.StateSyncMessage_GetBlockRes:
 		m.logger.Info().Str("proto_type", "GetBlockResponse").Msg("Handling StateSyncMessage GetBlockResponse")
-		//fmt.Println("Pushing block to blocksReceived channel, for height: ", stateSyncMessage.GetGetBlockRes().Block.BlockHeader.Height)
-		m.blocksReceived <- stateSyncMessage.GetGetBlockRes()
+		m.blocksResponsesReceived <- stateSyncMessage.GetGetBlockRes()
 		return nil
 	default:
 		return fmt.Errorf("unspecified state sync message type")

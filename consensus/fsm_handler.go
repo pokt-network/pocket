@@ -33,9 +33,8 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 }
 
 func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
-	fsm_state := msg.NewState
-
 	m.logger.Debug().Fields(messaging.TransitionEventToMap(msg)).Msg("Received state machine transition msg")
+	fsm_state := msg.NewState
 
 	switch coreTypes.StateMachineState(fsm_state) {
 	case coreTypes.StateMachineState_P2P_Bootstrapped:
@@ -55,7 +54,6 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 
 	default:
 		m.logger.Warn().Msgf("Consensus module not handling this event: %s", msg.Event)
-
 	}
 
 	return nil
@@ -84,12 +82,19 @@ func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEv
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Node is in Sync Mode, starting to sync...")
 
-	//TODO! check me
-	// aggregatedMetadata := m.getAggregatedStateSyncMetadata()
-	aggregatedMetadata := &typesCons.StateSyncMetadataResponse{}
-	m.stateSync.Set(aggregatedMetadata)
+	isValidator, err := m.GetBus().GetPersistenceModule().IsValidator(int64(m.height), m.GetNodeAddress())
+	if err != nil {
+		m.logger.Err(err).Msg("failed to check if the node is a validator")
+		return err
+	}
 
-	// go m.stateSync.Start()
+	// if the node is validator, start active state sync with StartActiveSync
+	// if the node is not validator, it will always stay in the sync mode, and it will eventually catch up to the final state with passive state sync
+	if isValidator {
+		m.logger.Debug().Msg("Validator node is starting active state sync")
+		go m.stateSync.StartActiveSync()
+	}
+
 	return nil
 }
 
