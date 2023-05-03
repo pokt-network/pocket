@@ -4,9 +4,10 @@ package configs;
 
 option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
+// CLEANUP: Need to make the configuration be "postgres agnostic"
 message PersistenceConfig {
   string postgres_url = 1;
-  string node_schema = 2;
+  string node_schema = 2; // the postgres schema used to store all the tables for a specific node; useful when multiple nodes share a single postgres instance
   string block_store_path = 3;
   string tx_indexer_path = 4;
   string trees_store_dir = 5;

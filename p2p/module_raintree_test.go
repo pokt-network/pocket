@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/p2p/protocol"
 )
 
@@ -233,7 +234,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		return iId < jId
 	})
 
-	prepareDNSResolverMock(t, valIds)
+	testutil.PrepareDNSMockFromServiceURLs(t, valIds)
 
 	// Create connection and bus mocks along with a shared WaitGroup to track the number of expected
 	// reads and writes throughout the mocked local network

@@ -2,7 +2,6 @@ package state_sync
 
 import (
 	"fmt"
-	"time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
@@ -17,7 +16,7 @@ import (
 const (
 	stateSyncModuleName       = "stateSyncModule"
 	committedBlocsChannelSize = 100
-	blockWaitingPeriod        = 30 * time.Second
+	//blockWaitingPeriod        = 30 * time.Second
 )
 
 type StateSyncModule interface {

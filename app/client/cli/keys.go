@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -81,7 +80,7 @@ func keysCreateCommands() []*cobra.Command {
 					return err
 				}
 
-				logger.Global.Info().Str("address", kp.GetAddressString()).Msg("New Key Created")
+				fmt.Printf("New key created 🔐: %s\n", kp.GetAddressString())
 
 				return nil
 			},
@@ -129,7 +128,7 @@ func keysUpdateCommands() []*cobra.Command {
 					return err
 				}
 
-				logger.Global.Info().Str("address", addrHex).Msg("Key updated")
+				fmt.Printf("Key updated 🔐: %s\n", addrHex)
 
 				return nil
 			},
@@ -176,7 +175,7 @@ func keysDeleteCommands() []*cobra.Command {
 					return err
 				}
 
-				logger.Global.Info().Str("address", addrHex).Msg("Key deleted")
+				fmt.Printf("Key deleted ❌: %s\n", addrHex)
 
 				return nil
 			},
@@ -215,7 +214,10 @@ func keysGetCommands() []*cobra.Command {
 					return err
 				}
 
-				logger.Global.Info().Strs("addresses", addresses).Msg("Get all keys")
+				fmt.Println("All keys 🔑")
+				for _, addr := range addresses {
+					fmt.Println(addr)
+				}
 
 				return nil
 			},
@@ -244,7 +246,8 @@ func keysGetCommands() []*cobra.Command {
 					return err
 				}
 
-				logger.Global.Info().Str("address", addrHex).Str("public_key", kp.GetPublicKey().String()).Msg("Found key")
+				fmt.Println("Key details 🕵️")
+				fmt.Printf("Address: %s\nPublic Key: %s\n", addrHex, kp.GetPublicKey().String())
 
 				return nil
 			},
@@ -301,11 +304,11 @@ func keysExportCommands() []*cobra.Command {
 
 				// Write to stdout or file
 				if outputFile == "" {
-					logger.Global.Info().Str("private_key", exportString).Msg("Key exported")
+					fmt.Printf("Private Key 🔒: %s\n", exportString)
 					return nil
 				}
 
-				logger.Global.Info().Str("output_file", outputFile).Msg("Exporting private key string to file...")
+				fmt.Println("Writing private key to file ⏳")
 
 				return utils.WriteOutput(exportString, outputFile)
 			},
@@ -380,7 +383,7 @@ func keysImportCommands() []*cobra.Command {
 					return err
 				}
 
-				logger.Global.Info().Str("address", kp.GetAddressString()).Msg("Key imported")
+				fmt.Printf("Key imported 📥: %s\n", kp.GetAddressString())
 
 				return nil
 			},
@@ -436,7 +439,7 @@ func keysSignMsgCommands() []*cobra.Command {
 
 				sigHex := hex.EncodeToString(sigBz)
 
-				logger.Global.Info().Str("signature", sigHex).Str("address", addrHex).Msg("Message signed")
+				fmt.Printf("Message signed 🔏\nSignature: %s\n", sigHex)
 
 				return nil
 			},
@@ -475,7 +478,12 @@ func keysSignMsgCommands() []*cobra.Command {
 					return err
 				}
 
-				logger.Global.Info().Str("address", addrHex).Bool("valid", valid).Msg("Signature checked")
+				if !valid {
+					fmt.Println("Signature is not valid ❌")
+					return nil
+				}
+
+				fmt.Println("Signature is valid ✅")
 
 				return nil
 			},
@@ -563,7 +571,7 @@ func keysSignTxCommands() []*cobra.Command {
 					return err
 				}
 
-				logger.Global.Info().Str("signed_transaction_file", outputFile).Str("address", addrHex).Msg("Message signed")
+				fmt.Printf("Message signed 🔏\nKey Address: %s\nSignature file: %s\n", addrHex, outputFile)
 
 				return nil
 			},
@@ -627,7 +635,12 @@ func keysSignTxCommands() []*cobra.Command {
 					return err
 				}
 
-				logger.Global.Info().Str("address", addrHex).Bool("valid", valid).Msg("Signature checked")
+				if !valid {
+					fmt.Println("Signature is not valid ❌")
+					return nil
+				}
+
+				fmt.Println("Signature is valid ✅")
 
 				return nil
 			},
@@ -679,7 +692,10 @@ func keysSlipCommands() []*cobra.Command {
 					return err
 				}
 
-				logger.Global.Info().Str("address", kp.GetAddressString()).Str("parent", parentAddr).Uint32("index", index).Bool("stored", storeChild).Msg("Child key derived")
+				fmt.Printf("Child key created 🚸\nChild Address: %s\nParent Address: %s\n", kp.GetAddressString(), parentAddr)
+				if storeChild {
+					fmt.Println("Child key stored in the Keybase 🔐")
+				}
 
 				return nil
 			},
