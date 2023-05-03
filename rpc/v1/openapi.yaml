@@ -324,7 +324,7 @@ paths:
     get:
       tags:
         - query
-      summary: Returns the current values of all governance parameters
+      summary: Returns the current values of all on-chain governance parameters
       responses:
         "200":
           description: Returns all the chain parameters
