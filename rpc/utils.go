@@ -45,11 +45,11 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 	return nil
 }
 
-// givenOrLatestBlockHeight returns either the height supplied or if it is equal to 0
+// getQueryHeight returns either the height supplied or if it is equal to 0
 // the most recent block height that has been commited. As the current consensus height
 // is one above this, and if used in certain queries will return an error as the height
 // has not been commited yet
-func (s *rpcServer) givenOrLatestBlockHeight(height int64) int64 {
+func (s *rpcServer) getQueryHeight(height int64) int64 {
 	if height == 0 {
 		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
 		if currentHeight > 0 {
