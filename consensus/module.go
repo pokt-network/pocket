@@ -52,8 +52,8 @@ type consensusModule struct {
 	round  uint64
 	step   typesCons.HotstuffStep
 	block  *coreTypes.Block // The current block being proposed / voted on; it has not been committed to finality
-	// TODO(#315): Move the statefulness of `TxResult` to the persistence module
-	TxResults []coreTypes.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
+	// TODO(#315): Move the statefulness of `IndexedTransaction` to the persistence module
+	IndexedTransactions []coreTypes.IndexedTransaction // The current block applied transaction results / voted on; it has not been committed to finality
 
 	prepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	lockedQC  *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT

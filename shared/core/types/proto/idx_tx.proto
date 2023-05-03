@@ -4,8 +4,8 @@ package core;
 
 option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
-// TxResult is a hydrated (i.e. blown up) version of the `Transaction` proto.
-message TxResult {
+// IndexedTransaction is a hydrated (i.e. blown up) version of the `Transaction` proto
+message IndexedTransaction {
   bytes tx = 1; // a serialized `Transaction` proto
   int64 height = 2; // the block height at which the transaction was included
   int32 index = 3; // the transaction's index within the block (i.e. ordered by when the proposer received it in the mempool)
