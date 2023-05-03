@@ -27,7 +27,7 @@ type TestReplayableOperation struct {
 }
 type TestReplayableTransaction struct {
 	operations []*TestReplayableOperation
-	txResult   *coreTypes.TxResult
+	idxTx      *coreTypes.IndexedTransaction
 }
 
 type TestReplayableBlock struct {
@@ -44,9 +44,9 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	// logic changes, these hashes will need to be updated based on the test output.
 	// TODO: Add an explicit updateSnapshots flag to the test to make this more clear.
 	stateHashes := []string{
-		"3a9a33c4d6b106f656c859296cd5ac16b608980d1d921f6de77051a707f48cb5",
-		"ec3d62106f1ca61dfe9c1d80a16c4ee3923550db5175389777bd1ecd9d50136e",
-		"e440914fba03bbb5ff4fbb73f760e4e75c3635263bbf7c15ca649870ee865222",
+		"6a30f096c86793de894388aad171e84c5ce766cbd82c5a5d36ca53d6c99ac041",
+		"c5840401da7028948f6d025867249fb9f9a9e738b36158669a64746e5b4f3ed2",
+		"209a2bda7e9a4495f45281e726777b33f54ac61868c8d8a059719cb5cefd2f75",
 	}
 
 	stakeAmount := initialStakeAmount
@@ -72,7 +72,7 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		require.NoError(t, err)
 
 		txBz := []byte("a tx, i am, which set the app stake amount to " + stakeAmountStr)
-		txResult := &coreTypes.TxResult{
+		idxTx := &coreTypes.IndexedTransaction{
 			Tx:            txBz,
 			Height:        height,
 			Index:         0,
@@ -83,7 +83,7 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 			MessageType:   "TODO",
 		}
 
-		err = db.IndexTransaction(txResult)
+		err = db.IndexTransaction(idxTx)
 		require.NoError(t, err)
 
 		// Update the state hash
@@ -156,13 +156,13 @@ func TestStateHash_ReplayingRandomTransactionsIsDeterministic(t *testing.T) {
 						}
 					}
 
-					txResult := getRandomTxResult(height)
-					err := db.IndexTransaction(txResult)
+					idxTx := getRandomIdxTx(height)
+					err := db.IndexTransaction(idxTx)
 					require.NoError(t, err)
 
 					replayableTxs[txIdx] = &TestReplayableTransaction{
 						operations: replayableOps,
-						txResult:   txResult,
+						idxTx:      idxTx,
 					}
 				}
 
@@ -212,7 +212,7 @@ func verifyReplayableBlocks(t *testing.T, replayableBlocks []*TestReplayableBloc
 			for _, op := range tx.operations {
 				require.Nil(t, reflect.ValueOf(db).MethodByName(op.methodName).Call(op.args)[0].Interface())
 			}
-			require.NoError(t, db.IndexTransaction(tx.txResult))
+			require.NoError(t, db.IndexTransaction(tx.idxTx))
 		}
 
 		stateHash, err := db.ComputeStateHash()

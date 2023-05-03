@@ -71,7 +71,7 @@ func BenchmarkStateHash(b *testing.B) {
 						_, _, err := callRandomDatabaseModifierFunc(db, false)
 						require.NoError(b, err)
 					}
-					err := db.IndexTransaction(getRandomTxResult(height))
+					err := db.IndexTransaction(getRandomIdxTx(height))
 					require.NoError(b, err)
 				}
 				_, err := db.ComputeStateHash()
@@ -151,8 +151,8 @@ MethodLoop:
 	}
 }
 
-func getRandomTxResult(height int64) *coreTypes.TxResult {
-	return &coreTypes.TxResult{
+func getRandomIdxTx(height int64) *coreTypes.IndexedTransaction {
+	return &coreTypes.IndexedTransaction{
 		Tx:            getRandomBytes(50),
 		Height:        height,
 		Index:         0,

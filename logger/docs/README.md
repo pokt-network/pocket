@@ -10,6 +10,7 @@
 - [Global Logging](#global-logging)
 - [Module Logging](#module-logging)
   - [Logger Initialization](#logger-initialization)
+- [Submodule / Subcontext Logging](#submodule--subcontext-logging)
 - [Accessing Logs](#accessing-logs)
   - [Grafana](#grafana)
   - [Example Queries](#example-queries)
@@ -125,6 +126,24 @@ type sweetModule struct {
 func (m *sweetModule) Start() error {
     m.logger = logger.Global.CreateLoggerForModule(u.GetModuleName())
     ...
+}
+```
+
+## Submodule / Subcontext Logging
+
+A common helpful practice is to create a logger that can be easily filtered for within a specific context, such as a specific submodule, a function or a code path.
+
+```golang
+m.logger.With().Str("source", "contextName").Logger(),
+```
+
+For example:
+
+```golang
+
+func (m *Module) fooFunc() {
+  fooLogger := m.logger.With().Str("source", "fooFunc").Logger(),
+  // use fooLogger here
 }
 ```
 

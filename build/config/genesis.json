@@ -4120,7 +4120,7 @@
     }
   ],
   "params": {
-    "blocks_per_session": 4,
+    "blocks_per_session": 1,
     "app_minimum_stake": "15000000000",
     "app_max_chains": 15,
     "app_session_tokens_multiplier": 100,
@@ -4138,6 +4138,7 @@
     "fisherman_unstaking_blocks": 2016,
     "fisherman_minimum_pause_blocks": 4,
     "fisherman_max_pause_blocks": 672,
+    "fisherman_per_session": 1,
     "validator_minimum_stake": "15000000000",
     "validator_unstaking_blocks": 2016,
     "validator_minimum_pause_blocks": 4,
@@ -4192,6 +4193,7 @@
     "fisherman_unstaking_blocks_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
     "fisherman_minimum_pause_blocks_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
     "fisherman_max_paused_blocks_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
+    "fisherman_per_session_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
     "validator_minimum_stake_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
     "validator_unstaking_blocks_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
     "validator_minimum_pause_blocks_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
