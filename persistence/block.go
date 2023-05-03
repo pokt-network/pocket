@@ -71,15 +71,15 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 	}
 
 	// Retrieve the indexed transactions at the current height
-	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
+	idxTxs, err := p.txIndexer.GetByHeight(p.Height, false)
 	if err != nil {
 		return nil, err
 	}
 
-	// Retrieve the transactions from the txResults
-	txs := make([][]byte, len(txResults))
-	for i, txResult := range txResults {
-		txs[i] = txResult.GetTx()
+	// Retrieve the transactions from the idxTxs
+	txs := make([][]byte, len(idxTxs))
+	for i, idxTx := range idxTxs {
+		txs[i] = idxTx.GetTx()
 	}
 
 	// Get the current timestamp

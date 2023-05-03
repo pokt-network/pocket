@@ -6,13 +6,14 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
-func TxToTxResult(
+// TxToIdxTx Converts a Transaction structure into an IndexedTransaction structure
+func TxToIdxTx(
 	tx *coreTypes.Transaction,
 	height int64,
 	index int,
 	msg Message,
 	msgHandlingResult coreTypes.Error,
-) (*coreTypes.TxResult, coreTypes.Error) {
+) (*coreTypes.IndexedTransaction, coreTypes.Error) {
 	txBz, err := tx.Bytes()
 	if err != nil {
 		return nil, coreTypes.ErrProtoMarshal(err)
@@ -23,7 +24,7 @@ func TxToTxResult(
 		resultCode = int32(msgHandlingResult.Code())
 		errorMsg = msgHandlingResult.Error()
 	}
-	result := &coreTypes.TxResult{
+	result := &coreTypes.IndexedTransaction{
 		Tx:            txBz,
 		Height:        height,
 		Index:         int32(index),

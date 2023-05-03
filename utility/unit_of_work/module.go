@@ -147,7 +147,7 @@ func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(txMempool
 			return err
 		}
 
-		txResult, err := uow.HydrateTxResult(tx, index)
+		idxTx, err := uow.HydrateIdxTx(tx, index)
 		if err != nil {
 			return err
 		}
@@ -167,7 +167,7 @@ func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(txMempool
 		}
 
 		// TODO(#564): make sure that indexing is reversible in case of a rollback
-		if err := uow.persistenceRWContext.IndexTransaction(txResult); err != nil {
+		if err := uow.persistenceRWContext.IndexTransaction(idxTx); err != nil {
 			uow.logger.Fatal().Err(err).Msg("TODO(#327): We can apply the transaction but not index it. Crash the process for now")
 		}
 	}

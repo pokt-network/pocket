@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.39] - 2023-05-03
+
+- Rename `TxResult` to `IndexedTransaction`
+
 ## [0.0.0.38] - 2023-04-28
 
 - Introduced testing helper to test the `UtilityModule` interface implementation
