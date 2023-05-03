@@ -13,6 +13,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	mocksPer "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -41,13 +42,63 @@ func TestMain(m *testing.M) {
 // TODO(integration): These are temporary variables used in the prototype integration phase that
 // will need to be parameterized later once the test framework design matures.
 const (
-	numValidators = 4
-	stateHash     = "42"
+	numValidators                = 4
+	stateHash                    = "42"
+	numberOfPersistedDummyBlocks = 200
 )
 
 var maxTxBytes = defaults.DefaultConsensusMaxMempoolBytes
 
 type IdToNodeMapping map[typesCons.NodeId]*shared.Node
+type IdToPKMapping map[typesCons.NodeId]cryptoPocket.PrivateKey
+
+type placeholderBlocks struct {
+	pKs    IdToPKMapping
+	blocks []*coreTypes.Block
+}
+
+func (p *placeholderBlocks) setPKs(nodeId typesCons.NodeId, pk cryptoPocket.PrivateKey) {
+	p.pKs[nodeId] = pk
+}
+
+func (p *placeholderBlocks) prepareBlocks(t *testing.T, bus modules.Bus, nodePKs IdToPKMapping) {
+	i := uint64(1)
+	for i <= numberOfPersistedDummyBlocks {
+
+		leaderId := bus.GetConsensusModule().GetLeaderForView(i, uint64(0), uint8(consensus.NewRound))
+		leaderPK := nodePKs[typesCons.NodeId(leaderId)]
+
+		// Construct the block
+		blockHeader := &coreTypes.BlockHeader{
+			Height:            i,
+			StateHash:         stateHash,
+			PrevStateHash:     stateHash,
+			ProposerAddress:   leaderPK.Address(),
+			QuorumCertificate: nil,
+		}
+		block := &coreTypes.Block{
+			BlockHeader:  blockHeader,
+			Transactions: make([][]byte, 0),
+		}
+
+		// TODO_IN_THIS_COMMIT: Need to redo how this is done.
+		qc, err := generateValidQuorumCertificate(nodePKs, block)
+		require.NoError(t, err)
+
+		qcBytes, err := codec.GetCodec().Marshal(qc)
+		require.NoError(t, err)
+
+		block.BlockHeader.QuorumCertificate = qcBytes
+
+		p.blocks = append(p.blocks, block)
+		i++
+	}
+}
+
+func (p *placeholderBlocks) getBlock(index uint64) *coreTypes.Block {
+	// get block at index -1, because block 1 is stored at index 0 of the blocks array
+	return p.blocks[index-1]
+}
 
 /*** Node Generation Helpers ***/
 
@@ -88,11 +139,19 @@ func CreateTestConsensusPocketNodes(
 		return pk.Address().String() < pk2.Address().String()
 	})
 
+	blocks := &placeholderBlocks{
+		pKs: make(IdToPKMapping, len(buses)),
+	}
+
 	for i := range buses {
-		pocketNode := CreateTestConsensusPocketNode(t, buses[i], eventsChannel)
+		pocketNode := CreateTestConsensusPocketNode(t, buses[i], eventsChannel, blocks)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
+		nodePK, err := cryptoPocket.NewPrivateKey(pocketNode.GetBus().GetRuntimeMgr().GetConfig().PrivateKey)
+		require.NoError(t, err)
+		blocks.setPKs(typesCons.NodeId(i+1), nodePK)
 	}
+	blocks.prepareBlocks(t, buses[0], blocks.pKs)
 	return
 }
 
@@ -101,8 +160,9 @@ func CreateTestConsensusPocketNode(
 	t *testing.T,
 	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
+	nodesAndBlocks *placeholderBlocks,
 ) *shared.Node {
-	persistenceMock := basePersistenceMock(t, eventsChannel, bus)
+	persistenceMock := basePersistenceMock(t, eventsChannel, bus, nodesAndBlocks)
 	bus.RegisterModule(persistenceMock)
 
 	consensusMod, err := consensus.Create(bus)
@@ -384,10 +444,11 @@ loop:
 /*** Module Mocking Helpers ***/
 
 // Creates a persistence module mock with mock implementations of some basic functionality
-func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *mockModules.MockPersistenceModule {
+func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus, placeholderBlocks *placeholderBlocks) *mockModules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
 	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
+	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
 
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
@@ -396,29 +457,22 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().IsValidator(gomock.Any(), gomock.Any()).Return(true, nil).AnyTimes()
 
-	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
-
 	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
 		heightInt := utils.HeightFromBytes(height)
 		if bus.GetConsensusModule().CurrentHeight() < heightInt {
 			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
 		}
-		blockWithHeight := &coreTypes.Block{
-			BlockHeader: &coreTypes.BlockHeader{
-				Height: utils.HeightFromBytes(height),
-			},
-		}
-		return codec.GetCodec().Marshal(blockWithHeight)
+		return codec.GetCodec().Marshal(placeholderBlocks.getBlock(heightInt))
 	}).AnyTimes()
 
 	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().GetMaximumBlockHeight().DoAndReturn(func() (uint64, error) {
-		currentHeight := bus.GetConsensusModule().CurrentHeight()
-		if currentHeight == 0 {
-			return 0, nil
+		// if it is checked for an unsynched node, return the current height - 1
+		if int(bus.GetConsensusModule().CurrentHeight()) <= numberOfPersistedDummyBlocks {
+			return bus.GetConsensusModule().CurrentHeight() - 1, nil
 		}
-		return currentHeight - 1, nil
+		return uint64(numberOfPersistedDummyBlocks), nil
 	}).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().GetMinimumBlockHeight().DoAndReturn(func() (uint64, error) {
@@ -764,7 +818,7 @@ func waitForNodeToCatchUp(
 	targetHeight uint64,
 ) error {
 	// wait for unsynced node to send StateMachineEvent_Consensus_IsSyncedValidator event
-	_, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "synced event", 1, 500, false)
+	_, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "didn't receive synced event", 1, 500, false)
 	require.NoError(t, err)
 
 	// ensure unsynced node caught up to the target height
@@ -876,4 +930,76 @@ func assertRound(t *testing.T, nodeId typesCons.NodeId, expected, actual uint8) 
 func startNode(t *testing.T, pocketNode *shared.Node) {
 	err := pocketNode.Start()
 	require.NoError(t, err)
+}
+
+func generateValidQuorumCertificate(nodePKs IdToPKMapping, block *coreTypes.Block) (*typesCons.QuorumCertificate, error) {
+	var pss []*typesCons.PartialSignature
+
+	for _, nodePK := range nodePKs {
+		ps, err := generatePartialSignature(block, nodePK)
+		if err != nil {
+			return nil, err
+		}
+		pss = append(pss, ps)
+	}
+
+	thresholdSig := getThresholdSignature(pss)
+
+	return &typesCons.QuorumCertificate{
+		Height:             block.BlockHeader.Height,
+		Step:               1,
+		Round:              1,
+		Block:              block,
+		ThresholdSignature: thresholdSig,
+	}, nil
+}
+
+// generate partial signature for the validator
+func generatePartialSignature(block *coreTypes.Block, nodePK cryptoPocket.PrivateKey) (*typesCons.PartialSignature, error) {
+	// privKey, err := node.GetBus().GetConsensusModule().GetPrivateKey()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	return &typesCons.PartialSignature{
+		Signature: getMessageSignature(block, nodePK),
+		Address:   nodePK.PublicKey().Address().String(),
+	}, nil
+}
+
+func getThresholdSignature(partialSigs []*typesCons.PartialSignature) *typesCons.ThresholdSignature {
+	thresholdSig := new(typesCons.ThresholdSignature)
+	thresholdSig.Signatures = make([]*typesCons.PartialSignature, len(partialSigs))
+	copy(thresholdSig.Signatures, partialSigs)
+	return thresholdSig
+}
+
+// Generates partial signature with given private key
+// If there is an error signing the bytes, nil is returned instead.
+func getMessageSignature(block *coreTypes.Block, privKey cryptoPocket.PrivateKey) []byte {
+	bytesToSign, err := getSignableBytes(block)
+	if err != nil {
+		logger.Global.Warn().Err(err).Msgf("error getting bytes to sign")
+		return nil
+	}
+
+	signature, err := privKey.Sign(bytesToSign)
+	if err != nil {
+		logger.Global.Warn().Err(err).Msgf("error signing message")
+		return nil
+	}
+
+	return signature
+}
+
+// Signature only over subset of fields in HotstuffMessage
+// For reference, see section 4.3 of the the hotstuff whitepaper, partial signatures are
+// computed over `tsignr(hm.type, m.viewNumber , m.nodei)`. https://arxiv.org/pdf/1803.05069.pdf
+func getSignableBytes(block *coreTypes.Block) ([]byte, error) {
+	msgToSign := &typesCons.HotstuffMessage{
+		Height: block.BlockHeader.Height,
+		Step:   1,
+		Round:  1,
+		Block:  block,
+	}
+	return codec.GetCodec().Marshal(msgToSign)
 }

@@ -270,7 +270,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// TODO(#352): Implement these tests
+// TODO: Implement these tests
 
 func TestStateSync_UnsyncedPeerSyncsABlock_Success(t *testing.T) {
 	t.Skip()

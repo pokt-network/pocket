@@ -48,7 +48,6 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		return nil
 	case *typesCons.StateSyncMessage_MetadataRes:
 		m.logger.Info().Str("proto_type", "MetadataResponse").Msg("Handling StateSyncMessage MetadataRes")
-		fmt.Println("MetadataResponse Received MaxHeight: ", stateSyncMessage.GetMetadataRes().MaxHeight)
 		m.metadataReceived <- stateSyncMessage.GetMetadataRes()
 		return nil
 	case *typesCons.StateSyncMessage_GetBlockReq:
