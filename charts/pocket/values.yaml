@@ -61,8 +61,8 @@ persistence:
   # -- custom data source of the persistent volume claim
   dataSource: {}
 
-# -- type of the blockchain node to run. Can be either `archival`, `validator`, `servicer`, `fishermen`
-nodeType: "archival"
+# -- type of the blockchain node to run. Can be either `full`, `validator`, `servicer`, `fishermen`
+nodeType: "full"
 
 privateKeySecretKeyRef:
   # -- REQUIRED. Name of the Secret in the same namespace that contains the private key of the node
