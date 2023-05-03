@@ -79,7 +79,10 @@ func (m *consensusModule) metadataSyncLoop() error {
 		select {
 		case <-ticker.C:
 			m.logger.Info().Msg("Background metadata sync check triggered")
-			m.sendMetadataRequests()
+			if err := m.sendMetadataRequests(); err != nil {
+				m.logger.Error().Err(err).Msg("Failed to send metadata requests")
+				return err
+			}
 
 		case <-ctx.Done():
 			ticker.Stop()

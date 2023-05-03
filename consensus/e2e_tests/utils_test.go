@@ -936,11 +936,8 @@ func generateValidQuorumCertificate(nodePKs IdToPKMapping, block *coreTypes.Bloc
 	var pss []*typesCons.PartialSignature
 
 	for _, nodePK := range nodePKs {
-		ps, err := generatePartialSignature(block, nodePK)
-		if err != nil {
-			return nil, err
-		}
-		pss = append(pss, ps)
+		//ps :=
+		pss = append(pss, generatePartialSignature(block, nodePK))
 	}
 
 	thresholdSig := getThresholdSignature(pss)
@@ -955,15 +952,11 @@ func generateValidQuorumCertificate(nodePKs IdToPKMapping, block *coreTypes.Bloc
 }
 
 // generate partial signature for the validator
-func generatePartialSignature(block *coreTypes.Block, nodePK cryptoPocket.PrivateKey) (*typesCons.PartialSignature, error) {
-	// privKey, err := node.GetBus().GetConsensusModule().GetPrivateKey()
-	// if err != nil {
-	// 	return nil, err
-	// }
+func generatePartialSignature(block *coreTypes.Block, nodePK cryptoPocket.PrivateKey) *typesCons.PartialSignature {
 	return &typesCons.PartialSignature{
 		Signature: getMessageSignature(block, nodePK),
 		Address:   nodePK.PublicKey().Address().String(),
-	}, nil
+	}
 }
 
 func getThresholdSignature(partialSigs []*typesCons.PartialSignature) *typesCons.ThresholdSignature {

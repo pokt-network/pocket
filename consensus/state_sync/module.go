@@ -24,7 +24,7 @@ type StateSyncModule interface {
 	StateSyncServerModule
 
 	SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyncMetadataResponse)
-	//StartSyncing()
+	// StartSyncing()
 	HandleStateSyncBlockCommittedEvent(message *anypb.Any) error
 }
 
@@ -51,9 +51,7 @@ func (m *stateSync) HandleStateSyncBlockCommittedEvent(event *anypb.Any) error {
 		return err
 	}
 
-	switch event.MessageName() {
-
-	case messaging.StateSyncBlockCommittedEventType:
+	if event.MessageName() == messaging.StateSyncBlockCommittedEventType {
 		newCommitBlockEvent, ok := evt.(*messaging.StateSyncBlockCommittedEvent)
 		if !ok {
 			return fmt.Errorf("failed to cast event to StateSyncBlockCommittedEvent")
@@ -61,6 +59,7 @@ func (m *stateSync) HandleStateSyncBlockCommittedEvent(event *anypb.Any) error {
 
 		m.committedBlocksChannel <- newCommitBlockEvent.Height
 	}
+
 	return nil
 }
 

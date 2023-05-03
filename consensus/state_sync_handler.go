@@ -10,11 +10,6 @@ import (
 )
 
 func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any) error {
-	// m.m.Lock()
-	// defer m.m.Unlock()
-
-	//m.logger.Info().Msg("Handling StateSyncMessage")
-
 	switch stateSyncMessageAny.MessageName() {
 	case messaging.StateSyncMessageContentType:
 		msg, err := codec.GetCodec().FromAny(stateSyncMessageAny)
