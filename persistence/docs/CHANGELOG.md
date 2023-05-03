@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.51] - 2023-05-03
+
+- Rename `TxResult` to `IndexedTransaction`
+- Have the `txIndexer` index transactions using the hash of the serialised `Transaction`
+- Use the hash of the serialised `Transaction` as the key for transactions in the transaction state tree
+
 ## [0.0.0.50] - 2023-04-28
 
 - Implemented a new `GetActor` persistence modular functoin
