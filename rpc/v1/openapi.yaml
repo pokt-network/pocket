@@ -762,7 +762,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TxResult"
+                $ref: "#/components/schemas/IndexedTransaction"
         "400":
           description: Bad request
           content:
@@ -793,7 +793,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TxResult"
+                $ref: "#/components/schemas/IndexedTransaction"
         "400":
           description: Bad request
           content:
@@ -1201,7 +1201,7 @@ components:
         txs:
           type: array
           items:
-            $ref: "#/components/schemas/TxResult"
+            $ref: "#/components/schemas/IndexedTransaction"
         total_txs:
           type: integer
           format: int64
@@ -1321,7 +1321,7 @@ components:
         transactions:
           type: array
           items:
-            $ref: "#/components/schemas/TxResult"
+            $ref: "#/components/schemas/IndexedTransaction"
         total_txs:
           type: integer
           format: int64
@@ -1463,7 +1463,7 @@ components:
         transactions:
           type: array
           items:
-            $ref: "#/components/schemas/TxResult"
+            $ref: "#/components/schemas/IndexedTransaction"
     BlockHeader:
       type: object
       required:
@@ -1797,7 +1797,7 @@ components:
           format: int32
         txMsg:
           $ref: "#/components/schemas/TxMessage"
-    TxResult:
+    IndexedTransaction:
       type: object
       required:
         - height

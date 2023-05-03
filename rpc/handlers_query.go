@@ -28,15 +28,7 @@ func (s *rpcServer) PostV1QueryAccount(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -64,15 +56,7 @@ func (s *rpcServer) PostV1QueryAccounts(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -115,12 +99,12 @@ func (s *rpcServer) PostV1QueryAccountTxs(ctx echo.Context) error {
 	sortDesc := checkSortDesc(*body.Sort)
 
 	txIndexer := s.GetBus().GetPersistenceModule().GetTxIndexer()
-	txResults, err := txIndexer.GetBySender(body.Address, sortDesc)
+	idxTxs, err := txIndexer.GetBySender(body.Address, sortDesc)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	start, end, totalPages, err := getPageIndexes(len(txResults), int(body.Page), int(body.PerPage))
+	start, end, totalPages, err := getPageIndexes(len(idxTxs), int(body.Page), int(body.PerPage))
 	if err != nil && !errors.Is(err, errNoItems) {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
@@ -128,9 +112,9 @@ func (s *rpcServer) PostV1QueryAccountTxs(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, QueryAccountTxsResponse{})
 	}
 
-	pageTxs := make([]TxResult, 0)
-	for _, txResult := range txResults[start : end+1] {
-		rpcTx, err := s.txResultToRPCTxResult(txResult)
+	pageTxs := make([]IndexedTransaction, 0)
+	for _, idxTx := range idxTxs[start : end+1] {
+		rpcTx, err := s.idxTxToRPCIdxTx(idxTx)
 		if err != nil {
 			return ctx.String(http.StatusInternalServerError, err.Error())
 		}
@@ -140,18 +124,14 @@ func (s *rpcServer) PostV1QueryAccountTxs(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, QueryAccountTxsResponse{
 		Txs:        pageTxs,
 		Page:       body.Page,
-		TotalTxs:   int64(len(txResults)),
+		TotalTxs:   int64(len(idxTxs)),
 		TotalPages: int64(totalPages),
 	})
 }
 
 func (s *rpcServer) GetV1QueryAllChainParams(ctx echo.Context) error {
-	// Get latest stored block height
-	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-	if currentHeight > 0 {
-		currentHeight -= 1
-	}
-	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	height := s.givenOrLatestBlockHeight(0)
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -177,15 +157,7 @@ func (s *rpcServer) PostV1QueryApp(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -211,15 +183,7 @@ func (s *rpcServer) PostV1QueryApps(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -255,15 +219,7 @@ func (s *rpcServer) PostV1QueryBalance(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -294,16 +250,7 @@ func (s *rpcServer) PostV1QueryBlock(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := uint64(body.Height)
-	if height == 0 {
-		currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
-
+	height := uint64(s.givenOrLatestBlockHeight(body.Height))
 	blockStore := s.GetBus().GetPersistenceModule().GetBlockStore()
 	blockBz, err := blockStore.Get(utils.HeightToBytes(height))
 	if err != nil {
@@ -329,16 +276,7 @@ func (s *rpcServer) PostV1QueryBlockTxs(ctx echo.Context) error {
 	}
 	sortDesc := checkSortDesc(*body.Sort)
 
-	// Get latest stored block height
-	height := uint64(body.Height)
-	if height == 0 {
-		currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
-
+	height := uint64(s.givenOrLatestBlockHeight(body.Height))
 	blockStore := s.GetBus().GetPersistenceModule().GetBlockStore()
 	blockBz, err := blockStore.Get(utils.HeightToBytes(height))
 	if err != nil {
@@ -382,15 +320,7 @@ func (s *rpcServer) PostV1QueryFisherman(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -416,15 +346,7 @@ func (s *rpcServer) PostV1QueryFishermen(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -455,14 +377,8 @@ func (s *rpcServer) PostV1QueryFishermen(ctx echo.Context) error {
 }
 
 func (s *rpcServer) GetV1QueryHeight(ctx echo.Context) error {
-	// Get latest stored block height
-	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-	if currentHeight > 0 {
-		currentHeight -= 1
-	}
-
 	return ctx.JSON(http.StatusOK, QueryHeight{
-		Height: int64(currentHeight),
+		Height: s.givenOrLatestBlockHeight(0),
 	})
 }
 
@@ -472,16 +388,7 @@ func (s *rpcServer) PostV1QueryParam(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-	if currentHeight > 0 {
-		currentHeight -= 1
-	}
-	height := body.Height
-	if height == 0 || height > currentHeight {
-		height = currentHeight
-	}
-
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -505,15 +412,7 @@ func (s *rpcServer) PostV1QueryServicer(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -539,15 +438,7 @@ func (s *rpcServer) PostV1QueryServicers(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -583,15 +474,7 @@ func (s *rpcServer) PostV1QuerySupply(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -635,15 +518,7 @@ func (s *rpcServer) PostV1QuerySupportedChains(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -671,12 +546,12 @@ func (s *rpcServer) PostV1QueryTx(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	txIndexer := s.GetBus().GetPersistenceModule().GetTxIndexer()
-	txResult, err := txIndexer.GetByHash(hashBz)
+	idxTx, err := txIndexer.GetByHash(hashBz)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	rpcTx, err := s.txResultToRPCTxResult(txResult)
+	rpcTx, err := s.idxTxToRPCIdxTx(idxTx)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -696,7 +571,7 @@ func (s *rpcServer) PostV1QueryUnconfirmedTx(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, fmt.Sprintf("hash not found in mempool: %s", body.Hash))
 	}
 
-	rpcUncTxs, err := s.txProtoBytesToRPCTxResults([][]byte{uncTx})
+	rpcUncTxs, err := s.txProtoBytesToRPCIdxTxs([][]byte{uncTx})
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -721,7 +596,7 @@ func (s *rpcServer) PostV1QueryUnconfirmedTxs(ctx echo.Context) error {
 		return ctx.JSON(http.StatusOK, QueryTxsResponse{})
 	}
 
-	rpcUncTxs, err := s.txProtoBytesToRPCTxResults(uncTxs[start : end+1])
+	rpcUncTxs, err := s.txProtoBytesToRPCIdxTxs(uncTxs[start : end+1])
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -740,15 +615,7 @@ func (s *rpcServer) PostV1QueryUpgrade(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	reatCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -771,15 +638,7 @@ func (s *rpcServer) PostV1QueryValidator(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -805,15 +664,7 @@ func (s *rpcServer) PostV1QueryValidators(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 
-	// Get latest stored block height
-	height := body.Height
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		height = currentHeight
-	}
+	height := s.givenOrLatestBlockHeight(body.Height)
 	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())

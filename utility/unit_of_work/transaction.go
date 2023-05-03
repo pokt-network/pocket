@@ -9,7 +9,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-// HydrateIdxTX converts a `Transaction` proto into a `TxResult` struct` after doing basic validation
+// HydrateIdxTX converts a `Transaction` proto into a `IndexedTransaction` struct` after doing basic validation
 // and extracting the relevant data from the embedded signed Message. `index` is the intended location
 // of its index (i.e. the transaction number) in the block where it is included.
 //

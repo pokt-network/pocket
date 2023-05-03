@@ -45,6 +45,21 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 	return nil
 }
 
+// givenOrLatestBlockHeight returns either the height supplied or if it is equal to 0
+// the most recent block height that has been commited. As the current consensus height
+// is one above this, and if used in certain queries will return an error as the height
+// has not been commited yet
+func (s *rpcServer) givenOrLatestBlockHeight(height int64) int64 {
+	if height == 0 {
+		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+		if currentHeight > 0 {
+			currentHeight -= 1
+		}
+		return currentHeight
+	}
+	return height
+}
+
 // checkSortDesc takes a sort string and returns whether to sort descending or not
 func checkSortDesc(sort string) bool {
 	return !strings.EqualFold(sort, "asc")
@@ -103,26 +118,26 @@ func protocolActorToRPCProtocolActors(actors []*coreTypes.Actor) []ProtocolActor
 	return rpcActors
 }
 
-// txResultToRPCTxResult converts the txResult protobuf into the RPC TxResult type
-func (s *rpcServer) txResultToRPCTxResult(txResult *coreTypes.TxResult) (*TxResult, error) {
-	hash := coreTypes.TxHash(txResult.GetTx())
-	txMsg, err := s.txBytesToRPCTxMsg(txResult.GetTx(), txResult.GetMessageType())
+// idxTxToRPCIdxTx converts the idxTx protobuf into the RPC IdxTx type
+func (s *rpcServer) idxTxToRPCIdxTx(idxTx *coreTypes.IndexedTransaction) (*IndexedTransaction, error) {
+	hash := coreTypes.TxHash(idxTx.GetTx())
+	txMsg, err := s.txBytesToRPCTxMsg(idxTx.GetTx(), idxTx.GetMessageType())
 	if err != nil {
 		return nil, err
 	}
-	return &TxResult{
+	return &IndexedTransaction{
 		Tx: Transaction{
 			Hash:   hash,
-			Height: txResult.GetHeight(),
-			Index:  txResult.GetIndex(),
+			Height: idxTx.GetHeight(),
+			Index:  idxTx.GetIndex(),
 			TxMsg:  *txMsg,
 		},
-		Height:        txResult.GetHeight(),
-		Index:         txResult.GetIndex(),
-		ResultCode:    txResult.GetResultCode(),
-		SignerAddr:    txResult.GetSignerAddr(),
-		RecipientAddr: txResult.GetRecipientAddr(),
-		MessageType:   txResult.GetMessageType(),
+		Height:        idxTx.GetHeight(),
+		Index:         idxTx.GetIndex(),
+		ResultCode:    idxTx.GetResultCode(),
+		SignerAddr:    idxTx.GetSignerAddr(),
+		RecipientAddr: idxTx.GetRecipientAddr(),
+		MessageType:   idxTx.GetMessageType(),
 	}, nil
 }
 
@@ -344,8 +359,8 @@ func (s *rpcServer) calculateMessageFeeForActor(actorType coreTypes.ActorType, m
 	return "", fmt.Errorf("unhandled message type: %s", messageType)
 }
 
-// txProtoBytesToRPCTxResults converts a slice of serialised Transaction protobufs to a slice of RPC TxResults
-func (s *rpcServer) txProtoBytesToRPCTxResults(txProtoBytes [][]byte) ([]TxResult, error) {
+// txProtoBytesToRPCIdxTxs converts a slice of serialised Transaction protobufs to a slice of RPC IdxTxs
+func (s *rpcServer) txProtoBytesToRPCIdxTxs(txProtoBytes [][]byte) ([]IndexedTransaction, error) {
 	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
 	uow, err := s.GetBus().GetUtilityModule().NewUnitOfWork(int64(currentHeight))
 	if err != nil {
@@ -353,17 +368,17 @@ func (s *rpcServer) txProtoBytesToRPCTxResults(txProtoBytes [][]byte) ([]TxResul
 	}
 	defer uow.Release() //nolint:errcheck // We only need to make sure the UOW is released
 
-	txs := make([]TxResult, 0)
+	txs := make([]IndexedTransaction, 0)
 	for idx, txBz := range txProtoBytes {
 		tx := new(coreTypes.Transaction)
 		if err := codec.GetCodec().Unmarshal(txBz, tx); err != nil {
 			return nil, err
 		}
-		txResult, er := uow.HydrateTxResult(tx, idx)
+		idxTx, er := uow.HydrateIdxTx(tx, idx)
 		if er != nil {
 			return nil, er
 		}
-		rpcTx, err := s.txResultToRPCTxResult(txResult)
+		rpcTx, err := s.idxTxToRPCIdxTx(idxTx)
 		if err != nil {
 			return nil, err
 		}
@@ -375,7 +390,7 @@ func (s *rpcServer) txProtoBytesToRPCTxResults(txProtoBytes [][]byte) ([]TxResul
 
 // blockToRPCBlock converts a block protobuf to the RPC block type
 func (s *rpcServer) blockToRPCBlock(protoBlock *coreTypes.Block) (*Block, error) {
-	txs, err := s.txProtoBytesToRPCTxResults(protoBlock.GetTransactions())
+	txs, err := s.txProtoBytesToRPCIdxTxs(protoBlock.GetTransactions())
 	if err != nil {
 		return nil, err
 	}
