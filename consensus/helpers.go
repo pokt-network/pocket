@@ -145,15 +145,11 @@ func protoHash(m proto.Message) string {
 
 func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 	leaderId := m.leaderId
-	m.logger.Debug().Fields(
-		map[string]any{
-			"src":    m.nodeId,
-			"dst":    leaderId,
-			"height": msg.GetHeight(),
-			"step":   msg.GetStep(),
-			"round":  msg.GetRound(),
-		},
-	).Msg("✉️ About to try sending hotstuff message ✉️")
+
+	loggingFields := hotstuffMsgToLoggingFields(msg)
+	loggingFields["src"] = m.nodeId
+	loggingFields["dst"] = leaderId
+	m.logger.Debug().Fields(loggingFields).Msg("✉️ About to try sending hotstuff message ✉️")
 
 	// TODO: This can happen due to a race condition with the pacemaker.
 	if leaderId == nil {
@@ -183,13 +179,7 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 // Star-like (O(n)) broadcast - send to all nodes directly
 // INVESTIGATE: Re-evaluate if we should be using our structured broadcast (RainTree O(log3(n))) algorithm instead
 func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
-	m.logger.Info().Fields(
-		map[string]any{
-			"height": m.CurrentHeight(),
-			"step":   m.step,
-			"round":  m.round,
-		},
-	).Msg("📣 Broadcasting message 📣")
+	m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msg("📣 Broadcasting message 📣")
 
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
@@ -283,27 +273,11 @@ func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Act
 	return readCtx.GetAllValidators(int64(height))
 }
 
-// TODO: This is a temporary solution, cache this in Consensus module. This field will be populated once with a single query to the persistence module.
-func (m *consensusModule) IsValidator() (bool, error) {
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-	if err != nil {
-		return false, err
-	}
-
-	for _, actor := range validators {
-		if actor.Address == m.nodeAddress {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
 func hotstuffMsgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
 	return map[string]any{
 		"height": msg.GetHeight(),
 		"round":  msg.GetRound(),
-		"step":   msg.GetStep(),
+		"step":   typesCons.StepToString[msg.GetStep()],
 	}
 }
 

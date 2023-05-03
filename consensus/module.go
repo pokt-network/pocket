@@ -53,7 +53,7 @@ type consensusModule struct {
 	step   typesCons.HotstuffStep
 	block  *coreTypes.Block // The current block being proposed / voted on; it has not been committed to finality
 	// TODO(#315): Move the statefulness of `TxResult` to the persistence module
-	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
+	TxResults []coreTypes.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
 	prepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	lockedQC  *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
@@ -77,7 +77,7 @@ type consensusModule struct {
 	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
 
 	// block responses received from peers are collected in this channel
-	blocksReceived chan *typesCons.GetBlockResponse
+	blocksResponsesReceived chan *typesCons.GetBlockResponse
 
 	// metadata responses received from peers are collected in this channel
 	metadataReceived chan *typesCons.StateSyncMetadataResponse
@@ -164,7 +164,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	m.nodeAddress = address
 
 	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
-	m.blocksReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
+	m.blocksResponsesReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
 
 	m.initMessagesPool()
 

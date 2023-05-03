@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.43] - 2023-04-17
+
+- Add test to exercise `sortedPeersView#Add()` and `#Remove()`
+- Fix raintree add/remove index
+
+## [0.0.0.42] - 2023-04-17
+
+- Added a test which asserts that transport encryption is required (i.e. unencrypted connections are refused)
+
+## [0.0.0.41] - 2023-04-17
+
+- Moved peer & url conversion utils to `p2p/utils` package
+- Refactor `getPeerIP` to use `net.DefaultResolver` for easier testing
+- Moved & refactor libp2p `host.Host` setup util to `p2p/utils`
+- Consolidated Libp2p & P2P `modules.Module` implementations
+- Consolidated Libp2p & P2P `stdnetwork` `typesP2P.Network` implementations
+- Refactored raintree `typesP2P.Network` implementation to use libp2p
+- Moved `shared/p2p` package into `p2p/types` packages
+- Removed `Trnasport` interface and implementations
+- Removed `ConnectionFactory` type and related members
+- Added libp2p `host.Host` mock generator
+- Refactor raintree constructor function signature to use new `RainTreeConfig` struct
+
+## [0.0.0.40] - 2023-04-12
+
+- Wrap IPv6 address in square brackets as per RFC3986 §3.2.2
+
+## [0.0.0.39] - 2023-04-12
+
+- Improve URL validation and error handling in Libp2pMultiaddrFromServiceURL function
+
 ## [0.0.0.38] - 2023-04-10
 
 - Switched mock generation to use reflect mode for effected interfaces (`modules.ModuleFactoryWithOptions` embedders)

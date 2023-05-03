@@ -53,6 +53,7 @@ services:
       - "seccomp:unconfined"
     environment:
       - POCKET_RPC_USE_CORS=true
+      - LIBP2P_DEBUG=info
     # Uncomment to enable the pprof server
     #  - PPROF_ENABLED=true
     # Uncomment to enable DLV debugging

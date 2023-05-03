@@ -1,0 +1,37 @@
+<div align="center">
+  <a href="https://www.pokt.network">
+    <img src="https://user-images.githubusercontent.com/2219004/151564884-212c0e40-3bfa-412e-a341-edb54b5f1498.jpeg" alt="Pocket Network logo" width="340"/>
+  </a>
+</div>
+
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.description" . }}
+
+## Requirements
+
+### Private key
+
+This helm chart assumes the user utilizes Kubernetes Secret to store the private key for an additional layer of protection. The key should not be protected with a password.
+
+Here is an example of the private key stored in a Kubernetes Secret:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+    name: validator-private-key
+stringData:
+    "1919605e50c0a60177d0554b528c9810313523b3": "4d6d24690137b0c43dee3490cafa4ca49cc1c4facdd1a73be1255a5b752223dc2b7672ea2493dcdd0efc6c6caf1073c4f3ff8508c686031e2d1244c02f0b900d"
+```
+
+This secret can then be utilized with this helm chart using the following variables:
+
+```yaml
+privateKeySecretKeyRef:
+  name: validator-private-key
+  key: 1919605e50c0a60177d0554b528c9810313523b3
+```
+
+{{ template "chart.valuesSection" . }}

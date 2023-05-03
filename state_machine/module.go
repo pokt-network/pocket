@@ -2,7 +2,6 @@ package state_machine
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/looplab/fsm"
 	"github.com/pokt-network/pocket/logger"
@@ -19,7 +18,8 @@ type stateMachineModule struct {
 	base_modules.InterruptableModule
 
 	*fsm.FSM
-	logger        *modules.Logger
+	logger *modules.Logger
+	// debugChannels is only used for testing purposes, events pushed to it are emitted in testing
 	debugChannels []modules.EventsChannel
 }
 
@@ -48,7 +48,6 @@ func (*stateMachineModule) Create(bus modules.Bus, options ...modules.ModuleOpti
 			if err != nil {
 				m.logger.Fatal().Err(err).Msg("failed to pack state machine transition event")
 			}
-			fmt.Println("Event bus in state machine: ", bus.GetEventBus())
 			bus.PublishEventToBus(newStateMachineTransitionEvent)
 			for _, channel := range m.debugChannels {
 				channel <- newStateMachineTransitionEvent
@@ -83,7 +82,7 @@ func WithCustomStateMachine(stateMachine *fsm.FSM) modules.ModuleOption {
 	}
 }
 
-// WithDebugEventsChannel is only used for testing purposes. It allows us to capture the events
+// WithDebugEventsChannel is used for testing purposes. It allows us to capture the events
 // from the FSM and publish them to debug channel for testing.
 func WithDebugEventsChannel(eventsChannel modules.EventsChannel) modules.ModuleOption {
 	return func(m modules.InitializableModule) {

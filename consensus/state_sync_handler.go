@@ -26,8 +26,11 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 		if !ok {
 			return fmt.Errorf("failed to cast message to StateSyncMessage")
 		}
-
 		return m.handleStateSyncMessage(stateSyncMessage)
+
+	case messaging.StateSyncBlockCommittedEventType:
+		return m.stateSync.HandleStateSyncBlockCommittedEvent(stateSyncMessageAny)
+
 	default:
 		return typesCons.ErrUnknownStateSyncMessageType(stateSyncMessageAny.MessageName())
 	}
@@ -38,7 +41,8 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 	case *typesCons.StateSyncMessage_MetadataReq:
 		m.logger.Info().Str("proto_type", "MetadataRequest").Msg("Handling StateSyncMessage MetadataReq")
 		if !m.serverModeEnabled {
-			return fmt.Errorf("server module is not enabled")
+			m.logger.Warn().Msg("Node's server module is not enabled")
+			return nil
 		}
 		go m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
 		return nil
@@ -49,14 +53,14 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 	case *typesCons.StateSyncMessage_GetBlockReq:
 		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage GetBlockRequest")
 		if !m.serverModeEnabled {
-			return fmt.Errorf("server module is not enabled")
+			m.logger.Warn().Msg("Node's server module is not enabled")
+			return nil
 		}
 		go m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
 		return nil
 	case *typesCons.StateSyncMessage_GetBlockRes:
 		m.logger.Info().Str("proto_type", "GetBlockResponse").Msg("Handling StateSyncMessage GetBlockResponse")
-		//fmt.Println("Pushing block to blocksReceived channel, for height: ", stateSyncMessage.GetGetBlockRes().Block.BlockHeader.Height)
-		m.blocksReceived <- stateSyncMessage.GetGetBlockRes()
+		m.blocksResponsesReceived <- stateSyncMessage.GetGetBlockRes()
 		return nil
 	default:
 		return fmt.Errorf("unspecified state sync message type")

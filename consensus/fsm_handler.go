@@ -33,9 +33,8 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 }
 
 func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
-	fsm_state := msg.NewState
-
 	m.logger.Debug().Fields(messaging.TransitionEventToMap(msg)).Msg("Received state machine transition msg")
+	fsm_state := msg.NewState
 
 	switch coreTypes.StateMachineState(fsm_state) {
 	case coreTypes.StateMachineState_P2P_Bootstrapped:
@@ -85,16 +84,20 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	m.logger.Debug().Msg("Node is in Sync Mode, starting to sync...")
 
 	aggregatedMetadata := m.getAggregatedStateSyncMetadata()
-	m.stateSync.Set(&aggregatedMetadata)
+	m.logger.Debug().Msgf("Setting metadata! is: ", aggregatedMetadata)
+	m.stateSync.SetAggregatedMetadata(&aggregatedMetadata)
 
+	m.logger.Debug().Msg("CALLING NOW is in Sync Mode, starting to sync...")
+
+	//go m.stateSync.StartSyncing()
 	go m.stateSync.Start()
+
 	return nil
 }
 
 // HandleSynced handles FSM event IsSyncedNonValidator for Non-Validators, and Synced is the destination state.
 // Currently, FSM never transition to this state and a non-validator node always stays in syncmode.
 // CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state.
-// TODO: Add check that this never happens when IsValidator() is false, i.e. node is not validator.
 func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Debug().Msg("Non-validator node is in Synced mode")
 	return nil

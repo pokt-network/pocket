@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.35] - 2023-04-17
+
+- Removed runtime/configs.Config#UseLibp2p field
+- Use pod IP for validator DNS resolution tilt localnet
+- Add `LIBP2P_DEBUG` env var
+
+## [0.0.0.34] - 2023-04-14
+
+- Changed LocalNet validators to use the new `pocket-validator` helm chart instead of templating the manifests with `sed`.
+- Each validator now has it's own postgres instance (as a helm chart dependency), which allows for clean scale up/down of the validators.
+- Cleaned up old manifests and scripts that are no longer needed.
+- Changed LocalNet documentation to reflect the new changes.
+
+## [0.0.0.33] - 2023-04-13
+
+- Add persistent txIndexerPath to node configs
+
 ## [0.0.0.32] - 2023-04-10
 
 - Adds e2e-tests button to Tiltfile

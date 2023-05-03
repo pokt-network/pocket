@@ -2,25 +2,31 @@ package state_sync
 
 import (
 	"fmt"
+	"time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
-	stateSyncModuleName             = "stateSyncModule"
-	committedBlockHeightChannelSize = 100
+	stateSyncModuleName       = "stateSyncModule"
+	committedBlocsChannelSize = 100
+	blockWaitingPeriod        = 30 * time.Second
 )
 
 type StateSyncModule interface {
 	modules.Module
 	StateSyncServerModule
 
-	Set(aggregatedMetaData *typesCons.StateSyncMetadataResponse)
-	CommittedBlock(uint64)
+	SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyncMetadataResponse)
+	//StartSyncing()
+	HandleStateSyncBlockCommittedEvent(message *anypb.Any) error
 }
 
 var (
@@ -30,19 +36,33 @@ var (
 )
 
 type stateSync struct {
-	bus                         modules.Bus
-	logger                      *modules.Logger
-	validators                  []*coreTypes.Actor
-	aggregatedMetaData          *typesCons.StateSyncMetadataResponse
-	committedBlockHeightChannel chan uint64
+	bus                    modules.Bus
+	logger                 *modules.Logger
+	aggregatedMetaData     *typesCons.StateSyncMetadataResponse
+	committedBlocksChannel chan uint64
 }
 
 func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return new(stateSync).Create(bus, options...)
 }
 
-func (m *stateSync) CommittedBlock(height uint64) {
-	m.committedBlockHeightChannel <- height
+func (m *stateSync) HandleStateSyncBlockCommittedEvent(event *anypb.Any) error {
+	evt, err := codec.GetCodec().FromAny(event)
+	if err != nil {
+		return err
+	}
+
+	switch event.MessageName() {
+
+	case messaging.StateSyncBlockCommittedEventType:
+		newCommitBlockEvent, ok := evt.(*typesCons.StateSyncBlockCommittedEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast event to StateSyncBlockCommittedEvent")
+		}
+
+		m.committedBlocksChannel <- newCommitBlockEvent.Height
+	}
+	return nil
 }
 
 func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -55,24 +75,28 @@ func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	bus.RegisterModule(m)
 
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
-
-	m.committedBlockHeightChannel = make(chan uint64, committedBlockHeightChannelSize)
+	m.committedBlocksChannel = make(chan uint64, committedBlocsChannelSize)
 
 	return m, nil
 }
 
-func (m *stateSync) Set(aggregatedMetaData *typesCons.StateSyncMetadataResponse) {
-	m.logger.Info().Msg("State Sync Module Set")
+func (m *stateSync) SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyncMetadataResponse) {
 	m.aggregatedMetaData = aggregatedMetaData
 }
+
+// func (m *stateSync) StartSyncing() {
+// 	err := m.Start()
+// 	if err != nil {
+// 		m.logger.Error().Err(err).Msg("couldn't start state sync")
+// 	}
+// }
 
 // Start performs state sync
 // processes and aggregates all metadata collected in metadataReceived channel,
 // requests missing blocks starting from its current height to the aggregated metadata's maxHeight,
 // once the requested block is received and committed by consensus module, sends the next request for the next block,
-// when all blocks are received and committed, stops the state sync process by calling its `Stop()` function.
+// when all blocks are received and committed, stops the state sync process by calling its `Stop()` function.>>>>>>> statesynchannels-local
 func (m *stateSync) Start() error {
-
 	consensusMod := m.bus.GetConsensusModule()
 	currentHeight := consensusMod.CurrentHeight()
 	nodeAddress := consensusMod.GetNodeAddress()
@@ -83,11 +107,12 @@ func (m *stateSync) Start() error {
 	defer readCtx.Release()
 
 	//get the current validators
-	m.validators, err = readCtx.GetAllValidators(int64(currentHeight))
+	validators, err := readCtx.GetAllValidators(int64(currentHeight))
 	if err != nil {
 		return err
 	}
 
+	// requests blocks from the current height to the aggregated metadata height
 	for currentHeight <= m.aggregatedMetaData.MaxHeight {
 		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.aggregatedMetaData.MaxHeight)
 
@@ -102,30 +127,38 @@ func (m *stateSync) Start() error {
 		}
 
 		// broadcast the get block request message to all validators
-		for _, val := range m.validators {
+		for _, val := range validators {
 			if err := m.sendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress())); err != nil {
 				return err
 			}
 		}
 
-		// wait for the block to be received and committed by consensus module
-		receivedBlockHeight := <-m.committedBlockHeightChannel
-		// TODO!: do we need to do this check? It should not happen
-		if receivedBlockHeight != consensusMod.CurrentHeight() {
-			return fmt.Errorf("received block height %d is not equal to current height %d", receivedBlockHeight, currentHeight)
-		}
-		//timer to check if block is received and committed
+		// wait for the requested block to be received and committed by consensus module
+		<-m.committedBlocksChannel
+
+		// requested block is received and committed, continue to the next block from the current height
 		currentHeight = consensusMod.CurrentHeight()
 	}
-	// syncing is complete, stop the state sync module
+	// syncing is complete and all requested blocks are committed, stop the state sync module
 	return m.Stop()
 }
 
-// TODO(#352): check if node is a valdiator, if not send Consensus_IsSyncedNonValidator event
 // Stop stops the state sync process, and sends `Consensus_IsSyncedValidator` FSM event
 func (m *stateSync) Stop() error {
-	m.logger.Info().Msg("Stop state sync moudule")
-	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
+	// check if the node is a validator
+	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
+	nodeAddress := m.bus.GetConsensusModule().GetNodeAddress()
+	isValidator, err := m.bus.GetPersistenceModule().IsValidator(int64(currentHeight), nodeAddress)
+
+	if err != nil {
+		return err
+	}
+	m.logger.Info().Msg("Syncing is complete!")
+
+	if isValidator {
+		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
+	}
+	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator)
 }
 
 func (m *stateSync) SetBus(pocketBus modules.Bus) {

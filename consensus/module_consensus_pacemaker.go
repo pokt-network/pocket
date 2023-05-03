@@ -28,7 +28,7 @@ func (m *consensusModule) ResetRound(isNewHeight bool) {
 func (m *consensusModule) ReleaseUtilityUnitOfWork() error {
 	utilityUnitOfWork := m.utilityUnitOfWork
 	if utilityUnitOfWork == nil {
-		m.logger.Debug().Msg("Try to release utilityUnitOfWork is nil...")
+		m.logger.Debug().Msg("Try to release a nil utilityUnitOfWork... Ideally this should not happen")
 		return nil
 	}
 	if err := utilityUnitOfWork.Release(); err != nil {
