@@ -30,6 +30,7 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 ### Guides
 
 - [Development Guide](docs/development/README.md)
+- [End-to-end testing Guide](e2e/README.md)
 - [Learning Guide](docs/learning/README.md)
 - [Contribution Guide](docs/contributing/README.md)
 - [Release Guide](docs/build/README.md)
