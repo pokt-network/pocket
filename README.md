@@ -50,7 +50,6 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 
 ### Changelogs
 
-- _Coming Soon: Shared Changelog_
 - [Utility Changelog](utility/doc/CHANGELOG.md)
 - [Consensus Changelog](consensus/doc/CHANGELOG.md)
 - [Persistence Changelog](persistence/docs/CHANGELOG.md)
@@ -58,8 +57,8 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 - [APP Changelog](app/client/doc/CHANGELOG.md)
 - [RPC Changelog](rpc/doc/CHANGELOG.md)
 - [Node binary Changelog](app/pocket/doc/CHANGELOG.md)
-
-- _Coming Soon: Telemetry Changelog_
+- [Shared Changelog](shared/CHANGELOG.md)
+- [Telemetry Changelog](telemetry/CHANGELOG.md)
 
 ### Project Management Resources
 - [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md)
