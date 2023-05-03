@@ -53,6 +53,7 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 - [Utility Changelog](utility/doc/CHANGELOG.md)
 - [Consensus Changelog](consensus/doc/CHANGELOG.md)
 - [Persistence Changelog](persistence/docs/CHANGELOG.md)
+- [E2E Changelog](e2e/docs/CHANGELOG.md)
 - [P2P Changelog](p2p/CHANGELOG.md)
 - [APP Changelog](app/client/doc/CHANGELOG.md)
 - [RPC Changelog](rpc/doc/CHANGELOG.md)
