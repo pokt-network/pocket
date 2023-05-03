@@ -30,6 +30,7 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 ### Guides
 
 - [Development Guide](docs/development/README.md)
+- [End-to-end testing Guide](e2e/README.md)
 - [Learning Guide](docs/learning/README.md)
 - [Contribution Guide](docs/contributing/README.md)
 - [Release Guide](docs/build/README.md)
@@ -49,16 +50,16 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 
 ### Changelogs
 
-- _Coming Soon: Shared Changelog_
-- [Utility Changelog](utility/doc/CHANGELOG.md)
-- [Consensus Changelog](consensus/doc/CHANGELOG.md)
-- [Persistence Changelog](persistence/docs/CHANGELOG.md)
-- [P2P Changelog](p2p/CHANGELOG.md)
 - [APP Changelog](app/client/doc/CHANGELOG.md)
-- [RPC Changelog](rpc/doc/CHANGELOG.md)
+- [Consensus Changelog](consensus/doc/CHANGELOG.md)
+- [E2E Changelog](e2e/docs/CHANGELOG.md)
 - [Node binary Changelog](app/pocket/doc/CHANGELOG.md)
-
-- _Coming Soon: Telemetry Changelog_
+- [P2P Changelog](p2p/CHANGELOG.md)
+- [Persistence Changelog](persistence/docs/CHANGELOG.md)
+- [RPC Changelog](rpc/doc/CHANGELOG.md)
+- [Shared Changelog](shared/CHANGELOG.md)
+- [Telemetry Changelog](telemetry/CHANGELOG.md)
+- [Utility Changelog](utility/doc/CHANGELOG.md)
 
 ### Project Management Resources
 - [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md)
