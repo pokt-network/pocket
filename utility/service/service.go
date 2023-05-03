@@ -5,6 +5,7 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
+// TECHDEBT: These structures were copied as placeholders from v0 and need to be updated to reflect changes in v1
 type Relay interface {
 	RelayPayload
 	RelayMeta

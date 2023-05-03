@@ -4,6 +4,7 @@ package core;
 
 option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
+// TECHDEBT: These structures were copied as placeholders from v0 and need to be updated to reflect changes in v1
 message Relay {
     RelayPayload payload = 1;
     RelayMeta meta = 2;
