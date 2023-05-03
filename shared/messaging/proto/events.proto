@@ -15,3 +15,7 @@ message StateMachineTransitionEvent {
   string previous_state = 2;
   string new_state = 3;
 }
+
+message StateSyncBlockCommittedEvent {
+  uint64 height = 1;
+}

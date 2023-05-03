@@ -64,6 +64,7 @@ func (m *consensusModule) blockApplicationLoop() {
 			m.logger.Err(err).Msg("failed to apply and commit block")
 			continue
 		}
+		m.logger.Info().Msgf("Block, at height %d is committed!", block.BlockHeader.Height)
 		m.publishStateSyncBlockCommittedEvent(block.BlockHeader.Height)
 	}
 }

@@ -54,7 +54,7 @@ func (m *stateSync) HandleStateSyncBlockCommittedEvent(event *anypb.Any) error {
 	switch event.MessageName() {
 
 	case messaging.StateSyncBlockCommittedEventType:
-		newCommitBlockEvent, ok := evt.(*typesCons.StateSyncBlockCommittedEvent)
+		newCommitBlockEvent, ok := evt.(*messaging.StateSyncBlockCommittedEvent)
 		if !ok {
 			return fmt.Errorf("failed to cast event to StateSyncBlockCommittedEvent")
 		}
@@ -98,6 +98,7 @@ func (m *stateSync) SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyn
 func (m *stateSync) Start() error {
 	consensusMod := m.bus.GetConsensusModule()
 	currentHeight := consensusMod.CurrentHeight()
+	fmt.Println("Consensus current height: ", currentHeight)
 	nodeAddress := consensusMod.GetNodeAddress()
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
 	if err != nil {
@@ -111,16 +112,25 @@ func (m *stateSync) Start() error {
 		return err
 	}
 
+	// TODO: maybe remove this
+	requestHeight := currentHeight
+
+	// if node is starting to sync from the beginning, set the request height to 1
+	// if currentHeight == 0 {
+	// 	fmt.Println("setting request height: ", 1)
+	// 	requestHeight = 1
+	// }
+
 	// requests blocks from the current height to the aggregated metadata height
-	for currentHeight <= m.aggregatedMetaData.MaxHeight {
-		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.aggregatedMetaData.MaxHeight)
+	for requestHeight <= m.aggregatedMetaData.MaxHeight {
+		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", requestHeight, m.aggregatedMetaData.MaxHeight)
 
 		// form the get block request message
 		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 			Message: &typesCons.StateSyncMessage_GetBlockReq{
 				GetBlockReq: &typesCons.GetBlockRequest{
 					PeerAddress: nodeAddress,
-					Height:      currentHeight,
+					Height:      requestHeight,
 				},
 			},
 		}
@@ -136,7 +146,7 @@ func (m *stateSync) Start() error {
 		<-m.committedBlocksChannel
 
 		// requested block is received and committed, continue to the next block from the current height
-		currentHeight = consensusMod.CurrentHeight()
+		requestHeight = consensusMod.CurrentHeight()
 	}
 	// syncing is complete and all requested blocks are committed, stop the state sync module
 	return m.Stop()
