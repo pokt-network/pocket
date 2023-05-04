@@ -195,8 +195,8 @@ for x in range(localnet_config["full_nodes"]["count"]):
         set=[
             "global.postgresql.auth.postgresPassword=LocalNetPassword",
             "image.repository=pocket-image",
-            # "privateKeySecretKeyRef.name=v1-localnet-validators-private-keys",
-            # "privateKeySecretKeyRef.key=%s" % formatted_node_number,
+            "privateKeySecretKeyRef.name=misc-private-keys",
+            "privateKeySecretKeyRef.key=%s" % formatted_node_number,
             "genesis.preProvisionedGenesis.enabled=false",
             "genesis.externalConfigMap.name=v1-localnet-genesis",
             "genesis.externalConfigMap.key=genesis.json",
