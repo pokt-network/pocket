@@ -219,6 +219,7 @@ func bootstrap(t *testing.T, ctx context.Context, testHosts []libp2pHost.Host) {
 
 	t.Log("bootstrapping...")
 	bootstrapHost := testHosts[0]
+	bootstrapAddr := bootstrapHost.Addrs()[0]
 	for _, h := range testHosts {
 		if h.ID() == bootstrapHost.ID() {
 			continue
@@ -230,7 +231,7 @@ func bootstrap(t *testing.T, ctx context.Context, testHosts []libp2pHost.Host) {
 		addrInfo := libp2pPeer.AddrInfo{
 			ID: bootstrapHost.ID(),
 			Addrs: []multiaddr.Multiaddr{
-				bootstrapHost.Addrs()[0].Encapsulate(p2pAddr),
+				bootstrapAddr.Encapsulate(p2pAddr),
 			},
 		}
 
