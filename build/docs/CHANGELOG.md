@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.40] - 2023-05-03
+
+- Added private keys for all (except fisherman) actors
+- Changed the debug_keybase package to support multiple yaml secrets in one yaml file
+- Added full node (non-staked validator)
+
 ## [0.0.0.39] - 2023-04-28
 
 - Added a `fisherman_per_session` governance parameter
