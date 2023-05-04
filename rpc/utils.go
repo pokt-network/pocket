@@ -46,18 +46,18 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 }
 
 // getQueryHeight returns either the height supplied or if it is equal to 0
-// the most recent block height that has been commited. As the current consensus height
+// the most recent block height that has been committed. As the current consensus height
 // is one above this, and if used in certain queries will return an error as the height
-// has not been commited yet
+// has not been committed yet
 func (s *rpcServer) getQueryHeight(height int64) int64 {
-	if height == 0 {
-		currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
-		if currentHeight > 0 {
-			currentHeight -= 1
-		}
-		return currentHeight
+	if height != 0 {
+		return height
 	}
-	return height
+	currentHeight := int64(s.GetBus().GetConsensusModule().CurrentHeight())
+	if currentHeight > 0 {
+		currentHeight -= 1
+	}
+	return currentHeight
 }
 
 // checkSortDesc takes a sort string and returns whether to sort descending or not
