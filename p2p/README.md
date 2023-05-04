@@ -78,21 +78,16 @@ _TODO(olshansky, BenVan): Link to RainTree visualizations once it is complete._
 
 Given `Local P2P Module` has a message that it needs to propagate:
 
-1a. `Raintree Router` selects targets from the `Pokt Peerstore`, **which only includes staked actors**
-
-1b. `Background Router` selects targets from the libp2p `Peerstore`, **which includes all P2P participants**
-
-2. Libp2p `Host` manages opens and closes streams to targeted peers on behalf of the routers
-
-2. `Remote P2P module`'s (i.e. receiver’s) `handleStream` is called (having been registered via `setStreamHandler()`)
-
-3a. `handleStream` propagates message via `Raintree Router`
-
-3b.  `handleStream` propagates message via `Background Router`
-
-4a. Repeat step 1a from `Remote P2P Module`'s perspective targeting its next peers
-
-4b. Repeat step 1b from `Remote P2P Module`'s perspective targeting its next peers
+<ul style="list-style-type: none;">
+    <li>1a. <code>Raintree Router</code> selects targets from the <code>Pokt Peerstore</code>, <strong>which only includes staked actors</strong></li>
+    <li>1b. <code>Background Router</code> selects targets from the libp2p <code>Peerstore</code>, <strong>which includes all P2P participants</strong></li>
+    <li>2. Libp2p <code>Host</code> manages opening and closing streams to targeted peers</li>
+    <li>3. <code>Remote P2P module</code>'s (i.e. receiver's) <code>handleStream</code> is called (having been registered via <code>setStreamHandler()</code>)</li>
+    <li>4a. <code>handleStream</code> propagates message via <code>Raintree Router</code></li>
+    <li>4b. <code>handleStream</code> propagates message via <code>Background Router</code></li>
+    <li>5a. Repeat step 1a from <code>Remote P2P Module</code>'s perspective targeting its next peers</li>
+    <li>5b. Repeat step 1b from <code>Remote P2P Module</code>'s perspective targeting its next peers</li>
+</ul>
 
 ```mermaid
 flowchart TD
@@ -144,7 +139,7 @@ end
 
 subgraph rBG[Background Router]
 subgraph rBGPS[Background Peerstore]
-rNetPS([arr P2P participants])
+rNetPS([all P2P participants])
 end
 
 subgraph rGossipSub[GossipSub]
@@ -157,12 +152,13 @@ rGossipSub --> rBGPS
 rDHT --> rBGPS
 end
 
-rHost -. "setStreamHandler()" .-> hs[[handleStream]]
-hs --3a--> rRT
-hs --3b--> rBG
-rBG  --"4a (cont. propagation)"--> rHost
+rHost -. "3 (setStreamHandler())" .-> hs[[handleStream]]
+
+hs --4a--> rRT
+hs --4b--> rBG
+rBG  --"5a (cont. propagation)"--> rHost
 linkStyle 11 stroke:#ff3
-rRT  --"4b (cont. propagation)"--> rHost
+rRT  --"5b (cont. propagation)"--> rHost
 linkStyle 12 stroke:#ff3
 end
 
