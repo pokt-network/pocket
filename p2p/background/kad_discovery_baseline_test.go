@@ -18,6 +18,8 @@ import (
 	"github.com/pokt-network/pocket/runtime/defaults"
 )
 
+const dhtUpdateSleepDuration = time.Millisecond * 500
+
 func TestLibp2pKademliaPeerDiscovery(t *testing.T) {
 	ctx := context.Background()
 
@@ -33,7 +35,8 @@ func TestLibp2pKademliaPeerDiscovery(t *testing.T) {
 
 	// TECHDEBT: consider using `host.ConnManager().Notifee()` to avoid sleeping here
 	// delay assertions for 500ms
-	time.Sleep(time.Millisecond * 500)
+	// NB: wait for peer discovery to complete
+	time.Sleep(dhtUpdateSleepDuration)
 
 	// assert that host2 has host3 in its peerstore
 	host2DiscoveredAddrs := host2.Peerstore().Addrs(host3.ID())
