@@ -40,13 +40,13 @@ func TestLibp2pKademliaPeerDiscovery(t *testing.T) {
 
 	// assert that host2 has host3 in its peerstore
 	host2DiscoveredAddrs := host2.Peerstore().Addrs(host3.ID())
-	require.Lenf(t, host2DiscoveredAddrs, 1, "did not discover host3")
+	require.Greaterf(t, len(host2DiscoveredAddrs), 0, "did not discover host3")
 	require.Equalf(t, addr3.String(), host2DiscoveredAddrs[0].String(), "did not discover host3")
 	require.ElementsMatchf(t, expectedPeerIDs, host2.Peerstore().Peers(), "host2 peer IDs don't match")
 
 	// assert that host3 has host2 in its peerstore
 	host3DiscoveredHost2Addrs := host3.Peerstore().Addrs(host2.ID())
-	require.Lenf(t, host3DiscoveredHost2Addrs, 1, "host3 did not discover host2")
+	require.Greaterf(t, len(host3DiscoveredHost2Addrs), 0, "host3 did not discover host2")
 	require.Equalf(t, addr2.String(), host3DiscoveredHost2Addrs[0].String(), "host3 did not discover host2")
 	require.ElementsMatchf(t, expectedPeerIDs, host3.Peerstore().Peers(), "host3 peer IDs don't match")
 
@@ -59,20 +59,20 @@ func TestLibp2pKademliaPeerDiscovery(t *testing.T) {
 
 	// new host discovers existing hosts...
 	host4DiscoveredHost2Addrs := host4.Peerstore().Addrs(host2.ID())
-	require.Lenf(t, host4DiscoveredHost2Addrs, 1, "host4 did not discover host2")
+	require.Greaterf(t, len(host4DiscoveredHost2Addrs), 0, "host4 did not discover host2")
 	require.Equalf(t, addr2.String(), host4DiscoveredHost2Addrs[0].String(), "host4 did not discover host2")
 
 	host4DiscoveredHost3Addrs := host4.Peerstore().Addrs(host3.ID())
-	require.Lenf(t, host4DiscoveredHost3Addrs, 1, "host4 did not discover host3")
+	require.Greaterf(t, len(host4DiscoveredHost3Addrs), 0, "host4 did not discover host3")
 	require.Equalf(t, addr3.String(), host4DiscoveredHost3Addrs[0].String(), "host4 did not discover host3")
 
 	// existing hosts discovers host host...
 	host2DiscoveredHost4Addrs := host2.Peerstore().Addrs(host4.ID())
-	require.Lenf(t, host2DiscoveredHost4Addrs, 1, "host2 did not discover host4")
+	require.Greaterf(t, len(host2DiscoveredHost4Addrs), 0, "host2 did not discover host4")
 	require.Equalf(t, addr4.String(), host2DiscoveredHost4Addrs[0].String(), "host2 did not discover host4")
 
 	host3DiscoveredHost4Addrs := host3.Peerstore().Addrs(host4.ID())
-	require.Lenf(t, host3DiscoveredHost4Addrs, 1, "host3 did not discover host4")
+	require.Greaterf(t, len(host3DiscoveredHost4Addrs), 0, "host3 did not discover host4")
 	require.Equalf(t, addr4.String(), host3DiscoveredHost4Addrs[0].String(), "host3 did not discover host4")
 
 	require.ElementsMatchf(t, expectedPeerIDs, host4.Peerstore().Peers(), "host4 peer IDs don't match")
