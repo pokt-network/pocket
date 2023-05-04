@@ -124,7 +124,8 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 
 	var (
 		ctx = context.Background()
-		mu  sync.Mutex
+		// mutex preventing concurrent writes to `seenMessages`
+		seenMessagesMutext sync.Mutex
 		// map used as a set to collect IDs of peers which have received a message
 		seenMessages       = make(map[string]struct{})
 		bootstrapWaitgroup = sync.WaitGroup{}
@@ -148,7 +149,7 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 		testHosts = append(testHosts, host)
 		expectedPeerIDs[i] = host.ID().String()
 		rtr := newRouterWithSelfPeerAndHost(t, selfPeer, host)
-		go readSubscription(t, ctx, &broadcastWaitgroup, rtr, &mu, seenMessages)
+		go readSubscription(t, ctx, &broadcastWaitgroup, rtr, &seenMessagesMutext, seenMessages)
 	}
 
 	// bootstrap off of arbitrary testHost
@@ -348,7 +349,7 @@ func newTestHost(t *testing.T, mockNet mocknet.Mocknet, privKey cryptoPocket.Pri
 func readSubscription(
 	t *testing.T,
 	ctx context.Context,
-	wg *sync.WaitGroup,
+	broadcastWaitGroup *sync.WaitGroup,
 	rtr *backgroundRouter,
 	mu *sync.Mutex,
 	seenMsgs map[string]struct{},
@@ -367,7 +368,7 @@ func readSubscription(
 		require.NoError(t, err)
 
 		mu.Lock()
-		wg.Done()
+		broadcastWaitGroup.Done()
 		seenMsgs[rtr.host.ID().String()] = struct{}{}
 		mu.Unlock()
 	}
