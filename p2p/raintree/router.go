@@ -63,7 +63,7 @@ func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (type
 	rtr := &rainTreeRouter{
 		host:                  cfg.Host,
 		selfAddr:              cfg.Addr,
-		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(cfg.MaxMempoolCount)),
+		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(cfg.MaxNonces)),
 		pstoreProvider:        cfg.PeerstoreProvider,
 		currentHeightProvider: cfg.CurrentHeightProvider,
 		logger:                routerLogger,

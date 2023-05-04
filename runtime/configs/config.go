@@ -127,9 +127,9 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			BlockStorePath: defaults.DefaultPersistenceBlockStorePath,
 		},
 		P2P: &P2PConfig{
-			Port:            defaults.DefaultP2PPort,
-			ConnectionType:  defaults.DefaultP2PConnectionType,
-			MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
+			Port:           defaults.DefaultP2PPort,
+			ConnectionType: defaults.DefaultP2PConnectionType,
+			MaxNonces:      defaults.DefaultP2PMaxNonces,
 		},
 		Telemetry: &TelemetryConfig{
 			Enabled:  defaults.DefaultTelemetryEnabled,
