@@ -291,7 +291,6 @@ func (m *p2pModule) setupRouter() (err error) {
 			Addr:                  m.address,
 			CurrentHeightProvider: m.currentHeightProvider,
 			Host:                  m.host,
-			Hostname:              m.cfg.Hostname,
 			MaxMempoolCount:       m.cfg.MaxMempoolCount,
 			PeerstoreProvider:     m.pstoreProvider,
 		},

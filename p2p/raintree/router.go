@@ -41,9 +41,7 @@ type rainTreeRouter struct {
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	host libp2pHost.Host
 	// selfAddr is the pocket address representing this host.
-	selfAddr cryptoPocket.Address
-	// hostname is the network hostname from the config
-	hostname              string
+	selfAddr              cryptoPocket.Address
 	peersManager          *rainTreePeersManager
 	pstoreProvider        peerstore_provider.PeerstoreProvider
 	currentHeightProvider providers.CurrentHeightProvider
@@ -65,7 +63,6 @@ func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (type
 	rtr := &rainTreeRouter{
 		host:                  cfg.Host,
 		selfAddr:              cfg.Addr,
-		hostname:              cfg.Hostname,
 		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(cfg.MaxMempoolCount)),
 		pstoreProvider:        cfg.PeerstoreProvider,
 		currentHeightProvider: cfg.CurrentHeightProvider,
