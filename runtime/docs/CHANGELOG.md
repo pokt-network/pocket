@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.37] - 2023-05-04
+
+- Add `network_id` field to the configs and give the default value of `"localnet"`
+
 ## [0.0.0.36] - 2023-04-28
 
 - Consolidated files for defaults together
