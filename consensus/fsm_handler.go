@@ -21,7 +21,6 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 		if err != nil {
 			return err
 		}
-
 		stateTransitionMessage, ok := msg.(*messaging.StateMachineTransitionEvent)
 		if !ok {
 			return fmt.Errorf("failed to cast message to StateSyncMessage")
@@ -86,8 +85,8 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	aggregatedMetadata := m.getAggregatedStateSyncMetadata()
 	m.stateSync.SetAggregatedMetadata(&aggregatedMetadata)
 
-	//go m.stateSync.StartSyncing()
-	go m.stateSync.Start()
+	go m.stateSync.StartSyncing()
+	//go m.stateSync.Start()
 
 	return nil
 }
@@ -107,9 +106,7 @@ func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionE
 	// validator receives a new block proposal, and it understands that it doesn't have block and it transitions to unsycnhed state
 	// transitioning out of this state happens when a new block proposal is received by the hotstuff_replica
 
-	// TODO move this check to a more proper place
-	// a validator who just bootstrapped, synced to the rest of the network and reached pacemaker mode, its consensus module doesn't have a valid nodeId set yet.
-	// therefore, it's node id should be assigned.
+	// if a validator who just bootstrapped and finished state sync, it will not have a nodeId yet, which is 0. Set correct nodeId here.
 	if m.nodeId == 0 {
 		// valdiator node receives nodeID after reaching pacemaker.
 		validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
@@ -118,7 +115,6 @@ func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionE
 		}
 		valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
 		m.nodeId = valAddrToIdMap[m.nodeAddress]
-		//fmt.Println("now my node id is", m.nodeId)
 	}
 
 	return nil

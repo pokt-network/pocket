@@ -12,20 +12,8 @@ func (p *PostgresContext) GetAppExists(address []byte, height int64) (exists boo
 	return p.GetExists(types.ApplicationActor, address, height)
 }
 
-//nolint:gocritic // tooManyResultsChecker This function needs to return many values
-func (p *PostgresContext) GetApp(address []byte, height int64) (operator, publicKey, stakedTokens, outputAddress string, pauseHeight, unstakingHeight int64, chains []string, err error) {
-	actor, err := p.getActor(types.ApplicationActor, address, height)
-	if err != nil {
-		return
-	}
-	operator = actor.Address
-	publicKey = actor.PublicKey
-	stakedTokens = actor.StakedAmount
-	outputAddress = actor.Output
-	pauseHeight = actor.PausedHeight
-	unstakingHeight = actor.UnstakingHeight
-	chains = actor.Chains
-	return
+func (p *PostgresContext) GetApp(address []byte, height int64) (*coreTypes.Actor, error) {
+	return p.getActor(types.ApplicationActor, address, height)
 }
 
 func (p *PostgresContext) InsertApp(address, publicKey, output []byte, _ bool, _ int32, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error {

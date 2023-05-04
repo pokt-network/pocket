@@ -52,8 +52,8 @@ type consensusModule struct {
 	round  uint64
 	step   typesCons.HotstuffStep
 	block  *coreTypes.Block // The current block being proposed / voted on; it has not been committed to finality
-	// TODO(#315): Move the statefulness of `TxResult` to the persistence module
-	TxResults []coreTypes.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
+	// TODO(#315): Move the statefulness of `IndexedTransaction` to the persistence module
+	IndexedTransactions []coreTypes.IndexedTransaction // The current block applied transaction results / voted on; it has not been committed to finality
 
 	prepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	lockedQC  *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
@@ -208,14 +208,14 @@ func (m *consensusModule) Stop() error {
 		select {
 		case metaData, ok := <-m.metadataReceived:
 			if ok {
-				m.logger.Info().Msgf("Drained metadata message: ", metaData)
+				m.logger.Info().Msgf("Drained metadata message: %s", metaData)
 			} else {
 				close(m.metadataReceived)
 				return nil
 			}
 		case blockResponse, ok := <-m.blocksResponsesReceived:
 			if ok {
-				m.logger.Info().Msgf("Drained blockResponse message: ", blockResponse)
+				m.logger.Info().Msgf("Drained blockResponse message: %s", blockResponse)
 			} else {
 				close(m.blocksResponsesReceived)
 				return nil
@@ -286,8 +286,6 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if !ok {
 			return fmt.Errorf("failed to cast message to HotstuffMessage")
 		}
-
-		//fmt.Println("Received message: ", hotstuffMessage)
 		return m.handleHotstuffMessage(hotstuffMessage)
 
 	default:

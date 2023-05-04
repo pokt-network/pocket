@@ -15,7 +15,7 @@ import (
 
 // Actor setters
 
-func (u *baseUtilityUnitOfWork) setActorStakeAmount(actorType coreTypes.ActorType, addr []byte, amount *big.Int) typesUtil.Error {
+func (u *baseUtilityUnitOfWork) setActorStakeAmount(actorType coreTypes.ActorType, addr []byte, amount *big.Int) coreTypes.Error {
 	amountStr := utils.BigIntToString(amount)
 
 	var err error
@@ -29,16 +29,16 @@ func (u *baseUtilityUnitOfWork) setActorStakeAmount(actorType coreTypes.ActorTyp
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		err = u.persistenceRWContext.SetValidatorStakeAmount(addr, amountStr)
 	default:
-		err = typesUtil.ErrUnknownActorType(actorType.String())
+		err = coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return typesUtil.ErrSetValidatorStakedAmount(err)
+		return coreTypes.ErrSetValidatorStakedAmount(err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) setActorUnbondingHeight(actorType coreTypes.ActorType, addr []byte, height int64) typesUtil.Error {
+func (u *baseUtilityUnitOfWork) setActorUnbondingHeight(actorType coreTypes.ActorType, addr []byte, height int64) coreTypes.Error {
 	var err error
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -50,16 +50,16 @@ func (u *baseUtilityUnitOfWork) setActorUnbondingHeight(actorType coreTypes.Acto
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		err = u.persistenceRWContext.SetValidatorUnstakingHeightAndStatus(addr, height, int32(coreTypes.StakeStatus_Unstaking))
 	default:
-		err = typesUtil.ErrUnknownActorType(actorType.String())
+		err = coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return typesUtil.ErrSetUnstakingHeightAndStatus(err)
+		return coreTypes.ErrSetUnstakingHeightAndStatus(err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) setActorPausedHeight(actorType coreTypes.ActorType, addr []byte, height int64) typesUtil.Error {
+func (u *baseUtilityUnitOfWork) setActorPausedHeight(actorType coreTypes.ActorType, addr []byte, height int64) coreTypes.Error {
 	var err error
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -71,18 +71,18 @@ func (u *baseUtilityUnitOfWork) setActorPausedHeight(actorType coreTypes.ActorTy
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		err = u.persistenceRWContext.SetValidatorPauseHeight(addr, height)
 	default:
-		err = typesUtil.ErrUnknownActorType(actorType.String())
+		err = coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return typesUtil.ErrSetPauseHeight(err)
+		return coreTypes.ErrSetPauseHeight(err)
 	}
 	return nil
 }
 
 // Actor getters
 
-func (u *baseUtilityUnitOfWork) getActorStakeAmount(actorType coreTypes.ActorType, addr []byte) (*big.Int, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getActorStakeAmount(actorType coreTypes.ActorType, addr []byte) (*big.Int, coreTypes.Error) {
 	var stakeAmount string
 	var err error
 
@@ -96,22 +96,22 @@ func (u *baseUtilityUnitOfWork) getActorStakeAmount(actorType coreTypes.ActorTyp
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		stakeAmount, err = u.persistenceReadContext.GetValidatorStakeAmount(u.height, addr)
 	default:
-		err = typesUtil.ErrUnknownActorType(actorType.String())
+		err = coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return nil, typesUtil.ErrGetStakeAmount(err)
+		return nil, coreTypes.ErrGetStakeAmount(err)
 	}
 
 	amount, err := utils.StringToBigInt(stakeAmount)
 	if err != nil {
-		return nil, typesUtil.ErrStringToBigInt(err)
+		return nil, coreTypes.ErrStringToBigInt(err)
 	}
 
 	return amount, nil
 }
 
-func (u *baseUtilityUnitOfWork) getMaxAllowedPausedBlocks(actorType coreTypes.ActorType) (int, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getMaxAllowedPausedBlocks(actorType coreTypes.ActorType) (int, coreTypes.Error) {
 	var paramName string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -123,18 +123,18 @@ func (u *baseUtilityUnitOfWork) getMaxAllowedPausedBlocks(actorType coreTypes.Ac
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		paramName = typesUtil.ValidatorMaxPausedBlocksParamName
 	default:
-		return 0, typesUtil.ErrUnknownActorType(actorType.String())
+		return 0, coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	maxPausedBlocks, err := u.getIntParam(paramName)
 	if err != nil {
-		return 0, typesUtil.ErrGetParam(paramName, err)
+		return 0, coreTypes.ErrGetParam(paramName, err)
 	}
 
 	return maxPausedBlocks, nil
 }
 
-func (u *baseUtilityUnitOfWork) getMinRequiredPausedBlocks(actorType coreTypes.ActorType) (int, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getMinRequiredPausedBlocks(actorType coreTypes.ActorType) (int, coreTypes.Error) {
 	var paramName string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -146,17 +146,17 @@ func (u *baseUtilityUnitOfWork) getMinRequiredPausedBlocks(actorType coreTypes.A
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		paramName = typesUtil.ValidatorMinimumPauseBlocksParamName
 	default:
-		return 0, typesUtil.ErrUnknownActorType(actorType.String())
+		return 0, coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	minPausedBlocks, er := u.getIntParam(paramName)
 	if er != nil {
-		return 0, typesUtil.ErrGetParam(paramName, er)
+		return 0, coreTypes.ErrGetParam(paramName, er)
 	}
 	return minPausedBlocks, nil
 }
 
-func (u *baseUtilityUnitOfWork) getPausedHeightIfExists(actorType coreTypes.ActorType, addr []byte) (int64, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getPausedHeightIfExists(actorType coreTypes.ActorType, addr []byte) (int64, coreTypes.Error) {
 	var pauseHeight int64
 	var err error
 
@@ -170,17 +170,17 @@ func (u *baseUtilityUnitOfWork) getPausedHeightIfExists(actorType coreTypes.Acto
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		pauseHeight, err = u.persistenceReadContext.GetValidatorPauseHeightIfExists(addr, u.height)
 	default:
-		err = typesUtil.ErrUnknownActorType(actorType.String())
+		err = coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return 0, typesUtil.ErrGetPauseHeight(err)
+		return 0, coreTypes.ErrGetPauseHeight(err)
 	}
 
 	return pauseHeight, nil
 }
 
-func (u *baseUtilityUnitOfWork) getActorStatus(actorType coreTypes.ActorType, addr []byte) (coreTypes.StakeStatus, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getActorStatus(actorType coreTypes.ActorType, addr []byte) (coreTypes.StakeStatus, coreTypes.Error) {
 	var status int32
 	var err error
 
@@ -194,21 +194,21 @@ func (u *baseUtilityUnitOfWork) getActorStatus(actorType coreTypes.ActorType, ad
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		status, err = u.persistenceReadContext.GetValidatorStatus(addr, u.height)
 	default:
-		err = typesUtil.ErrUnknownActorType(actorType.String())
+		err = coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return coreTypes.StakeStatus_UnknownStatus, typesUtil.ErrGetStatus(err)
+		return coreTypes.StakeStatus_UnknownStatus, coreTypes.ErrGetStatus(err)
 	}
 
 	if _, ok := coreTypes.StakeStatus_name[status]; !ok {
-		return coreTypes.StakeStatus_UnknownStatus, typesUtil.ErrUnknownStatus(status)
+		return coreTypes.StakeStatus_UnknownStatus, coreTypes.ErrUnknownStatus(status)
 	}
 
 	return coreTypes.StakeStatus(status), nil
 }
 
-func (u *baseUtilityUnitOfWork) getMinRequiredStakeAmount(actorType coreTypes.ActorType) (*big.Int, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getMinRequiredStakeAmount(actorType coreTypes.ActorType) (*big.Int, coreTypes.Error) {
 	var paramName string
 
 	switch actorType {
@@ -221,22 +221,22 @@ func (u *baseUtilityUnitOfWork) getMinRequiredStakeAmount(actorType coreTypes.Ac
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		paramName = typesUtil.ValidatorMinimumStakeParamName
 	default:
-		return nil, typesUtil.ErrUnknownActorType(actorType.String())
+		return nil, coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	minStake, er := u.getStringParam(paramName)
 	if er != nil {
-		return nil, typesUtil.ErrGetParam(paramName, er)
+		return nil, coreTypes.ErrGetParam(paramName, er)
 	}
 
 	amount, err := utils.StringToBigInt(minStake)
 	if err != nil {
-		return nil, typesUtil.ErrStringToBigInt(err)
+		return nil, coreTypes.ErrStringToBigInt(err)
 	}
 	return amount, nil
 }
 
-func (u *baseUtilityUnitOfWork) getUnbondingHeight(actorType coreTypes.ActorType) (int64, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getUnbondingHeight(actorType coreTypes.ActorType) (int64, coreTypes.Error) {
 	var paramName string
 
 	switch actorType {
@@ -249,18 +249,18 @@ func (u *baseUtilityUnitOfWork) getUnbondingHeight(actorType coreTypes.ActorType
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		paramName = typesUtil.ValidatorUnstakingBlocksParamName
 	default:
-		return 0, typesUtil.ErrUnknownActorType(actorType.String())
+		return 0, coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	unstakingBlocksPeriod, err := u.getIntParam(paramName)
 	if err != nil {
-		return 0, typesUtil.ErrGetParam(paramName, err)
+		return 0, coreTypes.ErrGetParam(paramName, err)
 	}
 
 	return u.height + int64(unstakingBlocksPeriod), nil
 }
 
-func (u *baseUtilityUnitOfWork) getMaxAllowedChains(actorType coreTypes.ActorType) (int, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getMaxAllowedChains(actorType coreTypes.ActorType) (int, coreTypes.Error) {
 	var paramName string
 	switch actorType {
 	case coreTypes.ActorType_ACTOR_TYPE_APP:
@@ -270,18 +270,18 @@ func (u *baseUtilityUnitOfWork) getMaxAllowedChains(actorType coreTypes.ActorTyp
 	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 		paramName = typesUtil.ServicerMaxChainsParamName
 	default:
-		return 0, typesUtil.ErrUnknownActorType(actorType.String())
+		return 0, coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	maxChains, err := u.getIntParam(paramName)
 	if err != nil {
-		return 0, typesUtil.ErrGetParam(paramName, err)
+		return 0, coreTypes.ErrGetParam(paramName, err)
 	}
 
 	return maxChains, nil
 }
 
-func (u *baseUtilityUnitOfWork) getActorExists(actorType coreTypes.ActorType, addr []byte) (bool, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getActorExists(actorType coreTypes.ActorType, addr []byte) (bool, coreTypes.Error) {
 	var exists bool
 	var err error
 
@@ -295,11 +295,11 @@ func (u *baseUtilityUnitOfWork) getActorExists(actorType coreTypes.ActorType, ad
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		exists, err = u.persistenceReadContext.GetValidatorExists(addr, u.height)
 	default:
-		return false, typesUtil.ErrUnknownActorType(actorType.String())
+		return false, coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return false, typesUtil.ErrGetExists(err)
+		return false, coreTypes.ErrGetExists(err)
 	}
 
 	return exists, nil
@@ -307,7 +307,7 @@ func (u *baseUtilityUnitOfWork) getActorExists(actorType coreTypes.ActorType, ad
 
 // IMPROVE: Need to re-evaluate the design of `Output Address` to support things like "rev-share"
 // and multiple output addresses.
-func (u *baseUtilityUnitOfWork) getActorOutputAddress(actorType coreTypes.ActorType, operator []byte) ([]byte, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) getActorOutputAddress(actorType coreTypes.ActorType, operator []byte) ([]byte, coreTypes.Error) {
 	var outputAddr []byte
 	var err error
 
@@ -321,11 +321,11 @@ func (u *baseUtilityUnitOfWork) getActorOutputAddress(actorType coreTypes.ActorT
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		outputAddr, err = u.persistenceReadContext.GetValidatorOutputAddress(operator, u.height)
 	default:
-		err = typesUtil.ErrUnknownActorType(actorType.String())
+		err = coreTypes.ErrUnknownActorType(actorType.String())
 	}
 
 	if err != nil {
-		return nil, typesUtil.ErrGetOutputAddress(operator, err)
+		return nil, coreTypes.ErrGetOutputAddress(operator, err)
 
 	}
 	return outputAddr, nil

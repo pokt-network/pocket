@@ -60,5 +60,4 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 	default:
 		return fmt.Errorf("unspecified state sync message type")
 	}
-
 }

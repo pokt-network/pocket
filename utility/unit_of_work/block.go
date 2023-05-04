@@ -16,7 +16,7 @@ const (
 	IgnoreProposalBlockCheckHash = "0100000000000000000000000000000000000000000000000000000000000010"
 )
 
-func (uow *baseUtilityUnitOfWork) beginBlock() typesUtil.Error {
+func (uow *baseUtilityUnitOfWork) beginBlock() coreTypes.Error {
 	log := uow.logger.With().Fields(map[string]interface{}{
 		"source": "beginBlock",
 	}).Logger()
@@ -24,7 +24,7 @@ func (uow *baseUtilityUnitOfWork) beginBlock() typesUtil.Error {
 	log.Debug().Bool("TODO", true).Msg("determining prevBlockByzantineValidators")
 	previousBlockByzantineValidators, err := uow.prevBlockByzantineValidators()
 	if err != nil {
-		return typesUtil.ErrGetPrevBlockByzantineValidators(err)
+		return coreTypes.ErrGetPrevBlockByzantineValidators(err)
 	}
 
 	log.Info().Msg("handling byzantine validators")
@@ -35,7 +35,7 @@ func (uow *baseUtilityUnitOfWork) beginBlock() typesUtil.Error {
 	return nil
 }
 
-func (uow *baseUtilityUnitOfWork) endBlock(proposer []byte) typesUtil.Error {
+func (uow *baseUtilityUnitOfWork) endBlock(proposer []byte) coreTypes.Error {
 	log := uow.logger.With().Fields(map[string]interface{}{
 		"proposer": hex.EncodeToString(proposer),
 		"source":   "endBlock",
@@ -63,7 +63,7 @@ func (uow *baseUtilityUnitOfWork) endBlock(proposer []byte) typesUtil.Error {
 	return nil
 }
 
-func (uow *baseUtilityUnitOfWork) handleProposerRewards(proposer []byte) typesUtil.Error {
+func (uow *baseUtilityUnitOfWork) handleProposerRewards(proposer []byte) coreTypes.Error {
 	feePoolAddress := coreTypes.Pools_POOLS_FEE_COLLECTOR.Address()
 	feesAndRewardsCollected, err := uow.getPoolAmount(feePoolAddress)
 	if err != nil {
@@ -82,7 +82,7 @@ func (uow *baseUtilityUnitOfWork) handleProposerRewards(proposer []byte) typesUt
 
 	daoCutPercentage := 100 - proposerCutPercentage
 	if daoCutPercentage < 0 || daoCutPercentage > 100 {
-		return typesUtil.ErrInvalidProposerCutPercentage()
+		return coreTypes.ErrInvalidProposerCutPercentage()
 	}
 
 	amountToProposerFloat := new(big.Float).SetInt(feesAndRewardsCollected)
@@ -99,7 +99,7 @@ func (uow *baseUtilityUnitOfWork) handleProposerRewards(proposer []byte) typesUt
 	return nil
 }
 
-func (uow *baseUtilityUnitOfWork) unbondUnstakingActors() (err typesUtil.Error) {
+func (uow *baseUtilityUnitOfWork) unbondUnstakingActors() (err coreTypes.Error) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -127,7 +127,7 @@ func (uow *baseUtilityUnitOfWork) unbondUnstakingActors() (err typesUtil.Error) 
 			continue
 		}
 		if er != nil {
-			return typesUtil.ErrGetReadyToUnstake(er)
+			return coreTypes.ErrGetReadyToUnstake(er)
 		}
 
 		// Loop through all unstaking actors and unbond those that have reached the waiting period,
@@ -135,12 +135,12 @@ func (uow *baseUtilityUnitOfWork) unbondUnstakingActors() (err typesUtil.Error) 
 		for _, actor := range readyToUnbond {
 			stakeAmount, err := utils.StringToBigInt(actor.StakeAmount)
 			if err != nil {
-				return typesUtil.ErrStringToBigInt(err)
+				return coreTypes.ErrStringToBigInt(err)
 			}
 
 			outputAddrBz, err := hex.DecodeString(actor.OutputAddress)
 			if err != nil {
-				return typesUtil.ErrHexDecodeFromString(err)
+				return coreTypes.ErrHexDecodeFromString(err)
 			}
 
 			if err := uow.subPoolAmount(poolAddress, stakeAmount); err != nil {
@@ -155,7 +155,7 @@ func (uow *baseUtilityUnitOfWork) unbondUnstakingActors() (err typesUtil.Error) 
 	return nil
 }
 
-func (uow *baseUtilityUnitOfWork) beginUnstakingMaxPausedActors() (err typesUtil.Error) {
+func (uow *baseUtilityUnitOfWork) beginUnstakingMaxPausedActors() (err coreTypes.Error) {
 	for actorTypeNum := range coreTypes.ActorType_name {
 		if actorTypeNum == 0 { // ACTOR_TYPE_UNSPECIFIED
 			continue
@@ -180,7 +180,7 @@ func (uow *baseUtilityUnitOfWork) beginUnstakingMaxPausedActors() (err typesUtil
 	return nil
 }
 
-func (uow *baseUtilityUnitOfWork) beginUnstakingActorsPausedBefore(pausedBeforeHeight int64, actorType coreTypes.ActorType) (err typesUtil.Error) {
+func (uow *baseUtilityUnitOfWork) beginUnstakingActorsPausedBefore(pausedBeforeHeight int64, actorType coreTypes.ActorType) (err coreTypes.Error) {
 	unbondingHeight, err := uow.getUnbondingHeight(actorType)
 	if err != nil {
 		return err
@@ -198,7 +198,7 @@ func (uow *baseUtilityUnitOfWork) beginUnstakingActorsPausedBefore(pausedBeforeH
 		er = uow.persistenceRWContext.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unbondingHeight, int32(coreTypes.StakeStatus_Unstaking))
 	}
 	if er != nil {
-		return typesUtil.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
+		return coreTypes.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}
 	return nil
 }
@@ -209,30 +209,30 @@ func (uow *baseUtilityUnitOfWork) prevBlockByzantineValidators() ([][]byte, erro
 }
 
 // TODO: This has not been tested or investigated in detail
-func (uow *baseUtilityUnitOfWork) revertLastSavePoint() typesUtil.Error {
+func (uow *baseUtilityUnitOfWork) revertLastSavePoint() coreTypes.Error {
 	// TODO(@deblasis): Implement this
 	// if len(u.savePointsSet) == 0 {
-	// 	return typesUtil.ErrEmptySavePoints()
+	// 	return coreTypes.ErrEmptySavePoints()
 	// }
 	// var key []byte
 	// popIndex := len(u.savePointsList) - 1
 	// key, u.savePointsList = u.savePointsList[popIndex], u.savePointsList[:popIndex]
 	// delete(u.savePointsSet, hex.EncodeToString(key))
 	// if err := u.store.RollbackToSavePoint(key); err != nil {
-	// 	return typesUtil.ErrRollbackSavePoint(err)
+	// 	return coreTypes.ErrRollbackSavePoint(err)
 	// }
 	return nil
 }
 
 //nolint:unused // TODO: This has not been tested or investigated in detail
-func (uow *baseUtilityUnitOfWork) newSavePoint(txHashBz []byte) typesUtil.Error {
+func (uow *baseUtilityUnitOfWork) newSavePoint(txHashBz []byte) coreTypes.Error {
 	// TODO(@deblasis): Implement this
 	// if err := u.store.NewSavePoint(txHashBz); err != nil {
-	// 	return typesUtil.ErrNewSavePoint(err)
+	// 	return coreTypes.ErrNewSavePoint(err)
 	// }
 	// txHash := hex.EncodeToString(txHashBz)
 	// if _, exists := u.savePointsSet[txHash]; exists {
-	// 	return typesUtil.ErrDuplicateSavePoint()
+	// 	return coreTypes.ErrDuplicateSavePoint()
 	// }
 	// u.savePointsList = append(u.savePointsList, txHashBz)
 	// u.savePointsSet[txHash] = struct{}{}

@@ -18,13 +18,3 @@ func (m *stateSync) sendStateSyncMessage(msg *typesCons.StateSyncMessage, dst cr
 	}
 	return nil
 }
-
-// func (m *stateSync) stateSyncLogHelper(receiverPeerAddress string) map[string]any {
-// 	consensusMod := m.GetBus().GetConsensusModule()
-
-// 	return map[string]any{
-// 		"height":              consensusMod.CurrentHeight(),
-// 		"senderPeerAddress":   consensusMod.GetNodeAddress(),
-// 		"receiverPeerAddress": receiverPeerAddress,
-// 	}
-// }

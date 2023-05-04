@@ -234,7 +234,6 @@ func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error 
 		return err
 	}
 
-	//m.logger.Info().Msgf("elected leader id: ", leaderId, ", for msg: ", msg)
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 	leader, ok := idToValAddrMap[leaderId]
 	if !ok {
@@ -295,24 +294,3 @@ func (m *consensusModule) maxPersistedBlockHeight() (uint64, error) {
 
 	return maxHeight, nil
 }
-
-// func (m *consensusModule) drainAndCloseChannel(ch chan int, channelName string) {
-// 	m.logger.Log().Msgf("Draining and closing channel ", channelName)
-// 	for {
-// 		select {
-// 		case msg, ok := <-ch:
-// 			if ok {
-// 				//fmt.Println("Logging element before closing channel:", elem)
-// 				m.logger.Info().Msgf("Drained message: ", msg)
-// 			} else {
-// 				close(ch)
-// 				return
-// 			}
-// 		default:
-
-// 			close(ch)
-// 			fmt.Println("Closed the channel")
-// 			return
-// 		}
-// 	}
-// }

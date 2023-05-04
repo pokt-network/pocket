@@ -58,8 +58,6 @@ func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(message *t
 		return typesCons.NodeId(0), err
 	}
 
-	//value := int64(message.Height) + int64(message.Round) + int64(message.Step) - 1
-	//fmt.Println("electNextLeaderDeterministicRoundRobin, Height:", message.Height, ", Round:", message.Round, ", Step:", message.Step)
 	value := int64(message.Height) + int64(message.Round) - 1
 	numVals := int64(len(vals))
 

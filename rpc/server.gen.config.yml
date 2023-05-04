@@ -1,5 +1,6 @@
 package: rpc
 generate:
+  types: true
   echo-server: true
   client: false
   models: true

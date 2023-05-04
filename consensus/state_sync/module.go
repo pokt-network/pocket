@@ -25,7 +25,7 @@ type StateSyncModule interface {
 	StateSyncServerModule
 
 	SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyncMetadataResponse)
-	// StartSyncing()
+	StartSyncing()
 	HandleStateSyncBlockCommittedEvent(message *anypb.Any) error
 }
 
@@ -83,18 +83,19 @@ func (m *stateSync) SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyn
 	m.aggregatedMetaData = aggregatedMetaData
 }
 
-// func (m *stateSync) StartSyncing() {
-// 	err := m.Start()
-// 	if err != nil {
-// 		m.logger.Error().Err(err).Msg("couldn't start state sync")
-// 	}
-// }
+// TODO: Remove this. This function is added to check return value of m.Start().
+func (m *stateSync) StartSyncing() {
+	err := m.Start()
+	if err != nil {
+		m.logger.Error().Err(err).Msg("couldn't start state sync")
+	}
+}
 
 // Start performs state sync
 // processes and aggregates all metadata collected in metadataReceived channel,
 // requests missing blocks starting from its current height to the aggregated metadata's maxHeight,
 // once the requested block is received and committed by consensus module, sends the next request for the next block,
-// when all blocks are received and committed, stops the state sync process by calling its `Stop()` function.>>>>>>> statesynchannels-local
+// when all blocks are received and committed, stops the state sync process by calling its `Stop()` function.
 func (m *stateSync) Start() error {
 	consensusMod := m.bus.GetConsensusModule()
 	currentHeight := consensusMod.CurrentHeight()

@@ -1,9 +1,15 @@
 package mempool
 
+import (
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+)
+
 type TXMempool interface {
 	Contains(hash string) bool
-	AddTx(tx []byte) error
+	AddTx(tx []byte) coreTypes.Error
 	RemoveTx(tx []byte) error
+	GetAll() [][]byte
+	Get(hash string) []byte
 
 	Clear()
 	TxCount() uint32 // Returns the number of transactions stored in the mempool

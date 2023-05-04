@@ -94,7 +94,7 @@ func (uow *leaderUtilityUnitOfWork) reapMempool(txMempool mempool.TXMempool, max
 			break // we've reached our max
 		}
 
-		txResult, err := uow.hydrateTxResult(tx, txIdx)
+		idxTx, err := uow.HydrateIdxTx(tx, txIdx)
 		if err != nil {
 			uow.logger.Err(err).Msg("Error in ApplyTransaction")
 			// TODO(#327): Properly implement 'unhappy path' for save points
@@ -107,7 +107,7 @@ func (uow *leaderUtilityUnitOfWork) reapMempool(txMempool mempool.TXMempool, max
 
 		// TODO(#564): make sure that indexing is reversible in case of a rollback
 		// Index the transaction
-		if err := uow.persistenceRWContext.IndexTransaction(txResult); err != nil {
+		if err := uow.persistenceRWContext.IndexTransaction(idxTx); err != nil {
 			uow.logger.Fatal().Bool("TODO", true).Err(err).Msg("TODO(#327): The transaction can by hydrated but not indexed. Crash the process for now")
 		}
 

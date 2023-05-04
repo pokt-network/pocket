@@ -133,15 +133,10 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	}
 
 	// Message is from the past
-	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) { // msg.Step < currentStep {
+	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
 		m.logger.Warn().Msgf("⚠️ [DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round)
 		return false, nil
 	}
-
-	// Pacemaker shouldn't catch to higher round (8, 2, 6) to (8, 1, 7) shouldn't happen, because it will cause re-leader election, and that round no blocks are generated.
-	// if msg.Round > currentRound && msg.Step < currentStep {
-	// 	return false, nil
-	// }
 
 	// Everything checks out!
 	if msg.Height == currentHeight && msg.Step == currentStep && msg.Round == currentRound {
@@ -154,8 +149,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		consensusMod.SetStep(uint8(msg.Step))
 		consensusMod.SetRound(msg.Round)
 
-		// TODO: Add tests for this. When we catch up to a later step, the leader is still the same. However, when we catch up to a later round, the leader at the same height will be different.
-		// TODO: Ensure correct leader election for validator that is catching up from previous rounds.
+		// TODO: Add tests for this. When we catch up to a later step, the leader is still the same.
 		if currentRound != msg.Round || !consensusMod.IsLeaderSet() {
 			anyProto, err := anypb.New(msg)
 			if err != nil {

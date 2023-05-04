@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.50] - 2023-05-03
+## [0.0.0.51] - 2023-05-04
 
 - Added state sync channels `blocksReceived` and `metadataReceived`, implemented `blockApplicationLoop()`, state sync functions `Start()` and `Stop()`
 - Implemented `WaitForNetworkFSMEvents()` function in test utils
+
+## [0.0.0.50] - 2023-05-03
+
+- Rename `TxResult` to `IndexedTransaction`
 
 ## [0.0.0.49] - 2023-04-27
 
@@ -22,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.47] - 2023-04-17
 
--  Log warnings in `handleStateSyncMessage()` 
+-  Log warnings in `handleStateSyncMessage()`
 
 ## [0.0.0.46] - 2023-04-13
 

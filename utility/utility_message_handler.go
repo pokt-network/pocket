@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
-	"github.com/pokt-network/pocket/utility/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -37,7 +37,7 @@ func (u *utilityModule) HandleUtilityMessage(message *anypb.Any) error {
 			return err
 		}
 
-		if txGossipMsg, ok := msg.(*types.TxGossipMessage); !ok {
+		if txGossipMsg, ok := msg.(*typesUtil.TxGossipMessage); !ok {
 			return fmt.Errorf("failed to cast message to UtilityMessage")
 		} else if err := u.HandleTransaction(txGossipMsg.Tx); err != nil {
 			return err
@@ -46,7 +46,7 @@ func (u *utilityModule) HandleUtilityMessage(message *anypb.Any) error {
 		u.logger.Info().Str("message_type", "TxGossipMessage").Msg("Successfully added a new message to the mempool!")
 
 	default:
-		return types.ErrUnknownMessageType(message.MessageName())
+		return coreTypes.ErrUnknownMessageType(message.MessageName())
 	}
 
 	return nil

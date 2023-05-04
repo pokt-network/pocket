@@ -305,17 +305,15 @@ func (p *PostgresContext) updatePoolTrees() error {
 // Data Tree Helpers
 
 func (p *PostgresContext) updateTransactionsTree() error {
-	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
+	indexedTxs, err := p.txIndexer.GetByHeight(p.Height, false)
 	if err != nil {
 		return err
 	}
 
-	for _, txResult := range txResults {
-		txHash, err := txResult.Hash()
-		if err != nil {
-			return err
-		}
-		if _, err := p.stateTrees.merkleTrees[transactionsMerkleTree].Update(txHash, txResult.GetTx()); err != nil {
+	for _, idxTx := range indexedTxs {
+		txBz := idxTx.GetTx()
+		txHash := crypto.SHA3Hash(txBz)
+		if _, err := p.stateTrees.merkleTrees[transactionsMerkleTree].Update(txHash, txBz); err != nil {
 			return err
 		}
 	}

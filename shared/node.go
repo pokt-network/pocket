@@ -157,10 +157,10 @@ func (m *Node) GetBus() modules.Bus {
 // TODO: Move all message types this is dependant on to the `messaging` package
 func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	contentType := message.GetContentType()
-	// logger.Global.Debug().Fields(map[string]any{
-	// 	"message":     message,
-	// 	"contentType": contentType,
-	// }).Msg("node handling event")
+	logger.Global.Debug().Fields(map[string]any{
+		"message":     message,
+		"contentType": contentType,
+	}).Msg("node handling event")
 
 	switch contentType {
 	case messaging.NodeStartedEventType:

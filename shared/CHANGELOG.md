@@ -7,9 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.58] - 2023-05-03
+
+- Exported `IsValidator()` function for Persistence module 
+- Added `pocket.StateSyncBlockCommittedEvent` to the shared messaging events
+
+## [0.0.0.57] - 2023-05-04
+
+- Move `utility/types/errors.go` into `shared/core/types/`
+- Add helper functions to pools structure to get friendly name from address
+- Add placeholder protobufs for relays and challenges copied from V0
+- Enable the introspection of the mempool for unconfirmed transactions
+
 ## [0.0.0.56] - 2023-05-03
 
-- Exported `IsValidator()` function in `ConsensusStateSync` interface 
+- Rename `TxResult` to `IndexedTransaction`
 
 ## [0.0.0.55] - 2023-04-28
 

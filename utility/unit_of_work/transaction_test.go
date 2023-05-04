@@ -38,10 +38,10 @@ func TestUtilityUnitOfWork_ApplyTransaction(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 
 	tx, startingBalance, amount, signer := newTestingTransaction(t, uow)
-	txResult, err := uow.hydrateTxResult(tx, 0)
+	idxTx, err := uow.HydrateIdxTx(tx, 0)
 	require.NoError(t, err)
-	require.Equal(t, int32(0), txResult.GetResultCode())
-	require.Equal(t, "", txResult.GetError())
+	require.Equal(t, int32(0), idxTx.GetResultCode())
+	require.Equal(t, "", idxTx.GetError())
 	feeBig, err := getGovParam[*big.Int](uow, typesUtil.MessageSendFee)
 	require.NoError(t, err)
 

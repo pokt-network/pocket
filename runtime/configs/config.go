@@ -19,6 +19,7 @@ type Config struct {
 	RootDirectory   string `json:"root_directory"`
 	PrivateKey      string `json:"private_key"` // INVESTIGATE(#150): better architecture for key management (keybase, keyfiles, etc.)
 	ClientDebugMode bool   `json:"client_debug_mode"`
+	NetworkId       string `json:"network_id"`
 
 	Consensus   *ConsensusConfig   `json:"consensus"`
 	Utility     *UtilityConfig     `json:"utility"`
@@ -110,6 +111,7 @@ func setViperDefaults(cfg *Config) {
 func NewDefaultConfig(options ...func(*Config)) *Config {
 	cfg := &Config{
 		RootDirectory: defaults.DefaultRootDirectory,
+		NetworkId:     defaults.DefaultNetworkID,
 		Consensus: &ConsensusConfig{
 			MaxMempoolBytes: defaults.DefaultConsensusMaxMempoolBytes,
 			PacemakerConfig: &PacemakerConfig{

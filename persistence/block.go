@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/utils"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (p *persistenceModule) TransactionExists(transactionHash string) (bool, error) {
@@ -26,6 +27,7 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 	}
 	return true, err
 }
+
 func (p *PostgresContext) GetMinimumBlockHeight() (latestHeight uint64, err error) {
 	ctx, tx := p.getCtxAndTx()
 
@@ -69,29 +71,37 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*coreTy
 	}
 
 	// Retrieve the indexed transactions at the current height
-	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
+	idxTxs, err := p.txIndexer.GetByHeight(p.Height, false)
 	if err != nil {
 		return nil, err
 	}
 
-	// Retrieve the transactions from the txResults
-	txs := make([][]byte, len(txResults))
-	for i, txResult := range txResults {
-		txs[i] = txResult.GetTx()
+	// Retrieve the transactions from the idxTxs
+	txs := make([][]byte, len(idxTxs))
+	for i, idxTx := range idxTxs {
+		txs[i] = idxTx.GetTx()
 	}
+
+	// Get the current timestamp
+	// TECHDEBT: This will lead to different timestamp in each node's block store because `prepareBlock` is called locally. Needs to be revisisted and decided on a proper implementation.
+	timestamp := timestamppb.Now()
 
 	// Preapre the block proto
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            uint64(p.Height),
+		NetworkId:         p.networkId,
 		StateHash:         p.stateHash,
 		PrevStateHash:     prevBlockHash,
 		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,
+		Timestamp:         timestamp,
 	}
 	block := &coreTypes.Block{
 		BlockHeader:  blockHeader,
 		Transactions: txs,
 	}
+
+	p.logger.Info().Uint64("height", block.BlockHeader.Height).Msg("Storing block in block store.")
 
 	return block, nil
 }

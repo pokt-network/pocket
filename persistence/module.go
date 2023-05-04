@@ -31,6 +31,7 @@ type persistenceModule struct {
 
 	config       *configs.PersistenceConfig
 	genesisState *genesis.GenesisState
+	networkId    string
 
 	// A key-value store mapping heights to blocks. Needed for block synchronization.
 	blockStore kvstore.KVStore
@@ -109,6 +110,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 
 	m.config = persistenceCfg
 	m.genesisState = genesisState
+	m.networkId = runtimeMgr.GetConfig().NetworkId
 
 	m.blockStore = blockStore
 	m.txIndexer = txIndexer
@@ -176,6 +178,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
 		stateTrees: m.stateTrees,
+		networkId:  m.networkId,
 	}
 
 	return m.writeContext, nil
@@ -207,6 +210,7 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
 		stateTrees: m.stateTrees,
+		networkId:  m.networkId,
 	}, nil
 }
 
@@ -225,6 +229,14 @@ func (m *persistenceModule) ReleaseWriteContext() error {
 
 func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
 	return m.blockStore
+}
+
+func (m *persistenceModule) GetTxIndexer() indexer.TxIndexer {
+	return m.txIndexer
+}
+
+func (m *persistenceModule) GetNetworkID() string {
+	return m.networkId
 }
 
 func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {

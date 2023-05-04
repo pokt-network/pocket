@@ -59,10 +59,8 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 		return
 	}
 
-	// if replica is syncing up:
-	// it is possible for it to have missed the newround, and m.block can be empty.
-	// here if that is the case, first few steps might have been empty.
-	//so we need to refresh utility context
+	// if replica received a proposal in statesync before receiving the NEWROUND proposals,
+	// in which case utilityUnitOfWork will be nil, and we refresh utility context
 	if m.utilityUnitOfWork == nil {
 		// Clear the previous utility unitOfWork, if it exists, and create a new one
 		if err := m.refreshUtilityUnitOfWork(); err != nil {
@@ -107,10 +105,8 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 		return
 	}
 
-	// if replica is syncing up:
-	// it is possible for it to have missed the newround, and m.block can be empty.
-	// here if that is the case,  first few steps might have been empty.
-	//so we need to set the block, and refresh utility context
+	// replica might have receive PRECOMMIT proposal without receiving the NEWROUND and/or PREPARE proposals while performing state sync.
+	// in this case m.block will be nil, and we set it via the proposal, since we already performed QC verification block in the proposal is valid.
 	if m.block == nil {
 		m.block = msg.GetBlock()
 		if err := m.refreshUtilityUnitOfWork(); err != nil {
@@ -147,10 +143,8 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 		return
 	}
 
-	// if replica is syncing up:
-	// it is possible for it to have missed the newround, and m.block can be empty.
-	// here if that is the case,  first few steps might have been empty.
-	//so we need to set the block, and refresh utility context
+	// replica might have receive COMMIT proposal without receiving the NEWROUND and/or PREPARE, PRECOMMIT proposals while performing state sync.
+	// in this case m.block will be nil, and we set it via the proposal, since we already performed QC verification block in the proposal is valid.
 	if m.block == nil {
 		m.block = msg.GetBlock()
 		if err := m.refreshUtilityUnitOfWork(); err != nil {
@@ -193,10 +187,8 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 		return
 	}
 
-	// if replica is syncing up:
-	// it is possible for it to have missed the newround, and m.block can be empty.
-	// here if that is the case,  first few steps might have been empty.
-	//so we need to set the block, and refresh utility context
+	// replica might have receive DECIDE proposal without receiving the NEWROUND and/or PREPARE, PRECOMMIT, COMMIT proposals while performing state sync.
+	// in this case m.block will be nil, and we set it via the proposal, since we already performed QC verification block in the proposal is valid.
 	if m.block == nil {
 		m.block = msg.GetBlock()
 		if err := m.refreshUtilityUnitOfWork(); err != nil {
