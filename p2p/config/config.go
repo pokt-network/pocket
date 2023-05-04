@@ -1,30 +1,25 @@
-package utils
+package config
 
 import (
 	"fmt"
-
 	"github.com/libp2p/go-libp2p/core/host"
-	"go.uber.org/multierr"
-
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"go.uber.org/multierr"
 )
 
-// RouterConfig is used to configure `Router` implementations using the given
-// libp2p host and current height and peerstore providers.
-// TECHDEBT: This should ideally be in p2p/types/router.go but it causes
-// an import cycle between `typesP2P` and `providers` so need to move everything over in the future.
-type RouterConfig struct {
+// RainTreeConfig implements `RouterConfig` for use with `RainTreeRouter`
+type RainTreeConfig struct {
 	Addr                  crypto.Address
 	CurrentHeightProvider providers.CurrentHeightProvider
 	Host                  host.Host
 	Hostname              string
-	MaxMempoolCount       uint64
+	MaxNonces             uint64
 	PeerstoreProvider     providers.PeerstoreProvider
 }
 
-func (cfg *RouterConfig) IsValid() (err error) {
-	// TECHDEBT: can `Hostname` or `MaxMempoolCount` be invalid?
+func (cfg *RainTreeConfig) IsValid() (err error) {
+	// TECHDEBT: can `Hostname` or `MaxNonces` be invalid?
 
 	if cfg.Addr == nil {
 		err = multierr.Append(err, fmt.Errorf("pokt address not configured"))
