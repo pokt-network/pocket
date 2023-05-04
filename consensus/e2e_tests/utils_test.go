@@ -54,6 +54,7 @@ type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 type IdToPKMapping map[typesCons.NodeId]cryptoPocket.PrivateKey
 
 /*** Placeholder Block Generation Helpers ***/
+
 type placeholderBlocks struct {
 	pKs    IdToPKMapping
 	blocks []*coreTypes.Block
@@ -922,7 +923,6 @@ func generateValidQuorumCertificate(nodePKs IdToPKMapping, block *coreTypes.Bloc
 	var pss []*typesCons.PartialSignature
 
 	for _, nodePK := range nodePKs {
-		//ps :=
 		pss = append(pss, generatePartialSignature(block, nodePK))
 	}
 

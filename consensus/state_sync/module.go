@@ -107,7 +107,6 @@ func (m *stateSync) Start() error {
 	}
 	defer readCtx.Release()
 
-	//get the current validators
 	validators, err := readCtx.GetAllValidators(int64(currentHeight))
 	if err != nil {
 		return err
@@ -144,7 +143,6 @@ func (m *stateSync) Start() error {
 		}
 
 		// wait for the requested block to be received and committed by consensus module
-		//<-m.committedBlocksChannel
 
 		currentHeight = consensusMod.CurrentHeight()
 	}
@@ -154,7 +152,6 @@ func (m *stateSync) Start() error {
 
 // Stop stops the state sync process, and sends `Consensus_IsSyncedValidator` FSM event
 func (m *stateSync) Stop() error {
-	// check if the node is a validator
 	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
 	nodeAddress := m.bus.GetConsensusModule().GetNodeAddress()
 
