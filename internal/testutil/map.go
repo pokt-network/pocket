@@ -1,8 +1,13 @@
 package testutil
 
-func GetKeys[K comparable, V any](keyMap map[K]V) (keys []K) {
+func GetKeys[K comparable, V any](keyMap map[K]V) []K {
+	var (
+		idx  = 0
+		keys = make([]K, len(keyMap))
+	)
 	for key := range keyMap {
-		keys = append(keys, key)
+		keys[idx] = key
+		idx++
 	}
 	return keys
 }
