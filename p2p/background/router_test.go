@@ -176,6 +176,8 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 
 	bootstrap(t, ctx, testHosts)
 
+	// broadcasting in a go routine so that we can wait for bootstrapping to
+	// complete before broadcasting.
 	go func() {
 		// wait for hosts to listen and peer discovery
 		bootstrapWaitgroup.Wait()
@@ -190,10 +192,8 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 		t.Log("broadcasting...")
 		err := testRouter.Broadcast([]byte(testMsg))
 		require.NoError(t, err)
-	}()
 
-	// wait concurrently
-	go func() {
+		// wait for broadcast to be received by all peers
 		broadcastWaitgroup.Wait()
 		broadcastDone <- struct{}{}
 	}()
