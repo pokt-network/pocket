@@ -69,7 +69,7 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 		return nil, err
 	}
 
-	// NOTE_TO_SELF: `pubsub.NewRandomSub` requires a `size` arg.
+	// CONSIDERATION: If switching to `NewRandomSub`, there will be a max size
 	gossipSub, err := pubsub.NewGossipSub(ctx, cfg.Host)
 	if err != nil {
 		return nil, fmt.Errorf("creating gossip pubsub: %w", err)
