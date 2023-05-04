@@ -201,7 +201,32 @@ func (m *consensusModule) Start() error {
 }
 
 func (m *consensusModule) Stop() error {
-	return nil
+	m.logger.Info().Msg("Stopping consensus module")
+
+	m.logger.Log().Msg("Draining and closing metadataReceived and blockResponse channels")
+	for {
+		select {
+		case metaData, ok := <-m.metadataReceived:
+			if ok {
+				m.logger.Info().Msgf("Drained metadata message: ", metaData)
+			} else {
+				close(m.metadataReceived)
+				return nil
+			}
+		case blockResponse, ok := <-m.blocksResponsesReceived:
+			if ok {
+				m.logger.Info().Msgf("Drained blockResponse message: ", blockResponse)
+			} else {
+				close(m.blocksResponsesReceived)
+				return nil
+			}
+		default:
+			close(m.metadataReceived)
+			close(m.blocksResponsesReceived)
+			fmt.Println("closed all chanells")
+			return nil
+		}
+	}
 }
 
 func (m *consensusModule) GetModuleName() string {

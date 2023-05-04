@@ -455,7 +455,6 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus,
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
-	persistenceMock.EXPECT().IsValidator(gomock.Any(), gomock.Any()).Return(true, nil).AnyTimes()
 
 	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
 		heightInt := utils.HeightFromBytes(height)
@@ -486,6 +485,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus,
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().Release().AnyTimes()
+	persistenceReadContextMock.EXPECT().IsValidator(gomock.Any(), gomock.Any()).Return(true, nil).AnyTimes()
 
 	return persistenceMock
 }
@@ -755,6 +755,7 @@ func WaitForNodeToSync(
 	allNodes IdToNodeMapping,
 	targetHeight uint64,
 ) {
+	t.Helper()
 	currentHeight := unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 
 	for currentHeight < targetHeight {

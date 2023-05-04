@@ -231,27 +231,6 @@ func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 	return m.writeContext
 }
 
-func (m *persistenceModule) IsValidator(height int64, address string) (bool, error) {
-	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(height)
-	if err != nil {
-		return false, err
-	}
-	defer readCtx.Release()
-
-	validators, err := readCtx.GetAllValidators(int64(height))
-	if err != nil {
-		return false, err
-	}
-
-	for _, actor := range validators {
-		if actor.Address == address {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
 func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 	if blockStorePath == "" {
 		return kvstore.NewMemKVStore(), nil

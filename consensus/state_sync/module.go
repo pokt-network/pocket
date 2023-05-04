@@ -156,12 +156,23 @@ func (m *stateSync) Stop() error {
 	// check if the node is a validator
 	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
 	nodeAddress := m.bus.GetConsensusModule().GetNodeAddress()
-	isValidator, err := m.bus.GetPersistenceModule().IsValidator(int64(currentHeight), nodeAddress)
 
+	m.logger.Info().Msg("Syncing is complete!")
+
+	readCtx, err := m.bus.GetPersistenceModule().NewReadContext(int64(currentHeight))
 	if err != nil {
 		return err
 	}
-	m.logger.Info().Msg("Syncing is complete!")
+	defer readCtx.Release()
+
+	fmt.Println("checking if validator...")
+
+	isValidator, err := readCtx.IsValidator(int64(currentHeight), nodeAddress)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("is validator: ", isValidator)
 
 	if isValidator {
 		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)

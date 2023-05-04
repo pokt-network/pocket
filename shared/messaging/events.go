@@ -2,14 +2,16 @@ package messaging
 
 const (
 	// Node
-	NodeStartedEventType             = "pocket.NodeStartedEvent"
-	ConsensusNewHeightEventType      = "pocket.ConsensusNewHeightEvent"
-	StateMachineTransitionEventType  = "pocket.StateMachineTransitionEvent"
-	StateSyncBlockCommittedEventType = "pocket.StateSyncBlockCommittedEvent"
+	NodeStartedEventType            = "pocket.NodeStartedEvent"
+	ConsensusNewHeightEventType     = "pocket.ConsensusNewHeightEvent"
+	StateMachineTransitionEventType = "pocket.StateMachineTransitionEvent"
 
-	// Consensus
-	HotstuffMessageContentType  = "consensus.HotstuffMessage"
-	StateSyncMessageContentType = "consensus.StateSyncMessage"
+	// Consensus - HotPOKT
+	HotstuffMessageContentType = "consensus.HotstuffMessage"
+
+	// Consensus - State Sync
+	StateSyncBlockCommittedEventType = "pocket.StateSyncBlockCommittedEvent"
+	StateSyncMessageContentType      = "consensus.StateSyncMessage"
 
 	// Utility
 	TxGossipMessageContentType = "utility.TxGossipMessage"

@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -81,6 +82,27 @@ func (p *PostgresContext) SetValidatorPauseHeight(address []byte, height int64) 
 
 func (p *PostgresContext) GetValidatorOutputAddress(operator []byte, height int64) (output []byte, err error) {
 	return p.GetActorOutputAddress(types.ValidatorActor, operator, height)
+}
+
+func (m *PostgresContext) IsValidator(height int64, address string) (bool, error) {
+	validators, err := m.GetAllValidators(int64(height))
+	if err != nil {
+		return false, err
+	}
+
+	for _, actor := range validators {
+		if actor.Address == address {
+			fmt.Println(" returning true")
+			return true, nil
+		}
+	}
+
+	// val, err := m.GetActor(coreTypes.ActorType_ACTOR_TYPE_VAL, []byte(address), height)
+	// if err != nil {
+	// 	return false, err
+	// }
+
+	return false, nil
 }
 
 // TODO: implement missed blocks
