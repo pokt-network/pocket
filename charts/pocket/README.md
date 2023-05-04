@@ -43,6 +43,7 @@ privateKeySecretKeyRef:
 | config.consensus.pacemaker_config.manual | bool | `true` |  |
 | config.consensus.pacemaker_config.timeout_msec | int | `10000` |  |
 | config.consensus.private_key | string | `""` |  |
+| config.consensus.server_mode_enabled | bool | `true` |  |
 | config.logger.format | string | `"json"` |  |
 | config.logger.level | string | `"debug"` |  |
 | config.p2p.hostname | string | `""` |  |
