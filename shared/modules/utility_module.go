@@ -22,6 +22,12 @@ type UtilityModule interface {
 	// HandleTransaction does basic `Transaction` validation & adds it to the utility's module mempool if valid
 	HandleTransaction(tx []byte) error
 
+	// HandleRelay process the relay to the specified chain if this node is a servicer
+	HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) // TODO: Implement this
+
+	// HandleChallenge handles a challenge request from an application unhappy with the response
+	HandleChallenge(challenge *coreTypes.Challenge) (*coreTypes.ChallengeResponse, error) // TODO: Implement this
+
 	// GetMempool returns the utility module's mempool of transactions gossiped throughout the network
 	GetMempool() mempool.TXMempool
 
@@ -56,6 +62,9 @@ type UtilityUnitOfWork interface {
 	// For example, it can be use during state sync to set a proposed state transition before validation.
 	// TODO: Investigate a way to potentially simplify the interface by removing this function.
 	SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error
+
+	// HydrateIdxTx hydrates a Transaction structure, with its index in the block returning a IndexedTransaction structure
+	HydrateIdxTx(tx *coreTypes.Transaction, index int) (*coreTypes.IndexedTransaction, coreTypes.Error)
 
 	// ApplyBlock applies the context's in-memory proposed state (i.e. the txs in this context).
 	// Only intended to be used by the block verifiers (i.e. replicas).

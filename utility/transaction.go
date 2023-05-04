@@ -3,7 +3,6 @@ package utility
 import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 // HandleTransaction implements the exposed functionality of the shared utilityModule interface.
@@ -12,20 +11,20 @@ func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
 
 	// Is the tx already in the mempool (in memory)?
 	if u.mempool.Contains(txHash) {
-		return typesUtil.ErrDuplicateTransaction()
+		return coreTypes.ErrDuplicateTransaction()
 	}
 
 	// Is the tx already committed & indexed (on disk)?
 	if txExists, err := u.GetBus().GetPersistenceModule().TransactionExists(txHash); err != nil {
 		return err
 	} else if txExists {
-		return typesUtil.ErrTransactionAlreadyCommitted()
+		return coreTypes.ErrTransactionAlreadyCommitted()
 	}
 
 	// Can the tx be decoded?
 	tx := &coreTypes.Transaction{}
 	if err := codec.GetCodec().Unmarshal(txProtoBytes, tx); err != nil {
-		return typesUtil.ErrProtoUnmarshal(err)
+		return coreTypes.ErrProtoUnmarshal(err)
 	}
 
 	// Does the tx pass basic validation?

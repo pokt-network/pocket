@@ -12,18 +12,8 @@ func (p *PostgresContext) GetFishermanExists(address []byte, height int64) (exis
 	return p.GetExists(types.FishermanActor, address, height)
 }
 
-//nolint:gocritic // tooManyResultsChecker This function needs to return many values
-func (p *PostgresContext) GetFisherman(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, err error) {
-	actor, err := p.getActor(types.FishermanActor, address, height)
-	operator = actor.Address
-	publicKey = actor.PublicKey
-	stakedTokens = actor.StakedAmount
-	serviceURL = actor.ServiceUrl
-	outputAddress = actor.Output
-	pausedHeight = actor.PausedHeight
-	unstakingHeight = actor.UnstakingHeight
-	chains = actor.Chains
-	return
+func (p *PostgresContext) GetFisherman(address []byte, height int64) (*coreTypes.Actor, error) {
+	return p.getActor(types.FishermanActor, address, height)
 }
 
 func (p *PostgresContext) InsertFisherman(address, publicKey, output []byte, _ bool, _ int32, serviceURL, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error {

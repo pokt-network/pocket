@@ -13,6 +13,18 @@ import (
 	"github.com/pokt-network/pocket/runtime/genesis"
 )
 
+// TODO: Implement this function
+func (p *PostgresContext) GetVersionAtHeight(height int64) (string, error) {
+	// This is a placeholder function for the RPC endpoint "v1/query/upgrade"
+	return "", nil
+}
+
+// TODO: Implement this function
+func (p *PostgresContext) GetSupportedChains(height int64) ([]string, error) {
+	// This is a placeholder function for the RPC endpoint "v1/query/supportedchains"
+	return []string{}, nil
+}
+
 func (p *PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	ctx, tx := p.getCtxAndTx()
 	if p.Height != 0 {

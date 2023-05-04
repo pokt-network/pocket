@@ -16,7 +16,7 @@ import (
 type Message interface {
 	proto.Message // TECHDEBT: Still making direct `proto` reference even with a central `codec` package
 
-	ValidateBasic() Error
+	ValidateBasic() coreTypes.Error
 
 	SetSigner(signerAddr []byte) // TECHDEBT: Convert to string or `crypto.Address` type
 
@@ -36,7 +36,7 @@ var (
 	_ Message = &MessageChangeParameter{}
 )
 
-func (msg *MessageSend) ValidateBasic() Error {
+func (msg *MessageSend) ValidateBasic() coreTypes.Error {
 	if err := validateAddress(msg.FromAddress); err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (msg *MessageSend) ValidateBasic() Error {
 	}
 	return nil
 }
-func (msg *MessageStake) ValidateBasic() Error {
+func (msg *MessageStake) ValidateBasic() coreTypes.Error {
 	if err := validatePublicKey(msg.PublicKey); err != nil {
 		return err
 	}
@@ -57,24 +57,24 @@ func (msg *MessageStake) ValidateBasic() Error {
 	}
 	return validateStaker(msg)
 }
-func (msg *MessageUnstake) ValidateBasic() Error {
+func (msg *MessageUnstake) ValidateBasic() coreTypes.Error {
 	return validateAddress(msg.Address)
 }
-func (msg *MessageUnpause) ValidateBasic() Error {
+func (msg *MessageUnpause) ValidateBasic() coreTypes.Error {
 	return validateAddress(msg.Address)
 }
-func (msg *MessageEditStake) ValidateBasic() Error {
+func (msg *MessageEditStake) ValidateBasic() coreTypes.Error {
 	if err := validateAddress(msg.Address); err != nil {
 		return err
 	}
 	return validateStaker(msg)
 }
-func (msg *MessageChangeParameter) ValidateBasic() Error {
+func (msg *MessageChangeParameter) ValidateBasic() coreTypes.Error {
 	if msg.ParameterKey == "" {
-		return ErrEmptyParamKey()
+		return coreTypes.ErrEmptyParamKey()
 	}
 	if msg.ParameterValue == nil {
-		return ErrEmptyParamValue()
+		return coreTypes.ErrEmptyParamValue()
 	}
 	if err := validateAddress(msg.Owner); err != nil {
 		return err
@@ -123,25 +123,25 @@ func (msg *MessageChangeParameter) GetCanonicalBytes() []byte { return getCanoni
 
 // CONSIDERATION: If the protobufs contain semantic types (e.g. Address is an interface), we could
 // potentially leverage a shared `address.ValidateBasic()` throughout the codebase.
-func validateAddress(address []byte) Error {
+func validateAddress(address []byte) coreTypes.Error {
 	if address == nil {
-		return ErrEmptyAddress()
+		return coreTypes.ErrEmptyAddress()
 	}
 	addrLen := len(address)
 	if addrLen != cryptoPocket.AddressLen {
-		return ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
+		return coreTypes.ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
 	}
 	return nil
 }
 
 // CONSIDERATION: Consolidate with `validateAddress`? The only difference is the error message.
-func validateOutputAddress(address []byte) Error {
+func validateOutputAddress(address []byte) coreTypes.Error {
 	if address == nil {
-		return ErrNilOutputAddress()
+		return coreTypes.ErrNilOutputAddress()
 	}
 	addrLen := len(address)
 	if addrLen != cryptoPocket.AddressLen {
-		return ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
+		return coreTypes.ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
 	}
 	return nil
 }
@@ -149,32 +149,32 @@ func validateOutputAddress(address []byte) Error {
 // CONSIDERATION: If the protobufs contain semantic types, we could potentially leverage
 //
 //	a shared `address.ValidateBasic()` throughout the codebase.s
-func validatePublicKey(publicKey []byte) Error {
+func validatePublicKey(publicKey []byte) coreTypes.Error {
 	if publicKey == nil {
-		return ErrEmptyPublicKey()
+		return coreTypes.ErrEmptyPublicKey()
 	}
 	pubKeyLen := len(publicKey)
 	if pubKeyLen != cryptoPocket.PublicKeyLen {
-		return ErrInvalidPublicKeyLen(pubKeyLen)
+		return coreTypes.ErrInvalidPublicKeyLen(pubKeyLen)
 	}
 	return nil
 }
 
 //nolint:unused // TODO: need to figure out why this function was added and never used
-func validateHash(hash []byte) Error {
+func validateHash(hash []byte) coreTypes.Error {
 	if hash == nil {
-		return ErrEmptyHash()
+		return coreTypes.ErrEmptyHash()
 	}
 	hashLen := len(hash)
 	if hashLen != cryptoPocket.SHA3HashLen {
-		return ErrInvalidHashLength(hashLen)
+		return coreTypes.ErrInvalidHashLength(hashLen)
 	}
 	return nil
 }
 
-func validateRelayChains(chains []string) Error {
+func validateRelayChains(chains []string) coreTypes.Error {
 	if chains == nil {
-		return ErrEmptyRelayChains()
+		return coreTypes.ErrEmptyRelayChains()
 	}
 	for _, chain := range chains {
 		if err := relayChain(chain).ValidateBasic(); err != nil {

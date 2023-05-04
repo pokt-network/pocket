@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.52] - 2023-05-04
+
+- Add protocol actor specifc getter functions
+- Add placeholder functions for `GetSupportedChains()` and `GetVersionAtHeight()`
+- Add the `network_id` field and local timestamp to block when preparing it
+
 ## [0.0.0.51] - 2023-05-03
 
 - Rename `TxResult` to `IndexedTransaction`

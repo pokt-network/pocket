@@ -1,7 +1,7 @@
 FROM golang:latest
 
 # Install grpc
-RUN go install github.com/golang/protobuf/protoc-gen-go@latest
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 
 
 # update

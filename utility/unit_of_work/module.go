@@ -7,7 +7,6 @@ import (
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
 const (
@@ -56,7 +55,7 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 
 	log.Debug().Msg("checking if proposal block has been set")
 	if !uow.isProposalBlockSet() {
-		return utilTypes.ErrProposalBlockNotSet()
+		return coreTypes.ErrProposalBlockNotSet()
 	}
 
 	// begin block lifecycle phase
@@ -81,7 +80,7 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 	stateHash, err := uow.persistenceRWContext.ComputeStateHash()
 	if err != nil {
 		log.Fatal().Err(err).Bool("TODO", true).Msg("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
-		return utilTypes.ErrAppHash(err)
+		return coreTypes.ErrAppHash(err)
 	}
 
 	// IMPROVE(#655): this acts as a feature flag to allow tests to ignore the check if needed, ideally the tests should have a way to determine
@@ -92,7 +91,7 @@ func (uow *baseUtilityUnitOfWork) ApplyBlock() error {
 				Str("proposalStateHash", uow.proposalStateHash).
 				Str("stateHash", stateHash).
 				Msg("State hash mismatch. TODO: Look into roll-backing the entire commit...")
-			return utilTypes.ErrAppHash(fmt.Errorf("state hash mismatch: expected %s from the proposal, got %s", uow.proposalStateHash, stateHash))
+			return coreTypes.ErrAppHash(fmt.Errorf("state hash mismatch: expected %s from the proposal, got %s", uow.proposalStateHash, stateHash))
 		}
 	}
 
@@ -148,7 +147,7 @@ func (uow *baseUtilityUnitOfWork) processTransactionsFromProposalBlock(txMempool
 			return err
 		}
 
-		idxTx, err := uow.hydrateIdxTx(tx, index)
+		idxTx, err := uow.HydrateIdxTx(tx, index)
 		if err != nil {
 			return err
 		}
