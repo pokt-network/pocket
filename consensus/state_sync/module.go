@@ -83,7 +83,7 @@ func (m *stateSync) SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyn
 	m.aggregatedMetaData = aggregatedMetaData
 }
 
-// TODO: Remove this. This function is added to check return value of m.Start().
+// TODO: Remove this. This function added as a hack to be able to check return value of m.Start().
 func (m *stateSync) StartSyncing() {
 	err := m.Start()
 	if err != nil {

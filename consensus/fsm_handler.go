@@ -86,7 +86,6 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	m.stateSync.SetAggregatedMetadata(&aggregatedMetadata)
 
 	go m.stateSync.StartSyncing()
-	//go m.stateSync.Start()
 
 	return nil
 }
@@ -106,7 +105,8 @@ func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionE
 	// validator receives a new block proposal, and it understands that it doesn't have block and it transitions to unsycnhed state
 	// transitioning out of this state happens when a new block proposal is received by the hotstuff_replica
 
-	// if a validator who just bootstrapped and finished state sync, it will not have a nodeId yet, which is 0. Set correct nodeId here.
+	// TODO: move this to a more appropriate place
+	// if a validator is just bootstrapped and finished state sync, it will not have a nodeId yet, which is 0. Set correct nodeId here.
 	if m.nodeId == 0 {
 		// valdiator node receives nodeID after reaching pacemaker.
 		validators, err := m.getValidatorsAtHeight(m.CurrentHeight())

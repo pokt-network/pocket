@@ -150,6 +150,7 @@ func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 		consensusMod.SetRound(msg.Round)
 
 		// TODO: Add tests for this. When we catch up to a later step, the leader is still the same.
+		// However, when we catch up to a later round, the leader at the same height will be different.
 		if currentRound != msg.Round || !consensusMod.IsLeaderSet() {
 			anyProto, err := anypb.New(msg)
 			if err != nil {

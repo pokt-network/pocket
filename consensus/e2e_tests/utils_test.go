@@ -53,6 +53,7 @@ var maxTxBytes = defaults.DefaultConsensusMaxMempoolBytes
 type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 type IdToPKMapping map[typesCons.NodeId]cryptoPocket.PrivateKey
 
+/*** Placeholder Block Generation Helpers ***/
 type placeholderBlocks struct {
 	pKs    IdToPKMapping
 	blocks []*coreTypes.Block
@@ -62,7 +63,7 @@ func (p *placeholderBlocks) setPKs(nodeId typesCons.NodeId, pk cryptoPocket.Priv
 	p.pKs[nodeId] = pk
 }
 
-func (p *placeholderBlocks) prepareBlocks(t *testing.T, bus modules.Bus, nodePKs IdToPKMapping) {
+func (p *placeholderBlocks) preparePlaceholderBlocks(t *testing.T, bus modules.Bus, nodePKs IdToPKMapping) {
 	i := uint64(1)
 	for i <= numberOfPersistedDummyBlocks {
 
@@ -82,9 +83,7 @@ func (p *placeholderBlocks) prepareBlocks(t *testing.T, bus modules.Bus, nodePKs
 			Transactions: make([][]byte, 0),
 		}
 
-		// TODO_IN_THIS_COMMIT: Need to redo how this is done.
-		qc, err := generateValidQuorumCertificate(nodePKs, block)
-		require.NoError(t, err)
+		qc := generateValidQuorumCertificate(nodePKs, block)
 
 		qcBytes, err := codec.GetCodec().Marshal(qc)
 		require.NoError(t, err)
@@ -152,7 +151,7 @@ func CreateTestConsensusPocketNodes(
 		require.NoError(t, err)
 		blocks.setPKs(typesCons.NodeId(i+1), nodePK)
 	}
-	blocks.prepareBlocks(t, buses[0], blocks.pKs)
+	blocks.preparePlaceholderBlocks(t, buses[0], blocks.pKs)
 	return
 }
 
@@ -161,9 +160,9 @@ func CreateTestConsensusPocketNode(
 	t *testing.T,
 	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
-	nodesAndBlocks *placeholderBlocks,
+	placeholderBlocks *placeholderBlocks,
 ) *shared.Node {
-	persistenceMock := basePersistenceMock(t, eventsChannel, bus, nodesAndBlocks)
+	persistenceMock := basePersistenceMock(t, eventsChannel, bus, placeholderBlocks)
 	bus.RegisterModule(persistenceMock)
 
 	consensusMod, err := consensus.Create(bus)
@@ -919,7 +918,7 @@ func startNode(t *testing.T, pocketNode *shared.Node) {
 	require.NoError(t, err)
 }
 
-func generateValidQuorumCertificate(nodePKs IdToPKMapping, block *coreTypes.Block) (*typesCons.QuorumCertificate, error) {
+func generateValidQuorumCertificate(nodePKs IdToPKMapping, block *coreTypes.Block) *typesCons.QuorumCertificate {
 	var pss []*typesCons.PartialSignature
 
 	for _, nodePK := range nodePKs {
@@ -935,7 +934,7 @@ func generateValidQuorumCertificate(nodePKs IdToPKMapping, block *coreTypes.Bloc
 		Round:              1,
 		Block:              block,
 		ThresholdSignature: thresholdSig,
-	}, nil
+	}
 }
 
 // generate partial signature for the validator
@@ -990,9 +989,7 @@ func checkIdentical(arr []*anypb.Any) bool {
 	}
 
 	first := arr[0]
-	fmt.Println("checking first: ", first)
 	for _, msg := range arr {
-		fmt.Println("checking identical: ", msg)
 		if !proto.Equal(first, msg) {
 			return false
 		}

@@ -233,7 +233,6 @@ func (m *consensusModule) electNextLeader(msg *typesCons.HotstuffMessage) error 
 	if err != nil {
 		return err
 	}
-
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 	leader, ok := idToValAddrMap[leaderId]
 	if !ok {
