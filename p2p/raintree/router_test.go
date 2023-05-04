@@ -10,6 +10,7 @@ import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 
+	"github.com/pokt-network/pocket/p2p/config"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/defaults"
@@ -52,7 +53,7 @@ func TestRainTreeRouter_AddPeer(t *testing.T) {
 	peerstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-	rtCfg := &utils.RouterConfig{
+	rtCfg := &config.RainTreeConfig{
 		Host:                  host,
 		Addr:                  selfAddr,
 		PeerstoreProvider:     peerstoreProviderMock,
@@ -114,7 +115,7 @@ func TestRainTreeRouter_RemovePeer(t *testing.T) {
 	busMock := mockBus(ctrl)
 	peerstoreProviderMock := mockPeerstoreProvider(ctrl, pstore)
 	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
-	rtCfg := &utils.RouterConfig{
+	rtCfg := &config.RainTreeConfig{
 		Host:                  host,
 		Addr:                  selfAddr,
 		PeerstoreProvider:     peerstoreProviderMock,

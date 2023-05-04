@@ -11,6 +11,7 @@ import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
@@ -49,7 +50,7 @@ type backgroundRouter struct {
 
 // NewBackgroundRouter returns a `backgroundRouter` as a `typesP2P.Router`
 // interface using the given configuration.
-func NewBackgroundRouter(bus modules.Bus, cfg *utils.RouterConfig) (typesP2P.Router, error) {
+func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2P.Router, error) {
 	// TECHDEBT(#595): add ctx to interface methods and propagate down.
 	ctx := context.TODO()
 

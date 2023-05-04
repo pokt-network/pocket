@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/internal/testutil"
+	"github.com/pokt-network/pocket/p2p/config"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
-	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -97,7 +97,7 @@ func TestRainTree_Peerstore_HandleUpdate(t *testing.T) {
 			libp2pMockNet, err := mocknet.WithNPeers(1)
 			require.NoError(t, err)
 
-			rtCfg := &utils.RouterConfig{
+			rtCfg := &config.RainTreeConfig{
 				Host:                  libp2pMockNet.Hosts()[0],
 				Addr:                  pubKey.Address(),
 				PeerstoreProvider:     pstoreProviderMock,
@@ -164,7 +164,7 @@ func BenchmarkPeerstoreUpdates(b *testing.B) {
 			hostMock := mocksP2P.NewMockHost(ctrl)
 			hostMock.EXPECT().Peerstore().Return(libp2pPStore).AnyTimes()
 
-			rtCfg := &utils.RouterConfig{
+			rtCfg := &config.RainTreeConfig{
 				Host:                  hostMock,
 				Addr:                  pubKey.Address(),
 				PeerstoreProvider:     pstoreProviderMock,
@@ -288,7 +288,7 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 	hostMock := mocksP2P.NewMockHost(ctrl)
 	hostMock.EXPECT().Peerstore().Return(libp2pPStore).AnyTimes()
 
-	rtCfg := &utils.RouterConfig{
+	rtCfg := &config.RainTreeConfig{
 		Host:                  hostMock,
 		Addr:                  []byte{expectedMsgProp.orig},
 		PeerstoreProvider:     pstoreProviderMock,

@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/internal/testutil"
+	"github.com/pokt-network/pocket/p2p/config"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mock_types "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/p2p/utils"
@@ -282,7 +283,7 @@ func newRouterWithSelfPeerAndHost(t *testing.T, selfPeer typesP2P.Peer, host lib
 	err := pstore.AddPeer(selfPeer)
 	require.NoError(t, err)
 
-	router, err := NewBackgroundRouter(busMock, &utils.RouterConfig{
+	router, err := NewBackgroundRouter(busMock, &config.BackgroundConfig{
 		Addr:                  selfPeer.GetAddress(),
 		PeerstoreProvider:     pstoreProviderMock,
 		CurrentHeightProvider: consensusMock,

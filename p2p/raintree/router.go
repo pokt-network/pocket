@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -28,7 +29,7 @@ var (
 	_ rainTreeFactory            = &rainTreeRouter{}
 )
 
-type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, *utils.RouterConfig]
+type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, *config.RainTreeConfig]
 
 type rainTreeRouter struct {
 	base_modules.IntegratableModule
@@ -49,11 +50,11 @@ type rainTreeRouter struct {
 	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 }
 
-func NewRainTreeRouter(bus modules.Bus, cfg *utils.RouterConfig) (typesP2P.Router, error) {
+func NewRainTreeRouter(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
 	return new(rainTreeRouter).Create(bus, cfg)
 }
 
-func (*rainTreeRouter) Create(bus modules.Bus, cfg *utils.RouterConfig) (typesP2P.Router, error) {
+func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
 	routerLogger := logger.Global.CreateLoggerForModule("router")
 	routerLogger.Info().Msg("Initializing rainTreeRouter")
 
