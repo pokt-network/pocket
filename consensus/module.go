@@ -223,7 +223,6 @@ func (m *consensusModule) Stop() error {
 		default:
 			close(m.metadataReceived)
 			close(m.blocksResponsesReceived)
-			fmt.Println("closed all chanells")
 			return nil
 		}
 	}

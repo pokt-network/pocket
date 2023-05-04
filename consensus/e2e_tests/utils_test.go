@@ -31,6 +31,7 @@ import (
 	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/pocket/state_machine"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -759,19 +760,31 @@ func WaitForNodeToSync(
 	currentHeight := unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 
 	for currentHeight < targetHeight {
-		// waiting for unsynced node to request missing block
-		blockRequests, err := waitForNodeToRequestMissingBlock(t, clck, eventsChannel)
+		// waiting for unsynced node to request the same missing block from all peers.
+		blockRequests, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, "Error while waiting for block response messages.", numValidators, 250, true)
 		require.NoError(t, err)
+		require.True(t, checkIdentical(blockRequests), "All block requests sent by node should be identical")
 
-		// broadcast one of the requests to all nodes
+		// broadcast one of the requests to all nodes, as all requests are identical
 		P2PBroadcast(t, allNodes, blockRequests[0])
 		advanceTime(t, clck, 10*time.Millisecond)
 
 		// wait to receive replies from all nodes
-		blockResponses, err := waitForNodesToReplyToBlockRequest(t, clck, eventsChannel)
+		blockResponses, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, "Error while waiting for block request messages.", numValidators-1, 250, true)
 		require.NoError(t, err)
 
-		// send one of the block responses to the unsynced node
+		// check that all nodes replied with the same block response
+		for _, msg := range blockResponses {
+			msgAny, err := codec.GetCodec().FromAny(msg)
+			require.NoError(t, err)
+
+			stateSyncMessage, ok := msgAny.(*typesCons.StateSyncMessage)
+			require.True(t, ok)
+
+			require.Equal(t, currentHeight, stateSyncMessage.GetGetBlockRes().Block.BlockHeader.Height)
+		}
+
+		// since all block responses are identical, send one of the block responses to the unsynced node
 		P2PSend(t, unsyncedNode, blockResponses[0])
 		advanceTime(t, clck, 10*time.Millisecond)
 
@@ -781,33 +794,6 @@ func WaitForNodeToSync(
 
 		currentHeight = unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 	}
-}
-
-// waitForNodeToRequestMissingBlock waits for unsynced node to request missing block form the network
-func waitForNodeToRequestMissingBlock(
-	t *testing.T,
-	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
-) ([]*anypb.Any, error) {
-
-	errMsg := "Error waiting for StateSync Block Request Messages"
-	msgs, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numValidators, 250, true)
-	require.NoError(t, err)
-
-	return msgs, err
-}
-
-// waitForNodesToReplyToBlockRequest waits for nodes to send back requested block
-func waitForNodesToReplyToBlockRequest(
-	t *testing.T,
-	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
-) ([]*anypb.Any, error) {
-	errMsg := "StateSync Block Response Messages"
-	msgs, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, errMsg, numValidators-1, 250, true)
-	require.NoError(t, err)
-
-	return msgs, err
 }
 
 // waitForNodeToCatchUp waits for unsynced node to catch up to the target height
@@ -996,4 +982,21 @@ func getSignableBytes(block *coreTypes.Block) ([]byte, error) {
 		Block:  block,
 	}
 	return codec.GetCodec().Marshal(msgToSign)
+}
+
+func checkIdentical(arr []*anypb.Any) bool {
+	if len(arr) == 0 {
+		return true
+	}
+
+	first := arr[0]
+	fmt.Println("checking first: ", first)
+	for _, msg := range arr {
+		fmt.Println("checking identical: ", msg)
+		if !proto.Equal(first, msg) {
+			return false
+		}
+	}
+
+	return true
 }

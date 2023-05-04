@@ -2,6 +2,7 @@ package state_sync
 
 import (
 	"fmt"
+	"time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
@@ -16,7 +17,7 @@ import (
 const (
 	stateSyncModuleName       = "stateSyncModule"
 	committedBlocsChannelSize = 100
-	//blockWaitingPeriod        = 30 * time.Second
+	blockWaitingPeriod        = 30 * time.Second
 )
 
 type StateSyncModule interface {
@@ -97,8 +98,8 @@ func (m *stateSync) SetAggregatedMetadata(aggregatedMetaData *typesCons.StateSyn
 func (m *stateSync) Start() error {
 	consensusMod := m.bus.GetConsensusModule()
 	currentHeight := consensusMod.CurrentHeight()
-	fmt.Println("Consensus current height: ", currentHeight)
 	nodeAddress := consensusMod.GetNodeAddress()
+
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
 	if err != nil {
 		return err
@@ -111,41 +112,40 @@ func (m *stateSync) Start() error {
 		return err
 	}
 
-	// TODO: maybe remove this
-	requestHeight := currentHeight
-
-	// if node is starting to sync from the beginning, set the request height to 1
-	// if currentHeight == 0 {
-	// 	fmt.Println("setting request height: ", 1)
-	// 	requestHeight = 1
-	// }
-
 	// requests blocks from the current height to the aggregated metadata height
-	for requestHeight <= m.aggregatedMetaData.MaxHeight {
-		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", requestHeight, m.aggregatedMetaData.MaxHeight)
+	for currentHeight <= m.aggregatedMetaData.MaxHeight {
+		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, m.aggregatedMetaData.MaxHeight)
 
 		// form the get block request message
 		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 			Message: &typesCons.StateSyncMessage_GetBlockReq{
 				GetBlockReq: &typesCons.GetBlockRequest{
 					PeerAddress: nodeAddress,
-					Height:      requestHeight,
+					Height:      currentHeight,
 				},
 			},
 		}
 
 		// broadcast the get block request message to all validators
+		// TODO: use raintree broadcast
 		for _, val := range validators {
 			if err := m.sendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress())); err != nil {
 				return err
 			}
 		}
 
-		// wait for the requested block to be received and committed by consensus module
-		<-m.committedBlocksChannel
+		// wait to receive requested block for blockWaitingPeriod. If the block is received next block will be requested, otherwise the current block will be requested again
+		select {
+		case blockHeight := <-m.committedBlocksChannel:
+			// requested block is received and committed, continue to request the next block from the current height
+			m.logger.Info().Msgf("Block %d is committed!", blockHeight)
+		case <-time.After(blockWaitingPeriod):
+		}
 
-		// requested block is received and committed, continue to the next block from the current height
-		requestHeight = consensusMod.CurrentHeight()
+		// wait for the requested block to be received and committed by consensus module
+		//<-m.committedBlocksChannel
+
+		currentHeight = consensusMod.CurrentHeight()
 	}
 	// syncing is complete and all requested blocks are committed, stop the state sync module
 	return m.Stop()
@@ -157,22 +157,16 @@ func (m *stateSync) Stop() error {
 	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
 	nodeAddress := m.bus.GetConsensusModule().GetNodeAddress()
 
-	m.logger.Info().Msg("Syncing is complete!")
-
 	readCtx, err := m.bus.GetPersistenceModule().NewReadContext(int64(currentHeight))
 	if err != nil {
 		return err
 	}
 	defer readCtx.Release()
 
-	fmt.Println("checking if validator...")
-
 	isValidator, err := readCtx.IsValidator(int64(currentHeight), nodeAddress)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("is validator: ", isValidator)
 
 	if isValidator {
 		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)

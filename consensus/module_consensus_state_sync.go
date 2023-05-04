@@ -34,37 +34,39 @@ func (m *consensusModule) GetNodeAddress() string {
 // blockApplicationLoop commits the blocks received from the blocksResponsesReceived channel
 // it is intended to be run as a background process
 func (m *consensusModule) blockApplicationLoop() {
+	logger := m.logger.With().Str("source", "blockApplicationLoop").Logger()
+
 	for blockResponse := range m.blocksResponsesReceived {
 		block := blockResponse.Block
-		m.logger.Info().Msgf("New block, at height %d is received!", block.BlockHeader.Height)
+		logger.Info().Msgf("New block, at height %d is received!", block.BlockHeader.Height)
 
 		maxPersistedHeight, err := m.maxPersistedBlockHeight()
 		if err != nil {
-			m.logger.Err(err).Msg("couldn't query max persisted height")
+			logger.Err(err).Msg("couldn't query max persisted height")
 			continue
 		}
 
-		// TODO: rather than discarding these blocks, push them into a channel to process them later
+		// CONSIDERATION: rather than discarding these blocks, push them into a channel to process them later
 		if block.BlockHeader.Height <= maxPersistedHeight {
-			m.logger.Info().Msgf("Received block at height %d, discarding as it has already been persisted", block.BlockHeader.Height)
+			logger.Info().Msgf("Received block at height %d, discarding as it has already been persisted", block.BlockHeader.Height)
 			continue
 		}
 
 		if block.BlockHeader.Height > m.CurrentHeight() {
-			m.logger.Info().Msgf("Received block at height %d, discarding as it is higher than the current height", block.BlockHeader.Height)
+			logger.Info().Msgf("Received block at height %d, discarding as it is higher than the current height", block.BlockHeader.Height)
 			continue
 		}
 
 		if err = m.validateBlock(block); err != nil {
-			m.logger.Err(err).Msg("failed to validate block")
+			logger.Err(err).Msg("failed to validate block")
 			continue
 		}
 
 		if err = m.applyAndCommitBlock(block); err != nil {
-			m.logger.Err(err).Msg("failed to apply and commit block")
+			logger.Err(err).Msg("failed to apply and commit block")
 			continue
 		}
-		m.logger.Info().Msgf("Block, at height %d is committed!", block.BlockHeader.Height)
+		logger.Info().Msgf("Block, at height %d is committed!", block.BlockHeader.Height)
 		m.publishStateSyncBlockCommittedEvent(block.BlockHeader.Height)
 	}
 }
@@ -120,7 +122,6 @@ func (m *consensusModule) sendMetadataRequests() error {
 	return nil
 }
 
-// TODO! If verify block tries to verify, state sync tests will fail as state sync blocks are empty.
 func (m *consensusModule) validateBlock(block *coreTypes.Block) error {
 	blockHeader := block.BlockHeader
 	qcBytes := blockHeader.GetQuorumCertificate()
