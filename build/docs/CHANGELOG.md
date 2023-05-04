@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.40] - 2023-05-01
+## [0.0.0.40] - 2023-05-04
 
 - Updated Dockerfiles using outdated go version to 1.19
 
