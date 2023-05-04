@@ -40,6 +40,7 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 			Hostname:       hostname,
 			Port:           defaults.DefaultP2PPort,
 			ConnectionType: types.ConnectionType_TCPConnection,
+			MaxNonces:      defaults.DefaultP2PMaxNonces,
 		},
 	}).AnyTimes()
 
