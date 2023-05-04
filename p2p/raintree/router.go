@@ -156,7 +156,8 @@ func (rtr *rainTreeRouter) sendInternal(data []byte, address cryptoPocket.Addres
 	}
 
 	// debug logging
-	utils.LogOutgoingMsg(rtr.logger, rtr.hostname, peer)
+	hostname := rtr.getHostname()
+	utils.LogOutgoingMsg(rtr.logger, hostname, peer)
 
 	if err := utils.Libp2pSendToPeer(rtr.host, data, peer); err != nil {
 		rtr.logger.Debug().Err(err).Msg("from libp2pSendInternal")
@@ -306,4 +307,8 @@ func (rtr *rainTreeRouter) setupDependencies() error {
 func (rtr *rainTreeRouter) setupPeerManager(pstore typesP2P.Peerstore) (err error) {
 	rtr.peersManager, err = newPeersManager(rtr.selfAddr, pstore, true)
 	return err
+}
+
+func (rtr *rainTreeRouter) getHostname() string {
+	return rtr.GetBus().GetRuntimeMgr().GetConfig().P2P.Hostname
 }
