@@ -4259,7 +4259,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						Hostname:       "node1.consensus",
 						Port:           42069,
 						ConnectionType: configTypes.ConnectionType_TCPConnection,
-						MaxNonces:      defaults.DefaultP2PMaxMempoolCount,
+						MaxNonces:      defaults.DefaultP2PMaxNonces,
 					},
 					Keybase: defaultCfg.Keybase,
 				},
