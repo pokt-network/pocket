@@ -44,8 +44,12 @@ type backgroundRouter struct {
 	topic *pubsub.Topic
 	// subscription provides an interface to continuously read messages from.
 	subscription *pubsub.Subscription
-	kadDHT       *dht.IpfsDHT
-	pstore       typesP2P.Peerstore
+	// kadDHT is a kademlia distributed hash table used for routing and peer discovery.
+	kadDHT *dht.IpfsDHT
+	// TECHDEBT: `pstore` will likely be removed in future refactoring / simplification
+	// of the `Router` interface.
+	// pstore is the background router's peerstore.
+	pstore typesP2P.Peerstore
 }
 
 // NewBackgroundRouter returns a `backgroundRouter` as a `typesP2P.Router`
