@@ -38,7 +38,7 @@ type backgroundRouter struct {
 	// (i.e. multiple, unidentified receivers)
 	// TECHDEBT: investigate diff between randomSub and gossipSub
 	gossipSub *pubsub.PubSub
-	// topic similar to pubsub but received messages are filtered by a "topic" string.
+	// topic is similar to pubsub but received messages are filtered by a "topic" string.
 	// Published messages are also given the respective topic before broadcast.
 	topic *pubsub.Topic
 	// subscription provides an interface to continuously read messages from.
@@ -54,7 +54,7 @@ func NewBackgroundRouter(bus modules.Bus, cfg *utils.RouterConfig) (typesP2P.Rou
 	ctx := context.TODO()
 
 	networkLogger := logger.Global.CreateLoggerForModule("backgroundRouter")
-	networkLogger.Info().Msg("Initializing background")
+	networkLogger.Info().Msg("Initializing background router")
 
 	// seed initial peerstore with current on-chain peer info (i.e. staked actors)
 	pstore, err := cfg.PeerstoreProvider.GetStakedPeerstoreAtHeight(

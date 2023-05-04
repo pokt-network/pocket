@@ -200,7 +200,7 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 	select {
 	case <-testTimeout:
 		t.Fatalf(
-			"timed out waiting for message: got %d; wanted %d",
+			"timed out waiting for all expected messages: got %d; wanted %d",
 			len(seenMessages),
 			numPeers,
 		)
@@ -296,7 +296,7 @@ func newRouterWithSelfPeerAndHost(t *testing.T, selfPeer typesP2P.Peer, host lib
 	return libp2pNet
 }
 
-// TECHDEBT: move & de-dup
+// TECHDEBT(#609): move & de-duplicate
 func newTestPeer(t *testing.T) (cryptoPocket.PrivateKey, *typesP2P.NetworkPeer) {
 	t.Helper()
 

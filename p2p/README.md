@@ -24,11 +24,11 @@ When used generally, shorthand for "message propogation"; **not to be confused w
 
 ### "gossipsub"
 
-A specific ["pubsub"](https://pkg.go.dev/github.com/libp2p/go-libp2p-pubsub) router implementation / protocol which uses information (referred to internally as 'gossip', **distinct from our definition**) about which peers have seen which messages to facilitate "gossip" (as per our definition).
+A specific ["pubsub"](https://pkg.go.dev/github.com/libp2p/go-libp2p-pubsub) router implementation/protocol which uses information (referred to internally as 'gossip' by LibP2P, **distinct from our definition**) about which peers have seen which messages to facilitate "gossip" (as per our definition).
 
 ### "raintree gossip"
 
-A "gossip" protocol (and implementation) which uses the raintree algorithm for peer selection. Used between all staked actors to optimize for "gossip" speed.
+A structured "gossip" protocol (and implementation) which uses the raintree algorithm for peer selection. Used between all staked actors to optimize for "gossip" speed.
 
 ### "background gossip"
 

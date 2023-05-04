@@ -12,8 +12,8 @@ import (
 
 // RouterConfig is used to configure `Router` implementations using the given
 // libp2p host and current height and peerstore providers.
-// TECHDEBT: I would prefer for this to be in p2p/types/router.go but this causes
-// an import cycle between `typesP2P` and `providers`.
+// TECHDEBT: This should ideally be in p2p/types/router.go but it causes
+// an import cycle between `typesP2P` and `providers` so need to move everything over in the future.
 type RouterConfig struct {
 	Addr                  crypto.Address
 	CurrentHeightProvider providers.CurrentHeightProvider
