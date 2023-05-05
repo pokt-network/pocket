@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.4] - 2023-05-03
+## [0.0.0.4] - 2023-05-05
 
 - Added `nodeType` parameter to the helm chart, which is now actor-agnostic.
 - Modified other places validator is mentioned to avoid confusion with non-validator actors.
