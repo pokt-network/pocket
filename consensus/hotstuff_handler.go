@@ -25,7 +25,7 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 		m.logger.Debug().Fields(loggingFields).Msg("Not handling hotstuff msg...")
 		// if the message height is higher than node's current height, node needs to start active state sync
 		if msg.Height > m.height {
-			// if the message is a decide message (which is the final consensus cycle, and it means proposed block is persisted), set active sync height to message height
+			// if the message is a DECIDE message (the final consensus cycle leading to block finality), set active sync height to message height
 			// else, set active sync height to message height - 1.
 			if msg.Step == Decide {
 				m.stateSync.SetActiveSyncHeight(msg.Height)
