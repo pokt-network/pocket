@@ -160,7 +160,7 @@ build_and_watch: ## Continous build Pocket's main entrypoint as files change
 # TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
 .PHONY: compose_and_watch
 compose_and_watch: docker_check db_start monitoring_start ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-	${docker-compose} up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+	${docker-compose} up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus node5.servicer
 
 .PHONY: rebuild_and_compose_and_watch
 rebuild_and_compose_and_watch: docker_check db_start monitoring_start ## Rebuilds the container from scratch and launches compose_and_watch

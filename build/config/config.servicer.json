@@ -29,7 +29,7 @@
     "health_check_period": "30s"
   },
   "p2p": {
-    "hostname": "node1.servicer",
+    "hostname": "node5.servicer",
     "port": 42069,
     "use_rain_tree": true,
     "is_empty_connection_type": false,

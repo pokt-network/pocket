@@ -16,8 +16,17 @@ import (
 	"github.com/pokt-network/pocket/utility/types"
 )
 
+const (
+	NodeIsNotServicerErr = "node is not a servicer"
+)
+
 // TODO: Implement this
 func (u *utilityModule) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
+
+	if u.servicer == nil {
+		return nil, fmt.Errorf(NodeIsNotServicerErr)
+	}
+
 	return nil, nil
 }
 
