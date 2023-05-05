@@ -8,83 +8,83 @@ package unit_of_work
 import (
 	"math/big"
 
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/utils"
-	"github.com/pokt-network/pocket/utility/types"
 )
 
 // Accounts specific functionality
 
-func (u *baseUtilityUnitOfWork) getAccountAmount(address []byte) (*big.Int, types.Error) {
+func (u *baseUtilityUnitOfWork) getAccountAmount(address []byte) (*big.Int, coreTypes.Error) {
 	amountStr, err := u.persistenceReadContext.GetAccountAmount(address, u.height)
 	if err != nil {
-		return nil, types.ErrGetAccountAmount(err)
+		return nil, coreTypes.ErrGetAccountAmount(err)
 	}
 	amount, err := utils.StringToBigInt(amountStr)
 	if err != nil {
-		return nil, types.ErrStringToBigInt(err)
+		return nil, coreTypes.ErrStringToBigInt(err)
 	}
 	return amount, nil
 }
 
-func (u *baseUtilityUnitOfWork) addAccountAmount(address []byte, amountToAdd *big.Int) types.Error {
+func (u *baseUtilityUnitOfWork) addAccountAmount(address []byte, amountToAdd *big.Int) coreTypes.Error {
 	if err := u.persistenceRWContext.AddAccountAmount(address, utils.BigIntToString(amountToAdd)); err != nil {
-		return types.ErrAddAccountAmount(err)
+		return coreTypes.ErrAddAccountAmount(err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) subtractAccountAmount(address []byte, amountToSubtract *big.Int) types.Error {
+func (u *baseUtilityUnitOfWork) subtractAccountAmount(address []byte, amountToSubtract *big.Int) coreTypes.Error {
 	if err := u.persistenceRWContext.SubtractAccountAmount(address, utils.BigIntToString(amountToSubtract)); err != nil {
-		return types.ErrSetAccountAmount(err)
+		return coreTypes.ErrSetAccountAmount(err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) setAccountAmount(address []byte, amount *big.Int) types.Error {
+func (u *baseUtilityUnitOfWork) setAccountAmount(address []byte, amount *big.Int) coreTypes.Error {
 	if err := u.persistenceRWContext.SetAccountAmount(address, utils.BigIntToString(amount)); err != nil {
-		return types.ErrSetAccountAmount(err)
+		return coreTypes.ErrSetAccountAmount(err)
 	}
 	return nil
 }
 
 // Pools specific functionality
 
-func (u *baseUtilityUnitOfWork) insertPool(address []byte, amount *big.Int) types.Error {
+func (u *baseUtilityUnitOfWork) insertPool(address []byte, amount *big.Int) coreTypes.Error {
 	if err := u.persistenceRWContext.InsertPool(address, utils.BigIntToString(amount)); err != nil {
-		return types.ErrSetPool(address, err)
+		return coreTypes.ErrSetPool(address, err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) getPoolAmount(address []byte) (*big.Int, types.Error) {
+func (u *baseUtilityUnitOfWork) getPoolAmount(address []byte) (*big.Int, coreTypes.Error) {
 	amountStr, err := u.persistenceReadContext.GetPoolAmount(address, u.height)
 	if err != nil {
-		return nil, types.ErrGetPoolAmount(address, err)
+		return nil, coreTypes.ErrGetPoolAmount(address, err)
 	}
 	amount, err := utils.StringToBigInt(amountStr)
 	if err != nil {
-		return nil, types.ErrStringToBigInt(err)
+		return nil, coreTypes.ErrStringToBigInt(err)
 	}
 	return amount, nil
 }
 
-func (u *baseUtilityUnitOfWork) addPoolAmount(address []byte, amountToAdd *big.Int) types.Error {
+func (u *baseUtilityUnitOfWork) addPoolAmount(address []byte, amountToAdd *big.Int) coreTypes.Error {
 	if err := u.persistenceRWContext.AddPoolAmount(address, utils.BigIntToString(amountToAdd)); err != nil {
-		return types.ErrAddPoolAmount(address, err)
+		return coreTypes.ErrAddPoolAmount(address, err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) subPoolAmount(address []byte, amountToSub *big.Int) types.Error {
+func (u *baseUtilityUnitOfWork) subPoolAmount(address []byte, amountToSub *big.Int) coreTypes.Error {
 	if err := u.persistenceRWContext.SubtractPoolAmount(address, utils.BigIntToString(amountToSub)); err != nil {
-		return types.ErrSubPoolAmount(address, err)
+		return coreTypes.ErrSubPoolAmount(address, err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) setPoolAmount(address []byte, amount *big.Int) types.Error {
+func (u *baseUtilityUnitOfWork) setPoolAmount(address []byte, amount *big.Int) coreTypes.Error {
 	if err := u.persistenceRWContext.SetPoolAmount(address, utils.BigIntToString(amount)); err != nil {
-		return types.ErrSetPoolAmount(address, err)
+		return coreTypes.ErrSetPoolAmount(address, err)
 	}
 	return nil
 }

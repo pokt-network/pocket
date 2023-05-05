@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.40] - 2023-05-04
+
+- Expose `HydrateIdxTx` for use outside of utility
+- Add placeholder functions `HandleRelay()` and `HandleChallenge()`
+- Moved `utility/types/errors.go` into `shared/core/types` and updated their usage accordingly
+
 ## [0.0.0.39] - 2023-05-03
 
 - Rename `TxResult` to `IndexedTransaction`

@@ -8,11 +8,9 @@ import (
 	"errors"
 	"fmt"
 
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
-// TODO(#556): Move this to a shared package so it can be used throughout the entire codebase
 type Error interface {
 	Code() Code
 	error
@@ -462,7 +460,7 @@ func ErrUnknownStatus(status int32) Error {
 	return NewError(CodeInvalidStatusError, fmt.Sprintf("%s: unknown status %d", InvalidStatusError, status))
 }
 
-func ErrInvalidStatus(got, expected coreTypes.StakeStatus) Error {
+func ErrInvalidStatus(got, expected StakeStatus) Error {
 	return NewError(CodeInvalidStatusError, fmt.Sprintf("%s: %d expected %d", InvalidStatusError, got, expected))
 }
 

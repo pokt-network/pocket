@@ -16,6 +16,18 @@ import (
 	"github.com/pokt-network/pocket/utility/types"
 )
 
+// TODO: Implement this
+func (u *utilityModule) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
+	return nil, nil
+}
+
+// TODO: Implement this
+func (u *utilityModule) HandleChallenge(challenge *coreTypes.Challenge) (*coreTypes.ChallengeResponse, error) {
+	// References: https://github.com/pokt-network/pocket/pull/430
+	//             https://forum.pokt.network/t/client-side-validation/148
+	return nil, nil
+}
+
 // GetSession implements of the exposed `UtilityModule.GetSession` function
 // TECHDEBT(#519): Add custom error types depending on the type of issue that occurred and assert on them in the unit tests.
 func (m *utilityModule) GetSession(appAddr string, height int64, relayChain, geoZone string) (*coreTypes.Session, error) {

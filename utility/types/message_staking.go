@@ -34,7 +34,7 @@ type stakingMessage interface {
 	GetServiceUrl() string
 }
 
-func validateStaker(msg stakingMessage) Error {
+func validateStaker(msg stakingMessage) coreTypes.Error {
 	if err := validateActorType(msg.GetActorType()); err != nil {
 		return err
 	}
@@ -47,24 +47,24 @@ func validateStaker(msg stakingMessage) Error {
 	return validateServiceURL(msg.GetActorType(), msg.GetServiceUrl())
 }
 
-func validateActorType(actorType coreTypes.ActorType) Error {
+func validateActorType(actorType coreTypes.ActorType) coreTypes.Error {
 	if actorType == coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED {
-		return ErrUnknownActorType(string(actorType))
+		return coreTypes.ErrUnknownActorType(string(actorType))
 	}
 	return nil
 }
 
-func validateAmount(amount string) Error {
+func validateAmount(amount string) coreTypes.Error {
 	if amount == "" {
-		return ErrEmptyAmount()
+		return coreTypes.ErrEmptyAmount()
 	}
 	if _, err := utils.StringToBigInt(amount); err != nil {
-		return ErrStringToBigInt(err)
+		return coreTypes.ErrStringToBigInt(err)
 	}
 	return nil
 }
 
-func validateServiceURL(actorType coreTypes.ActorType, uri string) Error {
+func validateServiceURL(actorType coreTypes.ActorType, uri string) coreTypes.Error {
 	if actorType == coreTypes.ActorType_ACTOR_TYPE_APP {
 		return nil
 	}
@@ -72,25 +72,25 @@ func validateServiceURL(actorType coreTypes.ActorType, uri string) Error {
 	uri = strings.ToLower(uri)
 	_, err := url.ParseRequestURI(uri)
 	if err != nil {
-		return ErrInvalidServiceURL(err.Error())
+		return coreTypes.ErrInvalidServiceURL(err.Error())
 	}
 	if !(uri[:8] == httpsPrefix || uri[:7] == httpPrefix) {
-		return ErrInvalidServiceURL(invalidURLPrefix)
+		return coreTypes.ErrInvalidServiceURL(invalidURLPrefix)
 	}
 
 	urlParts := strings.Split(uri, colon)
 	if len(urlParts) != 3 { // protocol:host:port
-		return ErrInvalidServiceURL(portRequired)
+		return coreTypes.ErrInvalidServiceURL(portRequired)
 	}
 	port, err := strconv.Atoi(urlParts[2])
 	if err != nil {
-		return ErrInvalidServiceURL(nonNumberPort)
+		return coreTypes.ErrInvalidServiceURL(nonNumberPort)
 	}
 	if port > maxPort || port < 0 {
-		return ErrInvalidServiceURL(portOutOfRange)
+		return coreTypes.ErrInvalidServiceURL(portOutOfRange)
 	}
 	if !strings.Contains(uri, period) {
-		return ErrInvalidServiceURL(noPeriod)
+		return coreTypes.ErrInvalidServiceURL(noPeriod)
 	}
 	return nil
 }

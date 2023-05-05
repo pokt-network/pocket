@@ -7,8 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/utility"
 )
 
 // CONSIDER: Remove all the V1 prefixes from the RPC module
@@ -32,7 +30,7 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "cannot decode tx bytes")
 	}
 
-	if err = s.GetBus().GetUtilityModule().HandleTransaction(txBz); err != nil {
+	if err := s.GetBus().GetUtilityModule().HandleTransaction(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
@@ -43,6 +41,146 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 	return nil
 }
 
+func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
+	var body SessionRequest
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	session, err := s.GetBus().GetUtilityModule().GetSession(body.AppAddress, body.SessionHeight, body.Chain, body.Geozone)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	application := session.GetApplication()
+	rpcApp := protocolActorToRPCProtocolActor(application)
+
+	rpcServicers := make([]ProtocolActor, 0)
+	for _, servicer := range session.GetServicers() {
+		actor := protocolActorToRPCProtocolActor(servicer)
+		rpcServicers = append(rpcServicers, actor)
+	}
+
+	rpcFishermen := make([]ProtocolActor, 0)
+	for _, fisher := range session.GetFishermen() {
+		actor := protocolActorToRPCProtocolActor(fisher)
+		rpcFishermen = append(rpcFishermen, actor)
+	}
+
+	return ctx.JSON(http.StatusOK, Session{
+		SessionId:        session.GetId(),
+		SessionNumber:    session.GetSessionNumber(),
+		SessionHeight:    session.GetSessionHeight(),
+		NumSessionBlocks: session.GetNumSessionBlocks(),
+		Chain:            string(session.GetRelayChain()),
+		Geozone:          string(session.GetGeoZone()),
+		Application:      rpcApp,
+		Servicers:        rpcServicers,
+		Fishermen:        rpcFishermen,
+	})
+}
+
+// TECHDEBT: This will need to be changed when the HandleRelay function is actually implemented
+// because it copies data structures from v0. For example, AATs are no longer necessary in v1.
+func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
+	var body RelayRequest
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Parse body into the protobuf messages
+	chain := &coreTypes.Identifiable{
+		Id:   body.Meta.Chain.Id,
+		Name: body.Meta.Chain.Name,
+	}
+	geozone := &coreTypes.Identifiable{
+		Id:   body.Meta.Geozone.Id,
+		Name: body.Meta.Geozone.Name,
+	}
+	aat := &coreTypes.AAT{
+		Version:              body.Meta.Token.Version,
+		ApplicationPublicKey: body.Meta.Token.AppPubKey,
+		ClientPublicKey:      body.Meta.Token.ClientPubKey,
+		ApplicationSignature: body.Meta.Token.AppSignature,
+	}
+	relayMeta := &coreTypes.RelayMeta{
+		BlockHeight:       body.Meta.BlockHeight,
+		ServicerPublicKey: body.Meta.ServicerPubKey,
+		RelayChain:        chain,
+		GeoZone:           geozone,
+		Token:             aat,
+		Signature:         body.Meta.Signature,
+	}
+
+	payload := &coreTypes.RelayPayload{
+		Data:     body.Payload.Data,
+		Method:   body.Payload.Method,
+		HttpPath: body.Payload.Path,
+	}
+
+	headers := make(map[string]string)
+	for _, header := range body.Payload.Headers {
+		headers[header.Name] = header.Value
+	}
+	payload.Headers = headers
+
+	relayRequest := &coreTypes.Relay{
+		Payload: payload,
+		Meta:    relayMeta,
+	}
+
+	relayResponse, err := s.GetBus().GetUtilityModule().HandleRelay(relayRequest)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	return ctx.JSON(http.StatusOK, RelayResponse{
+		Payload:           relayResponse.Payload,
+		ServicerSignature: relayResponse.ServicerSignature,
+	})
+}
+
+// TECHDEBT: This will need to be changed when the HandleChallenge function is actually implemented
+// because it copies data structures from v0
+func (s *rpcServer) PostV1ClientChallenge(ctx echo.Context) error {
+	var body ChallengeRequest
+	if err := ctx.Bind(&body); err != nil {
+		return ctx.String(http.StatusBadRequest, "bad request")
+	}
+
+	// Parse body into the protobuf messages
+	majorityResponses := make([]*coreTypes.RelayResponse, 0)
+	for _, resp := range body.MajorityResponses {
+		relayResponse := &coreTypes.RelayResponse{
+			Payload:           resp.Payload,
+			ServicerSignature: resp.ServicerSignature,
+		}
+		majorityResponses = append(majorityResponses, relayResponse)
+	}
+
+	minorityResponse := &coreTypes.RelayResponse{
+		Payload:           body.MinorityResponse.Payload,
+		ServicerSignature: body.MinorityResponse.ServicerSignature,
+	}
+
+	challenge := &coreTypes.Challenge{
+		SessionId:         body.SessionId,
+		Address:           body.Address,
+		ServicerPublicKey: body.ServicerPubKey,
+		MinorityResponse:  minorityResponse,
+		MajorityResponses: majorityResponses,
+	}
+
+	challengeResponse, err := s.GetBus().GetUtilityModule().HandleChallenge(challenge)
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, "bad request")
+	}
+
+	return ctx.JSON(http.StatusOK, ChallengeResponse{
+		Response: challengeResponse.Response,
+	})
+}
+
 func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 	consensus := s.GetBus().GetConsensusModule()
 	return ctx.JSON(200, ConsensusState{
@@ -50,42 +188,6 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 		Round:  int64(consensus.CurrentRound()),
 		Step:   int64(consensus.CurrentStep()),
 	})
-}
-
-func (s *rpcServer) GetV1QueryAllChainParams(ctx echo.Context) error {
-	currHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(int64(currHeight))
-	if err != nil {
-		return ctx.String(http.StatusInternalServerError, err.Error())
-	}
-	paramSlice, err := readCtx.GetAllParams()
-	if err != nil {
-		return ctx.String(http.StatusInternalServerError, err.Error())
-	}
-	resp := make([]Parameter, 0)
-	for i := 0; i < len(paramSlice); i++ {
-		resp = append(resp, Parameter{
-			ParameterName:  paramSlice[i][0],
-			ParameterValue: paramSlice[i][1],
-		})
-	}
-	return ctx.JSON(200, resp)
-}
-
-// Broadcast to the entire validator set
-func (s *rpcServer) broadcastMessage(msgBz []byte) error {
-	utilityMsg, err := utility.PrepareTxGossipMessage(msgBz)
-	if err != nil {
-		s.logger.Error().Err(err).Msg("Failed to prepare transaction gossip message")
-		return err
-	}
-
-	if err := s.GetBus().GetP2PModule().Broadcast(utilityMsg); err != nil {
-		s.logger.Error().Err(err).Msg("Failed to broadcast utility message")
-		return err
-	}
-
-	return nil
 }
 
 func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params GetV1P2pStakedActorsAddressBookParams) error {
@@ -126,39 +228,4 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 	}
 
 	return ctx.JSON(http.StatusOK, response)
-}
-
-// protocolActorToRPCActorTypeEnum converts a protocol actor type to the rpc actor type enum
-func protocolActorToRPCActorTypeEnum(protocolActorType coreTypes.ActorType) ActorTypesEnum {
-	switch protocolActorType {
-	case coreTypes.ActorType_ACTOR_TYPE_APP:
-		return Application
-	case coreTypes.ActorType_ACTOR_TYPE_FISH:
-		return Fisherman
-	case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
-		return Servicer
-	case coreTypes.ActorType_ACTOR_TYPE_VAL:
-		return Validator
-	default:
-		panic("invalid actor type")
-	}
-}
-
-// getProtocolActorGetter returns the correct protocol actor getter function based on the actor type parameter
-func getProtocolActorGetter(persistenceContext modules.PersistenceReadContext, params GetV1P2pStakedActorsAddressBookParams) func(height int64) ([]*coreTypes.Actor, error) {
-	var protocolActorGetter func(height int64) ([]*coreTypes.Actor, error) = persistenceContext.GetAllStakedActors
-	if params.ActorType == nil {
-		return persistenceContext.GetAllStakedActors
-	}
-	switch *params.ActorType {
-	case Application:
-		protocolActorGetter = persistenceContext.GetAllApps
-	case Fisherman:
-		protocolActorGetter = persistenceContext.GetAllFishermen
-	case Servicer:
-		protocolActorGetter = persistenceContext.GetAllServicers
-	case Validator:
-		protocolActorGetter = persistenceContext.GetAllValidators
-	}
-	return protocolActorGetter
 }

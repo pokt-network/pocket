@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/shared/core/types";
+
+import "relay.proto";
+
+// TECHDEBT: These structures were copied as placeholders from v0 and need to be updated to reflect changes in v1
+// https://editor.swagger.io/?url=https://raw.githubusercontent.com/pokt-network/pocket-core/staging/doc/specs/rpc-spec.yaml
+message Challenge {
+   string session_id = 1;
+   string address = 2;
+   string servicer_public_key = 3;
+   RelayResponse minority_response = 4;
+   repeated RelayResponse majority_responses = 5;
+}
+
+message ChallengeResponse {
+    string response = 1;
+}

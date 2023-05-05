@@ -3,6 +3,7 @@ package types
 import (
 	"sync"
 
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/mempool"
 )
@@ -18,9 +19,9 @@ type txFIFOMempool struct {
 }
 
 // AddTx adds a tx to the mempool
-func (t *txFIFOMempool) AddTx(tx []byte) error {
+func (t *txFIFOMempool) AddTx(tx []byte) coreTypes.Error {
 	if err := t.g.Push(tx); err != nil {
-		return ErrDuplicateTransaction()
+		return coreTypes.ErrDuplicateTransaction()
 	}
 	return nil
 }
@@ -74,6 +75,16 @@ func (t *txFIFOMempool) TxsBytesTotal() uint64 {
 	return t.txsBytesTotal
 }
 
+// GetAll returns all the txs in the mempool
+func (t *txFIFOMempool) GetAll() [][]byte {
+	return t.g.GetAll()
+}
+
+// Get returns the tx from the mempool with the given hash
+func (t *txFIFOMempool) Get(hash string) []byte {
+	return t.g.Get(hash)
+}
+
 func NewTxFIFOMempool(maxTxsBytesTotal uint64, maxTxs uint32) *txFIFOMempool {
 	txFIFOMempool := &txFIFOMempool{
 		m:                sync.Mutex{},
@@ -93,7 +104,7 @@ func NewTxFIFOMempool(maxTxsBytesTotal uint64, maxTxs uint32) *txFIFOMempool {
 			return txFIFOMempool.txCount > maxTxs || txFIFOMempool.txsBytesTotal > txFIFOMempool.maxTxsBytesTotal
 		}),
 		mempool.WithOnCollision(func(item []byte, g *mempool.GenericFIFOSet[string, []byte]) error {
-			return ErrDuplicateTransaction()
+			return coreTypes.ErrDuplicateTransaction()
 		}),
 		mempool.WithOnAdd(func(item []byte, g *mempool.GenericFIFOSet[string, []byte]) {
 			txFIFOMempool.m.Lock()

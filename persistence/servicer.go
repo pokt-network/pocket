@@ -12,18 +12,8 @@ func (p *PostgresContext) GetServicerExists(address []byte, height int64) (exist
 	return p.GetExists(types.ServicerActor, address, height)
 }
 
-//nolint:gocritic // tooManyResultsChecker This function needs to return many values
-func (p *PostgresContext) GetServicer(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, err error) {
-	actor, err := p.getActor(types.ServicerActor, address, height)
-	operator = actor.Address
-	publicKey = actor.PublicKey
-	stakedTokens = actor.StakedAmount
-	serviceURL = actor.ServiceUrl
-	outputAddress = actor.Output
-	pausedHeight = actor.PausedHeight
-	unstakingHeight = actor.UnstakingHeight
-	chains = actor.Chains
-	return
+func (p *PostgresContext) GetServicer(address []byte, height int64) (*coreTypes.Actor, error) {
+	return p.getActor(types.ServicerActor, address, height)
 }
 
 func (p *PostgresContext) InsertServicer(address, publicKey, output []byte, _ bool, _ int32, serviceURL, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error {
