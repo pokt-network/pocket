@@ -53,54 +53,6 @@ var maxTxBytes = defaults.DefaultConsensusMaxMempoolBytes
 type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 type IdToPKMapping map[typesCons.NodeId]cryptoPocket.PrivateKey
 
-/*** Placeholder Block Generation Helpers ***/
-
-type placeholderBlocks struct {
-	pKs    IdToPKMapping
-	blocks []*coreTypes.Block
-}
-
-func (p *placeholderBlocks) setPKs(nodeId typesCons.NodeId, pk cryptoPocket.PrivateKey) {
-	p.pKs[nodeId] = pk
-}
-
-func (p *placeholderBlocks) preparePlaceholderBlocks(t *testing.T, bus modules.Bus, nodePKs IdToPKMapping) {
-	i := uint64(1)
-	for i <= numberOfPersistedDummyBlocks {
-
-		leaderId := bus.GetConsensusModule().GetLeaderForView(i, uint64(0), uint8(consensus.NewRound))
-		leaderPK := nodePKs[typesCons.NodeId(leaderId)]
-
-		// Construct the block
-		blockHeader := &coreTypes.BlockHeader{
-			Height:            i,
-			StateHash:         stateHash,
-			PrevStateHash:     stateHash,
-			ProposerAddress:   leaderPK.Address(),
-			QuorumCertificate: nil,
-		}
-		block := &coreTypes.Block{
-			BlockHeader:  blockHeader,
-			Transactions: make([][]byte, 0),
-		}
-
-		qc := generateValidQuorumCertificate(nodePKs, block)
-
-		qcBytes, err := codec.GetCodec().Marshal(qc)
-		require.NoError(t, err)
-
-		block.BlockHeader.QuorumCertificate = qcBytes
-
-		p.blocks = append(p.blocks, block)
-		i++
-	}
-}
-
-func (p *placeholderBlocks) getBlock(index uint64) *coreTypes.Block {
-	// get block at index -1, because block 1 is stored at index 0 of the blocks array
-	return p.blocks[index-1]
-}
-
 /*** Node Generation Helpers ***/
 
 func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Clock) []*runtime.Manager {
@@ -804,6 +756,7 @@ func waitForNodeToCatchUp(
 	unsyncedNode *shared.Node,
 	targetHeight uint64,
 ) error {
+	t.Helper()
 	// wait for unsynced node to send StateMachineEvent_Consensus_IsSyncedValidator event
 	_, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "didn't receive synced event", 1, 500, false)
 	require.NoError(t, err)
@@ -852,6 +805,113 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 	loggerMock.EXPECT().GetModuleName().Return(modules.LoggerModuleName).AnyTimes()
 
 	return loggerMock
+}
+
+/*** Placeholder Block Generation Helpers ***/
+
+type placeholderBlocks struct {
+	pKs    IdToPKMapping
+	blocks []*coreTypes.Block
+}
+
+func (p *placeholderBlocks) setPKs(nodeId typesCons.NodeId, pk cryptoPocket.PrivateKey) {
+	p.pKs[nodeId] = pk
+}
+
+func (p *placeholderBlocks) getBlock(index uint64) *coreTypes.Block {
+	// get block at index -1, because block 1 is stored at index 0 of the blocks array
+	return p.blocks[index-1]
+}
+
+func (p *placeholderBlocks) preparePlaceholderBlocks(t *testing.T, bus modules.Bus, nodePKs IdToPKMapping) {
+	i := uint64(1)
+	for i <= numberOfPersistedDummyBlocks {
+
+		leaderId := bus.GetConsensusModule().GetLeaderForView(i, uint64(0), uint8(consensus.NewRound))
+		leaderPK := nodePKs[typesCons.NodeId(leaderId)]
+
+		// Construct the block
+		blockHeader := &coreTypes.BlockHeader{
+			Height:            i,
+			StateHash:         stateHash,
+			PrevStateHash:     stateHash,
+			ProposerAddress:   leaderPK.Address(),
+			QuorumCertificate: nil,
+		}
+		block := &coreTypes.Block{
+			BlockHeader:  blockHeader,
+			Transactions: make([][]byte, 0),
+		}
+
+		qc := generateValidQuorumCertificate(nodePKs, block)
+
+		qcBytes, err := codec.GetCodec().Marshal(qc)
+		require.NoError(t, err)
+
+		block.BlockHeader.QuorumCertificate = qcBytes
+
+		p.blocks = append(p.blocks, block)
+		i++
+	}
+}
+
+/*** Quorum certificate Generation Helpers ***/
+
+func generateValidQuorumCertificate(nodePKs IdToPKMapping, block *coreTypes.Block) *typesCons.QuorumCertificate {
+	var pss []*typesCons.PartialSignature
+
+	for _, nodePK := range nodePKs {
+		pss = append(pss, generatePartialSignature(block, nodePK))
+	}
+
+	// Generate threshold signature
+	thresholdSig := new(typesCons.ThresholdSignature)
+	thresholdSig.Signatures = make([]*typesCons.PartialSignature, len(pss))
+	copy(thresholdSig.Signatures, pss)
+
+	return &typesCons.QuorumCertificate{
+		Height:             block.BlockHeader.Height,
+		Step:               1,
+		Round:              1,
+		Block:              block,
+		ThresholdSignature: thresholdSig,
+	}
+}
+
+// generate partial signature for the validator
+func generatePartialSignature(block *coreTypes.Block, nodePK cryptoPocket.PrivateKey) *typesCons.PartialSignature {
+	return &typesCons.PartialSignature{
+		Signature: getMessageSignature(block, nodePK),
+		Address:   nodePK.PublicKey().Address().String(),
+	}
+}
+
+// Generates partial signature with given private key
+// If there is an error signing the bytes, nil is returned instead.
+func getMessageSignature(block *coreTypes.Block, privKey cryptoPocket.PrivateKey) []byte {
+	// Signature only over subset of fields in HotstuffMessage
+	// For reference, see section 4.3 of the the hotstuff whitepaper, partial signatures are
+	// computed over `tsignr(hm.type, m.viewNumber , m.nodei)`. https://arxiv.org/pdf/1803.05069.pdf
+	msgToSign := &typesCons.HotstuffMessage{
+		Height: block.BlockHeader.Height,
+		Step:   1,
+		Round:  1,
+		Block:  block,
+	}
+
+	bytesToSign, err := codec.GetCodec().Marshal(msgToSign)
+	if err != nil {
+		logger.Global.Warn().Err(err).Msgf("error getting bytes to sign")
+		return nil
+	}
+
+	signature, err := privKey.Sign(bytesToSign)
+	if err != nil {
+		logger.Global.Warn().Err(err).Msgf("error signing message")
+		return nil
+	}
+
+	return signature
 }
 
 func logTime(t *testing.T, clck *clock.Mock) {
@@ -917,70 +977,6 @@ func assertRound(t *testing.T, nodeId typesCons.NodeId, expected, actual uint8) 
 func startNode(t *testing.T, pocketNode *shared.Node) {
 	err := pocketNode.Start()
 	require.NoError(t, err)
-}
-
-func generateValidQuorumCertificate(nodePKs IdToPKMapping, block *coreTypes.Block) *typesCons.QuorumCertificate {
-	var pss []*typesCons.PartialSignature
-
-	for _, nodePK := range nodePKs {
-		pss = append(pss, generatePartialSignature(block, nodePK))
-	}
-
-	thresholdSig := getThresholdSignature(pss)
-
-	return &typesCons.QuorumCertificate{
-		Height:             block.BlockHeader.Height,
-		Step:               1,
-		Round:              1,
-		Block:              block,
-		ThresholdSignature: thresholdSig,
-	}
-}
-
-// generate partial signature for the validator
-func generatePartialSignature(block *coreTypes.Block, nodePK cryptoPocket.PrivateKey) *typesCons.PartialSignature {
-	return &typesCons.PartialSignature{
-		Signature: getMessageSignature(block, nodePK),
-		Address:   nodePK.PublicKey().Address().String(),
-	}
-}
-
-func getThresholdSignature(partialSigs []*typesCons.PartialSignature) *typesCons.ThresholdSignature {
-	thresholdSig := new(typesCons.ThresholdSignature)
-	thresholdSig.Signatures = make([]*typesCons.PartialSignature, len(partialSigs))
-	copy(thresholdSig.Signatures, partialSigs)
-	return thresholdSig
-}
-
-// Generates partial signature with given private key
-// If there is an error signing the bytes, nil is returned instead.
-func getMessageSignature(block *coreTypes.Block, privKey cryptoPocket.PrivateKey) []byte {
-	bytesToSign, err := getSignableBytes(block)
-	if err != nil {
-		logger.Global.Warn().Err(err).Msgf("error getting bytes to sign")
-		return nil
-	}
-
-	signature, err := privKey.Sign(bytesToSign)
-	if err != nil {
-		logger.Global.Warn().Err(err).Msgf("error signing message")
-		return nil
-	}
-
-	return signature
-}
-
-// Signature only over subset of fields in HotstuffMessage
-// For reference, see section 4.3 of the the hotstuff whitepaper, partial signatures are
-// computed over `tsignr(hm.type, m.viewNumber , m.nodei)`. https://arxiv.org/pdf/1803.05069.pdf
-func getSignableBytes(block *coreTypes.Block) ([]byte, error) {
-	msgToSign := &typesCons.HotstuffMessage{
-		Height: block.BlockHeader.Height,
-		Step:   1,
-		Round:  1,
-		Block:  block,
-	}
-	return codec.GetCodec().Marshal(msgToSign)
 }
 
 func checkIdentical(arr []*anypb.Any) bool {

@@ -36,6 +36,8 @@ func (m *consensusModule) GetNodeAddress() string {
 func (m *consensusModule) blockApplicationLoop() {
 	logger := m.logger.With().Str("source", "blockApplicationLoop").Logger()
 
+	//switch
+
 	for blockResponse := range m.blocksResponsesReceived {
 		block := blockResponse.Block
 		logger.Info().Msgf("New block, at height %d is received!", block.BlockHeader.Height)
