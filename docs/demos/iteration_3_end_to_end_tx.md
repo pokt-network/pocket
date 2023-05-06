@@ -114,8 +114,8 @@ echo '"25b385b367a827eaafcdb1003bd17a25f2ecc0d10d41f138846f52ae1015aa941041a9c76
 2. You can use `jq` and run these commands:
 
 ```bash
-cat ./build/config/config1.json | jq '.private_key' > /tmp/val1.json
-cat ./build/config/config2.json | jq '.private_key' > /tmp/val2.json
+cat ./build/config/config.node1.validator.json | jq '.private_key' > /tmp/val1.json
+cat ./build/config/config.node2.validator.json | jq '.private_key' > /tmp/val2.json
 ```
 
 3. You can manually copy-paste the private keys from the config files into the `/tmp/val1.json` and `/tmp/val2.json` files. Remember to keep the double quotes around the private keys ("private_key" field in the JSON).

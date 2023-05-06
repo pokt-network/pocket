@@ -27,7 +27,7 @@ This document is meant to be a supplement to the living protocol specification a
 
 ## Node Configuration
 
-The config specification can be found at [persistence_config.proto](../../runtime/configs/proto/persistence_config.proto), and an example can be found at [config1.json](../../build/config/config1.json).
+The config specification can be found at [persistence_config.proto](../../runtime/configs/proto/persistence_config.proto), and an example can be found at [config.node1.validator.json](../../build/config/config.node1.validator.json).
 
 Note that the `node_schema` parameter **MUST** be unique for each node pointing to the same Postgres instance. There is currently no check or validation to guarantee this.
 

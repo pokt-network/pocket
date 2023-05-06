@@ -119,7 +119,7 @@ You can add the following function so you can run the `p1` from anywhere on your
 ```sh
 function p1 {
     export POCKET_WORKDIR="${HOME}/workspace/pocket/pocket/"
-    export CONFIG_PATH="${POCKET_WORKDIR}/build/config/config1.json"
+    export CONFIG_PATH="${POCKET_WORKDIR}/build/config/config.node1.validator.json"
     export GENESIS_PATH="${POCKET_WORKDIR}/build/config/genesis_localhost.json"
     ${POCKET_WORKDIR}/bin/p1 "$@"
 }
@@ -131,7 +131,7 @@ Execute the following command from the root of the project to add it to your `~/
 cat >> ~/.bash_aliases << FUNC
 function p1 {
     export POCKET_WORKDIR="$(pwd)"
-    export CONFIG_PATH="${POCKET_WORKDIR}/build/config/config1.json"
+    export CONFIG_PATH="${POCKET_WORKDIR}/build/config/config.node1.validator.json"
     export GENESIS_PATH="${POCKET_WORKDIR}/build/config/genesis_localhost.json"
     ${POCKET_WORKDIR}/bin/p1 "\$@"
 }

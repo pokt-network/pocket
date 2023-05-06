@@ -1,6 +1,6 @@
 {
   "root_directory": "/go/src/github.com/pocket-network",
-  "private_key": "90ccfd6ba76d876e02ba09440af67582e0f4a37cbda2ce4c30b251132b670eda2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
+  "private_key": "e4ad8d293ebf5287e2403e6483ecb6c4e80b22b2d3effc8698dfe34eb35fc9466ac62bddc541432cff818a02bab732f815ef2e6f7099e7dddc793d62d482b451",
   "use_lib_p2p": false,
   "consensus": {
     "max_mempool_bytes": 500000000,
@@ -9,7 +9,7 @@
       "manual": true,
       "debug_time_between_steps_msec": 1000
     },
-    "private_key": "90ccfd6ba76d876e02ba09440af67582e0f4a37cbda2ce4c30b251132b670eda2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
+    "private_key": "e4ad8d293ebf5287e2403e6483ecb6c4e80b22b2d3effc8698dfe34eb35fc9466ac62bddc541432cff818a02bab732f815ef2e6f7099e7dddc793d62d482b451",
     "server_mode_enabled": true
   },
   "utility": {
@@ -18,7 +18,7 @@
   },
   "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
-    "node_schema": "fisherman",
+    "node_schema": "node5",
     "block_store_path": "/var/blockstore",
     "tx_indexer_path": "/var/txindexer",
     "trees_store_dir": "/var/trees",
@@ -29,11 +29,11 @@
     "health_check_period": "30s"
   },
   "p2p": {
-    "hostname": "node1.fisherman",
+    "hostname": "node5.servicer",
     "port": 42069,
     "use_rain_tree": true,
     "is_empty_connection_type": false,
-    "private_key": "90ccfd6ba76d876e02ba09440af67582e0f4a37cbda2ce4c30b251132b670eda2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
+    "private_key": "e4ad8d293ebf5287e2403e6483ecb6c4e80b22b2d3effc8698dfe34eb35fc9466ac62bddc541432cff818a02bab732f815ef2e6f7099e7dddc793d62d482b451",
     "max_mempool_count": 100000
   },
   "telemetry": {
@@ -51,7 +51,7 @@
     "timeout": 30000,
     "use_cors": false
   },
-  "fisherman": {
+  "servicer": {
     "enabled": true
   }
 }

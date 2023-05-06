@@ -31,7 +31,7 @@ services:
     logging: *loki-logging
     container_name: node1.consensus
     image: pocket/consensus:latest
-    command: "build/scripts/watch.sh build/config/config1.json build/config/genesis.json"
+    command: "build/scripts/watch.sh build/config/config.node1.validator.json build/config/genesis.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
@@ -63,7 +63,7 @@ services:
     logging: *loki-logging
     container_name: node2.consensus
     image: pocket/consensus:latest
-    command: "build/scripts/watch.sh build/config/config2.json build/config/genesis.json"
+    command: "build/scripts/watch.sh build/config/config.node2.validator.json build/config/genesis.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
@@ -91,7 +91,7 @@ services:
     logging: *loki-logging
     container_name: node3.consensus
     image: pocket/consensus:latest
-    command: "build/scripts/watch.sh build/config/config3.json build/config/genesis.json"
+    command: "build/scripts/watch.sh build/config/config.node3.validator.json build/config/genesis.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
@@ -119,7 +119,7 @@ services:
     logging: *loki-logging
     container_name: node4.consensus
     image: pocket/consensus:latest
-    command: "build/scripts/watch.sh build/config/config4.json build/config/genesis.json"
+    command: "build/scripts/watch.sh build/config/config.node4.validator.json build/config/genesis.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
@@ -147,7 +147,16 @@ services:
     logging: *loki-logging
     container_name: node5.servicer
     image: pocket/servicer:latest
-    command: "build/scripts/watch.sh build/config/config.servicer.json build/config/genesis.json"
+    command: >
+      sh -c '
+      if [ "$NODE5_POCKET_SERVICER_ENABLED" = "true" ]; then
+        build/scripts/watch.sh \
+          build/config/config.node5.servicer.json \
+          build/config/genesis.json;
+      else
+        echo "Servicer is not enabled. Going to sleep 😴";
+        sleep infinity;
+      fi'
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
@@ -167,11 +176,48 @@ services:
     # Needed for DLV debugging
     security_opt:
       - "seccomp:unconfined"
-  # Uncomment to enable DLV debugging
     environment:
       - POCKET_RPC_USE_CORS=true
-      - LIBP2P_DEBUG=info
-      - DEBUG_PORT=7085
+      # Uncomment to enable DLV debugging
+      # - DEBUG_PORT=7085
+
+  node6.fisherman:
+    logging: *loki-logging
+    container_name: node6.fisherman
+    image: pocket/fisherman:latest
+    command: >
+      sh -c '
+      if [ "$NODE6_POCKET_FISHERMAN_ENABLED" = "true" ]; then
+        build/scripts/watch.sh \
+          build/config/config.node6.fisherman.json \
+          build/config/genesis.json;
+      else
+        echo "Fisherman is not enabled. Going to sleep 😴";
+        sleep infinity;
+      fi'
+    build:
+      context: ../..
+      dockerfile: ./build/Dockerfile.localdev
+    expose:
+      - "7085" # dlv debug
+      - "42069"
+      - "9080"
+      - "9000"
+      - "50832"
+    ports:
+      - "${NODE6_DEBUG_PORT:-0.0.0.0:7086}:7086"
+      - "${NODE6_PORT_9081:-0.0.0.0:9086}:9080"
+      - "${NODE6_P2P_PORT:-0.0.0.0:42075}:42069"
+      - "${NODE6_RPC_PORT:-0.0.0.0:50837}:50832"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
+    environment:
+      - POCKET_RPC_USE_CORS=true
+      # Uncomment to enable DLV debugging
+      # - DEBUG_PORT=7086
 
   db:
     logging: *loki-logging

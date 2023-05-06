@@ -4154,7 +4154,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 		options       []func(*Manager)
 	}
 	defaultCfg := configs.NewDefaultConfig()
-	buildConfigBytes, err := os.ReadFile("../build/config/config1.json")
+	buildConfigBytes, err := os.ReadFile("../build/config/config.node1.validator.json")
 	if err != nil {
 		require.NoError(t, err)
 	}
