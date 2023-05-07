@@ -4095,10 +4095,21 @@
   ],
   "servicers": [
     {
+      "address": "00104055c00bed7c983a48aac7dc6335d7c607a7",
+      "public_key": "dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
+      "chains": ["0001"],
+      "service_url": "node1.consensus:42069",
+      "staked_amount": "1000000000000",
+      "paused_height": -1,
+      "unstaking_height": -1,
+      "output": "00104055c00bed7c983a48aac7dc6335d7c607a7",
+      "actor_type": 2
+    },
+    {
       "address": "00604d18001a2012830b93efcc23100450e5a512",
       "public_key": "6ac62bddc541432cff818a02bab732f815ef2e6f7099e7dddc793d62d482b451",
       "chains": ["0001"],
-      "service_url": "node1.servicer:42069",
+      "service_url": "node5.servicer:42069",
       "staked_amount": "1000000000000",
       "paused_height": -1,
       "unstaking_height": -1,
@@ -4111,7 +4122,7 @@
       "address": "00504987d4b181c1e97b1da9af42f3db733b1ff4",
       "public_key": "2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
       "chains": ["0001"],
-      "service_url": "node1.fisherman:42069",
+      "service_url": "node6.fisherman:42069",
       "staked_amount": "1000000000000",
       "paused_height": -1,
       "unstaking_height": -1,

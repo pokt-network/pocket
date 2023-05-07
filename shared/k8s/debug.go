@@ -49,6 +49,7 @@ func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]stri
 func getNamespace() (string, error) {
 	_, err := os.Stat(kubernetesServiceAccountNamespaceFile)
 	if err != nil {
+		logger.Global.Err(err).Msg("could not stat namespace file, using \"" + defaultNamespace + "\"")
 		return defaultNamespace, nil
 	}
 

@@ -50,5 +50,8 @@
     "port": "50832",
     "timeout": 30000,
     "use_cors": false
+  },
+  "servicer": {
+    "enabled": true
   }
 }
