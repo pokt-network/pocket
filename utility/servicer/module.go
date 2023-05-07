@@ -12,15 +12,10 @@ const (
 
 type ServicerModule interface {
 	modules.Module
-
-	// TODO: add servicer module functions here
 	ServicerUtility
 }
 
-// TODO_IN_THIS_COMMIT: exists to help with type assertions, drop once you've added your own functions
-type ServicerUtility interface {
-	Relay()
-}
+type ServicerUtility interface{}
 
 type servicer struct {
 	base_modules.IntegratableModule
@@ -30,7 +25,6 @@ type servicer struct {
 // type assertions for servicer module
 var (
 	_ ServicerModule = &servicer{}
-	// TODO: add servicer module functions here
 )
 
 func CreateServicer(bus modules.Bus, options ...modules.ModuleOption) (ServicerModule, error) {
@@ -68,8 +62,4 @@ func (m *servicer) Stop() error {
 
 func (m *servicer) GetModuleName() string {
 	return ServicerModuleName
-}
-
-func (m *servicer) Relay() {
-	m.logger.Info().Msg("🧬 Servicer module relayed 🧬")
 }

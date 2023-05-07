@@ -27,7 +27,10 @@ func (u *utilityModule) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayRes
 		return nil, fmt.Errorf(NodeIsNotServicerErr)
 	}
 
-	return nil, nil
+	return &coreTypes.RelayResponse{
+		Payload:           "😎",
+		ServicerSignature: "🪧",
+	}, nil
 }
 
 // TODO: Implement this

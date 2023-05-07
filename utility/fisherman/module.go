@@ -12,15 +12,10 @@ const (
 
 type FishermanModule interface {
 	modules.Module
-
-	// TODO: add fisherman module functions here
 	FishermanUtility
 }
 
-// TODO_IN_THIS_COMMIT: exists to help with type assertions, drop once you've added your own functions
-type FishermanUtility interface {
-	Fish()
-}
+type FishermanUtility interface{}
 
 type fisherman struct {
 	base_modules.IntegratableModule
@@ -30,7 +25,6 @@ type fisherman struct {
 // type assertions for fisherman module
 var (
 	_ FishermanModule = &fisherman{}
-	// TODO: add fisherman module functions here
 )
 
 func CreateFisherman(bus modules.Bus, options ...modules.ModuleOption) (FishermanModule, error) {
@@ -68,8 +62,4 @@ func (m *fisherman) Stop() error {
 
 func (m *fisherman) GetModuleName() string {
 	return FishermanModuleName
-}
-
-func (m *fisherman) Fish() {
-	m.logger.Info().Msg("🎣 Fisherman module is fishing 🎣")
 }

@@ -83,6 +83,12 @@ func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
 // TECHDEBT: This will need to be changed when the HandleRelay function is actually implemented
 // because it copies data structures from v0. For example, AATs are no longer necessary in v1.
 func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
+	var utility = s.GetBus().GetUtilityModule()
+
+	if utility.GetServicerModule() == nil {
+		return ctx.String(http.StatusInternalServerError, "node is not a servicer")
+	}
+
 	var body RelayRequest
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
@@ -129,7 +135,7 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 		Meta:    relayMeta,
 	}
 
-	relayResponse, err := s.GetBus().GetUtilityModule().HandleRelay(relayRequest)
+	relayResponse, err := utility.HandleRelay(relayRequest)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}

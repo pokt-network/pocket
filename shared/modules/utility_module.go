@@ -43,6 +43,9 @@ type UtilityModule interface {
 
 	// GetActorModules returns the utility module's actor modules
 	GetActorModules() []Module
+
+	// GetServicerModule returns the utility module's servicer module if enabled
+	GetServicerModule() Module
 }
 
 // TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead

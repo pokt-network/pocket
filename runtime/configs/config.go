@@ -33,7 +33,6 @@ type Config struct {
 	Validator   *ValidatorConfig   `json:"validator"`
 	Servicer    *ServicerConfig    `json:"servicer"`
 	Fisherman   *FishermanConfig   `json:"fisherman"`
-	Portal      *PortalConfig      `json:"portal"`
 }
 
 // ParseConfig parses the config file and returns a Config struct
@@ -161,8 +160,6 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 		Validator: &ValidatorConfig{},
 		Servicer:  &ServicerConfig{},
 		Fisherman: &FishermanConfig{},
-		Portal:    &PortalConfig{},
-		// TODO: application actor specific config
 	}
 
 	for _, option := range options {
@@ -195,6 +192,7 @@ func WithNodeSchema(schema string) func(*Config) {
 // CreateTempConfig creates a temporary config for testing purposes only
 func CreateTempConfig(cfg *Config) (*Config, error) {
 	tmpfile, err := os.CreateTemp("", "test_config_*.json")
+	defer os.Remove(tmpfile.Name())
 	if err != nil {
 		return nil, err
 	}

@@ -149,12 +149,12 @@ services:
     image: pocket/servicer:latest
     command: >
       sh -c '
-      if [ "$NODE5_POCKET_SERVICER_ENABLED" = "true" ]; then
+      if [ "$NODE5_SERVICER_ENABLED" = "true" ]; then
         build/scripts/watch.sh \
           build/config/config.node5.servicer.json \
           build/config/genesis.json;
       else
-        echo "Servicer is not enabled. Going to sleep 😴";
+        echo "😴 Going to sleep. Servicer is not enabled.";
         sleep infinity;
       fi'
     build:
@@ -187,19 +187,19 @@ services:
     image: pocket/fisherman:latest
     command: >
       sh -c '
-      if [ "$NODE6_POCKET_FISHERMAN_ENABLED" = "true" ]; then
+      if [ "$NODE6_FISHERMAN_ENABLED" = "true" ]; then
         build/scripts/watch.sh \
           build/config/config.node6.fisherman.json \
           build/config/genesis.json;
       else
-        echo "Fisherman is not enabled. Going to sleep 😴";
+        echo "😴 Going to sleep. Fisherman is not enabled.";
         sleep infinity;
       fi'
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
     expose:
-      - "7085" # dlv debug
+      - "7086" # dlv debug
       - "42069"
       - "9080"
       - "9000"

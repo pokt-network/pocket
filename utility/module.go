@@ -9,11 +9,9 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/pokt-network/pocket/utility/fisherman"
-	fisherman_module "github.com/pokt-network/pocket/utility/fisherman"
-	portal_module "github.com/pokt-network/pocket/utility/portal"
-	servicer_module "github.com/pokt-network/pocket/utility/servicer"
+	"github.com/pokt-network/pocket/utility/servicer"
 	"github.com/pokt-network/pocket/utility/types"
-	validator_module "github.com/pokt-network/pocket/utility/validator"
+	"github.com/pokt-network/pocket/utility/validator"
 )
 
 const (
@@ -35,10 +33,9 @@ type utilityModule struct {
 
 	actorModules []modules.Module
 
-	validator *validator_module.ValidatorModule
-	servicer  *servicer_module.ServicerModule
-	fisherman *fisherman_module.FishermanModule
-	portal    *portal_module.PortalModule
+	validator validator.ValidatorModule
+	servicer  servicer.ServicerModule
+	fisherman fisherman.FishermanModule
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -73,15 +70,14 @@ func enableActorModules(cfg *configs.Config, m *utilityModule, bus modules.Bus) 
 	fishermanCfg := cfg.Fisherman
 	servicerCfg := cfg.Servicer
 	validatorCfg := cfg.Validator
-	portalCfg := cfg.Portal
 
 	if servicerCfg.Enabled {
-		servicer, err := servicer_module.CreateServicer(bus)
+		servicer, err := servicer.CreateServicer(bus)
 		if err != nil {
 			m.logger.Error().Err(err).Msg("failed to create servicer module")
 			return err
 		}
-		m.servicer = &servicer
+		m.servicer = servicer
 		m.actorModules = append(m.actorModules, servicer)
 	}
 
@@ -91,40 +87,22 @@ func enableActorModules(cfg *configs.Config, m *utilityModule, bus modules.Bus) 
 			m.logger.Error().Err(err).Msg("failed to create fisherman module")
 			return err
 		}
-		m.fisherman = &fisherman
+		m.fisherman = fisherman
 		m.actorModules = append(m.actorModules, fisherman)
 	}
 
 	if validatorCfg.Enabled {
-		validator, err := validator_module.CreateValidator(bus)
+		validator, err := validator.CreateValidator(bus)
 		if err != nil {
 			m.logger.Error().Err(err).Msg("failed to create validator module")
 			return err
 		}
-		m.validator = &validator
+		m.validator = validator
 		m.actorModules = append(m.actorModules, validator)
 	}
 
-	if portalCfg.Enabled {
-		portal, err := portal_module.CreatePortal(bus)
-		if err != nil {
-			m.logger.Error().Err(err).Msg("failed to create portal module")
-			return err
-		}
-		m.portal = &portal
-		m.actorModules = append(m.actorModules, portal)
-	}
-
-	actors := m.GetActorModuleNames()
-	if len(m.actorModules) > 1 {
-		// only case where this is allowed is if the node is a validator and a servicer
-		if !(validatorCfg.Enabled && servicerCfg.Enabled) {
-			m.logger.Error().Strs("actors", actors).Msg(ErrInvalidActorsEnabled)
-			m.actorModules = []modules.Module{} // reset the actorModules
-			return errors.New(ErrInvalidActorsEnabled)
-		}
-	} else {
-		m.logger.Info().Strs("actors", actors).Msg("Node actors enabled")
+	if err := validateActorModuleExclusivity(m, cfg); err != nil {
+		return err
 	}
 
 	return nil
@@ -170,10 +148,35 @@ func (u *utilityModule) GetActorModules() []modules.Module {
 	return u.actorModules
 }
 
+func (u *utilityModule) GetServicerModule() modules.Module {
+	return u.servicer
+}
+
 func (u *utilityModule) GetActorModuleNames() []string {
 	names := []string{}
 	for _, submodule := range u.actorModules {
 		names = append(names, submodule.GetModuleName())
 	}
 	return names
+}
+
+// validateActorModuleExclusivity validates that the actor modules are enabled in a valid combination.
+// TODO: There are probably more rules that need to be added here.
+func validateActorModuleExclusivity(m *utilityModule, cfg *configs.Config) error {
+	servicerCfg := cfg.Servicer
+	validatorCfg := cfg.Validator
+	actors := m.GetActorModuleNames()
+
+	if len(m.actorModules) > 1 {
+		// only case where this is allowed is if the node is a validator and a servicer
+		if !(validatorCfg.Enabled && servicerCfg.Enabled) {
+			m.logger.Error().Strs("actors", actors).Msg(ErrInvalidActorsEnabled)
+			m.actorModules = []modules.Module{} // reset the actorModules
+			return errors.New(ErrInvalidActorsEnabled)
+		}
+	}
+
+	m.logger.Info().Strs("actors", actors).Msg("Node actors enabled")
+
+	return nil
 }

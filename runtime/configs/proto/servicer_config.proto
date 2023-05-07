@@ -6,9 +6,7 @@ package configs;
 option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
 // ServicerConfig defines the configuration for the node acting as a servicer. Servicers earn rewards for providing Web3 access over a function of volume and quality
-// TODO(0xbigboss): Add fields
 message ServicerConfig {
   // Enabled defines whether or not the node is a servicer.
   bool enabled = 1;
-  // INVESTIGATE(0xbigboss): what makes sense here? a public address? chains?
 }

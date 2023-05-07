@@ -49,11 +49,10 @@ var (
 	DefaultPersistencePostgresURL    = "postgres://postgres:postgres@pocket-db:5432/postgres"
 	DefaultPersistenceBlockStorePath = "/var/blockstore"
 	// p2p
-	DefaultUseLibp2p         = false
-	DefaultP2PPort           = uint32(42069)
-	DefaultP2PUseRainTree    = true
-	DefaultP2PConnectionType = types.ConnectionType_TCPConnection
-	DefaultP2PMaxNonces      = uint64(1e5)
+	DefaultP2PPort            = uint32(42069)
+	DefaultP2PUseRainTree     = true
+	DefaultP2PConnectionType  = types.ConnectionType_TCPConnection
+	DefaultP2PMaxMempoolCount = uint64(1e5)
 	// telemetry
 	DefaultTelemetryEnabled  = true
 	DefaultTelemetryAddress  = "0.0.0.0:9000"

@@ -2,6 +2,7 @@ openapi: 3.0.3
 servers:
   - url: "http://localhost:50832"
   - url: "http://localhost:50836"
+  - url: "http://localhost:50837"
 info:
   description: >-
     This is the API definition Pocket Network Node RPC interface.
@@ -935,7 +936,7 @@ paths:
             text/plain:
               example: "description of failure"
   /v1/query/nodeRoles:
-    get:
+    post:
       tags:
         - query
       summary: Returns the type of utility actor(s) running on the node
@@ -945,8 +946,11 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                example: ["validator", "servicer"]
+                $ref: "#/components/schemas/QueryNodeRolesResponse"
+              example:
+                node_roles:
+                  - "validator"
+                  - "servicer"
 
 externalDocs:
   description: Find out more about Pocket Network
@@ -1377,6 +1381,15 @@ components:
         total_pages:
           type: integer
           format: int64
+    QueryNodeRolesResponse:
+      type: object
+      required:
+        - node_roles
+      properties:
+        node_roles:
+          type: array
+          items:
+            type: string
     RelayResponse:
       type: object
       required:

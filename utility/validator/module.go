@@ -12,15 +12,10 @@ const (
 
 type ValidatorModule interface {
 	modules.Module
-
-	// TODO: add validator module functions here
 	ValidatorUtility
 }
 
-// TODO_IN_THIS_COMMIT: exists to help with type assertions, drop once you've added your own functions
-type ValidatorUtility interface {
-	Stake()
-}
+type ValidatorUtility interface{}
 
 type validator struct {
 	base_modules.IntegratableModule
@@ -30,7 +25,6 @@ type validator struct {
 // type assertions for validator module
 var (
 	_ ValidatorModule = &validator{}
-	// TODO: add validator module functions here
 )
 
 func CreateValidator(bus modules.Bus, options ...modules.ModuleOption) (ValidatorModule, error) {
@@ -68,8 +62,4 @@ func (m *validator) Stop() error {
 
 func (m *validator) GetModuleName() string {
 	return ValidatorModuleName
-}
-
-func (m *validator) Stake() {
-	m.logger.Info().Msg("📝 Validator module staked 📝")
 }

@@ -42,13 +42,6 @@ func TestEnableActorModules(t *testing.T) {
 			expectedNames: []string{"validator"},
 		},
 		{
-			name: "portal only",
-			config: &configs.Config{
-				Portal: &configs.PortalConfig{Enabled: true},
-			},
-			expectedNames: []string{"portal"},
-		},
-		{
 			name: "validator and servicer",
 			config: &configs.Config{
 				Validator: &configs.ValidatorConfig{Enabled: true},

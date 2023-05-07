@@ -95,7 +95,7 @@ func newTestRuntimeConfig(
 	numFisherman int,
 	genesisOpts ...test_artifacts.GenesisOption,
 ) *runtime.Manager {
-	cfg := &configs.Config{
+	cfg, err := configs.CreateTempConfig(&configs.Config{
 		Utility: &configs.UtilityConfig{
 			MaxMempoolTransactionBytes: 1000000,
 			MaxMempoolTransactions:     1000,
@@ -112,6 +112,9 @@ func newTestRuntimeConfig(
 			MaxConnIdleTime:   "1m",
 			HealthCheckPeriod: "30s",
 		},
+	})
+	if err != nil {
+		panic(err)
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(
 		numValidators,

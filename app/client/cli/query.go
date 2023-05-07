@@ -894,7 +894,7 @@ func queryCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
-				response, err := client.GetV1QueryNodeRoles(cmd.Context())
+				response, err := client.PostV1QueryNodeRoles(cmd.Context())
 				if err != nil {
 					return unableToConnectToRpc(err)
 				}
