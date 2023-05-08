@@ -17,19 +17,19 @@ import (
 type TxIndexer interface {
 	// `Index` analyzes, indexes and stores a single transaction result.
 	// `Index` indexes by `(hash, height, sender, recipient)`
-	Index(result *coreTypes.TxResult) error
+	Index(result *coreTypes.IndexedTransaction) error
 
 	// `GetByHash` returns the transaction specified by the hash if indexed or nil otherwise
-	GetByHash(hash []byte) (*coreTypes.TxResult, error)
+	GetByHash(hash []byte) (*coreTypes.IndexedTransaction, error)
 
 	// `GetByHeight` returns all transactions specified by height or nil if there are no transactions at that height; may be ordered descending/ascending
-	GetByHeight(height int64, descending bool) ([]*coreTypes.TxResult, error)
+	GetByHeight(height int64, descending bool) ([]*coreTypes.IndexedTransaction, error)
 
 	// `GetBySender` returns all transactions signed by *sender*; may be ordered descending/ascending
-	GetBySender(sender string, descending bool) ([]*coreTypes.TxResult, error)
+	GetBySender(sender string, descending bool) ([]*coreTypes.IndexedTransaction, error)
 
 	// GetByRecipient returns all transactions *sent to address*; may be ordered descending/ascending
-	GetByRecipient(recipient string, descending bool) ([]*coreTypes.TxResult, error)
+	GetByRecipient(recipient string, descending bool) ([]*coreTypes.IndexedTransaction, error)
 
 	// Close stops the underlying db connection
 	Close() error
@@ -70,12 +70,12 @@ func NewMemTxIndexer() (TxIndexer, error) {
 	}, nil
 }
 
-func (indexer *txIndexer) Index(result *coreTypes.TxResult) error {
+func (indexer *txIndexer) Index(result *coreTypes.IndexedTransaction) error {
 	bz, err := result.Bytes()
 	if err != nil {
 		return err
 	}
-	hash := result.HashFromBytes(bz)
+	hash := result.HashFromBytes(result.GetTx())
 	hashKey, err := indexer.indexByHash(hash, bz)
 	if err != nil {
 		return err
@@ -92,19 +92,19 @@ func (indexer *txIndexer) Index(result *coreTypes.TxResult) error {
 	return nil
 }
 
-func (indexer *txIndexer) GetByHash(hash []byte) (*coreTypes.TxResult, error) {
+func (indexer *txIndexer) GetByHash(hash []byte) (*coreTypes.IndexedTransaction, error) {
 	return indexer.get(indexer.hashKey(hash))
 }
 
-func (indexer *txIndexer) GetByHeight(height int64, descending bool) ([]*coreTypes.TxResult, error) {
+func (indexer *txIndexer) GetByHeight(height int64, descending bool) ([]*coreTypes.IndexedTransaction, error) {
 	return indexer.getAll(indexer.heightKey(height), descending)
 }
 
-func (indexer *txIndexer) GetBySender(sender string, descending bool) ([]*coreTypes.TxResult, error) {
+func (indexer *txIndexer) GetBySender(sender string, descending bool) ([]*coreTypes.IndexedTransaction, error) {
 	return indexer.getAll(indexer.senderKey(sender), descending)
 }
 
-func (indexer *txIndexer) GetByRecipient(recipient string, descending bool) ([]*coreTypes.TxResult, error) {
+func (indexer *txIndexer) GetByRecipient(recipient string, descending bool) ([]*coreTypes.IndexedTransaction, error) {
 	return indexer.getAll(indexer.recipientKey(recipient), descending)
 }
 
@@ -114,27 +114,27 @@ func (indexer *txIndexer) Close() error {
 
 // kv helper functions
 
-func (indexer *txIndexer) getAll(prefix []byte, descending bool) (result []*coreTypes.TxResult, err error) {
+func (indexer *txIndexer) getAll(prefix []byte, descending bool) (result []*coreTypes.IndexedTransaction, err error) {
 	_, hashKeys, err := indexer.db.GetAll(prefix, descending)
 	if err != nil {
 		return nil, err
 	}
 	for _, hashKey := range hashKeys {
-		txResult, err := indexer.get(hashKey)
+		idxTx, err := indexer.get(hashKey)
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, txResult)
+		result = append(result, idxTx)
 	}
 	return
 }
 
-func (indexer *txIndexer) get(key []byte) (*coreTypes.TxResult, error) {
+func (indexer *txIndexer) get(key []byte) (*coreTypes.IndexedTransaction, error) {
 	bz, err := indexer.db.Get(key)
 	if err != nil {
 		return nil, err
 	}
-	return new(coreTypes.TxResult).FromBytes(bz)
+	return new(coreTypes.IndexedTransaction).FromBytes(bz)
 }
 
 // index helper functions

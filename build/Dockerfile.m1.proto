@@ -1,7 +1,7 @@
 FROM --platform=linux/amd64 golang:latest
 
 # Install grpc
-RUN go get -u github.com/golang/protobuf/protoc-gen-go
+RUN go get -u google.golang.org/protobuf/cmd/protoc-gen-go@latest
 
 # update
 RUN apt-get update

@@ -7,6 +7,7 @@ package unit_of_work
 import (
 	"math/big"
 
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
@@ -15,10 +16,10 @@ import (
 //
 // calculateAppSessionTokens determines the number of "session tokens" an application gets at the beginning
 // of every session. For example, 1 session token could equate to a quota of 1 relay.
-func (u *baseUtilityUnitOfWork) calculateAppSessionTokens(appStakeStr string) (string, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) calculateAppSessionTokens(appStakeStr string) (string, coreTypes.Error) {
 	appStake, er := utils.StringToBigInt(appStakeStr)
 	if er != nil {
-		return typesUtil.EmptyString, typesUtil.ErrStringToBigInt(er)
+		return typesUtil.EmptyString, coreTypes.ErrStringToBigInt(er)
 	}
 
 	stakeToSessionTokensMultiplier, err := getGovParam[int](u, typesUtil.AppSessionTokensMultiplierParamName)

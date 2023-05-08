@@ -53,6 +53,7 @@ paths:
               schema:
                 type: string
                 example: 1.0.0
+
   /v1/consensus/state:
     get:
       tags:
@@ -66,6 +67,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ConsensusState"
               example: { "height": 75016, "round": 0, "step": 3 }
+
   /v1/client/broadcast_tx_sync:
     post:
       tags:
@@ -91,6 +93,96 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+  /v1/client/get_session:
+    post:
+      tags:
+        - client
+      summary: Sends a session request to the network and get the nodes that will be servicing your requests for the session
+      requestBody:
+        description: Retrieve the list of actors involved in servicing and verifying a session
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionRequest"
+        required: true
+      responses:
+        "200":
+          description: Session response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while sending the session request to the network
+          content:
+            text/plain:
+              example: "description of failure"
+  # TODO: Update this handler and its schemas when the HandleRelay function has been implemented
+  /v1/client/relay:
+    post:
+      tags:
+        - client
+      summary: Sends a relay to the servicer to receive a response
+      requestBody:
+        description: Request a relay to be sent on behalf of your application
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RelayRequest"
+        required: true
+      responses:
+        "200":
+          description: Relay request response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelayResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while sending the relay request to the network
+          content:
+            text/plain:
+              example: "description of failure"
+  # TODO: Update this handler and its schemas when the HandleChallenge function has been implemented
+  /v1/client/challenge:
+    post:
+      tags:
+        - client
+      summary: Sends a challenge request to the network
+      requestBody:
+        description: Request a challenge for invalid data returned from an RPC request
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChallengeRequest"
+        required: true
+      responses:
+        "200":
+          description: Challenge request response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while sending the challenge request to the network
+          content:
+            text/plain:
+              example: "description of failure"
+
   /v1/p2p/staked_actors_address_book:
     get:
       tags:
@@ -111,7 +203,6 @@ paths:
           schema:
             $ref: "#/components/schemas/ActorTypesEnum"
           description: The type of actor the address book will be populated with. By default it returns an address book for all protocol actors supported by the blockchain
-
       responses:
         "200":
           description: Staked actors response
@@ -119,7 +210,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/P2PStakedActorsResponse"
-
         "400":
           description: Bad request
           content:
@@ -130,21 +220,716 @@ paths:
           content:
             text/plain:
               example: "description of failure"
-  /v1/query/allChainParams:
+
+  /v1/query/account:
+    post:
+      tags:
+        - query
+      summary: Returns the data of the account specified at a given height
+      requestBody:
+        description: Request account data at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryAccountHeight"
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns account data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the account data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/accounts:
+    post:
+      tags:
+        - query
+      summary: Returns the paginated data of all accounts specified at a given height
+      requestBody:
+        description: Request all account data at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeightPaginated"
+            example:
+              height: 0
+              page: 1
+              per_page: 50
+        required: true
+      responses:
+        "200":
+          description: Returns account data for all accounts at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryAccountsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving accounts at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/account_txs:
+    post:
+      tags:
+        - query
+      summary: Returns all transactions sent by the specified address paginated
+      requestBody:
+        description: Returns all transactions sent by the address provided; Max per_page=1000, can be sorted either asc or desc (default)
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryAccountPaginated"
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              page: 1
+              per_page: 1000
+              sort: desc
+        required: true
+      responses:
+        "200":
+          description: Returns the transaction list for the account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryAccountTxsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the transactions for the account
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/all_chain_params:
     get:
       tags:
         - query
-      summary: Returns the current values of all governance parameters
-
+      summary: Returns the current values of all on-chain governance parameters
       responses:
         "200":
-          description: Node parameters response
+          description: Returns all the chain parameters
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AllChainParamsResponse"
         "500":
-          description: An error occurred while retrieving the current node parameters
+          description: An error occurred while retrieving the current chain parameters
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/app:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the specific app address at a given height
+      requestBody:
+        description: Request application data at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryAccountHeight"
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns application data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProtocolActor"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the application data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  # TODO: (h5law) Determine a parameter to give the request that differentiates
+  # the staking status of an app and returns only that type of staked application
+  # This will be equivalent to the `staking_status` field from the V0 RPC spec
+  /v1/query/apps:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the all apps at the specified height
+      requestBody:
+        description: Request all application data at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeightPaginated"
+            example:
+              height: 0
+              page: 1
+              per_page: 50
+        required: true
+      responses:
+        "200":
+          description: Returns application data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryAppsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving all application data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/balance:
+    post:
+      tags:
+        - query
+      summary: Returns the balance of the account at the specified height
+      requestBody:
+        description: Request account balance at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryAccountHeight'
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              height: 99
+        required: true
+      responses:
+        "200":
+          description: Returns account balance at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryBalanceResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the account balance at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/block:
+    post:
+      tags:
+        - query
+      summary: Returns the block structure at the specified height
+      requestBody:
+        description: Request the block at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeight"
+            example:
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns block structure at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryBlockResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the block structure at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/block_txs:
+    post:
+      tags:
+        - query
+      summary: Returns all the transactions in the block at the specified height
+      requestBody:
+        description: Request the transactions in the block at the specified height, height = 0 is used as the latest; Max per_page=1000, can be sorted either asc or desc (default)
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeightPaginated"
+            example:
+              height: 0
+              page: 1
+              per_page: 1000
+              sort: desc
+        required: true
+      responses:
+        "200":
+          description: Returns all transactions in the block at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryTxsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the block transactions at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/fisherman:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the specific fisherman address at a given height
+      requestBody:
+        description: Request fisherman data at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryAccountHeight"
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns fisherman data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProtocolActor"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the fisherman data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/fishermen:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the all fishermen at the specified height
+      requestBody:
+        description: Request all fishermen data at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeightPaginated"
+            example:
+              height: 0
+              page: 1
+              per_page: 50
+        required: true
+      responses:
+        "200":
+          description: Returns all fishermen data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryFishermenResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving all fishermen data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/height:
+    get:
+      tags:
+        - query
+      summary: Returns the current block height
+      responses:
+        "200":
+          description: Returns the current height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryHeight"
+        "500":
+          description: An error occurred while retrieving the current height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/param:
+    post:
+      tags:
+        - query
+      requestBody:
+        description: Request the value of the specified chain parameter at the given height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryParameter"
+            example:
+              param: blocks_per_session
+              height: 2
+        required: true
+      responses:
+        "200":
+          description: Returns the value of the parameter at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Parameter"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the parameter
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/servicer:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the specific servicer address at a given height
+      requestBody:
+        description: Request servicer data at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryAccountHeight"
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns servicer data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProtocolActor"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the servicer data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/servicers:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the all servicers at the specified height
+      requestBody:
+        description: Request all servicers data at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeightPaginated"
+            example:
+              height: 0
+              page: 1
+              per_page: 50
+        required: true
+      responses:
+        "200":
+          description: Returns all servicers data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryServicersResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving all servicers data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/supply:
+    post:
+      tags:
+        - query
+      summary: Returns the token supply at the specified height
+      requestBody:
+        description: Request the token supply data at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeight"
+            example:
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns the token supply data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuerySupplyResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the token supply data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/supported_chains:
+    post:
+      tags:
+        - query
+      summary: Returns the supported chains at the specified height
+      requestBody:
+        description: Request the supported chains at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeight"
+            example:
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns the supported chains list at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuerySupportedChainsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the supported chains at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/tx:
+    post:
+      tags:
+        - query
+      summary: Returns the transaction by its hash
+      requestBody:
+        description: Request a transaction from its hash
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHash"
+            example:
+              hash: c05a67912d84860ff5db13e29b453c578c3fc0c95333f6a4987b2060f56639b6
+        required: true
+      responses:
+        "200":
+          description: Returns the transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IndexedTransaction"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the transaction
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/unconfirmed_tx:
+    post:
+      tags:
+        - query
+      summary: Returns the unconfirmed transaction by its hash from mempool
+      requestBody:
+        description: Request an unconfirmed transaction currently in the mempool from its hash
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHash"
+            example:
+              hash: c05a67912d84860ff5db13e29b453c578c3fc0c95333f6a4987b2060f56639b6
+        required: true
+      responses:
+        "200":
+          description: Returns the unconfirmed transaction from the mempool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IndexedTransaction"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the transaction from the mempool
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/unconfirmed_txs:
+    post:
+      tags:
+        - query
+      summary: Returns all unconfirmed transactions handled by the mempool
+      requestBody:
+        description: Request the unconfirmed transactions currently in the mempool
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryPaginated"
+            example:
+              page: 1
+              per_page: 1000
+              sort: desc
+        required: true
+      responses:
+        "200":
+          description: Returns all the unconfirmed transactions in the mempool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryTxsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the transactions in the mempool
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/upgrade:
+    post:
+      tags:
+        - query
+      summary: Returns the upgrade information for the specified height
+      requestBody:
+        description: Request the upgrade information for the specified height, height = 0 is used as latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeight"
+            example:
+              height: 5
+        required: true
+      responses:
+        "200":
+          description: Returns the upgrade information for the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryUpgradeResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the update information
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/validator:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the specific validator address at a given height
+      requestBody:
+        description: Request validator data at the specified height, height = 0 is used as the latest
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryAccountHeight"
+            example:
+              address: da034209758b78eaea06dd99c07909ab54c99b45
+              height: 0
+        required: true
+      responses:
+        "200":
+          description: Returns validator data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProtocolActor"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving the validator data at the specified height
+          content:
+            text/plain:
+              example: "description of failure"
+  /v1/query/validators:
+    post:
+      tags:
+        - query
+      summary: Returns the data for the all validators at the specified height
+      requestBody:
+        description: Request all validators data at the specified height, height = 0 is used as the latest; Max per_page=1000
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueryHeightPaginated"
+            example:
+              height: 0
+              page: 1
+              per_page: 50
+        required: true
+      responses:
+        "200":
+          description: Returns all validators data at the specified height
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryValidatorsResponse"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
+        "500":
+          description: An error occurred while retrieving all validators data at the specified height
           content:
             text/plain:
               example: "description of failure"
@@ -154,6 +939,114 @@ externalDocs:
   url: "https://pokt.network"
 components:
   schemas:
+    # Requests
+    ChallengeRequest:
+      type: object
+      required:
+        - majority_responses
+        - minority_response
+        - address
+        - servicer_pub_key
+        - session_id
+      properties:
+        majority_responses:
+          type: array
+          items:
+            $ref: "#/components/schemas/RelayResponse"
+        minority_response:
+          $ref: "#/components/schemas/RelayResponse"
+        address:
+          type: string
+        servicer_pub_key:
+          type: string
+        session_id:
+          type: string
+    QueryAccountHeight:
+      type: object
+      required:
+        - height
+        - address
+      properties:
+        height:
+          type: integer
+          format: int64
+        address:
+          type: string
+    QueryAccountPaginated:
+      type: object
+      required:
+        - address
+        - page
+        - per_page
+      properties:
+        address:
+          type: string
+        page:
+          type: integer
+          format: int64
+        per_page:
+          type: integer
+          format: int64
+        sort:
+          type: string
+    QueryHeightPaginated:
+      type: object
+      required:
+        - height
+        - page
+        - per_page
+      properties:
+        height:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        per_page:
+          type: integer
+          format: int64
+        sort:
+          type: string
+    QueryHash:
+      type: object
+      required:
+        - hash
+      properties:
+        hash:
+          type: string
+    QueryHeight:
+      type: object
+      required:
+        - height
+      properties:
+        height:
+          type: integer
+          format: int64
+    QueryPaginated:
+      type: object
+      required:
+        - page
+        - per_page
+      properties:
+        page:
+          type: integer
+          format: int64
+        per_page:
+          type: integer
+          format: int64
+        sort:
+          type: string
+    QueryParameter:
+      type: object
+      required:
+        - param_name
+        - height
+      properties:
+        param_name:
+          type: string
+        height:
+          type: integer
+          format: int64
     RawTXRequest:
       type: object
       required:
@@ -163,6 +1056,58 @@ components:
         address:
           type: string
         raw_hex_bytes:
+          type: string
+    RelayRequest:
+      type: object
+      required:
+        - payload
+        - meta
+      properties:
+        payload:
+          $ref: "#/components/schemas/Payload"
+        meta:
+          $ref: "#/components/schemas/RelayRequestMeta"
+    SessionRequest:
+      type: object
+      required:
+        - app_address
+        - chain
+        - geozone
+        - session_height
+      properties:
+        app_address:
+          type: string
+        chain:
+          type: string
+        geozone:
+          type: string
+        session_height:
+          type: integer
+          format: int64
+
+    # Responses
+    Account:
+      type: object
+      required:
+        - address
+        - coins
+      properties:
+        address:
+          type: string
+        coins:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coin'
+    AllChainParamsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/Parameter"
+    ChallengeResponse:
+      type: object
+      required:
+        - response
+      properties:
+        response:
           type: string
     ConsensusState:
       type: object
@@ -180,6 +1125,317 @@ components:
         step:
           type: integer
           format: int64
+    ProtocolActor:
+      type: object
+      required:
+        - address
+        - actor_type
+        - public_key
+        - chains
+        - service_url
+        - staked_amount
+        - paused_height
+        - unstaking_height
+        - output_addr
+      properties:
+        address:
+          type: string
+        actor_type:
+          $ref: "#/components/schemas/ActorTypesEnum"
+        public_key:
+          type: string
+        chains:
+          type: array
+          items:
+            type: string
+        service_url:
+          type: string
+        staked_amount:
+          type: string
+        paused_height:
+          type: integer
+          format: int64
+        unstaking_height:
+          type: integer
+          format: int64
+        output_addr:
+          type: string
+    P2PStakedActorsResponse:
+      type: object
+      required:
+        - actors
+        - height
+      properties:
+        actors:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Actor"
+        height:
+          type: integer
+          format: int64
+    QueryAccountsResponse:
+      type: object
+      required:
+        - result
+        - page
+        - total_pages
+      properties:
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
+    QueryAccountTxsResponse:
+      type: object
+      required:
+        - txs
+        - total_txs
+        - page
+        - total_pages
+      properties:
+        txs:
+          type: array
+          items:
+            $ref: "#/components/schemas/IndexedTransaction"
+        total_txs:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
+    QueryAppsResponse:
+      type: object
+      required:
+        - apps
+        - total_apps
+        - page
+        - total_pages
+      properties:
+        apps:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProtocolActor"
+        total_apps:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
+    QueryBalanceResponse:
+      type: object
+      required:
+        - balance
+      properties:
+        balance:
+          type: integer
+          format: int64
+    QueryBlockResponse:
+      type: object
+      required:
+        - block
+      properties:
+        block:
+          $ref: "#/components/schemas/Block"
+    QueryFishermenResponse:
+      type: object
+      required:
+        - fishermen
+        - total_fishermen
+        - page
+        - total_pages
+      properties:
+        fishermen:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProtocolActor"
+        total_fishermen:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
+    QueryServicersResponse:
+      type: object
+      required:
+        - servicers
+        - total_servicers
+        - page
+        - total_pages
+      properties:
+        servicers:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProtocolActor"
+        total_servicers:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
+    QuerySupplyResponse:
+      type: object
+      required:
+        - pools
+        - total
+      properties:
+        pools:
+          type: array
+          items:
+            $ref: "#/components/schemas/Pool"
+        total:
+          $ref: "#/components/schemas/Coin"
+    QuerySupportedChainsResponse:
+      type: object
+      required:
+        - supported_chains
+      properties:
+        supported_chains:
+          type: array
+          items:
+            type: string
+    QueryTxsResponse:
+      type: object
+      required:
+        - transactions
+        - total_txs
+        - page
+        - total_pages
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/IndexedTransaction"
+        total_txs:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
+    QueryUpgradeResponse:
+      type: object
+      required:
+        - height
+        - version
+      properties:
+        height:
+          type: integer
+          format: int64
+        version:
+          type: string
+    QueryValidatorsResponse:
+      type: object
+      required:
+        - validators
+        - total_validators
+        - page
+        - total_pages
+      properties:
+        validators:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProtocolActor"
+        total_validators:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          format: int64
+        total_pages:
+          type: integer
+          format: int64
+    RelayResponse:
+      type: object
+      required:
+        - payload
+        - servicer_signature
+      properties:
+        payload:
+          type: string
+        servicer_signature:
+          type: string
+    Session:
+      type: object
+      required:
+        - session_id
+        - session_number
+        - session_height
+        - num_session_blocks
+        - chain
+        - geozone
+        - application
+        - servicers
+        - fishermen
+      properties:
+        session_id:
+          type: string
+        session_number:
+          type: integer
+          format: int64
+        session_height:
+          type: integer
+          format: int64
+        num_session_blocks:
+          type: integer
+          format: int64
+        chain:
+          type: string
+        geozone:
+          type: string
+        application:
+          $ref: "#/components/schemas/ProtocolActor"
+        servicers:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProtocolActor"
+        fishermen:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProtocolActor"
+
+    # Types
+    AAT:
+      type: object
+      required:
+        - version
+        - app_pub_key
+        - client_pub_key
+        - app_signature
+      properties:
+        version:
+          type: string
+        app_pub_key:
+          type: string
+        client_pub_key:
+          type: string
+        app_signature:
+          type: string
+    ActorTypesEnum:
+      type: string
+      enum:
+        - validator
+        - servicer
+        - fisherman
+        - application
     Actor:
       type: object
       required:
@@ -196,29 +1452,200 @@ components:
           type: string
         service_url:
           type: string
-
-    P2PStakedActorsResponse:
+    Block:
       type: object
       required:
-        - actors
-        - height
+        - block_header
+        - transactions
       properties:
-        actors:
-          type: "array"
+        block_header:
+          $ref: "#/components/schemas/BlockHeader"
+        transactions:
+          type: array
           items:
-            $ref: "#/components/schemas/Actor"
+            $ref: "#/components/schemas/IndexedTransaction"
+    BlockHeader:
+      type: object
+      required:
+        - height
+        - network_id
+        - state_hash
+        - prev_state_hash
+        - proposer_addr
+        - quorum_cert
+        - timestamp
+      properties:
         height:
           type: integer
           format: int64
-
-    ActorTypesEnum:
-      type: string
-      enum:
-        - validator
-        - servicer
-        - fisherman
-        - application
-
+        network_id:
+          type: string
+        state_hash:
+          type: string
+        prev_state_hash:
+          type: string
+        proposer_addr:
+          type: string
+        quorum_cert:
+          $ref: "#/components/schemas/QuorumCertificate"
+        timestamp:
+          type: string
+    Coin:
+      type: object
+      required:
+        - amount
+        - denom
+      properties:
+        amount:
+          type: string
+        denom:
+          type: string
+    Fee:
+      type: object
+      required:
+        - amount
+        - denom
+      properties:
+        amount:
+          type: string
+        denom:
+          type: string
+    Header:
+      type: object
+      required:
+        - name
+        - value
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+    Headers:
+      type: array
+      items:
+        $ref: "#/components/schemas/Header"
+    Identifiable:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    MessageSend:
+      type: object
+      required:
+        - from_addr
+        - to_addr
+        - amount
+        - denom
+      properties:
+        from_addr:
+          type: string
+        to_addr:
+          type: string
+        amount:
+          type: string
+        denom:
+          type: string
+    MessageStake:
+      type: object
+      required:
+        - actor_type
+        - public_key
+        - chains
+        - service_url
+        - output_address
+        - signer
+        - amount
+        - denom
+      properties:
+        actor_type:
+          $ref: "#/components/schemas/ActorTypesEnum"
+        public_key:
+          type: string
+        chains:
+          type: array
+          items:
+            type: string
+        service_url:
+          type: string
+        output_address:
+          type: string
+        signer:
+          type: string
+        amount:
+          type: string
+        denom:
+          type: string
+    MessageEditStake:
+      type: object
+      required:
+        - actor_type
+        - address
+        - chains
+        - service_url
+        - signer
+        - amount
+        - denom
+      properties:
+        actor_type:
+          $ref: "#/components/schemas/ActorTypesEnum"
+        address:
+          type: string
+        chains:
+          type: array
+          items:
+            type: string
+        service_url:
+          type: string
+        signer:
+          type: string
+        amount:
+          type: string
+        denom:
+          type: string
+    MessageUnstake:
+      type: object
+      required:
+        - actor_type
+        - address
+        - signer
+      properties:
+        actor_type:
+          $ref: "#/components/schemas/ActorTypesEnum"
+        address:
+          type: string
+        signer:
+          type: string
+    MessageUnpause:
+      type: object
+      required:
+        - actor_type
+        - address
+        - signer
+      properties:
+        actor_type:
+          $ref: "#/components/schemas/ActorTypesEnum"
+        address:
+          type: string
+        signer:
+          type: string
+    MessageChangeParameter:
+      type: object
+      required:
+        - signer
+        - owner
+        - parameter
+      properties:
+        signer:
+          type: string
+        owner:
+          type: string
+        parameter:
+          $ref: "#/components/schemas/Parameter"
     Parameter:
       type: object
       required:
@@ -229,11 +1656,185 @@ components:
           type: "string"
         parameter_value:
           type: "string"
-
-    AllChainParamsResponse:
-      type: array
-      items:
-        $ref: "#/components/schemas/Parameter"
+    PartialSignature:
+      type: object
+      required:
+        - signature
+        - address
+      properties:
+        signature:
+          type: string
+        address:
+          type: string
+    Payload:
+      type: object
+      required:
+        - data
+        - method
+        - path
+        - headers
+      properties:
+        data:
+          type: string
+        method:
+          type: string
+        path:
+          type: string
+        headers:
+          $ref: "#/components/schemas/Headers"
+    Pool:
+      type: object
+      required:
+        - address
+        - name
+        - amount
+        - denom
+      properties:
+        address:
+          type: string
+        name:
+          type: string
+        amount:
+          type: string
+        denom:
+          type: string
+    QuorumCertificate:
+      type: object
+      required:
+        - height
+        - round
+        - step
+        - block
+        - threshold_sig
+        - transactions
+      properties:
+        height:
+          type: integer
+          format: int64
+        round:
+          type: integer
+          format: int64
+        step:
+          type: string
+        block:
+          type: string
+        threshold_sig:
+          $ref: "#/components/schemas/ThresholdSignature"
+        transactions:
+          type: array
+          items:
+            type: string
+    RelayRequestMeta:
+      type: object
+      required:
+        - block_height
+        - servicer_pub_key
+        - chain
+        - geozone
+        - token
+        - signature
+      properties:
+        block_height:
+          type: integer
+          format: int64
+        servicer_pub_key:
+          type: string
+        chain:
+          $ref: "#/components/schemas/Identifiable"
+        geozone:
+          $ref: "#/components/schemas/Identifiable"
+        token:
+          $ref: "#/components/schemas/AAT"
+        signature:
+          type: string
+    Signature:
+      type: object
+      required:
+        - public_key
+        - signature
+      properties:
+        public_key:
+          type: string
+        signature:
+          type: string
+    TxMessage:
+      type: object
+      required:
+        - fee
+        - message
+        - nonce
+        - signature
+      properties:
+        fee:
+          $ref: "#/components/schemas/Fee"
+        message:
+          oneOf:
+            - $ref: "#/components/schemas/MessageSend"
+            - $ref: "#/components/schemas/MessageStake"
+            - $ref: "#/components/schemas/MessageEditStake"
+            - $ref: "#/components/schemas/MessageUnstake"
+            - $ref: "#/components/schemas/MessageUnpause"
+            - $ref: "#/components/schemas/MessageChangeParameter"
+        nonce:
+          type: string
+        signature:
+          $ref: "#/components/schemas/Signature"
+    Transaction:
+      type: object
+      required:
+        - hash
+        - height
+        - index
+        - txMsg
+      properties:
+        hash:
+          type: string
+        height:
+          type: integer
+          format: int64
+        index:
+          type: integer
+          format: int32
+        txMsg:
+          $ref: "#/components/schemas/TxMessage"
+    IndexedTransaction:
+      type: object
+      required:
+        - height
+        - index
+        - result_code
+        - error
+        - signer_addr
+        - recipient_addr
+        - message_type
+        - tx
+      properties:
+        height:
+          type: integer
+          format: int64
+        index:
+          type: integer
+          format: int32
+        result_code:
+          type: integer
+          format: int32
+        signer_addr:
+          type: string
+        recipient_addr:
+          type: string
+        message_type:
+          type: string
+        tx:
+          $ref: "#/components/schemas/Transaction"
+    ThresholdSignature:
+      type: object
+      required:
+        - signatures
+      properties:
+        signatures:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartialSignature"
 
   securitySchemes: {}
   links: {}

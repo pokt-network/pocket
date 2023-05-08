@@ -34,6 +34,8 @@ var (
 	// DefaultRootDirectory is root directory for the pocket node is initialized in the init function to be the home directory + /.pocket
 	DefaultRootDirectory = ""
 
+	// NetworkID
+	DefaultNetworkID = "localnet"
 	// consensus
 	DefaultConsensusMaxMempoolBytes = uint64(500000000)
 	// pacemaker

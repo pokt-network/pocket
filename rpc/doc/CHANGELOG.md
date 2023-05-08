@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.18] - 2023-05-04
+
+- Add parity with V0's RPC spec
+- Implement query handler functions
+- Implement client handler functions
+
 ## [0.0.0.17] - 2023-04-07
 
 - Add `v1/query/allChainParams` endpoint and handler function to query all governance parameters

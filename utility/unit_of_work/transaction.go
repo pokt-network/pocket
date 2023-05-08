@@ -9,39 +9,39 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-// hydrateTxResult converts a `Transaction` proto into a `TxResult` struct` after doing basic validation
+// HydrateIdxTX converts a `Transaction` proto into a `IndexedTransaction` struct` after doing basic validation
 // and extracting the relevant data from the embedded signed Message. `index` is the intended location
 // of its index (i.e. the transaction number) in the block where it is included.
 //
-// IMPROVE: hydration should accept and return the same type (i.e. TxResult) so there may be opportunity
+// IMPROVE: hydration should accept and return the same type (i.e. IndexedTransaction) so there may be opportunity
 // to refactor this in the future.
-func (u *baseUtilityUnitOfWork) hydrateTxResult(tx *coreTypes.Transaction, index int) (*coreTypes.TxResult, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) HydrateIdxTx(tx *coreTypes.Transaction, index int) (*coreTypes.IndexedTransaction, coreTypes.Error) {
 	msg, err := u.anteHandleMessage(tx)
 	if err != nil {
 		return nil, err
 	}
 	msgHandlingResult := u.handleMessage(msg)
-	return typesUtil.TxToTxResult(tx, u.height, index, msg, msgHandlingResult)
+	return typesUtil.TxToIdxTx(tx, u.height, index, msg, msgHandlingResult)
 }
 
 // anteHandleMessage handles basic validation of the message in the Transaction before it is processed
 // REFACTOR: Splitting this into a `feeValidation`, `signerValidation`, and `messageValidation` etc
 // would make it more modular and readable.
-func (u *baseUtilityUnitOfWork) anteHandleMessage(tx *coreTypes.Transaction) (typesUtil.Message, typesUtil.Error) {
+func (u *baseUtilityUnitOfWork) anteHandleMessage(tx *coreTypes.Transaction) (typesUtil.Message, coreTypes.Error) {
 	// Check if the transaction has a valid message
 	anyMsg, er := tx.GetMessage()
 	if er != nil {
-		return nil, typesUtil.ErrDecodeMessage(er)
+		return nil, coreTypes.ErrDecodeMessage(er)
 	}
 	msg, ok := anyMsg.(typesUtil.Message)
 	if !ok {
-		return nil, typesUtil.ErrDecodeMessage(fmt.Errorf("not a supported message type"))
+		return nil, coreTypes.ErrDecodeMessage(fmt.Errorf("not a supported message type"))
 	}
 
 	// Get the address of the transaction signer
 	pubKey, er := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
 	if er != nil {
-		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
+		return nil, coreTypes.ErrNewPublicKeyFromBytes(er)
 	}
 	address := pubKey.Address()
 	addressHex := address.ToString()
@@ -53,11 +53,11 @@ func (u *baseUtilityUnitOfWork) anteHandleMessage(tx *coreTypes.Transaction) (ty
 	}
 	accountAmount, err := u.getAccountAmount(address)
 	if err != nil {
-		return nil, typesUtil.ErrGetAccountAmount(err)
+		return nil, coreTypes.ErrGetAccountAmount(err)
 	}
 	accountAmount.Sub(accountAmount, fee)
 	if accountAmount.Sign() == -1 {
-		return nil, typesUtil.ErrInsufficientAmount(addressHex)
+		return nil, coreTypes.ErrInsufficientAmount(addressHex)
 	}
 
 	// Validate that the signer has a valid signature
@@ -74,7 +74,7 @@ func (u *baseUtilityUnitOfWork) anteHandleMessage(tx *coreTypes.Transaction) (ty
 		}
 	}
 	if !isValidSigner {
-		return nil, typesUtil.ErrInvalidSigner(addressHex)
+		return nil, coreTypes.ErrInvalidSigner(addressHex)
 	}
 
 	// Remove the fee from the signer's account and add it to the fee collector pool

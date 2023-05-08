@@ -73,9 +73,10 @@ func TestUpdateValidator(t *testing.T) {
 	addrBz, err := hex.DecodeString(validator.Address)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, err := db.GetValidator(addrBz, 0)
+	val, err := db.GetValidator(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for current height")
+	require.NotNil(t, val)
+	require.Equal(t, DefaultStake, val.StakedAmount, "default stake incorrect for current height")
 
 	db.Height = 1
 
@@ -83,13 +84,15 @@ func TestUpdateValidator(t *testing.T) {
 	err = db.UpdateValidator(addrBz, validator.ServiceUrl, StakeToUpdate)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, err = db.GetValidator(addrBz, 0)
+	val, err = db.GetValidator(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for previous height")
+	require.NotNil(t, val)
+	require.Equal(t, DefaultStake, val.StakedAmount, "default stake incorrect for current height")
 
-	_, _, stakedTokens, _, _, _, _, err = db.GetValidator(addrBz, 1)
+	val, err = db.GetValidator(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, StakeToUpdate, stakedTokens, "stake not updated for current height")
+	require.NotNil(t, val)
+	require.Equal(t, StakeToUpdate, val.StakedAmount, "stake not updated for current height")
 }
 
 func TestGetValidatorsReadyToUnstake(t *testing.T) {
@@ -192,16 +195,18 @@ func TestSetValidatorPauseHeightAndUnstakeLater(t *testing.T) {
 	err = db.SetValidatorPauseHeight(addrBz, pauseHeight)
 	require.NoError(t, err)
 
-	_, _, _, _, _, validatorPausedHeight, _, err := db.GetValidator(addrBz, db.Height)
+	val, err := db.GetValidator(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, pauseHeight, validatorPausedHeight, "pause height not updated")
+	require.NotNil(t, val)
+	require.Equal(t, pauseHeight, val.PausedHeight, "pause height not updated")
 
 	err = db.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pauseHeight+1, unstakingHeight, -1 /*unused*/)
 	require.NoError(t, err)
 
-	_, _, _, _, _, _, validatorUnstakingHeight, err := db.GetValidator(addrBz, db.Height)
+	val, err = db.GetValidator(addrBz, 0)
 	require.NoError(t, err)
-	require.Equal(t, unstakingHeight, validatorUnstakingHeight, "unstaking height was not set correctly")
+	require.NotNil(t, val)
+	require.Equal(t, unstakingHeight, val.UnstakingHeight, "unstaking height was not set correctly")
 }
 
 func TestGetValidatorOutputAddress(t *testing.T) {
@@ -270,33 +275,5 @@ func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*core
 }
 
 func getTestValidator(db *persistence.PostgresContext, address []byte) (*coreTypes.Actor, error) {
-	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, err := db.GetValidator(address, db.Height)
-	if err != nil {
-		return nil, err
-	}
-
-	operatorAddr, err := hex.DecodeString(operator)
-	if err != nil {
-		return nil, err
-	}
-
-	operatorPubKey, err := hex.DecodeString(publicKey)
-	if err != nil {
-		return nil, err
-	}
-
-	outputAddr, err := hex.DecodeString(outputAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	return &coreTypes.Actor{
-		Address:         hex.EncodeToString(operatorAddr),
-		PublicKey:       hex.EncodeToString(operatorPubKey),
-		ServiceUrl:      serviceURL,
-		StakedAmount:    stakedTokens,
-		PausedHeight:    pauseHeight,
-		UnstakingHeight: unstakingHeight,
-		Output:          hex.EncodeToString(outputAddr),
-	}, nil
+	return db.GetValidator(address, db.Height)
 }

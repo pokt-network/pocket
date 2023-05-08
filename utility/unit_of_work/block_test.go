@@ -36,9 +36,9 @@ func TestUtilityUnitOfWork_ApplyBlock(t *testing.T) {
 	proposerBeforeBalance, err := uow.getAccountAmount(addrBz)
 	require.NoError(t, err)
 
-	// calling ApplyBlock without having called SetProposalBlock first should fail with ErrProposalBlockNotSet
+	// calling ApplyBlock without having called SetProposalBlock first should fail with coreTypes.ErrProposalBlockNotSet
 	err = uow.ApplyBlock()
-	require.Equal(t, err.Error(), utilTypes.ErrProposalBlockNotSet().Error())
+	require.Equal(t, err.Error(), coreTypes.ErrProposalBlockNotSet().Error())
 
 	err = uow.SetProposalBlock(IgnoreProposalBlockCheckHash, addrBz, [][]byte{txBz})
 	require.NoError(t, err)

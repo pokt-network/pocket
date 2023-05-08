@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.30] - 2023-05-04
+
+- Add query subcommands to interact with a node's RPC server
+
 ## [0.0.0.29] - 2023-04-28
 
 - Adds debug subcommands matching list of interactive prompt commands
