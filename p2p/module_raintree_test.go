@@ -23,6 +23,18 @@ import (
 // TODO(#314): Add the tooling and instructions on how to generate unit tests in this file.
 
 func TestMain(m *testing.M) {
+	// build a slice of serviceURLs `validatorId(<num>)` for `<num>` in [1, <largest validator ID>]
+	var serviceURLs []string
+	for i := 1; i <= 27; i++ {
+		serviceURLs = append(serviceURLs, validatorId(i))
+	}
+
+	dnsMockDone, err := testutil.PrepareDNSMockFromServiceURLs(serviceURLs)
+	if err != nil {
+		log.Fatalf("Error preparing DNS mock: %v", err)
+	}
+	defer dnsMockDone()
+
 	exitCode := m.Run()
 	files, err := filepath.Glob("*.json")
 	if err != nil {
@@ -233,6 +245,8 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 // 1. It creates and configures a "real" P2P module where all the other components of the node are mocked.
 // 2. It then triggers a single message and waits for all of the expected messages transmission to complete before announcing failure.
 func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig TestNetworkSimulationConfig) {
+	t.Helper()
+
 	// Configure & prepare test module
 	numValidators := len(networkSimulationConfig)
 	runtimeConfigs := createMockRuntimeMgrs(t, numValidators)
@@ -249,8 +263,6 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		jId := extractNumericId(valIds[j])
 		return iId < jId
 	})
-
-	testutil.PrepareDNSMockFromServiceURLs(t, valIds)
 
 	// Create connection and bus mocks along with a shared WaitGroup to track the number of expected
 	// reads and writes throughout the mocked local network
