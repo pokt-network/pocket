@@ -36,6 +36,8 @@ func TestMain(m *testing.M) {
 
 // ### RainTree Unit Tests ###
 func TestRainTreeNetworkCompleteOneNodes(t *testing.T) {
+	t.Parallel()
+
 	// val_1
 	originatorNode := validatorId(1)
 	expectedCalls := TestNetworkSimulationConfig{
@@ -45,6 +47,8 @@ func TestRainTreeNetworkCompleteOneNodes(t *testing.T) {
 }
 
 func TestRainTreeNetworkCompleteTwoNodes(t *testing.T) {
+	t.Parallel()
+
 	// val_1
 	//   └───────┐
 	// 	       val_2
@@ -61,6 +65,8 @@ func TestRainTreeNetworkCompleteTwoNodes(t *testing.T) {
 }
 
 func TestRainTreeNetworkCompleteThreeNodes(t *testing.T) {
+	t.Parallel()
+
 	// 	          val_1
 	// 	   ┌───────┴────┬─────────┐
 	//   val_2        val_1     val_3
@@ -74,6 +80,8 @@ func TestRainTreeNetworkCompleteThreeNodes(t *testing.T) {
 }
 
 func TestRainTreeNetworkCompleteFourNodes(t *testing.T) {
+	t.Parallel()
+
 	// Test configurations (visualization retrieved from simulator)
 	// 	                val_1
 	// 	  ┌───────────────┴────┬─────────────────┐
@@ -91,6 +99,8 @@ func TestRainTreeNetworkCompleteFourNodes(t *testing.T) {
 }
 
 func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
+	t.Parallel()
+
 	// 	                              val_1
 	// 	         ┌──────────────────────┴────────────┬────────────────────────────────┐
 	//         val_4                               val_1                            val_7
@@ -120,6 +130,8 @@ func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
 //  val_8        val_7      val_10        val_6        val_5     val_8      val_11         val_10     val_5        val_4        val_3     val_6        val_2        val_1     val_4     val_7        val_6     val_1      val_12         val_11     val_2         val_10        val_9      val_12     val_3        val_2     val_9
 
 func TestRainTreeCompleteTwelveNodes(t *testing.T) {
+	t.Parallel()
+
 	originatorNode := validatorId(1)
 	expectedCalls := TestNetworkSimulationConfig{
 		originatorNode:  {1, 6},
@@ -139,6 +151,8 @@ func TestRainTreeCompleteTwelveNodes(t *testing.T) {
 }
 
 func TestRainTreeNetworkCompleteEighteenNodes(t *testing.T) {
+	t.Parallel()
+
 	// 	                                                                                                              val_1
 	// 	                                      ┌──────────────────────────────────────────────────────────────────────────┴─────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 	//                                      val_7                                                                                                            val_1                                                                                                     val_13
@@ -171,6 +185,8 @@ func TestRainTreeNetworkCompleteEighteenNodes(t *testing.T) {
 }
 
 func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
+	t.Parallel()
+
 	// 	                                                                                                                    val_1
 	// 	                                     ┌────────────────────────────────────────────────────────────────────────────────┴───────────────────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 	//                                    val_10                                                                                                                   val_1                                                                                                       val_19
