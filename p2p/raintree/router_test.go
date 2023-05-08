@@ -22,6 +22,8 @@ import (
 var testLocalServiceURL = fmt.Sprintf("127.0.0.1:%d", defaults.DefaultP2PPort)
 
 func TestRainTreeRouter_AddPeer(t *testing.T) {
+	t.Parallel()
+
 	ctrl := gomock.NewController(t)
 
 	// Start with a peerstore containing self.
@@ -97,6 +99,8 @@ func TestRainTreeRouter_AddPeer(t *testing.T) {
 }
 
 func TestRainTreeRouter_RemovePeer(t *testing.T) {
+	t.Parallel()
+
 	ctrl := gomock.NewController(t)
 
 	// Start with a peerstore which contains self and some number of peers: the
