@@ -81,7 +81,7 @@ func TestRainTreeRouter_AddPeer(t *testing.T) {
 	require.NoError(t, err)
 	expectedPStoreSize++
 
-	peerAddrs, peers := getPeersViewParts(rtRouter.peersManager)
+	peerAddrs, peers := getPeersViewParts(t, rtRouter.peersManager)
 
 	// Ensure size / lengths are consistent.
 	require.Equal(t, expectedPStoreSize, router.GetPeerstore().Size())
@@ -133,7 +133,7 @@ func TestRainTreeRouter_RemovePeer(t *testing.T) {
 	rainTree := router.(*rainTreeRouter)
 
 	// Ensure expected starting size / lengths are consistent.
-	peerAddrs, peers := getPeersViewParts(rainTree.peersManager)
+	peerAddrs, peers := getPeersViewParts(t, rainTree.peersManager)
 	require.Equal(t, expectedPStoreSize, pstore.Size())
 	require.Equal(t, expectedPStoreSize, len(peerAddrs))
 	require.Equal(t, expectedPStoreSize, len(peers))
@@ -158,7 +158,7 @@ func TestRainTreeRouter_RemovePeer(t *testing.T) {
 	require.NoError(t, err)
 	expectedPStoreSize--
 
-	peerAddrs, peers = getPeersViewParts(rainTree.peersManager)
+	peerAddrs, peers = getPeersViewParts(t, rainTree.peersManager)
 	removedAddr := peerToRemove.GetAddress()
 	getPeer := func(addr cryptoPocket.Address) typesP2P.Peer {
 		return rainTree.GetPeerstore().GetPeer(addr)
@@ -173,10 +173,12 @@ func TestRainTreeRouter_RemovePeer(t *testing.T) {
 	require.Nil(t, getPeer(removedAddr), "Peerstore contains removed peer")
 }
 
-func getPeersViewParts(pm typesP2P.PeerManager) (
+func getPeersViewParts(t *testing.T, pm typesP2P.PeerManager) (
 	addrs []string,
 	peers typesP2P.PeerList,
 ) {
+	t.Helper()
+
 	view := pm.GetPeersView()
 	addrs = view.GetAddrs()
 	peers = view.GetPeers()
@@ -185,6 +187,8 @@ func getPeersViewParts(pm typesP2P.PeerManager) (
 }
 
 func newTestPeer(t *testing.T) (*typesP2P.NetworkPeer, libp2pHost.Host) {
+	t.Helper()
+
 	selfPrivKey, err := cryptoPocket.GeneratePrivateKey()
 	require.NoError(t, err)
 
@@ -199,6 +203,8 @@ func newTestPeer(t *testing.T) (*typesP2P.NetworkPeer, libp2pHost.Host) {
 
 // TECHDEBT(#609): move & de-duplicate
 func newLibp2pMockNetHost(t *testing.T, privKey cryptoPocket.PrivateKey, peer *typesP2P.NetworkPeer) libp2pHost.Host {
+	t.Helper()
+
 	libp2pPrivKey, err := libp2pCrypto.UnmarshalEd25519PrivateKey(privKey.Bytes())
 	require.NoError(t, err)
 
