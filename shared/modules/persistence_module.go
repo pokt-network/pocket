@@ -3,8 +3,8 @@ package modules
 //go:generate mockgen -destination=./mocks/persistence_module_mock.go github.com/pokt-network/pocket/shared/modules PersistenceModule,PersistenceRWContext,PersistenceReadContext,PersistenceWriteContext
 
 import (
+	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
-	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -22,7 +22,7 @@ type PersistenceModule interface {
 	ReleaseWriteContext() error // The module can maintain many read contexts, but only one write context can exist at a time
 
 	// BlockStore operations
-	GetBlockStore() kvstore.KVStore
+	GetBlockStore() *blockstore.BlockStore
 	NewWriteContext() PersistenceRWContext
 
 	// Indexer operations

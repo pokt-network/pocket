@@ -7,8 +7,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
-	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -34,7 +34,7 @@ type persistenceModule struct {
 	networkId    string
 
 	// A key-value store mapping heights to blocks. Needed for block synchronization.
-	blockStore kvstore.KVStore
+	blockStore *blockstore.BlockStore
 
 	// A tx indexer (i.e. key-value store) mapping transaction hashes to transactions. Needed for
 	// avoiding tx replays attacks, and is also used as the backing database for the transaction
@@ -92,8 +92,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 	}
 	conn.Release()
 
-	// TODO: Follow the same pattern as txIndexer below for initializing the blockStore
-	blockStore, err := initializeBlockStore(persistenceCfg.BlockStorePath)
+	blockStore, err := blockstore.NewBlockStore(persistenceCfg.BlockStorePath)
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +226,7 @@ func (m *persistenceModule) ReleaseWriteContext() error {
 	return nil
 }
 
-func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
+func (m *persistenceModule) GetBlockStore() *blockstore.BlockStore {
 	return m.blockStore
 }
 
@@ -241,13 +240,6 @@ func (m *persistenceModule) GetNetworkID() string {
 
 func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 	return m.writeContext
-}
-
-func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
-	if blockStorePath == "" {
-		return kvstore.NewMemKVStore(), nil
-	}
-	return kvstore.NewKVStore(blockStorePath)
 }
 
 // HACK(olshansky): Simplify and externalize the logic for whether genesis should be populated and
