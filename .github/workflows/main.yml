@@ -22,6 +22,12 @@ env:
 jobs:
   gke:
     runs-on: ubuntu-latest
+    env:
+      ARGO_SERVER: "workflows.dev-us-east4-1.poktnodes.network:8443"
+      ARGO_HTTP1: true
+      ARGO_SECURE: true
+      ARGO_NAMESPACE: argo-workflows
+      # KUBECONFIG: /dev/null ;# recommended
     permissions:
       contents: "read"
       id-token: "write"
@@ -51,14 +57,8 @@ jobs:
           argo version
 
       - id: "test-argo"
-        env:
-          ARGO_SERVER: "workflows.dev-us-east4-1.poktnodes.network:8443"
-          ARGO_HTTP1: true
-          ARGO_SECURE: true
-          ARGO_NAMESPACE: argo-workflows
-          # KUBECONFIG: /dev/null ;# recommended
         run: |
-          argo list
+          argo auth token
 
   # test-multiple-go-versions:
   #   runs-on: ubuntu-latest
