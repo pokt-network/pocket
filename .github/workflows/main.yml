@@ -39,8 +39,26 @@ jobs:
           location: "us-east4"
 
       # The KUBECONFIG env var is automatically exported and picked up by kubectl.
-      - id: "get-pods"
-        run: "kubectl get pods"
+      # - id: "get-pods"
+      #   run: "kubectl get pods"
+
+      - id: "install-argo"
+        run: |
+          curl -sLO https://github.com/argoproj/argo-workflows/releases/download/v3.4.7/argo-linux-amd64.gz
+          gunzip argo-linux-amd64.gz
+          chmod +x argo-linux-amd64
+          mv ./argo-linux-amd64 /usr/local/bin/argo
+          argo version
+
+      - id: "test-argo"
+        env:
+          ARGO_SERVER: "workflows.dev-us-east4-1.poktnodes.network:8443"
+          ARGO_HTTP1: true
+          ARGO_SECURE: true
+          ARGO_NAMESPACE: argo-workflows
+          # KUBECONFIG: /dev/null ;# recommended
+        run: |
+          argo list
 
   # test-multiple-go-versions:
   #   runs-on: ubuntu-latest
