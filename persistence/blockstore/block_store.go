@@ -7,6 +7,8 @@ import (
 )
 
 // BlockStore wraps a KVStore to provide atomic block storage.
+// It provides the thin wrapper that manages the atomic state
+// transitions for the application of a Unit of Work.
 type BlockStore struct {
 	path string
 	kv   kvstore.KVStore
@@ -32,13 +34,13 @@ func NewBlockStore(path string) (*BlockStore, error) {
 }
 
 // Set adds a block into the blockstore.
-func (bs *BlockStore) Set([]byte, []byte) error {
-	return fmt.Errorf("not impl")
+func (bs *BlockStore) Set(k []byte, v []byte) error {
+	return bs.kv.Set(k, v)
 }
 
 // Get returns a block at the provided height from the blockstore.
-func (bs *BlockStore) Get([]byte) ([]byte, error) {
-	return nil, fmt.Errorf("not impl")
+func (bs *BlockStore) Get(key []byte) ([]byte, error) {
+	return bs.kv.Get(key)
 }
 
 // ClearAll removes all blocks from the block store.
