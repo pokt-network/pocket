@@ -22,12 +22,12 @@ env:
 jobs:
   gke:
     runs-on: ubuntu-latest
-    env:
-      ARGO_SERVER: "workflows.dev-us-east4-1.poktnodes.network:8443"
-      ARGO_HTTP1: true
-      ARGO_SECURE: true
-      ARGO_NAMESPACE: argo-workflows
-      # KUBECONFIG: /dev/null ;# recommended
+    # env:
+    # ARGO_SERVER: "workflows.dev-us-east4-1.poktnodes.network:8443"
+    # ARGO_HTTP1: true
+    # ARGO_SECURE: true
+    # ARGO_NAMESPACE: argo-workflows
+    # KUBECONFIG: /dev/null ;# recommended
     permissions:
       contents: "read"
       id-token: "write"
@@ -57,8 +57,8 @@ jobs:
           argo version
 
       - id: "test-argo"
+        # export ARGO_TOKEN=$(argo auth token)
         run: |
-          export ARGO_TOKEN=$(argo auth token)
           argo submit --wait --log --namespace devnet-issue-727 --from 'wftmpl/dev-e2e-tests' --parameter gitsha=35eb743feb0e74e2fb39399abc6efdc0155840de
 
   # test-multiple-go-versions:
