@@ -59,11 +59,11 @@ jobs:
       - id: "test-argo"
         run: |
           export ARGO_TOKEN=$(argo auth token)
-          ls -la ${GITHUB_WORKSPACE}
-          ls -la ${GITHUB_WORKSPACE}/.github
-          ls -la ${GITHUB_WORKSPACE}/.github/argo-workflows
+          ls -la
+          ls -la .github
+          ls -la .github/argo-workflows
 
-          argo submit --wait --log --namespace devnet-issue-727 ${GITHUB_WORKSPACE}/.github/argo-workflows/e2e-test.yaml
+          argo submit --wait --log --namespace devnet-issue-727 .github/argo-workflows/e2e-test.yaml
 
   # test-multiple-go-versions:
   #   runs-on: ubuntu-latest
