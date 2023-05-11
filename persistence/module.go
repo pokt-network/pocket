@@ -34,7 +34,7 @@ type persistenceModule struct {
 	networkId    string
 
 	// A key-value store mapping heights to blocks. Needed for block synchronization.
-	blockStore *blockstore.BlockStore
+	blockStore blockstore.BlockStore
 
 	// A tx indexer (i.e. key-value store) mapping transaction hashes to transactions. Needed for
 	// avoiding tx replays attacks, and is also used as the backing database for the transaction
@@ -226,7 +226,7 @@ func (m *persistenceModule) ReleaseWriteContext() error {
 	return nil
 }
 
-func (m *persistenceModule) GetBlockStore() *blockstore.BlockStore {
+func (m *persistenceModule) GetBlockStore() blockstore.BlockStore {
 	return m.blockStore
 }
 

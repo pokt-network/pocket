@@ -29,7 +29,7 @@ type PostgresContext struct {
 	stateHash string
 	// TECHDEBT(#361): These three values are pointers to objects maintained by the PersistenceModule.
 	//                 Need to simply access them via the bus.
-	blockStore *blockstore.BlockStore
+	blockStore blockstore.BlockStore
 	txIndexer  indexer.TxIndexer
 	stateTrees *stateTrees
 

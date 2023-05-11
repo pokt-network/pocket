@@ -13,7 +13,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	mocksPer "github.com/pokt-network/pocket/persistence/types/mocks"
+	blockstoreMocks "github.com/pokt-network/pocket/persistence/types/mocks/blockstore"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
@@ -22,7 +22,6 @@ import (
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -373,7 +372,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
 
-	blockStoreMock := mocksPer.NewMockKVStore(ctrl)
+	blockStoreMock := blockstoreMocks.NewMockBlockStore(ctrl)
 
 	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
 		heightInt := utils.HeightFromBytes(height)
@@ -737,7 +736,7 @@ func waitForNodeToCatchUp(
 	return nil
 }
 
-func generatePlaceholderBlock(height uint64, leaderAddrr crypto.Address) *coreTypes.Block {
+func generatePlaceholderBlock(height uint64, leaderAddrr cryptoPocket.Address) *coreTypes.Block {
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            height,
 		StateHash:         stateHash,

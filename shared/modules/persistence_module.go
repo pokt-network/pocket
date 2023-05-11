@@ -22,7 +22,7 @@ type PersistenceModule interface {
 	ReleaseWriteContext() error // The module can maintain many read contexts, but only one write context can exist at a time
 
 	// BlockStore operations
-	GetBlockStore() *blockstore.BlockStore
+	GetBlockStore() blockstore.BlockStore
 	NewWriteContext() PersistenceRWContext
 
 	// Indexer operations
