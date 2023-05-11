@@ -238,7 +238,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		}
 	}
 
-	busMocks, p2pModules, _ := constructors.NewP2PModulesAndMocknet(
+	busMocks, _, p2pModules := constructors.NewBusesMocknetAndP2PModules(
 		t, numValidators,
 		genesisMock,
 		busEventHandlerFactory,

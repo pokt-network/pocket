@@ -1,4 +1,4 @@
-package p2p
+package p2p_test
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"github.com/pokt-network/pocket/internal/testutil/persistence"
 	"github.com/pokt-network/pocket/internal/testutil/runtime"
 	"github.com/pokt-network/pocket/internal/testutil/telemetry"
+	"github.com/pokt-network/pocket/p2p"
 	"testing"
 	"time"
 
@@ -67,7 +68,7 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 	dnsDone := testutil.PrepareDNSMockFromServiceURLs(t, serviceURLs)
 	t.Cleanup(dnsDone)
 
-	p2pMod, err := Create(busMock)
+	p2pMod, err := p2p.Create(busMock)
 	require.NoError(t, err)
 
 	err = p2pMod.Start()
