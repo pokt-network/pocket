@@ -1,5 +1,7 @@
 package blockstore
 
+//go:generate mockgen -source=$GOFILE -destination=../types/mocks/block_store_mock.go github.com/pokt-network/pocket/persistence/types BlockStore
+
 import (
 	"fmt"
 
