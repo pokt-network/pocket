@@ -1,9 +1,12 @@
+//go:build test
+
 package p2p_test
 
 import (
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/internal/testutil/runtime"
 	"github.com/pokt-network/pocket/internal/testutil/telemetry"
+	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/regen-network/gocuke"
 	"sort"
@@ -84,18 +87,18 @@ func waitForNetworkSimulationCompletion(t *testing.T, wg *sync.WaitGroup) {
 // ~~~~~~ RainTree Unit Test Mocks ~~~~~~
 
 // createP2PModules returns a map of configured p2pModules keyed by an incremental naming convention (eg: `val_1`, `val_2`, etc.)
-func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus, netMock mocknet.Mocknet, serviceURLs []string) (p2pModules map[string]*p2pModule) {
+func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus, netMock mocknet.Mocknet, serviceURLs []string) (p2pModules map[string]*p2p.P2PModule) {
 	t.Helper()
 
 	require.GreaterOrEqualf(t, len(serviceURLs), len(busMocks), "number of bus mocks must be less than or equal to the number of service URLs")
 
 	peerIDs := p2p_testutil.SetupMockNetPeers(t, netMock, keys[:len(busMocks)], serviceURLs)
-	p2pModules = make(map[string]*p2pModule, len(busMocks))
+	p2pModules = make(map[string]*p2p.P2PModule, len(busMocks))
 	for i := range busMocks {
 		host := netMock.Host(peerIDs[i])
-		p2pMod, err := Create(busMocks[i], WithHostOption(host))
+		p2pMod, err := p2p.Create(busMocks[i], p2p.WithHostOption(host))
 		require.NoError(t, err)
-		p2pModules[serviceURLs[i]] = p2pMod.(*p2pModule)
+		p2pModules[serviceURLs[i]] = p2pMod.(*p2p.P2PModule)
 	}
 	return
 }

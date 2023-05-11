@@ -259,7 +259,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 
 	// Create connection and bus mocks along with a shared WaitGroup to track the number of expected
 	// reads and writes throughout the mocked local network
-	for i, valId := range valIds {
+	for _, valId := range valIds {
 		expectedCall := networkSimulationConfig[valId]
 		expectedReads := expectedCall.numNetworkReads
 		expectedWrites := expectedCall.numNetworkWrites
@@ -269,13 +269,13 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		wg.Add(expectedReads)
 		wg.Add(expectedWrites)
 
-		persistenceMock := persistence_testutil.BasePersistenceMock(t, busMocks[i], genesisMock)
-		consensusMock := consensus_testutil.PrepareConsensusMock(t, busMocks[i])
-		telemetryMock := prepareTelemetryMock(t, busMocks[i], valId, &wg, expectedWrites)
+		persistenceMock := persistence_testutil.BasePersistenceMock(t, busMocks[valId], genesisMock)
+		consensusMock := consensus_testutil.PrepareConsensusMock(t, busMocks[valId])
+		telemetryMock := prepareTelemetryMock(t, busMocks[valId], valId, &wg, expectedWrites)
 
-		busMocks[i].EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
-		busMocks[i].EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
-		busMocks[i].EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
+		busMocks[valId].EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
+		busMocks[valId].EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+		busMocks[valId].EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
 	}
 
 	// Inject the connection and bus mocks into the P2P modules

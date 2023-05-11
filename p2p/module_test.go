@@ -1,12 +1,7 @@
-package p2p_test
+package p2p
 
 import (
 	"fmt"
-	"github.com/pokt-network/pocket/internal/testutil"
-	p2p_testutil "github.com/pokt-network/pocket/internal/testutil/p2p"
-	"github.com/pokt-network/pocket/internal/testutil/persistence"
-	"github.com/pokt-network/pocket/internal/testutil/runtime"
-	"github.com/pokt-network/pocket/p2p"
 	"strings"
 	"testing"
 
@@ -14,6 +9,12 @@ import (
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	"github.com/stretchr/testify/require"
+
+	"github.com/pokt-network/pocket/internal/testutil"
+	p2p_testutil "github.com/pokt-network/pocket/internal/testutil/p2p"
+	"github.com/pokt-network/pocket/internal/testutil/persistence"
+	"github.com/pokt-network/pocket/internal/testutil/runtime"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -21,7 +22,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 // TECHDEBT(#609): move & de-dup.
@@ -112,6 +112,8 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 		},
 	}
 
+	keys := testutil.LoadLocalnetPrivateKeys(t, 10)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
@@ -143,7 +145,7 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 			}
 
 			host := newLibp2pMockNetHost(t, privKey, peer)
-			p2pMod, err := p2p.Create(mockBus, p2p.WithHostOption(host))
+			p2pMod, err := Create(mockBus, WithHostOption(host))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("p2pModule.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
