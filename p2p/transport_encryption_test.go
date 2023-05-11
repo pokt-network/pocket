@@ -49,10 +49,10 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 		},
 	}).AnyTimes()
 
-	telemetryMock := telemetry_testutil.BaseTelemetryMock(t)
-
 	busMock := testutil.BaseBusMock(t, runtimeMgrMock)
 	busMock.EXPECT().GetConsensusModule().Return(mockConsensusModule).AnyTimes()
+
+	telemetryMock := telemetry_testutil.BaseTelemetryMock(t, busMock)
 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
 
 	keys := testutil.LoadLocalnetPrivateKeys(t, 1)

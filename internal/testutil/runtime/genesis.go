@@ -38,7 +38,7 @@ func GenesisWithSequentialServiceURLs(t gocuke.TestingT, valKeys []cryptoPocket.
 
 	serviceURLs := make([]string, len(valKeys))
 	for i := range valKeys {
-		serviceURLs[i] = p2p_testutil.NewServiceURL(i)
+		serviceURLs[i] = p2p_testutil.NewServiceURL(i + 1)
 	}
 	return BaseGenesisStateMock(t, valKeys, serviceURLs)
 }

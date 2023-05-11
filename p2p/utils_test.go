@@ -8,13 +8,13 @@ import (
 	"github.com/pokt-network/pocket/internal/testutil/telemetry"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/shared/messaging"
+	"github.com/pokt-network/pocket/telemetry"
 	"github.com/regen-network/gocuke"
 	"sort"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/stretchr/testify/require"
 
@@ -133,23 +133,23 @@ func createMockBuses(t *testing.T, runtimeMgrs []modules.RuntimeMgr, wg *sync.Wa
 	return mockBuses
 }
 
-// TODO_THIS_COMMIT: refactor
+// TODO_THIS_COMMIT: refactor / move
 // Telemetry mock - Needed to help with proper counts for number of expected network writes
 func prepareTelemetryMock(t *testing.T, busMock *mockModules.MockBus, valId string, wg *sync.WaitGroup, expectedNumNetworkWrites int) *mockModules.MockTelemetryModule {
-	ctrl := gomock.NewController(t)
-	telemetryMock := mockModules.NewMockTelemetryModule(ctrl)
+	telemetryMock := telemetry_testutil.WithTimeSeriesAgent(t,
+		telemetry_testutil.MinimalTelemetryMock(t, busMock),
+	)
 
-	timeSeriesAgentMock := telemetry_testutil.BaseTimeSeriesAgentMock(t)
-	// TODO_THIS_COMMIT: refactor
-	eventMetricsAgentMock := telemetry_testutil.PrepareEventMetricsAgentMock(t, valId, wg, expectedNumNetworkWrites)
+	eventMetricsAgentMock := telemetry_testutil.EventMetricsAgentMockWithHandler(
+		t, telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL,
+		func(namesapce, event_name string, labels ...any) {
+			t.Logf("[valId: %s] Write\n", valId)
+			wg.Done()
+		},
+		expectedNumNetworkWrites,
+	)
 
-	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
-
-	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
-	telemetryMock.EXPECT().GetBus().Return(busMock).AnyTimes()
-	telemetryMock.EXPECT().SetBus(busMock).AnyTimes()
 	busMock.RegisterModule(telemetryMock)
-
 	return telemetryMock
 }

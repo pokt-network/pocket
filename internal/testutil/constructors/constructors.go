@@ -3,6 +3,7 @@ package constructors
 import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	consensus_testutil "github.com/pokt-network/pocket/internal/testutil/consensus"
 	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/require"
 
@@ -29,7 +30,7 @@ func NewBusesMocknetAndP2PModules(
 	libp2pNetworkMock mocknet.Mocknet,
 	p2pModules map[serviceURLStr]modules.P2PModule,
 ) {
-	// TODO_THIS_COMMIT: refafactor
+	// TODO_THIS_COMMIT: refactor
 	dnsSrv, dnsDone := testutil.MinimalDNSMock(t)
 	t.Cleanup(dnsDone)
 
@@ -40,9 +41,13 @@ func NewBusesMocknetAndP2PModules(
 		require.NoError(t, err)
 	})
 
+	buses = make(map[serviceURLStr]*mock_modules.MockBus)
+	p2pModules = make(map[serviceURLStr]modules.P2PModule)
 	// CONSIDERATION: using an iterator/generator would prevent unintentional
 	// ID collisions
 	privKeys := testutil.LoadLocalnetPrivateKeys(t, count)
+	// CONSIDERATION: using an iterator/generator would prevent unintentional
+	// serviceURL collisions
 	serviceURLs := p2p_testutil.SequentialServiceURLs(t, count)
 	for i, serviceURL := range serviceURLs {
 		if len(privKeys) <= i {
@@ -52,11 +57,16 @@ func NewBusesMocknetAndP2PModules(
 
 		privKey := privKeys[i]
 		busMock := NewBus(t, privKey, serviceURL, genesisState, busEventHandlerFactory)
-		host := p2p_testutil.NewMocknetHost(t, libp2pNetworkMock, privKey)
+		buses[serviceURL] = busMock
+
+		// TODO_THIS_COMMIT: refactor
+		consensusMock := consensus_testutil.PrepareConsensusMock(t, busMock)
+		busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 
 		// MUST register DNS before instantiating P2PModule
 		testutil.AddServiceURLZone(t, dnsSrv, serviceURL)
 
+		host := p2p_testutil.NewMocknetHost(t, libp2pNetworkMock, privKey)
 		p2pModules[serviceURL] = NewP2PModuleWithHost(t, busMock, host)
 	}
 	return buses, libp2pNetworkMock, p2pModules

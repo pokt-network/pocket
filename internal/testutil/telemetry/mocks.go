@@ -8,7 +8,10 @@ import (
 	"github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
-func MinimalTelemetryMock(t gocuke.TestingT) modules.TelemetryModule {
+func MinimalTelemetryMock(
+	t gocuke.TestingT,
+	busMock *mock_modules.MockBus,
+) modules.TelemetryModule {
 	t.Helper()
 
 	ctrl := gomock.NewController(t)
@@ -18,15 +21,19 @@ func MinimalTelemetryMock(t gocuke.TestingT) modules.TelemetryModule {
 	telemetryMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
 
+	busMock.RegisterModule(telemetryMock)
 	return telemetryMock
 }
 
-func BaseTelemetryMock(t gocuke.TestingT) modules.TelemetryModule {
+func BaseTelemetryMock(
+	t gocuke.TestingT,
+	busMock *mock_modules.MockBus,
+) modules.TelemetryModule {
 	t.Helper()
-	return WithTimeSeriesAgent(t, WithEventMetricsAgent(t, MinimalTelemetryMock(t)))
+	return WithTimeSeriesAgent(t, WithEventMetricsAgent(t, MinimalTelemetryMock(t, busMock)))
 }
 
-func WithTimeSeriesAgent(t gocuke.TestingT, telemetryMod modules.TelemetryModule) modules.TelemetryModule {
+func WithTimeSeriesAgent(t gocuke.TestingT, telemetryMod modules.TelemetryModule) *mock_modules.MockTelemetryModule {
 	t.Helper()
 
 	telemetryMock := telemetryMod.(*mock_modules.MockTelemetryModule)

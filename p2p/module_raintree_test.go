@@ -3,28 +3,26 @@
 package p2p_test
 
 import (
-	"github.com/pokt-network/pocket/internal/testutil"
-	"github.com/pokt-network/pocket/internal/testutil/constructors"
-	"github.com/pokt-network/pocket/internal/testutil/p2p"
-	"github.com/pokt-network/pocket/shared/messaging"
-	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/regen-network/gocuke"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strconv"
 	"sync"
 	"testing"
 
+	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	consensus_testutil "github.com/pokt-network/pocket/internal/testutil/consensus"
+	"github.com/pokt-network/pocket/internal/testutil"
+	"github.com/pokt-network/pocket/internal/testutil/constructors"
+	"github.com/pokt-network/pocket/internal/testutil/p2p"
 	persistence_testutil "github.com/pokt-network/pocket/internal/testutil/persistence"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/p2p/raintree"
+	"github.com/pokt-network/pocket/shared/messaging"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // TODO(#314): Add the tooling and instructions on how to generate unit tests in this file.
@@ -232,6 +230,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	//busMocks := createMockBuses(t, runtimeConfigs, &wg)
 	busEventHandlerFactory := func(t gocuke.TestingT, bus modules.Bus) testutil.BusEventHandler {
 		return func(data *messaging.PocketEnvelope) {
+			// TODO: decide - is mutually exclusive w/ telemetry based wg.Done() below
 			// `p2pModule#handleNetworkData()` calls `modules.Bus#PublishEventToBus()`
 			// assumes that P2P module is the only event producer running during the test
 			wg.Done()
@@ -244,42 +243,47 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		busEventHandlerFactory,
 	)
 
-	valIds := make([]string, 0, numValidators)
-	for valId := range networkSimulationConfig {
-		valIds = append(valIds, valId)
-	}
-
-	// TODO_THIS_COMMIT: need this?
-	// sort `valIds` in ascending order
-	sort.Slice(valIds, func(i, j int) bool {
-		iId := extractNumericId(valIds[i])
-		jId := extractNumericId(valIds[j])
-		return iId < jId
-	})
+	//serviceURLs := make([]string, 0, numValidators)
+	//for valId := range networkSimulationConfig {
+	//	serviceURLs = append(serviceURLs, valId)
+	//}
+	//
+	//// TODO_THIS_COMMIT: need this?
+	//// sort `serviceURLs` in ascending order
+	//sort.Slice(serviceURLs, func(i, j int) bool {
+	//	iId := extractNumericId(serviceURLs[i])
+	//	jId := extractNumericId(serviceURLs[j])
+	//	return iId < jId
+	//})
 
 	// Create connection and bus mocks along with a shared WaitGroup to track the number of expected
 	// reads and writes throughout the mocked local network
-	for _, valId := range valIds {
-		expectedCall := networkSimulationConfig[valId]
+	for serviceURL, busMock := range busMocks {
+		expectedCall := networkSimulationConfig[serviceURL]
 		expectedReads := expectedCall.numNetworkReads
 		expectedWrites := expectedCall.numNetworkWrites
 
-		log.Printf("[valId: %s] expected reads: %d\n", valId, expectedReads)
-		log.Printf("[valId: %s] expected writes: %d\n", valId, expectedWrites)
+		log.Printf("[serviceURL: %s] expected reads: %d\n", serviceURL, expectedReads)
+		log.Printf("[serviceURL: %s] expected writes: %d\n", serviceURL, expectedWrites)
 		wg.Add(expectedReads)
 		wg.Add(expectedWrites)
 
-		persistenceMock := persistence_testutil.BasePersistenceMock(t, busMocks[valId], genesisMock)
-		consensusMock := consensus_testutil.PrepareConsensusMock(t, busMocks[valId])
-		telemetryMock := prepareTelemetryMock(t, busMocks[valId], valId, &wg, expectedWrites)
+		// TODO_THIS_COMMIT:
+		//if serviceURL == origNode {
+		//	...
+		//}
 
-		busMocks[valId].EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
-		busMocks[valId].EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
-		busMocks[valId].EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
+		persistenceMock := persistence_testutil.BasePersistenceMock(t, busMock, genesisMock)
+		//consensusMock := consensus_testutil.PrepareConsensusMock(t, busMocks[serviceURL])
+		telemetryMock := prepareTelemetryMock(t, busMock, serviceURL, &wg, expectedWrites)
+
+		busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
+		//busMocks[serviceURL].EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+		busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
 	}
 
 	// Inject the connection and bus mocks into the P2P modules
-	//p2pModules := createP2PModules(t, busMocks, libp2pNetworkMock, valIds)
+	//p2pModules := createP2PModules(t, busMocks, libp2pNetworkMock, serviceURLs)
 
 	for _, p2pMod := range p2pModules {
 		err := p2pMod.Start()

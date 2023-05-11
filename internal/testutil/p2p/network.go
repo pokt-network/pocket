@@ -37,6 +37,7 @@ func NewMocknetHost(
 ) libp2pHost.Host {
 	t.Helper()
 
+	// TODO_THIS_COMMIT: move to const
 	addrMock, err := multiaddr.NewMultiaddr("/ip4/10.0.0.1/tcp/0")
 	require.NoError(t, err)
 

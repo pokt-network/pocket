@@ -36,3 +36,22 @@ func PrepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup
 
 	return eventMetricsAgentMock
 }
+
+func EventMetricsAgentMockWithHandler(
+	t gocuke.TestingT,
+	label string,
+	// TODO_THIS_COMMIT: consider refactoring as a type
+	handler func(namespace, event_name string, labels ...any),
+	times int,
+) *mock_modules.MockEventMetricsAgent {
+	ctrl := gomock.NewController(t)
+	eventMetricsAgentMock := mock_modules.NewMockEventMetricsAgent(ctrl)
+
+	// TODO_THIS_COMMIT: scrutinize these & their order
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Eq(label), gomock.Any()).Do(handler).Times(times)
+	// TODO_THIS_COMMIT: is this really needed?
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).AnyTimes()
+
+	return eventMetricsAgentMock
+}
