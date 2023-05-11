@@ -22,6 +22,7 @@ import (
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -736,7 +737,7 @@ func waitForNodeToCatchUp(
 	return nil
 }
 
-func generatePlaceholderBlock(height uint64, leaderAddrr cryptoPocket.Address) *coreTypes.Block {
+func generatePlaceholderBlock(height uint64, leaderAddrr crypto.Address) *coreTypes.Block {
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            height,
 		StateHash:         stateHash,
