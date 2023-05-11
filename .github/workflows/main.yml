@@ -221,7 +221,7 @@ jobs:
             config.image.tag = `sha-${context.payload.pull_request.head.sha}-dev`;
 
             // Write back the configuration to the file
-            fs.writeFileSync(devnetConfigPath, yaml.safeDump(config));
+            fs.writeFileSync(devnetConfigPath, yaml.dump(config));
 
       # Commit and push the changes
       - name: Commit and push configuration file changes
