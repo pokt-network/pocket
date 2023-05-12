@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	logger = pocketLogger.Global.CreateLoggerForModule("e2e")
+	e2eLogger = pocketLogger.Global.CreateLoggerForModule("e2e")
 
 	// validatorKeys is hydrated by the clientset with credentials for all validators.
 	// validatorKeys maps validator IDs to their private key as a hex string.
@@ -53,12 +53,12 @@ type rootSuite struct {
 func init() {
 	cs, err := getClientset()
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to get clientset")
+		e2eLogger.Fatal().Err(err).Msg("failed to get clientset")
 	}
 	clientset = cs
 	vkmap, err := pocketk8s.FetchValidatorPrivateKeys(clientset)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to get validator key map")
+		e2eLogger.Fatal().Err(err).Msg("failed to get validator key map")
 	}
 	validatorKeys = vkmap
 }
@@ -163,11 +163,11 @@ func getPrivateKey(keyMap map[string]string, validatorId string) cryptoPocket.Pr
 	privHexString := keyMap[validatorId]
 	keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to extract keypair")
+		e2eLogger.Fatal().Err(err).Msg("failed to extract keypair")
 	}
 	privateKey, err := keyPair.Unarmour("")
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to extract privkey")
+		e2eLogger.Fatal().Err(err).Msg("failed to extract privkey")
 	}
 	return privateKey
 }
@@ -182,7 +182,7 @@ func getClientset() (*kubernetes.Clientset, error) {
 	kubeConfigPath := filepath.Join(userHomeDir, ".kube", "config")
 	kubeConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	if err != nil {
-		logger.Info().Msgf("no default kubeconfig at %s; attempting to load InClusterConfig", kubeConfigPath)
+		e2eLogger.Info().Msgf("no default kubeconfig at %s; attempting to load InClusterConfig", kubeConfigPath)
 		config := inClusterConfig()
 		clientset, err := kubernetes.NewForConfig(config)
 		if err != nil {
@@ -190,7 +190,7 @@ func getClientset() (*kubernetes.Clientset, error) {
 		}
 		return clientset, nil
 	}
-	logger.Info().Msgf("e2e tests loaded default kubeconfig located at %s", kubeConfigPath)
+	e2eLogger.Info().Msgf("e2e tests loaded default kubeconfig located at %s", kubeConfigPath)
 	clientset, err := kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get clientset from config: %w", err)
@@ -201,7 +201,7 @@ func getClientset() (*kubernetes.Clientset, error) {
 func inClusterConfig() *rest.Config {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		logger.Fatal().AnErr("inClusterConfig", err)
+		e2eLogger.Fatal().AnErr("inClusterConfig", err)
 	}
 	return config
 }
