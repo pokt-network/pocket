@@ -23,6 +23,7 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -166,6 +167,7 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 				PrivateKey:     valKeys[i].String(),
 				Port:           uint32(port),
 				ConnectionType: types.ConnectionType_EmptyConnection,
+				MaxNonces:      defaults.DefaultP2PMaxNonces,
 			},
 		}
 
