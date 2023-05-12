@@ -92,8 +92,8 @@ func (s *rootSuite) TheUserShouldBeAbleToSeeStandardOutputContaining(arg1 string
 }
 
 func (s *rootSuite) TheUserStakesTheirValidatorWithAmountUpokt(amount int64) {
-	privateKey := s.getPrivateKey(validatorA)
-	s.stakeValidator(privateKey, fmt.Sprintf("%d", amount))
+	privKey := s.getPrivateKey(validatorA)
+	s.stakeValidator(privKey, fmt.Sprintf("%d", amount))
 }
 
 func (s *rootSuite) TheUserShouldBeAbleToUnstakeTheirValidator() {
@@ -102,14 +102,14 @@ func (s *rootSuite) TheUserShouldBeAbleToUnstakeTheirValidator() {
 
 // sends amount from validator-001 to validator-002
 func (s *rootSuite) TheUserSendsUpoktToAnotherAddress(amount int64) {
-	privateKey := s.getPrivateKey(validatorA)
+	privKey := s.getPrivateKey(validatorA)
 	valB := s.getPrivateKey(validatorB)
 	args := []string{
 		"--non_interactive=true",
 		"--remote_cli_url=" + rpcURL,
 		"Account",
 		"Send",
-		privateKey.Address().String(),
+		privKey.Address().String(),
 		valB.Address().String(),
 		fmt.Sprintf("%d", amount),
 	}
@@ -120,14 +120,14 @@ func (s *rootSuite) TheUserSendsUpoktToAnotherAddress(amount int64) {
 }
 
 // stakeValidator runs Validator stake command with the address, amount, chains..., and serviceURL provided
-func (s *rootSuite) stakeValidator(privateKey cryptoPocket.PrivateKey, amount string) {
+func (s *rootSuite) stakeValidator(privKey cryptoPocket.PrivateKey, amount string) {
 	validatorServiceUrl := fmt.Sprintf(validatorServiceURLTmpl, validatorA, defaults.DefaultP2PPort)
 	args := []string{
 		"--non_interactive=true",
 		"--remote_cli_url=" + rpcURL,
 		"Validator",
 		"Stake",
-		privateKey.Address().String(),
+		privKey.Address().String(),
 		amount,
 		chainId,
 		validatorServiceUrl,
@@ -162,10 +162,10 @@ func (s *rootSuite) getPrivateKey(
 	keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
 	require.NoErrorf(s, err, "failed to extract keypair")
 
-	privateKey, err := keyPair.Unarmour("")
+	privKey, err := keyPair.Unarmour("")
 	require.NoErrorf(s, err, "failed to extract privkey")
 
-	return privateKey
+	return privKey
 }
 
 // getClientset uses the default path `$HOME/.kube/config` to build a kubeconfig
