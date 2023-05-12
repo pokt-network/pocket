@@ -9,15 +9,16 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/regen-network/gocuke"
+	"github.com/stretchr/testify/require"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+
 	pocketLogger "github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
-	"k8s.io/client-go/rest"
-
-	"github.com/cucumber/godog"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
@@ -45,6 +46,10 @@ const (
 	chainId    = "0001"
 )
 
+type rootSuite struct {
+	gocuke.TestingT
+}
+
 func init() {
 	cs, err := getClientset()
 	if err != nil {
@@ -61,70 +66,42 @@ func init() {
 // TestFeatures runs the e2e tests specified in any .features files in this directory
 // * This test suite assumes that a LocalNet is running that can be accessed by `kubectl`
 func TestFeatures(t *testing.T) {
-	suite := godog.TestSuite{
-		ScenarioInitializer: InitializeScenario,
-		Options: &godog.Options{
-			Format:   "pretty",
-			Paths:    []string{"./"},
-			TestingT: t,
-		},
-	}
-	if suite.Run() != 0 {
-		t.Fatal("non-zero status returned, failed to run feature tests")
-	}
+	gocuke.NewRunner(t, &rootSuite{}).Path("*.feature").Run()
 }
 
 // InitializeScenario registers step regexes to function handlers
-func InitializeScenario(ctx *godog.ScenarioContext) {
-	ctx.Step(`^the user runs the command "([^"]*)"$`, theUserRunsTheCommand)
-	ctx.Step(`^the user should be able to see standard output containing "([^"]*)"$`, theUserShouldBeAbleToSeeStandardOutputContaining)
-	ctx.Step(`^the user has a validator$`, theUserHasAValidator)
-	ctx.Step(`^the validator should have exited without error$`, theValidatorShouldHaveExitedWithoutError)
-	ctx.Step(`^the user stakes their validator with amount (\d+) uPOKT$`, theUserStakesTheirValidatorWith)
-	ctx.Step(`^the user should be able to unstake their validator$`, theUserShouldBeAbleToUnstakeTheirValidator)
-	ctx.Step(`^the user sends (\d+) uPOKT to another address$`, theUserSendsToAnotherAddress)
+
+func (s *rootSuite) TheUserHasAValidator() {
+	res, err := s.validator.RunCommand("help")
+	require.NoError(s, err)
+	s.validator.result = res
 }
 
-func theUserHasAValidator() error {
-	res, err := validator.RunCommand("help")
-	validator.result = res
-	if err != nil {
-		return err
-	}
-	return nil
+func (s *rootSuite) TheValidatorShouldHaveExitedWithoutError() {
+	require.NoError(s, validator.result.Err)
 }
 
-func theValidatorShouldHaveExitedWithoutError() error {
-	return validator.result.Err
-}
-
-func theUserRunsTheCommand(cmd string) error {
+func (s *rootSuite) TheUserRunsTheCommand(cmd string) {
 	cmds := strings.Split(cmd, " ")
 	res, err := validator.RunCommand(cmds...)
+	require.NoError(s, err)
 	validator.result = res
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
-func theUserShouldBeAbleToSeeStandardOutputContaining(arg1 string) error {
-	if !strings.Contains(validator.result.Stdout, arg1) {
-		return fmt.Errorf("stdout must contain %s", arg1)
-	}
-	return nil
+func (s *rootSuite) TheUserShouldBeAbleToSeeStandardOutputContaining(arg1 string) {
+	require.Contains(s, validator.result.Stdout, arg1)
 }
 
-func theUserStakesTheirValidatorWith(amount int) error {
-	return stakeValidator(fmt.Sprintf("%d", amount))
+func (s *rootSuite) TheUserStakesTheirValidatorWithAmountUpokt(amount int64) {
+	require.NoError(s, stakeValidator(fmt.Sprintf("%d", amount)))
 }
 
-func theUserShouldBeAbleToUnstakeTheirValidator() error {
-	return unstakeValidator()
+func (s *rootSuite) TheUserShouldBeAbleToUnstakeTheirValidator() {
+	require.NoError(s, unstakeValidator())
 }
 
 // sends amount from validator-001 to validator-002
-func theUserSendsToAnotherAddress(amount int) error {
+func (s *rootSuite) TheUserSendsUpoktToAnotherAddress(amount int64) {
 	privateKey := getPrivateKey(validatorKeys, validatorA)
 	valB := getPrivateKey(validatorKeys, validatorB)
 	args := []string{
@@ -137,11 +114,8 @@ func theUserSendsToAnotherAddress(amount int) error {
 		fmt.Sprintf("%d", amount),
 	}
 	res, err := validator.RunCommand(args...)
+	require.NoError(s, err)
 	validator.result = res
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // stakeValidator runs Validator stake command with the address, amount, chains..., and serviceURL provided
