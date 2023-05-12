@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.53] - 2023-05-011
+## [0.0.0.53] - 2023-05-12
 
 - Refactors BlockStore into an independent component
 - Creates the BlockStore interface and package

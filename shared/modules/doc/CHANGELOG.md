@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.12] - 2023-05-11
+## [0.0.0.12] - 2023-05-12
 
 - Updates the PersistenceModule interface to return a BlockStore instead of KVStore directly
 
