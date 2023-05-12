@@ -23,8 +23,12 @@ func initDeleteCrashedPods(client *kubernetes.Clientset) {
 
 	// Loop through all existing Pods and delete the ones that are in CrashLoopBackOff status
 	podList, _ := podClient.List(context.TODO(), metav1.ListOptions{})
-	for _, pod := range podList.Items {
-		deleteCrashedPods(&pod, stsClient, podClient)
+	for i := range podList.Items {
+		pod := podList.Items[i]
+		err := deleteCrashedPods(&pod, stsClient, podClient)
+		if err != nil {
+			logger.Error().Err(err).Msg("error deleting crashed pod on init")
+		}
 	}
 
 	// Set up a watch for new Pods
@@ -37,7 +41,10 @@ func initDeleteCrashedPods(client *kubernetes.Clientset) {
 				continue
 			}
 
-			deleteCrashedPods(pod, stsClient, podClient)
+			err := deleteCrashedPods(pod, stsClient, podClient)
+			if err != nil {
+				logger.Error().Err(err).Msg("error deleting crashed pod on watch")
+			}
 		}
 	}
 }
@@ -45,9 +52,11 @@ func initDeleteCrashedPods(client *kubernetes.Clientset) {
 func deleteCrashedPods(pod *corev1.Pod, stsClient appstypedv1.StatefulSetInterface, podClient coretypedv1.PodInterface) error {
 	// If annotation is present, we monitor the Pod
 	if containerToMonitor, ok := pod.Annotations["cluster-manager-delete-on-crash-container"]; ok {
-		for _, podContainer := range pod.Spec.Containers {
+		for ci := range pod.Spec.Containers {
+			podContainer := pod.Spec.Containers[ci]
 			if podContainer.Name == containerToMonitor {
-				for _, containerStatus := range pod.Status.ContainerStatuses {
+				for pi := range pod.Status.ContainerStatuses {
+					containerStatus := pod.Status.ContainerStatuses[pi]
 
 					// Only proceed if container is in CrashLoopBackOff status
 					if containerStatus.State.Waiting != nil && containerStatus.State.Waiting.Reason == "CrashLoopBackOff" {
@@ -70,7 +79,8 @@ func deleteCrashedPods(pod *corev1.Pod, stsClient appstypedv1.StatefulSetInterfa
 						}
 
 						// Loop through all containers in the StatefulSet and find the one we monitor
-						for _, stsContainer := range sts.Spec.Template.Spec.Containers {
+						for sci := range sts.Spec.Template.Spec.Containers {
+							stsContainer := sts.Spec.Template.Spec.Containers[sci]
 							if stsContainer.Name == containerToMonitor {
 
 								// Loop through all containers in the Pod and find the one we monitor
