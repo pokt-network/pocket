@@ -159,13 +159,10 @@ func (s *rootSuite) getPrivateKey(
 	validatorId string,
 ) cryptoPocket.PrivateKey {
 	privHexString := s.validatorKeys[validatorId]
-	keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
-	require.NoErrorf(s, err, "failed to extract keypair")
-
-	privKey, err := keyPair.Unarmour("")
+	privateKey, err := cryptoPocket.NewPrivateKey(privHexString)
 	require.NoErrorf(s, err, "failed to extract privkey")
 
-	return privKey
+	return privateKey
 }
 
 // getClientset uses the default path `$HOME/.kube/config` to build a kubeconfig
