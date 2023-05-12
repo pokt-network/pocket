@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"errors"
+	"strings"
 
 	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
 	corev1 "k8s.io/api/core/v1"
@@ -32,7 +33,10 @@ func initDeleteCrashedPods(client *kubernetes.Clientset) {
 	}
 
 	// Set up a watch for new Pods
-	w, _ := podClient.Watch(context.TODO(), metav1.ListOptions{})
+	w, err := podClient.Watch(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		logger.Error().Err(err).Msg("error setting up watch for new pods")
+	}
 	for event := range w.ResultChan() {
 		switch event.Type {
 		case watch.Added, watch.Modified:
@@ -58,8 +62,10 @@ func deleteCrashedPods(pod *corev1.Pod, stsClient appstypedv1.StatefulSetInterfa
 				for pi := range pod.Status.ContainerStatuses {
 					containerStatus := pod.Status.ContainerStatuses[pi]
 
-					// Only proceed if container is in CrashLoopBackOff status
-					if containerStatus.State.Waiting != nil && containerStatus.State.Waiting.Reason == "CrashLoopBackOff" {
+					// Only proceed if container is in some fort of Err status
+					if containerStatus.State.Waiting != nil &&
+						(strings.HasPrefix(containerStatus.State.Waiting.Reason, "Err") ||
+							strings.HasSuffix(containerStatus.State.Waiting.Reason, "BackOff")) {
 						// Get StatefulSet that created the Pod
 						var stsName string
 						for _, ownerRef := range pod.OwnerReferences {
