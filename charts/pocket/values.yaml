@@ -61,6 +61,9 @@ persistence:
   # -- custom data source of the persistent volume claim
   dataSource: {}
 
+# -- type of the blockchain node to run. Can be either `full`, `validator`, `servicer`, `fishermen`
+nodeType: "full"
+
 privateKeySecretKeyRef:
   # -- REQUIRED. Name of the Secret in the same namespace that contains the private key of the node
   name: ""
@@ -82,10 +85,10 @@ config:
     max_mempool_transactions: 9000
   persistence:
     postgres_url: "" # @ignored This value is needed but ignored - if you wish to connect to the external database, use externalPostgresql instead
-    node_schema: validator
-    block_store_path: "/pocket/validator/block-store"
-    tx_indexer_path: "/pocket/validator/tx-indexer"
-    trees_store_dir: "/pocket/validator/trees"
+    node_schema: pocket
+    block_store_path: "/pocket/data/block-store"
+    tx_indexer_path: "/pocket/data/tx-indexer"
+    trees_store_dir: "/pocket/data/trees"
     max_conns_count: 50
     min_conns_count: 1
     max_conn_lifetime: 5m
