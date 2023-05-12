@@ -17,7 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated Dockerfiles using outdated go version to 1.19
 
-
 ## [0.0.0.40] - 2023-05-04
 
 - Added `network_id` parameter to the node config files
