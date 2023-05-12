@@ -29,6 +29,8 @@ func init() {
 	logger.Global.Info().Str("namespace", CurrentNamespace).Msg("got new namespace")
 }
 
+// FetchValidatorPrivateKeys returns a map corresponding to the data section of
+// the validator private keys k8s secret (yaml), located at `privateKeysSecretResourceName`.
 func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
 	validatorKeysMap := make(map[string]string)
 
