@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
@@ -286,13 +287,12 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 func (m *p2pModule) setupRouter() (err error) {
 	m.router, err = raintree.NewRainTreeRouter(
 		m.GetBus(),
-		&raintree.RainTreeConfig{
+		&config.RainTreeConfig{
 			Addr:                  m.address,
 			CurrentHeightProvider: m.currentHeightProvider,
-			Host:                  m.host,
-			Hostname:              m.cfg.Hostname,
-			MaxMempoolCount:       m.cfg.MaxMempoolCount,
 			PeerstoreProvider:     m.pstoreProvider,
+			Host:                  m.host,
+			MaxNonces:             m.cfg.MaxNonces,
 		},
 	)
 	return err

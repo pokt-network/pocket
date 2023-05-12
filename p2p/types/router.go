@@ -26,3 +26,9 @@ type Router interface {
 	// by the application layer.
 	HandleNetworkData(data []byte) ([]byte, error)
 }
+
+// RouterConfig is used to configure `Router` implementations and to test a
+// given configuration's validity.
+type RouterConfig interface {
+	IsValid() error
+}
