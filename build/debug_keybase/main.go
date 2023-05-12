@@ -156,13 +156,12 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 func parsePrivateKeysFromEmbeddedYaml(privateKeysYamlBytes []byte) ([]string, error) {
 	// Parse the YAML file and load into the config struct
 	decoder := yaml.NewDecoder(bytes.NewReader(privateKeysYamlBytes))
-	keysList := []string{}
+	keysList := make([]string, 0)
 
 	for {
 		var secret K8sSecret
 
-		err := decoder.Decode(&secret)
-		if err != nil {
+		if err := decoder.Decode(&secret); err != nil {
 			if err == io.EOF {
 				break
 			}
