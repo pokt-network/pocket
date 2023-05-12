@@ -21,18 +21,7 @@ import (
 	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
 )
 
-var (
-	e2eLogger = pocketLogger.Global.CreateLoggerForModule("e2e")
-
-	// validatorKeys is hydrated by the clientset with credentials for all validators.
-	// validatorKeys maps validator IDs to their private key as a hex string.
-	validatorKeys map[string]string
-	// clientset is the kubernetes API we acquire from the user's $HOME/.kube/config
-	clientset *kubernetes.Clientset
-	// validator holds command results between runs and reports errors to the test suite
-	validator = &validatorPod{}
-	// validatorA maps to suffix ID 001 of the kube pod that we use as our control agent
-)
+var e2eLogger = pocketLogger.Global.CreateLoggerForModule("e2e")
 
 const (
 	// defines the host & port scheme that LocalNet uses for naming validators.
@@ -48,6 +37,15 @@ const (
 
 type rootSuite struct {
 	gocuke.TestingT
+
+	// validatorKeys is hydrated by the clientset with credentials for all validators.
+	// validatorKeys maps validator IDs to their private key as a hex string.
+	validatorKeys map[string]string
+	// clientset is the kubernetes API we acquire from the user's $HOME/.kube/config
+	clientset *kubernetes.Clientset
+	// validator holds command results between runs and reports errors to the test suite
+	validator *validatorPod
+	// validatorA maps to suffix ID 001 of the kube pod that we use as our control agent
 }
 
 func init() {
@@ -78,32 +76,33 @@ func (s *rootSuite) TheUserHasAValidator() {
 }
 
 func (s *rootSuite) TheValidatorShouldHaveExitedWithoutError() {
-	require.NoError(s, validator.result.Err)
+	require.NoError(s, s.validator.result.Err)
 }
 
 func (s *rootSuite) TheUserRunsTheCommand(cmd string) {
 	cmds := strings.Split(cmd, " ")
-	res, err := validator.RunCommand(cmds...)
+	res, err := s.validator.RunCommand(cmds...)
 	require.NoError(s, err)
-	validator.result = res
+	s.validator.result = res
 }
 
 func (s *rootSuite) TheUserShouldBeAbleToSeeStandardOutputContaining(arg1 string) {
-	require.Contains(s, validator.result.Stdout, arg1)
+	require.Contains(s, s.validator.result.Stdout, arg1)
 }
 
 func (s *rootSuite) TheUserStakesTheirValidatorWithAmountUpokt(amount int64) {
-	require.NoError(s, stakeValidator(fmt.Sprintf("%d", amount)))
+	privateKey := s.getPrivateKey(validatorA)
+	s.stakeValidator(privateKey, fmt.Sprintf("%d", amount))
 }
 
 func (s *rootSuite) TheUserShouldBeAbleToUnstakeTheirValidator() {
-	require.NoError(s, unstakeValidator())
+	s.unstakeValidator()
 }
 
 // sends amount from validator-001 to validator-002
 func (s *rootSuite) TheUserSendsUpoktToAnotherAddress(amount int64) {
-	privateKey := getPrivateKey(validatorKeys, validatorA)
-	valB := getPrivateKey(validatorKeys, validatorB)
+	privateKey := s.getPrivateKey(validatorA)
+	valB := s.getPrivateKey(validatorB)
 	args := []string{
 		"--non_interactive=true",
 		"--remote_cli_url=" + rpcURL,
@@ -113,14 +112,14 @@ func (s *rootSuite) TheUserSendsUpoktToAnotherAddress(amount int64) {
 		valB.Address().String(),
 		fmt.Sprintf("%d", amount),
 	}
-	res, err := validator.RunCommand(args...)
+	res, err := s.validator.RunCommand(args...)
 	require.NoError(s, err)
-	validator.result = res
+
+	s.validator.result = res
 }
 
 // stakeValidator runs Validator stake command with the address, amount, chains..., and serviceURL provided
-func stakeValidator(amount string) error {
-	privateKey := getPrivateKey(validatorKeys, validatorA)
+func (s *rootSuite) stakeValidator(privateKey cryptoPocket.PrivateKey, amount string) {
 	validatorServiceUrl := fmt.Sprintf(validatorServiceURLTmpl, validatorA, defaults.DefaultP2PPort)
 	args := []string{
 		"--non_interactive=true",
@@ -132,17 +131,15 @@ func stakeValidator(amount string) error {
 		chainId,
 		validatorServiceUrl,
 	}
-	res, err := validator.RunCommand(args...)
-	validator.result = res
-	if err != nil {
-		return err
-	}
-	return nil
+	res, err := s.validator.RunCommand(args...)
+	require.NoError(s, err)
+
+	s.validator.result = res
 }
 
 // unstakeValidator unstakes the Validator at the same address that stakeValidator uses
-func unstakeValidator() error {
-	privKey := getPrivateKey(validatorKeys, validatorA)
+func (s *rootSuite) unstakeValidator() {
+	privKey := s.getPrivateKey(validatorA)
 	args := []string{
 		"--non_interactive=true",
 		"--remote_cli_url=" + rpcURL,
@@ -150,31 +147,29 @@ func unstakeValidator() error {
 		"Unstake",
 		privKey.Address().String(),
 	}
-	res, err := validator.RunCommand(args...)
-	validator.result = res
-	if err != nil {
-		return err
-	}
-	return nil
+	res, err := s.validator.RunCommand(args...)
+	require.NoError(s, err)
+
+	s.validator.result = res
 }
 
 // getPrivateKey generates a new keypair from the private hex key that we get from the clientset
-func getPrivateKey(keyMap map[string]string, validatorId string) cryptoPocket.PrivateKey {
-	privHexString := keyMap[validatorId]
+func (s *rootSuite) getPrivateKey(
+	validatorId string,
+) cryptoPocket.PrivateKey {
+	privHexString := s.validatorKeys[validatorId]
 	keyPair, err := cryptoPocket.CreateNewKeyFromString(privHexString, "", "")
-	if err != nil {
-		e2eLogger.Fatal().Err(err).Msg("failed to extract keypair")
-	}
+	require.NoErrorf(s, err, "failed to extract keypair")
+
 	privateKey, err := keyPair.Unarmour("")
-	if err != nil {
-		e2eLogger.Fatal().Err(err).Msg("failed to extract privkey")
-	}
+	require.NoErrorf(s, err, "failed to extract privkey")
+
 	return privateKey
 }
 
 // getClientset uses the default path `$HOME/.kube/config` to build a kubeconfig
 // and then connects to that cluster and returns a *Clientset or an error
-func getClientset() (*kubernetes.Clientset, error) {
+func getClientset(t gocuke.TestingT) (*kubernetes.Clientset, error) {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get home dir: %w", err)
@@ -183,25 +178,23 @@ func getClientset() (*kubernetes.Clientset, error) {
 	kubeConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	if err != nil {
 		e2eLogger.Info().Msgf("no default kubeconfig at %s; attempting to load InClusterConfig", kubeConfigPath)
-		config := inClusterConfig()
+		config := inClusterConfig(t)
 		clientset, err := kubernetes.NewForConfig(config)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get clientset from config: %w", err)
-		}
+		require.NoErrorf(t, err, "failed to get clientset from config")
+
 		return clientset, nil
 	}
+
 	e2eLogger.Info().Msgf("e2e tests loaded default kubeconfig located at %s", kubeConfigPath)
 	clientset, err := kubernetes.NewForConfig(kubeConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get clientset from config: %w", err)
-	}
+	require.NoErrorf(t, err, "failed to get clientset from config")
+
 	return clientset, nil
 }
 
-func inClusterConfig() *rest.Config {
+func inClusterConfig(t gocuke.TestingT) *rest.Config {
 	config, err := rest.InClusterConfig()
-	if err != nil {
-		e2eLogger.Fatal().AnErr("inClusterConfig", err)
-	}
+	require.NoError(t, err)
+
 	return config
 }
