@@ -181,16 +181,16 @@ func getClientset(t gocuke.TestingT) (*kubernetes.Clientset, error) {
 		e2eLogger.Info().Msgf("no default kubeconfig at %s; attempting to load InClusterConfig", kubeConfigPath)
 		config := inClusterConfig(t)
 		clientset, err := kubernetes.NewForConfig(config)
-		require.NoErrorf(t, err, "failed to get clientset from config")
+		require.NoErrorf(t, err, "failed to get clientSet from config")
 
 		return clientset, nil
 	}
 
 	e2eLogger.Info().Msgf("e2e tests loaded default kubeconfig located at %s", kubeConfigPath)
-	clientset, err := kubernetes.NewForConfig(kubeConfig)
-	require.NoErrorf(t, err, "failed to get clientset from config")
+	clientSet, err := kubernetes.NewForConfig(kubeConfig)
+	require.NoErrorf(t, err, "failed to get clientSet from config")
 
-	return clientset, nil
+	return clientSet, nil
 }
 
 func inClusterConfig(t gocuke.TestingT) *rest.Config {
