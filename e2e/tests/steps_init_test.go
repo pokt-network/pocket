@@ -48,17 +48,18 @@ type rootSuite struct {
 	// validatorA maps to suffix ID 001 of the kube pod that we use as our control agent
 }
 
-func init() {
-	cs, err := getClientset()
-	if err != nil {
-		e2eLogger.Fatal().Err(err).Msg("failed to get clientset")
-	}
-	clientset = cs
-	vkmap, err := pocketk8s.FetchValidatorPrivateKeys(clientset)
+func (s *rootSuite) Before() {
+	clientSet, err := getClientset(s)
+	require.NoErrorf(s, err, "failed to get clientset")
+
+	vkmap, err := pocketk8s.FetchValidatorPrivateKeys(clientSet)
 	if err != nil {
 		e2eLogger.Fatal().Err(err).Msg("failed to get validator key map")
 	}
-	validatorKeys = vkmap
+
+	s.validator = new(validatorPod)
+	s.clientset = clientSet
+	s.validatorKeys = vkmap
 }
 
 // TestFeatures runs the e2e tests specified in any .features files in this directory
