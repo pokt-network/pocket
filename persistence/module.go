@@ -17,7 +17,6 @@ import (
 
 var (
 	_ modules.PersistenceModule = &persistenceModule{}
-	_ modules.PersistenceModule = &persistenceModule{}
 
 	_ modules.PersistenceRWContext = &PostgresContext{}
 )
@@ -120,16 +119,18 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 	// 		     this forces the genesis state to be reloaded on every node startup until state
 	//           sync is implemented.
 	// Determine if we should hydrate the genesis db or use the current state of the DB attached
-	if shouldHydrateGenesis, err := m.shouldHydrateGenesisDb(); err != nil {
+	shouldHydrateGenesis, err := m.shouldHydrateGenesisDb()
+	if err != nil {
 		return nil, err
-	} else if shouldHydrateGenesis {
+	}
+	if shouldHydrateGenesis {
 		m.populateGenesisState(genesisState) // fatal if there's an error
 	} else {
 		// This configurations will connect to the SQL database and key-value stores specified
 		// in the configurations and connected to those.
 		logger.Global.Info().Msg("Loading state from disk...")
 	}
-
+	
 	return m, nil
 }
 
@@ -262,7 +263,7 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 
 	blockHeight, err := readCtx.GetMaximumBlockHeight()
 	if err != nil {
-		return true, nil
+		return false, err
 	}
 
 	if blockHeight > 0 {
