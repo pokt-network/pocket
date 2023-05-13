@@ -18,14 +18,17 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 		return false, err
 	}
 	res, err := p.txIndexer.GetByHash(hash)
-	if res == nil {
-		// check for not found
-		if err != nil && err.Error() == kvstore.BadgerKeyNotFoundError {
-			return false, nil
+	if res != nil {
+		if err != nil {
+			return false, err
 		}
-		return false, err
+		return true, nil
 	}
-	return true, err
+	// check for not found
+	if err != nil && err.Error() == kvstore.BadgerKeyNotFoundError {
+		return false, nil
+	}
+	return false, err
 }
 
 func (p *PostgresContext) GetMinimumBlockHeight() (latestHeight uint64, err error) {
