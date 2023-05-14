@@ -152,20 +152,15 @@ func (u *utilityModule) GetServicerModule() modules.Module {
 	return u.servicer
 }
 
-func (u *utilityModule) GetActorModuleNames() []string {
-	names := []string{}
-	for _, submodule := range u.actorModules {
-		names = append(names, submodule.GetModuleName())
-	}
-	return names
-}
-
 // validateActorModuleExclusivity validates that the actor modules are enabled in a valid combination.
 // TODO: There are probably more rules that need to be added here.
 func validateActorModuleExclusivity(m *utilityModule, cfg *configs.Config) error {
 	servicerCfg := cfg.Servicer
 	validatorCfg := cfg.Validator
-	actors := m.GetActorModuleNames()
+	actors := []string{}
+	for _, submodule := range m.actorModules {
+		actors = append(actors, submodule.GetModuleName())
+	}
 
 	if len(m.actorModules) > 1 {
 		// only case where this is allowed is if the node is a validator and a servicer
