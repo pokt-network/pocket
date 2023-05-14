@@ -74,7 +74,7 @@ spec:
               value: validator1
               # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
             - name: RPC_HOST
-              value: pocket-full-nodes
+              value: full-node-007-pocket
               # TECHDEBT(#678): debug client requires hostname to participate
               # in P2P networking.
             - name: POCKET_P2P_HOSTNAME

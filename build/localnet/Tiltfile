@@ -202,7 +202,7 @@ for x in range(localnet_config["servicers"]["count"]):
         set=[
             "global.postgresql.auth.postgresPassword=LocalNetPassword",
             "image.repository=pocket-image",
-            "privateKeySecretKeyRef.name=validators-private-keys",
+            "privateKeySecretKeyRef.name=servicers-private-keys",
             "privateKeySecretKeyRef.key=%s" % formatted_number,
             "genesis.preProvisionedGenesis.enabled=false",
             "genesis.externalConfigMap.name=v1-localnet-genesis",
@@ -224,7 +224,7 @@ for x in range(localnet_config["fishermen"]["count"]):
         set=[
             "global.postgresql.auth.postgresPassword=LocalNetPassword",
             "image.repository=pocket-image",
-            "privateKeySecretKeyRef.name=misc-private-keys",
+            "privateKeySecretKeyRef.name=fishermen-private-keys",
             "privateKeySecretKeyRef.key=%s" % formatted_number,
             "genesis.preProvisionedGenesis.enabled=false",
             "genesis.externalConfigMap.name=v1-localnet-genesis",
@@ -240,16 +240,15 @@ for x in range(localnet_config["fishermen"]["count"]):
 # Provisions full nodes
 for x in range(localnet_config["full_nodes"]["count"]):
     actor_number = actor_number + 1
-    formatted_node_number = local('printf "%03d" ' + str(node_number))
+    formatted_number = formatted_actor_number(actor_number)
 
     k8s_yaml(helm(root_dir + "/charts/pocket",
-        name="full-node-%s" % formatted_node_number,
-        namespace="default",
+        name="full-node-%s-pocket" % formatted_number,
         set=[
             "global.postgresql.auth.postgresPassword=LocalNetPassword",
             "image.repository=pocket-image",
             "privateKeySecretKeyRef.name=misc-private-keys",
-            "privateKeySecretKeyRef.key=%s" % formatted_node_number,
+            "privateKeySecretKeyRef.key=%s" % formatted_number,
             "genesis.preProvisionedGenesis.enabled=false",
             "genesis.externalConfigMap.name=v1-localnet-genesis",
             "genesis.externalConfigMap.key=genesis.json",
