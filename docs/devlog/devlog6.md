@@ -1,4 +1,4 @@
-# Pocket V1 DevLog Call #5 Notes <!-- omit in toc -->
+# Pocket V1 DevLog Call #6 Notes <!-- omit in toc -->
 
 - **Date and Time**: Tuesday April 4, 2023 16:00 UTC
 - **Location**: [Discord](https://discord.gg/pokt)
