@@ -39,8 +39,8 @@ Please mark the relevant option(s):
 ## Testing
 
 - [ ] `make develop_test`; if any code changes were made
-- [ ] E2E tests on LocalNet
-- [ ] E2E tests on DevNet
+- [ ] `make test_e2e` on [k8s LocalNet](https://github.com/pokt-network/pocket/blob/main/build/localnet/README.md); if any code changes were made
+- [ ] Passes E2E tests on [DevNet](https://pocketnetwork.notion.site/How-to-DevNet-ff1598f27efe44c09f34e2aa0051f0dd); if any code was changed
 - [ ] [Docker Compose LocalNet](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md); if any major functionality was changed or introduced
 - [ ] [k8s LocalNet](https://github.com/pokt-network/pocket/blob/main/build/localnet/README.md); if any infrastructure or configuration changes were made
 
