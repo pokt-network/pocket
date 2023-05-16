@@ -19,6 +19,8 @@ func MinimalTelemetryMock(
 
 	telemetryMock.EXPECT().Start().Return(nil).AnyTimes()
 	telemetryMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+	// TODO_THIS_COMMIT: which one ^ v ?
+	//telemetryMock.EXPECT().SetBus(busMock).Return().AnyTimes()
 	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
 	//busMock.RegisterModule(telemetryMock)
@@ -39,10 +41,8 @@ func WithTimeSeriesAgent(t gocuke.TestingT, telemetryMod modules.TelemetryModule
 
 	telemetryMock := telemetryMod.(*mock_modules.MockTelemetryModule)
 	timeSeriesAgentMock := BaseTimeSeriesAgentMock(t)
-	eventMetricsAgentMock := BaseEventMetricsAgentMock(t)
 
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
-	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
 	return telemetryMock
 }
 

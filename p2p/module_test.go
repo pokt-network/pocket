@@ -120,8 +120,14 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 			mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
 			mockBus := testutil.BaseBusMock(t, mockRuntimeMgr)
 
-			serviceURLs := p2p_testutil.SequentialServiceURLs(t, len(keys))
-			genesisStateMock := runtime_testutil.BaseGenesisStateMock(t, keys, serviceURLs)
+			// TODO_THIS_COMMIT: refactor
+			pubKeys := make([]cryptoPocket.PublicKey, len(keys))
+			for i, privKey := range keys {
+				pubKeys[i] = privKey.PublicKey()
+			}
+
+			serviceURLs := p2p_testutil.SequentialServiceURLs(t, len(pubKeys))
+			genesisStateMock := runtime_testutil.BaseGenesisStateMock(t, pubKeys, serviceURLs)
 			persistenceMock := persistence_testutil.BasePersistenceMock(t, mockBus, genesisStateMock)
 			mockBus.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 
