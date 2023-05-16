@@ -40,6 +40,8 @@
 
 ### 1. Trustless Relay
 
+#754
+
 ### 2. Delegated Relay
 
 ### 3. Rate Limited Application
@@ -47,6 +49,8 @@
 ## B. E2E QoS
 
 ### 1. QoS - Single Check
+
+#755
 
 ### 2. QoS - Test Score Submission
 
@@ -107,4 +111,3 @@ _NOTE: Actor may refer to any relevant actor and custom paths may need to be cre
 ### 4. Modifying Feature Value
 
 ## G. E2E Governance
-
