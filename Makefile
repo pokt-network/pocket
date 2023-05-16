@@ -111,8 +111,12 @@ go_clean_deps: ## Runs `go mod tidy` && `go mod vendor`
 go_lint: ## Run all linters that are triggered by the CI pipeline
 	docker run -t --rm -v $(shell pwd):/app -w /app golangci/golangci-lint:v1.51.1 golangci-lint run -v --timeout 2m
 
-.PHONY: gofmt
-gofmt: ## Format all the .go files in the project in place.
+.PHONY: go_imports
+go_imports: ## Group imports using rinchsan/gosimports
+	find . -name \*.go -not -path vendor  -exec gosimports -w {} \;
+
+.PHONY: go_fmt
+go_fmt: ## Format all the .go files in the project in place.
 	gofmt -w -s .
 
 .PHONY: install_cli_deps
