@@ -9,7 +9,10 @@ root_dir = os.path.dirname(tiltfile_dir + "/../..")
 localnet_config_path = root_dir + "/localnet_config.yaml"
 
 # Create localnet config file from defaults, and if some default configuration doesn't exist in it - populate with default values
-localnet_config_defaults = {"validators": {"count": 4}}
+localnet_config_defaults = {
+    "validators": {"count": 4},
+    "full_nodes": {"count": 1}
+}
 
 localnet_config_file = read_yaml(localnet_config_path, default=localnet_config_defaults)
 
@@ -93,9 +96,9 @@ local_resource(
     labels=['watchers']
 )
 
-# Builds and maintains the validator container image after the binary is built on local machine, restarts a process on code change
+# Builds and maintains the pocket container image after the binary is built on local machine, restarts a process on code change
 docker_build_with_restart(
-    "validator-image",
+    "pocket-image",
     root_dir,
     dockerfile_contents="""FROM debian:bullseye
 COPY bin/pocket-linux /usr/local/bin/pocket
@@ -141,7 +144,6 @@ COPY bin/client-linux /usr/local/bin/client
     ]
 )
 
-# TODO: https://github.com/tilt-dev/tilt/issues/3048
 # Pushes localnet manifests to the cluster.
 k8s_yaml(
     [
@@ -160,6 +162,8 @@ k8s_yaml(['manifests/cluster-manager.yaml'])
 k8s_resource('pocket-v1-cluster-manager', labels=['cluster-manager'])
 
 check_helm_dependencies_for_chart(root_dir + "/charts/pocket")
+
+# Provisions validators
 for x in range(localnet_config["validators"]["count"]):
     validator_number = x + 1
     formatted_validator_number = local('printf "%03d" ' + str(validator_number))
@@ -169,13 +173,35 @@ for x in range(localnet_config["validators"]["count"]):
         namespace="default",
         set=[
             "global.postgresql.auth.postgresPassword=LocalNetPassword",
-            "image.repository=validator-image",
+            "image.repository=pocket-image",
             "privateKeySecretKeyRef.name=validators-private-keys",
             "privateKeySecretKeyRef.key=%s" % formatted_validator_number,
             "genesis.preProvisionedGenesis.enabled=false",
             "genesis.externalConfigMap.name=v1-localnet-genesis",
             "genesis.externalConfigMap.key=genesis.json",
             "postgresql.primary.persistence.enabled=false",
+            "nodeType=validator",
+        ]
+    ))
+
+# Provisions full nodes
+for x in range(localnet_config["full_nodes"]["count"]):
+    node_number = x + 1
+    formatted_node_number = local('printf "%03d" ' + str(node_number))
+
+    k8s_yaml(helm(root_dir + "/charts/pocket",
+        name="full-node-%s" % formatted_node_number,
+        namespace="default",
+        set=[
+            "global.postgresql.auth.postgresPassword=LocalNetPassword",
+            "image.repository=pocket-image",
+            "privateKeySecretKeyRef.name=misc-private-keys",
+            "privateKeySecretKeyRef.key=%s" % formatted_node_number,
+            "genesis.preProvisionedGenesis.enabled=false",
+            "genesis.externalConfigMap.name=v1-localnet-genesis",
+            "genesis.externalConfigMap.key=genesis.json",
+            "postgresql.primary.persistence.enabled=false",
+            "nodeType=full",
         ]
     ))
 

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"crypto/md5" // nolint:gosec // Weak hashing function only used to check if the file has been changed
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -25,6 +27,14 @@ const (
 	// 4 threads takes 350-400MiB from a few tests which sounds acceptable.
 	debugKeybaseImportConcurrencyLimit = 4
 )
+
+type K8sSecret struct {
+	ApiVersion string            `yaml:"apiVersion"`
+	Kind       string            `yaml:"kind"`
+	MetaData   map[string]string `yaml:"metadata"`
+	Type       string            `yaml:"type"`
+	StringData map[string]string `yaml:"stringData"`
+}
 
 func main() {
 	if len(os.Args) < 3 {
@@ -55,7 +65,7 @@ func main() {
 func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 	fmt.Println("⚙️  Initializing debug Keybase...")
 
-	validatorKeysPairMap, err := parseValidatorPrivateKeysFromEmbeddedYaml(privateKeysYamlBytes)
+	validatorKeysPairMap, err := parsePrivateKeysFromEmbeddedYaml(privateKeysYamlBytes)
 	if err != nil {
 		panic(err)
 	}
@@ -143,24 +153,28 @@ func dumpKeybase(privateKeysYamlBytes []byte, targetFilePath string) {
 	fmt.Printf("✅ Keybase dumped in %s\n", targetFilePath)
 }
 
-func parseValidatorPrivateKeysFromEmbeddedYaml(privateKeysYamlBytes []byte) (map[string]string, error) {
+func parsePrivateKeysFromEmbeddedYaml(privateKeysYamlBytes []byte) ([]string, error) {
 	// Parse the YAML file and load into the config struct
-	var config struct {
-		ApiVersion string            `yaml:"apiVersion"`
-		Kind       string            `yaml:"kind"`
-		MetaData   map[string]string `yaml:"metadata"`
-		Type       string            `yaml:"type"`
-		StringData map[string]string `yaml:"stringData"`
-	}
-	if err := yaml.Unmarshal(privateKeysYamlBytes, &config); err != nil {
-		return nil, err
-	}
-	validatorKeysMap := make(map[string]string)
+	decoder := yaml.NewDecoder(bytes.NewReader(privateKeysYamlBytes))
+	keysList := make([]string, 0)
 
-	for id, privHexString := range config.StringData {
-		validatorKeysMap[id] = privHexString
+	for {
+		var secret K8sSecret
+
+		if err := decoder.Decode(&secret); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+
+		for _, privHexString := range secret.StringData {
+			keysList = append(keysList, privHexString)
+		}
+
 	}
-	return validatorKeysMap, nil
+
+	return keysList, nil
 }
 
 func cleanupStaleFiles(targetFolderPath string) {
