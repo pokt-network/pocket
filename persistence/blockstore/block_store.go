@@ -8,15 +8,20 @@ import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
 )
 
+// BlockStore is a key-value store that maps block heights to serialized
+// block structures.
+// * It manages the atomic state transitions for applying a Unit of Work.
 type BlockStore interface {
 	kvstore.KVStore
 }
 
+// Enforce blockStore to fulfill BlockStore
 var _ BlockStore = &blockStore{}
 
-// BlockStore wraps a KVStore to manage savepoint and rollback behavior.
-// * It provides the thin wrapper that manages the atomic state transitions
-// for the application of a Unit of Work.
+// blockStore wraps a KVStore to provide atomic commits
+// and implements `BlockStore`
+// * It's responsible for the lifecycle of savepoints and
+// rollbacks with its underlying KVStore.
 type blockStore struct {
 	kv kvstore.KVStore
 }
