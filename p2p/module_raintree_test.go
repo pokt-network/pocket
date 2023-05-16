@@ -6,6 +6,7 @@ import (
 	runtime_testutil "github.com/pokt-network/pocket/internal/testutil/runtime"
 	telemetry_testutil "github.com/pokt-network/pocket/internal/testutil/telemetry"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
 	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"log"
 	"os"
@@ -23,8 +24,6 @@ import (
 	"github.com/pokt-network/pocket/internal/testutil/constructors"
 	"github.com/pokt-network/pocket/internal/testutil/p2p"
 	persistence_testutil "github.com/pokt-network/pocket/internal/testutil/persistence"
-	"github.com/pokt-network/pocket/p2p/protocol"
-	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
@@ -237,19 +236,25 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 
 	genesisState := runtime_testutil.GenesisWithSequentialServiceURLs(t, pubKeys)
 
-	var wg sync.WaitGroup
+	var (
+		wg         sync.WaitGroup
+		busMocks   map[string]*mock_modules.MockBus
+		p2pModules map[string]modules.P2PModule
+	)
 	//busMocks := createMockBuses(t, runtimeConfigs, &wg)
 	busEventHandlerFactory := func(t gocuke.TestingT, busMock *mock_modules.MockBus) testutil.BusEventHandler {
 		return func(data *messaging.PocketEnvelope) {
-			// TODO: decide - is mutually exclusive w/ telemetry based wg.Done() below
+			p2pCfg := busMock.GetRuntimeMgr().GetConfig().P2P
+
 			// `p2pModule#handleNetworkData()` calls `modules.Bus#PublishEventToBus()`
-			// assumes that P2P module is the only event producer running during the test
-			t.Log("bus event received")
+			// assumes that P2P module is the only bus event producer running during
+			// the test.
+			t.Logf("[valId: %s:%d] Read", p2pCfg.Hostname, p2pCfg.Port)
 			wg.Done()
 		}
 	}
 
-	busMocks, _, p2pModules := constructors.NewBusesMocknetAndP2PModules(
+	busMocks, _, p2pModules = constructors.NewBusesMocknetAndP2PModules(
 		t, numValidators,
 		genesisState,
 		busEventHandlerFactory,
@@ -301,25 +306,6 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		//	wg.Done()
 		//}
 
-		//privKey, err := cryptoPocket.NewPrivateKey(busMock.GetRuntimeMgr().GetConfig().P2P.PrivateKey)
-		//require.NoError(t, err)
-		//
-		// TODO_THIS_COMMIT: move & de-dup
-		//libp2pPrivKey, err := libp2pCrypto.UnmarshalEd25519PrivateKey(privKey.Bytes())
-		//require.NoError(t, err)
-		//
-		//libp2pPeerID, err := libp2pPeer.IDFromPrivateKey(libp2pPrivKey)
-		//require.NoError(t, err)
-		// END TODO
-		//
-		//sURL := strings.Clone(serviceURL)
-		//host := libp2pNetworkMock.Host(libp2pPeerID)
-		//host.SetStreamHandler(protocol.PoktProtocolID, func(stream libp2pNetwork.Stream) {
-		//	t.Logf("[valID: %s] Read\n", sURL)
-		//	p2pModules[serviceURL].(*p2p.P2PModule).HandleStream(stream)
-		//	wg.Done()
-		//})
-
 		eventMetricsAgentMock := telemetry_testutil.PrepareEventMetricsAgentMock(t, serviceURL, &wg, expectedWrites)
 		busMock.GetTelemetryModule().(*mock_modules.MockTelemetryModule).EXPECT().
 			GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
@@ -334,34 +320,21 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		//	gomock.Any(),
 		//	//).Do(telemetryEventHandler).Times(expectedWrites)
 		//).Do(telemetryEventHandler).AnyTimes()
-		////telemetryMock.GetEventMetricsAgent().(*mock_modules.MockEventMetricsAgent).EXPECT().EmitEvent(
-		////	gomock.Eq("one"),
-		////	gomock.Eq("two"),
-		////	gomock.Eq("three"),
-		////).Do(telemetryEventHandler).Times(expectedWrites)
-		////telemetryMock.
-		////	GetEventMetricsAgent().
-		////	EmitEvent(
-		////		"one",
-		////		"two",
-		////		"three",
-		////	)
 	}
 
-	// Inject the connection and bus mocks into the P2P modules
-	//p2pModules := createP2PModules(t, busMocks, libp2pNetworkMock, serviceURLs)
-
+	// Start all p2p modules
 	for _, p2pMod := range p2pModules {
 		err := p2pMod.Start()
 		require.NoError(t, err)
 
-		sURL := strings.Clone(serviceURL)
-		mod := *p2pMod
-		p2pMod.host.SetStreamHandler(protocol.PoktProtocolID, func(stream libp2pNetwork.Stream) {
-			log.Printf("[valID: %s] Read\n", sURL)
-			(&mod).router.(*raintree.RainTreeRouter).HandleStream(stream)
-			wg.Done()
-		})
+		// TODO_THIS_COMMIT: decide where to `wg.Done()`
+		//sURL := strings.Clone(serviceURL)
+		//mod := *p2pMod
+		//p2pMod.host.SetStreamHandler(protocol.PoktProtocolID, func(stream libp2pNetwork.Stream) {
+		//	log.Printf("[valID: %s] Read\n", sURL)
+		//	(&mod).router.(*raintree.RainTreeRouter).HandleStream(stream)
+		//	wg.Done()
+		//})
 	}
 
 	// Wait for completion
@@ -378,18 +351,6 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
 	require.NoError(t, p2pMod.Broadcast(p))
-
-	//for _, busMock := range busMocks {
-	//	busMock.
-	//busMocks[testutil.GetKeys(busMocks)[0]].
-	//	GetTelemetryModule().
-	//	GetEventMetricsAgent().
-	//	EmitEvent(
-	//		"one",
-	//		"two",
-	//		"three",
-	//	)
-	//}
 }
 
 func extractNumericId(valId string) int64 {

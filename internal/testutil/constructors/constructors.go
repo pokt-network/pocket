@@ -66,13 +66,6 @@ func NewBusesMocknetAndP2PModules(
 		_ = telemetry_testutil.WithTimeSeriesAgent(
 			t, telemetry_testutil.MinimalTelemetryMock(t, busMock),
 		)
-		//_ = telemetry_testutil.BaseTelemetryMock(t, busMock)
-		//telemetryMock.GetEventMetricsAgent().(*mock_modules.MockEventMetricsAgent).EXPECT().EmitEvent(
-		//	gomock.Any(),
-		//	gomock.Any(),
-		//	gomock.Any(),
-		//	gomock.Any(),
-		//).AnyTimes()
 
 		// MUST register DNS before instantiating P2PModule
 		testutil.AddServiceURLZone(t, dnsSrv, serviceURL)

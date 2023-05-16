@@ -1,7 +1,6 @@
 package telemetry_testutil
 
 import (
-	"log"
 	"sync"
 	"testing"
 
@@ -28,13 +27,14 @@ func PrepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := mock_modules.NewMockEventMetricsAgent(ctrl)
 
+	// TODO_THIS_COMMIT: remove
 	logEvent := func(n, e string, l ...any) {
-		t.Logf("n: %s, e: %s, l: %v\n", n, e, l)
+		//t.Logf("n: %s, e: %s, l: %v\n", n, e, l)
 	}
 
-	//eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(logEvent).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(logEvent).AnyTimes()
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Eq(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).Do(func(n, e any, l ...any) {
-		log.Printf("[valId: %s] Write\n", valId)
+		t.Logf("[valId: %s] Write", valId)
 		wg.Done()
 	}).Do(logEvent).Times(expectedNumNetworkWrites)
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).Do(logEvent).AnyTimes()
