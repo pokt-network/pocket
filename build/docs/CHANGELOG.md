@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.42] - 2023-05-16
+
+- Added functionality to `cluster-manager` to delete crashed pods so StatefulSetController would recreate them with a new version.
+
 ## [0.0.0.41] - 2023-05-08
 
 - Updated Dockerfiles using outdated go version to 1.19

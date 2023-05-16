@@ -62,7 +62,7 @@ func deleteCrashedPods(pod *corev1.Pod, stsClient appstypedv1.StatefulSetInterfa
 				for pi := range pod.Status.ContainerStatuses {
 					containerStatus := pod.Status.ContainerStatuses[pi]
 
-					// Only proceed if container is in some fort of Err status
+					// Only proceed if container is in some sort of Err status
 					if containerStatus.State.Waiting != nil &&
 						(strings.HasPrefix(containerStatus.State.Waiting.Reason, "Err") ||
 							strings.HasSuffix(containerStatus.State.Waiting.Reason, "BackOff")) {
