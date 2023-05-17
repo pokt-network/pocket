@@ -9,10 +9,7 @@ This document is meant to be a supplement to the living specification of [1.0 Po
   - [Code Organization](#code-organization)
 - [Diagrams](#diagrams)
   - [Consensus Lifecycle](#consensus-lifecycle)
-  - [Block Validation Process](#block-validation-process)
-  - [State Sync Process](#state-sync-process)
-- [Testing](#testing)
-  - [Running Unit Tests](#running-unit-tests)
+  - [Block Generation Process](#block-generation-process)
 
 ## Interface
 
@@ -95,11 +92,28 @@ flowchart TD
   J1 --> A
 ```
 
-### Block Validation Process
+### Block Generation Process
+```mermaid
+sequenceDiagram
+    participant Leader
+    participant Replicas
+    Note over Leader,Replicas: Leader Election
+    Leader->>Replicas: Propose(block)
+    Note over Replicas: Validate proposed block
+    Replicas-->>Leader: Prepare(block)
+    Note over Leader: Receives Prepare messages from a quorum of Replicas
+    Leader->>Replicas: Pre-Commit(block, Prepare messages)
+    Note over Replicas: Validate Pre-Commit message
+    Replicas-->>Leader: Commit(block)
+    Note over Leader: Receives Commit messages from a quorum of Replicas
+    Leader->>Replicas: Notify(block, Commit messages)
+    Note over Replicas: Add block to local blockchain copy
+    Note over Leader,Replicas: New Leader Election
+```mermaid
 
 
 ### State Sync Process
-
+```mermaid
 graph TD
     A(Start testing) --> Z(Add new validators)
     Z --> B[Trigger Next View]
@@ -114,7 +128,6 @@ graph TD
     J -->|No| B
     G --> B
 
-
     subgraph Notes
        note1>NOTE: BFT requires > 2/3 validators<br>in same round & height, voting for proposal.]
        note2>NOTE: Syncing validators request blocks from the network.]
@@ -122,6 +135,7 @@ graph TD
 
     C --> note1
     J --> note2
+```mermaid
 
 ## Testing
 
