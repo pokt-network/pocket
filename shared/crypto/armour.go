@@ -1,25 +1,24 @@
 package crypto
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
 	crand "crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
-	"strings"
 
+	"golang.org/x/crypto/nacl/secretbox"
 	"golang.org/x/crypto/scrypt"
 )
 
 const (
 	// Encryption params
-	kdf          = "scrypt"
-	randBz       = 16
-	AESNonceSize = 12
+	kdf                = "scrypt"
+	randBz             = 16
+	SecretBoxNonceSize = 24
 	// Scrypt params
 	n    = 32768 // CPU/memory cost param; power of 2 greater than 1
 	r    = 8     // r * p < 2³⁰
@@ -31,7 +30,7 @@ const (
 
 // Errors
 var (
-	ErrorWrongPassphrase = errors.New("Can't decrypt private key: wrong passphrase")
+	ErrorWrongPassphrase = errors.New("cannot decrypt private key: wrong passphrase")
 )
 
 // Armoured Private Key struct with fields to unarmour it later
@@ -92,7 +91,7 @@ func encryptPrivKey(privKey PrivateKey, passphrase string) (saltBz, encBz []byte
 
 	// Encrypt using AES
 	privKeyHexString := privKey.String()
-	encBz, err = encryptAESGCM(encryptionKey, []byte(privKeyHexString))
+	encBz, err = encryptCipher(encryptionKey, []byte(privKeyHexString))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -111,22 +110,22 @@ func unarmourDecryptPrivKey(armourStr, passphrase string) (privKey PrivateKey, e
 
 	// Check the ArmouredKey for the correct parameters on kdf and salt
 	if ak.Kdf != kdf {
-		return nil, fmt.Errorf("Unrecognized KDF type: %v", ak.Kdf)
+		return nil, fmt.Errorf("unrecognized KDF type: %v", ak.Kdf)
 	}
 	if ak.Salt == "" {
-		return nil, fmt.Errorf("Missing salt bytes")
+		return nil, fmt.Errorf("missing salt bytes")
 	}
 
 	// Decoding the salt
 	saltBz, err := hex.DecodeString(ak.Salt)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding salt: %v", err.Error())
+		return nil, fmt.Errorf("error decoding salt: %v", err.Error())
 	}
 
 	// Decoding the "armoured" ciphertext stored in base64
 	encBz, err := base64.RawStdEncoding.DecodeString(ak.CipherText)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding ciphertext: %v", err.Error())
+		return nil, fmt.Errorf("error decoding ciphertext: %v", err.Error())
 	}
 
 	// Decrypt the actual privkey with the parameters
@@ -144,7 +143,7 @@ func decryptPrivKey(saltBz, encBz []byte, passphrase string) (PrivateKey, error)
 	}
 
 	// Decrypt using AES
-	privKeyRawHexBz, err := decryptAESGCM(encryptionKey, encBz)
+	privKeyRawHexBz, err := decryptCipher(encryptionKey, encBz)
 	if err != nil {
 		return nil, err
 	}
@@ -162,39 +161,30 @@ func decryptPrivKey(saltBz, encBz []byte, passphrase string) (PrivateKey, error)
 	return pk, nil
 }
 
-// Encrypt using AES-256 GCM Cipher
-func encryptAESGCM(key, plaintext []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
+// Encrypt using NaCl SecretBox (XSalsa20 + Poly1305)
+func encryptCipher(key, plaintext []byte) ([]byte, error) {
+	var nonce [SecretBoxNonceSize]byte
+	if _, err := io.ReadFull(crand.Reader, nonce[:]); err != nil {
 		return nil, err
 	}
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, err
-	}
-	nonce := key[:AESNonceSize]
-	encBz := gcm.Seal(nil, nonce, plaintext, nil)
+	var secretKey [klen]byte
+	copy(secretKey[:], key)
+	encBz := secretbox.Seal(nonce[:], plaintext, &nonce, &secretKey)
 	return encBz, nil
 }
 
-// Decrypt using AES-256 GCM Cipher
-func decryptAESGCM(key, encBz []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, err
-	}
-	nonce := key[:AESNonceSize]
-	result, err := gcm.Open(nil, nonce, encBz, nil)
-	if err != nil && strings.Contains(err.Error(), "authentication failed") {
+// Decrypt using NaCl SecretBox
+func decryptCipher(key, encBz []byte) ([]byte, error) {
+	var secretKey [klen]byte
+	copy(secretKey[:], key)
+	var decryptNonce [SecretBoxNonceSize]byte
+	copy(decryptNonce[:], encBz[:SecretBoxNonceSize])
+	decrypted, ok := secretbox.Open(nil, encBz[SecretBoxNonceSize:], &decryptNonce, &secretKey)
+	if !ok {
 		return nil, ErrorWrongPassphrase
-	} else if err != nil {
-		return nil, fmt.Errorf("Can't Decrypt Using AES : %s \n", err)
 	}
-	return result, nil
+
+	return decrypted, nil
 }
 
 // Use OS randomness
