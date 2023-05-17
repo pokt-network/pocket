@@ -6,13 +6,19 @@ import (
 	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/utils"
 )
 
 // BlockStore is a key-value store that maps block heights to serialized
 // block structures.
 // * It manages the atomic state transitions for applying a Unit of Work.
 type BlockStore interface {
-	kvstore.KVStore
+	kvstore.KVStore // TODO_IN_THIS_COMMIT remove this eventually and expose only the two below
+
+	GetBlock(height uint64) (*coreTypes.Block, error)
+	StoreBlock(height uint64, block *coreTypes.Block) error
 }
 
 // Enforce blockStore to fulfill BlockStore
@@ -41,6 +47,31 @@ func NewBlockStore(path string) (BlockStore, error) {
 	return &blockStore{
 		kv: kv,
 	}, nil
+}
+
+// StoreBlock takes a coreType Block and stores it.
+func (bs *blockStore) StoreBlock(height uint64, block *coreTypes.Block) error {
+	b, err := codec.GetCodec().Marshal(block)
+	if err != nil {
+		return err
+	}
+	// TECHDEBT add a proper logger to blockstore
+	// bs.logger.Info().Uint64("height", block.BlockHeader.Height).Msg("Storing block in block store")
+	return bs.kv.Set(utils.HeightToBytes(height), b)
+}
+
+// GetBlock returns a coreTypes Block at the given height.
+func (bs *blockStore) GetBlock(height uint64) (*coreTypes.Block, error) {
+	var block coreTypes.Block
+	blockBytes, err := bs.kv.Get(utils.HeightToBytes(height))
+	if err != nil {
+		return nil, err
+	}
+	err = codec.GetCodec().Unmarshal(blockBytes, &block)
+	if err != nil {
+		return nil, err
+	}
+	return &block, nil
 }
 
 // Set adds a block into the blockstore.

@@ -4,10 +4,7 @@ import (
 	"fmt"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/codec"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/utils"
 )
 
 // This module is responsible for handling requests and business logic that advertises and shares
@@ -72,8 +69,10 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	}
 
 	// get block from the persistence module
-	block, err := m.getBlockAtHeight(blockReq.Height)
+	blockStore := m.GetBus().GetPersistenceModule().GetBlockStore()
+	block, err := blockStore.GetBlock(blockReq.Height)
 	if err != nil {
+		m.logger.Error().Err(typesCons.ErrConsensusMempoolFull).Msg(typesCons.DisregardHotstuffMessage)
 		return err
 	}
 
@@ -87,24 +86,4 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	}
 
 	return m.sendStateSyncMessage(&stateSyncMessage, cryptoPocket.AddressFromString(clientPeerAddress))
-}
-
-// Get a block from persistence module given block height
-func (m *stateSync) getBlockAtHeight(blockHeight uint64) (*coreTypes.Block, error) {
-	blockStore := m.GetBus().GetPersistenceModule().GetBlockStore()
-	heightBytes := utils.HeightToBytes(blockHeight)
-
-	blockBytes, err := blockStore.Get(heightBytes)
-	if err != nil {
-		m.logger.Error().Err(typesCons.ErrConsensusMempoolFull).Msg(typesCons.DisregardHotstuffMessage)
-		return nil, err
-	}
-
-	var block coreTypes.Block
-	err = codec.GetCodec().Unmarshal(blockBytes, &block)
-	if err != nil {
-		return &coreTypes.Block{}, err
-	}
-
-	return &block, nil
 }
