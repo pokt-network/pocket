@@ -13,9 +13,8 @@ import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
-	"github.com/stretchr/testify/require"
-
 	"github.com/pokt-network/pocket/runtime/defaults"
+	"github.com/stretchr/testify/require"
 )
 
 const dhtUpdateSleepDuration = time.Millisecond * 500
