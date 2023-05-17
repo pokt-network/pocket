@@ -10,6 +10,7 @@
 1. Add a summary of the change including: motivation, reasons, context, dependencies, etc...
 2. If applicable, specify the key files that should be looked at.
 -->
+reviewpad:summary
 
 ## Issue
 
