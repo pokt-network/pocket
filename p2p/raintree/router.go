@@ -2,11 +2,17 @@ package raintree
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"time"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
+	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
+	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -19,8 +25,13 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	telemetry "github.com/pokt-network/pocket/telemetry"
-	"google.golang.org/protobuf/proto"
 )
+
+// TECHDEBT(#629): configure timeouts. Consider security exposure vs. real-world conditions.
+// TECHDEBT(#629): parameterize and expose via config.
+// readStreamTimeout is the duration to wait for a read operation on a
+// stream to complete, after which the stream is closed ("timed out").
+const readStreamTimeout = time.Second * 10
 
 var (
 	_ typesP2P.Router            = &rainTreeRouter{}
@@ -34,7 +45,9 @@ type rainTreeRouter struct {
 	base_modules.IntegratableModule
 
 	logger *modules.Logger
-	// host represents a libp2p network node, it encapsulates a libp2p peerstore
+	// handler is the function to call when a message is received.
+	handler typesP2P.RouterHandler
+	// host represents a libp2p libp2pNetwork node, it encapsulates a libp2p peerstore
 	// & connection manager. `libp2p.New` configures and starts listening
 	// according to options.
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
@@ -66,6 +79,7 @@ func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (type
 		pstoreProvider:        cfg.PeerstoreProvider,
 		currentHeightProvider: cfg.CurrentHeightProvider,
 		logger:                routerLogger,
+		handler:               cfg.Handler,
 	}
 	rtr.SetBus(bus)
 
@@ -73,6 +87,7 @@ func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (type
 		return nil, err
 	}
 
+	rtr.host.SetStreamHandler(protocol.PoktProtocolID, rtr.handleStream)
 	return typesP2P.Router(rtr), nil
 }
 
@@ -181,7 +196,6 @@ func (rtr *rainTreeRouter) sendInternal(data []byte, address cryptoPocket.Addres
 	return nil
 }
 
-// HandleNetworkData implements the respective member of `typesP2P.Router`.
 func (rtr *rainTreeRouter) HandleNetworkData(data []byte) ([]byte, error) {
 	blockHeightInt := rtr.GetBus().GetConsensusModule().CurrentHeight()
 	blockHeight := fmt.Sprintf("%d", blockHeightInt)
@@ -282,6 +296,96 @@ func (rtr *rainTreeRouter) Size() int {
 	return rtr.peersManager.GetPeerstore().Size()
 }
 
+// handleStream ensures the peerstore contains the remote peer and then reads
+// the incoming stream in a new go routine.
+func (rtr *rainTreeRouter) handleStream(stream libp2pNetwork.Stream) {
+	rtr.logger.Debug().Msg("handling incoming stream")
+	peer, err := utils.PeerFromLibp2pStream(stream)
+	if err != nil {
+		rtr.logger.Error().Err(err).
+			Str("address", peer.GetAddress().String()).
+			Msg("parsing remote peer identity")
+
+		if err = stream.Reset(); err != nil {
+			rtr.logger.Error().Err(err).Msg("resetting stream")
+		}
+		return
+	}
+
+	if err := rtr.AddPeer(peer); err != nil {
+		rtr.logger.Error().Err(err).
+			Str("address", peer.GetAddress().String()).
+			Msg("adding remote peer to router")
+	}
+
+	go rtr.readStream(stream)
+}
+
+// readStream reads the incoming stream, extracts the serialized `PocketEnvelope`
+// data from the incoming `RainTreeMessage`, and passes it to the application by
+// calling the configured `rtr.handler`.
+func (rtr *rainTreeRouter) readStream(stream libp2pNetwork.Stream) {
+	// Time out if no data is sent to free resources.
+	if err := stream.SetReadDeadline(newReadStreamDeadline()); err != nil {
+		// NB: tests using libp2p's `mocknet` rely on this not returning an error.
+		// `SetReadDeadline` not supported by `mocknet` streams.
+		rtr.logger.Debug().Err(err).Msg("setting stream read deadline")
+	}
+
+	// debug logging: stream scope stats
+	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.27.0/core/network#StreamScope)
+	if err := utils.LogScopeStatFactory(
+		&logger.Global.Logger,
+		"stream scope (read-side)",
+	)(stream.Scope()); err != nil {
+		rtr.logger.Debug().Err(err).Msg("logging stream scope stats")
+	}
+	// ---
+
+	// read stream
+	data, err := io.ReadAll(stream)
+	if err != nil {
+		rtr.logger.Error().Err(err).Msg("reading from stream")
+		if err := stream.Reset(); err != nil {
+			rtr.logger.Debug().Err(err).Msg("resetting stream (read-side)")
+		}
+		return
+	}
+
+	// done reading; reset to signal this to remote peer
+	if err := stream.Reset(); err != nil {
+		rtr.logger.Debug().Err(err).Msg("resetting stream (read-side)")
+	}
+
+	// debug logging
+	remotePeer, err := utils.PeerFromLibp2pStream(stream)
+	if err != nil {
+		rtr.logger.Debug().Err(err).Msg("getting remote remotePeer")
+	} else {
+		utils.LogIncomingMsg(rtr.logger, rtr.getHostname(), remotePeer)
+	}
+	// ---
+
+	// TODO_THIS_COMMIT: refactor
+	// extract `PocketEnvelope` from `RainTreeMessage` (& continue propagation)
+	appMsgData, err := rtr.HandleNetworkData(data)
+	if err != nil {
+		rtr.logger.Error().Err(err).Msg("handling network data")
+		return
+	}
+
+	// There was no error, but we don't need to forward this to the app-specific bus.
+	// For example, the message has already been handled by the application.
+	if appMsgData == nil {
+		return
+	}
+
+	// call configured handler to forward to app-specific bus
+	if err := rtr.handler(appMsgData); err != nil {
+		rtr.logger.Error().Err(err).Msg("handling network data")
+	}
+}
+
 // shouldSendToTarget returns false if target is self.
 func shouldSendToTarget(target target) bool {
 	return !target.isSelf
@@ -310,4 +414,10 @@ func (rtr *rainTreeRouter) setupPeerManager(pstore typesP2P.Peerstore) (err erro
 
 func (rtr *rainTreeRouter) getHostname() string {
 	return rtr.GetBus().GetRuntimeMgr().GetConfig().P2P.Hostname
+}
+
+// newReadStreamDeadline returns a future deadline
+// based on the read stream timeout duration.
+func newReadStreamDeadline() time.Time {
+	return time.Now().Add(readStreamTimeout)
 }
