@@ -242,10 +242,7 @@ refresh_debug_keybase: ## Refreshes the debug keybase with the latest keys from 
 
 .PHONY: clean_mocks
 clean_mocks: ## Use `clean_mocks` to delete mocks before recreating them. Also useful to cleanup code that was generated from a different branch
-	$(eval modules_dir = "shared/modules")
-	find ${modules_dir}/mocks -type f ! -name "mocks.go" -exec rm {} \;
-	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
-	find ${p2p_type_mocks_dir} -type f ! -name "mocks.go" -exec rm {} \;
+	find . -type f ! -name "mocks.go" -not -path "./vendor/*" -name "*_mock.go" -exec rm {} \;
 
 .PHONY: mockgen
 mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
@@ -253,7 +250,7 @@ mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purpose
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
-	$(eval DIRS = p2p persistence)
+	$(eval DIRS = persistence p2p)
 	for dir in $(DIRS); do \
 		echo "Processing $$dir mocks..."; \
         find $$dir/types/mocks -type f ! -name "mocks.go" -exec rm {} \;; \

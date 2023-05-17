@@ -172,6 +172,7 @@ func TestP2pModule_WithHostOption_Restart(t *testing.T) {
 		PrivateKey: privKey.String(),
 		P2P: &configs.P2PConfig{
 			PrivateKey: privKey.String(),
+			MaxNonces:  defaults.DefaultP2PMaxNonces,
 		},
 	}).AnyTimes()
 	mockBus.EXPECT().GetRuntimeMgr().Return(mockRuntimeMgr).AnyTimes()

@@ -16,3 +16,21 @@ spec:
     - port: 9000
       targetPort: 9000
       name: metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pocket-full-nodes
+  annotations:
+    prometheus.io/scrape: "false"
+    prometheus.io/port: "9000"
+spec:
+  selector:
+    pokt.network/purpose: full
+  ports:
+    - port: 50832
+      targetPort: 50832
+      name: rpc
+    - port: 9000
+      targetPort: 9000
+      name: metrics

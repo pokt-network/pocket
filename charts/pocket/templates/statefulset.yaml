@@ -9,7 +9,7 @@ metadata:
   labels:
     {{- include "pocket.labels" . | nindent 4 }}
 spec:
-  replicas: 1 # One StatefulSet = 1 validator
+  replicas: 1
   selector:
     matchLabels:
       {{- include "pocket.selectorLabels" . | nindent 6 }}
@@ -63,21 +63,23 @@ spec:
             - containerPort: 50832
               name: rpc
           env:
+          {{ if or .Values.privateKeySecretKeyRef.name .Values.privateKeySecretKeyRef.key }}
             - name: POCKET_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.privateKeySecretKeyRef.name }}
+                  name: {{ .Values.privateKeySecretKeyRef.name | quote }}
                   key: {{ .Values.privateKeySecretKeyRef.key | quote }}
             - name: POCKET_CONSENSUS_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.privateKeySecretKeyRef.name }}
+                  name: {{ .Values.privateKeySecretKeyRef.name | quote }}
                   key: {{ .Values.privateKeySecretKeyRef.key | quote }}
             - name: POCKET_P2P_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.privateKeySecretKeyRef.name }}
+                  name: {{ .Values.privateKeySecretKeyRef.name | quote }}
                   key: {{ .Values.privateKeySecretKeyRef.key | quote }}
+          {{ end }}
             - name: POSTGRES_USER
             {{ include "pocket.postgresqlUserValueOrSecretRef" . | nindent 14 }}
             - name: POSTGRES_PASSWORD
@@ -111,8 +113,8 @@ spec:
             - name: genesis-volume
               mountPath: /pocket/configs/genesis.json
               subPath: {{ if .Values.genesis.preProvisionedGenesis.enabled }}genesis.json{{ else }}{{ .Values.genesis.externalConfigMap.key }}{{ end }}
-            - name: validator-storage
-              mountPath: /pocket/validator
+            - name: data-dir
+              mountPath: /pocket/data
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
@@ -134,7 +136,7 @@ spec:
       - name: genesis-volume
         configMap:
           name: {{ include "pocket.genesisConfigMap" . }}
-      - name: validator-storage
+      - name: data-dir
       {{- if .Values.persistence.enabled }}
         persistentVolumeClaim:
           claimName: {{ default (printf "%s-%s" (include "pocket.fullname" .) "data") .Values.persistence.existingClaim }}
