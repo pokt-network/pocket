@@ -10,6 +10,8 @@ This document is meant to be a supplement to the living specification of [1.0 Po
 - [Diagrams](#diagrams)
   - [Consensus Lifecycle](#consensus-lifecycle)
   - [Block Generation Process](#block-generation-process)
+  - [Block Validation Process](#block-validation-process)
+  - [State Sync Process](#state-sync-process)
 
 ## Interface
 
@@ -109,8 +111,34 @@ sequenceDiagram
     Leader->>Replicas: Notify(block, Commit messages)
     Note over Replicas: Add block to local blockchain copy
     Note over Leader,Replicas: New Leader Election
-```mermaid
+```
 
+### Block Validation Process
+```mermaid
+graph TD
+    A[Receive Block Proposal from Leader]
+    B[Check Block Structure]
+    C[Check Block Hash]
+    D[Check Previous Block Reference]
+    E[Check Transactions]
+    F[Check Block Creator's Signature]
+    G[Check Timestamp]
+    H[Block is Valid - Proceed with Prepare message]
+    I[Block is Invalid - Reject Block]
+    A-->B
+    B-->C
+    C-->D
+    D-->E
+    E-->F
+    F-->G
+    G-->H
+    B-.->I
+    C-.->I
+    D-.->I
+    E-.->I
+    F-.->I
+    G-.->I
+```
 
 ### State Sync Process
 ```mermaid
