@@ -52,7 +52,11 @@ func initDeleteCrashedPods(client *kubernetes.Clientset) {
 	}
 }
 
-func deleteCrashedPods(pod *corev1.Pod, stsClient appstypedv1.StatefulSetInterface, podClient coretypedv1.PodInterface) error {
+func deleteCrashedPods(
+	pod *corev1.Pod,
+	stsClient appstypedv1.StatefulSetInterface,
+	podClient coretypedv1.PodInterface,
+) error {
 	// If annotation is present, we monitor the Pod
 	if containerToMonitor, ok := pod.Annotations["cluster-manager-delete-on-crash-container"]; ok {
 		for ci := range pod.Spec.Containers {
