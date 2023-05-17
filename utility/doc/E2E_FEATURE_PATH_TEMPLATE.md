@@ -1,6 +1,6 @@
 # E2E Feature Path <!-- omit in toc -->
 
-_IMPROVE: Once we've completed the entire process at least once, we'll add links to each step._
+_IMPROVE(olshansky): Once we've completed the entire process at least once, we'll add links to each step._
 
 - [Introduction \& Goals](#introduction--goals)
 - [Developer Journey](#developer-journey)
@@ -82,7 +82,7 @@ Adhering to the GitHub template provided [here](https://github.com/pokt-network/
 
 **Objective**: `Implement MVP E2E Feature Path <Letter>.<Number>: <Name>`
 
-**Origin Document**: _Specify the details from the [origin document[#origin-doc] underneath_
+**Origin Document**: _Specify the details from the [Origin Document](#origin-document) below_
 
 **Goals**:
 
@@ -91,19 +91,24 @@ Adhering to the GitHub template provided [here](https://github.com/pokt-network/
 
 **Deliverables**:
 
-- **POC**:
-  - [ ] A POC SPIKE to be closed out and split out into multiple PRs
-- **MVP**:
-  - [ ] A PR that adds or modifies relevant structures and interfaces; such as [shared/core/types/proto](../../shared/core/types/proto), [shared/modules](../../shared/modules), etc
-  - [ ] A PR that materializes an MVP of the feature along with unit tests
-  - [ ] A PR that introduces a new E2E tests with **one happy** and **one sad** path scenarios as described in the origin document (refer to [e2e/README.md](../../e2e/e2e/README.md)); this may require additions to the [cli](https://github.com/pokt-network/pocket/tree/main/app/client)
-  - [ ] A PR that updates all pertinent documentation
-- **PROD**:
-  - [ ] One or more subsequent GitHub issues that track future work including, but not limited to:
-    - Enhancing test coverage
-    - Adding subsequent features
-    - Patching hacks or workarounds
-    - Enabling your [imagination](https://github.com/pokt-network/pocket/assets/1892194/6aff9004-8d3b-48e8-b6d5-9b67ac266e3d)!
+**POC**:
+
+- [ ] A POC SPIKE to be closed out and split out into multiple PRs
+
+**MVP**:
+
+- [ ] A PR that adds or modifies relevant structures and interfaces; such as [shared/core/types/proto](../../shared/core/types/proto), [shared/modules](../../shared/modules), etc
+- [ ] A PR that materializes an MVP of the feature along with unit tests
+- [ ] A PR that introduces a new E2E tests with **one happy** and **one sad** path scenarios as described in the origin document (refer to [e2e/README.md](../../e2e/e2e/README.md)); this may require additions to the [cli](https://github.com/pokt-network/pocket/tree/main/app/client)
+- [ ] A PR that updates all pertinent documentation
+
+**PROD**:
+
+- [ ] One or more subsequent GitHub issues that track future work including, but not limited to:
+  - Enhancing test coverage
+  - Adding subsequent features
+  - Patching hacks or workarounds
+  - Enabling your [imagination](https://github.com/pokt-network/pocket/assets/1892194/6aff9004-8d3b-48e8-b6d5-9b67ac266e3d)!
 
 #### Origin Document
 
@@ -168,7 +173,7 @@ Adhering to the GitHub template provided [here](https://github.com/pokt-network/
 - Use natural language (long-form or bullet points) to define:
   - One (or more) HAPPY E2E path(s) from start to end with all the relevant details
   - One (or more) SAD E2E path(s) from start to end with all the relevant details
-  - **Guiding template (WIP)**: A [User | Actor | Source | etc] [performs an action] [where | when | at] [some specific context or state is guaranteed] and [the expected result is...].
+  - **[IMPROVE] Guiding template**: A [User | Actor | Source | etc] [performs an action] [where | when | at] [some specific context or state is guaranteed] and [the expected result is...].
     - **Example**: An Application requests the account balance of a specific address at a specific height when there is a Servicer staked for the Ethereum RelayChain in the same GeoZone, and receives a successful response.
 - _NOTE: Keep in mind that these tests will be used to:_
   - _Interact with our [CLI](../../app/client/cli/) and [E2E testing framework](../../e2e) but do not design it for that_
@@ -209,3 +214,5 @@ One or more follow-up GitHub issues that track follow-up work that my include, b
 - Adding subsequent features
 - Fixing hacks
 - Your [imagination](https://github.com/pokt-network/pocket/assets/1892194/6aff9004-8d3b-48e8-b6d5-9b67ac266e3d)!
+
+<!-- GITHUB_WIKI: utility/e2e_feature_path_template -->
