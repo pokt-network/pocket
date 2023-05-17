@@ -5,13 +5,12 @@ This document is meant to be a supplement to the living specification of [1.0 Po
 ## Table of Contents <!-- omit in toc -->
 
 - [Interface](#interface)
-- [Consensus Lifecycle](#consensus-lifecycle)
-- [Block Validation Process](#block-validation-process)
-- [State Sync Process](#state-sync-process)
-- [](#)
 - [Implementation](#implementation)
-  - [Code Architecture](#code-architecture)
   - [Code Organization](#code-organization)
+- [Diagrams](#diagrams)
+  - [Consensus Lifecycle](#consensus-lifecycle)
+  - [Block Validation Process](#block-validation-process)
+  - [State Sync Process](#state-sync-process)
 - [Testing](#testing)
   - [Running Unit Tests](#running-unit-tests)
 
@@ -19,8 +18,66 @@ This document is meant to be a supplement to the living specification of [1.0 Po
 
 This module aims to implement the interface specified in `pocket/shared/modules/consensus_module.go` using the specification above.
 
+## Implementation
 
-## Consensus Lifecycle
+### Code Organization
+
+```bash
+consensus
+├── doc
+│   ├── CHANGELOG.md                        
+│   ├── PROTOCOL_STATE_SYNC.md              # State sync protocol definition
+├── e2e_tests
+│   ├── hotstuff_test.go                    # Hotstuff consensus tests
+│   ├── pacemaker_test.go                   # Pacemaker module tests
+│   ├── state_sync_test.go                  # State sync tests
+│   ├── utils_test.go                       # test utils
+├── leader_election                         
+│   ├── sortition                           
+│       └── sortition_test.go               # Sortition tests
+│       └── sortition.go                    # Cryptographic sortition implementation
+│   ├── vrf                                 
+│       └── errors.go                       
+│       └── vrf_test.go                     # VRF tests
+│       └── vrf.go                          # VRF implementation
+│   ├── module.go                           # Leader election module implementation
+├── pacemaker                                  
+│   ├── debug.go                            
+│   ├── module.go                           # Pacemaker module implementation
+├── state_sync                                 
+│   ├── helpers.go                          
+│   ├── interfaces.go                       
+│   ├── module.go                           # State sync module implementation
+│   ├── server.go                           # State sync server functions
+├── telemetry   
+│   ├── metrics.go                          
+├── types
+│   ├── proto                               # Proto3 messages for generated types
+│   ├── actor_mapper_test.go
+│   ├── actor_mapper.go           
+│   ├── messages.go                         # Consensus message definitions 
+│   ├── types.go                            # Consensus type definitions
+├── block.go                                 
+├── debugging.go                            # Debug function implementation
+├── events.go                                
+├── fsm_handler.go                          # FSM events handler implementation
+├── helpers.go                              
+├── hotstuff_handler.go                     
+├── hotstuff_leader.go                      # Hotstuff message handlers for Leader
+├── hotstuff_mempool_test.go                # Mempool tests
+├── hotstuff_mempool.go                     # Hotstuff transaction mempool implementation
+├── hotstuff_replica.go                     # Hotstuff message handlers for Replica
+├── messages.go                             # Hotstuff message helpers
+├── module_consensus_debugging.go            
+├── module_consensus_pacemaker.go           # Pacemaker module helpers
+├── module_consensus_state_sync.go          # State sync module helpers
+├── module.go                               # The implementation of the Consensus Interface
+├── README.md                               # Self link to this README
+├── state_sync_handler.go                   # State sync message handler
+```
+
+## Diagrams
+### Consensus Lifecycle
 
 ```mermaid
 flowchart TD
@@ -30,7 +87,7 @@ flowchart TD
   D1 --> E1[Create Proposals]
   D2 --> E2[Validate Proposals]
   E1 --> F1[Aggregate Votes]
-  E2 -->  F2[Vote on Proposals]
+  E2 --> F2[Vote on Proposals]
   F1 --> G1[Quorum and Commit Block]
   F2 --> G2[Commit Block]
   G1 --> J1[End Round]
@@ -38,10 +95,10 @@ flowchart TD
   J1 --> A
 ```
 
-## Block Validation Process
+### Block Validation Process
 
 
-## State Sync Process
+### State Sync Process
 
 graph TD
     A(Start testing) --> Z(Add new validators)
@@ -65,37 +122,6 @@ graph TD
 
     C --> note1
     J --> note2
-
-
-## 
-
-## Implementation
-
-### Code Architecture 
-
-```mermaid
-
-```
-
-### Code Organization
-
-```bash
-consensus
-├── README.md                               # Self link to this README                   
-├── module.go                               # The implementation of the Consensus Interface
-├── types
-│   ├── consensus_genesis.go              # implementation
-│   ├── converters.go         
-│   ├── errors.go               
-│   ├── types.go                          # implementation of the Network interface using RainTree's specification
-│   ├── utils.go
-│   └── proto
-│       └── block.proto
-│       └── consensus_config.proto
-│       └── consensus_genesis.proto
-│       └── hotstuff_types.proto                 
-└── utils.go
-```
 
 ## Testing
 

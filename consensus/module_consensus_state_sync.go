@@ -23,7 +23,7 @@ func (m *consensusModule) GetNodeAddress() string {
 }
 
 // TODO(#352): Implement this function, currently a placeholder.
-// commitReceivedBlocks commits the blocks received from the blocksReceived channel
+// blockApplicationLoop commits the blocks received from the blocksReceived channel
 // it is intended to be run as a background process
 func (m *consensusModule) blockApplicationLoop() {
 	// runs as a background process in consensus module
