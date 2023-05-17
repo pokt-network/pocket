@@ -26,8 +26,7 @@ func initDeleteCrashedPods(client *kubernetes.Clientset) {
 	podList, _ := podClient.List(context.TODO(), metav1.ListOptions{})
 	for i := range podList.Items {
 		pod := podList.Items[i]
-		err := deleteCrashedPods(&pod, stsClient, podClient)
-		if err != nil {
+		if err := deleteCrashedPods(&pod, stsClient, podClient); err != nil {
 			logger.Error().Err(err).Msg("error deleting crashed pod on init")
 		}
 	}
