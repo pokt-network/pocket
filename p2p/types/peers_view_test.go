@@ -4,9 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSortedPeersView_Add_Remove(t *testing.T) {

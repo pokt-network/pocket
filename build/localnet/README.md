@@ -25,7 +25,6 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
   - [Full Cleanup](#full-cleanup)
 - [Code Structure](#code-structure)
 
-
 ## TLDR
 
 If you feel adventurous, and you know what you're doing, here is a rapid guide to start LocalNet:

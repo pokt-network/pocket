@@ -8,8 +8,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
-	"github.com/pokt-network/pocket/persistence/kvstore"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -29,7 +29,7 @@ type PostgresContext struct {
 	stateHash string
 	// TECHDEBT(#361): These three values are pointers to objects maintained by the PersistenceModule.
 	//                 Need to simply access them via the bus.
-	blockStore kvstore.KVStore
+	blockStore blockstore.BlockStore
 	txIndexer  indexer.TxIndexer
 	stateTrees *stateTrees
 

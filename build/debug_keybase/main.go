@@ -9,13 +9,12 @@ import (
 	"path/filepath"
 
 	"github.com/korovkin/limiter"
-	"gopkg.in/yaml.v2"
-
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
+	"gopkg.in/yaml.v2"
 )
 
 const (

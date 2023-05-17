@@ -62,6 +62,7 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 - [Utility Changelog](utility/doc/CHANGELOG.md)
 
 ### Project Management Resources
+
 - [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md)
 - [V1 Project Board](https://github.com/orgs/pokt-network/projects/142/views/12)
 

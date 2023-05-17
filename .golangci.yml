@@ -1,8 +1,6 @@
 linters:
+  # Full list available at https://golangci-lint.run/usage/linters/#disabled-by-default
   enable:
-    # TODO: investigate what linters we want to enable (many disabled by default!)
-    # https://golangci-lint.run/usage/linters/#disabled-by-default
-
     # Default linters
     - errcheck
     - gosimple
@@ -17,12 +15,12 @@ linters:
     - misspell
     - promlinter
     - unparam
+    - goimports
 
-    # Gocritic allows to use ruleguard - custom linting rules
+    # Gocritic allows to use ruleguard; custom linting rules
     - gocritic
 linters-settings:
-  # Gocritic settings
-  # https://go-critic.com/overview
+  # Gocritic settings; https://go-critic.com/overview
   gocritic:
     enabled-tags:
       - diagnostic
@@ -33,8 +31,6 @@ linters-settings:
     disabled-checks:
       - dupImport # https://github.com/go-critic/go-critic/issues/845
       - ifElseChain
-      # - octalLiteral
-      # - whyNoLint
     settings:
       ruleguard:
         # Enable debug to identify which 'Where' condition was rejected.

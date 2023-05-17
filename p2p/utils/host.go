@@ -6,11 +6,10 @@ import (
 	"time"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
-	"go.uber.org/multierr"
-
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"go.uber.org/multierr"
 )
 
 const (
