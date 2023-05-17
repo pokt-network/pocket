@@ -1,6 +1,6 @@
 package modules
 
-//go:generate mockgen -source=$GOFILE -destination=./mocks/modules_registry_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+//go:generate mockgen -destination=./mocks/modules_registry_mock.go github.com/pokt-network/pocket/shared/modules ModulesRegistry
 
 type ModulesRegistry interface {
 	// RegisterModule registers a Module with the ModuleRegistry

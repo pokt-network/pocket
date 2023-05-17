@@ -6,7 +6,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/genesis"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=./mocks/runtime_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+//go:generate mockgen -destination=./mocks/runtime_module_mock.go github.com/pokt-network/pocket/shared/modules RuntimeMgr
 
 type RuntimeMgr interface {
 	GetConfig() *configs.Config

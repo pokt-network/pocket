@@ -7,13 +7,12 @@ import (
 	"math"
 	"math/rand"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
+	"golang.org/x/exp/slices"
 )
 
 // TODO: Implement this

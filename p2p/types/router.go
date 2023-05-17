@@ -1,6 +1,6 @@
 package types
 
-//go:generate mockgen -source=$GOFILE -destination=./mocks/network_mock.go -package=mock_types github.com/pokt-network/pocket/p2p/types Network
+//go:generate mockgen -package=mock_types -destination=./mocks/network_mock.go github.com/pokt-network/pocket/p2p/types Router,RouterConfig
 
 import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"

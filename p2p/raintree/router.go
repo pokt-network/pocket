@@ -5,8 +5,6 @@ import (
 	"log"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/providers"
@@ -21,6 +19,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	telemetry "github.com/pokt-network/pocket/telemetry"
+	"google.golang.org/protobuf/proto"
 )
 
 var (

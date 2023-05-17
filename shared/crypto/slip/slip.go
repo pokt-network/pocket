@@ -5,10 +5,11 @@ import (
 	"crypto/sha512"
 	"encoding/binary"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 const (

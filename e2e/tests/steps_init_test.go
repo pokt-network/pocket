@@ -9,16 +9,15 @@ import (
 	"strings"
 	"testing"
 
+	pocketLogger "github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/runtime/defaults"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
 	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-
-	pocketLogger "github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/runtime/defaults"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	pocketk8s "github.com/pokt-network/pocket/shared/k8s"
 )
 
 var e2eLogger = pocketLogger.Global.CreateLoggerForModule("e2e")

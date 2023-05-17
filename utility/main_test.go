@@ -5,8 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -14,6 +12,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/stretchr/testify/require"
 )
 
 var (
