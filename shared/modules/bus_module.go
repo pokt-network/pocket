@@ -1,6 +1,6 @@
 package modules
 
-//go:generate mockgen -source=$GOFILE -destination=./mocks/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+//go:generate mockgen -destination=./mocks/bus_module_mock.go github.com/pokt-network/pocket/shared/modules Bus
 
 import (
 	"github.com/pokt-network/pocket/shared/messaging"
