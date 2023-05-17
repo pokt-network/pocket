@@ -1,7 +1,7 @@
 package main
 
-// Monitors Pods created by StatefulSets, and if Pods are in `CrashLoopBackOff` status,
-// and they have different image tag - kill them so StatefulSet would recreate the Pod with new image.
+// Monitors Pods created by StatefulSets, and if the Pods are in a `CrashLoopBackOff` status,
+// and they have a different image tag - kill them. StatefulSet would then recreate the Pod with a new image.
 
 import (
 	"context"
