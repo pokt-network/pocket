@@ -17,7 +17,7 @@ import (
 	coretypedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
-// Loop through existing pods and set up a watch for new pods so we don't hit Kubernetes API all the time
+// Loop through existing pods and set up a watch for new Pods so we don't hit Kubernetes API all the time
 func initDeleteCrashedPods(client *kubernetes.Clientset) {
 	stsClient := client.AppsV1().StatefulSets(pocketk8s.CurrentNamespace)
 	podClient := client.CoreV1().Pods(pocketk8s.CurrentNamespace)
