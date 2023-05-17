@@ -6,11 +6,10 @@ import (
 	"strconv"
 
 	"github.com/pokt-network/pocket/logger"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
-
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // TODO: Implement this function

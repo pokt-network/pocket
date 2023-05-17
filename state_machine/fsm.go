@@ -2,7 +2,6 @@ package state_machine
 
 import (
 	"github.com/looplab/fsm"
-
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 

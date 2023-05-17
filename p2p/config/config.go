@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/shared/crypto"
