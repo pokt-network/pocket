@@ -48,7 +48,7 @@ func main() {
 	}
 
 	// Monitor for crashed pods and delete them
-	go initDeleteCrashedPods(clientset)
+	go initCrashedPodsDeleter(clientset)
 
 	validatorKeysMap, err := pocketk8s.FetchValidatorPrivateKeys(clientset)
 	if err != nil {
