@@ -12,6 +12,8 @@ This document is meant to be a supplement to the living specification of [1.0 Po
   - [Block Generation Process](#block-generation-process)
   - [Block Validation Process](#block-validation-process)
   - [State Sync Process](#state-sync-process)
+- [Testing](#testing)
+  - [Running Unit Tests](#running-unit-tests)
 
 ## Interface
 
@@ -163,11 +165,9 @@ graph TD
 
     C --> note1
     J --> note2
-```mermaid
+```
 
 ## Testing
-
-_TODO: The work to add the tooling used to help with unit test generation is being tracked in #314._
 
 ### Running Unit Tests
 
