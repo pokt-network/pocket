@@ -18,6 +18,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
@@ -42,6 +43,7 @@ type p2pModule struct {
 	// Assigned during creation via `#setupDependencies()`.
 	currentHeightProvider providers.CurrentHeightProvider
 	pstoreProvider        providers.PeerstoreProvider
+	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 
 	// Assigned during `#Start()`. TLDR; `host` listens on instantiation.
 	// and `router` depends on `host`.
@@ -179,6 +181,7 @@ func (m *p2pModule) Stop() error {
 func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
+		Nonce:   cryptoPocket.GetNonce(),
 	}
 	//TECHDEBT: use shared/codec for marshalling
 	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
@@ -193,6 +196,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
+		Nonce:   cryptoPocket.GetNonce(),
 	}
 	//TECHDEBT: use shared/codec for marshalling
 	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
@@ -218,6 +222,9 @@ func (m *p2pModule) setupDependencies() error {
 		return err
 	}
 
+	if err := m.setupNonceDeduper(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -266,6 +273,17 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 	return nil
 }
 
+// setupNonceDeduper initializes an empty deduper with a max capacity of
+// the configured `MaxNonces`.
+func (m *p2pModule) setupNonceDeduper() error {
+	if m.cfg.MaxNonces == 0 {
+		return fmt.Errorf("max nonces must be greater than 0")
+	}
+
+	m.nonceDeduper = utils.NewNonceDeduper(m.cfg.MaxNonces)
+	return nil
+}
+
 // setupRouter instantiates the configured router implementation.
 func (m *p2pModule) setupRouter() (err error) {
 	m.router, err = raintree.NewRainTreeRouter(
@@ -276,7 +294,6 @@ func (m *p2pModule) setupRouter() (err error) {
 			PeerstoreProvider:     m.pstoreProvider,
 			Host:                  m.host,
 			Handler:               m.handleAppData,
-			MaxNonces:             m.cfg.MaxNonces,
 		},
 	)
 	return err
@@ -334,11 +351,54 @@ func (m *p2pModule) handleAppData(data []byte) error {
 		return fmt.Errorf("decoding network message: %w", err)
 	}
 
+	if ok, err := m.checkNonce(networkMessage.GetNonce()); err != nil {
+		return fmt.Errorf("handling network data: %w", err)
+	} else if !ok {
+		// skip passing redundant message to application layer
+		return nil
+	}
+
+	// DISCUSS_THIS_COMMIT: is there an explicit reason for constructing a new
+	// `PocketEnvelop` literal with content rather than passing `networkMessage`?
+	// (e.g. avoid blindly passing additional fields as the protobuf type changes)
 	event := messaging.PocketEnvelope{
 		Content: networkMessage.Content,
 	}
 	m.GetBus().PublishEventToBus(&event)
 	return nil
+}
+
+// checkNonce ensures the nonce has not been observed with i the deuper's capacity
+// of recent messages. Adds the nonce to the deduper if it has not been observed.
+// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
+func (m *p2pModule) checkNonce(nonce utils.Nonce) (ok bool, err error) {
+	if contains := m.nonceDeduper.Contains(nonce); contains {
+		m.logger.Debug().
+			Uint64("nonce", nonce).
+			Msgf("message already processed, skipping")
+
+		m.redundantNonceTelemetry(nonce)
+		return false, nil
+	}
+
+	// Add the nonce to the deduper
+	if err := m.nonceDeduper.Push(nonce); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (m *p2pModule) redundantNonceTelemetry(nonce utils.Nonce) {
+	blockHeight := m.currentHeightProvider.CurrentHeight()
+	m.GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent(
+			telemetry.P2P_EVENT_METRICS_NAMESPACE,
+			telemetry.P2P_BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME,
+			telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_NONCE_LABEL, nonce,
+			telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
+		)
 }
 
 // getMultiaddr returns a multiaddr constructed from the `hostname` and `port`

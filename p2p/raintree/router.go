@@ -3,7 +3,6 @@ package raintree
 import (
 	"fmt"
 	"io"
-	"log"
 	"time"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
@@ -18,7 +17,6 @@ import (
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -75,7 +73,6 @@ func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (type
 	rtr := &rainTreeRouter{
 		host:                  cfg.Host,
 		selfAddr:              cfg.Addr,
-		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(cfg.MaxNonces)),
 		pstoreProvider:        cfg.PeerstoreProvider,
 		currentHeightProvider: cfg.CurrentHeightProvider,
 		logger:                routerLogger,
@@ -93,13 +90,13 @@ func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (type
 
 // NetworkBroadcast implements the respective member of `typesP2P.Router`.
 func (rtr *rainTreeRouter) Broadcast(data []byte) error {
-	return rtr.broadcastAtLevel(data, rtr.peersManager.GetMaxNumLevels(), crypto.GetNonce())
+	return rtr.broadcastAtLevel(data, rtr.peersManager.GetMaxNumLevels())
 }
 
 // broadcastAtLevel recursively sends to both left and right target peers
 // from the starting level, demoting until level == 0.
 // (see: https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p)
-func (rtr *rainTreeRouter) broadcastAtLevel(data []byte, level uint32, nonce uint64) error {
+func (rtr *rainTreeRouter) broadcastAtLevel(data []byte, level uint32) error {
 	// This is handled either by the cleanup layer or redundancy layer
 	if level == 0 {
 		return nil
@@ -107,7 +104,6 @@ func (rtr *rainTreeRouter) broadcastAtLevel(data []byte, level uint32, nonce uin
 	msg := &typesP2P.RainTreeMessage{
 		Level: level,
 		Data:  data,
-		Nonce: nonce,
 	}
 	msgBz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
@@ -133,7 +129,7 @@ func (rtr *rainTreeRouter) broadcastAtLevel(data []byte, level uint32, nonce uin
 // (see: https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p)
 func (rtr *rainTreeRouter) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {
 	if rainTreeMsg.Level > 0 {
-		if err := rtr.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
+		if err := rtr.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1); err != nil {
 			return err
 		}
 	}
@@ -145,7 +141,6 @@ func (rtr *rainTreeRouter) Send(data []byte, address cryptoPocket.Address) error
 	msg := &typesP2P.RainTreeMessage{
 		Level: 0, // Direct send that does not need to be propagated
 		Data:  data,
-		Nonce: crypto.GetNonce(),
 	}
 
 	bz, err := codec.GetCodec().Marshal(msg)
@@ -224,32 +219,9 @@ func (rtr *rainTreeRouter) handleRainTreeMsg(data []byte) ([]byte, error) {
 
 	// Continue RainTree propagation
 	if rainTreeMsg.Level > 0 {
-		if err := rtr.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
+		if err := rtr.broadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1); err != nil {
 			return nil, err
 		}
-	}
-
-	// Avoids this node from processing a messages / transactions is has already processed at the
-	// application layer. The logic above makes sure it is only propagated and returns.
-	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
-	if contains := rtr.nonceDeduper.Contains(rainTreeMsg.Nonce); contains {
-		log.Printf("RainTree message with nonce %d already processed, skipping\n", rainTreeMsg.Nonce)
-		rtr.GetBus().
-			GetTelemetryModule().
-			GetEventMetricsAgent().
-			EmitEvent(
-				telemetry.P2P_EVENT_METRICS_NAMESPACE,
-				telemetry.P2P_BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME,
-				telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_NONCE_LABEL, rainTreeMsg.Nonce,
-				telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
-			)
-
-		return nil, nil
-	}
-
-	// Add the nonce to the deduper
-	if err := rtr.nonceDeduper.Push(rainTreeMsg.Nonce); err != nil {
-		return nil, err
 	}
 
 	// Return the data back to the caller so it can be handled by the app specific bus
