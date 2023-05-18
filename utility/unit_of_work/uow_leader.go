@@ -97,7 +97,7 @@ func (uow *leaderUtilityUnitOfWork) reapMempool(txMempool mempool.TXMempool, max
 
 		idxTx, err := uow.HandleTransaction(tx, txIdx)
 		if err != nil {
-			uow.logger.Err(err).Msg("Error in ApplyTransaction")
+			uow.logger.Err(err).Msg("Error handling the transaction")
 			// TODO(#327): Properly implement 'unhappy path' for save points
 			if err := uow.revertLastSavePoint(); err != nil {
 				return nil, err

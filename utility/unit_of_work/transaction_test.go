@@ -34,7 +34,7 @@ func TestUtilityUnitOfWork_BasicValidateTransaction(t *testing.T) {
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 }
 
-func TestUtilityUnitOfWork_ApplyTransaction(t *testing.T) {
+func TestUtilityUnitOfWork_HandleTransaction(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 
 	tx, startingBalance, amount, signer := newTestingTransaction(t, uow)
@@ -42,6 +42,7 @@ func TestUtilityUnitOfWork_ApplyTransaction(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int32(0), idxTx.GetResultCode())
 	require.Equal(t, "", idxTx.GetError())
+
 	feeBig, err := getGovParam[*big.Int](uow, typesUtil.MessageSendFee)
 	require.NoError(t, err)
 

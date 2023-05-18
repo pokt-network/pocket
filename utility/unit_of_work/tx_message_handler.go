@@ -11,6 +11,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
+// handleMessage handles the message by applying the underlying business logic associated with it.
 func (u *baseUtilityUnitOfWork) handleMessage(msg typesUtil.Message) (err coreTypes.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:
