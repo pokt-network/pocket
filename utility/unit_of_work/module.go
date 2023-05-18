@@ -135,9 +135,11 @@ func (uow *baseUtilityUnitOfWork) isProposalBlockSet() bool {
 	return uow.proposalStateHash != "" && uow.proposalProposerAddr != nil
 }
 
-// processProposalBlockTransactions processes the transactions from the proposal block.
-// It also removes the transactions from the mempool if they are also present.
+// processProposalBlockTransactions processes the transactions from the proposal block stored in the current
+// unit of work. It applies the transactions to the persistence context, indexes them, and removes that from
+// the mempool if they are present.
 func (uow *baseUtilityUnitOfWork) processProposalBlockTransactions(txMempool mempool.TXMempool) (err error) {
+	// CONSIDERATION: should we check that `uow.proposalBlockTxs` is not nil and return an error if so or allow empty blocks?
 	for index, txProtoBytes := range uow.proposalBlockTxs {
 		tx, err := coreTypes.TxFromBytes(txProtoBytes)
 		if err != nil {
@@ -147,7 +149,7 @@ func (uow *baseUtilityUnitOfWork) processProposalBlockTransactions(txMempool mem
 			return err
 		}
 
-		idxTx, err := uow.HydrateIdxTx(tx, index)
+		idxTx, err := uow.HandleTransaction(tx, index)
 		if err != nil {
 			return err
 		}

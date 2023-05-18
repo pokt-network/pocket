@@ -374,7 +374,7 @@ func (s *rpcServer) txProtoBytesToRPCIdxTxs(txProtoBytes [][]byte) ([]IndexedTra
 		if err := codec.GetCodec().Unmarshal(txBz, tx); err != nil {
 			return nil, err
 		}
-		idxTx, er := uow.HydrateIdxTx(tx, idx)
+		idxTx, er := uow.HandleTransaction(tx, idx)
 		if er != nil {
 			return nil, er
 		}

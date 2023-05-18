@@ -9,13 +9,13 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-// HydrateIdxTx converts a `Transaction` proto into a `IndexedTransaction` struct` after doing basic validation
+// HandleTransaction handles andconverts a `Transaction` proto into a `IndexedTransaction` struct` after doing basic validation
 // and extracting the relevant data from the embedded signed Message. `index` is the intended location
 // of its index (i.e. the transaction number) in the block where it is included.
 //
 // IMPROVE: hydration should accept and return the same type (i.e. IndexedTransaction) so there may be opportunity
 // to refactor this in the future.
-func (u *baseUtilityUnitOfWork) HydrateIdxTx(tx *coreTypes.Transaction, index int) (*coreTypes.IndexedTransaction, coreTypes.Error) {
+func (u *baseUtilityUnitOfWork) HandleTransaction(tx *coreTypes.Transaction, index int) (*coreTypes.IndexedTransaction, coreTypes.Error) {
 	msg, err := u.basicValidateTransaction(tx)
 	if err != nil {
 		return nil, err

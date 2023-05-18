@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.40] - 2023-05-04
 
-- Expose `HydrateIdxTx` for use outside of utility
+- Expose `HandleTransaction` for use outside of utility
 - Add placeholder functions `HandleRelay()` and `HandleChallenge()`
 - Moved `utility/types/errors.go` into `shared/core/types` and updated their usage accordingly
 

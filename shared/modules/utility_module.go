@@ -63,8 +63,8 @@ type UtilityUnitOfWork interface {
 	// TODO: Investigate a way to potentially simplify the interface by removing this function.
 	SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error
 
-	// HydrateIdxTx hydrates a Transaction structure, with its index in the block returning a IndexedTransaction structure
-	HydrateIdxTx(tx *coreTypes.Transaction, index int) (*coreTypes.IndexedTransaction, coreTypes.Error)
+	// HandleTransaction hydrates a Transaction structure, with its index in the block returning a IndexedTransaction structure
+	HandleTransaction(tx *coreTypes.Transaction, index int) (*coreTypes.IndexedTransaction, coreTypes.Error)
 
 	// ApplyBlock applies the context's in-memory proposed state (i.e. the txs in this context).
 	// Only intended to be used by the block verifiers (i.e. replicas).

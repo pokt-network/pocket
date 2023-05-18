@@ -95,7 +95,7 @@ func (uow *leaderUtilityUnitOfWork) reapMempool(txMempool mempool.TXMempool, max
 			break // we've reached our max
 		}
 
-		idxTx, err := uow.HydrateIdxTx(tx, txIdx)
+		idxTx, err := uow.HandleTransaction(tx, txIdx)
 		if err != nil {
 			uow.logger.Err(err).Msg("Error in ApplyTransaction")
 			// TODO(#327): Properly implement 'unhappy path' for save points
