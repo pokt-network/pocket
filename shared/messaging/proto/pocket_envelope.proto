@@ -8,4 +8,5 @@ option go_package = "github.com/pokt-network/pocket/shared/messaging";
 
 message PocketEnvelope {
   google.protobuf.Any content = 1;
+  uint64 nonce = 2; // DISCUSS: need entropy at this level?
 }
