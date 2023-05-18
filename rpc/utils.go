@@ -361,20 +361,14 @@ func (s *rpcServer) calculateMessageFeeForActor(actorType coreTypes.ActorType, m
 
 // txProtoBytesToRPCIdxTxs converts a slice of serialised Transaction protobufs to a slice of RPC IdxTxs
 func (s *rpcServer) txProtoBytesToRPCIdxTxs(txProtoBytes [][]byte) ([]IndexedTransaction, error) {
-	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-	uow, err := s.GetBus().GetUtilityModule().NewUnitOfWork(int64(currentHeight))
-	if err != nil {
-		return nil, err
-	}
-	defer uow.Release() //nolint:errcheck // We only need to make sure the UOW is released
-
+	utilityModule := s.GetBus().GetUtilityModule()
 	txs := make([]IndexedTransaction, 0)
-	for idx, txBz := range txProtoBytes {
+	for _, txBz := range txProtoBytes {
 		tx := new(coreTypes.Transaction)
 		if err := codec.GetCodec().Unmarshal(txBz, tx); err != nil {
 			return nil, err
 		}
-		idxTx, er := uow.HandleTransaction(tx, idx)
+		idxTx, er := utilityModule.GetIndexedTransaction(txBz)
 		if er != nil {
 			return nil, er
 		}
