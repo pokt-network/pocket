@@ -38,7 +38,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 135
+// NextCode: 136
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -137,6 +137,7 @@ const (
 	CodeEmptyParamValueError              Code = 93
 	CodeGetOutputAddressError             Code = 94
 	CodeTransactionAlreadyCommittedError  Code = 95
+	CodeTransactionNotCommittedError      Code = 135
 	CodeInitGenesisParamsError            Code = 96
 	CodeGetAllFishermenError              Code = 97
 	CodeGetAllServicersError              Code = 98
@@ -249,6 +250,7 @@ const (
 	GetOutputAddressError             = "an error occurred getting the output address using operator"
 	GetHeightError                    = "an error occurred when getting the height from the store"
 	TransactionAlreadyCommittedError  = "the transaction is already committed"
+	TransactionNotCommittedError      = "the transaction is not committed"
 	NewSavePointError                 = "an error occurred creating the save point"
 	RollbackSavePointError            = "an error occurred rolling back to save point"
 	NewPersistenceContextError        = "an error occurred creating the persistence context"
@@ -610,6 +612,10 @@ func ErrProtoFromAny(err error) Error {
 
 func ErrTransactionAlreadyCommitted() Error {
 	return NewError(CodeTransactionAlreadyCommittedError, TransactionAlreadyCommittedError)
+}
+
+func ErrTransactionNotCommitted() Error {
+	return NewError(CodeTransactionNotCommittedError, TransactionNotCommittedError)
 }
 
 func ErrTransactionSign(err error) Error {

@@ -35,3 +35,26 @@ func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
 	// Store the tx in the mempool
 	return u.mempool.AddTx(txProtoBytes)
 }
+
+// GetIndexedTransaction implements the exposed functionality of the shared utilityModule interface.
+func (u *utilityModule) GetIndexedTransaction(txProtoBytes []byte) (*coreTypes.IndexedTransaction, error) {
+	txHash := coreTypes.TxHash(txProtoBytes)
+	persistenceModule := u.GetBus().GetPersistenceModule()
+
+	txExists, err := persistenceModule.TransactionExists(txHash)
+	if err != nil {
+		return nil, err
+	}
+	if !txExists {
+		return nil, coreTypes.ErrTransactionNotCommitted()
+	}
+
+	// TECHDEBT: Note the inconsistency between referencing tx hash as a string vs. byte slice in different places. Need to pick
+	// one and consolidate throughout the codebase
+	idTx, err := persistenceModule.GetTxIndexer().GetByHash([]byte(txHash))
+	if err != nil {
+		return nil, err
+	}
+
+	return idTx, nil
+}

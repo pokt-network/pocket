@@ -23,6 +23,9 @@ type UtilityModule interface {
 	// if it's valid. It does not process the business logic of the underlying message; see UtilityUnitOfWork.HandleTransaction.
 	HandleTransaction(tx []byte) error
 
+	// GetIndexedTransaction returns the indexed transaction if it is available in this node's view of the world state.
+	GetIndexedTransaction(tx []byte) (*coreTypes.IndexedTransaction, coreTypes.Error)
+
 	// HandleRelay process the relay to the specified chain if this node is a servicer
 	HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) // TODO: Implement this
 
