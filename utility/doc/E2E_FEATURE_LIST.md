@@ -1,8 +1,9 @@
 # E2E Features <!-- omit in toc -->
 
+- [Legend](#legend)
 - [A. E2E Relay](#a-e2e-relay)
-  - [1. Trustless Relay](#1-trustless-relay)
-  - [2. Delegated Relay](#2-delegated-relay)
+  - [🟠 1. Trustless Relay](#-1-trustless-relay)
+  - [🟠 2. Delegated Relay](#-2-delegated-relay)
   - [3. Rate Limited Application](#3-rate-limited-application)
 - [B. E2E QoS](#b-e2e-qos)
   - [1. QoS - Single Check](#1-qos---single-check)
@@ -36,13 +37,20 @@
   - [4. Modifying Feature Value](#4-modifying-feature-value)
 - [G. E2E Governance](#g-e2e-governance)
 
+## Legend
+
+🟡 TestNet - Nice to have
+🟠 TestNet - Must have
+🟢 MainNet - Nice to have
+🔴 MainNet - Must have
+
 ## A. E2E Relay
 
-### 1. Trustless Relay
+### 🟠 1. Trustless Relay
 
 #754
 
-### 2. Delegated Relay
+### 🟠 2. Delegated Relay
 
 ### 3. Rate Limited Application
 
