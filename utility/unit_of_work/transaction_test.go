@@ -22,7 +22,7 @@ func TestUtilityUnitOfWork_AnteHandleMessage(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 
 	tx, startingBalance, _, signer := newTestingTransaction(t, uow)
-	msg, err := uow.anteHandleMessage(tx)
+	msg, err := uow.basicValidateTransaction(tx)
 	require.NoError(t, err)
 	require.Equal(t, signer.Address().Bytes(), msg.GetSigner())
 	feeBig, err := getGovParam[*big.Int](uow, typesUtil.MessageSendFee)

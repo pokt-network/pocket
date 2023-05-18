@@ -9,14 +9,14 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-// HydrateIdxTX converts a `Transaction` proto into a `IndexedTransaction` struct` after doing basic validation
+// HydrateIdxTx converts a `Transaction` proto into a `IndexedTransaction` struct` after doing basic validation
 // and extracting the relevant data from the embedded signed Message. `index` is the intended location
 // of its index (i.e. the transaction number) in the block where it is included.
 //
 // IMPROVE: hydration should accept and return the same type (i.e. IndexedTransaction) so there may be opportunity
 // to refactor this in the future.
 func (u *baseUtilityUnitOfWork) HydrateIdxTx(tx *coreTypes.Transaction, index int) (*coreTypes.IndexedTransaction, coreTypes.Error) {
-	msg, err := u.anteHandleMessage(tx)
+	msg, err := u.basicValidateTransaction(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -24,8 +24,9 @@ func (u *baseUtilityUnitOfWork) HydrateIdxTx(tx *coreTypes.Transaction, index in
 	return typesUtil.TxToIdxTx(tx, u.height, index, msg, msgHandlingResult)
 }
 
-// anteHandleMessage handles basic validation of the message in the Transaction before it is processed
-func (u *baseUtilityUnitOfWork) anteHandleMessage(tx *coreTypes.Transaction) (typesUtil.Message, coreTypes.Error) {
+// basicValidateTransaction handles basic transaction validation that is shared across all Messages.
+// If basic validation passes (e.g. sufficient fees), the internal message is returned
+func (u *baseUtilityUnitOfWork) basicValidateTransaction(tx *coreTypes.Transaction) (typesUtil.Message, coreTypes.Error) {
 	// Check if the transaction has a valid message
 	msg, err := u.validateTxMessage(tx)
 	if err != nil {
