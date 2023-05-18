@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.52] - 2023-05-19
+
+- Moved nonce field from RainTreeMessage to PocketEnvelope protobuf types
+- Formalize NonceDeduper (and related) types
+- Move NonceDeduper (and related types) from p2p/raintree to p2p/utils pkg
+- Move NonceDeduper usage out of RainTreeRouter and into p2pModule
+
 ## [0.0.0.51] - 2023-05-19
 
 - Added `Handler` field to `RainTreeConfig` & `BackgroundConfig`
