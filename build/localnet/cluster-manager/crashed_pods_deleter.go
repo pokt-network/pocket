@@ -29,8 +29,8 @@ func initCrashedPodsDeleter(client *kubernetes.Clientset) {
 	}
 
 	for i := range podList.Items {
-		pod := podList.Items[i]
-		if err := deleteCrashedPods(&pod, stsClient, podClient); err != nil {
+		pod := &podList.Items[i]
+		if err := deleteCrashedPods(pod, stsClient, podClient); err != nil {
 			logger.Error().Err(err).Msg("error deleting crashed pod on init")
 		}
 	}
@@ -81,8 +81,8 @@ func deleteCrashedPods(
 			continue
 		}
 
-		for pi := range pod.Status.ContainerStatuses {
-			containerStatus := &pod.Status.ContainerStatuses[pi]
+		for si := range pod.Status.ContainerStatuses {
+			containerStatus := &pod.Status.ContainerStatuses[si]
 
 			// Only proceed if container is in some sort of Err status
 			if containerErroneousStatus(containerStatus) {
@@ -120,6 +120,7 @@ func deleteCrashedPods(
 						}); err != nil {
 							return err
 						}
+
 						logger.Info().Str("pod", pod.Name).Msg("deleted crashed pod")
 					} else {
 						logger.Info().Str("pod", pod.Name).Msg("pod crashed, but image is the same, not deleting")
