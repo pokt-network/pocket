@@ -18,7 +18,7 @@ var (
 	defaultSendAmount = big.NewInt(10000)
 )
 
-func TestUtilityUnitOfWork_AnteHandleMessage(t *testing.T) {
+func TestUtilityUnitOfWork_BasicValidateTransaction(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 
 	tx, startingBalance, _, signer := newTestingTransaction(t, uow)

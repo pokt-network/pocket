@@ -35,6 +35,7 @@ func (uow *leaderUtilityUnitOfWork) CreateProposalBlock(proposer []byte, maxTxBy
 		"maxTxBytes": maxTxBytes,
 		"source":     "CreateProposalBlock",
 	}).Logger()
+
 	log.Debug().Msg("calling beginBlock")
 	// begin block lifecycle phase
 	if err := uow.beginBlock(); err != nil {
