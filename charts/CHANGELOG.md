@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.5] - 2023-05-17
+
+- Added `ServiceMonitor` to the helm chart.
+
 ## [0.0.0.4] - 2023-05-12
 
 - Added `nodeType` parameter to the helm chart, which is now actor-agnostic.
