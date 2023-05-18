@@ -115,8 +115,7 @@ func (priv Ed25519PrivateKey) Seed() []byte {
 
 func (priv *Ed25519PrivateKey) UnmarshalJSON(data []byte) error {
 	var privateKey string
-	err := json.Unmarshal(data, &privateKey)
-	if err != nil {
+	if err := json.Unmarshal(data, &privateKey); err != nil {
 		return err
 	}
 	return priv.UnmarshalText([]byte(privateKey))
@@ -201,8 +200,7 @@ func (pub Ed25519PublicKey) MarshalJSON() ([]byte, error) {
 
 func (pub *Ed25519PublicKey) UnmarshalJSON(data []byte) error {
 	var publicKey string
-	err := json.Unmarshal(data, &publicKey)
-	if err != nil {
+	if err := json.Unmarshal(data, &publicKey); err != nil {
 		return err
 	}
 	keyBytes, err := hex.DecodeString(publicKey)

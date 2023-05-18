@@ -222,7 +222,7 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 		defer it.Close()
 		for it.Rewind(); it.Valid(); it.Next() {
 			item := it.Item()
-			err := item.Value(func(val []byte) error {
+			if err := item.Value(func(val []byte) error {
 				b := make([]byte, len(val))
 				copy(b, val)
 
@@ -235,8 +235,7 @@ func (keybase *badgerKeybase) GetAll() (addresses []string, keyPairs []crypto.Ke
 				addresses = append(addresses, kp.GetAddressString())
 				keyPairs = append(keyPairs, kp)
 				return nil
-			})
-			if err != nil {
+			}); err != nil {
 				return err
 			}
 		}
