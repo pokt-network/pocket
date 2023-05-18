@@ -11,7 +11,7 @@ import (
 	"github.com/quasilyte/go-ruleguard/dsl"
 )
 
-// This is a custom linter that checks ensures a use of require.Equal
+// This is a custom linter that checks ensures a use of inline error checks
 func InlineErrCheck(m dsl.Matcher) {
 	m.Match(`$err := $x; if $err != nil { $*_ }`).
 		Where(m["err"].Type.Is(`error`)).
