@@ -44,7 +44,7 @@ jobs:
         shell: bash
         run: |
           start_time=$(date +%s) # store current time
-          timeout=900 # timeout in seconds
+          timeout=900 # 15 minute timeout in seconds
 
           until argo template get dev-e2e-tests --namespace=devnet-issue-${{ github.event.pull_request.number }}; do
               current_time=$(date +%s)
