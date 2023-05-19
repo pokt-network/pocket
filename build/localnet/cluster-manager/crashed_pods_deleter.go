@@ -18,6 +18,7 @@ import (
 )
 
 // Loop through existing pods and set up a watch for new Pods so we don't hit Kubernetes API all the time
+// This is a blocking function, intended for running in a goroutine
 func initCrashedPodsDeleter(client *kubernetes.Clientset) {
 	stsClient := client.AppsV1().StatefulSets(pocketk8s.CurrentNamespace)
 	podClient := client.CoreV1().Pods(pocketk8s.CurrentNamespace)
@@ -56,7 +57,7 @@ func initCrashedPodsDeleter(client *kubernetes.Clientset) {
 	}
 }
 
-func containerErroneousStatus(status *corev1.ContainerStatus) bool {
+func isContainerStatusErroneous(status *corev1.ContainerStatus) bool {
 	return status.State.Waiting != nil &&
 		(strings.HasPrefix(status.State.Waiting.Reason, "Err") ||
 			strings.HasSuffix(status.State.Waiting.Reason, "BackOff"))
@@ -85,47 +86,48 @@ func deleteCrashedPods(
 			containerStatus := &pod.Status.ContainerStatuses[si]
 
 			// Only proceed if container is in some sort of Err status
-			if containerErroneousStatus(containerStatus) {
-				// Get StatefulSet that created the Pod
-				var stsName string
-				for _, ownerRef := range pod.OwnerReferences {
-					if ownerRef.Kind == "StatefulSet" {
-						stsName = ownerRef.Name
-						break
-					}
+			if !isContainerStatusErroneous(containerStatus) {
+				continue
+			}
+
+			// Get StatefulSet that created the Pod
+			var stsName string
+			for _, ownerRef := range pod.OwnerReferences {
+				if ownerRef.Kind == "StatefulSet" {
+					stsName = ownerRef.Name
+					break
+				}
+			}
+
+			if stsName == "" {
+				return errors.New("no StatefulSet found for this pod")
+			}
+
+			sts, err := stsClient.Get(context.TODO(), stsName, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+
+			// Loop through all containers in the StatefulSet and find the one we monitor
+			for sci := range sts.Spec.Template.Spec.Containers {
+				stsContainer := &sts.Spec.Template.Spec.Containers[sci]
+				if stsContainer.Name != containerToMonitor {
+					continue
 				}
 
-				if stsName == "" {
-					return errors.New("no StatefulSet found for this pod")
-				}
+				// If images are different, delete the Pod
+				if stsContainer.Image != podContainer.Image {
+					deletePolicy := metav1.DeletePropagationForeground
 
-				sts, err := stsClient.Get(context.TODO(), stsName, metav1.GetOptions{})
-				if err != nil {
-					return err
-				}
-
-				// Loop through all containers in the StatefulSet and find the one we monitor
-				for sci := range sts.Spec.Template.Spec.Containers {
-					stsContainer := &sts.Spec.Template.Spec.Containers[sci]
-					if stsContainer.Name != containerToMonitor {
-						continue
+					if err := podClient.Delete(context.TODO(), pod.Name, metav1.DeleteOptions{
+						PropagationPolicy: &deletePolicy,
+					}); err != nil {
+						return err
 					}
 
-					// If images are different, delete the Pod
-					if stsContainer.Image != podContainer.Image {
-						deletePolicy := metav1.DeletePropagationForeground
-
-						if err := podClient.Delete(context.TODO(), pod.Name, metav1.DeleteOptions{
-							PropagationPolicy: &deletePolicy,
-						}); err != nil {
-							return err
-						}
-
-						logger.Info().Str("pod", pod.Name).Msg("deleted crashed pod")
-					} else {
-						logger.Info().Str("pod", pod.Name).Msg("pod crashed, but image is the same, not deleting")
-					}
-
+					logger.Info().Str("pod", pod.Name).Msg("deleted crashed pod")
+				} else {
+					logger.Info().Str("pod", pod.Name).Msg("pod crashed, but image is the same, not deleting")
 				}
 			}
 		}
