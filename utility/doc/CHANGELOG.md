@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.41] - 2023-05-18
+
+- Implemented `GetIndexedTransaction`
+- Add some comments and rename a few functions throughout to have things be more self-explanatory
+- Moved over all the business logic related to getting "signer candidates" into its own file for readability purposes
+
 ## [0.0.0.40] - 2023-05-04
 
 - Expose `HandleTransaction` for use outside of utility

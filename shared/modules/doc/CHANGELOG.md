@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.13] - 2023-05-18
+
+- Added `GetIndexedTransaction` to the `UtilityModule` interface to be able to retrieve an indexed transaction without running the underlying business logic
+- Renamed `HydrateIdxTx` to `HandleTransaction` in the `UtilityUnitOfWork`interface so its more descriptive of what the function does
+- Renamed `anteHandleMessage` to `basicValidateTransaction`
+- Split the logic in `basicValidateTransaction` into multiple smaller functions for readability and so adding new business logic will be clearer
+
 ## [0.0.0.12] - 2023-05-16
 
 - Updates the PersistenceModule interface to return a BlockStore instead of KVStore directly
@@ -14,7 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.11] - 2023-04-12
 
 - `Consensus` - Updated debug interface functions: added `PushStateSyncMetadataResponse()`, removed `SetAggregatedStateSyncMetadata()` and `GetAggregatedStateSyncMetadataMaxHeight()`
-
 
 ## [0.0.0.10] - 2023-03-30
 
