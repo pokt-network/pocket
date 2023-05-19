@@ -334,15 +334,8 @@ func (rtr *rainTreeRouter) readStream(stream libp2pNetwork.Stream) {
 		rtr.logger.Debug().Err(err).Msg("setting stream read deadline")
 	}
 
-	// debug logging: stream scope stats
-	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.27.0/core/network#StreamScope)
-	if err := utils.LogScopeStatFactory(
-		&logger.Global.Logger,
-		"stream scope (read-side)",
-	)(stream.Scope()); err != nil {
-		rtr.logger.Debug().Err(err).Msg("logging stream scope stats")
-	}
-	// ---
+	// log incoming stream
+	rtr.logStream(stream)
 
 	// read stream
 	data, err := io.ReadAll(stream)
@@ -359,16 +352,6 @@ func (rtr *rainTreeRouter) readStream(stream libp2pNetwork.Stream) {
 		rtr.logger.Debug().Err(err).Msg("resetting stream (read-side)")
 	}
 
-	// debug logging
-	remotePeer, err := utils.PeerFromLibp2pStream(stream)
-	if err != nil {
-		rtr.logger.Debug().Err(err).Msg("getting remote remotePeer")
-	} else {
-		utils.LogIncomingMsg(rtr.logger, rtr.getHostname(), remotePeer)
-	}
-	// ---
-
-	// TODO_THIS_COMMIT: refactor
 	// extract `PocketEnvelope` from `RainTreeMessage` (& continue propagation)
 	appMsgData, err := rtr.handleRainTreeMsg(data)
 	if err != nil {
