@@ -339,19 +339,20 @@ generate_node_state_machine_diagram: ## (Re)generates the Node State Machine dia
 
 .PHONY: test_all
 test_all: ## Run all go unit tests
-	go test -p 1 -count=1 ./...
+	go test -p=1 -count=1 ./...
 
 .PHONY: test_e2e
 test_e2e: kubectl_check ## Run all E2E tests
-	go test ${VERBOSE_TEST} ./e2e/tests/... -tags=e2e
+	echo "IMPROVE(#759): Make sure you ran 'make localnet_up' in case this fails with infrastructure related errors."
+	go test ${VERBOSE_TEST} -count=1 ./e2e/tests/... -tags=e2e
 
 .PHONY: test_all_with_json_coverage
 test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, output results & coverage into json & coverage files
-	go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out | tee test_results.json | jq
+	go test -p=1 -count=1 -json ./... -covermode=count -coverprofile=coverage.out | tee test_results.json | jq
 
 .PHONY: test_race
 test_race: ## Identify all unit tests that may result in race conditions
-	go test ${VERBOSE_TEST} -race ./...
+	go test ${VERBOSE_TEST} -race -count=1 ./...
 
 .PHONY: test_app
 test_app: ## Run all go app module unit tests
@@ -363,11 +364,11 @@ test_utility: ## Run all go utility module unit tests
 
 .PHONY: test_shared
 test_shared: ## Run all go unit tests in the shared module
-	go test ${VERBOSE_TEST} -p 1 ./shared/...
+	go test ${VERBOSE_TEST} -p=1 -count=1 ./shared/...
 
 .PHONY: test_consensus
 test_consensus: ## Run all go unit tests in the consensus module
-	go test ${VERBOSE_TEST} -count=1 ./consensus/...
+	go test ${VERBOSE_TEST} -p=1 -count=1 ./consensus/...
 
 # These tests are isolated to a single package which enables logs to be streamed in realtime. More details here: https://stackoverflow.com/a/74903989/768439
 .PHONY: test_consensus_e2e
@@ -383,11 +384,11 @@ test_consensus_concurrent_tests: ## Run unit tests in the consensus module that 
 
 .PHONY: test_hotstuff
 test_hotstuff: ## Run all go unit tests related to hotstuff consensus
-	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Hotstuff
+	go test ${VERBOSE_TEST} -count=1 ./consensus/e2e_tests -run Hotstuff
 
 .PHONY: test_pacemaker
 test_pacemaker: ## Run all go unit tests related to hotstuff pacemaker
-	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Pacemaker
+	go test ${VERBOSE_TEST} -count=1 ./consensus/e2e_tests -run Pacemaker
 
 .PHONY: test_statesync
 test_statesync: ## Run all go unit tests related to hotstuff statesync
@@ -395,19 +396,19 @@ test_statesync: ## Run all go unit tests related to hotstuff statesync
 
 .PHONY: test_vrf
 test_vrf: ## Run all go unit tests in the VRF library
-	go test ${VERBOSE_TEST} ./consensus/leader_election/vrf
+	go test ${VERBOSE_TEST} -count=1 ./consensus/leader_election/vrf
 
 .PHONY: test_sortition
 test_sortition: ## Run all go unit tests in the Sortition library
-	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition
+	go test ${VERBOSE_TEST} -count=1 ./consensus/leader_election/sortition
 
 .PHONY: test_persistence
 test_persistence: ## Run all go unit tests in the Persistence module
-	go test ${VERBOSE_TEST} -p 1 -count=1 ./persistence/...
+	go test ${VERBOSE_TEST} -count=1 -p=1 ./persistence/...
 
 .PHONY: test_persistence_state_hash
 test_persistence_state_hash: ## Run all go unit tests in the Persistence module related to the state hash
-	go test ${VERBOSE_TEST} -run TestStateHash -count=1 ./persistence/...
+	go test ${VERBOSE_TEST} -count=1 -run TestStateHash ./persistence/...
 
 .PHONY: test_p2p
 test_p2p: ## Run all p2p related tests
@@ -415,25 +416,25 @@ test_p2p: ## Run all p2p related tests
 
 .PHONY: test_p2p_raintree
 test_p2p_raintree: ## Run all p2p raintree related tests
-	go test ${VERBOSE_TEST} -run RainTreeNetwork -count=1 ./p2p/...
+	go test ${VERBOSE_TEST} -count=1 -run RainTreeNetwork -count=1 ./p2p/...
 
 .PHONY: test_p2p_raintree_addrbook
 test_p2p_raintree_addrbook: ## Run all p2p raintree addr book related tests
-	go test ${VERBOSE_TEST} -run RainTreeAddrBook -count=1 ./p2p/...
+	go test ${VERBOSE_TEST} -count=1 -run RainTreeAddrBook -count=1 ./p2p/...
 
 # TIP: For benchmarks, consider appending `-run=^#` to avoid running unit tests in the same package
 
 .PHONY: benchmark_persistence_state_hash
 benchmark_persistence_state_hash: ## Benchmark the state hash computation
-	go test ${VERBOSE_TEST} -cpu 1,2 -benchtime=1s -benchmem -bench=. -run BenchmarkStateHash -count=1 ./persistence/...
+	go test ${VERBOSE_TEST} -count=1 -cpu 1,2 -benchtime=1s -benchmem -bench=. -run BenchmarkStateHash -count=1 ./persistence/...
 
 .PHONY: benchmark_sortition
 benchmark_sortition: ## Benchmark the Sortition library
-	go test ${VERBOSE_TEST} -bench=. -run ^# ./consensus/leader_election/sortition
+	go test ${VERBOSE_TEST} -count=1 -bench=. -run ^# ./consensus/leader_election/sortition
 
 .PHONY: benchmark_p2p_addrbook
 benchmark_p2p_peerstore: ## Run P2P peerstore benchmarks
-	go test ${VERBOSE_TEST} -bench=. -run BenchmarkPeerstore -count=1 ./p2p/...
+	go test ${VERBOSE_TEST} -count=1 -bench=. -run BenchmarkPeerstore ./p2p/...
 
 ### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
 # TODO          - General Purpose catch-all.
