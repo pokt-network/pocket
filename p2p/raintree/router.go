@@ -196,7 +196,9 @@ func (rtr *rainTreeRouter) sendInternal(data []byte, address cryptoPocket.Addres
 	return nil
 }
 
-func (rtr *rainTreeRouter) HandleNetworkData(data []byte) ([]byte, error) {
+// handleRainTreeMsg handles a RainTree message, continuing broadcast propagation
+// if applicable. Returns the serialized `PocketEnvelope` data contained within.
+func (rtr *rainTreeRouter) handleRainTreeMsg(data []byte) ([]byte, error) {
 	blockHeightInt := rtr.GetBus().GetConsensusModule().CurrentHeight()
 	blockHeight := fmt.Sprintf("%d", blockHeightInt)
 
@@ -368,7 +370,7 @@ func (rtr *rainTreeRouter) readStream(stream libp2pNetwork.Stream) {
 
 	// TODO_THIS_COMMIT: refactor
 	// extract `PocketEnvelope` from `RainTreeMessage` (& continue propagation)
-	appMsgData, err := rtr.HandleNetworkData(data)
+	appMsgData, err := rtr.handleRainTreeMsg(data)
 	if err != nil {
 		rtr.logger.Error().Err(err).Msg("handling network data")
 		return
