@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.5] - 2023-05-17
+## [0.0.0.5] - 2023-05-19
 
 - Added `ServiceMonitor` to the helm chart.
 

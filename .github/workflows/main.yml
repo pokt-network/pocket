@@ -6,13 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths-ignore:
-      - "docs/**"
-      - "**.md"
   pull_request:
-    paths-ignore:
-      - "docs/**"
-      - "**.md"
 
 env:
   # Even though we can test against multiple versions, this one is considered a target version.
