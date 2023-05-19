@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.51] - 2023-05-19
+
+- Added `Handler` field to `RainTreeConfig` & `BackgroundConfig`
+- Refactored `rainTreeRouter` logging methods
+- Renamed `rainTreeRouter#HandleNetworkData()` to `#handleRainTreeMsg()`
+- Renamed `p2pModule#handleNetworkData()` to `#handleAppData()`
+- Added -tags=test to all test make targets
+- Fixed mockdns usage in `TestP2PModule_Insecure_Error` test
+- Moved message handling from p2p module to router
+
 ## [0.0.0.50] - 2023-05-08
 
 - Removed unused `Transport` interface
