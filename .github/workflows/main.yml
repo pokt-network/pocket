@@ -155,6 +155,7 @@ jobs:
     env:
       ARGO_HTTP1: true
       ARGO_SECURE: true
+      ARGO_SERVER: ${{ vars.ARGO_SERVER }}
     permissions:
       contents: "read"
       id-token: "write"
