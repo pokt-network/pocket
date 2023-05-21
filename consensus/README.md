@@ -5,12 +5,13 @@ This document is meant to be a supplement to the living specification of [1.0 Po
 ## Table of Contents <!-- omit in toc -->
 
 - [Interface](#interface)
-- [Consensus Module Lifecycle](#consensus-module-lifecycle)
+- [Consensus Processes](#consensus-processes)
   - [Leader Election](#leader-election)
-  - [Block Generation](#block-generation-process)
-  - [Block Validation](#block-validation-process)
-  - [State Sync Process](#state-sync)
+  - [Consensus Phases](#consensus-phases)
+  - [Block Generation](#block-generation)
+  - [Block Validation](#block-validation)
   - [Consensus Lifecycle](#consensus-lifecycle)
+  - [State Sync](#state-sync)
 - [Implementation](#implementation)
   - [Code Organization](#code-organization)
 - [Testing](#testing)
@@ -20,7 +21,7 @@ This document is meant to be a supplement to the living specification of [1.0 Po
 
 This module aims to implement the interface specified in `pocket/shared/modules/consensus_module.go` using the specification above.
 
-## Consensus Module Overview
+## Consensus Processes
 
 This repository features an implementation of the HotStuff consensus algorithm. Consensus process is facilitated through a series of rounds. Staked validator nodes participate in the consensus process, where one node is elected as the leader, and the others act as replicas.
 
@@ -36,8 +37,7 @@ Upon receiving the proposal, each replica node performs block validation check. 
 
 Once the leader collects votes from more than two-thirds of the replicas, it moves on to the next consensus phase. This two-thirds rule is critical for satisfying the Byzantine Fault Tolerance (BFT) requirement, ensuring the network's resilience against faulty or malicious nodes.
 
-
-### Block Generation Process
+### Block Generation
 ```mermaid
 sequenceDiagram
     participant Leader
@@ -56,33 +56,52 @@ sequenceDiagram
     Note over Leader,Replicas: New Leader Election
 ```
 
-### Block Validation Process
+### Block Validation
+For all leader proposals, replicas performs set of steps to ensure leader's proposal's validity.
+
+
 ```mermaid
 graph TD
-    A[Receive Block Proposal from Leader]
-    B[Check Block Structure]
-    C[Check Block Hash]
-    D[Check Previous Block Reference]
-    E[Check Transactions]
-    F[Check Block Creator's Signature]
-    G[Check Timestamp]
-    H[Block is Valid - Proceed with Prepare message]
-    I[Block is Invalid - Reject Block]
+    A[Receive Block proposal from leader]
+    B[Perform basic validation]
+    C[Check Block structure]
+    D[Validate quorum certificate]
+    E[Validate message signatures]
+    F[Validate optimistic threshold]
+    G[Block is Valid - apply block]
+    H[Block is Invalid - Reject the proposal]
+    J[Create and send vote message to the leader]
     A-->B
     B-->C
     C-->D
     D-->E
     E-->F
     F-->G
-    G-->H
-    B-.->I
-    C-.->I
-    D-.->I
-    E-.->I
-    F-.->I
-    G-.->I
+    G-->J
+    B-.->H
+    C-.->H
+    D-.->H
+    E-.->H
+    F-.->H
 ```
 
+### Consensus Lifecycle
+
+```mermaid
+flowchart TD
+  A[Start New Round] --> |Elect Leader| L[Leader Election Module]
+  L --> D1[Leader]
+  L --> D2[Replica]
+  D1 --> E1[Create Proposals]
+  D2 --> E2[Validate Proposals]
+  E1 --> F1[Aggregate Votes]
+  E2 --> F2[Vote on Proposals]
+  F1 --> G1[Quorum and Commit Block]
+  F2 --> G2[Commit Block]
+  G1 --> J1[End Round]
+  G2 --> J1
+  J1 --> A
+```
 
 ### State Sync
 
@@ -112,27 +131,6 @@ graph TD
     C --> note1
     J --> note2
 ```
-
-
-### Consensus Lifecycle
-
-```mermaid
-flowchart TD
-  A[Start New Round] --> |Elect Leader| L[Leader Election Module]
-  L --> D1[Leader]
-  L --> D2[Replica]
-  D1 --> E1[Create Proposals]
-  D2 --> E2[Validate Proposals]
-  E1 --> F1[Aggregate Votes]
-  E2 --> F2[Vote on Proposals]
-  F1 --> G1[Quorum and Commit Block]
-  F2 --> G2[Commit Block]
-  G1 --> J1[End Round]
-  G2 --> J1
-  J1 --> A
-```
-
-
 
 ## Implementation
 
