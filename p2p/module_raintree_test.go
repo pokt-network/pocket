@@ -3,8 +3,11 @@
 package p2p_test
 
 import (
+	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	runtime_testutil "github.com/pokt-network/pocket/internal/testutil/runtime"
 	telemetry_testutil "github.com/pokt-network/pocket/internal/testutil/telemetry"
+	"github.com/pokt-network/pocket/p2p"
+	"github.com/pokt-network/pocket/p2p/protocol"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -13,6 +16,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 
@@ -245,13 +249,13 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	//busMocks := createMockBuses(t, runtimeConfigs, &wg)
 	busEventHandlerFactory := func(t gocuke.TestingT, busMock *mock_modules.MockBus) testutil.BusEventHandler {
 		return func(data *messaging.PocketEnvelope) {
-			p2pCfg := busMock.GetRuntimeMgr().GetConfig().P2P
-
-			// `p2pModule#handleNetworkData()` calls `modules.Bus#PublishEventToBus()`
-			// assumes that P2P module is the only bus event producer running during
-			// the test.
-			t.Logf("[valId: %s:%d] Read", p2pCfg.Hostname, p2pCfg.Port)
-			wg.Done()
+			//p2pCfg := busMock.GetRuntimeMgr().GetConfig().P2P
+			//
+			//// `p2pModule#handleNetworkData()` calls `modules.Bus#PublishEventToBus()`
+			//// assumes that P2P module is the only bus event producer running during
+			//// the test.
+			//t.Logf("[valId: %s:%d] Read", p2pCfg.Hostname, p2pCfg.Port)
+			//wg.Done()
 		}
 	}
 
@@ -329,18 +333,18 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	}
 
 	// Start all p2p modules
-	for _, p2pMod := range p2pModules {
+	for serviceURL, p2pMod := range p2pModules {
 		err := p2pMod.Start()
 		require.NoError(t, err)
 
 		// TODO_THIS_COMMIT: decide where to `wg.Done()`
-		//sURL := strings.Clone(serviceURL)
-		//mod := *p2pMod
-		//p2pMod.host.SetStreamHandler(protocol.PoktProtocolID, func(stream libp2pNetwork.Stream) {
-		//	log.Printf("[valID: %s] Read\n", sURL)
-		//	(&mod).router.(*raintree.RainTreeRouter).HandleStream(stream)
-		//	wg.Done()
-		//})
+		sURL := strings.Clone(serviceURL)
+		mod := *(p2pMod.(*p2p.P2PModule))
+		mod.GetHost().SetStreamHandler(protocol.PoktProtocolID, func(stream libp2pNetwork.Stream) {
+			log.Printf("[valID: %s] Read\n", sURL)
+			(&mod).GetRainTreeRouter().HandleStream(stream)
+			wg.Done()
+		})
 	}
 
 	// Wait for completion
