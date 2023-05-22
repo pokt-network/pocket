@@ -1,6 +1,6 @@
 # Consensus Module <!-- omit in toc -->
 
-This document is meant to be a supplement to the living specification of [1.0 Pocket's Consensus Module Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/consensus) primarily focused on the implementation, and additional details related to the design of the codebase.
+This README serves as a guide to the implementation of the [1.0 Pocket's Consensus Module Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/consensus). It is designed to provide insights into the structure and design of the codebase.
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -19,25 +19,28 @@ This document is meant to be a supplement to the living specification of [1.0 Po
 
 ## Interface
 
-This module aims to implement the interface specified in `pocket/shared/modules/consensus_module.go` using the specification above.
+This module adheres to the interface outlined in `pocket/shared/modules/consensus_module.go`, which is derived from the above specification.
 
 ## Consensus Processes
 
-This repository features an implementation of the HotStuff consensus algorithm. Consensus process is facilitated through a series of rounds. Staked validator nodes participate in the consensus process, where one node is elected as the leader, and the others act as replicas.
+This repository features an implementation of the HotStuff consensus algorithm. It facilitates the consensus process through a series of rounds. Staked validator nodes participate in the consensus process, with one node serving as the leader and the rest as replicas.
 
 ### Leader Election
 
-Leader election is handled by a dedicated submodule. In our current configuration, we utilize a deterministic round-robin leader election mechanism as the primary leader election method.
+A dedicated submodule handles the leader election process. The current configuration employs a deterministic round-robin leader election mechanism.
 
 ### Consensus Phases
 
-The HotStuff consensus algorithm has three phases: `Prepare`, `Pre-Commit`, and `Commit`. In each phase, the leader creates a proposal and broadcasts it to all replica nodes.
+The HotStuff consensus algorithm consists of three phases: `Prepare`, `Pre-Commit`, and `Commit`. In each phase, the leader creates a proposal and broadcasts it to all replica nodes.
 
-Upon receiving the proposal, each replica node performs block validation check. If the proposal is valid, the replica node responds to the leader with its signature, which acts as its vote.
+Upon receiving the proposal, each replica node performs a block validation check. If the proposal is valid, the replica node responds to the leader with its signature as a vote.
 
-Once the leader collects votes from more than two-thirds of the replicas, it moves on to the next consensus phase. This two-thirds rule is critical for satisfying the Byzantine Fault Tolerance (BFT) requirement, ensuring the network's resilience against faulty or malicious nodes.
+When the leader collects votes from more than two-thirds of the replicas, it progresses to the next consensus phase. This two-thirds rule is essential to achieve Byzantine Fault Tolerance (BFT), ensuring network resilience against faulty or malicious nodes.
 
 ### Block Generation
+
+Block generation in the HotStuff consensus algorithm involves a series of interactive steps between the Leader and the Replica nodes. The steps are as follows:
+
 ```mermaid
 sequenceDiagram
     participant Leader
@@ -57,8 +60,8 @@ sequenceDiagram
 ```
 
 ### Block Validation
-For all leader proposals, replicas performs set of steps to ensure leader's proposal's validity.
 
+Every proposal made by the leader goes through a series of validation steps performed by the replicas.
 
 ```mermaid
 graph TD
@@ -87,6 +90,8 @@ graph TD
 
 ### Consensus Lifecycle
 
+The consensus lifecycle begins with a new round that includes leader election, proposal creation, proposal validation, vote aggregation, and block commitment. The steps are as follows:
+
 ```mermaid
 flowchart TD
   A[Start New Round] --> |Elect Leader| L[Leader Election Module]
@@ -105,8 +110,7 @@ flowchart TD
 
 ### State Sync
 
-State synchronization is an essential process in our consensus module to ensure that all participating nodes maintain an up-to-date and consistent view of the network state. It is particularly important in a dynamic and decentralized network environment where nodes can join or leave, or might be intermittently offline. For in-depth understanding of the state sync and current status check out our [State Sync Protocol Design Specification](https://github.com/pokt-network/pocket/blob/main/consensus/doc/PROTOCOL_STATE_SYNC.md).
-
+State synchronization is crucial to ensure all participating nodes maintain a consistent and up-to-date view of the network state. It is especially important in a dynamic and decentralized network where nodes can join, leave, or experience intermittent connectivity. For an in-depth understanding of the state sync process and its current status, please refer to our [State Sync Protocol Design Specification](https://github.com/pokt-network/pocket/blob/main/consensus/doc/PROTOCOL_STATE_SYNC.md).
 
 ```mermaid
 graph TD
@@ -118,13 +122,13 @@ graph TD
     E --> B
     D --> F{Are there new validators staked?}
     F -->|Yes| G(Wait for validators' metadata responses)
-    F -->|No| J{Are syncing nodes catched up?}
+    F -->|No| J{Are syncing nodes caught up?}
     J --> |Yes| Z
     J -->|No| B
     G --> B
 
     subgraph Notes
-       note1>NOTE: BFT requires > 2/3 validators<br>in same round & height, voting for proposal.]
+       note1>NOTE: BFT requires > 2/3 validators<br>in the same round & height, voting for the proposal.]
        note2>NOTE: Syncing validators request blocks from the network.]
     end
 
@@ -136,53 +140,55 @@ graph TD
 
 ### Code Organization
 
+The codebase is organized as follows:
+
 ```bash
 consensus
 ├── doc
-│   ├── CHANGELOG.md                        
+│   ├── CHANGELOG.md
 │   ├── PROTOCOL_STATE_SYNC.md              # State sync protocol definition
 ├── e2e_tests
 │   ├── hotstuff_test.go                    # Hotstuff consensus tests
 │   ├── pacemaker_test.go                   # Pacemaker module tests
 │   ├── state_sync_test.go                  # State sync tests
 │   ├── utils_test.go                       # test utils
-├── leader_election                         
-│   ├── sortition                           
+├── leader_election
+│   ├── sortition
 │       └── sortition_test.go               # Sortition tests
 │       └── sortition.go                    # Cryptographic sortition implementation
-│   ├── vrf                                 
-│       └── errors.go                       
+│   ├── vrf
+│       └── errors.go
 │       └── vrf_test.go                     # VRF tests
 │       └── vrf.go                          # VRF implementation
 │   ├── module.go                           # Leader election module implementation
-├── pacemaker                                  
-│   ├── debug.go                            
+├── pacemaker
+│   ├── debug.go
 │   ├── module.go                           # Pacemaker module implementation
-├── state_sync                                 
-│   ├── helpers.go                          
-│   ├── interfaces.go                       
+├── state_sync
+│   ├── helpers.go
+│   ├── interfaces.go
 │   ├── module.go                           # State sync module implementation
 │   ├── server.go                           # State sync server functions
-├── telemetry   
-│   ├── metrics.go                          
+├── telemetry
+│   ├── metrics.go
 ├── types
 │   ├── proto                               # Proto3 messages for generated types
 │   ├── actor_mapper_test.go
-│   ├── actor_mapper.go           
-│   ├── messages.go                         # Consensus message definitions 
+│   ├── actor_mapper.go
+│   ├── messages.go                         # Consensus message definitions
 │   ├── types.go                            # Consensus type definitions
-├── block.go                                 
+├── block.go
 ├── debugging.go                            # Debug function implementation
-├── events.go                                
+├── events.go
 ├── fsm_handler.go                          # FSM events handler implementation
-├── helpers.go                              
-├── hotstuff_handler.go                     
+├── helpers.go
+├── hotstuff_handler.go
 ├── hotstuff_leader.go                      # Hotstuff message handlers for Leader
 ├── hotstuff_mempool_test.go                # Mempool tests
 ├── hotstuff_mempool.go                     # Hotstuff transaction mempool implementation
 ├── hotstuff_replica.go                     # Hotstuff message handlers for Replica
 ├── messages.go                             # Hotstuff message helpers
-├── module_consensus_debugging.go            
+├── module_consensus_debugging.go
 ├── module_consensus_pacemaker.go           # Pacemaker module helpers
 ├── module_consensus_state_sync.go          # State sync module helpers
 ├── module.go                               # The implementation of the Consensus Interface
