@@ -12,6 +12,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
 )
 
@@ -84,6 +85,39 @@ func prepareEnvironment(
 	})
 
 	return runtimeCfg, testUtilityMod, testPersistenceMod
+}
+
+// Prepares a runtime environment for testing along with a genesis state and a utility module using the mocked persistence module provided.
+// NB: We are intentionally passing in a `MockPersistenceModule` instead of `PersistenceModule` since that is the intended use case and makes
+// the expectation explicit, but may be changed in the future.
+func prepareEnvironmentWithPersistenceMock(
+	t *testing.T,
+	numValidators, // nolint:unparam // we are not currently modifying parameter but want to keep it modifiable in the future
+	numServicers,
+	numApplications,
+	numFisherman int,
+	persistenceMod *mockModules.MockPersistenceModule,
+	genesisOpts ...test_artifacts.GenesisOption,
+) (*runtime.Manager, modules.UtilityModule) {
+	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
+
+	runtimeCfg := newTestRuntimeConfig(numValidators, numServicers, numApplications, numFisherman, genesisOpts...)
+	bus, err := runtime.CreateBus(runtimeCfg)
+	require.NoError(t, err)
+
+	bus.RegisterModule(persistenceMod)
+
+	testUtilityMod := newTestUtilityModule(bus)
+	err = testUtilityMod.Start()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		teardownDeterministicKeygen()
+		err = testUtilityMod.Stop()
+		require.NoError(t, err)
+	})
+
+	return runtimeCfg, testUtilityMod
 }
 
 // REFACTOR: This should be in a shared testing package
