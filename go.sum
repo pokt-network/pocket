@@ -694,8 +694,6 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/sftp v1.13.1/go.mod h1:3HaPG6Dq1ILlpPZRO0HVMrsydcdLt6HRDccSgb87qRg=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/pokt-network/go-mockdns v0.0.1 h1:1Kb/kIFH6bNtY9F1bFhJyMRMCc7WyiqfGg0hotBZ1JI=
-github.com/pokt-network/go-mockdns v0.0.1/go.mod h1:lgRN6+KxQBawyIghpnl5CezHFGS9VLzvtVlwxvzXTQ4=
 github.com/pokt-network/gocuke v0.0.1 h1:qJ/Ryf+hi5L6T9lsOZDNbiAclHkLlDio5/eVKQEYhgE=
 github.com/pokt-network/gocuke v0.0.1/go.mod h1:BowLKW4++696gTTU33teodtIhjjyaphEbhQT9D5Refw=
 github.com/pokt-network/smt v0.4.0 h1:fodLphes/EtQw+nr6Zc5giSJdnjIkM2BY6cGTOfTaqo=
