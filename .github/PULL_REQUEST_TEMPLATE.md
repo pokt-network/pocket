@@ -2,14 +2,17 @@
  1. Make the title of the PR is descriptive and follows this format: `[<Module>] <DESCRIPTION>`
  2. Update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the PR for review.
  3. Add label(s) for the purpose (e.g. `persistence`) and, if applicable, priority (e.g. `low`) labels as well.
+ 4. See our custom action driven labels if you need to trigger a build or interact with an LLM - https://github.com/pokt-network/pocket/blob/main/docs/development/README.md#github-labels
 -->
 
 ## Description
 
 <!-- REMOVE this comment block after following the instructions
-1. Add a summary of the change including: motivation, reasons, context, dependencies, etc...
-2. If applicable, specify the key files that should be looked at.
+ 1. Add a summary of the change including: motivation, reasons, context, dependencies, etc...
+ 2. If applicable, specify the key files that should be looked at.
+ 3. If you leave the `reviewpad:summary` block below, it'll autopopulate an AI generated summary. Alternatively, you can leave a `/reviewpad summarize` comment to trigger it manually.
 -->
+reviewpad:summary
 
 ## Issue
 
