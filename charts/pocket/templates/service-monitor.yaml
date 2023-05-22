@@ -1,0 +1,12 @@
+{{ if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+    name: {{ include "pocket.fullname" . }}
+spec:
+  endpoints:
+  - port: metrics
+  selector:
+    matchLabels:
+      {{- include "pocket.selectorLabels" . | nindent 6 }}
+{{ end }}
