@@ -61,12 +61,8 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 	persistenceMock := persistence_testutil.BasePersistenceMock(t, busMock, genesisStateMock)
 	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 
-	serviceURLs := make([]string, len(genesisStateMock.Validators))
-	for i, actor := range genesisStateMock.Validators {
-		serviceURLs[i] = actor.ServiceUrl
-	}
-	dnsDone := testutil.PrepareDNSMockFromServiceURLs(t, serviceURLs)
-	t.Cleanup(dnsDone)
+	// mock DNS for service URL hostnames
+	_ = testutil.DNSMockFromServiceURLs(t, serviceURLs)
 
 	p2pMod, err := p2p.Create(busMock)
 	require.NoError(t, err)

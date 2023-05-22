@@ -5,7 +5,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/regen-network/gocuke"
 
-	"github.com/pokt-network/pocket/persistence/types/mocks"
+	persistence_mocks "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/core/types"
@@ -47,7 +47,7 @@ func PersistenceMockWithBlockStore(t gocuke.TestingT, _ modules.EventsChannel, b
 
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
 
-	blockStoreMock := mock_kvstore.NewMockKVStore(ctrl)
+	blockStoreMock := persistence_mocks.NewMockBlockStore(ctrl)
 
 	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
 		heightInt := utils.HeightFromBytes(height)
