@@ -147,7 +147,7 @@ jobs:
             TARGET_GOLANG_VERSION=${{ env.TARGET_GOLANG_VERSION }}
 
 
-  # Run e2e tests on devnet IF the PR has a label "e2e-devnet-test"
+  # Run e2e tests on devnet if the PR has a label "e2e-devnet-test"
   e2e-tests:
     runs-on: ubuntu-latest
     needs: build-images
