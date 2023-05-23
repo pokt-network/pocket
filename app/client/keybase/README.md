@@ -40,13 +40,13 @@ The `KeyPair` defined in [crypto package](../../../shared/crypto) is the data st
 
 ### V0<->V1 Interoperability
 
-The `Keybase` interface supports full interoperability of key export & import between Pocket [V0](https://github.com/pokt-network/pocket-core)<->[V1](https://github.com/pokt-network/pocket).
+The `Keybase` interface supports partial interoperability of key export & import between Pocket [V0](https://github.com/pokt-network/pocket-core)<->[V1](https://github.com/pokt-network/pocket).
 
-Any private key created in the V0 protocol can be imported into V1 via one of the following two ways:
+Any private key created in the V0 protocol can be imported into V1 via the following:
 
-1. **JSON keyfile**: This method will take the JSON encoded, encrypted private key, and will import it into the V1 keybase. The `passphrase` supplied must be the same as the one use to encrypt the key in the first place or the key won't be importable.
+ - **Private Key Hex String**: This method will directly import the private key from the hex string provided and encrypt it with the passphrase provided. This enables the passphrase to be different from the original as the provided plaintext is already decrypted.
 
-2. **Private Key Hex String**: This method will directly import the private key from the hex string provided and encrypt it with the passphrase provided. This enables the passphrase to be different from the original as the provided plaintext is already decrypted.
+In order to import a key via a JSON file it must go through a decryption step before being re-encrypted for use in V1. This is because the V0 keys use a different cipher suite to secure the private key compared to V1.
 
 Although key pairs are stored in the local DB using the serialized (`[]byte`) representation of the public key, the associated address can be used for accessing the record in the DB for simplicity.
 
