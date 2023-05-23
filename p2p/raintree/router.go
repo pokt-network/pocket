@@ -338,7 +338,7 @@ func (rtr *rainTreeRouter) readStream(stream libp2pNetwork.Stream) {
 	rtr.logStream(stream)
 
 	// read stream
-	data, err := io.ReadAll(stream)
+	rainTreeMsgBz, err := io.ReadAll(stream)
 	if err != nil {
 		rtr.logger.Error().Err(err).Msg("reading from stream")
 		if err := stream.Reset(); err != nil {
@@ -353,21 +353,21 @@ func (rtr *rainTreeRouter) readStream(stream libp2pNetwork.Stream) {
 	}
 
 	// extract `PocketEnvelope` from `RainTreeMessage` (& continue propagation)
-	appMsgData, err := rtr.handleRainTreeMsg(data)
+	poktEnvelopeBz, err := rtr.handleRainTreeMsg(rainTreeMsgBz)
 	if err != nil {
-		rtr.logger.Error().Err(err).Msg("handling network data")
+		rtr.logger.Error().Err(err).Msg("handling raintree message")
 		return
 	}
 
 	// There was no error, but we don't need to forward this to the app-specific bus.
 	// For example, the message has already been handled by the application.
-	if appMsgData == nil {
+	if poktEnvelopeBz == nil {
 		return
 	}
 
 	// call configured handler to forward to app-specific bus
-	if err := rtr.handler(appMsgData); err != nil {
-		rtr.logger.Error().Err(err).Msg("handling network data")
+	if err := rtr.handler(poktEnvelopeBz); err != nil {
+		rtr.logger.Error().Err(err).Msg("handling pocket envelope")
 	}
 }
 

@@ -275,7 +275,7 @@ func (m *p2pModule) setupRouter() (err error) {
 			CurrentHeightProvider: m.currentHeightProvider,
 			PeerstoreProvider:     m.pstoreProvider,
 			Host:                  m.host,
-			Handler:               m.handleAppData,
+			Handler:               m.handlePocketEnvelope,
 			MaxNonces:             m.cfg.MaxNonces,
 		},
 	)
@@ -326,16 +326,16 @@ func (m *p2pModule) isClientDebugMode() bool {
 	return m.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode
 }
 
-// handleAppData deserializes the received `PocketEnvelope` data and publishes
+// handlePocketEnvelope deserializes the received `PocketEnvelope` data and publishes
 // a copy of its `Content` to the application event bus.
-func (m *p2pModule) handleAppData(data []byte) error {
-	networkMessage := messaging.PocketEnvelope{}
-	if err := proto.Unmarshal(data, &networkMessage); err != nil {
+func (m *p2pModule) handlePocketEnvelope(pocketEnvelopeBz []byte) error {
+	poktEnvelope := messaging.PocketEnvelope{}
+	if err := proto.Unmarshal(pocketEnvelopeBz, &poktEnvelope); err != nil {
 		return fmt.Errorf("decoding network message: %w", err)
 	}
 
 	event := messaging.PocketEnvelope{
-		Content: networkMessage.Content,
+		Content: poktEnvelope.Content,
 	}
 	m.GetBus().PublishEventToBus(&event)
 	return nil
