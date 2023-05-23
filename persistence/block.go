@@ -25,7 +25,7 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 		}
 		return false, err
 	}
-	return true, err
+	return true, nil
 }
 
 func (p *PostgresContext) GetMinimumBlockHeight() (latestHeight uint64, err error) {

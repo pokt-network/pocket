@@ -1,6 +1,8 @@
 package utility
 
 import (
+	"encoding/hex"
+
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
@@ -51,7 +53,11 @@ func (u *utilityModule) GetIndexedTransaction(txProtoBytes []byte) (*coreTypes.I
 
 	// TECHDEBT: Note the inconsistency between referencing tx hash as a string vs. byte slice in different places. Need to pick
 	// one and consolidate throughout the codebase
-	idTx, err := persistenceModule.GetTxIndexer().GetByHash([]byte(txHash))
+	hash, err := hex.DecodeString(txHash)
+	if err != nil {
+		return nil, err
+	}
+	idTx, err := persistenceModule.GetTxIndexer().GetByHash(hash)
 	if err != nil {
 		return nil, err
 	}
