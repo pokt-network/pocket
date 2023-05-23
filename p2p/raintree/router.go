@@ -325,11 +325,11 @@ func (rtr *rainTreeRouter) handleStream(stream libp2pNetwork.Stream) {
 
 // readStream reads the incoming stream, extracts the serialized `PocketEnvelope`
 // data from the incoming `RainTreeMessage`, and passes it to the application by
-// calling the configured `rtr.handler`.
+// calling the configured `rtr.handler`. Intended to be called in a go routine.
 func (rtr *rainTreeRouter) readStream(stream libp2pNetwork.Stream) {
 	// Time out if no data is sent to free resources.
+	// NB: tests using libp2p's `mocknet` rely on this not returning an error.
 	if err := stream.SetReadDeadline(newReadStreamDeadline()); err != nil {
-		// NB: tests using libp2p's `mocknet` rely on this not returning an error.
 		// `SetReadDeadline` not supported by `mocknet` streams.
 		rtr.logger.Error().Err(err).Msg("setting stream read deadline")
 	}
@@ -348,6 +348,8 @@ func (rtr *rainTreeRouter) readStream(stream libp2pNetwork.Stream) {
 	}
 
 	// done reading; reset to signal this to remote peer
+	// NB: failing to reset the stream can easily max out the number of available
+	// network connections on the receiver's side.
 	if err := stream.Reset(); err != nil {
 		rtr.logger.Error().Err(err).Msg("resetting stream (read-side)")
 	}
