@@ -42,7 +42,7 @@ func (rtr *rainTreeRouter) getTargetsAtLevel(level uint32) []target {
 			"firstTarget":  firstTarget.serviceURL,
 			"secondTarget": secondTarget.serviceURL,
 			"height":       height,
-			"level":        strconv.Itoa(int(level)), // TECHDEBT(#): Figure out why we need a conversion here
+			"level":        strconv.Itoa(int(level)), // HACK(#783): Figure out why we need a conversion here
 			"pstoreSize":   pstoreSizeAtHeight,
 		},
 	).Msg("Targets at height")

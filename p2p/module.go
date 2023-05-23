@@ -197,11 +197,6 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
 	}
-
-	m.logger.Info().
-		Interface("PocketEnvelope", c).
-		Msg("broadcasting message to network")
-
 	data, err := codec.GetCodec().Marshal(c)
 	if err != nil {
 		return err
@@ -214,11 +209,6 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
 	}
-
-	m.logger.Info().
-		Str("address", addr.ToString()).
-		Interface("PocketEnvelope", c).
-		Msg("sending message to address")
 
 	data, err := codec.GetCodec().Marshal(c)
 	if err != nil {
