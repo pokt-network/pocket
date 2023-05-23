@@ -49,13 +49,11 @@ flowchart LR
     subgraph S[scrypt lib]
         B["key(salt, pass, ...)"]
     end
-    subgraph AES-GCM
+    subgraph SecretBox
         direction TB
-        D["Cipher(key)"]
-        E["GCM(block)"]
-        F["Seal(plaintext, nonce)"]
-        D--Block-->E
-        E--Nonce-->F
+        D["Read(rand.Reader)"]
+        F["Seal(nonce, plaintext, key)"]
+        D--Nonce-->F
     end
     subgraph Armour
         direction LR
@@ -65,8 +63,8 @@ flowchart LR
         H --> armoured
     end
     C--Salt-->S
-    S--Key-->AES-GCM
-    AES-GCM--encryptedPrivateKey-->Armour
+    S--Key-->SecretBox
+    SecretBox--encryptedPrivateKey-->Armour
     C--Salt-->Armour
     kdf --> Armour
     hint --> Armour
@@ -90,19 +88,17 @@ flowchart LR
     subgraph S[scrypt lib]
         E["key(salt, pass, ...)"]
     end
-    subgraph AES-GCM
+    subgraph SecretBox
         direction TB
-        F["Cipher(key)"]
-        G["GCM(block)"]
-        H["Open(encryptedBytes, nonce)"]
-        F--Block-->G
-        G--Nonce-->H
+        F["encryptedBytes[:nonceSize]"]
+        H["Open(encryptedBytes[nonceSize:], nonce)"]
+        F--Nonce-->H
     end
     encryptedArmouredPrivateKey --Unmarshal--> U
     B--Salt-->S
-    C--encryptedBytes-->AES-GCM
-    S--Key-->AES-GCM
-    AES-GCM-->PrivateKey
+    C--encryptedBytes-->SecretBox
+    S--Key-->SecretBox
+    SecretBox-->PrivateKey
 ```
 
 ## SLIP-0010 HD Child Key Generation

@@ -56,7 +56,7 @@ func newArmouredKey(kdf, salt, hint, cipherText string) armouredKey {
 // Encrypt the given privKey with the passphrase, armour it by encoding the encrypted
 // []byte into base64, and convert into a json string with the parameters for unarmouring
 func encryptArmourPrivKey(privKey PrivateKey, passphrase, hint string) (string, error) {
-	// Encrypt privKey usign AES-256 GCM Cipher
+	// Encrypt privKey using SecretBox cipher
 	saltBz, encBz, err := encryptPrivKey(privKey, passphrase)
 	if err != nil {
 		return "", err
@@ -78,7 +78,7 @@ func encryptArmourPrivKey(privKey PrivateKey, passphrase, hint string) (string, 
 }
 
 // Encrypt the given privKey with the passphrase using a randomly
-// generated salt and the AES-256 GCM cipher
+// generated salt and the SecretBox cipher
 func encryptPrivKey(privKey PrivateKey, passphrase string) (saltBz, encBz []byte, err error) {
 	// Get random bytes for salt
 	saltBz = randBytes(randBz)
@@ -89,7 +89,7 @@ func encryptPrivKey(privKey PrivateKey, passphrase string) (saltBz, encBz []byte
 		return nil, nil, err
 	}
 
-	// Encrypt using AES
+	// Encrypt using SecretBox
 	privKeyHexString := privKey.String()
 	encBz, err = encryptCipher(encryptionKey, []byte(privKeyHexString))
 	if err != nil {
@@ -134,7 +134,7 @@ func unarmourDecryptPrivKey(armourStr, passphrase string) (privKey PrivateKey, e
 	return privKey, err
 }
 
-// Decrypt the AES-256 GCM encrypted bytes using the passphrase given
+// Decrypt the SecretBox encrypted bytes using the passphrase given
 func decryptPrivKey(saltBz, encBz []byte, passphrase string) (PrivateKey, error) {
 	// Derive key for decryption, see: https://pkg.go.dev/golang.org/x/crypto/scrypt#Key
 	encryptionKey, err := scrypt.Key([]byte(passphrase), saltBz, n, r, p, klen)
@@ -142,7 +142,7 @@ func decryptPrivKey(saltBz, encBz []byte, passphrase string) (PrivateKey, error)
 		return nil, err
 	}
 
-	// Decrypt using AES
+	// Decrypt using SecretBox
 	privKeyRawHexBz, err := decryptCipher(encryptionKey, encBz)
 	if err != nil {
 		return nil, err
