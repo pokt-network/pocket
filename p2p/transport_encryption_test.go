@@ -9,8 +9,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/libp2p/go-libp2p"
 	"github.com/multiformats/go-multiaddr"
-	"github.com/stretchr/testify/require"
-
 	"github.com/pokt-network/pocket/p2p/protocol"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
@@ -20,6 +18,7 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/stretchr/testify/require"
 )
 
 func TestP2pModule_Insecure_Error(t *testing.T) {
@@ -40,6 +39,7 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 			Hostname:       hostname,
 			Port:           defaults.DefaultP2PPort,
 			ConnectionType: types.ConnectionType_TCPConnection,
+			MaxNonces:      defaults.DefaultP2PMaxNonces,
 		},
 	}).AnyTimes()
 

@@ -51,16 +51,16 @@ privateKeySecretKeyRef:
 | config.p2p.port | int | `42069` |  |
 | config.p2p.private_key | string | `""` |  |
 | config.p2p.use_rain_tree | bool | `true` |  |
-| config.persistence.block_store_path | string | `"/pocket/validator/block-store"` |  |
+| config.persistence.block_store_path | string | `"/pocket/data/block-store"` |  |
 | config.persistence.health_check_period | string | `"30s"` |  |
 | config.persistence.max_conn_idle_time | string | `"1m"` |  |
 | config.persistence.max_conn_lifetime | string | `"5m"` |  |
 | config.persistence.max_conns_count | int | `50` |  |
 | config.persistence.min_conns_count | int | `1` |  |
-| config.persistence.node_schema | string | `"validator"` |  |
+| config.persistence.node_schema | string | `"pocket"` |  |
 | config.persistence.postgres_url | string | `""` |  |
-| config.persistence.trees_store_dir | string | `"/pocket/validator/trees"` |  |
-| config.persistence.tx_indexer_path | string | `"/pocket/validator/tx-indexer"` |  |
+| config.persistence.trees_store_dir | string | `"/pocket/data/trees"` |  |
+| config.persistence.tx_indexer_path | string | `"/pocket/data/tx-indexer"` |  |
 | config.private_key | string | `""` |  |
 | config.root_directory | string | `"/go/src/github.com/pocket-network"` |  |
 | config.rpc.enabled | bool | `true` |  |
@@ -99,6 +99,7 @@ privateKeySecretKeyRef:
 | ingress.tls | list | `[]` |  |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
+| nodeType | string | `"full"` | type of the blockchain node to run. Can be either `full`, `validator`, `servicer`, `fishermen` |
 | persistence.accessModes | list | `["ReadWriteOnce"]` | persistent Volume Access Modes |
 | persistence.annotations | object | `{}` | annotations of the persistent volume claim |
 | persistence.dataSource | object | `{}` | custom data source of the persistent volume claim |
@@ -126,4 +127,5 @@ privateKeySecretKeyRef:
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
+| serviceMonitor.enabled | bool | `false` | enable service monitor |
 | tolerations | list | `[]` |  |

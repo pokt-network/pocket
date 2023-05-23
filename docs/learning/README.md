@@ -3,6 +3,7 @@
 _This is a live document on how to get ramped up on all the knowledge you need to contribute to the Pocket Protocol._
 
 - [🏁 Where to Start?](#-where-to-start)
+- [🤫 Secret Zone](#-secret-zone)
 - [🏗️ Technical Foundation](#️-technical-foundation)
   - [Github Development](#github-development)
   - [Golang](#golang)
@@ -26,9 +27,11 @@ _IMPORTANT: If you are reading this, understand that if something looks incomple
 
 This is a general set of steps we have found to help new core team members onboard to Protocol development.
 
-1. Watch our [2022 Infracon presentation on v1](https://www.youtube.com/watch?v=NJoZyzQuJVc) to get a general idea of how everything works. _(43 mins)_
+1. Watch some of our V1 video presentation to help you understand the core building components Pocket V1 (curtesy of @Olshansk) _(1.5 hours)_
 
-   - This will help you understand the core building components of a Pocket V1 Node
+   - [2023 ETH Denver presentation](https://www.youtube.com/watch?v=7rQ4Awfx79g)
+   - [2022 Infracon presentation](https://www.youtube.com/watch?v=NJoZyzQuJVc)
+   - [2022 ETH Denver presentation](https://www.youtube.com/watch?v=cjuDDdiMbMQ)
 
 2. Run a **LocalNet** by following the [development guide](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md). _(1-3 hours)_
 
@@ -81,19 +84,28 @@ This is a general set of steps we have found to help new core team members onboa
 
 - This will help you understand the code architecture of Pocket V1
 
-10. View our [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md). _(10 mins)_
+10. Get acquainted with our [GitHub Wiki](https://github.com/pokt-network/pocket/wiki) which automatically mirrors all of the READMEs we have in the codebase. _(5 mins)_
+
+11. View our [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md). _(10 mins)_
 
     - This will give you insight into our development & release timelines
 
-11. Get a sense of all the open issues and tickets [in out Github project](https://github.com/orgs/pokt-network/projects/142/views/12). _(1 hour)_
-12. If you don't already have a starter task, pick one from [Dework](https://app.dework.xyz/pokt-network), our [open issues](https://github.com/pokt-network/pocket/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) or ask the team in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel. _(1 hour)_
+12. Get a sense of all the open issues and tickets [in out Github project](https://github.com/orgs/pokt-network/projects/142/views/12). _(1 hour)_
+13. If you don't already have a starter task, pick one from [Dework](https://app.dework.xyz/pokt-network), our [open issues](https://github.com/pokt-network/pocket/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) or ask the team in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel. _(1 hour)_
 
-13. Jump on a call and pair code! _(∞ and beyond)_
+14. Jump on a call and pair code! _(∞ and beyond)_
 
 - If you need a walk-through of the code and some pointers before getting started, **jump on a call!**
 - If you need to take your time to understand the problem and the code first, do so, and then **jump on a call!**
 - If you don't need help, **when you’re about 33% of the way done**, show your draft work and get some feedback, so **jump on a call!**
 - Just leave a message in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel and someone from the core team will respond.
+
+## 🤫 Secret Zone
+
+We aim to make all our documentation and resources public, but it takes more time and effort to maintain and share. The resources in this section are internal to the Pocket Team, but if you believe it'll bring you value in contributing to the project, reach out to some of the maintainer.
+
+- [What's the hook 🪝](https://www.notion.so/pocketnetwork/What-s-the-Hook-18448627cde04d34bf4c5be96bd37cd3?pvs=4)(_45minutes_)
+- [Protocol Hour Notes](https://www.notion.so/pocketnetwork/9e0590bdbd754163a5e7905f2246892c?v=ad14b5c982384c99944b153692c18f33&pvs=4)(_♾️_)
 
 ## 🏗️ Technical Foundation
 

@@ -5,10 +5,8 @@ import (
 	"log"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
-	"go.uber.org/multierr"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -21,6 +19,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	telemetry "github.com/pokt-network/pocket/telemetry"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -29,16 +28,7 @@ var (
 	_ rainTreeFactory            = &rainTreeRouter{}
 )
 
-type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, *RainTreeConfig]
-
-type RainTreeConfig struct {
-	Addr                  cryptoPocket.Address
-	CurrentHeightProvider providers.CurrentHeightProvider
-	Host                  libp2pHost.Host
-	Hostname              string
-	MaxMempoolCount       uint64
-	PeerstoreProvider     providers.PeerstoreProvider
-}
+type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, *config.RainTreeConfig]
 
 type rainTreeRouter struct {
 	base_modules.IntegratableModule
@@ -50,32 +40,29 @@ type rainTreeRouter struct {
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	host libp2pHost.Host
 	// selfAddr is the pocket address representing this host.
-	selfAddr cryptoPocket.Address
-	// hostname is the network hostname from the config
-	hostname              string
+	selfAddr              cryptoPocket.Address
 	peersManager          *rainTreePeersManager
 	pstoreProvider        peerstore_provider.PeerstoreProvider
 	currentHeightProvider providers.CurrentHeightProvider
 	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 }
 
-func NewRainTreeRouter(bus modules.Bus, cfg *RainTreeConfig) (typesP2P.Router, error) {
+func NewRainTreeRouter(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
 	return new(rainTreeRouter).Create(bus, cfg)
 }
 
-func (*rainTreeRouter) Create(bus modules.Bus, cfg *RainTreeConfig) (typesP2P.Router, error) {
+func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
 	routerLogger := logger.Global.CreateLoggerForModule("router")
 	routerLogger.Info().Msg("Initializing rainTreeRouter")
 
-	if err := cfg.isValid(); err != nil {
+	if err := cfg.IsValid(); err != nil {
 		return nil, err
 	}
 
 	rtr := &rainTreeRouter{
 		host:                  cfg.Host,
 		selfAddr:              cfg.Addr,
-		hostname:              cfg.Hostname,
-		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(cfg.MaxMempoolCount)),
+		nonceDeduper:          mempool.NewGenericFIFOSet[uint64, uint64](int(cfg.MaxNonces)),
 		pstoreProvider:        cfg.PeerstoreProvider,
 		currentHeightProvider: cfg.CurrentHeightProvider,
 		logger:                routerLogger,
@@ -168,7 +155,8 @@ func (rtr *rainTreeRouter) sendInternal(data []byte, address cryptoPocket.Addres
 	}
 
 	// debug logging
-	utils.LogOutgoingMsg(rtr.logger, rtr.hostname, peer)
+	hostname := rtr.getHostname()
+	utils.LogOutgoingMsg(rtr.logger, hostname, peer)
 
 	if err := utils.Libp2pSendToPeer(rtr.host, data, peer); err != nil {
 		rtr.logger.Debug().Err(err).Msg("from libp2pSendInternal")
@@ -320,17 +308,6 @@ func (rtr *rainTreeRouter) setupPeerManager(pstore typesP2P.Peerstore) (err erro
 	return err
 }
 
-func (cfg RainTreeConfig) isValid() (err error) {
-	if cfg.Host == nil {
-		err = multierr.Append(err, fmt.Errorf("host not configured"))
-	}
-
-	if cfg.PeerstoreProvider == nil {
-		err = multierr.Append(err, fmt.Errorf("peerstore provider not configured"))
-	}
-
-	if cfg.CurrentHeightProvider == nil {
-		err = multierr.Append(err, fmt.Errorf("current height provider not configured"))
-	}
-	return err
+func (rtr *rainTreeRouter) getHostname() string {
+	return rtr.GetBus().GetRuntimeMgr().GetConfig().P2P.Hostname
 }
