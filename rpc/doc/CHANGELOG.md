@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.19] - 2023-05-23
 
-- Updates rpc tests to use updated BlockStore mocks
+- Updates rpc handlers to use updated BlockStore interface
 
 ## [0.0.0.18] - 2023-05-04
 
