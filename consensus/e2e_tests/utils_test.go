@@ -633,7 +633,6 @@ func WaitForNextBlock(
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	blockStore := pocketNodes[1].GetBus().GetPersistenceModule().GetBlockStore()
-
 	block, err := blockStore.GetBlock(height)
 	require.NoError(t, err)
 
