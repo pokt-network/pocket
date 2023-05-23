@@ -24,8 +24,6 @@ const (
 	r    = 8     // r * p < 2³⁰
 	p    = 1     // r * p < 2³⁰
 	klen = 32    // bytes
-	// Sec param
-	secParam = 12
 )
 
 // Errors
@@ -37,7 +35,6 @@ var (
 type armouredKey struct {
 	Kdf        string `json:"kdf"`
 	Salt       string `json:"salt"`
-	SecParam   string `json:"secparam"`
 	Hint       string `json:"hint"`
 	CipherText string `json:"ciphertext"`
 }
@@ -47,7 +44,6 @@ func newArmouredKey(kdf, salt, hint, cipherText string) armouredKey {
 	return armouredKey{
 		Kdf:        kdf,
 		Salt:       salt,
-		SecParam:   strconv.Itoa(secParam),
 		Hint:       hint,
 		CipherText: cipherText,
 	}
