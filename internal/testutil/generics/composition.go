@@ -1,4 +1,4 @@
-package testutil
+package generics_testutil
 
 // PipeTwoToOne threads two values of any type (T and U) through a pipeline of
 // functions and returns the result of any type (U). Each function in the pipeline

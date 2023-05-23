@@ -14,7 +14,9 @@ import (
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/multiformats/go-multiaddr"
-	"github.com/pokt-network/pocket/internal/testutil"
+	"github.com/stretchr/testify/require"
+
+	"github.com/pokt-network/pocket/internal/testutil/generics"
 	"github.com/pokt-network/pocket/p2p/config"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mock_types "github.com/pokt-network/pocket/p2p/types/mocks"
@@ -23,7 +25,6 @@ import (
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 // https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2
@@ -208,7 +209,7 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 	case <-broadcastDone:
 	}
 
-	actualPeerIDs = testutil.GetKeys[string](seenMessages)
+	actualPeerIDs = generics_testutil.GetKeys[string](seenMessages)
 	require.ElementsMatchf(t, expectedPeerIDs, actualPeerIDs, "peerIDs don't match")
 }
 

@@ -4,16 +4,13 @@ package integration
 
 import (
 	"fmt"
-	dht "github.com/libp2p/go-libp2p-kad-dht"
-	pubsub "github.com/libp2p/go-libp2p-pubsub"
-	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
-	telemetry_testutil "github.com/pokt-network/pocket/internal/testutil/telemetry"
-	"github.com/pokt-network/pocket/p2p"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"sync"
 	"testing"
 	"time"
 
+	dht "github.com/libp2p/go-libp2p-kad-dht"
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	libp2pMocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/require"
@@ -21,7 +18,11 @@ import (
 
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/internal/testutil/constructors"
+	"github.com/pokt-network/pocket/internal/testutil/generics"
 	runtime_testutil "github.com/pokt-network/pocket/internal/testutil/runtime"
+	telemetry_testutil "github.com/pokt-network/pocket/internal/testutil/telemetry"
+	"github.com/pokt-network/pocket/p2p"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -169,7 +170,7 @@ func (s *suite) ANodeBroadcastsATestMessageViaItsBackgroundRouter() {
 	s.timeoutDuration = broadcastTimeoutDuration
 
 	// select arbitrary sender & store in context for reference later
-	sender := s.p2pModules[testutil.GetKeys(s.p2pModules)[0]].(*p2p.P2PModule)
+	sender := s.p2pModules[generics_testutil.GetKeys(s.p2pModules)[0]].(*p2p.P2PModule)
 
 	// broadcast a test message
 	msg := &anypb.Any{}
