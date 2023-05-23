@@ -139,11 +139,6 @@ func (rtr *backgroundRouter) Send(data []byte, address cryptoPocket.Address) err
 	return nil
 }
 
-// HandleNetworkData implements the respective `typesP2P.Router` interface  method.
-func (rtr *backgroundRouter) HandleNetworkData(data []byte) ([]byte, error) {
-	return data, nil // intentional passthrough
-}
-
 // GetPeerstore implements the respective `typesP2P.Router` interface  method.
 func (rtr *backgroundRouter) GetPeerstore() typesP2P.Peerstore {
 	return rtr.pstore
