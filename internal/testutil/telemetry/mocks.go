@@ -2,7 +2,7 @@ package telemetry_testutil
 
 import (
 	"github.com/golang/mock/gomock"
-	"github.com/pokt-network/pocket/internal/testutil"
+	"github.com/pokt-network/pocket/internal/testutil/generics"
 	"github.com/regen-network/gocuke"
 
 	"github.com/pokt-network/pocket/shared/modules"
@@ -42,9 +42,9 @@ func BaseTelemetryMock(
 ) *mock_modules.MockTelemetryModule {
 	t.Helper()
 
-	return testutil.PipeTwoToOne[
+	return generics_testutil.PipeTwoToOne[
 		gocuke.TestingT,
-		*mock_modules.MockTelemetryModule
+		*mock_modules.MockTelemetryModule,
 	](
 		t, MinimalTelemetryMock(t, busMock),
 		BehavesLikeBaseTelemetryMock,

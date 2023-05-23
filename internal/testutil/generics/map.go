@@ -1,4 +1,4 @@
-package testutil
+package generics_testutil
 
 func GetKeys[K comparable, V any](keyMap map[K]V) []K {
 	var (
