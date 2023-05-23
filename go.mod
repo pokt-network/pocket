@@ -81,15 +81,16 @@ require (
 )
 
 require (
-	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v3 v3.0.0 // indirect
 	github.com/cockroachdb/apd/v3 v3.1.0 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
-	github.com/cucumber/common/gherkin/go/v22 v22.0.0 // indirect
-	github.com/cucumber/common/messages/go/v17 v17.1.1 // indirect
+	github.com/cucumber/common/messages/go/v19 v19.1.2 // indirect
+	github.com/cucumber/gherkin/go/v26 v26.0.3 // indirect
+	github.com/cucumber/messages/go/v21 v21.0.1 // indirect
+	github.com/cucumber/tag-expressions/go/v5 v5.0.1 // indirect
 	github.com/davidlazar/go-crypto v0.0.0-20200604182044-b73af7476f6c // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
 	github.com/elastic/gosigar v0.14.2 // indirect
