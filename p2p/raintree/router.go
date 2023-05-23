@@ -331,7 +331,7 @@ func (rtr *rainTreeRouter) readStream(stream libp2pNetwork.Stream) {
 	if err := stream.SetReadDeadline(newReadStreamDeadline()); err != nil {
 		// NB: tests using libp2p's `mocknet` rely on this not returning an error.
 		// `SetReadDeadline` not supported by `mocknet` streams.
-		rtr.logger.Debug().Err(err).Msg("setting stream read deadline")
+		rtr.logger.Error().Err(err).Msg("setting stream read deadline")
 	}
 
 	// log incoming stream
@@ -342,14 +342,14 @@ func (rtr *rainTreeRouter) readStream(stream libp2pNetwork.Stream) {
 	if err != nil {
 		rtr.logger.Error().Err(err).Msg("reading from stream")
 		if err := stream.Reset(); err != nil {
-			rtr.logger.Debug().Err(err).Msg("resetting stream (read-side)")
+			rtr.logger.Error().Err(err).Msg("resetting stream (read-side)")
 		}
 		return
 	}
 
 	// done reading; reset to signal this to remote peer
 	if err := stream.Reset(); err != nil {
-		rtr.logger.Debug().Err(err).Msg("resetting stream (read-side)")
+		rtr.logger.Error().Err(err).Msg("resetting stream (read-side)")
 	}
 
 	// extract `PocketEnvelope` from `RainTreeMessage` (& continue propagation)
