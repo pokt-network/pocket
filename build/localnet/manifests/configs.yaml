@@ -4095,6 +4095,26 @@ data:
           "unstaking_height": -1,
           "output": "88a792b7aca673620132ef01f50e62caa58eca83",
           "actor_type": 1
+        },
+        {
+          "address": "00001fff518b1cdddd74c197d76ba5b5dedc0301",
+          "public_key": "05a25e527bf6f51676f61f2f1a96efaa748218ac82f54d3cdc55a4881389eb60",
+          "chains": ["0001"],
+          "staked_amount": "1000000000000",
+          "paused_height": -1,
+          "unstaking_height": -1,
+          "output": "00001fff518b1cdddd74c197d76ba5b5dedc0301",
+          "actor_type": 1
+        },
+        {
+          "address": "00101f2ff54811e84df2d767c661f57a06349b7e",
+          "public_key": "bb851ac31120a4c8848738582f358599abbc3d84638f8fa79f74aeafad1eede0",
+          "chains": ["0001"],
+          "staked_amount": "1000000000000",
+          "paused_height": -1,
+          "unstaking_height": -1,
+          "output": "00101f2ff54811e84df2d767c661f57a06349b7e",
+          "actor_type": 1
         }
       ],
       "servicers": [
@@ -4107,6 +4127,28 @@ data:
           "paused_height": -1,
           "unstaking_height": -1,
           "output": "43d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
+          "actor_type": 2
+        },
+        {
+          "address": "00002b8cea1bcc3dadc72ebecf95564ceb9c2e2a",
+          "public_key": "d1130c5eb920af8edd5b6bfa39d33aa787f421c8ba0786de4ca4e7703553bb97",
+          "chains": ["0001"],
+          "service_url": "http://validator-001-pocket:50832",
+          "staked_amount": "1000000000000",
+          "paused_height": -1,
+          "unstaking_height": -1,
+          "output": "00002b8cea1bcc3dadc72ebecf95564ceb9c2e2a",
+          "actor_type": 2
+        },
+        {
+          "address": "001022b138896c4c5466ac86b24a9bbe249905c2",
+          "public_key": "56915c1270bc8d9280a633e0be51647f62388a851318381614877ef2ed84a495",
+          "chains": ["0001"],
+          "service_url": "http://validator-002-pocket:50832",
+          "staked_amount": "1000000000000",
+          "paused_height": -1,
+          "unstaking_height": -1,
+          "output": "001022b138896c4c5466ac86b24a9bbe249905c2",
           "actor_type": 2
         }
       ],
