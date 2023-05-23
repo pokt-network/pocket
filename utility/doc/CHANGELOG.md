@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.40] - 2023-05-22
+
+- Added a utility feature list with must-have and nice-to-haves for MainNet and TestNet
+
 ## [0.0.0.40] - 2023-05-04
 
 - Expose `HydrateIdxTx` for use outside of utility
