@@ -2,6 +2,12 @@ module github.com/pokt-network/pocket
 
 go 1.18
 
+// TECHDEBT: remove once upstream PR is merged (see: https://github.com/regen-network/gocuke/pull/12)
+replace github.com/regen-network/gocuke => github.com/pokt-network/gocuke v0.0.1
+
+// TECHDEBT: remove once upstream PR is merged (see: https://github.com/foxcpp/go-mockdns/pull/13)
+replace github.com/foxcpp/go-mockdns => github.com/pokt-network/go-mockdns v0.0.1
+
 require (
 	github.com/ProtonMail/go-ecvrf v0.0.1
 	github.com/golang/mock v1.6.0
