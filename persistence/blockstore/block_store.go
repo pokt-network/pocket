@@ -15,7 +15,7 @@ import (
 // block structures.
 // * It manages the atomic state transitions for applying a Unit of Work.
 type BlockStore interface {
-	kvstore.KVStore // TODO_IN_THIS_COMMIT remove this eventually and expose only the two below
+	kvstore.KVStore
 
 	GetBlock(height uint64) (*coreTypes.Block, error)
 	StoreBlock(height uint64, block *coreTypes.Block) error
