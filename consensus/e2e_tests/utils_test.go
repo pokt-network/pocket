@@ -51,7 +51,7 @@ const (
 var maxTxBytes = defaults.DefaultConsensusMaxMempoolBytes
 
 type idToNodeMapping map[typesCons.NodeId]*shared.Node
-type idToPKMapping map[typesCons.NodeId]cryptoPocket.PrivateKey
+type idToPrivKeyMapping map[typesCons.NodeId]cryptoPocket.PrivateKey
 
 /*** Node Generation Helpers ***/
 
@@ -93,7 +93,7 @@ func CreateTestConsensusPocketNodes(
 	})
 
 	blocks := &placeholderBlocks{
-		pKs: make(idToPKMapping, len(buses)),
+		privKeys: make(idToPrivKeyMapping, len(buses)),
 	}
 
 	for i := range buses {
@@ -102,9 +102,9 @@ func CreateTestConsensusPocketNodes(
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 		nodePK, err := cryptoPocket.NewPrivateKey(pocketNode.GetBus().GetRuntimeMgr().GetConfig().PrivateKey)
 		require.NoError(t, err)
-		blocks.setPKs(typesCons.NodeId(i+1), nodePK)
+		blocks.setPrivKeys(typesCons.NodeId(i+1), nodePK)
 	}
-	blocks.preparePlaceholderBlocks(t, buses[0], blocks.pKs)
+	blocks.preparePlaceholderBlocks(t, buses[0], blocks.privKeys)
 	return
 }
 
@@ -810,12 +810,12 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 /*** Placeholder Block Generation Helpers ***/
 
 type placeholderBlocks struct {
-	pKs    idToPKMapping
-	blocks []*coreTypes.Block
+	privKeys idToPrivKeyMapping
+	blocks   []*coreTypes.Block
 }
 
-func (p *placeholderBlocks) setPKs(nodeId typesCons.NodeId, pk cryptoPocket.PrivateKey) {
-	p.pKs[nodeId] = pk
+func (p *placeholderBlocks) setPrivKeys(nodeId typesCons.NodeId, privKey cryptoPocket.PrivateKey) {
+	p.privKeys[nodeId] = privKey
 }
 
 func (p *placeholderBlocks) getBlock(index uint64) *coreTypes.Block {
@@ -823,19 +823,19 @@ func (p *placeholderBlocks) getBlock(index uint64) *coreTypes.Block {
 	return p.blocks[index-1]
 }
 
-func (p *placeholderBlocks) preparePlaceholderBlocks(t *testing.T, bus modules.Bus, nodePKs idToPKMapping) {
+func (p *placeholderBlocks) preparePlaceholderBlocks(t *testing.T, bus modules.Bus, nodePrivKeys idToPrivKeyMapping) {
 	i := uint64(1)
 	for i <= numberOfPersistedDummyBlocks {
 
 		leaderId := bus.GetConsensusModule().GetLeaderForView(i, uint64(0), uint8(consensus.NewRound))
-		leaderPK := nodePKs[typesCons.NodeId(leaderId)]
+		leaderPivKey := nodePrivKeys[typesCons.NodeId(leaderId)]
 
 		// Construct the block
 		blockHeader := &coreTypes.BlockHeader{
 			Height:            i,
 			StateHash:         stateHash,
 			PrevStateHash:     stateHash,
-			ProposerAddress:   leaderPK.Address(),
+			ProposerAddress:   leaderPivKey.Address(),
 			QuorumCertificate: nil,
 		}
 		block := &coreTypes.Block{
@@ -843,7 +843,7 @@ func (p *placeholderBlocks) preparePlaceholderBlocks(t *testing.T, bus modules.B
 			Transactions: make([][]byte, 0),
 		}
 
-		qc := generateValidQuorumCertificate(nodePKs, block)
+		qc := generateValidQuorumCertificate(nodePrivKeys, block)
 
 		qcBytes, err := codec.GetCodec().Marshal(qc)
 		require.NoError(t, err)
@@ -857,7 +857,7 @@ func (p *placeholderBlocks) preparePlaceholderBlocks(t *testing.T, bus modules.B
 
 /*** Quorum certificate Generation Helpers ***/
 
-func generateValidQuorumCertificate(nodePKs idToPKMapping, block *coreTypes.Block) *typesCons.QuorumCertificate {
+func generateValidQuorumCertificate(nodePKs idToPrivKeyMapping, block *coreTypes.Block) *typesCons.QuorumCertificate {
 	var pss []*typesCons.PartialSignature
 
 	for _, nodePK := range nodePKs {
