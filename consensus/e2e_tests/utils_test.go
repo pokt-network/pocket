@@ -50,8 +50,8 @@ const (
 
 var maxTxBytes = defaults.DefaultConsensusMaxMempoolBytes
 
-type IdToNodeMapping map[typesCons.NodeId]*shared.Node
-type IdToPKMapping map[typesCons.NodeId]cryptoPocket.PrivateKey
+type idToNodeMapping map[typesCons.NodeId]*shared.Node
+type idToPKMapping map[typesCons.NodeId]cryptoPocket.PrivateKey
 
 /*** Node Generation Helpers ***/
 
@@ -80,8 +80,8 @@ func CreateTestConsensusPocketNodes(
 	t *testing.T,
 	buses []modules.Bus,
 	eventsChannel modules.EventsChannel,
-) (pocketNodes IdToNodeMapping) {
-	pocketNodes = make(IdToNodeMapping, len(buses))
+) (pocketNodes idToNodeMapping) {
+	pocketNodes = make(idToNodeMapping, len(buses))
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
 	// This logic will need to change once proper leader election is implemented.
 	sort.Slice(buses, func(i, j int) bool {
@@ -93,7 +93,7 @@ func CreateTestConsensusPocketNodes(
 	})
 
 	blocks := &placeholderBlocks{
-		pKs: make(IdToPKMapping, len(buses)),
+		pKs: make(idToPKMapping, len(buses)),
 	}
 
 	for i := range buses {
@@ -168,7 +168,7 @@ func GenerateBuses(t *testing.T, runtimeMgrs []*runtime.Manager) (buses []module
 }
 
 // CLEANUP: Reduce package scope visibility in the consensus test module
-func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) error {
+func StartAllTestPocketNodes(t *testing.T, pocketNodes idToNodeMapping) error {
 	for _, pocketNode := range pocketNodes {
 		go startNode(t, pocketNode)
 		startEvent := pocketNode.GetBus().GetBusEvent()
@@ -221,7 +221,7 @@ func triggerDebugMessage(t *testing.T, node *shared.Node, action messaging.Debug
 
 /*** P2P Helpers ***/
 
-func P2PBroadcast(_ *testing.T, nodes IdToNodeMapping, any *anypb.Any) {
+func P2PBroadcast(_ *testing.T, nodes idToNodeMapping, any *anypb.Any) {
 	e := &messaging.PocketEnvelope{Content: any}
 	for _, node := range nodes {
 		node.GetBus().PublishEventToBus(e)
@@ -575,7 +575,7 @@ func WaitForNextBlock(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
-	pocketNodes IdToNodeMapping,
+	pocketNodes idToNodeMapping,
 	height uint64,
 	round uint8,
 	maxWaitTime time.Duration,
@@ -648,7 +648,7 @@ func waitForProposalMsgs(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
-	pocketNodes IdToNodeMapping,
+	pocketNodes idToNodeMapping,
 	height uint64,
 	step uint8,
 	round uint8,
@@ -688,7 +688,7 @@ func waitForProposalMsgs(
 	return proposalMsgs, nil
 }
 
-func broadcastMessages(t *testing.T, msgs []*anypb.Any, pocketNodes IdToNodeMapping) {
+func broadcastMessages(t *testing.T, msgs []*anypb.Any, pocketNodes idToNodeMapping) {
 	for _, message := range msgs {
 		P2PBroadcast(t, pocketNodes, message)
 	}
@@ -705,7 +705,7 @@ func WaitForNodeToSync(
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
 	unsyncedNode *shared.Node,
-	allNodes IdToNodeMapping,
+	allNodes idToNodeMapping,
 	targetHeight uint64,
 ) {
 	t.Helper()
@@ -810,7 +810,7 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 /*** Placeholder Block Generation Helpers ***/
 
 type placeholderBlocks struct {
-	pKs    IdToPKMapping
+	pKs    idToPKMapping
 	blocks []*coreTypes.Block
 }
 
@@ -823,7 +823,7 @@ func (p *placeholderBlocks) getBlock(index uint64) *coreTypes.Block {
 	return p.blocks[index-1]
 }
 
-func (p *placeholderBlocks) preparePlaceholderBlocks(t *testing.T, bus modules.Bus, nodePKs IdToPKMapping) {
+func (p *placeholderBlocks) preparePlaceholderBlocks(t *testing.T, bus modules.Bus, nodePKs idToPKMapping) {
 	i := uint64(1)
 	for i <= numberOfPersistedDummyBlocks {
 
@@ -857,7 +857,7 @@ func (p *placeholderBlocks) preparePlaceholderBlocks(t *testing.T, bus modules.B
 
 /*** Quorum certificate Generation Helpers ***/
 
-func generateValidQuorumCertificate(nodePKs IdToPKMapping, block *coreTypes.Block) *typesCons.QuorumCertificate {
+func generateValidQuorumCertificate(nodePKs idToPKMapping, block *coreTypes.Block) *typesCons.QuorumCertificate {
 	var pss []*typesCons.PartialSignature
 
 	for _, nodePK := range nodePKs {
