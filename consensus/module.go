@@ -305,6 +305,10 @@ func (m *consensusModule) CurrentStep() uint64 {
 	return uint64(m.step)
 }
 
+func (m *consensusModule) GetNodeAddress() string {
+	return m.nodeAddress
+}
+
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...
 func (m *consensusModule) loadPersistedState() error {
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height

@@ -1,6 +1,6 @@
 package modules
 
-//go:generate mockgen -destination=./mocks/consensus_module_mock.go github.com/pokt-network/pocket/shared/modules ConsensusModule,ConsensusPacemaker,ConsensusStateSync,ConsensusDebugModule
+//go:generate mockgen -destination=./mocks/consensus_module_mock.go github.com/pokt-network/pocket/shared/modules ConsensusModule,ConsensusPacemaker,ConsensusDebugModule
 
 import (
 	"github.com/pokt-network/pocket/shared/core/types"
@@ -21,7 +21,6 @@ type ConsensusModule interface {
 	Module
 	KeyholderModule
 
-	ConsensusStateSync
 	ConsensusPacemaker
 	ConsensusDebugModule
 
@@ -36,9 +35,14 @@ type ConsensusModule interface {
 	HandleEvent(transitionMessageAny *anypb.Any) error
 
 	// Consensus State Accessors
+	// CLEANUP: Add `Get` prefixes to these functions
 	CurrentHeight() uint64
 	CurrentRound() uint64
 	CurrentStep() uint64
+
+	// Returns The cryptographic address associated with the node's private key.
+	// TECHDEBT: Consider removing this function altogether when we consolidate node identities
+	GetNodeAddress() string
 }
 
 // ConsensusPacemaker represents functions exposed by the Consensus module for Pacemaker specific business logic.
@@ -67,13 +71,6 @@ type ConsensusPacemaker interface {
 	IsPrepareQCNil() bool
 	GetPrepareQC() (*anypb.Any, error)
 	GetNodeId() uint64
-}
-
-// ConsensusStateSync exposes functionality of the Consensus module for StateSync specific business logic.
-// These functions are intended to only be called by the StateSync module.
-// INVESTIGATE: This interface enable a fast implementation of state sync but look into a way of removing it in the future
-type ConsensusStateSync interface {
-	GetNodeAddress() string
 }
 
 // ConsensusDebugModule exposes functionality used for testing & development purposes.

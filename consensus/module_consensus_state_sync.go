@@ -7,18 +7,11 @@ import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const metadataSyncPeriod = 45 * time.Second // TODO: Make this configurable
-
-var _ modules.ConsensusStateSync = &consensusModule{}
-
-func (m *consensusModule) GetNodeAddress() string {
-	return m.nodeAddress
-}
 
 func (m *consensusModule) getNodeIdFromNodeAddress(peerId string) (uint64, error) {
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
@@ -178,6 +171,7 @@ func (m *consensusModule) applyAndCommitBlock(block *coreTypes.Block) error {
 
 func (m *consensusModule) getAggregatedStateSyncMetadata() typesCons.StateSyncMetadataResponse {
 	minHeight, maxHeight := uint64(1), uint64(1)
+
 	chanLen := len(m.metadataReceived)
 
 	for i := 0; i < chanLen; i++ {
