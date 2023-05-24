@@ -4,7 +4,7 @@ _IMPROVE(olshansky): Once we've completed the entire process at least once, we'l
 
 - [Introduction \& Goals](#introduction--goals)
 - [Developer Journey](#developer-journey)
-- [Feature Specification](#feature-specification)
+- [E2E Feature Specification](#e2e-feature-specification)
   - [Spot E2E Feature](#spot-e2e-feature)
   - [Spike E2E Feature](#spike-e2e-feature)
   - [Scope E2E Feature](#scope-e2e-feature)
