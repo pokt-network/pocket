@@ -7,13 +7,17 @@ option go_package = "github.com/pokt-network/pocket/shared/core/types";
 import "google/protobuf/timestamp.proto";
 
 message BlockHeader {
-  uint64 height = 1;
-  string networkId = 2; // used to differentiate what network the chain is on (Tendermint legacy)
-  string stateHash = 3; // the state committment at this blocks height
-  string prevStateHash = 4; // the state committment at this block height-1
-  bytes proposerAddress = 5; // the address of the proposer of this block; TECHDEBT: Change this to an string
+  uint64 height = 1; // the block height
+  // TECHDEBT: This is Tendermint legacy and we have to decide if we want to keep it
+  string networkId = 2; // used to differentiate what network the chain is on such as MainNet/TestNet
+  string stateHash = 3; // the state committment (i.e. root hash) at this block height
+  string prevStateHash = 4; // the state committment (i.e. root hash) for the previous block (height-1)
+  // TECHDEBT: Change the proposer address to a string
+  bytes proposerAddress = 5; // the address of the proposer/leader of this block
+  // CONSIDERATION: Should we use `QuorumCertificate` directly here?
   bytes quorumCertificate = 6; // the quorum certificate containing signature from 2/3+ validators at this height
-  google.protobuf.Timestamp timestamp = 7; // CONSIDERATION: Is this needed?
+   // CONSIDERATION: Decide if this is needed
+  google.protobuf.Timestamp timestamp = 7;
 }
 
 message Block {
