@@ -5,14 +5,14 @@ _IMPROVE(olshansky): Once we've completed the entire process at least once, we'l
 - [Introduction \& Goals](#introduction--goals)
 - [Developer Journey](#developer-journey)
 - [E2E Feature Specification](#e2e-feature-specification)
-  - [Spot E2E Feature](#spot-e2e-feature)
-  - [Spike E2E Feature](#spike-e2e-feature)
-  - [Scope E2E Feature](#scope-e2e-feature)
+  - [Spot Feature](#spot-feature)
+  - [Spike Feature](#spike-feature)
+  - [Scope Feature](#scope-feature)
     - [GitHub Ticket](#github-ticket)
     - [Origin Document](#origin-document)
 - [E2E Feature Implementation](#e2e-feature-implementation)
   - [POC: Proof of Concept](#poc-proof-of-concept)
-  - [MVP: Minimum Viable Product](#mvp-minimum-viable-product)
+  - [MVC: Minimum Viable Change](#mvc-minimum-viable-change)
   - [PROD: Production](#prod-production)
 
 ## Introduction & Goals
@@ -49,7 +49,7 @@ The [Pocket Network Specification](https://github.com/pokt-network/pocket-networ
           Explore:
           Hack:
           Have fun!
-        MVP:
+        MVC:
           Data Structures:
           Interfaces:
           Implementation:
@@ -80,13 +80,13 @@ Leverage the results from the SPIKE to create an implementation GitHub issue, li
 
 Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&labels=&projects=&template=issue.md&title=%5BREPLACE+ME%5D+with+a+descriptive+title) and populate its description, respectively, with the following additional elements:
 
-**Objective**: `Implement MVP E2E Feature Path <Letter>.<Number>: <Name>`
+**Objective**: `Implement MVC E2E Feature Path <Letter>.<Number>: <Name>`
 
 **Origin Document**: _Specify the details from the [Origin Document](#origin-document) below_
 
 **Goals**:
 
-- Complete the MVP implementation of the E2E Feature Path outlined in the objective
+- Complete the MVC implementation of the E2E Feature Path outlined in the objective
 - Identify future tasks and test requirements to transition the feature to production
 
 **Deliverables**:
@@ -95,10 +95,10 @@ Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&
 
 - [ ] A POC SPIKE to be closed out and split out into multiple PRs
 
-**MVP**:
+**MVC**:
 
 - [ ] A PR that adds or modifies relevant structures and interfaces; such as [shared/core/types/proto](../../shared/core/types/proto), [shared/modules](../../shared/modules), etc
-- [ ] A PR that materializes an MVP of the feature along with unit tests
+- [ ] A PR that materializes an MVC of the feature along with unit tests
 - [ ] A PR that introduces a new E2E tests with **one happy** and **one sad** path scenarios as described in the origin document (refer to [e2e/README.md](../../e2e/e2e/README.md)); this may require additions to the [cli](https://github.com/pokt-network/pocket/tree/main/app/client)
 - [ ] A PR that updates all pertinent documentation
 
@@ -128,7 +128,7 @@ Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&
 - See [shared/core/types/proto](../../shared/core/types/proto) as a reference as they will most likely, but not necessarily, be part of that package
 - _TIPS:_
 
-  - _This will be non-exhaustive and will likely change during the POC or MVP stages_
+  - _This will be non-exhaustive and will likely change during the POC or MVC stages_
   - You can find all other structs by running this command:
 
     ```bash
@@ -148,7 +148,7 @@ Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&
 - See [shared/modules](../../shared/modules) as a reference as they will most likely, but not necessarily, be part of that package
 - _TIPS:_
 
-  - _This will be non-exhaustive and will likely change during the POC or MVP stages_
+  - _This will be non-exhaustive and will likely change during the POC or MVC stages_
   - You can find all other structs by running this command:
 
     ```bash
@@ -194,7 +194,7 @@ Create a single PR where you _"do everything"_ with the knowledge that it'll be 
 
 _TODO(example): Link to Alessandro's KISS or Bryan's P2P._
 
-### MVP: Minimum Viable Product
+### MVC: Minimum Viable Change
 
 This is the 🥩 (or 🥙) of the whole feature. In several PRs, you will implement, get feedback and merge in the feature to the main branch. Use your best judgment on how to split it so it's easier for the reviewer to give feedback without blocking yourself. It'll include some, or all, of the following PRs:
 
