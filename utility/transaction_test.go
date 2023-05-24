@@ -128,6 +128,7 @@ func TestHandleTransaction_BasicValidation(t *testing.T) {
 					PublicKey: pubKey.Bytes(),
 					Signature: []byte("bytes in place for signature but not actually valid"),
 				},
+				Msg: nil,
 			},
 			expectedErr: types.ErrDecodeMessage(fmt.Errorf("proto:\u00a0invalid empty type URL")),
 		},

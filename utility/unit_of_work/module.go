@@ -140,6 +140,7 @@ func (uow *baseUtilityUnitOfWork) isProposalBlockSet() bool {
 // the mempool if they are present.
 func (uow *baseUtilityUnitOfWork) processProposalBlockTransactions(txMempool mempool.TXMempool) (err error) {
 	// CONSIDERATION: should we check that `uow.proposalBlockTxs` is not nil and return an error if so or allow empty blocks?
+	// For reference, see Tendermint: https://docs.tendermint.com/v0.34/tendermint-core/configuration.html#empty-blocks-vs-no-empty-blocks
 	for index, txProtoBytes := range uow.proposalBlockTxs {
 		tx, err := coreTypes.TxFromBytes(txProtoBytes)
 		if err != nil {
