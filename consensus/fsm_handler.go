@@ -10,7 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// HandleEvent handles FSM state transition events.
+// Implements the `HandleEvent` function in the `ConsensusModule` interface
 func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
@@ -33,9 +33,8 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 
 func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Info().Fields(messaging.TransitionEventToMap(msg)).Msg("Received state machine transition msg")
-	fsm_state := msg.NewState
 
-	switch coreTypes.StateMachineState(fsm_state) {
+	switch coreTypes.StateMachineState(msg.NewState) {
 	case coreTypes.StateMachineState_P2P_Bootstrapped:
 		return m.HandleBootstrapped(msg)
 
@@ -59,28 +58,28 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 	return nil
 }
 
-// HandleBootstrapped handles FSM event P2P_IsBootstrapped, and P2P_Bootstrapped is the destination state.
-// Bootrstapped mode is when the node (validator or non-validator) is first coming online.
+// HandleBootstrapped handles the FSM event P2P_IsBootstrapped, and when P2P_Bootstrapped is the destination state.
+// Bootstrapped mode is when the node (validator or non) is first coming online.
 // This is a transition mode from node bootstrapping to a node being out-of-sync.
 func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Msg("Node is in bootstrapped state")
+	m.logger.Info().Msg("Node is in the bootstrapped state. Consensus module NOOP.")
 	return nil
 }
 
-// HandleUnsynced handles FSM event Consensus_IsUnsynced, and Unsynced is the destination state.
-// In Unsynced mode node (validator or non-validator) is out of sync with the rest of the network.
+// HandleUnsynced handles the FSM event Consensus_IsUnsynced, and when Unsynced is the destination state.
+// In Unsynced mode, the node (validator or not) is out of sync with the rest of the network.
 // This mode is a transition mode from the node being up-to-date (i.e. Pacemaker mode, Synced mode) with the latest network height to being out-of-sync.
-// As soon as node transitions to this mode, it will transition to the sync mode.
+// As soon as a node transitions to this mode, it will transition to the synching mode.
 func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Msg("Node is in Unsyched state, as node is out of sync sending syncmode event to start syncing")
+	m.logger.Info().Msg("Node is in an Unsynced state. Consensus module is sending an even to transition to SYNCHING mode.")
 
 	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
 }
 
-// HandleSyncMode handles FSM event Consensus_IsSyncing, and SyncMode is the destination state.
-// In Sync mode node (validator or non-validator) starts syncing with the rest of the network.
+// HandleSyncMode handles the FSM event Consensus_IsSyncing, and when SyncMode is the destination state.
+// In Sync mode, the node (validator or not starts syncing with the rest of the network.
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Msg("Node is in Sync Mode, starting to sync...")
+	m.logger.Info().Msg("Node is in Sync Mode. Consensus Module is about to start synching...")
 
 	aggregatedMetadata := m.getAggregatedStateSyncMetadata()
 	m.stateSync.SetAggregatedMetadata(&aggregatedMetadata)

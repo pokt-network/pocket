@@ -16,7 +16,11 @@ const metadataSyncPeriod = 45 * time.Second // TODO: Make this configurable
 
 var _ modules.ConsensusStateSync = &consensusModule{}
 
-func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error) {
+func (m *consensusModule) GetNodeAddress() string {
+	return m.nodeAddress
+}
+
+func (m *consensusModule) getNodeIdFromNodeAddress(peerId string) (uint64, error) {
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		// REFACTOR(#434): As per issue #434, once the new id is sorted out, this return statement must be changed
@@ -25,10 +29,6 @@ func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) (uint64, error
 
 	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
 	return uint64(valAddrToIdMap[peerId]), nil
-}
-
-func (m *consensusModule) GetNodeAddress() string {
-	return m.nodeAddress
 }
 
 // blockApplicationLoop commits the blocks received from the blocksResponsesReceived channel
@@ -148,7 +148,7 @@ func (m *consensusModule) validateBlock(block *coreTypes.Block) error {
 		return err
 	}
 
-	leaderIdInt, err := m.GetNodeIdFromNodeAddress(string(block.BlockHeader.ProposerAddress))
+	leaderIdInt, err := m.getNodeIdFromNodeAddress(string(block.BlockHeader.ProposerAddress))
 	if err != nil {
 		m.logger.Error().Err(err).Msg("Could not get leader id from leader address")
 		return err

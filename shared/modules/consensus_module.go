@@ -25,12 +25,14 @@ type ConsensusModule interface {
 	ConsensusPacemaker
 	ConsensusDebugModule
 
-	// Consensus Engine Handlers
 	// TODO: Rename `HandleMessage` to a more specific name that is consistent with its business logic.
+	// Consensus message handlers
 	HandleMessage(*anypb.Any) error
+
 	// State Sync message handlers
 	HandleStateSyncMessage(*anypb.Any) error
-	// FSM transition event handler
+
+	// Internal event handler such as FSM transition events
 	HandleEvent(transitionMessageAny *anypb.Any) error
 
 	// Consensus State Accessors
@@ -71,13 +73,13 @@ type ConsensusPacemaker interface {
 // These functions are intended to only be called by the StateSync module.
 // INVESTIGATE: This interface enable a fast implementation of state sync but look into a way of removing it in the future
 type ConsensusStateSync interface {
-	GetNodeIdFromNodeAddress(string) (uint64, error)
 	GetNodeAddress() string
 }
 
 // ConsensusDebugModule exposes functionality used for testing & development purposes.
 // Not to be used in production.
-// TODO: Add a flag so this is not compiled in the prod binary.
+// TODO: Move this to a separate file and add a flag so this is not compiled in production
+// for safety purposes.
 type ConsensusDebugModule interface {
 	HandleDebugMessage(*messaging.DebugMessage) error
 

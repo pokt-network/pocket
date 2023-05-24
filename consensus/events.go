@@ -15,7 +15,10 @@ func (m *consensusModule) publishNewHeightEvent(height uint64) {
 
 // publishStateSyncBlockCommittedEvent publishes a new state sync block committed event, so that state sync module can react to it
 func (m *consensusModule) publishStateSyncBlockCommittedEvent(height uint64) {
-	stateSyncBlockCommittedEvent, err := messaging.PackMessage(&messaging.StateSyncBlockCommittedEvent{Height: height})
+	blockCommittedEvent := &messaging.StateSyncBlockCommittedEvent{
+		Height: height,
+	}
+	stateSyncBlockCommittedEvent, err := messaging.PackMessage(blockCommittedEvent)
 	if err != nil {
 		m.logger.Fatal().Err(err).Msg("Failed to pack state sync committed block event")
 	}
