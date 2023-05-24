@@ -17,7 +17,7 @@ _IMPROVE(olshansky): Once we've completed the entire process at least once, we'l
 
 ## Introduction & Goals
 
-The [Pocket Network Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/utility) implementation is driven by various [milestones](https://github.com/pokt-network/pocket/milestones) and protocol/module/component specific tasks. Each feature cross the boundaries of business logic, data types, and interfaces for different components. Due to the complex nature of implementation, we've designed a more streamlined approach.
+The [Pocket Network Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/utility) implementation is driven by various [milestones](https://github.com/pokt-network/pocket/milestones) and protocol/module/component specific tasks. Each feature crosses the boundaries of business logic, data types, and interfaces for different components. Due to the complex nature of implementation, we've designed a streamlined "developer journey".
 
 **The goal** of this document is to outline a well-defined process for adopting an end-to-end feature path approach. This makes each feature/task easier to scope, reason about, design, and implement.
 
