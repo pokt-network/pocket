@@ -64,7 +64,7 @@ The [Pocket Network Specification](https://github.com/pokt-network/pocket-networ
 
 ## Feature Specification
 
-### Spot E2E Feature
+### Spot Feature
 
 Choose or add a feature from the Utility E2E feature list [here](./E2E_FEATURE_LIST.md).
 
