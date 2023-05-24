@@ -383,6 +383,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 		AnyTimes()
 
 	blockStoreMock.
+		// NB: The business logic in this mock and below is vital for testing state-sync end-to-end
 		EXPECT().
 		GetBlock(gomock.Any()).
 		DoAndReturn(func(height uint64) (*coreTypes.Block, error) {

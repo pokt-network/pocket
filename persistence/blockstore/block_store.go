@@ -49,7 +49,7 @@ func NewBlockStore(path string) (BlockStore, error) {
 	}, nil
 }
 
-// StoreBlock takes a coreType Block and stores it.
+// StoreBlock accepts a coreType Block and stores it for the given height.
 func (bs *blockStore) StoreBlock(height uint64, block *coreTypes.Block) error {
 	b, err := codec.GetCodec().Marshal(block)
 	if err != nil {
@@ -62,13 +62,12 @@ func (bs *blockStore) StoreBlock(height uint64, block *coreTypes.Block) error {
 
 // GetBlock returns a coreTypes Block at the given height.
 func (bs *blockStore) GetBlock(height uint64) (*coreTypes.Block, error) {
-	var block coreTypes.Block
 	blockBytes, err := bs.kv.Get(utils.HeightToBytes(height))
 	if err != nil {
 		return nil, err
 	}
-	err = codec.GetCodec().Unmarshal(blockBytes, &block)
-	if err != nil {
+	var block coreTypes.Block
+	if err := codec.GetCodec().Unmarshal(blockBytes, &block); err != nil {
 		return nil, err
 	}
 	return &block, nil
