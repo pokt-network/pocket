@@ -38,7 +38,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 136
+// NextCode: 138
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -53,6 +53,7 @@ const (
 	CodeNewPublicKeyFromBytesError       Code = 8
 	CodeNewAddressFromBytesError         Code = 9
 	CodeSignatureVerificationFailedError Code = 10
+	CodeRetrievingSignableBytesError     Code = 137
 	CodeHexDecodeFromStringError         Code = 11
 	CodeInvalidHashLengthError           Code = 12
 	CodeEmptyNetworkIDError              Code = 13
@@ -74,6 +75,7 @@ const (
 	CodeEmptyNonceError                  Code = 30
 	CodeEmptyPublicKeyError              Code = 31
 	CodeEmptySignatureError              Code = 32
+	CodeEmptySignatureStructureError     Code = 136
 	CodeDuplicateTransactionError        Code = 35
 	CodeTransactionSignError             Code = 36
 	CodeGetAllValidatorsError            Code = 37
@@ -227,11 +229,13 @@ const (
 	InvalidNonceError                 = "the nonce field is invalid; cannot be converted to big.Int"
 	NewPublicKeyFromBytesError        = "unable to convert the raw bytes to a valid public key"
 	SignatureVerificationFailedError  = "the public key / signature combination is not valid for the msg"
+	RetrievingSignableBytesError      = "error retrieving signable bytes"
 	ProtoFromAnyError                 = "an error occurred getting the structure from the protobuf any"
 	NewFeeFromStringError             = "the fee string is unable to be converted to a valid base 10 number"
 	EmptyNonceError                   = "the nonce in the transaction is empty"
 	EmptyPublicKeyError               = "the public key field is empty"
 	EmptySignatureError               = "the signature field is empty"
+	EmptySignatureStructureError      = "the signature structure is empty"
 	TransactionSignError              = "an error occurred signing the transaction"
 	InterfaceConversionError          = "an error occurred converting the interface to an expected type: "
 	SetStatusPausedBeforeError        = "an error occurred setting the actor status that were paused before"
@@ -598,8 +602,16 @@ func ErrEmptySignature() Error {
 	return NewError(CodeEmptySignatureError, EmptySignatureError)
 }
 
+func ErrEmptySignatureStructure() Error {
+	return NewError(CodeEmptySignatureStructureError, EmptySignatureStructureError)
+}
+
 func ErrSignatureVerificationFailed() Error {
 	return NewError(CodeSignatureVerificationFailedError, SignatureVerificationFailedError)
+}
+
+func ErrRetrievingSignableBytes(err error) Error {
+	return NewError(CodeRetrievingSignableBytesError, fmt.Sprintf("%s: %s", RetrievingSignableBytesError, err.Error()))
 }
 
 func ErrDecodeMessage(err error) Error {
