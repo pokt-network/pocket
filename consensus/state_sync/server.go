@@ -72,7 +72,7 @@ func (m *stateSync) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) e
 	blockStore := m.GetBus().GetPersistenceModule().GetBlockStore()
 	block, err := blockStore.GetBlock(blockReq.Height)
 	if err != nil {
-		m.logger.Error().Err(typesCons.ErrConsensusMempoolFull).Msg(typesCons.DisregardHotstuffMessage)
+		m.logger.Error().Err(err).Msgf("failed to get block at height %d", blockReq.Height)
 		return err
 	}
 
