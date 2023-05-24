@@ -78,7 +78,7 @@ Leverage the results from the SPIKE to create an implementation GitHub issue, li
 
 #### GitHub Ticket
 
-Adhering to the GitHub template provided [here](https://github.com/pokt-network/pocket/blob/main/.github/ISSUE_TEMPLATE/issue.md), generate a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&labels=&projects=&template=issue.md&title=%5BREPLACE+ME%5D+with+a+descriptive+title) encompassing the subsequent elements:
+Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&labels=&projects=&template=issue.md&title=%5BREPLACE+ME%5D+with+a+descriptive+title) and populate its description, respectively, with the following additional elements:
 
 **Objective**: `Implement MVP E2E Feature Path <Letter>.<Number>: <Name>`
 
