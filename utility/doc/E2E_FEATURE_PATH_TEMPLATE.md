@@ -72,7 +72,7 @@ Choose or add a feature from the Utility E2E feature list [here](./E2E_FEATURE_L
 
 Create a SPIKE GitHub issue, like [this](<[http](https://github.com/pokt-network/pocket/issue/TODO_LINK_TO_ISSUE_ONCE_WE_HAVE_EXAMPLE)>) to scope the feature. This ticket is responsible for creating the ticket that'll track the work.
 
-### Scope E2E Feature
+### Scope Feature
 
 Leverage the results from the SPIKE to create an implementation GitHub issue, like [this](<[http](https://github.com/pokt-network/pocket/issue/TODO_LINK_TO_ISSUE_ONCE_WE_HAVE_EXAMPLE)>) to track the actual implementation.
 
