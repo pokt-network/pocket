@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.52] - 2023-05-23
+## [0.0.0.52] - 2023-05-24
 
 - Updates consensus tests to use GetBlock mock instead of Get mock
 

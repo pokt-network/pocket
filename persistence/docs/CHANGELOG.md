@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.54] - 2023-05-23
+## [0.0.0.54] - 2023-05-24
 
 - Adds the BlockStore interface
 - Updates the PersistenceContext struct to use BlockStore interface
