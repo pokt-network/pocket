@@ -34,13 +34,14 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// CLEANUP: Some functions in the test suite are exposed even though they do not need to be.
+
 func TestMain(m *testing.M) {
 	exitCode := m.Run()
 	os.Exit(exitCode)
 }
 
-// TODO(integration): These are temporary variables used in the prototype integration phase that
-// will need to be parameterized later once the test framework design matures.
+// TECHDEBT: Constants in the `e2e_tests` test suite that should be parameterized
 const (
 	numValidators   = 4
 	dummyStateHash  = "42"
@@ -91,7 +92,7 @@ func createTestConsensusPocketNodes(
 		return pk.Address().String() < pk2.Address().String()
 	})
 
-	blocks := &placeholderBlocks{}
+	blocks := &testingBlocks{}
 
 	validatorPrivKeys := make(idToPrivKeyMapping, len(buses))
 	for i, bus := range buses {
@@ -114,7 +115,7 @@ func createTestConsensusPocketNode(
 	t *testing.T,
 	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
-	placeholderBlocks *placeholderBlocks,
+	placeholderBlocks *testingBlocks,
 ) *shared.Node {
 	persistenceMock := basePersistenceMock(t, eventsChannel, bus, placeholderBlocks)
 	bus.RegisterModule(persistenceMock)
@@ -398,7 +399,7 @@ loop:
 /*** Module Mocking Helpers ***/
 
 // Creates a persistence module mock with mock implementations of some basic functionality
-func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus, placeholderBlocks *placeholderBlocks) *mockModules.MockPersistenceModule {
+func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus, testBlocks *testingBlocks) *mockModules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
 	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
@@ -415,14 +416,14 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus,
 		if bus.GetConsensusModule().CurrentHeight() < heightInt {
 			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
 		}
-		return codec.GetCodec().Marshal(placeholderBlocks.getBlock(heightInt))
+		return codec.GetCodec().Marshal(testBlocks.getBlock(heightInt))
 	}).AnyTimes()
 
 	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
 
 	persistenceReadContextMock.EXPECT().GetMaximumBlockHeight().DoAndReturn(func() (uint64, error) {
 		// Check that we are retrieving a block at a height that was mocked by our test suite
-		if int(bus.GetConsensusModule().CurrentHeight()) <= len(placeholderBlocks.blocks) {
+		if int(bus.GetConsensusModule().CurrentHeight()) <= len(testBlocks.blocks) {
 			return bus.GetConsensusModule().CurrentHeight() - 1, nil
 		}
 		t.Error("Trying to retrieve a block at a height that was not mocked.")
@@ -717,17 +718,21 @@ func waitForNodeToSync(
 		// waiting for unsynced node to request the same missing block from all peers.
 		blockRequests, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, "Error while waiting for block response messages.", numValidators, 250, true)
 		require.NoError(t, err)
-		require.True(t, checkIdentical(blockRequests), "All block requests sent by node should be identical")
 
-		// broadcast one of the requests to all nodes, as all requests are identical
-		P2PBroadcast(t, allNodes, blockRequests[0])
+		// verify that all requests are identical and take the first one
+		require.True(t, checkIdentical(blockRequests), "All block requests sent by node must be identical")
+		blockRequest := blockRequests[0]
+
+		// broadcast one of the requests to all nodes
+		P2PBroadcast(t, allNodes, blockRequest)
 		advanceTime(t, clck, 10*time.Millisecond)
 
 		// wait to receive replies from all nodes
-		blockResponses, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, "Error while waiting for block request messages.", numValidators-1, 250, true)
+		blockResponses, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, "Error while waiting for block response messages.", numValidators-1, 250, true)
 		require.NoError(t, err)
 
-		// check that all nodes replied with the same block response
+		// verify that all nodes replied with the same block response
+		var blockResponse *typesCons.GetBlockResponse
 		for _, msg := range blockResponses {
 			msgAny, err := codec.GetCodec().FromAny(msg)
 			require.NoError(t, err)
@@ -735,7 +740,16 @@ func waitForNodeToSync(
 			stateSyncMessage, ok := msgAny.(*typesCons.StateSyncMessage)
 			require.True(t, ok)
 
-			require.Equal(t, currentHeight, stateSyncMessage.GetGetBlockRes().Block.BlockHeader.Height)
+			// verify that all nodes replied with the same block response
+			if blockResponse == nil {
+				// On the first block received, we just verify the height is correct
+				blockResponse = stateSyncMessage.GetGetBlockRes()
+				require.Equal(t, currentHeight, blockResponse.Block.BlockHeader.Height)
+			} else {
+				// On subsequent blocks, we verify all the blocks are identical
+				require.Equal(t, blockResponse.Block, stateSyncMessage.GetGetBlockRes().Block)
+
+			}
 		}
 
 		// since all block responses are identical, send one of the block responses to the unsynced node
@@ -744,7 +758,6 @@ func waitForNodeToSync(
 
 		// waiting for node to reach to the next height (currentHeight + 1)
 		waitForNodeToCatchUp(t, clck, eventsChannel, unsyncedNode, currentHeight+1)
-
 		currentHeight = unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 	}
 }
@@ -810,16 +823,16 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 
 /*** Placeholder Block Generation Helpers ***/
 
-type placeholderBlocks struct {
+type testingBlocks struct {
 	blocks []*coreTypes.Block
 }
 
-func (p *placeholderBlocks) getBlock(index uint64) *coreTypes.Block {
+func (p *testingBlocks) getBlock(index uint64) *coreTypes.Block {
 	// returning block at index-1, because block 1 is stored at index 0 of the blocks array
 	return p.blocks[index-1]
 }
 
-func (p *placeholderBlocks) preparePlaceholderBlocks(t *testing.T, bus modules.Bus, validatorPrivKeys idToPrivKeyMapping, numMockedBlocks uint64) {
+func (p *testingBlocks) preparePlaceholderBlocks(t *testing.T, bus modules.Bus, validatorPrivKeys idToPrivKeyMapping, numMockedBlocks uint64) {
 	t.Helper()
 	for i := uint64(1); i <= numMockedBlocks; i++ {
 		leaderId := bus.GetConsensusModule().GetLeaderForView(i, uint64(0), uint8(consensus.NewRound))
@@ -965,6 +978,8 @@ func startNode(t *testing.T, pocketNode *shared.Node) {
 	require.NoError(t, err)
 }
 
+// checkIdentical verifies that all items in the array are equal.
+// Returns true if all items are equal or array is empty, false otherwise.
 func checkIdentical(arr []*anypb.Any) bool {
 	if len(arr) == 0 {
 		return true
@@ -976,6 +991,5 @@ func checkIdentical(arr []*anypb.Any) bool {
 			return false
 		}
 	}
-
 	return true
 }
