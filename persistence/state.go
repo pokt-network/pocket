@@ -17,12 +17,11 @@ import (
 type merkleTree float64
 
 type stateTrees struct {
-	merkleTrees map[merkleTree]*smt.SparseMerkleTree
+	merkleTrees map[merkleTree]*smt.SMT
 
-	// nodeStores & valueStore are part of the SMT, but references are kept below for convenience
+	// nodeStores are part of the SMT, but references are kept below for convenience
 	// and debugging purposes
-	nodeStores  map[merkleTree]kvstore.KVStore
-	valueStores map[merkleTree]kvstore.KVStore
+	nodeStores map[merkleTree]kvstore.KVStore
 }
 
 // A list of Merkle Trees used to maintain the state hash.
@@ -91,9 +90,8 @@ func newStateTrees(treesStoreDir string) (*stateTrees, error) {
 	}
 
 	stateTrees := &stateTrees{
-		merkleTrees: make(map[merkleTree]*smt.SparseMerkleTree, int(numMerkleTrees)),
+		merkleTrees: make(map[merkleTree]*smt.SMT, int(numMerkleTrees)),
 		nodeStores:  make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
-		valueStores: make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
 	}
 
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
@@ -101,29 +99,21 @@ func newStateTrees(treesStoreDir string) (*stateTrees, error) {
 		if err != nil {
 			return nil, err
 		}
-		valueStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_values", treesStoreDir, merkleTreeToString[tree]))
-		if err != nil {
-			return nil, err
-		}
 		stateTrees.nodeStores[tree] = nodeStore
-		stateTrees.valueStores[tree] = valueStore
-		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
+		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
 	}
 	return stateTrees, nil
 }
 
 func newMemStateTrees() (*stateTrees, error) {
 	stateTrees := &stateTrees{
-		merkleTrees: make(map[merkleTree]*smt.SparseMerkleTree, int(numMerkleTrees)),
+		merkleTrees: make(map[merkleTree]*smt.SMT, int(numMerkleTrees)),
 		nodeStores:  make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
-		valueStores: make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
 	}
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
 		nodeStore := kvstore.NewMemKVStore() // For testing, `smt.NewSimpleMap()` can be used as well
-		valueStore := kvstore.NewMemKVStore()
 		stateTrees.nodeStores[tree] = nodeStore
-		stateTrees.valueStores[tree] = valueStore
-		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
+		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
 	}
 	return stateTrees, nil
 }
@@ -213,7 +203,7 @@ func (p *PostgresContext) updateActorsTree(actorType coreTypes.ActorType) error 
 		if !ok {
 			return fmt.Errorf("no merkle tree found for actor type: %s", actorType)
 		}
-		if _, err := p.stateTrees.merkleTrees[merkleTreeName].Update(bzAddr, actorBz); err != nil {
+		if err := p.stateTrees.merkleTrees[merkleTreeName].Update(bzAddr, actorBz); err != nil {
 			return err
 		}
 	}
@@ -269,7 +259,7 @@ func (p *PostgresContext) updateAccountTrees() error {
 			return err
 		}
 
-		if _, err := p.stateTrees.merkleTrees[accountMerkleTree].Update(bzAddr, accBz); err != nil {
+		if err := p.stateTrees.merkleTrees[accountMerkleTree].Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}
@@ -294,7 +284,7 @@ func (p *PostgresContext) updatePoolTrees() error {
 			return err
 		}
 
-		if _, err := p.stateTrees.merkleTrees[poolMerkleTree].Update(bzAddr, accBz); err != nil {
+		if err := p.stateTrees.merkleTrees[poolMerkleTree].Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}
@@ -313,7 +303,7 @@ func (p *PostgresContext) updateTransactionsTree() error {
 	for _, idxTx := range indexedTxs {
 		txBz := idxTx.GetTx()
 		txHash := crypto.SHA3Hash(txBz)
-		if _, err := p.stateTrees.merkleTrees[transactionsMerkleTree].Update(txHash, txBz); err != nil {
+		if err := p.stateTrees.merkleTrees[transactionsMerkleTree].Update(txHash, txBz); err != nil {
 			return err
 		}
 	}
@@ -333,7 +323,7 @@ func (p *PostgresContext) updateParamsTree() error {
 		if err != nil {
 			return err
 		}
-		if _, err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(paramKey, paramBz); err != nil {
+		if err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(paramKey, paramBz); err != nil {
 			return err
 		}
 	}
@@ -353,7 +343,7 @@ func (p *PostgresContext) updateFlagsTree() error {
 		if err != nil {
 			return err
 		}
-		if _, err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(flagKey, flagBz); err != nil {
+		if err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(flagKey, flagBz); err != nil {
 			return err
 		}
 	}
