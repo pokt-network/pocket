@@ -99,7 +99,7 @@ Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&
 
 - [ ] A PR that adds or modifies relevant structures and interfaces; such as [shared/core/types/proto](../../shared/core/types/proto), [shared/modules](../../shared/modules), etc
 - [ ] A PR that materializes an MVC of the feature along with unit tests
-- [ ] A PR that introduces a new E2E tests with **one happy** and **one sad** path scenarios as described in the origin document (refer to [e2e/README.md](../../e2e/e2e/README.md)); this may require additions to the [cli](https://github.com/pokt-network/pocket/tree/main/app/client)
+- [ ] A PR that introduces a new E2E tests with **one happy** and **one sad** path scenarios as described in the origin document (refer to [e2e/README.md](../../e2e/README.md)); this may require additions to the [cli](https://github.com/pokt-network/pocket/tree/main/app/client)
 - [ ] A PR that updates all pertinent documentation
 
 **PROD**:
