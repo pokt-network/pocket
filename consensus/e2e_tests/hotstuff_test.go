@@ -24,7 +24,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 
 	// Create & start test pocket nodes
 	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+	pocketNodes := createTestConsensusPocketNodes(t, buses, eventsChannel)
 	err := StartAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 

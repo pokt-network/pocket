@@ -76,13 +76,13 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 	return runtimeMgrs
 }
 
-func CreateTestConsensusPocketNodes(
+func createTestConsensusPocketNodes(
 	t *testing.T,
 	buses []modules.Bus,
 	eventsChannel modules.EventsChannel,
 ) (pocketNodes idToNodeMapping) {
 	pocketNodes = make(idToNodeMapping, len(buses))
-	// TODO(design): The order here is important in order for NodeId to be set correctly below.
+	// TECHDEBT: The order here is important in order for NodeIds to be set correctly below.
 	// This logic will need to change once proper leader election is implemented.
 	sort.Slice(buses, func(i, j int) bool {
 		pk, err := cryptoPocket.NewPrivateKey(buses[i].GetRuntimeMgr().GetConfig().PrivateKey)
@@ -92,24 +92,26 @@ func CreateTestConsensusPocketNodes(
 		return pk.Address().String() < pk2.Address().String()
 	})
 
-	blocks := &placeholderBlocks{
-		privKeys: make(idToPrivKeyMapping, len(buses)),
-	}
+	blocks := &placeholderBlocks{}
 
-	for i := range buses {
-		pocketNode := CreateTestConsensusPocketNode(t, buses[i], eventsChannel, blocks)
-		// TODO(olshansky): Figure this part out.
-		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
+	privKeys := make(idToPrivKeyMapping, len(buses))
+	for i, bus := range buses {
+		nodeId := typesCons.NodeId(i + 1)
+
+		pocketNode := createTestConsensusPocketNode(t, bus, eventsChannel, blocks)
+		pocketNodes[nodeId] = pocketNode
+
 		nodePK, err := cryptoPocket.NewPrivateKey(pocketNode.GetBus().GetRuntimeMgr().GetConfig().PrivateKey)
 		require.NoError(t, err)
-		blocks.setPrivKeys(typesCons.NodeId(i+1), nodePK)
+
+		privKeys[nodeId] = nodePK
 	}
-	blocks.preparePlaceholderBlocks(t, buses[0], blocks.privKeys)
+	blocks.preparePlaceholderBlocks(t, buses[0], privKeys)
 	return
 }
 
 // Creates a pocket node where all the primary modules, exception for consensus, are mocked
-func CreateTestConsensusPocketNode(
+func createTestConsensusPocketNode(
 	t *testing.T,
 	bus modules.Bus,
 	eventsChannel modules.EventsChannel,
@@ -810,16 +812,11 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 /*** Placeholder Block Generation Helpers ***/
 
 type placeholderBlocks struct {
-	privKeys idToPrivKeyMapping
-	blocks   []*coreTypes.Block
-}
-
-func (p *placeholderBlocks) setPrivKeys(nodeId typesCons.NodeId, privKey cryptoPocket.PrivateKey) {
-	p.privKeys[nodeId] = privKey
+	blocks []*coreTypes.Block
 }
 
 func (p *placeholderBlocks) getBlock(index uint64) *coreTypes.Block {
-	// get block at index -1, because block 1 is stored at index 0 of the blocks array
+	// get block at index-1, because block 1 is stored at index 0 of the blocks array
 	return p.blocks[index-1]
 }
 
