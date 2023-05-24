@@ -93,13 +93,13 @@ Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&
 
 **POC**:
 
-- [ ] A POC SPIKE to be closed out and split out into multiple PRs
+- [ ] A POC SPIKE to be discarded, refactored, and/or restructured into multiple PRs
 
 **MVC**:
 
 - [ ] A PR that adds or modifies relevant structures and interfaces; such as [shared/core/types/proto](../../shared/core/types/proto), [shared/modules](../../shared/modules), etc
 - [ ] A PR that materializes an MVC of the feature along with unit tests
-- [ ] A PR that introduces a new E2E tests with **one happy** and **one sad** path scenarios as described in the origin document (refer to [e2e/README.md](../../e2e/README.md)); this may require additions to the [cli](https://github.com/pokt-network/pocket/tree/main/app/client)
+- [ ] A PR that introduces a new E2E tests with **one or more happy** and **one or more sad** path scenarios as described in the origin document (refer to [e2e/README.md](../../e2e/README.md)); this may require additions to the [cli](https://github.com/pokt-network/pocket/tree/main/app/client)
 - [ ] A PR that updates all pertinent documentation
 
 **PROD**:
@@ -163,7 +163,7 @@ Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&
 
 **Diagram**:
 
-- _One or more mermaid diagrams that will visualize the E2E feature_
+- One or more mermaid diagrams that will visualize the E2E feature
 - _TIPs:_
   - Use multiple diagrams if a single one ends up exceeding 7 or more core elements or steps
   - See if there’s anything in [pokt-network/pocket-network-protocol/tree/main/utility](../../utility/) or [pokt-network/pocket/tree/main/utility/doc](../../utility/doc) that you can use as a starting point
