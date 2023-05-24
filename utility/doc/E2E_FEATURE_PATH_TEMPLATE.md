@@ -62,7 +62,7 @@ The [Pocket Network Specification](https://github.com/pokt-network/pocket-networ
           Ideate!
 ```
 
-## Feature Specification
+## E2E Feature Specification
 
 ### Spot Feature
 
