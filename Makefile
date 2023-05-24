@@ -360,7 +360,7 @@ test_app: ## Run all go app module unit tests
 
 .PHONY: test_utility
 test_utility: ## Run all go utility module unit tests
-	go test ${VERBOSE_TEST} -p=1 -count=1 -tags=test./utility/...
+	go test ${VERBOSE_TEST} -p=1 -count=1 -tags=test ./utility/...
 
 .PHONY: test_shared
 test_shared: ## Run all go unit tests in the shared module
