@@ -286,8 +286,7 @@ func (m *consensusModule) applyBlock(block *coreTypes.Block) error {
 	}
 
 	// Apply all the transactions in the block
-	err := utilityUnitOfWork.ApplyBlock()
-	if err != nil {
+	if err := utilityUnitOfWork.ApplyBlock(); err != nil {
 		return err
 	}
 

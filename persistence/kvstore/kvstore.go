@@ -1,6 +1,6 @@
 package kvstore
 
-//go:generate mockgen -source=$GOFILE -destination=../types/mocks/block_store_mock.go github.com/pokt-network/pocket/persistence/types KVStore
+//go:generate mockgen -package=mock_types -destination=../types/mocks/kv_store_mock.go github.com/pokt-network/pocket/persistence/kvstore KVStore
 
 import (
 	"errors"
@@ -62,8 +62,7 @@ func (store *badgerKVStore) Set(key, value []byte) error {
 	tx := store.db.NewTransaction(true)
 	defer tx.Discard()
 
-	err := tx.Set(key, value)
-	if err != nil {
+	if err := tx.Set(key, value); err != nil {
 		return err
 	}
 

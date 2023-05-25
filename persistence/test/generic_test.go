@@ -5,10 +5,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-
-	"github.com/pokt-network/pocket/persistence"
 	"github.com/stretchr/testify/require"
 )
 

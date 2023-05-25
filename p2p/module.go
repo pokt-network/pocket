@@ -10,10 +10,8 @@ import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
-
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
@@ -24,11 +22,14 @@ import (
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/pokt-network/pocket/telemetry"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // TECHDEBT(#629): configure timeouts. Consider security exposure vs. real-world conditions.
@@ -196,12 +197,10 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
 	}
-	//TECHDEBT: use shared/codec for marshalling
-	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
+	data, err := codec.GetCodec().Marshal(c)
 	if err != nil {
 		return err
 	}
-	m.logger.Info().Msg("broadcasting message to network")
 
 	return m.router.Broadcast(data)
 }
@@ -210,8 +209,8 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
 	}
-	//TECHDEBT: use shared/codec for marshalling
-	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
+
+	data, err := codec.GetCodec().Marshal(c)
 	if err != nil {
 		return err
 	}
@@ -286,13 +285,12 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 func (m *p2pModule) setupRouter() (err error) {
 	m.router, err = raintree.NewRainTreeRouter(
 		m.GetBus(),
-		&raintree.RainTreeConfig{
+		&config.RainTreeConfig{
 			Addr:                  m.address,
 			CurrentHeightProvider: m.currentHeightProvider,
-			Host:                  m.host,
-			Hostname:              m.cfg.Hostname,
-			MaxMempoolCount:       m.cfg.MaxMempoolCount,
 			PeerstoreProvider:     m.pstoreProvider,
+			Host:                  m.host,
+			MaxNonces:             m.cfg.MaxNonces,
 		},
 	)
 	return err

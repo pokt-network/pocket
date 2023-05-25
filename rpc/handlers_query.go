@@ -9,9 +9,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/utils"
 )
 
 // This file contains the handlers for the v1/query path in the RPC specification
@@ -252,13 +250,8 @@ func (s *rpcServer) PostV1QueryBlock(ctx echo.Context) error {
 
 	height := uint64(s.getQueryHeight(body.Height))
 	blockStore := s.GetBus().GetPersistenceModule().GetBlockStore()
-	blockBz, err := blockStore.Get(utils.HeightToBytes(height))
+	block, err := blockStore.GetBlock(height)
 	if err != nil {
-		return ctx.String(http.StatusInternalServerError, err.Error())
-	}
-
-	block := new(coreTypes.Block)
-	if err := codec.GetCodec().Unmarshal(blockBz, block); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	rpcBlock, err := s.blockToRPCBlock(block)
@@ -278,15 +271,11 @@ func (s *rpcServer) PostV1QueryBlockTxs(ctx echo.Context) error {
 
 	height := uint64(s.getQueryHeight(body.Height))
 	blockStore := s.GetBus().GetPersistenceModule().GetBlockStore()
-	blockBz, err := blockStore.Get(utils.HeightToBytes(height))
+	block, err := blockStore.GetBlock(height)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	block := new(coreTypes.Block)
-	if err := codec.GetCodec().Unmarshal(blockBz, block); err != nil {
-		return ctx.String(http.StatusInternalServerError, err.Error())
-	}
 	rpcBlock, err := s.blockToRPCBlock(block)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())

@@ -32,8 +32,7 @@ type PrivateKey interface {
 
 func (a *Address) UnmarshalJSON(data []byte) error {
 	var address string
-	err := json.Unmarshal(data, &address)
-	if err != nil {
+	if err := json.Unmarshal(data, &address); err != nil {
 		return err
 	}
 	bz, err := hex.DecodeString(address)

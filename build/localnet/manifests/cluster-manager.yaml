@@ -20,5 +20,42 @@ spec:
         - cluster-manager
       env:
         - name: RPC_HOST
-          value: pocket-validators
-  serviceAccountName: cluster-manager-account
+          value: pocket-full-nodes
+  serviceAccountName: cluster-manager
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cluster-manager
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cluster-manager
+subjects:
+  - kind: ServiceAccount
+    name: cluster-manager
+    apiGroup: ""
+roleRef:
+  kind: Role
+  name: cluster-manager
+  apiGroup: ""
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cluster-manager
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["validators-private-keys"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["services", "pods"]
+    verbs: ["watch", "list", "get"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["delete"]
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["get"]

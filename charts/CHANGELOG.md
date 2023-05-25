@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.5] - 2023-05-20
+
+- Added `ServiceMonitor` to the helm chart.
+
+## [0.0.0.4] - 2023-05-12
+
+- Added `nodeType` parameter to the helm chart, which is now actor-agnostic.
+- Modified other places validator is mentioned to avoid confusion with non-validator actors.
+
 ## [0.0.0.3] - 2023-04-19
 
 - Rename `pocket-validator` to `pocket`, as we are not going to ship different artifacts, but will have just one.

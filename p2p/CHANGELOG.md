@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.51] - 2023-05-23
+
+- Use the shared codec module when marshaling the data sent over the wire
+- Introduce a hacky workaround to cast a `uint32` to a `string` since it is being passed in as a `json.Number` through some codeflow
+
+## [0.0.0.50] - 2023-05-08
+
+- Removed unused `Transport` interface
+- Moved and renamed `raintree.RainTreeConfig` to `util.RouterConfig`
+- Renamed `protocol.DefaultTopicStr` to `protocol.BackgroundTopicStr`
+- Added `protocol.PeerDiscoveryNamespace`
+- Added kademlia peer discovery baseline test
+- Added background router (kad + gossipsub)
+- Updated P2P README
+
 ## [0.0.0.49] - 2023-04-28
 
 - Extracted a couple of shared helpers (e.g. `stringLogArrayMarshaler`, `MarshalZerologArray`)

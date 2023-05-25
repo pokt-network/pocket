@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.44] - 2023-05-25
+
+- Update docker file to use `p1` as the binary name for the user facing client
+
+## [0.0.0.43] - 2023-05-18
+
+- Added functionality to `cluster-manager` to delete crashed pods so StatefulSetController would recreate them with a new version.
+
+## [0.0.0.42] - 2023-05-12
+
+- Added private keys for all (except fisherman) actors
+- Changed the debug_keybase package to support multiple yaml secrets in one yaml file
+- Added full node (non-staked validator)
+
+## [0.0.0.41] - 2023-05-08
+
+- Updated Dockerfiles using outdated go version to 1.19
+
 ## [0.0.0.40] - 2023-05-04
 
 - Added `network_id` parameter to the node config files

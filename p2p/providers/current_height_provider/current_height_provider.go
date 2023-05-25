@@ -1,6 +1,6 @@
 package current_height_provider
 
-//go:generate mockgen -source=$GOFILE -destination=../../types/mocks/current_height_provider_mock.go -package=mock_types github.com/pokt-network/pocket/p2p/types CurrentHeightProvider
+//go:generate mockgen -package=mock_types -destination=../../types/mocks/current_height_provider_mock.go github.com/pokt-network/pocket/p2p/providers/current_height_provider CurrentHeightProvider
 
 import "github.com/pokt-network/pocket/shared/modules"
 

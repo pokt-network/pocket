@@ -6,9 +6,7 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -117,14 +115,4 @@ func (p *PostgresContext) insertBlock(block *coreTypes.Block) error {
 
 	_, err := tx.Exec(ctx, types.InsertBlockQuery(blockHeader.Height, blockHeader.StateHash, blockHeader.ProposerAddress, blockHeader.QuorumCertificate))
 	return err
-}
-
-// Stores the block in the key-value store
-func (p *PostgresContext) storeBlock(block *coreTypes.Block) error {
-	blockBz, err := codec.GetCodec().Marshal(block)
-	if err != nil {
-		return err
-	}
-	p.logger.Info().Uint64("height", block.BlockHeader.Height).Msg("Storing block in block store")
-	return p.blockStore.Set(utils.HeightToBytes(uint64(p.Height)), blockBz)
 }

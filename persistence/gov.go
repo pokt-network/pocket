@@ -6,11 +6,10 @@ import (
 	"strconv"
 
 	"github.com/pokt-network/pocket/logger"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
-
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // TODO: Implement this function
@@ -169,8 +168,7 @@ func (p *PostgresContext) getParamsUpdated(height int64) ([]*coreTypes.Param, er
 	// Loop over all rows returned and load them into the ParamOrFlag struct array
 	for rows.Next() {
 		param := new(coreTypes.Param)
-		err := rows.Scan(&param.Name, &param.Value)
-		if err != nil {
+		if err := rows.Scan(&param.Name, &param.Value); err != nil {
 			return nil, err
 		}
 		param.Height = height
@@ -191,8 +189,7 @@ func (p *PostgresContext) getFlagsUpdated(height int64) ([]*coreTypes.Flag, erro
 	// Loop over all rows returned and load them into the ParamOrFlag struct array
 	for rows.Next() {
 		flag := new(coreTypes.Flag)
-		err := rows.Scan(&flag.Name, &flag.Value, &flag.Enabled)
-		if err != nil {
+		if err := rows.Scan(&flag.Name, &flag.Value, &flag.Enabled); err != nil {
 			return nil, err
 		}
 		flag.Height = height
