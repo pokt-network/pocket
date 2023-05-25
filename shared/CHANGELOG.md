@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.58] - 2023-05-04
 
-- Exported `IsValidator()` function for Persistence module 
 - Added `pocket.StateSyncBlockCommittedEvent` to the shared messaging events
 
 ## [0.0.0.57] - 2023-05-04

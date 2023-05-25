@@ -206,9 +206,6 @@ type PersistenceReadContext interface {
 	GetValidatorOutputAddress(operator []byte, height int64) (output []byte, err error)
 	GetValidatorMissedBlocks(address []byte, height int64) (int, error)
 
-	// Checks whether given node is validator in the given height
-	IsValidator(height int64, address string) (bool, error)
-
 	// Actors Queries
 	GetAllStakedActors(height int64) ([]*coreTypes.Actor, error)
 

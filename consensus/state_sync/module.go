@@ -1,6 +1,7 @@
 package state_sync
 
 import (
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -161,7 +162,11 @@ func (m *stateSync) Stop() error {
 	}
 	defer readCtx.Release()
 
-	isValidator, err := readCtx.IsValidator(int64(currentHeight), nodeAddress)
+	nodeAddressBz, err := hex.DecodeString(nodeAddress)
+	if err != nil {
+		return err
+	}
+	isValidator, err := readCtx.GetValidatorExists(nodeAddressBz, int64(currentHeight))
 	if err != nil {
 		return err
 	}
