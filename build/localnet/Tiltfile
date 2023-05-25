@@ -180,6 +180,9 @@ for x in range(localnet_config["validators"]["count"]):
             "genesis.externalConfigMap.name=v1-localnet-genesis",
             "genesis.externalConfigMap.key=genesis.json",
             "postgresql.primary.persistence.enabled=false",
+            "podAnnotations.prometheus\\.io/scrape=\"true\"",
+            "podAnnotations.prometheus\\.io/port=\"9000\"",
+            "podExtraLabels.region=local",
             "nodeType=validator",
         ]
     ))
@@ -201,6 +204,9 @@ for x in range(localnet_config["full_nodes"]["count"]):
             "genesis.externalConfigMap.name=v1-localnet-genesis",
             "genesis.externalConfigMap.key=genesis.json",
             "postgresql.primary.persistence.enabled=false",
+            "podAnnotations.prometheus\\.io/scrape=\"true\"",
+            "podAnnotations.prometheus\\.io/port=\"9000\"",
+            "podExtraLabels.region=local",
             "nodeType=full",
         ]
     ))
