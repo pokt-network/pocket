@@ -206,6 +206,11 @@ func (p *PostgresContext) updateActorsTree(actorType coreTypes.ActorType) error 
 		if err := p.stateTrees.merkleTrees[merkleTreeName].Update(bzAddr, actorBz); err != nil {
 			return err
 		}
+
+		// If no errors updating then commit changes to the nodestore
+		if err := p.stateTrees.merkleTrees[merkleTreeName].Commit(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -262,6 +267,11 @@ func (p *PostgresContext) updateAccountTrees() error {
 		if err := p.stateTrees.merkleTrees[accountMerkleTree].Update(bzAddr, accBz); err != nil {
 			return err
 		}
+
+		// If no errors updating then commit changes to the nodestore
+		if err := p.stateTrees.merkleTrees[accountMerkleTree].Commit(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -287,6 +297,11 @@ func (p *PostgresContext) updatePoolTrees() error {
 		if err := p.stateTrees.merkleTrees[poolMerkleTree].Update(bzAddr, accBz); err != nil {
 			return err
 		}
+
+		// If no errors updating then commit changes to the nodestore
+		if err := p.stateTrees.merkleTrees[poolMerkleTree].Commit(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -304,6 +319,11 @@ func (p *PostgresContext) updateTransactionsTree() error {
 		txBz := idxTx.GetTx()
 		txHash := crypto.SHA3Hash(txBz)
 		if err := p.stateTrees.merkleTrees[transactionsMerkleTree].Update(txHash, txBz); err != nil {
+			return err
+		}
+
+		// If no errors updating then commit changes to the nodestore
+		if err := p.stateTrees.merkleTrees[transactionsMerkleTree].Commit(); err != nil {
 			return err
 		}
 	}
@@ -326,6 +346,11 @@ func (p *PostgresContext) updateParamsTree() error {
 		if err := p.stateTrees.merkleTrees[paramsMerkleTree].Update(paramKey, paramBz); err != nil {
 			return err
 		}
+
+		// If no errors updating then commit changes to the nodestore
+		if err := p.stateTrees.merkleTrees[paramsMerkleTree].Commit(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -344,6 +369,11 @@ func (p *PostgresContext) updateFlagsTree() error {
 			return err
 		}
 		if err := p.stateTrees.merkleTrees[flagsMerkleTree].Update(flagKey, flagBz); err != nil {
+			return err
+		}
+
+		// If no errors updating then commit changes to the nodestore
+		if err := p.stateTrees.merkleTrees[flagsMerkleTree].Commit(); err != nil {
 			return err
 		}
 	}
