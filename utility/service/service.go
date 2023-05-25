@@ -1,11 +1,15 @@
 package service
 
 import (
+	"fmt"
+
+	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 // TECHDEBT: These structures were copied as placeholders from v0 and need to be updated to reflect changes in v1
+// TODO: remove: use coreTypes.Relay instead
 type Relay interface {
 	RelayPayload
 	RelayMeta
@@ -147,3 +151,151 @@ func (r *relay) GetRelayChain() RelayChain              { return nil }
 func (r *relay) GetGeoZone() GeoZone                    { return nil }
 func (r *relay) GetToken() AAT                          { return nil }
 func (r *relay) GetSignature() string                   { return "" }
+
+type Provider interface {
+	CurrentHeight() int64
+	GetSession(appAddr string, height int64, relayChain, geoZone string) (*coreTypes.Session, error)
+}
+
+type Servicer interface {
+	HandleRelay(*coreTypes.Relay) (*coreTypes.RelayResponse, error)
+}
+
+func NewServicer(provider Provider, config configs.ServicerConfig) (Servicer, error) {
+	return servicer{
+		provider: provider,
+		config:   config,
+	}, nil
+}
+
+type servicer struct {
+	config   configs.ServicerConfig
+	provider Provider
+}
+
+// HandleRelay processes a relay after performing validation.
+// It also updates the servicer's internal state to keep track of served relays.
+func (s servicer) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
+	if relay == nil {
+		return nil, fmt.Errorf("cannot serve nil relay")
+	}
+
+	if err := s.admitRelay(*relay); err != nil {
+		return nil, fmt.Errorf("Error admitting relay: %w", err)
+	}
+
+	// TODO: implement Persist Relay
+	// TODO: implement execution
+	// TODO: implement state maintenance
+	// TODO: validate the response from the node?
+	// TODO: (QUESTION) Should we persist SignedRPC?
+	return nil, nil
+}
+
+// validateRelayMeta ensures the relay metadata is valid for being handled by the servicer
+// TODO: (REFACTOR) move the meta-specific validation to a Validator method on RelayMeta struct
+func (s servicer) validateRelayMeta(meta *coreTypes.RelayMeta) error {
+	if meta == nil {
+		return fmt.Errorf("empty relay metadata")
+	}
+
+	if meta.RelayChain == nil {
+		return fmt.Errorf("relay chain unspecified")
+	}
+
+	// TODO: supported chains: needs to be crossed-checked with the world state from the persistence layer
+	if !s.isRelayChainSupported(*meta.RelayChain) {
+		return fmt.Errorf("relay chain not supported: %s", meta.RelayChain.Id)
+	}
+	return nil
+}
+
+func (s servicer) isRelayChainSupported(relayChain coreTypes.Identifiable) bool {
+	for _, ch := range s.config.Chains {
+		if ch == relayChain.Id {
+			return true
+		}
+	}
+	return false
+}
+
+// TODO: implement
+// validateApplication makes sure the application has not received more relays than allocated in the current session.
+func (s servicer) validateApplication(meta *coreTypes.RelayMeta, session *coreTypes.Session) error {
+	/*
+		// if maxRelaysPerSession, overServiced := calculateAppSessionTokens(); overServiced {
+			return fmt.Errorf("application %s has exceeded its allocated relays %d for the session %d", meta.ApplicationPublicKey, maxRelaysPerSession)
+		}
+	*/
+	return nil
+}
+
+// validateServicer makes sure the servicer is A) active in the current session, and B) has not served more than its allocated relays for the session
+func (s servicer) validateServicer(meta *coreTypes.RelayMeta, session *coreTypes.Session) error {
+	if meta.ServicerPublicKey != s.config.PublicKey {
+		return fmt.Errorf("relay servicer key %s does not match this servicer instance %s", meta.ServicerPublicKey, s.config.PublicKey)
+	}
+
+	var found bool
+	for _, servicer := range session.Servicers {
+		if servicer != nil && servicer.PublicKey == meta.ServicerPublicKey {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("relay servicer key %s not found in session %d with %d servicers", meta.ServicerPublicKey, session.SessionNumber, len(session.Servicers))
+	}
+
+	// TODO: implement isServicerMaxedOut
+	return nil
+}
+
+// admitRelay decides whether the relay should be served
+func (s servicer) admitRelay(relay coreTypes.Relay) error {
+	// TODO: utility module should initialize the servicer (if this module instance is a servicer)
+	const errPrefix = "Error admitting relay"
+
+	// TODO: use persistence module to verify the relaychain is supported by this servicer
+	if err := s.validateRelayMeta(relay.Meta); err != nil {
+		return fmt.Errorf("%s: relay metadata failed validation: %w", errPrefix, err)
+	}
+
+	height := s.provider.CurrentHeight()
+	// TODO: update the CLI to include ApplicationAddress(or Application Public Key) in the RelayMeta
+	session, err := s.provider.GetSession(relay.Meta.ApplicationAddress, height, relay.Meta.RelayChain.Id, relay.Meta.GeoZone.Id)
+	if err != nil {
+		return fmt.Errorf("%s: failed to get a session for height %d for relay meta %s: %w", errPrefix, height, relay.Meta, err)
+	}
+
+	// TODO: (REFACTOR) use a loop to run all validators: would also remove the need for passing the session around
+	if err := validateRelayBlockHeight(relay.Meta, session); err != nil {
+		return fmt.Errorf("%s: relay failed block height validation: %w", errPrefix, err)
+	}
+
+	if err := s.validateApplication(relay.Meta, session); err != nil {
+		return fmt.Errorf("%s: relay failed application validation: %w", errPrefix, err)
+	}
+
+	if err := s.validateServicer(relay.Meta, session); err != nil {
+		return fmt.Errorf("%s: relay failed servicer instance validation: %w", errPrefix, err)
+	}
+
+	return nil
+}
+
+func validateRelayBlockHeight(relayMeta *coreTypes.RelayMeta, session *coreTypes.Session) error {
+	sessionStartingBlock := session.SessionNumber * session.NumSessionBlocks
+	sessionLastBlock := sessionStartingBlock + session.SessionHeight
+
+	if relayMeta.BlockHeight >= sessionStartingBlock && relayMeta.BlockHeight <= sessionLastBlock {
+		return nil
+	}
+
+	return fmt.Errorf("relay block height %d not within session ID %s starting block %d and last block %d",
+		relayMeta.BlockHeight,
+		session.Id,
+		sessionStartingBlock,
+		sessionLastBlock)
+}

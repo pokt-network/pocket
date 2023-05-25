@@ -6,6 +6,7 @@ import (
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
+	"github.com/pokt-network/pocket/utility/service"
 	"github.com/pokt-network/pocket/utility/types"
 )
 
@@ -22,6 +23,9 @@ type utilityModule struct {
 
 	logger  *modules.Logger
 	mempool mempool.TXMempool
+
+	// TODO: initialize
+	servicer service.Servicer
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.20] - 2023-05-25
+
+- Removed AAT type from rpc handlers
+
 ## [0.0.0.19] - 2023-05-24
 
 - Updates rpc handlers to use updated BlockStore interface

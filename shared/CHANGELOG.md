@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.58] - 2023-05-25
+
+- Add ApplicationAddress to RelayMeta
+- Fix SessionHeight field meaning comment
+
 ## [0.0.0.57] - 2023-05-04
 
 - Move `utility/types/errors.go` into `shared/core/types/`

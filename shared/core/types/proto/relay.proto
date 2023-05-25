@@ -18,12 +18,15 @@ message RelayPayload {
 }
 
 message RelayMeta {
+    reserved 5;
+    reserved "token";
     int64 block_height = 1;
     string servicer_public_key = 2;
     Identifiable relay_chain = 3;
     Identifiable geo_zone = 4;
-    AAT token = 5;
     string signature = 6;
+    // TODO: should we use public key instead?
+    string application_address = 7;
 }
 
 message RelayResponse {
