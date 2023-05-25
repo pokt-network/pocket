@@ -8,8 +8,8 @@ _IMPROVE(olshansky): Once we've completed the entire process at least once, we'l
   - [Spot Feature](#spot-feature)
   - [Spike Feature](#spike-feature)
   - [Scope Feature](#scope-feature)
-    - [GitHub Ticket](#github-ticket)
-    - [Origin Document](#origin-document)
+    - [1. GitHub Ticket](#1-github-ticket)
+    - [2. Origin Document](#2-origin-document)
 - [E2E Feature Implementation](#e2e-feature-implementation)
   - [POC: Proof of Concept](#poc-proof-of-concept)
   - [MVC: Minimum Viable Change](#mvc-minimum-viable-change)
@@ -76,7 +76,7 @@ Create a SPIKE GitHub issue, like [this](<[http](https://github.com/pokt-network
 
 Leverage the results from the SPIKE to create an implementation GitHub issue, like [this](<[http](https://github.com/pokt-network/pocket/issue/TODO_LINK_TO_ISSUE_ONCE_WE_HAVE_EXAMPLE)>) to track the actual implementation.
 
-#### GitHub Ticket
+#### 1. GitHub Ticket
 
 Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&labels=&projects=&template=issue.md&title=%5BREPLACE+ME%5D+with+a+descriptive+title) and populate its description, respectively, with the following additional elements:
 
@@ -110,9 +110,9 @@ Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&
   - Patching hacks or workarounds
   - Enabling your [imagination](https://github.com/pokt-network/pocket/assets/1892194/6aff9004-8d3b-48e8-b6d5-9b67ac266e3d)!
 
-#### Origin Document
+#### 2. Origin Document
 
-**Purpose:** A single sentence that captures the intended purpose, behaviour and goal of the E2E feature
+**Purpose:** [Replace this with a single sentence that captures the intended purpose, behaviour and goal of the E2E feature]
 **Actors**: Check all of the protocol actors involved in the feature:
 
 - [ ] Validator
@@ -127,19 +127,9 @@ Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&
 - Mention or link to specific files if applicable
 - See [shared/core/types/proto](../../shared/core/types/proto) as a reference as they will most likely, but not necessarily, be part of that package
 - _TIPS:_
-
   - _This will be non-exhaustive and will likely change during the POC or MVC stages_
-  - You can find all other structs by running this command:
-
-    ```bash
-    grep -r "type .* struct" --exclude-dir="vendor" --exclude="*.gen.go" --exclude="*.pb.go" .
-    ```
-
-  - You can find all other protobufs by running this command:
-
-    ```bash
-    find . -name "*.proto" -not -path "./vendor/*"`
-    ```
+  - You can find all other structs by running `make search_structs`
+  - You can find all other protobufs by running `make search_protos`
 
 **Interfaces**:
 
@@ -147,19 +137,9 @@ Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&
 - Mention or link to specific files if applicable
 - See [shared/modules](../../shared/modules) as a reference as they will most likely, but not necessarily, be part of that package
 - _TIPS:_
-
   - _This will be non-exhaustive and will likely change during the POC or MVC stages_
-  - You can find all other structs by running this command:
-
-    ```bash
-    grep -r "type .* interface" --exclude-dir="vendor" --exclude="*.gen.go" --exclude="*.pb.go" .
-    ```
-
-  - You can find all other protobufs by running this command:
-
-    ```bash
-    find . -name "*.proto" -not -path "./vendor/*"`
-    ```
+  - You can find all other structs by running `make search_interfaces`
+  - You can find all other protobufs by running `make search_protos`
 
 **Diagram**:
 
