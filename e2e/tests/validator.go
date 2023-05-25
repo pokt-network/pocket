@@ -22,7 +22,7 @@ func init() {
 }
 
 // cliPath is the path of the binary installed and is set by the Tiltfile
-const cliPath = "/usr/local/bin/client"
+const cliPath = "/usr/local/bin/p1"
 
 // commandResult combines the stdout, stderr, and err of an operation
 type commandResult struct {
