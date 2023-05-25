@@ -89,31 +89,23 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 	return nil
 }
 
-// HandleSynced handles FSM event IsSyncedNonValidator for Non-Validators, and Synced is the destination state.
-// Currently, FSM never transition to this state and a non-validator node always stays in syncmode.
+// HandleSynced handles the FSM event IsSyncedNonValidator for Non-Validators, and Synced is the destination state.
+// Currently, FSM never transition to this state and a non-validator node always stays in SyncMode.
 // CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state.
 func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Msg("Non-validator node is in Synced mode")
+	m.logger.Info().Msg("Non-validator node is in Synced mode. Consensus module NOOP.")
 	return nil
 }
 
-// HandlePacemaker handles FSM event IsSyncedValidator, and Pacemaker is the destination state.
-// Execution of this state means the validator node is synced.
+// HandlePacemaker handles the FSM event IsSyncedValidator, and Pacemaker is the destination state.
+// Execution of this state means the validator node is synced and it will stay in this mode until
+// it receives a new block proposal that has a higher height than the current consensus height.
 func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Msg("Validator node is Synced and in Pacemaker mode. It will stay in this mode until it receives a new block proposal that has a higher height than the current block height")
-	// validator receives a new block proposal, and it understands that it doesn't have block and it transitions to unsycnhed state
-	// transitioning out of this state happens when a new block proposal is received by the hotstuff_replica
+	m.logger.Info().Msg("Validator node is Synced and in Pacemaker mode. Validator can now participate in voting on consensus.")
 
-	// TODO: move this to a more appropriate place
 	// if a validator is just bootstrapped and finished state sync, it will not have a nodeId yet, which is 0. Set correct nodeId here.
 	if m.nodeId == 0 {
-		// valdiator node receives nodeID after reaching pacemaker.
-		validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-		if err != nil {
-			return err
-		}
-		valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
-		m.nodeId = valAddrToIdMap[m.nodeAddress]
+		return m.updateNodeId()
 	}
 
 	return nil

@@ -29,8 +29,6 @@ func (m *consensusModule) getNodeIdFromNodeAddress(peerId string) (uint64, error
 func (m *consensusModule) blockApplicationLoop() {
 	logger := m.logger.With().Str("source", "blockApplicationLoop").Logger()
 
-	//switch
-
 	for blockResponse := range m.blocksResponsesReceived {
 		block := blockResponse.Block
 		logger.Info().Msgf("New block, at height %d is received!", block.BlockHeader.Height)
@@ -170,10 +168,12 @@ func (m *consensusModule) applyAndCommitBlock(block *coreTypes.Block) error {
 }
 
 func (m *consensusModule) getAggregatedStateSyncMetadata() typesCons.StateSyncMetadataResponse {
-	minHeight, maxHeight := uint64(1), uint64(1)
-
+	// TECHDEBT(#686): This should be an ongoing background passive state sync process but just
+	// capturing the available messages at the time that this function was called is good enough for now.
 	chanLen := len(m.metadataReceived)
+	m.logger.Info().Msgf("Looping over %d state sync metadata responses", chanLen)
 
+	minHeight, maxHeight := uint64(1), uint64(1)
 	for i := 0; i < chanLen; i++ {
 		metadata := <-m.metadataReceived
 		if metadata.MaxHeight > maxHeight {

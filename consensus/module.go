@@ -147,21 +147,14 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	if err != nil {
 		return nil, err
 	}
-	address := privateKey.Address().String()
-
-	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
-	if err != nil {
+	m.nodeAddress = privateKey.Address().String()
+	if m.updateNodeId() != nil {
 		return nil, err
 	}
-
-	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
 
 	m.privateKey = privateKey.(cryptoPocket.Ed25519PrivateKey)
 	m.consCfg = consensusCfg
 	m.genesisState = genesisState
-
-	m.nodeId = valAddrToIdMap[address]
-	m.nodeAddress = address
 
 	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
 	m.blocksResponsesReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
@@ -307,6 +300,16 @@ func (m *consensusModule) CurrentStep() uint64 {
 
 func (m *consensusModule) GetNodeAddress() string {
 	return m.nodeAddress
+}
+
+func (m *consensusModule) updateNodeId() error {
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return err
+	}
+	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
+	m.nodeId = valAddrToIdMap[m.nodeAddress]
+	return nil
 }
 
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...
