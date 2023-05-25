@@ -68,8 +68,8 @@ func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 		return err
 	}
 
-	// Store block in the KV store
-	if err := p.storeBlock(block); err != nil {
+	// Save the block in the BlockStore at the current height
+	if err := p.blockStore.StoreBlock(uint64(p.Height), block); err != nil {
 		return err
 	}
 
