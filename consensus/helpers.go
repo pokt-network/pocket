@@ -280,6 +280,7 @@ func hotstuffMsgToLoggingFields(msg *typesCons.HotstuffMessage) map[string]any {
 }
 
 func (m *consensusModule) maxPersistedBlockHeight() (uint64, error) {
+	// TECHDEBT: We don't need to pass the height here to retrieve the maximum block height.
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(m.CurrentHeight()))
 	if err != nil {
 		return 0, err

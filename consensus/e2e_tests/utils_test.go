@@ -27,6 +27,7 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/pocket/state_machine"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -409,7 +410,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus,
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
 
-	blockStoreMock := persistenceMocks.NewMockKVStore(ctrl)
+	blockStoreMock := persistenceMocks.NewMockBlockStore(ctrl)
 	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
 		heightInt := utils.HeightFromBytes(height)
 		if bus.GetConsensusModule().CurrentHeight() < heightInt {
@@ -425,12 +426,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus,
 			if bus.GetConsensusModule().CurrentHeight() < height {
 				return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
 			}
-			blockWithHeight := &coreTypes.Block{
-				BlockHeader: &coreTypes.BlockHeader{
-					Height: height,
-				},
-			}
-			return blockWithHeight, nil
+			return testBlocks.getBlock(height), nil
 		}).
 		AnyTimes()
 
@@ -756,7 +752,7 @@ func waitForNodeToSync(
 	currentHeight := unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 	for currentHeight < targetHeight {
 		// waiting for unsynced node to request the same missing block from all peers.
-		blockRequests, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, "Error while waiting for block response messages.", numValidators, 250, true)
+		blockRequests, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, "Error while waiting for block response messages.", numValidators, 500, true)
 		require.NoError(t, err)
 
 		// verify that all requests are identical and take the first one
@@ -768,7 +764,7 @@ func waitForNodeToSync(
 		advanceTime(t, clck, 10*time.Millisecond)
 
 		// wait to receive replies from all nodes
-		blockResponses, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, "Error while waiting for block response messages.", numValidators-1, 250, true)
+		blockResponses, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, "Error while waiting for block response messages.", numValidators-1, 500, true)
 		require.NoError(t, err)
 
 		// verify that all nodes replied with the same block response

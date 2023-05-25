@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -11,20 +12,22 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const metadataSyncPeriod = 45 * time.Second // TODO: Make this configurable
+// TODO: Make this configurable in StateSyncConfig
+const metadataSyncPeriod = 45 * time.Second
 
+// REFACTOR(#434): Once we consolidated NodeIds/PeerIds, this could potentially be removed
 func (m *consensusModule) getNodeIdFromNodeAddress(peerId string) (uint64, error) {
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
-		// REFACTOR(#434): As per issue #434, once the new id is sorted out, this return statement must be changed
-		return 0, err
+		m.logger.Warn().Err(err).Msgf("Could not get validators at height %d when checking if peer %s is a validator", m.CurrentHeight(), peerId)
+		return 0, fmt.Errorf("Could determine if peer %s is a validator or not: %w", peerId, err)
 	}
 
 	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
 	return uint64(valAddrToIdMap[peerId]), nil
 }
 
-// blockApplicationLoop commits the blocks received from the blocksResponsesReceived channel
+// blockApplicationLoop commits the blocks received from the `blocksResponsesReceived“ channel
 // it is intended to be run as a background process
 func (m *consensusModule) blockApplicationLoop() {
 	logger := m.logger.With().Str("source", "blockApplicationLoop").Logger()
