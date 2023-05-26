@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	cliExecutableName = "client"
+	cliExecutableName = "p1"
 )
 
 var (
