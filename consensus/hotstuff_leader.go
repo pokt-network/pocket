@@ -30,7 +30,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	if err := handler.anteHandle(m, msg); err != nil {
+	if err := handler.isMessageValidBasic(m, msg); err != nil {
 		m.logger.Error().Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
@@ -108,7 +108,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	if err := handler.anteHandle(m, msg); err != nil {
+	if err := handler.isMessageValidBasic(m, msg); err != nil {
 		m.logger.Error().Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
@@ -159,7 +159,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	if err := handler.anteHandle(m, msg); err != nil {
+	if err := handler.isMessageValidBasic(m, msg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
@@ -210,7 +210,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	if err := handler.anteHandle(m, msg); err != nil {
+	if err := handler.isMessageValidBasic(m, msg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
@@ -273,17 +273,17 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusMod
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	if err := handler.anteHandle(m, msg); err != nil {
+	if err := handler.isMessageValidBasic(m, msg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 }
 
-// anteHandle is the general handler called for every before every specific HotstuffLeaderMessageHandler handler
-func (handler *HotstuffLeaderMessageHandler) anteHandle(m *consensusModule, msg *typesCons.HotstuffMessage) error {
+// isMessageValidBasic is the general handler called for every before every specific HotstuffLeaderMessageHandler handler
+func (handler *HotstuffLeaderMessageHandler) isMessageValidBasic(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	// Basic block metadata validation
 
-	if valid, err := m.isValidMessageBlock(msg); !valid {
+	if valid, err := m.isBlockMessageInMessageValid(msg); !valid {
 		return err
 	}
 

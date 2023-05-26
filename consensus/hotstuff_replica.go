@@ -28,7 +28,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	if err := handler.anteHandle(m, msg); err != nil {
+	if err := handler.isMessageValidBasic(m, msg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
@@ -48,7 +48,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	if err := handler.anteHandle(m, msg); err != nil {
+	if err := handler.isMessageValidBasic(m, msg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
@@ -92,7 +92,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	if err := handler.anteHandle(m, msg); err != nil {
+	if err := handler.isMessageValidBasic(m, msg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
@@ -130,7 +130,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	if err := handler.anteHandle(m, msg); err != nil {
+	if err := handler.isMessageValidBasic(m, msg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
@@ -168,7 +168,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
-	if err := handler.anteHandle(m, msg); err != nil {
+	if err := handler.isMessageValidBasic(m, msg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
@@ -206,10 +206,10 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	m.paceMaker.NewHeight()
 }
 
-// anteHandle is the handler called on every replica message before specific handler
-func (handler *HotstuffReplicaMessageHandler) anteHandle(m *consensusModule, msg *typesCons.HotstuffMessage) error {
+// isMessageValidBasic is the handler called on every replica message before specific handler
+func (handler *HotstuffReplicaMessageHandler) isMessageValidBasic(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	// Basic block metadata validation
-	if valid, err := m.isValidMessageBlock(msg); !valid {
+	if valid, err := m.isBlockMessageInMessageValid(msg); !valid {
 		return err
 	}
 

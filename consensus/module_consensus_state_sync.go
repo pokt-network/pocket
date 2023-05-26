@@ -37,17 +37,20 @@ func (m *consensusModule) blockApplicationLoop() {
 		block := blockResponse.Block
 		logger.Info().Msgf("Received new block at height %d.", block.BlockHeader.Height)
 
+		// Check what the current latest committed block height is
 		maxPersistedHeight, err := m.maxPersistedBlockHeight()
 		if err != nil {
 			logger.Err(err).Msg("couldn't query max persisted height")
 			continue
 		}
 
+		// Check if the block being synched is behind the current height
 		if block.BlockHeader.Height <= maxPersistedHeight {
 			logger.Debug().Msgf("Discarding block height %d, since node is ahead at height %d", block.BlockHeader.Height, maxPersistedHeight)
 			continue
 		}
 
+		// Check if the block being synched is ahead of the current height
 		if block.BlockHeader.Height > m.CurrentHeight() {
 			logger.Info().Bool("TODO", true).Msgf("Received block at height %d, discarding as it is higher than the current height", block.BlockHeader.Height)
 			// TECHDEBT: we need to store block responses that we are not yet ready to validate so we can validate them on a subsequent iteration of this loop
@@ -55,17 +58,40 @@ func (m *consensusModule) blockApplicationLoop() {
 			continue
 		}
 
+		// Do basic block validation
 		if err = m.validateBlock(block); err != nil {
 			logger.Err(err).Msg("failed to validate block")
 			continue
 		}
 
-		if err = m.applyAndCommitBlock(block); err != nil {
-			logger.Err(err).Msg("failed to apply and commit block")
+		// Prepare the utility UOW of work to apply a new block
+		if err := m.refreshUtilityUnitOfWork(); err != nil {
+			m.logger.Error().Err(err).Msg("Could not refresh utility context")
 			continue
 		}
 
+		// Update the leader proposing the block
+		leaderIdInt, err := m.getNodeIdFromNodeAddress(string(block.BlockHeader.ProposerAddress))
+		if err != nil {
+			m.logger.Error().Err(err).Msg("Could not get leader id from leader address")
+			continue
+		}
+		m.leaderId = typesCons.NewNodeId(leaderIdInt)
+
+		// Try to apply the block by validating the transactions in the block
+		if err := m.applyBlock(block); err != nil {
+			m.logger.Error().Err(err).Msg("Could not apply block")
+			continue
+		}
+
+		// Try to commit the block to persistence
+		if err := m.commitBlock(block); err != nil {
+			m.logger.Error().Err(err).Msg("Could not commit block")
+			continue
+		}
 		logger.Info().Int64("height", int64(block.BlockHeader.Height)).Msgf("Block, at height %d is committed!", block.BlockHeader.Height)
+
+		m.paceMaker.NewHeight()
 		m.publishStateSyncBlockCommittedEvent(block.BlockHeader.Height)
 	}
 }
@@ -104,7 +130,7 @@ func (m *consensusModule) broadcastMetadataRequests() error {
 		},
 	}
 
-	// TECHDEBT: This should be sent to all peers (full nodes, servicesr, etc...), not just validators
+	// TECHDEBT: This should be sent to all peers (full nodes, servicers, etc...), not just validators
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
@@ -144,36 +170,6 @@ func (m *consensusModule) validateBlock(block *coreTypes.Block) error {
 		return err
 	}
 
-	if err := m.refreshUtilityUnitOfWork(); err != nil {
-		m.logger.Error().Err(err).Msg("Could not refresh utility context")
-		return err
-	}
-
-	leaderIdInt, err := m.getNodeIdFromNodeAddress(string(block.BlockHeader.ProposerAddress))
-	if err != nil {
-		m.logger.Error().Err(err).Msg("Could not get leader id from leader address")
-		return err
-	}
-
-	leaderId := typesCons.NodeId(leaderIdInt)
-	m.leaderId = &leaderId
-
-	return nil
-}
-
-func (m *consensusModule) applyAndCommitBlock(block *coreTypes.Block) error {
-	if err := m.applyBlock(block); err != nil {
-		m.logger.Error().Err(err).Msg("Could not apply block, invalid QC")
-		return err
-	}
-
-	if err := m.commitBlock(block); err != nil {
-		m.logger.Error().Err(err).Msg("Could not commit block, invalid QC")
-		return err
-	}
-	m.paceMaker.NewHeight()
-
-	m.logger.Info().Msgf("New block is committed, current height is :%d", m.height)
 	return nil
 }
 

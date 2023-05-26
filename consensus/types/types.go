@@ -30,3 +30,8 @@ func ActorListToValidatorMap(actors []*coreTypes.Actor) (m ValidatorMap) {
 	}
 	return
 }
+
+func NewNodeId(id uint64) *NodeId {
+	n := NodeId(id)
+	return &n
+}
