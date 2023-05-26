@@ -108,7 +108,7 @@ func (t *treeStore) Update(pgtx pgx.Tx) error {
 	return err
 }
 
-func newtreeStore(treesStoreDir string) (*treeStore, error) {
+func NewtreeStore(treesStoreDir string) (*treeStore, error) {
 	if treesStoreDir == "" {
 		return newMemtreeStore()
 	}
