@@ -17,6 +17,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -183,12 +184,10 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 		Content: msg,
 		Nonce:   cryptoPocket.GetNonce(),
 	}
-	//TECHDEBT: use shared/codec for marshalling
-	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
+	data, err := codec.GetCodec().Marshal(c)
 	if err != nil {
 		return err
 	}
-	m.logger.Info().Msg("broadcasting message to network")
 
 	return m.router.Broadcast(data)
 }
@@ -198,8 +197,8 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 		Content: msg,
 		Nonce:   cryptoPocket.GetNonce(),
 	}
-	//TECHDEBT: use shared/codec for marshalling
-	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
+
+	data, err := codec.GetCodec().Marshal(c)
 	if err != nil {
 		return err
 	}
@@ -293,7 +292,7 @@ func (m *p2pModule) setupRouter() (err error) {
 			CurrentHeightProvider: m.currentHeightProvider,
 			PeerstoreProvider:     m.pstoreProvider,
 			Host:                  m.host,
-			Handler:               m.handleAppData,
+			Handler:               m.handlePocketEnvelope,
 		},
 	)
 	return err
@@ -343,11 +342,11 @@ func (m *p2pModule) isClientDebugMode() bool {
 	return m.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode
 }
 
-// handleAppData deserializes the received `PocketEnvelope` data and publishes
+// handlePocketEnvelope deserializes the received `PocketEnvelope` data and publishes
 // a copy of its `Content` to the application event bus.
-func (m *p2pModule) handleAppData(data []byte) error {
-	networkMessage := messaging.PocketEnvelope{}
-	if err := proto.Unmarshal(data, &networkMessage); err != nil {
+func (m *p2pModule) handlePocketEnvelope(pocketEnvelopeBz []byte) error {
+	poktEnvelope := messaging.PocketEnvelope{}
+	if err := proto.Unmarshal(pocketEnvelopeBz, &poktEnvelope); err != nil {
 		return fmt.Errorf("decoding network message: %w", err)
 	}
 
@@ -362,7 +361,7 @@ func (m *p2pModule) handleAppData(data []byte) error {
 	// `PocketEnvelop` literal with content rather than passing `networkMessage`?
 	// (e.g. avoid blindly passing additional fields as the protobuf type changes)
 	event := messaging.PocketEnvelope{
-		Content: networkMessage.Content,
+		Content: poktEnvelope.Content,
 	}
 	m.GetBus().PublishEventToBus(&event)
 	return nil

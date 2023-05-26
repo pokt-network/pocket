@@ -7,9 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -53,7 +51,6 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	for i := 0; i < len(stateHashes); i++ {
 		// Get the context at the new height and retrieve one of the apps
 		height := int64(i + 1)
-		heightBz := utils.HeightToBytes(uint64(height))
 		expectedStateHash := stateHashes[i]
 
 		db := NewTestPostgresContext(t, height)
@@ -99,13 +96,10 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		require.NoError(t, err)
 
 		// Retrieve the block
-		blockBz, err := testPersistenceMod.GetBlockStore().Get(heightBz)
+		block, err := testPersistenceMod.GetBlockStore().GetBlock(uint64(height))
 		require.NoError(t, err)
 
 		// Verify the block contents
-		var block coreTypes.Block
-		err = codec.GetCodec().Unmarshal(blockBz, &block)
-		require.NoError(t, err)
 		require.Equal(t, expectedStateHash, block.BlockHeader.StateHash) // verify block hash
 		if i > 0 {
 			require.Equal(t, stateHashes[i-1], block.BlockHeader.PrevStateHash) // verify chain chain

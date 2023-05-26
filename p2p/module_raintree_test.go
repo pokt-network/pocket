@@ -295,7 +295,6 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
 	require.NoError(t, p2pMod.Broadcast(p))
-
 }
 
 func extractNumericId(valId string) int64 {

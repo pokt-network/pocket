@@ -360,7 +360,7 @@ test_app: ## Run all go app module unit tests
 
 .PHONY: test_utility
 test_utility: ## Run all go utility module unit tests
-	go test ${VERBOSE_TEST} -p=1 -count=1 -tags=test./utility/...
+	go test ${VERBOSE_TEST} -p=1 -count=1 -tags=test ./utility/...
 
 .PHONY: test_shared
 test_shared: ## Run all go unit tests in the shared module
@@ -509,7 +509,7 @@ localnet_up: ## Starts up a k8s LocalNet with all necessary dependencies (tl;dr 
 
 .PHONY: localnet_client_debug
 localnet_client_debug: ## Opens a `client debug` cli to interact with blockchain (e.g. change pacemaker mode, reset to genesis, etc). Though the node binary updates automatiacally on every code change (i.e. hot reloads), if client is already open you need to re-run this command to execute freshly compiled binary.
-	kubectl exec -it deploy/dev-cli-client --container pocket -- client debug
+	kubectl exec -it deploy/dev-cli-client --container pocket -- p1 debug
 
 .PHONY: localnet_shell
 localnet_shell: ## Opens a shell in the pod that has the `client` cli available. The binary updates automatically whenever the code changes (i.e. hot reloads).
