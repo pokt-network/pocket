@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
+	"github.com/pokt-network/pocket/persistence/trees"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -42,7 +43,8 @@ type persistenceModule struct {
 	txIndexer indexer.TxIndexer
 
 	// A list of all the merkle trees maintained by the persistence module that roll up into the state commitment.
-	stateTrees *stateTrees
+	// stateTrees *stateTrees
+	stateTrees trees.TreeStore
 
 	// Only one write context is allowed at a time
 	writeContext *PostgresContext
@@ -102,7 +104,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	stateTrees, err := newStateTrees(persistenceCfg.TreesStoreDir)
+	stateTrees, err := trees.NewtreeStore(persistenceCfg.TreesStoreDir)
 	if err != nil {
 		return nil, err
 	}
@@ -232,6 +234,10 @@ func (m *persistenceModule) GetBlockStore() blockstore.BlockStore {
 
 func (m *persistenceModule) GetTxIndexer() indexer.TxIndexer {
 	return m.txIndexer
+}
+
+func (m *persistenceModule) GetTreeStore() trees.TreeStore {
+	return m.stateTrees
 }
 
 func (m *persistenceModule) GetNetworkID() string {
