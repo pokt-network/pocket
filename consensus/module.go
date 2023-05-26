@@ -67,13 +67,11 @@ type consensusModule struct {
 	nodeId   typesCons.NodeId
 
 	// Module Dependencies
-	// IMPROVE(#283): Investigate whether the current approach to how the `utilityUnitOfWork` should be
-	//                managed or changed. Also consider exposing a function that exposes the context
-	//                to streamline how its accessed in the module (see the ticket).
 	utilityUnitOfWork modules.UtilityUnitOfWork
 	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
+	// State Sync
 	stateSync state_sync.StateSyncModule
 
 	// block responses received from peers are collected in this channel
@@ -81,8 +79,6 @@ type consensusModule struct {
 
 	// metadata responses received from peers are collected in this channel
 	metadataReceived chan *typesCons.StateSyncMetadataResponse
-
-	serverModeEnabled bool
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -129,32 +125,27 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	for _, option := range options {
 		option(m)
 	}
-
 	bus.RegisterModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
-
-	consensusCfg := runtimeMgr.GetConfig().Consensus
-
-	m.serverModeEnabled = consensusCfg.ServerModeEnabled
+	m.consCfg = runtimeMgr.GetConfig().Consensus
 
 	genesisState := runtimeMgr.GetGenesis()
 	if err := m.ValidateGenesis(genesisState); err != nil {
 		return nil, fmt.Errorf("genesis validation failed: %w", err)
 	}
+	m.genesisState = genesisState
 
-	privateKey, err := cryptoPocket.NewPrivateKey(consensusCfg.GetPrivateKey())
+	privateKey, err := cryptoPocket.NewPrivateKey(m.consCfg.GetPrivateKey())
 	if err != nil {
 		return nil, err
 	}
+	m.privateKey = privateKey.(cryptoPocket.Ed25519PrivateKey)
+
 	m.nodeAddress = privateKey.Address().String()
 	if m.updateNodeId() != nil {
 		return nil, err
 	}
-
-	m.privateKey = privateKey.(cryptoPocket.Ed25519PrivateKey)
-	m.consCfg = consensusCfg
-	m.genesisState = genesisState
 
 	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
 	m.blocksResponsesReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
