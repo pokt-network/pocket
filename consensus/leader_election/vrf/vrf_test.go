@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/crypto"
-
 	"github.com/stretchr/testify/require"
 )
 

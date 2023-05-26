@@ -35,9 +35,6 @@ shared/modules/mocks/*
 p2p/types/mocks/*
 !p2p/types/mocks/mocks.go
 
-libp2p/types/mocks/*
-!libp2p/types/mocks/mocks.go
-
 persistence/types/mocks/*
 !persistence/types/mocks/mocks.go
 

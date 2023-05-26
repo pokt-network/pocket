@@ -82,7 +82,7 @@ local_resource(
 )
 local_resource(
     "debug client: Watch & Compile",
-    "GOOS=linux go build -tags=debug -o {root_dir}/bin/client-linux {root_dir}/app/client/*.go".format(
+    "GOOS=linux go build -tags=debug -o {root_dir}/bin/p1-linux {root_dir}/app/client/*.go".format(
         root_dir=root_dir
     ),
     deps=deps_full_path,
@@ -122,11 +122,11 @@ docker_build_with_restart(
     dockerfile_contents="""FROM debian:bullseye
 RUN apt-get update && apt-get install -y procps
 WORKDIR /
-COPY bin/client-linux /usr/local/bin/client
+COPY bin/p1-linux /usr/local/bin/p1
 """,
-    only=["bin/client-linux"],
+    only=["bin/p1-linux"],
     entrypoint=["sleep", "infinity"],
-    live_update=[sync("bin/client-linux", "/usr/local/bin/client")],
+    live_update=[sync("bin/p1-linux", "/usr/local/bin/p1")],
 )
 
 # Builds and maintains the cluster-manager container image after the binary is built on local machine
@@ -136,13 +136,13 @@ docker_build_with_restart(
     dockerfile_contents="""FROM debian:bullseye
 WORKDIR /
 COPY bin/cluster-manager /usr/local/bin/cluster-manager
-COPY bin/client-linux /usr/local/bin/client
+COPY bin/p1-linux /usr/local/bin/p1
 """,
-    only=['bin/cluster-manager', 'bin/client-linux'],
+    only=['bin/cluster-manager', 'bin/p1-linux'],
     entrypoint=["/usr/local/bin/cluster-manager"],
     live_update=[
         sync("bin/cluster-manager", "/usr/local/bin/cluster-manager"),
-        sync("bin/client-linux", "/usr/local/bin/client"),
+        sync("bin/p1-linux", "/usr/local/bin/p1"),
     ]
 )
 

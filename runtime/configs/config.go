@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
-	// "github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/spf13/viper"
 )

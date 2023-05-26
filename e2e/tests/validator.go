@@ -22,7 +22,7 @@ func init() {
 }
 
 // cliPath is the path of the binary installed and is set by the Tiltfile
-const cliPath = "/usr/local/bin/client"
+const cliPath = "/usr/local/bin/p1"
 
 // commandResult combines the stdout, stderr, and err of an operation
 type commandResult struct {
@@ -57,8 +57,8 @@ func (v *validatorPod) RunCommand(args ...string) (*commandResult, error) {
 	cmd := exec.Command("kubectl", args...)
 	r := &commandResult{}
 	out, err := cmd.Output()
-	v.result = r
 	r.Stdout = string(out)
+	v.result = r
 	if err != nil {
 		return r, err
 	}

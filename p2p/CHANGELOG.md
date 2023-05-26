@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.51] - 2023-05-23
+
+- Use the shared codec module when marshaling the data sent over the wire
+- Introduce a hacky workaround to cast a `uint32` to a `string` since it is being passed in as a `json.Number` through some codeflow
+
 ## [0.0.0.50] - 2023-05-08
 
 - Removed unused `Transport` interface

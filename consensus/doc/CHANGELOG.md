@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.52] - 2023-05-24
+
+- Updates consensus tests to use GetBlock mock instead of Get mock
+
+## [0.0.0.51] - 2023-05-16
+
+- Updates consensus test to use BlockStore mock instead of KVStore mock
+
 ## [0.0.0.50] - 2023-05-03
 
 - Rename `TxResult` to `IndexedTransaction`

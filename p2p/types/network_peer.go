@@ -2,7 +2,6 @@ package types
 
 import (
 	"github.com/multiformats/go-multiaddr"
-
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 

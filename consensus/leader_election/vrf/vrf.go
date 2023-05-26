@@ -8,12 +8,10 @@ package vrf
 import (
 	"bytes"
 	"crypto/sha512"
-
 	"io"
 
-	"github.com/pokt-network/pocket/shared/crypto"
-
 	"github.com/ProtonMail/go-ecvrf/ecvrf"
+	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 const (
