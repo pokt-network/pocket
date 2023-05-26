@@ -87,7 +87,7 @@ type StateSyncModule interface {
   // ...
   GetAggregatedStateSyncMetadata() *StateSyncMetadataResponse // Aggregated metadata received from peers.
   IsSynced() (bool, error)
-  StartSyncing() error
+  Start() error
   // ...
 }
 ```
@@ -105,7 +105,7 @@ For every new block and block proposal `Validator`s receive:
 
 According to the result of the `IsSynced()` function:
 
-- If the node is out of sync, it runs `StartSyncing()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
+- If the node is out of sync, it runs `Start()` function. Node requests blocks one by one using the minimum and maximum height in aggregated state sync metadata.
 - If the node is in sync with its peers it rejects the block and/or block proposal.
 
 ```mermaid
@@ -120,7 +120,7 @@ flowchart TD
 
 
     %% is node synched
-    C -->  |No| E[StartSyncing]
+    C -->  |No| E[Start]
     C -->  |Yes| F[Apply Block]
 
     %% syncing
@@ -154,7 +154,7 @@ In `Unsynced` Mode, node transitions to `Sync Mode` by sending `Consensus_IsSync
 
 ### Sync Mode
 
-In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `StartSyncing()` function to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
+In `Sync` Mode, the Node is catching up to the latest block by making `GetBlock` requests, via `Start()` function to eligible peers in its address book. A peer can handle a `GetBlock` request if `PeerSyncMetadata.MinHeight` <= `localSyncState.MaxHeight` <= `PeerSyncMetadata.MaxHeight`.
 
 Though it is unspecified whether or not a Node may make `GetBlock` requests in order or in parallel, the cryptographic restraints of block processing require the Node to call `CommitBlock` sequentially until it is `Synced`.
 

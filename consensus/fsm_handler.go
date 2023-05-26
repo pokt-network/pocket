@@ -72,7 +72,6 @@ func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransiti
 // As soon as a node transitions to this mode, it will transition to the synching mode.
 func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Info().Msg("Node is in an Unsynced state. Consensus module is sending an even to transition to SYNCHING mode.")
-
 	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
 }
 
@@ -80,12 +79,7 @@ func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEv
 // In Sync mode, the node (validator or not starts syncing with the rest of the network.
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Info().Msg("Node is in Sync Mode. Consensus Module is about to start synching...")
-
-	aggregatedMetadata := m.getAggregatedStateSyncMetadata()
-	m.stateSync.SetAggregatedMetadata(&aggregatedMetadata)
-
-	go m.stateSync.StartSyncing()
-
+	go m.stateSync.SyncStateSync()
 	return nil
 }
 

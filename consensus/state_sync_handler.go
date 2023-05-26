@@ -52,12 +52,12 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 
 	case *typesCons.StateSyncMessage_MetadataRes:
 		m.logger.Info().Str("proto_type", "MetadataResponse").Msg("Handling StateSyncMessage MetadataRes")
-		m.metadataReceived <- stateSyncMessage.GetMetadataRes()
+		go m.stateSync.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
 		return nil
 
 	case *typesCons.StateSyncMessage_GetBlockRes:
 		m.logger.Info().Str("proto_type", "GetBlockResponse").Msg("Handling StateSyncMessage GetBlockResponse")
-		m.blocksResponsesReceived <- stateSyncMessage.GetGetBlockRes()
+		go m.tryToApplyRequestedBlock(stateSyncMessage.GetGetBlockRes())
 		return nil
 
 	default:

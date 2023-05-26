@@ -24,12 +24,6 @@ import (
 
 var _ modules.ConsensusModule = &consensusModule{}
 
-// TODO: Make these configurable
-const (
-	metadataChannelSize = 1000
-	blocksChannelSize   = 1000
-)
-
 type consensusModule struct {
 	base_modules.IntegratableModule
 
@@ -73,12 +67,6 @@ type consensusModule struct {
 
 	// State Sync
 	stateSync state_sync.StateSyncModule
-
-	// block responses received from peers are collected in this channel
-	blocksResponsesReceived chan *typesCons.GetBlockResponse
-
-	// metadata responses received from peers are collected in this channel
-	metadataReceived chan *typesCons.StateSyncMetadataResponse
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -147,9 +135,6 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 		return nil, err
 	}
 
-	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
-	m.blocksResponsesReceived = make(chan *typesCons.GetBlockResponse, blocksChannelSize)
-
 	m.initMessagesPool()
 
 	return m, nil
@@ -178,38 +163,12 @@ func (m *consensusModule) Start() error {
 		return err
 	}
 
-	go m.metadataSyncLoop()
-	go m.blockApplicationLoop()
-
 	return nil
 }
 
 func (m *consensusModule) Stop() error {
 	m.logger.Info().Msg("Stopping consensus module")
-
-	m.logger.Log().Msg("Draining and closing metadataReceived and blockResponse channels")
-	for {
-		select {
-		case metaData, ok := <-m.metadataReceived:
-			if ok {
-				m.logger.Info().Msgf("Drained metadata message: %s", metaData)
-			} else {
-				close(m.metadataReceived)
-				return nil
-			}
-		case blockResponse, ok := <-m.blocksResponsesReceived:
-			if ok {
-				m.logger.Info().Msgf("Drained blockResponse message: %s", blockResponse)
-			} else {
-				close(m.blocksResponsesReceived)
-				return nil
-			}
-		default:
-			close(m.metadataReceived)
-			close(m.blocksResponsesReceived)
-			return nil
-		}
-	}
+	return nil
 }
 
 func (m *consensusModule) GetModuleName() string {
