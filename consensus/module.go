@@ -24,7 +24,7 @@ import (
 
 var _ modules.ConsensusModule = &consensusModule{}
 
-// TODO: This should be configurable
+// TODO: Make these configurable
 const (
 	metadataChannelSize = 1000
 	blocksChannelSize   = 1000
@@ -33,18 +33,20 @@ const (
 type consensusModule struct {
 	base_modules.IntegratableModule
 
-	privateKey cryptoPocket.Ed25519PrivateKey
+	logger *modules.Logger
 
+	// General configs
 	consCfg      *configs.ConsensusConfig
 	genesisState *genesis.GenesisState
 
-	logger *modules.Logger
+	// The key used for participating in consensus
+	privateKey  cryptoPocket.Ed25519PrivateKey
+	nodeAddress string
 
 	// m is a mutex used to control synchronization when multiple goroutines are accessing the struct and its fields / properties.
-	//
-	// The idea is that you want to acquire a Lock when you are writing values and a RLock when you want to make sure that no other goroutine is changing the values you are trying to read concurrently.
-	//
-	// Locking context should be the smallest possible but not smaller than a single "unit of work".
+	// The idea is that you want to acquire a Lock when you are writing values and a RLock when you want to make sure that no other
+	// goroutine is changing the values you are trying to read concurrently. Locking context should be the smallest possible but not
+	// smaller than a single "unit of work".
 	m sync.RWMutex
 
 	// Hotstuff
@@ -52,17 +54,17 @@ type consensusModule struct {
 	round  uint64
 	step   typesCons.HotstuffStep
 	block  *coreTypes.Block // The current block being proposed / voted on; it has not been committed to finality
-	// TODO(#315): Move the statefulness of `IndexedTransaction` to the persistence module
-	IndexedTransactions []coreTypes.IndexedTransaction // The current block applied transaction results / voted on; it has not been committed to finality
 
+	// Stores messages aggregated during a single consensus round from other validators
+	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
+
+	// Hotstuff safety
 	prepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	lockedQC  *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
 	leaderId *typesCons.NodeId
 	nodeId   typesCons.NodeId
-
-	nodeAddress string
 
 	// Module Dependencies
 	// IMPROVE(#283): Investigate whether the current approach to how the `utilityUnitOfWork` should be
@@ -73,8 +75,6 @@ type consensusModule struct {
 	leaderElectionMod leader_election.LeaderElectionModule
 
 	stateSync state_sync.StateSyncModule
-
-	hotstuffMempool map[typesCons.HotstuffStep]*hotstuffFIFOMempool
 
 	// block responses received from peers are collected in this channel
 	blocksResponsesReceived chan *typesCons.GetBlockResponse

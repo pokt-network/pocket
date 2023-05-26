@@ -16,7 +16,6 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 		if err != nil {
 			return err
 		}
-
 		stateSyncMessage, ok := msg.(*typesCons.StateSyncMessage)
 		if !ok {
 			return fmt.Errorf("failed to cast message to StateSyncMessage")
@@ -41,10 +40,7 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		}
 		go m.stateSync.HandleStateSyncMetadataRequest(stateSyncMessage.GetMetadataReq())
 		return nil
-	case *typesCons.StateSyncMessage_MetadataRes:
-		m.logger.Info().Str("proto_type", "MetadataResponse").Msg("Handling StateSyncMessage MetadataRes")
-		m.metadataReceived <- stateSyncMessage.GetMetadataRes()
-		return nil
+
 	case *typesCons.StateSyncMessage_GetBlockReq:
 		m.logger.Info().Str("proto_type", "GetBlockRequest").Msg("Handling StateSyncMessage GetBlockRequest")
 		if !m.serverModeEnabled {
@@ -53,10 +49,17 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		}
 		go m.stateSync.HandleGetBlockRequest(stateSyncMessage.GetGetBlockReq())
 		return nil
+
+	case *typesCons.StateSyncMessage_MetadataRes:
+		m.logger.Info().Str("proto_type", "MetadataResponse").Msg("Handling StateSyncMessage MetadataRes")
+		m.metadataReceived <- stateSyncMessage.GetMetadataRes()
+		return nil
+
 	case *typesCons.StateSyncMessage_GetBlockRes:
 		m.logger.Info().Str("proto_type", "GetBlockResponse").Msg("Handling StateSyncMessage GetBlockResponse")
 		m.blocksResponsesReceived <- stateSyncMessage.GetGetBlockRes()
 		return nil
+
 	default:
 		return fmt.Errorf("unspecified state sync message type")
 	}

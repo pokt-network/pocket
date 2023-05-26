@@ -8,11 +8,9 @@ import (
 
 // SendStateSyncMessage sends a state sync message after converting to any proto, to the given peer
 func (m *stateSync) sendStateSyncMessage(msg *typesCons.StateSyncMessage, dst cryptoPocket.Address) error {
-	anyMsg, err := anypb.New(msg)
-	if err != nil {
+	if anyMsg, err := anypb.New(msg); err != nil {
 		return err
-	}
-	if err := m.GetBus().GetP2PModule().Send(dst, anyMsg); err != nil {
+	} else if err := m.GetBus().GetP2PModule().Send(dst, anyMsg); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
 		return err
 	}
