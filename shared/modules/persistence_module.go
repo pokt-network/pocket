@@ -5,6 +5,7 @@ package modules
 import (
 	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
+	"github.com/pokt-network/pocket/persistence/trees"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -23,6 +24,10 @@ type PersistenceModule interface {
 
 	// BlockStore operations
 	GetBlockStore() blockstore.BlockStore
+
+	// TreeStore operations
+	GetTreeStore() trees.TreeStore
+
 	NewWriteContext() PersistenceRWContext
 
 	// Indexer operations

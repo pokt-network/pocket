@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
+	"github.com/pokt-network/pocket/persistence/trees"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -31,7 +32,7 @@ type PostgresContext struct {
 	//                 Need to simply access them via the bus.
 	blockStore blockstore.BlockStore
 	txIndexer  indexer.TxIndexer
-	stateTrees *stateTrees
+	stateTrees trees.TreeStore
 
 	networkId string
 }
@@ -50,7 +51,7 @@ func (p *PostgresContext) RollbackToSavePoint(bytes []byte) error {
 // IMPROVE(#361): Guarantee the integrity of the state
 // Full details in the thread from the PR review: https://github.com/pokt-network/pocket/pull/285#discussion_r1018471719
 func (p *PostgresContext) ComputeStateHash() (string, error) {
-	stateHash, err := p.updateMerkleTrees()
+	stateHash, err := p.stateTrees.Update(p.tx, uint64(p.Height))
 	if err != nil {
 		return "", err
 	}
