@@ -350,11 +350,13 @@ func (m *p2pModule) handlePocketEnvelope(pocketEnvelopeBz []byte) error {
 		return fmt.Errorf("decoding network message: %w", err)
 	}
 
-	if ok, err := m.checkNonce(networkMessage.GetNonce()); err != nil {
-		return fmt.Errorf("handling network data: %w", err)
-	} else if !ok {
+	if m.isNonceAlreadyObserved(poktEnvelope.Nonce) {
 		// skip passing redundant message to application layer
 		return nil
+	}
+
+	if err := m.observeNonce(poktEnvelope.Nonce); err != nil {
+		return fmt.Errorf("pocket envelope nonce: %w", err)
 	}
 
 	// DISCUSS_THIS_COMMIT: is there an explicit reason for constructing a new
@@ -367,24 +369,28 @@ func (m *p2pModule) handlePocketEnvelope(pocketEnvelopeBz []byte) error {
 	return nil
 }
 
-// checkNonce ensures the nonce has not been observed with i the deuper's capacity
-// of recent messages. Adds the nonce to the deduper if it has not been observed.
+// observeNonce adds the nonce to the deduper if it has not been observed.
+func (m *p2pModule) observeNonce(nonce utils.Nonce) error {
+	// Add the nonce to the deduper
+	if err := m.nonceDeduper.Push(nonce); err != nil {
+		return err
+	}
+	return nil
+}
+
+// isNonceAlreadyObserved returns whether the nonce has been observed within the
+// deuper's capacity of recent messages.
 // DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
-func (m *p2pModule) checkNonce(nonce utils.Nonce) (ok bool, err error) {
+func (m *p2pModule) isNonceAlreadyObserved(nonce utils.Nonce) bool {
 	if contains := m.nonceDeduper.Contains(nonce); contains {
 		m.logger.Debug().
 			Uint64("nonce", nonce).
 			Msgf("message already processed, skipping")
 
 		m.redundantNonceTelemetry(nonce)
-		return false, nil
+		return false
 	}
-
-	// Add the nonce to the deduper
-	if err := m.nonceDeduper.Push(nonce); err != nil {
-		return false, err
-	}
-	return true, nil
+	return true
 }
 
 func (m *p2pModule) redundantNonceTelemetry(nonce utils.Nonce) {
