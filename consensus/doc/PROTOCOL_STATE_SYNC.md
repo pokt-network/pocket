@@ -55,9 +55,9 @@ Node gathers peer metadata from its peers in `StateSyncMetadataResponse` type, d
 
 ```golang
 type StateSyncMetadataResponse struct {
-    PeerAddress string
-	MinHeight   uint64
-	MaxHeight   uint64
+  PeerAddress string
+  MinHeight   uint64
+  MaxHeight   uint64
 }
 ```
 
@@ -114,12 +114,12 @@ flowchart TD
     A[Node] --> B[Periodic <br> Sync]
     A[Node] --> |New Block| C{IsSynced}
 
-    %% periodic snyc
+    %% periodic sync
     B --> |Request <br> metadata| D[Peers]
     D[Peers] --> |Collect metadata| B[Periodic <br> Sync]
 
 
-    %% is node sycnhed
+    %% is node synched
     C -->  |No| E[StartSyncing]
     C -->  |Yes| F[Apply Block]
 

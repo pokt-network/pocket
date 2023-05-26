@@ -17,7 +17,7 @@ import (
 
 const (
 	stateSyncModuleName       = "stateSyncModule"
-	committedBlocsChannelSize = 100
+	committedBlocsChannelSize = 100 //
 	blockWaitingPeriod        = 30 * time.Second
 )
 

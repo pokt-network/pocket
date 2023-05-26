@@ -19,7 +19,10 @@ type stateMachineModule struct {
 
 	*fsm.FSM
 	logger *modules.Logger
-	// DEBUG_ONLY: debugChannels is only used for testing purposes, events pushed to it are emitted in testing
+
+	// TEST_ONLY: debugChannels is only used for testing purposes.
+	// It is used to enable to aggregate and emit events during testing
+	// TODO: Find a way to avoid the need for this altogether or move it into an _test.go file
 	debugChannels []modules.EventsChannel
 }
 
@@ -49,6 +52,8 @@ func (*stateMachineModule) Create(bus modules.Bus, options ...modules.ModuleOpti
 				m.logger.Fatal().Err(err).Msg("failed to pack state machine transition event")
 			}
 			bus.PublishEventToBus(newStateMachineTransitionEvent)
+
+			// TEST_ONLY: Broadcast the events to additional channels used for testing purposes
 			for _, channel := range m.debugChannels {
 				channel <- newStateMachineTransitionEvent
 			}
@@ -82,7 +87,7 @@ func WithCustomStateMachine(stateMachine *fsm.FSM) modules.ModuleOption {
 	}
 }
 
-// WithDebugEventsChannel is used for testing purposes. It allows us to capture the events
+// WithDebugEventsChannel is used for testing purposes only. It allows us to capture the events
 // from the FSM and publish them to debug channel for testing.
 func WithDebugEventsChannel(eventsChannel modules.EventsChannel) modules.ModuleOption {
 	return func(m modules.InitializableModule) {
