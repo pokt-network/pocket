@@ -168,7 +168,6 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			// TODO: should skip if non-ineractive
 			pwd = readPassphrase(pwd)
 
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)

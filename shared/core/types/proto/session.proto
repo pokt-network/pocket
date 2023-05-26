@@ -20,6 +20,7 @@ message Session {
     // CONSIDERATION: Should a single session support multiple geo zones?
     string geo_zone = 6; // the target geographic region where the actors are present
     core.Actor application = 7; // the application that is being served
+    // IMPROVE: a map may be a better choice for storing servicers/fishermen
     repeated core.Actor servicers = 8; // the set of servicers that are serving the application
     repeated core.Actor fishermen = 9; // the set of fishermen that are fishing for servicers
 }

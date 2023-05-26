@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.31] - 2023-05-26
+
+- Add a new trustless relay subcommand to servicer command
+
 ## [0.0.0.30] - 2023-05-04
 
 - Add query subcommands to interact with a node's RPC server
