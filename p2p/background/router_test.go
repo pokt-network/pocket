@@ -138,6 +138,8 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 		// map used as a set to collect IDs of peers which have received a message
 		seenMessages       = make(map[string]struct{})
 		bootstrapWaitgroup = sync.WaitGroup{}
+		bootstrapPeerIDCh  = make(chan string)
+		bootstrapPeerIDs   = make(map[string]struct{})
 		broadcastWaitgroup = sync.WaitGroup{}
 		broadcastDone      = make(chan struct{}, 1)
 		testTimeout        = time.After(testTimeoutDuration)
@@ -170,6 +172,19 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 		})
 	}
 
+	// concurrently update the set of bootstrapped peer IDs as they connect
+	go func() {
+		for {
+			peerIDStr := <-bootstrapPeerIDCh
+			if _, ok := bootstrapPeerIDs[peerIDStr]; ok {
+				// already connected to this peer during bootstrapping
+				continue
+			}
+			bootstrapPeerIDs[peerIDStr] = struct{}{}
+			bootstrapWaitgroup.Done()
+		}
+	}()
+
 	// bootstrap off of arbitrary testHost
 	privKey, selfPeer := newTestPeer(t)
 
@@ -185,9 +200,14 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 
 	// setup notifee/notify BEFORE bootstrapping
 	notifee := &libp2pNetwork.NotifyBundle{
-		ConnectedF: func(_ libp2pNetwork.Network, _ libp2pNetwork.Conn) {
+		ConnectedF: func(_ libp2pNetwork.Network, conn libp2pNetwork.Conn) {
 			t.Logf("connected!")
-			bootstrapWaitgroup.Done()
+			t.Logf("local PeerID %s; remote PeerID: %s",
+				conn.LocalPeer().String(),
+				conn.RemotePeer().String(),
+			)
+			bootstrapPeerIDCh <- conn.RemotePeer().String()
+			//bootstrapWaitgroup.Done()
 		},
 	}
 	testRouter.host.Network().Notify(notifee)
@@ -228,6 +248,9 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 		)
 	case <-broadcastDone:
 	}
+
+	seenMessagesMutex.Lock()
+	defer seenMessagesMutex.Unlock()
 
 	actualPeerIDs = generics_testutil.GetKeys[string](seenMessages)
 	require.ElementsMatchf(t, expectedPeerIDs, actualPeerIDs, "peerIDs don't match")

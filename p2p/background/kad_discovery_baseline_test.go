@@ -54,7 +54,7 @@ func TestLibp2pKademliaPeerDiscovery(t *testing.T) {
 	expectedPeerIDs = append(expectedPeerIDs, host4.ID())
 
 	// TECHDEBT: consider using `host.ConnManager().Notifee()` to avoid sleeping here
-	time.Sleep(time.Millisecond * 500)
+	time.Sleep(dhtUpdateSleepDuration)
 
 	// new host discovers existing hosts...
 	host4DiscoveredHost2Addrs := host4.Peerstore().Addrs(host2.ID())

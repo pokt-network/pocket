@@ -209,10 +209,10 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 		return err
 	}
 
-	stakedBroadcastErr := m.stakedActorRouter.Broadcast(data)
+	//stakedBroadcastErr := m.stakedActorRouter.Broadcast(data)
 	unstakedBroadcastErr := m.unstakedActorRouter.Broadcast(data)
-	return multierror.Append(err, stakedBroadcastErr, unstakedBroadcastErr).ErrorOrNil()
-	//return multierror.Append(err, unstakedBroadcastErr).ErrorOrNil()
+	//return multierror.Append(err, stakedBroadcastErr, unstakedBroadcastErr).ErrorOrNil()
+	return multierror.Append(err, unstakedBroadcastErr).ErrorOrNil()
 }
 
 func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
