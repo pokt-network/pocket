@@ -103,8 +103,9 @@ func NewTreeStore() *treeStore {
 
 // Update takes a transaction and a height and updates
 // all of the trees in the treeStore for that height.
-func (t *treeStore) Update(pgtx pgx.Tx) error {
-	_, err := t.updateMerkleTrees(pgtx)
+func (t *treeStore) Update(pgtx pgx.Tx, height uint64) error {
+	hash, err := t.updateMerkleTrees(pgtx, height)
+	fmt.Printf("hash updated: %s", hash)
 	return err
 }
 
@@ -153,7 +154,7 @@ func newMemtreeStore() (*treeStore, error) {
 
 // updateMerkleTrees updates all of the merkle trees that TreeStore manages.
 // * it returns an hash of the output or an error.
-func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx) (string, error) {
+func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, height uint64) (string, error) {
 	// Update all the merkle trees
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
@@ -164,40 +165,58 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx) (string, error) {
 				return "", fmt.Errorf("no actor type found for merkle tree: %v", treeType)
 			}
 
-			var actors = []*coreTypes.Actor{ /* TODO */ }
+			actors, err := t.getActorsUpdated(pgtx, actorType, height)
+			if err != nil {
+				return "", fmt.Errorf("failed to get actors at height: %w", err)
+			}
+
 			if err := t.updateActorsTree(actorType, actors); err != nil {
 				return "", fmt.Errorf("failed to update actors tree for treeType: %v, actorType: %v - %w", treeType, actorType, err)
 			}
 
 		// Account Merkle Trees
 		case accountMerkleTree:
-			accounts := []*coreTypes.Account{ /* TODO */ }
+			accounts, err := t.getAccounts(pgtx)
+			if err != nil {
+				return "", fmt.Errorf("failed to get accounts: %w", err)
+			}
 			if err := t.updateAccountTrees(accounts); err != nil {
-				return "", fmt.Errorf("failed to update account trees - %w", err)
+				return "", fmt.Errorf("failed to update account trees: %w", err)
 			}
 		case poolMerkleTree:
-			pools := []*coreTypes.Account{ /* TODO */ }
+			pools, err := t.getPools(pgtx)
+			if err != nil {
+				return "", fmt.Errorf("failed to get transactions: %w", err)
+			}
 			if err := t.updatePoolTrees(pools); err != nil {
 				return "", fmt.Errorf("failed to update pool trees - %w", err)
 			}
 
 		// Data Merkle Trees
 		case transactionsMerkleTree:
-			indexedTxs := []*coreTypes.IndexedTransaction{ /* TODO */ }
+			indexedTxs, err := t.getTransactions(pgtx)
+			if err != nil {
+				return "", fmt.Errorf("failed to get transactions: %w", err)
+			}
 			if err := t.updateTransactionsTree(indexedTxs); err != nil {
-				return "", fmt.Errorf("failed to update transactions tree - %w", err)
+				return "", fmt.Errorf("failed to update transactions: %w", err)
 			}
 		case paramsMerkleTree:
-			params := []*coreTypes.Param{ /* TODO */ }
+			params, err := t.getParams(pgtx)
+			if err != nil {
+				return "", fmt.Errorf("failed to get params: %w", err)
+			}
 			if err := t.updateParamsTree(params); err != nil {
-				return "", fmt.Errorf("failed to update params tree - %w", err)
+				return "", fmt.Errorf("failed to update params tree: %w", err)
 			}
 		case flagsMerkleTree:
-			flags := []*coreTypes.Flag{ /* TODO */ }
+			flags, err := t.getFlags(pgtx)
+			if err != nil {
+				return "", fmt.Errorf("failed to get flags from transaction: %w", err)
+			}
 			if err := t.updateFlagsTree(flags); err != nil {
 				return "", fmt.Errorf("failed to update flags tree - %w", err)
 			}
-
 		// Default
 		default:
 			// t.logger.Fatal().Msgf("Not handled yet in state commitment update. Merkle tree #{%v}", treeType)
@@ -249,34 +268,34 @@ func (t *treeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*co
 	return nil
 }
 
-// func (t *treeStore) getActorsUpdatedAtHeight(actorType coreTypes.ActorType, height int64) (actors []*coreTypes.Actor, err error) {
-// 	actorSchema, ok := actorTypeToSchemaName[actorType]
-// 	if !ok {
-// 		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
-// 	}
+func (t *treeStore) getActorsUpdatedAtHeight(pgtx pgx.Tx, actorType coreTypes.ActorType, height int64) (actors []*coreTypes.Actor, err error) {
+	actorSchema, ok := actorTypeToSchemaName[actorType]
+	if !ok {
+		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
+	}
 
-// 	schemaActors, err := t.GetActorsUpdated(actorSchema, height)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	schemaActors, err := t.getActorsUpdated(pgtx, actorSchema, uint64(height))
+	if err != nil {
+		return nil, err
+	}
 
-// 	actors = make([]*coreTypes.Actor, len(schemaActors))
-// 	for i, schemaActor := range schemaActors {
-// 		actor := &coreTypes.Actor{
-// 			ActorType:       actorType,
-// 			Address:         schemaActor.Address,
-// 			PublicKey:       schemaActor.PublicKey,
-// 			Chains:          schemaActor.Chains,
-// 			ServiceUrl:      schemaActor.ServiceUrl,
-// 			StakedAmount:    schemaActor.StakedAmount,
-// 			PausedHeight:    schemaActor.PausedHeight,
-// 			UnstakingHeight: schemaActor.UnstakingHeight,
-// 			Output:          schemaActor.Output,
-// 		}
-// 		actors[i] = actor
-// 	}
-// 	return
-// }
+	actors = make([]*coreTypes.Actor, len(schemaActors))
+	for i, schemaActor := range schemaActors {
+		actor := &coreTypes.Actor{
+			ActorType:       actorType,
+			Address:         schemaActor.Address,
+			PublicKey:       schemaActor.PublicKey,
+			Chains:          schemaActor.Chains,
+			ServiceUrl:      schemaActor.ServiceUrl,
+			StakedAmount:    schemaActor.StakedAmount,
+			PausedHeight:    schemaActor.PausedHeight,
+			UnstakingHeight: schemaActor.UnstakingHeight,
+			Output:          schemaActor.Output,
+		}
+		actors[i] = actor
+	}
+	return
+}
 
 // Account Tree Helpers
 
@@ -362,4 +381,28 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 	}
 
 	return nil
+}
+
+func (t *treeStore) getActorsUpdated(pgtx pgx.Tx, actorSchema types.ProtocolActorSchema, height uint64) ([]*coreTypes.Actor, error) {
+	return nil, fmt.Errorf("not impl")
+}
+
+func (t *treeStore) getTransactions(pgtx pgx.Tx) ([]*coreTypes.IndexedTransaction, error) {
+	return nil, fmt.Errorf("not impl")
+}
+
+func (t *treeStore) getPools(pgtx pgx.Tx) ([]*coreTypes.Account, error) {
+	return nil, fmt.Errorf("not impl")
+}
+
+func (t *treeStore) getAccounts(pgtx pgx.Tx) ([]*coreTypes.Account, error) {
+	return nil, fmt.Errorf("not impl")
+}
+
+func (t *treeStore) getFlags(pgtx pgx.Tx) ([]*coreTypes.Flag, error) {
+	return nil, fmt.Errorf("not impl")
+}
+
+func (t *treeStore) getParams(pgtx pgx.Tx) ([]*coreTypes.Param, error) {
+	return nil, fmt.Errorf("not impl")
 }
