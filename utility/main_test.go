@@ -102,9 +102,9 @@ func newTestRuntimeConfig(
 		Persistence: &configs.PersistenceConfig{
 			PostgresUrl:       dbURL,
 			NodeSchema:        "test_schema",
-			BlockStorePath:    "", // in memory
-			TxIndexerPath:     "", // in memory
-			TreesStoreDir:     "", // in memory
+			BlockStorePath:    ":memory:",
+			TxIndexerPath:     ":memory:",
+			TreesStoreDir:     ":memory:",
 			MaxConnsCount:     50,
 			MinConnsCount:     1,
 			MaxConnLifetime:   "5m",

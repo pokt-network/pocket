@@ -35,7 +35,7 @@ type blockStore struct {
 // NewBlockStore initializes a new blockstore with the given path.
 // * If "" is provided as the path, an in-memory store is used.
 func NewBlockStore(path string) (BlockStore, error) {
-	if path == "" {
+	if path == ":memory:" {
 		return &blockStore{
 			kv: kvstore.NewMemKVStore(),
 		}, nil

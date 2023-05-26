@@ -51,6 +51,9 @@
     "timeout": 30000,
     "use_cors": false
   },
+  "validator": {
+    "enabled": true
+  },
   "servicer": {
     "enabled": true
   }

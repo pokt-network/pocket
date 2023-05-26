@@ -54,7 +54,7 @@ type txIndexer struct {
 }
 
 func NewTxIndexer(databasePath string) (TxIndexer, error) {
-	if databasePath == "" {
+	if databasePath == ":memory:" {
 		return NewMemTxIndexer()
 	}
 

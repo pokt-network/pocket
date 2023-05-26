@@ -86,7 +86,7 @@ var merkleTreeToActorTypeName = map[merkleTree]coreTypes.ActorType{
 }
 
 func newStateTrees(treesStoreDir string) (*stateTrees, error) {
-	if treesStoreDir == "" {
+	if treesStoreDir == ":memory:" {
 		return newMemStateTrees()
 	}
 
