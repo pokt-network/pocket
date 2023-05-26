@@ -359,9 +359,9 @@ func (m *p2pModule) handlePocketEnvelope(pocketEnvelopeBz []byte) error {
 		return fmt.Errorf("pocket envelope nonce: %w", err)
 	}
 
-	// DISCUSS_THIS_COMMIT: is there an explicit reason for constructing a new
-	// `PocketEnvelop` literal with content rather than passing `networkMessage`?
-	// (e.g. avoid blindly passing additional fields as the protobuf type changes)
+	// NB: Explicitly constructing a new `PocketEnvelop` literal with content
+	// rather than forwarding `poktEnvelope` to avoid blindly passing additional
+	// fields as the protobuf type changes. Additionally, strips the `Nonce` field.
 	event := messaging.PocketEnvelope{
 		Content: poktEnvelope.Content,
 	}
