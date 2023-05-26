@@ -27,14 +27,15 @@ func (m *consensusModule) getNodeIdFromNodeAddress(peerId string) (uint64, error
 	return uint64(valAddrToIdMap[peerId]), nil
 }
 
-// blockApplicationLoop commits the blocks received from the `blocksResponsesReceived“ channel
-// it is intended to be run as a background process
+// blockApplicationLoop commits the blocks received from the `blocksResponsesReceived“ channel.
+// It is intended to be run as a background process via `go blockApplicationLoop()`
 func (m *consensusModule) blockApplicationLoop() {
 	logger := m.logger.With().Str("source", "blockApplicationLoop").Logger()
 
+	// Blocks until m.blocksResponsesReceived is closed
 	for blockResponse := range m.blocksResponsesReceived {
 		block := blockResponse.Block
-		logger.Info().Msgf("New block, at height %d is received!", block.BlockHeader.Height)
+		logger.Info().Msgf("Received new block at height %d.", block.BlockHeader.Height)
 
 		maxPersistedHeight, err := m.maxPersistedBlockHeight()
 		if err != nil {
@@ -42,14 +43,15 @@ func (m *consensusModule) blockApplicationLoop() {
 			continue
 		}
 
-		// CONSIDERATION: rather than discarding these blocks, push them into a channel to process them later
 		if block.BlockHeader.Height <= maxPersistedHeight {
-			logger.Info().Msgf("Received block at height %d, discarding as it has already been persisted", block.BlockHeader.Height)
+			logger.Debug().Msgf("Discarding block height %d, since node is ahead at height %d", block.BlockHeader.Height, maxPersistedHeight)
 			continue
 		}
 
 		if block.BlockHeader.Height > m.CurrentHeight() {
-			logger.Info().Msgf("Received block at height %d, discarding as it is higher than the current height", block.BlockHeader.Height)
+			logger.Info().Bool("TODO", true).Msgf("Received block at height %d, discarding as it is higher than the current height", block.BlockHeader.Height)
+			// TECHDEBT: we need to store block responses that we are not yet ready to validate so we can validate them on a subsequent iteration of this loop
+			// m.blocksResponsesReceived <- blockResponse
 			continue
 		}
 
@@ -62,23 +64,25 @@ func (m *consensusModule) blockApplicationLoop() {
 			logger.Err(err).Msg("failed to apply and commit block")
 			continue
 		}
-		logger.Info().Msgf("Block, at height %d is committed!", block.BlockHeader.Height)
+
+		logger.Info().Int64("height", int64(block.BlockHeader.Height)).Msgf("Block, at height %d is committed!", block.BlockHeader.Height)
 		m.publishStateSyncBlockCommittedEvent(block.BlockHeader.Height)
 	}
 }
 
-// metadataSyncLoop periodically sends metadata requests to its peers
-// it is intended to be run as a background process
+// metadataSyncLoop periodically sends metadata requests to its peers to aggregate metadata related to synching the state.
+// It is intended to be run as a background process via `go metadataSyncLoop`
 func (m *consensusModule) metadataSyncLoop() error {
+	logger := m.logger.With().Str("source", "metadataSyncLoop").Logger()
 	ctx := context.TODO()
 
 	ticker := time.NewTicker(metadataSyncPeriod)
 	for {
 		select {
 		case <-ticker.C:
-			m.logger.Info().Msg("Background metadata sync check triggered")
-			if err := m.sendMetadataRequests(); err != nil {
-				m.logger.Error().Err(err).Msg("Failed to send metadata requests")
+			logger.Info().Msg("Background metadata sync check triggered")
+			if err := m.broadcastMetadataRequests(); err != nil {
+				logger.Error().Err(err).Msg("Failed to send metadata requests")
 				return err
 			}
 
@@ -89,8 +93,10 @@ func (m *consensusModule) metadataSyncLoop() error {
 	}
 }
 
-func (m *consensusModule) sendMetadataRequests() error {
-	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
+// broadcastMetadataRequests sends a metadata request to all peers in the network to understand
+// the state of the network and determine if the node is behind.
+func (m *consensusModule) broadcastMetadataRequests() error {
+	stateSyncMetadataReqMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_MetadataReq{
 			MetadataReq: &typesCons.StateSyncMetadataRequest{
 				PeerAddress: m.GetBus().GetConsensusModule().GetNodeAddress(),
@@ -98,17 +104,18 @@ func (m *consensusModule) sendMetadataRequests() error {
 		},
 	}
 
+	// TECHDEBT: This should be sent to all peers (full nodes, servicesr, etc...), not just validators
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
 
 	for _, val := range validators {
-
-		anyMsg, err := anypb.New(stateSyncMetaDataReqMessage)
+		anyMsg, err := anypb.New(stateSyncMetadataReqMessage)
 		if err != nil {
 			return err
 		}
+		// TECHDEBT: Revisit why we're not using `Broadcast` here instead of `Send`.
 		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyMsg); err != nil {
 			m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
 			return err
