@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.19] - 2023-05-26
+
+- Remove AAT reference from handlers
+
 ## [0.0.0.18] - 2023-05-04
 
 - Add parity with V0's RPC spec

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.31] - 2023-05-26
 
-- Add a new trustless relay subcommand to servicer command
+- Add a new trustless relay sub-command to servicer command
 
 ## [0.0.0.30] - 2023-05-04
 

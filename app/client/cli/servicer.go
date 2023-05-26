@@ -106,7 +106,7 @@ Will prompt the user for the *application* account passphrase`,
 func validateServicer(ctx context.Context, session *rpc.Session, servicerAddress string) (*rpc.ProtocolActor, error) {
 	for _, s := range session.Servicers {
 		if s.Address == servicerAddress {
-			return s, nil
+			return &s, nil
 		}
 	}
 
@@ -178,10 +178,10 @@ func sendTrustlessRelay(ctx context.Context, servicerUrl string, relay *rpc.Rela
 		return nil, err
 	}
 
-	return client.PostV1ClientRelayWithResponse(ctx, relay)
+	return client.PostV1ClientRelayWithResponse(ctx, *relay)
 }
 
-func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Session, servicer rpc.ProtocolActor) (*rpc.RelayRequest, error) {
+func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Session, servicer *rpc.ProtocolActor) (*rpc.RelayRequest, error) {
 	// TECHDEBT: This is mostly COPIED from pocket-go: we should refactor pocket-go code and import this functionality from there instead.
 	relayPayload := rpc.Payload{
 		Data:   payload,
