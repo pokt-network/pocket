@@ -66,10 +66,12 @@ func TestEnableActorModules(t *testing.T) {
 
 			mockRunMgr := mocks.NewMockRuntimeMgr(ctrl)
 			cfg, err := configs.CreateTempConfig(test.config)
+			assert.NoError(t, err)
 
 			mockRunMgr.EXPECT().GetConfig().Return(cfg).AnyTimes()
 
 			bus, err := runtime.CreateBus(mockRunMgr)
+			assert.NoError(t, err)
 
 			// Call enableActorModules with the test config
 			m, err := Create(bus)

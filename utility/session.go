@@ -22,7 +22,7 @@ const (
 // TODO: Implement this
 func (u *utilityModule) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
 
-	if u.servicer == nil {
+	if u.svc == nil {
 		return nil, fmt.Errorf(NodeIsNotServicerErr)
 	}
 

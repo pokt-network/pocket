@@ -33,9 +33,9 @@ type utilityModule struct {
 
 	actorModules []modules.Module
 
-	validator validator.ValidatorModule
-	servicer  servicer.ServicerModule
-	fisherman fisherman.FishermanModule
+	vld validator.ValidatorModule
+	svc servicer.ServicerModule
+	fsh fisherman.FishermanModule
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -72,33 +72,33 @@ func enableActorModules(cfg *configs.Config, m *utilityModule, bus modules.Bus) 
 	validatorCfg := cfg.Validator
 
 	if servicerCfg.Enabled {
-		servicer, err := servicer.CreateServicer(bus)
+		s, err := servicer.CreateServicer(bus)
 		if err != nil {
 			m.logger.Error().Err(err).Msg("failed to create servicer module")
 			return err
 		}
-		m.servicer = servicer
-		m.actorModules = append(m.actorModules, servicer)
+		m.svc = s
+		m.actorModules = append(m.actorModules, s)
 	}
 
 	if fishermanCfg.Enabled {
-		fisherman, err := fisherman.CreateFisherman(bus)
+		f, err := fisherman.CreateFisherman(bus)
 		if err != nil {
 			m.logger.Error().Err(err).Msg("failed to create fisherman module")
 			return err
 		}
-		m.fisherman = fisherman
-		m.actorModules = append(m.actorModules, fisherman)
+		m.fsh = f
+		m.actorModules = append(m.actorModules, f)
 	}
 
 	if validatorCfg.Enabled {
-		validator, err := validator.CreateValidator(bus)
+		v, err := validator.CreateValidator(bus)
 		if err != nil {
 			m.logger.Error().Err(err).Msg("failed to create validator module")
 			return err
 		}
-		m.validator = validator
-		m.actorModules = append(m.actorModules, validator)
+		m.vld = v
+		m.actorModules = append(m.actorModules, v)
 	}
 
 	if err := validateActorModuleExclusivity(m, cfg); err != nil {
@@ -149,7 +149,7 @@ func (u *utilityModule) GetActorModules() []modules.Module {
 }
 
 func (u *utilityModule) GetServicerModule() modules.Module {
-	return u.servicer
+	return u.svc
 }
 
 // validateActorModuleExclusivity validates that the actor modules are enabled in a valid combination.
