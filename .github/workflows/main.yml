@@ -11,10 +11,15 @@ on:
     #   - "docs/**"
     #   - "**.md"
   pull_request:
+    types: [opened, synchronize, reopened, labeled] # Now also triggers when the label is added.
     # paths-ignore:
     #   - "docs/**"
     #   - "**.md"
 
+# Cancels all previous runs of this workflow if a new one is triggered. For example when a new commit is pushed, or label attached.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 env:
   # Even though we can test against multiple versions, this one is considered a target version.
