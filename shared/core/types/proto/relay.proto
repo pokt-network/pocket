@@ -6,15 +6,29 @@ option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
 // TECHDEBT: These structures were copied as placeholders from v0 and need to be updated to reflect changes in v1
 message Relay {
-    RelayPayload payload = 1;
-    RelayMeta meta = 2;
+    RelayMeta meta = 1;
+    oneof RelayPayload {
+        JSONRPCPayload json_rpc_payload = 2;
+        RESTPayload rest_payload = 3;
+        //DISCUSS: content of the following types:
+        // GRPCPayload grpc_payload = 3;
+        // GraphQLPayload graphql_payload = 4;
+        // WebSocketsPayload websockets_payload = 5;
+    }
 }
 
-message RelayPayload {
-    string data = 1;
-    string method = 2;
-    string http_path = 3;
-    map<string, string> headers = 4;
+message RESTPayload {
+    string contents = 1;
+}
+
+message JSONRPCPayload {
+    bytes id = 1;
+    string json_rpc = 2;
+    string method = 3;
+    bytes parameters = 4;
+    // DISCUSS: is HttpPath needed and is it a Meta field or Payload field?
+    string http_path = 5;
+    map<string, string> headers = 6;
 }
 
 message RelayMeta {
@@ -22,8 +36,7 @@ message RelayMeta {
     string servicer_public_key = 2;
     Identifiable relay_chain = 3;
     Identifiable geo_zone = 4;
-    AAT token = 5;
-    string signature = 6;
+    string signature = 5;
 }
 
 message RelayResponse {

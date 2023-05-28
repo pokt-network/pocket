@@ -184,8 +184,9 @@ func sendTrustlessRelay(ctx context.Context, servicerUrl string, relay *rpc.Rela
 func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Session, servicer *rpc.ProtocolActor) (*rpc.RelayRequest, error) {
 	// TECHDEBT: This is mostly COPIED from pocket-go: we should refactor pocket-go code and import this functionality from there instead.
 	relayPayload := rpc.Payload{
-		Data:   payload,
-		Method: "POST",
+		// INCOMPLETE: need to unmarshal into JSONRPC (and other supported relay formats), using a custom unmarshaller
+		Jsonrpc: "2.0",
+		Method:  payload,
 		// TODO: Path: load Path field from the corresponding Blockchain (e.g. database)
 		// TODO: set Headers
 	}

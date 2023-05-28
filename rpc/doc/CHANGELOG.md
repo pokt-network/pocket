@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.19] - 2023-05-26
+## [0.0.0.19] - 2023-05-28
 
 - Remove AAT reference from handlers
+- Update openapi spec and handler code with JSONRPC fields 
 
 ## [0.0.0.18] - 2023-05-04
 
