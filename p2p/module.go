@@ -388,9 +388,9 @@ func (m *p2pModule) isNonceAlreadyObserved(nonce utils.Nonce) bool {
 			Msgf("message already processed, skipping")
 
 		m.redundantNonceTelemetry(nonce)
-		return false
+		return true
 	}
-	return true
+	return false
 }
 
 func (m *p2pModule) redundantNonceTelemetry(nonce utils.Nonce) {
