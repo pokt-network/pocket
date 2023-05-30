@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.13] - 2023-05-18
+## [0.0.0.13] - 2023-05-30
 
 - Added `GetIndexedTransaction` to the `UtilityModule` interface to be able to retrieve an indexed transaction without running the underlying business logic
 - Renamed `HydrateIdxTx` to `HandleTransaction` in the `UtilityUnitOfWork`interface so its more descriptive of what the function does
