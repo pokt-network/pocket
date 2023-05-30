@@ -197,7 +197,7 @@ type IBCHandler interface {
 // stores used by the IBC module.
 type StoreManager interface {
 	GetStore(storeKey string) (Store, error)
-	AddStore(store Store, storeKey string) error
+	AddStore(store Store) error
 	RemoveStore(storeKey string) error
 }
 
@@ -206,6 +206,7 @@ type Store interface {
 	Get(key []byte) ([]byte, error)
 	Set(key []byte, value []byte) error
 	Delete(key []byte) error
+	GetStoreKey() string
 }
 
 // ProvableStore allows for the creation of proofs for the data stored in the store

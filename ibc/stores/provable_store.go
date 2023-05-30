@@ -18,6 +18,10 @@ type ProvableStore struct {
 	storeKey  string
 }
 
+func (prov *ProvableStore) GetStoreKey() string {
+	return prov.storeKey
+}
+
 func (prov *ProvableStore) Get(key []byte) ([]byte, error) {
 	return prov.tree.Get(key)
 }

@@ -10,6 +10,11 @@ var _ modules.Store = (*PrivateStore)(nil)
 // PrivateStore does not need to be provable and as such simply wraps the KVStore interface
 type PrivateStore struct {
 	kvstore.KVStore
+	storeKey string
+}
+
+func (priv *PrivateStore) GetStoreKey() string {
+	return priv.storeKey
 }
 
 func (priv *PrivateStore) Get(key []byte) ([]byte, error) {
