@@ -12,7 +12,7 @@ func ApplyPrefix(prefix *coreTypes.CommitmentPrefix, path string) *coreTypes.Com
 	return &coreTypes.CommitmentPath{Path: bz}
 }
 
-// RemovePrefix removes the prefix from the provided CommitmentPath returning a path byte slice
-func RemovePrefix(prefix *coreTypes.CommitmentPrefix, path *coreTypes.CommitmentPath) []byte {
-	return path.Path[len(prefix.Prefix):]
+// RemovePrefix removes the prefix from the provided CommitmentPath returning a path string
+func RemovePrefix(prefix *coreTypes.CommitmentPrefix, path *coreTypes.CommitmentPath) string {
+	return string(path.Path[len(prefix.Prefix):])
 }
