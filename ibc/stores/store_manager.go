@@ -17,12 +17,27 @@ type Stores struct {
 	stores map[string]modules.Store
 }
 
+// NewStoreManager creates a new store manager instance with an empty map of stores
 func NewStoreManager() modules.StoreManager {
 	return &Stores{
 		stores: make(map[string]modules.Store),
 	}
 }
 
+// NewTestStore creates a new store for testing purposes using an in memory KVStore
+func NewTestStore(storeKey string, provable bool) (modules.Store, error) {
+	db := kvstore.NewMemKVStore()
+	if !provable {
+		return &PrivateStore{db, storeKey}, nil
+	}
+	// Create a new SMT with no value hasher to store the unhashed value bytes in the tree
+	tree := smt.NewSparseMerkleTree(db, sha256.New(), smt.WithValueHasher(nil))
+	return &ProvableStore{db, tree, storeKey}, nil
+}
+
+// NewStore creates a new store using a persistent KVStore
+// Stores can either be provable or not provable, a non provable store will simply be a KVStore
+// instance, a provable store will be a KVStore instance with an SMT on top of it for proof verification
 func NewStore(storeKey, storePath string, provable bool) (modules.Store, error) {
 	db, err := kvstore.NewKVStore(storePath)
 	if err != nil {
@@ -36,6 +51,7 @@ func NewStore(storeKey, storePath string, provable bool) (modules.Store, error) 
 	return &ProvableStore{db, tree, storeKey}, nil
 }
 
+// GetStore retrieves a Store instance from the StoreManager
 func (s *Stores) GetStore(storeKey string) (modules.Store, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -46,6 +62,7 @@ func (s *Stores) GetStore(storeKey string) (modules.Store, error) {
 	return store, nil
 }
 
+// AddStore adds a Store instance to the StoreManager
 func (s *Stores) AddStore(store modules.Store) error {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -57,6 +74,7 @@ func (s *Stores) AddStore(store modules.Store) error {
 	return nil
 }
 
+// RemoveStore removes a Store instance from the StoreManager
 func (s *Stores) RemoveStore(storeKey string) error {
 	s.m.Lock()
 	defer s.m.Unlock()
