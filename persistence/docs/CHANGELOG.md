@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.55] - 2023-05-30
+
+- Renamed an error used by Badger / KVStore
+- Improve comments used for mock generation
+
 ## [0.0.0.54] - 2023-05-24
 
 - Adds the BlockStore interface
