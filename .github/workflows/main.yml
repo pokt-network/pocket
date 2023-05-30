@@ -82,12 +82,11 @@ jobs:
         uses: guyarb/golang-test-annotations@v0.5.1
         with:
           test-results: test_results.json
-      - name: Prepare code coverage report
-        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
-        run: go tool cover -func=coverage.out -o=coverage.out
       - name: Upload coverage to Codecov
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.out
       - name: golangci-lint
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: golangci/golangci-lint-action@v3
