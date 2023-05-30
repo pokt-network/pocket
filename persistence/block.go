@@ -18,7 +18,7 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 	res, err := p.txIndexer.GetByHash(hash)
 	if res == nil {
 		// check for not found
-		if err != nil && err.Error() == kvstore.BadgerKeyNotFoundError {
+		if err != nil && err.Error() == kvstore.KeyNotFoundError {
 			return false, nil
 		}
 		return false, err

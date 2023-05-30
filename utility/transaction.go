@@ -3,6 +3,7 @@ package utility
 import (
 	"encoding/hex"
 
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
@@ -43,14 +44,6 @@ func (u *utilityModule) GetIndexedTransaction(txProtoBytes []byte) (*coreTypes.I
 	txHash := coreTypes.TxHash(txProtoBytes)
 	persistenceModule := u.GetBus().GetPersistenceModule()
 
-	txExists, err := persistenceModule.TransactionExists(txHash)
-	if err != nil {
-		return nil, err
-	}
-	if !txExists {
-		return nil, coreTypes.ErrTransactionNotCommitted()
-	}
-
 	// TECHDEBT: Note the inconsistency between referencing tx hash as a string vs. byte slice in different places. Need to pick
 	// one and consolidate throughout the codebase
 	hash, err := hex.DecodeString(txHash)
@@ -59,6 +52,9 @@ func (u *utilityModule) GetIndexedTransaction(txProtoBytes []byte) (*coreTypes.I
 	}
 	idTx, err := persistenceModule.GetTxIndexer().GetByHash(hash)
 	if err != nil {
+		if err.Error() == kvstore.KeyNotFoundError {
+			return nil, coreTypes.ErrTransactionNotCommitted()
+		}
 		return nil, err
 	}
 
