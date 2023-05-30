@@ -35,9 +35,9 @@ func NewTestStore(storeKey string, provable bool) (modules.Store, error) {
 	return &ProvableStore{db, tree, storeKey}, nil
 }
 
-// NewStore creates a new store using a persistent KVStore
-// Stores can either be provable or not provable, a non provable store will simply be a KVStore
-// instance, a provable store will be a KVStore instance with an SMT on top of it for proof verification
+// NewStore creates a new store using a persistent KVStore at the path provided.  Stores can either
+// be provable or not provable, a non provable store will simply be a KVStore instance, a provable
+// store will be a KVStore instance with an SMT on top of it for proof verification
 func NewStore(storeKey, storePath string, provable bool) (modules.Store, error) {
 	db, err := kvstore.NewKVStore(storePath)
 	if err != nil {
