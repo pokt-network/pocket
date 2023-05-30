@@ -3,14 +3,14 @@ package modules
 //go:generate mockgen -destination=./mocks/ibc_module_mock.go github.com/pokt-network/pocket/shared/modules IBCModule,IBCHost,IBCHandler
 
 import (
-	ics23 "github.com/cosmos/ics23/go"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 const IBCModuleName = "ibc"
 
 type IBCModule interface {
 	Module
-	NewHost() IBCHost
+	NewHost() (IBCHost, error)
 }
 
 type IBCHost interface {
@@ -75,7 +75,7 @@ type IBCHandler interface {
 
 	// ConnOpenAck relays the acceptance of a connection open attempt from counterparty chain (executed on source chain)
 	/**
-		ConnOpenAck(
+	ConnOpenAck(
 			identifier, counterpartyIdentifier Identifier,
 			clientState ClientState,
 			version string,
@@ -193,19 +193,26 @@ type IBCHandler interface {
 	**/
 }
 
+// StoreManager is an interface that allows for the interaction with the numerous
+// stores used by the IBC module.
 type StoreManager interface {
 	GetStore(storeKey string) (Store, error)
 	AddStore(store Store, storeKey string) error
+	RemoveStore(storeKey string) error
 }
 
+// Store is a simple interface to interact with data in a key-value manner.
 type Store interface {
-	Get(path []byte) ([]byte, error)
-	Set(path []byte, value []byte) error
-	Delete(path []byte) error
+	Get(key []byte) ([]byte, error)
+	Set(key []byte, value []byte) error
+	Delete(key []byte) error
 }
 
+// ProvableStore allows for the creation of proofs for the data stored in the store
+// which can be verified for authenticity
 type ProvableStore interface {
 	Store
-	GetRoot() []byte
-	Prove(path []byte) ics23.CommitmentProof
+	Root() []byte
+	CreateMembershipProof(key, value []byte) (*coreTypes.CommitmentProof, error)
+	CreateNonMembershipProof(key []byte) (*coreTypes.CommitmentProof, error)
 }

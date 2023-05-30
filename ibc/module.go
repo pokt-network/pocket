@@ -1,7 +1,9 @@
 package ibc
 
 import (
+	"github.com/pokt-network/pocket/ibc/stores"
 	"github.com/pokt-network/pocket/logger"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
@@ -45,15 +47,18 @@ func (m *ibcModule) GetModuleName() string {
 	return modules.IBCModuleName
 }
 
-func (m *ibcModule) NewHost() modules.IBCHost {
-	storeManager := newStoreManager()
+// NewHost returns a new IBC host instance if one is not already created
+func (m *ibcModule) NewHost() (modules.IBCHost, error) {
+	if m.host != nil {
+		return nil, coreTypes.ErrHostAlreadyExists()
+	}
 
 	host := &Host{
 		logger: m.logger,
-		stores: storeManager,
+		stores: stores.NewStoreManager(),
 	}
 
 	m.host = host
 
-	return host
+	return host, nil
 }

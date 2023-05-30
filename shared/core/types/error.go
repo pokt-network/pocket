@@ -38,7 +38,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 135
+// NextCode: 140
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -174,6 +174,11 @@ const (
 	CodeUnknownActorType                  Code = 130
 	CodeUnknownMessageType                Code = 131
 	CodeProposalBlockNotSet               Code = 133
+	CodeStoreNotFound                     Code = 135
+	CodeStoreAlreadyExists                Code = 136
+	CodeIBCInvalidID                      Code = 137
+	CodeIBCInvalidPath                    Code = 138
+	CodeHostAlreadyExists                 Code = 139
 )
 
 const (
@@ -306,6 +311,11 @@ const (
 	NegativeAmountError               = "the amount is negative"
 	UnknownActorTypeError             = "the actor type is not recognized"
 	UnknownMessageTypeError           = "the message being by the utility message is not recognized"
+	StoreNotFoundError                = "the store was not found"
+	StoreAlreadyExistsError           = "the store already exists"
+	IBCInvalidIDError                 = "invalid ibc identifier"
+	IBCInvalidPathError               = "invalid ibc path"
+	HostAlreadyExistsError            = "an ibc host already exists"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -666,7 +676,6 @@ func ErrMissingRequiredArg(value string) error {
 
 func ErrSocketRequestTimedOut(addr string, nonce uint32) error {
 	return NewError(CodeSocketRequestTimedOutError, fmt.Sprintf("%s: %s, %d", SocketRequestTimedOutError, addr, nonce))
-
 }
 
 func ErrUndefinedSocketType(socketType string) error {
@@ -828,4 +837,24 @@ func ErrUnknownActorType(actorType string) Error {
 
 func ErrUnknownMessageType(messageType any) Error {
 	return NewError(CodeUnknownMessageType, fmt.Sprintf("%s: %v", UnknownMessageTypeError, messageType))
+}
+
+func ErrStoreNotFound(storeKey string) Error {
+	return NewError(CodeStoreNotFound, fmt.Sprintf("%s: %s", StoreNotFoundError, storeKey))
+}
+
+func ErrStoreAlreadyExists(storeKey string) Error {
+	return NewError(CodeStoreAlreadyExists, fmt.Sprintf("%s: %s", StoreAlreadyExistsError, storeKey))
+}
+
+func ErrIBCInvalidID(identifier, msg string) Error {
+	return NewError(CodeIBCInvalidID, fmt.Sprintf("%s: %s (%s)", IBCInvalidIDError, identifier, msg))
+}
+
+func ErrIBCInvalidPath(path string) Error {
+	return NewError(CodeIBCInvalidPath, fmt.Sprintf("%s: %s", IBCInvalidPathError, path))
+}
+
+func ErrHostAlreadyExists() Error {
+	return NewError(CodeHostAlreadyExists, HostAlreadyExistsError)
 }
