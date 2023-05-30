@@ -63,6 +63,8 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 // This is a transition mode from node bootstrapping to a node being out-of-sync.
 func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Info().Msg("Node is in the bootstrapped state. Consensus module NOOP.")
+	// TODO_IN_THIS_COMMIT: Pick up here
+	// return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
 	return nil
 }
 

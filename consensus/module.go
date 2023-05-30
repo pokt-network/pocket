@@ -163,6 +163,11 @@ func (m *consensusModule) Start() error {
 		return err
 	}
 
+	// TODO_IN_THIS_COMMIT: Pick up here
+	// if err := m.stateSync.Start(); err != nil {
+	// 	return err
+	// }
+
 	return nil
 }
 
