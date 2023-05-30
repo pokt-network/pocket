@@ -31,3 +31,8 @@ func (priv *PrivateStore) Set(key, value []byte) error {
 func (priv *PrivateStore) Delete(key []byte) error {
 	return priv.KVStore.Delete(key)
 }
+
+// Stop closes the KVStore
+func (priv *PrivateStore) Stop() error {
+	return priv.KVStore.Stop()
+}

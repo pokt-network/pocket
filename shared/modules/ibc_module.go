@@ -207,6 +207,7 @@ type Store interface {
 	Set(key []byte, value []byte) error
 	Delete(key []byte) error
 	GetStoreKey() string
+	Stop() error
 }
 
 // ProvableStore allows for the creation of proofs for the data stored in the store

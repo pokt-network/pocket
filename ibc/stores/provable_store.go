@@ -61,14 +61,22 @@ func (prov *ProvableStore) Delete(key []byte) error {
 	return nil
 }
 
+// Stop closes the undelying database behind the SMT
+func (prov *ProvableStore) Stop() error {
+	return prov.nodeStore.Stop()
+}
+
+// Root returns the root of the SMT as a CommitmentRoot object
 func (prov *ProvableStore) Root() *coreTypes.CommitmentRoot {
 	return &coreTypes.CommitmentRoot{Root: prov.tree.Root()}
 }
 
+// CreateMembershipProof generates a CommitmentProof object verifying the membership of a key-value pair
 func (prov *ProvableStore) CreateMembershipProof(key, value []byte) (*coreTypes.CommitmentProof, error) {
 	return generateProof(prov.tree, key, value)
 }
 
+// CreateNonMembershipProof generates a CommitmentProof object verifying the non-membership of a key
 func (prov *ProvableStore) CreateNonMembershipProof(key []byte) (*coreTypes.CommitmentProof, error) {
 	return generateProof(prov.tree, key, nil)
 }
