@@ -153,7 +153,7 @@ type IBCHandler interface {
 		) (sequence uint64, err error)
 	**/
 
-	// RecvPacket is called in order to recieve an IBC packet on the corresponding channel end
+	// RecvPacket is called in order to receive an IBC packet on the corresponding channel end
 	// on the counterpaty chain
 	// RecvPacket(packet OpaquePacket, proof ics23.CommitmentProof, proofHeight Height, relayer string) (Packet, error)
 
@@ -181,7 +181,7 @@ type IBCHandler interface {
 	**/
 
 	// TimeoutOnClose is called to prove to the counterparty chain that the channel end has been
-	// closed and that the packet sent over this channel will not be recieved
+	// closed and that the packet sent over this channel will not be received
 	/**
 		TimeoutOnClose(
 			packet OpaquePacket,

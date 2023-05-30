@@ -18,13 +18,13 @@ func (priv *PrivateStore) GetStoreKey() string {
 }
 
 func (priv *PrivateStore) Get(key []byte) ([]byte, error) {
-	return priv.Get(key)
+	return priv.KVStore.Get(key)
 }
 
 func (priv *PrivateStore) Set(key, value []byte) error {
-	return priv.Set(key, value)
+	return priv.KVStore.Set(key, value)
 }
 
 func (priv *PrivateStore) Delete(key []byte) error {
-	return priv.Delete(key)
+	return priv.KVStore.Delete(key)
 }

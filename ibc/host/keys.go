@@ -37,12 +37,6 @@ func fullClientKey(clientID string, key []byte) []byte {
 // The following paths are the keys to the store as defined in
 // https://github.com/cosmos/ibc/tree/master/spec/core/ics-002-client-semantics#path-space
 
-// fullClientStatePath takes a client identifier and returns a Path under which to store a
-// particular client state
-func fullClientStatePath(clientID string) string {
-	return fullClientPath(clientID, KeyClientState)
-}
-
 // FullClientStateKey takes a client identifier and returns a Key under which to store a
 // particular client state.
 func FullClientStateKey(clientID string) []byte {

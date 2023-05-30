@@ -32,8 +32,8 @@ func NewStore(storeKey, storePath string, provable bool) (modules.Store, error) 
 		return &PrivateStore{db, storeKey}, nil
 	}
 	// Create a new SMT with no value hasher to store the unhashed value bytes in the tree
-	smt := smt.NewSparseMerkleTree(db, sha256.New(), smt.WithValueHasher(nil))
-	return &ProvableStore{db, smt, storeKey}, nil
+	tree := smt.NewSparseMerkleTree(db, sha256.New(), smt.WithValueHasher(nil))
+	return &ProvableStore{db, tree, storeKey}, nil
 }
 
 func (s *Stores) GetStore(storeKey string) (modules.Store, error) {
