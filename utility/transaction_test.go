@@ -130,7 +130,7 @@ func TestHandleTransaction_BasicValidation(t *testing.T) {
 				},
 				Msg: nil,
 			},
-			expectedErr: types.ErrDecodeMessage(fmt.Errorf("proto:\u00a0invalid empty type URL")),
+			expectedErr: types.ErrDecodeMessage(fmt.Errorf("proto: invalid empty type URL")),
 		},
 		{
 			name: "Invalid transaction: Invalid Signature",
