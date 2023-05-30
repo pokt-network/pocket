@@ -38,7 +38,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 142
+// NextCode: 143
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -180,7 +180,8 @@ const (
 	CodeStoreNotFound                     Code = 138
 	CodeStoreAlreadyExists                Code = 139
 	CodeStoreCreationError                Code = 140
-	CodeInvalidProof                      Code = 141
+	CodeStoreUpdateError                  Code = 141
+	CodeInvalidProof                      Code = 142
 )
 
 const (
@@ -319,6 +320,7 @@ const (
 	StoreNotFoundError                = "the store was not found"
 	StoreAlreadyExistsError           = "the store already exists"
 	StoreCreationError                = "an error occurred creating the store"
+	StoreUpdateError                  = "an error occurred updating the store"
 	InvalidProofError                 = "invalid commitment proof"
 )
 
@@ -865,6 +867,10 @@ func ErrStoreAlreadyExists(storeKey string) Error {
 
 func ErrStoreCreation(err error) Error {
 	return NewError(CodeStoreCreationError, fmt.Sprintf("%s: %s", StoreCreationError, err.Error()))
+}
+
+func ErrStoreUpdate(err error) Error {
+	return NewError(CodeStoreUpdateError, fmt.Sprintf("%s: %s", StoreUpdateError, err.Error()))
 }
 
 func ErrInvalidProof(msg string) Error {
