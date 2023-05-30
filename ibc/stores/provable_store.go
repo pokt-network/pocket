@@ -1,13 +1,18 @@
 package stores
 
 import (
+	"crypto/sha256"
+
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/smt"
 )
 
-var _ modules.ProvableStore = (*ProvableStore)(nil)
+var (
+	_             modules.ProvableStore = (*ProvableStore)(nil)
+	noValueHasher                       = smt.WithValueHasher(nil)
+)
 
 // ProvableStore needs to produce CommitmentProof objects verifying membership
 // and non-membership of keys in the store, as such the ProvableStore utilises
@@ -26,12 +31,34 @@ func (prov *ProvableStore) Get(key []byte) ([]byte, error) {
 	return prov.tree.Get(key)
 }
 
+// Set atomically updates the tree reverting to the previous state if any error occurs
+// during the update or underlying database commit
 func (prov *ProvableStore) Set(key, value []byte) error {
-	return prov.tree.Update(key, value)
+	pre := smt.ImportSparseMerkleTree(prov.nodeStore, sha256.New(), prov.tree.Root(), noValueHasher)
+	if err := prov.tree.Update(key, value); err != nil {
+		prov.tree = pre
+		return coreTypes.ErrStoreUpdate(err)
+	}
+	if err := prov.tree.Commit(); err != nil {
+		prov.tree = pre
+		return coreTypes.ErrStoreUpdate(err)
+	}
+	return nil
 }
 
+// Delete atomically deletes from the tree reverting to the previous state if any error occurs
+// during the update or underlying database commit
 func (prov *ProvableStore) Delete(key []byte) error {
-	return prov.tree.Delete(key)
+	pre := smt.ImportSparseMerkleTree(prov.nodeStore, sha256.New(), prov.tree.Root(), noValueHasher)
+	if err := prov.tree.Delete(key); err != nil {
+		prov.tree = pre
+		return coreTypes.ErrStoreUpdate(err)
+	}
+	if err := prov.tree.Commit(); err != nil {
+		prov.tree = pre
+		return coreTypes.ErrStoreUpdate(err)
+	}
+	return nil
 }
 
 func (prov *ProvableStore) Root() *coreTypes.CommitmentRoot {
