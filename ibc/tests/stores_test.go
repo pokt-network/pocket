@@ -81,11 +81,12 @@ func TestStoreManager(t *testing.T) {
 				require.NoError(t, err)
 			}
 		case "get":
-			_, err := sm.GetStore(tc.store.GetStoreKey())
+			store, err := sm.GetStore(tc.store.GetStoreKey())
 			if tc.fail {
 				require.Error(t, err)
 				require.Equal(t, tc.expected, err)
 			} else {
+				require.Equal(t, store.GetStoreKey(), tc.store.GetStoreKey())
 				require.NoError(t, err)
 			}
 		case "remove":
