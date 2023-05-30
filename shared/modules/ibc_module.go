@@ -213,7 +213,7 @@ type Store interface {
 // which can be verified for authenticity
 type ProvableStore interface {
 	Store
-	Root() []byte
+	Root() *coreTypes.CommitmentRoot
 	CreateMembershipProof(key, value []byte) (*coreTypes.CommitmentProof, error)
 	CreateNonMembershipProof(key []byte) (*coreTypes.CommitmentProof, error)
 }

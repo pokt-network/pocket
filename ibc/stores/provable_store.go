@@ -34,8 +34,8 @@ func (prov *ProvableStore) Delete(key []byte) error {
 	return prov.tree.Delete(key)
 }
 
-func (prov *ProvableStore) Root() []byte {
-	return prov.tree.Root()
+func (prov *ProvableStore) Root() *coreTypes.CommitmentRoot {
+	return &coreTypes.CommitmentRoot{Root: prov.tree.Root()}
 }
 
 func (prov *ProvableStore) CreateMembershipProof(key, value []byte) (*coreTypes.CommitmentProof, error) {

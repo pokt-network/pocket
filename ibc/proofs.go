@@ -32,20 +32,20 @@ func validateProof(nonmembership bool, proof *coreTypes.CommitmentProof, key, va
 
 // verifyCommitmentProof is a wrapper that converts the protobuf CommitmentProof to a SparseMerkleProof
 // in order to verify the proof using the SMT library.
-func verifyCommitmentProof(spec *smt.TreeSpec, proof *coreTypes.CommitmentProof, root, key, value []byte) (bool, error) {
+func verifyCommitmentProof(spec *smt.TreeSpec, proof *coreTypes.CommitmentProof, root *coreTypes.CommitmentRoot, key, value []byte) (bool, error) {
 	smtProof := smt.SparseMerkleProof{
 		SideNodes:             proof.SideNodes,
 		NonMembershipLeafData: proof.NonMembershipLeafData,
 		SiblingData:           proof.SiblingData,
 	}
-	return smt.VerifyProof(smtProof, root, key, value, spec), nil
+	return smt.VerifyProof(smtProof, root.Root, key, value, spec), nil
 }
 
 // VerifyMembership verifies whether a given key-value pair is contained in the tree according
 // to the proof provided. It does so by converting the CommitmentProof to a SparseMerkleProof
 // and then rebuilds the root hash of the tree. If the root hash matches the one provided, the
 // key-value pair is contained in the tree.
-func VerifyMembership(spec *smt.TreeSpec, proof *coreTypes.CommitmentProof, root, key, value []byte) (bool, error) {
+func VerifyMembership(spec *smt.TreeSpec, proof *coreTypes.CommitmentProof, root *coreTypes.CommitmentRoot, key, value []byte) (bool, error) {
 	if err := validateProof(false, proof, key, value); err != nil {
 		return false, err
 	}
@@ -57,7 +57,7 @@ func VerifyMembership(spec *smt.TreeSpec, proof *coreTypes.CommitmentProof, root
 // and then rebuilds the root hash of the tree using the unrelated key-value pair in the
 // position of the provided key in the tree. If the root hash matches the one provided, the
 // key is not contained in the tree.
-func VerifyNonMembership(spec *smt.TreeSpec, proof *coreTypes.CommitmentProof, root, key []byte) (bool, error) {
+func VerifyNonMembership(spec *smt.TreeSpec, proof *coreTypes.CommitmentProof, root *coreTypes.CommitmentRoot, key []byte) (bool, error) {
 	if err := validateProof(true, proof, key, defaultValue); err != nil {
 		return false, err
 	}

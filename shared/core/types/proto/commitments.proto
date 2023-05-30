@@ -4,6 +4,14 @@ package ibc;
 
 option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
+message CommitmentPrefix {
+    bytes prefix = 1;
+}
+
+message CommitmentPath {
+    bytes path = 1;
+}
+
 message CommitmentRoot {
     bytes root = 1;
 }
