@@ -8,6 +8,7 @@ import (
 var _ modules.StoreManager = (*Stores)(nil)
 
 type Stores struct {
+	m      sync.Mutex
 	stores map[string]modules.Store
 }
 
@@ -18,6 +19,8 @@ func NewStoreManager() modules.StoreManager {
 }
 
 func (s *Stores) GetStore(storeKey string) (modules.Store, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
 	store, ok := s.stores[storeKey]
 	if !ok {
 		return nil, coreTypes.ErrStoreNotFound(storeKey)
@@ -26,6 +29,8 @@ func (s *Stores) GetStore(storeKey string) (modules.Store, error) {
 }
 
 func (s *Stores) AddStore(store modules.Store, storeKey string) error {
+	s.m.Lock()
+	defer s.m.Unlock()
 	if _, ok := s.stores[storeKey]; ok {
 		return coreTypes.ErrStoreAlreadyExists(storeKey)
 	}
@@ -34,6 +39,8 @@ func (s *Stores) AddStore(store modules.Store, storeKey string) error {
 }
 
 func (s *Stores) RemoveStore(storeKey string) error {
+	s.m.Lock()
+	defer s.m.Unlock()
 	if _, ok := s.stores[storeKey]; !ok {
 		return coreTypes.ErrStoreNotFound(storeKey)
 	}
