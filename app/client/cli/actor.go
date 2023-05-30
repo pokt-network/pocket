@@ -169,7 +169,9 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			pwd = readPassphrase(pwd)
+			if !nonInteractive {
+				pwd = readPassphrase(pwd)
+			}
 
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 			if err != nil {
@@ -282,7 +284,9 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			pwd = readPassphrase(pwd)
+			if !nonInteractive {
+				pwd = readPassphrase(pwd)
+			}
 
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
 			if err != nil {

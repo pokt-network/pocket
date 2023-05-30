@@ -2,6 +2,7 @@ package raintree
 
 import (
 	"math"
+	"strconv"
 )
 
 // Refer to the P2P specification for a formal description and proof of how the constants are selected
@@ -41,7 +42,7 @@ func (rtr *rainTreeRouter) getTargetsAtLevel(level uint32) []target {
 			"firstTarget":  firstTarget.serviceURL,
 			"secondTarget": secondTarget.serviceURL,
 			"height":       height,
-			"level":        level,
+			"level":        strconv.Itoa(int(level)), // HACK(#783): Figure out why we need a conversion here
 			"pstoreSize":   pstoreSizeAtHeight,
 		},
 	).Msg("Targets at height")

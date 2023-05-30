@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.44] - 2023-05-25
+
+- Update docker file to use `p1` as the binary name for the user facing client
 
 ## [0.0.0.43] - 2023-05-18
 
