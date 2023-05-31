@@ -18,14 +18,12 @@ message RelayPayload {
 }
 
 message RelayMeta {
-    reserved 5;
-    reserved "token";
     int64 block_height = 1;
     string servicer_public_key = 2;
     Identifiable relay_chain = 3;
     Identifiable geo_zone = 4;
-    string signature = 6;
-    string application_publickey = 7;
+    string signature = 5;
+    string application_address = 6;
 }
 
 message RelayResponse {
