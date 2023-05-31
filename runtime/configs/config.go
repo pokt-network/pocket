@@ -121,6 +121,9 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 		},
 		Utility: &UtilityConfig{
 			// TODO: add a servicer default config
+			ServicerConfig: &ServicerConfig{
+				Chains: []string{"0001"},
+			},
 			MaxMempoolTransactionBytes: defaults.DefaultUtilityMaxMempoolTransactionBytes,
 			MaxMempoolTransactions:     defaults.DefaultUtilityMaxMempoolTransactions,
 		},
