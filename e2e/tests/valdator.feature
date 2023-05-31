@@ -1,5 +1,5 @@
-
-Feature: Validators Namespace
+# TECHDEBT: Validator should eventually be changed to full node or just node.
+Feature: Validator Namespace
 
   Scenario: User Wants Help Using The Validator Command 
     Given the user has a validator
