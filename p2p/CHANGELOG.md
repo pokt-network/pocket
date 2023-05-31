@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.53] - 2023-05-26
+## [0.0.0.53] - 2023-05-31
 
 - Moved nonce field from RainTreeMessage to PocketEnvelope protobuf types
 - Formalize NonceDeduper (and related) types
