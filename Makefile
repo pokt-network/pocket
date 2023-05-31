@@ -560,3 +560,15 @@ send_local_tx: ## A hardcoded send tx to make LocalNet debugging easier
 .PHONY: query_chain_params
 query_chain_params: ## A hardcoded ChainParams query to make LocalNet debugging easier
 	go run app/client/main.go Query AllChainParams
+
+.PHONY: search_structs
+search_structs: ## Greps and outputs all of the structs in the project (excluding vendor or proto generated files)
+	grep -r "type .* struct" --exclude-dir="vendor" --exclude="*.gen.go" --exclude="*.pb.go" .
+
+.PHONY: search_interfaces
+search_interfaces: ## Greps and outputs all of the structs in the project (excluding vendor or proto generated files)
+	grep -r "type .* interface" --exclude-dir="vendor" --exclude="*.gen.go" --exclude="*.pb.go" .
+
+.PHONY: search_protos
+search_protos: ## Finds all of the proto files in the project (excluding vendor)
+	find . -name "*.proto" -not -path "./vendor/*"

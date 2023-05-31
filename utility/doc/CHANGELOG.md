@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.41] - 2023-05-30
+
+- Added the E2E Feature Path Template to document, present and explain how to go about defining and scoping utility level features
+
 ## [0.0.0.40] - 2023-05-04
 
 - Expose `HydrateIdxTx` for use outside of utility

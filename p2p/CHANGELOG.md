@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Move NonceDeduper (and related types) from p2p/raintree to p2p/utils pkg
 - Move NonceDeduper usage out of RainTreeRouter and into p2pModule
 
-## [0.0.0.52] - 2023-05-26
+## [0.0.0.52] - 2023-05-31
 
 - Added `Handler` field to `RainTreeConfig` & `BackgroundConfig`
 - Refactored `rainTreeRouter` logging methods
