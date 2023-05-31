@@ -1,5 +1,7 @@
 package stores
 
+//go:generate mockgen -package=mock_types -destination=../types/mocks/provable_store_mock.go github.com/pokt-network/pocket/ibc/stores ProvableStore
+
 import (
 	"crypto/sha256"
 
@@ -21,6 +23,34 @@ type ProvableStore struct {
 	nodeStore kvstore.KVStore
 	tree      *smt.SMT
 	storeKey  string
+}
+
+// newProvableStoreFromKV generates a new provable store from the nodeStore provided
+func newProvableStoreFromKV(nodeStore kvstore.KVStore, storeKey string) (*ProvableStore, error) {
+	tree := smt.NewSparseMerkleTree(nodeStore, sha256.New(), noValueHasher)
+	return &ProvableStore{
+		nodeStore: nodeStore,
+		tree:      tree,
+		storeKey:  storeKey,
+	}, nil
+}
+
+// NewTestProvableStore generates a new provable store for testing purposes
+func NewTestProvableStore(storeKey string, nodeStore kvstore.KVStore) (modules.ProvableStore, error) {
+	if nodeStore == nil {
+		ns := kvstore.NewMemKVStore()
+		return newProvableStoreFromKV(ns, storeKey)
+	}
+	return newProvableStoreFromKV(nodeStore, storeKey)
+}
+
+// NewProvableStore generates a new provable store using a perishable KVStore at the path provided
+func NewProvableStore(storeKey, storePath string) (modules.ProvableStore, error) {
+	nodeStore, err := kvstore.NewKVStore(storePath)
+	if err != nil {
+		return nil, coreTypes.ErrStoreCreation(err)
+	}
+	return newProvableStoreFromKV(nodeStore, storeKey)
 }
 
 func (prov *ProvableStore) GetStoreKey() string {
@@ -69,6 +99,11 @@ func (prov *ProvableStore) Stop() error {
 // Root returns the root of the SMT as a CommitmentRoot object
 func (prov *ProvableStore) Root() *coreTypes.CommitmentRoot {
 	return &coreTypes.CommitmentRoot{Root: prov.tree.Root()}
+}
+
+// TreeSpec returns the SMT spec for the ProvableStore
+func (prov *ProvableStore) TreeSpec() *smt.TreeSpec {
+	return prov.tree.Spec()
 }
 
 // CreateMembershipProof generates a CommitmentProof object verifying the membership of a key-value pair

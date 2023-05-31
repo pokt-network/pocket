@@ -1,9 +1,10 @@
 package modules
 
-//go:generate mockgen -destination=./mocks/ibc_module_mock.go github.com/pokt-network/pocket/shared/modules IBCModule,IBCHost,IBCHandler
+//go:generate mockgen -destination=./mocks/ibc_module_mock.go github.com/pokt-network/pocket/shared/modules IBCModule,IBCHost,IBCHandler,StoreManager,PrivateStore,ProvableStore
 
 import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/smt"
 )
 
 const IBCModuleName = "ibc"
@@ -196,13 +197,15 @@ type IBCHandler interface {
 // StoreManager is an interface that allows for the interaction with the numerous
 // stores used by the IBC module.
 type StoreManager interface {
-	GetStore(storeKey string) (Store, error)
-	AddStore(store Store) error
+	GetPrivateStore(storeKey string) (PrivateStore, error)
+	AddPrivateStore(store PrivateStore) error
+	GetProvableStore(storeKey string) (ProvableStore, error)
+	AddProvableStore(store ProvableStore) error
 	RemoveStore(storeKey string) error
 }
 
-// Store is a simple interface to interact with data in a key-value manner.
-type Store interface {
+// PrivateStore is a simple interface to interact with data in a key-value manner.
+type PrivateStore interface {
 	Get(key []byte) ([]byte, error)
 	Set(key []byte, value []byte) error
 	Delete(key []byte) error
@@ -213,8 +216,9 @@ type Store interface {
 // ProvableStore allows for the creation of proofs for the data stored in the store
 // which can be verified for authenticity
 type ProvableStore interface {
-	Store
+	PrivateStore
 	Root() *coreTypes.CommitmentRoot
+	TreeSpec() *smt.TreeSpec
 	CreateMembershipProof(key, value []byte) (*coreTypes.CommitmentProof, error)
 	CreateNonMembershipProof(key []byte) (*coreTypes.CommitmentProof, error)
 }
