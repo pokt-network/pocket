@@ -359,7 +359,7 @@ func (m *p2pModule) handlePocketEnvelope(pocketEnvelopeBz []byte) error {
 		return fmt.Errorf("pocket envelope nonce: %w", err)
 	}
 
-	// NB: Explicitly constructing a new `PocketEnvelop` literal with content
+	// NB: Explicitly constructing a new `PocketEnvelope` literal with content
 	// rather than forwarding `poktEnvelope` to avoid blindly passing additional
 	// fields as the protobuf type changes. Additionally, strips the `Nonce` field.
 	event := messaging.PocketEnvelope{
