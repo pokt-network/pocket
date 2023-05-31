@@ -1,7 +1,7 @@
 package service
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -13,7 +13,12 @@ import (
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
-var testServicer1 = &coreTypes.Actor{PublicKey: "a6cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d75a998b"}
+var testServicer1 = &coreTypes.Actor{
+	ActorType: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
+	Address:   "a3d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
+	PublicKey: "a6cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d75a998b",
+	Chains:    []string{"0021"},
+}
 
 func TestAdmitRelay(t *testing.T) {
 	currentHeight := uint64(9)
@@ -29,33 +34,33 @@ func TestAdmitRelay(t *testing.T) {
 		{
 			name:     "Relay with empty Meta is rejected",
 			relay:    &coreTypes.Relay{},
-			expected: fmt.Errorf("Error admitting relay: relay metadata failed validation: empty relay metadata"),
+			expected: errValidateRelayMeta,
 		},
 		{
 			name:     "Relay with unspecified chain is rejected",
 			relay:    &coreTypes.Relay{Meta: &coreTypes.RelayMeta{}},
-			expected: fmt.Errorf("Error admitting relay: relay metadata failed validation: relay chain unspecified"),
+			expected: errValidateRelayMeta,
 		},
 		{
 			name:     "Relay for unsupported chain is rejected",
 			relay:    testRelay("foo", 8),
-			expected: fmt.Errorf("Error admitting relay: relay metadata failed validation: relay chain not supported: %s", "foo"),
+			expected: errValidateRelayMeta,
 		},
 		{
 			name:     "Relay with height set in a past session is rejected",
 			relay:    testRelay("0021", 5),
-			expected: fmt.Errorf("Error admitting relay: relay failed block height validation: relay block height 5 not within session ID session-1 starting block 8 and last block 10"),
+			expected: errValidateBlockHeight,
 		},
 		{
 			name:     "Relay with height set in a future session is rejected",
 			relay:    testRelay("0021", 9999),
-			expected: fmt.Errorf("Error admitting relay: relay failed block height validation: relay block height 9999 not within session ID session-1 starting block 8 and last block 10"),
+			expected: errValidateBlockHeight,
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			config := testServicerConfig("0021")
+			config := testServicerConfig()
 			session := testSession(
 				sessionNumber(2),
 				sessionBlocks(4),
@@ -68,13 +73,8 @@ func TestAdmitRelay(t *testing.T) {
 			require.NoError(t, err)
 
 			err = servicerMod.(*servicer).admitRelay(testCase.relay)
-			switch {
-			case err == nil && testCase.expected != nil:
-				t.Fatalf("Expected error %v, got: nil", testCase.expected)
-			case err != nil && testCase.expected == nil:
-				t.Fatalf("Unexpected error %v", err)
-			case err != nil && err.Error() != testCase.expected.Error():
-				t.Fatalf("Expected error %v, got: %v", testCase.expected, err)
+			if !errors.Is(err, testCase.expected) {
+				t.Fatalf("Expected error %v got: %v", testCase.expected, err)
 			}
 		})
 	}
@@ -95,10 +95,11 @@ func testRelay(chain string, height int64) *coreTypes.Relay {
 	}
 }
 
-func testServicerConfig(chains ...string) configs.ServicerConfig {
+func testServicerConfig() configs.ServicerConfig {
 	return configs.ServicerConfig{
-		Chains:    append([]string{}, chains...),
 		PublicKey: testServicer1.PublicKey,
+		Address:   testServicer1.Address,
+		Chains:    testServicer1.Chains,
 	}
 }
 
@@ -147,9 +148,19 @@ func mockBus(t *testing.T, cfg *configs.ServicerConfig, height uint64, session *
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(height).AnyTimes()
 
+	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
+	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
+	persistenceReadContextMock.EXPECT().GetServicer(gomock.Any(), gomock.Any()).Return(testServicer1, nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().Release().AnyTimes()
+
+	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
+	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
+	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
+
 	busMock := mockModules.NewMockBus(ctrl)
 	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
-	busMock.EXPECT().GetPersistenceModule().Return(nil).AnyTimes()
+	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 	busMock.EXPECT().GetUtilityModule().Return(baseUtilityMock(ctrl, session)).AnyTimes()
 	busMock.EXPECT().RegisterModule(gomock.Any()).DoAndReturn(func(m modules.Module) {

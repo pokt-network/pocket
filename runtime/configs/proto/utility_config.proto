@@ -12,5 +12,6 @@ message UtilityConfig {
 
 message ServicerConfig {
   string public_key = 1;
-  repeated string chains = 2;
+  string address = 2;
+  repeated string chains = 3;
 }

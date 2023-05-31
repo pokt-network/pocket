@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/pokt-network/pocket/logger"
@@ -11,7 +12,12 @@ import (
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
-var _ Servicer = &servicer{}
+var (
+	errValidateBlockHeight = errors.New("relay failed block height validation")
+	errValidateRelayMeta   = errors.New("relay failed metadata validation")
+
+	_ Servicer = &servicer{}
+)
 
 type Servicer interface {
 	modules.Module
@@ -78,7 +84,7 @@ func (s *servicer) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse
 
 // validateRelayMeta ensures the relay metadata is valid for being handled by the servicer
 // TODO: (REFACTOR) move the meta-specific validation to a Validator method on RelayMeta struct
-func (s servicer) validateRelayMeta(meta *coreTypes.RelayMeta) error {
+func (s servicer) validateRelayMeta(meta *coreTypes.RelayMeta, currentHeight int64) error {
 	if meta == nil {
 		return fmt.Errorf("empty relay metadata")
 	}
@@ -88,19 +94,36 @@ func (s servicer) validateRelayMeta(meta *coreTypes.RelayMeta) error {
 	}
 
 	// TODO: supported chains: needs to be crossed-checked with the world state from the persistence layer
-	if !s.isRelayChainSupported(meta.RelayChain) {
-		return fmt.Errorf("relay chain not supported: %s", meta.RelayChain.Id)
+	if err := s.validateRelayChainSupport(meta.RelayChain, currentHeight); err != nil {
+		return fmt.Errorf("validation of support for relay chain %s failed: %w", meta.RelayChain.Id, err)
 	}
+
 	return nil
 }
 
-func (s servicer) isRelayChainSupported(relayChain *coreTypes.Identifiable) bool {
-	for _, ch := range s.config.Chains {
-		if ch == relayChain.Id {
-			return true
-		}
+func (s servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable, currentHeight int64) error {
+	if !isChainSupported(relayChain.Id, s.config.Chains) {
+		return fmt.Errorf("chain %s not supported by servicer %s configuration", relayChain.Id, s.config.Address)
 	}
-	return false
+
+	// DISCUSS: either update NewReadContext to take a uint64, or the GetCurrentHeight to return an int64.
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	if err != nil {
+		return fmt.Errorf("error getting persistence context at height %d: %w", currentHeight, err)
+	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
+
+	// DISCUSS: should we update the GetServicer signature to take a string instead?
+	servicer, err := readCtx.GetServicer([]byte(s.config.Address), currentHeight)
+	if err != nil {
+		return fmt.Errorf("error reading servicer from persistence: %w", err)
+	}
+
+	if !isChainSupported(relayChain.Id, servicer.Chains) {
+		return fmt.Errorf("chain %s not supported by servicer %s configuration fetched from persistence", relayChain.Id, s.config.Address)
+	}
+
+	return nil
 }
 
 // TODO: implement
@@ -145,12 +168,11 @@ func (s servicer) admitRelay(relay *coreTypes.Relay) error {
 		return fmt.Errorf("%s: relay is nil", errPrefix)
 	}
 
-	// TODO: use persistence module to verify the relaychain is supported by this servicer
-	if err := s.validateRelayMeta(relay.Meta); err != nil {
-		return fmt.Errorf("%s: relay metadata failed validation: %w", errPrefix, err)
+	height := s.GetBus().GetConsensusModule().CurrentHeight()
+	if err := s.validateRelayMeta(relay.Meta, int64(height)); err != nil {
+		return fmt.Errorf("%w: %w", errValidateRelayMeta, err)
 	}
 
-	height := s.GetBus().GetConsensusModule().CurrentHeight()
 	// TODO: update the CLI to include ApplicationAddress(or Application Public Key) in the RelayMeta
 	session, err := s.GetBus().GetUtilityModule().GetSession(relay.Meta.ApplicationAddress, int64(height), relay.Meta.RelayChain.Id, relay.Meta.GeoZone.Id)
 	if err != nil {
@@ -159,7 +181,7 @@ func (s servicer) admitRelay(relay *coreTypes.Relay) error {
 
 	// TODO: (REFACTOR) use a loop to run all validators: would also remove the need for passing the session around
 	if err := validateRelayBlockHeight(relay.Meta, session); err != nil {
-		return fmt.Errorf("%s: relay failed block height validation: %w", errPrefix, err)
+		return fmt.Errorf("%w: %w", errValidateBlockHeight, err)
 	}
 
 	if err := s.validateApplication(relay.Meta, session); err != nil {
@@ -332,25 +354,11 @@ func (r *relay) GetGeoZone() GeoZone                    { return nil }
 func (r *relay) GetToken() AAT                          { return nil }
 func (r *relay) GetSignature() string                   { return "" }
 
-type Provider interface {
-	CurrentHeight() int64
-	GetSession(appAddr string, height int64, relayChain, geoZone string) (*coreTypes.Session, error)
+func isChainSupported(chainId string, allChains []string) bool {
+	for _, ch := range allChains {
+		if ch == chainId {
+			return true
+		}
+	}
+	return false
 }
-
-/*
-type Servicer interface {
-	HandleRelay(*coreTypes.Relay) (*coreTypes.RelayResponse, error)
-}
-
-func NewServicer(provider Provider, config configs.ServicerConfig) (Servicer, error) {
-	return servicer{
-		provider: provider,
-		config:   config,
-	}, nil
-}
-
-type servicer struct {
-	config   configs.ServicerConfig
-	provider Provider
-}
-*/
