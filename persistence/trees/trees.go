@@ -2,6 +2,7 @@ package trees
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -95,12 +96,6 @@ type treeStore struct {
 	valueStores map[merkleTree]kvstore.KVStore
 }
 
-// var _ TreeStore = &treeStore{} // TODO
-
-func NewTreeStore() *treeStore {
-	panic("not impl")
-}
-
 // Update takes a transaction and a height and updates
 // all of the trees in the treeStore for that height.
 func (t *treeStore) Update(pgtx pgx.Tx, height uint64) error {
@@ -155,7 +150,8 @@ func newMemtreeStore() (*treeStore, error) {
 // updateMerkleTrees updates all of the merkle trees that TreeStore manages.
 // * it returns an hash of the output or an error.
 func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, height uint64) (string, error) {
-	// Update all the merkle trees
+	// TECHDEBT: Interop with the smt Commit functionality for rollbacks.
+	// Update each of the merkle trees in the list of trees
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
 		// Actor Merkle Trees
@@ -268,34 +264,29 @@ func (t *treeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*co
 	return nil
 }
 
-func (t *treeStore) getActorsUpdatedAtHeight(pgtx pgx.Tx, actorType coreTypes.ActorType, height int64) (actors []*coreTypes.Actor, err error) {
-	actorSchema, ok := actorTypeToSchemaName[actorType]
-	if !ok {
-		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
-	}
-
-	schemaActors, err := t.getActorsUpdated(pgtx, actorSchema, uint64(height))
-	if err != nil {
-		return nil, err
-	}
-
-	actors = make([]*coreTypes.Actor, len(schemaActors))
-	for i, schemaActor := range schemaActors {
-		actor := &coreTypes.Actor{
-			ActorType:       actorType,
-			Address:         schemaActor.Address,
-			PublicKey:       schemaActor.PublicKey,
-			Chains:          schemaActor.Chains,
-			ServiceUrl:      schemaActor.ServiceUrl,
-			StakedAmount:    schemaActor.StakedAmount,
-			PausedHeight:    schemaActor.PausedHeight,
-			UnstakingHeight: schemaActor.UnstakingHeight,
-			Output:          schemaActor.Output,
-		}
-		actors[i] = actor
-	}
-	return
-}
+// func (t *treeStore) getActorsUpdatedAtHeight(pgtx pgx.Tx, actorType coreTypes.ActorType, height int64) (actors []*coreTypes.Actor, err error) {
+// 	schemaActors, err := t.getActorsUpdated(pgtx, actorType, uint64(height))
+// 	if err != nil {
+// 		return nil, err
+// 	}
+//  // This code just turns a schema actor into a coreTypes.Actor
+// 	actors = make([]*coreTypes.Actor, len(schemaActors))
+// 	for i, schemaActor := range schemaActors {
+// 		actor := &coreTypes.Actor{
+// 			ActorType:       actorType,
+// 			Address:         schemaActor.Address,
+// 			PublicKey:       schemaActor.PublicKey,
+// 			Chains:          schemaActor.Chains,
+// 			ServiceUrl:      schemaActor.ServiceUrl,
+// 			StakedAmount:    schemaActor.StakedAmount,
+// 			PausedHeight:    schemaActor.PausedHeight,
+// 			UnstakingHeight: schemaActor.UnstakingHeight,
+// 			Output:          schemaActor.Output,
+// 		}
+// 		actors[i] = actor
+// 	}
+// 	return
+// }
 
 // Account Tree Helpers
 
@@ -383,8 +374,46 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 	return nil
 }
 
-func (t *treeStore) getActorsUpdated(pgtx pgx.Tx, actorSchema types.ProtocolActorSchema, height uint64) ([]*coreTypes.Actor, error) {
-	return nil, fmt.Errorf("not impl")
+func (t *treeStore) getActorsUpdated(pgtx pgx.Tx, actorType coreTypes.ActorType, height uint64) ([]*coreTypes.Actor, error) {
+	actorSchema, ok := actorTypeToSchemaName[actorType]
+	if !ok {
+		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
+	}
+
+	// TODO: this height usage is gross and could cause issues, we should use
+	// uint64 in the source so that this doesn't have to cast
+	query := actorSchema.GetUpdatedAtHeightQuery(int64(height))
+	rows, err := pgtx.Query(context.TODO(), query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	addrs := make([][]byte, 0)
+	for rows.Next() {
+		var addr string
+		if err := rows.Scan(&addr); err != nil {
+			return nil, err
+		}
+		addrBz, err := hex.DecodeString(addr)
+		if err != nil {
+			return nil, err
+		}
+		addrs = append(addrs, addrBz)
+	}
+
+	actors := make([]*coreTypes.Actor, len(addrs))
+	for i, addr := range addrs {
+		// TODO same goes here for int64 height cast here
+		actor, err := t.getActor(pgtx, actorSchema, addr, int64(height))
+		if err != nil {
+			return nil, err
+		}
+		actors[i] = actor
+	}
+	rows.Close()
+
+	return actors, nil
 }
 
 func (t *treeStore) getTransactions(pgtx pgx.Tx) ([]*coreTypes.IndexedTransaction, error) {
@@ -405,4 +434,61 @@ func (t *treeStore) getFlags(pgtx pgx.Tx) ([]*coreTypes.Flag, error) {
 
 func (t *treeStore) getParams(pgtx pgx.Tx) ([]*coreTypes.Param, error) {
 	return nil, fmt.Errorf("not impl")
+}
+
+func (t *treeStore) getActor(tx pgx.Tx, actorSchema types.ProtocolActorSchema, address []byte, height int64) (actor *coreTypes.Actor, err error) {
+	ctx := context.TODO()
+	actor, height, err = t.getActorFromRow(actorSchema.GetActorType(), tx.QueryRow(ctx, actorSchema.GetQuery(hex.EncodeToString(address), height)))
+	if err != nil {
+		return
+	}
+	return t.getChainsForActor(ctx, tx, actorSchema, actor, height)
+}
+
+func (t *treeStore) getActorFromRow(actorType coreTypes.ActorType, row pgx.Row) (actor *coreTypes.Actor, height int64, err error) {
+	actor = &coreTypes.Actor{
+		ActorType: actorType,
+	}
+	err = row.Scan(
+		&actor.Address,
+		&actor.PublicKey,
+		&actor.StakedAmount,
+		&actor.ServiceUrl,
+		&actor.Output,
+		&actor.PausedHeight,
+		&actor.UnstakingHeight,
+		&height)
+	return
+}
+
+func (t *treeStore) getChainsForActor(
+	ctx context.Context,
+	tx pgx.Tx,
+	actorSchema types.ProtocolActorSchema,
+	actor *coreTypes.Actor,
+	height int64,
+) (a *coreTypes.Actor, err error) {
+	if actorSchema.GetChainsTableName() == "" {
+		return actor, nil
+	}
+	rows, err := tx.Query(ctx, actorSchema.GetChainsQuery(actor.Address, height))
+	if err != nil {
+		return actor, err
+	}
+	defer rows.Close()
+
+	var chainAddr string
+	var chainID string
+	var chainEndHeight int64 // unused
+	for rows.Next() {
+		err = rows.Scan(&chainAddr, &chainID, &chainEndHeight)
+		if err != nil {
+			return
+		}
+		if chainAddr != actor.Address {
+			return actor, fmt.Errorf("unexpected address %s, expected %s when reading chains", chainAddr, actor.Address)
+		}
+		actor.Chains = append(actor.Chains, chainID)
+	}
+	return actor, nil
 }
