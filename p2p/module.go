@@ -382,15 +382,16 @@ func (m *p2pModule) observeNonce(nonce utils.Nonce) error {
 // deuper's capacity of recent messages.
 // DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
 func (m *p2pModule) isNonceAlreadyObserved(nonce utils.Nonce) bool {
-	if contains := m.nonceDeduper.Contains(nonce); contains {
-		m.logger.Debug().
-			Uint64("nonce", nonce).
-			Msgf("message already processed, skipping")
-
-		m.redundantNonceTelemetry(nonce)
-		return true
+	if !m.nonceDeduper.Contains(nonce) {
+		return false
 	}
-	return false
+
+	m.logger.Debug().
+		Uint64("nonce", nonce).
+		Msgf("message already processed, skipping")
+
+	m.redundantNonceTelemetry(nonce)
+	return true
 }
 
 func (m *p2pModule) redundantNonceTelemetry(nonce utils.Nonce) {
