@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.52] - 2023-05-26
+
+- Added `Handler` field to `RainTreeConfig` & `BackgroundConfig`
+- Refactored `rainTreeRouter` logging methods
+- Renamed `rainTreeRouter#HandleNetworkData()` to `#handleRainTreeMsg()`
+- Renamed `p2pModule#handleNetworkData()` to `#handlePocketEnvelope()`
+- Added -tags=test to all test make targets
+- Fixed mockdns usage in `TestP2PModule_Insecure_Error` test
+- Moved message handling from p2p module to router
+
 ## [0.0.0.51] - 2023-05-23
 
 - Use the shared codec module when marshaling the data sent over the wire

@@ -3,16 +3,11 @@ package p2p
 import (
 	"errors"
 	"fmt"
-	"io"
-	"time"
-
 	"github.com/libp2p/go-libp2p"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
-	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
-	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
@@ -31,12 +26,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
-
-// TECHDEBT(#629): configure timeouts. Consider security exposure vs. real-world conditions.
-// TECHDEBT(#629): parameterize and expose via config.
-// readStreamTimeout is the duration to wait for a read operation on a
-// stream to complete, after which the stream is closed ("timed out").
-const readStreamTimeout = time.Second * 10
 
 var _ modules.P2PModule = &p2pModule{}
 
@@ -173,11 +162,6 @@ func (m *p2pModule) Start() (err error) {
 		return fmt.Errorf("setting up router: %w", err)
 	}
 
-	// Don't handle incoming streams in client debug mode.
-	if !m.isClientDebugMode() {
-		m.host.SetStreamHandler(protocol.PoktProtocolID, m.handleStream)
-	}
-
 	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
@@ -290,6 +274,7 @@ func (m *p2pModule) setupRouter() (err error) {
 			CurrentHeightProvider: m.currentHeightProvider,
 			PeerstoreProvider:     m.pstoreProvider,
 			Host:                  m.host,
+			Handler:               m.handlePocketEnvelope,
 			MaxNonces:             m.cfg.MaxNonces,
 		},
 	)
@@ -340,100 +325,16 @@ func (m *p2pModule) isClientDebugMode() bool {
 	return m.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode
 }
 
-// handleStream is called each time a peer establishes a new stream with this
-// module's libp2p `host.Host`.
-func (m *p2pModule) handleStream(stream libp2pNetwork.Stream) {
-	m.logger.Debug().Msg("handling incoming stream")
-	peer, err := utils.PeerFromLibp2pStream(stream)
-	if err != nil {
-		m.logger.Error().Err(err).
-			Str("address", peer.GetAddress().String()).
-			Msg("parsing remote peer identity")
-
-		if err = stream.Reset(); err != nil {
-			m.logger.Error().Err(err).Msg("resetting stream")
-		}
-		return
-	}
-
-	if err := m.router.AddPeer(peer); err != nil {
-		m.logger.Error().Err(err).
-			Str("address", peer.GetAddress().String()).
-			Msg("adding remote peer to router")
-	}
-
-	go m.readStream(stream)
-}
-
-// readStream is intended to be called in a goroutine. It continuously reads from
-// the given stream for handling at the network level. Used for handling "direct"
-// messages (i.e. one specific target node).
-func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
-	// Time out if no data is sent to free resources.
-	if err := stream.SetReadDeadline(newReadStreamDeadline()); err != nil {
-		// NB: tests using libp2p's `mocknet` rely on this not returning an error.
-		// `SetReadDeadline` not supported by `mocknet` streams.
-		m.logger.Debug().Err(err).Msg("setting stream read deadline")
-	}
-
-	// debug logging: stream scope stats
-	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.27.0/core/network#StreamScope)
-	if err := utils.LogScopeStatFactory(
-		&logger.Global.Logger,
-		"stream scope (read-side)",
-	)(stream.Scope()); err != nil {
-		m.logger.Debug().Err(err).Msg("logging stream scope stats")
-	}
-	// ---
-
-	data, err := io.ReadAll(stream)
-	if err != nil {
-		m.logger.Error().Err(err).Msg("reading from stream")
-		if err := stream.Reset(); err != nil {
-			m.logger.Debug().Err(err).Msg("resetting stream (read-side)")
-		}
-		return
-	}
-
-	if err := stream.Reset(); err != nil {
-		m.logger.Debug().Err(err).Msg("resetting stream (read-side)")
-	}
-
-	// debug logging
-	remotePeer, err := utils.PeerFromLibp2pStream(stream)
-	if err != nil {
-		m.logger.Debug().Err(err).Msg("getting remote remotePeer")
-	} else {
-		utils.LogIncomingMsg(m.logger, m.cfg.Hostname, remotePeer)
-	}
-	// ---
-
-	if err := m.handleNetworkData(data); err != nil {
-		m.logger.Error().Err(err).Msg("handling network data")
-	}
-}
-
-// handleNetworkData passes a network message to the configured
-// `Router`implementation for routing.
-func (m *p2pModule) handleNetworkData(data []byte) error {
-	appMsgData, err := m.router.HandleNetworkData(data)
-	if err != nil {
-		return err
-	}
-
-	// There was no error, but we don't need to forward this to the app-specific bus.
-	// For example, the message has already been handled by the application.
-	if appMsgData == nil {
-		return nil
-	}
-
-	networkMessage := messaging.PocketEnvelope{}
-	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
+// handlePocketEnvelope deserializes the received `PocketEnvelope` data and publishes
+// a copy of its `Content` to the application event bus.
+func (m *p2pModule) handlePocketEnvelope(pocketEnvelopeBz []byte) error {
+	poktEnvelope := messaging.PocketEnvelope{}
+	if err := proto.Unmarshal(pocketEnvelopeBz, &poktEnvelope); err != nil {
 		return fmt.Errorf("decoding network message: %w", err)
 	}
 
 	event := messaging.PocketEnvelope{
-		Content: networkMessage.Content,
+		Content: poktEnvelope.Content,
 	}
 	m.GetBus().PublishEventToBus(&event)
 	return nil
@@ -447,10 +348,4 @@ func (m *p2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
 	return utils.Libp2pMultiaddrFromServiceURL(fmt.Sprintf(
 		"%s:%d", m.cfg.Hostname, m.cfg.Port,
 	))
-}
-
-// newReadStreamDeadline returns a future deadline
-// based on the read stream timeout duration.
-func newReadStreamDeadline() time.Time {
-	return time.Now().Add(readStreamTimeout)
 }
