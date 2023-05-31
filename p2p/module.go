@@ -372,10 +372,7 @@ func (m *p2pModule) handlePocketEnvelope(pocketEnvelopeBz []byte) error {
 // observeNonce adds the nonce to the deduper if it has not been observed.
 func (m *p2pModule) observeNonce(nonce utils.Nonce) error {
 	// Add the nonce to the deduper
-	if err := m.nonceDeduper.Push(nonce); err != nil {
-		return err
-	}
-	return nil
+	return m.nonceDeduper.Push(nonce)
 }
 
 // isNonceAlreadyObserved returns whether the nonce has been observed within the
