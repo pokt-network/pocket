@@ -25,8 +25,7 @@ message RelayMeta {
     Identifiable relay_chain = 3;
     Identifiable geo_zone = 4;
     string signature = 6;
-    // TODO: should we use public key instead?
-    string application_address = 7;
+    string application_publickey = 7;
 }
 
 message RelayResponse {
