@@ -288,6 +288,7 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 
 	hostMock := mocksP2P.NewMockHost(ctrl)
 	hostMock.EXPECT().Peerstore().Return(libp2pPStore).AnyTimes()
+	hostMock.EXPECT().SetStreamHandler(gomock.Any(), gomock.Any()).Times(1)
 
 	rtCfg := &config.RainTreeConfig{
 		Host:                  hostMock,
