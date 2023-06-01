@@ -85,7 +85,20 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 	//}
 
 	// CONSIDERATION: If switching to `NewRandomSub`, there will be a max size
-	gossipSub, err := pubsub.NewGossipSub(ctx, cfg.Host) //pubsub.WithFloodPublish(false),
+	// TECHDEBT: integrate with go-libp2p-pubsub tracing
+	truncID := cfg.Host.ID().String()[:20]
+	jsonTracer, err := pubsub.NewJSONTracer(fmt.Sprintf("./pubsub-trace_%s.json", truncID))
+	if err != nil {
+		return nil, fmt.Errorf("creating json tracer: %w", err)
+	}
+	//pbTracer, err := pubsub.NewPBTracer("./pubsub-trace.pb")
+	//if err != nil {
+	//	return nil, fmt.Errorf("creating json tracer: %w", err)
+	//}
+
+	tracerOpt := pubsub.WithEventTracer(jsonTracer)
+	//tracerOpt := pubsub.WithEventTracer(pbTracer)
+	gossipSub, err := pubsub.NewGossipSub(ctx, cfg.Host, tracerOpt) //pubsub.WithFloodPublish(false),
 	//pubsub.WithMaxMessageSize(256),
 
 	if err != nil {
