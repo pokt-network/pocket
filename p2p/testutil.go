@@ -4,6 +4,7 @@ package p2p
 
 import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
+	"github.com/pokt-network/pocket/p2p/background"
 
 	"github.com/pokt-network/pocket/p2p/raintree"
 )
@@ -21,6 +22,6 @@ func (m *p2pModule) GetRainTreeRouter() *raintree.RainTreeRouter {
 }
 
 // GetBackgroundRouter returns the `BackgroundRouter` for use in integration tests
-//func (m *p2pModule) GetBackgroundRouter() background.BackgroundRouter {
-//	return m.backgroundRouter
-//}
+func (m *p2pModule) GetBackgroundRouter() *background.BackgroundRouter {
+	return m.unstakedActorRouter.(*background.BackgroundRouter)
+}
