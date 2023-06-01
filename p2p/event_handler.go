@@ -23,7 +23,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 			return fmt.Errorf("failed to cast event to ConsensusNewHeightEvent")
 		}
 
-		oldPeerList := m.router.GetPeerstore().GetPeerList()
+		oldPeerList := m.stakedActorRouter.GetPeerstore().GetPeerList()
 		updatedPeerstore, err := m.pstoreProvider.GetStakedPeerstoreAtHeight(consensusNewHeightEvent.Height)
 		if err != nil {
 			return err
@@ -31,12 +31,12 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 
 		added, removed := oldPeerList.Delta(updatedPeerstore.GetPeerList())
 		for _, add := range added {
-			if err := m.router.AddPeer(add); err != nil {
+			if err := m.stakedActorRouter.AddPeer(add); err != nil {
 				return err
 			}
 		}
 		for _, rm := range removed {
-			if err := m.router.RemovePeer(rm); err != nil {
+			if err := m.stakedActorRouter.RemovePeer(rm); err != nil {
 				return err
 			}
 		}
@@ -50,7 +50,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		m.logger.Debug().Fields(messaging.TransitionEventToMap(stateMachineTransitionEvent)).Msg("Received state machine transition event")
 
 		if stateMachineTransitionEvent.NewState == string(coreTypes.StateMachineState_P2P_Bootstrapping) {
-			if m.router.GetPeerstore().Size() == 0 {
+			if m.stakedActorRouter.GetPeerstore().Size() == 0 {
 				m.logger.Warn().Msg("No peers in addrbook, bootstrapping")
 
 				if err := m.bootstrap(); err != nil {
