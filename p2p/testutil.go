@@ -17,7 +17,7 @@ func (m *p2pModule) GetHost() libp2pHost.Host {
 
 // GetRainTreeRouter returns the `RainTreeRouter` for use in integration tests
 func (m *p2pModule) GetRainTreeRouter() *raintree.RainTreeRouter {
-	return m.router.(*raintree.RainTreeRouter)
+	return m.stakedActorRouter.(*raintree.RainTreeRouter)
 }
 
 // GetBackgroundRouter returns the `BackgroundRouter` for use in integration tests
