@@ -41,10 +41,10 @@ func TestMinimal(t *testing.T) {
 	t.Parallel()
 
 	// a new step definition suite is constructed for every scenario
-	gocuke.NewRunner(t, &suite{}).Path(backgroundGossipFeaturePath).Run()
+	gocuke.NewRunner(t, new(backgroundGossipSuite)).Path(backgroundGossipFeaturePath).Run()
 }
 
-type suite struct {
+type backgroundGossipSuite struct {
 	// special arguments like TestingT are injected automatically into exported fields
 	gocuke.TestingT
 
@@ -71,7 +71,7 @@ type suite struct {
 	sender                    *p2p.P2PModule
 }
 
-func (s *suite) Before(scenario gocuke.Scenario) {
+func (s *backgroundGossipSuite) Before(scenario gocuke.Scenario) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -79,23 +79,23 @@ func (s *suite) Before(scenario gocuke.Scenario) {
 	s.receivedFromServiceURLMap = make(map[string]struct{})
 }
 
-func (s *suite) AFaultyNetworkOfPeers(a int64) {
+func (s *backgroundGossipSuite) AFaultyNetworkOfPeers(a int64) {
 	panic("PENDING")
 }
 
-func (s *suite) NumberOfFaultyPeers(a int64) {
+func (s *backgroundGossipSuite) NumberOfFaultyPeers(a int64) {
 	panic("PENDING")
 }
 
-func (s *suite) NumberOfNodesJoinTheNetwork(a int64) {
+func (s *backgroundGossipSuite) NumberOfNodesJoinTheNetwork(a int64) {
 	panic("PENDING")
 }
 
-func (s *suite) NumberOfNodesLeaveTheNetwork(a int64) {
+func (s *backgroundGossipSuite) NumberOfNodesLeaveTheNetwork(a int64) {
 	panic("PENDING")
 }
 
-func (s *suite) AFullyConnectedNetworkOfPeers(count int64) {
+func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 	var (
 		peerCount = int(count)
 		pubKeys   = make([]cryptoPocket.PublicKey, peerCount)
@@ -277,7 +277,7 @@ func (s *suite) AFullyConnectedNetworkOfPeers(count int64) {
 	}
 }
 
-func (s *suite) ANodeBroadcastsATestMessageViaItsBackgroundRouter() {
+func (s *backgroundGossipSuite) ANodeBroadcastsATestMessageViaItsBackgroundRouter() {
 	// TODO_THIS_COMMIT: refactor
 	s.timeoutDuration = broadcastTimeoutDuration
 
@@ -295,7 +295,7 @@ func (s *suite) ANodeBroadcastsATestMessageViaItsBackgroundRouter() {
 	require.NoError(s, err)
 }
 
-func (s *suite) MinusOneNumberOfNodesShouldReceiveTheTestMessage(receivedCountPlus1 int64) {
+func (s *backgroundGossipSuite) MinusOneNumberOfNodesShouldReceiveTheTestMessage(receivedCountPlus1 int64) {
 	done := make(chan struct{}, 1)
 
 	go func() {
@@ -323,7 +323,7 @@ func (s *suite) MinusOneNumberOfNodesShouldReceiveTheTestMessage(receivedCountPl
 	}
 }
 
-func (s *suite) initBootstrapPeerIDChMap(p2pModule *p2p.P2PModule) {
+func (s *backgroundGossipSuite) initBootstrapPeerIDChMap(p2pModule *p2p.P2PModule) {
 	selfID := p2pModule.GetHost().ID()
 	// initialize `s.bootstrapPeerIDChMap` for each p2pModule
 	if _, ok := s.bootstrapPeerIDChMap[selfID]; !ok {
@@ -331,7 +331,7 @@ func (s *suite) initBootstrapPeerIDChMap(p2pModule *p2p.P2PModule) {
 	}
 }
 
-func (s *suite) initBootstrapPeerIDsMap(p2pModule *p2p.P2PModule) {
+func (s *backgroundGossipSuite) initBootstrapPeerIDsMap(p2pModule *p2p.P2PModule) {
 	selfID := p2pModule.GetHost().ID()
 	// initialize `s.bootstrapPeerIDsMap`
 	if s.bootstrapPeerIDsMap == nil {
@@ -344,7 +344,7 @@ func (s *suite) initBootstrapPeerIDsMap(p2pModule *p2p.P2PModule) {
 	}
 }
 
-func (s *suite) trackBootstrapProgress(p2pModule *p2p.P2PModule, peerCount int) {
+func (s *backgroundGossipSuite) trackBootstrapProgress(p2pModule *p2p.P2PModule, peerCount int) {
 	s.initBootstrapPeerIDsMap(p2pModule)
 	selfID := p2pModule.GetHost().ID()
 
