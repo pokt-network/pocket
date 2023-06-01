@@ -185,7 +185,7 @@ jobs:
           curl -sLO https://github.com/argoproj/argo-workflows/releases/download/v3.4.7/argo-linux-amd64.gz
           gunzip argo-linux-amd64.gz
           chmod +x argo-linux-amd64
-          echop $PATH
+          echo $PATH
           ./argo-linux-amd64 version
 
       - id: "wait-for-infra"
