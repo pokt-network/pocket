@@ -37,7 +37,7 @@ func TestHandleTransaction_ErrorAlreadyInMempool(t *testing.T) {
 func TestHandleTransaction_ErrorAlreadyCommitted(t *testing.T) {
 	// Prepare the environment
 	_, utilityMod, persistenceMod := prepareEnvironment(t, 0, 0, 0, 0)
-	_, idxTx := prepareEmptyIndexedTransaction(t, persistenceMod.GetTxIndexer())
+	idxTx := prepareEmptyIndexedTransaction(t, persistenceMod.GetTxIndexer())
 
 	// Error on having an indexed transaction
 	err := utilityMod.HandleTransaction(idxTx.Tx)
@@ -174,7 +174,7 @@ func TestHandleTransaction_BasicValidation(t *testing.T) {
 func TestGetIndexedTransaction(t *testing.T) {
 	// Prepare the environment
 	_, utilityMod, persistenceMod := prepareEnvironment(t, 0, 0, 0, 0)
-	_, idxTx := prepareEmptyIndexedTransaction(t, persistenceMod.GetTxIndexer())
+	idxTx := prepareEmptyIndexedTransaction(t, persistenceMod.GetTxIndexer())
 
 	tests := []struct {
 		name         string
@@ -199,7 +199,7 @@ func TestGetIndexedTransaction(t *testing.T) {
 	}
 }
 
-func prepareEmptyIndexedTransaction(t *testing.T, txIndexer indexer.TxIndexer) (types.Transaction, *coreTypes.IndexedTransaction) {
+func prepareEmptyIndexedTransaction(t *testing.T, txIndexer indexer.TxIndexer) *coreTypes.IndexedTransaction {
 	t.Helper()
 
 	// Test data - Prepare Transaction
@@ -223,5 +223,5 @@ func prepareEmptyIndexedTransaction(t *testing.T, txIndexer indexer.TxIndexer) (
 	err = txIndexer.Index(idxTx)
 	require.NoError(t, err)
 
-	return emptyTx, idxTx
+	return idxTx
 }
