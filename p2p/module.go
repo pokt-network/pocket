@@ -3,6 +3,7 @@ package p2p
 import (
 	"errors"
 	"fmt"
+	"go.uber.org/multierr"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/libp2p/go-libp2p"
@@ -183,7 +184,15 @@ func (m *p2pModule) Start() (err error) {
 }
 
 func (m *p2pModule) Stop() error {
-	err := m.host.Close()
+	routerCloseErrs := multierr.Append(
+		m.unstakedActorRouter.Close(),
+		m.stakedActorRouter.Close(),
+	)
+
+	err := multierr.Append(
+		routerCloseErrs,
+		m.host.Close(),
+	)
 
 	// Don't reuse closed host, `#Start()` will re-create.
 	m.host = nil
