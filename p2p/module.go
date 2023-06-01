@@ -331,7 +331,7 @@ func (m *p2pModule) setupRouters() (err error) {
 			CurrentHeightProvider: m.currentHeightProvider,
 			PeerstoreProvider:     m.pstoreProvider,
 			Host:                  m.host,
-			Handler:               m.handleAppData,
+			Handler:               m.handlePocketEnvelope,
 		},
 	)
 	if err != nil {
