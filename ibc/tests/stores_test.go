@@ -8,6 +8,7 @@ import (
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/pkg/errors"
+	"github.com/pokt-network/pocket/ibc"
 	stores "github.com/pokt-network/pocket/ibc/stores"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -512,9 +513,14 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 	err = store.Set([]byte("boz"), []byte("bar4"))
 	require.NoError(t, err)
 
-	root := store.GetRoot()
+	root := store.Root()
 
 	memProof, err := store.CreateMembershipProof([]byte("foo"), []byte("bar"))
+	require.NoError(t, err)
+	require.NotNil(t, memProof)
+	require.Nil(t, memProof.GetNonMembershipLeafData())
+
+	invalidMemProof, err := store.CreateMembershipProof([]byte("foo"), []byte("bar2"))
 	require.NoError(t, err)
 	require.NotNil(t, memProof)
 	require.Nil(t, memProof.GetNonMembershipLeafData())
@@ -605,16 +611,20 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 			tc.modify(proof)
 		}
 
+		var valid bool
+		var err error
+		if tc.nonmembership {
+			valid, err = ibc.VerifyNonMembership(store.TreeSpec(), proof, root, tc.key)
+		} else {
+			valid, err = ibc.VerifyMembership(store.TreeSpec(), proof, root, tc.key, tc.value)
+		}
+
 		if tc.valid {
-			err = store.VerifyCommitmentProof(root, memProof)
 			require.NoError(t, err)
-			err = store.VerifyCommitmentProof(root, nonMemProof)
-			require.NoError(t, err)
+			require.True(t, valid)
 		} else if tc.fail {
-			err = store.VerifyCommitmentProof(root, memProof)
 			require.EqualError(t, err, tc.expected.Error())
-			err = store.VerifyCommitmentProof(root, nonMemProof)
-			require.EqualError(t, err, tc.expected.Error())
+			require.False(t, valid)
 		}
 	}
 

@@ -10,14 +10,15 @@ import (
 )
 
 const (
-	identifierPrefix   = "#"
-	identifierCharset  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-#[]<>"
-	portMinIdLength    = 2
-	channelMinIdLength = 8
-	clientMinIdLength  = 9
-	connectionMinIdLen = 10
-	defaultMaxIdLength = 64
-	portMaxIdLength    = 128
+	DefaultIdetifierLength = 32
+	identifierPrefix       = "#"
+	identifierCharset      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-#[]<>"
+	portMinIdLength        = 2
+	channelMinIdLength     = 8
+	clientMinIdLength      = 9
+	connectionMinIdLen     = 10
+	defaultMaxIdLength     = 64
+	portMaxIdLength        = 128
 )
 
 func basicValidation(id string, minLength, maxLength int) error {
