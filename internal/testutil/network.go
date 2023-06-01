@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"fmt"
+	"github.com/libp2p/go-libp2p/core/network"
 
 	crypto2 "github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
@@ -70,4 +71,32 @@ func SequentialServiceURLs(t gocuke.TestingT, count int) (serviceURLs []string) 
 // TECHDEBT: rename `validatorId()` to `serviceURL()`
 func NewServiceURL(i int) string {
 	return fmt.Sprintf(ServiceURLFormat, i)
+}
+
+// TODO_THIS_COMMIT: move
+func NewDebugNotifee(t gocuke.TestingT) network.Notifiee {
+	t.Helper()
+
+	return &network.NotifyBundle{
+		ConnectedF: func(_ network.Network, conn network.Conn) {
+			t.Logf("connected: local: %s; remote: %s",
+				conn.LocalPeer().String(),
+				conn.RemotePeer().String(),
+			)
+			//bootstrapPeerIDCh <- conn.RemotePeer().String()
+			//bootstrapWaitgroup.Done()
+		},
+		DisconnectedF: func(_ network.Network, conn network.Conn) {
+			t.Logf("disconnected: local: %s; remote: %s",
+				conn.LocalPeer().String(),
+				conn.RemotePeer().String(),
+			)
+		},
+		ListenF: func(_ network.Network, addr multiaddr.Multiaddr) {
+			t.Logf("listening: %s", addr.String())
+		},
+		ListenCloseF: func(_ network.Network, addr multiaddr.Multiaddr) {
+			t.Logf("closed: %s", addr.String())
+		},
+	}
 }

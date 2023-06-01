@@ -10,6 +10,8 @@ import (
 	telemetry_testutil "github.com/pokt-network/pocket/internal/testutil/telemetry"
 	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/require"
+	"net"
+	"strconv"
 
 	"github.com/pokt-network/pocket/internal/testutil"
 	p2p_testutil "github.com/pokt-network/pocket/internal/testutil/p2p"
@@ -53,16 +55,13 @@ func NewBusesMocknetAndP2PModules(
 // TODO_THIS_COMMIT: rename / move, if possible
 func NewP2PModule(
 	t gocuke.TestingT,
-	// TODO_THIS_COMMIT: get these from the bus instead
-	serviceURL string,
-	privKey cryptoPocket.PrivateKey,
-	// --
 	busMock *mock_modules.MockBus,
-	genesisState *genesis.GenesisState,
 	dnsSrv *mockdns.Server,
 	libp2pNetworkMock mocknet.Mocknet,
 	// TODO_THIS_COMMIT: consider *p2p.P2PModule instead
 ) modules.P2PModule {
+	genesisState := busMock.GetRuntimeMgr().GetGenesis()
+
 	_ = consensus_testutil.BaseConsensusMock(t, busMock)
 	_ = persistence_testutil.BasePersistenceMock(t, busMock, genesisState)
 
@@ -73,6 +72,11 @@ func NewP2PModule(
 	//_ = telemetry_testutil.WithTimeSeriesAgent(
 	//	t, telemetry_testutil.MinimalTelemetryMock(t, busMock),
 	//)
+
+	p2pCfg := busMock.GetRuntimeMgr().GetConfig().P2P
+	serviceURL := net.JoinHostPort(p2pCfg.Hostname, strconv.Itoa(int(p2pCfg.Port)))
+	privKey, err := cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
+	require.NoError(t, err)
 
 	// MUST register DNS before instantiating P2PModule
 	testutil.AddServiceURLZone(t, dnsSrv, serviceURL)
@@ -106,18 +110,7 @@ func NewBusesAndP2PModules(
 		)
 		busMocks[serviceURL] = busMock
 
-		p2pModules[serviceURL] = NewP2PModule(
-			t, serviceURL,
-			// TODO_THIS_COMMIT: send via busMock instead
-			privKey,
-			busMock,
-			// TODO_THIS_COMMIT: send via busMock instead
-			genesisState,
-			// TODO_THIS_COMMIT: send via busMock instead (?)
-			dnsSrv,
-			// TODO_THIS_COMMIT: send via busMock instead (?)
-			libp2pNetworkMock,
-		)
+		p2pModules[serviceURL] = NewP2PModule(t, busMock, dnsSrv, libp2pNetworkMock)
 	}
 	return busMocks, p2pModules
 }
