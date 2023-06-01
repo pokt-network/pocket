@@ -7,15 +7,17 @@ import (
 	"regexp"
 	"runtime"
 
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/require"
+
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
 var (
 	privKeyManifestKeyRegex = regexp.MustCompile(`\s+"\d+":\s+(\w+)\s+`)
 )
 
-func LoadLocalnetPrivateKeys(t require.TestingT, keyCount int) (privKeys []cryptoPocket.PrivateKey) {
+func LoadLocalnetPrivateKeys(t gocuke.TestingT, keyCount int) (privKeys []cryptoPocket.PrivateKey) {
 	_, filename, _, _ := runtime.Caller(0)
 	pkgDir := filepath.Dir(filename)
 	relativePathToKeys := filepath.Join(pkgDir, "..", "..", "build", "localnet", "manifests", "private-keys.yaml")
