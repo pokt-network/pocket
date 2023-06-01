@@ -125,6 +125,7 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 				P2P: &configs.P2PConfig{
 					BootstrapNodesCsv: tt.args.initialBootstrapNodesCsv,
 					PrivateKey:        privKey.String(),
+					MaxNonces:         100,
 				},
 			}).AnyTimes()
 			mockBus.EXPECT().GetRuntimeMgr().Return(mockRuntimeMgr).AnyTimes()
