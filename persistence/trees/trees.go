@@ -8,20 +8,14 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+
 	"github.com/pokt-network/pocket/persistence/kvstore"
-	"github.com/pokt-network/pocket/persistence/types"
+	ptypes "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/smt"
 )
-
-type TreeStore interface {
-	Update(pgtx pgx.Tx, height uint64) (string, error)
-	// ClearAll completely clears the state of the trees.
-	// For debugging purposes only.
-	ClearAll() error
-}
 
 var merkleTreeToString = map[merkleTree]string{
 	appMerkleTree:      "app",
@@ -44,11 +38,11 @@ var actorTypeToMerkleTreeName = map[coreTypes.ActorType]merkleTree{
 	coreTypes.ActorType_ACTOR_TYPE_SERVICER: servicerMerkleTree,
 }
 
-var actorTypeToSchemaName = map[coreTypes.ActorType]types.ProtocolActorSchema{
-	coreTypes.ActorType_ACTOR_TYPE_APP:      types.ApplicationActor,
-	coreTypes.ActorType_ACTOR_TYPE_VAL:      types.ValidatorActor,
-	coreTypes.ActorType_ACTOR_TYPE_FISH:     types.FishermanActor,
-	coreTypes.ActorType_ACTOR_TYPE_SERVICER: types.ServicerActor,
+var actorTypeToSchemaName = map[coreTypes.ActorType]ptypes.ProtocolActorSchema{
+	coreTypes.ActorType_ACTOR_TYPE_APP:      ptypes.ApplicationActor,
+	coreTypes.ActorType_ACTOR_TYPE_VAL:      ptypes.ValidatorActor,
+	coreTypes.ActorType_ACTOR_TYPE_FISH:     ptypes.FishermanActor,
+	coreTypes.ActorType_ACTOR_TYPE_SERVICER: ptypes.ServicerActor,
 }
 
 var merkleTreeToActorTypeName = map[merkleTree]coreTypes.ActorType{
@@ -86,35 +80,33 @@ const (
 )
 
 // treeStore stores a set of merkle trees that
-// it manages.
+// it manages. It fulfills the modules.TreeStore interface.
 // * It is responsible for commit or rollback behavior
 // of the underlying trees by utilizing the lazy loading
 // functionality provided by the underlying smt library.
 type treeStore struct {
-	merkleTrees map[merkleTree]*smt.SparseMerkleTree
+	merkleTrees map[merkleTree]*smt.SMT
 
-	// nodeStores & valueStore are part of the SMT, but references are kept below for convenience
+	// nodeStores are part of the SMT, but references are kept below for convenience
 	// and debugging purposes
-	nodeStores  map[merkleTree]kvstore.KVStore
-	valueStores map[merkleTree]kvstore.KVStore
+	nodeStores map[merkleTree]kvstore.KVStore
 }
 
 // Update takes a transaction and a height and updates
 // all of the trees in the treeStore for that height.
 func (t *treeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
-	hash, err := t.updateMerkleTrees(pgtx, height)
-	return hash, err
+	// NB: Consider not wrapping this
+	return t.updateMerkleTrees(pgtx, height)
 }
 
-func NewtreeStore(treesStoreDir string) (*treeStore, error) {
+func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 	if treesStoreDir == ":memory:" {
-		return newMemtreeStore()
+		return newMemStateTrees()
 	}
 
-	treeStore := &treeStore{
-		merkleTrees: make(map[merkleTree]*smt.SparseMerkleTree, int(numMerkleTrees)),
+	stateTrees := &treeStore{
+		merkleTrees: make(map[merkleTree]*smt.SMT, int(numMerkleTrees)),
 		nodeStores:  make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
-		valueStores: make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
 	}
 
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
@@ -122,38 +114,28 @@ func NewtreeStore(treesStoreDir string) (*treeStore, error) {
 		if err != nil {
 			return nil, err
 		}
-		valueStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_values", treesStoreDir, merkleTreeToString[tree]))
-		if err != nil {
-			return nil, err
-		}
-		treeStore.nodeStores[tree] = nodeStore
-		treeStore.valueStores[tree] = valueStore
-		treeStore.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
+		stateTrees.nodeStores[tree] = nodeStore
+		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
 	}
-	return treeStore, nil
+	return stateTrees, nil
 }
 
-func newMemtreeStore() (*treeStore, error) {
-	treeStore := &treeStore{
-		merkleTrees: make(map[merkleTree]*smt.SparseMerkleTree, int(numMerkleTrees)),
+func newMemStateTrees() (*treeStore, error) {
+	stateTrees := &treeStore{
+		merkleTrees: make(map[merkleTree]*smt.SMT, int(numMerkleTrees)),
 		nodeStores:  make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
-		valueStores: make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
 	}
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
 		nodeStore := kvstore.NewMemKVStore() // For testing, `smt.NewSimpleMap()` can be used as well
-		valueStore := kvstore.NewMemKVStore()
-		treeStore.nodeStores[tree] = nodeStore
-		treeStore.valueStores[tree] = valueStore
-		treeStore.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
+		stateTrees.nodeStores[tree] = nodeStore
+		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
 	}
-	return treeStore, nil
+	return stateTrees, nil
 }
 
 // updateMerkleTrees updates all of the merkle trees that TreeStore manages.
 // * it returns an hash of the output or an error.
 func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, height uint64) (string, error) {
-	// TECHDEBT: Interop with the smt Commit functionality for rollbacks.
-	// Update each of the merkle trees in the list of trees
 	// TODO: loop through the trees, update each & commit; Trigger rollback if any fail to update.
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
@@ -259,7 +241,7 @@ func (t *treeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*co
 		if !ok {
 			return fmt.Errorf("no merkle tree found for actor type: %s", actorType)
 		}
-		if _, err := t.merkleTrees[merkleTreeName].Update(bzAddr, actorBz); err != nil {
+		if err := t.merkleTrees[merkleTreeName].Update(bzAddr, actorBz); err != nil {
 			return err
 		}
 	}
@@ -281,7 +263,7 @@ func (t *treeStore) updateAccountTrees(accounts []*coreTypes.Account) error {
 			return err
 		}
 
-		if _, err := t.merkleTrees[accountMerkleTree].Update(bzAddr, accBz); err != nil {
+		if err := t.merkleTrees[accountMerkleTree].Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}
@@ -301,7 +283,7 @@ func (t *treeStore) updatePoolTrees(pools []*coreTypes.Account) error {
 			return err
 		}
 
-		if _, err := t.merkleTrees[poolMerkleTree].Update(bzAddr, accBz); err != nil {
+		if err := t.merkleTrees[poolMerkleTree].Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}
@@ -315,7 +297,7 @@ func (t *treeStore) updateTransactionsTree(indexedTxs []*coreTypes.IndexedTransa
 	for _, idxTx := range indexedTxs {
 		txBz := idxTx.GetTx()
 		txHash := crypto.SHA3Hash(txBz)
-		if _, err := t.merkleTrees[transactionsMerkleTree].Update(txHash, txBz); err != nil {
+		if err := t.merkleTrees[transactionsMerkleTree].Update(txHash, txBz); err != nil {
 			return err
 		}
 	}
@@ -330,7 +312,7 @@ func (t *treeStore) updateParamsTree(params []*coreTypes.Param) error {
 		if err != nil {
 			return err
 		}
-		if _, err := t.merkleTrees[paramsMerkleTree].Update(paramKey, paramBz); err != nil {
+		if err := t.merkleTrees[paramsMerkleTree].Update(paramKey, paramBz); err != nil {
 			return err
 		}
 	}
@@ -345,7 +327,7 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 		if err != nil {
 			return err
 		}
-		if _, err := t.merkleTrees[flagsMerkleTree].Update(flagKey, flagBz); err != nil {
+		if err := t.merkleTrees[flagsMerkleTree].Update(flagKey, flagBz); err != nil {
 			return err
 		}
 	}
@@ -396,6 +378,7 @@ func (t *treeStore) getActorsUpdated(pgtx pgx.Tx, actorType coreTypes.ActorType,
 }
 
 func (t *treeStore) getTransactions(pgtx pgx.Tx) ([]*coreTypes.IndexedTransaction, error) {
+	// pgtx.Query()
 	return nil, fmt.Errorf("not impl")
 }
 
@@ -415,7 +398,7 @@ func (t *treeStore) getParams(pgtx pgx.Tx) ([]*coreTypes.Param, error) {
 	return nil, fmt.Errorf("not impl")
 }
 
-func (t *treeStore) getActor(tx pgx.Tx, actorSchema types.ProtocolActorSchema, address []byte, height int64) (actor *coreTypes.Actor, err error) {
+func (t *treeStore) getActor(tx pgx.Tx, actorSchema ptypes.ProtocolActorSchema, address []byte, height int64) (actor *coreTypes.Actor, err error) {
 	ctx := context.TODO()
 	actor, height, err = t.getActorFromRow(actorSchema.GetActorType(), tx.QueryRow(ctx, actorSchema.GetQuery(hex.EncodeToString(address), height)))
 	if err != nil {
@@ -443,7 +426,7 @@ func (t *treeStore) getActorFromRow(actorType coreTypes.ActorType, row pgx.Row) 
 func (t *treeStore) getChainsForActor(
 	ctx context.Context,
 	tx pgx.Tx,
-	actorSchema types.ProtocolActorSchema,
+	actorSchema ptypes.ProtocolActorSchema,
 	actor *coreTypes.Actor,
 	height int64,
 ) (a *coreTypes.Actor, err error) {
