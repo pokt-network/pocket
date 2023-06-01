@@ -24,6 +24,9 @@ const (
 	KeyPacketReceiptPrefix     = "receipts"
 )
 
+// DISCUSSION: Do we need both paths and keys with the ApplyPrefix and RemovePrefix functions?
+// These seem to be redundant and could be removed, but are included in the cosmos/ibc-go repo
+
 // fullClientPath returns the full path of a specific client path in the format:
 // "clients/{clientID}/{key}" as a string.
 func fullClientPath(clientID, key string) string {
