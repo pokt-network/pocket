@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.55] - 2023-06-01
+
+- Integrate lazy loading SMT (release v0.5.0) into V1
+
+## [0.0.0.54] - 2023-05-24
+
+- Adds the BlockStore interface
+- Updates the PersistenceContext struct to use BlockStore interface
+
 ## [0.0.0.53] - 2023-05-16
 
 - Refactors BlockStore into an independent component

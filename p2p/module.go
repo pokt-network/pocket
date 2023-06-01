@@ -3,16 +3,11 @@ package p2p
 import (
 	"errors"
 	"fmt"
-	"io"
-	"time"
-
 	"github.com/libp2p/go-libp2p"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
-	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
-	"github.com/pokt-network/pocket/p2p/protocol"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
@@ -22,7 +17,9 @@ import (
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
@@ -30,12 +27,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
-
-// TECHDEBT(#629): configure timeouts. Consider security exposure vs. real-world conditions.
-// TECHDEBT(#629): parameterize and expose via config.
-// readStreamTimeout is the duration to wait for a read operation on a
-// stream to complete, after which the stream is closed ("timed out").
-const readStreamTimeout = time.Second * 10
 
 var _ modules.P2PModule = &p2pModule{}
 
@@ -53,6 +44,7 @@ type p2pModule struct {
 	// Assigned during creation via `#setupDependencies()`.
 	currentHeightProvider providers.CurrentHeightProvider
 	pstoreProvider        providers.PeerstoreProvider
+	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 
 	// Assigned during `#Start()`. TLDR; `host` listens on instantiation.
 	// and `router` depends on `host`.
@@ -172,11 +164,6 @@ func (m *p2pModule) Start() (err error) {
 		return fmt.Errorf("setting up router: %w", err)
 	}
 
-	// Don't handle incoming streams in client debug mode.
-	if !m.isClientDebugMode() {
-		m.host.SetStreamHandler(protocol.PoktProtocolID, m.handleStream)
-	}
-
 	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
@@ -195,13 +182,12 @@ func (m *p2pModule) Stop() error {
 func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
+		Nonce:   cryptoPocket.GetNonce(),
 	}
-	//TECHDEBT: use shared/codec for marshalling
-	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
+	data, err := codec.GetCodec().Marshal(c)
 	if err != nil {
 		return err
 	}
-	m.logger.Info().Msg("broadcasting message to network")
 
 	return m.router.Broadcast(data)
 }
@@ -209,9 +195,10 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 	c := &messaging.PocketEnvelope{
 		Content: msg,
+		Nonce:   cryptoPocket.GetNonce(),
 	}
-	//TECHDEBT: use shared/codec for marshalling
-	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
+
+	data, err := codec.GetCodec().Marshal(c)
 	if err != nil {
 		return err
 	}
@@ -234,6 +221,9 @@ func (m *p2pModule) setupDependencies() error {
 		return err
 	}
 
+	if err := m.setupNonceDeduper(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -282,6 +272,17 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 	return nil
 }
 
+// setupNonceDeduper initializes an empty deduper with a max capacity of
+// the configured `MaxNonces`.
+func (m *p2pModule) setupNonceDeduper() error {
+	if m.cfg.MaxNonces == 0 {
+		return fmt.Errorf("max nonces must be greater than 0")
+	}
+
+	m.nonceDeduper = utils.NewNonceDeduper(m.cfg.MaxNonces)
+	return nil
+}
+
 // setupRouter instantiates the configured router implementation.
 func (m *p2pModule) setupRouter() (err error) {
 	m.router, err = raintree.NewRainTreeRouter(
@@ -291,7 +292,7 @@ func (m *p2pModule) setupRouter() (err error) {
 			CurrentHeightProvider: m.currentHeightProvider,
 			PeerstoreProvider:     m.pstoreProvider,
 			Host:                  m.host,
-			MaxNonces:             m.cfg.MaxNonces,
+			Handler:               m.handlePocketEnvelope,
 		},
 	)
 	return err
@@ -341,103 +342,66 @@ func (m *p2pModule) isClientDebugMode() bool {
 	return m.GetBus().GetRuntimeMgr().GetConfig().ClientDebugMode
 }
 
-// handleStream is called each time a peer establishes a new stream with this
-// module's libp2p `host.Host`.
-func (m *p2pModule) handleStream(stream libp2pNetwork.Stream) {
-	m.logger.Debug().Msg("handling incoming stream")
-	peer, err := utils.PeerFromLibp2pStream(stream)
-	if err != nil {
-		m.logger.Error().Err(err).
-			Str("address", peer.GetAddress().String()).
-			Msg("parsing remote peer identity")
-
-		if err = stream.Reset(); err != nil {
-			m.logger.Error().Err(err).Msg("resetting stream")
-		}
-		return
-	}
-
-	if err := m.router.AddPeer(peer); err != nil {
-		m.logger.Error().Err(err).
-			Str("address", peer.GetAddress().String()).
-			Msg("adding remote peer to router")
-	}
-
-	go m.readStream(stream)
-}
-
-// readStream is intended to be called in a goroutine. It continuously reads from
-// the given stream for handling at the network level. Used for handling "direct"
-// messages (i.e. one specific target node).
-func (m *p2pModule) readStream(stream libp2pNetwork.Stream) {
-	// Time out if no data is sent to free resources.
-	if err := stream.SetReadDeadline(newReadStreamDeadline()); err != nil {
-		// NB: tests using libp2p's `mocknet` rely on this not returning an error.
-		// `SetReadDeadline` not supported by `mocknet` streams.
-		m.logger.Debug().Err(err).Msg("setting stream read deadline")
-	}
-
-	// debug logging: stream scope stats
-	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p@v0.27.0/core/network#StreamScope)
-	if err := utils.LogScopeStatFactory(
-		&logger.Global.Logger,
-		"stream scope (read-side)",
-	)(stream.Scope()); err != nil {
-		m.logger.Debug().Err(err).Msg("logging stream scope stats")
-	}
-	// ---
-
-	data, err := io.ReadAll(stream)
-	if err != nil {
-		m.logger.Error().Err(err).Msg("reading from stream")
-		if err := stream.Reset(); err != nil {
-			m.logger.Debug().Err(err).Msg("resetting stream (read-side)")
-		}
-		return
-	}
-
-	if err := stream.Reset(); err != nil {
-		m.logger.Debug().Err(err).Msg("resetting stream (read-side)")
-	}
-
-	// debug logging
-	remotePeer, err := utils.PeerFromLibp2pStream(stream)
-	if err != nil {
-		m.logger.Debug().Err(err).Msg("getting remote remotePeer")
-	} else {
-		utils.LogIncomingMsg(m.logger, m.cfg.Hostname, remotePeer)
-	}
-	// ---
-
-	if err := m.handleNetworkData(data); err != nil {
-		m.logger.Error().Err(err).Msg("handling network data")
-	}
-}
-
-// handleNetworkData passes a network message to the configured
-// `Router`implementation for routing.
-func (m *p2pModule) handleNetworkData(data []byte) error {
-	appMsgData, err := m.router.HandleNetworkData(data)
-	if err != nil {
-		return err
-	}
-
-	// There was no error, but we don't need to forward this to the app-specific bus.
-	// For example, the message has already been handled by the application.
-	if appMsgData == nil {
-		return nil
-	}
-
-	networkMessage := messaging.PocketEnvelope{}
-	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
+// handlePocketEnvelope deserializes the received `PocketEnvelope` data and publishes
+// a copy of its `Content` to the application event bus.
+func (m *p2pModule) handlePocketEnvelope(pocketEnvelopeBz []byte) error {
+	poktEnvelope := messaging.PocketEnvelope{}
+	if err := proto.Unmarshal(pocketEnvelopeBz, &poktEnvelope); err != nil {
 		return fmt.Errorf("decoding network message: %w", err)
 	}
 
+	if m.isNonceAlreadyObserved(poktEnvelope.Nonce) {
+		// skip passing redundant message to application layer
+		return nil
+	}
+
+	if err := m.observeNonce(poktEnvelope.Nonce); err != nil {
+		return fmt.Errorf("pocket envelope nonce: %w", err)
+	}
+
+	// NB: Explicitly constructing a new `PocketEnvelope` literal with content
+	// rather than forwarding `poktEnvelope` to avoid blindly passing additional
+	// fields as the protobuf type changes. Additionally, strips the `Nonce` field.
 	event := messaging.PocketEnvelope{
-		Content: networkMessage.Content,
+		Content: poktEnvelope.Content,
 	}
 	m.GetBus().PublishEventToBus(&event)
 	return nil
+}
+
+// observeNonce adds the nonce to the deduper if it has not been observed.
+func (m *p2pModule) observeNonce(nonce utils.Nonce) error {
+	// Add the nonce to the deduper
+	return m.nonceDeduper.Push(nonce)
+}
+
+// isNonceAlreadyObserved returns whether the nonce has been observed within the
+// deuper's capacity of recent messages.
+// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
+func (m *p2pModule) isNonceAlreadyObserved(nonce utils.Nonce) bool {
+	if !m.nonceDeduper.Contains(nonce) {
+		return false
+	}
+
+	m.logger.Debug().
+		Uint64("nonce", nonce).
+		Msgf("message already processed, skipping")
+
+	m.redundantNonceTelemetry(nonce)
+	return true
+}
+
+func (m *p2pModule) redundantNonceTelemetry(nonce utils.Nonce) {
+	blockHeight := m.currentHeightProvider.CurrentHeight()
+	m.GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent(
+			telemetry.P2P_EVENT_METRICS_NAMESPACE,
+			telemetry.P2P_BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME,
+			telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_NONCE_LABEL, nonce,
+			telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
+		)
 }
 
 // getMultiaddr returns a multiaddr constructed from the `hostname` and `port`
@@ -448,10 +412,4 @@ func (m *p2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
 	return utils.Libp2pMultiaddrFromServiceURL(fmt.Sprintf(
 		"%s:%d", m.cfg.Hostname, m.cfg.Port,
 	))
-}
-
-// newReadStreamDeadline returns a future deadline
-// based on the read stream timeout duration.
-func newReadStreamDeadline() time.Time {
-	return time.Now().Add(readStreamTimeout)
 }

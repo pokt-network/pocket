@@ -5,10 +5,7 @@ import (
 	"runtime/debug"
 
 	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/codec"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
-	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/smt"
 )
 
@@ -45,15 +42,9 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMess
 func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) {
 	// TODO: Add an iterator to the `kvstore` and use that instead
 	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1
-	blockBytes, err := m.GetBlockStore().Get(utils.HeightToBytes(height))
+	block, err := m.GetBlockStore().GetBlock(height)
 	if err != nil {
 		m.logger.Error().Err(err).Uint64("height", height).Msg("Error getting block from block store")
-		return
-	}
-
-	block := &coreTypes.Block{}
-	if err := codec.GetCodec().Unmarshal(blockBytes, block); err != nil {
-		m.logger.Error().Err(err).Uint64("height", height).Msg("Error decoding block from block store")
 		return
 	}
 
@@ -128,18 +119,14 @@ func (p *PostgresContext) clearAllSQLState() error {
 
 func (p *PostgresContext) clearAllTreeState() error {
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		valueStore := p.stateTrees.valueStores[treeType]
 		nodeStore := p.stateTrees.nodeStores[treeType]
 
-		if err := valueStore.ClearAll(); err != nil {
-			return err
-		}
 		if err := nodeStore.ClearAll(); err != nil {
 			return err
 		}
 
 		// Needed in order to make sure the root is re-set correctly after clearing
-		p.stateTrees.merkleTrees[treeType] = smt.NewSparseMerkleTree(valueStore, nodeStore, sha256.New())
+		p.stateTrees.merkleTrees[treeType] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
 	}
 
 	return nil

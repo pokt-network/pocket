@@ -1,4 +1,4 @@
-package raintree
+package utils
 
 import (
 	"testing"
