@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.43] - 2023-06-01
+## [0.0.0.44] - 2023-06-01
 
 - Implemented `GetIndexedTransaction`
 - Add some comments and rename a few functions throughout to have things be more self-explanatory
 - Moved over all the business logic related to getting "signer candidates" into its own file for readability purposes
+
+## [0.0.0.43] - 2023-06-01
+
+- Add a place-holder Servicer implementation
+- Use mockgen and Bus for DI
+- Cross-check the chains handled by a servicer using the Persistence module
 
 ## [0.0.0.42] - 2023-06-01
 

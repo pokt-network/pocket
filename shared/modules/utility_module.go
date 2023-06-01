@@ -96,3 +96,9 @@ type LeaderUtilityUnitOfWork interface {
 type ReplicaUtilityUnitOfWork interface {
 	UtilityUnitOfWork
 }
+
+type Servicer interface {
+	Module
+
+	HandleRelay(*coreTypes.Relay) (*coreTypes.RelayResponse, error)
+}

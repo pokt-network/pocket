@@ -7,4 +7,12 @@ option go_package = "github.com/pokt-network/pocket/runtime/configs";
 message UtilityConfig {
   uint64 max_mempool_transaction_bytes = 1;
   uint32 max_mempool_transactions = 2;
+  ServicerConfig servicer_config = 3;
+}
+
+// TODO: Reevalute whether each utility actor should contain address/pubKey configs or if it should be shared
+message ServicerConfig {
+  string public_key = 1;
+  string address = 2;
+  repeated string chains = 3;
 }

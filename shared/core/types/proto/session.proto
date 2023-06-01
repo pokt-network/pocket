@@ -11,7 +11,7 @@ import "actor.proto";
 message Session {
     string id = 1; // a universally unique ID for the session
     int64 session_number = 2; // a monotonically increasing number representing the # on the chain
-    int64 session_height = 3; // the block height at which this session started
+    int64 session_height = 3; // the number of blocks (out of numBlocksPerSession) in this session
     int64 num_session_blocks = 4; // the number of blocks the session is valid from
      // CONSIDERATION: Should we add a `RelayChain` enum and use it across the board?
      // CONSIDERATION: Should a single session support multiple relay chains?
