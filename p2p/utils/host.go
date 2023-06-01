@@ -94,6 +94,17 @@ func Libp2pSendToPeer(host libp2pHost.Host, data []byte, peer typesP2P.Peer) err
 		logger.Global.Debug().Err(err).Msg("logging resource scope stats")
 	}
 
+	// TODO: remove me!
+	//pstore := host.Peerstore()
+	//for _, peerID := range pstore.Peers() {
+	//	addr := pstore.Addrs(peerID)[0]
+	//	logger.Global.Debug().
+	//		Str("peerID", peerID.String()).
+	//		Str("addr", addr.String()).
+	//		Msg("peerstore")
+	//}
+	// -- end TODO
+
 	stream, err := host.NewStream(ctx, peerInfo.ID, protocol.PoktProtocolID)
 	if err != nil {
 		return fmt.Errorf("opening stream: %w", err)
