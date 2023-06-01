@@ -15,7 +15,6 @@ on:
     #   - "docs/**"
     #   - "**.md"
 
-
 env:
   # Even though we can test against multiple versions, this one is considered a target version.
   TARGET_GOLANG_VERSION: "1.19"
@@ -152,7 +151,6 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             TARGET_GOLANG_VERSION=${{ env.TARGET_GOLANG_VERSION }}
-
 
   # Run e2e tests on devnet if the PR has a label "e2e-devnet-test"
   e2e-tests:
