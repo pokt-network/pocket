@@ -31,6 +31,7 @@ func init() {
 
 // FetchValidatorPrivateKeys returns a map corresponding to the data section of
 // the validator private keys k8s secret (yaml), located at `privateKeysSecretResourceName`.
+// NB: depends on running k8s cluster.
 func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
 	validatorKeysMap := make(map[string]string)
 
