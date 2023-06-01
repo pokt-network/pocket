@@ -222,6 +222,8 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 // 1. It creates and configures a "real" P2P module where all the other components of the node are mocked.
 // 2. It then triggers a single message and waits for all of the expected messages transmission to complete before announcing failure.
 func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig TestNetworkSimulationConfig) {
+	dnsSrv := testutil.MinimalDNSMock(t)
+
 	// Configure & prepare test module
 	numValidators := len(networkSimulationConfig)
 	//runtimeConfigs := createMockRuntimeMgrs(t, numValidators)
@@ -255,8 +257,10 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 
 	busMocks, _, p2pModules = constructors.NewBusesMocknetAndP2PModules(
 		t, numValidators,
+		dnsSrv,
 		genesisState,
 		busEventHandlerFactory,
+		nil,
 	)
 
 	//for _, busMock := range busMocks {
