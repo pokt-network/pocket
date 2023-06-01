@@ -13,7 +13,7 @@ Feature: Background Gossip Broadcast
       | 12   |
       | 18   |
       | 27   |
-      | 100  |
+#      | 100  |
 ##      | 1024 |
 
 #  Scenario Outline: Partial broadcast

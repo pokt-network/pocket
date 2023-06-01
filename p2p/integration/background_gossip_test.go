@@ -4,6 +4,9 @@ package integration
 
 import (
 	"fmt"
+	dht "github.com/libp2p/go-libp2p-kad-dht"
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	telemetry_testutil "github.com/pokt-network/pocket/internal/testutil/telemetry"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/runtime/defaults"
@@ -35,7 +38,6 @@ func TestMinimal(t *testing.T) {
 
 	// a new step definition suite is constructed for every scenario
 	gocuke.NewRunner(t, &suite{}).Path(backgroundGossipFeaturePath).Run()
-	t.Fatalf("fail")
 }
 
 type suite struct {
@@ -129,17 +131,38 @@ func (s *suite) AFullyConnectedNetworkOfPeers(count int64) {
 		)
 	}
 
+	// TODO_THIS_COMMIT: bus event handler based wg.Done()!
+
+	// start P2P modules of all peers
 	for _, p2pModule := range s.p2pModules {
+		// (NOPE) WIP: pubsub-level intercept...
+		//p2pModule.GetBackgroundRouter().Get
+
 		err := p2pModule.(*p2p.P2PModule).Start()
 		require.NoError(s, err)
 	}
 
-	//for _, host := range libp2pNetworkMock.Hosts() {
-	//	host.SetStreamHandler(protocol.PoktProtocolID, func(stream libp2pNetwork.Stream) {
-	//		s.Logf("inbound stream protocol: %s", stream.Protocol())
-	//		s.seenServiceURLs[stream.Conn().RemotePeer()] = struct{}{}
-	//	})
-	//}
+	// (NOPE) WIP: host-level intercept...
+	for _, host := range s.libp2pNetworkMock.Hosts() {
+		s.Logf("host protocols: %v", host.Mux().Protocols())
+		//host.SetStreamHandler(protocol.PoktProtocolID, func(stream libp2pNetwork.Stream) {
+		host.SetStreamHandler(pubsub.FloodSubID, func(stream libp2pNetwork.Stream) {
+			s.Logf("inbound stream protocol: %s", stream.Protocol())
+			//	//s.seenServiceURLs[stream.Conn().RemotePeer()] = struct{}{}
+			//	data, err := io.ReadAll(stream)
+			//	require.NoError(s, err)
+			//
+			//	s.Logf("stream data: %s", data)
+		})
+		host.SetStreamHandler(dht.ProtocolDHT, func(stream libp2pNetwork.Stream) {
+			s.Logf("inbound stream protocol: %s", stream.Protocol())
+			//s.seenServiceURLs[stream.Conn().RemotePeer()] = struct{}{}
+			//data, err := io.ReadAll(stream)
+			//require.NoError(s, err)
+			//
+			//s.Logf("stream data: %s", data)
+		})
+	}
 }
 
 func (s *suite) ANodeBroadcastsATestMessageViaItsBackgroundRouter() {
