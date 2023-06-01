@@ -180,6 +180,10 @@ func (m *p2pModule) Stop() error {
 }
 
 func (m *p2pModule) Broadcast(msg *anypb.Any) error {
+	if m.router == nil {
+		return fmt.Errorf("router not started")
+	}
+
 	c := &messaging.PocketEnvelope{
 		Content: msg,
 		Nonce:   cryptoPocket.GetNonce(),
