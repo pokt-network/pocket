@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/pokt-network/pocket/internal/testutil"
-	p2p_testutil "github.com/pokt-network/pocket/internal/testutil/p2p"
 	"github.com/pokt-network/pocket/internal/testutil/persistence"
 	"github.com/pokt-network/pocket/internal/testutil/runtime"
 	"github.com/pokt-network/pocket/internal/testutil/telemetry"
@@ -62,7 +61,7 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 	for i, privKey := range keys {
 		pubKeys[i] = privKey.PublicKey()
 	}
-	serviceURLs := p2p_testutil.SequentialServiceURLs(t, len(pubKeys))
+	serviceURLs := testutil.SequentialServiceURLs(t, len(pubKeys))
 	genesisStateMock := runtime_testutil.BaseGenesisStateMock(t, pubKeys, serviceURLs)
 	persistenceMock := persistence_testutil.BasePersistenceMock(t, busMock, genesisStateMock)
 	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
