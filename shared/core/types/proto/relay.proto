@@ -22,8 +22,8 @@ message RelayMeta {
     string servicer_public_key = 2;
     Identifiable relay_chain = 3;
     Identifiable geo_zone = 4;
-    AAT token = 5;
-    string signature = 6;
+    string signature = 5;
+    string application_address = 6;
 }
 
 message RelayResponse {
