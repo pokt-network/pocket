@@ -26,17 +26,17 @@ Feature: Background Router Peer Discovery
     Given a "bootstrap" node
     When <initial> number of nodes join the network
     And  the "bootstrap" node leaves the network
-    And <leave> number of nodes leave the network
-    And <join> number of nodes join the network
+    And <leaver> number of nodes leave the network
+    And <joiners> number of nodes join the network
     Then the network should contain <final> number of nodes
     And each node should have <final> number of peers in their respective peerstores
-    And each node should not have any nodes which left in their peerstores
+    And each node should not have any leavers in their peerstores
 
     Examples:
-      | initial | leave | join | final |
-      | 4       | 2     | 2    | 4     |
-      | 4       | 3     | 4    | 5     |
-      | 12      | 6     | 6    | 12    |
+      | initial | leavers | joiners | final |
+      | 4       | 2       | 2       | 4     |
+      | 4       | 3       | 4       | 5     |
+      | 12      | 6       | 6       | 12    |
 #      | 100  | 50    | 55   | 105      |
 #      | 1024 | 1000  | 1200 | 1224     |
 
