@@ -47,6 +47,11 @@ func TestMinimal(t *testing.T) {
 	gocuke.NewRunner(t, new(backgroundGossipSuite)).Path(backgroundGossipFeaturePath).Run()
 }
 
+type peerConnectionEvent struct {
+	localID  libp2pPeer.ID
+	remoteID libp2pPeer.ID
+}
+
 type backgroundGossipSuite struct {
 	// special arguments like TestingT are injected automatically into exported fields
 	gocuke.TestingT
@@ -59,14 +64,19 @@ type backgroundGossipSuite struct {
 	// received by which nodes.
 	receivedFromServiceURLMap map[string]struct{}
 	bootstrapMutex            sync.Mutex
+
 	// bootstrapPeerIDChMap is a mapping between the peerID string of each node to
 	// a channel that will be used to signal the peer ID strings of each node it
 	// has discovered.
-	bootstrapPeerIDChMap map[libp2pPeer.ID]chan libp2pPeer.ID
+	//bootstrapPeerIDChMap map[libp2pPeer.ID]chan libp2pPeer.ID
+
+	bootstrapPeerIDCh chan peerConnectionEvent
+
 	// bootstrapPeerIDsMap is a mapping between the peerID string of each node to a
 	// set of peerID strings that node has discovered. This set is represented as
 	// a map with the peerID string as the key and an empty struct as the value.
-	bootstrapPeerIDsMap       map[libp2pPeer.ID]PeerIDSet
+	bootstrapPeerIDsMap map[libp2pPeer.ID]PeerIDSet
+
 	bootstrapNetworkWaitGroup sync.WaitGroup
 	receivedCount             int
 	receivedWaitGroup         sync.WaitGroup
@@ -81,7 +91,8 @@ func (s *backgroundGossipSuite) Before(scenario gocuke.Scenario) {
 	defer s.mu.Unlock()
 
 	s.dnsSrv = testutil.MinimalDNSMock(s)
-	s.bootstrapPeerIDChMap = make(map[libp2pPeer.ID]chan libp2pPeer.ID)
+	//s.bootstrapPeerIDChMap = make(map[libp2pPeer.ID]chan libp2pPeer.ID)
+	s.bootstrapPeerIDCh = make(chan peerConnectionEvent)
 	s.receivedFromServiceURLMap = make(map[string]struct{})
 }
 
@@ -102,23 +113,17 @@ func (s *backgroundGossipSuite) NumberOfNodesLeaveTheNetwork(a int64) {
 }
 
 func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
-	var (
-		peerCount = int(count)
-		pubKeys   = make([]cryptoPocket.PublicKey, peerCount)
-	)
+	peerCount := int(count)
 
-	//s.Logf("ADDING peerCount - 1: %d", peerCount-1)
-	s.bootstrapNetworkWaitGroup.Add(peerCount)
+	//s.bootstrapNetworkWaitGroup.Add(peerCount)
+	//s.bootstrapNetworkWaitGroup.Add(peerCount * (peerCount - 1) / 2)
+	s.bootstrapNetworkWaitGroup.Add(peerCount * (peerCount - 1))
 	s.receivedWaitGroup.Add(peerCount - 1)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for i, privKey := range testutil.LoadLocalnetPrivateKeys(s, peerCount) {
-		pubKeys[i] = privKey.PublicKey()
-	}
-	genesisState := runtime_testutil.GenesisWithSequentialServiceURLs(s, pubKeys)
-	// TODO_THIS_COMMIT: explain
-	//genesisState := runtime_testutil.GenesisWithSequentialServiceURLs(s, nil)
+	serviceURLKeyMap := testutil.SequentialServiceURLPrivKeyMap(s, peerCount)
+	genesisState := runtime_testutil.BaseGenesisStateMockFromServiceURLKeyMap(s, serviceURLKeyMap)
 
 	// TODO_THIS_COMMIT: refactor
 	busEventHandlerFactory := func(t gocuke.TestingT, busMock *mock_modules.MockBus) testutil.BusEventHandler {
@@ -162,12 +167,44 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 	}
 	// --
 
+	// TODO_THIS_COMMIT: refactor
+	debugNotifiee := testutil.NewDebugNotifee(s)
+	notifiee := &libp2pNetwork.NotifyBundle{
+		//DisconnectedF: func(network libp2pNetwork.Network, conn libp2pNetwork.Conn) {
+		//	s.Logf("disconnected: %s", conn.RemotePeer())
+		//},
+		DisconnectedF: debugNotifiee.Disconnected,
+		ConnectedF: func(net libp2pNetwork.Network, conn libp2pNetwork.Conn) {
+			//s.Logf("connected: %s", conn.RemotePeer())
+			//s.Logf("pstore size: %d", len(p2pModule.GetHost().Peerstore().Peers()))
+
+			s.bootstrapPeerIDCh <- peerConnectionEvent{
+				localID:  conn.LocalPeer(),
+				remoteID: conn.RemotePeer(),
+			}
+			//s.bootstrapPeerIDChMap[p2pModule.GetHost().ID()] <- conn.RemotePeer()
+			//s.Logf("bootstrap peer ID sent on channel")
+			//if len(p2pModule.GetHost().Peerstore().Peers()) == peerCount {
+			//	countz++
+			//	s.Logf("count: %d", countz)
+			//	//s.bootstrapNetworkWaitGroup.Done()
+			//	//s.bootstrapNetworkWaitGroup.Done()
+			//	//s.bootstrapNetworkWaitGroup.Done()
+			//}
+			debugNotifiee.Connected(net, conn)
+		},
+		ListenF:      debugNotifiee.Listen,
+		ListenCloseF: debugNotifiee.ListenClose,
+	}
+	// --
+
 	// setup mock network
 	s.busMocks, s.libp2pNetworkMock, s.p2pModules = constructors.NewBusesMocknetAndP2PModules(
 		s, peerCount,
 		s.dnsSrv,
 		genesisState,
 		busEventHandlerFactory,
+		notifiee,
 	)
 
 	// add number of combinations of peers given number of peers
@@ -193,52 +230,50 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 
 	// TODO_THIS_COMMIT: bus event handler based receivedWaitGroup.Done()!
 
+	// concurrently update `s.bootstrapPeerIDsMap` by receiving from the
+	// corresponding channel from `s.bootstrapPeerIDChMap` that  `notifee`
+	// is sending on.
+	go s.trackBootstrapProgress(peerCount - 1)
+
 	// start P2P modules of all peers
 	//handleCount := 0
 	for _, module := range s.p2pModules {
 		//countz := 0
 		p2pModule := module.(*p2p.P2PModule)
 
-		//p2pCfg := p2pModule.GetBus().GetRuntimeMgr().GetConfig().P2P
-		//serviceURL := fmt.Sprintf("%s:%d", p2pCfg.Hostname, p2pCfg.Port)
-		//s.Logf("serviceURL: %s; peer ID: %s", serviceURL, p2pModule.GetHost().ID())
-
-		s.initBootstrapPeerIDChMap(p2pModule)
-
-		// concurrently update `s.bootstrapPeerIDsMap` by receiving from the
-		// corresponding channel from `s.bootstrapPeerIDChMap` that  `notifee`
-		// is sending on.
-		go s.trackBootstrapProgress(p2pModule, peerCount-1)
-
 		// TODO_THIS_COMMIT: refactor
-		debugNotifee := testutil.NewDebugNotifee(s)
-		notifee := &libp2pNetwork.NotifyBundle{
-			//DisconnectedF: func(network libp2pNetwork.Network, conn libp2pNetwork.Conn) {
-			//	s.Logf("disconnected: %s", conn.RemotePeer())
-			//},
-			DisconnectedF: debugNotifee.Disconnected,
-			ConnectedF: func(net libp2pNetwork.Network, conn libp2pNetwork.Conn) {
-				//s.Logf("connected: %s", conn.RemotePeer())
-				//s.Logf("pstore size: %d", len(p2pModule.GetHost().Peerstore().Peers()))
-				s.bootstrapMutex.Lock()
-				defer s.bootstrapMutex.Unlock()
-
-				s.bootstrapPeerIDChMap[p2pModule.GetHost().ID()] <- conn.RemotePeer()
-				//s.Logf("bootstrap peer ID sent on channel")
-				//if len(p2pModule.GetHost().Peerstore().Peers()) == peerCount {
-				//	countz++
-				//	s.Logf("count: %d", countz)
-				//	//s.bootstrapNetworkWaitGroup.Done()
-				//	//s.bootstrapNetworkWaitGroup.Done()
-				//	//s.bootstrapNetworkWaitGroup.Done()
-				//}
-				debugNotifee.Connected(net, conn)
-			},
-			ListenF:      debugNotifee.Listen,
-			ListenCloseF: debugNotifee.ListenClose,
-		}
-		//p2pModule.GetHost().Network().Notify(debugNotifee)
-		p2pModule.GetHost().Network().Notify(notifee)
+		//debugNotifiee := testutil.NewDebugNotifee(s)
+		//notifee := &libp2pNetwork.NotifyBundle{
+		//	//DisconnectedF: func(network libp2pNetwork.Network, conn libp2pNetwork.Conn) {
+		//	//	s.Logf("disconnected: %s", conn.RemotePeer())
+		//	//},
+		//	DisconnectedF: debugNotifiee.Disconnected,
+		//	ConnectedF: func(net libp2pNetwork.Network, conn libp2pNetwork.Conn) {
+		//		//s.Logf("connected: %s", conn.RemotePeer())
+		//		//s.Logf("pstore size: %d", len(p2pModule.GetHost().Peerstore().Peers()))
+		//		s.bootstrapMutex.Lock()
+		//		defer s.bootstrapMutex.Unlock()
+		//
+		//		s.bootstrapPeerIDCh <- peerConnectionEvent{
+		//			localID:  conn.LocalPeer(),
+		//			remoteID: conn.RemotePeer(),
+		//		}
+		//		//s.bootstrapPeerIDChMap[p2pModule.GetHost().ID()] <- conn.RemotePeer()
+		//		//s.Logf("bootstrap peer ID sent on channel")
+		//		//if len(p2pModule.GetHost().Peerstore().Peers()) == peerCount {
+		//		//	countz++
+		//		//	s.Logf("count: %d", countz)
+		//		//	//s.bootstrapNetworkWaitGroup.Done()
+		//		//	//s.bootstrapNetworkWaitGroup.Done()
+		//		//	//s.bootstrapNetworkWaitGroup.Done()
+		//		//}
+		//		debugNotifiee.Connected(net, conn)
+		//	},
+		//	ListenF:      debugNotifiee.Listen,
+		//	ListenCloseF: debugNotifiee.ListenClose,
+		//}
+		////p2pModule.GetHost().Network().Notify(debugNotifiee)
+		//p2pModule.GetHost().Network().Notify(notifee)
 		// --
 
 		err := p2pModule.Start()
@@ -338,22 +373,22 @@ func (s *backgroundGossipSuite) MinusOneNumberOfNodesShouldReceiveTheTestMessage
 	}
 }
 
-func (s *backgroundGossipSuite) initBootstrapPeerIDChMap(p2pModule *p2p.P2PModule) {
+//func (s *backgroundGossipSuite) initBootstrapPeerIDChMap(p2pModule *p2p.P2PModule) {
+//	s.bootstrapMutex.Lock()
+//	defer s.bootstrapMutex.Unlock()
+//
+//	selfID := p2pModule.GetHost().ID()
+//	// initialize `s.bootstrapPeerIDChMap` for each p2pModule
+//	if _, ok := s.bootstrapPeerIDChMap[selfID]; !ok {
+//		s.bootstrapPeerIDChMap[selfID] = make(chan libp2pPeer.ID)
+//	}
+//}
+
+func (s *backgroundGossipSuite) initBootstrapPeerIDsMap(selfID libp2pPeer.ID) {
+	// TODO_THIS_COMMIT: need this?
 	s.bootstrapMutex.Lock()
 	defer s.bootstrapMutex.Unlock()
 
-	selfID := p2pModule.GetHost().ID()
-	// initialize `s.bootstrapPeerIDChMap` for each p2pModule
-	if _, ok := s.bootstrapPeerIDChMap[selfID]; !ok {
-		s.bootstrapPeerIDChMap[selfID] = make(chan libp2pPeer.ID)
-	}
-}
-
-func (s *backgroundGossipSuite) initBootstrapPeerIDsMap(p2pModule *p2p.P2PModule) {
-	s.bootstrapMutex.Lock()
-	defer s.bootstrapMutex.Unlock()
-
-	selfID := p2pModule.GetHost().ID()
 	// initialize `s.bootstrapPeerIDsMap`
 	if s.bootstrapPeerIDsMap == nil {
 		s.bootstrapPeerIDsMap = make(map[libp2pPeer.ID]PeerIDSet)
@@ -365,37 +400,43 @@ func (s *backgroundGossipSuite) initBootstrapPeerIDsMap(p2pModule *p2p.P2PModule
 	}
 }
 
-func (s *backgroundGossipSuite) trackBootstrapProgress(p2pModule *p2p.P2PModule, peerCount int) {
-	s.initBootstrapPeerIDsMap(p2pModule)
-	selfID := p2pModule.GetHost().ID()
+func (s *backgroundGossipSuite) trackBootstrapProgress(peerCount int) {
+	//selfID := p2pModule.GetHost().ID()
 
 	// add unique bootstrap peer IDs to `bootstrapPeerIDsMap` for this
 	// p2pModule (`selfID`) as they connect
 	for {
-		newBootstrapPeerID := <-s.bootstrapPeerIDChMap[selfID]
-		if selfID == newBootstrapPeerID {
+		//newBootstrapPeerID := <-s.bootstrapPeerIDChMap[selfID]
+		newPeerConnectionEvent := <-s.bootstrapPeerIDCh
+		localID, remoteID := newPeerConnectionEvent.localID, newPeerConnectionEvent.remoteID
+
+		s.initBootstrapPeerIDsMap(localID)
+
+		if localID == remoteID {
 			// don't count self as a bootstrap peer
-			s.Logf("self bootstrap peer ID: %s", newBootstrapPeerID)
+			s.Logf("self bootstrap peer ID: %s")
 			continue
 		}
 
-		if _, ok := s.bootstrapPeerIDsMap[selfID][newBootstrapPeerID]; ok {
+		if _, ok := s.bootstrapPeerIDsMap[localID][remoteID]; ok {
 			// already connected to this peer during bootstrapping
-			s.Logf("duplicate bootstrap peer ID: %s", newBootstrapPeerID)
+			s.Logf("duplicate bootstrap peer ID: %s", remoteID)
 			continue
 		}
-		s.bootstrapPeerIDsMap[selfID][newBootstrapPeerID] = struct{}{}
+		s.bootstrapPeerIDsMap[localID][remoteID] = struct{}{}
+		s.bootstrapNetworkWaitGroup.Done()
 
-		if len(p2pModule.GetHost().Network().Conns()) == peerCount {
-			s.Logf("bootstrap peer connections len: %d", len(p2pModule.GetHost().Network().Conns()))
-			connections := p2pModule.GetHost().Network().Conns()
-			remoteConnPeers := make([]libp2pPeer.ID, len(connections))
-			for i, conn := range connections {
-				remoteConnPeers[i] = conn.RemotePeer()
-			}
-			s.Logf("p2pModule.GetHost().Network().Conns(): %v", remoteConnPeers)
-			s.Logf("s.bootstrapPeerIDsMap[selfID]: %v", s.bootstrapPeerIDsMap[selfID])
-			s.bootstrapNetworkWaitGroup.Done()
-		}
+		//p2pModule := s.p2pModules[serviceURL].(*p2p.P2PModule)
+		//if len(p2pModule.GetHost().Network().Conns()) == peerCount {
+		//	s.Logf("bootstrap peer connections len: %d", len(p2pModule.GetHost().Network().Conns()))
+		//	connections := p2pModule.GetHost().Network().Conns()
+		//	remoteConnPeers := make([]libp2pPeer.ID, len(connections))
+		//	for i, conn := range connections {
+		//		remoteConnPeers[i] = conn.RemotePeer()
+		//	}
+		//	s.Logf("p2pModule.GetHost().Network().Conns(): %v", remoteConnPeers)
+		//	s.Logf("s.bootstrapPeerIDsMap[selfID]: %v", s.bootstrapPeerIDsMap[localID])
+		//	s.bootstrapNetworkWaitGroup.Done()
+		//}
 	}
 }
