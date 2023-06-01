@@ -3,6 +3,7 @@ package constructors
 import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	"github.com/pokt-network/pocket/internal/testutil/bus"
 	consensus_testutil "github.com/pokt-network/pocket/internal/testutil/consensus"
 	persistence_testutil "github.com/pokt-network/pocket/internal/testutil/persistence"
 	telemetry_testutil "github.com/pokt-network/pocket/internal/testutil/telemetry"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/pokt-network/pocket/internal/testutil"
 	p2p_testutil "github.com/pokt-network/pocket/internal/testutil/p2p"
-	runtime_testutil "github.com/pokt-network/pocket/internal/testutil/runtime"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -57,7 +57,7 @@ func NewBusesMocknetAndP2PModules(
 		}
 
 		privKey := privKeys[i]
-		busMock := NewBus(t, privKey, serviceURL, genesisState, busEventHandlerFactory)
+		busMock := bus_testutil.NewBus(t, privKey, serviceURL, genesisState, busEventHandlerFactory)
 		buses[serviceURL] = busMock
 
 		// TODO_THIS_COMMIT: refactor
@@ -118,27 +118,8 @@ func NewBusesAndP2PModuleWithHost(
 ) (*mock_modules.MockBus, modules.P2PModule) {
 	t.Helper()
 
-	busMock := NewBus(t, privKey, serviceURL, genesisState, busEventHandlerFactory)
+	busMock := bus_testutil.NewBus(t, privKey, serviceURL, genesisState, busEventHandlerFactory)
 	return busMock, NewP2PModuleWithHost(t, busMock, host)
-}
-
-func NewBus(
-	t gocuke.TestingT,
-	privKey cryptoPocket.PrivateKey,
-	serviceURL string,
-	genesisState *genesis.GenesisState,
-	busEventHandlerFactory testutil.BusEventHandlerFactory,
-) *mock_modules.MockBus {
-	t.Helper()
-
-	runtimeMgrMock := runtime_testutil.BaseRuntimeManagerMock(
-		t, privKey,
-		serviceURL,
-		genesisState,
-	)
-	busMock := testutil.BusMockWithEventHandler(t, runtimeMgrMock, busEventHandlerFactory)
-	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
-	return busMock
 }
 
 func NewP2PModuleWithHost(

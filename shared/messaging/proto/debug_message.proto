@@ -30,6 +30,10 @@ message DebugMessage {
   google.protobuf.Any message = 3;
 }
 
+message DebugStringMessage {
+	string value = 1;
+}
+
 // NB: See https://en.wikipedia.org/wiki/Routing for more info on routing and delivery schemes.
 enum DebugMessageRoutingType {
 	DEBUG_MESSAGE_TYPE_UNKNOWN = 0;
