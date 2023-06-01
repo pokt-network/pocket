@@ -20,8 +20,9 @@ func MinimalTelemetryMock(
 	telemetryMock.EXPECT().Start().Return(nil).AnyTimes()
 	telemetryMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
+	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
+	//busMock.RegisterModule(telemetryMock)
 
-	busMock.RegisterModule(telemetryMock)
 	return telemetryMock
 }
 

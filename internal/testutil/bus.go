@@ -13,7 +13,7 @@ import (
 )
 
 type BusEventHandler func(*messaging.PocketEnvelope)
-type BusEventHandlerFactory func(t gocuke.TestingT, bus modules.Bus) BusEventHandler
+type BusEventHandlerFactory func(t gocuke.TestingT, busMock *mock_modules.MockBus) BusEventHandler
 
 // MinimalBusMock returns a bus mock with a module registry and minimal
 // expectations registered to maximize re-usability.

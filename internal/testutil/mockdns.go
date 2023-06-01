@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func DNSMockFromServiceURLs(t gocuke.TestingT, serviceURLs []string) (srv *mockdns.Server, done func()) {
+func DNSMockFromServiceURLs(t gocuke.TestingT, serviceURLs []string) *mockdns.Server {
 	t.Helper()
 
-	srv, done = MinimalDNSMock(t)
+	srv := MinimalDNSMock(t)
 	for _, serviceURL := range serviceURLs {
 		AddServiceURLZone(t, srv, serviceURL)
 	}
-	return srv, done
+	return srv
 }
 
 func AddServiceURLZone(t gocuke.TestingT, srv *mockdns.Server, serviceURL string) {
@@ -34,25 +34,28 @@ func AddServiceURLZone(t gocuke.TestingT, srv *mockdns.Server, serviceURL string
 	require.NoError(t, err)
 }
 
-func MinimalDNSMock(t gocuke.TestingT) (srv *mockdns.Server, done func()) {
+func MinimalDNSMock(t gocuke.TestingT) *mockdns.Server {
 	t.Helper()
 
 	return BaseDNSMock(t, nil)
 }
 
-func BaseDNSMock(t gocuke.TestingT, zones map[string]mockdns.Zone) (srv *mockdns.Server, done func()) {
+func BaseDNSMock(t gocuke.TestingT, zones map[string]mockdns.Zone) *mockdns.Server {
 	t.Helper()
 
 	if zones == nil {
 		zones = make(map[string]mockdns.Zone)
 	}
 
-	srv, _ = mockdns.NewServerWithLogger(zones, noopLogger{}, false)
+	srv, _ := mockdns.NewServerWithLogger(zones, noopLogger{}, false)
 	srv.PatchNet(net.DefaultResolver)
-	return srv, func() {
-		_ = srv.Close()
+	t.Cleanup(func() {
+		err := srv.Close()
+		require.NoError(t, err)
 		mockdns.UnpatchNet(net.DefaultResolver)
-	}
+	})
+
+	return srv
 }
 
 // NB: default logging behavior is too noisy.

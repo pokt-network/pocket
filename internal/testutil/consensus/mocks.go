@@ -9,7 +9,7 @@ import (
 )
 
 // Consensus mock - only needed for validatorMap access
-func PrepareConsensusMock(t gocuke.TestingT, busMock *mock_modules.MockBus) *mock_modules.MockConsensusModule {
+func BaseConsensusMock(t gocuke.TestingT, busMock *mock_modules.MockBus) *mock_modules.MockConsensusModule {
 	ctrl := gomock.NewController(t)
 	consensusMock := mock_modules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
@@ -17,7 +17,8 @@ func PrepareConsensusMock(t gocuke.TestingT, busMock *mock_modules.MockBus) *moc
 	consensusMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	consensusMock.EXPECT().SetBus(busMock).AnyTimes()
 	consensusMock.EXPECT().GetModuleName().Return(modules.ConsensusModuleName).AnyTimes()
-	busMock.RegisterModule(consensusMock)
+	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+	//busMock.RegisterModule(consensusMock)
 
 	return consensusMock
 }

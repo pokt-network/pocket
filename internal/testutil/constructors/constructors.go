@@ -4,6 +4,8 @@ import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	consensus_testutil "github.com/pokt-network/pocket/internal/testutil/consensus"
+	persistence_testutil "github.com/pokt-network/pocket/internal/testutil/persistence"
+	telemetry_testutil "github.com/pokt-network/pocket/internal/testutil/telemetry"
 	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/require"
 
@@ -31,8 +33,7 @@ func NewBusesMocknetAndP2PModules(
 	p2pModules map[serviceURLStr]modules.P2PModule,
 ) {
 	// TODO_THIS_COMMIT: refactor
-	dnsSrv, dnsDone := testutil.MinimalDNSMock(t)
-	t.Cleanup(dnsDone)
+	dnsSrv := testutil.MinimalDNSMock(t)
 
 	libp2pNetworkMock = mocknet.New()
 	// destroy mocknet on test cleanup
@@ -60,8 +61,9 @@ func NewBusesMocknetAndP2PModules(
 		buses[serviceURL] = busMock
 
 		// TODO_THIS_COMMIT: refactor
-		consensusMock := consensus_testutil.PrepareConsensusMock(t, busMock)
-		busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+		_ = consensus_testutil.BaseConsensusMock(t, busMock)
+		_ = persistence_testutil.BasePersistenceMock(t, busMock, genesisState)
+		_ = telemetry_testutil.BaseTelemetryMock(t, busMock)
 
 		// MUST register DNS before instantiating P2PModule
 		testutil.AddServiceURLZone(t, dnsSrv, serviceURL)
@@ -69,6 +71,9 @@ func NewBusesMocknetAndP2PModules(
 		host := p2p_testutil.NewMocknetHost(t, libp2pNetworkMock, privKey)
 		p2pModules[serviceURL] = NewP2PModuleWithHost(t, busMock, host)
 	}
+	err := libp2pNetworkMock.LinkAll()
+	require.NoError(t, err)
+
 	return buses, libp2pNetworkMock, p2pModules
 }
 
@@ -119,7 +124,11 @@ func NewBus(
 ) *mock_modules.MockBus {
 	t.Helper()
 
-	runtimeMgrMock := runtime_testutil.BaseRuntimeManagerMock(t, privKey, serviceURL, genesisState)
+	runtimeMgrMock := runtime_testutil.BaseRuntimeManagerMock(
+		t, privKey,
+		serviceURL,
+		genesisState,
+	)
 	busMock := testutil.BusMockWithEventHandler(t, runtimeMgrMock, busEventHandlerFactory)
 	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
 	return busMock

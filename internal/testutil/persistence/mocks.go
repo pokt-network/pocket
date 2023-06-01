@@ -2,21 +2,20 @@ package persistence_testutil
 
 import (
 	"fmt"
+	"github.com/golang/mock/gomock"
+	"github.com/regen-network/gocuke"
+
 	"github.com/pokt-network/pocket/persistence/types/mocks"
+	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/utils"
-	"testing"
-
-	"github.com/golang/mock/gomock"
-
-	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/pokt-network/pocket/shared/utils"
 )
 
 // Persistence mock - only needed for validatorMap access
-func BasePersistenceMock(t *testing.T, busMock *mock_modules.MockBus, genesisState *genesis.GenesisState) *mock_modules.MockPersistenceModule {
+func BasePersistenceMock(t gocuke.TestingT, busMock *mock_modules.MockBus, genesisState *genesis.GenesisState) *mock_modules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 
 	persistenceModuleMock := mock_modules.NewMockPersistenceModule(ctrl)
@@ -29,13 +28,14 @@ func BasePersistenceMock(t *testing.T, busMock *mock_modules.MockBus, genesisSta
 	persistenceModuleMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	persistenceModuleMock.EXPECT().SetBus(busMock).AnyTimes()
 	persistenceModuleMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
-	busMock.RegisterModule(persistenceModuleMock)
+	busMock.EXPECT().GetPersistenceModule().Return(persistenceModuleMock).AnyTimes()
+	//busMock.RegisterModule(persistenceModuleMock)
 
 	return persistenceModuleMock
 }
 
 // Creates a persistence module mock with mock implementations of some basic functionality
-func PersistenceMockWithBlockStore(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *mock_modules.MockPersistenceModule {
+func PersistenceMockWithBlockStore(t gocuke.TestingT, _ modules.EventsChannel, bus modules.Bus) *mock_modules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 	persistenceMock := mock_modules.NewMockPersistenceModule(ctrl)
 	persistenceReadContextMock := mock_modules.NewMockPersistenceReadContext(ctrl)

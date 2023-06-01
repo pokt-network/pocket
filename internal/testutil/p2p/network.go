@@ -8,6 +8,7 @@ import (
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/multiformats/go-multiaddr"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/require"
 
@@ -32,19 +33,19 @@ func NewMocknetWithNPeers(t gocuke.TestingT, peerCount int) (mocknet.Mocknet, []
 
 func NewMocknetHost(
 	t gocuke.TestingT,
-	netMock mocknet.Mocknet,
+	libp2pNetworkMock mocknet.Mocknet,
 	privKey cryptoPocket.PrivateKey,
 ) libp2pHost.Host {
 	t.Helper()
 
 	// TODO_THIS_COMMIT: move to const
-	addrMock, err := multiaddr.NewMultiaddr("/ip4/10.0.0.1/tcp/0")
+	addrMock, err := multiaddr.NewMultiaddr(fmt.Sprintf("/ip4/10.0.0.1/tcp/%d", defaults.DefaultP2PPort))
 	require.NoError(t, err)
 
 	libp2pPrivKey, err := crypto.UnmarshalEd25519PrivateKey(privKey.Bytes())
 	require.NoError(t, err)
 
-	host, err := netMock.AddPeer(libp2pPrivKey, addrMock)
+	host, err := libp2pNetworkMock.AddPeer(libp2pPrivKey, addrMock)
 	require.NoError(t, err)
 
 	return host
@@ -62,8 +63,7 @@ func SetupMockNetPeers(
 	//
 	// MUST add mockdns before any libp2p host comes online. Otherwise, it will
 	// error while attempting to resolve its own hostname.
-	_, dnsSrvDone := testutil.DNSMockFromServiceURLs(t, serviceURLs)
-	t.Cleanup(dnsSrvDone)
+	_ = testutil.DNSMockFromServiceURLs(t, serviceURLs)
 
 	// Add a libp2p peers/hosts to the `MockNet` with the keypairs corresponding
 	// to the genesis validators' keypairs

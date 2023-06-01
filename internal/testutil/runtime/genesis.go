@@ -9,7 +9,7 @@ import (
 	"github.com/regen-network/gocuke"
 )
 
-func BaseGenesisStateMock(t gocuke.TestingT, valKeys []cryptoPocket.PrivateKey, serviceURLs []string) *genesis.GenesisState {
+func BaseGenesisStateMock(t gocuke.TestingT, valKeys []cryptoPocket.PublicKey, serviceURLs []string) *genesis.GenesisState {
 	t.Helper()
 
 	genesisState := new(genesis.GenesisState)
@@ -19,7 +19,7 @@ func BaseGenesisStateMock(t gocuke.TestingT, valKeys []cryptoPocket.PrivateKey, 
 		mockActor := &types.Actor{
 			ActorType:       types.ActorType_ACTOR_TYPE_VAL,
 			Address:         addr,
-			PublicKey:       valKey.PublicKey().String(),
+			PublicKey:       valKey.String(),
 			ServiceUrl:      serviceURLs[i],
 			StakedAmount:    test_artifacts.DefaultStakeAmountString,
 			PausedHeight:    int64(0),
@@ -33,7 +33,7 @@ func BaseGenesisStateMock(t gocuke.TestingT, valKeys []cryptoPocket.PrivateKey, 
 	return genesisState
 }
 
-func GenesisWithSequentialServiceURLs(t gocuke.TestingT, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
+func GenesisWithSequentialServiceURLs(t gocuke.TestingT, valKeys []cryptoPocket.PublicKey) *genesis.GenesisState {
 	t.Helper()
 
 	serviceURLs := make([]string, len(valKeys))
