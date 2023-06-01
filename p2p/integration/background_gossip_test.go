@@ -35,9 +35,9 @@ type PeerIDSet map[libp2pPeer.ID]struct{}
 const (
 	backgroundGossipFeaturePath = "background_gossip.feature"
 	//broadcastTimeoutDuration    = time.Millisecond * 250
-	broadcastTimeoutDuration = time.Second * 3
+	broadcastTimeoutDuration = time.Second * 1
 	// TODO_THIS_COMMIT: move
-	bootstrapTimeoutDuration = time.Second * 3
+	bootstrapTimeoutMinSeconds = 3
 )
 
 func TestMinimal(t *testing.T) {
@@ -79,12 +79,13 @@ type backgroundGossipSuite struct {
 	bootstrapPeerIDsMap map[libp2pPeer.ID]PeerIDSet
 
 	bootstrapNetworkWaitGroup sync.WaitGroup
-	receivedCount             int
-	receivedWaitGroup         sync.WaitGroup
-	p2pModules                map[string]modules.P2PModule
-	busMocks                  map[string]*mock_modules.MockBus
-	libp2pNetworkMock         libp2pMocknet.Mocknet
-	sender                    *p2p.P2PModule
+	// TODO_THIS_COMMIT: use this?
+	receivedCount     int
+	receivedWaitGroup sync.WaitGroup
+	p2pModules        map[string]modules.P2PModule
+	busMocks          map[string]*mock_modules.MockBus
+	libp2pNetworkMock libp2pMocknet.Mocknet
+	sender            *p2p.P2PModule
 }
 
 func (s *backgroundGossipSuite) Before(_ gocuke.Scenario) {
@@ -96,6 +97,10 @@ func (s *backgroundGossipSuite) Before(_ gocuke.Scenario) {
 	s.bootstrapPeerIDCh = make(chan peerConnectionEvent)
 	s.receivedServiceURLCh = make(chan string)
 	s.receivedServiceURLMap = make(map[string]struct{})
+}
+
+func (s *backgroundGossipSuite) After(_ gocuke.Scenario) {
+	close(s.receivedServiceURLCh)
 }
 
 func (s *backgroundGossipSuite) AFaultyNetworkOfPeers(a int64) {
@@ -121,7 +126,6 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 	//s.bootstrapNetworkWaitGroup.Add(peerCount)
 	//s.bootstrapNetworkWaitGroup.Add(peerCount * (peerCount - 1) / 2)
 	s.bootstrapNetworkWaitGroup.Add(peerCount * (peerCount - 1))
-	s.receivedWaitGroup.Add(peerCount - 1)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -142,9 +146,9 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 		}
 	}()
 
-	s.Cleanup(func() {
-		close(s.receivedServiceURLCh)
-	})
+	//s.Cleanup(func() {
+	//	close(s.receivedServiceURLCh)
+	//})
 
 	busEventHandlerFactory := func(t gocuke.TestingT, busMock *mock_modules.MockBus) testutil.BusEventHandler {
 		// event handler is called when a p2p module receives a network message
@@ -175,22 +179,18 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 			}
 			t.Logf("received message from %s", serviceURL)
 
-			// TODO: RESUME HERE!!!
-			// TODO: RESUME HERE!!!
-			// TODO: RESUME HERE!!!
-
 			s.receivedServiceURLCh <- serviceURL
 		}
 	}
 	// --
 
 	// TODO_THIS_COMMIT: refactor
-	debugNotifiee := testutil.NewDebugNotifee(s)
+	//debugNotifiee := testutil.NewDebugNotifee(s)
 	notifiee := &libp2pNetwork.NotifyBundle{
 		//DisconnectedF: func(network libp2pNetwork.Network, conn libp2pNetwork.Conn) {
 		//	s.Logf("disconnected: %s", conn.RemotePeer())
 		//},
-		DisconnectedF: debugNotifiee.Disconnected,
+		//DisconnectedF: debugNotifiee.Disconnected,
 		ConnectedF: func(net libp2pNetwork.Network, conn libp2pNetwork.Conn) {
 			//s.Logf("connected: %s", conn.RemotePeer())
 			//s.Logf("pstore size: %d", len(p2pModule.GetHost().Peerstore().Peers()))
@@ -208,10 +208,10 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 			//	//s.bootstrapNetworkWaitGroup.Done()
 			//	//s.bootstrapNetworkWaitGroup.Done()
 			//}
-			debugNotifiee.Connected(net, conn)
+			//debugNotifiee.Connected(net, conn)
 		},
-		ListenF:      debugNotifiee.Listen,
-		ListenCloseF: debugNotifiee.ListenClose,
+		//ListenF:      debugNotifiee.Listen,
+		//ListenCloseF: debugNotifiee.ListenClose,
 	}
 	// --
 
@@ -329,10 +329,21 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 		close(bootstrapDone)
 	}()
 
+	var bootstrapTimeoutCh <-chan time.Time
+	if peerCount <= 20 {
+		bootstrapTimeoutCh = time.After(time.Second * bootstrapTimeoutMinSeconds)
+	} else {
+		largeNetworkTimeoutMilliseconds := (bootstrapTimeoutMinSeconds * 1000) + (250 * peerCount)
+		bootstrapTimeoutCh = time.After(time.Millisecond * time.Duration(largeNetworkTimeoutMilliseconds))
+	}
+
 	select {
-	case <-time.After(bootstrapTimeoutDuration):
+	case <-bootstrapTimeoutCh:
 		s.Fatal("timed out waiting for bootstrapping")
 	case <-bootstrapDone:
+		// TODO_THIS_COMMIT: try to remove...
+		// wait for DHT bootstrapping
+		time.Sleep(time.Millisecond * 500)
 	}
 }
 
@@ -346,12 +357,16 @@ func (s *backgroundGossipSuite) ANodeBroadcastsATestMessageViaItsBackgroundRoute
 	// broadcast a test message
 	msg := &anypb.Any{}
 
-	// TODO_THIS_COMMIT: try to remove...
-	// wait for DHT bootstrapping
-	time.Sleep(time.Millisecond * 250)
+	s.receivedWaitGroup.Add(1)
 
+	// TODO_THIS_COMMIT: refactor
+	//for i := 0; i > 10; i++ {
+	s.receivedWaitGroup.Add(len(s.p2pModules) - 1)
 	err := s.sender.Broadcast(msg)
 	require.NoError(s, err)
+	//}
+
+	s.receivedWaitGroup.Done()
 }
 
 func (s *backgroundGossipSuite) MinusOneNumberOfNodesShouldReceiveTheTestMessage(receivedCountPlus1 int64) {
@@ -363,10 +378,9 @@ func (s *backgroundGossipSuite) MinusOneNumberOfNodesShouldReceiveTheTestMessage
 		defer s.mu.Unlock()
 
 		receivedCount := int(receivedCountPlus1 - 1)
-		require.Lenf(
-			s, s.receivedServiceURLMap, receivedCount,
-			"expected to see %d peers, got: %v",
-			receivedCount, len(s.receivedServiceURLMap),
+		require.Equalf(
+			s, receivedCount, s.receivedCount,
+			"received messages count doesn't match",
 		)
 		done <- struct{}{}
 	}()
@@ -428,7 +442,7 @@ func (s *backgroundGossipSuite) trackBootstrapProgress(peerCount int) {
 
 		if _, ok := s.bootstrapPeerIDsMap[localID][remoteID]; ok {
 			// already connected to this peer during bootstrapping
-			s.Logf("duplicate bootstrap peer ID: %s", remoteID)
+			//s.Logf("duplicate bootstrap peer ID: %s", remoteID)
 			continue
 		}
 		s.bootstrapPeerIDsMap[localID][remoteID] = struct{}{}
