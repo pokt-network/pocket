@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.20] - 2023-05-30
+## [0.0.0.20] - 2023-06-01
 
 - Add a few clarifying comments
 - Use `utilityModule.GetIndexedTransaction` instead of `utilityUnitOfWork.HydrateTxId` which only retrieves indexed transactions instead of applying the underlying business logic

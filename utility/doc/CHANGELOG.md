@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.42] - 2023-05-30
+## [0.0.0.42] - 2023-06-01
 
 - Implemented `GetIndexedTransaction`
 - Add some comments and rename a few functions throughout to have things be more self-explanatory
