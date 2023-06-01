@@ -23,7 +23,7 @@ env:
 
 jobs:
   test-multiple-go-versions:
-    runs-on: ubuntu-latest
+    runs-on: custom-runner
     strategy:
       matrix:
         go: ["1.19"] # As we are relying on generics, we can't go lower than 1.18.
@@ -100,7 +100,7 @@ jobs:
   # of going through the build process in container build job again
   # - figure out how to handle musl/alpine case if we want to support it
   build-images:
-    runs-on: ubuntu-latest
+    runs-on: custom-runner
     needs: test-multiple-go-versions
     # Until we have developer environments, we don't need the images built on other that main branches.
     if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'push-image') || contains(github.event.pull_request.labels.*.name, 'e2e-devnet-test')
@@ -156,7 +156,7 @@ jobs:
 
   # Run e2e tests on devnet if the PR has a label "e2e-devnet-test"
   e2e-tests:
-    runs-on: ubuntu-latest
+    runs-on: custom-runner
     needs: build-images
     if: contains(github.event.pull_request.labels.*.name, 'e2e-devnet-test')
     env:
