@@ -271,6 +271,10 @@ func (rtr *rainTreeRouter) Size() int {
 	return rtr.peersManager.GetPeerstore().Size()
 }
 
+func (rtr *rainTreeRouter) Close() error {
+	return nil
+}
+
 // handleStream ensures the peerstore contains the remote peer and then reads
 // the incoming stream in a new go routine.
 func (rtr *rainTreeRouter) handleStream(stream libp2pNetwork.Stream) {
