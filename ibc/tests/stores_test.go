@@ -450,9 +450,9 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 	require.NoError(t, err)
 	err = store.Set([]byte("foo2"), []byte("bar2"))
 	require.NoError(t, err)
-	err = store.Set([]byte("bar"), []byte("bar3"))
+	err = store.Set([]byte("bar"), []byte("foo"))
 	require.NoError(t, err)
-	err = store.Set([]byte("boz"), []byte("bar4"))
+	err = store.Set([]byte("bar2"), []byte("foo2"))
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -508,19 +508,14 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 	require.NoError(t, err)
 	err = store.Set([]byte("foo2"), []byte("bar2"))
 	require.NoError(t, err)
-	err = store.Set([]byte("bar"), []byte("bar3"))
+	err = store.Set([]byte("bar"), []byte("foo"))
 	require.NoError(t, err)
-	err = store.Set([]byte("boz"), []byte("bar4"))
+	err = store.Set([]byte("bar2"), []byte("foo2"))
 	require.NoError(t, err)
 
 	root := store.Root()
 
 	memProof, err := store.CreateMembershipProof([]byte("foo"), []byte("bar"))
-	require.NoError(t, err)
-	require.NotNil(t, memProof)
-	require.Nil(t, memProof.GetNonMembershipLeafData())
-
-	invalidMemProof, err := store.CreateMembershipProof([]byte("foo"), []byte("bar2"))
 	require.NoError(t, err)
 	require.NotNil(t, memProof)
 	require.Nil(t, memProof.GetNonMembershipLeafData())
@@ -597,6 +592,30 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 			fail:          true,
 			expected:      coreTypes.ErrInvalidProof("non membership leaf data must not be nil"),
 		},
+		{ // Fails to verify membership proof when computed root is different from provided root
+			modify: func(proof *coreTypes.CommitmentProof) {
+				proof.Value = []byte("new value")
+			},
+			key:           []byte("foo"),
+			value:         []byte("new value"),
+			nonmembership: false,
+			valid:         false,
+			fail:          false,
+			expected:      nil,
+		},
+		{ // Fails to verify non-membership proof when key exists
+			modify: func(proof *coreTypes.CommitmentProof) { //nolint:unused // param not used in modify function
+				err := store.Set([]byte("baz"), []byte("bar")) // Set a value at the missing key
+				require.NoError(t, err)
+				root = store.Root() // Get new root
+			},
+			key:           []byte("baz"),
+			value:         nil,
+			nonmembership: true,
+			valid:         false,
+			fail:          false,
+			expected:      nil,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -619,11 +638,15 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 			valid, err = ibc.VerifyMembership(store.TreeSpec(), proof, root, tc.key, tc.value)
 		}
 
-		if tc.valid {
-			require.NoError(t, err)
-			require.True(t, valid)
-		} else if tc.fail {
+		if tc.fail {
 			require.EqualError(t, err, tc.expected.Error())
+		} else {
+			require.NoError(t, err)
+		}
+
+		if tc.valid {
+			require.True(t, valid)
+		} else {
 			require.False(t, valid)
 		}
 	}
