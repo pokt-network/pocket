@@ -88,8 +88,6 @@ func NewDebugNotifee(t gocuke.TestingT) libp2pNetwork.Notifiee {
 				conn.LocalPeer().String(),
 				conn.RemotePeer().String(),
 			)
-			//bootstrapPeerIDCh <- conn.RemotePeer().String()
-			//bootstrapWaitgroup.Done()
 		},
 		DisconnectedF: func(_ libp2pNetwork.Network, conn libp2pNetwork.Conn) {
 			t.Logf("disconnected: local: %s; remote: %s",
