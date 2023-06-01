@@ -16,7 +16,6 @@ import (
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/runtime/configs"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
@@ -102,7 +101,6 @@ func TestRainTree_Peerstore_HandleUpdate(t *testing.T) {
 				Addr:                  pubKey.Address(),
 				PeerstoreProvider:     pstoreProviderMock,
 				CurrentHeightProvider: currentHeightProviderMock,
-				MaxNonces:             defaults.DefaultP2PMaxNonces,
 			}
 
 			router, err := NewRainTreeRouter(mockBus, rtCfg)
@@ -295,7 +293,6 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 		Addr:                  []byte{expectedMsgProp.orig},
 		PeerstoreProvider:     pstoreProviderMock,
 		CurrentHeightProvider: currentHeightProviderMock,
-		MaxNonces:             defaults.DefaultP2PMaxNonces,
 	}
 
 	router, err := NewRainTreeRouter(busMock, rtCfg)
