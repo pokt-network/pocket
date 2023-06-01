@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.40] - 2023-05-31
+## [0.0.0.40] - 2023-06-01
 
 - Add a new Address field to Servicer configuration
 - Add a place-holder default servicer configuration

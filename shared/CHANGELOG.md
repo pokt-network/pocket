@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.58] - 2023-05-31
+## [0.0.0.58] - 2023-06-01
 
 - Use ApplicationAddress in RelayMeta
 - Fix SessionHeight field meaning comment

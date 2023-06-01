@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -16,14 +18,8 @@ var (
 	errValidateBlockHeight = errors.New("relay failed block height validation")
 	errValidateRelayMeta   = errors.New("relay failed metadata validation")
 
-	_ Servicer = &servicer{}
+	_ modules.Servicer = &servicer{}
 )
-
-type Servicer interface {
-	modules.Module
-
-	HandleRelay(*coreTypes.Relay) (*coreTypes.RelayResponse, error)
-}
 
 type servicer struct {
 	base_modules.IntegratableModule
@@ -83,7 +79,7 @@ func (s *servicer) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse
 }
 
 // validateRelayMeta ensures the relay metadata is valid for being handled by the servicer
-// TODO: (REFACTOR) move the meta-specific validation to a Validator method on RelayMeta struct
+// REFACTOR: move the meta-specific validation to a Validator method on RelayMeta struct
 func (s servicer) validateRelayMeta(meta *coreTypes.RelayMeta, currentHeight int64) error {
 	if meta == nil {
 		return fmt.Errorf("empty relay metadata")
@@ -102,7 +98,7 @@ func (s servicer) validateRelayMeta(meta *coreTypes.RelayMeta, currentHeight int
 }
 
 func (s servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable, currentHeight int64) error {
-	if !isChainSupported(relayChain.Id, s.config.Chains) {
+	if !slices.Contains(s.config.Chains, relayChain.Id) {
 		return fmt.Errorf("chain %s not supported by servicer %s configuration", relayChain.Id, s.config.Address)
 	}
 
@@ -119,7 +115,7 @@ func (s servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable, 
 		return fmt.Errorf("error reading servicer from persistence: %w", err)
 	}
 
-	if !isChainSupported(relayChain.Id, servicer.Chains) {
+	if !slices.Contains(servicer.Chains, relayChain.Id) {
 		return fmt.Errorf("chain %s not supported by servicer %s configuration fetched from persistence", relayChain.Id, s.config.Address)
 	}
 
@@ -195,6 +191,7 @@ func (s servicer) admitRelay(relay *coreTypes.Relay) error {
 	return nil
 }
 
+// IMPROVE: Add session height tolerance to account for session rollovers
 func validateRelayBlockHeight(relayMeta *coreTypes.RelayMeta, session *coreTypes.Session) error {
 	sessionStartingBlock := session.SessionNumber * session.NumSessionBlocks
 	sessionLastBlock := sessionStartingBlock + session.SessionHeight
@@ -353,12 +350,3 @@ func (r *relay) GetRelayChain() RelayChain              { return nil }
 func (r *relay) GetGeoZone() GeoZone                    { return nil }
 func (r *relay) GetToken() AAT                          { return nil }
 func (r *relay) GetSignature() string                   { return "" }
-
-func isChainSupported(chainId string, allChains []string) bool {
-	for _, ch := range allChains {
-		if ch == chainId {
-			return true
-		}
-	}
-	return false
-}

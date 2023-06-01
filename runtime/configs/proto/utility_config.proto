@@ -10,6 +10,7 @@ message UtilityConfig {
   ServicerConfig servicer_config = 3;
 }
 
+// TODO: Reevalute whether each utility actor should contain address/pubKey configs or if it should be shared
 message ServicerConfig {
   string public_key = 1;
   string address = 2;
