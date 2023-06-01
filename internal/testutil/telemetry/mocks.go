@@ -11,7 +11,7 @@ import (
 func MinimalTelemetryMock(
 	t gocuke.TestingT,
 	busMock *mock_modules.MockBus,
-) modules.TelemetryModule {
+) *mock_modules.MockTelemetryModule {
 	t.Helper()
 
 	ctrl := gomock.NewController(t)
@@ -31,26 +31,31 @@ func MinimalTelemetryMock(
 func BaseTelemetryMock(
 	t gocuke.TestingT,
 	busMock *mock_modules.MockBus,
-) modules.TelemetryModule {
+) *mock_modules.MockTelemetryModule {
 	t.Helper()
 	return WithTimeSeriesAgent(t, WithEventMetricsAgent(t, MinimalTelemetryMock(t, busMock)))
 }
 
-func WithTimeSeriesAgent(t gocuke.TestingT, telemetryMod modules.TelemetryModule) *mock_modules.MockTelemetryModule {
+func WithTimeSeriesAgent(
+	t gocuke.TestingT,
+	telemetryMock *mock_modules.MockTelemetryModule,
+) *mock_modules.MockTelemetryModule {
 	t.Helper()
 
-	telemetryMock := telemetryMod.(*mock_modules.MockTelemetryModule)
 	timeSeriesAgentMock := BaseTimeSeriesAgentMock(t)
 
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
 	return telemetryMock
 }
 
-func WithEventMetricsAgent(t gocuke.TestingT, telemetryMod modules.TelemetryModule) modules.TelemetryModule {
+func WithEventMetricsAgent(
+	t gocuke.TestingT,
+	telemetryMock *mock_modules.MockTelemetryModule,
+) *mock_modules.MockTelemetryModule {
 	t.Helper()
 
-	telemetryMock := telemetryMod.(*mock_modules.MockTelemetryModule)
-	eventMetricsAgentMock := BaseEventMetricsAgentMock(t)
+	ctrl := gomock.NewController(t)
+	eventMetricsAgentMock := mock_modules.NewMockEventMetricsAgent(ctrl)
 
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
 	return telemetryMock

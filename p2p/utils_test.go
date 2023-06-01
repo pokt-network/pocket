@@ -3,31 +3,17 @@
 package p2p_test
 
 import (
-	"github.com/pokt-network/pocket/internal/testutil"
-	"github.com/pokt-network/pocket/internal/testutil/runtime"
-	"github.com/pokt-network/pocket/internal/testutil/telemetry"
-	"github.com/pokt-network/pocket/p2p"
-	"github.com/pokt-network/pocket/shared/messaging"
-	"github.com/pokt-network/pocket/telemetry"
-	"github.com/regen-network/gocuke"
 	"sort"
 	"sync"
 	"testing"
 	"time"
 
-	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
-	"github.com/stretchr/testify/require"
-
-	p2p_testutil "github.com/pokt-network/pocket/internal/testutil/p2p"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
-	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
 
 const (
-	eventsChannelSize = 10000
 	// Since we simulate up to a 27 node network, we will pre-generate a n >= 27 number of keys to avoid generation
 	// every time. The genesis config seed start is set for deterministic key generation and 42 was chosen arbitrarily.
 	genesisConfigSeedStart = 42
@@ -82,74 +68,4 @@ func waitForNetworkSimulationCompletion(t *testing.T, wg *sync.WaitGroup) {
 	case <-time.After(2 * time.Second): // 2 seconds was chosen arbitrarily. In a mocked environment, all messages should finish sending in less than one minute.
 		t.Fatal("Timeout waiting for message to be handled")
 	}
-}
-
-// ~~~~~~ RainTree Unit Test Mocks ~~~~~~
-
-// createP2PModules returns a map of configured p2pModules keyed by an incremental naming convention (eg: `val_1`, `val_2`, etc.)
-func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus, netMock mocknet.Mocknet, serviceURLs []string) (p2pModules map[string]*p2p.P2PModule) {
-	t.Helper()
-
-	require.GreaterOrEqualf(t, len(serviceURLs), len(busMocks), "number of bus mocks must be less than or equal to the number of service URLs")
-
-	peerIDs := p2p_testutil.SetupMockNetPeers(t, netMock, keys[:len(busMocks)], serviceURLs)
-	p2pModules = make(map[string]*p2p.P2PModule, len(busMocks))
-	for i := range busMocks {
-		host := netMock.Host(peerIDs[i])
-		p2pMod, err := p2p.Create(busMocks[i], p2p.WithHostOption(host))
-		require.NoError(t, err)
-		p2pModules[serviceURLs[i]] = p2pMod.(*p2p.P2PModule)
-	}
-	return
-}
-
-// createMockRuntimeMgrs creates `numValidators` instances of mocked `RuntimeMgr` that are essentially
-// representing the runtime environments of the validators that we will use in our tests
-func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr {
-	mockRuntimeMgrs := make([]modules.RuntimeMgr, numValidators)
-	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
-	copy(valKeys, keys[:numValidators])
-	mockGenesisState := runtime_testutil.GenesisWithSequentialServiceURLs(t, valKeys)
-	for i := range mockRuntimeMgrs {
-		mockRuntimeMgrs[i] = runtime_testutil.BaseRuntimeManagerMock(
-			t, valKeys[i],
-			p2p_testutil.NewServiceURL(i+1),
-			mockGenesisState,
-		)
-	}
-	return mockRuntimeMgrs
-}
-
-func createMockBuses(t *testing.T, runtimeMgrs []modules.RuntimeMgr, wg *sync.WaitGroup) []*mockModules.MockBus {
-	mockBuses := make([]*mockModules.MockBus, len(runtimeMgrs))
-	for i := range mockBuses {
-		handlerFactory := func(t gocuke.TestingT, bus modules.Bus) testutil.BusEventHandler {
-			return func(data *messaging.PocketEnvelope) {
-				wg.Done()
-			}
-		}
-		mockBuses[i] = testutil.BusMockWithEventHandler(t, runtimeMgrs[i], handlerFactory)
-	}
-	return mockBuses
-}
-
-// TODO_THIS_COMMIT: refactor / move
-// Telemetry mock - Needed to help with proper counts for number of expected network writes
-func prepareTelemetryMock(t *testing.T, busMock *mockModules.MockBus, valId string, wg *sync.WaitGroup, expectedNumNetworkWrites int) *mockModules.MockTelemetryModule {
-	telemetryMock := telemetry_testutil.WithTimeSeriesAgent(t,
-		telemetry_testutil.MinimalTelemetryMock(t, busMock),
-	)
-
-	eventMetricsAgentMock := telemetry_testutil.EventMetricsAgentMockWithHandler(
-		t, telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL,
-		func(namesapce, event_name string, labels ...any) {
-			t.Logf("[valId: %s] Write\n", valId)
-			wg.Done()
-		},
-		expectedNumNetworkWrites,
-	)
-
-	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
-	busMock.RegisterModule(telemetryMock)
-	return telemetryMock
 }

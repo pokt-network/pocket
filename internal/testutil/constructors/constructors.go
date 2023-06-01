@@ -63,10 +63,14 @@ func NewBusesMocknetAndP2PModules(
 		// TODO_THIS_COMMIT: refactor
 		_ = consensus_testutil.BaseConsensusMock(t, busMock)
 		_ = persistence_testutil.BasePersistenceMock(t, busMock, genesisState)
-		//_ = telemetry_testutil.BaseTelemetryMock(t, busMock)
-		_ = telemetry_testutil.WithTimeSeriesAgent(
-			t, telemetry_testutil.MinimalTelemetryMock(t, busMock),
-		)
+
+		// -- option 1
+		_ = telemetry_testutil.BaseTelemetryMock(t, busMock)
+
+		// -- option 2
+		//_ = telemetry_testutil.WithTimeSeriesAgent(
+		//	t, telemetry_testutil.MinimalTelemetryMock(t, busMock),
+		//)
 
 		// MUST register DNS before instantiating P2PModule
 		testutil.AddServiceURLZone(t, dnsSrv, serviceURL)

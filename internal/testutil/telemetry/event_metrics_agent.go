@@ -9,11 +9,12 @@ import (
 	"github.com/pokt-network/pocket/telemetry"
 )
 
-func BaseEventMetricsAgentMock(t gocuke.TestingT) *mock_modules.MockEventMetricsAgent {
+func WithP2PIntegrationEvents(
+	t gocuke.TestingT,
+	eventMetricsAgentMock *mock_modules.MockEventMetricsAgent,
+) *mock_modules.MockEventMetricsAgent {
 	t.Helper()
 
-	ctrl := gomock.NewController(t)
-	eventMetricsAgentMock := mock_modules.NewMockEventMetricsAgent(ctrl)
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
 	// TODO_THIS_COMMIT: remove v -- may represent failure condition w/ reused nonces..
@@ -45,6 +46,29 @@ func PrepareEventMetricsAgentMock(t gocuke.TestingT, valId string, wg *sync.Wait
 	return eventMetricsAgentMock
 }
 
+func WhyEventMetricsAgentMock(
+	t gocuke.TestingT,
+	eventMetricsAgentMock *mock_modules.MockEventMetricsAgent,
+	valId string,
+	wg *sync.WaitGroup,
+	//handler func(namespace, eventName string, labels ...any),
+	expectedNumNetworkWrites int,
+) *mock_modules.MockEventMetricsAgent {
+	// TODO_THIS_COMMIT: remove
+	logEvent := func(n, e string, l ...any) {
+		//t.Logf("n: %s, e: %s, l: %v\n", n, e, l)
+	}
+
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(logEvent).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Eq(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).Do(func(n, e any, l ...any) {
+		t.Logf("[valId: %s] Write", valId)
+		wg.Done()
+	}).Do(logEvent).Times(expectedNumNetworkWrites)
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).Do(logEvent).AnyTimes()
+
+	return eventMetricsAgentMock
+}
+
 func EventMetricsAgentMockWithHandler(
 	t gocuke.TestingT,
 	label string,
@@ -52,8 +76,29 @@ func EventMetricsAgentMockWithHandler(
 	handler func(namespace, eventName string, labels ...any),
 	times int,
 ) *mock_modules.MockEventMetricsAgent {
+	t.Helper()
+
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := mock_modules.NewMockEventMetricsAgent(ctrl)
+
+	return WithEventMetricsHandler(t, eventMetricsAgentMock, label, handler, times)
+}
+
+func WithEventMetricsHandler(
+	t gocuke.TestingT,
+	eventMetricsAgentMock *mock_modules.MockEventMetricsAgent,
+	label string,
+	handler func(namespace, eventName string, labels ...any),
+	times int,
+) *mock_modules.MockEventMetricsAgent {
+	t.Helper()
+
+	//eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(logEvent).AnyTimes()
+	//eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Eq(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).Do(func(n, e any, l ...any) {
+	//	t.Logf("[valId: %s] Write", valId)
+	//	wg.Done()
+	//}).Do(logEvent).Times(expectedNumNetworkWrites)
+	//eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).Do(logEvent).AnyTimes()
 
 	// TODO_THIS_COMMIT: scrutinize these & their order
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
