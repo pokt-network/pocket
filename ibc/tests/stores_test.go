@@ -18,145 +18,91 @@ import (
 )
 
 func TestStoreManager_StoreManagerOperations(t *testing.T) {
-	priStore1, err := stores.NewTestPrivateStore("priTest1")
+	store1, err := stores.NewTestPrivateStore("test1")
 	require.NoError(t, err)
-	require.Equal(t, priStore1.GetStoreKey(), "priTest1")
-	priStore2, err := stores.NewTestPrivateStore("priTest2")
+	require.Equal(t, store1.GetStoreKey(), "test1")
+	require.False(t, store1.IsProvable())
+	store2, err := stores.NewTestPrivateStore("test2")
 	require.NoError(t, err)
-	require.Equal(t, priStore2.GetStoreKey(), "priTest2")
-	priStore3, err := stores.NewTestPrivateStore("priTest3")
+	require.Equal(t, store2.GetStoreKey(), "test2")
+	require.False(t, store2.IsProvable())
+	store3, err := stores.NewTestPrivateStore("test3")
 	require.NoError(t, err)
-	require.Equal(t, priStore3.GetStoreKey(), "priTest3")
-	priStore4, err := stores.NewTestPrivateStore("priTest4")
+	require.Equal(t, store3.GetStoreKey(), "test3")
+	require.False(t, store3.IsProvable())
+	store4, err := stores.NewTestProvableStore("test4", nil)
 	require.NoError(t, err)
-	require.Equal(t, priStore4.GetStoreKey(), "priTest4")
+	require.Equal(t, store4.GetStoreKey(), "test4")
+	require.True(t, store4.IsProvable())
 
-	provStore1, err := stores.NewTestProvableStore("provTest1", nil)
-	require.NoError(t, err)
-	require.Equal(t, provStore1.GetStoreKey(), "provTest1")
-	provStore2, err := stores.NewTestProvableStore("provTest2", nil)
-	require.NoError(t, err)
-	require.Equal(t, provStore2.GetStoreKey(), "provTest2")
-	provStore3, err := stores.NewTestProvableStore("provTest3", nil)
-	require.NoError(t, err)
-	require.Equal(t, provStore3.GetStoreKey(), "provTest3")
-	provStore4, err := stores.NewTestProvableStore("provTest4", nil)
-	require.NoError(t, err)
-	require.Equal(t, provStore4.GetStoreKey(), "provTest4")
-
-	initialPriStores := []modules.PrivateStore{priStore1, priStore2, priStore3}
-	initialProvStores := []modules.ProvableStore{provStore1, provStore2, provStore3}
+	initialStores := []modules.Store{store1, store2, store3}
 
 	sm := stores.NewStoreManager()
 	for i := 0; i < 3; i++ {
-		err := sm.AddPrivateStore(initialPriStores[i])
-		require.NoError(t, err)
-		err = sm.AddProvableStore(initialProvStores[i])
+		err := sm.AddStore(initialStores[i])
 		require.NoError(t, err)
 	}
 
 	testCases := []struct {
-		privateStore  modules.PrivateStore
-		provableStore modules.ProvableStore
-		op            string
-		fail          bool
-		expected      error
+		store    modules.Store
+		op       string
+		fail     bool
+		expected error
 	}{
 		{ // Fails to add store that is already in the store manager
-			privateStore:  priStore1,
-			provableStore: nil,
-			op:            "add",
-			fail:          true,
-			expected:      coreTypes.ErrStoreAlreadyExists("priTest1"),
+			store:    store1,
+			op:       "add",
+			fail:     true,
+			expected: coreTypes.ErrStoreAlreadyExists("test1"),
 		},
 		{ // Successfully returns store with matching store key when present
-			privateStore:  priStore2,
-			provableStore: nil,
-			op:            "get",
-			fail:          false,
-			expected:      nil,
+			store:    store2,
+			op:       "get",
+			fail:     false,
+			expected: nil,
 		},
 		{ // Successfully deletes store with matching store key when present
-			privateStore:  priStore3,
-			provableStore: nil,
-			op:            "remove",
-			fail:          false,
-			expected:      nil,
+			store:    store3,
+			op:       "remove",
+			fail:     false,
+			expected: nil,
 		},
 		{ // Fails to delete store with matching store key when not present
-			privateStore:  priStore4,
-			provableStore: nil,
-			op:            "remove",
-			fail:          true,
-			expected:      coreTypes.ErrStoreNotFound("priTest4"),
+			store:    store4,
+			op:       "remove",
+			fail:     true,
+			expected: coreTypes.ErrStoreNotFound("test4"),
 		},
 		{ // Successfully adds a store to the store manager when not already present
-			privateStore:  priStore4,
-			provableStore: nil,
-			op:            "add",
-			fail:          false,
-			expected:      nil,
+			store:    store4,
+			op:       "add",
+			fail:     false,
+			expected: nil,
 		},
 		{ // Fail to get store with matching store key when not present
-			privateStore:  priStore3,
-			provableStore: nil,
-			op:            "get",
-			fail:          true,
-			expected:      coreTypes.ErrStoreNotFound("priTest3"),
+			store:    store3,
+			op:       "get",
+			fail:     true,
+			expected: coreTypes.ErrStoreNotFound("test3"),
 		},
-		{ // Fails to add store that is already in the store manager
-			provableStore: provStore1,
-			privateStore:  nil,
-			op:            "add",
-			fail:          true,
-			expected:      coreTypes.ErrStoreAlreadyExists("provTest1"),
+		{ // Successfully returns provable store with matching store key when present
+			store:    store4,
+			op:       "getprovable",
+			fail:     false,
+			expected: nil,
 		},
-		{ // Successfully returns store with matching store key when present
-			provableStore: provStore2,
-			privateStore:  nil,
-			op:            "get",
-			fail:          false,
-			expected:      nil,
-		},
-		{ // Successfully deletes store with matching store key when present
-			provableStore: provStore3,
-			privateStore:  nil,
-			op:            "remove",
-			fail:          false,
-			expected:      nil,
-		},
-		{ // Fails to delete store with matching store key when not present
-			provableStore: provStore4,
-			privateStore:  nil,
-			op:            "remove",
-			fail:          true,
-			expected:      coreTypes.ErrStoreNotFound("provTest4"),
-		},
-		{ // Successfully adds a store to the store manager when not already present
-			provableStore: provStore4,
-			privateStore:  nil,
-			op:            "add",
-			fail:          false,
-			expected:      nil,
-		},
-		{ // Fail to get store with matching store key when not present
-			provableStore: provStore3,
-			privateStore:  nil,
-			op:            "get",
-			fail:          true,
-			expected:      coreTypes.ErrStoreNotFound("provTest3"),
+		{ // Fails to return a provable store when the store is private
+			store:    store1,
+			op:       "getprovable",
+			fail:     true,
+			expected: coreTypes.ErrStoreNotProvable("test1"),
 		},
 	}
 
 	for _, tc := range testCases {
 		switch tc.op {
 		case "add":
-			var err error
-			if tc.privateStore != nil {
-				err = sm.AddPrivateStore(tc.privateStore)
-			} else {
-				err = sm.AddProvableStore(tc.provableStore)
-			}
+			err = sm.AddStore(tc.store)
 			if tc.fail {
 				require.Error(t, err)
 				require.Equal(t, tc.expected, err)
@@ -164,32 +110,26 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 				require.NoError(t, err)
 			}
 		case "get":
-			if tc.privateStore != nil {
-				store, err := sm.GetPrivateStore(tc.privateStore.GetStoreKey())
-				if tc.fail {
-					require.Error(t, err)
-					require.Equal(t, tc.expected, err)
-				} else {
-					require.Equal(t, store.GetStoreKey(), tc.privateStore.GetStoreKey())
-					require.NoError(t, err)
-				}
-				continue
-			}
-			store, err := sm.GetProvableStore(tc.provableStore.GetStoreKey())
+			store, err := sm.GetStore(tc.store.GetStoreKey())
 			if tc.fail {
 				require.Error(t, err)
 				require.Equal(t, tc.expected, err)
 			} else {
-				require.Equal(t, store.GetStoreKey(), tc.provableStore.GetStoreKey())
+				require.Equal(t, store.GetStoreKey(), tc.store.GetStoreKey())
+				require.NoError(t, err)
+			}
+		case "getprovable":
+			store, err := sm.GetProvableStore(tc.store.GetStoreKey())
+			if tc.fail {
+				require.Error(t, err)
+				require.Equal(t, tc.expected, err)
+			} else {
+				require.Equal(t, store.GetStoreKey(), tc.store.GetStoreKey())
+				require.True(t, store.IsProvable())
 				require.NoError(t, err)
 			}
 		case "remove":
-			var err error
-			if tc.privateStore != nil {
-				err = sm.RemoveStore(tc.privateStore.GetStoreKey())
-			} else {
-				err = sm.RemoveStore(tc.provableStore.GetStoreKey())
-			}
+			err = sm.RemoveStore(tc.store.GetStoreKey())
 			if tc.fail {
 				require.Error(t, err)
 				require.Equal(t, tc.expected, err)
@@ -199,21 +139,13 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 		}
 	}
 
-	err = priStore1.Stop()
+	err = store1.Stop()
 	require.NoError(t, err)
-	err = priStore2.Stop()
+	err = store2.Stop()
 	require.NoError(t, err)
-	err = priStore3.Stop()
+	err = store3.Stop()
 	require.NoError(t, err)
-	err = priStore4.Stop()
-	require.NoError(t, err)
-	err = provStore1.Stop()
-	require.NoError(t, err)
-	err = provStore2.Stop()
-	require.NoError(t, err)
-	err = provStore3.Stop()
-	require.NoError(t, err)
-	err = provStore4.Stop()
+	err = store4.Stop()
 	require.NoError(t, err)
 }
 

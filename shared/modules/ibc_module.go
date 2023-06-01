@@ -197,26 +197,26 @@ type IBCHandler interface {
 // StoreManager is an interface that allows for the interaction with the numerous
 // stores used by the IBC module.
 type StoreManager interface {
-	GetPrivateStore(storeKey string) (PrivateStore, error)
-	AddPrivateStore(store PrivateStore) error
+	GetStore(storeKey string) (Store, error)
 	GetProvableStore(storeKey string) (ProvableStore, error)
-	AddProvableStore(store ProvableStore) error
+	AddStore(store Store) error
 	RemoveStore(storeKey string) error
 }
 
-// PrivateStore is a simple interface to interact with data in a key-value manner.
-type PrivateStore interface {
+// Store is a simple interface to interact with data in a key-value manner.
+type Store interface {
 	Get(key []byte) ([]byte, error)
 	Set(key []byte, value []byte) error
 	Delete(key []byte) error
 	GetStoreKey() string
+	IsProvable() bool
 	Stop() error
 }
 
 // ProvableStore allows for the creation of proofs for the data stored in the store
 // which can be verified for authenticity
 type ProvableStore interface {
-	PrivateStore
+	Store
 	Root() *coreTypes.CommitmentRoot
 	TreeSpec() *smt.TreeSpec
 	CreateMembershipProof(key, value []byte) (*coreTypes.CommitmentProof, error)

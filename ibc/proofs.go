@@ -25,7 +25,7 @@ func validateProof(nonmembership bool, proof *coreTypes.CommitmentProof, key, va
 		return coreTypes.ErrInvalidProof("non membership leaf data must be nil")
 	}
 	if nonmembership && proof.NonMembershipLeafData == nil {
-		return coreTypes.ErrInvalidProof("non membership leaf data must not be nil")
+		return coreTypes.ErrInvalidProof("non membership leaf data must be nil")
 	}
 	return nil
 }

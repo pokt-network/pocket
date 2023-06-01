@@ -1,7 +1,5 @@
 package stores
 
-//go:generate mockgen -package=mock_types -destination=../types/mocks/provable_store_mock.go github.com/pokt-network/pocket/ibc/stores ProvableStore
-
 import (
 	"crypto/sha256"
 
@@ -23,6 +21,7 @@ type ProvableStore struct {
 	nodeStore kvstore.KVStore
 	tree      *smt.SMT
 	storeKey  string
+	provable  bool
 }
 
 // newProvableStoreFromKV generates a new provable store from the nodeStore provided
@@ -44,17 +43,12 @@ func NewTestProvableStore(storeKey string, nodeStore kvstore.KVStore) (modules.P
 	return newProvableStoreFromKV(nodeStore, storeKey)
 }
 
-// NewProvableStore generates a new provable store using a perishable KVStore at the path provided
-func NewProvableStore(storeKey, storePath string) (modules.ProvableStore, error) {
-	nodeStore, err := kvstore.NewKVStore(storePath)
-	if err != nil {
-		return nil, coreTypes.ErrStoreCreation(err)
-	}
-	return newProvableStoreFromKV(nodeStore, storeKey)
-}
-
 func (prov *ProvableStore) GetStoreKey() string {
 	return prov.storeKey
+}
+
+func (prov *ProvableStore) IsProvable() bool {
+	return prov.provable
 }
 
 func (prov *ProvableStore) Get(key []byte) ([]byte, error) {
@@ -121,12 +115,11 @@ func generateProof(tree *smt.SMT, key, value []byte) (*coreTypes.CommitmentProof
 	if err != nil {
 		return nil, err
 	}
-	proof := &coreTypes.CommitmentProof{
+	return &coreTypes.CommitmentProof{
 		Key:                   key,
 		Value:                 value,
 		SideNodes:             smtProof.SideNodes,
 		NonMembershipLeafData: smtProof.NonMembershipLeafData,
 		SiblingData:           smtProof.SiblingData,
-	}
-	return proof, nil
+	}, nil
 }
