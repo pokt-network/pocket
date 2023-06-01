@@ -5,6 +5,7 @@ package background
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/go-multierror"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
