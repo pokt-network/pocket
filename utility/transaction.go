@@ -3,10 +3,11 @@ package utility
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 
+	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/smt"
 )
 
 // HandleTransaction implements the exposed functionality of the shared utilityModule interface.
@@ -52,7 +53,8 @@ func (u *utilityModule) GetIndexedTransaction(txProtoBytes []byte) (*coreTypes.I
 	}
 	idTx, err := u.GetBus().GetPersistenceModule().GetTxIndexer().GetByHash(hash)
 	if err != nil {
-		if errors.Is(err, smt.ErrKeyNotPresent) {
+		fmt.Println("OLSH", err)
+		if errors.Is(err, badger.ErrKeyNotFound) {
 			return nil, coreTypes.ErrTransactionNotCommitted()
 		}
 		return nil, err
