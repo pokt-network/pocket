@@ -4192,7 +4192,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						ServerModeEnabled: true,
 					},
 					Utility: &configs.UtilityConfig{
-						ServicerConfig: &ServicerConfig{
+						ServicerConfig: &configs.ServicerConfig{
 							Chains: []string{"0001"},
 						},
 						MaxMempoolTransactionBytes: 1073741824,
