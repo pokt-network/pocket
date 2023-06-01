@@ -2,15 +2,16 @@ package testutil
 
 import (
 	"fmt"
+	"github.com/foxcpp/go-mockdns"
+	"github.com/regen-network/gocuke"
+	"github.com/stretchr/testify/require"
 	"net"
 	"net/url"
-	"testing"
-
-	"github.com/foxcpp/go-mockdns"
-	"github.com/stretchr/testify/require"
 )
 
-func PrepareDNSMockFromServiceURLs(t *testing.T, serviceURLs []string) (done func()) {
+func PrepareDNSMockFromServiceURLs(t gocuke.TestingT, serviceURLs []string) (srv *mockdns.Server, done func()) {
+	t.Helper()
+
 	zones := make(map[string]mockdns.Zone)
 	for i, u := range serviceURLs {
 		// Perpend `scheme://` as serviceURLs are currently scheme-less.
@@ -30,13 +31,15 @@ func PrepareDNSMockFromServiceURLs(t *testing.T, serviceURLs []string) (done fun
 		}
 	}
 
-	return PrepareDNSMock(zones)
+	return PrepareDNSMock(t, zones)
 }
 
-func PrepareDNSMock(zones map[string]mockdns.Zone) (done func()) {
-	srv, _ := mockdns.NewServerWithLogger(zones, noopLogger{}, false)
+func PrepareDNSMock(t gocuke.TestingT, zones map[string]mockdns.Zone) (srv *mockdns.Server, done func()) {
+	t.Helper()
+
+	srv, _ = mockdns.NewServerWithLogger(zones, noopLogger{}, false)
 	srv.PatchNet(net.DefaultResolver)
-	return func() {
+	return srv, func() {
 		_ = srv.Close()
 		mockdns.UnpatchNet(net.DefaultResolver)
 	}

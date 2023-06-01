@@ -1,7 +1,12 @@
-package p2p
+package p2p_test
 
 import (
 	"fmt"
+	"github.com/pokt-network/pocket/internal/testutil"
+	p2p_testutil "github.com/pokt-network/pocket/internal/testutil/p2p"
+	"github.com/pokt-network/pocket/internal/testutil/persistence"
+	"github.com/pokt-network/pocket/internal/testutil/runtime"
+	"github.com/pokt-network/pocket/p2p"
 	"strings"
 	"testing"
 
@@ -111,10 +116,11 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
-			mockBus := createMockBus(t, mockRuntimeMgr)
+			mockBus := testutil.BaseBusMock(t, mockRuntimeMgr)
 
-			genesisStateMock := createMockGenesisState(keys)
-			persistenceMock := preparePersistenceMock(t, mockBus, genesisStateMock)
+			serviceURLs := p2p_testutil.SequentialServiceURLs(t, len(keys))
+			genesisStateMock := runtime_testutil.BaseGenesisStateMock(t, keys, serviceURLs)
+			persistenceMock := persistence_testutil.BasePersistenceMock(t, mockBus, genesisStateMock)
 			mockBus.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 
 			mockConsensusModule := mockModules.NewMockConsensusModule(ctrl)
@@ -137,7 +143,7 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 			}
 
 			host := newLibp2pMockNetHost(t, privKey, peer)
-			p2pMod, err := Create(mockBus, WithHostOption(host))
+			p2pMod, err := p2p.Create(mockBus, p2p.WithHostOption(host))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("p2pModule.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -155,10 +161,10 @@ func TestP2pModule_WithHostOption_Restart(t *testing.T) {
 
 	privKey := cryptoPocket.GetPrivKeySeed(1)
 	mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
-	mockBus := createMockBus(t, mockRuntimeMgr)
+	mockBus := testutil.BaseBusMock(t, mockRuntimeMgr)
 
-	genesisStateMock := createMockGenesisState(nil)
-	persistenceMock := preparePersistenceMock(t, mockBus, genesisStateMock)
+	genesisStateMock := runtime_testutil.BaseGenesisStateMock(t, nil, nil)
+	persistenceMock := persistence_testutil.BasePersistenceMock(t, mockBus, genesisStateMock)
 	mockBus.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 
 	consensusModuleMock := mockModules.NewMockConsensusModule(ctrl)
