@@ -53,7 +53,7 @@ func (s *backgroundPeerDiscoverySuite) ANetworkContainingANode(nodeLabel string)
 	s.dnsSrv = testutil.MinimalDNSMock(s)
 
 	s.busMocks, s.libp2pNetworkMock, s.p2pModules = constructors.NewBusesMocknetAndP2PModules(
-		s, 1, s.dnsSrv, nil, nil,
+		s, 1, s.dnsSrv, nil, nil, nil,
 	)
 
 	// i.e. "only" serviceURL as this step definition initializes the network
@@ -102,6 +102,7 @@ func (s *backgroundPeerDiscoverySuite) NumberOfNodesJoinTheNetwork(nodeCount int
 		genesisState,
 		s.libp2pNetworkMock,
 		serviceURLKeyMap,
+		nil,
 	)
 
 	err := s.libp2pNetworkMock.LinkAll()
