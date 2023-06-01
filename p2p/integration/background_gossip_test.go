@@ -59,11 +59,12 @@ type backgroundGossipSuite struct {
 
 	timeoutDuration time.Duration
 	// TODO_THIS_COMMIT: rename
-	mu sync.Mutex
-	// receivedFromServiceURLMap is used as a map to track which messages have been
+	mu                   sync.Mutex
+	receivedServiceURLCh chan string
+	// receivedServiceURLMap is used as a map to track which messages have been
 	// received by which nodes.
-	receivedFromServiceURLMap map[string]struct{}
-	bootstrapMutex            sync.Mutex
+	receivedServiceURLMap map[string]struct{}
+	bootstrapMutex        sync.Mutex
 
 	// bootstrapPeerIDChMap is a mapping between the peerID string of each node to
 	// a channel that will be used to signal the peer ID strings of each node it
@@ -86,14 +87,15 @@ type backgroundGossipSuite struct {
 	sender                    *p2p.P2PModule
 }
 
-func (s *backgroundGossipSuite) Before(scenario gocuke.Scenario) {
+func (s *backgroundGossipSuite) Before(_ gocuke.Scenario) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.dnsSrv = testutil.MinimalDNSMock(s)
 	//s.bootstrapPeerIDChMap = make(map[libp2pPeer.ID]chan libp2pPeer.ID)
 	s.bootstrapPeerIDCh = make(chan peerConnectionEvent)
-	s.receivedFromServiceURLMap = make(map[string]struct{})
+	s.receivedServiceURLCh = make(chan string)
+	s.receivedServiceURLMap = make(map[string]struct{})
 }
 
 func (s *backgroundGossipSuite) AFaultyNetworkOfPeers(a int64) {
@@ -115,6 +117,7 @@ func (s *backgroundGossipSuite) NumberOfNodesLeaveTheNetwork(a int64) {
 func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 	peerCount := int(count)
 
+	// TODO_THIS_COMMOT: comment, explain
 	//s.bootstrapNetworkWaitGroup.Add(peerCount)
 	//s.bootstrapNetworkWaitGroup.Add(peerCount * (peerCount - 1) / 2)
 	s.bootstrapNetworkWaitGroup.Add(peerCount * (peerCount - 1))
@@ -126,23 +129,39 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 	genesisState := runtime_testutil.BaseGenesisStateMockFromServiceURLKeyMap(s, serviceURLKeyMap)
 
 	// TODO_THIS_COMMIT: refactor
+	go func() {
+		for serviceURL := range s.receivedServiceURLCh {
+			// use a channel instead of a map; send a struct like w/ trackBootstrapProgress()
+			// THIS IS PER BUS (i.e. run in each node)!!
+			_, ok := s.receivedServiceURLMap[serviceURL]
+			require.Falsef(s, ok, "received message from duplicate serviceURL: %s", serviceURL)
+
+			s.receivedCount++
+			s.receivedServiceURLMap[serviceURL] = struct{}{}
+			s.receivedWaitGroup.Done()
+		}
+	}()
+
+	s.Cleanup(func() {
+		close(s.receivedServiceURLCh)
+	})
+
 	busEventHandlerFactory := func(t gocuke.TestingT, busMock *mock_modules.MockBus) testutil.BusEventHandler {
 		// event handler is called when a p2p module receives a network message
 		return func(data *messaging.PocketEnvelope) {
 			s.mu.Lock()
 			defer s.mu.Unlock()
 
-			defer func() {
-				if r := recover(); r != nil {
-					t.Logf("seenCount: %d; receivedFromServiceURLMap: %v", len(s.receivedFromServiceURLMap), s.receivedFromServiceURLMap)
-					//panic(r)
-					t.Fatalf("panic: %v", r)
-				}
-			}()
+			//defer func() {
+			//	if r := recover(); r != nil {
+			//		t.Logf("seenCount: %d; receivedServiceURLMap: %v", len(s.receivedServiceURLMap), s.receivedServiceURLMap)
+			//		//panic(r)
+			//		t.Fatalf("panic: %v", r)
+			//	}
+			//}()
 
 			p2pCfg := busMock.GetRuntimeMgr().GetConfig().P2P
 			serviceURL := fmt.Sprintf("%s:%d", p2pCfg.Hostname, defaults.DefaultP2PPort)
-			t.Logf("received message by %s", serviceURL)
 
 			peerPrivKey, err := cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
 			require.NoError(t, err)
@@ -151,18 +170,16 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 			require.NoError(t, err)
 
 			if senderAddr.Equals(peerPrivKey.Address()) {
-				t.Logf("SELF: %s", serviceURL)
+				t.Logf("ignoring message from self: %s", serviceURL)
 				return
 			}
+			t.Logf("received message from %s", serviceURL)
 
-			if _, ok := s.receivedFromServiceURLMap[serviceURL]; ok {
-				t.Logf("DUPLICATE SERVICE URL: %s", serviceURL)
-				return
-			}
+			// TODO: RESUME HERE!!!
+			// TODO: RESUME HERE!!!
+			// TODO: RESUME HERE!!!
 
-			s.receivedCount++
-			s.receivedFromServiceURLMap[serviceURL] = struct{}{}
-			s.receivedWaitGroup.Done()
+			s.receivedServiceURLCh <- serviceURL
 		}
 	}
 	// --
@@ -206,14 +223,6 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 		busEventHandlerFactory,
 		notifiee,
 	)
-
-	// add number of combinations of peers given number of peers
-	//s.Logf("bootstrapNetworkWaitGroup.Add: %d", peerCount*(peerCount-1)/2)
-	//s.Logf("bootstrapNetworkWaitGroup.Add: %d", peerCount*(peerCount-1))
-	//s.Logf("bootstrapNetworkWaitGroup.Add: %d", peerCount*peerCount)
-	//s.bootstrapNetworkWaitGroup.Add(peerCount * (peerCount - 1) / 2)
-	//s.bootstrapNetworkWaitGroup.Add(peerCount * (peerCount - 1))
-	//s.bootstrapNetworkWaitGroup.Add(peerCount * peerCount)
 
 	// add expectations for P2P events to telemetry module's event metrics agent
 	for _, busMock := range s.busMocks {
@@ -355,9 +364,9 @@ func (s *backgroundGossipSuite) MinusOneNumberOfNodesShouldReceiveTheTestMessage
 
 		receivedCount := int(receivedCountPlus1 - 1)
 		require.Lenf(
-			s, s.receivedFromServiceURLMap, receivedCount,
+			s, s.receivedServiceURLMap, receivedCount,
 			"expected to see %d peers, got: %v",
-			receivedCount, len(s.receivedFromServiceURLMap),
+			receivedCount, len(s.receivedServiceURLMap),
 		)
 		done <- struct{}{}
 	}()
@@ -367,9 +376,9 @@ func (s *backgroundGossipSuite) MinusOneNumberOfNodesShouldReceiveTheTestMessage
 		s.mu.Lock()
 		defer s.mu.Unlock()
 
-		s.Fatalf("timed out waiting for messages to be received; received: %d; receivedFromServiceURLMap: %v", s.receivedCount, s.receivedFromServiceURLMap)
+		s.Fatalf("timed out waiting for messages to be received; received: %d; receivedServiceURLMap: %v", s.receivedCount, s.receivedServiceURLMap)
 	case <-done:
-		s.Logf("seenCount: %d; receivedFromServiceURLMap: %v", len(s.receivedFromServiceURLMap), s.receivedFromServiceURLMap)
+		s.Logf("seenCount: %d; receivedServiceURLMap: %v", len(s.receivedServiceURLMap), s.receivedServiceURLMap)
 	}
 }
 
@@ -405,9 +414,8 @@ func (s *backgroundGossipSuite) trackBootstrapProgress(peerCount int) {
 
 	// add unique bootstrap peer IDs to `bootstrapPeerIDsMap` for this
 	// p2pModule (`selfID`) as they connect
-	for {
+	for newPeerConnectionEvent := range s.bootstrapPeerIDCh {
 		//newBootstrapPeerID := <-s.bootstrapPeerIDChMap[selfID]
-		newPeerConnectionEvent := <-s.bootstrapPeerIDCh
 		localID, remoteID := newPeerConnectionEvent.localID, newPeerConnectionEvent.remoteID
 
 		s.initBootstrapPeerIDsMap(localID)
