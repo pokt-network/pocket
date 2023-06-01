@@ -75,8 +75,11 @@ func WithBusEventHandler(
 ) *mock_modules.MockBus {
 	t.Helper()
 
-	handler := handlerFactory(t, busMock)
-	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(handler).AnyTimes()
+	if handlerFactory != nil {
+		handler := handlerFactory(t, busMock)
+		busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(handler).AnyTimes()
+	}
+
 	return busMock
 }
 

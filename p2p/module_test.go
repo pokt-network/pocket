@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/internal/testutil"
-	p2p_testutil "github.com/pokt-network/pocket/internal/testutil/p2p"
 	"github.com/pokt-network/pocket/internal/testutil/persistence"
 	"github.com/pokt-network/pocket/internal/testutil/runtime"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -126,7 +125,7 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 				pubKeys[i] = privKey.PublicKey()
 			}
 
-			serviceURLs := p2p_testutil.SequentialServiceURLs(t, len(pubKeys))
+			serviceURLs := testutil.SequentialServiceURLs(t, len(pubKeys))
 			genesisStateMock := runtime_testutil.BaseGenesisStateMock(t, pubKeys, serviceURLs)
 			persistenceMock := persistence_testutil.BasePersistenceMock(t, mockBus, genesisStateMock)
 			mockBus.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()

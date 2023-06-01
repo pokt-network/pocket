@@ -22,7 +22,6 @@ import (
 
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/internal/testutil/constructors"
-	"github.com/pokt-network/pocket/internal/testutil/p2p"
 	persistence_testutil "github.com/pokt-network/pocket/internal/testutil/persistence"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
@@ -44,7 +43,7 @@ func TestMain(m *testing.M) {
 // ### RainTree Unit Tests ###
 func TestRainTreeNetworkCompleteOneNodes(t *testing.T) {
 	// val_1
-	originatorNode := p2p_testutil.NewServiceURL(1)
+	originatorNode := testutil.NewServiceURL(1)
 	expectedCalls := TestNetworkSimulationConfig{
 		originatorNode: {0, 0}, // val_1, the originator, does 0 network reads or writes
 	}
@@ -55,13 +54,13 @@ func TestRainTreeNetworkCompleteTwoNodes(t *testing.T) {
 	// val_1
 	//   └───────┐
 	// 	       val_2
-	originatorNode := p2p_testutil.NewServiceURL(1)
+	originatorNode := testutil.NewServiceURL(1)
 	// Per the diagram above, in the case of a 2 node network, the originator node (val_1) does a
 	// single write to another node (val_2),  also the
 	// originator node and never performs any reads or writes during a RainTree broadcast.
 	expectedCalls := TestNetworkSimulationConfig{
 		// Attempt: I think Validator 1 is sending a message in a 2 (including self) node network originatorNode:                {0, 1}, // val_1 does a single network write (to val_2)
-		p2p_testutil.NewServiceURL(2): {1, 0}, // val_2 does a single network read (from val_1)
+		testutil.NewServiceURL(2): {1, 0}, // val_2 does a single network read (from val_1)
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
@@ -70,11 +69,11 @@ func TestRainTreeNetworkCompleteThreeNodes(t *testing.T) {
 	// 	          val_1
 	// 	   ┌───────┴────┬─────────┐
 	//   val_2        val_1     val_3
-	originatorNode := p2p_testutil.NewServiceURL(1)
+	originatorNode := testutil.NewServiceURL(1)
 	expectedCalls := TestNetworkSimulationConfig{
-		originatorNode:                {0, 2}, // val_1 does two network writes (to val_2 and val_3)
-		p2p_testutil.NewServiceURL(2): {1, 0}, // val_2 does a single network read (from val_1)
-		p2p_testutil.NewServiceURL(3): {1, 0}, // val_2 does a single network read (from val_3)
+		originatorNode:            {0, 2}, // val_1 does two network writes (to val_2 and val_3)
+		testutil.NewServiceURL(2): {1, 0}, // val_2 does a single network read (from val_1)
+		testutil.NewServiceURL(3): {1, 0}, // val_2 does a single network read (from val_3)
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
@@ -86,12 +85,12 @@ func TestRainTreeNetworkCompleteFourNodes(t *testing.T) {
 	//  val_2                val_1             val_3
 	//    └───────┐            └───────┐         └───────┐
 	// 		    val_3                val_2             val_4
-	originatorNode := p2p_testutil.NewServiceURL(1)
+	originatorNode := testutil.NewServiceURL(1)
 	expectedCalls := TestNetworkSimulationConfig{
-		originatorNode:                {0, 3}, // val_1 does 3 network writes (two to val_2 and 1 to val_3)
-		p2p_testutil.NewServiceURL(2): {2, 1}, // val_2 does 2 network reads (both from val_1) and 1 network write (to val_3)
-		p2p_testutil.NewServiceURL(3): {2, 1}, // val_2 does 2 network reads (from val_1 and val_2) and 1 network write (to val_4)
-		p2p_testutil.NewServiceURL(4): {1, 0}, // val_2 does 1 network read (from val_3)
+		originatorNode:            {0, 3}, // val_1 does 3 network writes (two to val_2 and 1 to val_3)
+		testutil.NewServiceURL(2): {2, 1}, // val_2 does 2 network reads (both from val_1) and 1 network write (to val_3)
+		testutil.NewServiceURL(3): {2, 1}, // val_2 does 2 network reads (from val_1 and val_2) and 1 network write (to val_4)
+		testutil.NewServiceURL(4): {1, 0}, // val_2 does 1 network read (from val_3)
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
@@ -102,17 +101,17 @@ func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
 	//         val_4                               val_1                            val_7
 	//   ┌───────┴────┬─────────┐            ┌───────┴────┬─────────┐         ┌───────┴────┬─────────┐
 	// val_6        val_4     val_8        val_3        val_1     val_5     val_9        val_7     val_2
-	originatorNode := p2p_testutil.NewServiceURL(1)
+	originatorNode := testutil.NewServiceURL(1)
 	expectedCalls := TestNetworkSimulationConfig{
-		originatorNode:                {0, 4},
-		p2p_testutil.NewServiceURL(2): {1, 0},
-		p2p_testutil.NewServiceURL(3): {1, 0},
-		p2p_testutil.NewServiceURL(4): {1, 2},
-		p2p_testutil.NewServiceURL(5): {1, 0},
-		p2p_testutil.NewServiceURL(6): {1, 0},
-		p2p_testutil.NewServiceURL(7): {1, 2},
-		p2p_testutil.NewServiceURL(8): {1, 0},
-		p2p_testutil.NewServiceURL(9): {1, 0},
+		originatorNode:            {0, 4},
+		testutil.NewServiceURL(2): {1, 0},
+		testutil.NewServiceURL(3): {1, 0},
+		testutil.NewServiceURL(4): {1, 2},
+		testutil.NewServiceURL(5): {1, 0},
+		testutil.NewServiceURL(6): {1, 0},
+		testutil.NewServiceURL(7): {1, 2},
+		testutil.NewServiceURL(8): {1, 0},
+		testutil.NewServiceURL(9): {1, 0},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
@@ -126,20 +125,20 @@ func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
 //  val_8        val_7      val_10        val_6        val_5     val_8      val_11         val_10     val_5        val_4        val_3     val_6        val_2        val_1     val_4     val_7        val_6     val_1      val_12         val_11     val_2         val_10        val_9      val_12     val_3        val_2     val_9
 
 func TestRainTreeCompleteTwelveNodes(t *testing.T) {
-	originatorNode := p2p_testutil.NewServiceURL(1)
+	originatorNode := testutil.NewServiceURL(1)
 	expectedCalls := TestNetworkSimulationConfig{
-		originatorNode:                 {1, 6},
-		p2p_testutil.NewServiceURL(2):  {3, 2},
-		p2p_testutil.NewServiceURL(3):  {2, 2},
-		p2p_testutil.NewServiceURL(4):  {2, 0},
-		p2p_testutil.NewServiceURL(5):  {2, 4},
-		p2p_testutil.NewServiceURL(6):  {3, 2},
-		p2p_testutil.NewServiceURL(7):  {2, 2},
-		p2p_testutil.NewServiceURL(8):  {2, 0},
-		p2p_testutil.NewServiceURL(9):  {2, 4},
-		p2p_testutil.NewServiceURL(10): {3, 2},
-		p2p_testutil.NewServiceURL(11): {2, 2},
-		p2p_testutil.NewServiceURL(12): {2, 0},
+		originatorNode:             {1, 6},
+		testutil.NewServiceURL(2):  {3, 2},
+		testutil.NewServiceURL(3):  {2, 2},
+		testutil.NewServiceURL(4):  {2, 0},
+		testutil.NewServiceURL(5):  {2, 4},
+		testutil.NewServiceURL(6):  {3, 2},
+		testutil.NewServiceURL(7):  {2, 2},
+		testutil.NewServiceURL(8):  {2, 0},
+		testutil.NewServiceURL(9):  {2, 4},
+		testutil.NewServiceURL(10): {3, 2},
+		testutil.NewServiceURL(11): {2, 2},
+		testutil.NewServiceURL(12): {2, 0},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
@@ -152,26 +151,26 @@ func TestRainTreeNetworkCompleteEighteenNodes(t *testing.T) {
 	//           val_11                                   val_7                               val_15                                 val_5                                 val_1                              val_9                           val_17                                  val_13                                val_3
 	//    ┌────────┴─────┬───────────┐             ┌───────┴────┬──────────┐           ┌────────┴─────┬──────────┐            ┌───────┴────┬──────────┐             ┌───────┴────┬─────────┐          ┌────────┴────┬─────────┐         ┌───────┴─────┬──────────┐             ┌────────┴─────┬───────────┐          ┌───────┴────┬──────────┐
 	// val_13         val_11      val_16        val_9        val_7      val_12      val_17         val_15     val_8        val_7        val_5      val_10        val_3        val_1     val_6      val_11        val_9     val_2     val_1         val_17     val_4         val_15         val_13      val_18     val_5        val_3      val_14
-	originatorNode := p2p_testutil.NewServiceURL(1)
+	originatorNode := testutil.NewServiceURL(1)
 	expectedCalls := TestNetworkSimulationConfig{
-		originatorNode:                 {1, 6},
-		p2p_testutil.NewServiceURL(2):  {1, 0},
-		p2p_testutil.NewServiceURL(3):  {2, 2},
-		p2p_testutil.NewServiceURL(4):  {1, 0},
-		p2p_testutil.NewServiceURL(5):  {2, 2},
-		p2p_testutil.NewServiceURL(6):  {1, 0},
-		p2p_testutil.NewServiceURL(7):  {2, 4},
-		p2p_testutil.NewServiceURL(8):  {1, 0},
-		p2p_testutil.NewServiceURL(9):  {2, 2},
-		p2p_testutil.NewServiceURL(10): {1, 0},
-		p2p_testutil.NewServiceURL(11): {2, 2},
-		p2p_testutil.NewServiceURL(12): {1, 0},
-		p2p_testutil.NewServiceURL(13): {2, 4},
-		p2p_testutil.NewServiceURL(14): {1, 0},
-		p2p_testutil.NewServiceURL(15): {2, 2},
-		p2p_testutil.NewServiceURL(16): {1, 0},
-		p2p_testutil.NewServiceURL(17): {2, 2},
-		p2p_testutil.NewServiceURL(18): {1, 0},
+		originatorNode:             {1, 6},
+		testutil.NewServiceURL(2):  {1, 0},
+		testutil.NewServiceURL(3):  {2, 2},
+		testutil.NewServiceURL(4):  {1, 0},
+		testutil.NewServiceURL(5):  {2, 2},
+		testutil.NewServiceURL(6):  {1, 0},
+		testutil.NewServiceURL(7):  {2, 4},
+		testutil.NewServiceURL(8):  {1, 0},
+		testutil.NewServiceURL(9):  {2, 2},
+		testutil.NewServiceURL(10): {1, 0},
+		testutil.NewServiceURL(11): {2, 2},
+		testutil.NewServiceURL(12): {1, 0},
+		testutil.NewServiceURL(13): {2, 4},
+		testutil.NewServiceURL(14): {1, 0},
+		testutil.NewServiceURL(15): {2, 2},
+		testutil.NewServiceURL(16): {1, 0},
+		testutil.NewServiceURL(17): {2, 2},
+		testutil.NewServiceURL(18): {1, 0},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
@@ -184,35 +183,35 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 	//          val_16                                    val_10                                 val_22                                     val_7                                 val_1                             val_13                             val_25                                  val_19                                val_4
 	//   ┌────────┴─────┬───────────┐              ┌────────┴─────┬───────────┐           ┌────────┴─────┬───────────┐              ┌────────┴────┬──────────┐             ┌───────┴────┬─────────┐          ┌────────┴─────┬──────────┐         ┌───────┴─────┬──────────┐             ┌────────┴─────┬───────────┐          ┌───────┴────┬──────────┐
 	// val_20         val_16      val_24         val_14         val_10      val_18      val_26         val_22      val_12         val_11        val_7      val_15        val_5        val_1     val_9      val_17         val_13     val_3     val_2         val_25     val_6         val_23         val_19      val_27     val_8        val_4      val_21
-	originatorNode := p2p_testutil.NewServiceURL(1)
+	originatorNode := testutil.NewServiceURL(1)
 	expectedCalls := TestNetworkSimulationConfig{
-		originatorNode:                 {0, 6},
-		p2p_testutil.NewServiceURL(2):  {1, 0},
-		p2p_testutil.NewServiceURL(3):  {1, 0},
-		p2p_testutil.NewServiceURL(4):  {1, 2},
-		p2p_testutil.NewServiceURL(5):  {1, 0},
-		p2p_testutil.NewServiceURL(6):  {1, 0},
-		p2p_testutil.NewServiceURL(7):  {1, 2},
-		p2p_testutil.NewServiceURL(8):  {1, 0},
-		p2p_testutil.NewServiceURL(9):  {1, 0},
-		p2p_testutil.NewServiceURL(10): {1, 4},
-		p2p_testutil.NewServiceURL(11): {1, 0},
-		p2p_testutil.NewServiceURL(12): {1, 0},
-		p2p_testutil.NewServiceURL(13): {1, 2},
-		p2p_testutil.NewServiceURL(14): {1, 0},
-		p2p_testutil.NewServiceURL(15): {1, 0},
-		p2p_testutil.NewServiceURL(16): {1, 2},
-		p2p_testutil.NewServiceURL(17): {1, 0},
-		p2p_testutil.NewServiceURL(18): {1, 0},
-		p2p_testutil.NewServiceURL(19): {1, 4},
-		p2p_testutil.NewServiceURL(20): {1, 0},
-		p2p_testutil.NewServiceURL(21): {1, 0},
-		p2p_testutil.NewServiceURL(22): {1, 2},
-		p2p_testutil.NewServiceURL(23): {1, 0},
-		p2p_testutil.NewServiceURL(24): {1, 0},
-		p2p_testutil.NewServiceURL(25): {1, 2},
-		p2p_testutil.NewServiceURL(26): {1, 0},
-		p2p_testutil.NewServiceURL(27): {1, 0},
+		originatorNode:             {0, 6},
+		testutil.NewServiceURL(2):  {1, 0},
+		testutil.NewServiceURL(3):  {1, 0},
+		testutil.NewServiceURL(4):  {1, 2},
+		testutil.NewServiceURL(5):  {1, 0},
+		testutil.NewServiceURL(6):  {1, 0},
+		testutil.NewServiceURL(7):  {1, 2},
+		testutil.NewServiceURL(8):  {1, 0},
+		testutil.NewServiceURL(9):  {1, 0},
+		testutil.NewServiceURL(10): {1, 4},
+		testutil.NewServiceURL(11): {1, 0},
+		testutil.NewServiceURL(12): {1, 0},
+		testutil.NewServiceURL(13): {1, 2},
+		testutil.NewServiceURL(14): {1, 0},
+		testutil.NewServiceURL(15): {1, 0},
+		testutil.NewServiceURL(16): {1, 2},
+		testutil.NewServiceURL(17): {1, 0},
+		testutil.NewServiceURL(18): {1, 0},
+		testutil.NewServiceURL(19): {1, 4},
+		testutil.NewServiceURL(20): {1, 0},
+		testutil.NewServiceURL(21): {1, 0},
+		testutil.NewServiceURL(22): {1, 2},
+		testutil.NewServiceURL(23): {1, 0},
+		testutil.NewServiceURL(24): {1, 0},
+		testutil.NewServiceURL(25): {1, 2},
+		testutil.NewServiceURL(26): {1, 0},
+		testutil.NewServiceURL(27): {1, 0},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }

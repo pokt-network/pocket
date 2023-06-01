@@ -1,6 +1,7 @@
 package constructors
 
 import (
+	"github.com/foxcpp/go-mockdns"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/pokt-network/pocket/internal/testutil/bus"
@@ -25,6 +26,7 @@ type serviceURLStr = string
 func NewBusesMocknetAndP2PModules(
 	t gocuke.TestingT,
 	count int,
+	dnsSrv *mockdns.Server,
 	genesisState *genesis.GenesisState,
 	busEventHandlerFactory testutil.BusEventHandlerFactory,
 ) (
@@ -32,78 +34,92 @@ func NewBusesMocknetAndP2PModules(
 	libp2pNetworkMock mocknet.Mocknet,
 	p2pModules map[serviceURLStr]modules.P2PModule,
 ) {
-	// TODO_THIS_COMMIT: refactor
-	dnsSrv := testutil.MinimalDNSMock(t)
+	libp2pNetworkMock = p2p_testutil.NewLibp2pNetworkMock(t)
+	serviceURLKeyMap := testutil.SequentialServiceURLPrivKeyMap(t, count)
 
-	libp2pNetworkMock = mocknet.New()
-	// destroy mocknet on test cleanup
-	t.Cleanup(func() {
-		err := libp2pNetworkMock.Close()
-		require.NoError(t, err)
-	})
-
-	buses = make(map[serviceURLStr]*mock_modules.MockBus)
-	p2pModules = make(map[serviceURLStr]modules.P2PModule)
-	// CONSIDERATION: using an iterator/generator would prevent unintentional
-	// ID collisions
-	privKeys := testutil.LoadLocalnetPrivateKeys(t, count)
-	// CONSIDERATION: using an iterator/generator would prevent unintentional
-	// serviceURL collisions
-	serviceURLs := p2p_testutil.SequentialServiceURLs(t, count)
-	for i, serviceURL := range serviceURLs {
-		if len(privKeys) <= i {
-			t.Logf("WARNING: not enough private keys for %d service URLs", len(serviceURLs))
-			break
-		}
-
-		privKey := privKeys[i]
-		busMock := bus_testutil.NewBus(t, privKey, serviceURL, genesisState, busEventHandlerFactory)
-		buses[serviceURL] = busMock
-
-		// TODO_THIS_COMMIT: refactor
-		_ = consensus_testutil.BaseConsensusMock(t, busMock)
-		_ = persistence_testutil.BasePersistenceMock(t, busMock, genesisState)
-
-		// -- option 1
-		_ = telemetry_testutil.BaseTelemetryMock(t, busMock)
-
-		// -- option 2
-		//_ = telemetry_testutil.WithTimeSeriesAgent(
-		//	t, telemetry_testutil.MinimalTelemetryMock(t, busMock),
-		//)
-
-		// MUST register DNS before instantiating P2PModule
-		testutil.AddServiceURLZone(t, dnsSrv, serviceURL)
-
-		host := p2p_testutil.NewMocknetHost(t, libp2pNetworkMock, privKey)
-		p2pModules[serviceURL] = NewP2PModuleWithHost(t, busMock, host)
-	}
+	buses, p2pModules = NewBusesAndP2PModules(
+		t, busEventHandlerFactory,
+		dnsSrv,
+		genesisState,
+		libp2pNetworkMock,
+		serviceURLKeyMap,
+	)
 	err := libp2pNetworkMock.LinkAll()
 	require.NoError(t, err)
 
 	return buses, libp2pNetworkMock, p2pModules
 }
 
-// TODO_THIS_TEST: need this?
-func NewP2PModules(
+// TODO_THIS_COMMIT: rename / move, if possible
+func NewP2PModule(
 	t gocuke.TestingT,
-	privKeys []cryptoPocket.PrivateKey,
+	// TODO_THIS_COMMIT: get these from the bus instead
+	serviceURL string,
+	privKey cryptoPocket.PrivateKey,
+	// --
 	busMock *mock_modules.MockBus,
+	genesisState *genesis.GenesisState,
+	dnsSrv *mockdns.Server,
 	libp2pNetworkMock mocknet.Mocknet,
+	// TODO_THIS_COMMIT: consider *p2p.P2PModule instead
+) modules.P2PModule {
+	_ = consensus_testutil.BaseConsensusMock(t, busMock)
+	_ = persistence_testutil.BasePersistenceMock(t, busMock, genesisState)
+
+	// -- option 1
+	_ = telemetry_testutil.BaseTelemetryMock(t, busMock)
+
+	// -- option 2
+	//_ = telemetry_testutil.WithTimeSeriesAgent(
+	//	t, telemetry_testutil.MinimalTelemetryMock(t, busMock),
+	//)
+
+	// MUST register DNS before instantiating P2PModule
+	testutil.AddServiceURLZone(t, dnsSrv, serviceURL)
+
+	host := testutil.NewMocknetHost(t, libp2pNetworkMock, privKey)
+	return NewP2PModuleWithHost(t, busMock, host)
+}
+
+// TODO_THIS_TEST: need this?
+func NewBusesAndP2PModules(
+	t gocuke.TestingT,
+	busEventHandlerFactory testutil.BusEventHandlerFactory,
+	dnsSrv *mockdns.Server,
+	genesisState *genesis.GenesisState,
+	libp2pNetworkMock mocknet.Mocknet,
+	serviceURLKeyMap map[serviceURLStr]cryptoPocket.PrivateKey,
 ) (
+	busMocks map[serviceURLStr]*mock_modules.MockBus,
+	// TODO_THIS_COMMIT: consider *p2p.P2PModule instead
 	p2pModules map[serviceURLStr]modules.P2PModule,
 ) {
-	// CONSIDERATION: using an iterator/generator would prevent unintentional
-	// serviceURL collisions
-	serviceURLs := p2p_testutil.SequentialServiceURLs(t, len(privKeys))
-	_ = p2p_testutil.SetupMockNetPeers(t, libp2pNetworkMock, privKeys, serviceURLs)
+	busMocks = make(map[serviceURLStr]*mock_modules.MockBus)
+	p2pModules = make(map[serviceURLStr]modules.P2PModule)
 
-	for i, serviceURL := range serviceURLs {
-		host := libp2pNetworkMock.Hosts()[i]
-		// TECHDEBT: refactor
-		p2pModules[serviceURL] = NewP2PModuleWithHost(t, busMock, host)
+	for serviceURL, privKey := range serviceURLKeyMap {
+		busMock := bus_testutil.NewBus(
+			t, privKey,
+			serviceURL,
+			genesisState,
+			busEventHandlerFactory,
+		)
+		busMocks[serviceURL] = busMock
+
+		p2pModules[serviceURL] = NewP2PModule(
+			t, serviceURL,
+			// TODO_THIS_COMMIT: send via busMock instead
+			privKey,
+			busMock,
+			// TODO_THIS_COMMIT: send via busMock instead
+			genesisState,
+			// TODO_THIS_COMMIT: send via busMock instead (?)
+			dnsSrv,
+			// TODO_THIS_COMMIT: send via busMock instead (?)
+			libp2pNetworkMock,
+		)
 	}
-	return p2pModules
+	return busMocks, p2pModules
 }
 
 // TODO_THIS_TEST: need this?
@@ -122,6 +138,7 @@ func NewBusesAndP2PModuleWithHost(
 	return busMock, NewP2PModuleWithHost(t, busMock, host)
 }
 
+// TODO_THIS_COMMIT: rename; consider returning *p2p.P2PModule instead
 func NewP2PModuleWithHost(
 	t gocuke.TestingT,
 	busMock *mock_modules.MockBus,

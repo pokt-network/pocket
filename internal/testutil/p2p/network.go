@@ -1,14 +1,10 @@
 package p2p_testutil
 
 import (
-	"fmt"
 	"github.com/libp2p/go-libp2p/core/crypto"
-	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/net/mock"
-	"github.com/multiformats/go-multiaddr"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/require"
 
@@ -25,30 +21,23 @@ func NewMocknetWithNPeers(t gocuke.TestingT, peerCount int) (mocknet.Mocknet, []
 	// load pre-generated validator keypairs
 	libp2pNetworkMock := mocknet.New()
 	privKeys := testutil.LoadLocalnetPrivateKeys(t, peerCount)
-	serviceURLs := SequentialServiceURLs(t, peerCount)
+	serviceURLs := testutil.SequentialServiceURLs(t, peerCount)
 	_ = SetupMockNetPeers(t, libp2pNetworkMock, privKeys, serviceURLs)
 
 	return libp2pNetworkMock, serviceURLs
 }
 
-func NewMocknetHost(
-	t gocuke.TestingT,
-	libp2pNetworkMock mocknet.Mocknet,
-	privKey cryptoPocket.PrivateKey,
-) libp2pHost.Host {
+func NewLibp2pNetworkMock(t gocuke.TestingT) mocknet.Mocknet {
 	t.Helper()
 
-	// TODO_THIS_COMMIT: move to const
-	addrMock, err := multiaddr.NewMultiaddr(fmt.Sprintf("/ip4/10.0.0.1/tcp/%d", defaults.DefaultP2PPort))
-	require.NoError(t, err)
+	libp2pNetworkMock := mocknet.New()
+	// destroy mocknet on test cleanup
+	t.Cleanup(func() {
+		err := libp2pNetworkMock.Close()
+		require.NoError(t, err)
+	})
 
-	libp2pPrivKey, err := crypto.UnmarshalEd25519PrivateKey(privKey.Bytes())
-	require.NoError(t, err)
-
-	host, err := libp2pNetworkMock.AddPeer(libp2pPrivKey, addrMock)
-	require.NoError(t, err)
-
-	return host
+	return libp2pNetworkMock
 }
 
 func SetupMockNetPeers(
@@ -85,17 +74,6 @@ func SetupMockNetPeers(
 	return peerIDs
 }
 
-// CONSIDERATION: serviceURLs are only unique within their respective slice;
-// consider building an iterator/generator instead.
-func SequentialServiceURLs(t gocuke.TestingT, count int) (serviceURLs []string) {
-	t.Helper()
-
-	for i := 0; i < count; i++ {
-		serviceURLs = append(serviceURLs, NewServiceURL(i+1))
-	}
-	return serviceURLs
-}
-
 func PeersFromPrivKeysAndServiceURLs(
 	t gocuke.TestingT,
 	privKeys []cryptoPocket.PrivateKey,
@@ -110,7 +88,7 @@ func PeersFromPrivKeysAndServiceURLs(
 	}
 
 	for i, privKey := range privKeys[:maxCount] {
-		peerInfo := peerFromPrivKeyAndServiceURL(t, privKey, NewServiceURL(i+1))
+		peerInfo := peerFromPrivKeyAndServiceURL(t, privKey, testutil.NewServiceURL(i+1))
 		peersInfo = append(peersInfo, peerInfo)
 	}
 	return peersInfo
@@ -131,11 +109,4 @@ func peerFromPrivKeyAndServiceURL(
 	require.NoError(t, err)
 
 	return peerInfo
-}
-
-const ServiceURLFormat = "node%d.consensus:42069"
-
-// TECHDEBT: rename `validatorId()` to `serviceURL()`
-func NewServiceURL(i int) string {
-	return fmt.Sprintf(ServiceURLFormat, i)
 }
