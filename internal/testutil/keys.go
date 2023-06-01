@@ -25,7 +25,7 @@ func LoadLocalnetPrivateKeys(t require.TestingT, keyCount int) (privKeys []crypt
 
 	privKeys = make([]cryptoPocket.PrivateKey, 0, keyCount)
 
-	// scann through file & extract private keys
+	// scan through file & extract private keys
 	scanner := bufio.NewScanner(privKeyManifest)
 	scanner.Split(bufio.ScanLines)
 

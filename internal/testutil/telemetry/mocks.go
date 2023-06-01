@@ -2,6 +2,7 @@ package telemetry_testutil
 
 import (
 	"github.com/golang/mock/gomock"
+	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/regen-network/gocuke"
 
 	"github.com/pokt-network/pocket/shared/modules"
@@ -17,13 +18,20 @@ func MinimalTelemetryMock(
 	ctrl := gomock.NewController(t)
 	telemetryMock := mock_modules.NewMockTelemetryModule(ctrl)
 
+	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
+
+	return telemetryMock
+}
+
+func BehavesLikeBaseTelemetryMock(
+	t gocuke.TestingT,
+	telemetryMock *mock_modules.MockTelemetryModule,
+) *mock_modules.MockTelemetryModule {
+	t.Helper()
+
 	telemetryMock.EXPECT().Start().Return(nil).AnyTimes()
 	telemetryMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
-	// TODO_THIS_COMMIT: which one ^ v ?
-	//telemetryMock.EXPECT().SetBus(busMock).Return().AnyTimes()
 	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
-	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
-	//busMock.RegisterModule(telemetryMock)
 
 	return telemetryMock
 }
@@ -33,7 +41,16 @@ func BaseTelemetryMock(
 	busMock *mock_modules.MockBus,
 ) *mock_modules.MockTelemetryModule {
 	t.Helper()
-	return WithTimeSeriesAgent(t, WithEventMetricsAgent(t, MinimalTelemetryMock(t, busMock)))
+
+	return testutil.PipeTwoToOne[
+		gocuke.TestingT,
+		*mock_modules.MockTelemetryModule
+	](
+		t, MinimalTelemetryMock(t, busMock),
+		BehavesLikeBaseTelemetryMock,
+		WithEventMetricsAgent,
+		WithTimeSeriesAgent,
+	)
 }
 
 func WithTimeSeriesAgent(
