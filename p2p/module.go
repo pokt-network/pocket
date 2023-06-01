@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go.uber.org/multierr"
+	"sync/atomic"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/libp2p/go-libp2p"
@@ -38,6 +39,7 @@ var _ modules.P2PModule = &p2pModule{}
 type p2pModule struct {
 	base_modules.IntegratableModule
 
+	started        atomic.Bool
 	address        cryptoPocket.Address
 	logger         *modules.Logger
 	options        []modules.ModuleOption
@@ -143,6 +145,10 @@ func (m *p2pModule) GetModuleName() string {
 // Start instantiates and assigns `m.host`, unless one already exists, and
 // `m.stakedActorRouter` (which depends on `m.host` as a required config field).
 func (m *p2pModule) Start() (err error) {
+	if !m.started.CompareAndSwap(false, true) {
+		return fmt.Errorf("p2p module already started")
+	}
+
 	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
@@ -184,6 +190,10 @@ func (m *p2pModule) Start() (err error) {
 }
 
 func (m *p2pModule) Stop() error {
+	if !m.started.CompareAndSwap(true, false) {
+		return fmt.Errorf("p2p module already stopped")
+	}
+
 	routerCloseErrs := multierr.Append(
 		m.unstakedActorRouter.Close(),
 		m.stakedActorRouter.Close(),
@@ -196,6 +206,8 @@ func (m *p2pModule) Stop() error {
 
 	// Don't reuse closed host, `#Start()` will re-create.
 	m.host = nil
+	m.stakedActorRouter = nil
+	m.unstakedActorRouter = nil
 	return err
 }
 
@@ -218,10 +230,11 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 		return err
 	}
 
-	//stakedBroadcastErr := m.stakedActorRouter.Broadcast(data)
+	stakedBroadcastErr := m.stakedActorRouter.Broadcast(data)
 	unstakedBroadcastErr := m.unstakedActorRouter.Broadcast(data)
-	//return multierror.Append(err, stakedBroadcastErr, unstakedBroadcastErr).ErrorOrNil()
-	return multierror.Append(err, unstakedBroadcastErr).ErrorOrNil()
+	return multierror.Append(err, stakedBroadcastErr, unstakedBroadcastErr).ErrorOrNil()
+	//return multierror.Append(err, unstakedBroadcastErr).ErrorOrNil()
+	//return multierror.Append(err, stakedBroadcastErr).ErrorOrNil()
 }
 
 func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
