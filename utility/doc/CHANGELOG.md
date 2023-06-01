@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.42] - 2023-06-01
 
-- Add a placeholder Servicer implementation
+- Add a place-holder Servicer implementation
 - Use mockgen and Bus for DI
 - Cross-check the chains handled by a servicer using the Persistence module
 

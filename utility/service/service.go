@@ -166,7 +166,7 @@ func (s servicer) admitRelay(relay *coreTypes.Relay) error {
 
 	height := s.GetBus().GetConsensusModule().CurrentHeight()
 	if err := s.validateRelayMeta(relay.Meta, int64(height)); err != nil {
-		return fmt.Errorf("%w: %w", errValidateRelayMeta, err)
+		return fmt.Errorf("%w: %s", errValidateRelayMeta, err.Error())
 	}
 
 	// TODO: update the CLI to include ApplicationAddress(or Application Public Key) in the RelayMeta
@@ -177,7 +177,7 @@ func (s servicer) admitRelay(relay *coreTypes.Relay) error {
 
 	// TODO: (REFACTOR) use a loop to run all validators: would also remove the need for passing the session around
 	if err := validateRelayBlockHeight(relay.Meta, session); err != nil {
-		return fmt.Errorf("%w: %w", errValidateBlockHeight, err)
+		return fmt.Errorf("%w: %s", errValidateBlockHeight, err.Error())
 	}
 
 	if err := s.validateApplication(relay.Meta, session); err != nil {
