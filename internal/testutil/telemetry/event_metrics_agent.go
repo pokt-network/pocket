@@ -1,11 +1,9 @@
 package telemetry_testutil
 
 import (
-	"sync"
-	"testing"
-
 	"github.com/golang/mock/gomock"
 	"github.com/regen-network/gocuke"
+	"sync"
 
 	"github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/telemetry"
@@ -17,13 +15,18 @@ func BaseEventMetricsAgentMock(t gocuke.TestingT) *mock_modules.MockEventMetrics
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := mock_modules.NewMockEventMetricsAgent(ctrl)
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
+	// TODO_THIS_COMMIT: remove v -- may represent failure condition w/ reused nonces..
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	// END TODO
+
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	return eventMetricsAgentMock
 }
 
 // TODO_THIS_COMMIT: refactor...
 // Events metric mock - Needed to help with proper counts for number of expected network writes
-func PrepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup, expectedNumNetworkWrites int) *mock_modules.MockEventMetricsAgent {
+func PrepareEventMetricsAgentMock(t gocuke.TestingT, valId string, wg *sync.WaitGroup, expectedNumNetworkWrites int) *mock_modules.MockEventMetricsAgent {
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := mock_modules.NewMockEventMetricsAgent(ctrl)
 
@@ -56,7 +59,7 @@ func EventMetricsAgentMockWithHandler(
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Eq(label), gomock.Any()).Do(handler).Times(times)
 	// TODO_THIS_COMMIT: is this really needed?
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(label), gomock.Any()).AnyTimes()
 
 	return eventMetricsAgentMock
 }
