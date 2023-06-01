@@ -20,12 +20,9 @@ type Router interface {
 	GetPeerstore() Peerstore
 	AddPeer(peer Peer) error
 	RemovePeer(peer Peer) error
-
-	// This function was added to specifically support the RainTree implementation.
-	// Handles the raw data received from the network and returns the data to be processed
-	// by the application layer.
-	HandleNetworkData(data []byte) ([]byte, error)
 }
+
+type RouterHandler func(data []byte) error
 
 // RouterConfig is used to configure `Router` implementations and to test a
 // given configuration's validity.

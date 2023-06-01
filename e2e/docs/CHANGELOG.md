@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.8] - 2023-05-31
+
+- Adds the query feature file
+- Renames the validator feature file
+- Adds a Gherkin test for querying the block store through the Query Get CLI
+
 ## [0.0.0.7] - 2023-05-25
 
 - Update E2E tests to use the `p1` binary name instead of the `client` binary name
