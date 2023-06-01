@@ -3,14 +3,14 @@
 package p2p_test
 
 import (
-	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	runtime_testutil "github.com/pokt-network/pocket/internal/testutil/runtime"
 	telemetry_testutil "github.com/pokt-network/pocket/internal/testutil/telemetry"
 	"github.com/pokt-network/pocket/p2p"
-	"github.com/pokt-network/pocket/p2p/protocol"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
+	"google.golang.org/protobuf/types/known/anypb"
 	"log"
 	"os"
 	"path/filepath"
@@ -20,14 +20,12 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/regen-network/gocuke"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/anypb"
-
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/internal/testutil/constructors"
 	persistence_testutil "github.com/pokt-network/pocket/internal/testutil/persistence"
 	"github.com/pokt-network/pocket/shared/messaging"
+	"github.com/regen-network/gocuke"
+	"github.com/stretchr/testify/require"
 )
 
 // TODO(#314): Add the tooling and instructions on how to generate unit tests in this file.
@@ -383,10 +381,12 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		// TODO_THIS_COMMIT: consider using BusEventHandler instead...
 		sURL := strings.Clone(serviceURL)
 		mod := *(p2pMod.(*p2p.P2PModule))
-		mod.GetHost().SetStreamHandler(protocol.PoktProtocolID, func(stream libp2pNetwork.Stream) {
-			log.Printf("[valID: %s] Read\n", sURL)
-			(&mod).GetRainTreeRouter().HandleStream(stream)
-			wg.Done()
+		mod.GetRainTreeRouter().HandlerProxy(t, func(origHandler typesP2P.RouterHandler) typesP2P.RouterHandler {
+			return func(data []byte) error {
+				log.Printf("[valID: %s] Read\n", sURL)
+				wg.Done()
+				return nil
+			}
 		})
 	}
 
