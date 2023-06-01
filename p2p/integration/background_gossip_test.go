@@ -35,6 +35,7 @@ func TestMinimal(t *testing.T) {
 
 	// a new step definition suite is constructed for every scenario
 	gocuke.NewRunner(t, &suite{}).Path(backgroundGossipFeaturePath).Run()
+	t.Fatalf("fail")
 }
 
 type suite struct {
@@ -117,16 +118,20 @@ func (s *suite) AFullyConnectedNetworkOfPeers(count int64) {
 		busEventHandlerFactory,
 	)
 
+	// add expectations for P2P events to telemetry module's event metrics agent
+	for _, busMock := range s.busMocks {
+		eventMetricsAgentMock := busMock.
+			GetTelemetryModule().
+			GetEventMetricsAgent().(*mock_modules.MockEventMetricsAgent)
+
+		telemetry_testutil.WithP2PIntegrationEvents(
+			s, eventMetricsAgentMock,
+		)
+	}
+
 	for _, p2pModule := range s.p2pModules {
 		err := p2pModule.(*p2p.P2PModule).Start()
 		require.NoError(s, err)
-	}
-
-	for _, busMock := range s.busMocks {
-		//eventMetricsAgentMock := telemetry_testutil.PrepareEventMetricsAgentMock(s, serviceURL, &s.wg, peerCount)
-		eventMetricsAgentMock := telemetry_testutil.BaseEventMetricsAgentMock(s)
-		busMock.GetTelemetryModule().(*mock_modules.MockTelemetryModule).EXPECT().
-			GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
 	}
 
 	//for _, host := range libp2pNetworkMock.Hosts() {
@@ -157,12 +162,11 @@ func (s *suite) MinusOneNumberOfNodesShouldReceiveTheTestMessage(receivedCountPl
 		s.mu.Lock()
 		defer s.mu.Unlock()
 
+		receivedCount := int(receivedCountPlus1 - 1)
 		require.Lenf(
-			s, s.seenServiceURLs,
-			int(receivedCountPlus1-1),
+			s, s.seenServiceURLs, receivedCount,
 			"expected to see %d peers, got: %v",
-			receivedCountPlus1-1,
-			len(s.seenServiceURLs),
+			receivedCount, len(s.seenServiceURLs),
 		)
 		done <- struct{}{}
 	}()
