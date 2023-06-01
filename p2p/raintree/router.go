@@ -210,11 +210,13 @@ func (rtr *rainTreeRouter) handleRainTreeMsg(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	// TECHDEBT(#763): refactor as "pre-propagation validation"
 	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
 		rtr.logger.Error().Err(err).Msg("Error decoding network message")
 		return nil, err
 	}
+	// --
 
 	// Continue RainTree propagation
 	if rainTreeMsg.Level > 0 {
