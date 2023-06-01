@@ -3,9 +3,9 @@ package modules
 //go:generate mockgen -destination=./mocks/persistence_module_mock.go github.com/pokt-network/pocket/shared/modules PersistenceModule,PersistenceRWContext,PersistenceReadContext,PersistenceWriteContext
 
 import (
+	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
-	"github.com/pokt-network/pocket/persistence/trees"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -26,7 +26,7 @@ type PersistenceModule interface {
 	GetBlockStore() blockstore.BlockStore
 
 	// TreeStore operations
-	GetTreeStore() trees.TreeStore
+	GetTreeStore() TreeStore
 
 	NewWriteContext() PersistenceRWContext
 
@@ -36,6 +36,21 @@ type PersistenceModule interface {
 
 	// Debugging / development only
 	HandleDebugMessage(*messaging.DebugMessage) error
+}
+
+type TreeStore interface {
+	// Update returns the new state hash for a given height.
+	//
+	// DOCUMENTATION: This needs to describe how height is passed
+	// through to the Update function and used by the queries.
+	// It updates to the future but not to the past.
+	// * So passing a higher height will cause a change
+	// but repeatedly calling the same or a lower height will
+	// not incur a change.
+	Update(pgtx pgx.Tx, height uint64) (string, error)
+	// ClearAll completely clears the state of the trees.
+	// For debugging purposes only.
+	ClearAll() error
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.

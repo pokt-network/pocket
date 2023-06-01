@@ -42,9 +42,11 @@ type persistenceModule struct {
 	// tx merkle tree.
 	txIndexer indexer.TxIndexer
 
-	// A list of all the merkle trees maintained by the persistence module that roll up into the state commitment.
+	// TODO_IN_THIS_COMMIT updates this comment
+	// A list of all the merkle trees maintained by the
+	// persistence module that roll up into the state commitment.
 	// stateTrees *stateTrees
-	stateTrees trees.TreeStore
+	stateTrees modules.TreeStore
 
 	// Only one write context is allowed at a time
 	writeContext *PostgresContext
@@ -104,7 +106,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	stateTrees, err := trees.NewtreeStore(persistenceCfg.TreesStoreDir)
+	stateTrees, err := trees.NewStateTrees(persistenceCfg.TreesStoreDir)
 	if err != nil {
 		return nil, err
 	}
@@ -228,15 +230,17 @@ func (m *persistenceModule) ReleaseWriteContext() error {
 	return nil
 }
 
+// TECHDEBT: declare BlockStore interface in shared/modules
 func (m *persistenceModule) GetBlockStore() blockstore.BlockStore {
 	return m.blockStore
 }
 
+// TECHDEBT: declare TxIndexer interface in shared/modules
 func (m *persistenceModule) GetTxIndexer() indexer.TxIndexer {
 	return m.txIndexer
 }
 
-func (m *persistenceModule) GetTreeStore() trees.TreeStore {
+func (m *persistenceModule) GetTreeStore() modules.TreeStore {
 	return m.stateTrees
 }
 

@@ -5,18 +5,19 @@ import (
 	"log"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/types"
+	ptypes "github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/stretchr/testify/require"
 )
 
 func FuzzValidator(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		newTestGenericActor(types.ValidatorActor, newTestValidator),
-		getGenericActor(types.ValidatorActor, getTestValidator),
-		types.ValidatorActor)
+		newTestGenericActor(ptypes.ValidatorActor, newTestValidator),
+		getGenericActor(ptypes.ValidatorActor, getTestValidator),
+		ptypes.ValidatorActor)
 }
 
 func TestGetSetValidatorStakeAmount(t *testing.T) {
@@ -26,7 +27,7 @@ func TestGetSetValidatorStakeAmount(t *testing.T) {
 
 func TestGetValidatorUpdatedAtHeight(t *testing.T) {
 	getValidatorsUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*coreTypes.Actor, error) {
-		return db.GetActorsUpdated(types.ValidatorActor, height)
+		return db.GetActorsUpdated(ptypes.ValidatorActor, height)
 	}
 	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestValidator, getValidatorsUpdatedFunc, 5)
 }
