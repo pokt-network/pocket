@@ -4,6 +4,7 @@ package integration
 
 import (
 	"fmt"
+	"github.com/foxcpp/go-mockdns"
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -34,7 +35,9 @@ type PeerIDSet map[libp2pPeer.ID]struct{}
 const (
 	backgroundGossipFeaturePath = "background_gossip.feature"
 	//broadcastTimeoutDuration    = time.Millisecond * 250
-	broadcastTimeoutDuration = time.Second * 5
+	broadcastTimeoutDuration = time.Second * 3
+	// TODO_THIS_COMMIT: move
+	bootstrapTimeoutDuration = time.Second * 3
 )
 
 func TestMinimal(t *testing.T) {
@@ -47,6 +50,7 @@ func TestMinimal(t *testing.T) {
 type backgroundGossipSuite struct {
 	// special arguments like TestingT are injected automatically into exported fields
 	gocuke.TestingT
+	dnsSrv *mockdns.Server
 
 	timeoutDuration time.Duration
 	// TODO_THIS_COMMIT: rename
@@ -54,6 +58,7 @@ type backgroundGossipSuite struct {
 	// receivedFromServiceURLMap is used as a map to track which messages have been
 	// received by which nodes.
 	receivedFromServiceURLMap map[string]struct{}
+	bootstrapMutex            sync.Mutex
 	// bootstrapPeerIDChMap is a mapping between the peerID string of each node to
 	// a channel that will be used to signal the peer ID strings of each node it
 	// has discovered.
@@ -75,6 +80,7 @@ func (s *backgroundGossipSuite) Before(scenario gocuke.Scenario) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	s.dnsSrv = testutil.MinimalDNSMock(s)
 	s.bootstrapPeerIDChMap = make(map[libp2pPeer.ID]chan libp2pPeer.ID)
 	s.receivedFromServiceURLMap = make(map[string]struct{})
 }
@@ -100,7 +106,9 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 		peerCount = int(count)
 		pubKeys   = make([]cryptoPocket.PublicKey, peerCount)
 	)
-	s.Logf("ADDING peerCount - 1: %d", peerCount-1)
+
+	//s.Logf("ADDING peerCount - 1: %d", peerCount-1)
+	s.bootstrapNetworkWaitGroup.Add(peerCount)
 	s.receivedWaitGroup.Add(peerCount - 1)
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -157,6 +165,7 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 	// setup mock network
 	s.busMocks, s.libp2pNetworkMock, s.p2pModules = constructors.NewBusesMocknetAndP2PModules(
 		s, peerCount,
+		s.dnsSrv,
 		genesisState,
 		busEventHandlerFactory,
 	)
@@ -168,7 +177,6 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 	//s.bootstrapNetworkWaitGroup.Add(peerCount * (peerCount - 1) / 2)
 	//s.bootstrapNetworkWaitGroup.Add(peerCount * (peerCount - 1))
 	//s.bootstrapNetworkWaitGroup.Add(peerCount * peerCount)
-	s.bootstrapNetworkWaitGroup.Add(peerCount)
 
 	// add expectations for P2P events to telemetry module's event metrics agent
 	for _, busMock := range s.busMocks {
@@ -191,9 +199,9 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 		//countz := 0
 		p2pModule := module.(*p2p.P2PModule)
 
-		p2pCfg := p2pModule.GetBus().GetRuntimeMgr().GetConfig().P2P
-		serviceURL := fmt.Sprintf("%s:%d", p2pCfg.Hostname, p2pCfg.Port)
-		s.Logf("serviceURL: %s; peer ID: %s", serviceURL, p2pModule.GetHost().ID())
+		//p2pCfg := p2pModule.GetBus().GetRuntimeMgr().GetConfig().P2P
+		//serviceURL := fmt.Sprintf("%s:%d", p2pCfg.Hostname, p2pCfg.Port)
+		//s.Logf("serviceURL: %s; peer ID: %s", serviceURL, p2pModule.GetHost().ID())
 
 		s.initBootstrapPeerIDChMap(p2pModule)
 
@@ -203,15 +211,20 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 		go s.trackBootstrapProgress(p2pModule, peerCount-1)
 
 		// TODO_THIS_COMMIT: refactor
+		debugNotifee := testutil.NewDebugNotifee(s)
 		notifee := &libp2pNetwork.NotifyBundle{
-			DisconnectedF: func(network libp2pNetwork.Network, conn libp2pNetwork.Conn) {
-				s.Logf("disconnected: %s", conn.RemotePeer())
-			},
-			ConnectedF: func(_ libp2pNetwork.Network, conn libp2pNetwork.Conn) {
-				s.Logf("connected: %s", conn.RemotePeer())
+			//DisconnectedF: func(network libp2pNetwork.Network, conn libp2pNetwork.Conn) {
+			//	s.Logf("disconnected: %s", conn.RemotePeer())
+			//},
+			DisconnectedF: debugNotifee.Disconnected,
+			ConnectedF: func(net libp2pNetwork.Network, conn libp2pNetwork.Conn) {
+				//s.Logf("connected: %s", conn.RemotePeer())
 				//s.Logf("pstore size: %d", len(p2pModule.GetHost().Peerstore().Peers()))
+				s.bootstrapMutex.Lock()
+				defer s.bootstrapMutex.Unlock()
+
 				s.bootstrapPeerIDChMap[p2pModule.GetHost().ID()] <- conn.RemotePeer()
-				s.Logf("bootstrap peer ID sent on channel")
+				//s.Logf("bootstrap peer ID sent on channel")
 				//if len(p2pModule.GetHost().Peerstore().Peers()) == peerCount {
 				//	countz++
 				//	s.Logf("count: %d", countz)
@@ -219,8 +232,12 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 				//	//s.bootstrapNetworkWaitGroup.Done()
 				//	//s.bootstrapNetworkWaitGroup.Done()
 				//}
+				debugNotifee.Connected(net, conn)
 			},
+			ListenF:      debugNotifee.Listen,
+			ListenCloseF: debugNotifee.ListenClose,
 		}
+		//p2pModule.GetHost().Network().Notify(debugNotifee)
 		p2pModule.GetHost().Network().Notify(notifee)
 		// --
 
@@ -262,8 +279,6 @@ func (s *backgroundGossipSuite) AFullyConnectedNetworkOfPeers(count int64) {
 	}
 
 	// wait for bootstrapping to complete
-	// TODO_THIS_COMMIT: move
-	bootstrapTimeoutDuration := time.Second * 5
 	bootstrapDone := make(chan struct{}, 0)
 	go func() {
 		s.bootstrapNetworkWaitGroup.Wait()
@@ -324,6 +339,9 @@ func (s *backgroundGossipSuite) MinusOneNumberOfNodesShouldReceiveTheTestMessage
 }
 
 func (s *backgroundGossipSuite) initBootstrapPeerIDChMap(p2pModule *p2p.P2PModule) {
+	s.bootstrapMutex.Lock()
+	defer s.bootstrapMutex.Unlock()
+
 	selfID := p2pModule.GetHost().ID()
 	// initialize `s.bootstrapPeerIDChMap` for each p2pModule
 	if _, ok := s.bootstrapPeerIDChMap[selfID]; !ok {
@@ -332,6 +350,9 @@ func (s *backgroundGossipSuite) initBootstrapPeerIDChMap(p2pModule *p2p.P2PModul
 }
 
 func (s *backgroundGossipSuite) initBootstrapPeerIDsMap(p2pModule *p2p.P2PModule) {
+	s.bootstrapMutex.Lock()
+	defer s.bootstrapMutex.Unlock()
+
 	selfID := p2pModule.GetHost().ID()
 	// initialize `s.bootstrapPeerIDsMap`
 	if s.bootstrapPeerIDsMap == nil {
