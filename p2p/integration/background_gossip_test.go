@@ -20,6 +20,7 @@ import (
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/internal/testutil/constructors"
 	"github.com/pokt-network/pocket/internal/testutil/generics"
+	p2p_testutil "github.com/pokt-network/pocket/internal/testutil/p2p"
 	runtime_testutil "github.com/pokt-network/pocket/internal/testutil/runtime"
 	telemetry_testutil "github.com/pokt-network/pocket/internal/testutil/telemetry"
 	"github.com/pokt-network/pocket/p2p"
@@ -355,14 +356,16 @@ func (s *backgroundGossipSuite) ANodeBroadcastsATestMessageViaItsBackgroundRoute
 	s.sender = s.p2pModules[generics_testutil.GetKeys(s.p2pModules)[0]].(*p2p.P2PModule)
 
 	// broadcast a test message
-	msg := &anypb.Any{}
+	debugStringMsg := p2p_testutil.NewDebugStringMessage(s, "test message")
+	msg, err := anypb.New(debugStringMsg)
+	require.NoError(s, err)
 
 	s.receivedWaitGroup.Add(1)
 
 	// TODO_THIS_COMMIT: refactor
 	//for i := 0; i > 10; i++ {
 	s.receivedWaitGroup.Add(len(s.p2pModules) - 1)
-	err := s.sender.Broadcast(msg)
+	err = s.sender.Broadcast(msg)
 	require.NoError(s, err)
 	//}
 
