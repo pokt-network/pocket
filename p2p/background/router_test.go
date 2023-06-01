@@ -3,6 +3,8 @@ package background
 import (
 	"context"
 	"fmt"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"sync"
 	"testing"
 	"time"
@@ -129,16 +131,10 @@ func TestBackgroundRouter_RemovePeer(t *testing.T) {
 }
 
 func TestBackgroundRouter_Broadcast(t *testing.T) {
-	const (
-		numPeers            = 4
-		testMsg             = "test messsage"
-		testTimeoutDuration = time.Second * 5
-	)
-
 	var (
 		ctx = context.Background()
 		// mutex preventing concurrent writes to `seenMessages`
-		seenMessagesMutext sync.Mutex
+		seenMessagesMutex sync.Mutex
 		// map used as a set to collect IDs of peers which have received a message
 		seenMessages       = make(map[string]struct{})
 		bootstrapWaitgroup = sync.WaitGroup{}
@@ -162,7 +158,16 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 		testHosts = append(testHosts, host)
 		expectedPeerIDs[i] = host.ID().String()
 		rtr := newRouterWithSelfPeerAndHost(t, selfPeer, host)
-		go readSubscription(t, ctx, &broadcastWaitgroup, rtr, &seenMessagesMutext, seenMessages)
+		rtr.HandlerProxy(t, func(origHandler typesP2P.RouterHandler) typesP2P.RouterHandler {
+			return func(data []byte) error {
+				seenMessagesMutex.Lock()
+				broadcastWaitgroup.Done()
+				seenMessages[rtr.host.ID().String()] = struct{}{}
+				seenMessagesMutex.Unlock()
+
+				return origHandler(data)
+			}
+		})
 	}
 
 	// bootstrap off of arbitrary testHost
@@ -203,7 +208,8 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 
 		// broadcast message
 		t.Log("broadcasting...")
-		err := testRouter.Broadcast([]byte(testMsg))
+		testPoktEnvelopeBz := newTestPoktEnvelopeBz(t, testMsg)
+		err = testRouter.Broadcast(testPoktEnvelopeBz)
 		require.NoError(t, err)
 
 		// wait for broadcast to be received by all peers
@@ -214,6 +220,7 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 	// waitgroup broadcastDone or timeout
 	select {
 	case <-testTimeout:
+		seenMessagesMutex.Lock()
 		t.Fatalf(
 			"timed out waiting for all expected messages: got %d; wanted %d",
 			len(seenMessages),
@@ -298,11 +305,33 @@ func newRouterWithSelfPeerAndHost(t *testing.T, selfPeer typesP2P.Peer, host lib
 	err := pstore.AddPeer(selfPeer)
 	require.NoError(t, err)
 
+	handler := func(poktEnvelopeBz []byte) error {
+		poktEnvelope := &messaging.PocketEnvelope{}
+		err := proto.Unmarshal(poktEnvelopeBz, poktEnvelope)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, poktEnvelope.Nonce)
+		require.NotEmpty(t, poktEnvelope.Content)
+
+		debugMsg := &messaging.DebugMessage{}
+		err = poktEnvelope.Content.UnmarshalTo(debugMsg)
+		require.NoError(t, err)
+
+		debugStringMsg := &messaging.DebugStringMessage{}
+		err = debugMsg.Message.UnmarshalTo(debugStringMsg)
+		require.NoError(t, err)
+
+		require.Equal(t, testMsg, debugStringMsg.Value, "debug string messages don't match")
+
+		return nil
+	}
+
 	router, err := NewBackgroundRouter(busMock, &config.BackgroundConfig{
 		Addr:                  selfPeer.GetAddress(),
 		PeerstoreProvider:     pstoreProviderMock,
 		CurrentHeightProvider: consensusMock,
 		Host:                  host,
+		Handler:               handler,
 	})
 	require.NoError(t, err)
 
@@ -360,30 +389,21 @@ func newTestHost(t *testing.T, mockNet mocknet.Mocknet, privKey cryptoPocket.Pri
 	return newMockNetHostFromPeer(t, mockNet, privKey, peer)
 }
 
-func readSubscription(
-	t *testing.T,
-	ctx context.Context,
-	broadcastWaitGroup *sync.WaitGroup,
-	rtr *backgroundRouter,
-	mu *sync.Mutex,
-	seenMsgs map[string]struct{},
-) {
-	t.Helper()
+func newTestPoktEnvelopeBz(t *testing.T, msg string) []byte {
+	debugStringMsg, err := anypb.New(&messaging.DebugStringMessage{Value: msg})
+	require.NoError(t, err)
 
-	for {
-		if err := ctx.Err(); err != nil {
-			if err != context.Canceled || err != context.DeadlineExceeded {
-				require.NoError(t, err)
-			}
-			return
-		}
-
-		_, err := rtr.subscription.Next(ctx)
-		require.NoError(t, err)
-
-		mu.Lock()
-		broadcastWaitGroup.Done()
-		seenMsgs[rtr.host.ID().String()] = struct{}{}
-		mu.Unlock()
+	debugMsg := &messaging.DebugMessage{
+		Action:  messaging.DebugMessageAction_DEBUG_ACTION_UNKNOWN,
+		Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
+		Message: debugStringMsg,
 	}
+
+	poktEnvelope, err := messaging.PackMessage(debugMsg)
+	require.NoError(t, err)
+
+	poktEnvelopeBz, err := proto.Marshal(poktEnvelope)
+	require.NoError(t, err)
+
+	return poktEnvelopeBz
 }
