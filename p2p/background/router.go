@@ -5,8 +5,6 @@ package background
 import (
 	"context"
 	"fmt"
-	"sync"
-
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
@@ -15,6 +13,7 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
+	"github.com/pokt-network/pocket/p2p/providers"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -52,7 +51,7 @@ type backgroundRouter struct {
 	kadDHT *dht.IpfsDHT
 	// TECHDEBT: `pstore` will likely be removed in future refactoring / simplification
 	// of the `Router` interface.
-	// pstore is the background router's peerstore.
+	// pstore is the background router's peerstore. Assigned in `backgroundRouter#setupPeerstore()`.
 	pstore typesP2P.Peerstore
 }
 
@@ -66,14 +65,6 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 	networkLogger.Info().Msg("Initializing background router")
 
 	if err := cfg.IsValid(); err != nil {
-		return nil, err
-	}
-
-	// seed initial peerstore with current on-chain peer info (i.e. staked actors)
-	pstore, err := cfg.PeerstoreProvider.GetStakedPeerstoreAtHeight(
-		cfg.CurrentHeightProvider.CurrentHeight(),
-	)
-	if err != nil {
 		return nil, err
 	}
 
@@ -95,6 +86,10 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 	if err != nil {
 		return nil, fmt.Errorf("creating DHT: %w", err)
 	}
+
+	//if err := kadDHT.Bootstrap(ctx); err != nil {
+	//	return nil, fmt.Errorf("bootstrapping DHT: %w", err)
+	//}
 
 	topic, err := gossipSub.Join(protocol.BackgroundTopicStr)
 	if err != nil {
@@ -121,8 +116,14 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 		topic:        topic,
 		subscription: subscription,
 		logger:       networkLogger,
-		pstore:       pstore,
 		handler:      cfg.Handler,
+	}
+
+	if err := rtr.setupPeerstore(
+		cfg.PeerstoreProvider,
+		cfg.CurrentHeightProvider,
+	); err != nil {
+		return nil, err
 	}
 
 	go rtr.readSubscription(ctx)
@@ -188,18 +189,52 @@ func (rtr *backgroundRouter) RemovePeer(peer typesP2P.Peer) error {
 	return rtr.pstore.RemovePeer(peer.GetAddress())
 }
 
-var readCountMu sync.Mutex
+func (rtr *backgroundRouter) setupPeerstore(
+	pstoreProvider providers.PeerstoreProvider,
+	currentHeightProvider providers.CurrentHeightProvider,
+) (err error) {
+	// seed initial peerstore with current on-chain peer info (i.e. staked actors)
+	rtr.pstore, err = pstoreProvider.GetStakedPeerstoreAtHeight(
+		currentHeightProvider.CurrentHeight(),
+	)
+	if err != nil {
+		return err
+	}
+
+	// CONSIDERATION: add `GetPeers` method to `PeerstoreProvider` interface
+	// to avoid this loop.
+	for _, peer := range rtr.pstore.GetPeerList() {
+		if err := utils.AddPeerToLibp2pHost(rtr.host, peer); err != nil {
+			return err
+		}
+
+		// TODO: refactor: #bootstrap()
+		libp2pPeer, err := utils.Libp2pAddrInfoFromPeer(peer)
+		if err != nil {
+			return fmt.Errorf(
+				"converting peer info, pokt address: %s: %w",
+				peer.GetAddress(),
+				err,
+			)
+		}
+
+		// don't attempt to connect to self
+		if rtr.host.ID() == libp2pPeer.ID {
+			return nil
+		}
+
+		// TECHDEBT(#595): add ctx to interface methods and propagate down.
+		if err := rtr.host.Connect(context.TODO(), libp2pPeer); err != nil {
+			return fmt.Errorf("connecting to peer: %w", err)
+		}
+	}
+	return nil
+}
 
 func (rtr *backgroundRouter) readSubscription(ctx context.Context) {
 	// TODO_THIS_COMMIT: look into "topic validaton"
 	// (see: https://github.com/libp2p/specs/tree/master/pubsub#topic-validation)
-	readCount := 0
 	for {
-		readCountMu.Lock()
-		readCount++
-		fmt.Printf("readCount: %d\n", readCount)
-		readCountMu.Unlock()
-
 		msg, err := rtr.subscription.Next(ctx)
 		if ctx.Err() != nil {
 			fmt.Printf("error: %s\n", ctx.Err())
