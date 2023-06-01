@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.42] - 2023-06-01
+## [0.0.0.43] - 2023-06-01
 
 - Add a place-holder Servicer implementation
 - Use mockgen and Bus for DI
 - Cross-check the chains handled by a servicer using the Persistence module
+
+## [0.0.0.42] - 2023-06-01
+
+- Added a utility feature list with must-have and nice-to-haves for MainNet and TestNet
 
 ## [0.0.0.41] - 2023-05-30
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.45] - 2023-06-01
+
+- Added 2 applications to genesis.json in LocalNet configuration
+- Added 2 servicers to genesis.json in LocalNet configuration
+
 ## [0.0.0.44] - 2023-05-25
 
 - Update docker file to use `p1` as the binary name for the user facing client
