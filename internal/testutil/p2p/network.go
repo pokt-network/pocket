@@ -1,17 +1,22 @@
 package p2p_testutil
 
 import (
+	"testing"
+
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/peer"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/messaging"
 )
 
 // TODO: remove if not needed
@@ -109,4 +114,27 @@ func peerFromPrivKeyAndServiceURL(
 	require.NoError(t, err)
 
 	return peerInfo
+}
+
+func NewTestPoktEnvelopeBz(t *testing.T, msg string) []byte {
+	debugMsg := NewDebugStringMessage(t, msg)
+
+	poktEnvelope, err := messaging.PackMessage(debugMsg)
+	require.NoError(t, err)
+
+	poktEnvelopeBz, err := proto.Marshal(poktEnvelope)
+	require.NoError(t, err)
+
+	return poktEnvelopeBz
+}
+
+func NewDebugStringMessage(t gocuke.TestingT, msg string) *messaging.DebugMessage {
+	debugStringMsg, err := anypb.New(&messaging.DebugStringMessage{Value: msg})
+	require.NoError(t, err)
+
+	return &messaging.DebugMessage{
+		Action:  messaging.DebugMessageAction_DEBUG_ACTION_UNKNOWN,
+		Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
+		Message: debugStringMsg,
+	}
 }

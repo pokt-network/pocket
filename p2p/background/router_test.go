@@ -3,8 +3,6 @@ package background
 import (
 	"context"
 	"fmt"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 	"sync"
 	"testing"
 	"time"
@@ -17,8 +15,10 @@ import (
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/pokt-network/pocket/internal/testutil/generics"
+	"github.com/pokt-network/pocket/internal/testutil/p2p"
 	"github.com/pokt-network/pocket/p2p/config"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mock_types "github.com/pokt-network/pocket/p2p/types/mocks"
@@ -228,7 +228,7 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 
 		// broadcast message
 		t.Log("broadcasting...")
-		testPoktEnvelopeBz := newTestPoktEnvelopeBz(t, testMsg)
+		testPoktEnvelopeBz := p2p_testutil.NewTestPoktEnvelopeBz(t, testMsg)
 		err = testRouter.Broadcast(testPoktEnvelopeBz)
 		require.NoError(t, err)
 
@@ -410,23 +410,4 @@ func newTestHost(t *testing.T, mockNet mocknet.Mocknet, privKey cryptoPocket.Pri
 
 	// construct mock host
 	return newMockNetHostFromPeer(t, mockNet, privKey, peer)
-}
-
-func newTestPoktEnvelopeBz(t *testing.T, msg string) []byte {
-	debugStringMsg, err := anypb.New(&messaging.DebugStringMessage{Value: msg})
-	require.NoError(t, err)
-
-	debugMsg := &messaging.DebugMessage{
-		Action:  messaging.DebugMessageAction_DEBUG_ACTION_UNKNOWN,
-		Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
-		Message: debugStringMsg,
-	}
-
-	poktEnvelope, err := messaging.PackMessage(debugMsg)
-	require.NoError(t, err)
-
-	poktEnvelopeBz, err := proto.Marshal(poktEnvelope)
-	require.NoError(t, err)
-
-	return poktEnvelopeBz
 }
