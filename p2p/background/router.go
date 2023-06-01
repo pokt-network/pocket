@@ -9,6 +9,9 @@ import (
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
+	"github.com/pokt-network/pocket/shared/messaging"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
@@ -29,6 +32,8 @@ type backgroundRouter struct {
 	base_modules.IntegratableModule
 
 	logger *modules.Logger
+	// handler is the function to call when a message is received.
+	handler typesP2P.RouterHandler
 	// host represents a libp2p network node, it encapsulates a libp2p peerstore
 	// & connection manager. `libp2p.New` configures and starts listening
 	// according to options.
@@ -110,6 +115,8 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 		pstore:       pstore,
 	}
 
+	go rtr.readSubscription(ctx)
+
 	return rtr, nil
 }
 
@@ -164,6 +171,35 @@ func (rtr *backgroundRouter) RemovePeer(peer typesP2P.Peer) error {
 	}
 
 	return rtr.pstore.RemovePeer(peer.GetAddress())
+}
+
+func (rtr *backgroundRouter) readSubscription(ctx context.Context) {
+	for msg, err := rtr.subscription.Next(ctx); ctx.Err() == nil; {
+		if err != nil {
+			rtr.logger.Error().Err(err).
+				Msg("error reading from background topic subscription")
+			continue
+		}
+
+		// TECHDEBT/DISCUSS: telemetry
+		if err := rtr.handleBackgroundMsg(msg.Data); err != nil {
+			rtr.logger.Error().Err(err).Msg("error handling background message")
+			continue
+		}
+	}
+}
+
+func (rtr *backgroundRouter) handleBackgroundMsg(data []byte) error {
+	var backgroundMsg typesP2P.BackgroundMessage
+	if err := proto.Unmarshal(data, &backgroundMsg); err != nil {
+		return err
+	}
+
+	networkMessage := messaging.PocketEnvelope{}
+	if err := proto.Unmarshal(data, &networkMessage); err != nil {
+		return err
+	}
+	return nil
 }
 
 // isClientDebugMode returns the value of `ClientDebugMode` in the base config
