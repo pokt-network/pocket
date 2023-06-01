@@ -24,14 +24,27 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/messaging"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
 // https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2
-const testIP6ServiceURL = "[2a00:1450:4005:802::2004]:8080"
+const (
+	testIP6ServiceURL   = "[2a00:1450:4005:802::2004]:8080"
+	numPeers            = 4
+	testMsg             = "test messsage"
+	testTimeoutDuration = time.Second * 2
+)
 
 // TECHDEBT(#609): move & de-dup.
 var testLocalServiceURL = fmt.Sprintf("127.0.0.1:%d", defaults.DefaultP2PPort)
+
+func TestBackgroundRouter_InvalidConfig(t *testing.T) {
+	t.Skip("pending")
+	//busMock := bus_testutil.NewBus(t)
+	//
+	//router, err := NewBackgroundRouter()
+}
 
 func TestBackgroundRouter_AddPeer(t *testing.T) {
 	testRouter := newTestRouter(t, nil)
