@@ -1,79 +1,235 @@
+//go:build test
+
 package integration
 
 import (
+	"github.com/foxcpp/go-mockdns"
+	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	"github.com/pokt-network/pocket/internal/testutil"
+	"github.com/pokt-network/pocket/internal/testutil/constructors"
+	generics_testutil "github.com/pokt-network/pocket/internal/testutil/generics"
+	runtime_testutil "github.com/pokt-network/pocket/internal/testutil/runtime"
+	"github.com/pokt-network/pocket/p2p"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/regen-network/gocuke"
+	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 const (
 	peerDiscoveryFeaturePath = "peer_discovery.feature"
-	bootstrapNodePrefix      = "bootstrap"
-)
-
-var (
-	testNodes map[string]modules.P2PModule
+	bootstrapNodeLabelPrefix = "bootstrap"
+	otherNodeLabelPrefix     = "other"
 )
 
 func TestPeerDiscoveryIntegration(t *testing.T) {
 	t.Parallel()
 
-	//testutil.RunGherkinFeature(t, peerDiscoveryFeaturePath, initPeerDiscoveryScenarios)
+	gocuke.NewRunner(t, new(backgroundPeerDiscoverySuite)).Path(peerDiscoveryFeaturePath).Run()
 }
 
-//func aNode(nodeName string) error {
-//	if strings.HasPrefix(bootstrapNodePrefix, nodeName) {
-//		// --
-//	}
-//
-//	return godog.ErrPending
+type backgroundPeerDiscoverySuite struct {
+	gocuke.TestingT
+
+	dnsSrv            *mockdns.Server
+	busMocks          map[string]*mock_modules.MockBus
+	libp2pNetworkMock mocknet.Mocknet
+	p2pModules        map[string]modules.P2PModule
+
+	// TODO: something more sophisticated..
+	// - what about a list of nodes sharing a label?
+	//
+	// labelServiceURLMap a list of serviceURLs to a set of labels
+	labelServiceURLMap map[string][]string
+}
+
+func (s *backgroundPeerDiscoverySuite) Before(_ gocuke.Scenario) {
+	s.labelServiceURLMap = make(map[string][]string)
+}
+
+func (s *backgroundPeerDiscoverySuite) ANetworkContainingANode(nodeLabel string) {
+	s.dnsSrv = testutil.MinimalDNSMock(s)
+
+	s.busMocks, s.libp2pNetworkMock, s.p2pModules = constructors.NewBusesMocknetAndP2PModules(
+		s, 1, s.dnsSrv, nil, nil,
+	)
+
+	// i.e. "only" serviceURL as this step definition initializes the network
+	firstServiceURL := generics_testutil.GetKeys(s.busMocks)[0]
+	s.addServiceURLWithLabel(nodeLabel, firstServiceURL)
+
+	err := s.p2pModules[firstServiceURL].Start()
+	require.NoError(s, err)
+
+	// TODO_THIS_COMMIT: revisit...
+	time.Sleep(time.Second * 1)
+}
+
+func (s *backgroundPeerDiscoverySuite) NumberOfNodesJoinTheNetwork(nodeCount int64, nodeLabel string) {
+	// TECHDEBT: use an iterator instead..
+	// plus 1 to account for the bootstrap node serviceURL which we used earlier
+	serviceURLKeyMap := testutil.SequentialServiceURLPrivKeyMap(s, int(nodeCount+1))
+
+	// TODO_THIS_COMMIT: clarify how to use `bootstrapNodeLabelPrefix` / what it is for
+	bootstrapNodeServiceURLs := s.getServiceURLsWithLabel(bootstrapNodeLabelPrefix)
+	require.Equalf(s, 1, len(bootstrapNodeServiceURLs), "expected exactly one bootstrap node")
+
+	bootstrapNodeServiceURL := bootstrapNodeServiceURLs[0]
+
+	// bootstrap node is the only validator in genesis
+	genesisState := runtime_testutil.BaseGenesisStateMockFromServiceURLKeyMap(
+		s, map[string]cryptoPocket.PrivateKey{
+			bootstrapNodeServiceURL: serviceURLKeyMap[bootstrapNodeServiceURL],
+		},
+	)
+
+	// remove the bootstrap node from the map
+	delete(serviceURLKeyMap, bootstrapNodeServiceURL)
+
+	for serviceURL := range serviceURLKeyMap {
+		s.addServiceURLWithLabel(otherNodeLabelPrefix, serviceURL)
+	}
+
+	joinersBusMocks, joinersP2PModules := constructors.NewBusesAndP2PModules(
+		s, nil,
+		s.dnsSrv,
+		genesisState,
+		s.libp2pNetworkMock,
+		serviceURLKeyMap,
+	)
+
+	err := s.libp2pNetworkMock.LinkAll()
+	require.NoError(s, err)
+
+	for _, p2pModule := range joinersP2PModules {
+		err := p2pModule.Start()
+		require.NoError(s, err)
+	}
+
+	s.addBusMocks(joinersBusMocks)
+	s.addP2PModules(joinersP2PModules)
+
+	// TODO_THIS_COMMIT: wait for bootstrapping
+	time.Sleep(time.Second * 1)
+}
+
+// TODO_THIS_COMMIT: move below exported methods
+func (s *backgroundPeerDiscoverySuite) addServiceURLWithLabel(nodeLabel, serviceURL string) {
+	serviceURLs := s.labelServiceURLMap[nodeLabel]
+	if serviceURLs == nil {
+		serviceURLs = make([]string, 0)
+	}
+	s.labelServiceURLMap[nodeLabel] = append(serviceURLs, serviceURL)
+}
+func (s *backgroundPeerDiscoverySuite) getServiceURLsWithLabel(nodeLabel string) []string {
+	serviceURLs, ok := s.labelServiceURLMap[nodeLabel]
+	if !ok {
+		return nil
+	}
+
+	if len(serviceURLs) < 1 {
+		return nil
+	}
+	return serviceURLs
+}
+
+func (s *backgroundPeerDiscoverySuite) TheNodeShouldHavePlusOneNumberOfPeersInItsPeerstore(nodeLabel string, peerCountMinus1 int64) {
+	labelServiceURLs := s.getServiceURLsWithLabel(nodeLabel)
+	//serviceURL, ok := s.labelServiceURLMap[nodeLabel]
+	require.NotEmptyf(s, labelServiceURLs, "node label %q not found", nodeLabel)
+	require.Equalf(s, 1, len(labelServiceURLs), "node label %q has more than one service url", nodeLabel)
+
+	serviceURL := labelServiceURLs[0]
+	p2pModule, ok := s.p2pModules[serviceURL]
+	require.Truef(s, ok, "p2p module for service url %q not found", serviceURL)
+
+	host := p2pModule.(*p2p.P2PModule).GetHost()
+	peers := host.Peerstore().Peers()
+
+	require.Equalf(s, int(peerCountMinus1+1), len(peers), "unexpected number of peers in peerstore: %s", peers)
+}
+
+func (s *backgroundPeerDiscoverySuite) OtherNodesShouldHavePlusOneNumberOfPeersInTheirPeerstores(peerCountMinus1 int64) {
+	// TODO_THIS_COMMIT: clarify how to use `bootstrapNodeLabelPrefix` / what it is for
+	otherNodeServiceURLs := s.getServiceURLsWithoutLabel(bootstrapNodeLabelPrefix)
+
+	require.NotEmpty(s, otherNodeServiceURLs, "other nodes not found")
+	require.Equal(s, int(peerCountMinus1), len(otherNodeServiceURLs))
+
+	for _, serviceURL := range otherNodeServiceURLs {
+		p2pModule, ok := s.p2pModules[serviceURL]
+		require.Truef(s, ok, "p2p module for service url %q not found", serviceURL)
+
+		host := p2pModule.(*p2p.P2PModule).GetHost()
+		peers := host.Peerstore().Peers()
+
+		require.Equalf(s, int(peerCountMinus1+1), len(peers), "unexpected number of peers in peerstore: %s", peers)
+	}
+}
+
+//func (s *backgroundPeerDiscoverySuite) EachNodeShouldNotHaveAnyLeaversInTheirPeerstores() {
+//	panic("PENDING")
 //}
 //
-//func allNodesInPartitionShouldDiscoverAllNodesInPartition(partitionA, partitionB string) error {
-//	return godog.ErrPending
+//func (s *backgroundPeerDiscoverySuite) LeaverNumberOfNodesLeaveTheNetwork() {
+//	panic("PENDING")
+//}
+
+func (s *backgroundPeerDiscoverySuite) EachNodeShouldHaveNumberOfPeersInTheirRespectivePeerstores(peerCount int64) {
+	panic("PENDING")
+}
+
+//func (s *backgroundPeerDiscoverySuite) NumberOfNodesBootstrapInPartition(a int64, b string) {
+//	panic("PENDING")
+//}
+
+func (s *backgroundPeerDiscoverySuite) TheNetworkShouldContainNumberOfNodes(nodeCount int64) {
+	panic("PENDING")
+}
+
+//func (s *backgroundPeerDiscoverySuite) ANodeInPartition(a string, b string) {
+//	panic("PENDING")
 //}
 //
-//func eachNodeShouldHaveNumberOfPeersInTheirRespectivePeerstores(expectedPeerCount int) error {
-//	return godog.ErrPending
+//func (s *backgroundPeerDiscoverySuite) ANodeJoinsPartitionsAnd(a string, b string, c string) {
+//	panic("PENDING")
 //}
 //
-//func eachNodeShouldNotHaveAnyLeaversInTheirPeerstores() error {
-//	return godog.ErrPending
+//func (s *backgroundPeerDiscoverySuite) AllNodesInPartitionShouldDiscoverAllNodesInPartition(a string, b string) {
+//	panic("PENDING")
 //}
-//
-//func otherNodesShouldHaveNumberOfPeersInTheirPeerstores(arg1 int) error {
-//	return godog.ErrPending
+
+//func (s *backgroundPeerDiscoverySuite) TheNodeLeavesTheNetwork(a string) {
+//	panic("PENDING")
 //}
-//
-//func otherNodesShouldNotBeIncludedInTheirRespectivePeerstores() error {
-//	return godog.ErrPending
-//}
-//
-//func theNetworkShouldContainNumberOfNodes(arg1 int) error {
-//	return godog.ErrPending
-//}
-//
-//func theNodeShouldHaveNumberOfPeersInItsPeerstore(arg1 string, arg2 int) error {
-//	return godog.ErrPending
-//}
-//
-//func theNodeShouldNotBeIncludedInItsOwnPeerstore(arg1 string) error {
-//	return godog.ErrPending
-//}
-//
-//func initPeerDiscoveryScenarios(ctx *godog.ScenarioContext) {
-//	ctx.Step(`^a "([^"]*)" node$`, aNode)
-//	ctx.Step(`^a "([^"]*)" node in partition "([^"]*)"$`, aNodeInPartition)
-//	ctx.Step(`^a "([^"]*)" node joins partitions "([^"]*)" and "([^"]*)"$`, aNodeJoinsPartitionsAnd)
-//	ctx.Step(`^all nodes in partition "([^"]*)" should discover all nodes in partition "([^"]*)"$`, allNodesInPartitionShouldDiscoverAllNodesInPartition)
-//	ctx.Step(`^each node should have (\d+) number of peers in their respective peerstores$`, eachNodeShouldHaveNumberOfPeersInTheirRespectivePeerstores)
-//	ctx.Step(`^each node should not have any leavers in their peerstores$`, eachNodeShouldNotHaveAnyLeaversInTheirPeerstores)
-//	ctx.Step(`^(\d+) number of nodes bootstrap in partition "([^"]*)"$`, numberOfNodesBootstrapInPartition)
-//	ctx.Step(`^(\d+) number of nodes join the network$`, numberOfNodesJoinTheNetwork)
-//	ctx.Step(`^(\d+) number of nodes leave the network$`, numberOfNodesLeaveTheNetwork)
-//	ctx.Step(`^other nodes should have (\d+) number of peers in their peerstores$`, otherNodesShouldHaveNumberOfPeersInTheirPeerstores)
-//	ctx.Step(`^other nodes should not be included in their respective peerstores$`, otherNodesShouldNotBeIncludedInTheirRespectivePeerstores)
-//	ctx.Step(`^the network should contain (\d+) number of nodes$`, theNetworkShouldContainNumberOfNodes)
-//	ctx.Step(`^the "([^"]*)" node leaves the network$`, theNodeLeavesTheNetwork)
-//	ctx.Step(`^the "([^"]*)" node should have (\d+) number of peers in its peerstore$`, theNodeShouldHaveNumberOfPeersInItsPeerstore)
-//	ctx.Step(`^the "([^"]*)" node should not be included in its own peerstore$`, theNodeShouldNotBeIncludedInItsOwnPeerstore)
-//}
+
+func (s *backgroundPeerDiscoverySuite) addBusMocks(busMocks map[string]*mock_modules.MockBus) {
+	s.Helper()
+
+	for serviceURL, busMock := range busMocks {
+		require.Nilf(s, s.busMocks[serviceURL], "busMock for serviceURL %s already exists", serviceURL)
+		s.busMocks[serviceURL] = busMock
+	}
+}
+
+func (s *backgroundPeerDiscoverySuite) addP2PModules(p2pModules map[string]modules.P2PModule) {
+	s.Helper()
+
+	for serviceURL, p2pModule := range p2pModules {
+		require.Nilf(s, s.p2pModules[serviceURL], "p2pModule for serviceURL %s already exists", serviceURL)
+		s.p2pModules[serviceURL] = p2pModule
+	}
+}
+
+func (s *backgroundPeerDiscoverySuite) getServiceURLsWithoutLabel(nodeLabel string) (serviceURLs []string) {
+	for label, urls := range s.labelServiceURLMap {
+		if label == nodeLabel {
+			continue
+		}
+		serviceURLs = append(serviceURLs, urls...)
+	}
+	return serviceURLs
+}
