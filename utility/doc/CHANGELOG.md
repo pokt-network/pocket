@@ -9,12 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.42] - 2023-06-01
 
+- Add a placeholder Servicer implementation
 - Use mockgen and Bus for DI
 - Cross-check the chains handled by a servicer using the Persistence module
 
-## [0.0.0.41] - 2023-05-25
+## [0.0.0.41] - 2023-05-30
 
-- Add a placeholder Servicer implementation
+- Added the E2E Feature Path Template to document, present and explain how to go about defining and scoping utility level features
 
 ## [0.0.0.40] - 2023-05-04
 
