@@ -5,11 +5,11 @@ package background
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
-	"github.com/pokt-network/pocket/shared/messaging"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/pokt-network/pocket/logger"
@@ -65,6 +65,10 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 	networkLogger := logger.Global.CreateLoggerForModule("backgroundRouter")
 	networkLogger.Info().Msg("Initializing background router")
 
+	if err := cfg.IsValid(); err != nil {
+		return nil, err
+	}
+
 	// seed initial peerstore with current on-chain peer info (i.e. staked actors)
 	pstore, err := cfg.PeerstoreProvider.GetStakedPeerstoreAtHeight(
 		cfg.CurrentHeightProvider.CurrentHeight(),
@@ -74,7 +78,9 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 	}
 
 	// CONSIDERATION: If switching to `NewRandomSub`, there will be a max size
-	gossipSub, err := pubsub.NewGossipSub(ctx, cfg.Host)
+	gossipSub, err := pubsub.NewGossipSub(ctx, cfg.Host) //pubsub.WithFloodPublish(false),
+	//pubsub.WithMaxMessageSize(256),
+
 	if err != nil {
 		return nil, fmt.Errorf("creating gossip pubsub: %w", err)
 	}
@@ -100,7 +106,10 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 	// > output buffer. The default length is 32 but it can be configured to avoid
 	// > dropping messages if the consumer is not reading fast enough.
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p-pubsub#WithBufferSize)
-	subscription, err := topic.Subscribe()
+	subscription, err := topic.Subscribe(
+	//pubsub.WithBufferSize(10),
+	//pubsub.With
+	)
 	if err != nil {
 		return nil, fmt.Errorf("subscribing to background topic: %w", err)
 	}
@@ -113,6 +122,7 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 		subscription: subscription,
 		logger:       networkLogger,
 		pstore:       pstore,
+		handler:      cfg.Handler,
 	}
 
 	go rtr.readSubscription(ctx)
@@ -122,8 +132,18 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 
 // Broadcast implements the respective `typesP2P.Router` interface  method.
 func (rtr *backgroundRouter) Broadcast(data []byte) error {
+	// CONSIDERATION: validate as PocketEnvelopeBz here (?)
+	// TODO_THIS_COMMIT: wrap in BackgroundMessage
+	backgroundMsg := &typesP2P.BackgroundMessage{
+		Data: data,
+	}
+	backgroundMsgBz, err := proto.Marshal(backgroundMsg)
+	if err != nil {
+		return err
+	}
+
 	// TECHDEBT(#595): add ctx to interface methods and propagate down.
-	return rtr.topic.Publish(context.TODO(), data)
+	return rtr.topic.Publish(context.TODO(), backgroundMsgBz)
 }
 
 // Send implements the respective `typesP2P.Router` interface  method.
@@ -168,8 +188,24 @@ func (rtr *backgroundRouter) RemovePeer(peer typesP2P.Peer) error {
 	return rtr.pstore.RemovePeer(peer.GetAddress())
 }
 
+var readCountMu sync.Mutex
+
 func (rtr *backgroundRouter) readSubscription(ctx context.Context) {
-	for msg, err := rtr.subscription.Next(ctx); ctx.Err() == nil; {
+	// TODO_THIS_COMMIT: look into "topic validaton"
+	// (see: https://github.com/libp2p/specs/tree/master/pubsub#topic-validation)
+	readCount := 0
+	for {
+		readCountMu.Lock()
+		readCount++
+		fmt.Printf("readCount: %d\n", readCount)
+		readCountMu.Unlock()
+
+		msg, err := rtr.subscription.Next(ctx)
+		if ctx.Err() != nil {
+			fmt.Printf("error: %s\n", ctx.Err())
+			return
+		}
+
 		if err != nil {
 			rtr.logger.Error().Err(err).
 				Msg("error reading from background topic subscription")
@@ -184,17 +220,13 @@ func (rtr *backgroundRouter) readSubscription(ctx context.Context) {
 	}
 }
 
-func (rtr *backgroundRouter) handleBackgroundMsg(data []byte) error {
+func (rtr *backgroundRouter) handleBackgroundMsg(backgroundMsgBz []byte) error {
 	var backgroundMsg typesP2P.BackgroundMessage
-	if err := proto.Unmarshal(data, &backgroundMsg); err != nil {
+	if err := proto.Unmarshal(backgroundMsgBz, &backgroundMsg); err != nil {
 		return err
 	}
 
-	networkMessage := messaging.PocketEnvelope{}
-	if err := proto.Unmarshal(data, &networkMessage); err != nil {
-		return err
-	}
-	return nil
+	return rtr.handler(backgroundMsg.Data)
 }
 
 // isClientDebugMode returns the value of `ClientDebugMode` in the base config
