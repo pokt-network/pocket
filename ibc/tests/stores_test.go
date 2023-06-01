@@ -18,20 +18,16 @@ import (
 )
 
 func TestStoreManager_StoreManagerOperations(t *testing.T) {
-	store1, err := stores.NewTestPrivateStore("test1")
-	require.NoError(t, err)
+	store1 := stores.NewTestPrivateStore("test1")
 	require.Equal(t, store1.GetStoreKey(), "test1")
 	require.False(t, store1.IsProvable())
-	store2, err := stores.NewTestPrivateStore("test2")
-	require.NoError(t, err)
+	store2 := stores.NewTestPrivateStore("test2")
 	require.Equal(t, store2.GetStoreKey(), "test2")
 	require.False(t, store2.IsProvable())
-	store3, err := stores.NewTestPrivateStore("test3")
-	require.NoError(t, err)
+	store3 := stores.NewTestPrivateStore("test3")
 	require.Equal(t, store3.GetStoreKey(), "test3")
 	require.False(t, store3.IsProvable())
-	store4, err := stores.NewTestProvableStore("test4", nil)
-	require.NoError(t, err)
+	store4 := stores.NewTestProvableStore("test4", nil)
 	require.Equal(t, store4.GetStoreKey(), "test4")
 	require.True(t, store4.IsProvable())
 
@@ -102,7 +98,7 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 	for _, tc := range testCases {
 		switch tc.op {
 		case "add":
-			err = sm.AddStore(tc.store)
+			err := sm.AddStore(tc.store)
 			if tc.fail {
 				require.Error(t, err)
 				require.Equal(t, tc.expected, err)
@@ -129,7 +125,7 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 				require.NoError(t, err)
 			}
 		case "remove":
-			err = sm.RemoveStore(tc.store.GetStoreKey())
+			err := sm.RemoveStore(tc.store.GetStoreKey())
 			if tc.fail {
 				require.Error(t, err)
 				require.Equal(t, tc.expected, err)
@@ -139,7 +135,7 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 		}
 	}
 
-	err = store1.Stop()
+	err := store1.Stop()
 	require.NoError(t, err)
 	err = store2.Stop()
 	require.NoError(t, err)
@@ -150,8 +146,7 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 }
 
 func TestPrivateStore_StoreOperations(t *testing.T) {
-	store, err := stores.NewTestPrivateStore("test1")
-	require.NoError(t, err)
+	store := stores.NewTestPrivateStore("test1")
 	require.Equal(t, store.GetStoreKey(), "test1")
 	require.False(t, store.IsProvable())
 
@@ -277,13 +272,12 @@ func TestPrivateStore_StoreOperations(t *testing.T) {
 		}
 	}
 
-	err = store.Stop()
+	err := store.Stop()
 	require.NoError(t, err)
 }
 
 func TestProvableStore_StoreOperations(t *testing.T) {
-	store, err := stores.NewTestProvableStore("test1", nil)
-	require.NoError(t, err)
+	store := stores.NewTestProvableStore("test1", nil)
 	require.Equal(t, store.GetStoreKey(), "test1")
 	require.True(t, store.IsProvable())
 
@@ -402,17 +396,18 @@ func TestProvableStore_StoreOperations(t *testing.T) {
 		}
 	}
 
-	err = store.Stop()
+	err := store.Stop()
 	require.NoError(t, err)
 }
 
 func TestProvableStore_UpdatesPersist(t *testing.T) {
 	nodeStore := kvstore.NewMemKVStore()
-	store, err := stores.NewTestProvableStore("test1", nodeStore)
-	require.NoError(t, err)
+	store := stores.NewTestProvableStore("test1", nodeStore)
+	require.Equal(t, store.GetStoreKey(), "test1")
+	require.True(t, store.IsProvable())
 
 	// Set a value in the store
-	err = store.Set([]byte("foo"), []byte("bar"))
+	err := store.Set([]byte("foo"), []byte("bar"))
 	require.NoError(t, err)
 
 	// Calculate path and leaf digest of stored value
@@ -421,13 +416,13 @@ func TestProvableStore_UpdatesPersist(t *testing.T) {
 	sum := hasher.Sum(nil)
 	hasher.Reset()
 	preDigest := []byte{0}
-	preDigest = append(preDigest, sum[:]...)
+	preDigest = append(preDigest, sum...)
 	preDigest = append(preDigest, []byte("bar")...)
 	hasher.Write(preDigest)
 	digest := hasher.Sum(nil)
 
 	// Check that the value stored in  the nodeStore is the pre-hashed digest of the leaf
-	val, err := nodeStore.Get(digest[:])
+	val, err := nodeStore.Get(digest)
 	require.NoError(t, err)
 	require.True(t, bytes.Equal(val, preDigest))
 
@@ -436,7 +431,7 @@ func TestProvableStore_UpdatesPersist(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check the nodeStore no longer contains the pre-hashed digest of the leaf
-	_, err = nodeStore.Get(digest[:])
+	_, err = nodeStore.Get(digest)
 	require.EqualError(t, err, badger.ErrKeyNotFound.Error())
 
 	err = store.Stop()
@@ -444,16 +439,15 @@ func TestProvableStore_UpdatesPersist(t *testing.T) {
 }
 
 func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
-	store, err := stores.NewTestProvableStore("test1", nil)
-	require.NoError(t, err)
+	store := stores.NewTestProvableStore("test1", nil)
 	require.Equal(t, store.GetStoreKey(), "test1")
 	require.True(t, store.IsProvable())
 
 	// Set a value in the store
-	err = store.Set([]byte("foo"), []byte("bar"))
+	err := store.Set([]byte("foo"), []byte("bar"))
 	require.NoError(t, err)
-	// err = store.Set([]byte("foo2"), []byte("bar2"))
-	// require.NoError(t, err)
+	err = store.Set([]byte("foo2"), []byte("bar2"))
+	require.NoError(t, err)
 
 	root := store.Root()
 

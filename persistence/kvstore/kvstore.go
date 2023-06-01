@@ -91,7 +91,7 @@ func (store *badgerKVStore) Delete(key []byte) error {
 }
 
 func (store *badgerKVStore) GetAll(prefix []byte, descending bool) (keys, values [][]byte, err error) {
-	if err = store.db.View(func(tx *badger.Txn) error {
+	if err := store.db.View(func(tx *badger.Txn) error {
 		opt := badger.DefaultIteratorOptions
 		opt.Prefix = prefix
 		opt.Reverse = descending

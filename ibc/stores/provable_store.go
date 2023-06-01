@@ -25,18 +25,18 @@ type ProvableStore struct {
 }
 
 // newProvableStoreFromKV generates a new provable store from the nodeStore provided
-func newProvableStoreFromKV(nodeStore kvstore.KVStore, storeKey string) (*ProvableStore, error) {
+func newProvableStoreFromKV(nodeStore kvstore.KVStore, storeKey string) *ProvableStore {
 	tree := smt.NewSparseMerkleTree(nodeStore, sha256.New(), noValueHasher)
 	return &ProvableStore{
 		nodeStore: nodeStore,
 		tree:      tree,
 		storeKey:  storeKey,
 		provable:  true,
-	}, nil
+	}
 }
 
 // NewTestProvableStore generates a new provable store for testing purposes
-func NewTestProvableStore(storeKey string, nodeStore kvstore.KVStore) (modules.ProvableStore, error) {
+func NewTestProvableStore(storeKey string, nodeStore kvstore.KVStore) modules.ProvableStore {
 	if nodeStore == nil {
 		ns := kvstore.NewMemKVStore()
 		return newProvableStoreFromKV(ns, storeKey)

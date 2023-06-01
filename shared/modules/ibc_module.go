@@ -1,7 +1,5 @@
 package modules
 
-//go:generate mockgen -destination=./mocks/ibc_module_mock.go github.com/pokt-network/pocket/shared/modules IBCModule,IBCHost,IBCHandler,StoreManager,PrivateStore,ProvableStore
-
 import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/smt"

@@ -15,9 +15,9 @@ type PrivateStore struct {
 }
 
 // NewTestPrivateStore creates a new store for testing purposes using an in memory KVStore
-func NewTestPrivateStore(storeKey string) (modules.Store, error) {
+func NewTestPrivateStore(storeKey string) modules.Store {
 	db := kvstore.NewMemKVStore()
-	return &PrivateStore{db, storeKey, false}, nil
+	return &PrivateStore{db, storeKey, false}
 }
 
 func (priv *PrivateStore) GetStoreKey() string {
