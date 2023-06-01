@@ -39,10 +39,9 @@ type backgroundPeerDiscoverySuite struct {
 	libp2pNetworkMock mocknet.Mocknet
 	p2pModules        map[string]modules.P2PModule
 
-	// TODO: something more sophisticated..
-	// - what about a list of nodes sharing a label?
-	//
-	// labelServiceURLMap a list of serviceURLs to a set of labels
+	// labelServiceURLMap a list of serviceURLs to a set of labels; intended to
+	// be access and updated via `#getServiceURLsWithLabel()` and
+	// `#addServiceURLWithLabel()`, respectively.
 	labelServiceURLMap map[string][]string
 }
 
@@ -61,7 +60,11 @@ func (s *backgroundPeerDiscoverySuite) ANetworkContainingANode(nodeLabel string)
 	firstServiceURL := generics_testutil.GetKeys(s.busMocks)[0]
 	s.addServiceURLWithLabel(nodeLabel, firstServiceURL)
 
-	err := s.p2pModules[firstServiceURL].Start()
+	debugNotifee := testutil.NewDebugNotifee(s)
+	bootstrapP2PModule := s.p2pModules[firstServiceURL]
+	bootstrapP2PModule.(*p2p.P2PModule).GetHost().Network().Notify(debugNotifee)
+
+	err := bootstrapP2PModule.Start()
 	require.NoError(s, err)
 
 	// TODO_THIS_COMMIT: revisit...
@@ -105,6 +108,9 @@ func (s *backgroundPeerDiscoverySuite) NumberOfNodesJoinTheNetwork(nodeCount int
 	require.NoError(s, err)
 
 	for _, p2pModule := range joinersP2PModules {
+		debugNotifee := testutil.NewDebugNotifee(s)
+		p2pModule.(*p2p.P2PModule).GetHost().Network().Notify(debugNotifee)
+
 		err := p2pModule.Start()
 		require.NoError(s, err)
 	}
@@ -113,7 +119,9 @@ func (s *backgroundPeerDiscoverySuite) NumberOfNodesJoinTheNetwork(nodeCount int
 	s.addP2PModules(joinersP2PModules)
 
 	// TODO_THIS_COMMIT: wait for bootstrapping
-	time.Sleep(time.Second * 1)
+	s.Log("STARTING DELAY...")
+	time.Sleep(time.Second * 5)
+	s.Log("DELAY OVER")
 }
 
 // TODO_THIS_COMMIT: move below exported methods
@@ -138,7 +146,6 @@ func (s *backgroundPeerDiscoverySuite) getServiceURLsWithLabel(nodeLabel string)
 
 func (s *backgroundPeerDiscoverySuite) TheNodeShouldHavePlusOneNumberOfPeersInItsPeerstore(nodeLabel string, peerCountMinus1 int64) {
 	labelServiceURLs := s.getServiceURLsWithLabel(nodeLabel)
-	//serviceURL, ok := s.labelServiceURLMap[nodeLabel]
 	require.NotEmptyf(s, labelServiceURLs, "node label %q not found", nodeLabel)
 	require.Equalf(s, 1, len(labelServiceURLs), "node label %q has more than one service url", nodeLabel)
 
