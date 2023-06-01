@@ -3,6 +3,7 @@ package constructors
 import (
 	"github.com/foxcpp/go-mockdns"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
+	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/pokt-network/pocket/internal/testutil/bus"
 	consensus_testutil "github.com/pokt-network/pocket/internal/testutil/consensus"
@@ -31,6 +32,7 @@ func NewBusesMocknetAndP2PModules(
 	dnsSrv *mockdns.Server,
 	genesisState *genesis.GenesisState,
 	busEventHandlerFactory testutil.BusEventHandlerFactory,
+	notifiee libp2pNetwork.Notifiee,
 ) (
 	buses map[serviceURLStr]*mock_modules.MockBus,
 	libp2pNetworkMock mocknet.Mocknet,
@@ -45,6 +47,7 @@ func NewBusesMocknetAndP2PModules(
 		genesisState,
 		libp2pNetworkMock,
 		serviceURLKeyMap,
+		notifiee,
 	)
 	err := libp2pNetworkMock.LinkAll()
 	require.NoError(t, err)
@@ -58,6 +61,7 @@ func NewP2PModule(
 	busMock *mock_modules.MockBus,
 	dnsSrv *mockdns.Server,
 	libp2pNetworkMock mocknet.Mocknet,
+	notifiee libp2pNetwork.Notifiee,
 	// TODO_THIS_COMMIT: consider *p2p.P2PModule instead
 ) modules.P2PModule {
 	genesisState := busMock.GetRuntimeMgr().GetGenesis()
@@ -81,7 +85,7 @@ func NewP2PModule(
 	// MUST register DNS before instantiating P2PModule
 	testutil.AddServiceURLZone(t, dnsSrv, serviceURL)
 
-	host := testutil.NewMocknetHost(t, libp2pNetworkMock, privKey)
+	host := testutil.NewMocknetHost(t, libp2pNetworkMock, privKey, notifiee)
 	return NewP2PModuleWithHost(t, busMock, host)
 }
 
@@ -93,6 +97,7 @@ func NewBusesAndP2PModules(
 	genesisState *genesis.GenesisState,
 	libp2pNetworkMock mocknet.Mocknet,
 	serviceURLKeyMap map[serviceURLStr]cryptoPocket.PrivateKey,
+	notifiee libp2pNetwork.Notifiee,
 ) (
 	busMocks map[serviceURLStr]*mock_modules.MockBus,
 	// TODO_THIS_COMMIT: consider *p2p.P2PModule instead
@@ -110,7 +115,12 @@ func NewBusesAndP2PModules(
 		)
 		busMocks[serviceURL] = busMock
 
-		p2pModules[serviceURL] = NewP2PModule(t, busMock, dnsSrv, libp2pNetworkMock)
+		p2pModules[serviceURL] = NewP2PModule(
+			t, busMock,
+			dnsSrv,
+			libp2pNetworkMock,
+			notifiee,
+		)
 	}
 	return busMocks, p2pModules
 }

@@ -2,10 +2,10 @@ package testutil
 
 import (
 	"fmt"
-	"github.com/libp2p/go-libp2p/core/network"
 
 	crypto2 "github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
+	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/regen-network/gocuke"
@@ -21,6 +21,7 @@ func NewMocknetHost(
 	t gocuke.TestingT,
 	libp2pNetworkMock mocknet.Mocknet,
 	privKey crypto.PrivateKey,
+	notifiee libp2pNetwork.Notifiee,
 ) host.Host {
 	t.Helper()
 
@@ -33,6 +34,10 @@ func NewMocknetHost(
 
 	host, err := libp2pNetworkMock.AddPeer(libp2pPrivKey, addrMock)
 	require.NoError(t, err)
+
+	if notifiee != nil {
+		host.Network().Notify(notifiee)
+	}
 
 	return host
 }
@@ -74,11 +79,11 @@ func NewServiceURL(i int) string {
 }
 
 // TODO_THIS_COMMIT: move
-func NewDebugNotifee(t gocuke.TestingT) network.Notifiee {
+func NewDebugNotifee(t gocuke.TestingT) libp2pNetwork.Notifiee {
 	t.Helper()
 
-	return &network.NotifyBundle{
-		ConnectedF: func(_ network.Network, conn network.Conn) {
+	return &libp2pNetwork.NotifyBundle{
+		ConnectedF: func(_ libp2pNetwork.Network, conn libp2pNetwork.Conn) {
 			t.Logf("connected: local: %s; remote: %s",
 				conn.LocalPeer().String(),
 				conn.RemotePeer().String(),
@@ -86,16 +91,16 @@ func NewDebugNotifee(t gocuke.TestingT) network.Notifiee {
 			//bootstrapPeerIDCh <- conn.RemotePeer().String()
 			//bootstrapWaitgroup.Done()
 		},
-		DisconnectedF: func(_ network.Network, conn network.Conn) {
+		DisconnectedF: func(_ libp2pNetwork.Network, conn libp2pNetwork.Conn) {
 			t.Logf("disconnected: local: %s; remote: %s",
 				conn.LocalPeer().String(),
 				conn.RemotePeer().String(),
 			)
 		},
-		ListenF: func(_ network.Network, addr multiaddr.Multiaddr) {
+		ListenF: func(_ libp2pNetwork.Network, addr multiaddr.Multiaddr) {
 			t.Logf("listening: %s", addr.String())
 		},
-		ListenCloseF: func(_ network.Network, addr multiaddr.Multiaddr) {
+		ListenCloseF: func(_ libp2pNetwork.Network, addr multiaddr.Multiaddr) {
 			t.Logf("closed: %s", addr.String())
 		},
 	}
