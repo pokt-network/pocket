@@ -192,9 +192,14 @@ func (m *p2pModule) Stop() error {
 
 func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 	if m.stakedActorRouter == nil {
-		return fmt.Errorf("router not started")
+		return fmt.Errorf("staked actor router not started")
 	}
 
+	if m.unstakedActorRouter == nil {
+		return fmt.Errorf("unstaked actor router not started")
+	}
+
+	// TODO: rename `c`
 	c := &messaging.PocketEnvelope{
 		Content: msg,
 		Nonce:   cryptoPocket.GetNonce(),
@@ -207,9 +212,11 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 	stakedBroadcastErr := m.stakedActorRouter.Broadcast(data)
 	unstakedBroadcastErr := m.unstakedActorRouter.Broadcast(data)
 	return multierror.Append(err, stakedBroadcastErr, unstakedBroadcastErr).ErrorOrNil()
+	//return multierror.Append(err, unstakedBroadcastErr).ErrorOrNil()
 }
 
 func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
+	// TODO: rename `c`
 	c := &messaging.PocketEnvelope{
 		Content: msg,
 		Nonce:   cryptoPocket.GetNonce(),
@@ -313,6 +320,9 @@ func (m *p2pModule) setupRouters() (err error) {
 			Handler:               m.handlePocketEnvelope,
 		},
 	)
+	if err != nil {
+		return fmt.Errorf("staked actor router: %w", err)
+	}
 
 	m.unstakedActorRouter, err = background.NewBackgroundRouter(
 		m.GetBus(),
@@ -324,7 +334,10 @@ func (m *p2pModule) setupRouters() (err error) {
 			Handler:               m.handleAppData,
 		},
 	)
-	return err
+	if err != nil {
+		return fmt.Errorf("unstaked actor router: %w", err)
+	}
+	return nil
 }
 
 // setupHost creates a new libp2p host and assignes it to `m.host`. Libp2p host
