@@ -10,7 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
-	"github.com/pokt-network/pocket/persistence/trees"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -32,7 +31,7 @@ type PostgresContext struct {
 	//                 Need to simply access them via the bus.
 	blockStore blockstore.BlockStore
 	txIndexer  indexer.TxIndexer
-	stateTrees trees.TreeStore
+	stateTrees modules.TreeStore
 
 	networkId string
 }
