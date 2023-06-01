@@ -63,6 +63,7 @@ func NewRainTreeRouter(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Ro
 }
 
 func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
+	// TODO_THIS_COMMIT: rename logger to support multiple routers
 	routerLogger := logger.Global.CreateLoggerForModule("router")
 	routerLogger.Info().Msg("Initializing rainTreeRouter")
 
