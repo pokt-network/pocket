@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.20] - 2023-05-25
+## [0.0.0.20] - 2023-06-01
 
 - Removed AAT type from rpc handlers
 
