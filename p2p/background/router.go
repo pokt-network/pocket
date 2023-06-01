@@ -69,14 +69,6 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 		return nil, err
 	}
 
-	// CONSIDERATION: If switching to `NewRandomSub`, there will be a max size
-	gossipSub, err := pubsub.NewGossipSub(ctx, cfg.Host) //pubsub.WithFloodPublish(false),
-	//pubsub.WithMaxMessageSize(256),
-
-	if err != nil {
-		return nil, fmt.Errorf("creating gossip pubsub: %w", err)
-	}
-
 	dhtMode := dht.ModeAutoServer
 	// NB: don't act as a bootstrap node in peer discovery in client debug mode
 	if isClientDebugMode(bus) {
@@ -91,6 +83,14 @@ func NewBackgroundRouter(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2
 	//if err := kadDHT.Bootstrap(ctx); err != nil {
 	//	return nil, fmt.Errorf("bootstrapping DHT: %w", err)
 	//}
+
+	// CONSIDERATION: If switching to `NewRandomSub`, there will be a max size
+	gossipSub, err := pubsub.NewGossipSub(ctx, cfg.Host) //pubsub.WithFloodPublish(false),
+	//pubsub.WithMaxMessageSize(256),
+
+	if err != nil {
+		return nil, fmt.Errorf("creating gossip pubsub: %w", err)
+	}
 
 	topic, err := gossipSub.Join(protocol.BackgroundTopicStr)
 	if err != nil {
