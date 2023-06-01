@@ -20,6 +20,7 @@ type baseConfig struct {
 	Addr                  crypto.Address
 	CurrentHeightProvider providers.CurrentHeightProvider
 	PeerstoreProvider     providers.PeerstoreProvider
+	Handler               func(data []byte) error
 }
 
 // BackgroundConfig implements `RouterConfig` for use with `BackgroundRouter`.
@@ -57,6 +58,10 @@ func (cfg *baseConfig) IsValid() (err error) {
 	if cfg.PeerstoreProvider == nil {
 		err = multierr.Append(err, fmt.Errorf("peerstore provider not configured"))
 	}
+
+	if cfg.Handler == nil {
+		err = multierr.Append(err, fmt.Errorf("handler not configured"))
+	}
 	return err
 }
 
@@ -67,6 +72,7 @@ func (cfg *BackgroundConfig) IsValid() (err error) {
 		Addr:                  cfg.Addr,
 		CurrentHeightProvider: cfg.CurrentHeightProvider,
 		PeerstoreProvider:     cfg.PeerstoreProvider,
+		Handler:               cfg.Handler,
 	}
 	return multierr.Append(err, baseCfg.IsValid())
 }
@@ -78,6 +84,7 @@ func (cfg *RainTreeConfig) IsValid() (err error) {
 		Addr:                  cfg.Addr,
 		CurrentHeightProvider: cfg.CurrentHeightProvider,
 		PeerstoreProvider:     cfg.PeerstoreProvider,
+		Handler:               cfg.Handler,
 	}
 	return multierr.Append(err, baseCfg.IsValid())
 }
