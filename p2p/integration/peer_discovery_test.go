@@ -60,9 +60,9 @@ func (s *backgroundPeerDiscoverySuite) ANetworkContainingANode(nodeLabel string)
 	firstServiceURL := generics_testutil.GetKeys(s.busMocks)[0]
 	s.addServiceURLWithLabel(nodeLabel, firstServiceURL)
 
-	debugNotifee := testutil.NewDebugNotifee(s)
+	//debugNotifee := testutil.NewDebugNotifee(s)
 	bootstrapP2PModule := s.p2pModules[firstServiceURL]
-	bootstrapP2PModule.(*p2p.P2PModule).GetHost().Network().Notify(debugNotifee)
+	//bootstrapP2PModule.(*p2p.P2PModule).GetHost().Network().Notify(debugNotifee)
 
 	err := bootstrapP2PModule.Start()
 	require.NoError(s, err)
