@@ -31,6 +31,7 @@ func newProvableStoreFromKV(nodeStore kvstore.KVStore, storeKey string) (*Provab
 		nodeStore: nodeStore,
 		tree:      tree,
 		storeKey:  storeKey,
+		provable:  true,
 	}, nil
 }
 
@@ -111,15 +112,15 @@ func (prov *ProvableStore) CreateNonMembershipProof(key []byte) (*coreTypes.Comm
 }
 
 func generateProof(tree *smt.SMT, key, value []byte) (*coreTypes.CommitmentProof, error) {
-	smtProof, err := tree.Prove(key)
+	proof, err := tree.Prove(key)
 	if err != nil {
 		return nil, err
 	}
 	return &coreTypes.CommitmentProof{
 		Key:                   key,
 		Value:                 value,
-		SideNodes:             smtProof.SideNodes,
-		NonMembershipLeafData: smtProof.NonMembershipLeafData,
-		SiblingData:           smtProof.SiblingData,
+		SideNodes:             proof.SideNodes,
+		NonMembershipLeafData: proof.NonMembershipLeafData,
+		SiblingData:           proof.SiblingData,
 	}, nil
 }

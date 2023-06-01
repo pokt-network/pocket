@@ -85,7 +85,7 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 			fail:     true,
 			expected: coreTypes.ErrStoreNotFound("test3"),
 		},
-		{ // Successfully returns provable store with matching store key when present
+		{ // Successfully returns provable store instance for provable stores
 			store:    store4,
 			op:       "getprovable",
 			fail:     false,
@@ -153,6 +153,7 @@ func TestPrivateStore_StoreOperations(t *testing.T) {
 	store, err := stores.NewTestPrivateStore("test1")
 	require.NoError(t, err)
 	require.Equal(t, store.GetStoreKey(), "test1")
+	require.False(t, store.IsProvable())
 
 	invalidKey := [65001]byte{}
 	testCases := []struct {
@@ -284,6 +285,7 @@ func TestProvableStore_StoreOperations(t *testing.T) {
 	store, err := stores.NewTestProvableStore("test1", nil)
 	require.NoError(t, err)
 	require.Equal(t, store.GetStoreKey(), "test1")
+	require.True(t, store.IsProvable())
 
 	testCases := []struct {
 		op       string
@@ -444,6 +446,8 @@ func TestProvableStore_UpdatesPersist(t *testing.T) {
 func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 	store, err := stores.NewTestProvableStore("test1", nil)
 	require.NoError(t, err)
+	require.Equal(t, store.GetStoreKey(), "test1")
+	require.True(t, store.IsProvable())
 
 	// Set a value in the store
 	err = store.Set([]byte("foo"), []byte("bar"))
