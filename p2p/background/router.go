@@ -5,6 +5,7 @@ package background
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
@@ -187,6 +188,15 @@ func (rtr *backgroundRouter) RemovePeer(peer typesP2P.Peer) error {
 	}
 
 	return rtr.pstore.RemovePeer(peer.GetAddress())
+}
+
+func (rtr *backgroundRouter) Close() error {
+	rtr.subscription.Cancel()
+
+	return multierror.Append(
+		rtr.topic.Close(),
+		rtr.kadDHT.Close(),
+	)
 }
 
 func (rtr *backgroundRouter) setupPeerstore(
