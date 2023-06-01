@@ -299,9 +299,12 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		wg.Add(expectedWrites)
 
 		// TODO_THIS_COMMIT:
-		//if serviceURL == origNode {
-		//	...
-		//}
+		if serviceURL == origNode {
+			t.Log("SELF SEND!!!! 1")
+			t.Log("SELF SEND!!!! 2")
+			t.Log("SELF SEND!!!! 3")
+			//...
+		}
 
 		// TODO_THIS_COMMIT: MOVE
 		//telemetryEventHandler := func(namespace, eventName string, labels ...any) {
