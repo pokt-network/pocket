@@ -35,6 +35,8 @@ func SetupMockNetPeers(
 ) (peerIDs []peer.ID) {
 	t.Helper()
 
+	// TODO_THIS_COMMIT: return these
+	//
 	// MUST add mockdns before any libp2p host comes online. Otherwise, it will
 	// error while attempting to resolve its own hostname.
 	_, dnsSrvDone := testutil.PrepareDNSMockFromServiceURLs(t, serviceURLs)

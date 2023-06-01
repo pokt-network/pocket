@@ -47,6 +47,7 @@ func NewP2PModulesAndMocknet(
 
 	for i, serviceURL := range serviceURLs {
 		// TECHDEBT: refactor
+		t.Logf("hosts: %v", libp2pNetworkMock.Hosts())
 		host := libp2pNetworkMock.Hosts()[i]
 		buses[serviceURL], p2pModules[serviceURL] = NewP2PModuleWithHost(
 			t, privKeys[i],

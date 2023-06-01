@@ -29,7 +29,7 @@ func LoadLocalnetPrivateKeys(t require.TestingT, keyCount int) (privKeys []crypt
 	scanner := bufio.NewScanner(privKeyManifest)
 	scanner.Split(bufio.ScanLines)
 
-	for i, done := 0, false; i < keyCount || !done; i++ {
+	for i, done := 0, false; i < keyCount && !done; {
 		done = !scanner.Scan()
 		line := scanner.Text()
 		matches := privKeyManifestKeyRegex.FindStringSubmatch(line)
@@ -38,6 +38,7 @@ func LoadLocalnetPrivateKeys(t require.TestingT, keyCount int) (privKeys []crypt
 			require.NoError(t, err)
 
 			privKeys = append(privKeys, privKey)
+			i++
 		}
 	}
 	return privKeys
