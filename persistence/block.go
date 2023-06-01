@@ -2,11 +2,12 @@ package persistence
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 
-	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/smt"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -18,7 +19,7 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 	res, err := p.txIndexer.GetByHash(hash)
 	if res == nil {
 		// check for not found
-		if err != nil && err.Error() == kvstore.KeyNotFoundError {
+		if err != nil && errors.Is(err, smt.ErrKeyNotPresent) {
 			return false, nil
 		}
 		return false, err

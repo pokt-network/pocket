@@ -2,10 +2,11 @@ package utility
 
 import (
 	"encoding/hex"
+	"errors"
 
-	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/smt"
 )
 
 // HandleTransaction implements the exposed functionality of the shared utilityModule interface.
@@ -42,7 +43,6 @@ func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
 // GetIndexedTransaction implements the exposed functionality of the shared utilityModule interface.
 func (u *utilityModule) GetIndexedTransaction(txProtoBytes []byte) (*coreTypes.IndexedTransaction, error) {
 	txHash := coreTypes.TxHash(txProtoBytes)
-	persistenceModule := u.GetBus().GetPersistenceModule()
 
 	// TECHDEBT: Note the inconsistency between referencing tx hash as a string vs. byte slice in different places. Need to pick
 	// one and consolidate throughout the codebase
@@ -50,9 +50,9 @@ func (u *utilityModule) GetIndexedTransaction(txProtoBytes []byte) (*coreTypes.I
 	if err != nil {
 		return nil, err
 	}
-	idTx, err := persistenceModule.GetTxIndexer().GetByHash(hash)
+	idTx, err := u.GetBus().GetPersistenceModule().GetTxIndexer().GetByHash(hash)
 	if err != nil {
-		if err.Error() == kvstore.KeyNotFoundError {
+		if errors.Is(err, smt.ErrKeyNotPresent) {
 			return nil, coreTypes.ErrTransactionNotCommitted()
 		}
 		return nil, err
