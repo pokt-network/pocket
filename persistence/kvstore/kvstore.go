@@ -25,7 +25,7 @@ type KVStore interface {
 }
 
 const (
-	BadgerKeyNotFoundError = "Key not found"
+	KeyNotFoundError = "Key not found"
 )
 
 var (
@@ -62,8 +62,7 @@ func (store *badgerKVStore) Set(key, value []byte) error {
 	tx := store.db.NewTransaction(true)
 	defer tx.Discard()
 
-	err := tx.Set(key, value)
-	if err != nil {
+	if err := tx.Set(key, value); err != nil {
 		return err
 	}
 

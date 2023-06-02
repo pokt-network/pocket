@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -27,6 +28,7 @@ type BackgroundConfig struct {
 	Addr                  crypto.Address
 	CurrentHeightProvider providers.CurrentHeightProvider
 	PeerstoreProvider     providers.PeerstoreProvider
+	Handler               func(data []byte) error
 }
 
 // RainTreeConfig implements `RouterConfig` for use with `RainTreeRouter`.
@@ -35,8 +37,7 @@ type RainTreeConfig struct {
 	Addr                  crypto.Address
 	CurrentHeightProvider providers.CurrentHeightProvider
 	PeerstoreProvider     providers.PeerstoreProvider
-
-	MaxNonces uint64
+	Handler               func(data []byte) error
 }
 
 // IsValid implements the respective member of the `RouterConfig` interface.
@@ -72,10 +73,6 @@ func (cfg *BackgroundConfig) IsValid() (err error) {
 
 // IsValid implements the respective member of the `RouterConfig` interface.
 func (cfg *RainTreeConfig) IsValid() (err error) {
-	if cfg.MaxNonces == 0 {
-		err = multierr.Append(err, fmt.Errorf("max nonces must be greater than 0"))
-	}
-
 	baseCfg := baseConfig{
 		Host:                  cfg.Host,
 		Addr:                  cfg.Addr,

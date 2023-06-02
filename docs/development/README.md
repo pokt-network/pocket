@@ -18,6 +18,8 @@ Please note that this repository is under very active development and breaking c
 - [Code Organization](#code-organization)
 - [Maintaining Documentation](#maintaining-documentation)
 - [Documentation Resources and Implementation](#documentation-resources-and-implementation)
+  - [Your Project Dashboard](#your-project-dashboard)
+  - [Github Labels](#github-labels)
   - [Github Actions File](#github-actions-file)
   - [Python Script](#python-script)
   - [Linters](#linters)
@@ -319,6 +321,22 @@ To keep the Wiki organized, a comment is added at the end of each `.md` file. Fo
 If you are adding a new `.md` file for documentation please included a similar comment. Use your best judgment for the category and subcategory if its a new directory. Otherwise, copy the comment from a similar file in the directory and choose a relevant filename.
 
 ## Documentation Resources and Implementation
+
+### Your Project Dashboard
+
+If you plan to be a regular contributor, you might benefit from having your own dashboard similar to [this](https://github.com/orgs/pokt-network/projects/142/views/55?query=is%3Aopen+sort%3Aupdated-desc) to help track your work. Reach out to one of the maintainers to help you set it up.
+
+### Github Labels
+
+We have various [labels](https://github.com/pokt-network/pocket/labels) on GitHub for filtering and tagging different tickets, but some of them trigger special logic.
+
+- `cl validate` - shares the comments related to changelog validation as a PR comment; merging is still blocked by default
+- `gpt review` - adds a code review by GPT to your PR
+- `do not merge` - blocks merging the PR even if it is approved and CI is green
+- `community` - is automatically added to Pocket's dashboard on app.dework.xyz so it becomes a bounty for a community contributor
+- `push-image` - builds and pushes an image at the HEAD of the PR
+- `e2e-devnet-test` - runs E2E tests on your PR
+- Not a label but close: Add the `/reviewpad summarize` comment to automatically get an LLM to summarize your PR
 
 ### [Github Actions File](/.github/workflows/wiki_sync_process.yml)
 

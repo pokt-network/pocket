@@ -25,7 +25,6 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
   - [Full Cleanup](#full-cleanup)
 - [Code Structure](#code-structure)
 
-
 ## TLDR
 
 If you feel adventurous, and you know what you're doing, here is a rapid guide to start LocalNet:
@@ -148,6 +147,21 @@ For example:
 - `66603bc4082281b7de23001ffd237da62c66a839` is a fisherperson #666.
 - `0010297b55fc9278e4be4f1bcfe52bf9bd0443f8` is a servicer #001.
 - `314019dbb7faf8390c1f0cf4976ef1215c90b7e4` is an application #314.
+
+
+#### Applications staked on LocalNet
+Applications with the following addresses are staked on LocalNet, through the [applications field of the genesis.json in the LocalNet configuration](https://github.com/pokt-network/pocket/blob/main/build/localnet/manifests/configs.yaml#L4088)
+
+- `00001fff518b1cdddd74c197d76ba5b5dedc0301`
+- `00101f2ff54811e84df2d767c661f57a06349b7e`
+
+These addresses can be used for e.g. testing the CLI.
+
+#### Servicers staked on LocalNet
+Servicers with the following addresses are staked on LocalNet, through the [servicers field of the genesis.json in the LocalNet configuration](https://github.com/pokt-network/pocket/blob/main/build/localnet/manifests/configs.yaml#L4120)
+
+- `00002b8cea1bcc3dadc72ebecf95564ceb9c2e2a`
+- `001022b138896c4c5466ac86b24a9bbe249905c2`
 
 ## How to change configuration files
 

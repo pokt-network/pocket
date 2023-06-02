@@ -7,18 +7,20 @@ import (
 	"math"
 	"math/rand"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/pokt-network/pocket/logger"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
+	"golang.org/x/exp/slices"
 )
 
 // TODO: Implement this
 func (u *utilityModule) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
-	return nil, nil
+	if u.servicer == nil {
+		return nil, fmt.Errorf("utility module instance is not a servicer")
+	}
+	return u.servicer.HandleRelay(relay)
 }
 
 // TODO: Implement this

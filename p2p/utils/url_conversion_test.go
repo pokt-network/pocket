@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/foxcpp/go-mockdns"
-
 	"github.com/multiformats/go-multiaddr"
 	"github.com/stretchr/testify/require"
 )

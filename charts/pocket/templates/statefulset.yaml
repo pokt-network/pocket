@@ -58,10 +58,12 @@ spec:
             - -config=/pocket/configs/config.json
             - -genesis=/pocket/configs/genesis.json
           ports:
-            - containerPort: 42069
+            - containerPort: {{ .Values.service.ports.consensus }}
               name: consensus
-            - containerPort: 50832
+            - containerPort: {{ .Values.service.ports.rpc }}
               name: rpc
+            - containerPort: {{ .Values.service.ports.metrics }}
+              name: metrics
           env:
           {{ if or .Values.privateKeySecretKeyRef.name .Values.privateKeySecretKeyRef.key }}
             - name: POCKET_PRIVATE_KEY

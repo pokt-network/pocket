@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
-	// "github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/spf13/viper"
 )
@@ -121,6 +120,9 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			},
 		},
 		Utility: &UtilityConfig{
+			ServicerConfig: &ServicerConfig{
+				Chains: []string{"0001"},
+			},
 			MaxMempoolTransactionBytes: defaults.DefaultUtilityMaxMempoolTransactionBytes,
 			MaxMempoolTransactions:     defaults.DefaultUtilityMaxMempoolTransactions,
 		},

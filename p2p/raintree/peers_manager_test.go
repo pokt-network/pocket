@@ -11,16 +11,14 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoremem"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
-	"github.com/stretchr/testify/require"
-
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/p2p/config"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/runtime/configs"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -103,7 +101,6 @@ func TestRainTree_Peerstore_HandleUpdate(t *testing.T) {
 				Addr:                  pubKey.Address(),
 				PeerstoreProvider:     pstoreProviderMock,
 				CurrentHeightProvider: currentHeightProviderMock,
-				MaxNonces:             defaults.DefaultP2PMaxNonces,
 			}
 
 			router, err := NewRainTreeRouter(mockBus, rtCfg)
@@ -289,13 +286,13 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 
 	hostMock := mocksP2P.NewMockHost(ctrl)
 	hostMock.EXPECT().Peerstore().Return(libp2pPStore).AnyTimes()
+	hostMock.EXPECT().SetStreamHandler(gomock.Any(), gomock.Any()).Times(1)
 
 	rtCfg := &config.RainTreeConfig{
 		Host:                  hostMock,
 		Addr:                  []byte{expectedMsgProp.orig},
 		PeerstoreProvider:     pstoreProviderMock,
 		CurrentHeightProvider: currentHeightProviderMock,
-		MaxNonces:             defaults.DefaultP2PMaxNonces,
 	}
 
 	router, err := NewRainTreeRouter(busMock, rtCfg)

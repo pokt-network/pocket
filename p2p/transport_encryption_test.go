@@ -11,6 +11,7 @@ import (
 	"github.com/multiformats/go-multiaddr"
 	"github.com/stretchr/testify/require"
 
+	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
@@ -64,6 +65,13 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 
 	telemetryMock.EXPECT().GetBus().Return(busMock).AnyTimes()
 	telemetryMock.EXPECT().SetBus(busMock).AnyTimes()
+
+	serviceURLs := make([]string, len(genesisStateMock.Validators))
+	for i, actor := range genesisStateMock.Validators {
+		serviceURLs[i] = actor.ServiceUrl
+	}
+	dnsDone := testutil.PrepareDNSMockFromServiceURLs(t, serviceURLs)
+	t.Cleanup(dnsDone)
 
 	p2pMod, err := Create(busMock)
 	require.NoError(t, err)

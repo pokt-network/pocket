@@ -46,7 +46,11 @@ jobs:
         # Set outputs using the command.
         run: |
           bash ./.githooks/pre-receive "${{needs.changedfiles.outputs.all}}" 2>&1 | tee output.txt
-          echo "all=$(cat output.txt | jq -sR .)" >> $GITHUB_OUTPUT
+          VALIDATION_OUTPUT=$(cat output.txt)
+          echo "all=$(echo "$VALIDATION_OUTPUT" | jq -sR .)" >> $GITHUB_OUTPUT
+          if [[ "$VALIDATION_OUTPUT" == *"failed"* ]]; then 
+            exit 1
+          fi
   review:
     runs-on: ubuntu-latest
     # require the validate job to have ran

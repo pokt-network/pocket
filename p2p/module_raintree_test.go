@@ -1,3 +1,5 @@
+//go:build test
+
 package p2p
 
 import (
@@ -18,6 +20,7 @@ import (
 
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/p2p/protocol"
+	"github.com/pokt-network/pocket/p2p/raintree"
 )
 
 // TODO(#314): Add the tooling and instructions on how to generate unit tests in this file.
@@ -273,7 +276,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		mod := *p2pMod
 		p2pMod.host.SetStreamHandler(protocol.PoktProtocolID, func(stream libp2pNetwork.Stream) {
 			log.Printf("[valID: %s] Read\n", sURL)
-			(&mod).handleStream(stream)
+			(&mod).router.(*raintree.RainTreeRouter).HandleStream(stream)
 			wg.Done()
 		})
 	}
@@ -292,7 +295,6 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
 	require.NoError(t, p2pMod.Broadcast(p))
-
 }
 
 func extractNumericId(valId string) int64 {
