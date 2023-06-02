@@ -1,6 +1,7 @@
 package stores
 
 import (
+	"bytes"
 	"crypto/sha256"
 
 	ics23 "github.com/cosmos/ics23/go"
@@ -54,8 +55,11 @@ func VerifyMembership(root *coreTypes.CommitmentRoot, proof *ics23.CommitmentPro
 // value is either the default nil value for the SMT or an unrelated value at the path
 func VerifyNonMembership(root *coreTypes.CommitmentRoot, proof *ics23.CommitmentProof, key []byte) bool {
 	// Verify the proof of the non-membership data doesn't belong to the key
-	// TODO: Find a better way than negating here
-	return !ics23.VerifyMembership(smtSpec, root.Root, proof, key, proof.GetExist().GetValue())
+	valid := ics23.VerifyMembership(smtSpec, root.Root, proof, key, proof.GetExist().GetValue())
+	if bytes.Equal(proof.GetExist().GetValue(), defaultValue) {
+		return valid
+	}
+	return !valid
 }
 
 // createMembershipProof generates a CommitmentProof object verifying the membership of a key-value pair
@@ -78,12 +82,15 @@ func createNonMembershipProof(tree *smt.SMT, key []byte) (*ics23.CommitmentProof
 	if err != nil {
 		return nil, coreTypes.ErrCreatingProof(err.Error())
 	}
-	if proof.NonMembershipLeafData == nil {
-		proof.NonMembershipLeafData = defaultValue
+
+	value := defaultValue
+	if proof.NonMembershipLeafData != nil {
+		value = proof.NonMembershipLeafData[33:]
 	}
+
 	return &ics23.CommitmentProof{
 		Proof: &ics23.CommitmentProof_Exist{
-			Exist: convertSMPToExistenceProof(&proof, key, proof.NonMembershipLeafData),
+			Exist: convertSMPToExistenceProof(&proof, key, value),
 		},
 	}, nil
 }

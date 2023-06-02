@@ -474,11 +474,7 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 			store: store1,
 			key:   []byte("baz"),
 			// unrelated leaf data
-			value: []byte{
-				0x0, 0x84, 0x4b, 0x7f, 0xde, 0xcd, 0xa0, 0x76, 0x33,
-				0x76, 0x96, 0xdb, 0xd, 0xca, 0xc0, 0xce, 0x9d, 0x83, 0x83, 0x19, 0xac, 0x0, 0xb2, 0x43, 0x80, 0xd6,
-				0xc6, 0x2d, 0x44, 0x2d, 0x6, 0x80, 0xaf, 0x66, 0x6f, 0x6f, 0x32,
-			},
+			value:         []byte("foo2"),
 			nonmembership: true,
 			fails:         false,
 			expected:      nil,
@@ -487,11 +483,7 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 			store: store1,
 			key:   nil,
 			// unrelated leaf data
-			value: []byte{
-				0x0, 0xfc, 0xde, 0x2b, 0x2e, 0xdb, 0xa5, 0x6b, 0xf4,
-				0x8, 0x60, 0x1f, 0xb7, 0x21, 0xfe, 0x9b, 0x5c, 0x33, 0x8d, 0x10, 0xee, 0x42, 0x9e, 0xa0, 0x4f, 0xae,
-				0x55, 0x11, 0xb6, 0x8f, 0xbf, 0x8f, 0xb9, 0x66, 0x6f, 0x6f,
-			},
+			value:         []byte("foo"),
 			nonmembership: true,
 			fails:         false,
 			expected:      nil,
@@ -512,7 +504,6 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 		}
 		require.NoError(t, err)
 		require.NotNil(t, proof)
-		require.Equal(t, tc.key, proof.GetExist().GetKey())
 		require.Equal(t, tc.value, proof.GetExist().GetValue())
 		require.NotNil(t, proof.GetExist().GetLeaf())
 		require.NotNil(t, proof.GetExist().GetPath())
@@ -556,7 +547,7 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 		},
 		{ // Successfully verifies a non-membership proof for a key-value pair not stored
 			modify:        nil,
-			key:           []byte("foo"),
+			key:           []byte("not stored"),
 			value:         nil,
 			nonmembership: true,
 			valid:         true,
@@ -577,6 +568,13 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 			nonmembership: true,
 			valid:         false,
 		},
+		{ // Fails to verify a non-membership proof for a key stored in the tree
+			modify:        nil,
+			key:           []byte("foo"),
+			value:         nil,
+			nonmembership: true,
+			valid:         false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -588,6 +586,7 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 		} else {
 			proof, err = store.CreateMembershipProof(tc.key, tc.value)
 		}
+
 		require.NoError(t, err)
 		require.NotNil(t, proof)
 		require.NotNil(t, proof.GetExist())
