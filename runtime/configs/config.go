@@ -191,10 +191,10 @@ func WithNodeSchema(schema string) func(*Config) {
 // CreateTempConfig creates a temporary config for testing purposes only
 func CreateTempConfig(cfg *Config) (*Config, error) {
 	tmpfile, err := os.CreateTemp("", "test_config_*.json")
-	defer os.Remove(tmpfile.Name())
 	if err != nil {
 		return nil, err
 	}
+	defer os.Remove(tmpfile.Name())
 
 	content, err := json.Marshal(cfg)
 	if err != nil {

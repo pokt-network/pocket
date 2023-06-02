@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	mocks "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEnableActorModules(t *testing.T) {
@@ -78,7 +79,7 @@ func TestEnableActorModules(t *testing.T) {
 
 			// Verify error output
 			if test.expectedError == "" {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			} else {
 				assert.EqualError(t, err, test.expectedError)
 			}

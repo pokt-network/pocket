@@ -113,7 +113,7 @@ func newTestRuntimeConfig(
 		},
 	})
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error creating config: %s", err)
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(
 		numValidators,
