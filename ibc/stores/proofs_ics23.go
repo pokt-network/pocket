@@ -94,8 +94,8 @@ func convertSMPToExistenceProof(proof *smt.SparseMerkleProof, key, value []byte)
 	path := sha256.Sum256(key)
 	steps := make([]*ics23.InnerOp, 0, len(proof.SideNodes))
 	for i := 0; i < len(proof.SideNodes); i++ {
-		var suffix []byte
-		prefix := []byte{1}
+		var prefix, suffix []byte
+		prefix = append(prefix, innerPrefix...)
 		if getPathBit(path[:], len(proof.SideNodes)-1-i) == left {
 			suffix = make([]byte, 0, len(proof.SideNodes[i]))
 			suffix = append(suffix, proof.SideNodes[i]...)
