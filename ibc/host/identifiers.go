@@ -65,7 +65,7 @@ func ValidatePortID(id string) error {
 }
 
 // generateNewIdentifier generates a new identifier in the given range with the identifier prefix
-func generateNewIdentifier(min, max int) string {
+func generateNewIdentifier(min, max int) string { //nolint:unparam // min is used although always the same
 	//nolint:gosec // weak random source okay - cryptographically secure randomness not required
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	size := r.Intn(max-1-min) + min // -1 for the prefix
