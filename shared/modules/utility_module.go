@@ -42,10 +42,28 @@ type UtilityModule interface {
 	GetSession(appAddr string, sessionHeight int64, relayChain string, geoZone string) (*coreTypes.Session, error)
 
 	// GetActorModules returns the utility module's actor modules
-	GetActorModules() []Module
+	GetActorModules() map[string]Module
+
+	// GetFishermanModule returns the utility module's fisherman module if enabled
+	GetFishermanModule() FishermanModule
 
 	// GetServicerModule returns the utility module's servicer module if enabled
-	GetServicerModule() Module
+	GetServicerModule() ServicerModule
+
+	// GetValidatorModule returns the utility module's validator module if enabled
+	GetValidatorModule() ValidatorModule
+}
+
+type FishermanModule interface {
+	Module
+}
+
+type ServicerModule interface {
+	Module
+}
+
+type ValidatorModule interface {
+	Module
 }
 
 // TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead

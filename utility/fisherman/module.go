@@ -10,29 +10,21 @@ const (
 	FishermanModuleName = "fisherman"
 )
 
-type FishermanModule interface {
-	modules.Module
-	FishermanUtility
-}
-
-type FishermanUtility interface{}
-
 type fisherman struct {
 	base_modules.IntegratableModule
 	logger *modules.Logger
 }
 
-// type assertions for fisherman module
 var (
-	_ FishermanModule = &fisherman{}
+	_ modules.FishermanModule = &fisherman{}
 )
 
-func CreateFisherman(bus modules.Bus, options ...modules.ModuleOption) (FishermanModule, error) {
+func CreateFisherman(bus modules.Bus, options ...modules.ModuleOption) (modules.FishermanModule, error) {
 	m, err := new(fisherman).Create(bus, options...)
 	if err != nil {
 		return nil, err
 	}
-	return m.(FishermanModule), nil
+	return m.(modules.FishermanModule), nil
 }
 
 func (*fisherman) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {

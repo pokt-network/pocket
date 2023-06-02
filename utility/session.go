@@ -22,10 +22,11 @@ const (
 // TODO: Implement this
 func (u *utilityModule) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
 
-	if u.svc == nil {
+	if u.GetServicerModule() == nil {
 		return nil, fmt.Errorf(NodeIsNotServicerErr)
 	}
 
+	// TECHDEBT: Initialize properly
 	return &coreTypes.RelayResponse{
 		Payload:           "😎",
 		ServicerSignature: "🪧",

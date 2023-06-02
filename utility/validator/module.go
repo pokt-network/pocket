@@ -10,29 +10,21 @@ const (
 	ValidatorModuleName = "validator"
 )
 
-type ValidatorModule interface {
-	modules.Module
-	ValidatorUtility
-}
-
-type ValidatorUtility interface{}
-
 type validator struct {
 	base_modules.IntegratableModule
 	logger *modules.Logger
 }
 
-// type assertions for validator module
 var (
-	_ ValidatorModule = &validator{}
+	_ modules.ValidatorModule = &validator{}
 )
 
-func CreateValidator(bus modules.Bus, options ...modules.ModuleOption) (ValidatorModule, error) {
+func CreateValidator(bus modules.Bus, options ...modules.ModuleOption) (modules.ValidatorModule, error) {
 	m, err := new(validator).Create(bus, options...)
 	if err != nil {
 		return nil, err
 	}
-	return m.(ValidatorModule), nil
+	return m.(modules.ValidatorModule), nil
 }
 
 func (*validator) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {

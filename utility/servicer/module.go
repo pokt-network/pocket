@@ -10,29 +10,21 @@ const (
 	ServicerModuleName = "servicer"
 )
 
-type ServicerModule interface {
-	modules.Module
-	ServicerUtility
-}
-
-type ServicerUtility interface{}
-
 type servicer struct {
 	base_modules.IntegratableModule
 	logger *modules.Logger
 }
 
-// type assertions for servicer module
 var (
-	_ ServicerModule = &servicer{}
+	_ modules.ServicerModule = &servicer{}
 )
 
-func CreateServicer(bus modules.Bus, options ...modules.ModuleOption) (ServicerModule, error) {
+func CreateServicer(bus modules.Bus, options ...modules.ModuleOption) (modules.ServicerModule, error) {
 	m, err := new(servicer).Create(bus, options...)
 	if err != nil {
 		return nil, err
 	}
-	return m.(ServicerModule), nil
+	return m.(modules.ServicerModule), nil
 }
 
 func (*servicer) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {

@@ -31,11 +31,7 @@ type utilityModule struct {
 
 	mempool mempool.TXMempool
 
-	actorModules []modules.Module
-
-	vld validator.ValidatorModule
-	svc servicer.ServicerModule
-	fsh fisherman.FishermanModule
+	actorModules map[string]modules.Module
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -44,7 +40,7 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 
 func (*utilityModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	m := &utilityModule{
-		actorModules: []modules.Module{},
+		actorModules: map[string]modules.Module{},
 	}
 
 	for _, option := range options {
@@ -62,46 +58,43 @@ func (*utilityModule) Create(bus modules.Bus, options ...modules.ModuleOption) (
 	m.mempool = types.NewTxFIFOMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
-	return m, enableActorModules(cfg, m, bus)
+	return m, m.enableActorModules(cfg)
 }
 
 // enableActorModules enables the actor-specific modules and adds them to the utility module's actorModules to be started later.
-func enableActorModules(cfg *configs.Config, m *utilityModule, bus modules.Bus) error {
+func (u *utilityModule) enableActorModules(cfg *configs.Config) error {
 	fishermanCfg := cfg.Fisherman
 	servicerCfg := cfg.Servicer
 	validatorCfg := cfg.Validator
 
 	if servicerCfg.Enabled {
-		s, err := servicer.CreateServicer(bus)
+		s, err := servicer.CreateServicer(u.GetBus())
 		if err != nil {
-			m.logger.Error().Err(err).Msg("failed to create servicer module")
+			u.logger.Error().Err(err).Msg("failed to create servicer module")
 			return err
 		}
-		m.svc = s
-		m.actorModules = append(m.actorModules, s)
+		u.actorModules[s.GetModuleName()] = s
 	}
 
 	if fishermanCfg.Enabled {
-		f, err := fisherman.CreateFisherman(bus)
+		f, err := fisherman.CreateFisherman(u.GetBus())
 		if err != nil {
-			m.logger.Error().Err(err).Msg("failed to create fisherman module")
+			u.logger.Error().Err(err).Msg("failed to create fisherman module")
 			return err
 		}
-		m.fsh = f
-		m.actorModules = append(m.actorModules, f)
+		u.actorModules[f.GetModuleName()] = f
 	}
 
 	if validatorCfg.Enabled {
-		v, err := validator.CreateValidator(bus)
+		v, err := validator.CreateValidator(u.GetBus())
 		if err != nil {
-			m.logger.Error().Err(err).Msg("failed to create validator module")
+			u.logger.Error().Err(err).Msg("failed to create validator module")
 			return err
 		}
-		m.vld = v
-		m.actorModules = append(m.actorModules, v)
+		u.actorModules[v.GetModuleName()] = v
 	}
 
-	if err := validateActorModuleExclusivity(m, cfg); err != nil {
+	if err := u.validateActorModuleExclusivity(*cfg); err != nil {
 		return err
 	}
 
@@ -140,38 +133,42 @@ func (u *utilityModule) GetMempool() mempool.TXMempool {
 	return u.mempool
 }
 
-func (u *utilityModule) GetLogger() *modules.Logger {
-	return u.logger
-}
-
-func (u *utilityModule) GetActorModules() []modules.Module {
+func (u *utilityModule) GetActorModules() map[string]modules.Module {
 	return u.actorModules
 }
 
-func (u *utilityModule) GetServicerModule() modules.Module {
-	return u.svc
+func (u *utilityModule) GetServicerModule() modules.ServicerModule {
+	return u.actorModules[servicer.ServicerModuleName]
+}
+
+func (u *utilityModule) GetFishermanModule() modules.FishermanModule {
+	return u.actorModules[fisherman.FishermanModuleName]
+}
+
+func (u *utilityModule) GetValidatorModule() modules.ValidatorModule {
+	return u.actorModules[validator.ValidatorModuleName]
 }
 
 // validateActorModuleExclusivity validates that the actor modules are enabled in a valid combination.
 // TODO: There are probably more rules that need to be added here.
-func validateActorModuleExclusivity(m *utilityModule, cfg *configs.Config) error {
+func (u *utilityModule) validateActorModuleExclusivity(cfg configs.Config) error {
 	servicerCfg := cfg.Servicer
 	validatorCfg := cfg.Validator
 	actors := []string{}
-	for _, submodule := range m.actorModules {
+	for _, submodule := range u.actorModules {
 		actors = append(actors, submodule.GetModuleName())
 	}
 
-	if len(m.actorModules) > 1 {
+	if len(u.actorModules) > 1 {
 		// only case where this is allowed is if the node is a validator and a servicer
 		if !(validatorCfg.Enabled && servicerCfg.Enabled) {
-			m.logger.Error().Strs("actors", actors).Msg(ErrInvalidActorsEnabled)
-			m.actorModules = []modules.Module{} // reset the actorModules
+			u.logger.Error().Strs("actors", actors).Msg(ErrInvalidActorsEnabled)
+			u.actorModules = map[string]modules.Module{}
 			return errors.New(ErrInvalidActorsEnabled)
 		}
 	}
 
-	m.logger.Info().Strs("actors", actors).Msg("Node actors enabled")
+	u.logger.Info().Strs("actors", actors).Msg("Node actors enabled")
 
 	return nil
 }
