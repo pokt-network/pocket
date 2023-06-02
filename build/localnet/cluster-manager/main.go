@@ -19,7 +19,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-const cliPath = "/usr/local/bin/client"
+const cliPath = "/usr/local/bin/p1"
 const validatorServiceUrlFormat = "validator-%s-pocket:%d"
 
 var (

@@ -32,6 +32,8 @@ type utilityModule struct {
 	mempool mempool.TXMempool
 
 	actorModules map[string]modules.Module
+	// TODO: initialize
+	servicer modules.Servicer
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {

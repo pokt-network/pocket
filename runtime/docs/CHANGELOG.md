@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.40] - 2023-06-01
+
+- Add an Address field to Servicer configuration
+- Add a default servicer configuration
+
+## [0.0.0.39] - 2023-05-25
+
+- Added a new ServicerConfig type
+
 ## [0.0.0.38] - 2023-05-08
 
 - Renamed `P2PConfig#MaxMempoolCount` to `P2PConfig#MaxNonces`
