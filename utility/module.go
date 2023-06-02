@@ -22,6 +22,9 @@ type utilityModule struct {
 
 	logger  *modules.Logger
 	mempool mempool.TXMempool
+
+	// TODO: initialize
+	servicer modules.Servicer
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
