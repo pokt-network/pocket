@@ -17,8 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var defaultValue []byte = nil
-
 func TestStoreManager_StoreManagerOperations(t *testing.T) {
 	store1 := stores.NewTestPrivateStore("test1")
 	require.Equal(t, store1.GetStoreKey(), "test1")
@@ -464,7 +462,7 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 		fails         bool
 		expected      error
 	}{
-		{ // Successfully generates and verifies a membership proof for a key stored
+		{ // Successfully generates a membership proof for a key stored
 			store:         store1,
 			key:           []byte("foo"),
 			value:         []byte("bar"),
@@ -472,7 +470,7 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 			fails:         false,
 			expected:      nil,
 		},
-		{ // Successfully generates and verifies a non-membership proof for a key not stored
+		{ // Successfully generates a non-membership proof for a key not stored
 			store: store1,
 			key:   []byte("baz"),
 			// unrelated leaf data
@@ -485,7 +483,7 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 			fails:         false,
 			expected:      nil,
 		},
-		{ // Successfully generates and verifies a non-membership proof for an unset nil key
+		{ // Successfully generates a non-membership proof for an unset nil key
 			store: store1,
 			key:   nil,
 			// unrelated leaf data
@@ -563,7 +561,22 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 			nonmembership: true,
 			valid:         true,
 		},
-		// TODO: Add more test cases
+		{ // Fails to verify a membership proof for a key-value pair not stored
+			modify:        nil,
+			key:           []byte("baz"),
+			value:         []byte("bar"),
+			nonmembership: false,
+			valid:         false,
+		},
+		{ // Fails to verify a non-membership proof for a key-value pair stored
+			modify: func(proof *ics23.CommitmentProof) {
+				proof.GetExist().Value = []byte("bar")
+			},
+			key:           []byte("foo"),
+			value:         nil,
+			nonmembership: true,
+			valid:         false,
+		},
 	}
 
 	for _, tc := range testCases {
