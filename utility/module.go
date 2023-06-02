@@ -60,7 +60,11 @@ func (*utilityModule) Create(bus modules.Bus, options ...modules.ModuleOption) (
 	m.mempool = types.NewTxFIFOMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
 	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
-	return m, m.enableActorModules(cfg)
+	if err := m.enableActorModules(cfg); err != nil {
+		return m, err
+	}
+
+	return m, nil
 }
 
 // enableActorModules enables the actor-specific modules and adds them to the utility module's actorModules to be started later.
@@ -96,7 +100,7 @@ func (u *utilityModule) enableActorModules(cfg *configs.Config) error {
 		u.actorModules[v.GetModuleName()] = v
 	}
 
-	if err := u.validateActorModuleExclusivity(*cfg); err != nil {
+	if err := u.validateActorModuleExclusivity(cfg); err != nil {
 		return err
 	}
 
@@ -153,7 +157,7 @@ func (u *utilityModule) GetValidatorModule() modules.ValidatorModule {
 
 // validateActorModuleExclusivity validates that the actor modules are enabled in a valid combination.
 // TODO: There are probably more rules that need to be added here.
-func (u *utilityModule) validateActorModuleExclusivity(cfg configs.Config) error {
+func (u *utilityModule) validateActorModuleExclusivity(cfg *configs.Config) error {
 	servicerCfg := cfg.Servicer
 	validatorCfg := cfg.Validator
 	actors := []string{}
@@ -163,7 +167,9 @@ func (u *utilityModule) validateActorModuleExclusivity(cfg configs.Config) error
 
 	if len(u.actorModules) > 1 {
 		// only case where this is allowed is if the node is a validator and a servicer
-		if !(validatorCfg.Enabled && servicerCfg.Enabled) {
+		isVal := (validatorCfg != nil && validatorCfg.Enabled)
+		isServ := (servicerCfg != nil && servicerCfg.Enabled)
+		if !isVal || !isServ {
 			u.logger.Error().Strs("actors", actors).Msg(ErrInvalidActorsEnabled)
 			u.actorModules = map[string]modules.Module{}
 			return errors.New(ErrInvalidActorsEnabled)

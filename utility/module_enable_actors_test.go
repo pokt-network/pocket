@@ -90,7 +90,7 @@ func TestEnableActorModules(t *testing.T) {
 			// Verify actor modules
 			for _, expectedName := range test.expectedNames {
 				module, err := um.GetBus().GetModulesRegistry().GetModule(expectedName)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.NotNil(t, module)
 			}
 			assert.Equal(t, len(test.expectedNames), len(um.GetActorModules()))
