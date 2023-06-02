@@ -182,7 +182,7 @@ const (
 	CodeStoreCreationError                Code = 140
 	CodeStoreUpdateError                  Code = 141
 	CodeStoreNotProvable                  Code = 142
-	CodeInvalidProof                      Code = 143
+	CodeCreatingProofError                Code = 143
 )
 
 const (
@@ -323,7 +323,7 @@ const (
 	StoreCreationError                = "an error occurred creating the store"
 	StoreUpdateError                  = "an error occurred updating the store"
 	StoreNotProvableError             = "the store is not provable"
-	InvalidProofError                 = "invalid commitment proof"
+	ProofCreationError                = "an error occured creating the commitment proof"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -879,6 +879,6 @@ func ErrStoreNotProvable(storeKey string) Error {
 	return NewError(CodeStoreNotProvable, fmt.Sprintf("%s: %s", StoreNotProvableError, storeKey))
 }
 
-func ErrInvalidProof(msg string) Error {
-	return NewError(CodeInvalidProof, fmt.Sprintf("%s: %s", InvalidProofError, msg))
+func ErrCreatingProof(msg string) Error {
+	return NewError(CodeCreatingProofError, fmt.Sprintf("%s: %s", ProofCreationError, msg))
 }

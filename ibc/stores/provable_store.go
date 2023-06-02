@@ -3,6 +3,7 @@ package stores
 import (
 	"crypto/sha256"
 
+	ics23 "github.com/cosmos/ics23/go"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -96,31 +97,12 @@ func (prov *ProvableStore) Root() *coreTypes.CommitmentRoot {
 	return &coreTypes.CommitmentRoot{Root: prov.tree.Root()}
 }
 
-// TreeSpec returns the SMT spec for the ProvableStore
-func (prov *ProvableStore) TreeSpec() *smt.TreeSpec {
-	return prov.tree.Spec()
-}
-
 // CreateMembershipProof generates a CommitmentProof object verifying the membership of a key-value pair
-func (prov *ProvableStore) CreateMembershipProof(key, value []byte) (*coreTypes.CommitmentProof, error) {
-	return generateProof(prov.tree, key, value)
+func (prov *ProvableStore) CreateMembershipProof(key, value []byte) (*ics23.CommitmentProof, error) {
+	return createMembershipProof(prov.tree, key, value)
 }
 
 // CreateNonMembershipProof generates a CommitmentProof object verifying the non-membership of a key
-func (prov *ProvableStore) CreateNonMembershipProof(key []byte) (*coreTypes.CommitmentProof, error) {
-	return generateProof(prov.tree, key, nil)
-}
-
-func generateProof(tree *smt.SMT, key, value []byte) (*coreTypes.CommitmentProof, error) {
-	proof, err := tree.Prove(key)
-	if err != nil {
-		return nil, err
-	}
-	return &coreTypes.CommitmentProof{
-		Key:                   key,
-		Value:                 value,
-		SideNodes:             proof.SideNodes,
-		NonMembershipLeafData: proof.NonMembershipLeafData,
-		SiblingData:           proof.SiblingData,
-	}, nil
+func (prov *ProvableStore) CreateNonMembershipProof(key []byte) (*ics23.CommitmentProof, error) {
+	return createNonMembershipProof(prov.tree, key)
 }

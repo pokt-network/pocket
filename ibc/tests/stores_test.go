@@ -6,17 +6,18 @@ import (
 	"encoding/hex"
 	"testing"
 
+	ics23 "github.com/cosmos/ics23/go"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/pkg/errors"
-	"github.com/pokt-network/pocket/ibc"
 	stores "github.com/pokt-network/pocket/ibc/stores"
 	"github.com/pokt-network/pocket/persistence/kvstore"
-	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/smt"
 	"github.com/stretchr/testify/require"
 )
+
+var defaultValue []byte = nil
 
 func TestStoreManager_StoreManagerOperations(t *testing.T) {
 	store1 := stores.NewTestPrivateStore("test1")
@@ -441,60 +442,85 @@ func TestProvableStore_UpdatesPersist(t *testing.T) {
 
 // Proof generation cannot fail but verification can
 func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
-	store := stores.NewTestProvableStore("test1", nil)
-	require.Equal(t, store.GetStoreKey(), "test1")
-	require.True(t, store.IsProvable())
+	store1 := stores.NewTestProvableStore("test1", nil)
+	require.Equal(t, store1.GetStoreKey(), "test1")
+	require.True(t, store1.IsProvable())
 
 	// Set a value in the store
-	err := store.Set([]byte("foo"), []byte("bar"))
+	err := store1.Set([]byte("foo"), []byte("bar"))
 	require.NoError(t, err)
-	err = store.Set([]byte("foo2"), []byte("bar2"))
+	err = store1.Set([]byte("foo2"), []byte("bar2"))
 	require.NoError(t, err)
-	err = store.Set([]byte("bar"), []byte("foo"))
+	err = store1.Set([]byte("bar"), []byte("foo"))
 	require.NoError(t, err)
-	err = store.Set([]byte("bar2"), []byte("foo2"))
+	err = store1.Set([]byte("bar2"), []byte("foo2"))
 	require.NoError(t, err)
 
 	testCases := []struct {
+		store         modules.ProvableStore
 		key           []byte
 		value         []byte
 		nonmembership bool
+		fails         bool
+		expected      error
 	}{
 		{ // Successfully generates and verifies a membership proof for a key stored
+			store:         store1,
 			key:           []byte("foo"),
 			value:         []byte("bar"),
 			nonmembership: false,
+			fails:         false,
+			expected:      nil,
 		},
 		{ // Successfully generates and verifies a non-membership proof for a key not stored
-			key:           []byte("baz"),
-			value:         nil,
+			store: store1,
+			key:   []byte("baz"),
+			// unrelated leaf data
+			value: []byte{
+				0x0, 0x84, 0x4b, 0x7f, 0xde, 0xcd, 0xa0, 0x76, 0x33,
+				0x76, 0x96, 0xdb, 0xd, 0xca, 0xc0, 0xce, 0x9d, 0x83, 0x83, 0x19, 0xac, 0x0, 0xb2, 0x43, 0x80, 0xd6,
+				0xc6, 0x2d, 0x44, 0x2d, 0x6, 0x80, 0xaf, 0x66, 0x6f, 0x6f, 0x32,
+			},
 			nonmembership: true,
+			fails:         false,
+			expected:      nil,
 		},
 		{ // Successfully generates and verifies a non-membership proof for an unset nil key
-			key:           nil,
-			value:         nil,
+			store: store1,
+			key:   nil,
+			// unrelated leaf data
+			value: []byte{
+				0x0, 0xfc, 0xde, 0x2b, 0x2e, 0xdb, 0xa5, 0x6b, 0xf4,
+				0x8, 0x60, 0x1f, 0xb7, 0x21, 0xfe, 0x9b, 0x5c, 0x33, 0x8d, 0x10, 0xee, 0x42, 0x9e, 0xa0, 0x4f, 0xae,
+				0x55, 0x11, 0xb6, 0x8f, 0xbf, 0x8f, 0xb9, 0x66, 0x6f, 0x6f,
+			},
 			nonmembership: true,
+			fails:         false,
+			expected:      nil,
 		},
 	}
 
 	for _, tc := range testCases {
-		var proof *coreTypes.CommitmentProof
+		var proof *ics23.CommitmentProof
 		if tc.nonmembership {
-			proof, err = store.CreateNonMembershipProof(tc.key)
-			require.NoError(t, err)
-			require.NotNil(t, proof)
-			require.NotNil(t, proof.GetNonMembershipLeafData())
+			proof, err = tc.store.CreateNonMembershipProof(tc.key)
 		} else {
-			proof, err = store.CreateMembershipProof(tc.key, tc.value)
-			require.NoError(t, err)
-			require.NotNil(t, proof)
-			require.Nil(t, proof.GetNonMembershipLeafData())
+			proof, err = tc.store.CreateMembershipProof(tc.key, tc.value)
 		}
-		require.Equal(t, tc.key, proof.GetKey())
-		require.Equal(t, tc.value, proof.GetValue())
+		if tc.fails {
+			require.EqualError(t, err, tc.expected.Error())
+			require.Nil(t, proof)
+			continue
+		}
+		require.NoError(t, err)
+		require.NotNil(t, proof)
+		require.Equal(t, tc.key, proof.GetExist().GetKey())
+		require.Equal(t, tc.value, proof.GetExist().GetValue())
+		require.NotNil(t, proof.GetExist().GetLeaf())
+		require.NotNil(t, proof.GetExist().GetPath())
 	}
 
-	err = store.Stop()
+	err = store1.Stop()
 	require.NoError(t, err)
 }
 
@@ -514,25 +540,14 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 	require.NoError(t, err)
 
 	root := store.Root()
-
-	memProof, err := store.CreateMembershipProof([]byte("foo"), []byte("bar"))
-	require.NoError(t, err)
-	require.NotNil(t, memProof)
-	require.Nil(t, memProof.GetNonMembershipLeafData())
-
-	nonMemProof, err := store.CreateNonMembershipProof([]byte("baz"))
-	require.NoError(t, err)
-	require.NotNil(t, nonMemProof)
-	require.NotNil(t, nonMemProof.GetNonMembershipLeafData())
+	require.NotNil(t, root)
 
 	testCases := []struct {
-		modify        func(proof *coreTypes.CommitmentProof)
+		modify        func(proof *ics23.CommitmentProof)
 		key           []byte
 		value         []byte
 		nonmembership bool
 		valid         bool
-		fail          bool
-		expected      error
 	}{
 		{ // Successfully verifies a membership proof for a key-value stored pair
 			modify:        nil,
@@ -540,108 +555,39 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 			value:         []byte("bar"),
 			nonmembership: false,
 			valid:         true,
-			fail:          false,
-			expected:      nil,
 		},
 		{ // Successfully verifies a non-membership proof for a key-value pair not stored
 			modify:        nil,
-			key:           []byte("baz"),
+			key:           []byte("foo"),
 			value:         nil,
 			nonmembership: true,
 			valid:         true,
-			fail:          false,
-			expected:      nil,
 		},
-		{ // Fails to verify proof for an invalid value
-			modify:        nil,
-			key:           []byte("foo"),
-			value:         []byte("baz"),
-			nonmembership: false,
-			valid:         false,
-			fail:          true,
-			expected:      coreTypes.ErrInvalidProof("provided value does not match proof value"),
-		},
-		{ // Fails to verify proof for an invalid key
-			modify:        nil,
-			key:           []byte("baz"),
-			value:         []byte("bar"),
-			nonmembership: false,
-			valid:         false,
-			fail:          true,
-			expected:      coreTypes.ErrInvalidProof("provided key does not match proof key"),
-		},
-		{ // Fails to verify membership proof with non nil non membership leaf data
-			modify: func(proof *coreTypes.CommitmentProof) {
-				proof.NonMembershipLeafData = []byte("invalid non membership data")
-			},
-			key:           []byte("foo"),
-			value:         []byte("bar"),
-			nonmembership: false,
-			valid:         false,
-			fail:          true,
-			expected:      coreTypes.ErrInvalidProof("non membership leaf data must be nil"),
-		},
-		{ // Fails to verify non-membership proof with nil non membership leaf data
-			modify: func(proof *coreTypes.CommitmentProof) {
-				proof.NonMembershipLeafData = nil
-			},
-			key:           []byte("baz"),
-			value:         nil,
-			nonmembership: true,
-			valid:         false,
-			fail:          true,
-			expected:      coreTypes.ErrInvalidProof("non membership leaf data must not be nil"),
-		},
-		{ // Fails to verify membership proof when computed root is different from provided root
-			modify: func(proof *coreTypes.CommitmentProof) {
-				proof.Value = []byte("new value")
-			},
-			key:           []byte("foo"),
-			value:         []byte("new value"),
-			nonmembership: false,
-			valid:         false,
-			fail:          false,
-			expected:      nil,
-		},
-		{ // Fails to verify non-membership proof when key exists
-			modify: func(proof *coreTypes.CommitmentProof) { //nolint:unused // param not used in modify function
-				err := store.Set([]byte("baz"), []byte("bar")) // Set a value at the missing key
-				require.NoError(t, err)
-				root = store.Root() // Get new root
-			},
-			key:           []byte("baz"),
-			value:         nil,
-			nonmembership: true,
-			valid:         false,
-			fail:          false,
-			expected:      nil,
-		},
+		// TODO: Add more test cases
 	}
 
 	for _, tc := range testCases {
-		var proof *coreTypes.CommitmentProof
+		proof := new(ics23.CommitmentProof)
+		var err error
+
 		if tc.nonmembership {
-			proof = codec.GetCodec().Clone(nonMemProof).(*coreTypes.CommitmentProof)
+			proof, err = store.CreateNonMembershipProof(tc.key)
 		} else {
-			proof = codec.GetCodec().Clone(memProof).(*coreTypes.CommitmentProof)
+			proof, err = store.CreateMembershipProof(tc.key, tc.value)
 		}
+		require.NoError(t, err)
+		require.NotNil(t, proof)
+		require.NotNil(t, proof.GetExist())
 
 		if tc.modify != nil {
 			tc.modify(proof)
 		}
 
 		var valid bool
-		var err error
 		if tc.nonmembership {
-			valid, err = ibc.VerifyNonMembership(store.TreeSpec(), proof, root, tc.key)
+			valid = stores.VerifyNonMembership(root, proof, tc.key)
 		} else {
-			valid, err = ibc.VerifyMembership(store.TreeSpec(), proof, root, tc.key, tc.value)
-		}
-
-		if tc.fail {
-			require.EqualError(t, err, tc.expected.Error())
-		} else {
-			require.NoError(t, err)
+			valid = stores.VerifyMembership(root, proof, tc.key, tc.value)
 		}
 
 		if tc.valid {

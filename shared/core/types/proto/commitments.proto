@@ -15,11 +15,3 @@ message CommitmentPath {
 message CommitmentRoot {
     bytes root = 1;
 }
-
-message CommitmentProof {
-    bytes key = 1;   // DISCUSSION: Do we need these? Check against spec Create(Non)MembershipProof
-    bytes value = 2; // as they really are useless.
-    repeated bytes side_nodes = 3;
-    optional bytes non_membership_leaf_data = 4;
-    optional bytes sibling_data = 5;
-}

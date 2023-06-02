@@ -1,8 +1,8 @@
 package modules
 
 import (
+	ics23 "github.com/cosmos/ics23/go"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/smt"
 )
 
 const IBCModuleName = "ibc"
@@ -216,7 +216,6 @@ type Store interface {
 type ProvableStore interface {
 	Store
 	Root() *coreTypes.CommitmentRoot
-	TreeSpec() *smt.TreeSpec
-	CreateMembershipProof(key, value []byte) (*coreTypes.CommitmentProof, error)
-	CreateNonMembershipProof(key []byte) (*coreTypes.CommitmentProof, error)
+	CreateMembershipProof(key, value []byte) (*ics23.CommitmentProof, error)
+	CreateNonMembershipProof(key []byte) (*ics23.CommitmentProof, error)
 }
