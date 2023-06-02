@@ -88,12 +88,7 @@ func TestAdmitRelay(t *testing.T) {
 			},
 			expected: errValidateApplication,
 		},
-		/*
-			{
-				name: "session roll-over"
-			},
-
-		*/
+		// INCOMPLETE: add a unit test for session roll-over
 	}
 
 	for _, testCase := range testCases {

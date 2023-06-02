@@ -18,6 +18,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
+// DISCUSS: where should the RelayAccracyParameter be defined?
 const RelayAccuracyParameter = 0.2
 
 var (
@@ -216,7 +217,6 @@ func (s servicer) calculateServicerAppSessionTokens(session *coreTypes.Session, 
 	// This multiplication is performed to minimize the chance of under-utilization of application's tokens,
 	//	while removing the overhead of communication between servicers which would be necessary otherwise.
 	// see https://arxiv.org/abs/2305.10672 for details on application and servicer distributed rate-limiting
-	// DISCUSS: where should the RelayAccracyParameter be defined?
 	adjustedTokens := servicerTokens.Mul(servicerTokens, big.NewFloat(1+RelayAccuracyParameter))
 	roundedTokens, _ := adjustedTokens.Int(big.NewInt(1))
 
@@ -267,7 +267,7 @@ func (s servicer) admitRelay(relay *coreTypes.Relay) error {
 
 	height := s.GetBus().GetConsensusModule().CurrentHeight()
 	if err := s.validateRelayMeta(relay.Meta, int64(height)); err != nil {
-		return fmt.Errorf("%w: %w", errValidateRelayMeta, err)
+		return fmt.Errorf("%s: %w", err.Error(), errValidateRelayMeta)
 	}
 
 	// TODO: update the CLI to include ApplicationAddress(or Application Public Key) in the RelayMeta
@@ -278,7 +278,7 @@ func (s servicer) admitRelay(relay *coreTypes.Relay) error {
 
 	// TODO: (REFACTOR) use a loop to run all validators: would also remove the need for passing the session around
 	if err := validateRelayBlockHeight(relay.Meta, session); err != nil {
-		return fmt.Errorf("%w: %w", errValidateBlockHeight, err)
+		return fmt.Errorf("%s: %w", err.Error(), errValidateBlockHeight)
 	}
 
 	if err := s.validateServicer(relay.Meta, session); err != nil {
