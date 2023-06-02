@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"math/big"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -11,25 +12,43 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-var testServicer1 = &coreTypes.Actor{
-	ActorType: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
-	Address:   "a3d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
-	PublicKey: "a6cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d75a998b",
-	Chains:    []string{"0021"},
-}
+const (
+	testAppsTokensMultiplier = int(2)
+	testCurrentHeight        = int64(9)
+)
+
+var (
+	testServicer1 = &coreTypes.Actor{
+		ActorType: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
+		Address:   "a3d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
+		PublicKey: "a6cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d75a998b",
+		Chains:    []string{"0021"},
+	}
+
+	testApp1 = &coreTypes.Actor{
+		Address:      "98a792b7aca673620132ef01f50e62caa58eca83",
+		PublicKey:    "b5cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d86b009c",
+		StakedAmount: "1000",
+	}
+)
 
 func TestAdmitRelay(t *testing.T) {
-	currentHeight := uint64(9)
+	const (
+		currentSessionNumber = 2
+	)
+
 	testCases := []struct {
-		name     string
-		relay    *coreTypes.Relay
-		expected error
+		name       string
+		usedTokens map[string]*sessionTokens
+		relay      *coreTypes.Relay
+		expected   error
 	}{
 		{
 			name:  "valid relay is admitted",
-			relay: testRelay("0021", int64(currentHeight)),
+			relay: testRelay(),
 		},
 		{
 			name:     "Relay with empty Meta is rejected",
@@ -43,36 +62,58 @@ func TestAdmitRelay(t *testing.T) {
 		},
 		{
 			name:     "Relay for unsupported chain is rejected",
-			relay:    testRelay("foo", 8),
+			relay:    testRelay(testRelayChain("foo")),
 			expected: errValidateRelayMeta,
 		},
 		{
 			name:     "Relay with height set in a past session is rejected",
-			relay:    testRelay("0021", 5),
+			relay:    testRelay(testRelayHeight(5)),
 			expected: errValidateBlockHeight,
 		},
 		{
 			name:     "Relay with height set in a future session is rejected",
-			relay:    testRelay("0021", 9999),
+			relay:    testRelay(testRelayHeight(9999)),
 			expected: errValidateBlockHeight,
 		},
+		{
+			name:     "Relay not matching the servicer is rejected",
+			relay:    testRelay(testRelayServicer("bar")),
+			expected: errValidateServicer,
+		},
+		{
+			name:  "Relay for maxed-out app is rejected",
+			relay: testRelay(),
+			usedTokens: map[string]*sessionTokens{
+				testApp1.PublicKey: {currentSessionNumber, big.NewInt(999999)},
+			},
+			expected: errValidateApplication,
+		},
+		/*
+			{
+				name: "session roll-over"
+			},
+
+		*/
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			config := testServicerConfig()
 			session := testSession(
-				sessionNumber(2),
+				sessionNumber(currentSessionNumber),
 				sessionBlocks(4),
 				sessionHeight(2),
 				sessionServicers(testServicer1),
 			)
-			mockBus := mockBus(t, &config, currentHeight, session)
+			mockBus := mockBus(t, &config, uint64(testCurrentHeight), session)
 
 			servicerMod, err := CreateServicer(mockBus)
 			require.NoError(t, err)
 
-			err = servicerMod.(*servicer).admitRelay(testCase.relay)
+			servicer := servicerMod.(*servicer)
+			servicer.usedTokens = testCase.usedTokens
+
+			err = servicer.admitRelay(testCase.relay)
 			if !errors.Is(err, testCase.expected) {
 				t.Fatalf("Expected error %v got: %v", testCase.expected, err)
 			}
@@ -80,19 +121,46 @@ func TestAdmitRelay(t *testing.T) {
 	}
 }
 
-func testRelay(chain string, height int64) *coreTypes.Relay {
-	return &coreTypes.Relay{
+type relayEditor func(*coreTypes.Relay)
+
+func testRelayServicer(publicKey string) relayEditor {
+	return func(relay *coreTypes.Relay) {
+		relay.Meta.ServicerPublicKey = publicKey
+	}
+}
+
+func testRelayChain(chain string) relayEditor {
+	return func(relay *coreTypes.Relay) {
+		relay.Meta.RelayChain = &coreTypes.Identifiable{Id: chain}
+	}
+}
+
+func testRelayHeight(height int64) relayEditor {
+	return func(relay *coreTypes.Relay) {
+		relay.Meta.BlockHeight = height
+	}
+}
+
+func testRelay(editors ...relayEditor) *coreTypes.Relay {
+	relay := &coreTypes.Relay{
 		Meta: &coreTypes.RelayMeta{
-			ServicerPublicKey: testServicer1.PublicKey,
-			BlockHeight:       height,
+			ServicerPublicKey:  testServicer1.PublicKey,
+			ApplicationAddress: testApp1.Address,
+			BlockHeight:        testCurrentHeight,
 			RelayChain: &coreTypes.Identifiable{
-				Id: chain,
+				Id: "0021",
 			},
 			GeoZone: &coreTypes.Identifiable{
 				Id: "geozone",
 			},
 		},
 	}
+
+	for _, editor := range editors {
+		editor(relay)
+	}
+
+	return relay
 }
 
 func testServicerConfig() configs.ServicerConfig {
@@ -131,7 +199,8 @@ func sessionServicers(servicers ...*coreTypes.Actor) func(*coreTypes.Session) {
 
 func testSession(editors ...sessionModifier) *coreTypes.Session {
 	session := coreTypes.Session{
-		Id: "session-1",
+		Id:          "session-1",
+		Application: testApp1,
 	}
 	for _, editor := range editors {
 		editor(&session)
@@ -150,9 +219,9 @@ func mockBus(t *testing.T, cfg *configs.ServicerConfig, height uint64, session *
 
 	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
 	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
-	persistenceReadContextMock.EXPECT().GetServicer(gomock.Any(), gomock.Any()).Return(testServicer1, nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().Release().AnyTimes()
-
+	persistenceReadContextMock.EXPECT().GetServicer(gomock.Any(), gomock.Any()).Return(testServicer1, nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().GetIntParam(typesUtil.AppSessionTokensMultiplierParamName, int64(height)).Return(testAppsTokensMultiplier, nil).AnyTimes()
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()

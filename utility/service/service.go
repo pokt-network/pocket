@@ -3,6 +3,8 @@ package service
 import (
 	"errors"
 	"fmt"
+	"math/big"
+	"sync"
 
 	"golang.org/x/exp/slices"
 
@@ -12,14 +14,25 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
+	"github.com/pokt-network/pocket/shared/utils"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
+
+const RelayAccuracyParameter = 0.2
 
 var (
 	errValidateBlockHeight = errors.New("relay failed block height validation")
 	errValidateRelayMeta   = errors.New("relay failed metadata validation")
+	errValidateServicer    = errors.New("relay does not match the servicer")
+	errValidateApplication = errors.New("relay failed application validation")
 
 	_ modules.Servicer = &servicer{}
 )
+
+type sessionTokens struct {
+	SessionNumber int64
+	Count         *big.Int
+}
 
 type servicer struct {
 	base_modules.IntegratableModule
@@ -27,6 +40,33 @@ type servicer struct {
 
 	logger *modules.Logger
 	config *configs.ServicerConfig
+
+	rwlock sync.RWMutex
+	// totalTokens holds the total number of tokens assigned to this servicer for the app in the current session
+	totalTokens map[string]*sessionTokens
+	// INCOMPLETE: need to either persist this value or calculate it using persistence module
+	// usedTokens holds the total number of tokens used by the servicer for the app in the current session
+	usedTokens map[string]*sessionTokens
+}
+
+func (s *servicer) incrementUsedTokens(session *coreTypes.Session) {
+	s.rwlock.Lock()
+	defer s.rwlock.Unlock()
+
+	if len(s.usedTokens) == 0 {
+		s.usedTokens = make(map[string]*sessionTokens)
+	}
+
+	key := session.Application.PublicKey
+	current := s.usedTokens[key]
+	// Reset the counter if this is a new session
+	if current == nil || current.SessionNumber != session.SessionNumber {
+		s.usedTokens[key] = &sessionTokens{session.SessionNumber, big.NewInt(1)}
+		return
+	}
+
+	current.Count.Add(current.Count, big.NewInt(1))
+	s.usedTokens[key] = current
 }
 
 func CreateServicer(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -75,6 +115,7 @@ func (s *servicer) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse
 	// TODO: implement state maintenance
 	// TODO: validate the response from the node?
 	// TODO: (QUESTION) Should we persist SignedRPC?
+	// INCOMPLETE: Update state (Persistence Local?) after execution to reflect token usage for app
 	return nil, nil
 }
 
@@ -122,15 +163,76 @@ func (s servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable, 
 	return nil
 }
 
-// TODO: implement
 // validateApplication makes sure the application has not received more relays than allocated in the current session.
-func (s servicer) validateApplication(meta *coreTypes.RelayMeta, session *coreTypes.Session) error {
-	/*
-		// if maxRelaysPerSession, overServiced := calculateAppSessionTokens(); overServiced {
-			return fmt.Errorf("application %s has exceeded its allocated relays %d for the session %d", meta.ApplicationPublicKey, maxRelaysPerSession)
-		}
-	*/
-	return nil
+func (s servicer) validateApplication(meta *coreTypes.RelayMeta, session *coreTypes.Session, currentHeight int64) error {
+	// IMPROVE: use a function to get current height from the current session
+	servicerAppSessionTokens, err := s.calculateServicerAppSessionTokens(session, currentHeight)
+	if err != nil {
+		return fmt.Errorf("Error calculating servicer tokens for application: %w", err)
+	}
+
+	s.rwlock.RLock()
+	defer s.rwlock.RUnlock()
+
+	usedAppSessionTokens := s.usedTokens[session.Application.PublicKey]
+
+	if usedAppSessionTokens == nil || usedAppSessionTokens.Count == nil || usedAppSessionTokens.Count.Cmp(servicerAppSessionTokens) < 0 {
+		return nil
+	}
+
+	return fmt.Errorf("application %s has exceeded its allocated relays %s for session %d",
+		session.Application.PublicKey,
+		servicerAppSessionTokens,
+		session.SessionNumber)
+}
+
+func (s servicer) cachedAppTokens(session *coreTypes.Session) *sessionTokens {
+	s.rwlock.RLock()
+	defer s.rwlock.RUnlock()
+
+	return s.totalTokens[session.Application.PublicKey]
+}
+
+// calculateServicerAppSessionTokens return the number of tokens the servicer can use for the application in the current session
+func (s servicer) calculateServicerAppSessionTokens(session *coreTypes.Session, currentHeight int64) (*big.Int, error) {
+	tokens := s.cachedAppTokens(session)
+	if tokens != nil && tokens.Count != nil && tokens.SessionNumber == session.SessionNumber {
+		return big.NewInt(1).Set(tokens.Count), nil
+	}
+
+	// Calculate this servicer's limit for the application in the current session.
+	//	This is distributed rate limiting (DRL): no need to know how many requests have
+	//		been performed for this application by other servicers. Instead, simply enforce
+	//		this servicer's share of the application's tokens for this session.
+	appSessionTokens, err := s.calculateAppSessionTokens(session.Application.StakedAmount, currentHeight)
+	if err != nil {
+		return nil, fmt.Errorf("Error calculating application %s total tokens for session %d: %w", session.Application.PublicKey, session.SessionNumber, err)
+	}
+
+	// type conversion from big.Int to big.Float
+	appTokens := big.NewFloat(1).SetInt(appSessionTokens)
+	servicerTokens := appTokens.Quo(appTokens, big.NewFloat(float64(len(session.Servicers))))
+
+	// This multiplication is performed to minimize the chance of under-utilization of application's tokens,
+	//	while removing the overhead of communication between servicers which would be necessary otherwise.
+	// see https://arxiv.org/abs/2305.10672 for details on application and servicer distributed rate-limiting
+	// DISCUSS: where should the RelayAccracyParameter be defined?
+	adjustedTokens := servicerTokens.Mul(servicerTokens, big.NewFloat(1+RelayAccuracyParameter))
+	roundedTokens, _ := adjustedTokens.Int(big.NewInt(1))
+
+	s.setAppSessionTokens(session, &sessionTokens{session.SessionNumber, roundedTokens})
+	return roundedTokens, nil
+}
+
+func (s *servicer) setAppSessionTokens(session *coreTypes.Session, tokens *sessionTokens) {
+	s.rwlock.Lock()
+	defer s.rwlock.Unlock()
+
+	if len(s.totalTokens) == 0 {
+		s.totalTokens = make(map[string]*sessionTokens)
+	}
+
+	s.totalTokens[session.Application.PublicKey] = tokens
 }
 
 // validateServicer makes sure the servicer is A) active in the current session, and B) has not served more than its allocated relays for the session
@@ -151,7 +253,6 @@ func (s servicer) validateServicer(meta *coreTypes.RelayMeta, session *coreTypes
 		return fmt.Errorf("relay servicer key %s not found in session %d with %d servicers", meta.ServicerPublicKey, session.SessionNumber, len(session.Servicers))
 	}
 
-	// TODO: implement isServicerMaxedOut
 	return nil
 }
 
@@ -166,7 +267,7 @@ func (s servicer) admitRelay(relay *coreTypes.Relay) error {
 
 	height := s.GetBus().GetConsensusModule().CurrentHeight()
 	if err := s.validateRelayMeta(relay.Meta, int64(height)); err != nil {
-		return fmt.Errorf("%w: %s", errValidateRelayMeta, err.Error())
+		return fmt.Errorf("%w: %w", errValidateRelayMeta, err)
 	}
 
 	// TODO: update the CLI to include ApplicationAddress(or Application Public Key) in the RelayMeta
@@ -177,18 +278,42 @@ func (s servicer) admitRelay(relay *coreTypes.Relay) error {
 
 	// TODO: (REFACTOR) use a loop to run all validators: would also remove the need for passing the session around
 	if err := validateRelayBlockHeight(relay.Meta, session); err != nil {
-		return fmt.Errorf("%w: %s", errValidateBlockHeight, err.Error())
-	}
-
-	if err := s.validateApplication(relay.Meta, session); err != nil {
-		return fmt.Errorf("%s: relay failed application validation: %w", errPrefix, err)
+		return fmt.Errorf("%w: %w", errValidateBlockHeight, err)
 	}
 
 	if err := s.validateServicer(relay.Meta, session); err != nil {
-		return fmt.Errorf("%s: relay failed servicer instance validation: %w", errPrefix, err)
+		return fmt.Errorf("%s: %s: %w", errPrefix, err.Error(), errValidateServicer)
+	}
+
+	if err := s.validateApplication(relay.Meta, session, int64(height)); err != nil {
+		return fmt.Errorf("%s: %s: %w", errPrefix, err.Error(), errValidateApplication)
 	}
 
 	return nil
+}
+
+// DISCUSS: do we need to export this functionality as part of the utility module?
+// calculateAppSessionTokens determines the number of "session tokens" an application gets at the beginning
+// of every session. Each servicer will serve a maximum of (Session Tokens / Number of Servicers in the Session) relays for the application
+func (s *servicer) calculateAppSessionTokens(appStakeStr string, currentHeight int64) (*big.Int, error) {
+	appStake, err := utils.StringToBigInt(appStakeStr)
+	if err != nil {
+		return nil, fmt.Errorf("Error processing application's staked amount %s: %w", appStakeStr, coreTypes.ErrStringToBigInt(err))
+	}
+
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	if err != nil {
+		return nil, fmt.Errorf("error getting persistence context at height %d: %w", currentHeight, err)
+	}
+	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
+
+	// DISCUSS: using an interface for returning each defined parameter seems less error-prone: also could return e.g. int64 in this case to remove the type cast
+	appStakeTokensMultiplier, err := readCtx.GetIntParam(typesUtil.AppSessionTokensMultiplierParamName, currentHeight)
+	if err != nil {
+		return nil, fmt.Errorf("error reading parameter %s at height %d from persistence: %w", typesUtil.AppSessionTokensMultiplierParamName, currentHeight, err)
+	}
+
+	return appStake.Mul(appStake, big.NewInt(int64(appStakeTokensMultiplier))), nil
 }
 
 // IMPROVE: Add session height tolerance to account for session rollovers
