@@ -51,6 +51,7 @@
     "use_cors": false
   },
   "servicer": {
-    "enabled": true
+    "enabled": true,
+    "chains": ["0001"]
   }
 }

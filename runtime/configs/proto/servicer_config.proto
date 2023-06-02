@@ -9,4 +9,7 @@ option go_package = "github.com/pokt-network/pocket/runtime/configs";
 message ServicerConfig {
   // Enabled defines whether or not the node is a servicer.
   bool enabled = 1;
+  string public_key = 2;
+  string address = 3;
+  repeated string chains = 4;
 }

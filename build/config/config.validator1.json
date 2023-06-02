@@ -55,6 +55,7 @@
     "enabled": true
   },
   "servicer": {
-    "enabled": true
+    "enabled": true,
+    "chains": ["0001"]
   }
 }

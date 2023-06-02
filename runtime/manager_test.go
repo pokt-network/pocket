@@ -4203,9 +4203,6 @@ func TestNewManagerFromReaders(t *testing.T) {
 						ServerModeEnabled: true,
 					},
 					Utility: &configs.UtilityConfig{
-						ServicerConfig: &configs.ServicerConfig{
-							Chains: []string{"0001"},
-						},
 						MaxMempoolTransactionBytes: 1073741824,
 						MaxMempoolTransactions:     9000,
 					},
@@ -4243,8 +4240,11 @@ func TestNewManagerFromReaders(t *testing.T) {
 						Timeout: 30000,
 						UseCors: false,
 					},
-					Keybase:   defaultCfg.Keybase,
-					Servicer:  &configs.ServicerConfig{Enabled: true},
+					Keybase: defaultCfg.Keybase,
+					Servicer: &configs.ServicerConfig{
+						Enabled: true,
+						Chains:  []string{"0001"},
+					},
 					Validator: &configs.ValidatorConfig{Enabled: true},
 					Fisherman: defaultCfg.Fisherman,
 				},

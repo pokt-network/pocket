@@ -45,7 +45,7 @@ func (*servicer) Create(bus modules.Bus, options ...modules.ModuleOption) (modul
 	bus.RegisterModule(s)
 
 	cfg := bus.GetRuntimeMgr().GetConfig()
-	s.config = cfg.Utility.ServicerConfig
+	s.config = cfg.Servicer
 
 	return s, nil
 }
