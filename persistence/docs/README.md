@@ -27,14 +27,14 @@ This document is meant to be a supplement to the living protocol specification a
 
 ## Node Configuration
 
-The config specification can be found at [persistence_config.proto](../../runtime/configs/proto/persistence_config.proto), and an example can be found at [config.node1.validator.json](../../build/config/config.node1.validator.json).
+The config specification can be found at [persistence_config.proto](../../runtime/configs/proto/persistence_config.proto), and an example can be found at [config.validator1.json](../../build/config/config.validator1.json).
 
 Note that the `node_schema` parameter **MUST** be unique for each node pointing to the same Postgres instance. There is currently no check or validation to guarantee this.
 
 ```json
   "persistence": {
     // ...
-    "node_schema": "node1",
+    "node_schema": "validator1",
     // ...
   },
 ```
@@ -108,14 +108,14 @@ Open up a CLI to the postgres database via:
 ```bash
 make db_cli # Connect to the DB before connecting to a specific schema
 # OR
-psqlSchema=node3 make db_cli_node # Immediately connect to the schema of node3
+psqlSchema=validator3 make db_cli_node # Immediately connect to the schema of validator3
 ```
 
 Then you can make use of the following SQL commands and explore:
 
 ```sql
 SELECT schema_name FROM information_schema.schemata; // View all of the schemas available
-SET search_path=node1; // Set the search path to a schema `node1`
+SET search_path=validator1; // Set the search path to a schema `validator1`
 /dt // View all available tables
 ```
 

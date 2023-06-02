@@ -1,6 +1,7 @@
 {
   "root_directory": "/go/src/github.com/pocket-network",
-  "private_key": "90ccfd6ba76d876e02ba09440af67582e0f4a37cbda2ce4c30b251132b670eda2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
+  "private_key": "ba81e6e56d293895b299bc495ae75d490644429a5e0028fabeb5e1871c1098e7eb2c78364525a210d994a83e02d18b4287ab81f6670cf4510ab6c9f51e296d91",
+  "network_id": "localnet",
   "consensus": {
     "max_mempool_bytes": 500000000,
     "pacemaker_config": {
@@ -8,7 +9,7 @@
       "manual": true,
       "debug_time_between_steps_msec": 1000
     },
-    "private_key": "90ccfd6ba76d876e02ba09440af67582e0f4a37cbda2ce4c30b251132b670eda2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
+    "private_key": "ba81e6e56d293895b299bc495ae75d490644429a5e0028fabeb5e1871c1098e7eb2c78364525a210d994a83e02d18b4287ab81f6670cf4510ab6c9f51e296d91",
     "server_mode_enabled": true
   },
   "utility": {
@@ -17,7 +18,7 @@
   },
   "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
-    "node_schema": "node6",
+    "node_schema": "validator2",
     "block_store_path": "/var/blockstore",
     "tx_indexer_path": "/var/txindexer",
     "trees_store_dir": "/var/trees",
@@ -28,11 +29,11 @@
     "health_check_period": "30s"
   },
   "p2p": {
-    "hostname": "node6.fisherman",
+    "hostname": "validator2",
     "port": 42069,
     "use_rain_tree": true,
     "is_empty_connection_type": false,
-    "private_key": "90ccfd6ba76d876e02ba09440af67582e0f4a37cbda2ce4c30b251132b670eda2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
+    "private_key": "ba81e6e56d293895b299bc495ae75d490644429a5e0028fabeb5e1871c1098e7eb2c78364525a210d994a83e02d18b4287ab81f6670cf4510ab6c9f51e296d91",
     "max_mempool_count": 100000
   },
   "telemetry": {
@@ -46,11 +47,8 @@
   },
   "rpc": {
     "enabled": true,
-    "port": 50832,
+    "port": "50832",
     "timeout": 30000,
     "use_cors": false
-  },
-  "fisherman": {
-    "enabled": true
   }
 }

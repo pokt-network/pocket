@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dev-cli-client
+  # namespace: default # default namespace commented out to allow user override
   labels:
     app: v1-cli-client
 spec:

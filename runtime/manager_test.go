@@ -4078,7 +4078,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "00104055c00bed7c983a48aac7dc6335d7c607a7",
 			PublicKey:       "dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 			Chains:          nil,
-			ServiceUrl:      "node1.consensus:42069",
+			ServiceUrl:      "validator1:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4089,7 +4089,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "00204737d2a165ebe4be3a7d5b0af905b0ea91d8",
 			PublicKey:       "eb2c78364525a210d994a83e02d18b4287ab81f6670cf4510ab6c9f51e296d91",
 			Chains:          nil,
-			ServiceUrl:      "node2.consensus:42069",
+			ServiceUrl:      "validator2:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4100,7 +4100,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "00304d0101847b37fd62e7bebfbdddecdbb7133e",
 			PublicKey:       "1041a9c76539791fef9bee5b4fcd5bf4a1a489e0790c44cbdfa776b901e13b50",
 			Chains:          nil,
-			ServiceUrl:      "node3.consensus:42069",
+			ServiceUrl:      "validator3:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4111,7 +4111,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "00404a570febd061274f72b50d0a37f611dfe339",
 			PublicKey:       "d6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
 			Chains:          nil,
-			ServiceUrl:      "node4.consensus:42069",
+			ServiceUrl:      "validator4:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4124,7 +4124,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "00104055c00bed7c983a48aac7dc6335d7c607a7",
 			PublicKey:       "dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 			Chains:          []string{"0001"},
-			ServiceUrl:      "node1.consensus:42069",
+			ServiceUrl:      "validator1:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4135,7 +4135,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "00604d18001a2012830b93efcc23100450e5a512",
 			PublicKey:       "6ac62bddc541432cff818a02bab732f815ef2e6f7099e7dddc793d62d482b451",
 			Chains:          []string{"0001"},
-			ServiceUrl:      "node5.servicer:42069",
+			ServiceUrl:      "servicer1:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4148,7 +4148,7 @@ var expectedGenesis = &genesis.GenesisState{
 			Address:         "00504987d4b181c1e97b1da9af42f3db733b1ff4",
 			PublicKey:       "2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
 			Chains:          []string{"0001"},
-			ServiceUrl:      "node6.fisherman:42069",
+			ServiceUrl:      "fisherman1:42069",
 			StakedAmount:    "1000000000000",
 			PausedHeight:    -1,
 			UnstakingHeight: -1,
@@ -4165,7 +4165,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 		options       []func(*Manager)
 	}
 	defaultCfg := configs.NewDefaultConfig()
-	buildConfigBytes, err := os.ReadFile("../build/config/config.node1.validator.json")
+	buildConfigBytes, err := os.ReadFile("../build/config/config.validator1.json")
 	if err != nil {
 		require.NoError(t, err)
 	}
@@ -4208,7 +4208,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 					},
 					Persistence: &configs.PersistenceConfig{
 						PostgresUrl:       "postgres://postgres:postgres@pocket-db:5432/postgres",
-						NodeSchema:        "node1",
+						NodeSchema:        "validator1",
 						BlockStorePath:    "/var/blockstore",
 						TxIndexerPath:     "/var/txindexer",
 						TreesStoreDir:     "/var/trees",
@@ -4220,7 +4220,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 					},
 					P2P: &configs.P2PConfig{
 						PrivateKey:     "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
-						Hostname:       "node1.consensus",
+						Hostname:       "validator1",
 						Port:           defaults.DefaultP2PPort,
 						ConnectionType: configTypes.ConnectionType_TCPConnection,
 						MaxNonces:      1e5,
@@ -4258,7 +4258,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 			args: args{
 				configReader: strings.NewReader(string(`{
 					"p2p": {
-					  "hostname": "node1.consensus",
+					  "hostname": "validator1",
 					  "port": 42069,
 					  "use_rain_tree": true,
 					  "is_empty_connection_type": false,
@@ -4271,7 +4271,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 				config: &configs.Config{
 					P2P: &configs.P2PConfig{
 						PrivateKey:     "4ff3292ff14213149446f8208942b35439cb4b2c5e819f41fb612e880b5614bdd6cea8706f6ee6672c1e013e667ec8c46231e0e7abcf97ba35d89fceb8edae45",
-						Hostname:       "node1.consensus",
+						Hostname:       "validator1",
 						Port:           42069,
 						ConnectionType: configTypes.ConnectionType_TCPConnection,
 						MaxNonces:      defaults.DefaultP2PMaxNonces,

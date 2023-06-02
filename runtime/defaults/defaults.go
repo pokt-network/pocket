@@ -26,7 +26,7 @@ const (
 	DefaultRPCPort                  = "50832"
 	DefaultBusBufferSize            = 100
 	DefaultRPCHost                  = "localhost"
-	Validator1EndpointDockerCompose = "node1.consensus"
+	Validator1EndpointDockerCompose = "validator1"
 	Validator1EndpointK8S           = "validator-001-pocket"
 )
 
