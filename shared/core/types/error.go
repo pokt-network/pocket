@@ -323,7 +323,7 @@ const (
 	StoreCreationError                = "an error occurred creating the store"
 	StoreUpdateError                  = "an error occurred updating the store"
 	StoreNotProvableError             = "the store is not provable"
-	ProofCreationError                = "an error occured creating the commitment proof"
+	ProofCreationError                = "an error occurred creating the commitment proof"
 )
 
 func ErrUnknownParam(paramName string) Error {
