@@ -1,5 +1,7 @@
 package modules
 
+//go:generate mockgen -destination=./mocks/ibc_module_mock.go github.com/pokt-network/pocket/shared/modules IBCModule,IBCHost,IBCHandler,StoreManager,Store,ProvableStore
+
 import (
 	ics23 "github.com/cosmos/ics23/go"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -15,8 +17,10 @@ type IBCModule interface {
 type IBCHost interface {
 	IBCHandler
 
-	// GetStore returns the IBC StoreManager to interact with the IBC hosts state
-	GetStore() StoreManager
+	// GetStoreManager returns the IBC StoreManager to interact with the IBC hosts state
+	GetStoreManager() StoreManager
+	// GetTimestamp returns the current unix timestamp for the hostmachine
+	GetTimestamp() uint64
 }
 
 // TODO: Uncomment interface functions as they are defined and potentially change their signatures

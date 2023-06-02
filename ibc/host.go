@@ -1,6 +1,8 @@
 package ibc
 
 import (
+	"time"
+
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -12,6 +14,12 @@ type Host struct {
 	stores modules.StoreManager
 }
 
-func (h *Host) GetStore() modules.StoreManager {
+// GetStoreManager returns the store manager for the host
+func (h *Host) GetStoreManager() modules.StoreManager {
 	return h.stores
+}
+
+// GetTimestamp returns the current unix timestamp
+func (h *Host) GetTimestamp() uint64 {
+	return uint64(time.Now().Unix())
 }
