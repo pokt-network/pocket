@@ -10,28 +10,29 @@ import (
 )
 
 const (
-	DefaultIdetifierLength = 32
-	identifierPrefix       = "#"
-	identifierCharset      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-#[]<>"
-	portMinIdLength        = 2
-	channelMinIdLength     = 8
-	clientMinIdLength      = 9
-	connectionMinIdLen     = 10
-	defaultMaxIdLength     = 64
-	portMaxIdLength        = 128
+	defaultIdentifierLength = 32
+	identifierPrefix        = "#"
+	identifierCharset       = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-#[]<>"
+	defaultMaxIdLength      = 64
+	portMaxIdLength         = 128
 )
 
+// basicValidation performs basic validation on the given identifier
 func basicValidation(id string, minLength, maxLength int) error {
 	if strings.TrimSpace(id) == "" {
 		return coreTypes.ErrIBCInvalidID(id, "cannot be blank")
 	}
 
-	if strings.Contains(id, "/") {
-		return coreTypes.ErrIBCInvalidID(id, "cannot contain '/'")
-	}
-
 	if len(id) < minLength || len(id) > maxLength {
 		return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("length must be between %d and %d", minLength, maxLength))
+	}
+
+	if !strings.HasPrefix(id, identifierPrefix) {
+		return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("must start with '%s'", identifierPrefix))
+	}
+
+	if strings.Contains(id, "/") {
+		return coreTypes.ErrIBCInvalidID(id, "cannot contain '/'")
 	}
 
 	for _, c := range id {
@@ -45,29 +46,29 @@ func basicValidation(id string, minLength, maxLength int) error {
 
 // ValidateClientID validates the client identifier string
 func ValidateClientID(id string) error {
-	return basicValidation(id, clientMinIdLength, defaultMaxIdLength)
+	return basicValidation(id, 9, defaultMaxIdLength)
 }
 
 // ValidateConnectionID validates the connection identifier string
 func ValidateConnectionID(id string) error {
-	return basicValidation(id, connectionMinIdLen, defaultMaxIdLength)
+	return basicValidation(id, 10, defaultMaxIdLength)
 }
 
 // ValidateChannelID validates the channel identifier string
 func ValidateChannelID(id string) error {
-	return basicValidation(id, channelMinIdLength, defaultMaxIdLength)
+	return basicValidation(id, 8, defaultMaxIdLength)
 }
 
 // ValidatePortID validates the port identifier string
 func ValidatePortID(id string) error {
-	return basicValidation(id, portMinIdLength, portMaxIdLength)
+	return basicValidation(id, 2, portMaxIdLength)
 }
 
 // generateNewIdentifier generates a new identifier in the given range with the identifier prefix
 func generateNewIdentifier(min, max int) string {
 	//nolint:gosec // weak random source okay - cryptographically secure randomness not required
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	size := r.Intn(max-1-min) + min // -1 for
+	size := r.Intn(max-1-min) + min // -1 for the prefix
 
 	b := make([]byte, size)
 
@@ -80,20 +81,20 @@ func generateNewIdentifier(min, max int) string {
 
 // GenerateClientIdentifier generates a new client identifier
 func GenerateClientIdentifier() string {
-	return generateNewIdentifier(clientMinIdLength, defaultMaxIdLength)
+	return generateNewIdentifier(defaultIdentifierLength, defaultMaxIdLength)
 }
 
 // GenerateConnectionIdentifier generates a new connection identifier
 func GenerateConnectionIdentifier() string {
-	return generateNewIdentifier(connectionMinIdLen, defaultMaxIdLength)
+	return generateNewIdentifier(defaultIdentifierLength, defaultMaxIdLength)
 }
 
 // GenerateChannelIdentifier generates a new channel identifier
 func GenerateChannelIdentifier() string {
-	return generateNewIdentifier(channelMinIdLength, defaultMaxIdLength)
+	return generateNewIdentifier(defaultIdentifierLength, defaultMaxIdLength)
 }
 
 // GeneratePortIdentifier generates a new port identifier
 func GeneratePortIdentifier() string {
-	return generateNewIdentifier(portMinIdLength, portMaxIdLength)
+	return generateNewIdentifier(defaultIdentifierLength, portMaxIdLength)
 }
