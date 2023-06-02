@@ -166,12 +166,12 @@ k8s_resource('pocket-v1-cluster-manager', labels=['cluster-manager'])
 chart_dir = root_dir + "/charts/pocket"
 check_helm_dependencies_for_chart(chart_dir)
 
-actor_number = 0
 
 def formatted_actor_number(n):
     return local('printf "%03d" ' + str(n))
 
 # Provisions validators
+actor_number = 0
 for x in range(localnet_config["validators"]["count"]):
     actor_number = actor_number + 1
     formatted_number = formatted_actor_number(actor_number)
@@ -193,6 +193,7 @@ for x in range(localnet_config["validators"]["count"]):
 
     k8s_resource("validator-%s-pocket" % formatted_number, labels=['pocket-validators'])
 
+actor_number = 0
 for x in range(localnet_config["servicers"]["count"]):
     actor_number = actor_number + 1
     formatted_number = formatted_actor_number(actor_number)
@@ -215,6 +216,7 @@ for x in range(localnet_config["servicers"]["count"]):
 
     k8s_resource("servicer-%s-pocket" % formatted_number, labels=['pocket-servicers'])
 
+actor_number = 0
 for x in range(localnet_config["fishermen"]["count"]):
     actor_number = actor_number + 1
     formatted_number = formatted_actor_number(actor_number)
@@ -238,6 +240,7 @@ for x in range(localnet_config["fishermen"]["count"]):
     k8s_resource("fisherman-%s-pocket" % formatted_number, labels=['pocket-fishermen'])
 
 # Provisions full nodes
+actor_number = 0
 for x in range(localnet_config["full_nodes"]["count"]):
     actor_number = actor_number + 1
     formatted_number = formatted_actor_number(actor_number)
