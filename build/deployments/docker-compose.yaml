@@ -30,7 +30,7 @@ services:
   validator1:
     logging: *loki-logging
     container_name: validator1
-    image: pocket/consensus:latest
+    image: pocket/validator:latest
     command: "build/scripts/watch.sh build/config/config.validator1.json build/config/genesis.json"
     build:
       context: ../..
@@ -60,7 +60,7 @@ services:
   validator2:
     logging: *loki-logging
     container_name: validator2
-    image: pocket/consensus:latest
+    image: pocket/validator:latest
     command: "build/scripts/watch.sh build/config/config.validator2.json build/config/genesis.json"
     build:
       context: ../..
@@ -86,7 +86,7 @@ services:
   validator3:
     logging: *loki-logging
     container_name: validator3
-    image: pocket/consensus:latest
+    image: pocket/validator:latest
     command: "build/scripts/watch.sh build/config/config.validator3.json build/config/genesis.json"
     build:
       context: ../..
@@ -112,7 +112,7 @@ services:
   validator4:
     logging: *loki-logging
     container_name: validator4
-    image: pocket/consensus:latest
+    image: pocket/validator:latest
     command: "build/scripts/watch.sh build/config/config.validator4.json build/config/genesis.json"
     build:
       context: ../..
@@ -147,7 +147,6 @@ services:
           build/config/genesis.json;
       else
         echo "😴 Going to sleep. Servicer is not enabled.";
-        sleep infinity;
       fi'
     build:
       context: ../..
@@ -183,7 +182,6 @@ services:
           build/config/genesis.json;
       else
         echo "😴 Going to sleep. Fisherman is not enabled.";
-        sleep infinity;
       fi'
     build:
       context: ../..
