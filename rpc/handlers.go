@@ -30,10 +30,12 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "cannot decode tx bytes")
 	}
 
+	// Validate the transaction and add it to the mempool
 	if err := s.GetBus().GetUtilityModule().HandleTransaction(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
+	// Broadcast the transaction to the rest of the network if it passed the basic validation above
 	if err := s.broadcastMessage(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
