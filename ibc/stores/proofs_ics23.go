@@ -56,9 +56,11 @@ func VerifyMembership(root *coreTypes.CommitmentRoot, proof *ics23.CommitmentPro
 func VerifyNonMembership(root *coreTypes.CommitmentRoot, proof *ics23.CommitmentProof, key []byte) bool {
 	// Verify the proof of the non-membership data doesn't belong to the key
 	valid := ics23.VerifyMembership(smtSpec, root.Root, proof, key, proof.GetExist().GetValue())
+	// Verify the key was actually empty
 	if bytes.Equal(proof.GetExist().GetValue(), defaultValue) {
 		return valid
 	}
+	// Verify the key was present with unrelated data
 	return !valid
 }
 
