@@ -53,6 +53,7 @@ const (
 	CodeNewPublicKeyFromBytesError       Code = 8
 	CodeNewAddressFromBytesError         Code = 9
 	CodeSignatureVerificationFailedError Code = 10
+	CodeRetrievingSignableBytesError     Code = 137
 	CodeHexDecodeFromStringError         Code = 11
 	CodeInvalidHashLengthError           Code = 12
 	CodeEmptyNetworkIDError              Code = 13
@@ -74,6 +75,7 @@ const (
 	CodeEmptyNonceError                  Code = 30
 	CodeEmptyPublicKeyError              Code = 31
 	CodeEmptySignatureError              Code = 32
+	CodeEmptySignatureStructureError     Code = 136
 	CodeDuplicateTransactionError        Code = 35
 	CodeTransactionSignError             Code = 36
 	CodeGetAllValidatorsError            Code = 37
@@ -137,6 +139,7 @@ const (
 	CodeEmptyParamValueError              Code = 93
 	CodeGetOutputAddressError             Code = 94
 	CodeTransactionAlreadyCommittedError  Code = 95
+	CodeTransactionNotCommittedError      Code = 135
 	CodeInitGenesisParamsError            Code = 96
 	CodeGetAllFishermenError              Code = 97
 	CodeGetAllServicersError              Code = 98
@@ -235,11 +238,13 @@ const (
 	InvalidNonceError                 = "the nonce field is invalid; cannot be converted to big.Int"
 	NewPublicKeyFromBytesError        = "unable to convert the raw bytes to a valid public key"
 	SignatureVerificationFailedError  = "the public key / signature combination is not valid for the msg"
+	RetrievingSignableBytesError      = "error retrieving signable bytes"
 	ProtoFromAnyError                 = "an error occurred getting the structure from the protobuf any"
 	NewFeeFromStringError             = "the fee string is unable to be converted to a valid base 10 number"
 	EmptyNonceError                   = "the nonce in the transaction is empty"
 	EmptyPublicKeyError               = "the public key field is empty"
 	EmptySignatureError               = "the signature field is empty"
+	EmptySignatureStructureError      = "the signature structure is empty"
 	TransactionSignError              = "an error occurred signing the transaction"
 	InterfaceConversionError          = "an error occurred converting the interface to an expected type: "
 	SetStatusPausedBeforeError        = "an error occurred setting the actor status that were paused before"
@@ -258,6 +263,7 @@ const (
 	GetOutputAddressError             = "an error occurred getting the output address using operator"
 	GetHeightError                    = "an error occurred when getting the height from the store"
 	TransactionAlreadyCommittedError  = "the transaction is already committed"
+	TransactionNotCommittedError      = "the transaction is not committed"
 	NewSavePointError                 = "an error occurred creating the save point"
 	RollbackSavePointError            = "an error occurred rolling back to save point"
 	NewPersistenceContextError        = "an error occurred creating the persistence context"
@@ -614,8 +620,16 @@ func ErrEmptySignature() Error {
 	return NewError(CodeEmptySignatureError, EmptySignatureError)
 }
 
+func ErrEmptySignatureStructure() Error {
+	return NewError(CodeEmptySignatureStructureError, EmptySignatureStructureError)
+}
+
 func ErrSignatureVerificationFailed() Error {
 	return NewError(CodeSignatureVerificationFailedError, SignatureVerificationFailedError)
+}
+
+func ErrRetrievingSignableBytes(err error) Error {
+	return NewError(CodeRetrievingSignableBytesError, fmt.Sprintf("%s: %s", RetrievingSignableBytesError, err.Error()))
 }
 
 func ErrDecodeMessage(err error) Error {
@@ -628,6 +642,10 @@ func ErrProtoFromAny(err error) Error {
 
 func ErrTransactionAlreadyCommitted() Error {
 	return NewError(CodeTransactionAlreadyCommittedError, TransactionAlreadyCommittedError)
+}
+
+func ErrTransactionNotCommitted() Error {
+	return NewError(CodeTransactionNotCommittedError, TransactionNotCommittedError)
 }
 
 func ErrTransactionSign(err error) Error {

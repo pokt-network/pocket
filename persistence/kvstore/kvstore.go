@@ -25,7 +25,7 @@ type KVStore interface {
 }
 
 const (
-	BadgerKeyNotFoundError = "Key not found"
+	KeyNotFoundError = "Key not found"
 )
 
 var (
