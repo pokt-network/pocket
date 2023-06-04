@@ -15,6 +15,9 @@ type ibcModule struct {
 
 	logger *modules.Logger
 
+	hostEnabled bool
+	storesDir   string
+
 	// Only a single host is allowed at a time
 	host *Host
 }
@@ -32,14 +35,33 @@ func (m *ibcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 
 	bus.RegisterModule(m)
 
+	runtimeMgr := bus.GetRuntimeMgr()
+
+	ibcCfg := runtimeMgr.GetConfig().IBC
+	m.hostEnabled = ibcCfg.HostEnabled
+	m.storesDir = ibcCfg.StoresDir
+
 	return m, nil
 }
 
 func (m *ibcModule) Start() error {
+	m.logger.Info().Msg("🪐 starting IBC module 🪐")
+	if m.hostEnabled {
+		m.logger.Info().Msg("🛰️ creating IBC host 🛰️")
+		_, err := m.NewHost()
+		if err != nil {
+			m.logger.Error().Err(err).Msg("❌ failed to create IBC host")
+			return err
+		}
+	}
 	return nil
 }
 
 func (m *ibcModule) Stop() error {
+	if m.host != nil {
+		m.logger.Info().Msg("🚨 closing IBC host stores 🚨")
+		return m.host.GetStoreManager().CloseAllStores()
+	}
 	return nil
 }
 
@@ -55,7 +77,7 @@ func (m *ibcModule) NewHost() (modules.IBCHost, error) {
 
 	host := &Host{
 		logger: m.logger,
-		stores: stores.NewStoreManager(),
+		stores: stores.NewStoreManager(m.storesDir),
 	}
 
 	m.host = host

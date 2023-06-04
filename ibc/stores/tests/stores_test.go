@@ -33,9 +33,9 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 
 	initialStores := []modules.Store{store1, store2, store3}
 
-	sm := stores.NewStoreManager()
+	sm := stores.NewStoreManager("")
 	for i := 0; i < 3; i++ {
-		err := sm.AddStore(initialStores[i])
+		err := sm.AddExistingStore(initialStores[i])
 		require.NoError(t, err)
 	}
 
@@ -98,7 +98,7 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 	for _, tc := range testCases {
 		switch tc.op {
 		case "add":
-			err := sm.AddStore(tc.store)
+			err := sm.AddExistingStore(tc.store)
 			if tc.fail {
 				require.Error(t, err)
 				require.Equal(t, tc.expected, err)
@@ -471,19 +471,17 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 			expected:      nil,
 		},
 		{ // Successfully generates a non-membership proof for a key not stored
-			store: store1,
-			key:   []byte("baz"),
-			// unrelated leaf data
-			value:         []byte("foo2"),
+			store:         store1,
+			key:           []byte("baz"),
+			value:         []byte("foo2"), // unrelated leaf data
 			nonmembership: true,
 			fails:         false,
 			expected:      nil,
 		},
 		{ // Successfully generates a non-membership proof for an unset nil key
-			store: store1,
-			key:   nil,
-			// unrelated leaf data
-			value:         []byte("foo"),
+			store:         store1,
+			key:           nil,
+			value:         []byte("foo"), // unrelated leaf data
 			nonmembership: true,
 			fails:         false,
 			expected:      nil,

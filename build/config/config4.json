@@ -51,5 +51,9 @@
     "port": "50832",
     "timeout": 30000,
     "use_cors": false
+  },
+  "ibc": {
+    "host_enabled": true,
+    "stores_dir": "/var/ibc"
   }
 }

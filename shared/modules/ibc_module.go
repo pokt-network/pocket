@@ -11,7 +11,6 @@ const IBCModuleName = "ibc"
 
 type IBCModule interface {
 	Module
-	NewHost() (IBCHost, error)
 }
 
 type IBCHost interface {
@@ -201,8 +200,11 @@ type IBCHandler interface {
 type StoreManager interface {
 	GetStore(storeKey string) (Store, error)
 	GetProvableStore(storeKey string) (ProvableStore, error)
-	AddStore(store Store) error
+	AddStore(storeKey string, provable bool) (Store, error)
 	RemoveStore(storeKey string) error
+	CloseAllStores() error
+	// Testing
+	AddExistingStore(store Store) error
 }
 
 // Store is a simple interface to interact with data in a key-value manner.

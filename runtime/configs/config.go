@@ -28,6 +28,7 @@ type Config struct {
 	Logger      *LoggerConfig      `json:"logger"`
 	RPC         *RPCConfig         `json:"rpc"`
 	Keybase     *KeybaseConfig     `json:"keybase"` // Determines and configures which keybase to use, `file` or `vault`. IMPROVE(#626): See for rationale around proto design. We have proposed a better config design, but did not implement it due to viper limitations
+	IBC         *IBCConfig         `json:"ibc"`
 }
 
 // ParseConfig parses the config file and returns a Config struct
@@ -93,7 +94,6 @@ func ParseConfig(cfgFile string) *Config {
 func setViperDefaults(cfg *Config) {
 	// convert the config struct to a map with the json tags as keys
 	cfgData, err := json.Marshal(cfg)
-
 	if err != nil {
 		log.Fatalf("[ERROR] failed to marshal config %s", err.Error())
 	}
@@ -154,6 +154,9 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			VaultAddr:      defaults.DefaultKeybaseVaultAddr,
 			VaultToken:     defaults.DefaultKeybaseVaultToken,
 			VaultMountPath: defaults.DefaultKeybaseVaultMountPath,
+		},
+		IBC: &IBCConfig{
+			StoresDir: defaults.DefaultIBCStoresDir,
 		},
 	}
 
