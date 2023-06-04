@@ -4233,6 +4233,10 @@ func TestNewManagerFromReaders(t *testing.T) {
 						UseCors: false,
 					},
 					Keybase: defaultCfg.Keybase,
+					IBC: &configs.IBCConfig{
+						HostEnabled: true,
+						StoresDir:   "/var/ibc",
+					},
 				},
 				genesisState: expectedGenesis,
 				clock:        clock.New(),
