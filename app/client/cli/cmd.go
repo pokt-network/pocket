@@ -37,6 +37,8 @@ func init() {
 	if err := viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose")); err != nil {
 		panic(err)
 	}
+
+	rootCmd.AddCommand(PeerCmd)
 }
 
 var rootCmd = &cobra.Command{
