@@ -92,7 +92,18 @@ func (rpcPSP *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (t
 }
 
 func (rpcPSP *rpcPeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
-	return peerstore_provider.GetUnstakedPeerstore(rpcPSP.GetBus())
+	// TECHDEBT(#810, #811): use `bus.GetUnstakedActorRouter()` once it's available.
+	unstakedActorRouterMod, err := rpcPSP.GetBus().GetModulesRegistry().GetModule(typesP2P.UnstakedActorRouterSubmoduleName)
+	if err != nil {
+		return nil, err
+	}
+
+	unstakedActorRouter, ok := unstakedActorRouterMod.(typesP2P.Router)
+	if !ok {
+		return nil, fmt.Errorf("unexpected unstaked actor router submodule type: %T", unstakedActorRouterMod)
+	}
+
+	return unstakedActorRouter.GetPeerstore(), nil
 }
 
 func (rpcPSP *rpcPeerstoreProvider) initRPCClient() {

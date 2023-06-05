@@ -1,6 +1,8 @@
 package persistence
 
 import (
+	"fmt"
+
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -58,5 +60,16 @@ func (persistencePSP *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(h
 
 // GetStakedPeerstoreAtHeight implements the respective `PeerstoreProvider` interface method.
 func (persistencePSP *persistencePeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
-	return peerstore_provider.GetUnstakedPeerstore(persistencePSP.GetBus())
+	// TECHDEBT(#810, #811): use `bus.GetUnstakedActorRouter()` once it's available.
+	unstakedActorRouterMod, err := persistencePSP.GetBus().GetModulesRegistry().GetModule(typesP2P.UnstakedActorRouterSubmoduleName)
+	if err != nil {
+		return nil, err
+	}
+
+	unstakedActorRouter, ok := unstakedActorRouterMod.(typesP2P.Router)
+	if !ok {
+		return nil, fmt.Errorf("unexpected unstaked actor router submodule type: %T", unstakedActorRouterMod)
+	}
+
+	return unstakedActorRouter.GetPeerstore(), nil
 }
