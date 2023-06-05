@@ -4,8 +4,14 @@ package modules
 // a variadic `ModuleOption` argument(s) and returns a `Module`and an error.
 type ModuleFactoryWithOptions FactoryWithOptions[Module, ModuleOption]
 
-// FactoryWithConfig implements a `#Create()` factory method which takes a
-// required "config" argument of type K and returns a value of type T and an error.
+// Factory implements a `#Create()` factory method which takes a bus and returns
+// a value of type T and an error.
+type Factory[T interface{}] interface {
+	Create(bus Bus) (T, error)
+}
+
+// FactoryWithConfig implements a `#Create()` factory method which takes a bus and
+// a required "config" argument of type K and returns a value of type T and an error.
 // TECHDEBT: apply enforcement across applicable "sub-modules" (see: `p2p/raintree/router.go`: `raintTreeFactory`)
 type FactoryWithConfig[T interface{}, K interface{}] interface {
 	Create(bus Bus, cfg K) (T, error)
