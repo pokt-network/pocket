@@ -326,15 +326,6 @@ func boldText[T string | []byte](s T) string {
 	return fmt.Sprintf("\033[1m%s\033[0m", s)
 }
 
-func setValueInCLIContext(cmd *cobra.Command, key cliContextKey, value any) {
-	cmd.SetContext(context.WithValue(cmd.Context(), key, value))
-}
-
-func getValueFromCLIContext[T any](cmd *cobra.Command, key cliContextKey) (T, bool) {
-	value, ok := cmd.Context().Value(key).(T)
-	return value, ok
-}
-
 // confirmPassphrase should be used when a new key is being created or a raw unarmored key is being imported
 func confirmPassphrase(currPwd string) {
 	confirm := readPassphraseMessage("", "Confirm passphrase: ")
