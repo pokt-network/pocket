@@ -1,6 +1,8 @@
 package persistence
 
 import (
+	"fmt"
+
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -15,6 +17,7 @@ type persistencePeerstoreProvider struct {
 	base_modules.InterruptableModule
 }
 
+// TECHDEBT: refactor
 func NewPersistencePeerstoreProvider(bus modules.Bus, options ...func(*persistencePeerstoreProvider)) *persistencePeerstoreProvider {
 	pabp := &persistencePeerstoreProvider{
 		IntegratableModule: *base_modules.NewIntegratableModule(bus),
@@ -27,10 +30,12 @@ func NewPersistencePeerstoreProvider(bus modules.Bus, options ...func(*persisten
 	return pabp
 }
 
+// TECHDEBT: remove
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return new(persistencePeerstoreProvider).Create(bus, options...)
 }
 
+// TECHDEBT: refactor
 func (*persistencePeerstoreProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return NewPersistencePeerstoreProvider(bus), nil
 }
@@ -55,4 +60,8 @@ func (pabp *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(height uint
 
 func (pabp *persistencePeerstoreProvider) GetP2PConfig() *configs.P2PConfig {
 	return pabp.GetBus().GetRuntimeMgr().GetConfig().P2P
+}
+
+func (pabp *persistencePeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
+	return nil, fmt.Errorf("persistence peerstore provider does not support unstaked peerstore")
 }
