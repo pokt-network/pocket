@@ -38,16 +38,17 @@ type PersistenceModule interface {
 	HandleDebugMessage(*messaging.DebugMessage) error
 }
 
+// TreeStore is fulfilled by the treeStore to create an
+// atomic tree component for use by the peristence context.
 type TreeStore interface {
 	// Update returns the new state hash for a given height.
-	//
-	// DOCUMENTATION: This needs to describe how height is passed
-	// through to the Update function and used by the queries.
+	// * Height is passed through to the Update function
+	// and used by the queries against the TxIndexer and the
 	// It updates to the future but not to the past.
-	// * So passing a higher height will cause a change
+	// * Passing a higher height will cause a change
 	// but repeatedly calling the same or a lower height will
 	// not incur a change.
-	Update(pgtx pgx.Tx, height uint64) (string, error)
+	Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error)
 	// ClearAll completely clears the state of the trees.
 	// For debugging purposes only.
 	ClearAll() error
