@@ -155,7 +155,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 
 		// Account Merkle Trees
 		case accountMerkleTree:
-			accounts, err := t.getAccounts(pgtx)
+			accounts, err := t.getAccounts(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get accounts: %w", err)
 			}
@@ -181,7 +181,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 				return "", fmt.Errorf("failed to update transactions: %w", err)
 			}
 		case paramsMerkleTree:
-			params, err := t.getParams(pgtx)
+			params, err := t.getParams(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get params: %w", err)
 			}
@@ -189,7 +189,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 				return "", fmt.Errorf("failed to update params tree: %w", err)
 			}
 		case flagsMerkleTree:
-			flags, err := t.getFlags(pgtx)
+			flags, err := t.getFlags(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get flags from transaction: %w", err)
 			}
@@ -423,16 +423,57 @@ func (t *treeStore) getPools(pgtx pgx.Tx, height uint64) ([]*coreTypes.Account, 
 	return pools, nil
 }
 
-func (t *treeStore) getAccounts(pgtx pgx.Tx) ([]*coreTypes.Account, error) {
-	return nil, fmt.Errorf("not impl")
+// getAccounts returns the list of accounts updated at the provided height
+func (t *treeStore) getAccounts(pgtx pgx.Tx, height uint64) ([]*coreTypes.Account, error) {
+	accounts, err := t.getAccountsUpdated(pgtx, ptypes.Account, height)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get accounts: %w", err)
+	}
+	return accounts, nil
 }
 
-func (t *treeStore) getFlags(pgtx pgx.Tx) ([]*coreTypes.Flag, error) {
-	return nil, fmt.Errorf("not impl")
+func (t *treeStore) getFlags(pgtx pgx.Tx, height uint64) ([]*coreTypes.Flag, error) {
+	fields := "name,value,enabled"
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE height=%d ORDER BY name ASC", fields, ptypes.FlagsTableName, height)
+	rows, err := pgtx.Query(context.TODO(), query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get flags: %w", err)
+	}
+	defer rows.Close()
+
+	flagSlice := []*coreTypes.Flag{}
+	for rows.Next() {
+		flag := new(coreTypes.Flag)
+		if err := rows.Scan(&flag.Name, &flag.Value, &flag.Enabled); err != nil {
+			return nil, err
+		}
+		flag.Height = int64(height)
+		flagSlice = append(flagSlice, flag)
+	}
+
+	return flagSlice, nil
 }
 
-func (t *treeStore) getParams(pgtx pgx.Tx) ([]*coreTypes.Param, error) {
-	return nil, fmt.Errorf("not impl")
+func (t *treeStore) getParams(pgtx pgx.Tx, height uint64) ([]*coreTypes.Param, error) {
+	fields := "name,value"
+	// Return a query to select all params or queries but only the most recent update for each
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE height=%d ORDER BY name ASC", fields, ptypes.ParamsTableName, height)
+	rows, err := pgtx.Query(context.TODO(), query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var paramSlice []*coreTypes.Param // Store returned rows
+	for rows.Next() {
+		param := new(coreTypes.Param)
+		if err := rows.Scan(&param.Name, &param.Value); err != nil {
+			return nil, err
+		}
+		param.Height = int64(height)
+		paramSlice = append(paramSlice, param)
+	}
+	return paramSlice, nil
 }
 
 func (t *treeStore) getActor(tx pgx.Tx, actorSchema ptypes.ProtocolActorSchema, address []byte, height int64) (actor *coreTypes.Actor, err error) {
@@ -498,7 +539,6 @@ func (t *treeStore) ClearAll() error {
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		// nodeStore := t.nodeStores[treeType]
 		// tree := t.merkleTrees[treeType]
-
 		// TODO: implement the below
 		// 	if err := valueStore.ClearAll(); err != nil {
 		// 		return err
