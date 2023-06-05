@@ -106,7 +106,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	stateTrees, err := trees.NewStateTrees(persistenceCfg.TreesStoreDir)
+	stateTrees, err := trees.NewStateTrees(persistenceCfg.TreesStoreDir, txIndexer)
 	if err != nil {
 		return nil, err
 	}
