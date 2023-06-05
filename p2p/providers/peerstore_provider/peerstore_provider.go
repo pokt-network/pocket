@@ -18,6 +18,7 @@ type PeerstoreProvider interface {
 	modules.IntegratableModule
 
 	GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error)
+	GetUnstakedPeerstore() (typesP2P.Peerstore, error)
 }
 
 func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore typesP2P.Peerstore, errs error) {
