@@ -17,16 +17,16 @@ type FactoryWithConfig[T interface{}, K interface{}] interface {
 	Create(bus Bus, cfg K) (T, error)
 }
 
-// FactoryWithOptions implements a `#Create()` factory method which takes a
-// variadic "optional" argument(s) of type O and returns a value of type T
+// FactoryWithOptions implements a `#Create()` factory method which takes a bus
+// and a variadic "optional" argument(s) of type O and returns a value of type T
 // and an error.
 // TECHDEBT: apply enforcement across applicable "sub-modules"
 type FactoryWithOptions[T interface{}, O interface{}] interface {
 	Create(bus Bus, opts ...O) (T, error)
 }
 
-// FactoryWithConfigAndOptions implements a `#Create()` factory method which
-// takes both a required "config" argument of type K and a variadic "optional"
+// FactoryWithConfigAndOptions implements a `#Create()` factory method which takes
+// a bus and both a required "config" argument of type K and a variadic "optional"
 // argument(s) of type O and returns a value of type T and an error.
 // TECHDEBT: apply enforcement across applicable "sub-modules"
 type FactoryWithConfigAndOptions[T interface{}, K interface{}, O interface{}] interface {
