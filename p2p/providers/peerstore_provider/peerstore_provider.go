@@ -5,7 +5,6 @@ package peerstore_provider
 import (
 	"github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -19,7 +18,6 @@ type PeerstoreProvider interface {
 	modules.IntegratableModule
 
 	GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error)
-	GetP2PConfig() *configs.P2PConfig
 }
 
 func ActorsToPeerstore(abp PeerstoreProvider, actors []*coreTypes.Actor) (pstore typesP2P.Peerstore, errs error) {
