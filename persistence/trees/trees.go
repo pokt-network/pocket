@@ -86,14 +86,14 @@ const (
 // of the underlying trees by utilizing the lazy loading
 // functionality provided by the underlying smt library.
 type treeStore struct {
-	merkleTrees map[merkleTree]*smt.SMT
-	nodeStores  map[merkleTree]kvstore.KVStore
+	treeStoreDir string
+	merkleTrees  map[merkleTree]*smt.SMT
+	nodeStores   map[merkleTree]kvstore.KVStore
 }
 
 // Update takes a transaction and a height and updates
 // all of the trees in the treeStore for that height.
 func (t *treeStore) Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
-	// NB: Consider not wrapping this
 	return t.updateMerkleTrees(pgtx, txi, height)
 }
 
@@ -103,12 +103,13 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 	}
 
 	stateTrees := &treeStore{
-		merkleTrees: make(map[merkleTree]*smt.SMT, int(numMerkleTrees)),
-		nodeStores:  make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
+		treeStoreDir: dir,
+		merkleTrees:  make(map[merkleTree]*smt.SMT, int(numMerkleTrees)),
+		nodeStores:   make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
 	}
 
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", treesStoreDir, merkleTreeToString[tree]))
+		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", dir, merkleTreeToString[tree]))
 		if err != nil {
 			return nil, err
 		}
@@ -134,7 +135,6 @@ func newMemStateTrees() (*treeStore, error) {
 // updateMerkleTrees updates all of the merkle trees that TreeStore manages.
 // * it returns an hash of the output or an error.
 func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
-	// TODO: loop through the trees, update each & commit; Trigger rollback if any fail to update.
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
 		// Actor Merkle Trees
@@ -202,25 +202,40 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 		}
 	}
 
+	if err := t.commit(); err != nil {
+		return "", fmt.Errorf("failed to commit: %w", err)
+	}
 	return t.getStateHash(), nil
 }
 
+func (t *treeStore) commit() error {
+	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
+		if err := t.merkleTrees[tree].Commit(); err != nil {
+			return fmt.Errorf("failed to commit %s: %w", merkleTreeToString[tree])
+		}
+	}
+	return nil
+}
+
 func (t *treeStore) getStateHash() string {
-	// Get the root of each Merkle Tree
+	// create an order-matters list of roots
 	roots := make([][]byte, 0)
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
 		roots = append(roots, t.merkleTrees[tree].Root())
 	}
 
-	// Get the state hash
+	// combine them and hash the result
 	rootsConcat := bytes.Join(roots, []byte{})
 	stateHash := sha256.Sum256(rootsConcat)
 
 	// Convert the array to a slice and return it
+	// REF: https://stackoverflow.com/questions/28886616/convert-array-to-slice-in-go
 	return hex.EncodeToString(stateHash[:])
 }
 
-// Actor Tree Helpers
+////////////////////////
+// Actor Tree Helpers //
+////////////////////////
 
 // NB: I think this needs to be done manually for all 4 types.
 func (t *treeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*coreTypes.Actor) error {
@@ -247,7 +262,9 @@ func (t *treeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*co
 	return nil
 }
 
-// Account Tree Helpers
+//////////////////////////
+// Account Tree Helpers //
+//////////////////////////
 
 func (t *treeStore) updateAccountTrees(accounts []*coreTypes.Account) error {
 	for _, account := range accounts {
@@ -289,7 +306,9 @@ func (t *treeStore) updatePoolTrees(pools []*coreTypes.Account) error {
 	return nil
 }
 
-// Data Tree Helpers
+///////////////////////
+// Data Tree Helpers //
+///////////////////////
 
 func (t *treeStore) updateTransactionsTree(indexedTxs []*coreTypes.IndexedTransaction) error {
 	for _, idxTx := range indexedTxs {
@@ -367,7 +386,7 @@ func (t *treeStore) getActorsUpdated(
 
 	actors := make([]*coreTypes.Actor, len(addrs))
 	for i, addr := range addrs {
-		// TODO same goes here for int64 height cast here
+		// TECHDEBT #XXX: Avoid this cast to int64
 		actor, err := t.getActor(pgtx, actorSchema, addr, int64(height))
 		if err != nil {
 			return nil, err
@@ -456,7 +475,6 @@ func (t *treeStore) getFlags(pgtx pgx.Tx, height uint64) ([]*coreTypes.Flag, err
 
 func (t *treeStore) getParams(pgtx pgx.Tx, height uint64) ([]*coreTypes.Param, error) {
 	fields := "name,value"
-	// Return a query to select all params or queries but only the most recent update for each
 	query := fmt.Sprintf("SELECT %s FROM %s WHERE height=%d ORDER BY name ASC", fields, ptypes.ParamsTableName, height)
 	rows, err := pgtx.Query(context.TODO(), query)
 	if err != nil {
@@ -464,7 +482,7 @@ func (t *treeStore) getParams(pgtx pgx.Tx, height uint64) ([]*coreTypes.Param, e
 	}
 	defer rows.Close()
 
-	var paramSlice []*coreTypes.Param // Store returned rows
+	var paramSlice []*coreTypes.Param
 	for rows.Next() {
 		param := new(coreTypes.Param)
 		if err := rows.Scan(&param.Name, &param.Value); err != nil {
@@ -473,6 +491,7 @@ func (t *treeStore) getParams(pgtx pgx.Tx, height uint64) ([]*coreTypes.Param, e
 		param.Height = int64(height)
 		paramSlice = append(paramSlice, param)
 	}
+
 	return paramSlice, nil
 }
 
@@ -519,7 +538,7 @@ func (t *treeStore) getChainsForActor(
 
 	var chainAddr string
 	var chainID string
-	var chainEndHeight int64 // unused
+	var chainEndHeight int64 // DISCUSS: why is this commented as "unused"?
 	for rows.Next() {
 		err = rows.Scan(&chainAddr, &chainID, &chainEndHeight)
 		if err != nil {
@@ -533,24 +552,14 @@ func (t *treeStore) getChainsForActor(
 	return actor, nil
 }
 
-// clearAllTreeState was used by the persistence context for debugging but should
-// be handled here in the TreeStore instead of the level above.
 func (t *treeStore) ClearAll() error {
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		// nodeStore := t.nodeStores[treeType]
-		// tree := t.merkleTrees[treeType]
-		// TODO: implement the below
-		// 	if err := valueStore.ClearAll(); err != nil {
-		// 		return err
-		// 	}
-		// 	if err := tree.ClearAll(); err != nil {
-		// 		return err
-		// 	}
-
-		// p.stateTrees.merkleTrees[treeType] = smt.NewSparseMerkleTree(valueStore, nodeStore, sha256.New())
-		// TODO: like the line above, create a new set of state tree and assign it to the merkleTrees property
-		// // This is Needed in order to make sure the root is re-set correctly after clearing
-		// t.merkleTrees[treeType] = smt.NewSparseMerkleTree()
+		nodeStore := t.nodeStores[treeType]
+		if err := nodeStore.ClearAll(); err != nil {
+			return fmt.Errorf("failed to clear %s node store: %w", merkleTreeToString[treeType], err)
+		}
+		t.merkleTrees[treeType] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
 	}
-	return fmt.Errorf("not impl")
+
+	return nil
 }
