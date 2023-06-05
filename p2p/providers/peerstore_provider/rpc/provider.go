@@ -101,6 +101,10 @@ func (rabp *rpcPeerstoreProvider) GetP2PConfig() *configs.P2PConfig {
 	return rabp.p2pCfg
 }
 
+func (rabp *rpcPeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
+	return nil, fmt.Errorf("unstaked peerstore not supported by rpc peerstore provider")
+}
+
 func (rabp *rpcPeerstoreProvider) initRPCClient() {
 	rpcClient, err := rpc.NewClientWithResponses(rabp.rpcURL)
 	if err != nil {
