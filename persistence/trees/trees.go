@@ -9,6 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	ptypes "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -86,17 +87,14 @@ const (
 // functionality provided by the underlying smt library.
 type treeStore struct {
 	merkleTrees map[merkleTree]*smt.SMT
-
-	// nodeStores are part of the SMT, but references are kept below for convenience
-	// and debugging purposes
-	nodeStores map[merkleTree]kvstore.KVStore
+	nodeStores  map[merkleTree]kvstore.KVStore
 }
 
 // Update takes a transaction and a height and updates
 // all of the trees in the treeStore for that height.
-func (t *treeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
+func (t *treeStore) Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
 	// NB: Consider not wrapping this
-	return t.updateMerkleTrees(pgtx, height)
+	return t.updateMerkleTrees(pgtx, txi, height)
 }
 
 func NewStateTrees(treesStoreDir string) (*treeStore, error) {
@@ -135,7 +133,7 @@ func newMemStateTrees() (*treeStore, error) {
 
 // updateMerkleTrees updates all of the merkle trees that TreeStore manages.
 // * it returns an hash of the output or an error.
-func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, height uint64) (string, error) {
+func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
 	// TODO: loop through the trees, update each & commit; Trigger rollback if any fail to update.
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
@@ -165,7 +163,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, height uint64) (string, error
 				return "", fmt.Errorf("failed to update account trees: %w", err)
 			}
 		case poolMerkleTree:
-			pools, err := t.getPools(pgtx)
+			pools, err := t.getPools(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get transactions: %w", err)
 			}
@@ -175,7 +173,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, height uint64) (string, error
 
 		// Data Merkle Trees
 		case transactionsMerkleTree:
-			indexedTxs, err := t.getTransactions(pgtx)
+			indexedTxs, err := t.getTransactions(pgtx, txi, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get transactions: %w", err)
 			}
@@ -301,7 +299,6 @@ func (t *treeStore) updateTransactionsTree(indexedTxs []*coreTypes.IndexedTransa
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -335,7 +332,12 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 	return nil
 }
 
-func (t *treeStore) getActorsUpdated(pgtx pgx.Tx, actorType coreTypes.ActorType, height uint64) ([]*coreTypes.Actor, error) {
+// getActorsUpdated is responsible for fetching the actors that have been updated at a given height.
+func (t *treeStore) getActorsUpdated(
+	pgtx pgx.Tx,
+	actorType coreTypes.ActorType,
+	height uint64,
+) ([]*coreTypes.Actor, error) {
 	actorSchema, ok := actorTypeToSchemaName[actorType]
 	if !ok {
 		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
@@ -377,13 +379,48 @@ func (t *treeStore) getActorsUpdated(pgtx pgx.Tx, actorType coreTypes.ActorType,
 	return actors, nil
 }
 
-func (t *treeStore) getTransactions(pgtx pgx.Tx) ([]*coreTypes.IndexedTransaction, error) {
-	// pgtx.Query()
-	return nil, fmt.Errorf("not impl")
+func (t *treeStore) getAccountsUpdated(
+	pgtx pgx.Tx,
+	acctType ptypes.ProtocolAccountSchema,
+	height uint64,
+) ([]*coreTypes.Account, error) {
+	accounts := []*coreTypes.Account{}
+
+	// TECHDEBT #XXX: Avoid this cast to int64
+	query := acctType.GetAccountsUpdatedAtHeightQuery(int64(height))
+	rows, err := pgtx.Query(context.TODO(), query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		acc := new(coreTypes.Account)
+		if err := rows.Scan(&acc.Address, &acc.Amount); err != nil {
+			return nil, err
+		}
+		accounts = append(accounts, acc)
+	}
+
+	return accounts, nil
 }
 
-func (t *treeStore) getPools(pgtx pgx.Tx) ([]*coreTypes.Account, error) {
-	return nil, fmt.Errorf("not impl")
+func (t *treeStore) getTransactions(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) ([]*coreTypes.IndexedTransaction, error) {
+	// TECHDEBT(#XXX): TxIndexer should use uint64s so we avoid this cast.
+	indexedTxs, err := txi.GetByHeight(int64(height), false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get transactions by height: %w", err)
+	}
+	return indexedTxs, nil
+}
+
+// getPools returns the pools updated at the given height
+func (t *treeStore) getPools(pgtx pgx.Tx, height uint64) ([]*coreTypes.Account, error) {
+	pools, err := t.getAccountsUpdated(pgtx, ptypes.Pool, height)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pools: %w", err)
+	}
+	return pools, nil
 }
 
 func (t *treeStore) getAccounts(pgtx pgx.Tx) ([]*coreTypes.Account, error) {
@@ -458,19 +495,22 @@ func (t *treeStore) getChainsForActor(
 // clearAllTreeState was used by the persistence context for debugging but should
 // be handled here in the TreeStore instead of the level above.
 func (t *treeStore) ClearAll() error {
-	// for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-	// 	valueStore := p.stateTrees.valueStores[treeType]
-	// 	nodeStore := p.stateTrees.nodeStores[treeType]
+	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
+		// nodeStore := t.nodeStores[treeType]
+		// tree := t.merkleTrees[treeType]
 
-	// 	if err := valueStore.ClearAll(); err != nil {
-	// 		return err
-	// 	}
-	// 	if err := nodeStore.ClearAll(); err != nil {
-	// 		return err
-	// 	}
+		// TODO: implement the below
+		// 	if err := valueStore.ClearAll(); err != nil {
+		// 		return err
+		// 	}
+		// 	if err := tree.ClearAll(); err != nil {
+		// 		return err
+		// 	}
 
-	// 	// Needed in order to make sure the root is re-set correctly after clearing
-	// 	p.stateTrees.merkleTrees[treeType] = smt.NewSparseMerkleTree(valueStore, nodeStore, sha256.New())
-	// }
+		// p.stateTrees.merkleTrees[treeType] = smt.NewSparseMerkleTree(valueStore, nodeStore, sha256.New())
+		// TODO: like the line above, create a new set of state tree and assign it to the merkleTrees property
+		// // This is Needed in order to make sure the root is re-set correctly after clearing
+		// t.merkleTrees[treeType] = smt.NewSparseMerkleTree()
+	}
 	return fmt.Errorf("not impl")
 }
