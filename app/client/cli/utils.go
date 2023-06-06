@@ -11,6 +11,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"golang.org/x/term"
+
+	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/pokt-network/pocket/app/client/keybase"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
@@ -20,9 +25,6 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"golang.org/x/term"
 )
 
 var (
@@ -129,7 +131,7 @@ func prepareTxBytes(msg typesUtil.Message, pk crypto.PrivateKey) ([]byte, error)
 
 // postRawTx posts a signed transaction
 func postRawTx(ctx context.Context, pk crypto.PrivateKey, j []byte) (*rpc.PostV1ClientBroadcastTxSyncResponse, error) {
-	client, err := rpc.NewClientWithResponses(remoteCLIURL)
+	client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 	if err != nil {
 		return nil, err
 	}
@@ -313,12 +315,12 @@ func keybaseForCLI() (keybase.Keybase, error) {
 }
 
 func unableToConnectToRpc(err error) error {
-	fmt.Printf("❌ Unable to connect to the RPC @ %s\n\nError: %s", boldText(remoteCLIURL), err)
+	fmt.Printf("❌ Unable to connect to the RPC @ %s\n\nError: %s", boldText(flags.RemoteCLIURL), err)
 	return nil
 }
 
 func rpcResponseCodeUnhealthy(statusCode int, response []byte) error {
-	fmt.Printf("❌ RPC reporting unhealthy status HTTP %d @ %s\n\n%s", statusCode, boldText(remoteCLIURL), response)
+	fmt.Printf("❌ RPC reporting unhealthy status HTTP %d @ %s\n\n%s", statusCode, boldText(flags.RemoteCLIURL), response)
 	return nil
 }
 

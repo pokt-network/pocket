@@ -7,11 +7,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/cobra"
+
+	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -65,7 +67,7 @@ func keysCreateCommands() []*cobra.Command {
 					return err
 				}
 
-				if !nonInteractive {
+				if !flags.NonInteractive {
 					pwd = readPassphrase(pwd)
 					confirmPassphrase(pwd)
 				}
@@ -112,7 +114,7 @@ func keysUpdateCommands() []*cobra.Command {
 					return err
 				}
 
-				if !nonInteractive {
+				if !flags.NonInteractive {
 					pwd = readPassphrase(pwd)
 					newPwd = readPassphraseMessage(newPwd, "New passphrase: ")
 					confirmPassphrase(newPwd)
@@ -161,7 +163,7 @@ func keysDeleteCommands() []*cobra.Command {
 					return err
 				}
 
-				if !nonInteractive {
+				if !flags.NonInteractive {
 					pwd = readPassphrase(pwd)
 				}
 
@@ -276,7 +278,7 @@ func keysExportCommands() []*cobra.Command {
 					return err
 				}
 
-				if !nonInteractive {
+				if !flags.NonInteractive {
 					pwd = readPassphrase(pwd)
 				}
 
@@ -353,7 +355,7 @@ func keysImportCommands() []*cobra.Command {
 					return err
 				}
 
-				if !nonInteractive {
+				if !flags.NonInteractive {
 					pwd = readPassphrase(pwd)
 				}
 
@@ -367,7 +369,7 @@ func keysImportCommands() []*cobra.Command {
 					}
 				case "raw":
 					// it is unarmoured so we need to confirm the passphrase
-					if !nonInteractive {
+					if !flags.NonInteractive {
 						confirmPassphrase(pwd)
 					}
 					kp, err = kb.ImportFromString(privateKeyString, pwd, hint)
@@ -423,7 +425,7 @@ func keysSignMsgCommands() []*cobra.Command {
 					return err
 				}
 
-				if !nonInteractive {
+				if !flags.NonInteractive {
 					pwd = readPassphrase(pwd)
 				}
 
@@ -520,7 +522,7 @@ func keysSignTxCommands() []*cobra.Command {
 					return err
 				}
 
-				if !nonInteractive {
+				if !flags.NonInteractive {
 					pwd = readPassphrase(pwd)
 				}
 
@@ -678,7 +680,7 @@ func keysSlipCommands() []*cobra.Command {
 					return err
 				}
 
-				if !nonInteractive {
+				if !flags.NonInteractive {
 					pwd = readPassphrase(pwd)
 				}
 

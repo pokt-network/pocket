@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pokt-network/pocket/rpc"
 	"github.com/spf13/cobra"
+
+	"github.com/pokt-network/pocket/app/client/cli/flags"
+	"github.com/pokt-network/pocket/rpc"
 )
 
 func init() {
@@ -34,7 +36,7 @@ func systemCommands() []*cobra.Command {
 			Long:    "Performs a simple liveness check on the node RPC endpoint",
 			Aliases: []string{"health"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return nil
 				}
@@ -44,7 +46,7 @@ func systemCommands() []*cobra.Command {
 				}
 				statusCode := response.StatusCode()
 				if statusCode == http.StatusOK {
-					fmt.Printf("✅ RPC reporting healthy status for node @ %s\n\n%s", boldText(remoteCLIURL), response.Body)
+					fmt.Printf("✅ RPC reporting healthy status for node @ %s\n\n%s", boldText(flags.RemoteCLIURL), response.Body)
 					return nil
 				}
 
@@ -57,7 +59,7 @@ func systemCommands() []*cobra.Command {
 			Long:    "Queries the node RPC to obtain the version of the software currently running",
 			Aliases: []string{"version"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -67,7 +69,7 @@ func systemCommands() []*cobra.Command {
 				}
 				statusCode := response.StatusCode()
 				if statusCode == http.StatusOK {
-					fmt.Printf("Node @ %s reports that it's running version: \n%s\n", boldText(remoteCLIURL), boldText(response.Body))
+					fmt.Printf("Node @ %s reports that it's running version: \n%s\n", boldText(flags.RemoteCLIURL), boldText(response.Body))
 					return nil
 				}
 
