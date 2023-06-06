@@ -2,10 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 
+	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility/types"
-	"github.com/spf13/cobra"
 )
 
 func init() {
@@ -48,7 +49,7 @@ func accountCommands() []*cobra.Command {
 					return err
 				}
 
-				if !nonInteractive {
+				if !flags.NonInteractive {
 					pwd = readPassphrase(pwd)
 				}
 

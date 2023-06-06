@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/pokt-network/pocket/rpc"
 	"github.com/spf13/cobra"
+
+	"github.com/pokt-network/pocket/app/client/cli/flags"
+	"github.com/pokt-network/pocket/rpc"
 )
 
 var (
@@ -68,7 +70,7 @@ func queryHeightCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"account"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -103,7 +105,7 @@ func queryHeightCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"app"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -138,7 +140,7 @@ func queryHeightCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"balance"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -173,7 +175,7 @@ func queryHeightCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"block"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -207,7 +209,7 @@ func queryHeightCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"fisherman"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -242,7 +244,7 @@ func queryHeightCommands() []*cobra.Command {
 			Aliases: []string{"param"},
 			Args:    cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -277,7 +279,7 @@ func queryHeightCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"servicer"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -312,7 +314,7 @@ func queryHeightCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"supply"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -346,7 +348,7 @@ func queryHeightCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"supportedchains"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -380,7 +382,7 @@ func queryHeightCommands() []*cobra.Command {
 			Aliases: []string{"param"},
 			Args:    cobra.ExactArgs(0),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -414,7 +416,7 @@ func queryHeightCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"validator"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -456,7 +458,7 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"accounts"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -492,7 +494,7 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"apps"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -528,7 +530,7 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"fishermen"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -564,7 +566,7 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"servicers"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -600,7 +602,7 @@ func queryHeightPaginatedCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"validators"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -643,7 +645,7 @@ func queryHeightPaginatedSortedCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"blocktxs"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -687,7 +689,7 @@ func queryPaginatedSortedCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(1),
 			Aliases: []string{"accounttxs"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -724,7 +726,7 @@ func queryPaginatedSortedCommands() []*cobra.Command {
 			Args:    cobra.ExactArgs(0),
 			Aliases: []string{"unconfirmedtxs"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -767,7 +769,7 @@ func queryCommands() []*cobra.Command {
 			Aliases: []string{"allparams"},
 			Args:    cobra.ExactArgs(0),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -795,7 +797,7 @@ func queryCommands() []*cobra.Command {
 			Aliases: []string{"height"},
 			Args:    cobra.ExactArgs(0),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -823,7 +825,7 @@ func queryCommands() []*cobra.Command {
 			Aliases: []string{"tx"},
 			Args:    cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
@@ -857,7 +859,7 @@ func queryCommands() []*cobra.Command {
 			Aliases: []string{"unconfirmedtx"},
 			Args:    cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
