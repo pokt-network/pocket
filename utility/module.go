@@ -32,8 +32,6 @@ type utilityModule struct {
 	mempool mempool.TXMempool
 
 	actorModules map[string]modules.Module
-	// TODO: initialize
-	servicer modules.Servicer
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -144,15 +142,15 @@ func (u *utilityModule) GetActorModules() map[string]modules.Module {
 }
 
 func (u *utilityModule) GetServicerModule() modules.ServicerModule {
-	return u.actorModules[servicer.ServicerModuleName]
+	return u.actorModules[servicer.ServicerModuleName].(modules.ServicerModule)
 }
 
 func (u *utilityModule) GetFishermanModule() modules.FishermanModule {
-	return u.actorModules[fisherman.FishermanModuleName]
+	return u.actorModules[fisherman.FishermanModuleName].(modules.FishermanModule)
 }
 
 func (u *utilityModule) GetValidatorModule() modules.ValidatorModule {
-	return u.actorModules[validator.ValidatorModuleName]
+	return u.actorModules[validator.ValidatorModuleName].(modules.ValidatorModule)
 }
 
 // validateActorModuleExclusivity validates that the actor modules are enabled in a valid combination.

@@ -21,11 +21,13 @@ const (
 
 // TODO: Implement this
 func (u *utilityModule) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
-	if u.servicer == nil {
-		// if u.GetServicerModule() == nil {
+	sm := u.GetServicerModule()
+
+	if sm == nil {
 		return nil, fmt.Errorf(NodeIsNotServicerErr)
 	}
-	return u.servicer.HandleRelay(relay)
+
+	return sm.HandleRelay(relay)
 }
 
 // TODO: Implement this
