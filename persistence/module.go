@@ -37,9 +37,9 @@ type persistenceModule struct {
 	// A key-value store mapping heights to blocks. Needed for block synchronization.
 	blockStore blockstore.BlockStore
 
-	// txIndexer is a key-value store mapping transaction hashes to transactions.
-	// It is needed for avoiding tx replays attacks, and is also used as the backing
-	// data store for tree store.
+	// txIndexer is a key-value store mapping transaction hashes to `IndexedTransaction` protos.
+	// It is needed to avoid tx replay attacks and for business logic around transaction validation.
+	// IMPORTANT: It doubles as the data store for the transaction tree in state tree set.
 	txIndexer indexer.TxIndexer
 
 	// stateTrees manages all of the merkle trees maintained by the
@@ -104,7 +104,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	stateTrees, err := trees.NewStateTrees(persistenceCfg.TreesStoreDir, txIndexer)
+	stateTrees, err := trees.NewStateTrees(persistenceCfg.TreesStoreDir)
 	if err != nil {
 		return nil, err
 	}
