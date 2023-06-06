@@ -1,6 +1,8 @@
 package service
 
 import (
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -44,30 +46,8 @@ type servicer struct {
 
 	rwlock sync.RWMutex
 	// totalTokens holds the total number of tokens assigned to this servicer for the app in the current session
+	// DISCUSS: considering the computational complexity, should we skip caching this value?
 	totalTokens map[string]*sessionTokens
-	// INCOMPLETE: need to either persist this value or calculate it using persistence module
-	// usedTokens holds the total number of tokens used by the servicer for the app in the current session
-	usedTokens map[string]*sessionTokens
-}
-
-func (s *servicer) incrementUsedTokens(session *coreTypes.Session) {
-	s.rwlock.Lock()
-	defer s.rwlock.Unlock()
-
-	if len(s.usedTokens) == 0 {
-		s.usedTokens = make(map[string]*sessionTokens)
-	}
-
-	key := session.Application.PublicKey
-	current := s.usedTokens[key]
-	// Reset the counter if this is a new session
-	if current == nil || current.SessionNumber != session.SessionNumber {
-		s.usedTokens[key] = &sessionTokens{session.SessionNumber, big.NewInt(1)}
-		return
-	}
-
-	current.Count.Add(current.Count, big.NewInt(1))
-	s.usedTokens[key] = current
 }
 
 func CreateServicer(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -111,18 +91,89 @@ func (s *servicer) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse
 		return nil, fmt.Errorf("Error admitting relay: %w", err)
 	}
 
-	// TODO: implement Persist Relay
-	// TODO: implement execution
-	// TODO: implement state maintenance
-	// TODO: validate the response from the node?
-	// TODO: (QUESTION) Should we persist SignedRPC?
-	// INCOMPLETE: Update state (Persistence Local?) after execution to reflect token usage for app
+	response, err := s.executeRelay(relay)
+	if err != nil {
+		return nil, fmt.Errorf("Error executing relay: %w", err)
+	}
+
+	// DISCUSS: should we validate the response from the node?
+	relayDigest, shouldStore, err := s.hasCollision(relay, response)
+	if err != nil {
+		return nil, fmt.Errorf("Error calculating relay service digest: %w", err)
+	}
+	if !shouldStore {
+		return response, nil
+	}
+
+	height := s.GetBus().GetConsensusModule().CurrentHeight()
+	writeCtx, err := s.GetBus().GetPersistenceModule().NewRWContext(int64(height))
+	if err != nil {
+		return nil, fmt.Errorf("Error getting a write context to update token usage for application %s: %w", relay.Meta.ApplicationAddress, err)
+	}
+	defer writeCtx.Release()
+
+	// DISCUSS: should we extend/use UnitOfWork for updating/retrieving token usage?
+	if err := writeCtx.RecordRelayService(relay.Meta.ApplicationAddress, relayDigest, relay, response); err != nil {
+		return nil, fmt.Errorf("Error recording service proof for application %s: %w", relay.Meta.ApplicationAddress, err)
+	}
+
+	return response, nil
+}
+
+// hasCollision returns:
+//  1. The signed digest of a relay/response pair,
+//  2. Whether there was a collision for the specific chain (i.e. should the service proof be stored for claiming later)
+func (s *servicer) hasCollision(relay *coreTypes.Relay, response *coreTypes.RelayResponse) (digest []byte, collides bool, err error) {
+	relayBytes, err := marshal(relay, response)
+	if err != nil {
+		return nil, false, fmt.Errorf("Error marshalling relay and/or response: %w", err)
+	}
+
+	relayDigest := crypto.SHA3Hash(relayBytes)
+
+	signedDigest := s.sign(relayDigest)
+	response.ServicerSignature = hex.EncodeToString(signedDigest)
+	collision, err := s.hasCollisionOnChain(relayDigest, relay.Meta.RelayChain.Id)
+	if err != nil {
+		return nil, false, fmt.Errorf("Error checking collision for chain %s: %w", relay.Meta.RelayChain.Id, err)
+	}
+
+	return signedDigest, collision, nil
+}
+
+// INCOMPLETE: implement this
+func (s *servicer) sign(bz []byte) []byte {
+	return bz
+}
+
+// INCOMPLETE: implement this
+func (s *servicer) hasCollisionOnChain(digest []byte, relayChainId string) (bool, error) {
+	return false, nil
+}
+
+func marshal(request *coreTypes.Relay, response *coreTypes.RelayResponse) ([]byte, error) {
+	if request == nil || response == nil {
+		return nil, fmt.Errorf("error marshalling: got nil value as input")
+	}
+
+	s := struct {
+		*coreTypes.Relay
+		*coreTypes.RelayResponse
+	}{
+		request,
+		response,
+	}
+	return json.Marshal(s)
+}
+
+// INCOMPLETE: implement this
+func (s *servicer) executeRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
 	return nil, nil
 }
 
 // validateRelayMeta ensures the relay metadata is valid for being handled by the servicer
 // REFACTOR: move the meta-specific validation to a Validator method on RelayMeta struct
-func (s servicer) validateRelayMeta(meta *coreTypes.RelayMeta, currentHeight int64) error {
+func (s *servicer) validateRelayMeta(meta *coreTypes.RelayMeta, currentHeight int64) error {
 	if meta == nil {
 		return fmt.Errorf("empty relay metadata")
 	}
@@ -139,7 +190,7 @@ func (s servicer) validateRelayMeta(meta *coreTypes.RelayMeta, currentHeight int
 	return nil
 }
 
-func (s servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable, currentHeight int64) error {
+func (s *servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable, currentHeight int64) error {
 	if !slices.Contains(s.config.Chains, relayChain.Id) {
 		return fmt.Errorf("chain %s not supported by servicer %s configuration", relayChain.Id, s.config.Address)
 	}
@@ -165,19 +216,24 @@ func (s servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable, 
 }
 
 // validateApplication makes sure the application has not received more relays than allocated in the current session.
-func (s servicer) validateApplication(meta *coreTypes.RelayMeta, session *coreTypes.Session, currentHeight int64) error {
+func (s *servicer) validateApplication(session *coreTypes.Session, currentHeight int64) error {
 	// IMPROVE: use a function to get current height from the current session
 	servicerAppSessionTokens, err := s.calculateServicerAppSessionTokens(session, currentHeight)
 	if err != nil {
 		return fmt.Errorf("Error calculating servicer tokens for application: %w", err)
 	}
 
-	s.rwlock.RLock()
-	defer s.rwlock.RUnlock()
+	readCtx, err := s.GetBus().GetPersistenceModule().NewReadContext(currentHeight)
+	if err != nil {
+		return fmt.Errorf("Error getting read context: application %s session number %d: %w", session.Application.PublicKey, session.SessionNumber, err)
+	}
 
-	usedAppSessionTokens := s.usedTokens[session.Application.PublicKey]
+	usedAppSessionTokens, err := readCtx.GetServicerTokenUsage(session)
+	if err != nil {
+		return fmt.Errorf("Error getting servicer token usage: application %s session number %d: %w", session.Application.PublicKey, session.SessionNumber, err)
+	}
 
-	if usedAppSessionTokens == nil || usedAppSessionTokens.Count == nil || usedAppSessionTokens.Count.Cmp(servicerAppSessionTokens) < 0 {
+	if usedAppSessionTokens == nil || usedAppSessionTokens.Cmp(servicerAppSessionTokens) < 0 {
 		return nil
 	}
 
@@ -187,7 +243,7 @@ func (s servicer) validateApplication(meta *coreTypes.RelayMeta, session *coreTy
 		session.SessionNumber)
 }
 
-func (s servicer) cachedAppTokens(session *coreTypes.Session) *sessionTokens {
+func (s *servicer) cachedAppTokens(session *coreTypes.Session) *sessionTokens {
 	s.rwlock.RLock()
 	defer s.rwlock.RUnlock()
 
@@ -195,7 +251,7 @@ func (s servicer) cachedAppTokens(session *coreTypes.Session) *sessionTokens {
 }
 
 // calculateServicerAppSessionTokens return the number of tokens the servicer can use for the application in the current session
-func (s servicer) calculateServicerAppSessionTokens(session *coreTypes.Session, currentHeight int64) (*big.Int, error) {
+func (s *servicer) calculateServicerAppSessionTokens(session *coreTypes.Session, currentHeight int64) (*big.Int, error) {
 	tokens := s.cachedAppTokens(session)
 	if tokens != nil && tokens.Count != nil && tokens.SessionNumber == session.SessionNumber {
 		return big.NewInt(1).Set(tokens.Count), nil
@@ -236,7 +292,7 @@ func (s *servicer) setAppSessionTokens(session *coreTypes.Session, tokens *sessi
 }
 
 // validateServicer makes sure the servicer is A) active in the current session, and B) has not served more than its allocated relays for the session
-func (s servicer) validateServicer(meta *coreTypes.RelayMeta, session *coreTypes.Session) error {
+func (s *servicer) validateServicer(meta *coreTypes.RelayMeta, session *coreTypes.Session) error {
 	if meta.ServicerPublicKey != s.config.PublicKey {
 		return fmt.Errorf("relay servicer key %s does not match this servicer instance %s", meta.ServicerPublicKey, s.config.PublicKey)
 	}
@@ -257,7 +313,7 @@ func (s servicer) validateServicer(meta *coreTypes.RelayMeta, session *coreTypes
 }
 
 // admitRelay decides whether the relay should be served
-func (s servicer) admitRelay(relay *coreTypes.Relay) error {
+func (s *servicer) admitRelay(relay *coreTypes.Relay) error {
 	// TODO: utility module should initialize the servicer (if this module instance is a servicer)
 	const errPrefix = "Error admitting relay"
 
@@ -285,7 +341,7 @@ func (s servicer) admitRelay(relay *coreTypes.Relay) error {
 		return fmt.Errorf("%s: %s: %w", errPrefix, err.Error(), errValidateServicer)
 	}
 
-	if err := s.validateApplication(relay.Meta, session, int64(height)); err != nil {
+	if err := s.validateApplication(session, int64(height)); err != nil {
 		return fmt.Errorf("%s: %s: %w", errPrefix, err.Error(), errValidateApplication)
 	}
 

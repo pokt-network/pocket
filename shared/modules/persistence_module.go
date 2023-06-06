@@ -3,6 +3,8 @@ package modules
 //go:generate mockgen -destination=./mocks/persistence_module_mock.go github.com/pokt-network/pocket/shared/modules PersistenceModule,PersistenceRWContext,PersistenceReadContext,PersistenceWriteContext
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/runtime/genesis"
@@ -129,6 +131,8 @@ type PersistenceWriteContext interface {
 	// Flag Operations
 	InitFlags() error
 	SetFlag(paramName string, value any, enabled bool) error
+
+	RecordRelayService(applicationAddress string, key []byte, relay *coreTypes.Relay, response *coreTypes.RelayResponse) error
 }
 
 type PersistenceReadContext interface {
@@ -219,4 +223,7 @@ type PersistenceReadContext interface {
 	GetIntFlag(paramName string, height int64) (int, bool, error)
 	GetStringFlag(paramName string, height int64) (string, bool, error)
 	GetBytesFlag(paramName string, height int64) ([]byte, bool, error)
+
+	// Servicer application tokens
+	GetServicerTokenUsage(session *coreTypes.Session) (*big.Int, error)
 }

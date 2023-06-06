@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.56] - 2023-06-06
+
+- Add place-holder for servicer token usage support methods
+
 ## [0.0.0.55] - 2023-06-01
 
 - Integrate lazy loading SMT (release v0.5.0) into V1

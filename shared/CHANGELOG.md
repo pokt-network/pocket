@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.60] - 2023-06-06
+
+- Add place-holders for servicer token usage support
+
 ## [0.0.0.59] - 2023-06-01
 
 - Use ApplicationAddress in RelayMeta

@@ -42,7 +42,7 @@ func TestAdmitRelay(t *testing.T) {
 
 	testCases := []struct {
 		name       string
-		usedTokens map[string]*sessionTokens
+		usedTokens int64
 		relay      *coreTypes.Relay
 		expected   error
 	}{
@@ -81,14 +81,11 @@ func TestAdmitRelay(t *testing.T) {
 			expected: errValidateServicer,
 		},
 		{
-			name:  "Relay for maxed-out app is rejected",
-			relay: testRelay(),
-			usedTokens: map[string]*sessionTokens{
-				testApp1.PublicKey: {currentSessionNumber, big.NewInt(999999)},
-			},
-			expected: errValidateApplication,
+			name:       "Relay for maxed-out app is rejected",
+			relay:      testRelay(),
+			usedTokens: 999999,
+			expected:   errValidateApplication,
 		},
-		// INCOMPLETE: add a unit test for session roll-over
 	}
 
 	for _, testCase := range testCases {
@@ -100,13 +97,12 @@ func TestAdmitRelay(t *testing.T) {
 				sessionHeight(2),
 				sessionServicers(testServicer1),
 			)
-			mockBus := mockBus(t, &config, uint64(testCurrentHeight), session)
+			mockBus := mockBus(t, &config, uint64(testCurrentHeight), session, testCase.usedTokens)
 
 			servicerMod, err := CreateServicer(mockBus)
 			require.NoError(t, err)
 
 			servicer := servicerMod.(*servicer)
-			servicer.usedTokens = testCase.usedTokens
 
 			err = servicer.admitRelay(testCase.relay)
 			if !errors.Is(err, testCase.expected) {
@@ -204,7 +200,7 @@ func testSession(editors ...sessionModifier) *coreTypes.Session {
 }
 
 // Create a mockBus with mock implementations of consensus and utility modules
-func mockBus(t *testing.T, cfg *configs.ServicerConfig, height uint64, session *coreTypes.Session) *mockModules.MockBus {
+func mockBus(t *testing.T, cfg *configs.ServicerConfig, height uint64, session *coreTypes.Session, usedTokens int64) *mockModules.MockBus {
 	ctrl := gomock.NewController(t)
 	runtimeMgrMock := mockModules.NewMockRuntimeMgr(ctrl)
 	runtimeMgrMock.EXPECT().GetConfig().Return(&configs.Config{Utility: &configs.UtilityConfig{ServicerConfig: cfg}}).AnyTimes()
@@ -212,15 +208,21 @@ func mockBus(t *testing.T, cfg *configs.ServicerConfig, height uint64, session *
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(height).AnyTimes()
 
-	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
 	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
 	persistenceReadContextMock.EXPECT().Release().AnyTimes()
 	persistenceReadContextMock.EXPECT().GetServicer(gomock.Any(), gomock.Any()).Return(testServicer1, nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetIntParam(typesUtil.AppSessionTokensMultiplierParamName, int64(height)).Return(testAppsTokensMultiplier, nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().GetServicerTokenUsage(gomock.Any()).Return(big.NewInt(usedTokens), nil).AnyTimes()
+
+	persistenceRWContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
+	persistenceRWContextMock.EXPECT().RecordRelayService(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
+	persistenceMock.EXPECT().NewRWContext(gomock.Any()).Return(persistenceRWContextMock, nil).AnyTimes()
 
 	busMock := mockModules.NewMockBus(ctrl)
 	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
