@@ -84,8 +84,9 @@ func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
 // because it copies data structures from v0. For example, AATs are no longer necessary in v1.
 func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 	utility := s.GetBus().GetUtilityModule()
+	_, err := utility.GetServicerModule()
 
-	if utility.GetServicerModule() == nil {
+	if err != nil {
 		return ctx.String(http.StatusInternalServerError, "node is not a servicer")
 	}
 
