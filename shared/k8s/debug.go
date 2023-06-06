@@ -3,8 +3,12 @@ package k8s
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/pokt-network/pocket/logger"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,15 +52,44 @@ func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]stri
 
 func getNamespace() (string, error) {
 	_, err := os.Stat(kubernetesServiceAccountNamespaceFile)
-	if err != nil {
-		logger.Global.Err(err).Msg("could not stat namespace file, using \"" + defaultNamespace + "\"")
-		return defaultNamespace, nil
+	if err == nil {
+		return getNamespaceSvcAcct()
 	}
+	if ns, err := getClientNamespace(); err == nil {
+		return ns, nil
+	}
+	return defaultNamespace, nil
+}
 
+func getNamespaceSvcAcct() (string, error) {
 	nsBytes, err := os.ReadFile(kubernetesServiceAccountNamespaceFile)
 	if err != nil {
 		return "", fmt.Errorf("could not read namespace file: %v", err)
 	}
 
 	return string(nsBytes), nil
+}
+
+func getClientNamespace() (string, error) {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to get home dir: %w", err)
+	}
+	kubeConfigPath := filepath.Join(userHomeDir, ".kube", "config")
+	kubeconfig := flag.String("kubeconfig", kubeConfigPath, "(optional) absolute path to the kubeconfig file")
+	_, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		return "", fmt.Errorf("could not build config from flags: %v", err)
+	}
+
+	// use the NewDefaultClientConfigLoadingRules() function to load the kubeconfig file
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+
+	// use the NewNonInteractiveDeferredLoadingClientConfig() function to get the config
+	configOverrides := &clientcmd.ConfigOverrides{}
+	kubeconfigClient := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
+
+	// use the Namespace() function to get the current namespace
+	namespace, _, err := kubeconfigClient.Namespace()
+	return namespace, err
 }
