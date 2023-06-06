@@ -2,7 +2,7 @@
 
 _This document was last updated on 06-05-2023._
 
-IMPORTANT: Please note that with recent changes to the Pocket Network protocol team, the dates below are subject to change. With a lower capacity, we can no longer commit to the dates previously stated but will updated these as soon as we can.
+IMPORTANT: Please note that with recent changes to the Pocket Network protocol team, the dates below are subject to change. With the loss of some of our key team members, our capacity is lower while we work on rebuilding the team. Though it is a temporary hurdle, and we are still doing our best to reprioritze and cut some scope, and we will update these dates as soon as we have more certainty on the new timelines!
 
 - [V1 Roadmap](#v1-roadmap)
 - [Milestones](#milestones)

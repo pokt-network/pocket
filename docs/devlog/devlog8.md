@@ -2,6 +2,8 @@
 
 **Date Published**: June 5th, 2023
 
+We have kept the goals and details in this document short, but feel free to reach out to @Olshansk in the [core-dev-chat](https://discord.com/channels/553741558869131266/986789914379186226) for additional details, links & resources.
+
 ## Table of Contents <!-- omit in toc -->
 
 - [Iteration 17 Goals \& Results](#iteration-17-goals--results)
@@ -16,11 +18,9 @@
   - [Iteration 17 - Completed](#iteration-17---completed)
   - [Iteration 18 - Planned](#iteration-18---planned)
 
----
-
 ## Iteration 17 Goals & Results
 
-**Iterate Dates**:
+**Iterate Dates**: May 17th - May 30th, 2023
 
 ### M1: PoS
 
@@ -92,7 +92,7 @@ There was no demo in this explicit DevLog but check out [this teaser](https://tw
 - [V1 Specifications](https://github.com/pokt-network/pocket-network-protocol)
 - [V1 Repo](https://github.com/pokt-network/pocket)
 - [V1 Wiki](https://github.com/pokt-network/pocket/wiki)
-  [V1 Project Dashboard](https://github.com/pokt-network/pocket/projects?query=is%3Aopen)
+- [V1 Project Dashboard](https://github.com/pokt-network/pocket/projects?query=is%3Aopen)
 
 ## ScreenShots
 
