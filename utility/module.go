@@ -142,15 +142,30 @@ func (u *utilityModule) GetActorModules() map[string]modules.Module {
 }
 
 func (u *utilityModule) GetServicerModule() modules.ServicerModule {
-	return u.actorModules[servicer.ServicerModuleName].(modules.ServicerModule)
+	m, ok := u.actorModules[servicer.ServicerModuleName].(modules.ServicerModule)
+	if !ok {
+		u.logger.Warn().Err(errors.New("failed to cast servicer module")).Msg("failed to get servicer module")
+		return nil
+	}
+	return m
 }
 
 func (u *utilityModule) GetFishermanModule() modules.FishermanModule {
-	return u.actorModules[fisherman.FishermanModuleName].(modules.FishermanModule)
+	m, ok := u.actorModules[fisherman.FishermanModuleName].(modules.FishermanModule)
+	if !ok {
+		u.logger.Warn().Err(errors.New("failed to cast fisherman module")).Msg("failed to get fisherman module")
+		return nil
+	}
+	return m
 }
 
 func (u *utilityModule) GetValidatorModule() modules.ValidatorModule {
-	return u.actorModules[validator.ValidatorModuleName].(modules.ValidatorModule)
+	m, ok := u.actorModules[validator.ValidatorModuleName].(modules.ValidatorModule)
+	if !ok {
+		u.logger.Warn().Err(errors.New("failed to cast validator module")).Msg("failed to get validator module")
+		return nil
+	}
+	return m
 }
 
 // validateActorModuleExclusivity validates that the actor modules are enabled in a valid combination.
