@@ -142,31 +142,33 @@ func (u *utilityModule) GetActorModules() map[string]modules.Module {
 }
 
 func (u *utilityModule) GetServicerModule() (modules.ServicerModule, error) {
-	m, ok := u.actorModules[servicer.ServicerModuleName].(modules.ServicerModule)
-	if !ok {
-		u.logger.Warn().Err(errors.New("failed to cast servicer module")).Msg("failed to get servicer module")
-		return nil, errors.New("failed to cast servicer module")
+	if u.actorModules[servicer.ServicerModuleName] == nil {
+		return nil, errors.New("servicer module not enabled")
 	}
-	return m, nil
+	if m, ok := u.actorModules[servicer.ServicerModuleName].(modules.ServicerModule); ok {
+		return m, nil
+	}
+	return nil, errors.New("failed to cast servicer module")
 }
 
 func (u *utilityModule) GetFishermanModule() (modules.FishermanModule, error) {
-	m, ok := u.actorModules[fisherman.FishermanModuleName].(modules.FishermanModule)
-	if !ok {
-		u.logger.Warn().Err(errors.New("failed to cast fisherman module")).Msg("failed to get fisherman module")
-		return nil, errors.New("failed to cast fisherman module")
+	if u.actorModules[fisherman.FishermanModuleName] == nil {
+		return nil, errors.New("fisherman module not enabled")
 	}
-	return m, nil
-
+	if m, ok := u.actorModules[fisherman.FishermanModuleName].(modules.FishermanModule); ok {
+		return m, nil
+	}
+	return nil, errors.New("failed to cast fisherman module")
 }
 
 func (u *utilityModule) GetValidatorModule() (modules.ValidatorModule, error) {
-	m, ok := u.actorModules[validator.ValidatorModuleName].(modules.ValidatorModule)
-	if !ok {
-		u.logger.Warn().Err(errors.New("failed to cast validator module")).Msg("failed to get validator module")
-		return nil, errors.New("failed to cast validator module")
+	if u.actorModules[validator.ValidatorModuleName] == nil {
+		return nil, errors.New("validator module not enabled")
 	}
-	return m, nil
+	if m, ok := u.actorModules[validator.ValidatorModuleName].(modules.ValidatorModule); ok {
+		return m, nil
+	}
+	return nil, errors.New("failed to cast validator module")
 }
 
 // validateActorModuleExclusivity validates that the actor modules are enabled in a valid combination.

@@ -3,7 +3,6 @@ package utility
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -16,18 +15,12 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-const (
-	NodeIsNotServicerErr = "node is not a servicer"
-)
-
 // TODO: Implement this
 func (u *utilityModule) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
 	sm, err := u.GetServicerModule()
-
 	if err != nil {
-		return nil, errors.New(NodeIsNotServicerErr)
+		return nil, err
 	}
-
 	return sm.HandleRelay(relay)
 }
 
