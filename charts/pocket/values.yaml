@@ -100,6 +100,7 @@ config:
     use_rain_tree: true
     is_empty_connection_type: false
     private_key: "" # @ignored This value is needed but ignored - use privateKeySecretKeyRef instead
+    # TODO: I think this has been renamed to `max_nonces`
     max_mempool_count: 100000
     enable_peer_discovery_debug_rpc: false
   telemetry:
