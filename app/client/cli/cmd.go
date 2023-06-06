@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/pokt-network/pocket/app/client/cli/flags"
+	"github.com/pokt-network/pocket/app/client/cli/peer"
 	"github.com/pokt-network/pocket/runtime/defaults"
 )
 
@@ -36,6 +37,8 @@ func init() {
 	if err := viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose")); err != nil {
 		log.Fatalf(flagBindErrFormat, "verbose", err)
 	}
+
+	rootCmd.AddCommand(peer.PeerCmd)
 }
 
 var rootCmd = &cobra.Command{
