@@ -11,7 +11,10 @@ import (
 )
 
 // A message is a component of a transaction (excluding metadata such as the signature)
-// defining the action driving the state transition
+// defining the action driving the state transition.
+//
+// This file contains the interface and structure definition for the Message type
+// along with basic stateless validation of some of its metadata.
 
 type Message interface {
 	proto.Message // TECHDEBT: Still making direct `proto` reference even with a central `codec` package
