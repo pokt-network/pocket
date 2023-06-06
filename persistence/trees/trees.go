@@ -1,3 +1,7 @@
+// package trees maintains a set of sparse merkle trees
+// each backed by the KVStore interface. It offers an atomic
+// commit and rollback mechanism for interacting with
+// that core resource map of merkle trees.
 package trees
 
 import (
@@ -119,6 +123,27 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 	return stateTrees, nil
 }
 
+// Update takes a transaction and a height and updates
+// all of the trees in the treeStore for that height.
+func (t *treeStore) Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
+	return t.updateMerkleTrees(pgtx, txi, height)
+}
+
+// ClearAll is used by debug cli to completely reset the tree.
+// This should only be called by the debug CLI.
+func (t *treeStore) ClearAll() error {
+	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
+		nodeStore := t.nodeStores[treeType]
+		if err := nodeStore.ClearAll(); err != nil {
+			return fmt.Errorf("failed to clear %s node store: %w", merkleTreeToString[treeType], err)
+		}
+		t.merkleTrees[treeType] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
+	}
+
+	return nil
+}
+
+// newMemStateTrees creates a new in-memory state tree
 func newMemStateTrees() (*treeStore, error) {
 	stateTrees := &treeStore{
 		merkleTrees: make(map[merkleTree]*smt.SMT, int(numMerkleTrees)),
@@ -173,7 +198,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 
 		// Data Merkle Trees
 		case transactionsMerkleTree:
-			indexedTxs, err := t.getTransactions(pgtx, txi, height)
+			indexedTxs, err := t.getTransactions(txi, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get transactions: %w", err)
 			}
@@ -198,7 +223,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 		// Default
 		default:
-			// t.logger.Fatal().Msgf("Not handled yet in state commitment update. Merkle tree #{%v}", treeType)
+			panic(fmt.Sprintf("not handled in state commitment update. Merkle tree #{%v}", treeType))
 		}
 	}
 
@@ -211,7 +236,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 func (t *treeStore) commit() error {
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
 		if err := t.merkleTrees[tree].Commit(); err != nil {
-			return fmt.Errorf("failed to commit %s: %w", merkleTreeToString[tree])
+			return fmt.Errorf("failed to commit %s: %w", merkleTreeToString[tree], err)
 		}
 	}
 	return nil
@@ -362,8 +387,7 @@ func (t *treeStore) getActorsUpdated(
 		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
 	}
 
-	// TODO: this height usage is gross and could cause issues, we should use
-	// uint64 in the source so that this doesn't have to cast
+	// TECHDEBT #XXX: Avoid this cast to int64
 	query := actorSchema.GetUpdatedAtHeightQuery(int64(height))
 	rows, err := pgtx.Query(context.TODO(), query)
 	if err != nil {
@@ -424,7 +448,7 @@ func (t *treeStore) getAccountsUpdated(
 	return accounts, nil
 }
 
-func (t *treeStore) getTransactions(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) ([]*coreTypes.IndexedTransaction, error) {
+func (t *treeStore) getTransactions(txi indexer.TxIndexer, height uint64) ([]*coreTypes.IndexedTransaction, error) {
 	// TECHDEBT(#XXX): TxIndexer should use uint64s so we avoid this cast.
 	indexedTxs, err := txi.GetByHeight(int64(height), false)
 	if err != nil {
@@ -550,16 +574,4 @@ func (t *treeStore) getChainsForActor(
 		actor.Chains = append(actor.Chains, chainID)
 	}
 	return actor, nil
-}
-
-func (t *treeStore) ClearAll() error {
-	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		nodeStore := t.nodeStores[treeType]
-		if err := nodeStore.ClearAll(); err != nil {
-			return fmt.Errorf("failed to clear %s node store: %w", merkleTreeToString[treeType], err)
-		}
-		t.merkleTrees[treeType] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
-	}
-
-	return nil
 }
