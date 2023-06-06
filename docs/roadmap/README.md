@@ -1,6 +1,8 @@
-# Roadmap & Milestones <!-- omit in toc -->
+# [WIP] Roadmap & Milestones <!-- omit in toc -->
 
-This document was last updated on 02-02-2022.
+_This document was last updated on 06-05-2023._
+
+IMPORTANT: Please note that with recent changes to the Pocket Network protocol team, the dates below are subject to change. With a lower capacity, we can no longer commit to the dates previously stated but will updated these as soon as we can.
 
 - [V1 Roadmap](#v1-roadmap)
 - [Milestones](#milestones)
