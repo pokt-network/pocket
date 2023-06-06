@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.44] - 2023-06-06
 
 - Add trustless relay validation: available service tokens for the application
+- Add relay execution logic to the servicer
 
 ## [0.0.0.43] - 2023-06-01
 

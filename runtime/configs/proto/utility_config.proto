@@ -14,5 +14,18 @@ message UtilityConfig {
 message ServicerConfig {
   string public_key = 1;
   string address = 2;
-  repeated string chains = 3;
+  map<string, ChainConfig> chains = 3;
+}
+
+message ChainConfig {
+  string url = 1;
+  string user_agent = 2;
+  uint64 timeout_milliseconds = 3;
+  BasicAuth basic_auth = 4;
+}
+
+message BasicAuth {
+  string user_name = 1;
+  // DISCUSS: does this need to be encrypted?
+  string password = 2;
 }

@@ -2,7 +2,10 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -32,6 +35,16 @@ var (
 		Address:      "98a792b7aca673620132ef01f50e62caa58eca83",
 		PublicKey:    "b5cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d86b009c",
 		StakedAmount: "1000",
+	}
+
+	testChainConfig1 = &configs.ChainConfig{
+		Url:                 "http://chain-url.pokt.network",
+		UserAgent:           "user-agent-1",
+		TimeoutMilliseconds: 1234,
+		BasicAuth: &configs.BasicAuth{
+			UserName: "user1",
+			Password: "password1",
+		},
 	}
 )
 
@@ -112,6 +125,45 @@ func TestAdmitRelay(t *testing.T) {
 	}
 }
 
+func TestExecuteRelay(t *testing.T) {
+	testCases := []struct {
+		name        string
+		relay       *coreTypes.Relay
+		expectedErr error
+	}{
+		{
+			name:        "relay is rejected if chain is not specified in the config",
+			relay:       testRelay(testRelayChain("foo")),
+			expectedErr: errValidateRelayMeta,
+		},
+		{
+			name:  "Relay for accepted chain is executed",
+			relay: testRelay(),
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				fmt.Fprintln(w, `{"0x1234"}`)
+			}))
+			defer ts.Close()
+
+			config := testServicerConfig()
+			for ch := range config.Chains {
+				config.Chains[ch].Url = ts.URL
+			}
+
+			servicer := &servicer{config: &config}
+			_, err := servicer.executeRelay(testCase.relay)
+			if !errors.Is(err, testCase.expectedErr) {
+				t.Fatalf("Expected error %v got: %v", testCase.expectedErr, err)
+			}
+			// INCOMPLETE: verify HTTP request properties: payload/headers/user-agent/etc.
+		})
+	}
+}
+
 type relayEditor func(*coreTypes.Relay)
 
 func testRelayServicer(publicKey string) relayEditor {
@@ -145,6 +197,10 @@ func testRelay(editors ...relayEditor) *coreTypes.Relay {
 				Id: "geozone",
 			},
 		},
+		Payload: &coreTypes.RelayPayload{
+			Method: "POST",
+			Data:   `{"id": 1, "jsonrpc": "2.0", method: "eth_blockNumber"}`,
+		},
 	}
 
 	for _, editor := range editors {
@@ -158,7 +214,9 @@ func testServicerConfig() configs.ServicerConfig {
 	return configs.ServicerConfig{
 		PublicKey: testServicer1.PublicKey,
 		Address:   testServicer1.Address,
-		Chains:    testServicer1.Chains,
+		Chains: map[string]*configs.ChainConfig{
+			"0021": testChainConfig1,
+		},
 	}
 }
 

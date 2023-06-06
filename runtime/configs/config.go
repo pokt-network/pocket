@@ -121,7 +121,17 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 		},
 		Utility: &UtilityConfig{
 			ServicerConfig: &ServicerConfig{
-				Chains: []string{"0001"},
+				Chains: map[string]*ChainConfig{
+					"0021": {
+						Url:                 "http://chain-url.pokt.network",
+						UserAgent:           "user-agent",
+						TimeoutMilliseconds: 5000,
+						BasicAuth: &BasicAuth{
+							UserName: "user",
+							Password: "password",
+						},
+					},
+				},
 			},
 			MaxMempoolTransactionBytes: defaults.DefaultUtilityMaxMempoolTransactionBytes,
 			MaxMempoolTransactions:     defaults.DefaultUtilityMaxMempoolTransactions,

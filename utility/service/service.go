@@ -1,12 +1,17 @@
 package service
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
+	"net/http"
+	"net/url"
 	"sync"
+	"time"
 
 	"golang.org/x/exp/slices"
 
@@ -166,9 +171,22 @@ func marshal(request *coreTypes.Relay, response *coreTypes.RelayResponse) ([]byt
 	return json.Marshal(s)
 }
 
-// INCOMPLETE: implement this
+// executeRelay performs the passed relay using an HTTP request to the chain-specific target URL
 func (s *servicer) executeRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
-	return nil, nil
+	if relay.Meta == nil || relay.Meta.RelayChain == nil || relay.Meta.RelayChain.Id == "" {
+		return nil, fmt.Errorf("Relay for application %s does not specify relay chain", relay.Meta.ApplicationAddress)
+	}
+
+	chainConfig, ok := s.config.Chains[relay.Meta.RelayChain.Id]
+	if !ok {
+		return nil, fmt.Errorf("Chain %s not found in servicer configuration: %w", relay.Meta.RelayChain.Id, errValidateRelayMeta)
+	}
+
+	res, err := executeHTTPRequest(chainConfig, relay.Payload)
+	if err != nil {
+		return nil, fmt.Errorf("Error executing HTTP request for relay on application %s: %w", relay.Meta.ApplicationAddress, err)
+	}
+	return res, nil
 }
 
 // validateRelayMeta ensures the relay metadata is valid for being handled by the servicer
@@ -182,7 +200,6 @@ func (s *servicer) validateRelayMeta(meta *coreTypes.RelayMeta, currentHeight in
 		return fmt.Errorf("relay chain unspecified")
 	}
 
-	// TODO: supported chains: needs to be crossed-checked with the world state from the persistence layer
 	if err := s.validateRelayChainSupport(meta.RelayChain, currentHeight); err != nil {
 		return fmt.Errorf("validation of support for relay chain %s failed: %w", meta.RelayChain.Id, err)
 	}
@@ -191,7 +208,7 @@ func (s *servicer) validateRelayMeta(meta *coreTypes.RelayMeta, currentHeight in
 }
 
 func (s *servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable, currentHeight int64) error {
-	if !slices.Contains(s.config.Chains, relayChain.Id) {
+	if _, ok := s.config.Chains[relayChain.Id]; !ok {
 		return fmt.Errorf("chain %s not supported by servicer %s configuration", relayChain.Id, s.config.Address)
 	}
 
@@ -531,3 +548,44 @@ func (r *relay) GetRelayChain() RelayChain              { return nil }
 func (r *relay) GetGeoZone() GeoZone                    { return nil }
 func (r *relay) GetToken() AAT                          { return nil }
 func (r *relay) GetSignature() string                   { return "" }
+
+// executeHTTPRequest performs the HTTP request that sends the relay to the chain's URL.
+func executeHTTPRequest(cfg *configs.ChainConfig, relay *coreTypes.RelayPayload) (*coreTypes.RelayResponse, error) {
+	chainUrl, err := url.Parse(cfg.Url)
+	if err != nil {
+		return nil, fmt.Errorf("Error parsing chain URL %s: %w", cfg.Url, err)
+	}
+	targetUrl := chainUrl.JoinPath(relay.HttpPath)
+
+	req, err := http.NewRequest(relay.Method, targetUrl.String(), bytes.NewBuffer([]byte(relay.Data)))
+	if err != nil {
+		return nil, err
+	}
+	if cfg.BasicAuth != nil && cfg.BasicAuth.UserName != "" {
+		req.SetBasicAuth(cfg.BasicAuth.UserName, cfg.BasicAuth.Password)
+	}
+	if cfg.UserAgent != "" {
+		req.Header.Set("User-Agent", cfg.UserAgent)
+	}
+
+	for k, v := range relay.Headers {
+		req.Header.Set(k, v)
+	}
+	if len(relay.Headers) == 0 {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	// DISCUSS: we need to optimize usage of HTTP client, e.g. for connection reuse, considering the expected volume of relays
+	resp, err := (&http.Client{Timeout: time.Duration(cfg.TimeoutMilliseconds) * time.Millisecond}).Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Error performing the HTTP request for relay: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading response body: %w", err)
+	}
+
+	return &coreTypes.RelayResponse{Payload: string(body)}, nil
+}

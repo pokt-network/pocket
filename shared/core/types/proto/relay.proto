@@ -10,6 +10,7 @@ message Relay {
     RelayMeta meta = 2;
 }
 
+// INCOMPLETE: add support for different payloads, e.g. JSON, GRPC, etc.
 message RelayPayload {
     string data = 1;
     string method = 2;
