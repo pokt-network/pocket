@@ -116,5 +116,5 @@ func (p *PostgresContext) clearAllSQLState() error {
 }
 
 func (p *PostgresContext) clearAllTreeState() error {
-	return p.stateTrees.ClearAll()
+	return p.stateTrees.DebugClearAll()
 }
