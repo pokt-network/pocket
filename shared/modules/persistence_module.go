@@ -22,10 +22,11 @@ type PersistenceModule interface {
 	NewReadContext(height int64) (PersistenceReadContext, error)
 	ReleaseWriteContext() error // The module can maintain many read contexts, but only one write context can exist at a time
 
-	// BlockStore operations
+	// BlockStore maps a block height to an *coreTypes.IndexedTransaction
 	GetBlockStore() blockstore.BlockStore
 
-	// TreeStore operations
+	// TreeStore manages atomic access to a set of merkle trees
+	// that compose the state hash.
 	GetTreeStore() TreeStore
 
 	NewWriteContext() PersistenceRWContext
@@ -38,19 +39,18 @@ type PersistenceModule interface {
 	HandleDebugMessage(*messaging.DebugMessage) error
 }
 
-// TreeStore is fulfilled by the treeStore to create an
-// atomic tree component for use by the peristence context.
+// TreeStore defines the interface for atomic updates and rollbacks to the internal
+// merkle trees that compose the state hash of pocket.
 type TreeStore interface {
 	// Update returns the new state hash for a given height.
-	// * Height is passed through to the Update function
-	// and used by the queries against the TxIndexer and the
-	// It updates to the future but not to the past.
-	// * Passing a higher height will cause a change
-	// but repeatedly calling the same or a lower height will
+	// * Height is passed through to the Update function and is used to query the TxIndexer for transactions
+	// to update into the merkle tree set
+	// * Passing a higher height will cause a change but repeatedly calling the same or a lower height will
 	// not incur a change.
+	// * By nature of it taking a pgx transaction at runtime, Update inherits the pgx transaction's read view of the
+	// database.
 	Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error)
-	// ClearAll completely clears the state of the trees.
-	// For debugging purposes only.
+	// ClearAll completely clears the state of the trees. For debugging purposes only.
 	ClearAll() error
 }
 
