@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.33] - 2023-06-06
+
+- Exported `rootCmd` to support cross-package usage (i.e. subcommands w/ own pkgs)
+- Refactored common CLI code
+  - Moved & refactored `PersistentPreRunE()` helper
+  - Moved & exported `busCLICtxKey`
+  - Exported `GetValueFromCLIContext()` and `SetValueInCLIContext()`
+  - Moved `setupAndStartP2PModule`
+  - Moved `setupCurrentHeightProvider`
+  - Moved `setupPeerstoreProvider`
+- Refactored CLI flags to own package for cross-package use
+
 ## [0.0.0.32] - 2023-05-25
 
 - Add the `nonInteractive` flag in a couple spots where it was missing
