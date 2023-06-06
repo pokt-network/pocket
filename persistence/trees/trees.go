@@ -107,13 +107,13 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 	}
 
 	stateTrees := &treeStore{
-		treeStoreDir: dir,
+		treeStoreDir: treesStoreDir,
 		merkleTrees:  make(map[merkleTree]*smt.SMT, int(numMerkleTrees)),
 		nodeStores:   make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
 	}
 
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", dir, merkleTreeToString[tree]))
+		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", treesStoreDir, merkleTreeToString[tree]))
 		if err != nil {
 			return nil, err
 		}
@@ -123,15 +123,9 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 	return stateTrees, nil
 }
 
-// Update takes a transaction and a height and updates
-// all of the trees in the treeStore for that height.
-func (t *treeStore) Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
-	return t.updateMerkleTrees(pgtx, txi, height)
-}
-
-// ClearAll is used by debug cli to completely reset the tree.
+// DebugClearAll is used by the debug cli to completely reset all merkle trees.
 // This should only be called by the debug CLI.
-func (t *treeStore) ClearAll() error {
+func (t *treeStore) DebugClearAll() error {
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		nodeStore := t.nodeStores[treeType]
 		if err := nodeStore.ClearAll(); err != nil {
