@@ -103,3 +103,5 @@ There was no demo in this explicit DevLog but check out [this teaser](https://tw
 ### Iteration 18 - Planned
 
 ![Iteration 18](https://github.com/pokt-network/pocket/assets/1892194/5778c180-e1f9-4e37-9ce3-48d006a290eb)
+
+<!-- GITHUB_WIKI: devlog/2023_06_05 -->
