@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"fmt"
+
 	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/spf13/cobra"
 
