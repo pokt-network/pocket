@@ -2,7 +2,6 @@ package p2p
 
 import (
 	"fmt"
-
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pokt-network/pocket/shared/codec"
@@ -98,9 +97,5 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		return fmt.Errorf("unknown event type: %s", event.MessageName())
 	}
 
-	return nil
-}
-
-func (m *p2pModule) handleDebugMessage(msg *messaging.DebugMessage) error {
 	return nil
 }

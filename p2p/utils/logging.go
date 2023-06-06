@@ -1,13 +1,26 @@
 package utils
 
 import (
+	"fmt"
 	"net"
+	"os"
+	"text/tabwriter"
 
 	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/rs/zerolog"
+
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/rs/zerolog"
 )
+
+// RowProvider is a function which receives a variadic number of "column" values.
+// It is intended to be passed to a `RowConsumer` so that the consumer can operate
+// on the column values, row-by-row, without having to know how to produce them.
+type RowProvider func(columns ...string) error
+
+// RowConsumer is any function which receives a `RowProvider` in order to consume
+// its column values, row-by-row.
+type RowConsumer func(RowProvider) error
 
 type scopeCallback func(scope network.ResourceScope) error
 
@@ -39,6 +52,63 @@ func LogOutgoingMsg(logger *modules.Logger, hostname string, peer types.Peer) {
 func LogIncomingMsg(logger *modules.Logger, hostname string, peer types.Peer) {
 	msg := "INCOMING MSG"
 	logMessage(logger, msg, hostname, peer)
+}
+
+// Print table prints a table to stdout. Header row is defined by `header`. Row printing
+// behavior is defined by `consumeRows`. Header length SHOULD match row length.
+func PrintTable(header []string, consumeRows RowConsumer) error {
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 0, 1, ' ', 0)
+
+	// Print header
+	for _, col := range header {
+		if _, err := fmt.Fprintf(w, "| %s\t", col); err != nil {
+			return err
+		}
+	}
+	if _, err := fmt.Fprintln(w, "|"); err != nil {
+		return err
+	}
+
+	// Print separator
+	for _, col := range header {
+		if _, err := fmt.Fprintf(w, "| "); err != nil {
+			return err
+		}
+		for range col {
+			if _, err := fmt.Fprintf(w, "-"); err != nil {
+				return err
+			}
+		}
+		if _, err := fmt.Fprintf(w, "\t"); err != nil {
+			return err
+		}
+	}
+	if _, err := fmt.Fprintln(w, "|"); err != nil {
+		return err
+	}
+
+	// Print rows -- `consumeRows` will call this function once for each row.
+	if err := consumeRows(func(row ...string) error {
+		for _, col := range row {
+			if _, err := fmt.Fprintf(w, "| %s\t", col); err != nil {
+				return err
+			}
+		}
+		if _, err := fmt.Fprintln(w, "|"); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	// Flush the buffer and print the table
+	if err := w.Flush(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func logMessage(logger *modules.Logger, msg, hostname string, peer types.Peer) {

@@ -22,6 +22,7 @@ enum DebugMessageAction {
 
 	DEBUG_PERSISTENCE_CLEAR_STATE = 8;
 	DEBUG_PERSISTENCE_RESET_TO_GENESIS = 9;
+	DEBUG_P2P_PEER_LIST = 10;
 }
 
 message DebugMessage {
