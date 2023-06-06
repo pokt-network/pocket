@@ -37,15 +37,13 @@ type persistenceModule struct {
 	// A key-value store mapping heights to blocks. Needed for block synchronization.
 	blockStore blockstore.BlockStore
 
-	// A tx indexer (i.e. key-value store) mapping transaction hashes to transactions. Needed for
-	// avoiding tx replays attacks, and is also used as the backing database for the transaction
-	// tx merkle tree.
+	// txIndexer is a key-value store mapping transaction hashes to transactions.
+	// It is needed for avoiding tx replays attacks, and is also used as the backing
+	// data store for tree store.
 	txIndexer indexer.TxIndexer
 
-	// TODO_IN_THIS_COMMIT updates this comment
-	// A list of all the merkle trees maintained by the
+	// stateTrees manages all of the merkle trees maintained by the
 	// persistence module that roll up into the state commitment.
-	// stateTrees *stateTrees
 	stateTrees modules.TreeStore
 
 	// Only one write context is allowed at a time
@@ -230,12 +228,10 @@ func (m *persistenceModule) ReleaseWriteContext() error {
 	return nil
 }
 
-// TECHDEBT: declare BlockStore interface in shared/modules
 func (m *persistenceModule) GetBlockStore() blockstore.BlockStore {
 	return m.blockStore
 }
 
-// TECHDEBT: declare TxIndexer interface in shared/modules
 func (m *persistenceModule) GetTxIndexer() indexer.TxIndexer {
 	return m.txIndexer
 }

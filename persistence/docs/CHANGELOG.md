@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.58] - 2023-06-08
+
+- Refactors the stateTrees implementation off of the PersistenceContext and into its in module
+- Implements the new Update and Commit pattern with the SMT trees in the trees module
+
 ## [0.0.0.57] - 2023-06-06
 
 - Uses ":memory:" to signify when connecting to an in-memory database
