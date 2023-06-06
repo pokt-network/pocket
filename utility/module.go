@@ -141,31 +141,32 @@ func (u *utilityModule) GetActorModules() map[string]modules.Module {
 	return u.actorModules
 }
 
-func (u *utilityModule) GetServicerModule() modules.ServicerModule {
+func (u *utilityModule) GetServicerModule() (modules.ServicerModule, error) {
 	m, ok := u.actorModules[servicer.ServicerModuleName].(modules.ServicerModule)
 	if !ok {
 		u.logger.Warn().Err(errors.New("failed to cast servicer module")).Msg("failed to get servicer module")
-		return nil
+		return nil, errors.New("failed to cast servicer module")
 	}
-	return m
+	return m, nil
 }
 
-func (u *utilityModule) GetFishermanModule() modules.FishermanModule {
+func (u *utilityModule) GetFishermanModule() (modules.FishermanModule, error) {
 	m, ok := u.actorModules[fisherman.FishermanModuleName].(modules.FishermanModule)
 	if !ok {
 		u.logger.Warn().Err(errors.New("failed to cast fisherman module")).Msg("failed to get fisherman module")
-		return nil
+		return nil, errors.New("failed to cast fisherman module")
 	}
-	return m
+	return m, nil
+
 }
 
-func (u *utilityModule) GetValidatorModule() modules.ValidatorModule {
+func (u *utilityModule) GetValidatorModule() (modules.ValidatorModule, error) {
 	m, ok := u.actorModules[validator.ValidatorModuleName].(modules.ValidatorModule)
 	if !ok {
 		u.logger.Warn().Err(errors.New("failed to cast validator module")).Msg("failed to get validator module")
-		return nil
+		return nil, errors.New("failed to cast validator module")
 	}
-	return m
+	return m, nil
 }
 
 // validateActorModuleExclusivity validates that the actor modules are enabled in a valid combination.

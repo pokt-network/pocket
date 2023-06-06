@@ -3,6 +3,7 @@ package utility
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -21,10 +22,10 @@ const (
 
 // TODO: Implement this
 func (u *utilityModule) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
-	sm := u.GetServicerModule()
+	sm, err := u.GetServicerModule()
 
-	if sm == nil {
-		return nil, fmt.Errorf(NodeIsNotServicerErr)
+	if err != nil {
+		return nil, errors.New(NodeIsNotServicerErr)
 	}
 
 	return sm.HandleRelay(relay)
