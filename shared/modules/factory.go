@@ -26,7 +26,7 @@ type FactoryWithOptions[T any, O any] interface {
 }
 
 // FactoryWithConfigAndOptions implements a `#Create()` factory method which takes
-// a bus and both a required "config" argument of type K and a variadic "optional"
+// a bus, a required "config" argument of type K, and a variadic (optional)
 // argument(s) of type O and returns a value of type T and an error.
 // TECHDEBT: apply enforcement across applicable "sub-modules"
 type FactoryWithConfigAndOptions[T any, K any, O any] interface {
