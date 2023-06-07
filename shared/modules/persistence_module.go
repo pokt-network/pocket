@@ -42,6 +42,8 @@ type PersistenceModule interface {
 // TreeStore defines the interface for atomic updates and rollbacks to the internal
 // merkle trees that compose the state hash of pocket.
 type TreeStore interface {
+	Module
+
 	// Update returns the new state hash for a given height.
 	// * Update inherits the pgx transaction's read view of the database and builds the trees according to that view.
 	// TODO(#808): Change interface to `Update(pgtx pgx.Tx, height uint64) (string, error)`

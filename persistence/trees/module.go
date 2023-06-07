@@ -23,11 +23,3 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 func (t *treeStore) GetModuleName() string {
 	return modules.TreeStoreModuleName
 }
-
-func (t *treeStore) SetBus(pocketBus modules.Bus) {
-
-}
-
-func (t *treeStore) GetBus() modules.Bus {
-	panic("not impl")
-}
