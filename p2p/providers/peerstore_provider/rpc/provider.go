@@ -94,11 +94,8 @@ func (rpcPSP *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (t
 	return peerstore_provider.ActorsToPeerstore(rpcPSP, coreActors)
 }
 
-func (rabp *rpcPeerstoreProvider) GetP2PConfig() *configs.P2PConfig {
-	if rabp.p2pCfg == nil {
-		return rabp.GetBus().GetRuntimeMgr().GetConfig().P2P
-	}
-	return rabp.p2pCfg
+func (rpcPSP *rpcPeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
+	return peerstore_provider.GetUnstakedPeerstore(rpcPSP.GetBus())
 }
 
 func (rpcPSP *rpcPeerstoreProvider) initRPCClient() {

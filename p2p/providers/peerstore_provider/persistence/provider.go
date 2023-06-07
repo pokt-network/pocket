@@ -1,8 +1,6 @@
 package persistence
 
 import (
-	"fmt"
-
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -54,6 +52,6 @@ func (persistencePSP *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(h
 }
 
 // GetStakedPeerstoreAtHeight implements the respective `PeerstoreProvider` interface method.
-func (pabp *persistencePeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
-	return nil, fmt.Errorf("persistence peerstore provider does not support unstaked peerstore")
+func (persistencePSP *persistencePeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
+	return peerstore_provider.GetUnstakedPeerstore(persistencePSP.GetBus())
 }
