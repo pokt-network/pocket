@@ -27,7 +27,7 @@ This repository features an implementation of the HotStuff consensus algorithm. 
 
 ### Leader Election
 
-A dedicated submodule handles the leader election process. The current configuration employs a deterministic round-robin leader election mechanism. We are working towards implementing a randomized leader election mechanism with cryptographic sortition using Verifiable Random Functions (VRFs), see [Algorand's Whitepaper Section 5.1](https://algorandcom.cdn.prismic.io/algorandcom%2Fa26acb80-b80c-46ff-a1ab-a8121f74f3a3_p51-gilad.pdf) for detailed explonation.
+A dedicated submodule handles the leader election process. The current configuration employs a deterministic round-robin leader election mechanism. We are working on a randomized leader election mechanism with cryptographic sortition using Verifiable Random Functions (VRFs), see [Algorand's Whitepaper Section 5.1](https://algorandcom.cdn.prismic.io/algorandcom%2Fa26acb80-b80c-46ff-a1ab-a8121f74f3a3_p51-gilad.pdf) for detailed explanation.
 
 ### Consensus Phases
 
@@ -135,6 +135,7 @@ graph TD
     C --> note1
     J --> note2
 ```
+
 
 ## Implementation
 
