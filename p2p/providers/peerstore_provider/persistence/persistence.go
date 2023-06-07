@@ -5,7 +5,6 @@ import (
 
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
@@ -56,10 +55,6 @@ func (pabp *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(height uint
 		return nil, err
 	}
 	return peerstore_provider.ActorsToPeerstore(pabp, validators)
-}
-
-func (pabp *persistencePeerstoreProvider) GetP2PConfig() *configs.P2PConfig {
-	return pabp.GetBus().GetRuntimeMgr().GetConfig().P2P
 }
 
 func (pabp *persistencePeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
