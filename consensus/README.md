@@ -27,11 +27,13 @@ This repository features an implementation of the HotStuff consensus algorithm. 
 
 ### Leader Election
 
-A dedicated submodule handles the leader election process. The current configuration employs a deterministic round-robin leader election mechanism.
+A dedicated submodule handles the leader election process. The current configuration employs a deterministic round-robin leader election mechanism. We are working towards implementing a randomized leader election mechanism with cryptographic sortition using Verifiable Random Functions (VRFs), see [Algorand's Whitepaper Section 5.1](https://algorandcom.cdn.prismic.io/algorandcom%2Fa26acb80-b80c-46ff-a1ab-a8121f74f3a3_p51-gilad.pdf) for detailed explonation.
 
 ### Consensus Phases
 
-The HotStuff consensus algorithm consists of three phases: `Prepare`, `Pre-Commit`, and `Commit`. In each phase, the leader creates a proposal and broadcasts it to all replica nodes.
+The HotStuff consensus algorithm consists of three phases: `Prepare`, `Pre-Commit`, and `Commit`. It is worth to note that recently published [HotStuff 2 research paper](https://eprint.iacr.org/2023/397.pdf) proposes the updated HotStuff consensus algorithm which only needs two phases. 
+
+In each phase of Hotstuff, the leader creates a proposal and broadcasts it to all replica nodes. 
 
 Upon receiving the proposal, each replica node performs a block validation check. If the proposal is valid, the replica node responds to the leader with its signature as a vote.
 
@@ -61,7 +63,7 @@ sequenceDiagram
 
 ### Block Validation
 
-Every proposal made by the leader goes through a series of validation steps performed by the replicas.
+Every proposal made by the leader undergo a series of validation steps during the `Prepare` phase, which are carried out by the replicas. However, during the `Pre-commit` and `Commit` phases, the replicas are solely responsible for performing signature validation.
 
 ```mermaid
 graph TD
@@ -69,18 +71,16 @@ graph TD
     B[Perform basic validation]
     C[Check Block structure]
     D[Validate quorum certificate]
-    E[Validate message signatures]
-    F[Validate optimistic threshold]
-    G[Block is Valid - apply block]
-    H[Block is Invalid - Reject the proposal]
-    J[Create and send vote message to the leader]
+    E[Validate optimistic threshold]
+    F[Block is Valid - apply block]
+    G[Block is Invalid - Reject the proposal]
+    H[Create and send vote message to the leader]
     A-->B
     B-->C
     C-->D
     D-->E
     E-->F
     F-->G
-    G-->J
     B-.->H
     C-.->H
     D-.->H
@@ -197,6 +197,7 @@ consensus
 ```
 
 ## Testing
+_TODO: Document the testing framework._
 
 ### Running Unit Tests
 
