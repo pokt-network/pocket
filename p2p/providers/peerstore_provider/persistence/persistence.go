@@ -11,13 +11,18 @@ import (
 
 var _ peerstore_provider.PeerstoreProvider = &persistencePeerstoreProvider{}
 
+type persistencePStoreProviderOption func(*persistencePeerstoreProvider)
+type persistencePStoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, persistencePStoreProviderOption]
 type persistencePeerstoreProvider struct {
 	base_modules.IntegratableModule
-	base_modules.InterruptableModule
+	persistencePStoreProviderFactory
 }
 
-// TECHDEBT: refactor
-func NewPersistencePeerstoreProvider(bus modules.Bus, options ...func(*persistencePeerstoreProvider)) *persistencePeerstoreProvider {
+func NewPersistencePeerstoreProvider(bus modules.Bus, options ...persistencePStoreProviderOption) (peerstore_provider.PeerstoreProvider, error) {
+	return new(persistencePeerstoreProvider).Create(bus, options...)
+}
+
+func (*persistencePeerstoreProvider) Create(bus modules.Bus, options ...persistencePStoreProviderOption) (peerstore_provider.PeerstoreProvider, error) {
 	pabp := &persistencePeerstoreProvider{
 		IntegratableModule: *base_modules.NewIntegratableModule(bus),
 	}
@@ -26,17 +31,7 @@ func NewPersistencePeerstoreProvider(bus modules.Bus, options ...func(*persisten
 		o(pabp)
 	}
 
-	return pabp
-}
-
-// TECHDEBT: remove
-func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return new(persistencePeerstoreProvider).Create(bus, options...)
-}
-
-// TECHDEBT: refactor
-func (*persistencePeerstoreProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return NewPersistencePeerstoreProvider(bus), nil
+	return pabp, nil
 }
 
 func (*persistencePeerstoreProvider) GetModuleName() string {
