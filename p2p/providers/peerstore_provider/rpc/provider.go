@@ -63,7 +63,7 @@ func (*rpcPeerstoreProvider) GetModuleName() string {
 	return peerstore_provider.ModuleName
 }
 
-func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
+func (rpcPSP *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
 
@@ -71,7 +71,7 @@ func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typ
 		h         int64              = int64(height)
 		actorType rpc.ActorTypesEnum = "validator"
 	)
-	response, err := rabp.rpcClient.GetV1P2pStakedActorsAddressBookWithResponse(ctx, &rpc.GetV1P2pStakedActorsAddressBookParams{Height: &h, ActorType: &actorType})
+	response, err := rpcPSP.rpcClient.GetV1P2pStakedActorsAddressBookWithResponse(ctx, &rpc.GetV1P2pStakedActorsAddressBookParams{Height: &h, ActorType: &actorType})
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typ
 		})
 	}
 
-	return peerstore_provider.ActorsToPeerstore(rabp, coreActors)
+	return peerstore_provider.ActorsToPeerstore(rpcPSP, coreActors)
 }
 
 func (rabp *rpcPeerstoreProvider) GetP2PConfig() *configs.P2PConfig {
@@ -101,16 +101,12 @@ func (rabp *rpcPeerstoreProvider) GetP2PConfig() *configs.P2PConfig {
 	return rabp.p2pCfg
 }
 
-func (rabp *rpcPeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
-	return nil, fmt.Errorf("unstaked peerstore not supported by rpc peerstore provider")
-}
-
-func (rabp *rpcPeerstoreProvider) initRPCClient() {
-	rpcClient, err := rpc.NewClientWithResponses(rabp.rpcURL)
+func (rpcPSP *rpcPeerstoreProvider) initRPCClient() {
+	rpcClient, err := rpc.NewClientWithResponses(rpcPSP.rpcURL)
 	if err != nil {
 		log.Fatalf("could not create RPC client: %v", err)
 	}
-	rabp.rpcClient = rpcClient
+	rpcPSP.rpcClient = rpcClient
 }
 
 // options

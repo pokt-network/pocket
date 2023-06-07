@@ -39,8 +39,8 @@ func (*persistencePeerstoreProvider) GetModuleName() string {
 }
 
 // GetStakedPeerstoreAtHeight implements the respective `PeerstoreProvider` interface method.
-func (pabp *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
-	readCtx, err := pabp.GetBus().GetPersistenceModule().NewReadContext(int64(height))
+func (persistencePSP *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
+	readCtx, err := persistencePSP.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (pabp *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(height uint
 	if err != nil {
 		return nil, err
 	}
-	return peerstore_provider.ActorsToPeerstore(pabp, validators)
+	return peerstore_provider.ActorsToPeerstore(persistencePSP, validators)
 }
 
 // GetStakedPeerstoreAtHeight implements the respective `PeerstoreProvider` interface method.
