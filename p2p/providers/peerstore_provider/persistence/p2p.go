@@ -29,9 +29,7 @@ type p2pPeerstoreProvider struct {
 	persistencePeerstoreProvider
 }
 
-func NewP2PPeerstoreProvider(
-	bus modules.Bus,
-) (peerstore_provider.PeerstoreProvider, error) {
+func NewP2PPeerstoreProvider(bus modules.Bus) (peerstore_provider.PeerstoreProvider, error) {
 	return new(p2pPeerstoreProvider).Create(bus)
 }
 
