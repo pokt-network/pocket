@@ -9,10 +9,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
-var (
-	_ peerstore_provider.PeerstoreProvider = &p2pPeerstoreProvider{}
-	_ p2pPStoreProviderFactory             = &p2pPeerstoreProvider{}
-)
+var _ peerstore_provider.PeerstoreProvider = &p2pPeerstoreProvider{}
 
 // unstakedPeerstoreProvider is an interface which the p2p module supports in
 // order to allow access to the unstaked-actor-router's peerstore
@@ -28,6 +25,7 @@ type p2pPStoreProviderFactory = modules.Factory[peerstore_provider.PeerstoreProv
 
 type p2pPeerstoreProvider struct {
 	base_modules.IntegratableModule
+	p2pPStoreProviderFactory
 	persistencePeerstoreProvider
 }
 
