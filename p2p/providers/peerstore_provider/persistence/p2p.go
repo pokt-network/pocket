@@ -29,8 +29,6 @@ type p2pPStoreProviderFactory = modules.Factory[peerstore_provider.PeerstoreProv
 type p2pPeerstoreProvider struct {
 	base_modules.IntegratableModule
 	persistencePeerstoreProvider
-
-	p2pModule modules.P2PModule
 }
 
 func NewP2PPeerstoreProvider(
@@ -46,14 +44,8 @@ func (*p2pPeerstoreProvider) Create(
 		return nil, fmt.Errorf("bus is required")
 	}
 
-	p2pModule := bus.GetP2PModule()
-	if p2pModule == nil {
-		return nil, fmt.Errorf("p2p module is not registered to bus and is required")
-	}
-
 	p2pPSP := &p2pPeerstoreProvider{
 		IntegratableModule: *base_modules.NewIntegratableModule(bus),
-		p2pModule:          p2pModule,
 	}
 
 	return p2pPSP, nil
@@ -64,7 +56,12 @@ func (*p2pPeerstoreProvider) GetModuleName() string {
 }
 
 func (p2pPSP *p2pPeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
-	unstakedPSP, ok := p2pPSP.p2pModule.(unstakedPeerstoreProvider)
+	p2pModule := p2pPSP.GetBus().GetP2PModule()
+	if p2pModule == nil {
+		return nil, fmt.Errorf("p2p module is not registered to bus and is required")
+	}
+
+	unstakedPSP, ok := p2pModule.(unstakedPeerstoreProvider)
 	if !ok {
 		return nil, fmt.Errorf("p2p module does not implement unstakedPeerstoreProvider")
 	}
