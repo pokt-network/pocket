@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	// TECHDEBT: Accept reading this from `Datadir` and/or as a flag.
 	genesisPath = runtime.GetEnv("GENESIS_PATH", "build/config/genesis.json")
 	RpcHost     string
 
