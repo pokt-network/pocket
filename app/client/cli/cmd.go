@@ -24,7 +24,7 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remote_cli_url", runtime.GetEnv("POCKET_RPC_URL", defaults.DefaultRemoteCLIURL), "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
+	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remote_cli_url", runtime.GetEnv("POCKET_RPC_URL", defaults.DefaultRemoteCLIURL), "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port). Can be set via POCKET_RPC_URL environment variable.")
 	rootCmd.PersistentFlags().BoolVar(&nonInteractive, "non_interactive", false, "if true skips the interactive prompts wherever possible (useful for scripting & automation)")
 
 	// TECHDEBT: Why do we have a data dir when we have a config path if the data dir is only storing keys?
