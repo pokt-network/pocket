@@ -23,7 +23,7 @@ func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 	rpcURL := fmt.Sprintf("http://%s:%s", RpcHost, defaults.DefaultRPCPort)
 
 	runtimeMgr := runtime.NewManagerFromFiles(
-		flags.ConfigPath, GenesisPath,
+		flags.ConfigPath, genesisPath,
 		runtime.WithClientDebugMode(),
 		runtime.WithRandomPK(),
 	)
