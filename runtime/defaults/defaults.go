@@ -26,7 +26,7 @@ const (
 	DefaultRPCPort                  = "50832"
 	DefaultBusBufferSize            = 100
 	DefaultRPCHost                  = "localhost"
-	Validator1EndpointDockerCompose = "node1.consensus"
+	Validator1EndpointDockerCompose = "validator1"
 	Validator1EndpointK8S           = "validator-001-pocket"
 )
 
@@ -49,7 +49,6 @@ var (
 	DefaultPersistencePostgresURL    = "postgres://postgres:postgres@pocket-db:5432/postgres"
 	DefaultPersistenceBlockStorePath = "/var/blockstore"
 	// p2p
-	DefaultUseLibp2p         = false
 	DefaultP2PPort           = uint32(42069)
 	DefaultP2PUseRainTree    = true
 	DefaultP2PConnectionType = types.ConnectionType_TCPConnection
