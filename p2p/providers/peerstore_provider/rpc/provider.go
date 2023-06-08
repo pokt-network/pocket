@@ -29,6 +29,7 @@ func init() {
 }
 
 type rpcPeerstoreProvider struct {
+	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
 	base_modules.IntegratableModule
 	base_modules.InterruptableModule
 
@@ -37,6 +38,8 @@ type rpcPeerstoreProvider struct {
 	rpcClient *rpc.ClientWithResponses
 }
 
+// TECHDEBT(#810): refactor to be consistent with `persistencePeerstoreProvider`
+// (i.e. `NewRPCPeerstoreProvider` calls `rpcPeerstoreProvider#Create()`.
 func NewRPCPeerstoreProvider(options ...modules.ModuleOption) *rpcPeerstoreProvider {
 	rabp := &rpcPeerstoreProvider{
 		rpcURL: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
@@ -51,10 +54,13 @@ func NewRPCPeerstoreProvider(options ...modules.ModuleOption) *rpcPeerstoreProvi
 	return rabp
 }
 
+// TECHDEBT(#810): remove as it should no longer be needed.
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return new(rpcPeerstoreProvider).Create(bus, options...)
 }
 
+// TECHDEBT(#810): refactor to be consistent with `persistencePeerstoreProvider`
+// (i.e. `NewRPCPeerstoreProvider` calls `rpcPeerstoreProvider#Create()`.
 func (*rpcPeerstoreProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return NewRPCPeerstoreProvider(options...), nil
 }
