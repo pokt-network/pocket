@@ -27,7 +27,7 @@ This repository features an implementation of the HotStuff consensus algorithm. 
 
 ### Leader Election
 
-A dedicated submodule handles the leader election process. The current configuration employs a deterministic round-robin leader election mechanism. We are working on a randomized leader election mechanism with cryptographic sortition using Verifiable Random Functions (VRFs), see [Algorand's Whitepaper Section 5.1](https://algorandcom.cdn.prismic.io/algorandcom%2Fa26acb80-b80c-46ff-a1ab-a8121f74f3a3_p51-gilad.pdf) for detailed explanation.
+A dedicated submodule handles the leader election process. The current configuration employs a deterministic round-robin leader election mechanism. We are working on a randomized leader election mechanism with cryptographic sortition using Verifiable Random Functions (VRFs), see [Algorand's Whitepaper Section 5.1](https://algorandcom.cdn.prismic.io/algorandcom%2Fa26acb80-b80c-46ff-a1ab-a8121f74f3a3_p51-gilad.pdf) for detailed explanation. Upon its' completion, round-robin leader election will be 
 
 ### Consensus Phases
 
@@ -113,27 +113,31 @@ flowchart TD
 State synchronization is crucial to ensure all participating nodes maintain a consistent and up-to-date view of the network state. It is especially important in a dynamic and decentralized network where nodes can join, leave, or experience intermittent connectivity. For an in-depth understanding of the state sync process and its current status, please refer to our [State Sync Protocol Design Specification](https://github.com/pokt-network/pocket/blob/main/consensus/doc/PROTOCOL_STATE_SYNC.md).
 
 ```mermaid
-graph TD
-    A(Start testing) --> Z(Add new validators)
-    Z --> B[Trigger Next View]
-    B --> C{BFT threshold satisfied?}
-    C -->|Yes| D(New block, height increases)
-    C -->|No| E(No new block, height is same)
-    E --> B
-    D --> F{Are there new validators staked?}
-    F -->|Yes| G(Wait for validators' metadata responses)
-    F -->|No| J{Are syncing nodes caught up?}
-    J --> |Yes| Z
-    J -->|No| B
-    G --> B
+graph TB
+  A(Start testing)
+  A --> Z(Add new validators)
+  Z --> B[Trigger Next View]
+  
+  B --> C{BFT threshold satisfied?}
+  C -->|No| E(No new block, height is same)
+  E --> B1[Trigger Next View]
+  
+  C -->|Yes| D(New block, height increases)
+  D --> F{Are there new validators staked?}
+  F -->|No| J{Are syncing nodes caught up?}
 
-    subgraph Notes
-       note1>NOTE: BFT requires > 2/3 validators<br>in the same round & height, voting for the proposal.]
-       note2>NOTE: Syncing validators request blocks from the network.]
-    end
+  J --> |No| B2[Trigger Next View]
+  J --> |Yes| H[Success, new validators are synced!]
+  F -->|Yes| G(Wait for validators' metadata responses)
+  G --> B3[Trigger Next View]
+  
+  subgraph Notes
+     note1>NOTE: BFT requires > 2/3 validators<br>in the same round & height, voting for the proposal.]
+     note2>NOTE: Syncing validators request blocks from the network.]
+  end
 
-    C --> note1
-    J --> note2
+  C --> note1
+  J --> note2
 ```
 
 
