@@ -19,7 +19,7 @@ import (
 // p2p module with consumes them. Everything is registered to the bus.
 func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 	// TECHDEBT: this is to keep backwards compatibility with localnet
-	flags.ConfigPath = runtime.GetEnv("CONFIG_PATH", "build/config/config1.json")
+	flags.ConfigPath = runtime.GetEnv("CONFIG_PATH", "build/config/config.validator1.json")
 	rpcURL := fmt.Sprintf("http://%s:%s", RpcHost, defaults.DefaultRPCPort)
 
 	runtimeMgr := runtime.NewManagerFromFiles(
