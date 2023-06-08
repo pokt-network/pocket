@@ -164,11 +164,11 @@ build_and_watch: ## Continous build Pocket's main entrypoint as files change
 # TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
 .PHONY: compose_and_watch
 compose_and_watch: docker_check db_start monitoring_start ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-	${docker-compose} up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+	${docker-compose} up --force-recreate validator1 validator2 validator3 validator4 servicer1 fisherman1
 
 .PHONY: rebuild_and_compose_and_watch
 rebuild_and_compose_and_watch: docker_check db_start monitoring_start ## Rebuilds the container from scratch and launches compose_and_watch
-	${docker-compose} up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+	${docker-compose} up --build --force-recreate validator1 validator2 validator3 validator4 servicer1 fisherman1
 
 .PHONY: db_start
 db_start: docker_check ## Start a detached local postgres and admin instance; compose_and_watch is responsible for instantiating the actual schemas
@@ -179,7 +179,7 @@ db_cli: ## Open a CLI to the local containerized postgres instance
 	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
 	docker exec -it pocket-db bash -c "psql -U postgres"
 
-psqlSchema ?= node1
+psqlSchema ?= validator1
 
 .PHONY: db_cli_node
 db_cli_node: ## Open a CLI to the local containerized postgres instance for a specific node
@@ -320,10 +320,11 @@ generate_rpc_openapi: go_oapi-codegen ## (Re)generates the RPC server and client
 	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
 	echo "OpenAPI client and server generated"
 
+SWAGGER_PORT=127.0.0.1:8080
 .PHONY: swagger-ui
 swagger-ui: ## Starts a local Swagger UI instance for the RPC API
 	echo "Attempting to start Swagger UI at http://localhost:8080"
-	docker run -p 8080:8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
+	docker run --name pocket-swagger-ui --rm -p $(SWAGGER_PORT):8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
 
 .PHONY: generate_cli_commands_docs
 generate_cli_commands_docs: ## (Re)generates the CLI commands docs (this is meant to be called by CI)

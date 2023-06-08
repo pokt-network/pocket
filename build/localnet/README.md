@@ -17,6 +17,7 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
     - [Make Targets](#make-targets)
   - [Addresses and keys on LocalNet](#addresses-and-keys-on-localnet)
 - [How to change configuration files](#how-to-change-configuration-files)
+  - [Overriding default values for localnet with Tilt](#overriding-default-values-for-localnet-with-tilt)
 - [How does it work?](#how-does-it-work)
 - [Troubleshooting](#troubleshooting)
   - [Why?](#why)
@@ -172,6 +173,30 @@ Configurations can be changed in helm charts where network protocol actor config
 If you need to add a new parameter – feel free to modify the section in place. Some of the parameters that contain secrets (e.g. private key), are stored in Secrets object and injected as environment variables.
 
 Please refer to helm charts documentation for more details.
+
+### Overriding default values for localnet with Tilt
+
+You may also create a overrides YAML file in the `charts/pocket` directory and override the default values for the various actors.
+
+Override files supported:
+
+- pocket-fisherman-overrides.yaml
+- pocket-servicer-overrides.yaml
+- pocket-validator-overrides.yaml
+
+```sh
+touch charts/pocket/pocket-validator-overrides.yaml
+```
+
+For example, to enable CORS for the RPC server, you can run the following command. Note, this overrides config.json **for all** validators in localnet.
+
+```yaml
+cat <<EOF > charts/pocket/pocket-validator-overrides.yaml
+config:
+  rpc:
+    use_cors: true
+EOF
+```
 
 ## How does it work?
 
