@@ -1,4 +1,4 @@
-//go:build test
+// +built test debug
 
 package state_machine
 

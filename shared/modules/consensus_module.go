@@ -3,6 +3,8 @@ package modules
 //go:generate mockgen -destination=./mocks/consensus_module_mock.go github.com/pokt-network/pocket/shared/modules ConsensusModule,ConsensusPacemaker,ConsensusDebugModule
 
 import (
+	"github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -69,4 +71,21 @@ type ConsensusPacemaker interface {
 	IsPrepareQCNil() bool
 	GetPrepareQC() (*anypb.Any, error)
 	GetNodeId() uint64
+}
+
+// ConsensusDebugModule exposes functionality used for testing & development purposes.
+// Not to be used in production.
+// TECHDEBT: Move this into a separate file with the `//go:build debug test` tags
+type ConsensusDebugModule interface {
+	HandleDebugMessage(*messaging.DebugMessage) error
+
+	SetHeight(uint64)
+	SetRound(uint64)
+	SetStep(uint8) // REFACTOR: This should accept typesCons.HotstuffStep
+	SetBlock(*types.Block)
+
+	SetUtilityUnitOfWork(UtilityUnitOfWork)
+
+	// REFACTOR: This should accept typesCons.HotstuffStep and return typesCons.NodeId.
+	GetLeaderForView(height, round uint64, step uint8) (leaderId uint64)
 }

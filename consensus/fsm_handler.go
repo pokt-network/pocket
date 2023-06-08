@@ -31,6 +31,7 @@ func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
 	}
 }
 
+// handleStateTransitionEvent handles the state transition event from the state machine module
 func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Info().Fields(messaging.TransitionEventToMap(msg)).Msg("Received state machine transition msg")
 
@@ -64,8 +65,8 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Info().Msg("Node is in the bootstrapped state. Consensus module NOOP.")
 	// TODO_IN_THIS_COMMIT: Pick up here
-	// return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
-	return nil
+	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
+	// return nil
 }
 
 // HandleUnsynced handles the FSM event Consensus_IsUnsynced, and when Unsynced is the destination state.

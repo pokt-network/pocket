@@ -2,7 +2,7 @@
 load("ext://helm_resource", "helm_resource", "helm_repo")
 load("ext://namespace", "namespace_create")
 load("ext://restart_process", "docker_build_with_restart")
-load('ext://tests/golang', 'test_go')
+load("ext://tests/golang", "test_go")
 
 tiltfile_dir = os.path.dirname(config.main_dir)
 root_dir = os.path.dirname(tiltfile_dir + "/../..")
@@ -13,7 +13,7 @@ localnet_config_defaults = {
     "validators": {"count": 4},
     "servicers": {"count": 1},
     "fishermen": {"count": 1},
-    "full_nodes": {"count": 1}
+    "full_nodes": {"count": 1},
 }
 
 localnet_config_file = read_yaml(localnet_config_path, default=localnet_config_defaults)
@@ -49,6 +49,7 @@ deps = [
 
 deps_full_path = [root_dir + "/" + depdir for depdir in deps]
 
+
 # Avoid downloading dependencies if no missing/outdated charts are found
 def check_helm_dependencies_for_chart(path):
     check_helm_dependencies = local(
@@ -57,6 +58,7 @@ def check_helm_dependencies_for_chart(path):
     helm_dependencies_not_ok_count = len(str(check_helm_dependencies).splitlines())
     if helm_dependencies_not_ok_count > 1:
         local("helm dependency update " + path)
+
 
 check_helm_dependencies_for_chart("dependencies")
 
@@ -78,7 +80,7 @@ local_resource(
         root_dir=root_dir
     ),
     deps=deps_full_path,
-    labels=['watchers']
+    labels=["watchers"],
 )
 local_resource(
     "debug client: Watch & Compile",
@@ -86,16 +88,16 @@ local_resource(
         root_dir=root_dir
     ),
     deps=deps_full_path,
-    labels=['watchers']
+    labels=["watchers"],
 )
 # Builds the cluster manager binary
 local_resource(
-    'cluster manager: Watch & Compile',
-    'GOOS=linux go build -o {root_dir}/bin/cluster-manager {root_dir}/build/localnet/cluster-manager/*.go'.format(
+    "cluster manager: Watch & Compile",
+    "GOOS=linux go build -o {root_dir}/bin/cluster-manager {root_dir}/build/localnet/cluster-manager/*.go".format(
         root_dir=root_dir
     ),
     deps=deps_full_path,
-    labels=['watchers']
+    labels=["watchers"],
 )
 
 # Builds and maintains the pocket container image after the binary is built on local machine, restarts a process on code change
@@ -119,7 +121,7 @@ WORKDIR /
 docker_build_with_restart(
     "client-image",
     root_dir,
-    dockerfile_contents="""FROM debian:bullseye
+    dockerfile_contents=    """FROM debian:bullseye
 RUN apt-get update && apt-get install -y procps
 WORKDIR /
 COPY bin/p1-linux /usr/local/bin/p1
@@ -138,12 +140,12 @@ WORKDIR /
 COPY bin/cluster-manager /usr/local/bin/cluster-manager
 COPY bin/p1-linux /usr/local/bin/p1
 """,
-    only=['bin/cluster-manager', 'bin/p1-linux'],
+    only=["bin/cluster-manager", "bin/p1-linux"],
     entrypoint=["/usr/local/bin/cluster-manager"],
     live_update=[
         sync("bin/cluster-manager", "/usr/local/bin/cluster-manager"),
         sync("bin/p1-linux", "/usr/local/bin/p1"),
-    ]
+    ],
 )
 
 # Pushes localnet manifests to the cluster.
@@ -159,9 +161,9 @@ k8s_yaml(
 )
 
 k8s_yaml(["manifests/cli-client.yaml"])
-k8s_resource('dev-cli-client', labels=['client'])
-k8s_yaml(['manifests/cluster-manager.yaml'])
-k8s_resource('pocket-v1-cluster-manager', labels=['cluster-manager'])
+k8s_resource("dev-cli-client", labels=["client"])
+k8s_yaml(["manifests/cluster-manager.yaml"])
+k8s_resource("pocket-v1-cluster-manager", labels=["cluster-manager"])
 
 chart_dir = root_dir + "/charts/pocket"
 check_helm_dependencies_for_chart(chart_dir)
@@ -170,74 +172,93 @@ check_helm_dependencies_for_chart(chart_dir)
 def formatted_actor_number(n):
     return local('printf "%03d" ' + str(n))
 
+
 # Provisions validators
 actor_number = 0
 for x in range(localnet_config["validators"]["count"]):
     actor_number = actor_number + 1
     formatted_number = formatted_actor_number(actor_number)
 
-    k8s_yaml(helm(chart_dir,
-        name="validator-%s-pocket" % formatted_number,
-        set=[
-            "global.postgresql.auth.postgresPassword=LocalNetPassword",
-            "image.repository=pocket-image",
-            "privateKeySecretKeyRef.name=validators-private-keys",
-            "privateKeySecretKeyRef.key=%s" % formatted_number,
-            "genesis.preProvisionedGenesis.enabled=false",
-            "genesis.externalConfigMap.name=v1-localnet-genesis",
-            "genesis.externalConfigMap.key=genesis.json",
-            "postgresql.primary.persistence.enabled=false",
-            "nodeType=validator",
-        ],
-        values=[chart_dir + "/pocket-validator-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-validator-overrides.yaml") else [],))
+    k8s_yaml(
+        helm(
+            chart_dir,
+            name="validator-%s-pocket" % formatted_number,
+            set=[
+                "global.postgresql.auth.postgresPassword=LocalNetPassword",
+                "image.repository=pocket-image",
+                "privateKeySecretKeyRef.name=validators-private-keys",
+                "privateKeySecretKeyRef.key=%s" % formatted_number,
+                "genesis.preProvisionedGenesis.enabled=false",
+                "genesis.externalConfigMap.name=v1-localnet-genesis",
+                "genesis.externalConfigMap.key=genesis.json",
+                "postgresql.primary.persistence.enabled=false",
+                "nodeType=validator",
+            ],
+            values=[chart_dir + "/pocket-validator-overrides.yaml"]
+            if os.path.exists(chart_dir + "/pocket-validator-overrides.yaml")
+            else [],
+        )
+    )
 
-    k8s_resource("validator-%s-pocket" % formatted_number, labels=['pocket-validators'])
+    k8s_resource("validator-%s-pocket" % formatted_number, labels=["pocket-validators"])
 
 actor_number = 0
 for x in range(localnet_config["servicers"]["count"]):
     actor_number = actor_number + 1
     formatted_number = formatted_actor_number(actor_number)
 
-    k8s_yaml(helm(chart_dir,
-        name="servicer-%s-pocket" % formatted_number,
-        set=[
-            "global.postgresql.auth.postgresPassword=LocalNetPassword",
-            "image.repository=pocket-image",
-            "privateKeySecretKeyRef.name=servicers-private-keys",
-            "privateKeySecretKeyRef.key=%s" % formatted_number,
-            "genesis.preProvisionedGenesis.enabled=false",
-            "genesis.externalConfigMap.name=v1-localnet-genesis",
-            "genesis.externalConfigMap.key=genesis.json",
-            "postgresql.primary.persistence.enabled=false",
-            "config.servicer.enabled=true",
-            "nodeType=servicer",
-        ],
-        values=[chart_dir + "/pocket-servicer-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-servicer-overrides.yaml") else [],))
+    k8s_yaml(
+        helm(
+            chart_dir,
+            name="servicer-%s-pocket" % formatted_number,
+            set=[
+                "global.postgresql.auth.postgresPassword=LocalNetPassword",
+                "image.repository=pocket-image",
+                "privateKeySecretKeyRef.name=servicers-private-keys",
+                "privateKeySecretKeyRef.key=%s" % formatted_number,
+                "genesis.preProvisionedGenesis.enabled=false",
+                "genesis.externalConfigMap.name=v1-localnet-genesis",
+                "genesis.externalConfigMap.key=genesis.json",
+                "postgresql.primary.persistence.enabled=false",
+                "config.servicer.enabled=true",
+                "nodeType=servicer",
+            ],
+            values=[chart_dir + "/pocket-servicer-overrides.yaml"]
+            if os.path.exists(chart_dir + "/pocket-servicer-overrides.yaml")
+            else [],
+        )
+    )
 
-    k8s_resource("servicer-%s-pocket" % formatted_number, labels=['pocket-servicers'])
+    k8s_resource("servicer-%s-pocket" % formatted_number, labels=["pocket-servicers"])
 
 actor_number = 0
 for x in range(localnet_config["fishermen"]["count"]):
     actor_number = actor_number + 1
     formatted_number = formatted_actor_number(actor_number)
 
-    k8s_yaml(helm(chart_dir,
-        name="fisherman-%s-pocket" % formatted_number,
-        set=[
-            "global.postgresql.auth.postgresPassword=LocalNetPassword",
-            "image.repository=pocket-image",
-            "privateKeySecretKeyRef.name=fishermen-private-keys",
-            "privateKeySecretKeyRef.key=%s" % formatted_number,
-            "genesis.preProvisionedGenesis.enabled=false",
-            "genesis.externalConfigMap.name=v1-localnet-genesis",
-            "genesis.externalConfigMap.key=genesis.json",
-            "postgresql.primary.persistence.enabled=false",
-            "config.fisherman.enabled=true",
-            "nodeType=fisherman",
-        ],
-        values=[chart_dir + "/pocket-fisherman-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-fisherman-overrides.yaml") else [],))
+    k8s_yaml(
+        helm(
+            chart_dir,
+            name="fisherman-%s-pocket" % formatted_number,
+            set=[
+                "global.postgresql.auth.postgresPassword=LocalNetPassword",
+                "image.repository=pocket-image",
+                "privateKeySecretKeyRef.name=fishermen-private-keys",
+                "privateKeySecretKeyRef.key=%s" % formatted_number,
+                "genesis.preProvisionedGenesis.enabled=false",
+                "genesis.externalConfigMap.name=v1-localnet-genesis",
+                "genesis.externalConfigMap.key=genesis.json",
+                "postgresql.primary.persistence.enabled=false",
+                "config.fisherman.enabled=true",
+                "nodeType=fisherman",
+            ],
+            values=[chart_dir + "/pocket-fisherman-overrides.yaml"]
+            if os.path.exists(chart_dir + "/pocket-fisherman-overrides.yaml")
+            else [],
+        )
+    )
 
-    k8s_resource("fisherman-%s-pocket" % formatted_number, labels=['pocket-fishermen'])
+    k8s_resource("fisherman-%s-pocket" % formatted_number, labels=["pocket-fishermen"])
 
 # Provisions full nodes
 actor_number = 0
@@ -245,22 +266,28 @@ for x in range(localnet_config["full_nodes"]["count"]):
     actor_number = actor_number + 1
     formatted_number = formatted_actor_number(actor_number)
 
-    k8s_yaml(helm(root_dir + "/charts/pocket",
-        name="full-node-%s-pocket" % formatted_number,
-        set=[
-            "global.postgresql.auth.postgresPassword=LocalNetPassword",
-            "image.repository=pocket-image",
-            "privateKeySecretKeyRef.name=misc-private-keys",
-            "privateKeySecretKeyRef.key=%s" % formatted_number,
-            "genesis.preProvisionedGenesis.enabled=false",
-            "genesis.externalConfigMap.name=v1-localnet-genesis",
-            "genesis.externalConfigMap.key=genesis.json",
-            "postgresql.primary.persistence.enabled=false",
-            "nodeType=full",
-        ],
-        values=[chart_dir + "/pocket-full-node-overrides.yaml"] if os.path.exists(chart_dir + "/pocket-full-node-overrides.yaml") else [],))
+    k8s_yaml(
+        helm(
+            root_dir + "/charts/pocket",
+            name="full-node-%s-pocket" % formatted_number,
+            set=[
+                "global.postgresql.auth.postgresPassword=LocalNetPassword",
+                "image.repository=pocket-image",
+                "privateKeySecretKeyRef.name=misc-private-keys",
+                "privateKeySecretKeyRef.key=%s" % formatted_number,
+                "genesis.preProvisionedGenesis.enabled=false",
+                "genesis.externalConfigMap.name=v1-localnet-genesis",
+                "genesis.externalConfigMap.key=genesis.json",
+                "postgresql.primary.persistence.enabled=false",
+                "nodeType=full",
+            ],
+            values=[chart_dir + "/pocket-full-node-overrides.yaml"]
+            if os.path.exists(chart_dir + "/pocket-full-node-overrides.yaml")
+            else [],
+        )
+    )
 
-    k8s_resource("full-node-%s-pocket" % formatted_number, labels=['pocket-full-nodes'])
+    k8s_resource("full-node-%s-pocket" % formatted_number, labels=["pocket-full-nodes"])
 
 # Exposes grafana
 k8s_resource(
@@ -268,12 +295,15 @@ k8s_resource(
     workload="dependencies-grafana",
     extra_pod_selectors=[{"app.kubernetes.io/name": "grafana"}],
     port_forwards=["42000:3000"],
-    labels=["monitoring"]
+    labels=["monitoring"],
 )
 
 # E2E test button
-test_go('e2e-tests', '{root_dir}/e2e/tests'.format(root_dir=root_dir), '.',
-        extra_args=["-v", "-tags=e2e"],
-        labels=['e2e-tests'],
-        trigger_mode=TRIGGER_MODE_MANUAL,
+test_go(
+    "e2e-tests",
+    "{root_dir}/e2e/tests".format(root_dir=root_dir),
+    ".",
+    extra_args=["-v", "-tags=e2e"],
+    labels=["e2e-tests"],
+    trigger_mode=TRIGGER_MODE_MANUAL,
 )
