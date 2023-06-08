@@ -381,7 +381,8 @@ func (t *treeStore) getActorsUpdated(
 		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
 	}
 
-	// TECHDEBT #XXX: Avoid this cast to int64
+	// TECHDEBT (ISSUE #813): Avoid this cast to int64
+	// https://github.com/pokt-network/pocket/issues/813
 	query := actorSchema.GetUpdatedAtHeightQuery(int64(height))
 	rows, err := pgtx.Query(context.TODO(), query)
 	if err != nil {
@@ -423,7 +424,8 @@ func (t *treeStore) getAccountsUpdated(
 ) ([]*coreTypes.Account, error) {
 	accounts := []*coreTypes.Account{}
 
-	// TECHDEBT #XXX: Avoid this cast to int64
+	// TECHDEBT (ISSUE #813): Avoid this cast to int64
+	// https://github.com/pokt-network/pocket/issues/813
 	query := acctType.GetAccountsUpdatedAtHeightQuery(int64(height))
 	rows, err := pgtx.Query(context.TODO(), query)
 	if err != nil {
@@ -443,7 +445,8 @@ func (t *treeStore) getAccountsUpdated(
 }
 
 func (t *treeStore) getTransactions(txi indexer.TxIndexer, height uint64) ([]*coreTypes.IndexedTransaction, error) {
-	// TECHDEBT(#XXX): TxIndexer should use uint64s so we avoid this cast.
+	// TECHDEBT (ISSUE #813): Avoid this cast to int64
+	// https://github.com/pokt-network/pocket/issues/813
 	indexedTxs, err := txi.GetByHeight(int64(height), false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get transactions by height: %w", err)
