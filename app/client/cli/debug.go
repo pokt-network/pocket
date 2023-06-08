@@ -47,7 +47,7 @@ var (
 	}
 
 	genesisPath string = runtime.GetEnv("GENESIS_PATH", "build/config/genesis.json")
-	rpcHost     string
+	rpcURL      string
 )
 
 // NOTE: this is required by the linter, otherwise a simple string constant would have been enough
@@ -60,13 +60,7 @@ func init() {
 	dbg.AddCommand(NewDebugSubCommands()...)
 	rootCmd.AddCommand(dbg)
 
-	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
-	validator1Endpoint := defaults.Validator1EndpointDockerCompose
-	if runtime.IsProcessRunningInsideKubernetes() {
-		validator1Endpoint = defaults.Validator1EndpointK8S
-	}
-
-	rpcHost = runtime.GetEnv("RPC_HOST", validator1Endpoint)
+	rpcURL = runtime.GetEnv("POCKET_RPC_URL", defaults.DefaultRemoteCLIURL)
 }
 
 // NewDebugSubCommands builds out the list of debug subcommands by matching the
@@ -107,7 +101,6 @@ func NewDebugCommand() *cobra.Command {
 func persistentPreRun(cmd *cobra.Command, _ []string) {
 	// TECHDEBT: this is to keep backwards compatibility with localnet
 	configPath = runtime.GetEnv("CONFIG_PATH", "build/config/config.validator1.json")
-	rpcURL := fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
 
 	runtimeMgr := runtime.NewManagerFromFiles(
 		configPath, genesisPath,

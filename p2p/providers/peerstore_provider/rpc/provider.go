@@ -19,13 +19,13 @@ import (
 )
 
 var (
-	_       peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
-	rpcHost string
+	_      peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
+	rpcURL string
 )
 
 func init() {
 	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
-	rpcHost = runtime.GetEnv("RPC_HOST", defaults.DefaultRPCHost)
+	rpcURL = runtime.GetEnv("POCKET_RPC_URL", defaults.DefaultRemoteCLIURL)
 }
 
 type rpcPeerstoreProvider struct {
@@ -39,7 +39,7 @@ type rpcPeerstoreProvider struct {
 
 func NewRPCPeerstoreProvider(options ...modules.ModuleOption) *rpcPeerstoreProvider {
 	rabp := &rpcPeerstoreProvider{
-		rpcURL: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
+		rpcURL: rpcURL,
 	}
 
 	for _, o := range options {

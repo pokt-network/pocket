@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/spf13/cobra"
@@ -23,7 +24,7 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remote_cli_url", defaults.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
+	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remote_cli_url", runtime.GetEnv("POCKET_RPC_URL", defaults.DefaultRemoteCLIURL), "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
 	rootCmd.PersistentFlags().BoolVar(&nonInteractive, "non_interactive", false, "if true skips the interactive prompts wherever possible (useful for scripting & automation)")
 
 	// TECHDEBT: Why do we have a data dir when we have a config path if the data dir is only storing keys?

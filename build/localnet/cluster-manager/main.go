@@ -34,7 +34,7 @@ var (
 )
 
 func init() {
-	rpcURL = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", defaults.Validator1EndpointK8S), defaults.DefaultRPCPort)
+	rpcURL = runtime.GetEnv("POCKET_RPC_URL", defaults.DefaultRemoteCLIURL)
 }
 
 func main() {

@@ -19,8 +19,8 @@ spec:
       args:
         - cluster-manager
       env:
-        - name: RPC_HOST
-          value: pocket-full-nodes
+        - name: POCKET_RPC_URL
+          value: http://pocket-validators:50832
   serviceAccountName: cluster-manager
 ---
 apiVersion: v1

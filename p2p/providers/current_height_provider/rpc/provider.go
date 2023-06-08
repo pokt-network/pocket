@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -16,12 +15,12 @@ import (
 )
 
 var (
-	_       current_height_provider.CurrentHeightProvider = &rpcCurrentHeightProvider{}
-	rpcHost string
+	_      current_height_provider.CurrentHeightProvider = &rpcCurrentHeightProvider{}
+	rpcURL string
 )
 
 func init() {
-	rpcHost = runtime.GetEnv("RPC_HOST", defaults.DefaultRPCHost)
+	rpcURL = runtime.GetEnv("POCKET_RPC_URL", defaults.DefaultRemoteCLIURL)
 }
 
 type rpcCurrentHeightProvider struct {
@@ -65,7 +64,7 @@ func (rchp *rpcCurrentHeightProvider) CurrentHeight() uint64 {
 
 func NewRPCCurrentHeightProvider(options ...modules.ModuleOption) *rpcCurrentHeightProvider {
 	rchp := &rpcCurrentHeightProvider{
-		rpcURL: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
+		rpcURL: rpcURL,
 	}
 
 	for _, o := range options {
