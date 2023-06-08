@@ -231,14 +231,19 @@ func (m *p2pModule) setupDependencies() error {
 
 // setupPeerstoreProvider attempts to retrieve the peerstore provider from the
 // bus, if one is registered, otherwise returns a new `persistencePeerstoreProvider`.
-func (m *p2pModule) setupPeerstoreProvider() (err error) {
+func (m *p2pModule) setupPeerstoreProvider() error {
 	m.logger.Debug().Msg("setupPeerstoreProvider")
 
 	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
 	pstoreProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(peerstore_provider.ModuleName)
 	if err != nil {
 		m.logger.Debug().Msg("creating new persistence peerstore...")
-		m.pstoreProvider, err = persPSP.NewPersistencePeerstoreProvider(m.GetBus())
+		pstoreProvider, err := persPSP.NewPersistencePeerstoreProvider(m.GetBus())
+		if err != nil {
+			return err
+		}
+
+		m.pstoreProvider = pstoreProvider
 		return nil
 	}
 

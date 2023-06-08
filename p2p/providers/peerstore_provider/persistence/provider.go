@@ -7,13 +7,15 @@ import (
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
-var _ peerstore_provider.PeerstoreProvider = &persistencePeerstoreProvider{}
+var (
+	_ peerstore_provider.PeerstoreProvider = &persistencePeerstoreProvider{}
+	_ persistencePStoreProviderFactory     = &persistencePeerstoreProvider{}
+)
 
 type persistencePStoreProviderOption func(*persistencePeerstoreProvider)
 type persistencePStoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, persistencePStoreProviderOption]
 type persistencePeerstoreProvider struct {
 	base_modules.IntegratableModule
-	persistencePStoreProviderFactory
 }
 
 func NewPersistencePeerstoreProvider(bus modules.Bus, options ...persistencePStoreProviderOption) (peerstore_provider.PeerstoreProvider, error) {
