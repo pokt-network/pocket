@@ -1,6 +1,12 @@
 # State Sync Protocol Design <!-- omit in toc -->
 
-_NOTE: This document makes some assumption of P2P implementation details, so please see [p2p](../../p2p/README.md) for the latest source of truth._
+⚠️ IMPORTANT NOTES TO THE (last updated on 06/08/2023):
+
+- State Sync implementation is a WIP and has taken several different shapes.
+- This document is out of date and needs to be updated to reflect the latest implementation. This will be done once a functional implementation is in place.
+- This document makes some assumption of P2P implementation details, so please see [p2p](../../p2p/README.md) for the latest source of truth.
+
+## Table of Contents <!-- omit in toc -->
 
 - [Background](#background)
 - [State Sync - Peer Metadata](#state-sync---peer-metadata)
