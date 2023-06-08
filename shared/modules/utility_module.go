@@ -20,7 +20,11 @@ type UtilityModule interface {
 	NewUnitOfWork(height int64) (UtilityUnitOfWork, error)
 
 	// HandleTransaction does basic `Transaction` validation & adds it to the utility's module mempool if valid
+	// if it's valid. It does not process the business logic of the underlying message; see UtilityUnitOfWork.HandleTransaction.
 	HandleTransaction(tx []byte) error
+
+	// GetIndexedTransaction returns the indexed transaction if it is available in this node's view of the world state.
+	GetIndexedTransaction(tx []byte) (*coreTypes.IndexedTransaction, error)
 
 	// HandleRelay process the relay to the specified chain if this node is a servicer
 	HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) // TODO: Implement this
@@ -40,6 +44,31 @@ type UtilityModule interface {
 	// relay chain and geo zones using on-chain data as the source of entropy. Sessions can be returned for
 	// any previous height or at most 1 block height into the future.
 	GetSession(appAddr string, sessionHeight int64, relayChain string, geoZone string) (*coreTypes.Session, error)
+
+	// GetActorModules returns the utility module's actor modules
+	GetActorModules() map[string]Module
+
+	// GetFishermanModule returns the utility module's fisherman module if enabled
+	GetFishermanModule() (FishermanModule, error)
+
+	// GetServicerModule returns the utility module's servicer module if enabled
+	GetServicerModule() (ServicerModule, error)
+
+	// GetValidatorModule returns the utility module's validator module if enabled
+	GetValidatorModule() (ValidatorModule, error)
+}
+
+type FishermanModule interface {
+	Module
+}
+
+type ServicerModule interface {
+	Module
+	HandleRelay(*coreTypes.Relay) (*coreTypes.RelayResponse, error)
+}
+
+type ValidatorModule interface {
+	Module
 }
 
 // TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead
@@ -63,8 +92,9 @@ type UtilityUnitOfWork interface {
 	// TODO: Investigate a way to potentially simplify the interface by removing this function.
 	SetProposalBlock(blockHash string, proposerAddr []byte, txs [][]byte) error
 
-	// HydrateIdxTx hydrates a Transaction structure, with its index in the block returning a IndexedTransaction structure
-	HydrateIdxTx(tx *coreTypes.Transaction, index int) (*coreTypes.IndexedTransaction, coreTypes.Error)
+	// HandleTransaction validates the transaction, processes the business logic of the underlying message
+	// given the index in the current unit of work, and returns the resulting `IndexedTransaction` struct.
+	HandleTransaction(tx *coreTypes.Transaction, index int) (*coreTypes.IndexedTransaction, coreTypes.Error)
 
 	// ApplyBlock applies the context's in-memory proposed state (i.e. the txs in this context).
 	// Only intended to be used by the block verifiers (i.e. replicas).

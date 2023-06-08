@@ -84,6 +84,15 @@ func (m *consensusModule) tryToApplyRequestedBlock(blockResponse *typesCons.GetB
 	m.publishStateSyncBlockCommittedEvent(block.BlockHeader.Height)
 }
 
+// TODO(#352): Implement this function, currently a placeholder.
+// blockApplicationLoop commits the blocks received from the blocksReceived channel
+// it is intended to be run as a background process
+func (m *consensusModule) blockApplicationLoop() {
+	// runs as a background process in consensus module
+	// listens on the blocksReceived channel
+	// commits the received block
+}
+
 func (m *consensusModule) validateBlock(block *coreTypes.Block) error {
 	blockHeader := block.BlockHeader
 	qcBytes := blockHeader.GetQuorumCertificate()

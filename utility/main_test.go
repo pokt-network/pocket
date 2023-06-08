@@ -94,7 +94,7 @@ func newTestRuntimeConfig(
 	numFisherman int,
 	genesisOpts ...test_artifacts.GenesisOption,
 ) *runtime.Manager {
-	cfg := &configs.Config{
+	cfg, err := configs.CreateTempConfig(&configs.Config{
 		Utility: &configs.UtilityConfig{
 			MaxMempoolTransactionBytes: 1000000,
 			MaxMempoolTransactions:     1000,
@@ -102,15 +102,18 @@ func newTestRuntimeConfig(
 		Persistence: &configs.PersistenceConfig{
 			PostgresUrl:       dbURL,
 			NodeSchema:        "test_schema",
-			BlockStorePath:    "", // in memory
-			TxIndexerPath:     "", // in memory
-			TreesStoreDir:     "", // in memory
+			BlockStorePath:    ":memory:",
+			TxIndexerPath:     ":memory:",
+			TreesStoreDir:     ":memory:",
 			MaxConnsCount:     50,
 			MinConnsCount:     1,
 			MaxConnLifetime:   "5m",
 			MaxConnIdleTime:   "1m",
 			HealthCheckPeriod: "30s",
 		},
+	})
+	if err != nil {
+		log.Fatalf("Error creating config: %s", err)
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(
 		numValidators,

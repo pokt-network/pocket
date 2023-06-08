@@ -1,6 +1,10 @@
 package utility
 
 import (
+	"encoding/hex"
+	"errors"
+
+	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
@@ -34,4 +38,25 @@ func (u *utilityModule) HandleTransaction(txProtoBytes []byte) error {
 
 	// Store the tx in the mempool
 	return u.mempool.AddTx(txProtoBytes)
+}
+
+// GetIndexedTransaction implements the exposed functionality of the shared utilityModule interface.
+func (u *utilityModule) GetIndexedTransaction(txProtoBytes []byte) (*coreTypes.IndexedTransaction, error) {
+	txHash := coreTypes.TxHash(txProtoBytes)
+
+	// TECHDEBT: Note the inconsistency between referencing tx hash as a string vs. byte slice in different places. Need to pick
+	// one and consolidate throughout the codebase
+	hash, err := hex.DecodeString(txHash)
+	if err != nil {
+		return nil, err
+	}
+	idTx, err := u.GetBus().GetPersistenceModule().GetTxIndexer().GetByHash(hash)
+	if err != nil {
+		if errors.Is(err, badger.ErrKeyNotFound) {
+			return nil, coreTypes.ErrTransactionNotCommitted()
+		}
+		return nil, err
+	}
+
+	return idTx, nil
 }

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.53] - 2023-06-01
+
+- Moved nonce field from RainTreeMessage to PocketEnvelope protobuf types
+- Formalize NonceDeduper (and related) types
+- Move NonceDeduper (and related types) from p2p/raintree to p2p/utils pkg
+- Move NonceDeduper usage out of RainTreeRouter and into p2pModule
+
+## [0.0.0.52] - 2023-05-31
+
+- Added `Handler` field to `RainTreeConfig` & `BackgroundConfig`
+- Refactored `rainTreeRouter` logging methods
+- Renamed `rainTreeRouter#HandleNetworkData()` to `#handleRainTreeMsg()`
+- Renamed `p2pModule#handleNetworkData()` to `#handlePocketEnvelope()`
+- Added -tags=test to all test make targets
+- Fixed mockdns usage in `TestP2PModule_Insecure_Error` test
+- Moved message handling from p2p module to router
+
 ## [0.0.0.51] - 2023-05-23
 
 - Use the shared codec module when marshaling the data sent over the wire

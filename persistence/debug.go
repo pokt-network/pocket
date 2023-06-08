@@ -119,18 +119,14 @@ func (p *PostgresContext) clearAllSQLState() error {
 
 func (p *PostgresContext) clearAllTreeState() error {
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		valueStore := p.stateTrees.valueStores[treeType]
 		nodeStore := p.stateTrees.nodeStores[treeType]
 
-		if err := valueStore.ClearAll(); err != nil {
-			return err
-		}
 		if err := nodeStore.ClearAll(); err != nil {
 			return err
 		}
 
 		// Needed in order to make sure the root is re-set correctly after clearing
-		p.stateTrees.merkleTrees[treeType] = smt.NewSparseMerkleTree(valueStore, nodeStore, sha256.New())
+		p.stateTrees.merkleTrees[treeType] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
 	}
 
 	return nil

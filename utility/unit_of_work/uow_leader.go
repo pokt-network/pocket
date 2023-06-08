@@ -35,6 +35,7 @@ func (uow *leaderUtilityUnitOfWork) CreateProposalBlock(proposer []byte, maxTxBy
 		"maxTxBytes": maxTxBytes,
 		"source":     "CreateProposalBlock",
 	}).Logger()
+
 	log.Debug().Msg("calling beginBlock")
 	// begin block lifecycle phase
 	if err := uow.beginBlock(); err != nil {
@@ -94,9 +95,9 @@ func (uow *leaderUtilityUnitOfWork) reapMempool(txMempool mempool.TXMempool, max
 			break // we've reached our max
 		}
 
-		idxTx, err := uow.HydrateIdxTx(tx, txIdx)
+		idxTx, err := uow.HandleTransaction(tx, txIdx)
 		if err != nil {
-			uow.logger.Err(err).Msg("Error in ApplyTransaction")
+			uow.logger.Err(err).Msg("Error handling the transaction")
 			// TODO(#327): Properly implement 'unhappy path' for save points
 			if err := uow.revertLastSavePoint(); err != nil {
 				return nil, err

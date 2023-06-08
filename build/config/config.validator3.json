@@ -1,7 +1,6 @@
 {
   "root_directory": "/go/src/github.com/pocket-network",
   "private_key": "25b385b367a827eaafcdb1003bd17a25f2ecc0d10d41f138846f52ae1015aa941041a9c76539791fef9bee5b4fcd5bf4a1a489e0790c44cbdfa776b901e13b50",
-  "use_lib_p2p": false,
   "network_id": "localnet",
   "consensus": {
     "max_mempool_bytes": 500000000,
@@ -19,7 +18,7 @@
   },
   "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
-    "node_schema": "node3",
+    "node_schema": "validator3",
     "block_store_path": "/var/blockstore",
     "tx_indexer_path": "/var/txindexer",
     "trees_store_dir": "/var/trees",
@@ -30,7 +29,7 @@
     "health_check_period": "30s"
   },
   "p2p": {
-    "hostname": "node3.consensus",
+    "hostname": "validator3",
     "port": 42069,
     "use_rain_tree": true,
     "is_empty_connection_type": false,

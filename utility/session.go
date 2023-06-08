@@ -17,7 +17,11 @@ import (
 
 // TODO: Implement this
 func (u *utilityModule) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
-	return nil, nil
+	sm, err := u.GetServicerModule()
+	if err != nil {
+		return nil, err
+	}
+	return sm.HandleRelay(relay)
 }
 
 // TODO: Implement this
