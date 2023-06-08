@@ -124,6 +124,7 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	}
 	m.genesisState = genesisState
 
+	// TECHDEBT: Should we use the same private key everywhere (top level config, consensus config, etc...) or should we consolidate them?
 	privateKey, err := cryptoPocket.NewPrivateKey(m.consCfg.GetPrivateKey())
 	if err != nil {
 		return nil, err
