@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.33] - 2023-06-06
+## [0.0.0.33] - 2023-06-08
 
 - Exported `rootCmd` to support cross-package usage (i.e. subcommands w/ own pkgs)
 - Refactored common CLI code
