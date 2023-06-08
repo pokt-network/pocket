@@ -3,6 +3,7 @@
 package e2e
 
 import (
+	"fmt"
 	"os/exec"
 
 	"github.com/pokt-network/pocket/runtime"
@@ -17,7 +18,8 @@ var (
 )
 
 func init() {
-	rpcURL = runtime.GetEnv("POCKET_RPC_URL", defaults.DefaultRemoteCLIURL)
+	pocketValidatorsRpcFallback := fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "pocket-validators"), defaults.DefaultRPCPort)
+	rpcURL = runtime.GetEnv("POCKET_RPC_URL", pocketValidatorsRpcFallback)
 }
 
 // cliPath is the path of the binary installed and is set by the Tiltfile
