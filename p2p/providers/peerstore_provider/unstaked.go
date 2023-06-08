@@ -10,7 +10,7 @@ import (
 // unstakedPeerstoreProvider is an interface which the p2p module supports in
 // order to allow access to the unstaked-actor-router's peerstore
 //
-// TECHDEBT(#xxx): will become unnecessary after `modules.P2PModule#GetUnstakedPeerstore` is added.`
+// TECHDEBT(#811): will become unnecessary after `modules.P2PModule#GetUnstakedPeerstore` is added.`
 // CONSIDERATION: split `PeerstoreProvider` into `StakedPeerstoreProvider` and `UnstakedPeerstoreProvider`.
 // (see: https://github.com/pokt-network/pocket/pull/804#issuecomment-1576531916)
 type unstakedPeerstoreProvider interface {
