@@ -43,9 +43,9 @@ func TestMain(m *testing.M) {
 
 // TECHDEBT: Constants in the `e2e_tests` test suite that should be parameterized
 const (
-	numValidators   = 4
-	dummyStateHash  = "42"
-	numMockedBlocks = 200
+	numValidators   = 4    // The number of validators in the testing network created
+	dummyStateHash  = "42" // The state hash returned for all committed blocks
+	numMockedBlocks = 200  // The number of mocked blocks in in memory for testing purposes
 )
 
 var maxTxBytes = defaults.DefaultConsensusMaxMempoolBytes
@@ -292,6 +292,7 @@ func WaitForNetworkStateSyncEvents(
 	return waitForEventsInternal(clck, eventsChannel, messaging.StateSyncMessageContentType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
 }
 
+// WaitForNetworkFSMEvents waits for the number of expected state machine events to be published on the events channel.
 func WaitForNetworkFSMEvents(
 	t *testing.T,
 	clck *clock.Mock,

@@ -22,7 +22,7 @@ type stateMachineModule struct {
 
 	// TEST_ONLY: debugChannels is only used for testing purposes.
 	// It is used to enable to aggregate and emit events during testing
-	// TODO: Find a way to avoid the need for this altogether or move it into an _test.go file
+	// TECHDEBT: Find a way to avoid the need for this altogether or move it into an _test.go file
 	debugChannels []modules.EventsChannel
 }
 
@@ -83,16 +83,6 @@ func WithCustomStateMachine(stateMachine *fsm.FSM) modules.ModuleOption {
 	return func(m modules.InitializableModule) {
 		if m, ok := m.(*stateMachineModule); ok {
 			m.FSM = stateMachine
-		}
-	}
-}
-
-// WithDebugEventsChannel is used for testing purposes only. It allows us to capture the events
-// from the FSM and publish them to debug channel for testing.
-func WithDebugEventsChannel(eventsChannel modules.EventsChannel) modules.ModuleOption {
-	return func(m modules.InitializableModule) {
-		if m, ok := m.(*stateMachineModule); ok {
-			m.debugChannels = append(m.debugChannels, eventsChannel)
 		}
 	}
 }
