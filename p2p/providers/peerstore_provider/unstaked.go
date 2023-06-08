@@ -8,7 +8,10 @@ import (
 )
 
 // unstakedPeerstoreProvider is an interface which the p2p module supports in
-// order to allow access to the unstaked-actor-router's peerstore
+// order to allow access to the unstaked-actor-router's peerstore.
+//
+// NB: this peerstore includes all actors which participate in P2P (e.g. full
+// and light clients but also validators, servicers, etc.).
 //
 // TECHDEBT(#811): will become unnecessary after `modules.P2PModule#GetUnstakedPeerstore` is added.`
 // CONSIDERATION: split `PeerstoreProvider` into `StakedPeerstoreProvider` and `UnstakedPeerstoreProvider`.
