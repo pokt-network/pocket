@@ -29,6 +29,7 @@ func init() {
 }
 
 type rpcPeerstoreProvider struct {
+	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
 	base_modules.IntegratableModule
 	base_modules.InterruptableModule
 
@@ -37,6 +38,8 @@ type rpcPeerstoreProvider struct {
 	rpcClient *rpc.ClientWithResponses
 }
 
+// TECHDEBT(#810): refactor to be consistent with `persistencePeerstoreProvider`
+// (i.e. `NewRPCPeerstoreProvider` calls `rpcPeerstoreProvider#Create()`.
 func NewRPCPeerstoreProvider(options ...modules.ModuleOption) *rpcPeerstoreProvider {
 	rabp := &rpcPeerstoreProvider{
 		rpcURL: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
@@ -51,10 +54,13 @@ func NewRPCPeerstoreProvider(options ...modules.ModuleOption) *rpcPeerstoreProvi
 	return rabp
 }
 
+// TECHDEBT(#810): remove as it should no longer be needed.
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return new(rpcPeerstoreProvider).Create(bus, options...)
 }
 
+// TECHDEBT(#810): refactor to be consistent with `persistencePeerstoreProvider`
+// (i.e. `NewRPCPeerstoreProvider` calls `rpcPeerstoreProvider#Create()`.
 func (*rpcPeerstoreProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return NewRPCPeerstoreProvider(options...), nil
 }
@@ -63,7 +69,7 @@ func (*rpcPeerstoreProvider) GetModuleName() string {
 	return peerstore_provider.ModuleName
 }
 
-func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
+func (rpcPSP *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
 
@@ -71,7 +77,7 @@ func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typ
 		h         int64              = int64(height)
 		actorType rpc.ActorTypesEnum = "validator"
 	)
-	response, err := rabp.rpcClient.GetV1P2pStakedActorsAddressBookWithResponse(ctx, &rpc.GetV1P2pStakedActorsAddressBookParams{Height: &h, ActorType: &actorType})
+	response, err := rpcPSP.rpcClient.GetV1P2pStakedActorsAddressBookWithResponse(ctx, &rpc.GetV1P2pStakedActorsAddressBookParams{Height: &h, ActorType: &actorType})
 	if err != nil {
 		return nil, err
 	}
@@ -91,26 +97,19 @@ func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typ
 		})
 	}
 
-	return peerstore_provider.ActorsToPeerstore(rabp, coreActors)
+	return peerstore_provider.ActorsToPeerstore(rpcPSP, coreActors)
 }
 
-func (rabp *rpcPeerstoreProvider) GetP2PConfig() *configs.P2PConfig {
-	if rabp.p2pCfg == nil {
-		return rabp.GetBus().GetRuntimeMgr().GetConfig().P2P
-	}
-	return rabp.p2pCfg
+func (rpcPSP *rpcPeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
+	return peerstore_provider.GetUnstakedPeerstore(rpcPSP.GetBus())
 }
 
-func (rabp *rpcPeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
-	return nil, fmt.Errorf("unstaked peerstore not supported by rpc peerstore provider")
-}
-
-func (rabp *rpcPeerstoreProvider) initRPCClient() {
-	rpcClient, err := rpc.NewClientWithResponses(rabp.rpcURL)
+func (rpcPSP *rpcPeerstoreProvider) initRPCClient() {
+	rpcClient, err := rpc.NewClientWithResponses(rpcPSP.rpcURL)
 	if err != nil {
 		log.Fatalf("could not create RPC client: %v", err)
 	}
-	rabp.rpcClient = rpcClient
+	rpcPSP.rpcClient = rpcClient
 }
 
 // options

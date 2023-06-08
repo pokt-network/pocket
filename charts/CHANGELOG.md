@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.6] - 2023-06-06
+
+- Adds fisherman and servicer configurations to the helm chart.
+- Adds method of overriding localnet values in the helm chart.
+
 ## [0.0.0.5] - 2023-05-20
 
 - Added `ServiceMonitor` to the helm chart.

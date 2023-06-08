@@ -184,7 +184,7 @@ func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage)
 
 	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
 	// broadcast. The reason it cannot be done right now is because this client is not in the
-	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
+	// address book of the actual validator nodes, so `validator1` never receives the message.
 	// p2pMod.Broadcast(anyProto)
 
 	pstore, err := fetchPeerstore(cmd)

@@ -7,12 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.54] - 2023-06-06
+## [0.0.0.54] - 2023-06-08
 
-- Replaced embedded modules.Module with simpler modules.IntegratableModule in PeerstoreProvider interface
-- Removed unused PeerstoreProvider#GetP2PConfig() method
-- Added PeerstoreProvider#GetUnstakedPeerstore() method
-- Added p2pPeerstoreProvider implementation of PeerstoreProvider interface
+- Replaced embedded `modules.Module` with simpler `modules.IntegratableModule` in `PeerstoreProvider` interface
+- Removed unused `PeerstoreProvider#GetP2PConfig()` method
+- Added `PeerstoreProvider#GetUnstakedPeerstore()` method
+- Added temporary `unstakedPeerstoreProvider` interface
 
 ## [0.0.0.53] - 2023-06-01
 

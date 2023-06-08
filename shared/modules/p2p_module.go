@@ -14,7 +14,7 @@ type P2PModule interface {
 
 	// Returns the public P2P address of this node
 	GetAddress() (cryptoPocket.Address, error)
-	// TECHDEBT(#xxx): uncomment after moving `typesP2P.Peerstore` interface to a shared package
+	// TECHDEBT(#811): uncomment after moving `typesP2P.Peerstore` interface to a shared package
 	// GetUnstakedPeerstore() (typesP2P.Peerstore, error)
 
 	// A network broadcast to all staked actors on the network using RainTree
