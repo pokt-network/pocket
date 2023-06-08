@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.9] - 2023-06-08
+
+- Adds `POCKET_RPC_URL` environment variable, which replaces an existing `RPC_HOST`
+
 ## [0.0.0.8] - 2023-05-31
 
 - Adds the query feature file
