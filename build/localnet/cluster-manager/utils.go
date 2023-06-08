@@ -21,7 +21,11 @@ func isValidator(service *v1.Service) bool {
 //
 // it follows the pattern defined in the pocket helm chart.
 func extractValidatorId(validatorName string) string {
-	return validatorServiceNamePatternRegex.FindStringSubmatch(validatorName)[1]
+	match := validatorServiceNamePatternRegex.FindStringSubmatch(validatorName)
+	if len(match) != 2 {
+		logger.Fatal().Msgf("Could not extract validator id from service name: %s", validatorName)
+	}
+	return match[1]
 }
 
 // TODO: Create a type for `validatorKeyMap` and document what the expected key-value types contain

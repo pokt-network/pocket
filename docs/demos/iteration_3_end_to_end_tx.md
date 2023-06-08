@@ -6,8 +6,8 @@
   - [Features](#features)
 - [Shell #1: Setup LocalNet](#shell-1-setup-localnet)
 - [Shell #2: Setup Consensus debugger](#shell-2-setup-consensus-debugger)
-- [Shell #3: Inspect the data in the database for node1](#shell-3-inspect-the-data-in-the-database-for-node1)
-- [Shell #4: Inspect the data in the database for node3](#shell-4-inspect-the-data-in-the-database-for-node3)
+- [Shell #3: Inspect the data in the database for validator1](#shell-3-inspect-the-data-in-the-database-for-validator1)
+- [Shell #4: Inspect the data in the database for validator3](#shell-4-inspect-the-data-in-the-database-for-validator3)
 - [Shell #5: Trigger a send transaction from the CLI](#shell-5-trigger-a-send-transaction-from-the-cli)
   - [Available Commands](#available-commands)
     - [Accounts setup](#accounts-setup)
@@ -54,7 +54,7 @@ make client_start && make client_connect # start the consensus debugger
 
 Use `TriggerNextView` and `PrintNodeState` to increment and inspect each node's `height/round/step`.
 
-## Shell #3: Inspect the data in the database for node1
+## Shell #3: Inspect the data in the database for validator1
 
 Connect to the SQL DB of node #1:
 
@@ -72,10 +72,10 @@ select * from account;
 select * from pool;
 ```
 
-## Shell #4: Inspect the data in the database for node3
+## Shell #4: Inspect the data in the database for validator3
 
 ```bash
-psqlSchema=node3 make db_cli_node # connect to node 3
+psqlSchema=validator3 make db_cli_node # connect to node 3
 ```
 
 Query the blocks, accounts and pools from the DB:
@@ -114,8 +114,8 @@ echo '"25b385b367a827eaafcdb1003bd17a25f2ecc0d10d41f138846f52ae1015aa941041a9c76
 2. You can use `jq` and run these commands:
 
 ```bash
-cat ./build/config/config1.json | jq '.private_key' > /tmp/val1.json
-cat ./build/config/config2.json | jq '.private_key' > /tmp/val2.json
+cat ./build/config/config.validator1.json | jq '.private_key' > /tmp/val1.json
+cat ./build/config/config.validator2.json | jq '.private_key' > /tmp/val2.json
 ```
 
 3. You can manually copy-paste the private keys from the config files into the `/tmp/val1.json` and `/tmp/val2.json` files. Remember to keep the double quotes around the private keys ("private_key" field in the JSON).

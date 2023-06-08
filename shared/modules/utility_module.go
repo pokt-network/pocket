@@ -44,6 +44,31 @@ type UtilityModule interface {
 	// relay chain and geo zones using on-chain data as the source of entropy. Sessions can be returned for
 	// any previous height or at most 1 block height into the future.
 	GetSession(appAddr string, sessionHeight int64, relayChain string, geoZone string) (*coreTypes.Session, error)
+
+	// GetActorModules returns the utility module's actor modules
+	GetActorModules() map[string]Module
+
+	// GetFishermanModule returns the utility module's fisherman module if enabled
+	GetFishermanModule() (FishermanModule, error)
+
+	// GetServicerModule returns the utility module's servicer module if enabled
+	GetServicerModule() (ServicerModule, error)
+
+	// GetValidatorModule returns the utility module's validator module if enabled
+	GetValidatorModule() (ValidatorModule, error)
+}
+
+type FishermanModule interface {
+	Module
+}
+
+type ServicerModule interface {
+	Module
+	HandleRelay(*coreTypes.Relay) (*coreTypes.RelayResponse, error)
+}
+
+type ValidatorModule interface {
+	Module
 }
 
 // TECHDEBT: Remove this interface from `shared/modules` and use the `Actor` protobuf type instead
@@ -95,10 +120,4 @@ type LeaderUtilityUnitOfWork interface {
 
 type ReplicaUtilityUnitOfWork interface {
 	UtilityUnitOfWork
-}
-
-type Servicer interface {
-	Module
-
-	HandleRelay(*coreTypes.Relay) (*coreTypes.RelayResponse, error)
 }

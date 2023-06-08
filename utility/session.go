@@ -17,10 +17,11 @@ import (
 
 // TODO: Implement this
 func (u *utilityModule) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
-	if u.servicer == nil {
-		return nil, fmt.Errorf("utility module instance is not a servicer")
+	sm, err := u.GetServicerModule()
+	if err != nil {
+		return nil, err
 	}
-	return u.servicer.HandleRelay(relay)
+	return sm.HandleRelay(relay)
 }
 
 // TODO: Implement this

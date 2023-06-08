@@ -1,6 +1,8 @@
 openapi: 3.0.3
 servers:
   - url: "http://localhost:50832"
+  - url: "http://localhost:50836"
+  - url: "http://localhost:50837"
 info:
   description: >-
     This is the API definition Pocket Network Node RPC interface.
@@ -415,7 +417,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/QueryAccountHeight'
+              $ref: "#/components/schemas/QueryAccountHeight"
             example:
               address: da034209758b78eaea06dd99c07909ab54c99b45
               height: 99
@@ -933,6 +935,22 @@ paths:
           content:
             text/plain:
               example: "description of failure"
+  /v1/query/nodeRoles:
+    post:
+      tags:
+        - query
+      summary: Returns the type of utility actor(s) running on the node
+      responses:
+        "200":
+          description: A list of the node's utility actor(s)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryNodeRolesResponse"
+              example:
+                node_roles:
+                  - "validator"
+                  - "servicer"
 
 externalDocs:
   description: Find out more about Pocket Network
@@ -1097,7 +1115,7 @@ components:
         coins:
           type: array
           items:
-            $ref: '#/components/schemas/Coin'
+            $ref: "#/components/schemas/Coin"
     AllChainParamsResponse:
       type: array
       items:
@@ -1183,7 +1201,7 @@ components:
         result:
           type: array
           items:
-            $ref: '#/components/schemas/Account'
+            $ref: "#/components/schemas/Account"
         page:
           type: integer
           format: int64
@@ -1363,6 +1381,15 @@ components:
         total_pages:
           type: integer
           format: int64
+    QueryNodeRolesResponse:
+      type: object
+      required:
+        - node_roles
+      properties:
+        node_roles:
+          type: array
+          items:
+            type: string
     RelayResponse:
       type: object
       required:

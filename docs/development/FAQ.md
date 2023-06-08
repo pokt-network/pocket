@@ -14,19 +14,19 @@ _NOTE: Consider turning off the `gofmt` in your IDE to prevent unexpected format
 - **Issue**: when trying to run `make compose_and_watch` on an operating system with SELinux, the command gives the error:
 
 ```
-Recreating node2.consensus ... done
-Recreating node4.consensus ... done
-Recreating node1.consensus ... done
-Recreating node3.consensus ... done
-Attaching to node3.consensus, node1.consensus, node2.consensus, node4.consensus
-node2.consensus    | /bin/sh: can't open 'build/scripts/watch.sh': Permission denied
-node1.consensus    | /bin/sh: can't open 'build/scripts/watch.sh': Permission denied
-node3.consensus    | /bin/sh: can't open 'build/scripts/watch.sh': Permission denied
-node1.consensus exited with code 2
-node4.consensus    | /bin/sh: can't open 'build/scripts/watch.sh': Permission denied
-node2.consensus exited with code 2
-node3.consensus exited with code 2
-node4.consensus exited with code 2
+Recreating validator2 ... done
+Recreating validator4 ... done
+Recreating validator1 ... done
+Recreating validator3 ... done
+Attaching to validator3, validator1, validator2, validator4
+validator2    | /bin/sh: can't open 'build/scripts/watch.sh': Permission denied
+validator1    | /bin/sh: can't open 'build/scripts/watch.sh': Permission denied
+validator3    | /bin/sh: can't open 'build/scripts/watch.sh': Permission denied
+validator1 exited with code 2
+validator4    | /bin/sh: can't open 'build/scripts/watch.sh': Permission denied
+validator2 exited with code 2
+validator3 exited with code 2
+validator4 exited with code 2
 ```
 
 - **Solution**: A temporary fix would be to run
