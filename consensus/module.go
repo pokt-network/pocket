@@ -79,13 +79,13 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 		return nil, err
 	}
 
-	paceMakerMod, err := pacemaker.CreatePacemaker(bus)
+	paceMakerMod, err := pacemaker.Create(bus)
 	if err != nil {
 		return nil, err
 	}
 	pm := paceMakerMod.(pacemaker.Pacemaker)
 
-	stateSyncMod, err := state_sync.CreateStateSync(bus)
+	stateSyncMod, err := state_sync.Create(bus)
 	if err != nil {
 		return nil, err
 	}

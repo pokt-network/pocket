@@ -60,31 +60,30 @@ type pacemaker struct {
 	logPrefix string
 }
 
-func CreatePacemaker(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return new(pacemaker).Create(bus, options...)
 }
 
 func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	runtimeMgr := bus.GetRuntimeMgr()
+	cfg := runtimeMgr.GetConfig()
+	pacemakerCfg := cfg.Consensus.PacemakerConfig
+
 	m := &pacemaker{
 		logPrefix: defaultLogPrefix,
+		debug: pacemakerDebug{
+			manualMode:                pacemakerCfg.GetManual(),
+			debugTimeBetweenStepsMsec: pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
+			quorumCertificate:         nil,
+		},
+		pacemakerCfg: pacemakerCfg,
 	}
+	m.roundTimeout = m.getRoundTimeout()
 
 	for _, option := range options {
 		option(m)
 	}
-
 	bus.RegisterModule(m)
-
-	runtimeMgr := bus.GetRuntimeMgr()
-	cfg := runtimeMgr.GetConfig()
-
-	m.pacemakerCfg = cfg.Consensus.PacemakerConfig
-	m.roundTimeout = m.getRoundTimeout()
-	m.debug = pacemakerDebug{
-		manualMode:                m.pacemakerCfg.GetManual(),
-		debugTimeBetweenStepsMsec: m.pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
-		quorumCertificate:         nil,
-	}
 
 	return m, nil
 }

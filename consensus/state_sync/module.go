@@ -51,22 +51,21 @@ type stateSync struct {
 	committedBlocksChannel chan uint64
 }
 
-func CreateStateSync(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return new(stateSync).Create(bus, options...)
 }
 
 func (*stateSync) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	m := &stateSync{}
+	m := &stateSync{
+		metadataReceived:       make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize),
+		committedBlocksChannel: make(chan uint64, committedBlocsChannelSize),
+	}
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
 	for _, option := range options {
 		option(m)
 	}
-
 	bus.RegisterModule(m)
-
-	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
-	m.metadataReceived = make(chan *typesCons.StateSyncMetadataResponse, metadataChannelSize)
-	m.committedBlocksChannel = make(chan uint64, committedBlocsChannelSize)
 
 	return m, nil
 }

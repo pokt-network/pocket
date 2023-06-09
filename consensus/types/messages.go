@@ -116,7 +116,6 @@ var (
 	ErrSendMessage                            = errors.New(sendMessageError)
 	ErrBroadcastMessage                       = errors.New(broadcastMessageError)
 	ErrCreateConsensusMessage                 = errors.New(createConsensusMessageError)
-	ErrCreateStateSyncMessage                 = errors.New(createStateSyncMessageError)
 	ErrNoQcInReceivedBlock                    = errors.New(noQcInReceivedBlockError)
 	ErrBlockRetrievalMessage                  = errors.New(blockRetrievalError)
 	ErrHotstuffValidation                     = errors.New(anteValidationError)
