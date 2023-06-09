@@ -71,7 +71,7 @@ func TestFeatures(t *testing.T) {
 
 func (s *rootSuite) TheUserHasAValidator() {
 	res, err := s.validator.RunCommand("help")
-	require.NoError(s, err)
+	require.NoErrorf(s, err, res.Stderr)
 	s.validator.result = res
 }
 
