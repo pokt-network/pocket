@@ -177,7 +177,6 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 }
 
 // Star-like (O(n)) broadcast - send to all nodes directly
-// INVESTIGATE: Re-evaluate if we should be using our structured broadcast (RainTree O(log3(n))) algorithm instead
 func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
 	m.logger.Info().Fields(hotstuffMsgToLoggingFields(msg)).Msg("📣 Broadcasting message 📣")
 
@@ -187,11 +186,11 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 		return
 	}
 
+	// Not using Broadcast because this is a direct message to all validators only
 	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
 	}
-
 	for _, val := range validators {
 		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
 			m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())

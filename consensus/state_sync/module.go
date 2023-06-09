@@ -10,7 +10,6 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -236,25 +235,12 @@ func (m *stateSync) broadcastMetadataRequests() error {
 			},
 		},
 	}
-
-	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
-	// TECHDEBT: This should be sent to all peers (full nodes, servicers, etc...), not just validators
-	validators, err := m.getValidatorsAtHeight(currentHeight)
+	anyMsg, err := anypb.New(stateSyncMetadataReqMessage)
 	if err != nil {
-		m.logger.Error().Err(err).Msg(typesCons.ErrPersistenceGetAllValidators.Error())
+		return err
 	}
-
-	for _, val := range validators {
-		anyMsg, err := anypb.New(stateSyncMetadataReqMessage)
-		if err != nil {
-			return err
-		}
-		// TECHDEBT: Revisit why we're not using `Broadcast` here instead of `Send`.
-		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyMsg); err != nil {
-			m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
-			return err
-		}
+	if err := m.GetBus().GetP2PModule().Broadcast(anyMsg); err != nil {
+		return err
 	}
-
 	return nil
 }

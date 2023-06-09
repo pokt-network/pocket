@@ -32,6 +32,7 @@ func (m *consensusModule) HandleStateSyncMessage(stateSyncMessageAny *anypb.Any)
 
 func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.StateSyncMessage) error {
 	switch stateSyncMessage.Message.(type) {
+
 	case *typesCons.StateSyncMessage_MetadataReq:
 		m.logger.Info().Str("proto_type", "MetadataRequest").Msg("Handling StateSyncMessage MetadataReq")
 		if !m.consCfg.ServerModeEnabled {

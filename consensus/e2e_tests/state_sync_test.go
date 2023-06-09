@@ -169,12 +169,6 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
-	// Broadcast the new round messages so nodes enter the prepare stage
-	// broadcastMessages(t, newRoundMessages, pocketNodes)
-	// advanceTime(t, clockMock, 10*time.Millisecond)
-	// _, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 500, true)
-	// require.NoError(t, err)
-
 	// Wait for unsyncedNode to go from height 2 to height 4
 	assertHeight(t, unsyncedNodeId, uint64(2), getConsensusNodeState(unsyncedNode).Height)
 	waitForNodeToSync(t, clockMock, eventsChannel, unsyncedNode, pocketNodes, 3)

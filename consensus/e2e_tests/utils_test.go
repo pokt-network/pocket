@@ -380,7 +380,8 @@ loop:
 			if numRemainingMsgs == 0 {
 				break loop
 			} else if numRemainingMsgs > 0 {
-				return expectedMsgs, fmt.Errorf("Missing '%s' messages; %d expected but %d received. (%s) \n\t DO_NOT_SKIP_ME(#462): Consider increasing `maxWaitTime` as a workaround", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
+				fmt.Println("OLSH", expectedMsgs)
+				return expectedMsgs, fmt.Errorf("Missing '%s' messages; %d expected but %d received. (%s) \n\t !!!IMPORTANT(#462)!!!: Consider increasing `maxWaitTime` as a workaround", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			} else {
 				return expectedMsgs, fmt.Errorf("Too many '%s' messages; %d expected but %d received. (%s)", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			}
@@ -756,9 +757,16 @@ func waitForNodeToSync(
 	require.Less(t, currentHeight, targetHeight, "target height must be greater than current height")
 
 	for currentHeight < targetHeight {
-		receivedMsg, err := waitForNetworkStateSyncEvents(t, clck, eventsChannel, "error waiting on response to a get block request", 1, 500, false)
+		receivedMsg, err := waitForNetworkStateSyncEvents(t, clck, eventsChannel, "error waiting on response to a get block request", 5, 5000, false)
 		require.NoError(t, err)
-		fmt.Println("receivedMsg", receivedMsg)
+
+		msg, err := codec.GetCodec().FromAny(receivedMsg[0])
+		require.NoError(t, err)
+		stateSyncMessage, ok := msg.(*typesCons.StateSyncMessage)
+		require.True(t, ok)
+		fmt.Println("receivedMsg", stateSyncMessage.GetGetBlockReq().Height, "~~~~~", stateSyncMessage.GetGetBlockReq().PeerAddress, "~~~~~")
+
+		broadcastMessages(t, receivedMsg, allNodes)
 
 		// Wait for block request messages
 		// Broadcast them
@@ -1033,14 +1041,12 @@ func checkIdentical(arr []*anypb.Any) bool {
 func prepareStateSyncGetBlockMessage(t *testing.T, peerAddress string, height uint64) *anypb.Any {
 	t.Helper()
 
-	stateSyncGetBlockReq := typesCons.GetBlockRequest{
-		PeerAddress: peerAddress,
-		Height:      height,
-	}
-
 	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
 		Message: &typesCons.StateSyncMessage_GetBlockReq{
-			GetBlockReq: &stateSyncGetBlockReq,
+			GetBlockReq: &typesCons.GetBlockRequest{
+				PeerAddress: peerAddress,
+				Height:      height,
+			},
 		},
 	}
 

@@ -72,8 +72,7 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 // This is a transition mode from node bootstrapping to a node being out-of-sync.
 func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
 	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Node is in the bootstrapped state. Consensus module NOOP.")
-	// INVESTIGATE(#816): Why are we not calling fsm.SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced) here?
-	return nil
+	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
 }
 
 // HandleUnsynced handles the FSM event Consensus_IsUnsynced, and when Unsynced is the destination state.
