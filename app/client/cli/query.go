@@ -892,7 +892,7 @@ func queryCommands() []*cobra.Command {
 			Long:    "Queries the node RPC to returns the type of utility actor(s) running on the node",
 			Aliases: []string{"noderoles"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				client, err := rpc.NewClientWithResponses(remoteCLIURL)
+				client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 				if err != nil {
 					return err
 				}
