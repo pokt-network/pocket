@@ -79,6 +79,7 @@ func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 		pacemakerCfg: pacemakerCfg,
 	}
 	m.roundTimeout = m.getRoundTimeout()
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
 	for _, option := range options {
 		option(m)
@@ -89,7 +90,6 @@ func (*pacemaker) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 }
 
 func (m *pacemaker) Start() error {
-	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 	m.RestartTimer()
 	return nil
 }

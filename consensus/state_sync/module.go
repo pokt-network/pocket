@@ -30,9 +30,11 @@ type StateSyncModule interface {
 	modules.Module
 	StateSyncServerModule
 
-	SyncStateSync() error
 	HandleStateSyncBlockCommittedEvent(message *anypb.Any) error
 	HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error
+
+	// TECHDEBT: This function can be removed once the dependency of state sync on the FSM module is removed.
+	StartSynchronousStateSync() error
 }
 
 var (
@@ -80,10 +82,14 @@ func (m *stateSync) Start() error {
 // requests missing blocks starting from its current height to the aggregated metadata's maxHeight,
 // once the requested block is received and committed by consensus module, sends the next request for the next block,
 // when all blocks are received and committed, stops the state sync process by calling its `Stop()` function.
-func (m *stateSync) SyncStateSync() error {
+func (m *stateSync) StartSynchronousStateSync() error {
 	consensusMod := m.bus.GetConsensusModule()
 	currentHeight := consensusMod.CurrentHeight()
 	nodeAddress := consensusMod.GetNodeAddress()
+	nodeAddressBz, err := hex.DecodeString(nodeAddress)
+	if err != nil {
+		return err
+	}
 
 	readCtx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(currentHeight))
 	if err != nil {
@@ -91,7 +97,8 @@ func (m *stateSync) SyncStateSync() error {
 	}
 	defer readCtx.Release()
 
-	// TECHDEBT: We want to request blocks from all peers (staked or not) as opposed to just validators
+	// TODO: Replace `GetAllValidators` with `GetAllStakedActors` to retrieve blocks from all staked actors and add tests
+	// TODO: Extend `GetAllStakedActors` to use all nodes for block requests
 	validators, err := readCtx.GetAllValidators(int64(currentHeight))
 	if err != nil {
 		return err
@@ -136,8 +143,18 @@ func (m *stateSync) SyncStateSync() error {
 		// Update the height and continue catching up to the latest known state
 		currentHeight = consensusMod.CurrentHeight()
 	}
-	// syncing is complete and all requested blocks are committed, stop the state sync module
-	return m.pauseSynching()
+
+	// Checked if the synched node is a validator or not
+	isValidator, err := readCtx.GetValidatorExists(nodeAddressBz, int64(currentHeight))
+	if err != nil {
+		return err
+	}
+
+	// Send out the appropriate FSM event now that the node is caught up
+	if isValidator {
+		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
+	}
+	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator)
 }
 
 func (m *stateSync) HandleStateSyncMetadataResponse(res *typesCons.StateSyncMetadataResponse) error {
@@ -159,32 +176,6 @@ func (m *stateSync) HandleStateSyncBlockCommittedEvent(event *anypb.Any) error {
 		m.committedBlocksChannel <- newCommitBlockEvent.Height
 	}
 	return nil
-}
-
-// Stop stops the state sync process, and sends `Consensus_IsSyncedValidator` FSM event
-func (m *stateSync) pauseSynching() error {
-	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
-	nodeAddress := m.bus.GetConsensusModule().GetNodeAddress()
-
-	readCtx, err := m.bus.GetPersistenceModule().NewReadContext(int64(currentHeight))
-	if err != nil {
-		return err
-	}
-	defer readCtx.Release()
-
-	nodeAddressBz, err := hex.DecodeString(nodeAddress)
-	if err != nil {
-		return err
-	}
-	isValidator, err := readCtx.GetValidatorExists(nodeAddressBz, int64(currentHeight))
-	if err != nil {
-		return err
-	}
-
-	if isValidator {
-		return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedValidator)
-	}
-	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncedNonValidator)
 }
 
 func (m *stateSync) Stop() error {
@@ -220,8 +211,9 @@ func (m *stateSync) GetModuleName() string {
 	return stateSyncModuleName
 }
 
-// metadataSyncLoop periodically sends metadata requests to its peers to aggregate metadata related to synching the state.
-// It is intended to be run as a background process via `go metadataSyncLoop`
+// metadataSyncLoop periodically sends metadata requests to its peers to collect &
+// aggregate metadata related to synching the state.
+// It is intended to be run as a background process via a goroutine.
 func (m *stateSync) metadataSyncLoop() error {
 	logger := m.logger.With().Str("source", "metadataSyncLoop").Logger()
 	ctx := context.TODO()
