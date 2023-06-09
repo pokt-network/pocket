@@ -1,9 +1,9 @@
 package helpers
 
 import (
-	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/spf13/cobra"
 
+	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
