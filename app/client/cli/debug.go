@@ -14,8 +14,6 @@ import (
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -47,14 +45,6 @@ func init() {
 	dbg := NewDebugCommand()
 	dbg.AddCommand(NewDebugSubCommands()...)
 	rootCmd.AddCommand(dbg)
-
-	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
-	validator1Endpoint := defaults.Validator1EndpointDockerCompose
-	if runtime.IsProcessRunningInsideKubernetes() {
-		validator1Endpoint = defaults.Validator1EndpointK8S
-	}
-
-	helpers.RpcHost = runtime.GetEnv("RPC_HOST", validator1Endpoint)
 }
 
 // NewDebugSubCommands builds out the list of debug subcommands by matching the

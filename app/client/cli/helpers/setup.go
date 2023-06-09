@@ -1,17 +1,14 @@
 package helpers
 
 import (
-	"fmt"
-
 	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/spf13/cobra"
 
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
-	rpc2 "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
+	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
 	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -20,7 +17,6 @@ import (
 func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 	// TECHDEBT: this is to keep backwards compatibility with localnet
 	flags.ConfigPath = runtime.GetEnv("CONFIG_PATH", "build/config/config.validator1.json")
-	rpcURL := fmt.Sprintf("http://%s:%s", RpcHost, defaults.DefaultRPCPort)
 
 	runtimeMgr := runtime.NewManagerFromFiles(
 		flags.ConfigPath, genesisPath,
@@ -31,8 +27,8 @@ func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 	bus := runtimeMgr.GetBus()
 	SetValueInCLIContext(cmd, BusCLICtxKey, bus)
 
-	setupPeerstoreProvider(*runtimeMgr, rpcURL)
-	setupCurrentHeightProvider(*runtimeMgr, rpcURL)
+	setupPeerstoreProvider(*runtimeMgr, flags.RemoteCLIURL)
+	setupCurrentHeightProvider(*runtimeMgr, flags.RemoteCLIURL)
 	setupAndStartP2PModule(*runtimeMgr)
 
 	return nil
@@ -51,8 +47,8 @@ func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) {
 func setupCurrentHeightProvider(rm runtime.Manager, rpcURL string) {
 	bus := rm.GetBus()
 	modulesRegistry := bus.GetModulesRegistry()
-	currentHeightProvider := rpc2.NewRPCCurrentHeightProvider(
-		rpc2.WithCustomRPCURL(rpcURL),
+	currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(
+		rpcCHP.WithCustomRPCURL(rpcURL),
 	)
 	modulesRegistry.RegisterModule(currentHeightProvider)
 }

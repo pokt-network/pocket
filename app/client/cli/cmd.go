@@ -20,7 +20,12 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&flags.RemoteCLIURL, "remote_cli_url", defaults.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
+	rootCmd.PersistentFlags().StringVar(&flags.RemoteCLIURL, "remote_cli_url", defaults.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host>:<port> (uses RPC Port)")
+	// ensure that this flag can be overidden by the respective viper-conventional environment variable (i.e. `POCKET_REMOTE_CLI_URL`)
+	if err := viper.BindPFlag("remote_cli_url", rootCmd.PersistentFlags().Lookup("remote_cli_url")); err != nil {
+		log.Fatalf("could not bind flag %q: %v", "remote_cli_url", err)
+	}
+
 	rootCmd.PersistentFlags().BoolVar(&flags.NonInteractive, "non_interactive", false, "if true skips the interactive prompts wherever possible (useful for scripting & automation)")
 
 	// TECHDEBT: Why do we have a data dir when we have a config path if the data dir is only storing keys?
