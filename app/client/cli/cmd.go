@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"log"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,12 +33,12 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.DataDir, "data_dir", defaults.DefaultRootDirectory, "Path to store pocket related data (keybase etc.)")
 	rootCmd.PersistentFlags().StringVar(&flags.ConfigPath, "config", "", "Path to config")
 	if err := viper.BindPFlag("root_directory", rootCmd.PersistentFlags().Lookup("data_dir")); err != nil {
-		panic(err)
+		log.Fatalf("could not bind flag %q: %v", "data_dir", err)
 	}
 
 	rootCmd.PersistentFlags().BoolVar(&flags.Verbose, "verbose", false, "Show verbose output")
 	if err := viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose")); err != nil {
-		panic(err)
+		log.Fatalf("could not bind flag %q: %v", "verbose", err)
 	}
 }
 
