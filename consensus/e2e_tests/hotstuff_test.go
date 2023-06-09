@@ -10,7 +10,6 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
@@ -19,19 +18,17 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	timeReminder(t, clockMock, time.Second)
 
 	// Test configs
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-	buses := GenerateBuses(t, runtimeMgrs)
+	runtimeMgrs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
+	buses := generateBuses(t, runtimeMgrs)
 
 	// Create & start test pocket nodes
 	eventsChannel := make(modules.EventsChannel, 100)
 	pocketNodes := createTestConsensusPocketNodes(t, buses, eventsChannel)
-	err := StartAllTestPocketNodes(t, pocketNodes)
+	err := startAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
 	// Debug message to start consensus by triggering first view change
-	for _, pocketNode := range pocketNodes {
-		TriggerNextView(t, pocketNode)
-	}
+	triggerNextView(t, pocketNodes)
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Wait for nodes to reach height=1 by generating a block
@@ -51,35 +48,18 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	requesterNode := pocketNodes[2]
 	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
-	stateSyncGetBlockReq := typesCons.GetBlockRequest{
-		PeerAddress: requesterNodePeerAddress,
-		Height:      1,
-	}
-
-	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
-		Message: &typesCons.StateSyncMessage_GetBlockReq{
-			GetBlockReq: &stateSyncGetBlockReq,
-		},
-	}
-
-	anyProto, err := anypb.New(stateSyncGetBlockMessage)
-	require.NoError(t, err)
-
 	// Send get block request to the server node
-	P2PSend(t, serverNode, anyProto)
+	stateSyncGetBlockMsg := prepareStateSyncGetBlockMessage(t, requesterNodePeerAddress, 1)
+	send(t, serverNode, stateSyncGetBlockMsg)
 
 	// Server node is waiting for the get block request message
-	numExpectedMsgs := 1
-	errMsg := "StateSync Get Block Request Message"
-	receivedMsg, err := WaitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, numExpectedMsgs, 500, false)
+	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting for StateSync.GetBlockRequest message", 1, 500, false)
 	require.NoError(t, err)
 
 	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
 	require.NoError(t, err)
-
 	stateSyncGetBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
 	require.True(t, ok)
-
 	getBlockRes := stateSyncGetBlockResMessage.GetGetBlockRes()
 	require.NotEmpty(t, getBlockRes)
 

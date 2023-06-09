@@ -23,23 +23,21 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	paceMakerTimeoutMsec := uint64(10000) // Set a small pacemaker timeout
 	paceMakerTimeout := time.Duration(paceMakerTimeoutMsec) * time.Millisecond
 	consensusMessageTimeout := time.Duration(paceMakerTimeoutMsec / 5) // Must be smaller than pacemaker timeout because we expect a deterministic number of consensus messages.
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	runtimeMgrs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
 	for _, runtimeConfig := range runtimeMgrs {
 		consCfg := runtimeConfig.GetConfig().Consensus.PacemakerConfig
 		consCfg.TimeoutMsec = paceMakerTimeoutMsec
 	}
-	buses := GenerateBuses(t, runtimeMgrs)
+	buses := generateBuses(t, runtimeMgrs)
 
 	// Create & start test pocket nodes
 	eventsChannel := make(modules.EventsChannel, 100)
 	pocketNodes := createTestConsensusPocketNodes(t, buses, eventsChannel)
-	err := StartAllTestPocketNodes(t, pocketNodes)
+	err := startAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
 	// Debug message to start consensus by triggering next view
-	for _, pocketNode := range pocketNodes {
-		TriggerNextView(t, pocketNode)
-	}
+	triggerNextView(t, pocketNodes)
 
 	// Advance time by an amount shorter than the pacemaker timeout
 	advanceTime(t, clockMock, 10*time.Millisecond)
@@ -77,13 +75,13 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
 
-	runtimeConfigs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-	buses := GenerateBuses(t, runtimeConfigs)
+	runtimeConfigs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
+	buses := generateBuses(t, runtimeConfigs)
 
 	// Create & start test pocket nodes
 	eventsChannel := make(modules.EventsChannel, 100)
 	pocketNodes := createTestConsensusPocketNodes(t, buses, eventsChannel)
-	err := StartAllTestPocketNodes(t, pocketNodes)
+	err := startAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
 	// Starting point
@@ -92,7 +90,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 
 	// UnitTestNet configs
 	paceMakerTimeoutMsec := uint64(500) // Set a small pacemaker timeout
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	runtimeMgrs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
 	for _, runtimeConfig := range runtimeMgrs {
 		runtimeConfig.GetConfig().Consensus.PacemakerConfig.TimeoutMsec = paceMakerTimeoutMsec
 	}
@@ -145,13 +143,13 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 
 	broadcastMessages(t, []*anypb.Any{anyMsg}, pocketNodes)
 	advanceTime(t, clockMock, 10*time.Millisecond)
-	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, 2, consensus.Vote, numExpectedMsgs, time.Duration(msgTimeout), true)
+	_, err = waitForNetworkConsensusEvents(t, clockMock, eventsChannel, 2, consensus.Vote, numExpectedMsgs, time.Duration(msgTimeout), true)
 
 	require.NoError(t, err)
 
 	// Check that all the nodes caught up to the leader's (i.e. the latest) round
 	for nodeId, pocketNode := range pocketNodes {
-		nodeState := GetConsensusNodeState(pocketNode)
+		nodeState := getConsensusNodeState(pocketNode)
 		if nodeId == leaderId {
 			require.Equal(t, consensus.Prepare.String(), typesCons.HotstuffStep(nodeState.Step).String())
 		} else {

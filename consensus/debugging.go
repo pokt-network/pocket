@@ -83,7 +83,7 @@ func (m *consensusModule) togglePacemakerManualMode(_ *messaging.DebugMessage) {
 	m.paceMaker.SetManualMode(newMode)
 }
 
-// requests current block from all validators
+// sendGetBlockStateSyncMessage requests nodes with the state sync server to send the current block
 func (m *consensusModule) sendGetBlockStateSyncMessage(_ *messaging.DebugMessage) {
 	currentHeight := m.CurrentHeight()
 	requestHeight := currentHeight - 1

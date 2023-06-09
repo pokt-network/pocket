@@ -34,8 +34,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// CLEANUP: Some functions in the test suite are exposed even though they do not need to be.
-
 func TestMain(m *testing.M) {
 	exitCode := m.Run()
 	os.Exit(exitCode)
@@ -55,9 +53,10 @@ type idToPrivKeyMapping map[typesCons.NodeId]cryptoPocket.PrivateKey
 
 /*** Node Generation Helpers ***/
 
-func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Clock) []*runtime.Manager {
+func generateNodeRuntimeMgrs(t *testing.T, validatorCount int, clockMgr clock.Clock) []*runtime.Manager {
+	t.Helper()
+
 	runtimeMgrs := make([]*runtime.Manager, validatorCount)
-	var validatorKeys []string
 	genesisState, validatorKeys := test_artifacts.NewGenesisState(validatorCount, 1, 1, 1)
 	cfgs := test_artifacts.NewDefaultConfigs(validatorKeys)
 	for i, config := range cfgs {
@@ -159,7 +158,7 @@ func createTestConsensusPocketNode(
 	return pocketNode
 }
 
-func GenerateBuses(t *testing.T, runtimeMgrs []*runtime.Manager) (buses []modules.Bus) {
+func generateBuses(t *testing.T, runtimeMgrs []*runtime.Manager) (buses []modules.Bus) {
 	buses = make([]modules.Bus, len(runtimeMgrs))
 	for i := range runtimeMgrs {
 		bus, err := runtime.CreateBus(runtimeMgrs[i])
@@ -169,8 +168,7 @@ func GenerateBuses(t *testing.T, runtimeMgrs []*runtime.Manager) (buses []module
 	return
 }
 
-// CLEANUP: Reduce package scope visibility in the consensus test module
-func StartAllTestPocketNodes(t *testing.T, pocketNodes idToNodeMapping) error {
+func startAllTestPocketNodes(t *testing.T, pocketNodes idToNodeMapping) error {
 	for _, pocketNode := range pocketNodes {
 		go startNode(t, pocketNode)
 		startEvent := pocketNode.GetBus().GetBusEvent()
@@ -188,26 +186,20 @@ func StartAllTestPocketNodes(t *testing.T, pocketNodes idToNodeMapping) error {
 
 /*** Node Visibility/Reflection Helpers ***/
 
-// TODO(discuss): Should we use reflections inside the testing module as being done here or explicitly
-// define the interfaces used for debug/development. The latter will probably scale more but will
-// require more effort and pollute the source code with debugging information.
-func GetConsensusNodeState(node *shared.Node) typesCons.ConsensusNodeState {
-	return GetConsensusModImpl(node).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(typesCons.ConsensusNodeState)
+// HACK: Look for ways to avoid using reflections in the testing package. It was a quick & dirty way to keep going.
+func getConsensusNodeState(node *shared.Node) typesCons.ConsensusNodeState {
+	return getConsensusModImpl(node).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(typesCons.ConsensusNodeState)
 }
 
-func GetConsensusModElem(node *shared.Node) reflect.Value {
+func getConsensusModElem(node *shared.Node) reflect.Value {
 	return reflect.ValueOf(node.GetBus().GetConsensusModule()).Elem()
 }
 
-func GetConsensusModImpl(node *shared.Node) reflect.Value {
+func getConsensusModImpl(node *shared.Node) reflect.Value {
 	return reflect.ValueOf(node.GetBus().GetConsensusModule())
 }
 
 /*** Debug/Development Message Helpers ***/
-
-func TriggerNextView(t *testing.T, node *shared.Node) {
-	triggerDebugMessage(t, node, messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
-}
 
 func triggerDebugMessage(t *testing.T, node *shared.Node, action messaging.DebugMessageAction) {
 	debugMessage := &messaging.DebugMessage{
@@ -223,14 +215,16 @@ func triggerDebugMessage(t *testing.T, node *shared.Node, action messaging.Debug
 
 /*** P2P Helpers ***/
 
-func P2PBroadcast(_ *testing.T, nodes idToNodeMapping, any *anypb.Any) {
+func broadcast(t *testing.T, nodes idToNodeMapping, any *anypb.Any) {
+	t.Helper()
+
 	e := &messaging.PocketEnvelope{Content: any}
 	for _, node := range nodes {
 		node.GetBus().PublishEventToBus(e)
 	}
 }
 
-func P2PSend(t *testing.T, node *shared.Node, any *anypb.Any) {
+func send(t *testing.T, node *shared.Node, any *anypb.Any) {
 	t.Helper()
 
 	e := &messaging.PocketEnvelope{Content: any}
@@ -246,7 +240,7 @@ func P2PSend(t *testing.T, node *shared.Node, any *anypb.Any) {
 //	For example, if the test expects to receive 5 messages within 2 seconds:
 //		false: continue if 5 messages are received in 0.5 seconds
 //		true: wait for another 1.5 seconds after 5 messages are received in 0.5 seconds, and fail if any additional messages are received.
-func WaitForNetworkConsensusEvents(
+func waitForNetworkConsensusEvents(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
@@ -272,7 +266,7 @@ func WaitForNetworkConsensusEvents(
 
 // IMPROVE: Consider unifying this function with WaitForNetworkConsensusEvents
 // This is a helper for 'waitForEventsInternal' that creates the `includeFilter` function based on state sync message specific parameters.
-func WaitForNetworkStateSyncEvents(
+func waitForNetworkStateSyncEvents(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
@@ -294,8 +288,8 @@ func WaitForNetworkStateSyncEvents(
 	return waitForEventsInternal(clck, eventsChannel, messaging.StateSyncMessageContentType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
 }
 
-// WaitForNetworkFSMEvents waits for the number of expected state machine events to be published on the events channel.
-func WaitForNetworkFSMEvents(
+// waitForNetworkFSMEvents waits for the number of expected state machine events to be published on the events channel.
+func waitForNetworkFSMEvents(
 	t *testing.T,
 	clck *clock.Mock,
 	eventsChannel modules.EventsChannel,
@@ -644,7 +638,7 @@ func WaitForNextBlock(
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	// wait for prepare votes
-	prepareVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, 2, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
+	prepareVotes, err := waitForNetworkConsensusEvents(t, clck, eventsChannel, 2, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, prepareVotes, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
@@ -656,7 +650,7 @@ func WaitForNextBlock(
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	// wait for preCommit votes
-	preCommitVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, 3, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
+	preCommitVotes, err := waitForNetworkConsensusEvents(t, clck, eventsChannel, 3, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, preCommitVotes, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
@@ -668,7 +662,7 @@ func WaitForNextBlock(
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	// wait for commit votes
-	commitVotes, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, 4, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
+	commitVotes, err := waitForNetworkConsensusEvents(t, clck, eventsChannel, 4, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, commitVotes, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
@@ -699,14 +693,13 @@ func waitForProposalMsgs(
 	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
 ) ([]*anypb.Any, error) {
-
-	proposalMsgs, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, typesCons.HotstuffStep(step), consensus.Propose, numExpectedMsgs, maxWaitTime, failOnExtraMessages)
+	proposalMsgs, err := waitForNetworkConsensusEvents(t, clck, eventsChannel, typesCons.HotstuffStep(step), consensus.Propose, numExpectedMsgs, maxWaitTime, failOnExtraMessages)
 	if err != nil {
 		return nil, err
 	}
 
 	for nodeId, pocketNode := range pocketNodes {
-		nodeState := GetConsensusNodeState(pocketNode)
+		nodeState := getConsensusNodeState(pocketNode)
 		if (typesCons.HotstuffStep(step) == consensus.Decide) && (nodeId == leaderId) {
 			assertNodeConsensusView(t, nodeId,
 				typesCons.ConsensusNodeState{
@@ -732,12 +725,17 @@ func waitForProposalMsgs(
 
 func broadcastMessages(t *testing.T, msgs []*anypb.Any, pocketNodes idToNodeMapping) {
 	for _, message := range msgs {
-		P2PBroadcast(t, pocketNodes, message)
+		broadcast(t, pocketNodes, message)
+	}
+}
+
+func triggerNextView(t *testing.T, pocketNodes idToNodeMapping) {
+	for _, node := range pocketNodes {
+		triggerDebugMessage(t, node, messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
 	}
 }
 
 // waitForNodeToSync waits for a node to sync to a target height.
-//
 // For every block the unsynched node is missing:
 //  1. Wait for the unsynched node to request a missing block via `waitForNodeToRequestMissingBlock()`
 //  2. Wait for other nodes to send the requested block via `waitForNodesToReplyToBlockRequest()`
@@ -752,22 +750,52 @@ func waitForNodeToSync(
 ) {
 	t.Helper()
 
+	metadataReceived := &typesCons.StateSyncMetadataResponse{
+		PeerAddress: "unused_peer_addr_in_tests",
+		MinHeight:   uint64(1),
+		MaxHeight:   uint64(2), // 2 because unsynced node last persisted height 2
+	}
+
+	// Simulate state sync metadata response by pushing metadata to the unsynced node's consensus module
+	consensusModImpl := getConsensusModImpl(unsyncedNode)
+	consensusModImpl.MethodByName("PushStateSyncMetadataResponse").Call([]reflect.Value{reflect.ValueOf(metadataReceived)})
+
+	// Get unsynched node info
+	unsyncedNodeId := typesCons.NodeId(unsyncedNode.GetBus().GetConsensusModule().GetNodeId())
 	currentHeight := unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
+	require.Less(t, currentHeight, targetHeight, "target height must be greater than current height")
+
 	for currentHeight < targetHeight {
+
+		receivedMsg, err := waitForNetworkStateSyncEvents(t, clck, eventsChannel, "error waiting on response to a get block request", 1, 500, false)
+		require.NoError(t, err)
+		fmt.Println("receivedMsg", receivedMsg)
+
+		// Wait for block request messages
+		// Broadcast them
+		// Wait for block response messages
+		// Broadcast them
+
+		// anyProto, err := anypb.New(stateSyncGetBlockMessage)
+		// require.NoError(t, err)
+
+		// // Send get block request to the server node
+		// P2PSend(t, serverNode, anyProto)
+
 		// waiting for unsynced node to request the same missing block from all peers.
-		blockRequests, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, "Error while waiting for block response messages.", numValidators, 500, true)
+		blockRequests, err := waitForNetworkStateSyncEvents(t, clck, eventsChannel, "error while waiting for block response messages.", numValidators, 500, true)
 		require.NoError(t, err)
 
 		// verify that all requests are identical and take the first one
 		require.True(t, checkIdentical(blockRequests), "All block requests sent by node must be identical")
 		blockRequest := blockRequests[0]
 
-		// broadcast one of the requests to all nodes
-		P2PBroadcast(t, allNodes, blockRequest)
+		// broadcast one of the block requests to all nodes
+		broadcast(t, allNodes, blockRequest)
 		advanceTime(t, clck, 10*time.Millisecond)
 
-		// wait to receive replies from all nodes
-		blockResponses, err := WaitForNetworkStateSyncEvents(t, clck, eventsChannel, "Error while waiting for block response messages.", numValidators-1, 500, true)
+		// wait to receive block replies from all nodes (except for self)
+		blockResponses, err := waitForNetworkStateSyncEvents(t, clck, eventsChannel, "error while waiting for block response messages.", numValidators-1, 500, true)
 		require.NoError(t, err)
 
 		// verify that all nodes replied with the same block response
@@ -779,46 +807,26 @@ func waitForNodeToSync(
 			stateSyncMessage, ok := msgAny.(*typesCons.StateSyncMessage)
 			require.True(t, ok)
 
-			// verify that all nodes replied with the same block response
 			if blockResponse == nil {
-				// On the first block received, we just verify the height is correct
 				blockResponse = stateSyncMessage.GetGetBlockRes()
-				require.Equal(t, currentHeight, blockResponse.Block.BlockHeader.Height)
-			} else {
-				// On subsequent blocks, we verify all the blocks are identical
-				require.Equal(t, blockResponse.Block, stateSyncMessage.GetGetBlockRes().Block)
-
+				continue
 			}
+			require.Equal(t, blockResponse.Block, stateSyncMessage.GetGetBlockRes().Block)
 		}
 
 		// since all block responses are identical, send one of the block responses to the unsynced node
-		P2PSend(t, unsyncedNode, blockResponses[0])
+		send(t, unsyncedNode, blockResponses[0])
 		advanceTime(t, clck, 10*time.Millisecond)
 
-		// waiting for node to reach to the next height (currentHeight + 1)
-		waitForNodeToCatchUp(t, clck, eventsChannel, unsyncedNode, currentHeight+1)
+		// waiting for node to reach to the next height (currentHeight+1)
+		_, err = waitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "error while waiting for validator to sync", 1, 500, false)
+		require.NoError(t, err)
+
+		// ensure unsynced node caught up to the target height
+		nodeState := getConsensusNodeState(unsyncedNode)
+		assertHeight(t, unsyncedNodeId, currentHeight+1, nodeState.Height)
 		currentHeight = unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 	}
-}
-
-// waitForNodeToCatchUp waits for unsynced node to catch up to the target height
-func waitForNodeToCatchUp(
-	t *testing.T,
-	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
-	unsyncedNode *shared.Node,
-	targetHeight uint64,
-) {
-	t.Helper()
-
-	// wait for unsynced node to send StateMachineEvent_Consensus_IsSyncedValidator event
-	_, err := WaitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "didn't receive synced event", 1, 500, false)
-	require.NoError(t, err)
-
-	// ensure unsynced node caught up to the target height
-	nodeState := GetConsensusNodeState(unsyncedNode)
-	nodeId := typesCons.NodeId(unsyncedNode.GetBus().GetConsensusModule().GetNodeId())
-	assertHeight(t, nodeId, targetHeight, nodeState.Height)
 }
 
 func generatePlaceholderBlock(height uint64, leaderAddrr crypto.Address) *coreTypes.Block {
@@ -1031,4 +1039,24 @@ func checkIdentical(arr []*anypb.Any) bool {
 		}
 	}
 	return true
+}
+
+func prepareStateSyncGetBlockMessage(t *testing.T, peerAddress string, height uint64) *anypb.Any {
+	t.Helper()
+
+	stateSyncGetBlockReq := typesCons.GetBlockRequest{
+		PeerAddress: peerAddress,
+		Height:      height,
+	}
+
+	stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+		Message: &typesCons.StateSyncMessage_GetBlockReq{
+			GetBlockReq: &stateSyncGetBlockReq,
+		},
+	}
+
+	anyProto, err := anypb.New(stateSyncGetBlockMessage)
+	require.NoError(t, err)
+
+	return anyProto
 }
