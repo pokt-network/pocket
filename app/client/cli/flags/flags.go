@@ -2,7 +2,7 @@ package flags
 
 var (
 	// RemoveCLIURL is the URL of the remote RPC node which the CLI will interact with.
-	// Formatted as <protocol>://<host> (uses RPC Port).
+	// Formatted as <protocol>://<host>:<port> (uses RPC Port).
 	// (see: --help the root command for more info).
 	RemoteCLIURL string
 
