@@ -112,22 +112,23 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	// Prepare leader info
 	leaderRound := uint64(6)
 
+	// Any node in pocketNodes mapping can be used to get this function
+	leaderFn := pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView
+
 	// Get leaderId for the given height, round and step, by using the Consensus Modules' GetLeaderForView() function.
-	// Any node in pocketNodes mapping can be used to call GetLeaderForView() function.
-	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(testHeight, leaderRound, uint8(consensus.Prepare)))
+	leaderId := typesCons.NodeId(leaderFn(testHeight, leaderRound, uint8(consensus.Prepare)))
 	leader := pocketNodes[leaderId]
 	leaderPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
 	require.NoError(t, err)
 
-	block := generatePlaceholderBlock(testHeight, leaderPK.Address())
-	leader.GetBus().GetConsensusModule().SetBlock(block)
-
 	// Set the leader to be in the highest round.
-	pocketNodes[1].GetBus().GetConsensusModule().SetRound(leaderRound - 2)
-	pocketNodes[2].GetBus().GetConsensusModule().SetRound(leaderRound - 3)
+	require.Equal(t, typesCons.NodeId(1), leaderId)
 	pocketNodes[leaderId].GetBus().GetConsensusModule().SetRound(leaderRound)
-	pocketNodes[4].GetBus().GetConsensusModule().SetRound(leaderRound - 4)
+	pocketNodes[2].GetBus().GetConsensusModule().SetRound(leaderRound - 1)
+	pocketNodes[3].GetBus().GetConsensusModule().SetRound(leaderRound - 2)
+	pocketNodes[4].GetBus().GetConsensusModule().SetRound(leaderRound - 3)
 
+	block := generatePlaceholderBlock(testHeight, leaderPK.Address())
 	prepareProposal := &typesCons.HotstuffMessage{
 		Type:          consensus.Propose,
 		Height:        testHeight,

@@ -230,7 +230,9 @@ func P2PBroadcast(_ *testing.T, nodes idToNodeMapping, any *anypb.Any) {
 	}
 }
 
-func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
+func P2PSend(t *testing.T, node *shared.Node, any *anypb.Any) {
+	t.Helper()
+
 	e := &messaging.PocketEnvelope{Content: any}
 	node.GetBus().PublishEventToBus(e)
 }

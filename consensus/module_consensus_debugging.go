@@ -1,8 +1,10 @@
 package consensus
 
+// All the code below is used for debugging & testing purposes only and should not be used in prod.
+// TODO: Add debug/test tags to avoid accidental production usage.
+
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -45,10 +47,6 @@ func (m *consensusModule) SetRound(round uint64) {
 
 func (m *consensusModule) SetStep(step uint8) {
 	m.step = typesCons.HotstuffStep(step)
-}
-
-func (m *consensusModule) SetBlock(block *coreTypes.Block) {
-	m.block = block
 }
 
 func (m *consensusModule) SetUtilityUnitOfWork(utilityUnitOfWork modules.UtilityUnitOfWork) {
