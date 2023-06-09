@@ -77,11 +77,11 @@ func (m *stateSync) Start() error {
 	return nil
 }
 
-// Start performs state sync
-// processes and aggregates all metadata collected in metadataReceived channel,
-// requests missing blocks starting from its current height to the aggregated metadata's maxHeight,
-// once the requested block is received and committed by consensus module, sends the next request for the next block,
-// when all blocks are received and committed, stops the state sync process by calling its `Stop()` function.
+// Start a synchronous state sync process to catch up to the network
+// 1. Processes and aggregates all metadata collected in metadataReceived channel
+// 2. Requests missing blocks until the maximum seen block is retrieved
+// 3. Perform (2) one-by-one, applying and validating each block while doing so
+// 4. Once all blocks are received and committed, stop the synchronous state sync process
 func (m *stateSync) StartSynchronousStateSync() error {
 	consensusMod := m.bus.GetConsensusModule()
 	currentHeight := consensusMod.CurrentHeight()
@@ -97,23 +97,15 @@ func (m *stateSync) StartSynchronousStateSync() error {
 	}
 	defer readCtx.Release()
 
-	// TODO: Replace `GetAllValidators` with `GetAllStakedActors` to retrieve blocks from all staked actors and add tests
-	// TODO: Extend `GetAllStakedActors` to use all nodes for block requests
-	validators, err := readCtx.GetAllValidators(int64(currentHeight))
-	if err != nil {
-		return err
-	}
+	// Get a view into the state of the network
+	_, maxHeight := m.getAggregatedStateSyncMetadata()
 
-	// Understand the view of the network
-	aggregatedMetaData := m.getAggregatedStateSyncMetadata()
-	maxHeight := aggregatedMetaData.MaxHeight
-
-	// requests blocks from the current height to the aggregated metadata height
+	// Synchronously request block requests from the current height to the aggregated metadata height
 	for currentHeight <= maxHeight {
 		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, maxHeight)
 
 		// form the get block request message
-		stateSyncGetBlockMessage := &typesCons.StateSyncMessage{
+		stateSyncGetBlockMsg := &typesCons.StateSyncMessage{
 			Message: &typesCons.StateSyncMessage_GetBlockReq{
 				GetBlockReq: &typesCons.GetBlockRequest{
 					PeerAddress: nodeAddress,
@@ -121,20 +113,19 @@ func (m *stateSync) StartSynchronousStateSync() error {
 				},
 			},
 		}
-
-		// Broadcast the get block request message from all the available peers on the network
-		// TODO: Use P2P.broadcast instead of looping over the validators and sending the message to each one
-		for _, val := range validators {
-			if err := m.sendStateSyncMessage(stateSyncGetBlockMessage, cryptoPocket.AddressFromString(val.GetAddress())); err != nil {
-				return err
-			}
+		anyProtoStateSyncMsg, err := anypb.New(stateSyncGetBlockMsg)
+		if err != nil {
+			return err
 		}
 
-		// Wait for the consensus module to commit the requested block
-		// If the block is not committed within some time, try re-requesting the block
+		// Broadcast the block request
+		if err := m.GetBus().GetP2PModule().Broadcast(anyProtoStateSyncMsg); err != nil {
+			return err
+		}
+
+		// Wait for the consensus module to commit the requested block and re-try on timeout
 		select {
 		case blockHeight := <-m.committedBlocksChannel:
-			// requested block is received and committed, continue to request the next block from the current height
 			m.logger.Info().Msgf("Block %d is committed!", blockHeight)
 		case <-time.After(blockWaitingPeriod):
 			m.logger.Warn().Msgf("Timed out waiting for block %d to be committed...", currentHeight)

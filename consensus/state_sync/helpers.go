@@ -27,9 +27,9 @@ func (m *stateSync) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, er
 	return readCtx.GetAllValidators(int64(height))
 }
 
-// TECHDEBT(#686): This should be an ongoing background passive state sync process but just
-// capturing the available messages at the time that this function was called is good enough for now.
-func (m *stateSync) getAggregatedStateSyncMetadata() typesCons.StateSyncMetadataResponse {
+// TECHDEBT(#686): This should be an ongoing background passive state sync process.
+// For now, aggregating the messages when requests is good enough.
+func (m *stateSync) getAggregatedStateSyncMetadata() (uint64, uint64) {
 	chanLen := len(m.metadataReceived)
 	m.logger.Info().Msgf("Looping over %d state sync metadata responses", chanLen)
 
@@ -44,9 +44,5 @@ func (m *stateSync) getAggregatedStateSyncMetadata() typesCons.StateSyncMetadata
 		}
 	}
 
-	return typesCons.StateSyncMetadataResponse{
-		PeerAddress: "unused_aggregated_metadata_address",
-		MinHeight:   minHeight,
-		MaxHeight:   maxHeight,
-	}
+	return minHeight, maxHeight
 }

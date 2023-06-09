@@ -750,23 +750,12 @@ func waitForNodeToSync(
 ) {
 	t.Helper()
 
-	metadataReceived := &typesCons.StateSyncMetadataResponse{
-		PeerAddress: "unused_peer_addr_in_tests",
-		MinHeight:   uint64(1),
-		MaxHeight:   uint64(2), // 2 because unsynced node last persisted height 2
-	}
-
-	// Simulate state sync metadata response by pushing metadata to the unsynced node's consensus module
-	consensusModImpl := getConsensusModImpl(unsyncedNode)
-	consensusModImpl.MethodByName("PushStateSyncMetadataResponse").Call([]reflect.Value{reflect.ValueOf(metadataReceived)})
-
 	// Get unsynched node info
 	unsyncedNodeId := typesCons.NodeId(unsyncedNode.GetBus().GetConsensusModule().GetNodeId())
 	currentHeight := unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 	require.Less(t, currentHeight, targetHeight, "target height must be greater than current height")
 
 	for currentHeight < targetHeight {
-
 		receivedMsg, err := waitForNetworkStateSyncEvents(t, clck, eventsChannel, "error waiting on response to a get block request", 1, 500, false)
 		require.NoError(t, err)
 		fmt.Println("receivedMsg", receivedMsg)
