@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.55] - 2023-06-09
+
+- Replaced `RPC_HOST` with `POCKET_REMOTE_CLI_URL` or `--pocket-remote-cli-url` where appropriate
+
 ## [0.0.0.54] - 2023-06-08
 
 - Replaced embedded `modules.Module` with simpler `modules.IntegratableModule` in `PeerstoreProvider` interface

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.42] - 2023-06-09
+
+- Append "Hostname" to validator endpoint hostname constants
+- Promoted string literal to `RandomValidatorEndpointK8SHostname` constant
+
 ## [0.0.0.41] - 2023-06-06
 
 - Adds fisherman and servicer proto configurations.
