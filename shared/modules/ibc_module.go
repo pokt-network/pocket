@@ -16,7 +16,7 @@ type IBCModule interface {
 // IBCHost is the interface used by the host machine (a Pocket node) to interact with the IBC module
 // the host is responsible for managing the IBC state and interacting with consensus in order for
 // any IBC packets to be sent to another host on a different chain (via an IBC relayer). The hosts
-// are also responsible for recieving any IBC packets from another chain and verifying them through
+// are also responsible for receiving any IBC packets from another chain and verifying them through
 // the light clients they manage
 // https://github.com/cosmos/ibc/tree/main/spec/core/ics-024-host-requirements
 type IBCHost interface {
