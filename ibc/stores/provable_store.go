@@ -63,11 +63,11 @@ func (prov *ProvableStore) Set(key, value []byte) error {
 	pre := smt.ImportSparseMerkleTree(prov.nodeStore, sha256.New(), prov.tree.Root(), noValueHasher)
 	if err := prov.tree.Update(key, value); err != nil {
 		prov.tree = pre
-		return coreTypes.ErrStoreUpdate(err)
+		return coreTypes.ErrIBCStoreUpdate(err)
 	}
 	if err := prov.tree.Commit(); err != nil {
 		prov.tree = pre
-		return coreTypes.ErrStoreUpdate(err)
+		return coreTypes.ErrIBCStoreUpdate(err)
 	}
 	return nil
 }
@@ -78,11 +78,11 @@ func (prov *ProvableStore) Delete(key []byte) error {
 	pre := smt.ImportSparseMerkleTree(prov.nodeStore, sha256.New(), prov.tree.Root(), noValueHasher)
 	if err := prov.tree.Delete(key); err != nil {
 		prov.tree = pre
-		return coreTypes.ErrStoreUpdate(err)
+		return coreTypes.ErrIBCStoreUpdate(err)
 	}
 	if err := prov.tree.Commit(); err != nil {
 		prov.tree = pre
-		return coreTypes.ErrStoreUpdate(err)
+		return coreTypes.ErrIBCStoreUpdate(err)
 	}
 	return nil
 }

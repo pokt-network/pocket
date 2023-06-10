@@ -180,11 +180,11 @@ const (
 	CodeHostAlreadyExists                 Code = 135
 	CodeIBCInvalidID                      Code = 136
 	CodeIBCInvalidPath                    Code = 137
-	CodeStoreNotFound                     Code = 138
-	CodeStoreAlreadyExists                Code = 139
-	CodeStoreCreationError                Code = 140
-	CodeStoreUpdateError                  Code = 141
-	CodeStoreNotProvable                  Code = 142
+	CodeIBCStoreNotFound                  Code = 138
+	CodeIBCStoreAlreadyExists             Code = 139
+	CodeIBCStoreCreationError             Code = 140
+	CodeIBCStoreUpdateError               Code = 141
+	CodeIBCStoreNotProvable               Code = 142
 	CodeCreatingProofError                Code = 143
 )
 
@@ -324,11 +324,11 @@ const (
 	HostAlreadyExistsError            = "an ibc host already exists"
 	IBCInvalidIDError                 = "invalid ibc identifier"
 	IBCInvalidPathError               = "invalid ibc path"
-	StoreNotFoundError                = "the store was not found"
-	StoreAlreadyExistsError           = "the store already exists"
-	StoreCreationError                = "an error occurred creating the store"
-	StoreUpdateError                  = "an error occurred updating the store"
-	StoreNotProvableError             = "the store is not provable"
+	IBCStoreNotFoundError             = "the store was not found"
+	IBCStoreAlreadyExistsError        = "the store already exists"
+	IBCStoreCreationError             = "an error occurred creating the store"
+	IBCStoreUpdateError               = "an error occurred updating the store"
+	IBCStoreNotProvableError          = "the store is not provable"
 	ProofCreationError                = "an error occurred creating the commitment proof"
 )
 
@@ -877,24 +877,24 @@ func ErrIBCInvalidPath(path string) Error {
 	return NewError(CodeIBCInvalidPath, fmt.Sprintf("%s: %s", IBCInvalidPathError, path))
 }
 
-func ErrStoreNotFound(storeKey string) Error {
-	return NewError(CodeStoreNotFound, fmt.Sprintf("%s: %s", StoreNotFoundError, storeKey))
+func ErrIBCStoreNotFound(storeKey string) Error {
+	return NewError(CodeIBCStoreNotFound, fmt.Sprintf("%s: %s", IBCStoreNotFoundError, storeKey))
 }
 
-func ErrStoreAlreadyExists(storeKey string) Error {
-	return NewError(CodeStoreAlreadyExists, fmt.Sprintf("%s: %s", StoreAlreadyExistsError, storeKey))
+func ErrIBCStoreAlreadyExists(storeKey string) Error {
+	return NewError(CodeIBCStoreAlreadyExists, fmt.Sprintf("%s: %s", IBCStoreAlreadyExistsError, storeKey))
 }
 
-func ErrStoreCreation(err error) Error {
-	return NewError(CodeStoreCreationError, fmt.Sprintf("%s: %s", StoreCreationError, err.Error()))
+func ErrIBCStoreCreation(err error) Error {
+	return NewError(CodeIBCStoreCreationError, fmt.Sprintf("%s: %s", IBCStoreCreationError, err.Error()))
 }
 
-func ErrStoreUpdate(err error) Error {
-	return NewError(CodeStoreUpdateError, fmt.Sprintf("%s: %s", StoreUpdateError, err.Error()))
+func ErrIBCStoreUpdate(err error) Error {
+	return NewError(CodeIBCStoreUpdateError, fmt.Sprintf("%s: %s", IBCStoreUpdateError, err.Error()))
 }
 
-func ErrStoreNotProvable(storeKey string) Error {
-	return NewError(CodeStoreNotProvable, fmt.Sprintf("%s: %s", StoreNotProvableError, storeKey))
+func ErrIBCStoreNotProvable(storeKey string) Error {
+	return NewError(CodeIBCStoreNotProvable, fmt.Sprintf("%s: %s", IBCStoreNotProvableError, storeKey))
 }
 
 func ErrCreatingProof(msg string) Error {

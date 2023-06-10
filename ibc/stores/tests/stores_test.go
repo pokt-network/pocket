@@ -51,7 +51,7 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 			store:    store1,
 			op:       "add",
 			fail:     true,
-			expected: coreTypes.ErrStoreAlreadyExists("test1"),
+			expected: coreTypes.ErrIBCStoreAlreadyExists("test1"),
 		},
 		{
 			name:     "Successfully returns store with matching store key when present",
@@ -72,7 +72,7 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 			store:    store4,
 			op:       "remove",
 			fail:     true,
-			expected: coreTypes.ErrStoreNotFound("test4"),
+			expected: coreTypes.ErrIBCStoreNotFound("test4"),
 		},
 		{
 			name:     "Successfully adds a store to the store manager when not already present",
@@ -86,7 +86,7 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 			store:    store3,
 			op:       "get",
 			fail:     true,
-			expected: coreTypes.ErrStoreNotFound("test3"),
+			expected: coreTypes.ErrIBCStoreNotFound("test3"),
 		},
 		{
 			name:     "Successfully returns provable store instance for provable stores",
@@ -100,7 +100,7 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 			store:    store1,
 			op:       "getprovable",
 			fail:     true,
-			expected: coreTypes.ErrStoreNotProvable("test1"),
+			expected: coreTypes.ErrIBCStoreNotProvable("test1"),
 		},
 	}
 
@@ -384,7 +384,7 @@ func TestProvableStore_StoreOperations(t *testing.T) {
 			key:      []byte("bar"),
 			value:    nil,
 			fail:     true,
-			expected: coreTypes.ErrStoreUpdate(smt.ErrKeyNotPresent),
+			expected: coreTypes.ErrIBCStoreUpdate(smt.ErrKeyNotPresent),
 		},
 		{
 			name:     "Fails to delete a nil key",
@@ -392,7 +392,7 @@ func TestProvableStore_StoreOperations(t *testing.T) {
 			key:      nil,
 			value:    nil,
 			fail:     true,
-			expected: coreTypes.ErrStoreUpdate(smt.ErrKeyNotPresent),
+			expected: coreTypes.ErrIBCStoreUpdate(smt.ErrKeyNotPresent),
 		},
 	}
 

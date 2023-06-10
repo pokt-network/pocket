@@ -46,7 +46,7 @@ func (s *Stores) GetStore(storeKey string) (modules.Store, error) {
 	defer s.m.Unlock()
 	store, ok := s.stores[storeKey]
 	if !ok {
-		return nil, coreTypes.ErrStoreNotFound(storeKey)
+		return nil, coreTypes.ErrIBCStoreNotFound(storeKey)
 	}
 	return store, nil
 }
@@ -57,11 +57,11 @@ func (s *Stores) GetProvableStore(storeKey string) (modules.ProvableStore, error
 	defer s.m.Unlock()
 	store, ok := s.stores[storeKey]
 	if !ok {
-		return nil, coreTypes.ErrStoreNotFound(storeKey)
+		return nil, coreTypes.ErrIBCStoreNotFound(storeKey)
 	}
 	provable, ok := store.(modules.ProvableStore)
 	if !ok || !store.IsProvable() {
-		return nil, coreTypes.ErrStoreNotProvable(storeKey)
+		return nil, coreTypes.ErrIBCStoreNotProvable(storeKey)
 	}
 	return provable, nil
 }
@@ -71,12 +71,12 @@ func (s *Stores) AddStore(storeKey string, provable bool) (modules.Store, error)
 	s.m.Lock()
 	defer s.m.Unlock()
 	if _, ok := s.stores[storeKey]; ok {
-		return nil, coreTypes.ErrStoreAlreadyExists(storeKey)
+		return nil, coreTypes.ErrIBCStoreAlreadyExists(storeKey)
 	}
 	var store modules.Store
 	db, err := kvstore.NewKVStore(s.storesDir + "/" + storeKey)
 	if err != nil {
-		return nil, coreTypes.ErrStoreCreation(err)
+		return nil, coreTypes.ErrIBCStoreCreation(err)
 	}
 	if !provable {
 		store = &PrivateStore{db, storeKey, false}
@@ -94,7 +94,7 @@ func (s *Stores) AddExistingStore(store modules.Store) error {
 	defer s.m.Unlock()
 	storeKey := store.GetStoreKey()
 	if _, ok := s.stores[storeKey]; ok {
-		return coreTypes.ErrStoreAlreadyExists(storeKey)
+		return coreTypes.ErrIBCStoreAlreadyExists(storeKey)
 	}
 	s.stores[storeKey] = store
 	return nil
@@ -105,7 +105,7 @@ func (s *Stores) RemoveStore(storeKey string) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 	if _, ok := s.stores[storeKey]; !ok {
-		return coreTypes.ErrStoreNotFound(storeKey)
+		return coreTypes.ErrIBCStoreNotFound(storeKey)
 	}
 	delete(s.stores, storeKey)
 	return nil
