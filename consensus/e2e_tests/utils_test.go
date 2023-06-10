@@ -120,6 +120,7 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
+	ibcMock := baseIbcMock(t, eventsChannel)
 
 	for _, module := range []modules.Module{
 		p2pMock,
@@ -127,6 +128,7 @@ func CreateTestConsensusPocketNode(
 		telemetryMock,
 		loggerMock,
 		rpcMock,
+		ibcMock,
 	} {
 		bus.RegisterModule(module)
 	}
@@ -573,6 +575,16 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 	return rpcMock
 }
 
+func baseIbcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockIBCModule {
+	ctrl := gomock.NewController(t)
+	ibcMock := mockModules.NewMockIBCModule(ctrl)
+	ibcMock.EXPECT().Start().Return(nil).AnyTimes()
+	ibcMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+	ibcMock.EXPECT().GetModuleName().Return(modules.IBCModuleName).AnyTimes()
+
+	return ibcMock
+}
+
 func WaitForNextBlock(
 	t *testing.T,
 	clck *clock.Mock,
@@ -653,7 +665,6 @@ func waitForProposalMsgs(
 	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
 ) ([]*anypb.Any, error) {
-
 	proposalMsgs, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, typesCons.HotstuffStep(step), consensus.Propose, numExpectedMsgs, maxWaitTime, failOnExtraMessages)
 	if err != nil {
 		return nil, err
@@ -735,7 +746,6 @@ func waitForNodeToRequestMissingBlock(
 	startingHeight uint64,
 	targetHeight uint64,
 ) (*anypb.Any, error) {
-
 	return &anypb.Any{}, nil
 }
 
@@ -749,7 +759,6 @@ func waitForNodeToReceiveMissingBlock(
 	allNodes IdToNodeMapping,
 	blockReq *anypb.Any,
 ) (*anypb.Any, error) {
-
 	return &anypb.Any{}, nil
 }
 
@@ -763,7 +772,6 @@ func waitForNodeToCatchUp(
 	blockResponse *anypb.Any,
 	targetHeight uint64,
 ) error {
-
 	return nil
 }
 

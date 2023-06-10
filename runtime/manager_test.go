@@ -4242,8 +4242,8 @@ func TestNewManagerFromReaders(t *testing.T) {
 					},
 					Keybase: defaultCfg.Keybase,
 					IBC: &configs.IBCConfig{
-						HostEnabled: true,
-						StoresDir:   "/var/ibc",
+						Enabled:   true,
+						StoresDir: "/var/ibc",
 					},
 					Servicer: &configs.ServicerConfig{
 						Enabled: true,
