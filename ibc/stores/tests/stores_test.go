@@ -40,54 +40,63 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 	}
 
 	testCases := []struct {
+		name     string
 		store    modules.Store
 		op       string
 		fail     bool
 		expected error
 	}{
-		{ // Fails to add store that is already in the store manager
+		{
+			name:     "Fails to add store that is already in the store manager",
 			store:    store1,
 			op:       "add",
 			fail:     true,
 			expected: coreTypes.ErrStoreAlreadyExists("test1"),
 		},
-		{ // Successfully returns store with matching store key when present
+		{
+			name:     "Successfully returns store with matching store key when present",
 			store:    store2,
 			op:       "get",
 			fail:     false,
 			expected: nil,
 		},
-		{ // Successfully deletes store with matching store key when present
+		{
+			name:     "Successfully deletes store with matching store key when present",
 			store:    store3,
 			op:       "remove",
 			fail:     false,
 			expected: nil,
 		},
-		{ // Fails to delete store with matching store key when not present
+		{
+			name:     "Fails to delete store with matching store key when not present",
 			store:    store4,
 			op:       "remove",
 			fail:     true,
 			expected: coreTypes.ErrStoreNotFound("test4"),
 		},
-		{ // Successfully adds a store to the store manager when not already present
+		{
+			name:     "Successfully adds a store to the store manager when not already present",
 			store:    store4,
 			op:       "add",
 			fail:     false,
 			expected: nil,
 		},
-		{ // Fail to get store with matching store key when not present
+		{
+			name:     "Fail to get store with matching store key when not present",
 			store:    store3,
 			op:       "get",
 			fail:     true,
 			expected: coreTypes.ErrStoreNotFound("test3"),
 		},
-		{ // Successfully returns provable store instance for provable stores
+		{
+			name:     "Successfully returns provable store instance for provable stores",
 			store:    store4,
 			op:       "getprovable",
 			fail:     false,
 			expected: nil,
 		},
-		{ // Fails to return a provable store when the store is private
+		{
+			name:     "Fails to return a provable store when the store is private",
 			store:    store1,
 			op:       "getprovable",
 			fail:     true,
@@ -96,43 +105,45 @@ func TestStoreManager_StoreManagerOperations(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		switch tc.op {
-		case "add":
-			err := sm.AddExistingStore(tc.store)
-			if tc.fail {
-				require.Error(t, err)
-				require.Equal(t, tc.expected, err)
-			} else {
-				require.NoError(t, err)
+		t.Run(tc.name, func(t *testing.T) {
+			switch tc.op {
+			case "add":
+				err := sm.AddExistingStore(tc.store)
+				if tc.fail {
+					require.Error(t, err)
+					require.Equal(t, tc.expected, err)
+				} else {
+					require.NoError(t, err)
+				}
+			case "get":
+				store, err := sm.GetStore(tc.store.GetStoreKey())
+				if tc.fail {
+					require.Error(t, err)
+					require.Equal(t, tc.expected, err)
+				} else {
+					require.Equal(t, store.GetStoreKey(), tc.store.GetStoreKey())
+					require.NoError(t, err)
+				}
+			case "getprovable":
+				store, err := sm.GetProvableStore(tc.store.GetStoreKey())
+				if tc.fail {
+					require.Error(t, err)
+					require.Equal(t, tc.expected, err)
+				} else {
+					require.Equal(t, store.GetStoreKey(), tc.store.GetStoreKey())
+					require.True(t, store.IsProvable())
+					require.NoError(t, err)
+				}
+			case "remove":
+				err := sm.RemoveStore(tc.store.GetStoreKey())
+				if tc.fail {
+					require.Error(t, err)
+					require.Equal(t, tc.expected, err)
+				} else {
+					require.NoError(t, err)
+				}
 			}
-		case "get":
-			store, err := sm.GetStore(tc.store.GetStoreKey())
-			if tc.fail {
-				require.Error(t, err)
-				require.Equal(t, tc.expected, err)
-			} else {
-				require.Equal(t, store.GetStoreKey(), tc.store.GetStoreKey())
-				require.NoError(t, err)
-			}
-		case "getprovable":
-			store, err := sm.GetProvableStore(tc.store.GetStoreKey())
-			if tc.fail {
-				require.Error(t, err)
-				require.Equal(t, tc.expected, err)
-			} else {
-				require.Equal(t, store.GetStoreKey(), tc.store.GetStoreKey())
-				require.True(t, store.IsProvable())
-				require.NoError(t, err)
-			}
-		case "remove":
-			err := sm.RemoveStore(tc.store.GetStoreKey())
-			if tc.fail {
-				require.Error(t, err)
-				require.Equal(t, tc.expected, err)
-			} else {
-				require.NoError(t, err)
-			}
-		}
+		})
 	}
 
 	err := store1.Stop()
@@ -152,83 +163,95 @@ func TestPrivateStore_StoreOperations(t *testing.T) {
 
 	invalidKey := [65001]byte{}
 	testCases := []struct {
+		name     string
 		op       string
 		key      []byte
 		value    []byte
 		fail     bool
 		expected error
 	}{
-		{ // Successfully sets a value in the store
+		{
+			name:     "Successfully sets a value in the store",
 			op:       "set",
 			key:      []byte("foo"),
 			value:    []byte("baz"),
 			fail:     false,
 			expected: nil,
 		},
-		{ // Successfully updates a value in the store
+		{
+			name:     "Successfully updates a value in the store",
 			op:       "set",
 			key:      []byte("foo"),
 			value:    []byte("bar"),
 			fail:     false,
 			expected: nil,
 		},
-		{ // Fails to set value to nil key
+		{
+			name:     "Fails to set value to nil key",
 			op:       "set",
 			key:      nil,
 			value:    []byte("bar"),
 			fail:     true,
 			expected: badger.ErrEmptyKey,
 		},
-		{ // Fails to set a value to a key that is too large
+		{
+			name:     "Fails to set a value to a key that is too large",
 			op:       "set",
 			key:      invalidKey[:],
 			value:    []byte("bar"),
 			fail:     true,
 			expected: errors.Errorf("Key with size 65001 exceeded 65000 limit. Key:\n%s", hex.Dump(invalidKey[:1<<10])),
 		},
-		{ // Successfully manages to retrieve a value from the store
+		{
+			name:     "Successfully manages to retrieve a value from the store",
 			op:       "get",
 			key:      []byte("foo"),
 			value:    []byte("bar"),
 			fail:     false,
 			expected: nil,
 		},
-		{ // Fails to get a value that is not stored
+		{
+			name:     "Fails to get a value that is not stored",
 			op:       "get",
 			key:      []byte("bar"),
 			value:    nil,
 			fail:     true,
 			expected: badger.ErrKeyNotFound,
 		},
-		{ // Fails when the key is empty
+		{
+			name:     "Fails when the key is empty",
 			op:       "get",
 			key:      nil,
 			value:    nil,
 			fail:     true,
 			expected: badger.ErrEmptyKey,
 		},
-		{ // Successfully deletes a value in the store
+		{
+			name:     "Successfully deletes a value in the store",
 			op:       "delete",
 			key:      []byte("foo"),
 			value:    nil,
 			fail:     false,
 			expected: nil,
 		},
-		{ // Fails to delete a value not in the store
+		{
+			name:     "Fails to delete a value not in the store",
 			op:       "delete",
 			key:      []byte("bar"),
 			value:    nil,
 			fail:     false,
 			expected: nil,
 		},
-		{ // Fails to set value to nil key
+		{
+			name:     "Fails to set value to nil key",
 			op:       "delete",
 			key:      nil,
 			value:    nil,
 			fail:     true,
 			expected: badger.ErrEmptyKey,
 		},
-		{ // Fails to set a value to a key that is too large
+		{
+			name:     "Fails to set a value to a key that is too large",
 			op:       "delete",
 			key:      invalidKey[:],
 			value:    nil,
@@ -238,38 +261,40 @@ func TestPrivateStore_StoreOperations(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		switch tc.op {
-		case "set":
-			err := store.Set(tc.key, tc.value)
-			if tc.fail {
-				require.Error(t, err)
-				require.EqualError(t, tc.expected, err.Error())
-			} else {
-				require.NoError(t, err)
+		t.Run(tc.name, func(t *testing.T) {
+			switch tc.op {
+			case "set":
+				err := store.Set(tc.key, tc.value)
+				if tc.fail {
+					require.Error(t, err)
+					require.EqualError(t, tc.expected, err.Error())
+				} else {
+					require.NoError(t, err)
+					got, err := store.Get(tc.key)
+					require.NoError(t, err)
+					require.Equal(t, tc.value, got)
+				}
+			case "get":
 				got, err := store.Get(tc.key)
-				require.NoError(t, err)
-				require.Equal(t, tc.value, got)
+				if tc.fail {
+					require.Error(t, err)
+					require.EqualError(t, tc.expected, err.Error())
+				} else {
+					require.NoError(t, err)
+					require.Equal(t, tc.value, got)
+				}
+			case "delete":
+				err := store.Delete(tc.key)
+				if tc.fail {
+					require.Error(t, err)
+					require.EqualError(t, tc.expected, err.Error())
+				} else {
+					require.NoError(t, err)
+					_, err := store.Get(tc.key)
+					require.EqualError(t, err, badger.ErrKeyNotFound.Error())
+				}
 			}
-		case "get":
-			got, err := store.Get(tc.key)
-			if tc.fail {
-				require.Error(t, err)
-				require.EqualError(t, tc.expected, err.Error())
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.value, got)
-			}
-		case "delete":
-			err := store.Delete(tc.key)
-			if tc.fail {
-				require.Error(t, err)
-				require.EqualError(t, tc.expected, err.Error())
-			} else {
-				require.NoError(t, err)
-				_, err := store.Get(tc.key)
-				require.EqualError(t, err, badger.ErrKeyNotFound.Error())
-			}
-		}
+		})
 	}
 
 	err := store.Stop()
@@ -282,76 +307,87 @@ func TestProvableStore_StoreOperations(t *testing.T) {
 	require.True(t, store.IsProvable())
 
 	testCases := []struct {
+		name     string
 		op       string
 		key      []byte
 		value    []byte
 		fail     bool
 		expected error
 	}{
-		{ // Successfully sets a value in the store
+		{
+			name:     "Successfully sets a value in the store",
 			op:       "set",
 			key:      []byte("foo"),
 			value:    []byte("baz"),
 			fail:     false,
 			expected: nil,
 		},
-		{ // Successfully updates a value in the store
+		{
+			name:     "Successfully updates a value in the store",
 			op:       "set",
 			key:      []byte("foo"),
 			value:    []byte("bar"),
 			fail:     false,
 			expected: nil,
 		},
-		{ // Successfully sets a nil key to value
+		{
+			name:     "Successfully sets a nil key to value",
 			op:       "set",
 			key:      nil,
 			value:    []byte("bar"),
 			fail:     false,
 			expected: nil,
 		},
-		{ // Successfully deletes value stored at nil key
+		{
+			name:     "Successfully deletes value stored at nil key",
 			op:       "delete",
 			key:      nil,
 			value:    nil,
 			fail:     false,
 			expected: nil,
 		},
-		{ // Successfully manages to retrieve a value from the store
+		{
+			name:     "Successfully manages to retrieve a value from the store",
 			op:       "get",
 			key:      []byte("foo"),
 			value:    []byte("bar"),
 			fail:     false,
 			expected: nil,
 		},
-		{ // Successfully returns default value for a key that is not stored
+		{
+			name:     "Successfully returns default value for a key that is not stored",
 			op:       "get",
 			key:      []byte("bar"),
 			value:    nil,
 			fail:     false,
 			expected: nil,
 		},
-		{ // Successfully returns defaultValue for a nil path
+		{
+			name:     "Successfully returns defaultValue for a nil path",
 			op:       "get",
 			key:      nil,
 			value:    nil,
 			fail:     false,
 			expected: nil,
 		},
-		{ // Successfully deletes a value in the store
+		{
+			name:     "Successfully deletes a value in the store",
 			op:       "delete",
 			key:      []byte("foo"),
 			value:    nil,
 			fail:     false,
 			expected: nil,
 		},
-		{ // Fails to delete a value not in the store
+		{
+			name:     "Fails to delete a value not in the store",
 			op:       "delete",
 			key:      []byte("bar"),
 			value:    nil,
 			fail:     true,
 			expected: coreTypes.ErrStoreUpdate(smt.ErrKeyNotPresent),
 		},
-		{ // Fails to delete a nil key
+		{
+			name:     "Fails to delete a nil key",
 			op:       "delete",
 			key:      nil,
 			value:    nil,
@@ -361,39 +397,41 @@ func TestProvableStore_StoreOperations(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		switch tc.op {
-		case "set":
-			err := store.Set(tc.key, tc.value)
-			if tc.fail {
-				require.Error(t, err)
-				require.EqualError(t, tc.expected, err.Error())
-			} else {
-				require.NoError(t, err)
+		t.Run(tc.name, func(t *testing.T) {
+			switch tc.op {
+			case "set":
+				err := store.Set(tc.key, tc.value)
+				if tc.fail {
+					require.Error(t, err)
+					require.EqualError(t, tc.expected, err.Error())
+				} else {
+					require.NoError(t, err)
+					got, err := store.Get(tc.key)
+					require.NoError(t, err)
+					require.Equal(t, tc.value, got)
+				}
+			case "get":
 				got, err := store.Get(tc.key)
-				require.NoError(t, err)
-				require.Equal(t, tc.value, got)
+				if tc.fail {
+					require.Error(t, err)
+					require.EqualError(t, tc.expected, err.Error())
+				} else {
+					require.NoError(t, err)
+					require.Equal(t, tc.value, got)
+				}
+			case "delete":
+				err := store.Delete(tc.key)
+				if tc.fail {
+					require.Error(t, err)
+					require.EqualError(t, tc.expected, err.Error())
+				} else {
+					require.NoError(t, err)
+					got, err := store.Get(tc.key)
+					require.NoError(t, err)
+					require.True(t, bytes.Equal(got, []byte{}))
+				}
 			}
-		case "get":
-			got, err := store.Get(tc.key)
-			if tc.fail {
-				require.Error(t, err)
-				require.EqualError(t, tc.expected, err.Error())
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.value, got)
-			}
-		case "delete":
-			err := store.Delete(tc.key)
-			if tc.fail {
-				require.Error(t, err)
-				require.EqualError(t, tc.expected, err.Error())
-			} else {
-				require.NoError(t, err)
-				got, err := store.Get(tc.key)
-				require.NoError(t, err)
-				require.True(t, bytes.Equal(got, []byte{}))
-			}
-		}
+		})
 	}
 
 	err := store.Stop()
@@ -455,6 +493,7 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 	require.NoError(t, err)
 
 	testCases := []struct {
+		name          string
 		store         modules.ProvableStore
 		key           []byte
 		value         []byte
@@ -462,7 +501,8 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 		fails         bool
 		expected      error
 	}{
-		{ // Successfully generates a membership proof for a key stored
+		{
+			name:          "Successfully generates a membership proof for a key stored",
 			store:         store1,
 			key:           []byte("foo"),
 			value:         []byte("bar"),
@@ -470,7 +510,8 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 			fails:         false,
 			expected:      nil,
 		},
-		{ // Successfully generates a non-membership proof for a key not stored
+		{
+			name:          "Successfully generates a non-membership proof for a key not stored",
 			store:         store1,
 			key:           []byte("baz"),
 			value:         []byte("foo2"), // unrelated leaf data
@@ -478,7 +519,8 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 			fails:         false,
 			expected:      nil,
 		},
-		{ // Successfully generates a non-membership proof for an unset nil key
+		{
+			name:          "Successfully generates a non-membership proof for an unset nil key",
 			store:         store1,
 			key:           nil,
 			value:         []byte("foo"), // unrelated leaf data
@@ -489,22 +531,24 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		var proof *ics23.CommitmentProof
-		if tc.nonmembership {
-			proof, err = tc.store.CreateNonMembershipProof(tc.key)
-		} else {
-			proof, err = tc.store.CreateMembershipProof(tc.key, tc.value)
-		}
-		if tc.fails {
-			require.EqualError(t, err, tc.expected.Error())
-			require.Nil(t, proof)
-			continue
-		}
-		require.NoError(t, err)
-		require.NotNil(t, proof)
-		require.Equal(t, tc.value, proof.GetExist().GetValue())
-		require.NotNil(t, proof.GetExist().GetLeaf())
-		require.NotNil(t, proof.GetExist().GetPath())
+		t.Run(tc.name, func(t *testing.T) {
+			var proof *ics23.CommitmentProof
+			if tc.nonmembership {
+				proof, err = tc.store.CreateNonMembershipProof(tc.key)
+			} else {
+				proof, err = tc.store.CreateMembershipProof(tc.key, tc.value)
+			}
+			if tc.fails {
+				require.EqualError(t, err, tc.expected.Error())
+				require.Nil(t, proof)
+				return
+			}
+			require.NoError(t, err)
+			require.NotNil(t, proof)
+			require.Equal(t, tc.value, proof.GetExist().GetValue())
+			require.NotNil(t, proof.GetExist().GetLeaf())
+			require.NotNil(t, proof.GetExist().GetPath())
+		})
 	}
 
 	err = store1.Stop()
@@ -530,34 +574,39 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 	require.NotNil(t, root)
 
 	testCases := []struct {
+		name          string
 		modify        func(proof *ics23.CommitmentProof)
 		key           []byte
 		value         []byte
 		nonmembership bool
 		valid         bool
 	}{
-		{ // Successfully verifies a membership proof for a key-value stored pair
+		{
+			name:          "Successfully verifies a membership proof for a key-value stored pair",
 			modify:        nil,
 			key:           []byte("foo"),
 			value:         []byte("bar"),
 			nonmembership: false,
 			valid:         true,
 		},
-		{ // Successfully verifies a non-membership proof for a key-value pair not stored
+		{
+			name:          "Successfully verifies a non-membership proof for a key-value pair not stored",
 			modify:        nil,
 			key:           []byte("not stored"),
 			value:         nil,
 			nonmembership: true,
 			valid:         true,
 		},
-		{ // Fails to verify a membership proof for a key-value pair not stored
+		{
+			name:          "Fails to verify a membership proof for a key-value pair not stored",
 			modify:        nil,
 			key:           []byte("baz"),
 			value:         []byte("bar"),
 			nonmembership: false,
 			valid:         false,
 		},
-		{ // Fails to verify a non-membership proof for a key-value pair stored
+		{
+			name: "Fails to verify a non-membership proof for a key-value pair stored",
 			modify: func(proof *ics23.CommitmentProof) {
 				proof.GetExist().Value = []byte("bar")
 			},
@@ -566,7 +615,8 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 			nonmembership: true,
 			valid:         false,
 		},
-		{ // Fails to verify a non-membership proof for a key stored in the tree
+		{
+			name:          "Fails to verify a non-membership proof for a key stored in the tree",
 			modify:        nil,
 			key:           []byte("foo"),
 			value:         nil,
@@ -576,35 +626,37 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		proof := new(ics23.CommitmentProof)
-		var err error
+		t.Run(tc.name, func(t *testing.T) {
+			proof := new(ics23.CommitmentProof)
+			var err error
 
-		if tc.nonmembership {
-			proof, err = store.CreateNonMembershipProof(tc.key)
-		} else {
-			proof, err = store.CreateMembershipProof(tc.key, tc.value)
-		}
+			if tc.nonmembership {
+				proof, err = store.CreateNonMembershipProof(tc.key)
+			} else {
+				proof, err = store.CreateMembershipProof(tc.key, tc.value)
+			}
 
-		require.NoError(t, err)
-		require.NotNil(t, proof)
-		require.NotNil(t, proof.GetExist())
+			require.NoError(t, err)
+			require.NotNil(t, proof)
+			require.NotNil(t, proof.GetExist())
 
-		if tc.modify != nil {
-			tc.modify(proof)
-		}
+			if tc.modify != nil {
+				tc.modify(proof)
+			}
 
-		var valid bool
-		if tc.nonmembership {
-			valid = stores.VerifyNonMembership(root, proof, tc.key)
-		} else {
-			valid = stores.VerifyMembership(root, proof, tc.key, tc.value)
-		}
+			var valid bool
+			if tc.nonmembership {
+				valid = stores.VerifyNonMembership(root, proof, tc.key)
+			} else {
+				valid = stores.VerifyMembership(root, proof, tc.key, tc.value)
+			}
 
-		if tc.valid {
-			require.True(t, valid)
-		} else {
-			require.False(t, valid)
-		}
+			if tc.valid {
+				require.True(t, valid)
+			} else {
+				require.False(t, valid)
+			}
+		})
 	}
 
 	err = store.Stop()

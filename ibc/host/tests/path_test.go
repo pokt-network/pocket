@@ -14,25 +14,25 @@ func TestPaths_GenerateValidIdentifiers(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		switch i % 4 {
 		case 0:
-			cl := host.GenerateClientIdentifier()
+			cl := host.GenerateClientIdentifier(int64(i))
 			require.NotNil(t, cl)
 			_, ok := ids[cl]
 			require.False(t, ok)
 			ids[cl] = "client"
 		case 1:
-			co := host.GenerateConnectionIdentifier()
+			co := host.GenerateConnectionIdentifier(int64(i))
 			require.NotNil(t, co)
 			_, ok := ids[co]
 			require.False(t, ok)
 			ids[co] = "connection"
 		case 2:
-			ch := host.GenerateChannelIdentifier()
+			ch := host.GenerateChannelIdentifier(int64(i))
 			require.NotNil(t, ch)
 			_, ok := ids[ch]
 			require.False(t, ok)
 			ids[ch] = "channel"
 		case 3:
-			po := host.GeneratePortIdentifier()
+			po := host.GeneratePortIdentifier(int64(i))
 			require.NotNil(t, po)
 			_, ok := ids[po]
 			require.False(t, ok)
@@ -59,18 +59,21 @@ func TestPaths_CommitmentPrefix(t *testing.T) {
 	prefix := &coreTypes.CommitmentPrefix{Prefix: []byte("test")}
 
 	testCases := []struct {
+		name     string
 		path     string
 		prefix   *coreTypes.CommitmentPrefix
 		expected []byte
 		result   string
 	}{
-		{ // Successfully applies and removes prefix to produce the same path
+		{
+			name:     "Successfully applies and removes prefix to produce the same path",
 			path:     "path",
 			prefix:   &coreTypes.CommitmentPrefix{Prefix: []byte("test")},
 			expected: []byte("test/path"),
 			result:   "path",
 		},
-		{ // Fails to produce input path when given a different prefix
+		{
+			name:     "Fails to produce input path when given a different prefix",
 			path:     "path",
 			prefix:   &coreTypes.CommitmentPrefix{Prefix: []byte("test2")},
 			expected: []byte("test/path"),
@@ -79,12 +82,14 @@ func TestPaths_CommitmentPrefix(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		commitment := host.ApplyPrefix(prefix, tc.path)
-		require.NotNil(t, commitment.GetPath())
-		require.True(t, bytes.Equal(commitment.GetPath(), tc.expected))
+		t.Run(tc.name, func(t *testing.T) {
+			commitment := host.ApplyPrefix(prefix, tc.path)
+			require.NotNil(t, commitment.GetPath())
+			require.True(t, bytes.Equal(commitment.GetPath(), tc.expected))
 
-		path := host.RemovePrefix(tc.prefix, commitment)
-		require.NotNil(t, path)
-		require.Equal(t, path, tc.result)
+			path := host.RemovePrefix(tc.prefix, commitment)
+			require.NotNil(t, path)
+			require.Equal(t, path, tc.result)
+		})
 	}
 }
