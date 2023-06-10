@@ -43,6 +43,7 @@ privateKeySecretKeyRef:
 | config.consensus.pacemaker_config.manual | bool | `true` |  |
 | config.consensus.pacemaker_config.timeout_msec | int | `10000` |  |
 | config.consensus.private_key | string | `""` |  |
+| config.fisherman.enabled | bool | `false` |  |
 | config.logger.format | string | `"json"` |  |
 | config.logger.level | string | `"debug"` |  |
 | config.p2p.hostname | string | `""` |  |
@@ -67,6 +68,7 @@ privateKeySecretKeyRef:
 | config.rpc.port | string | `"50832"` |  |
 | config.rpc.timeout | int | `30000` |  |
 | config.rpc.use_cors | bool | `false` |  |
+| config.servicer.enabled | bool | `false` |  |
 | config.telemetry.address | string | `"0.0.0.0:9000"` |  |
 | config.telemetry.enabled | bool | `true` |  |
 | config.telemetry.endpoint | string | `"/metrics"` |  |

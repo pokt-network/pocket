@@ -99,9 +99,9 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 		Persistence: &configs.PersistenceConfig{
 			PostgresUrl:       databaseUrl,
 			NodeSchema:        testSchema,
-			BlockStorePath:    "",
-			TxIndexerPath:     "",
-			TreesStoreDir:     "",
+			BlockStorePath:    ":memory:",
+			TxIndexerPath:     ":memory:",
+			TreesStoreDir:     ":memory:",
 			MaxConnsCount:     5,
 			MinConnsCount:     1,
 			MaxConnLifetime:   "5m",
