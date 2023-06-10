@@ -157,6 +157,7 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			VaultMountPath: defaults.DefaultKeybaseVaultMountPath,
 		},
 		IBC: &IBCConfig{
+			Enabled:   defaults.DefaultIBCEnabled,
 			StoresDir: defaults.DefaultIBCStoresDir,
 		},
 		Validator: &ValidatorConfig{},

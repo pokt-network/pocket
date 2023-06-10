@@ -15,8 +15,10 @@ type ibcModule struct {
 
 	logger *modules.Logger
 
-	hostEnabled bool
-	storesDir   string
+	// If the IBC module is enabled AND the node is a validator then a host will be created
+	// otherwise this module will be disabled
+	enabled   bool
+	storesDir string
 
 	// Only a single host is allowed at a time
 	host *host
@@ -38,21 +40,25 @@ func (m *ibcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 	runtimeMgr := bus.GetRuntimeMgr()
 
 	ibcCfg := runtimeMgr.GetConfig().IBC
-	m.hostEnabled = ibcCfg.HostEnabled
+	m.enabled = false
+	if runtimeMgr.GetConfig().Validator.Enabled && ibcCfg.Enabled {
+		m.enabled = true
+	}
 	m.storesDir = ibcCfg.StoresDir
 
 	return m, nil
 }
 
 func (m *ibcModule) Start() error {
+	if !m.enabled {
+		return nil
+	}
 	m.logger.Info().Msg("🪐 starting IBC module 🪐")
-	if m.hostEnabled {
-		m.logger.Info().Msg("🛰️ creating IBC host 🛰️")
-		_, err := m.NewHost()
-		if err != nil {
-			m.logger.Error().Err(err).Msg("❌ failed to create IBC host")
-			return err
-		}
+	m.logger.Info().Msg("🛰️ creating IBC host 🛰️")
+	_, err := m.NewHost()
+	if err != nil {
+		m.logger.Error().Err(err).Msg("❌ failed to create IBC host")
+		return err
 	}
 	return nil
 }

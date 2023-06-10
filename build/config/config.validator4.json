@@ -52,7 +52,7 @@
     "use_cors": false
   },
   "ibc": {
-    "host_enabled": true,
+    "enabled": true,
     "stores_dir": "/var/ibc"
   }
 }

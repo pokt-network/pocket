@@ -59,7 +59,7 @@
     "chains": ["0001"]
   },
   "ibc": {
-    "host_enabled": true,
+    "enabled": true,
     "stores_dir": "/var/ibc"
   }
 }

@@ -5,6 +5,6 @@ package configs;
 option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
 message IBCConfig {
-  bool host_enabled = 1;
+  bool enabled = 1;
   string stores_dir = 2;
 }
