@@ -5,7 +5,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var _ modules.Store = (*PrivateStore)(nil)
+var _ modules.Store = &PrivateStore{}
 
 // PrivateStore does not need to be provable and as such simply wraps the KVStore interface
 type PrivateStore struct {

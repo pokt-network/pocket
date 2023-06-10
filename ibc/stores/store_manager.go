@@ -11,7 +11,7 @@ import (
 	"github.com/pokt-network/smt"
 )
 
-var _ modules.StoreManager = (*Stores)(nil)
+var _ modules.StoreManager = &Stores{}
 
 type Stores struct {
 	m         sync.Mutex

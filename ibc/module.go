@@ -8,7 +8,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
-var _ modules.IBCModule = (*ibcModule)(nil)
+var _ modules.IBCModule = &ibcModule{}
 
 type ibcModule struct {
 	base_modules.IntegratableModule
@@ -19,7 +19,7 @@ type ibcModule struct {
 	storesDir   string
 
 	// Only a single host is allowed at a time
-	host *Host
+	host *host
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -75,7 +75,7 @@ func (m *ibcModule) NewHost() (modules.IBCHost, error) {
 		return nil, coreTypes.ErrHostAlreadyExists()
 	}
 
-	host := &Host{
+	host := &host{
 		logger: m.logger,
 		stores: stores.NewStoreManager(m.storesDir),
 	}

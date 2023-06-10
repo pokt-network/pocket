@@ -6,20 +6,20 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var _ modules.IBCHost = (*Host)(nil)
+var _ modules.IBCHost = &host{}
 
-type Host struct {
+type host struct {
 	logger *modules.Logger
 
 	stores modules.StoreManager
 }
 
 // GetStoreManager returns the store manager for the host
-func (h *Host) GetStoreManager() modules.StoreManager {
+func (h *host) GetStoreManager() modules.StoreManager {
 	return h.stores
 }
 
 // GetTimestamp returns the current unix timestamp
-func (h *Host) GetTimestamp() uint64 {
+func (h *host) GetTimestamp() uint64 {
 	return uint64(time.Now().Unix())
 }

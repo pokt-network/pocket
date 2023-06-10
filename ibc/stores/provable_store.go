@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	_             modules.ProvableStore = (*ProvableStore)(nil)
+	_             modules.ProvableStore = &ProvableStore{}
 	noValueHasher                       = smt.WithValueHasher(nil)
 )
 
