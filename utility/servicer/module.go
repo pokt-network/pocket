@@ -1,4 +1,4 @@
-package service
+package servicer
 
 import (
 	"bytes"
@@ -12,17 +12,15 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/pokt-network/pocket/shared/utils"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -31,7 +29,11 @@ var (
 	errValidateServicer    = errors.New("relay failed servicer validation")
 	errValidateApplication = errors.New("relay failed application validation")
 
-	_ modules.Servicer = &servicer{}
+	_ modules.ServicerModule = &servicer{}
+)
+
+const (
+	ServicerModuleName = "servicer"
 )
 
 // sessionTokens is used to cache the original number of tokens available
@@ -55,14 +57,20 @@ type servicer struct {
 	totalTokens map[string]*sessionTokens
 }
 
-func CreateServicer(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return new(servicer).Create(bus, options...)
+var (
+	_ modules.ServicerModule = &servicer{}
+)
+
+func CreateServicer(bus modules.Bus, options ...modules.ModuleOption) (modules.ServicerModule, error) {
+	m, err := new(servicer).Create(bus, options...)
+	if err != nil {
+		return nil, err
+	}
+	return m.(modules.ServicerModule), nil
 }
 
 func (*servicer) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	s := &servicer{
-		logger: logger.Global.CreateLoggerForModule(servicerModuleName),
-	}
+	s := &servicer{}
 
 	for _, option := range options {
 		option(s)
@@ -70,19 +78,27 @@ func (*servicer) Create(bus modules.Bus, options ...modules.ModuleOption) (modul
 
 	bus.RegisterModule(s)
 
+	s.logger = logger.Global.CreateLoggerForModule(s.GetModuleName())
+
 	cfg := bus.GetRuntimeMgr().GetConfig()
-	s.config = cfg.Utility.ServicerConfig
+	s.config = cfg.Servicer
 
 	return s, nil
 }
 
+// TODO: implement this function
 func (s *servicer) Start() error {
-	s.logger = logger.Global.CreateLoggerForModule(s.GetModuleName())
+	s.logger.Info().Msg("🧬 Servicer module started 🧬")
 	return nil
 }
 
-func (*servicer) GetModuleName() string {
-	return servicerModuleName
+func (s *servicer) Stop() error {
+	s.logger.Info().Msg("🧬 Servicer module stopped 🧬")
+	return nil
+}
+
+func (s *servicer) GetModuleName() string {
+	return ServicerModuleName
 }
 
 // HandleRelay processes a relay after performing validation.
@@ -208,7 +224,7 @@ func (s *servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable,
 		return fmt.Errorf("error reading servicer from persistence: %w", err)
 	}
 
-	if !slices.Contains(servicer.Chains, relayChain.Id) {
+	if !slices.Contains(servicer.Services, relayChain.Id) {
 		return fmt.Errorf("chain %s not supported by servicer %s configuration fetched from persistence", relayChain.Id, s.config.Address)
 	}
 
@@ -452,147 +468,3 @@ func validateRelayBlockHeight(relayMeta *coreTypes.RelayMeta, session *coreTypes
 		sessionStartingBlock,
 		sessionLastBlock)
 }
-
-// TECHDEBT: These structures were copied as placeholders from v0 and need to be updated to reflect changes in v1
-// TODO: remove: use coreTypes.Relay instead
-type Relay interface {
-	RelayPayload
-	RelayMeta
-}
-
-type RelayPayload interface {
-	GetData() string               // the actual data string for the external chain
-	GetMethod() string             // the http CRUD method
-	GetHTTPPath() string           // the HTTP Path
-	GetHeaders() map[string]string // http headers
-}
-
-type RelayMeta interface {
-	GetBlockHeight() int64 // the block height when the request is made
-	GetServicerPublicKey() crypto.PublicKey
-	GetRelayChain() RelayChain
-	GetGeoZone() GeoZone
-	GetToken() AAT
-	GetSignature() string
-}
-
-type RelayResponse interface {
-	Payload() string
-	ServicerSignature() string
-}
-
-type RelayChain Identifiable
-type GeoZone Identifiable
-
-type AAT interface {
-	GetVersion() string              // confirm a valid AAT version
-	GetApplicationPublicKey() string // confirm the identity/signature of the app
-	GetClientPublicKey() string      // confirm the identity/signature of the client
-	GetApplicationSignature() string // confirm the application signed the token
-}
-
-type Identifiable interface {
-	Name() string
-	ID() string
-}
-
-var _ Relay = &relay{}
-
-type relay struct{}
-
-// Validate a submitted relay by a client before servicing
-func (r *relay) Validate() coreTypes.Error {
-
-	// validate payload
-
-	// validate the metadata
-
-	// ensure the RelayChain is supported locally
-
-	// ensure session block height is current
-
-	// get the session context
-
-	// get the application object from the r.AAT()
-
-	// get session node count from that session height
-
-	// get maximum possible relays for the application
-
-	// ensure not over serviced
-
-	// generate the session from seed data
-
-	// validate self against the session
-
-	return nil
-}
-
-// Store a submitted relay by a client for volume tracking
-func (r *relay) Store() coreTypes.Error {
-
-	// marshal relay object into protoBytes
-
-	// calculate the hashOf(protoBytes) <needed for volume tracking>
-
-	// persist relay object, indexing under session
-
-	return nil
-}
-
-// Execute a submitted relay by a client after validation
-func (r *relay) Execute() (RelayResponse, coreTypes.Error) {
-
-	// retrieve the RelayChain url from the servicer's local configuration file
-
-	// execute http request with the relay payload
-
-	// format and digitally sign the response
-
-	return nil, nil
-}
-
-// Get volume metric applicable relays from store
-func (r *relay) ReapStoreForHashCollision(sessionBlockHeight int64, hashEndWith string) ([]Relay, coreTypes.Error) {
-
-	// Pull all relays whose hash collides with the revealed secret key
-	// It's important to note, the secret key isn't revealed by the network until the session is over
-	// to prevent volume based bias. The secret key is usually a pseudorandom selection using the block hash as a seed.
-	// (See the session protocol)
-	//
-	// Demonstrable pseudocode below:
-	//   `SELECT * from RELAY where HashOf(relay) ends with hashEndWith AND sessionBlockHeight=sessionBlockHeight`
-
-	// This function also signifies deleting the non-volume-applicable Relays
-
-	return nil, nil
-}
-
-// Report volume metric applicable relays to Fisherman
-func (r *relay) ReportVolumeMetrics(fishermanServiceURL string, volumeRelays []Relay) coreTypes.Error {
-
-	// Send all volume applicable relays to the assigned trusted Fisherman for
-	// a proper verification of the volume completed. Send volumeRelays to fishermanServiceURL
-	// through http.
-
-	// NOTE: an alternative design is a 2 step, claim - proof lifecycle where the individual servicers
-	// build a merkle sum index tree from all the relays, submits a root and subsequent merkle proof to the
-	// network.
-	//
-	// Pros: Can report volume metrics directly to the chain in a trustless fashion
-	// Cons: Large chain bloat, non-trivial compute requirement for creation of claim/proof transactions and trees,
-	//       non-trivial compute requirement to process claim / proofs during ApplyBlock()
-
-	return nil
-}
-
-func (r *relay) GetData() string                        { return "" }
-func (r *relay) GetMethod() string                      { return "" }
-func (r *relay) GetHTTPPath() string                    { return "" }
-func (r *relay) GetHeaders() map[string]string          { return nil }
-func (r *relay) GetBlockHeight() int64                  { return 0 }
-func (r *relay) GetServicerPublicKey() crypto.PublicKey { return nil }
-func (r *relay) GetRelayChain() RelayChain              { return nil }
-func (r *relay) GetGeoZone() GeoZone                    { return nil }
-func (r *relay) GetToken() AAT                          { return nil }
-func (r *relay) GetSignature() string                   { return "" }

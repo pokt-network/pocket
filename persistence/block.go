@@ -2,9 +2,10 @@ package persistence
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 
-	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/dgraph-io/badger/v3"
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -18,12 +19,12 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 	res, err := p.txIndexer.GetByHash(hash)
 	if res == nil {
 		// check for not found
-		if err != nil && err.Error() == kvstore.BadgerKeyNotFoundError {
+		if err != nil && errors.Is(err, badger.ErrKeyNotFound) {
 			return false, nil
 		}
 		return false, err
 	}
-	return true, err
+	return true, nil
 }
 
 func (p *PostgresContext) GetMinimumBlockHeight() (latestHeight uint64, err error) {

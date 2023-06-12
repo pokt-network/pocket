@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.46] - 2023-06-12
+
+- Renames config files and actor hostnames
+- Adds servicer and fisherman nodes to localnet deployments
+- Removes hard-coded default namespace
+
 ## [0.0.0.45] - 2023-06-01
 
 - Added 2 applications to genesis.json in LocalNet configuration

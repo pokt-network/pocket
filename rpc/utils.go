@@ -360,21 +360,15 @@ func (s *rpcServer) calculateMessageFeeForActor(actorType coreTypes.ActorType, m
 }
 
 // txProtoBytesToRPCIdxTxs converts a slice of serialised Transaction protobufs to a slice of RPC IdxTxs
+// ADDTEST: Add an E2E test (using the gherkin suite) that leverages this codepath
 func (s *rpcServer) txProtoBytesToRPCIdxTxs(txProtoBytes [][]byte) ([]IndexedTransaction, error) {
-	currentHeight := s.GetBus().GetConsensusModule().CurrentHeight()
-	uow, err := s.GetBus().GetUtilityModule().NewUnitOfWork(int64(currentHeight))
-	if err != nil {
-		return nil, err
-	}
-	defer uow.Release() //nolint:errcheck // We only need to make sure the UOW is released
-
 	txs := make([]IndexedTransaction, 0)
-	for idx, txBz := range txProtoBytes {
+	for _, txBz := range txProtoBytes {
 		tx := new(coreTypes.Transaction)
 		if err := codec.GetCodec().Unmarshal(txBz, tx); err != nil {
 			return nil, err
 		}
-		idxTx, er := uow.HydrateIdxTx(tx, idx)
+		idxTx, er := s.GetBus().GetUtilityModule().GetIndexedTransaction(txBz)
 		if er != nil {
 			return nil, er
 		}

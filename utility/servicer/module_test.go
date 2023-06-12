@@ -1,4 +1,4 @@
-package service
+package servicer
 
 import (
 	"errors"
@@ -264,7 +264,7 @@ func testSession(editors ...sessionModifier) *coreTypes.Session {
 func mockBus(t *testing.T, cfg *configs.ServicerConfig, height uint64, session *coreTypes.Session, usedSessionTokens int64) *mockModules.MockBus {
 	ctrl := gomock.NewController(t)
 	runtimeMgrMock := mockModules.NewMockRuntimeMgr(ctrl)
-	runtimeMgrMock.EXPECT().GetConfig().Return(&configs.Config{Utility: &configs.UtilityConfig{ServicerConfig: cfg}}).AnyTimes()
+	runtimeMgrMock.EXPECT().GetConfig().Return(&configs.Config{Servicer: cfg}).AnyTimes()
 
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(height).AnyTimes()

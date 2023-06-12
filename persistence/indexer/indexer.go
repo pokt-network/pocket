@@ -1,6 +1,6 @@
-// TECHDEBT(andrew): Move this out of shared and alongside the mempool.
-
 package indexer
+
+//go:generate mockgen -package=mock_types -destination=../types/mocks/indexer_mock.go github.com/pokt-network/pocket/persistence/indexer TxIndexer
 
 import (
 	"encoding/hex"
@@ -10,8 +10,6 @@ import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
-
-// Interface
 
 // `TxIndexer` interface defines methods to index and query transactions.
 type TxIndexer interface {
@@ -54,7 +52,7 @@ type txIndexer struct {
 }
 
 func NewTxIndexer(databasePath string) (TxIndexer, error) {
-	if databasePath == "" {
+	if databasePath == ":memory:" {
 		return NewMemTxIndexer()
 	}
 

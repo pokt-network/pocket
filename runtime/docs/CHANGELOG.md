@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.41] - 2023-06-12
+## [0.0.0.42] - 2023-06-12
 
 - Add a new ServiceConfig configuration field to servicer config
+
+## [0.0.0.41] - 2023-06-06
+
+- Adds fisherman and servicer proto configurations.
+- Renames actor hostnames
 
 ## [0.0.0.40] - 2023-06-01
 

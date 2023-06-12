@@ -18,11 +18,11 @@ var (
 	defaultSendAmount = big.NewInt(10000)
 )
 
-func TestUtilityUnitOfWork_AnteHandleMessage(t *testing.T) {
+func TestUtilityUnitOfWork_BasicValidateTransaction(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 
 	tx, startingBalance, _, signer := newTestingTransaction(t, uow)
-	msg, err := uow.anteHandleMessage(tx)
+	msg, err := uow.basicValidateTransaction(tx)
 	require.NoError(t, err)
 	require.Equal(t, signer.Address().Bytes(), msg.GetSigner())
 	feeBig, err := getGovParam[*big.Int](uow, typesUtil.MessageSendFee)
@@ -34,14 +34,15 @@ func TestUtilityUnitOfWork_AnteHandleMessage(t *testing.T) {
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 }
 
-func TestUtilityUnitOfWork_ApplyTransaction(t *testing.T) {
+func TestUtilityUnitOfWork_HandleTransaction(t *testing.T) {
 	uow := newTestingUtilityUnitOfWork(t, 0)
 
 	tx, startingBalance, amount, signer := newTestingTransaction(t, uow)
-	idxTx, err := uow.HydrateIdxTx(tx, 0)
+	idxTx, err := uow.HandleTransaction(tx, 0)
 	require.NoError(t, err)
 	require.Equal(t, int32(0), idxTx.GetResultCode())
 	require.Equal(t, "", idxTx.GetError())
+
 	feeBig, err := getGovParam[*big.Int](uow, typesUtil.MessageSendFee)
 	require.NoError(t, err)
 

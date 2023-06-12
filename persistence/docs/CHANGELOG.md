@@ -7,9 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.56] - 2023-06-12
+## [0.0.0.58] - 2023-06-12
 
 - Add place-holder for local context and servicer token usage support methods
+
+## [0.0.0.57] - 2023-06-06
+
+- Uses ":memory:" to signify when connecting to an in-memory database
+
+## [0.0.0.56] - 2023-06-02
+
+- Renamed an error used by Badger / KVStore
+- Improve comments used for mock generation
 
 ## [0.0.0.55] - 2023-06-01
 

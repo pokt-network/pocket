@@ -7,6 +7,11 @@ import (
 )
 
 // TxToIdxTx Converts a Transaction structure into an IndexedTransaction structure
+//
+// RESEARCH: The reader may notice that even invalid messages result in indexed transaction.
+// This is common in other PoS networks, such as Tendermint, so fees can be deducted even if its invalid.
+// This is a design decision that will need to be revisited and can have lots repercussions, sybil attack,
+// vectors, etc if not properly thought out.
 func TxToIdxTx(
 	tx *coreTypes.Transaction,
 	height int64,

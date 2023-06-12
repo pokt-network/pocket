@@ -7,9 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.21] - 2023-06-12
+## [0.0.0.23] - 2023-06-12
 
 - Update handlers to use new relay payload types
+
+## [0.0.0.22] - 2023-06-06
+
+- Adds RPC PostV1QueryNodeRoles
+
+## [0.0.0.21] - 2023-06-02
+
+- Add a few clarifying comments
+- Use `utilityModule.GetIndexedTransaction` instead of `utilityUnitOfWork.HydrateTxId` which only retrieves indexed transactions instead of applying the underlying business logic
 
 ## [0.0.0.20] - 2023-06-01
 
