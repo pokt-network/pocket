@@ -28,6 +28,7 @@ func init() {
 	rpcHost = runtime.GetEnv("RPC_HOST", defaults.DefaultRPCHost)
 }
 
+// TECHDEBT(#810): refactor to implement `Submodule` interface.
 type rpcPeerstoreProvider struct {
 	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
 	base_modules.IntegratableModule
@@ -59,8 +60,7 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 	return new(rpcPeerstoreProvider).Create(bus, options...)
 }
 
-// TECHDEBT(#810): refactor to be consistent with `persistencePeerstoreProvider`
-// (i.e. `NewRPCPeerstoreProvider` calls `rpcPeerstoreProvider#Create()`.
+// TECHDEBT(#810): refactor to implement `Submodule` interface.
 func (*rpcPeerstoreProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	return NewRPCPeerstoreProvider(options...), nil
 }

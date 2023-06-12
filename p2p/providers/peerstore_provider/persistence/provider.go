@@ -14,6 +14,8 @@ var (
 
 type persistencePStoreProviderOption func(*persistencePeerstoreProvider)
 type persistencePStoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, persistencePStoreProviderOption]
+
+// TECHDEBT(#810): refactor to implement `Submodule` interface.
 type persistencePeerstoreProvider struct {
 	base_modules.IntegratableModule
 }
