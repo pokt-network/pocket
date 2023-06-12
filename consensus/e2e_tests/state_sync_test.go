@@ -145,7 +145,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	_, err := waitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 500, true)
 	require.NoError(t, err)
 
-	// Verify the unsynched node is still behind after NewRound starts
+	// Verify the unsynced node is still behind after NewRound starts
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := getConsensusNodeState(pocketNode)
 		if nodeId == unsyncedNodeId {

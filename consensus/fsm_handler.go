@@ -71,7 +71,7 @@ func (m *consensusModule) handleStateTransitionEvent(msg *messaging.StateMachine
 // Bootstrapped mode is when the node (validator or non) is first coming online.
 // This is a transition mode from node bootstrapping to a node being out-of-sync.
 func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Node is in the bootstrapped state. Consensus module NOOP.")
+	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Node is in the bootstrapped state. Transitioning to IsUnsynched mode...")
 	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsUnsynced)
 }
 
@@ -80,14 +80,14 @@ func (m *consensusModule) HandleBootstrapped(msg *messaging.StateMachineTransiti
 // This mode is a transition mode from the node being up-to-date (i.e. Pacemaker mode, Synced mode) with the latest network height to being out-of-sync.
 // As soon as a node transitions to this mode, it will transition to the synching mode.
 func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Node is in an Unsynced state. Consensus module is sending an even to transition to SYNCHING mode.")
+	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Node is in an Unsynced state. Transitioning to IsSyncing mode...")
 	return m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_Consensus_IsSyncing)
 }
 
 // HandleSyncMode handles the FSM event Consensus_IsSyncing, and when SyncMode is the destination state.
 // In Sync mode, the node (validator or not starts syncing with the rest of the network.
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Node is in Sync Mode. Consensus Module is about to start synching...")
+	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Node is in Sync Mode. About to start synchronous sync loop...")
 	go m.stateSync.StartSynchronousStateSync()
 	return nil
 }
@@ -96,7 +96,7 @@ func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEv
 // Currently, FSM never transition to this state and a non-validator node always stays in SyncMode.
 // CONSIDER: when a non-validator sync is implemented, maybe there is a case that requires transitioning to this state.
 func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Non-validator node is in Synced mode. Consensus module NOOP.")
+	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Node (non-validator) is Synced. NOOP")
 	return nil
 }
 
@@ -104,7 +104,7 @@ func (m *consensusModule) HandleSynced(msg *messaging.StateMachineTransitionEven
 // Execution of this state means the validator node is synced and it will stay in this mode until
 // it receives a new block proposal that has a higher height than the current consensus height.
 func (m *consensusModule) HandlePacemaker(msg *messaging.StateMachineTransitionEvent) error {
-	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Validator node is Synced and in Pacemaker mode. Validator can now participate in voting on consensus.")
+	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Node (validator) node is Synced and entering Pacemaker mode. About to starting participating in consensus...")
 
 	// if a validator is just bootstrapped and finished state sync, it will not have a nodeId yet, which is 0. Set correct nodeId here.
 	if m.nodeId == 0 {
