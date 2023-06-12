@@ -54,6 +54,10 @@ type UnstakingActor interface {
 // CONSIDERATION: Consider removing `Utility` from `UtilityUnitOfWork` altogether
 
 // UtilityUnitOfWork is a unit of work (https://martinfowler.com/eaaCatalog/unitOfWork.html) that allows for atomicity and commit/rollback functionality
+//
+//	It should be used to track a single, atomic, rollbackable state transition related to on-chain data.
+//	Conversely, use Local context from persistence module to track off-chain data that will eventually lead to a state transition,
+//		e.g. reward claim for a session that spans multiple blocks.
 type UtilityUnitOfWork interface {
 	IntegratableModule
 

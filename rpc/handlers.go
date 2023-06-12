@@ -105,8 +105,8 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 		Signature:         body.Meta.Signature,
 	}
 
-	payload := &coreTypes.RelayPayload{
-		Data:     body.Payload.Data,
+	payload := &coreTypes.JsonRpcPayload{
+		Data:     []byte(body.Payload.Data),
 		Method:   body.Payload.Method,
 		HttpPath: body.Payload.Path,
 	}
@@ -118,8 +118,8 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 	payload.Headers = headers
 
 	relayRequest := &coreTypes.Relay{
-		Payload: payload,
-		Meta:    relayMeta,
+		RelayPayload: &coreTypes.Relay_JsonRpcPayload{payload},
+		Meta:         relayMeta,
 	}
 
 	relayResponse, err := s.GetBus().GetUtilityModule().HandleRelay(relayRequest)

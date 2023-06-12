@@ -14,18 +14,26 @@ message UtilityConfig {
 message ServicerConfig {
   string public_key = 1;
   string address = 2;
-  map<string, ChainConfig> chains = 3;
+  map<string, ServiceConfig> services = 3;
+
+  // relay_mining_volume_accuracy is a parameter used to adjust the calculated number of service tokens for an application.
+  // It is introduced to minimize the chance of under-utilization of application's tokens, while removing the overhead of
+  // communication between servicers which would be necessary otherwise.
+  // See the following for more details:
+  //	https://arxiv.org/abs/2305.10672
+  double relay_mining_volume_accuracy = 4;
 }
 
-message ChainConfig {
-  string url = 1;
-  string user_agent = 2;
-  uint64 timeout_milliseconds = 3;
-  BasicAuth basic_auth = 4;
+message ServiceConfig {
+  string url = 1; // url specifies the URL at which the service is provided/requested
+  uint64 timeout_msec = 2; // timeout specifes the maximum amount of time, in milliseconds, to allow for the service to return a response
+  BasicAuth basic_auth = 3; // optional: basic authentication for HTTP services.
 }
 
+// BasicAuth stores authentication data for HTTP services
+// When supplied, this data will be used as specified by the HTTP basic authentication scheme.
 message BasicAuth {
   string user_name = 1;
-  // DISCUSS: does this need to be encrypted?
+  // IMPROVE: enforce encryption of plaintext password
   string password = 2;
 }

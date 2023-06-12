@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.56] - 2023-06-06
+## [0.0.0.56] - 2023-06-12
 
-- Add place-holder for servicer token usage support methods
+- Add place-holder for local context and servicer token usage support methods
 
 ## [0.0.0.55] - 2023-06-01
 

@@ -242,6 +242,14 @@ func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 	return m.writeContext
 }
 
+// INCOMPLETE: implement this
+// NewLocalContext
+func (m *persistenceModule) NewLocalContext() (modules.PersistenceLocalContext, error) {
+	return &persistenceLocalContext{
+		databasePath: m.config.LocalDatabasePath,
+	}, nil
+}
+
 // HACK(olshansky): Simplify and externalize the logic for whether genesis should be populated and
 //
 //	move the if logic out of this file.

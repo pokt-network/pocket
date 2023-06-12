@@ -16,4 +16,5 @@ message PersistenceConfig {
   string max_conn_lifetime = 8; // See pkg.go.dev/time#ParseDuration for reference
   string max_conn_idle_time = 9; // See pkg.go.dev/time#ParseDuration for reference
   string health_check_period = 10; // See pkg.go.dev/time#ParseDuration for reference
+  string local_database_path = 11; // The path used to store local, i.e. off-chain and node-specific, data.
 }

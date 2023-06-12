@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.60] - 2023-06-06
+## [0.0.0.60] - 2023-06-12
 
-- Add place-holders for servicer token usage support
+- Add a new LocalContext type and place-holders for servicer token usage support to persistence 
 - Add a TODO comment for supporting different relay payload types in core types
 
 ## [0.0.0.59] - 2023-06-01

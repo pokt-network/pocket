@@ -6,16 +6,24 @@ option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
 // TECHDEBT: These structures were copied as placeholders from v0 and need to be updated to reflect changes in v1
 message Relay {
-    RelayPayload payload = 1;
-    RelayMeta meta = 2;
+    RelayMeta meta = 1;
+    oneof relay_payload {
+        JsonRpcPayload json_rpc_payload = 2;
+        RestPayload rest_payload = 3;
+    }
 }
 
 // INCOMPLETE: add support for different payloads, e.g. JSON, GRPC, etc.
-message RelayPayload {
-    string data = 1;
+message JsonRpcPayload {
+    bytes data = 1;
     string method = 2;
     string http_path = 3;
     map<string, string> headers = 4;
+}
+
+// INCOMPLETE: add REST relay payload fields
+message RestPayload {
+    string data = 1;
 }
 
 message RelayMeta {
@@ -42,4 +50,9 @@ message AAT {
 message Identifiable {
     string id = 1;
     string name = 2;
+}
+
+message RelayReqRes {
+    Relay relay = 1;
+    RelayResponse response = 2;
 }

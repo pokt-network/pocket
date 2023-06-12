@@ -121,11 +121,12 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 		},
 		Utility: &UtilityConfig{
 			ServicerConfig: &ServicerConfig{
-				Chains: map[string]*ChainConfig{
-					"0021": {
-						Url:                 "http://chain-url.pokt.network",
-						UserAgent:           "user-agent",
-						TimeoutMilliseconds: 5000,
+				RelayMiningVolumeAccuracy: 0.2,
+				Services: map[string]*ServiceConfig{
+					// DISCUSS: what should the default config be? POKT/ETHM?
+					"POKT-V1": {
+						Url:         "http://localhost",
+						TimeoutMsec: 5000,
 						BasicAuth: &BasicAuth{
 							UserName: "user",
 							Password: "password",

@@ -1,6 +1,6 @@
 package modules
 
-//go:generate mockgen -destination=./mocks/persistence_module_mock.go github.com/pokt-network/pocket/shared/modules PersistenceModule,PersistenceRWContext,PersistenceReadContext,PersistenceWriteContext
+//go:generate mockgen -destination=./mocks/persistence_module_mock.go github.com/pokt-network/pocket/shared/modules PersistenceModule,PersistenceRWContext,PersistenceReadContext,PersistenceWriteContext,PersistenceLocalContext
 
 import (
 	"math/big"
@@ -20,6 +20,9 @@ type PersistenceModule interface {
 
 	// Context operations
 	NewRWContext(height int64) (PersistenceRWContext, error)
+	// DISCUSS: removing height from "NewReadContext" input and passing it to specific methods seems a better choice.
+	//	This could prevent confusion when retrieving the value of a parameter for a height less than the current height,
+	//		e.g. when getting the App Token sessions multiplier for the starting height of a session.
 	NewReadContext(height int64) (PersistenceReadContext, error)
 	ReleaseWriteContext() error // The module can maintain many read contexts, but only one write context can exist at a time
 
@@ -33,6 +36,11 @@ type PersistenceModule interface {
 
 	// Debugging / development only
 	HandleDebugMessage(*messaging.DebugMessage) error
+
+	// NewLocalContext returns a local persistence context that can be used to store/retrieve node-specific, i.e. off-chain, data
+	// The module can maintain a single local context for both read and write operations: subsequent calls to NewLocalContext return
+	// the same local context.
+	NewLocalContext() (PersistenceLocalContext, error)
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.
@@ -223,7 +231,24 @@ type PersistenceReadContext interface {
 	GetIntFlag(paramName string, height int64) (int, bool, error)
 	GetStringFlag(paramName string, height int64) (string, bool, error)
 	GetBytesFlag(paramName string, height int64) ([]byte, bool, error)
+}
 
-	// Servicer application tokens
-	GetServicerTokenUsage(session *coreTypes.Session) (*big.Int, error)
+// PersistenceLocalContext defines the set of operations specific to local persistence.
+//
+//	This context should be used for node-specific data, e.g. records of served relays.
+//	This is in contrast to PersistenceRWContext which should be used to store on-chain data.
+type PersistenceLocalContext interface {
+	// StoreServiceRelay stores record of a serviced relay and its response in the local context.
+	// The stored service relays will be used to:
+	//	a) check the number of tokens used per session, and
+	//	b) prepare claim/proof messages once the session is over
+	// The "relayDigest" and "relayReqResBytes" parameters will be used as key and leaf contents in the constructed SMT, respectively.
+	// OPTIMIZE: both the relay and the response can be large structures: we may need to truncate the stored values
+	StoreServiceRelay(session *coreTypes.Session, appAddr string, relayDigest, relayReqResBytes []byte) error
+	// GetSessionTokensUsed returns the number of tokens that have been used for the passed session.
+	//    This gets calculated from local storage, so it returns the count of tokens used by the servicer instance
+	//	for the application associated with the session
+	GetSessionTokensUsed(*coreTypes.Session) (*big.Int, error)
+	// Release the allocated local context.
+	Release() error
 }
