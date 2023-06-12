@@ -20,7 +20,7 @@ type persistencePeerstoreProvider struct {
 	base_modules.IntegratableModule
 }
 
-func NewPersistencePeerstoreProvider(bus modules.Bus, options ...persistencePStoreProviderOption) (peerstore_provider.PeerstoreProvider, error) {
+func Create(bus modules.Bus, options ...persistencePStoreProviderOption) (peerstore_provider.PeerstoreProvider, error) {
 	return new(persistencePeerstoreProvider).Create(bus, options...)
 }
 

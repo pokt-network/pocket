@@ -238,7 +238,7 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 	pstoreProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(peerstore_provider.ModuleName)
 	if err != nil {
 		m.logger.Debug().Msg("creating new persistence peerstore...")
-		pstoreProvider, err := persPSP.NewPersistencePeerstoreProvider(m.GetBus())
+		pstoreProvider, err := persPSP.Create(m.GetBus())
 		if err != nil {
 			return err
 		}
