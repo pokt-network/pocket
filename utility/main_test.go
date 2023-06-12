@@ -16,20 +16,13 @@ import (
 )
 
 var (
-	// dbURL string
-
-	// Initialized in TestMain
-	testPersistenceMod modules.PersistenceModule
+	dbURL string
 )
 
 // NB: `TestMain` serves all tests in the immediate `utility` package and not its children
 func TestMain(m *testing.M) {
 	pool, resource, url := test_artifacts.SetupPostgresDocker()
-	// dbURL = url
-	testPersistenceMod = newTestPersistenceModule(url)
-	if testPersistenceMod == nil {
-		log.Fatal("[ERROR] Unable to create new test persistence module")
-	}
+	dbURL = url
 
 	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
@@ -38,7 +31,6 @@ func TestMain(m *testing.M) {
 
 func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
 	utilityMod, err := Create(bus)
-
 	if err != nil {
 		log.Fatalf("Error creating utility module: %s", err)
 	}
