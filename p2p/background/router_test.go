@@ -14,7 +14,11 @@ import (
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/multiformats/go-multiaddr"
-	"github.com/pokt-network/pocket/internal/testutil"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+
+	"github.com/pokt-network/pocket/internal/testutil/generics"
+	"github.com/pokt-network/pocket/internal/testutil/p2p"
 	"github.com/pokt-network/pocket/p2p/config"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mock_types "github.com/pokt-network/pocket/p2p/types/mocks"
@@ -22,15 +26,27 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/messaging"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 // https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2
-const testIP6ServiceURL = "[2a00:1450:4005:802::2004]:8080"
+const (
+	testIP6ServiceURL   = "[2a00:1450:4005:802::2004]:8080"
+	numPeers            = 4
+	testMsg             = "test messsage"
+	testTimeoutDuration = time.Second * 2
+)
 
 // TECHDEBT(#609): move & de-dup.
 var testLocalServiceURL = fmt.Sprintf("127.0.0.1:%d", defaults.DefaultP2PPort)
+
+func TestBackgroundRouter_InvalidConfig(t *testing.T) {
+	t.Skip("pending")
+	//busMock := bus_testutil.NewBus(t)
+	//
+	//router, err := NewBackgroundRouter()
+}
 
 func TestBackgroundRouter_AddPeer(t *testing.T) {
 	testRouter := newTestRouter(t, nil)
@@ -115,19 +131,15 @@ func TestBackgroundRouter_RemovePeer(t *testing.T) {
 }
 
 func TestBackgroundRouter_Broadcast(t *testing.T) {
-	const (
-		numPeers            = 4
-		testMsg             = "test messsage"
-		testTimeoutDuration = time.Second * 5
-	)
-
 	var (
 		ctx = context.Background()
 		// mutex preventing concurrent writes to `seenMessages`
-		seenMessagesMutext sync.Mutex
+		seenMessagesMutex sync.Mutex
 		// map used as a set to collect IDs of peers which have received a message
 		seenMessages       = make(map[string]struct{})
 		bootstrapWaitgroup = sync.WaitGroup{}
+		bootstrapPeerIDCh  = make(chan string)
+		bootstrapPeerIDs   = make(map[string]struct{})
 		broadcastWaitgroup = sync.WaitGroup{}
 		broadcastDone      = make(chan struct{}, 1)
 		testTimeout        = time.After(testTimeoutDuration)
@@ -148,8 +160,30 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 		testHosts = append(testHosts, host)
 		expectedPeerIDs[i] = host.ID().String()
 		rtr := newRouterWithSelfPeerAndHost(t, selfPeer, host)
-		go readSubscription(t, ctx, &broadcastWaitgroup, rtr, &seenMessagesMutext, seenMessages)
+		rtr.HandlerProxy(t, func(origHandler typesP2P.RouterHandler) typesP2P.RouterHandler {
+			return func(data []byte) error {
+				seenMessagesMutex.Lock()
+				broadcastWaitgroup.Done()
+				seenMessages[rtr.host.ID().String()] = struct{}{}
+				seenMessagesMutex.Unlock()
+
+				return origHandler(data)
+			}
+		})
 	}
+
+	// concurrently update the set of bootstrapped peer IDs as they connect
+	go func() {
+		for {
+			peerIDStr := <-bootstrapPeerIDCh
+			if _, ok := bootstrapPeerIDs[peerIDStr]; ok {
+				// already connected to this peer during bootstrapping
+				continue
+			}
+			bootstrapPeerIDs[peerIDStr] = struct{}{}
+			bootstrapWaitgroup.Done()
+		}
+	}()
 
 	// bootstrap off of arbitrary testHost
 	privKey, selfPeer := newTestPeer(t)
@@ -166,9 +200,14 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 
 	// setup notifee/notify BEFORE bootstrapping
 	notifee := &libp2pNetwork.NotifyBundle{
-		ConnectedF: func(_ libp2pNetwork.Network, _ libp2pNetwork.Conn) {
+		ConnectedF: func(_ libp2pNetwork.Network, conn libp2pNetwork.Conn) {
 			t.Logf("connected!")
-			bootstrapWaitgroup.Done()
+			t.Logf("local PeerID %s; remote PeerID: %s",
+				conn.LocalPeer().String(),
+				conn.RemotePeer().String(),
+			)
+			bootstrapPeerIDCh <- conn.RemotePeer().String()
+			//bootstrapWaitgroup.Done()
 		},
 	}
 	testRouter.host.Network().Notify(notifee)
@@ -189,7 +228,8 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 
 		// broadcast message
 		t.Log("broadcasting...")
-		err := testRouter.Broadcast([]byte(testMsg))
+		testPoktEnvelopeBz := p2p_testutil.NewTestPoktEnvelopeBz(t, testMsg)
+		err = testRouter.Broadcast(testPoktEnvelopeBz)
 		require.NoError(t, err)
 
 		// wait for broadcast to be received by all peers
@@ -200,6 +240,7 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 	// waitgroup broadcastDone or timeout
 	select {
 	case <-testTimeout:
+		seenMessagesMutex.Lock()
 		t.Fatalf(
 			"timed out waiting for all expected messages: got %d; wanted %d",
 			len(seenMessages),
@@ -208,7 +249,10 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 	case <-broadcastDone:
 	}
 
-	actualPeerIDs = testutil.GetKeys[string](seenMessages)
+	seenMessagesMutex.Lock()
+	defer seenMessagesMutex.Unlock()
+
+	actualPeerIDs = generics_testutil.GetKeys[string](seenMessages)
 	require.ElementsMatchf(t, expectedPeerIDs, actualPeerIDs, "peerIDs don't match")
 }
 
@@ -284,11 +328,33 @@ func newRouterWithSelfPeerAndHost(t *testing.T, selfPeer typesP2P.Peer, host lib
 	err := pstore.AddPeer(selfPeer)
 	require.NoError(t, err)
 
+	handler := func(poktEnvelopeBz []byte) error {
+		poktEnvelope := &messaging.PocketEnvelope{}
+		err := proto.Unmarshal(poktEnvelopeBz, poktEnvelope)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, poktEnvelope.Nonce)
+		require.NotEmpty(t, poktEnvelope.Content)
+
+		debugMsg := &messaging.DebugMessage{}
+		err = poktEnvelope.Content.UnmarshalTo(debugMsg)
+		require.NoError(t, err)
+
+		debugStringMsg := &messaging.DebugStringMessage{}
+		err = debugMsg.Message.UnmarshalTo(debugStringMsg)
+		require.NoError(t, err)
+
+		require.Equal(t, testMsg, debugStringMsg.Value, "debug string messages don't match")
+
+		return nil
+	}
+
 	router, err := NewBackgroundRouter(busMock, &config.BackgroundConfig{
 		Addr:                  selfPeer.GetAddress(),
 		PeerstoreProvider:     pstoreProviderMock,
 		CurrentHeightProvider: consensusMock,
 		Host:                  host,
+		Handler:               handler,
 	})
 	require.NoError(t, err)
 
@@ -344,32 +410,4 @@ func newTestHost(t *testing.T, mockNet mocknet.Mocknet, privKey cryptoPocket.Pri
 
 	// construct mock host
 	return newMockNetHostFromPeer(t, mockNet, privKey, peer)
-}
-
-func readSubscription(
-	t *testing.T,
-	ctx context.Context,
-	broadcastWaitGroup *sync.WaitGroup,
-	rtr *backgroundRouter,
-	mu *sync.Mutex,
-	seenMsgs map[string]struct{},
-) {
-	t.Helper()
-
-	for {
-		if err := ctx.Err(); err != nil {
-			if err != context.Canceled || err != context.DeadlineExceeded {
-				require.NoError(t, err)
-			}
-			return
-		}
-
-		_, err := rtr.subscription.Next(ctx)
-		require.NoError(t, err)
-
-		mu.Lock()
-		broadcastWaitGroup.Done()
-		seenMsgs[rtr.host.ID().String()] = struct{}{}
-		mu.Unlock()
-	}
 }

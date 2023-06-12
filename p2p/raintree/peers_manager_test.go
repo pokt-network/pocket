@@ -356,5 +356,6 @@ func mockAlphabetValidatorServiceURLsDNS(t *testing.T) (done func()) {
 		}
 	}
 
-	return testutil.PrepareDNSMock(zones)
+	_ = testutil.BaseDNSMock(t, zones)
+	return done
 }

@@ -1,8 +1,13 @@
-package p2p
+package p2p_test
 
 import (
 	"context"
 	"fmt"
+	"github.com/pokt-network/pocket/internal/testutil"
+	"github.com/pokt-network/pocket/internal/testutil/persistence"
+	"github.com/pokt-network/pocket/internal/testutil/runtime"
+	"github.com/pokt-network/pocket/internal/testutil/telemetry"
+	"github.com/pokt-network/pocket/p2p"
 	"testing"
 	"time"
 
@@ -11,7 +16,6 @@ import (
 	"github.com/multiformats/go-multiaddr"
 	"github.com/stretchr/testify/require"
 
-	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/p2p/protocol"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
@@ -19,7 +23,6 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
@@ -45,35 +48,28 @@ func TestP2pModule_Insecure_Error(t *testing.T) {
 		},
 	}).AnyTimes()
 
-	timeSeriesAgentMock := prepareNoopTimeSeriesAgentMock(t)
-	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-
-	telemetryMock := mockModules.NewMockTelemetryModule(ctrl)
-	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
-	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
-	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
-
-	busMock := createMockBus(t, runtimeMgrMock)
+	busMock := testutil.BaseBusMock(t, runtimeMgrMock)
 	busMock.EXPECT().GetConsensusModule().Return(mockConsensusModule).AnyTimes()
-	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
+
+	telemetryMock := telemetry_testutil.BaseTelemetryMock(t, busMock)
 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
 
-	genesisStateMock := createMockGenesisState(keys[:1])
-	persistenceMock := preparePersistenceMock(t, busMock, genesisStateMock)
+	keys := testutil.LoadLocalnetPrivateKeys(t, 1)
+
+	// TODO_THIS_COMMIT: refactor
+	pubKeys := make([]cryptoPocket.PublicKey, len(keys))
+	for i, privKey := range keys {
+		pubKeys[i] = privKey.PublicKey()
+	}
+	serviceURLs := testutil.SequentialServiceURLs(t, len(pubKeys))
+	genesisStateMock := runtime_testutil.BaseGenesisStateMock(t, pubKeys, serviceURLs)
+	persistenceMock := persistence_testutil.BasePersistenceMock(t, busMock, genesisStateMock)
 	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 
-	telemetryMock.EXPECT().GetBus().Return(busMock).AnyTimes()
-	telemetryMock.EXPECT().SetBus(busMock).AnyTimes()
+	// mock DNS for service URL hostnames
+	_ = testutil.DNSMockFromServiceURLs(t, serviceURLs)
 
-	serviceURLs := make([]string, len(genesisStateMock.Validators))
-	for i, actor := range genesisStateMock.Validators {
-		serviceURLs[i] = actor.ServiceUrl
-	}
-	dnsDone := testutil.PrepareDNSMockFromServiceURLs(t, serviceURLs)
-	t.Cleanup(dnsDone)
-
-	p2pMod, err := Create(busMock)
+	p2pMod, err := p2p.Create(busMock)
 	require.NoError(t, err)
 
 	err = p2pMod.Start()

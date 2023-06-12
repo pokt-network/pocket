@@ -9,6 +9,11 @@ import (
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	"github.com/stretchr/testify/require"
+
+	"github.com/pokt-network/pocket/internal/testutil"
+	"github.com/pokt-network/pocket/internal/testutil/persistence"
+	"github.com/pokt-network/pocket/internal/testutil/runtime"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -16,7 +21,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 // TECHDEBT(#609): move & de-dup.
@@ -107,14 +111,23 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 		},
 	}
 
+	keys := testutil.LoadLocalnetPrivateKeys(t, 10)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
-			mockBus := createMockBus(t, mockRuntimeMgr)
+			mockBus := testutil.BaseBusMock(t, mockRuntimeMgr)
 
-			genesisStateMock := createMockGenesisState(keys)
-			persistenceMock := preparePersistenceMock(t, mockBus, genesisStateMock)
+			// TODO_THIS_COMMIT: refactor
+			pubKeys := make([]cryptoPocket.PublicKey, len(keys))
+			for i, privKey := range keys {
+				pubKeys[i] = privKey.PublicKey()
+			}
+
+			serviceURLs := testutil.SequentialServiceURLs(t, len(pubKeys))
+			genesisStateMock := runtime_testutil.BaseGenesisStateMock(t, pubKeys, serviceURLs)
+			persistenceMock := persistence_testutil.BasePersistenceMock(t, mockBus, genesisStateMock)
 			mockBus.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 
 			mockConsensusModule := mockModules.NewMockConsensusModule(ctrl)
@@ -155,10 +168,10 @@ func TestP2pModule_WithHostOption_Restart(t *testing.T) {
 
 	privKey := cryptoPocket.GetPrivKeySeed(1)
 	mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
-	mockBus := createMockBus(t, mockRuntimeMgr)
+	mockBus := testutil.BaseBusMock(t, mockRuntimeMgr)
 
-	genesisStateMock := createMockGenesisState(nil)
-	persistenceMock := preparePersistenceMock(t, mockBus, genesisStateMock)
+	genesisStateMock := runtime_testutil.BaseGenesisStateMock(t, nil, nil)
+	persistenceMock := persistence_testutil.BasePersistenceMock(t, mockBus, genesisStateMock)
 	mockBus.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 
 	consensusModuleMock := mockModules.NewMockConsensusModule(ctrl)
