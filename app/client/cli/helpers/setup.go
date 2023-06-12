@@ -7,7 +7,7 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
-	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
+	rpcPSP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -37,9 +37,9 @@ func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) {
 	bus := rm.GetBus()
 	modulesRegistry := bus.GetModulesRegistry()
-	pstoreProvider := rpc.NewRPCPeerstoreProvider(
-		rpc.WithP2PConfig(rm.GetConfig().P2P),
-		rpc.WithCustomRPCURL(rpcURL),
+	pstoreProvider := rpcPSP.Create(
+		rpcPSP.WithP2PConfig(rm.GetConfig().P2P),
+		rpcPSP.WithCustomRPCURL(rpcURL),
 	)
 	modulesRegistry.RegisterModule(pstoreProvider)
 }
