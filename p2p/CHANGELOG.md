@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.54] - 2023-06-08
+## [0.0.0.54] - 2023-06-12
 
 - Replaced embedded `modules.Module` with simpler `modules.IntegratableModule` in `PeerstoreProvider` interface
 - Removed unused `PeerstoreProvider#GetP2PConfig()` method
 - Added `PeerstoreProvider#GetUnstakedPeerstore()` method
 - Added temporary `unstakedPeerstoreProvider` interface
+- Renamed `NewRPCPeerstoreProvider()` and `NewPersistencePeerstoreProvider()` to `Create()` (per package)
+- Updated `persistencePeerstoreProvider` to retrieve all staked actors (not just validators)
 
 ## [0.0.0.53] - 2023-06-01
 
