@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/pokt-network/pocket/ibc/host"
@@ -85,7 +84,7 @@ func TestPaths_CommitmentPrefix(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			commitment := host.ApplyPrefix(prefix, tc.path)
 			require.NotNil(t, commitment.GetPath())
-			require.True(t, bytes.Equal(commitment.GetPath(), tc.expected))
+			require.Equal(t, commitment.GetPath(), tc.expected)
 
 			path := host.RemovePrefix(tc.prefix, commitment)
 			require.NotNil(t, path)

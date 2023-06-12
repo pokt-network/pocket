@@ -359,6 +359,10 @@ test_race: ## Identify all unit tests that may result in race conditions
 test_app: ## Run all go app module unit tests
 	go test ${VERBOSE_TEST} -p=1 -count=1 -tags=test ./app/...
 
+.PHONY: test_ibc
+test_ibc: ## Run all go ibc module unit tests
+	go test ${VERBOSE_TEST} -p=1 -count=1 -tags=test ./ibc/...
+
 .PHONY: test_utility
 test_utility: ## Run all go utility module unit tests
 	go test ${VERBOSE_TEST} -p=1 -count=1 -tags=test ./utility/...

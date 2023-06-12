@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"testing"
@@ -428,7 +427,7 @@ func TestProvableStore_StoreOperations(t *testing.T) {
 					require.NoError(t, err)
 					got, err := store.Get(tc.key)
 					require.NoError(t, err)
-					require.True(t, bytes.Equal(got, []byte{}))
+					require.Equal(t, got, []byte(nil))
 				}
 			}
 		})
@@ -462,7 +461,7 @@ func TestProvableStore_UpdatesPersist(t *testing.T) {
 	// Check that the value stored in  the nodeStore is the pre-hashed digest of the leaf
 	val, err := nodeStore.Get(digest)
 	require.NoError(t, err)
-	require.True(t, bytes.Equal(val, preDigest))
+	require.Equal(t, val, preDigest)
 
 	// Delete the value from the store
 	err = store.Delete([]byte("foo"))
