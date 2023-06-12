@@ -48,11 +48,11 @@ func (persistencePSP *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(h
 	}
 	defer readCtx.Release()
 
-	validators, err := readCtx.GetAllValidators(int64(height))
+	stakedActors, err := readCtx.GetAllStakedActors(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	return peerstore_provider.ActorsToPeerstore(persistencePSP, validators)
+	return peerstore_provider.ActorsToPeerstore(persistencePSP, stakedActors)
 }
 
 // GetStakedPeerstoreAtHeight implements the respective `PeerstoreProvider` interface method.
