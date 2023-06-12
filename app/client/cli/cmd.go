@@ -14,17 +14,16 @@ import (
 
 const (
 	cliExecutableName = "p1"
+	flagBindErrFormat = "could not bind flag %q: %v"
 )
 
-var (
-	cfg *configs.Config
-)
+var cfg *configs.Config
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.RemoteCLIURL, "remote_cli_url", defaults.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host>:<port> (uses RPC Port)")
-	// ensure that this flag can be overidden by the respective viper-conventional environment variable (i.e. `POCKET_REMOTE_CLI_URL`)
+	// ensure that this flag can be overridden by the respective viper-conventional environment variable (i.e. `POCKET_REMOTE_CLI_URL`)
 	if err := viper.BindPFlag("remote_cli_url", rootCmd.PersistentFlags().Lookup("remote_cli_url")); err != nil {
-		log.Fatalf("could not bind flag %q: %v", "remote_cli_url", err)
+		log.Fatalf(flagBindErrFormat, "remote_cli_url", err)
 	}
 
 	rootCmd.PersistentFlags().BoolVar(&flags.NonInteractive, "non_interactive", false, "if true skips the interactive prompts wherever possible (useful for scripting & automation)")
@@ -33,12 +32,12 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.DataDir, "data_dir", defaults.DefaultRootDirectory, "Path to store pocket related data (keybase etc.)")
 	rootCmd.PersistentFlags().StringVar(&flags.ConfigPath, "config", "", "Path to config")
 	if err := viper.BindPFlag("root_directory", rootCmd.PersistentFlags().Lookup("data_dir")); err != nil {
-		log.Fatalf("could not bind flag %q: %v", "data_dir", err)
+		log.Fatalf(flagBindErrFormat, "data_dir", err)
 	}
 
 	rootCmd.PersistentFlags().BoolVar(&flags.Verbose, "verbose", false, "Show verbose output")
 	if err := viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose")); err != nil {
-		log.Fatalf("could not bind flag %q: %v", "verbose", err)
+		log.Fatalf(flagBindErrFormat, "verbose", err)
 	}
 }
 
@@ -49,6 +48,9 @@ var rootCmd = &cobra.Command{
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// by this time, the config path should be set
 		cfg = configs.ParseConfig(flags.ConfigPath)
+
+		// set final `remote_cli_url` value; order of precedence: flag > env var > config > default
+		flags.RemoteCLIURL = viper.GetString("remote_cli_url")
 		return nil
 	},
 }
