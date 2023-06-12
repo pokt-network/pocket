@@ -16,6 +16,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/pokt-network/pocket/shared/utils"
@@ -224,7 +225,7 @@ func (s *servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable,
 		return fmt.Errorf("error reading servicer from persistence: %w", err)
 	}
 
-	if !slices.Contains(servicer.Services, relayChain.Id) {
+	if !slices.Contains(servicer.Chains, relayChain.Id) {
 		return fmt.Errorf("chain %s not supported by servicer %s configuration fetched from persistence", relayChain.Id, s.config.Address)
 	}
 
