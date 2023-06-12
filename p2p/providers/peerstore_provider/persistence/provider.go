@@ -14,11 +14,13 @@ var (
 
 type persistencePStoreProviderOption func(*persistencePeerstoreProvider)
 type persistencePStoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, persistencePStoreProviderOption]
+
+// TECHDEBT(#810): refactor to implement `Submodule` interface.
 type persistencePeerstoreProvider struct {
 	base_modules.IntegratableModule
 }
 
-func NewPersistencePeerstoreProvider(bus modules.Bus, options ...persistencePStoreProviderOption) (peerstore_provider.PeerstoreProvider, error) {
+func Create(bus modules.Bus, options ...persistencePStoreProviderOption) (peerstore_provider.PeerstoreProvider, error) {
 	return new(persistencePeerstoreProvider).Create(bus, options...)
 }
 
@@ -46,11 +48,11 @@ func (persistencePSP *persistencePeerstoreProvider) GetStakedPeerstoreAtHeight(h
 	}
 	defer readCtx.Release()
 
-	validators, err := readCtx.GetAllValidators(int64(height))
+	stakedActors, err := readCtx.GetAllStakedActors(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	return peerstore_provider.ActorsToPeerstore(persistencePSP, validators)
+	return peerstore_provider.ActorsToPeerstore(persistencePSP, stakedActors)
 }
 
 // GetStakedPeerstoreAtHeight implements the respective `PeerstoreProvider` interface method.

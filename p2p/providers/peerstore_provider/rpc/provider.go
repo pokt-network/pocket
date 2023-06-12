@@ -19,6 +19,7 @@ import (
 
 var _ peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
 
+// TECHDEBT(#810): refactor to implement `Submodule` interface.
 type rpcPeerstoreProvider struct {
 	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
 	base_modules.IntegratableModule
@@ -29,9 +30,7 @@ type rpcPeerstoreProvider struct {
 	rpcClient *rpc.ClientWithResponses
 }
 
-// TECHDEBT(#810): refactor to be consistent with `persistencePeerstoreProvider`
-// (i.e. `NewRPCPeerstoreProvider` calls `rpcPeerstoreProvider#Create()`.
-func NewRPCPeerstoreProvider(options ...modules.ModuleOption) *rpcPeerstoreProvider {
+func Create(options ...modules.ModuleOption) *rpcPeerstoreProvider {
 	rabp := &rpcPeerstoreProvider{
 		rpcURL: flags.RemoteCLIURL,
 	}
@@ -45,15 +44,9 @@ func NewRPCPeerstoreProvider(options ...modules.ModuleOption) *rpcPeerstoreProvi
 	return rabp
 }
 
-// TECHDEBT(#810): remove as it should no longer be needed.
-func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return new(rpcPeerstoreProvider).Create(bus, options...)
-}
-
-// TECHDEBT(#810): refactor to be consistent with `persistencePeerstoreProvider`
-// (i.e. `NewRPCPeerstoreProvider` calls `rpcPeerstoreProvider#Create()`.
+// TECHDEBT(#810): refactor to implement `Submodule` interface.
 func (*rpcPeerstoreProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return NewRPCPeerstoreProvider(options...), nil
+	return Create(options...), nil
 }
 
 func (*rpcPeerstoreProvider) GetModuleName() string {
