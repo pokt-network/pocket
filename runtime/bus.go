@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/pokt-network/pocket/logger"
@@ -51,6 +52,7 @@ func (m *bus) RegisterModule(module modules.Module) {
 }
 
 func (m *bus) PublishEventToBus(e *messaging.PocketEnvelope) {
+	fmt.Println("OLSH eventsChannel", m.channel)
 	m.channel <- e
 }
 

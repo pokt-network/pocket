@@ -100,6 +100,9 @@ func (m *stateSync) StartSynchronousStateSync() error {
 	_, maxHeight := m.getAggregatedStateSyncMetadata()
 
 	// Synchronously request block requests from the current height to the aggregated metadata height
+	// Note that we are using `<=` because:
+	// - maxHeight is the max * committed * height of the network
+	// - currentHeight is the latest * committing * height of the node
 	for currentHeight <= maxHeight {
 		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, maxHeight)
 

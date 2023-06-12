@@ -13,7 +13,7 @@ func (m *consensusModule) publishNewHeightEvent(height uint64) {
 	m.GetBus().PublishEventToBus(newHeightEvent)
 }
 
-// publishStateSyncBlockCommittedEvent publishes a nstate_machine/module.goew state sync block committed event, so that state sync module can react to it
+// publishStateSyncBlockCommittedEvent publishes a state_machine/module.goew state sync block committed event, so that state sync module can react to it
 func (m *consensusModule) publishStateSyncBlockCommittedEvent(height uint64) {
 	blockCommittedEvent := &messaging.StateSyncBlockCommittedEvent{
 		Height: height,

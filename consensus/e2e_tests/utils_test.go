@@ -274,14 +274,18 @@ func waitForNetworkStateSyncEvents(
 	numExpectedMsgs int,
 	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
+	include *func(*typesCons.StateSyncMessage) bool,
 ) (messages []*anypb.Any, err error) {
 	includeFilter := func(anyMsg *anypb.Any) bool {
 		msg, err := codec.GetCodec().FromAny(anyMsg)
 		require.NoError(t, err)
 
-		_, ok := msg.(*typesCons.StateSyncMessage)
+		stateSyncMsg, ok := msg.(*typesCons.StateSyncMessage)
 		require.True(t, ok)
 
+		if include != nil {
+			return (*include)(stateSyncMsg)
+		}
 		return true
 	}
 
@@ -354,16 +358,19 @@ loop:
 	for {
 		select {
 		case nodeEvent := <-eventsChannel:
+			fmt.Println("OLSH eventContentType0", eventContentType, nodeEvent.GetContentType())
 			if nodeEvent.GetContentType() != eventContentType {
 				unusedEvents = append(unusedEvents, nodeEvent)
 				continue
 			}
 
+			fmt.Println("OLSH eventContentType1", eventContentType)
 			message := nodeEvent.Content
 			if message == nil || !msgIncludeFilter(message) {
 				unusedEvents = append(unusedEvents, nodeEvent)
 				continue
 			}
+			fmt.Println("OLSH eventContentType2", eventContentType)
 
 			expectedMsgs = append(expectedMsgs, message)
 			numRemainingMsgs--
@@ -380,7 +387,6 @@ loop:
 			if numRemainingMsgs == 0 {
 				break loop
 			} else if numRemainingMsgs > 0 {
-				fmt.Println("OLSH", expectedMsgs)
 				return expectedMsgs, fmt.Errorf("Missing '%s' messages; %d expected but %d received. (%s) \n\t !!!IMPORTANT(#462)!!!: Consider increasing `maxWaitTime` as a workaround", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			} else {
 				return expectedMsgs, fmt.Errorf("Too many '%s' messages; %d expected but %d received. (%s)", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
@@ -626,6 +632,10 @@ func WaitForNextBlock(
 ) *coreTypes.Block {
 	leaderId := typesCons.NodeId(pocketNodes[1].GetBus().GetConsensusModule().GetLeaderForView(height, uint64(round), uint8(consensus.NewRound)))
 
+	// Debug message to start consensus by triggering first view change
+	triggerNextView(t, pocketNodes)
+	advanceTime(t, clck, 10*time.Millisecond)
+
 	// 1. NewRound
 	newRoundMessages, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.NewRound), round, 0, numValidators*numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
@@ -733,96 +743,6 @@ func broadcastMessages(t *testing.T, msgs []*anypb.Any, pocketNodes idToNodeMapp
 func triggerNextView(t *testing.T, pocketNodes idToNodeMapping) {
 	for _, node := range pocketNodes {
 		triggerDebugMessage(t, node, messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
-	}
-}
-
-// waitForNodeToSync waits for a node to sync to a target height.
-// For every block the unsynched node is missing:
-//  1. Wait for the unsynched node to request a missing block via `waitForNodeToRequestMissingBlock()`
-//  2. Wait for other nodes to send the requested block via `waitForNodesToReplyToBlockRequest()`
-//  3. Wait for the node to catch up to the target height via `waitForNodeToCatchUp()`
-func waitForNodeToSync(
-	t *testing.T,
-	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
-	unsyncedNode *shared.Node,
-	allNodes idToNodeMapping,
-	targetHeight uint64,
-) {
-	t.Helper()
-
-	// Get unsynched node info
-	unsyncedNodeId := typesCons.NodeId(unsyncedNode.GetBus().GetConsensusModule().GetNodeId())
-	currentHeight := unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
-	require.Less(t, currentHeight, targetHeight, "target height must be greater than current height")
-
-	for currentHeight < targetHeight {
-		receivedMsg, err := waitForNetworkStateSyncEvents(t, clck, eventsChannel, "error waiting on response to a get block request", 5, 5000, false)
-		require.NoError(t, err)
-
-		msg, err := codec.GetCodec().FromAny(receivedMsg[0])
-		require.NoError(t, err)
-		stateSyncMessage, ok := msg.(*typesCons.StateSyncMessage)
-		require.True(t, ok)
-		fmt.Println("receivedMsg", stateSyncMessage.GetGetBlockReq().Height, "~~~~~", stateSyncMessage.GetGetBlockReq().PeerAddress, "~~~~~")
-
-		broadcastMessages(t, receivedMsg, allNodes)
-
-		// Wait for block request messages
-		// Broadcast them
-		// Wait for block response messages
-		// Broadcast them
-
-		// anyProto, err := anypb.New(stateSyncGetBlockMessage)
-		// require.NoError(t, err)
-
-		// // Send get block request to the server node
-		// P2PSend(t, serverNode, anyProto)
-
-		// waiting for unsynced node to request the same missing block from all peers.
-		blockRequests, err := waitForNetworkStateSyncEvents(t, clck, eventsChannel, "error while waiting for block response messages.", numValidators, 500, true)
-		require.NoError(t, err)
-
-		// verify that all requests are identical and take the first one
-		require.True(t, checkIdentical(blockRequests), "All block requests sent by node must be identical")
-		blockRequest := blockRequests[0]
-
-		// broadcast one of the block requests to all nodes
-		broadcast(t, allNodes, blockRequest)
-		advanceTime(t, clck, 10*time.Millisecond)
-
-		// wait to receive block replies from all nodes (except for self)
-		blockResponses, err := waitForNetworkStateSyncEvents(t, clck, eventsChannel, "error while waiting for block response messages.", numValidators-1, 500, true)
-		require.NoError(t, err)
-
-		// verify that all nodes replied with the same block response
-		var blockResponse *typesCons.GetBlockResponse
-		for _, msg := range blockResponses {
-			msgAny, err := codec.GetCodec().FromAny(msg)
-			require.NoError(t, err)
-
-			stateSyncMessage, ok := msgAny.(*typesCons.StateSyncMessage)
-			require.True(t, ok)
-
-			if blockResponse == nil {
-				blockResponse = stateSyncMessage.GetGetBlockRes()
-				continue
-			}
-			require.Equal(t, blockResponse.Block, stateSyncMessage.GetGetBlockRes().Block)
-		}
-
-		// since all block responses are identical, send one of the block responses to the unsynced node
-		send(t, unsyncedNode, blockResponses[0])
-		advanceTime(t, clck, 10*time.Millisecond)
-
-		// waiting for node to reach to the next height (currentHeight+1)
-		_, err = waitForNetworkFSMEvents(t, clck, eventsChannel, coreTypes.StateMachineEvent_Consensus_IsSyncedValidator, "error while waiting for validator to sync", 1, 500, false)
-		require.NoError(t, err)
-
-		// ensure unsynced node caught up to the target height
-		nodeState := getConsensusNodeState(unsyncedNode)
-		assertHeight(t, unsyncedNodeId, currentHeight+1, nodeState.Height)
-		currentHeight = unsyncedNode.GetBus().GetConsensusModule().CurrentHeight()
 	}
 }
 
@@ -1051,6 +971,22 @@ func prepareStateSyncGetBlockMessage(t *testing.T, peerAddress string, height ui
 	}
 
 	anyProto, err := anypb.New(stateSyncGetBlockMessage)
+	require.NoError(t, err)
+
+	return anyProto
+}
+
+func prepareStateSyncGetMetadataMessage(t *testing.T, selfAddress string) *anypb.Any {
+	t.Helper()
+
+	stateSyncMetaDataReqMessage := &typesCons.StateSyncMessage{
+		Message: &typesCons.StateSyncMessage_MetadataReq{
+			MetadataReq: &typesCons.StateSyncMetadataRequest{
+				PeerAddress: selfAddress,
+			},
+		},
+	}
+	anyProto, err := anypb.New(stateSyncMetaDataReqMessage)
 	require.NoError(t, err)
 
 	return anyProto

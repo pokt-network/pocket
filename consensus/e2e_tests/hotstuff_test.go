@@ -27,10 +27,6 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	err := startAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
-	// Debug message to start consensus by triggering first view change
-	triggerNextView(t, pocketNodes)
-	advanceTime(t, clockMock, 10*time.Millisecond)
-
 	// Wait for nodes to reach height=1 by generating a block
 	block := WaitForNextBlock(t, clockMock, eventsChannel, pocketNodes, 1, 0, 500, true)
 	require.Equal(t, uint64(1), block.BlockHeader.Height)
@@ -52,10 +48,14 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	stateSyncGetBlockMsg := prepareStateSyncGetBlockMessage(t, requesterNodePeerAddress, 1)
 	send(t, serverNode, stateSyncGetBlockMsg)
 
-	// Server node is waiting for the get block request message
-	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting for StateSync.GetBlockRequest message", 1, 500, false)
+	isGetBlockResponse := func(msg *typesCons.StateSyncMessage) bool {
+		return msg.GetGetBlockRes() != nil
+	}
+	// Server node is waiting for the get block response message
+	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting for StateSync.GetBlockRequest message", 1, 500, false, &isGetBlockResponse)
 	require.NoError(t, err)
 
+	// Verify that it was a get block request of the right height
 	msg, err := codec.GetCodec().FromAny(receivedMsg[0])
 	require.NoError(t, err)
 	stateSyncGetBlockResMessage, ok := msg.(*typesCons.StateSyncMessage)
@@ -63,6 +63,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	getBlockRes := stateSyncGetBlockResMessage.GetGetBlockRes()
 	require.NotEmpty(t, getBlockRes)
 
+	// Validate the data in the block received
 	require.Equal(t, uint64(1), getBlockRes.Block.GetBlockHeader().Height)
 }
 
