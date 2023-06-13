@@ -18,18 +18,7 @@ var (
 )
 
 func init() {
-	// set the rpcURL based on the environment while still supporting overriding of the RPC_HOST.
-	var rpcHost string
-	// TECHDEBT: if we intend to support running the e2e tests in both tilt/k8s and
-	// docker compose, then we need to understand why the `KUBERNETES_SERVICE_HOST`
-	// isn't set even when running in k8s. See: `test_go('e2e-tests', ...` in the
-	// Tiltfile.
-	// if runtime.IsProcessRunningInsideKubernetes() {
-	rpcHost = runtime.GetEnv("RPC_HOST", defaults.RandomValidatorEndpointK8SHostname)
-	// } else {
-	// 	rpcHost = runtime.GetEnv("RPC_HOST", defaults.Validator1EndpointDockerComposeHostname)
-	// }
-
+	rpcHost := runtime.GetEnv("RPC_HOST", defaults.RandomValidatorEndpointK8SHostname)
 	rpcURL = fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
 }
 
