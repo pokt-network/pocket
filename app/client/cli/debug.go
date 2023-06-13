@@ -76,7 +76,7 @@ func NewDebugCommand() *cobra.Command {
 	}
 }
 
-func runDebug(cmd *cobra.Command, args []string) (err error) {
+func runDebug(cmd *cobra.Command, _ []string) (err error) {
 	for {
 		if selection, err := promptGetInput(); err == nil {
 			handleSelect(cmd, selection)
@@ -164,32 +164,17 @@ func handleSelect(cmd *cobra.Command, selection string) {
 	}
 }
 
-// Broadcast to the entire validator set
-func broadcastDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
+// Broadcast to the entire network.
+func broadcastDebugMessage(_ *cobra.Command, debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to create Any proto")
 	}
 
-	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
-	// broadcast. The reason it cannot be done right now is because this client is not in the
-	// address book of the actual validator nodes, so `validator1` never receives the message.
-	// p2pMod.Broadcast(anyProto)
-
-	pstore, err := fetchPeerstore(cmd)
-	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Unable to retrieve the pstore")
+	// TECHDEBT: prefer to retrieve P2P module from the bus instead.
+	if err := helpers.P2PMod.Broadcast(anyProto); err != nil {
+		logger.Global.Error().Err(err).Msg("Failed to broadcast debug message")
 	}
-	for _, val := range pstore.GetPeerList() {
-		addr := val.GetAddress()
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
-		}
-		if err := helpers.P2PMod.Send(addr, anyProto); err != nil {
-			logger.Global.Error().Err(err).Msg("Failed to send debug message")
-		}
-	}
-
 }
 
 // Send to just a single (i.e. first) validator in the set
@@ -210,6 +195,9 @@ func sendDebugMessage(cmd *cobra.Command, debugMsg *messaging.DebugMessage) {
 	}
 
 	// if the message needs to be broadcast, it'll be handled by the business logic of the message handler
+	//
+	// DISCUSS_THIS_COMMIT: The statement above is false. Using `#Send()` will only
+	// be unicast with no opportunity for further propagation.
 	validatorAddress = pstore.GetPeerList()[0].GetAddress()
 	if err != nil {
 		logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
