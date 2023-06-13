@@ -126,7 +126,7 @@ func persistentPreRun(cmd *cobra.Command, _ []string) {
 func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) {
 	bus := rm.GetBus()
 	modulesRegistry := bus.GetModulesRegistry()
-	pstoreProvider := rpcABP.NewRPCPeerstoreProvider(
+	pstoreProvider := rpcABP.Create(
 		rpcABP.WithP2PConfig(rm.GetConfig().P2P),
 		rpcABP.WithCustomRPCURL(rpcURL),
 	)
