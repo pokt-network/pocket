@@ -31,8 +31,8 @@ func NewStoreManager(storesDirPath string) modules.StoreManager {
 // applying the store prefix to the paths and setting the value in the store to this key
 func InitialiseStore(store modules.Store, data map[string][]byte) error {
 	for path, value := range data {
-		prefix := &coreTypes.CommitmentPrefix{Prefix: []byte(store.GetStoreKey())}
-		key := host.ApplyPrefix(prefix, path).GetPath()
+		prefix := host.CommitmentPrefix([]byte(store.GetStoreKey()))
+		key := host.ApplyPrefix(prefix, path)
 		if err := store.Set(key, value); err != nil {
 			return err
 		}

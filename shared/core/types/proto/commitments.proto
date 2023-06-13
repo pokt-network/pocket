@@ -4,18 +4,7 @@ package ibc;
 
 option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
-// CommitmentPrefix is the prefix bytes used in conjuction with a path string to create a
-// CommitmentPath. The prefix represents the store in which the path is stored
-message CommitmentPrefix {
-    bytes prefix = 1;
-}
-
-// CommitmentPath is the path bytes used to store a commitment in a store
-message CommitmentPath {
-    bytes path = 1;
-}
-
 // CommitmentRoot is the root of the tree used to store a commitment in a ProvableStore
 message CommitmentRoot {
-    bytes root = 1;
+    bytes hash = 1;
 }

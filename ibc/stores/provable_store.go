@@ -15,6 +15,8 @@ var (
 	noValueHasher                       = smt.WithValueHasher(nil)
 )
 
+type CommitmentRoot []byte
+
 // ProvableStore needs to produce CommitmentProof objects verifying membership
 // and non-membership of keys in the store, as such the ProvableStore utilises
 // a Sparse Merkle Tree (SMT) to store the data and generate such proofs
@@ -94,7 +96,7 @@ func (prov *ProvableStore) Stop() error {
 
 // Root returns the root of the SMT as a CommitmentRoot object
 func (prov *ProvableStore) Root() *coreTypes.CommitmentRoot {
-	return &coreTypes.CommitmentRoot{Root: prov.tree.Root()}
+	return &coreTypes.CommitmentRoot{Hash: prov.tree.Root()}
 }
 
 // CreateMembershipProof generates a CommitmentProof object verifying the membership of a key-value pair

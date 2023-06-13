@@ -47,7 +47,7 @@ var (
 // root as the one given. If it does, the key-value pair is a member of the tree
 func VerifyMembership(root *coreTypes.CommitmentRoot, proof *ics23.CommitmentProof, key, value []byte) bool {
 	// verify the proof
-	return ics23.VerifyMembership(smtSpec, root.Root, proof, key, value)
+	return ics23.VerifyMembership(smtSpec, root.Hash, proof, key, value)
 }
 
 // VerifyNonMembership verifies the CommitmentProof provided, checking whether it produces the same
@@ -55,7 +55,7 @@ func VerifyMembership(root *coreTypes.CommitmentRoot, proof *ics23.CommitmentPro
 // value is either the default nil value for the SMT or an unrelated value at the path
 func VerifyNonMembership(root *coreTypes.CommitmentRoot, proof *ics23.CommitmentProof, key []byte) bool {
 	// Verify the proof of the non-membership data doesn't belong to the key
-	valid := ics23.VerifyMembership(smtSpec, root.Root, proof, key, proof.GetExist().GetValue())
+	valid := ics23.VerifyMembership(smtSpec, root.Hash, proof, key, proof.GetExist().GetValue())
 	// Verify the key was actually empty
 	if bytes.Equal(proof.GetExist().GetValue(), defaultValue) {
 		return valid

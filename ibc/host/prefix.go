@@ -1,19 +1,23 @@
 package host
 
-import (
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+type (
+	// CommitmentPrefix is the prefix bytes used in conjuction with a path string to create a
+	// CommitmentPath. The prefix represents the store in which the path is stored
+	CommitmentPrefix []byte
+	// CommitmentPath is the path bytes used to store a commitment in a store
+	CommitmentPath []byte
 )
 
 // ApplyPrefix applies the prefix to the provided path returning a CommitmentPath
-func ApplyPrefix(prefix *coreTypes.CommitmentPrefix, path string) *coreTypes.CommitmentPath {
-	bz := make([]byte, 0, len(prefix.Prefix)+1+len([]byte(path)))
-	bz = append(bz, prefix.Prefix...)
+func ApplyPrefix(prefix CommitmentPrefix, path string) CommitmentPath {
+	bz := make([]byte, 0, len(prefix)+1+len([]byte(path)))
+	bz = append(bz, prefix...)
 	bz = append(bz, []byte("/")...)
 	bz = append(bz, []byte(path)...)
-	return &coreTypes.CommitmentPath{Path: bz}
+	return CommitmentPath(bz)
 }
 
 // RemovePrefix removes the prefix from the provided CommitmentPath returning a path string
-func RemovePrefix(prefix *coreTypes.CommitmentPrefix, path *coreTypes.CommitmentPath) string {
-	return string(path.Path[len(prefix.Prefix)+1:])
+func RemovePrefix(prefix CommitmentPrefix, path CommitmentPath) string {
+	return string(path[len(prefix)+1:])
 }
