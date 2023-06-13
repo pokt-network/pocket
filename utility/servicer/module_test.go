@@ -199,7 +199,7 @@ func testRelay(editors ...relayEditor) *coreTypes.Relay {
 			},
 		},
 		RelayPayload: &coreTypes.Relay_JsonRpcPayload{
-			&coreTypes.JsonRpcPayload{
+			JsonRpcPayload: &coreTypes.JsonRpcPayload{
 				Method: "POST",
 				Data:   []byte(`{"id": 1, "jsonrpc": "2.0", method: "eth_blockNumber"}`),
 			},

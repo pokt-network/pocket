@@ -127,7 +127,7 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 	payload.Headers = headers
 
 	relayRequest := &coreTypes.Relay{
-		RelayPayload: &coreTypes.Relay_JsonRpcPayload{payload},
+		RelayPayload: &coreTypes.Relay_JsonRpcPayload{JsonRpcPayload: payload},
 		Meta:         relayMeta,
 	}
 

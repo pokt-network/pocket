@@ -137,10 +137,13 @@ func (s *servicer) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse
 	if err != nil {
 		return nil, fmt.Errorf("Error getting a local context to update token usage for application %s: %w", relay.Meta.ApplicationAddress, err)
 	}
-	defer localCtx.Release()
 
 	if err := localCtx.StoreServiceRelay(session, relay.Meta.ApplicationAddress, relayDigest, relayReqResBytes); err != nil {
 		return nil, fmt.Errorf("Error recording service proof for application %s: %w", relay.Meta.ApplicationAddress, err)
+	}
+
+	if err := localCtx.Release(); err != nil {
+		s.logger.Warn().Err(err).Msg("failed to release local context")
 	}
 
 	return response, nil
@@ -149,7 +152,7 @@ func (s *servicer) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse
 // isRelayVolumeApplicable returns:
 //  1. The signed digest of a relay/response pair,
 //  2. Whether there was a collision for the specific chain (i.e. should the service proof be stored for claiming later)
-func (s *servicer) isRelayVolumeApplicable(relay *coreTypes.Relay, response *coreTypes.RelayResponse) (digest []byte, serializedRelayRes []byte, collides bool, err error) {
+func (s *servicer) isRelayVolumeApplicable(relay *coreTypes.Relay, response *coreTypes.RelayResponse) (digest, serializedRelayRes []byte, collides bool, err error) {
 	relayReqResBytes, err := codec.GetCodec().Marshal(&coreTypes.RelayReqRes{Relay: relay, Response: response})
 	if err != nil {
 		return nil, nil, false, fmt.Errorf("Error marshalling relay and/or response: %w", err)
@@ -185,7 +188,7 @@ func (s *servicer) executeRelay(relay *coreTypes.Relay) (*coreTypes.RelayRespons
 	case *coreTypes.Relay_RestPayload:
 		return nil, fmt.Errorf("Error executing relay on application %s: REST not supported", relay.Meta.ApplicationAddress)
 	default:
-		return nil, fmt.Errorf("Error exeucting relay on applicaiton %s: Unsupported type on payload %s", relay.Meta.ApplicationAddress, payload)
+		return nil, fmt.Errorf("Error exeucting relay on application %s: Unsupported type on payload %s", relay.Meta.ApplicationAddress, payload)
 	}
 }
 

@@ -112,6 +112,7 @@ func setViperDefaults(cfg *Config) {
 }
 
 func NewDefaultConfig(options ...func(*Config)) *Config {
+
 	cfg := &Config{
 		RootDirectory: defaults.DefaultRootDirectory,
 		NetworkId:     defaults.DefaultNetworkID,
@@ -124,20 +125,7 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			},
 		},
 		Utility: &UtilityConfig{
-			ServicerConfig: &ServicerConfig{
-				RelayMiningVolumeAccuracy: 0.2,
-				Services: map[string]*ServiceConfig{
-					// DISCUSS: what should the default config be? POKT/ETHM?
-					"POKT-V1": {
-						Url:         "http://localhost",
-						TimeoutMsec: 5000,
-						BasicAuth: &BasicAuth{
-							UserName: "user",
-							Password: "password",
-						},
-					},
-				},
-			},
+			ServicerConfig:             defaultServicerConfig(),
 			MaxMempoolTransactionBytes: defaults.DefaultUtilityMaxMempoolTransactionBytes,
 			MaxMempoolTransactions:     defaults.DefaultUtilityMaxMempoolTransactions,
 		},
@@ -171,7 +159,7 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			VaultMountPath: defaults.DefaultKeybaseVaultMountPath,
 		},
 		Validator: &ValidatorConfig{},
-		Servicer:  &ServicerConfig{},
+		Servicer:  defaultServicerConfig(),
 		Fisherman: &FishermanConfig{},
 	}
 
@@ -224,4 +212,22 @@ func CreateTempConfig(cfg *Config) (*Config, error) {
 	}
 
 	return ParseConfig(tmpfile.Name()), nil
+}
+
+func defaultServicerConfig() *ServicerConfig {
+	return &ServicerConfig{
+		Enabled:                   true,
+		RelayMiningVolumeAccuracy: 0.2,
+		Services: map[string]*ServiceConfig{
+			// DISCUSS: what should the default config be? POKT/ETHM?
+			"POKT-V1": {
+				Url:         "http://localhost",
+				TimeoutMsec: 5000,
+				BasicAuth: &BasicAuth{
+					UserName: "user",
+					Password: "password",
+				},
+			},
+		},
+	}
 }
