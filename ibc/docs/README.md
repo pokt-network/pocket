@@ -2,7 +2,7 @@
 
 - [Overview](#overview)
 - [IBC Module](#ibc-module)
-  - [IBC Hosts](#ibc-hosts)
+  - [Host Configuration](#host-configuration)
 - [Components](#components)
   - [ICS-24 Host Requirements](#ics-24-host-requirements)
   - [ICS-23 Vector Commitments](#ics-23-vector-commitments)
@@ -20,7 +20,7 @@ Pocket's IBC module is split into numerous components detailed below. The overal
 **Note:** Not all of the different ICS components have been fully implemented yet, this is a work in progress.
 
 ```mermaid
-flowchart TD
+flowchart TB
     subgraph IBC[IBC Module]
         subgraph 23[ICS-23]
             VC[Vector Commitments]
@@ -55,7 +55,7 @@ flowchart TD
     IBC ---> 20
 ```
 
-### IBC Hosts
+### Host Configuration
 
 Part of the node configurations relating to the IBC module is as follows:
 
@@ -66,7 +66,7 @@ Part of the node configurations relating to the IBC module is as follows:
 }
 ```
 
-If a node enables the IBC module, and is a validator, then the IBC module will automatically create an IBC host on startup. As the host defines the connections, channels and ports - which must stay persistent, the node should be a validator with little risk of suddenly closing any of these while open. As any tokens transferred over a connection/channel/port are unique to that combination they can only be returned over the same combination. If the channel is to close without warning then tokens will be unable to be returned to their source.
+If a node enables the IBC module, and is a validator, then the IBC module will automatically create an IBC host on startup. As the host defines the connections, channels and ports - which must stay persistent, the node should be a validator with little risk of suddenly closing any of these while open. As any tokens transferred over a connection/channel/port are unique to that combination they can only be returned over the same combination. If the channel is to close without warning then tokens will be unable to be returned to their source. It is for this reason that only validators are able to become IBC hosts.
 
 ## Components
 
