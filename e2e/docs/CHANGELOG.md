@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.9] - 2023-06-12
+## [0.0.0.9] - 2023-06-13
 
 - Replaced RPC_HOST with POCKET_REMOTE_CLI_URL where appropriate
 - Added `remote-cli-url` flag to cluster manager & refactor
