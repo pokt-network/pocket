@@ -18,7 +18,8 @@ var (
 )
 
 func init() {
-	rpcURL = fmt.Sprintf("http://%s:%s", runtime.GetEnv("RPC_HOST", "pocket-validators"), defaults.DefaultRPCPort)
+	rpcHost := runtime.GetEnv("RPC_HOST", defaults.RandomValidatorEndpointK8SHostname)
+	rpcURL = fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort)
 }
 
 // cliPath is the path of the binary installed and is set by the Tiltfile

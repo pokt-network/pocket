@@ -7,26 +7,17 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
-	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
-var (
-	_       peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
-	rpcHost string
-)
-
-func init() {
-	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
-	rpcHost = runtime.GetEnv("RPC_HOST", defaults.DefaultRPCHost)
-}
+var _ peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
 
 // TECHDEBT(#810): refactor to implement `Submodule` interface.
 type rpcPeerstoreProvider struct {
@@ -41,7 +32,7 @@ type rpcPeerstoreProvider struct {
 
 func Create(options ...modules.ModuleOption) *rpcPeerstoreProvider {
 	rabp := &rpcPeerstoreProvider{
-		rpcURL: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
+		rpcURL: flags.RemoteCLIURL,
 	}
 
 	for _, o := range options {

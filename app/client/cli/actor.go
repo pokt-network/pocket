@@ -6,10 +6,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/spf13/cobra"
+
+	"github.com/pokt-network/pocket/app/client/cli/flags"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	"github.com/spf13/cobra"
 )
 
 func init() {
@@ -100,7 +102,7 @@ If no changes are desired for the parameter, just enter the current param value 
 				return err
 			}
 
-			if !nonInteractive {
+			if !flags.NonInteractive {
 				pwd = readPassphrase(pwd)
 			}
 
@@ -169,7 +171,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			if !nonInteractive {
+			if !flags.NonInteractive {
 				pwd = readPassphrase(pwd)
 			}
 
@@ -233,7 +235,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			if !nonInteractive {
+			if !flags.NonInteractive {
 				pwd = readPassphrase(pwd)
 			}
 			pk, err := kb.GetPrivKey(fromAddrHex, pwd)
@@ -284,7 +286,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 
-			if !nonInteractive {
+			if !flags.NonInteractive {
 				pwd = readPassphrase(pwd)
 			}
 

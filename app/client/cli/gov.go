@@ -3,10 +3,12 @@ package cli
 import (
 	"fmt"
 
-	"github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+
+	"github.com/pokt-network/pocket/app/client/cli/flags"
+	"github.com/pokt-network/pocket/utility/types"
 )
 
 func init() {
@@ -52,7 +54,7 @@ func govCommands() []*cobra.Command {
 					return err
 				}
 
-				if !nonInteractive {
+				if !flags.NonInteractive {
 					pwd = readPassphrase(pwd)
 				}
 

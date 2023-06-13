@@ -25,15 +25,15 @@ func Create(bus modules.Bus, options ...persistencePStoreProviderOption) (peerst
 }
 
 func (*persistencePeerstoreProvider) Create(bus modules.Bus, options ...persistencePStoreProviderOption) (peerstore_provider.PeerstoreProvider, error) {
-	pabp := &persistencePeerstoreProvider{
+	persistencePSP := &persistencePeerstoreProvider{
 		IntegratableModule: *base_modules.NewIntegratableModule(bus),
 	}
 
 	for _, o := range options {
-		o(pabp)
+		o(persistencePSP)
 	}
 
-	return pabp, nil
+	return persistencePSP, nil
 }
 
 func (*persistencePeerstoreProvider) GetModuleName() string {

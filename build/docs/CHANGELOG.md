@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.47] - 2023-06-13
+
+- Replaced `RPC_HOST` with `POCKET_REMOTE_CLI_URL` or `--pocket-remote-cli-url` where appropriate
+- Added `remote-cli-url` flag to cluster manager & refactored
+
 ## [0.0.0.46] - 2023-06-06
 
 - Renames config files and actor hostnames

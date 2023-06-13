@@ -71,7 +71,7 @@ func TestFeatures(t *testing.T) {
 
 func (s *rootSuite) TheUserHasAValidator() {
 	res, err := s.validator.RunCommand("help")
-	require.NoError(s, err)
+	require.NoErrorf(s, err, res.Stderr)
 	s.validator.result = res
 }
 
@@ -104,8 +104,6 @@ func (s *rootSuite) TheUserSendsUpoktToAnotherAddress(amount int64) {
 	privKey := s.getPrivateKey(validatorA)
 	valB := s.getPrivateKey(validatorB)
 	args := []string{
-		"--non_interactive=true",
-		"--remote_cli_url=" + rpcURL,
 		"Account",
 		"Send",
 		privKey.Address().String(),
@@ -122,8 +120,6 @@ func (s *rootSuite) TheUserSendsUpoktToAnotherAddress(amount int64) {
 func (s *rootSuite) stakeValidator(privKey cryptoPocket.PrivateKey, amount string) {
 	validatorServiceUrl := fmt.Sprintf(validatorServiceURLTmpl, validatorA, defaults.DefaultP2PPort)
 	args := []string{
-		"--non_interactive=true",
-		"--remote_cli_url=" + rpcURL,
 		"Validator",
 		"Stake",
 		privKey.Address().String(),
@@ -141,8 +137,6 @@ func (s *rootSuite) stakeValidator(privKey cryptoPocket.PrivateKey, amount strin
 func (s *rootSuite) unstakeValidator() {
 	privKey := s.getPrivateKey(validatorA)
 	args := []string{
-		"--non_interactive=true",
-		"--remote_cli_url=" + rpcURL,
 		"Validator",
 		"Unstake",
 		privKey.Address().String(),
