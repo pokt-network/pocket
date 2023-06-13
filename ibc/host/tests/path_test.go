@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/ibc/host"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,26 +54,26 @@ func TestPaths_GenerateValidIdentifiers(t *testing.T) {
 }
 
 func TestPaths_CommitmentPrefix(t *testing.T) {
-	prefix := &coreTypes.CommitmentPrefix{Prefix: []byte("test")}
+	prefix := host.CommitmentPrefix([]byte("test"))
 
 	testCases := []struct {
 		name     string
 		path     string
-		prefix   *coreTypes.CommitmentPrefix
+		prefix   host.CommitmentPrefix
 		expected []byte
 		result   string
 	}{
 		{
 			name:     "Successfully applies and removes prefix to produce the same path",
 			path:     "path",
-			prefix:   &coreTypes.CommitmentPrefix{Prefix: []byte("test")},
+			prefix:   host.CommitmentPrefix([]byte("test")),
 			expected: []byte("test/path"),
 			result:   "path",
 		},
 		{
 			name:     "Fails to produce input path when given a different prefix",
 			path:     "path",
-			prefix:   &coreTypes.CommitmentPrefix{Prefix: []byte("test2")},
+			prefix:   host.CommitmentPrefix([]byte("test2")),
 			expected: []byte("test/path"),
 			result:   "ath",
 		},
@@ -83,8 +82,8 @@ func TestPaths_CommitmentPrefix(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			commitment := host.ApplyPrefix(prefix, tc.path)
-			require.NotNil(t, commitment.GetPath())
-			require.Equal(t, commitment.GetPath(), tc.expected)
+			require.NotNil(t, commitment)
+			require.Equal(t, []byte(commitment), tc.expected)
 
 			path := host.RemovePrefix(tc.prefix, commitment)
 			require.NotNil(t, path)
