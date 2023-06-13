@@ -21,7 +21,7 @@ services:
       dockerfile: ./build/Dockerfile.client
     environment:
       # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
-      - RPC_HOST=validator1
+      - POCKET_REMOTE_CLI_URL=http://validator1:50832
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     stdin_open: true

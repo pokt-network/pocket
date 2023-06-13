@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.54] - 2023-06-08
+## [0.0.0.55] - 2023-06-08
 
 - Added state sync channels `blocksReceived` and `metadataReceived`
 - Implemented `blockApplicationLoop()`
 - Implemented state sync module functions `Start()` and `Stop()`
 - Implemented `WaitForNetworkFSMEvents()` function in test utils
+
+## [0.0.0.54] - 2023-06-13
+
+- Fix tests
 
 ## [0.0.0.53] - 2023-06-08
 

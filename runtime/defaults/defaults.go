@@ -23,11 +23,12 @@ func initDefaultRootDirectory() {
 }
 
 const (
-	DefaultRPCPort                  = "50832"
-	DefaultBusBufferSize            = 100
-	DefaultRPCHost                  = "localhost"
-	Validator1EndpointDockerCompose = "validator1"
-	Validator1EndpointK8S           = "validator-001-pocket"
+	DefaultRPCPort                          = "50832"
+	DefaultBusBufferSize                    = 100
+	DefaultRPCHost                          = "localhost"
+	Validator1EndpointDockerComposeHostname = "validator1"
+	Validator1EndpointK8SHostname           = "validator-001-pocket"
+	RandomValidatorEndpointK8SHostname      = "pocket-validators"
 )
 
 var (
@@ -78,7 +79,7 @@ var (
 	//
 	// In LocalNet, the developer will have only one of the two stack online, therefore this is also a poor's man way to simulate the scenario in which a boostrap node is offline.
 	DefaultP2PBootstrapNodesCsv = fmt.Sprintf("%s,%s",
-		fmt.Sprintf("http://%s:%s", Validator1EndpointDockerCompose, DefaultRPCPort),
-		fmt.Sprintf("http://%s:%s", Validator1EndpointK8S, DefaultRPCPort),
+		fmt.Sprintf("http://%s:%s", Validator1EndpointDockerComposeHostname, DefaultRPCPort),
+		fmt.Sprintf("http://%s:%s", Validator1EndpointK8SHostname, DefaultRPCPort),
 	)
 )

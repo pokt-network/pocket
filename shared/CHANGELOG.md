@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `pocket.StateSyncBlockCommittedEvent` to the shared messaging events
 
+## [0.0.0.60] - 2023-06-13
+
+- Added `Factory` generic type
+- Improved godoc comments
+
 ## [0.0.0.59] - 2023-06-01
 
 - Use ApplicationAddress in RelayMeta
