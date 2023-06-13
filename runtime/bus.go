@@ -27,16 +27,20 @@ type bus struct {
 	runtimeMgr modules.RuntimeMgr
 }
 
-func CreateBus(runtimeMgr modules.RuntimeMgr) (modules.Bus, error) {
-	return new(bus).Create(runtimeMgr)
+func CreateBus(runtimeMgr modules.RuntimeMgr, opts ...modules.BusOption) (modules.Bus, error) {
+	return new(bus).Create(runtimeMgr, opts...)
 }
 
-func (b *bus) Create(runtimeMgr modules.RuntimeMgr) (modules.Bus, error) {
+func (b *bus) Create(runtimeMgr modules.RuntimeMgr, opts ...modules.BusOption) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, defaults.DefaultBusBufferSize),
 
 		runtimeMgr:      runtimeMgr,
 		modulesRegistry: NewModulesRegistry(),
+	}
+
+	for _, o := range opts {
+		o(bus)
 	}
 
 	return bus, nil
@@ -119,6 +123,15 @@ func (m *bus) GetRPCModule() modules.RPCModule {
 
 func (m *bus) GetStateMachineModule() modules.StateMachineModule {
 	return getModuleFromRegistry[modules.StateMachineModule](m, modules.StateMachineModuleName)
+}
+
+// WithEventsChannel is used initialize the bus with a specific events channel
+func WithEventsChannel(eventsChannel modules.EventsChannel) modules.BusOption {
+	return func(m modules.Bus) {
+		if m, ok := m.(*bus); ok {
+			m.channel = eventsChannel
+		}
+	}
 }
 
 // getModuleFromRegistry is a helper function to get a module from the registry that handles errors and casting via generics
