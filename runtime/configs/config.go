@@ -159,7 +159,7 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			VaultMountPath: defaults.DefaultKeybaseVaultMountPath,
 		},
 		Validator: &ValidatorConfig{},
-		Servicer:  defaultServicerConfig(),
+		Servicer:  &ServicerConfig{},
 		Fisherman: &FishermanConfig{},
 	}
 
