@@ -121,7 +121,7 @@ WORKDIR /
 docker_build_with_restart(
     "client-image",
     root_dir,
-    dockerfile_contents=    """FROM debian:bullseye
+    dockerfile_contents="""FROM debian:bullseye
 RUN apt-get update && apt-get install -y procps
 WORKDIR /
 COPY bin/p1-linux /usr/local/bin/p1
@@ -303,7 +303,7 @@ test_go(
     "e2e-tests",
     "{root_dir}/e2e/tests".format(root_dir=root_dir),
     ".",
-    extra_args=["-v", "-tags=e2e"],
+    extra_args=["-v", "-count=1", "-tags=e2e"],
     labels=["e2e-tests"],
     trigger_mode=TRIGGER_MODE_MANUAL,
 )
