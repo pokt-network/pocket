@@ -20,6 +20,7 @@ type Bus interface {
 	PublishEventToBus(e *messaging.PocketEnvelope)
 	GetBusEvent() *messaging.PocketEnvelope
 	GetEventBus() EventsChannel
+	GetDebugEventBus() EventsChannel
 
 	// Dependency Injection / Service Discovery
 	GetModulesRegistry() ModulesRegistry

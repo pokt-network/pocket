@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/pokt-network/pocket/logger"
@@ -37,7 +36,8 @@ func CreateBus(runtimeMgr modules.RuntimeMgr, opts ...modules.BusOption) (module
 
 func (b *bus) Create(runtimeMgr modules.RuntimeMgr, opts ...modules.BusOption) (modules.Bus, error) {
 	bus := &bus{
-		channel: make(modules.EventsChannel, defaults.DefaultBusBufferSize),
+		channel:      make(modules.EventsChannel, defaults.DefaultBusBufferSize),
+		debugChannel: nil,
 
 		runtimeMgr:      runtimeMgr,
 		modulesRegistry: NewModulesRegistry(),
@@ -60,8 +60,10 @@ func (m *bus) RegisterModule(module modules.Module) {
 }
 
 func (m *bus) PublishEventToBus(e *messaging.PocketEnvelope) {
-	fmt.Println("OLSH eventsChannel", m.channel)
 	m.channel <- e
+	if m.debugChannel != nil {
+		m.debugChannel <- e
+	}
 }
 
 func (m *bus) GetBusEvent() *messaging.PocketEnvelope {
@@ -70,6 +72,11 @@ func (m *bus) GetBusEvent() *messaging.PocketEnvelope {
 }
 
 func (m *bus) GetEventBus() modules.EventsChannel {
+	return m.channel
+}
+
+// GetDebugEventBus returns the debug event bus
+func (m *bus) GetDebugEventBus() modules.EventsChannel {
 	return m.channel
 }
 

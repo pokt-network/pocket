@@ -126,7 +126,8 @@ func createTestConsensusPocketNode(
 	consensusModule, ok := consensusMod.(modules.ConsensusModule)
 	require.True(t, ok)
 
-	_, err = state_machine.Create(bus, state_machine.WithDebugEventsChannel(sharedNetworkChannel))
+	// _, err = state_machine.Create(bus, state_machine.WithDebugEventsChannel(sharedNetworkChannel))
+	_, err = state_machine.Create(bus)
 	require.NoError(t, err)
 
 	runtimeMgr := (bus).GetRuntimeMgr()
@@ -160,10 +161,10 @@ func createTestConsensusPocketNode(
 	return pocketNode
 }
 
-func generateBuses(t *testing.T, runtimeMgrs []*runtime.Manager) (buses []modules.Bus) {
+func generateBuses(t *testing.T, runtimeMgrs []*runtime.Manager, opts ...modules.BusOption) (buses []modules.Bus) {
 	buses = make([]modules.Bus, len(runtimeMgrs))
 	for i := range runtimeMgrs {
-		bus, err := runtime.CreateBus(runtimeMgrs[i])
+		bus, err := runtime.CreateBus(runtimeMgrs[i], opts...)
 		require.NoError(t, err)
 		buses[i] = bus
 	}
@@ -293,30 +294,6 @@ func waitForNetworkStateSyncEvents(
 	}
 
 	return waitForEventsInternal(clck, sharedNetworkChannel, messaging.StateSyncMessageContentType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
-}
-
-// waitForNetworkFSMEvents waits for the number of expected state machine events to be published on the events channel.
-func waitForNetworkFSMEvents(
-	t *testing.T,
-	clck *clock.Mock,
-	sharedNetworkChannel modules.EventsChannel,
-	eventType coreTypes.StateMachineEvent,
-	errMsg string,
-	numExpectedMsgs int,
-	maxWaitTime time.Duration,
-	failOnExtraMessages bool,
-) (messages []*anypb.Any, err error) {
-	includeFilter := func(anyMsg *anypb.Any) bool {
-		msg, err := codec.GetCodec().FromAny(anyMsg)
-		require.NoError(t, err)
-
-		stateTransitionMessage, ok := msg.(*messaging.StateMachineTransitionEvent)
-		require.True(t, ok)
-
-		return stateTransitionMessage.Event == string(eventType)
-	}
-
-	return waitForEventsInternal(clck, sharedNetworkChannel, messaging.StateMachineTransitionEventType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework

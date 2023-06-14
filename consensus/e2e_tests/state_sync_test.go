@@ -1,6 +1,7 @@
 package e2e_tests
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
@@ -192,6 +194,11 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 
 		// Send one of the responses (since they are equal) to the unsynched node to apply it
 		send(t, unsyncedNode, blockResponses[0])
+		debugChannel := unsyncedNode.GetBus().GetDebugEventBus()
+		for {
+			e := <-debugChannel
+			fmt.Println(e)
+		}
 
 		// CONSIDERATION: Do we need to sleep or block before checking if the block was committed?
 		advanceTime(t, clockMock, 10*time.Millisecond)
@@ -208,8 +215,26 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	assertHeight(t, unsyncedNodeId, targetHeight, getConsensusNodeState(unsyncedNode).Height)
 }
 
-// TODO: Implement these tests
+func prepareStateSyncTestEnvironment(t *testing.T) (*clock.Mock, modules.EventsChannel, idToNodeMapping) {
+	// Test preparation
+	clockMock := clock.NewMock()
+	timeReminder(t, clockMock, time.Second)
 
+	// Test configs
+	runtimeMgrs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
+	buses := generateBuses(t, runtimeMgrs, runtime.WithNewDebugEventsChannel())
+
+	// Create & start test pocket nodes
+	// This channel captures all the messages that consensus nodes would send to each other over the network
+	sharedNetworkChannel := make(modules.EventsChannel, 100)
+	pocketNodes := createTestConsensusPocketNodes(t, buses, sharedNetworkChannel)
+	err := startAllTestPocketNodes(t, pocketNodes)
+	require.NoError(t, err)
+
+	return clockMock, sharedNetworkChannel, pocketNodes
+}
+
+// INCOMPLETE: Implement the following tests
 func TestStateSync_UnsyncedPeerSyncsABlock_Success(t *testing.T) {
 	t.Skip()
 }
@@ -233,33 +258,3 @@ func TestStateSync_4of10UnsyncedPeersCatchUp(t *testing.T) {
 func TestStateSync_9of10UnsyncedPeersCatchUp(t *testing.T) {
 	t.Skip()
 }
-
-func prepareStateSyncTestEnvironment(t *testing.T) (*clock.Mock, modules.EventsChannel, idToNodeMapping) {
-	// Test preparation
-	clockMock := clock.NewMock()
-	timeReminder(t, clockMock, time.Second)
-
-	// Test configs
-	runtimeMgrs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
-	buses := generateBuses(t, runtimeMgrs)
-	// buses := generateBusesTemp(t, runtimeMgrs, sharedNetworkChannel)
-
-	// Create & start test pocket nodes
-	sharedNetworkChannel := make(modules.EventsChannel, 100)
-	// buses := generateBusesTemp(t, runtimeMgrs, sharedNetworkChannel)
-	pocketNodes := createTestConsensusPocketNodes(t, buses, sharedNetworkChannel)
-	err := startAllTestPocketNodes(t, pocketNodes)
-	require.NoError(t, err)
-
-	return clockMock, sharedNetworkChannel, pocketNodes
-}
-
-// func generateBusesTemp(t *testing.T, runtimeMgrs []*runtime.Manager, channel modules.EventsChannel) (buses []modules.Bus) {
-// 	buses = make([]modules.Bus, len(runtimeMgrs))
-// 	for i := range runtimeMgrs {
-// 		bus, err := runtime.CreateBus(runtimeMgrs[i], runtime.WithEventsChannel(channel))
-// 		require.NoError(t, err)
-// 		buses[i] = bus
-// 	}
-// 	return
-// }
