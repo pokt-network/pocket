@@ -49,6 +49,7 @@ type TreeStore interface {
 	// not incur a change.
 	// * By nature of it taking a pgx transaction at runtime, Update inherits the pgx transaction's read view of the
 	// database.
+	// TODO(#808): Change interface to `Update(pgtx pgx.Tx, height uint64) (string, error)`
 	Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error)
 	// DebugClearAll completely clears the state of the trees. For debugging purposes only.
 	DebugClearAll() error
