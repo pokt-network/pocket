@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.35] - 2023-06-14
+
+- Update documentation and tests in the keybase to use the Secretbox key encryption method
+
 ## [0.0.0.34] - 2023-06-13
 
 - Exported `rootCmd` to support cross-package usage (i.e. subcommands w/ own pkgs)

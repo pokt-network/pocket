@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.49] - 2023-06-14
+
+- Updated keybase to use Secretbox encryption rather than AES-GCM, changing backup binary
+
 ## [0.0.0.48] - 2023-06-13
 
 - Added `-count=1` to tilt e2e-test execution to break the go test cache
