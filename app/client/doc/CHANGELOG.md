@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.31] - 2023-05-28
+## [0.0.0.31] - 2023-06-14
 
 - Add a new trustless relay sub-command to servicer command
 

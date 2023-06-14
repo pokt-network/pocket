@@ -43,7 +43,7 @@ func servicerCommands() []*cobra.Command {
 		newUnstakeCmd(cmdDef),
 		newUnpauseCmd(cmdDef),
 		{
-			// IMPROVE: allow reading the relay payload from a file
+			// IMPROVE: allow reading the relay payload from a file with the serialized protobuf via [--input_file]
 			Use:   "Relay <applicationAddrHex> <servicerAddrHex> <relayChainID> <relayPayload>",
 			Short: "Relay <applicationAddrHex> <servicerAddrHex> <relayChainID> <relayPayload>",
 			Long: `Sends a trustless relay using <relayPayload> as contents, to the specified active <servicerAddrHex> in the the <applicationAddrHex>'s session.
@@ -60,7 +60,7 @@ Will prompt the user for the *application* account passphrase`,
 				//	The client will: send the trustless relay and return the response (using a single function as entrypoint)
 				//	The CLI will:
 				//		1) extract the required input from the command arguments
-				//		2) call the client function that performs the trustless relay
+				//		2) call the client function (with the inputs above) that performs the trustless relay
 				pk, err := getPrivateKeyFromKeybase(applicationAddr)
 				if err != nil {
 					return fmt.Errorf("error getting application's private key: %w", err)
@@ -82,7 +82,7 @@ Will prompt the user for the *application* account passphrase`,
 					return fmt.Errorf("error building relay from payload: %w", err)
 				}
 
-				fmt.Printf("sending trustless relay for %s to %v with payload: %s\n", applicationAddr, servicer, relayPayload)
+				fmt.Printf("sending trustless relay for %s to %s with payload: %s\n", applicationAddr, servicerAddr, relayPayload)
 
 				resp, err := sendTrustlessRelay(cmd.Context(), servicer.ServiceUrl, relay)
 				if err != nil {
@@ -100,9 +100,9 @@ Will prompt the user for the *application* account passphrase`,
 	return cmds
 }
 
-// DECIDE: do we need/want a cli subcommand for fetching sessions?
+// TODO: add a cli command for fetching sessions
 // validateServicer returns the servicer specified by the <servicer> argument.
-// It validates that the <servicer> is the address of a servicer that is active in the passed session.
+// It validates that the <servicer> is the address of a servicer that is active in the current session.
 func validateServicer(ctx context.Context, session *rpc.Session, servicerAddress string) (*rpc.ProtocolActor, error) {
 	for _, s := range session.Servicers {
 		if s.Address == servicerAddress {
@@ -137,7 +137,8 @@ func getCurrentSession(ctx context.Context, appAddress, chain string) (*rpc.Sess
 	if err != nil {
 		return nil, fmt.Errorf("Error getting current session with request %v: %w", req, err)
 	}
-	// TODO: refactor boiler-plate code
+
+	// IMPROVE: move the HTTP response processing code to a separate function to enable reuse.
 	if resp.HTTPResponse.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("Error getting current session: Unexpected status code %d for request %v", resp.HTTPResponse.StatusCode, req)
 	}
@@ -149,7 +150,7 @@ func getCurrentSession(ctx context.Context, appAddress, chain string) (*rpc.Sess
 	return resp.JSON200, nil
 }
 
-// TODO: reuse this function in the query commands
+// REFACTOR: reuse this function in all the query commands
 func getCurrentHeight(ctx context.Context) (int64, error) {
 	client, err := rpc.NewClientWithResponses(remoteCLIURL)
 	if err != nil {
@@ -171,7 +172,7 @@ func getCurrentHeight(ctx context.Context) (int64, error) {
 }
 
 // IMPROVE: [K8s][LocalNet] Publish Servicer(s) Host and Port as env. vars in K8s: similar to Validators
-// REFACTOR: move package-level variables (e.g. remoteCLIURL) to a cli object.
+// REFACTOR: move package-level variables (e.g. remoteCLIURL) to a cli object and consider storing it in the context
 func sendTrustlessRelay(ctx context.Context, servicerUrl string, relay *rpc.RelayRequest) (*rpc.PostV1ClientRelayResponse, error) {
 	client, err := rpc.NewClientWithResponses(servicerUrl)
 	if err != nil {
@@ -184,7 +185,7 @@ func sendTrustlessRelay(ctx context.Context, servicerUrl string, relay *rpc.Rela
 func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Session, servicer *rpc.ProtocolActor) (*rpc.RelayRequest, error) {
 	// TECHDEBT: This is mostly COPIED from pocket-go: we should refactor pocket-go code and import this functionality from there instead.
 	relayPayload := rpc.Payload{
-		// INCOMPLETE: need to unmarshal into JSONRPC (and other supported relay formats), using a custom unmarshaller
+		// INCOMPLETE(#803): need to unmarshal into JSONRPC and other supported relay formats once proto-generated custom types are added.
 		Jsonrpc: "2.0",
 		Method:  payload,
 		// TODO: Path: load Path field from the corresponding Blockchain (e.g. database)
@@ -193,7 +194,7 @@ func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Se
 
 	relayMeta := rpc.RelayRequestMeta{
 		BlockHeight: session.SessionHeight,
-		// TODO: use Identifiable for Chain in Session (or string for Chain in Relay Meta)
+		// TODO: Make Chain Identifier type consistent in Session and Meta use Identifiable for Chain in Session (or string for Chain in Relay Meta)
 		Chain: rpc.Identifiable{
 			Id: session.Chain,
 		},
@@ -204,8 +205,8 @@ func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Se
 	relay := &rpc.RelayRequest{
 		Payload: relayPayload,
 		Meta:    relayMeta,
-		// DISCUSS: why is there no Proof field in v1 struct?
 	}
+	// TECHDEBT: Evaluate which fields we should and shouldn't marshall when signing the payload
 	reqBytes, err := json.Marshal(relay)
 	if err != nil {
 		return nil, fmt.Errorf("Error marshalling relay request %v: %w", relay, err)
@@ -220,7 +221,7 @@ func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Se
 	return relay, nil
 }
 
-// TECHDEBT: remove use of package-level variables
+// TECHDEBT: remove use of package-level variables, such as nonInteractive, remoteCLIURL, pwd, etc.
 func getPrivateKeyFromKeybase(address string) (crypto.PrivateKey, error) {
 	kb, err := keybaseForCLI()
 	if err != nil {

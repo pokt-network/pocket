@@ -123,14 +123,13 @@ paths:
             text/plain:
               example: "description of failure"
   # TODO: Update this handler and its schemas when the HandleRelay function has been implemented
-  # DISCUSS: do we need separate JSON and JSONRPC endpoints?
   /v1/client/relay:
     post:
       tags:
         - client
-      summary: Sends a JSONRPC relay to the servicer to receive a response
+      summary: Sends a relay to the servicer to receive a response. The payload is the serialized form of one of the supported formats.
       requestBody:
-        description: Request a relay to be sent on behalf of your application
+        description: Request a relay to be sent on behalf of your application. The server is responsible for unpacking the payload as one of the supported formats.
         content:
           application/json:
             schema:
@@ -1678,8 +1677,6 @@ components:
         jsonrpc:
           type: string
         method:
-          type: string
-        path:
           type: string
         parameters:
           type: string

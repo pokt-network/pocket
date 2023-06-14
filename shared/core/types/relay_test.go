@@ -1,8 +1,9 @@
 package types
 
 import (
-	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestRelayValidate(t *testing.T) {
@@ -13,7 +14,6 @@ func TestRelayValidate(t *testing.T) {
 	}{
 		{
 			name: "valid Relay: JSONRPC",
-			// IMPROVE: use a factory function to build test relays
 			relay: Relay{
 				RelayPayload: &Relay_JsonRpcPayload{
 					JsonRpcPayload: &JSONRPCPayload{JsonRpc: "2.0", Method: "eth_blockNumber"},
@@ -30,7 +30,7 @@ func TestRelayValidate(t *testing.T) {
 		},
 		{
 			name:     "invalid Relay: missing payload",
-			expected: errInvalidRelayInvalidPayload,
+			expected: errInvalidRelayPayload,
 		},
 		{
 			name: "invalid Relay: invalid JSONRPC Payload",
@@ -39,7 +39,7 @@ func TestRelayValidate(t *testing.T) {
 					JsonRpcPayload: &JSONRPCPayload{JsonRpc: "foo"},
 				},
 			},
-			expected: errInvalidJSONRPCInvalidRPC,
+			expected: errInvalidJSONRPC,
 		},
 		{
 			name: "invalid Relay: invalid REST Payload",
@@ -55,14 +55,7 @@ func TestRelayValidate(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			err := testCase.relay.Validate()
-			switch {
-			case err == nil && testCase.expected != nil:
-				t.Fatalf("Expected error %v, got: nil", testCase.expected)
-			case err != nil && testCase.expected == nil:
-				t.Fatalf("Unexpected error: %v", err)
-			case testCase.expected != nil && !errors.Is(err, testCase.expected):
-				t.Fatalf("Expected error %v got: %v", testCase.expected, err)
-			}
+			require.ErrorIs(t, err, testCase.expected)
 		})
 	}
 }
@@ -80,7 +73,7 @@ func TestJsonRpcValidate(t *testing.T) {
 		{
 			name:     "invalid JSONRPC: invalid JsonRpc field value",
 			payload:  JSONRPCPayload{JsonRpc: "foo", Method: "eth_blockNumber"},
-			expected: errInvalidJSONRPCInvalidRPC,
+			expected: errInvalidJSONRPC,
 		},
 		{
 			name:     "invalid JSONRPC: Method field not set",
@@ -92,14 +85,7 @@ func TestJsonRpcValidate(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			err := testCase.payload.Validate()
-			switch {
-			case err == nil && testCase.expected != nil:
-				t.Fatalf("Expected error %v, got: nil", testCase.expected)
-			case err != nil && testCase.expected == nil:
-				t.Fatalf("Unexpected error: %v", err)
-			case testCase.expected != nil && !errors.Is(err, testCase.expected):
-				t.Fatalf("Expected error %v got: %v", testCase.expected, err)
-			}
+			require.ErrorIs(t, err, testCase.expected)
 		})
 	}
 }
@@ -124,14 +110,7 @@ func TestRESTValidate(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			err := testCase.payload.Validate()
-			switch {
-			case err == nil && testCase.expected != nil:
-				t.Fatalf("Expected error %v, got: nil", testCase.expected)
-			case err != nil && testCase.expected == nil:
-				t.Fatalf("Unexpected error: %v", err)
-			case testCase.expected != nil && !errors.Is(err, testCase.expected):
-				t.Fatalf("Expected error %v got: %v", testCase.expected, err)
-			}
+			require.ErrorIs(t, err, testCase.expected)
 		})
 	}
 }

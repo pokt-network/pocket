@@ -4,13 +4,12 @@ package core;
 
 option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
-// TECHDEBT: These structures were copied as placeholders from v0 and need to be updated to reflect changes in v1
 message Relay {
     RelayMeta meta = 1;
-    oneof RelayPayload {
+    oneof relay_payload {
         JSONRPCPayload json_rpc_payload = 2;
         RESTPayload rest_payload = 3;
-        //DISCUSS: content of the following types:
+        // DISCUSS: design and content of other relay types
         // GRPCPayload grpc_payload = 3;
         // GraphQLPayload graphql_payload = 4;
         // WebSocketsPayload websockets_payload = 5;
@@ -19,24 +18,42 @@ message Relay {
 
 message RESTPayload {
     string contents = 1;
+    string http_path = 2;
+    RESTRequestType request_type = 3;
+}
+
+enum RESTRequestType {
+	RESTRequestTypeGET = 0;
+	RESTRequestTypePUT = 1;
+	RESTRequestTypePOST = 2;
+	RESTRequestTypeDELETE = 3;
 }
 
 message JSONRPCPayload {
+    // JSONRPC version 2 expected a field named "id".
+    // See the JSONRPC spec in the following link for more details:
+    //   https://www.jsonrpc.org/specification#request_object
     bytes id = 1;
+    // JSONRPC version 2 expects a field named "jsonrpc" with a value of "2.0".
+    // See the JSONRPC spec in the following link for more details:
+    //   https://www.jsonrpc.org/specification#request_object
     string json_rpc = 2;
     string method = 3;
+    // The parameters field can be empty, an array or a structure. It is on the server to decide which one
+    // has been sent to it and whether the supplied value is valid.
+    // See the JSONRPC spec in the following link for more details:
+    //   https://www.jsonrpc.org/specification#parameter_structures
     bytes parameters = 4;
-    // DISCUSS: is HttpPath needed and is it a Meta field or Payload field?
-    string http_path = 5;
-    map<string, string> headers = 6;
+    map<string, string> headers = 5;
 }
 
 message RelayMeta {
     int64 block_height = 1;
     string servicer_public_key = 2;
+    // TODO: Make Chain identifier type consistent in Session and Meta: use Identifiable for Chain in Session (or a string here to match the session)
     Identifiable relay_chain = 3;
     Identifiable geo_zone = 4;
-    string signature = 5;
+    string signature = 5;  // TECHDEBT: Consolidate with `Signature` proto used elsewhere in the future
 }
 
 message RelayResponse {
