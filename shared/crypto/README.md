@@ -3,7 +3,7 @@
 - [KeyPair Interface](#keypair-interface)
   - [KeyPair Code Structure](#keypair-code-structure)
 - [Encryption and Armouring](#encryption-and-armouring)
-- [Child Key Generation](#slip-0010-hd-child-key-generation)
+- [SLIP-0010 HD Child Key Generation](#slip-0010-hd-child-key-generation)
 
 _DOCUMENT: Note that this README is a WIP and does not exhaustively document all the current types in this package_
 
@@ -38,6 +38,8 @@ shared
 ## Encryption and Armouring
 
 The passphrase provided or `""` (default) is used for encrypting and armouring new or imported keys.
+
+Keys are encrypted using the `secretbox` library based on the NaCl (libsodium) primitives. Secretbox uses the `XSalsa20` stream cipher and `Poly1305` message authentication suite to encrypt and authenticate the key.
 
 The following flowchart shows this process:
 
@@ -107,6 +109,7 @@ flowchart LR
 
 The keys are generated using the BIP-44 path `m/44'/635'/%d'` where `%d` is the index of the child key - this allows for the deterministic generation of up to `2147483647` hardened ed25519 child keys per master key.
 Master key derivation is done as follows:
+
 ```mermaid
 flowchart LR
     subgraph HMAC
@@ -129,6 +132,7 @@ flowchart LR
 ```
 
 Child keys are derived from their parents as follows:
+
 ```mermaid
 flowchart LR
     subgraph HCHILD["HMAC-CHILD"]

@@ -9,7 +9,7 @@ This document is intended to outline the current Keybase implementation used by 
 - [Configuration Methods](#configuration-methods)
 - [Makefile Testing Helper](#makefile-testing-helper)
 - [KeyPair Encryption \& Armouring](#keypair-encryption--armouring)
-- [SLIP-0010 Child Key Generation](#slip-0010-child-key-generation)
+- [Child Key Generation](#child-key-generation)
 - [TODO: Future Work](#todo-future-work)
 
 ## Backend Options
@@ -44,9 +44,9 @@ The `Keybase` interface supports partial interoperability of key export & import
 
 Any private key created in the V0 protocol can be imported into V1 via the following:
 
- - **Private Key Hex String**: This method will directly import the private key from the hex string provided and encrypt it with the passphrase provided. This enables the passphrase to be different from the original as the provided plaintext is already decrypted.
+- **Private Key Hex String**: This method will directly import the private key from the hex string provided and encrypt it with the passphrase provided. This enables the passphrase to be different from the original as the provided plaintext is already decrypted.
 
-In order to import a key via a JSON file it must go through a decryption step before being re-encrypted for use in V1. This is because the V0 keys use a different cipher suite to secure the private key compared to V1.
+In order to import a key via an armoured JSON file, it must go through a decryption step before being re-encrypted for use in V1. This is because the V0 keys use a different cipher suite (`AES-GCM`) to secure the private key than V1 (SecretBox - `XSalsa20`+`Poly1305`).
 
 Although key pairs are stored in the local DB using the serialized (`[]byte`) representation of the public key, the associated address can be used for accessing the record in the DB for simplicity.
 
