@@ -94,15 +94,6 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 		return
 	}
 
-	// replica might have receive PRECOMMIT proposal without receiving the NEWROUND and/or PREPARE proposals while performing state sync.
-	// in this case m.block will be nil, and we set it via the proposal, since we already performed QC verification block in the proposal is valid.
-	if m.block == nil {
-		m.block = msg.GetBlock()
-		if err := m.refreshUtilityUnitOfWork(); err != nil {
-			m.logger.Error().Err(err).Msg("Could not refresh utility context")
-		}
-	}
-
 	m.step = Commit
 	m.prepareQC = quorumCert // INVESTIGATE: Why are we never using this for validation?
 
@@ -130,15 +121,6 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Commit).Error())
 		m.paceMaker.InterruptRound("invalid quorum certificate")
 		return
-	}
-
-	// replica might have receive COMMIT proposal without receiving the NEWROUND and/or PREPARE, PRECOMMIT proposals while performing state sync.
-	// in this case m.block will be nil, and we set it via the proposal, since we already performed QC verification block in the proposal is valid.
-	if m.block == nil {
-		m.block = msg.GetBlock()
-		if err := m.refreshUtilityUnitOfWork(); err != nil {
-			m.logger.Error().Err(err).Msg("Could not refresh utility context")
-		}
 	}
 
 	m.step = Decide
@@ -174,15 +156,6 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	if err != nil {
 		m.logger.Error().Err(err).Msg("Failed to convert the quorum certificate to bytes")
 		return
-	}
-
-	// replica might have receive DECIDE proposal without receiving the NEWROUND and/or PREPARE, PRECOMMIT, COMMIT proposals while performing state sync.
-	// in this case m.block will be nil, and we set it via the proposal, since we already performed QC verification block in the proposal is valid.
-	if m.block == nil {
-		m.block = msg.GetBlock()
-		if err := m.refreshUtilityUnitOfWork(); err != nil {
-			m.logger.Error().Err(err).Msg("Could not refresh utility context")
-		}
 	}
 
 	m.block.BlockHeader.QuorumCertificate = quorumCertBytes
