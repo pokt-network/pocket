@@ -104,7 +104,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	// TECHDEBT (PR #808): Make TreeStore into a full Module
+	// TECHDEBT (#808): Make TreeStore into a full Module
 	stateTrees, err := trees.NewStateTrees(persistenceCfg.TreesStoreDir)
 	if err != nil {
 		return nil, err
