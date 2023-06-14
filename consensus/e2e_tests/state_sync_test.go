@@ -1,7 +1,6 @@
 package e2e_tests
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -11,7 +10,9 @@ import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -194,15 +195,25 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 
 		// Send one of the responses (since they are equal) to the unsynched node to apply it
 		send(t, unsyncedNode, blockResponses[0])
+		advanceTime(t, clockMock, 10*time.Millisecond)
 		debugChannel := unsyncedNode.GetBus().GetDebugEventBus()
-		for {
-			e := <-debugChannel
-			fmt.Println("OLSH", e)
+		select {
+		case e := <-debugChannel:
+			if e.GetContentType() == messaging.StateSyncBlockCommittedEventType {
+				msg, err := codec.GetCodec().FromAny(e.Content)
+				require.NoError(t, err)
+				blockCommittedEvent, ok := msg.(*messaging.StateSyncBlockCommittedEvent)
+				require.True(t, ok)
+				if unsyncedNodeHeight == blockCommittedEvent.Height {
+					break
+				}
+			}
+		case <-time.After(time.Second):
+			assert.Fail(t, "Timed out waiting for block %d to be committed...", unsyncedNodeHeight)
 		}
 
 		// CONSIDERATION: Do we need to sleep or block before checking if the block was committed?
-		advanceTime(t, clockMock, 10*time.Millisecond)
-		time.Sleep(10 * time.Millisecond)
+		// time.Sleep(10 * time.Millisecond)
 
 		// ensure unsynced node height increased
 		nodeState := getConsensusNodeState(unsyncedNode)

@@ -99,9 +99,7 @@ func (*pacemaker) GetModuleName() string {
 }
 
 func (m *pacemaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, error) {
-	fmt.Println("OLSH ShouldHandleMessage")
 	consensusMod := m.GetBus().GetConsensusModule()
-
 	currentHeight := consensusMod.CurrentHeight()
 	currentRound := consensusMod.CurrentRound()
 	currentStep := typesCons.HotstuffStep(consensusMod.CurrentStep())

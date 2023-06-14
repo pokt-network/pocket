@@ -77,7 +77,7 @@ func (m *bus) GetEventBus() modules.EventsChannel {
 
 // GetDebugEventBus returns the debug event bus
 func (m *bus) GetDebugEventBus() modules.EventsChannel {
-	return m.channel
+	return m.debugChannel
 }
 
 func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {

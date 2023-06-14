@@ -287,7 +287,6 @@ func waitForNetworkStateSyncEvents(
 		require.True(t, ok)
 
 		if stateSyncMsgType != nil {
-			fmt.Println("OLSH HERE", reflect.TypeOf(stateSyncMsg.Message), stateSyncMsgType)
 			return reflect.TypeOf(stateSyncMsg.Message) == stateSyncMsgType
 		}
 		return true
@@ -338,19 +337,16 @@ loop:
 	for {
 		select {
 		case nodeEvent := <-sharedNetworkChannel:
-			fmt.Println("OLSH eventContentType0", eventContentType, nodeEvent.GetContentType())
 			if nodeEvent.GetContentType() != eventContentType {
 				unusedEvents = append(unusedEvents, nodeEvent)
 				continue
 			}
 
-			fmt.Println("OLSH eventContentType1", eventContentType, nodeEvent)
 			message := nodeEvent.Content
 			if message == nil || !msgIncludeFilter(message) {
 				unusedEvents = append(unusedEvents, nodeEvent)
 				continue
 			}
-			fmt.Println("OLSH eventContentType2", eventContentType)
 
 			expectedMsgs = append(expectedMsgs, message)
 			numRemainingMsgs--

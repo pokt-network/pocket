@@ -180,8 +180,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.StateMachineTransitionEventType:
 		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
-		// TODO: Remove this lib once we move to Go 1.2
-		return multierr.Combine(err_consensus, err_p2p)
+		return multierr.Combine(err_consensus, err_p2p) // TECHDEBT: Remove this lib once we move to Go 1.2
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
 	default:

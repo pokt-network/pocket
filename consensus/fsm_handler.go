@@ -87,7 +87,6 @@ func (m *consensusModule) HandleUnsynced(msg *messaging.StateMachineTransitionEv
 // HandleSyncMode handles the FSM event Consensus_IsSyncing, and when SyncMode is the destination state.
 // In Sync mode, the node (validator or not starts syncing with the rest of the network.
 func (m *consensusModule) HandleSyncMode(msg *messaging.StateMachineTransitionEvent) error {
-	fmt.Println("OLSH")
 	m.logger.Info().Str("source", consensusFSMHandlerSource).Msg("Node is in Sync Mode. About to start synchronous sync loop...")
 	go m.stateSync.StartSynchronousStateSync()
 	return nil
