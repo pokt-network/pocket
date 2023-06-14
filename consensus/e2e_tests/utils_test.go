@@ -174,8 +174,6 @@ func generateBuses(t *testing.T, runtimeMgrs []*runtime.Manager, opts ...modules
 func startAllTestPocketNodes(t *testing.T, pocketNodes idToNodeMapping) error {
 	for _, pocketNode := range pocketNodes {
 		go startNode(t, pocketNode)
-		// startEvent := pocketNode.GetBus().GetBusEvent()
-		// require.Equal(t, messaging.NodeStartedEventType, startEvent.GetContentType())
 		stateMachine := pocketNode.GetBus().GetStateMachineModule()
 		if err := stateMachine.SendEvent(coreTypes.StateMachineEvent_Start); err != nil {
 			return err

@@ -59,16 +59,6 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 		return
 	}
 
-	// TODO_IN_THIS_COMMIT: Figure out how to remove this.
-	// if the replica received a proposal in statesync before receiving the NEWROUND proposals,
-	// in which case utilityUnitOfWork will be nil, and we refresh utility context
-	if m.utilityUnitOfWork == nil {
-		if err := m.refreshUtilityUnitOfWork(); err != nil {
-			m.logger.Error().Err(err).Msg("Could not refresh utility unitOfWork")
-			return
-		}
-	}
-
 	block := msg.GetBlock()
 	if err := m.applyBlock(block); err != nil {
 		m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())

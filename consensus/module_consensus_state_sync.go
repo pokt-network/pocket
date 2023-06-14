@@ -76,8 +76,8 @@ func (m *consensusModule) tryToApplyRequestedBlock(blockResponse *typesCons.GetB
 	}
 	logger.Info().Int64("height", int64(block.BlockHeader.Height)).Msgf("Block, at height %d is committed!", block.BlockHeader.Height)
 
-	m.publishStateSyncBlockCommittedEvent(block.BlockHeader.Height)
 	m.paceMaker.NewHeight()
+	m.publishStateSyncBlockCommittedEvent(block.BlockHeader.Height)
 }
 
 // REFACTOR(#434): Once we consolidated NodeIds/PeerIds, this could potentially be removed

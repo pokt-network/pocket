@@ -212,9 +212,6 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 			assert.Fail(t, "Timed out waiting for block %d to be committed...", unsyncedNodeHeight)
 		}
 
-		// CONSIDERATION: Do we need to sleep or block before checking if the block was committed?
-		// time.Sleep(10 * time.Millisecond)
-
 		// ensure unsynced node height increased
 		nodeState := getConsensusNodeState(unsyncedNode)
 		assertHeight(t, unsyncedNodeId, unsyncedNodeHeight+1, nodeState.Height)
@@ -235,9 +232,10 @@ func prepareStateSyncTestEnvironment(t *testing.T) (*clock.Mock, modules.EventsC
 	runtimeMgrs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
 	buses := generateBuses(t, runtimeMgrs, runtime.WithNewDebugEventsChannel())
 
-	// Create & start test pocket nodes
 	// This channel captures all the messages that consensus nodes would send to each other over the network
 	sharedNetworkChannel := make(modules.EventsChannel, 100)
+
+	// Create & start test pocket nodes
 	pocketNodes := createTestConsensusPocketNodes(t, buses, sharedNetworkChannel)
 	err := startAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
