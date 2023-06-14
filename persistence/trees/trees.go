@@ -65,6 +65,8 @@ const (
 	// defines the index of the root hash each independent as they are concatenated together
 	// to generate the state hash.
 
+	// TECHDEBT: Enforce this ordering in protobufs using enums
+
 	// Actor Merkle Trees
 	appMerkleTree merkleTree = iota
 	valMerkleTree
@@ -86,7 +88,7 @@ const (
 
 // treeStore stores a set of merkle trees that
 // it manages. It fulfills the modules.TreeStore interface.
-// * It is responsible for commit or rollback behavior
+// * It is responsible for atomic commit or rollback behavior
 // of the underlying trees by utilizing the lazy loading
 // functionality provided by the underlying smt library.
 type treeStore struct {
@@ -405,14 +407,13 @@ func (t *treeStore) getActorsUpdated(
 
 	actors := make([]*coreTypes.Actor, len(addrs))
 	for i, addr := range addrs {
-		// TECHDEBT #XXX: Avoid this cast to int64
+		// TECHDEBT #813: Avoid this cast to int64
 		actor, err := t.getActor(pgtx, actorSchema, addr, int64(height))
 		if err != nil {
 			return nil, err
 		}
 		actors[i] = actor
 	}
-	rows.Close()
 
 	return actors, nil
 }
@@ -559,7 +560,7 @@ func (t *treeStore) getChainsForActor(
 
 	var chainAddr string
 	var chainID string
-	var chainEndHeight int64 // DISCUSS: why is this commented as "unused"?
+	var chainEndHeight int64
 	for rows.Next() {
 		err = rows.Scan(&chainAddr, &chainID, &chainEndHeight)
 		if err != nil {
