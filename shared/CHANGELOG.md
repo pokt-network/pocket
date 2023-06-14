@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.60] - 2023-05-04
+## [0.0.0.62] - 2023-06-14
 
 - Added `pocket.StateSyncBlockCommittedEvent` to the shared messaging events
+
+## [0.0.0.61] - 2023-06-14
+
+- Replace AES-GCM in key encryption with Secretbox (XSalsa20+Poly1305)
 
 ## [0.0.0.60] - 2023-06-13
 
