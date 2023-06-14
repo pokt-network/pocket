@@ -2,6 +2,7 @@ package e2e_tests
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -31,19 +32,18 @@ func TestStateSync_MetadataRequestResponse_Success(t *testing.T) {
 	send(t, serverNode, anyProto)
 
 	// Wait for response from the server node
-	receivedMsgs, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "did not receive response to state sync metadata request", 1, 500, false, nil)
+	receivedMsgs, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "did not receive response to state sync metadata request", 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_MetadataRes{}))
 	require.NoError(t, err)
 
-	// Validate the response
+	// Extract the response
 	msg, err := codec.GetCodec().FromAny(receivedMsgs[0])
 	require.NoError(t, err)
-
 	stateSyncMetaDataResMsg, ok := msg.(*typesCons.StateSyncMessage)
 	require.True(t, ok)
-
 	stateSyncMetaDataRes := stateSyncMetaDataResMsg.GetMetadataRes()
 	require.NotEmpty(t, stateSyncMetaDataRes)
 
+	// Validate the response
 	require.Equal(t, uint64(3), stateSyncMetaDataRes.MaxHeight) // 3 because node sends the last persisted height
 	require.Equal(t, uint64(1), stateSyncMetaDataRes.MinHeight)
 	require.Equal(t, serverNodePeerId, stateSyncMetaDataRes.PeerAddress)
@@ -67,8 +67,8 @@ func TestStateSync_BlockRequestResponse_Success(t *testing.T) {
 	// Send get block request to the server node
 	send(t, serverNode, stateSyncGetBlockMsg)
 
-	// Start waiting for the get block request on server node, expect to return error
-	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting on response to a get block request", 1, 500, false, nil)
+	// Start waiting for the get block response on server node
+	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting on response to a get block request", 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
 	require.NoError(t, err)
 
 	// validate the response
@@ -89,24 +89,25 @@ func TestStateSync_BlockRequestResponse_Success(t *testing.T) {
 func TestStateSync_BlockRequestResponse_FailNonExistingBlock(t *testing.T) {
 	clockMock, eventsChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
 
-	// Choose node 1 as the server node
+	testHeight := uint64(5)
+
+	// Choose node 1 as the server node and set its height
 	serverNode := pocketNodes[1]
-	// Set server node's height to test height.
-	serverNode.GetBus().GetConsensusModule().SetHeight(uint64(5))
+	serverNode.GetBus().GetConsensusModule().SetHeight(testHeight)
 
 	// Choose node 2 as the requester node
 	requesterNode := pocketNodes[2]
 	requesterNodePeerAddress := requesterNode.GetBus().GetConsensusModule().GetNodeAddress()
 
 	// Prepare a get block request for a non existing block (server is only at height 5)
-	stateSyncGetBlockMsg := prepareStateSyncGetBlockMessage(t, requesterNodePeerAddress, 6)
+	stateSyncGetBlockMsg := prepareStateSyncGetBlockMessage(t, requesterNodePeerAddress, testHeight+2)
 
 	// Send get block request to the server node
 	send(t, serverNode, stateSyncGetBlockMsg)
 
 	// Start waiting for the get block request on server node, expect to return error
 	errMsg := "expecting to time out waiting on a response from a non existent"
-	_, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 500, false, nil)
+	_, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
 	require.Error(t, err)
 }
 
@@ -155,16 +156,9 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	broadcastMessages(t, proposalMsgs, pocketNodes)
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	isGetBlockRequest := func(msg *typesCons.StateSyncMessage) bool {
-		return msg.GetGetBlockReq() != nil
-	}
-	isGetBlockResponse := func(msg *typesCons.StateSyncMessage) bool {
-		return msg.GetGetBlockRes() != nil
-	}
-
 	for unsyncedNodeHeight < targetHeight {
 		// Wait for the unsynched node to request the block at the current height
-		blockRequests, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting on response to a get block request", 1, 5000, false, &isGetBlockRequest)
+		blockRequests, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting on response to a get block request", 1, 5000, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockReq{}))
 		require.NoError(t, err)
 
 		// Validate the height being requested is correct
@@ -178,10 +172,10 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		advanceTime(t, clockMock, 10*time.Millisecond)
 
 		// Wait for the unsynched node to receive the block responses
-		blockResponses, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting on response to a get block response", numValidators-1, 5000, false, &isGetBlockResponse)
+		blockResponses, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting on response to a get block response", numValidators-1, 5000, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
 		require.NoError(t, err)
 
-		// Validate that the block is the same from all the validators who send it
+		// Validate that the block is the same from all the validators who send it (non byzantine scenario)
 		var blockResponse *typesCons.GetBlockResponse
 		for _, msg := range blockResponses {
 			msgAny, err := codec.GetCodec().FromAny(msg)

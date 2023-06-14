@@ -276,7 +276,7 @@ func waitForNetworkStateSyncEvents(
 	numExpectedMsgs int,
 	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
-	include *func(*typesCons.StateSyncMessage) bool,
+	stateSyncMsgType any,
 ) (messages []*anypb.Any, err error) {
 	includeFilter := func(anyMsg *anypb.Any) bool {
 		msg, err := codec.GetCodec().FromAny(anyMsg)
@@ -285,8 +285,9 @@ func waitForNetworkStateSyncEvents(
 		stateSyncMsg, ok := msg.(*typesCons.StateSyncMessage)
 		require.True(t, ok)
 
-		if include != nil {
-			return (*include)(stateSyncMsg)
+		if stateSyncMsgType != nil {
+			fmt.Println("OLSH HERE", reflect.TypeOf(stateSyncMsg.Message), stateSyncMsgType)
+			return reflect.TypeOf(stateSyncMsg.Message) == stateSyncMsgType
 		}
 		return true
 	}
@@ -366,7 +367,7 @@ loop:
 				continue
 			}
 
-			fmt.Println("OLSH eventContentType1", eventContentType)
+			fmt.Println("OLSH eventContentType1", eventContentType, nodeEvent)
 			message := nodeEvent.Content
 			if message == nil || !msgIncludeFilter(message) {
 				unusedEvents = append(unusedEvents, nodeEvent)

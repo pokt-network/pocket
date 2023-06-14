@@ -114,7 +114,7 @@ func (m *consensusModule) sendGetMetadataStateSyncMessage(_ *messaging.DebugMess
 	}
 	anyMsg, err := anypb.New(stateSyncMetaDataReqMessage)
 	if err != nil {
-		m.logger.Error().Err(err).Str("proto_type", "GetBlockRequest").Msg("failed to create StateSyncGetBlockMessage")
+		m.logger.Error().Err(err).Str("proto_type", "StateSyncMessage").Msg("failed to create StateSyncMetadataRequest")
 		return
 	}
 	if m.GetBus().GetP2PModule().Broadcast(anyMsg) != nil {

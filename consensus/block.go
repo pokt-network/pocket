@@ -34,12 +34,12 @@ func (m *consensusModule) commitBlock(block *coreTypes.Block) error {
 	return nil
 }
 
-// ADDTEST: Add unit tests specific to block validation
-// isBlockMessageInMessageValid does basic validation of the block in the hotstuff message for the step provided, such as:
+// isBlockInMessageValidBasic does basic validation of the block in the hotstuff message such as:
 // - validating if the block could/should be nil
 // - the state hash of the block
 // - the size of the block
-func (m *consensusModule) isBlockMessageInMessageValid(msg *typesCons.HotstuffMessage) (bool, error) {
+// ADDTEST: Add unit tests specific to block validation
+func (m *consensusModule) isBlockInMessageValidBasic(msg *typesCons.HotstuffMessage) (bool, error) {
 	block := msg.GetBlock()
 	step := msg.GetStep()
 

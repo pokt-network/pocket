@@ -1,6 +1,7 @@
 package e2e_tests
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
+func TestHotstuff_4Nodes1BlockHappyPath(t *testing.T) {
 	// Test preparation
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
@@ -48,11 +49,8 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	stateSyncGetBlockMsg := prepareStateSyncGetBlockMessage(t, requesterNodePeerAddress, 1)
 	send(t, serverNode, stateSyncGetBlockMsg)
 
-	isGetBlockResponse := func(msg *typesCons.StateSyncMessage) bool {
-		return msg.GetGetBlockRes() != nil
-	}
 	// Server node is waiting for the get block response message
-	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting for StateSync.GetBlockRequest message", 1, 500, false, &isGetBlockResponse)
+	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting for StateSync.GetBlockRequest message", 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
 	require.NoError(t, err)
 
 	// Verify that it was a get block request of the right height
@@ -116,53 +114,53 @@ func TestQuorumCertificate_ResistenceToSignatureMalleability(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4Nodes1Byzantine1Block(t *testing.T) {
+func TestHotstuff_4Nodes1Byzantine1Block(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4Nodes2Byzantine1Block(t *testing.T) {
+func TestHotstuff_4Nodes2Byzantine1Block(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4Nodes1BlockNetworkPartition(t *testing.T) {
+func TestHotstuff_4Nodes1BlockNetworkPartition(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4Nodes1Block4Rounds(t *testing.T) {
+func TestHotstuff_4Nodes1Block4Rounds(t *testing.T) {
 	t.Skip()
 }
-func TestHotstuff4Nodes2Blocks(t *testing.T) {
-	t.Skip()
-}
-
-func TestHotstuff4Nodes2NewNodes1Block(t *testing.T) {
+func TestHotstuff_4Nodes2Blocks(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4Nodes2DroppedNodes1Block(t *testing.T) {
+func TestHotstuff_4Nodes2NewNodes1Block(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4NodesFailOnPrepare(t *testing.T) {
+func TestHotstuff_4Nodes2DroppedNodes1Block(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4NodesFailOnPrecommit(t *testing.T) {
+func TestHotstuff_4NodesFailOnPrepare(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4NodesFailOnCommit(t *testing.T) {
+func TestHotstuff_4NodesFailOnPrecommit(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuff4NodesFailOnDecide(t *testing.T) {
+func TestHotstuff_4NodesFailOnCommit(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuffValidatorWithLockedQC(t *testing.T) {
+func TestHotstuff_4NodesFailOnDecide(t *testing.T) {
 	t.Skip()
 }
 
-func TestHotstuffValidatorWithLockedQCMissingNewRoundMsg(t *testing.T) {
+func TestHotstuff_ValidatorWithLockedQC(t *testing.T) {
+	t.Skip()
+}
+
+func TestHotstuff_ValidatorWithLockedQCMissingNewRoundMsg(t *testing.T) {
 	t.Skip()
 }

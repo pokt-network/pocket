@@ -283,7 +283,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusMod
 func (handler *HotstuffLeaderMessageHandler) isMessageValidBasic(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	// Basic block metadata validation
 
-	if valid, err := m.isBlockMessageInMessageValid(msg); !valid {
+	if valid, err := m.isBlockInMessageValidBasic(msg); !valid {
 		return err
 	}
 

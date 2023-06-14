@@ -209,7 +209,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 // isMessageValidBasic is the handler called on every replica message before specific handler
 func (handler *HotstuffReplicaMessageHandler) isMessageValidBasic(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	// Basic block metadata validation
-	if valid, err := m.isBlockMessageInMessageValid(msg); !valid {
+	if valid, err := m.isBlockInMessageValidBasic(msg); !valid {
 		return err
 	}
 
