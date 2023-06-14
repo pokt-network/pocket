@@ -7,28 +7,21 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
-	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
-var (
-	_       peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
-	rpcHost string
-)
+var _ peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
 
-func init() {
-	// by default, we point at the same endpoint used by the CLI but the debug client is used either in docker-compose of K8S, therefore we cater for overriding
-	rpcHost = runtime.GetEnv("RPC_HOST", defaults.DefaultRPCHost)
-}
-
+// TECHDEBT(#810): refactor to implement `Submodule` interface.
 type rpcPeerstoreProvider struct {
+	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
 	base_modules.IntegratableModule
 	base_modules.InterruptableModule
 
@@ -37,9 +30,9 @@ type rpcPeerstoreProvider struct {
 	rpcClient *rpc.ClientWithResponses
 }
 
-func NewRPCPeerstoreProvider(options ...modules.ModuleOption) *rpcPeerstoreProvider {
+func Create(options ...modules.ModuleOption) *rpcPeerstoreProvider {
 	rabp := &rpcPeerstoreProvider{
-		rpcURL: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
+		rpcURL: flags.RemoteCLIURL,
 	}
 
 	for _, o := range options {
@@ -51,19 +44,16 @@ func NewRPCPeerstoreProvider(options ...modules.ModuleOption) *rpcPeerstoreProvi
 	return rabp
 }
 
-func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return new(rpcPeerstoreProvider).Create(bus, options...)
-}
-
+// TECHDEBT(#810): refactor to implement `Submodule` interface.
 func (*rpcPeerstoreProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return NewRPCPeerstoreProvider(options...), nil
+	return Create(options...), nil
 }
 
 func (*rpcPeerstoreProvider) GetModuleName() string {
 	return peerstore_provider.ModuleName
 }
 
-func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
+func (rpcPSP *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
 
@@ -71,7 +61,7 @@ func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typ
 		h         int64              = int64(height)
 		actorType rpc.ActorTypesEnum = "validator"
 	)
-	response, err := rabp.rpcClient.GetV1P2pStakedActorsAddressBookWithResponse(ctx, &rpc.GetV1P2pStakedActorsAddressBookParams{Height: &h, ActorType: &actorType})
+	response, err := rpcPSP.rpcClient.GetV1P2pStakedActorsAddressBookWithResponse(ctx, &rpc.GetV1P2pStakedActorsAddressBookParams{Height: &h, ActorType: &actorType})
 	if err != nil {
 		return nil, err
 	}
@@ -91,22 +81,19 @@ func (rabp *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typ
 		})
 	}
 
-	return peerstore_provider.ActorsToPeerstore(rabp, coreActors)
+	return peerstore_provider.ActorsToPeerstore(rpcPSP, coreActors)
 }
 
-func (rabp *rpcPeerstoreProvider) GetP2PConfig() *configs.P2PConfig {
-	if rabp.p2pCfg == nil {
-		return rabp.GetBus().GetRuntimeMgr().GetConfig().P2P
-	}
-	return rabp.p2pCfg
+func (rpcPSP *rpcPeerstoreProvider) GetUnstakedPeerstore() (typesP2P.Peerstore, error) {
+	return peerstore_provider.GetUnstakedPeerstore(rpcPSP.GetBus())
 }
 
-func (rabp *rpcPeerstoreProvider) initRPCClient() {
-	rpcClient, err := rpc.NewClientWithResponses(rabp.rpcURL)
+func (rpcPSP *rpcPeerstoreProvider) initRPCClient() {
+	rpcClient, err := rpc.NewClientWithResponses(rpcPSP.rpcURL)
 	if err != nil {
 		log.Fatalf("could not create RPC client: %v", err)
 	}
-	rabp.rpcClient = rpcClient
+	rpcPSP.rpcClient = rpcClient
 }
 
 // options

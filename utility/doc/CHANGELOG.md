@@ -7,9 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.45] - 2023-06-06
+
+- Adds servicer, fisherman, and validator utility modules
+
+## [0.0.0.44] - 2023-06-02
+
+- Implemented `GetIndexedTransaction`
+- Add some comments and rename a few functions throughout to have things be more self-explanatory
+- Moved over all the business logic related to getting "signer candidates" into its own file for readability purposes
+
+## [0.0.0.43] - 2023-06-01
+
+- Add a place-holder Servicer implementation
+- Use mockgen and Bus for DI
+- Cross-check the chains handled by a servicer using the Persistence module
+
+## [0.0.0.42] - 2023-06-01
+
+- Added a utility feature list with must-have and nice-to-haves for MainNet and TestNet
+
+## [0.0.0.41] - 2023-05-30
+
+- Added the E2E Feature Path Template to document, present and explain how to go about defining and scoping utility level features
+
 ## [0.0.0.40] - 2023-05-04
 
-- Expose `HydrateIdxTx` for use outside of utility
+- Expose `HandleTransaction` for use outside of utility
 - Add placeholder functions `HandleRelay()` and `HandleChallenge()`
 - Moved `utility/types/errors.go` into `shared/core/types` and updated their usage accordingly
 

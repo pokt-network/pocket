@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.54] - 2023-06-13
+
+- Fix tests
+
+## [0.0.0.53] - 2023-06-08
+
+- Add consensus README
+
+## [0.0.0.52] - 2023-05-24
+
+- Updates consensus tests to use GetBlock mock instead of Get mock
+
 ## [0.0.0.51] - 2023-05-16
 
 - Updates consensus test to use BlockStore mock instead of KVStore mock
@@ -25,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.47] - 2023-04-17
 
--  Log warnings in `handleStateSyncMessage()`
+- Log warnings in `handleStateSyncMessage()`
 
 ## [0.0.0.46] - 2023-04-13
 

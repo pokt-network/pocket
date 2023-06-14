@@ -17,6 +17,7 @@ This guide shows how to deploy a LocalNet using [pocket-operator](https://github
     - [Make Targets](#make-targets)
   - [Addresses and keys on LocalNet](#addresses-and-keys-on-localnet)
 - [How to change configuration files](#how-to-change-configuration-files)
+  - [Overriding default values for localnet with Tilt](#overriding-default-values-for-localnet-with-tilt)
 - [How does it work?](#how-does-it-work)
 - [Troubleshooting](#troubleshooting)
   - [Why?](#why)
@@ -148,6 +149,21 @@ For example:
 - `0010297b55fc9278e4be4f1bcfe52bf9bd0443f8` is a servicer #001.
 - `314019dbb7faf8390c1f0cf4976ef1215c90b7e4` is an application #314.
 
+
+#### Applications staked on LocalNet
+Applications with the following addresses are staked on LocalNet, through the [applications field of the genesis.json in the LocalNet configuration](https://github.com/pokt-network/pocket/blob/main/build/localnet/manifests/configs.yaml#L4088)
+
+- `00001fff518b1cdddd74c197d76ba5b5dedc0301`
+- `00101f2ff54811e84df2d767c661f57a06349b7e`
+
+These addresses can be used for e.g. testing the CLI.
+
+#### Servicers staked on LocalNet
+Servicers with the following addresses are staked on LocalNet, through the [servicers field of the genesis.json in the LocalNet configuration](https://github.com/pokt-network/pocket/blob/main/build/localnet/manifests/configs.yaml#L4120)
+
+- `00002b8cea1bcc3dadc72ebecf95564ceb9c2e2a`
+- `001022b138896c4c5466ac86b24a9bbe249905c2`
+
 ## How to change configuration files
 
 Configurations can be changed in helm charts where network protocol actor configs are maintained. You can find them in [this directory](../../charts).
@@ -157,6 +173,30 @@ Configurations can be changed in helm charts where network protocol actor config
 If you need to add a new parameter – feel free to modify the section in place. Some of the parameters that contain secrets (e.g. private key), are stored in Secrets object and injected as environment variables.
 
 Please refer to helm charts documentation for more details.
+
+### Overriding default values for localnet with Tilt
+
+You may also create a overrides YAML file in the `charts/pocket` directory and override the default values for the various actors.
+
+Override files supported:
+
+- pocket-fisherman-overrides.yaml
+- pocket-servicer-overrides.yaml
+- pocket-validator-overrides.yaml
+
+```sh
+touch charts/pocket/pocket-validator-overrides.yaml
+```
+
+For example, to enable CORS for the RPC server, you can run the following command. Note, this overrides config.json **for all** validators in localnet.
+
+```yaml
+cat <<EOF > charts/pocket/pocket-validator-overrides.yaml
+config:
+  rpc:
+    use_cors: true
+EOF
+```
 
 ## How does it work?
 

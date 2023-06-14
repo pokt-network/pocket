@@ -21,31 +21,29 @@ services:
       dockerfile: ./build/Dockerfile.client
     environment:
       # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
-      - RPC_HOST=node1.consensus
+      - POCKET_REMOTE_CLI_URL=http://validator1:50832
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     stdin_open: true
     tty: true
 
-  node1.consensus:
+  validator1:
     logging: *loki-logging
-    container_name: node1.consensus
-    image: pocket/consensus:latest
-    command: "build/scripts/watch.sh build/config/config1.json build/config/genesis.json"
+    container_name: validator1
+    image: pocket/validator:latest
+    command: "build/scripts/watch.sh build/config/config.validator1.json build/config/genesis.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
     expose:
-      - "7080" # dlv debug
-      - "9080"
+      - "7081" # dlv debug
       - "9000"
       - "42069"
       - "50832"
     ports:
-      - "${NODE1_PORT_7081:-0.0.0.0:7081}:7081"
-      - "${NODE1_PORT_9081:-0.0.0.0:9081}:9080"
-      - "${NODE1_PORT_42070:-0.0.0.0:42070}:42069"
-      - "${NODE1_PORT_50832:-0.0.0.0:50832}:50832"
+      - "${VALIDATOR1_DEBUG_PORT:-0.0.0.0:7081}:7081"
+      - "${VALIDATOR1_P2P_PORT:-0.0.0.0:42070}:42069"
+      - "${VALIDATOR1_RPC_PORT:-0.0.0.0:50832}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging
@@ -59,25 +57,23 @@ services:
     # Uncomment to enable DLV debugging
     #   - DEBUG_PORT=7081
 
-  node2.consensus:
+  validator2:
     logging: *loki-logging
-    container_name: node2.consensus
-    image: pocket/consensus:latest
-    command: "build/scripts/watch.sh build/config/config2.json build/config/genesis.json"
+    container_name: validator2
+    image: pocket/validator:latest
+    command: "build/scripts/watch.sh build/config/config.validator2.json build/config/genesis.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
     expose:
       - "7082" # dlv debug
       - "42069"
-      - "9080"
       - "9000"
       - "50832"
     ports:
-      - "${NODE2_PORT_7081:-0.0.0.0:7082}:7081"
-      - "${NODE2_PORT_9081:-0.0.0.0:9082}:9080"
-      - "${NODE2_PORT_42070:-0.0.0.0:42071}:42069"
-      - "${NODE2_PORT_50832:-0.0.0.0:50833}:50832"
+      - "${VALIDATOR2_DEBUG_PORT:-0.0.0.0:7082}:7082"
+      - "${VALIDATOR2_P2P_PORT:-0.0.0.0:42071}:42069"
+      - "${VALIDATOR2_RPC_PORT:-0.0.0.0:50833}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging
@@ -87,25 +83,23 @@ services:
     # environment:
     #   - DEBUG_PORT=7082
 
-  node3.consensus:
+  validator3:
     logging: *loki-logging
-    container_name: node3.consensus
-    image: pocket/consensus:latest
-    command: "build/scripts/watch.sh build/config/config3.json build/config/genesis.json"
+    container_name: validator3
+    image: pocket/validator:latest
+    command: "build/scripts/watch.sh build/config/config.validator3.json build/config/genesis.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
     expose:
       - "7083" # dlv debug
       - "42069"
-      - "9080"
       - "9000"
       - "50832"
     ports:
-      - "${NODE3_PORT_7081:-0.0.0.0:7083}:7081"
-      - "${NODE3_PORT_9081:-0.0.0.0:9083}:9080"
-      - "${NODE3_PORT_42070:-0.0.0.0:42072}:42069"
-      - "${NODE3_PORT_50832:-0.0.0.0:50834}:50832"
+      - "${VALIDATOR3_DEBUG_PORT:-0.0.0.0:7083}:7083"
+      - "${VALIDATOR3_P2P_PORT:-0.0.0.0:42072}:42069"
+      - "${VALIDATOR3_RPC_PORT:-0.0.0.0:50834}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging
@@ -115,25 +109,23 @@ services:
     # environment:
     #   - DEBUG_PORT=7083
 
-  node4.consensus:
+  validator4:
     logging: *loki-logging
-    container_name: node4.consensus
-    image: pocket/consensus:latest
-    command: "build/scripts/watch.sh build/config/config4.json build/config/genesis.json"
+    container_name: validator4
+    image: pocket/validator:latest
+    command: "build/scripts/watch.sh build/config/config.validator4.json build/config/genesis.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
     expose:
       - "7084" # dlv debug
       - "42069"
-      - "9080"
       - "9000"
       - "50832"
     ports:
-      - "${NODE4_PORT_7081:-0.0.0.0:7084}:7081"
-      - "${NODE4_PORT_9081:-0.0.0.0:9084}:9080"
-      - "${NODE4_PORT_42070:-0.0.0.0:42073}:42069"
-      - "${NODE4_PORT_50832:-0.0.0.0:50835}:50832"
+      - "${VALIDATOR4_DEBUG_PORT:-0.0.0.0:7084}:7084"
+      - "${VALIDATOR4_P2P_PORT:-0.0.0.0:42073}:42069"
+      - "${VALIDATOR4_RPC_PORT:-0.0.0.0:50835}:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging
@@ -142,6 +134,76 @@ services:
   # Uncomment to enable DLV debugging
   # environment:
   #   - DEBUG_PORT=7084
+
+  servicer1:
+    logging: *loki-logging
+    container_name: servicer1
+    image: pocket/servicer:latest
+    command: >
+      sh -c '
+      if [ "$SERVICER1_SERVICER_ENABLED" = "true" ]; then
+        build/scripts/watch.sh \
+          build/config/config.servicer1.json \
+          build/config/genesis.json;
+      else
+        echo "😴 Going to sleep. Servicer is not enabled.";
+      fi'
+    build:
+      context: ../..
+      dockerfile: ./build/Dockerfile.localdev
+    expose:
+      - "7085" # dlv debug
+      - "42069"
+      - "9000"
+      - "50832"
+    ports:
+      - "${SERVICER1_DEBUG_PORT:-0.0.0.0:7085}:7085"
+      - "${SERVICER1_P2P_PORT:-0.0.0.0:42074}:42069"
+      - "${SERVICER1_RPC_PORT:-0.0.0.0:50836}:50832"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
+    environment:
+      - POCKET_RPC_USE_CORS=true
+      # Uncomment to enable DLV debugging
+      # - DEBUG_PORT=7085
+
+  fisherman1:
+    logging: *loki-logging
+    container_name: fisherman1
+    image: pocket/fisherman:latest
+    command: >
+      sh -c '
+      if [ "$FISHERMAN1_FISHERMAN_ENABLED" = "true" ]; then
+        build/scripts/watch.sh \
+          build/config/config.fisherman1.json \
+          build/config/genesis.json;
+      else
+        echo "😴 Going to sleep. Fisherman is not enabled.";
+      fi'
+    build:
+      context: ../..
+      dockerfile: ./build/Dockerfile.localdev
+    expose:
+      - "7086" # dlv debug
+      - "42069"
+      - "9000"
+      - "50832"
+    ports:
+      - "${FISHERMAN1_DEBUG_PORT:-0.0.0.0:7086}:7086"
+      - "${FISHERMAN1_P2P_PORT:-0.0.0.0:42075}:42069"
+      - "${FISHERMAN1_RPC_PORT:-0.0.0.0:50837}:50832"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
+    environment:
+      - POCKET_RPC_USE_CORS=true
+      # Uncomment to enable DLV debugging
+      # - DEBUG_PORT=7086
 
   db:
     logging: *loki-logging

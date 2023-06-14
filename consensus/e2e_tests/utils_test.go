@@ -11,8 +11,10 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
+
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/internal/testutil"
 	persistenceMocks "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -27,7 +29,6 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/pocket/state_machine"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -375,37 +376,88 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 
 	blockStoreMock := persistenceMocks.NewMockBlockStore(ctrl)
 
-	blockStoreMock.EXPECT().Get(gomock.Any()).DoAndReturn(func(height []byte) ([]byte, error) {
-		heightInt := utils.HeightFromBytes(height)
-		if bus.GetConsensusModule().CurrentHeight() < heightInt {
-			return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
-		}
-		blockWithHeight := &coreTypes.Block{
-			BlockHeader: &coreTypes.BlockHeader{
-				Height: utils.HeightFromBytes(height),
-			},
-		}
-		return codec.GetCodec().Marshal(blockWithHeight)
-	}).AnyTimes()
+	blockStoreMock.
+		EXPECT().
+		StoreBlock(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(height []byte, block *coreTypes.Block) error {
+			return nil
+		}).
+		AnyTimes()
 
-	persistenceMock.EXPECT().GetBlockStore().Return(blockStoreMock).AnyTimes()
+	blockStoreMock.
+		// NB: The business logic in this mock and below is vital for testing state-sync end-to-end
+		EXPECT().
+		GetBlock(gomock.Any()).
+		DoAndReturn(func(height uint64) (*coreTypes.Block, error) {
+			if bus.GetConsensusModule().CurrentHeight() < height {
+				return nil, fmt.Errorf("requested height is higher than current height of the node's consensus module")
+			}
+			blockWithHeight := &coreTypes.Block{
+				BlockHeader: &coreTypes.BlockHeader{
+					Height: height,
+				},
+			}
+			return blockWithHeight, nil
+		}).
+		AnyTimes()
 
-	persistenceReadContextMock.EXPECT().GetMaximumBlockHeight().DoAndReturn(func() (uint64, error) {
-		height := bus.GetConsensusModule().CurrentHeight()
-		return height, nil
-	}).AnyTimes()
+	persistenceMock.
+		EXPECT().
+		GetBlockStore().
+		Return(blockStoreMock).
+		AnyTimes()
 
-	persistenceReadContextMock.EXPECT().GetMinimumBlockHeight().DoAndReturn(func() (uint64, error) {
-		// mock minimum block height in persistence module to 1 if current height is equal or more than 1, else return 0 as the minimum height
-		if bus.GetConsensusModule().CurrentHeight() >= 1 {
-			return 1, nil
-		}
-		return 0, nil
-	}).AnyTimes()
+	persistenceReadContextMock.
+		EXPECT().
+		GetMaximumBlockHeight().
+		DoAndReturn(func() (uint64, error) {
+			height := bus.GetConsensusModule().CurrentHeight()
+			return height, nil
+		}).
+		AnyTimes()
 
-	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).AnyTimes()
-	persistenceReadContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
-	persistenceReadContextMock.EXPECT().Release().AnyTimes()
+	persistenceReadContextMock.
+		EXPECT().
+		GetMinimumBlockHeight().
+		DoAndReturn(func() (uint64, error) {
+			// mock minimum block height in persistence module to 1 if current height is equal or more than 1, else return 0 as the minimum height
+			if bus.GetConsensusModule().CurrentHeight() >= 1 {
+				return 1, nil
+			}
+			return 0, nil
+		}).
+		AnyTimes()
+
+	persistenceReadContextMock.
+		EXPECT().
+		GetAllValidators(gomock.Any()).
+		Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).
+		AnyTimes()
+
+	persistenceReadContextMock.
+		EXPECT().
+		GetAllStakedActors(gomock.Any()).
+		DoAndReturn(func(height int64) ([]*coreTypes.Actor, error) {
+			genesisState := bus.GetRuntimeMgr().GetGenesis()
+			return testutil.Concatenate[*coreTypes.Actor](
+				genesisState.Validators,
+				genesisState.Servicers,
+				genesisState.Fishermen,
+				genesisState.Applications,
+			), nil
+		}).
+		AnyTimes()
+
+	persistenceReadContextMock.
+		EXPECT().
+		GetBlockHash(gomock.Any()).
+		Return("", nil).
+		AnyTimes()
+
+	persistenceReadContextMock.
+		EXPECT().
+		Release().
+		AnyTimes()
 
 	return persistenceMock
 }
@@ -598,16 +650,10 @@ func WaitForNextBlock(
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	blockStore := pocketNodes[1].GetBus().GetPersistenceModule().GetBlockStore()
-	heightBytes := utils.HeightToBytes(height)
-
-	blockBytes, err := blockStore.Get(heightBytes)
+	block, err := blockStore.GetBlock(height)
 	require.NoError(t, err)
 
-	var block coreTypes.Block
-	err = codec.GetCodec().Unmarshal(blockBytes, &block)
-	require.NoError(t, err)
-
-	return &block
+	return block
 }
 
 func waitForProposalMsgs(

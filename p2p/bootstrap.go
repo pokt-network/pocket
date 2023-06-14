@@ -58,7 +58,7 @@ func (m *p2pModule) bootstrap() error {
 			continue
 		}
 
-		pstoreProvider := rpcABP.NewRPCPeerstoreProvider(
+		pstoreProvider := rpcABP.Create(
 			rpcABP.WithP2PConfig(
 				m.GetBus().GetRuntimeMgr().GetConfig().P2P,
 			),

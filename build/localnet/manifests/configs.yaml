@@ -4095,31 +4095,73 @@ data:
           "unstaking_height": -1,
           "output": "88a792b7aca673620132ef01f50e62caa58eca83",
           "actor_type": 1
+        },
+        {
+          "address": "00001fff518b1cdddd74c197d76ba5b5dedc0301",
+          "public_key": "05a25e527bf6f51676f61f2f1a96efaa748218ac82f54d3cdc55a4881389eb60",
+          "chains": ["0001"],
+          "staked_amount": "1000000000000",
+          "paused_height": -1,
+          "unstaking_height": -1,
+          "output": "00001fff518b1cdddd74c197d76ba5b5dedc0301",
+          "actor_type": 1
+        },
+        {
+          "address": "00101f2ff54811e84df2d767c661f57a06349b7e",
+          "public_key": "bb851ac31120a4c8848738582f358599abbc3d84638f8fa79f74aeafad1eede0",
+          "chains": ["0001"],
+          "staked_amount": "1000000000000",
+          "paused_height": -1,
+          "unstaking_height": -1,
+          "output": "00101f2ff54811e84df2d767c661f57a06349b7e",
+          "actor_type": 1
         }
       ],
       "servicers": [
         {
-          "address": "43d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
-          "public_key": "16cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d75a998b",
+          "address": "00604d18001a2012830b93efcc23100450e5a512",
+          "public_key": "6ac62bddc541432cff818a02bab732f815ef2e6f7099e7dddc793d62d482b451",
           "chains": ["0001"],
-          "service_url": "validator-001-pocket:42069",
+          "service_url": "servicer-pocket:42069",
           "staked_amount": "1000000000000",
           "paused_height": -1,
           "unstaking_height": -1,
-          "output": "43d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
+          "output": "00604d18001a2012830b93efcc23100450e5a512",
+          "actor_type": 2
+        },
+        {
+          "address": "00002b8cea1bcc3dadc72ebecf95564ceb9c2e2a",
+          "public_key": "d1130c5eb920af8edd5b6bfa39d33aa787f421c8ba0786de4ca4e7703553bb97",
+          "chains": ["0001"],
+          "service_url": "http://validator-001-pocket:50832",
+          "staked_amount": "1000000000000",
+          "paused_height": -1,
+          "unstaking_height": -1,
+          "output": "00002b8cea1bcc3dadc72ebecf95564ceb9c2e2a",
+          "actor_type": 2
+        },
+        {
+          "address": "001022b138896c4c5466ac86b24a9bbe249905c2",
+          "public_key": "56915c1270bc8d9280a633e0be51647f62388a851318381614877ef2ed84a495",
+          "chains": ["0001"],
+          "service_url": "http://validator-002-pocket:50832",
+          "staked_amount": "1000000000000",
+          "paused_height": -1,
+          "unstaking_height": -1,
+          "output": "001022b138896c4c5466ac86b24a9bbe249905c2",
           "actor_type": 2
         }
       ],
       "fishermen": [
         {
-          "address": "9ba047197ec043665ad3f81278ab1f5d3eaf6b8b",
-          "public_key": "68efd26af01692fcd77dc135ca1de69ede464e8243e6832bd6c37f282db8c9cb",
+          "address": "00504987d4b181c1e97b1da9af42f3db733b1ff4",
+          "public_key": "2777a49cdfde21867a538ddcfca05002f0115b1955a75b80e965ed63fc95f809",
           "chains": ["0001"],
-          "service_url": "validator-001-pocket:42069",
+          "service_url": "fisherman-pocket:42069",
           "staked_amount": "1000000000000",
           "paused_height": -1,
           "unstaking_height": -1,
-          "output": "9ba047197ec043665ad3f81278ab1f5d3eaf6b8b",
+          "output": "00504987d4b181c1e97b1da9af42f3db733b1ff4",
           "actor_type": 3
         }
       ],
@@ -4244,4 +4286,3 @@ data:
 kind: ConfigMap
 metadata:
   name: v1-localnet-genesis
-  namespace: default
