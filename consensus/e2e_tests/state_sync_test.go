@@ -197,7 +197,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		debugChannel := unsyncedNode.GetBus().GetDebugEventBus()
 		for {
 			e := <-debugChannel
-			fmt.Println(e)
+			fmt.Println("OLSH", e)
 		}
 
 		// CONSIDERATION: Do we need to sleep or block before checking if the block was committed?
