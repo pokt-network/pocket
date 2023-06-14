@@ -20,6 +20,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/pokt-network/smt"
 )
 
@@ -57,8 +58,7 @@ type merkleTree float64
 
 // A list of Merkle Trees used to maintain the state hash.
 const (
-	// IMPORTANT: The order in which these trees are defined is important and strict. It implicitly
-	// defines the index of the root hash each independent as they are concatenated together
+	// IMPORTANT: The order in which these trees are defined is important and strict. It implicitly // defines the index of the root hash each independent as they are concatenated together
 	// to generate the state hash.
 
 	// TECHDEBT(#834): Remove the need for enforced ordering
@@ -82,13 +82,16 @@ const (
 	numMerkleTrees
 )
 
+// Ensure treeStore implements TreeStore
+var _ modules.TreeStoreModule = &treeStore{}
+
 // treeStore stores a set of merkle trees that
 // it manages. It fulfills the modules.TreeStore interface.
 // * It is responsible for atomic commit or rollback behavior
 // of the underlying trees by utilizing the lazy loading
 // functionality provided by the underlying smt library.
 type treeStore struct {
-	modules.Module
+	base_modules.IntegratableModule
 
 	treeStoreDir string
 	merkleTrees  map[merkleTree]*smt.SMT

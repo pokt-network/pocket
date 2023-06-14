@@ -31,7 +31,7 @@ type PostgresContext struct {
 	//                 Need to simply access them via the bus.
 	blockStore blockstore.BlockStore
 	txIndexer  indexer.TxIndexer
-	stateTrees modules.TreeStore
+	stateTrees modules.TreeStoreModule
 
 	networkId string
 }
