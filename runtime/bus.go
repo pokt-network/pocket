@@ -129,16 +129,6 @@ func (m *bus) GetStateMachineModule() modules.StateMachineModule {
 	return getModuleFromRegistry[modules.StateMachineModule](m, modules.StateMachineModuleName)
 }
 
-// WithDebugEventsChannel is used initialize a secondary (debug) bus that receives all the same events
-// as the main bus, but does pull events when `GetBusEvent` is called
-func WithDebugEventsChannel(eventsChannel modules.EventsChannel) modules.BusOption {
-	return func(m modules.Bus) {
-		if m, ok := m.(*bus); ok {
-			m.debugChannel = eventsChannel
-		}
-	}
-}
-
 // getModuleFromRegistry is a helper function to get a module from the registry that handles errors and casting via generics
 func getModuleFromRegistry[T modules.Module](m *bus, moduleName string) T {
 	mod, err := m.modulesRegistry.GetModule(moduleName)
