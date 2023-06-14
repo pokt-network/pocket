@@ -76,13 +76,13 @@ The [IBC specification][ibc-spec] details numerous Interchain Standards (ICSs) t
 
 [ICS-24][ics24] defines the requirements for a host chain to be IBC compatible. This includes the definition of a store system to hold IBC related data in a provable (and also a private) fashion. This implementation uses the [SMT](https://github.com/pokt-network/smt) rather than the IAVL tree used by `cosmos-sdk` for its provable stores. ICS-24 also defines the Event Logging system that is used to store and query IBC related events for the relayers to read packet data and timeouts, as only the proofs of these are stored in the chain state.
 
-More details on the specifics of the ICS-24 implementation for Pocket can be found [here](./ics-24.md).
+More details on the specifics of the ICS-24 implementation for Pocket can be found [here](./ics24.md).
 
 ### ICS-23 Vector Commitments
 
 [ICS-23][ics23] defines the `CommitmentProof` type that is used to prove the membership/non-membership of a key-value pair in the IBC stores. As this type is serialisable the relayers can relay these proofs to a counterparty chain, as described above, for their light client (of the source chain) to verify the proof and thus react accordingly. In order to implement ICS-23, the `cosmos/ics23` library was used, specifically its `CommitmentProof` type and its methods to verify the proofs in a way that does not require the tree itself.
 
-More details on the specifics of the ICS-23 implementation for Pocket can be found [here](./ics-23.md).
+More details on the specifics of the ICS-23 implementation for Pocket can be found [here](./ics23.md).
 
 [ibc-spec]: https://github.com/cosmos/ibc
 [ics24]: https://github.com/cosmos/ibc/blob/main/spec/core/ics-024-host-requirements/README.md
