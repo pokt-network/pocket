@@ -80,7 +80,7 @@ func generateNodeRuntimeMgrs(t *testing.T, validatorCount int, clockMgr clock.Cl
 func createTestConsensusPocketNodes(
 	t *testing.T,
 	buses []modules.Bus,
-	eventsChannel modules.EventsChannel,
+	sharedNetworkChannel modules.EventsChannel,
 ) (pocketNodes idToNodeMapping) {
 	pocketNodes = make(idToNodeMapping, len(buses))
 	// TECHDEBT: The order here is important in order for NodeIds to be set correctly below.
@@ -99,7 +99,7 @@ func createTestConsensusPocketNodes(
 	for i, bus := range buses {
 		nodeId := typesCons.NodeId(i + 1)
 
-		pocketNode := createTestConsensusPocketNode(t, bus, eventsChannel, blocks)
+		pocketNode := createTestConsensusPocketNode(t, bus, sharedNetworkChannel, blocks)
 		pocketNodes[nodeId] = pocketNode
 
 		validatorPrivKey, err := cryptoPocket.NewPrivateKey(pocketNode.GetBus().GetRuntimeMgr().GetConfig().PrivateKey)
@@ -115,10 +115,10 @@ func createTestConsensusPocketNodes(
 func createTestConsensusPocketNode(
 	t *testing.T,
 	bus modules.Bus,
-	eventsChannel modules.EventsChannel,
+	sharedNetworkChannel modules.EventsChannel,
 	placeholderBlocks *testingBlocks,
 ) *shared.Node {
-	persistenceMock := basePersistenceMock(t, eventsChannel, bus, placeholderBlocks)
+	persistenceMock := basePersistenceMock(t, sharedNetworkChannel, bus, placeholderBlocks)
 	bus.RegisterModule(persistenceMock)
 
 	consensusMod, err := consensus.Create(bus)
@@ -126,17 +126,17 @@ func createTestConsensusPocketNode(
 	consensusModule, ok := consensusMod.(modules.ConsensusModule)
 	require.True(t, ok)
 
-	_, err = state_machine.Create(bus, state_machine.WithDebugEventsChannel(eventsChannel))
+	_, err = state_machine.Create(bus, state_machine.WithDebugEventsChannel(sharedNetworkChannel))
 	require.NoError(t, err)
 
 	runtimeMgr := (bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
-	p2pMock := baseP2PMock(t, eventsChannel)
-	utilityMock := baseUtilityMock(t, eventsChannel, runtimeMgr.GetGenesis(), consensusModule)
-	telemetryMock := baseTelemetryMock(t, eventsChannel)
-	loggerMock := baseLoggerMock(t, eventsChannel)
-	rpcMock := baseRpcMock(t, eventsChannel)
+	p2pMock := baseP2PMock(t, sharedNetworkChannel)
+	utilityMock := baseUtilityMock(t, sharedNetworkChannel, runtimeMgr.GetGenesis(), consensusModule)
+	telemetryMock := baseTelemetryMock(t, sharedNetworkChannel)
+	loggerMock := baseLoggerMock(t, sharedNetworkChannel)
+	rpcMock := baseRpcMock(t, sharedNetworkChannel)
 
 	for _, module := range []modules.Module{
 		p2pMock,
@@ -245,7 +245,7 @@ func send(t *testing.T, node *shared.Node, any *anypb.Any) {
 func waitForNetworkConsensusEvents(
 	t *testing.T,
 	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
+	sharedNetworkChannel modules.EventsChannel,
 	step typesCons.HotstuffStep,
 	msgType typesCons.HotstuffMessageType,
 	numExpectedMsgs int,
@@ -263,7 +263,7 @@ func waitForNetworkConsensusEvents(
 	}
 
 	errMsg := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(msgType)])
-	return waitForEventsInternal(clck, eventsChannel, messaging.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clck, sharedNetworkChannel, messaging.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // IMPROVE: Consider unifying this function with WaitForNetworkConsensusEvents
@@ -271,7 +271,7 @@ func waitForNetworkConsensusEvents(
 func waitForNetworkStateSyncEvents(
 	t *testing.T,
 	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
+	sharedNetworkChannel modules.EventsChannel,
 	errMsg string,
 	numExpectedMsgs int,
 	maxWaitTime time.Duration,
@@ -292,14 +292,14 @@ func waitForNetworkStateSyncEvents(
 		return true
 	}
 
-	return waitForEventsInternal(clck, eventsChannel, messaging.StateSyncMessageContentType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clck, sharedNetworkChannel, messaging.StateSyncMessageContentType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // waitForNetworkFSMEvents waits for the number of expected state machine events to be published on the events channel.
 func waitForNetworkFSMEvents(
 	t *testing.T,
 	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
+	sharedNetworkChannel modules.EventsChannel,
 	eventType coreTypes.StateMachineEvent,
 	errMsg string,
 	numExpectedMsgs int,
@@ -316,14 +316,14 @@ func waitForNetworkFSMEvents(
 		return stateTransitionMessage.Event == string(eventType)
 	}
 
-	return waitForEventsInternal(clck, eventsChannel, messaging.StateMachineTransitionEventType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
+	return waitForEventsInternal(clck, sharedNetworkChannel, messaging.StateMachineTransitionEventType, numExpectedMsgs, maxWaitTime, includeFilter, errMsg, failOnExtraMessages)
 }
 
 // RESEARCH(#462): Research ways to eliminate time-based non-determinism from the test framework
 // IMPROVE: This function can be extended to testing events outside of just the consensus module.
 func waitForEventsInternal(
 	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
+	sharedNetworkChannel modules.EventsChannel,
 	eventContentType string,
 	numExpectedMsgs int,
 	maxWaitTime time.Duration,
@@ -360,7 +360,7 @@ func waitForEventsInternal(
 loop:
 	for {
 		select {
-		case nodeEvent := <-eventsChannel:
+		case nodeEvent := <-sharedNetworkChannel:
 			fmt.Println("OLSH eventContentType0", eventContentType, nodeEvent.GetContentType())
 			if nodeEvent.GetContentType() != eventContentType {
 				unusedEvents = append(unusedEvents, nodeEvent)
@@ -398,7 +398,7 @@ loop:
 	}
 
 	for _, u := range unusedEvents {
-		eventsChannel <- u
+		sharedNetworkChannel <- u
 	}
 	return
 }
@@ -510,7 +510,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus,
 }
 
 // Creates a p2p module mock with mock implementations of some basic functionality
-func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *mockModules.MockP2PModule {
+func baseP2PMock(t *testing.T, sharedNetworkChannel modules.EventsChannel) *mockModules.MockP2PModule {
 	ctrl := gomock.NewController(t)
 	p2pMock := mockModules.NewMockP2PModule(ctrl)
 
@@ -520,7 +520,7 @@ func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *mockModules
 		Broadcast(gomock.Any()).
 		Do(func(msg *anypb.Any) {
 			e := &messaging.PocketEnvelope{Content: msg}
-			eventsChannel <- e
+			sharedNetworkChannel <- e
 		}).
 		AnyTimes()
 	// CONSIDERATION: Adding a check to not to send message to itself
@@ -528,7 +528,7 @@ func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *mockModules
 		Send(gomock.Any(), gomock.Any()).
 		Do(func(addr cryptoPocket.Address, msg *anypb.Any) {
 			e := &messaging.PocketEnvelope{Content: msg}
-			eventsChannel <- e
+			sharedNetworkChannel <- e
 		}).
 		AnyTimes()
 	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()
@@ -640,7 +640,7 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 func WaitForNextBlock(
 	t *testing.T,
 	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
+	sharedNetworkChannel modules.EventsChannel,
 	pocketNodes idToNodeMapping,
 	height uint64,
 	round uint8,
@@ -654,49 +654,49 @@ func WaitForNextBlock(
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	// 1. NewRound
-	newRoundMessages, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.NewRound), round, 0, numValidators*numValidators, maxWaitTime, failOnExtraMessages)
+	newRoundMessages, err := waitForProposalMsgs(t, clck, sharedNetworkChannel, pocketNodes, height, uint8(consensus.NewRound), round, 0, numValidators*numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, newRoundMessages, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	// 2. Prepare
-	prepareProposals, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.Prepare), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
+	prepareProposals, err := waitForProposalMsgs(t, clck, sharedNetworkChannel, pocketNodes, height, uint8(consensus.Prepare), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, prepareProposals, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	// wait for prepare votes
-	prepareVotes, err := waitForNetworkConsensusEvents(t, clck, eventsChannel, 2, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
+	prepareVotes, err := waitForNetworkConsensusEvents(t, clck, sharedNetworkChannel, 2, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, prepareVotes, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	// 3. PreCommit
-	preCommitProposals, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.PreCommit), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
+	preCommitProposals, err := waitForProposalMsgs(t, clck, sharedNetworkChannel, pocketNodes, height, uint8(consensus.PreCommit), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, preCommitProposals, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	// wait for preCommit votes
-	preCommitVotes, err := waitForNetworkConsensusEvents(t, clck, eventsChannel, 3, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
+	preCommitVotes, err := waitForNetworkConsensusEvents(t, clck, sharedNetworkChannel, 3, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, preCommitVotes, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	// 4. Commit
-	commitProposals, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.Commit), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
+	commitProposals, err := waitForProposalMsgs(t, clck, sharedNetworkChannel, pocketNodes, height, uint8(consensus.Commit), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, commitProposals, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	// wait for commit votes
-	commitVotes, err := waitForNetworkConsensusEvents(t, clck, eventsChannel, 4, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
+	commitVotes, err := waitForNetworkConsensusEvents(t, clck, sharedNetworkChannel, 4, consensus.Vote, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, commitVotes, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
 
 	// 5. Decide
-	decideProposals, err := waitForProposalMsgs(t, clck, eventsChannel, pocketNodes, height, uint8(consensus.Decide), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
+	decideProposals, err := waitForProposalMsgs(t, clck, sharedNetworkChannel, pocketNodes, height, uint8(consensus.Decide), round, leaderId, numValidators, maxWaitTime, failOnExtraMessages)
 	require.NoError(t, err)
 	broadcastMessages(t, decideProposals, pocketNodes)
 	advanceTime(t, clck, 10*time.Millisecond)
@@ -711,7 +711,7 @@ func WaitForNextBlock(
 func waitForProposalMsgs(
 	t *testing.T,
 	clck *clock.Mock,
-	eventsChannel modules.EventsChannel,
+	sharedNetworkChannel modules.EventsChannel,
 	pocketNodes idToNodeMapping,
 	height uint64,
 	step uint8,
@@ -721,7 +721,7 @@ func waitForProposalMsgs(
 	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
 ) ([]*anypb.Any, error) {
-	proposalMsgs, err := waitForNetworkConsensusEvents(t, clck, eventsChannel, typesCons.HotstuffStep(step), consensus.Propose, numExpectedMsgs, maxWaitTime, failOnExtraMessages)
+	proposalMsgs, err := waitForNetworkConsensusEvents(t, clck, sharedNetworkChannel, typesCons.HotstuffStep(step), consensus.Propose, numExpectedMsgs, maxWaitTime, failOnExtraMessages)
 	if err != nil {
 		return nil, err
 	}

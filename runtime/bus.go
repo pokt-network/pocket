@@ -22,6 +22,10 @@ type bus struct {
 	// Node events
 	channel modules.EventsChannel
 
+	// A secondary channel that receives all the same events as the main bus,
+	// but does not pull events when `GetBusEvent` is called
+	debugChannel modules.EventsChannel
+
 	modulesRegistry modules.ModulesRegistry
 
 	runtimeMgr modules.RuntimeMgr
@@ -125,11 +129,12 @@ func (m *bus) GetStateMachineModule() modules.StateMachineModule {
 	return getModuleFromRegistry[modules.StateMachineModule](m, modules.StateMachineModuleName)
 }
 
-// WithEventsChannel is used initialize the bus with a specific events channel
-func WithEventsChannel(eventsChannel modules.EventsChannel) modules.BusOption {
+// WithDebugEventsChannel is used initialize a secondary (debug) bus that receives all the same events
+// as the main bus, but does pull events when `GetBusEvent` is called
+func WithDebugEventsChannel(eventsChannel modules.EventsChannel) modules.BusOption {
 	return func(m modules.Bus) {
 		if m, ok := m.(*bus); ok {
-			m.channel = eventsChannel
+			m.debugChannel = eventsChannel
 		}
 	}
 }

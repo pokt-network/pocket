@@ -1,7 +1,6 @@
 package e2e_tests
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -15,7 +14,7 @@ import (
 )
 
 func TestStateSync_MetadataRequestResponse_Success(t *testing.T) {
-	clockMock, eventsChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
+	clockMock, sharedNetworkChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
 
 	// Choose node 1 as the server node
 	serverNode := pocketNodes[1]
@@ -32,7 +31,7 @@ func TestStateSync_MetadataRequestResponse_Success(t *testing.T) {
 	send(t, serverNode, anyProto)
 
 	// Wait for response from the server node
-	receivedMsgs, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "did not receive response to state sync metadata request", 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_MetadataRes{}))
+	receivedMsgs, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "did not receive response to state sync metadata request", 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_MetadataRes{}))
 	require.NoError(t, err)
 
 	// Extract the response
@@ -50,7 +49,7 @@ func TestStateSync_MetadataRequestResponse_Success(t *testing.T) {
 }
 
 func TestStateSync_BlockRequestResponse_Success(t *testing.T) {
-	clockMock, eventsChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
+	clockMock, sharedNetworkChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
 
 	// Choose node 1 as the server node
 	serverNode := pocketNodes[1]
@@ -68,7 +67,7 @@ func TestStateSync_BlockRequestResponse_Success(t *testing.T) {
 	send(t, serverNode, stateSyncGetBlockMsg)
 
 	// Start waiting for the get block response on server node
-	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting on response to a get block request", 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
+	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "error waiting on response to a get block request", 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
 	require.NoError(t, err)
 
 	// validate the response
@@ -87,7 +86,7 @@ func TestStateSync_BlockRequestResponse_Success(t *testing.T) {
 }
 
 func TestStateSync_BlockRequestResponse_FailNonExistingBlock(t *testing.T) {
-	clockMock, eventsChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
+	clockMock, sharedNetworkChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
 
 	testHeight := uint64(5)
 
@@ -107,12 +106,12 @@ func TestStateSync_BlockRequestResponse_FailNonExistingBlock(t *testing.T) {
 
 	// Start waiting for the get block request on server node, expect to return error
 	errMsg := "expecting to time out waiting on a response from a non existent"
-	_, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, errMsg, 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
+	_, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, errMsg, 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
 	require.Error(t, err)
 }
 
 func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
-	clockMock, eventsChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
+	clockMock, sharedNetworkChannel, pocketNodes := prepareStateSyncTestEnvironment(t)
 
 	// Select node 2 as the unsynched node that will catch up
 	unsyncedNodeId := typesCons.NodeId(pocketNodes[2].GetBus().GetConsensusModule().GetNodeId())
@@ -141,7 +140,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	broadcast(t, pocketNodes, anyProto)
 
 	// Make sure the unsynched node has a view of the network
-	receivedMsgs, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "did not receive response to state sync metadata request", len(pocketNodes), 500, false, nil)
+	receivedMsgs, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "did not receive response to state sync metadata request", len(pocketNodes), 500, false, nil)
 	require.NoError(t, err)
 	for _, msg := range receivedMsgs {
 		send(t, unsyncedNode, msg)
@@ -151,14 +150,14 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	// Trigger the next round of consensus so the unsynched nodes is prompted to start synching
 	triggerNextView(t, pocketNodes)
 	advanceTime(t, clockMock, 10*time.Millisecond)
-	proposalMsgs, err := waitForNetworkConsensusEvents(t, clockMock, eventsChannel, typesCons.HotstuffStep(consensus.NewRound), consensus.Propose, numValidators*numValidators, 500, false)
+	proposalMsgs, err := waitForNetworkConsensusEvents(t, clockMock, sharedNetworkChannel, typesCons.HotstuffStep(consensus.NewRound), consensus.Propose, numValidators*numValidators, 500, false)
 	require.NoError(t, err)
 	broadcastMessages(t, proposalMsgs, pocketNodes)
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	for unsyncedNodeHeight < targetHeight {
 		// Wait for the unsynched node to request the block at the current height
-		blockRequests, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting on response to a get block request", 1, 5000, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockReq{}))
+		blockRequests, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "error waiting on response to a get block request", 1, 5000, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockReq{}))
 		require.NoError(t, err)
 
 		// Validate the height being requested is correct
@@ -172,7 +171,7 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		advanceTime(t, clockMock, 10*time.Millisecond)
 
 		// Wait for the unsynched node to receive the block responses
-		blockResponses, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting on response to a get block response", numValidators-1, 5000, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
+		blockResponses, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "error waiting on response to a get block response", numValidators-1, 5000, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
 		require.NoError(t, err)
 
 		// Validate that the block is the same from all the validators who send it (non byzantine scenario)
@@ -193,14 +192,9 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 
 		// Send one of the responses (since they are equal) to the unsynched node to apply it
 		send(t, unsyncedNode, blockResponses[0])
+
+		// CONSIDERATION: Do we need to sleep or block before checking if the block was committed?
 		advanceTime(t, clockMock, 10*time.Millisecond)
-
-		fmt.Println("OLSH events channel", eventsChannel)
-
-		// TODO_IN_THIS_COMMIT: Remove this hack
-		// Wait for the unsynched node to commit the block
-		// _, err = waitForEventsInternal(clockMock, eventsChannel, messaging.StateSyncBlockCommittedEventType, 1, 5000, nil, "error waiting on response to a get block response", false)
-		// require.NoError(t, err)
 		time.Sleep(10 * time.Millisecond)
 
 		// ensure unsynced node height increased
@@ -248,16 +242,16 @@ func prepareStateSyncTestEnvironment(t *testing.T) (*clock.Mock, modules.EventsC
 	// Test configs
 	runtimeMgrs := generateNodeRuntimeMgrs(t, numValidators, clockMock)
 	buses := generateBuses(t, runtimeMgrs)
-	// buses := generateBusesTemp(t, runtimeMgrs, eventsChannel)
+	// buses := generateBusesTemp(t, runtimeMgrs, sharedNetworkChannel)
 
 	// Create & start test pocket nodes
-	eventsChannel := make(modules.EventsChannel, 100)
-	// buses := generateBusesTemp(t, runtimeMgrs, eventsChannel)
-	pocketNodes := createTestConsensusPocketNodes(t, buses, eventsChannel)
+	sharedNetworkChannel := make(modules.EventsChannel, 100)
+	// buses := generateBusesTemp(t, runtimeMgrs, sharedNetworkChannel)
+	pocketNodes := createTestConsensusPocketNodes(t, buses, sharedNetworkChannel)
 	err := startAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
-	return clockMock, eventsChannel, pocketNodes
+	return clockMock, sharedNetworkChannel, pocketNodes
 }
 
 // func generateBusesTemp(t *testing.T, runtimeMgrs []*runtime.Manager, channel modules.EventsChannel) (buses []modules.Bus) {

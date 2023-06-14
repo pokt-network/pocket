@@ -23,17 +23,17 @@ func TestHotstuff_4Nodes1BlockHappyPath(t *testing.T) {
 	buses := generateBuses(t, runtimeMgrs)
 
 	// Create & start test pocket nodes
-	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := createTestConsensusPocketNodes(t, buses, eventsChannel)
+	sharedNetworkChannel := make(modules.EventsChannel, 100)
+	pocketNodes := createTestConsensusPocketNodes(t, buses, sharedNetworkChannel)
 	err := startAllTestPocketNodes(t, pocketNodes)
 	require.NoError(t, err)
 
 	// Wait for nodes to reach height=1 by generating a block
-	block := WaitForNextBlock(t, clockMock, eventsChannel, pocketNodes, 1, 0, 500, true)
+	block := WaitForNextBlock(t, clockMock, sharedNetworkChannel, pocketNodes, 1, 0, 500, true)
 	require.Equal(t, uint64(1), block.BlockHeader.Height)
 
 	// Expecting NewRound messages for height=2 to be sent after a block is committed
-	_, err = waitForProposalMsgs(t, clockMock, eventsChannel, pocketNodes, 2, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, 500, true)
+	_, err = waitForProposalMsgs(t, clockMock, sharedNetworkChannel, pocketNodes, 2, uint8(consensus.NewRound), 0, 0, numValidators*numValidators, 500, true)
 	require.NoError(t, err)
 
 	// TODO(#615): Add QC verification here after valid block mocking is implemented with issue #352.
@@ -50,7 +50,7 @@ func TestHotstuff_4Nodes1BlockHappyPath(t *testing.T) {
 	send(t, serverNode, stateSyncGetBlockMsg)
 
 	// Server node is waiting for the get block response message
-	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, eventsChannel, "error waiting for StateSync.GetBlockRequest message", 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
+	receivedMsg, err := waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "error waiting for StateSync.GetBlockRequest message", 1, 500, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockRes{}))
 	require.NoError(t, err)
 
 	// Verify that it was a get block request of the right height
