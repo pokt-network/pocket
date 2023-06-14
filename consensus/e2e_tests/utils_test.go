@@ -575,6 +575,7 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 	return rpcMock
 }
 
+// TODO: (h5law) Implement this mock properly as IBC module evolves
 func baseIbcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockIBCModule {
 	ctrl := gomock.NewController(t)
 	ibcMock := mockModules.NewMockIBCModule(ctrl)
