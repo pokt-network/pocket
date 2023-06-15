@@ -26,6 +26,32 @@ var expectedGenesis = &genesis.GenesisState{
 	MaxBlockBytes: 4000000,
 	Pools: []*types.Account{
 		{
+			Address: "44414f0000000000000000000000000000000000",
+			Amount:  "100000000000000",
+		},
+		{
+			Address: "466565436f6c6c6563746f720000000000000000",
+			Amount:  "0",
+		},
+		{
+			Address: "4170705374616b65506f6f6c0000000000000000",
+			Amount:  "100000000000000",
+		},
+		{
+			Address: "56616c696461746f725374616b65506f6f6c0000",
+			Amount:  "100000000000000",
+		},
+		{
+			Address: "53657276696365725374616b65506f6f6c000000",
+			Amount:  "100000000000000",
+		},
+		{
+			Address: "4669736865726d616e5374616b65506f6f6c0000",
+			Amount:  "100000000000000",
+		},
+	},
+	Accounts: []*types.Account{
+		{
 			Address: "00101f2ff54811e84df2d767c661f57a06349b7e",
 			Amount:  "100000000000000",
 		},
