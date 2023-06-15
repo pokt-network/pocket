@@ -57,6 +57,17 @@ Reviewers (and prospective reviewers) are encouraged to engage in reviews of cod
 
 ### Reviewing
 
+tl;dr Use SOS, TECHDEBT(XXX), TECHDEBT, NIT if you think it'll help the author get context on next steps.
+
+When you leave reviews, if it is unclear from the reviewer to the author, please make sure to mention if:
+
+- NIT: Comment is a nitpick
+- TECHDEBT: Comment should have a TECHDEBT comment w/o a ticket
+- TECHDEBT(XXX): Comment should have a TECHDEBT comment but imporant enough that it requires a ticket to track the work in the near future
+- SOS: Show Stopper. You feel strongly it needs to be addressed now
+
+Only use the above if you think normal comments / TODOs are not self explanatory enough.
+
 ### Starting a Review
 
 Consider if it could be broken into smaller Pull Requests. If it is clear that it can be, summarize your thinking on how in your Review.
