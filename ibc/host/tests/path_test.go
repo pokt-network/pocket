@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/ibc/host"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -54,26 +55,26 @@ func TestPaths_GenerateValidIdentifiers(t *testing.T) {
 }
 
 func TestPaths_CommitmentPrefix(t *testing.T) {
-	prefix := host.CommitmentPrefix([]byte("test"))
+	prefix := coreTypes.CommitmentPrefix([]byte("test"))
 
 	testCases := []struct {
 		name     string
 		path     string
-		prefix   host.CommitmentPrefix
+		prefix   coreTypes.CommitmentPrefix
 		expected []byte
 		result   string
 	}{
 		{
 			name:     "Successfully applies and removes prefix to produce the same path",
 			path:     "path",
-			prefix:   host.CommitmentPrefix([]byte("test")),
+			prefix:   coreTypes.CommitmentPrefix([]byte("test")),
 			expected: []byte("test/path"),
 			result:   "path",
 		},
 		{
 			name:     "Fails to produce input path when given a different prefix",
 			path:     "path",
-			prefix:   host.CommitmentPrefix([]byte("test2")),
+			prefix:   coreTypes.CommitmentPrefix([]byte("test2")),
 			expected: []byte("test/path"),
 			result:   "ath",
 		},

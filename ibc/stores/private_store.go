@@ -2,6 +2,7 @@ package stores
 
 import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -22,6 +23,10 @@ func NewTestPrivateStore(storeKey string) modules.Store {
 
 func (priv *PrivateStore) GetStoreKey() string {
 	return priv.storeKey
+}
+
+func (priv *PrivateStore) GetCommitmentPrefix() coreTypes.CommitmentPrefix {
+	return coreTypes.CommitmentPrefix(priv.storeKey)
 }
 
 func (priv *PrivateStore) IsProvable() bool {

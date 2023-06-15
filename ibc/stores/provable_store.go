@@ -51,6 +51,11 @@ func (prov *ProvableStore) GetStoreKey() string {
 	return prov.storeKey
 }
 
+// TODO: automatically add prefix to keys being stored if not present
+func (prov *ProvableStore) GetCommitmentPrefix() coreTypes.CommitmentPrefix {
+	return coreTypes.CommitmentPrefix(prov.storeKey)
+}
+
 func (prov *ProvableStore) IsProvable() bool {
 	return prov.provable
 }

@@ -219,6 +219,7 @@ type Store interface {
 	Set(key []byte, value []byte) error
 	Delete(key []byte) error
 	GetStoreKey() string
+	GetCommitmentPrefix() coreTypes.CommitmentPrefix
 	IsProvable() bool
 	Stop() error
 }
