@@ -235,7 +235,7 @@ paths:
             schema:
               $ref: "#/components/schemas/QueryAccountHeight"
             example:
-              address: da034209758b78eaea06dd99c07909ab54c99b45
+              address: 0000085e3333920cfa506f0c956f109b056772f4
               height: 0
         required: true
       responses:
@@ -300,7 +300,7 @@ paths:
             schema:
               $ref: "#/components/schemas/QueryAccountPaginated"
             example:
-              address: da034209758b78eaea06dd99c07909ab54c99b45
+              address: 0000085e3333920cfa506f0c956f109b056772f4
               page: 1
               per_page: 1000
               sort: desc
@@ -351,7 +351,7 @@ paths:
             schema:
               $ref: "#/components/schemas/QueryAccountHeight"
             example:
-              address: da034209758b78eaea06dd99c07909ab54c99b45
+              address: 0000085e3333920cfa506f0c956f109b056772f4
               height: 0
         required: true
       responses:
@@ -419,7 +419,7 @@ paths:
             schema:
               $ref: "#/components/schemas/QueryAccountHeight"
             example:
-              address: da034209758b78eaea06dd99c07909ab54c99b45
+              address: 0000085e3333920cfa506f0c956f109b056772f4
               height: 99
         required: true
       responses:
@@ -516,7 +516,7 @@ paths:
             schema:
               $ref: "#/components/schemas/QueryAccountHeight"
             example:
-              address: da034209758b78eaea06dd99c07909ab54c99b45
+              address: 0000085e3333920cfa506f0c956f109b056772f4
               height: 0
         required: true
       responses:
@@ -629,7 +629,7 @@ paths:
             schema:
               $ref: "#/components/schemas/QueryAccountHeight"
             example:
-              address: da034209758b78eaea06dd99c07909ab54c99b45
+              address: 0000085e3333920cfa506f0c956f109b056772f4
               height: 0
         required: true
       responses:
@@ -882,7 +882,7 @@ paths:
             schema:
               $ref: "#/components/schemas/QueryAccountHeight"
             example:
-              address: da034209758b78eaea06dd99c07909ab54c99b45
+              address: 0000085e3333920cfa506f0c956f109b056772f4
               height: 0
         required: true
       responses:
