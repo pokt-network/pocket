@@ -55,6 +55,9 @@ func (m *consensusModule) handleStateSyncMessage(stateSyncMessage *typesCons.Sta
 		go m.stateSync.HandleStateSyncMetadataResponse(stateSyncMessage.GetMetadataRes())
 		return nil
 
+	// NB: Note that this is the only case that calls a function in the consensus module (not the state sync submodule) since
+	// consensus is the one responsible for calling business logic to apply and commit the blocks. State sync listens for events
+	// that are a result of it.
 	case *typesCons.StateSyncMessage_GetBlockRes:
 		m.logger.Info().Str("proto_type", "GetBlockResponse").Msg("Handling StateSyncMessage GetBlockResponse")
 		go m.tryToApplyRequestedBlock(stateSyncMessage.GetGetBlockRes())
