@@ -26,6 +26,7 @@ type TreeStoreModule interface {
 	// not incur a change.
 	// * By nature of it taking a pgx transaction at runtime, Update inherits the pgx transaction's read view of the
 	// database.
+	// TECHDEBT: Remove the TxIndexer pass here and get it from the bus
 	Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error)
 	// DebugClearAll completely clears the state of the trees. For debugging purposes only.
 	DebugClearAll() error
