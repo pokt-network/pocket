@@ -171,7 +171,7 @@ func getCurrentHeight(ctx context.Context) (int64, error) {
 	return resp.JSON200.Height, nil
 }
 
-// IMPROVE: [K8s][LocalNet] Publish Servicer(s) Host and Port as env. vars in K8s: similar to Validators
+// IMPROVE: [K8s][LocalNet] Publish Servicer(s) Host and Port as env. vars in K8s: similar to Validators: #823
 // REFACTOR: move package-level variables (e.g. remoteCLIURL) to a cli object and consider storing it in the context
 func sendTrustlessRelay(ctx context.Context, servicerUrl string, relay *rpc.RelayRequest) (*rpc.PostV1ClientRelayResponse, error) {
 	client, err := rpc.NewClientWithResponses(servicerUrl)
@@ -188,8 +188,7 @@ func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Se
 		// INCOMPLETE(#803): need to unmarshal into JSONRPC and other supported relay formats once proto-generated custom types are added.
 		Jsonrpc: "2.0",
 		Method:  payload,
-		// TODO: Path: load Path field from the corresponding Blockchain (e.g. database)
-		// TODO: set Headers
+		// INCOMPLETE: set Headers for HTTP relays
 	}
 
 	relayMeta := rpc.RelayRequestMeta{
