@@ -6,7 +6,6 @@ package trees
 
 import (
 	"bytes"
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -15,7 +14,7 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
-	ptypes "github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/persistence/sql"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -41,13 +40,6 @@ var actorTypeToMerkleTreeName = map[coreTypes.ActorType]merkleTree{
 	coreTypes.ActorType_ACTOR_TYPE_VAL:      valMerkleTree,
 	coreTypes.ActorType_ACTOR_TYPE_FISH:     fishMerkleTree,
 	coreTypes.ActorType_ACTOR_TYPE_SERVICER: servicerMerkleTree,
-}
-
-var actorTypeToSchemaName = map[coreTypes.ActorType]ptypes.ProtocolActorSchema{
-	coreTypes.ActorType_ACTOR_TYPE_APP:      ptypes.ApplicationActor,
-	coreTypes.ActorType_ACTOR_TYPE_VAL:      ptypes.ValidatorActor,
-	coreTypes.ActorType_ACTOR_TYPE_FISH:     ptypes.FishermanActor,
-	coreTypes.ActorType_ACTOR_TYPE_SERVICER: ptypes.ServicerActor,
 }
 
 var merkleTreeToActorTypeName = map[merkleTree]coreTypes.ActorType{
@@ -165,7 +157,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 				return "", fmt.Errorf("no actor type found for merkle tree: %v", treeType)
 			}
 
-			actors, err := t.getActorsUpdated(pgtx, actorType, height)
+			actors, err := sql.GetActors(pgtx, actorType, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get actors at height: %w", err)
 			}
@@ -176,7 +168,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 
 		// Account Merkle Trees
 		case accountMerkleTree:
-			accounts, err := t.getAccounts(pgtx, height)
+			accounts, err := sql.GetAccounts(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get accounts: %w", err)
 			}
@@ -184,7 +176,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 				return "", fmt.Errorf("failed to update account trees: %w", err)
 			}
 		case poolMerkleTree:
-			pools, err := t.getPools(pgtx, height)
+			pools, err := sql.GetPools(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get transactions: %w", err)
 			}
@@ -194,7 +186,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 
 		// Data Merkle Trees
 		case transactionsMerkleTree:
-			indexedTxs, err := t.getTransactions(txi, height)
+			indexedTxs, err := sql.GetTransactions(txi, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get transactions: %w", err)
 			}
@@ -202,7 +194,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 				return "", fmt.Errorf("failed to update transactions: %w", err)
 			}
 		case paramsMerkleTree:
-			params, err := t.getParams(pgtx, height)
+			params, err := sql.GetParams(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get params: %w", err)
 			}
@@ -210,7 +202,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 				return "", fmt.Errorf("failed to update params tree: %w", err)
 			}
 		case flagsMerkleTree:
-			flags, err := t.getFlags(pgtx, height)
+			flags, err := sql.GetFlags(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get flags from transaction: %w", err)
 			}
@@ -370,206 +362,4 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 	}
 
 	return nil
-}
-
-// getActorsUpdated is responsible for fetching the actors that have been updated at a given height.
-func (t *treeStore) getActorsUpdated(
-	pgtx pgx.Tx,
-	actorType coreTypes.ActorType,
-	height uint64,
-) ([]*coreTypes.Actor, error) {
-	actorSchema, ok := actorTypeToSchemaName[actorType]
-	if !ok {
-		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
-	}
-
-	// TECHDEBT (ISSUE #813): Avoid this cast to int64
-	// https://github.com/pokt-network/pocket/issues/813
-	query := actorSchema.GetUpdatedAtHeightQuery(int64(height))
-	rows, err := pgtx.Query(context.TODO(), query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	addrs := make([][]byte, 0)
-	for rows.Next() {
-		var addr string
-		if err := rows.Scan(&addr); err != nil {
-			return nil, err
-		}
-		addrBz, err := hex.DecodeString(addr)
-		if err != nil {
-			return nil, err
-		}
-		addrs = append(addrs, addrBz)
-	}
-
-	actors := make([]*coreTypes.Actor, len(addrs))
-	for i, addr := range addrs {
-		// TECHDEBT #813: Avoid this cast to int64
-		actor, err := t.getActor(pgtx, actorSchema, addr, int64(height))
-		if err != nil {
-			return nil, err
-		}
-		actors[i] = actor
-	}
-
-	return actors, nil
-}
-
-func (t *treeStore) getAccountsUpdated(
-	pgtx pgx.Tx,
-	acctType ptypes.ProtocolAccountSchema,
-	height uint64,
-) ([]*coreTypes.Account, error) {
-	accounts := []*coreTypes.Account{}
-
-	// TECHDEBT (ISSUE #813): Avoid this cast to int64
-	// https://github.com/pokt-network/pocket/issues/813
-	query := acctType.GetAccountsUpdatedAtHeightQuery(int64(height))
-	rows, err := pgtx.Query(context.TODO(), query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		acc := new(coreTypes.Account)
-		if err := rows.Scan(&acc.Address, &acc.Amount); err != nil {
-			return nil, err
-		}
-		accounts = append(accounts, acc)
-	}
-
-	return accounts, nil
-}
-
-func (t *treeStore) getTransactions(txi indexer.TxIndexer, height uint64) ([]*coreTypes.IndexedTransaction, error) {
-	// TECHDEBT (ISSUE #813): Avoid this cast to int64
-	// https://github.com/pokt-network/pocket/issues/813
-	indexedTxs, err := txi.GetByHeight(int64(height), false)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get transactions by height: %w", err)
-	}
-	return indexedTxs, nil
-}
-
-// getPools returns the pools updated at the given height
-func (t *treeStore) getPools(pgtx pgx.Tx, height uint64) ([]*coreTypes.Account, error) {
-	pools, err := t.getAccountsUpdated(pgtx, ptypes.Pool, height)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get pools: %w", err)
-	}
-	return pools, nil
-}
-
-// getAccounts returns the list of accounts updated at the provided height
-func (t *treeStore) getAccounts(pgtx pgx.Tx, height uint64) ([]*coreTypes.Account, error) {
-	accounts, err := t.getAccountsUpdated(pgtx, ptypes.Account, height)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get accounts: %w", err)
-	}
-	return accounts, nil
-}
-
-func (t *treeStore) getFlags(pgtx pgx.Tx, height uint64) ([]*coreTypes.Flag, error) {
-	fields := "name,value,enabled"
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE height=%d ORDER BY name ASC", fields, ptypes.FlagsTableName, height)
-	rows, err := pgtx.Query(context.TODO(), query)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get flags: %w", err)
-	}
-	defer rows.Close()
-
-	flagSlice := []*coreTypes.Flag{}
-	for rows.Next() {
-		flag := new(coreTypes.Flag)
-		if err := rows.Scan(&flag.Name, &flag.Value, &flag.Enabled); err != nil {
-			return nil, err
-		}
-		flag.Height = int64(height)
-		flagSlice = append(flagSlice, flag)
-	}
-
-	return flagSlice, nil
-}
-
-func (t *treeStore) getParams(pgtx pgx.Tx, height uint64) ([]*coreTypes.Param, error) {
-	fields := "name,value"
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE height=%d ORDER BY name ASC", fields, ptypes.ParamsTableName, height)
-	rows, err := pgtx.Query(context.TODO(), query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var paramSlice []*coreTypes.Param
-	for rows.Next() {
-		param := new(coreTypes.Param)
-		if err := rows.Scan(&param.Name, &param.Value); err != nil {
-			return nil, err
-		}
-		param.Height = int64(height)
-		paramSlice = append(paramSlice, param)
-	}
-
-	return paramSlice, nil
-}
-
-func (t *treeStore) getActor(tx pgx.Tx, actorSchema ptypes.ProtocolActorSchema, address []byte, height int64) (actor *coreTypes.Actor, err error) {
-	ctx := context.TODO()
-	actor, height, err = t.getActorFromRow(actorSchema.GetActorType(), tx.QueryRow(ctx, actorSchema.GetQuery(hex.EncodeToString(address), height)))
-	if err != nil {
-		return
-	}
-	return t.getChainsForActor(ctx, tx, actorSchema, actor, height)
-}
-
-func (t *treeStore) getActorFromRow(actorType coreTypes.ActorType, row pgx.Row) (actor *coreTypes.Actor, height int64, err error) {
-	actor = &coreTypes.Actor{
-		ActorType: actorType,
-	}
-	err = row.Scan(
-		&actor.Address,
-		&actor.PublicKey,
-		&actor.StakedAmount,
-		&actor.ServiceUrl,
-		&actor.Output,
-		&actor.PausedHeight,
-		&actor.UnstakingHeight,
-		&height)
-	return
-}
-
-func (t *treeStore) getChainsForActor(
-	ctx context.Context,
-	tx pgx.Tx,
-	actorSchema ptypes.ProtocolActorSchema,
-	actor *coreTypes.Actor,
-	height int64,
-) (a *coreTypes.Actor, err error) {
-	if actorSchema.GetChainsTableName() == "" {
-		return actor, nil
-	}
-	rows, err := tx.Query(ctx, actorSchema.GetChainsQuery(actor.Address, height))
-	if err != nil {
-		return actor, err
-	}
-	defer rows.Close()
-
-	var chainAddr string
-	var chainID string
-	var chainEndHeight int64
-	for rows.Next() {
-		err = rows.Scan(&chainAddr, &chainID, &chainEndHeight)
-		if err != nil {
-			return
-		}
-		if chainAddr != actor.Address {
-			return actor, fmt.Errorf("unexpected address %s, expected %s when reading chains", chainAddr, actor.Address)
-		}
-		actor.Chains = append(actor.Chains, chainID)
-	}
-	return actor, nil
 }
