@@ -226,8 +226,10 @@ func (m *pacemaker) NewHeight() {
 
 	consensusMod := m.GetBus().GetConsensusModule()
 	consensusMod.ResetRound(true)
+
 	newHeight := consensusMod.CurrentHeight() + 1
 	consensusMod.SetHeight(newHeight)
+
 	m.logger.Info().Uint64("height", newHeight).Msg("🏁 Starting 1st round at new height 🏁")
 
 	// CONSIDERATION: We are omitting CommitQC and TimeoutQC here for simplicity, but should we add them?

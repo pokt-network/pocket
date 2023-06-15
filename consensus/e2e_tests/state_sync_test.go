@@ -123,16 +123,14 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	targetHeight := uint64(6)
 
 	// Set the unsynced node to height (2) and rest of the nodes to height (4)
+	unsyncedNode.GetBus().GetConsensusModule().SetHeight(unsyncedNodeHeight)
 	for id, pocketNode := range pocketNodes {
-		var height uint64
-		if id == unsyncedNodeId {
-			height = unsyncedNodeHeight
-		} else {
-			height = targetHeight
+		consensusMod := pocketNode.GetBus().GetConsensusModule()
+		if id != unsyncedNodeId {
+			consensusMod.SetHeight(targetHeight)
 		}
-		pocketNode.GetBus().GetConsensusModule().SetHeight(height)
-		pocketNode.GetBus().GetConsensusModule().SetStep(uint8(consensus.NewRound))
-		pocketNode.GetBus().GetConsensusModule().SetRound(uint64(0))
+		consensusMod.SetStep(uint8(consensus.NewRound))
+		consensusMod.SetRound(uint64(0))
 	}
 
 	// Sanity check unsynched node is at height 2
@@ -153,10 +151,18 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 	// Trigger the next round of consensus so the unsynched nodes is prompted to start synching
 	triggerNextView(t, pocketNodes)
 	advanceTime(t, clockMock, 10*time.Millisecond)
+
+	// Wait for proposal messages
 	proposalMsgs, err := waitForNetworkConsensusEvents(t, clockMock, sharedNetworkChannel, typesCons.HotstuffStep(consensus.NewRound), consensus.Propose, numValidators*numValidators, 500, false)
 	require.NoError(t, err)
+
+	// Broadcast the proposal messages to all nodes
 	broadcastMessages(t, proposalMsgs, pocketNodes)
 	advanceTime(t, clockMock, 10*time.Millisecond)
+
+	// TODO: Figure out why we have one extra (non harmful) request at the very beginning
+	_, err = waitForNetworkStateSyncEvents(t, clockMock, sharedNetworkChannel, "error waiting on response to a get block request", 1, 5000, false, reflect.TypeOf(&typesCons.StateSyncMessage_GetBlockReq{}))
+	require.NoError(t, err)
 
 	for unsyncedNodeHeight < targetHeight {
 		// Wait for the unsynched node to request the block at the current height
@@ -197,19 +203,22 @@ func TestStateSync_UnsyncedPeerSyncs_Success(t *testing.T) {
 		send(t, unsyncedNode, blockResponses[0])
 		advanceTime(t, clockMock, 10*time.Millisecond)
 		debugChannel := unsyncedNode.GetBus().GetDebugEventBus()
-		select {
-		case e := <-debugChannel:
-			if e.GetContentType() == messaging.StateSyncBlockCommittedEventType {
-				msg, err := codec.GetCodec().FromAny(e.Content)
-				require.NoError(t, err)
-				blockCommittedEvent, ok := msg.(*messaging.StateSyncBlockCommittedEvent)
-				require.True(t, ok)
-				if unsyncedNodeHeight == blockCommittedEvent.Height {
-					break
+	loop:
+		for {
+			select {
+			case e := <-debugChannel:
+				if e.GetContentType() == messaging.ConsensusNewHeightEventType {
+					msg, err := codec.GetCodec().FromAny(e.Content)
+					require.NoError(t, err)
+					blockCommittedEvent, ok := msg.(*messaging.ConsensusNewHeightEvent)
+					require.True(t, ok)
+					if unsyncedNodeHeight == blockCommittedEvent.Height {
+						break loop
+					}
 				}
+			case <-time.After(time.Second):
+				assert.Fail(t, "Timed out waiting for block %d to be committed...", unsyncedNodeHeight)
 			}
-		case <-time.After(time.Second):
-			assert.Fail(t, "Timed out waiting for block %d to be committed...", unsyncedNodeHeight)
 		}
 
 		// ensure unsynced node height increased

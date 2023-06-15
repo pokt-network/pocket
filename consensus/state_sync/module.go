@@ -3,12 +3,10 @@ package state_sync
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -29,7 +27,7 @@ type StateSyncModule interface {
 	modules.Module
 	StateSyncServerModule
 
-	HandleStateSyncBlockCommittedEvent(message *anypb.Any) error
+	HandleBlockCommittedEvent(*messaging.ConsensusNewHeightEvent) error
 	HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error
 
 	// TECHDEBT: This function can be removed once the dependency of state sync on the FSM module is removed.
@@ -104,7 +102,7 @@ func (m *stateSync) StartSynchronousStateSync() error {
 	// - maxHeight is the max * committed * height of the network
 	// - currentHeight is the latest * committing * height of the node
 	for currentHeight <= maxHeight {
-		m.logger.Info().Msgf("Sync is requesting block: %d, ending height: %d", currentHeight, maxHeight)
+		m.logger.Info().Msgf("Synchronous state sync is requesting block: %d, ending height: %d", currentHeight, maxHeight)
 
 		// form the get block request message
 		stateSyncGetBlockMsg := &typesCons.StateSyncMessage{
@@ -128,7 +126,7 @@ func (m *stateSync) StartSynchronousStateSync() error {
 		// Wait for the consensus module to commit the requested block and re-try on timeout
 		select {
 		case blockHeight := <-m.committedBlocksChannel:
-			m.logger.Info().Msgf("Block %d is committed!", blockHeight)
+			m.logger.Info().Msgf("State sync received event that block %d is committed!", blockHeight)
 		case <-time.After(blockWaitingPeriod):
 			m.logger.Warn().Msgf("Timed out waiting for block %d to be committed...", currentHeight)
 		}
@@ -151,23 +149,15 @@ func (m *stateSync) StartSynchronousStateSync() error {
 }
 
 func (m *stateSync) HandleStateSyncMetadataResponse(res *typesCons.StateSyncMetadataResponse) error {
+	m.logger.Info().Msg("Handling state sync metadata response")
+
 	m.metadataReceived <- res
 	return nil
 }
 
-func (m *stateSync) HandleStateSyncBlockCommittedEvent(event *anypb.Any) error {
-	evt, err := codec.GetCodec().FromAny(event)
-	if err != nil {
-		return err
-	}
-
-	if event.MessageName() == messaging.StateSyncBlockCommittedEventType {
-		newCommitBlockEvent, ok := evt.(*messaging.StateSyncBlockCommittedEvent)
-		if !ok {
-			return fmt.Errorf("failed to cast event to StateSyncBlockCommittedEvent")
-		}
-		m.committedBlocksChannel <- newCommitBlockEvent.Height
-	}
+func (m *stateSync) HandleBlockCommittedEvent(msg *messaging.ConsensusNewHeightEvent) error {
+	m.logger.Info().Msg("Handling state sync block committed event")
+	m.committedBlocksChannel <- msg.Height
 	return nil
 }
 

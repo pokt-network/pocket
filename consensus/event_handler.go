@@ -19,23 +19,33 @@ const (
 )
 
 // Implements the `HandleEvent` function in the `ConsensusModule` interface
-func (m *consensusModule) HandleEvent(transitionMessageAny *anypb.Any) error {
+func (m *consensusModule) HandleEvent(event *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 
-	switch transitionMessageAny.MessageName() {
+	msg, err := codec.GetCodec().FromAny(event)
+	if err != nil {
+		return err
+	}
+
+	switch event.MessageName() {
+
 	case messaging.StateMachineTransitionEventType:
-		msg, err := codec.GetCodec().FromAny(transitionMessageAny)
-		if err != nil {
-			return err
-		}
 		stateTransitionMessage, ok := msg.(*messaging.StateMachineTransitionEvent)
 		if !ok {
 			return fmt.Errorf("failed to cast message to StateSyncMessage")
 		}
 		return m.handleStateTransitionEvent(stateTransitionMessage)
+
+	case messaging.ConsensusNewHeightEventType:
+		blockCommittedEvent, ok := msg.(*messaging.ConsensusNewHeightEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast event to ConsensusNewHeightEvent")
+		}
+		return m.stateSync.HandleBlockCommittedEvent(blockCommittedEvent)
+
 	default:
-		return typesCons.ErrUnknownStateSyncMessageType(transitionMessageAny.MessageName())
+		return typesCons.ErrUnknownStateSyncMessageType(event.MessageName())
 	}
 }
 

@@ -173,15 +173,16 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 
-	case messaging.StateSyncMessageContentType,
-		messaging.StateSyncBlockCommittedEventType:
+	case messaging.StateSyncMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleStateSyncMessage(message.Content)
 
 	case messaging.TxGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleUtilityMessage(message.Content)
 
 	case messaging.ConsensusNewHeightEventType:
-		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
+		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
+		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
+		return multierr.Combine(err_consensus, err_p2p) // TECHDEBT: Remove this lib once we move to Go 1.2
 
 	case messaging.StateMachineTransitionEventType:
 		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)

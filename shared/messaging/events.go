@@ -10,8 +10,7 @@ const (
 	HotstuffMessageContentType = "consensus.HotstuffMessage"
 
 	// Consensus - State Sync
-	StateSyncBlockCommittedEventType = "pocket.StateSyncBlockCommittedEvent"
-	StateSyncMessageContentType      = "consensus.StateSyncMessage"
+	StateSyncMessageContentType = "consensus.StateSyncMessage"
 
 	// Utility
 	TxGossipMessageContentType = "utility.TxGossipMessage"

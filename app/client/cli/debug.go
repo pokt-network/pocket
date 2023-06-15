@@ -252,7 +252,7 @@ func fetchPeerstore(cmd *cobra.Command) (typesP2P.Peerstore, error) {
 
 // sendConsensusNewHeightEventToP2PModule mimicks the consensus module sending a ConsensusNewHeightEvent to the p2p module
 // This is necessary because the debug client is not a validator and has no consensus module but it has to update the peerstore
-// depending on the changes in the validator set.
+// depending on the changes in the validator set, which is based on the on-chain state.
 // TODO(#613): Make the debug client mimic a full node.
 func sendConsensusNewHeightEventToP2PModule(height uint64, bus modules.Bus) error {
 	newHeightEvent, err := messaging.PackMessage(&messaging.ConsensusNewHeightEvent{Height: height})
