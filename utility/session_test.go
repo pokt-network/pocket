@@ -25,7 +25,7 @@ func TestSession_GetSession_SingleFishermanSingleServicerBaseCase(t *testing.T) 
 	numFishermen := 1
 	numServicers := 1
 	// needs to be manually updated if business logic changes
-	expectedSessionId := "bd78d459d08c4473aa0af464a3f7d0e5628dd3a4e61b8094e699000a0c6ff0b2"
+	expectedSessionId := "5acf559f1a3faf3bea7eb692fe51bc1e2e5fb687ede0a6daa7d42399da4aa82b"
 
 	runtimeCfg, utilityMod, _ := prepareEnvironment(t, 5, numServicers, 1, numFishermen)
 
