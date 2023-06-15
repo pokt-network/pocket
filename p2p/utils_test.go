@@ -37,6 +37,7 @@ import (
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
 
 const (
+	// TECHDEBT: Look into ways to remove `serviceURLFormat` from the test suite
 	serviceURLFormat = "node%d.consensus:42069"
 	// Since we simulate up to a 27 node network, we will pre-generate a n >= 27 number of keys to avoid generation
 	// every time. The genesis config seed start is set for deterministic key generation and 42 was chosen arbitrarily.
