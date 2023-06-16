@@ -12,11 +12,11 @@ import (
 func (*treeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
 	m := &treeStore{}
 
-	m.SetBus(bus)
-
 	for _, option := range options {
 		option(m)
 	}
+
+	m.SetBus(bus)
 
 	if err := m.setupTrees(); err != nil {
 		return nil, err
@@ -38,10 +38,6 @@ func WithTreeStoreDirectory(path string) modules.TreeStoreOption {
 			mod.treeStoreDir = path
 		}
 	}
-}
-
-func (t *treeStore) GetModuleName() string {
-	return modules.TreeStoreModuleName
 }
 
 func (t *treeStore) setupTrees() error {

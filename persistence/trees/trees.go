@@ -98,7 +98,10 @@ type treeStore struct {
 	nodeStores   map[merkleTree]kvstore.KVStore
 }
 
-func (t *treeStore) Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
+// Update takes a transaction and a height and updates
+// all of the trees in the treeStore for that height.
+func (t *treeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
+	txi := t.GetBus().GetPersistenceModule().GetTxIndexer()
 	return t.updateMerkleTrees(pgtx, txi, height)
 }
 
