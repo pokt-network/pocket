@@ -1,0 +1,8 @@
+syntax = "proto3";
+package background;
+
+option go_package = "github.com/pokt-network/pocket/p2p/types";
+
+message BackgroundMessage {
+  bytes data = 1;
+}
