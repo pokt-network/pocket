@@ -40,10 +40,19 @@
 ## Legend
 
 🟢 TestNet - Nice to have
+  *   _A feature that can be added in future protocol upgrades after TestNet is launched_
+
 🟡 TestNet - Must have
+  *   _A blocker for the first live/public version of TestNet_
+
 🔵 MainNet - Nice to have
+  *   _A feature that can be added in future protocol upgrades after MainNet is launched_
+
 🔴 MainNet - Must have
+  *   _A blocker for the first live/public version of MainNet_
+
 ⭐ MainNet - Top priority post launch
+
 
 ## A. E2E Relay
 
