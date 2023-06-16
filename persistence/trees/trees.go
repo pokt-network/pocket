@@ -98,13 +98,14 @@ type treeStore struct {
 	treeStoreDir string
 	merkleTrees  map[merkleTree]*smt.SMT
 	nodeStores   map[merkleTree]kvstore.KVStore
+
+	txi indexer.TxIndexer
 }
 
 // Update takes a transaction and a height and updates
 // all of the trees in the treeStore for that height.
 func (t *treeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
-	txi := t.GetBus().GetPersistenceModule().GetTxIndexer()
-	return t.updateMerkleTrees(pgtx, txi, height)
+	return t.updateMerkleTrees(pgtx, t.txi, height)
 }
 
 // DebugClearAll is used by the debug cli to completely reset all merkle trees.
