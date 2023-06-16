@@ -57,7 +57,7 @@ const (
 	// defines the index of the root hash each independent as they are concatenated together
 	// to generate the state hash.
 
-	// TECHDEBT: Enforce this ordering in protobufs using enums
+	// TECHDEBT(#834): Remove the need for enforced ordering
 
 	// Actor Merkle Trees
 	appMerkleTree merkleTree = iota
