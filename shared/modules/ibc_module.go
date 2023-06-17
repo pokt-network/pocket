@@ -5,12 +5,16 @@ package modules
 import (
 	ics23 "github.com/cosmos/ics23/go"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const IBCModuleName = "ibc"
 
 type IBCModule interface {
 	Module
+
+	// HandleMessage handles an IBC related message from the bus
+	HandleMessage(*anypb.Any) error
 }
 
 // IBCHost is the interface used by the host machine (a Pocket node) to interact with the IBC module
@@ -24,6 +28,7 @@ type IBCHost interface {
 
 	// GetStoreManager returns the IBC StoreManager to interact with the IBC hosts state
 	GetStoreManager() StoreManager
+
 	// GetTimestamp returns the current unix timestamp for the hostmachine
 	GetTimestamp() uint64
 }

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package types;
+
+option go_package = "github.com/pokt-network/pocket/ibc/types";
+
+// UpdateIBCStore defines a message representing the addition of a key/value pair to the IBC store
+message UpdateIBCStore {
+    bytes prefix = 1;
+    bytes key = 2;
+    bytes value = 3;
+}
+
+// PruneIBCStore defines a message representing the removal of a key from the IBC store
+message PruneIBCStore {
+    bytes prefix = 1;
+    bytes key = 2;
+}
+
+// IBCMessage defines the different types of IBC message that can be sent across the network
+message IBCMessage {
+    oneof msg {
+        UpdateIBCStore update = 1;
+        PruneIBCStore prune = 2;
+    }
+}

@@ -38,7 +38,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 144
+// NextCode: 146
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -178,14 +178,16 @@ const (
 	CodeUnknownMessageType                Code = 131
 	CodeProposalBlockNotSet               Code = 133
 	CodeHostAlreadyExists                 Code = 135
-	CodeIBCInvalidID                      Code = 136
-	CodeIBCInvalidPath                    Code = 137
-	CodeIBCStoreNotFound                  Code = 138
-	CodeIBCStoreAlreadyExists             Code = 139
-	CodeIBCStoreCreationError             Code = 140
-	CodeIBCStoreUpdateError               Code = 141
-	CodeIBCStoreNotProvable               Code = 142
-	CodeCreatingProofError                Code = 143
+	CodeHostDoesNotExist                  Code = 136
+	CodeIBCInvalidID                      Code = 137
+	CodeIBCInvalidPath                    Code = 138
+	CodeIBCStoreNotFound                  Code = 139
+	CodeIBCStoreAlreadyExists             Code = 140
+	CodeIBCStoreCreationError             Code = 141
+	CodeIBCStoreUpdateError               Code = 142
+	CodeIBCStoreNotProvable               Code = 143
+	CodeCreatingProofError                Code = 144
+	CodeUnknownIBCMessageTypeError        Code = 145
 )
 
 const (
@@ -322,6 +324,7 @@ const (
 	UnknownActorTypeError             = "the actor type is not recognized"
 	UnknownMessageTypeError           = "the message being by the utility message is not recognized"
 	HostAlreadyExistsError            = "an ibc host already exists"
+	HostDoesNotExistError             = "an ibc host does not exist"
 	IBCInvalidIDError                 = "invalid ibc identifier"
 	IBCInvalidPathError               = "invalid ibc path"
 	IBCStoreNotFoundError             = "the store was not found"
@@ -330,6 +333,7 @@ const (
 	IBCStoreUpdateError               = "an error occurred updating the store"
 	IBCStoreNotProvableError          = "the store is not provable"
 	ProofCreationError                = "an error occurred creating the commitment proof"
+	UnknownIBCMessageTypeError        = "the ibc message type is not recognised"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -869,6 +873,10 @@ func ErrHostAlreadyExists() Error {
 	return NewError(CodeHostAlreadyExists, HostAlreadyExistsError)
 }
 
+func ErrHostDoesNotExist() Error {
+	return NewError(CodeHostDoesNotExist, HostDoesNotExistError)
+}
+
 func ErrIBCInvalidID(identifier, msg string) Error {
 	return NewError(CodeIBCInvalidID, fmt.Sprintf("%s: %s (%s)", IBCInvalidIDError, identifier, msg))
 }
@@ -899,4 +907,8 @@ func ErrIBCStoreNotProvable(storeKey string) Error {
 
 func ErrCreatingProof(msg string) Error {
 	return NewError(CodeCreatingProofError, fmt.Sprintf("%s: %s", ProofCreationError, msg))
+}
+
+func ErrUnknownIBCMessageType(messageType string) Error {
+	return NewError(CodeUnknownIBCMessageTypeError, fmt.Sprintf("%s: %s", UnknownIBCMessageTypeError, messageType))
 }

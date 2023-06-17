@@ -299,6 +299,9 @@ protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the
 	# P2P
 	$(PROTOC_SHARED) -I=./p2p/raintree/types/proto --go_out=./p2p/types ./p2p/raintree/types/proto/*.proto
 
+	# IBC
+	$(PROTOC_SHARED) -I=./ibc/types/proto --go_out=./ibc/types ./ibc/types/proto/*.proto
+
 	# echo "View generated proto files by running: make protogen_show"
 
 # CONSIDERATION: Some proto files contain unused gRPC services so we may need to add the following
