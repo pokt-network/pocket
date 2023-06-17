@@ -39,13 +39,13 @@ var (
 )
 
 // testPublicKey is a helper that returns a public key and its corresponding address
-func testPublicKey() (string, string) {
-	publicKey, err := crypto.GeneratePublicKey()
+func testPublicKey() (publicKey, address string) {
+	pk, err := crypto.GeneratePublicKey()
 	if err != nil {
 		log.Fatalf("Error creating public key: %s", err)
 	}
 
-	return publicKey.String(), publicKey.Address().String()
+	return pk.String(), pk.Address().String()
 }
 
 // TestMain initialized the test fixtures for all the unit tests in the servicer package
