@@ -7,10 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.60] - 2023-06-12
+## [0.0.0.60] - 2023-06-16
 
 - Add a LocalContext type and place-holders for servicer token usage support to persistence 
 - Add a TODO comment for supporting different relay payload types in core types
+
+## [0.0.0.61] - 2023-06-14
+
+- Replace AES-GCM in key encryption with Secretbox (XSalsa20+Poly1305)
+
+## [0.0.0.60] - 2023-06-13
+
+- Added `Factory` generic type
+- Improved godoc comments
 
 ## [0.0.0.59] - 2023-06-01
 

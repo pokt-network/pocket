@@ -2,27 +2,18 @@ package rpc
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/rpc"
-	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
-var (
-	_       current_height_provider.CurrentHeightProvider = &rpcCurrentHeightProvider{}
-	rpcHost string
-)
-
-func init() {
-	rpcHost = runtime.GetEnv("RPC_HOST", defaults.DefaultRPCHost)
-}
+var _ current_height_provider.CurrentHeightProvider = &rpcCurrentHeightProvider{}
 
 type rpcCurrentHeightProvider struct {
 	base_modules.IntegratableModule
@@ -65,7 +56,7 @@ func (rchp *rpcCurrentHeightProvider) CurrentHeight() uint64 {
 
 func NewRPCCurrentHeightProvider(options ...modules.ModuleOption) *rpcCurrentHeightProvider {
 	rchp := &rpcCurrentHeightProvider{
-		rpcURL: fmt.Sprintf("http://%s:%s", rpcHost, defaults.DefaultRPCPort), // TODO: Make port configurable
+		rpcURL: flags.RemoteCLIURL,
 	}
 
 	for _, o := range options {

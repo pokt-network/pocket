@@ -3,15 +3,19 @@ package p2p
 import (
 	"errors"
 	"fmt"
+
 	"github.com/libp2p/go-libp2p"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	"github.com/multiformats/go-multiaddr"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
-	persABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/persistence"
+	persPSP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/raintree"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
@@ -24,8 +28,6 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"github.com/pokt-network/pocket/telemetry"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var _ modules.P2PModule = &p2pModule{}
@@ -231,14 +233,21 @@ func (m *p2pModule) setupDependencies() error {
 // bus, if one is registered, otherwise returns a new `persistencePeerstoreProvider`.
 func (m *p2pModule) setupPeerstoreProvider() error {
 	m.logger.Debug().Msg("setupPeerstoreProvider")
+
+	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
 	pstoreProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(peerstore_provider.ModuleName)
 	if err != nil {
 		m.logger.Debug().Msg("creating new persistence peerstore...")
-		pstoreProviderModule = persABP.NewPersistencePeerstoreProvider(m.GetBus())
-	} else if pstoreProviderModule != nil {
-		m.logger.Debug().Msg("loaded persistence peerstore...")
+		pstoreProvider, err := persPSP.Create(m.GetBus())
+		if err != nil {
+			return err
+		}
+
+		m.pstoreProvider = pstoreProvider
+		return nil
 	}
 
+	m.logger.Debug().Msg("loaded persistence peerstore...")
 	pstoreProvider, ok := pstoreProviderModule.(providers.PeerstoreProvider)
 	if !ok {
 		return fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)

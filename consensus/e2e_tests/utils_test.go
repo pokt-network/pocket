@@ -11,8 +11,10 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
+
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/internal/testutil"
 	persistenceMocks "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -430,6 +432,20 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 		EXPECT().
 		GetAllValidators(gomock.Any()).
 		Return(bus.GetRuntimeMgr().GetGenesis().Validators, nil).
+		AnyTimes()
+
+	persistenceReadContextMock.
+		EXPECT().
+		GetAllStakedActors(gomock.Any()).
+		DoAndReturn(func(height int64) ([]*coreTypes.Actor, error) {
+			genesisState := bus.GetRuntimeMgr().GetGenesis()
+			return testutil.Concatenate[*coreTypes.Actor](
+				genesisState.Validators,
+				genesisState.Servicers,
+				genesisState.Fishermen,
+				genesisState.Applications,
+			), nil
+		}).
 		AnyTimes()
 
 	persistenceReadContextMock.

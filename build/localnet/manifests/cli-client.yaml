@@ -74,8 +74,8 @@ spec:
             - name: POCKET_PERSISTENCE_NODE_SCHEMA
               value: validator1
               # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
-            - name: RPC_HOST
-              value: full-node-001-pocket
+            - name: POCKET_REMOTE_CLI_URL
+              value: http://full-node-001-pocket:50832
               # TECHDEBT(#678): debug client requires hostname to participate
               # in P2P networking.
             - name: POCKET_P2P_HOSTNAME

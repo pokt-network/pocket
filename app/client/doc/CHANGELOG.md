@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.35] - 2023-06-14
+
+- Update documentation and tests in the keybase to use the Secretbox key encryption method
+
+## [0.0.0.34] - 2023-06-13
+
+- Exported `rootCmd` to support cross-package usage (i.e. subcommands w/ own pkgs)
+- Refactored common CLI code
+  - Moved & refactored `PersistentPreRunE()` helper
+  - Moved & exported `busCLICtxKey`
+  - Exported `GetValueFromCLIContext()` and `SetValueInCLIContext()`
+  - Moved `setupAndStartP2PModule`
+  - Moved `setupCurrentHeightProvider`
+  - Moved `setupPeerstoreProvider`
+- Refactored CLI flags to own package for cross-package use
+- Replaced RPC_HOST with POCKET_REMOTE_CLI_URL where appropriate
+- Added support for overriding of `remote-cli-url` flag with env var
+- Improve error handling in client CLI
+
+## [0.0.0.33] - 2023-06-13
+
+- Renamed `NewRPCPeerstoreProvider()` and `NewPersistencePeerstoreProvider()` to `Create()` (per package)
+
 ## [0.0.0.32] - 2023-05-25
 
 - Add the `nonInteractive` flag in a couple spots where it was missing

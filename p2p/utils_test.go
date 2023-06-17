@@ -14,6 +14,9 @@ import (
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	"github.com/stretchr/testify/require"
+
+	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -29,7 +32,6 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/telemetry"
-	"github.com/stretchr/testify/require"
 )
 
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
@@ -257,6 +259,14 @@ func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisS
 	readCtxMock := mockModules.NewMockPersistenceReadContext(ctrl)
 
 	readCtxMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	readCtxMock.EXPECT().GetAllStakedActors(gomock.Any()).DoAndReturn(func(height int64) ([]*coreTypes.Actor, error) {
+		return testutil.Concatenate[*coreTypes.Actor](
+			genesisState.GetValidators(),
+			genesisState.GetServicers(),
+			genesisState.GetFishermen(),
+			genesisState.GetApplications(),
+		), nil
+	}).AnyTimes()
 	persistenceModuleMock.EXPECT().NewReadContext(gomock.Any()).Return(readCtxMock, nil).AnyTimes()
 	readCtxMock.EXPECT().Release().AnyTimes()
 

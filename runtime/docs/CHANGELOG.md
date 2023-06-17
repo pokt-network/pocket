@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.42] - 2023-06-13
+## [0.0.0.43] - 2023-06-17
 
 - Add a new ServiceConfig field to servicer config
+
+## [0.0.0.42] - 2023-06-13
+
+- Append "Hostname" to validator endpoint hostname constants
+- Promoted string literal to `RandomValidatorEndpointK8SHostname` constant
 
 ## [0.0.0.41] - 2023-06-06
 
