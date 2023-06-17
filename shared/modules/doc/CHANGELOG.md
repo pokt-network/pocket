@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.14] - 2023-06-12
+## [0.0.0.14] - 2023-06-06
 
 - Adds fisherman, servicer, and validator modules to utility interface.
 - Adds client kubectl kubeconfig as a fallback when sourcing namespace from the environment.

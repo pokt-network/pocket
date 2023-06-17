@@ -4,21 +4,22 @@ package core;
 
 option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
-// TECHDEBT: These structures were copied as placeholders from v0 and need to be updated to reflect changes in v1
 message Relay {
     RelayMeta meta = 1;
+    // Every different chain/service may have its own custom payload (e.g. HTTP, JSON, GRPC, non-chain services)
     oneof relay_payload {
+	// INCOMPLETE: add support for other payloads, e.g. GRPC.
         JsonRpcPayload json_rpc_payload = 2;
         RestPayload rest_payload = 3;
     }
 }
 
-// INCOMPLETE: add support for different payloads, e.g. JSON, GRPC, etc.
 message JsonRpcPayload {
-    bytes data = 1;
-    string method = 2;
-    string http_path = 3;
-    map<string, string> headers = 4;
+    bytes id = 1;
+    string json_rpc = 2;
+    string method = 3;
+    bytes parameters = 4;
+    map<string, string> headers = 5;
 }
 
 // INCOMPLETE: add REST relay payload fields
@@ -29,6 +30,7 @@ message RestPayload {
 message RelayMeta {
     int64 block_height = 1;
     string servicer_public_key = 2;
+    // TODO(M5): Consider renaming `relay_chain` to `rpc_service` or something similar
     Identifiable relay_chain = 3;
     Identifiable geo_zone = 4;
     string signature = 5;
@@ -52,6 +54,8 @@ message Identifiable {
     string name = 2;
 }
 
+
+// RelayReqRes contains a relay request and its response, used for persistence of relay service evidence
 message RelayReqRes {
     Relay relay = 1;
     RelayResponse response = 2;

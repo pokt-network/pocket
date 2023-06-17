@@ -115,9 +115,9 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 	}
 
 	payload := &coreTypes.JsonRpcPayload{
-		Data:     []byte(body.Payload.Data),
-		Method:   body.Payload.Method,
-		HttpPath: body.Payload.Path,
+		Id:         body.Payload.Id,
+		Method:     body.Payload.Method,
+		Parameters: body.Payload.Parameters,
 	}
 
 	headers := make(map[string]string)

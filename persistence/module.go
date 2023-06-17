@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
+	"github.com/pokt-network/pocket/persistence/local"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -242,12 +243,10 @@ func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 	return m.writeContext
 }
 
-// INCOMPLETE: implement this
-// NewLocalContext
-func (m *persistenceModule) NewLocalContext() (modules.PersistenceLocalContext, error) {
-	return &persistenceLocalContext{
-		databasePath: m.config.LocalDatabasePath,
-	}, nil
+// INCOMPLETE(#826): implement this
+// GetLocalContext returns a new local context for storing off-chain, i.e. node-specific, data.
+func (m *persistenceModule) GetLocalContext() (modules.PersistenceLocalContext, error) {
+	return local.CreateLocalContext(m.GetBus())
 }
 
 // HACK(olshansky): Simplify and externalize the logic for whether genesis should be populated and

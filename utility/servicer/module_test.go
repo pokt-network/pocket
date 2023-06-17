@@ -1,11 +1,12 @@
 package servicer
 
 import (
-	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -23,17 +25,45 @@ const (
 	testCurrentHeight        = int64(9)
 )
 
+// INCOMPLETE(#833) add e2e testing on servicer's features
+
 var (
-	testServicer1 = &coreTypes.Actor{
-		ActorType: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
-		Address:   "a3d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
-		PublicKey: "a6cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d75a998b",
-		Chains:    []string{"0021"},
+	// Initialized in TestMain
+	testServicer1 *coreTypes.Actor
+
+	// Initialized in TestMain
+	testApp1 *coreTypes.Actor
+
+	// Initialized in TestMain
+	testServiceConfig1 *configs.ServiceConfig
+)
+
+// testPublicKey is a helper that returns a public key and its corresponding address
+func testPublicKey() (string, string) {
+	publicKey, err := crypto.GeneratePublicKey()
+	if err != nil {
+		log.Fatalf("Error creating public key: %s", err)
 	}
 
+	return publicKey.String(), publicKey.Address().String()
+}
+
+// TestMain initialized the test fixtures for all the unit tests in the servicer package
+func TestMain(m *testing.M) {
+	servicerPublicKey, servicerAddr := testPublicKey()
+	testServicer1 = &coreTypes.Actor{
+		ActorType:    coreTypes.ActorType_ACTOR_TYPE_SERVICER,
+		Address:      servicerAddr,
+		PublicKey:    servicerPublicKey,
+		Chains:       []string{"POKT-UnitTestNet"},
+		StakedAmount: "1000",
+	}
+
+	appPublicKey, appAddr := testPublicKey()
 	testApp1 = &coreTypes.Actor{
-		Address:      "98a792b7aca673620132ef01f50e62caa58eca83",
-		PublicKey:    "b5cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d86b009c",
+		ActorType:    coreTypes.ActorType_ACTOR_TYPE_APP,
+		Address:      appAddr,
+		PublicKey:    appPublicKey,
 		StakedAmount: "1000",
 	}
 
@@ -45,9 +75,11 @@ var (
 			Password: "password1",
 		},
 	}
-)
 
-func TestAdmitRelay(t *testing.T) {
+	os.Exit(m.Run())
+}
+
+func TestRelay_Admit(t *testing.T) {
 	const (
 		currentSessionNumber      = 2
 		testSessionStartingHeight = 8
@@ -74,7 +106,7 @@ func TestAdmitRelay(t *testing.T) {
 			expected: errValidateRelayMeta,
 		},
 		{
-			name:     "Relay for unsupported chain is rejected",
+			name:     "Relay for unsupported service is rejected",
 			relay:    testRelay(testRelayChain("foo")),
 			expected: errValidateRelayMeta,
 		},
@@ -97,7 +129,7 @@ func TestAdmitRelay(t *testing.T) {
 			name:              "Relay for app out of quota is rejected",
 			relay:             testRelay(),
 			usedSessionTokens: 999999,
-			expected:          errValidateApplication,
+			expected:          errShouldMineRelay,
 		},
 	}
 
@@ -119,26 +151,24 @@ func TestAdmitRelay(t *testing.T) {
 			require.True(t, ok)
 
 			err = servicer.admitRelay(testCase.relay)
-			if !errors.Is(err, testCase.expected) {
-				t.Fatalf("Expected error %v got: %v", testCase.expected, err)
-			}
+			require.ErrorIs(t, err, testCase.expected)
 		})
 	}
 }
 
-func TestExecuteRelay(t *testing.T) {
+func TestRelay_Execute(t *testing.T) {
 	testCases := []struct {
 		name        string
 		relay       *coreTypes.Relay
 		expectedErr error
 	}{
 		{
-			name:        "relay is rejected if chain is not specified in the config",
+			name:        "relay is rejected if service is not specified in the config",
 			relay:       testRelay(testRelayChain("foo")),
 			expectedErr: errValidateRelayMeta,
 		},
 		{
-			name:  "Relay for accepted chain is executed",
+			name:  "Relay for accepted service is executed",
 			relay: testRelay(),
 		},
 	}
@@ -151,16 +181,14 @@ func TestExecuteRelay(t *testing.T) {
 			defer ts.Close()
 
 			config := testServicerConfig()
-			for ch := range config.Services {
-				config.Services[ch].Url = ts.URL
+			for svc := range config.Services {
+				config.Services[svc].Url = ts.URL
 			}
 
 			servicer := &servicer{config: &config}
 			_, err := servicer.executeRelay(testCase.relay)
-			if !errors.Is(err, testCase.expectedErr) {
-				t.Fatalf("Expected error %v got: %v", testCase.expectedErr, err)
-			}
-			// INCOMPLETE: verify HTTP request properties: payload/headers/user-agent/etc.
+			require.ErrorIs(t, err, testCase.expectedErr)
+			// INCOMPLETE(@adshmh): verify HTTP request properties: payload/headers/user-agent/etc.
 		})
 	}
 }
@@ -192,7 +220,7 @@ func testRelay(editors ...relayEditor) *coreTypes.Relay {
 			ApplicationAddress: testApp1.Address,
 			BlockHeight:        testCurrentHeight,
 			RelayChain: &coreTypes.Identifiable{
-				Id: "0021",
+				Id: "POKT-UnitTestNet",
 			},
 			GeoZone: &coreTypes.Identifiable{
 				Id: "geozone",
@@ -200,8 +228,9 @@ func testRelay(editors ...relayEditor) *coreTypes.Relay {
 		},
 		RelayPayload: &coreTypes.Relay_JsonRpcPayload{
 			JsonRpcPayload: &coreTypes.JsonRpcPayload{
-				Method: "POST",
-				Data:   []byte(`{"id": 1, "jsonrpc": "2.0", method: "eth_blockNumber"}`),
+				Id:      []byte("1"),
+				JsonRpc: "2.0",
+				Method:  "eth_blockNumber",
 			},
 		},
 	}
@@ -218,7 +247,7 @@ func testServicerConfig() configs.ServicerConfig {
 		PublicKey: testServicer1.PublicKey,
 		Address:   testServicer1.Address,
 		Services: map[string]*configs.ServiceConfig{
-			"0021": testServiceConfig1,
+			"POKT-UnitTestNet": testServiceConfig1,
 		},
 	}
 }
@@ -276,16 +305,15 @@ func mockBus(t *testing.T, cfg *configs.ServicerConfig, height uint64, session *
 		Return(testAppsTokensMultiplier, nil).AnyTimes()
 
 	persistenceLocalContextMock := mockModules.NewMockPersistenceLocalContext(ctrl)
-	persistenceLocalContextMock.EXPECT().StoreServiceRelay(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	persistenceLocalContextMock.EXPECT().StoreServicedRelay(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	persistenceLocalContextMock.EXPECT().GetSessionTokensUsed(gomock.Any()).Return(big.NewInt(usedSessionTokens), nil).AnyTimes()
-	persistenceLocalContextMock.EXPECT().Release().Return(nil).AnyTimes()
 
 	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
-	persistenceMock.EXPECT().NewLocalContext().Return(persistenceLocalContextMock, nil).AnyTimes()
+	persistenceMock.EXPECT().GetLocalContext().Return(persistenceLocalContextMock, nil).AnyTimes()
 
 	busMock := mockModules.NewMockBus(ctrl)
 	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()

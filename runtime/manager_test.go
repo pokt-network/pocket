@@ -4205,7 +4205,6 @@ func TestNewManagerFromReaders(t *testing.T) {
 					Utility: &configs.UtilityConfig{
 						MaxMempoolTransactionBytes: 1073741824,
 						MaxMempoolTransactions:     9000,
-						ServicerConfig:             defaultCfg.Utility.ServicerConfig,
 					},
 					Persistence: &configs.PersistenceConfig{
 						PostgresUrl:       "postgres://postgres:postgres@pocket-db:5432/postgres",
@@ -4242,7 +4241,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						UseCors: false,
 					},
 					Keybase:   defaultCfg.Keybase,
-					Servicer:  &configs.ServicerConfig{Enabled: true},
+					Servicer:  defaultCfg.Servicer,
 					Validator: &configs.ValidatorConfig{Enabled: true},
 					Fisherman: defaultCfg.Fisherman,
 				},

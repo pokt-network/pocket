@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.46] - 2023-06-12
+## [0.0.0.46] - 2023-06-06
 
 - Renames config files and actor hostnames
 - Adds servicer and fisherman nodes to localnet deployments

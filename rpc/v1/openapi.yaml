@@ -1696,17 +1696,19 @@ components:
     Payload:
       type: object
       required:
-        - data
+        - id
         - method
-        - path
+        - parameters
         - headers
       properties:
-        data:
+        id:
           type: string
+          format: byte
         method:
           type: string
-        path:
+        parameters:
           type: string
+          format: byte
         headers:
           $ref: "#/components/schemas/Headers"
     Pool:

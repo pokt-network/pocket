@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -24,11 +25,12 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// TECHDEBT(#519): Refactor error handling and consolidate with `shared/core/types/error.go`
 var (
 	errValidateBlockHeight = errors.New("relay failed block height validation")
 	errValidateRelayMeta   = errors.New("relay failed metadata validation")
 	errValidateServicer    = errors.New("relay failed servicer validation")
-	errValidateApplication = errors.New("relay failed application validation")
+	errShouldMineRelay     = errors.New("relay failed validating available tokens")
 
 	_ modules.ServicerModule = &servicer{}
 )
@@ -37,11 +39,12 @@ const (
 	ServicerModuleName = "servicer"
 )
 
-// sessionTokens is used to cache the original number of tokens available
+// sessionTokens is used to cache the starting number of tokens available
 // during a specific session: it is used as the value for a map with keys being applications' public keys
+// TODO: What if we have a servicer managing more than one session from the same app at once? We may/may not need to resolve this in the future.
 type sessionTokens struct {
-	sessionNumber          int64
-	originalCountAvailable *big.Int
+	sessionNumber               int64
+	startingTokenCountAvailable *big.Int
 }
 
 type servicer struct {
@@ -71,7 +74,9 @@ func CreateServicer(bus modules.Bus, options ...modules.ModuleOption) (modules.S
 }
 
 func (*servicer) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	s := &servicer{}
+	s := &servicer{
+		totalTokens: make(map[string]*sessionTokens),
+	}
 
 	for _, option := range options {
 		option(s)
@@ -120,7 +125,12 @@ func (s *servicer) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse
 
 	// TODO(M6): Look into data integrity checks and response validation.
 
-	relayDigest, relayReqResBytes, shouldStore, err := s.isRelayVolumeApplicable(relay, response)
+	session, err := s.getSession(relay)
+	if err != nil {
+		return nil, err
+	}
+
+	relayDigest, relayReqResBytes, shouldStore, err := s.isRelayVolumeApplicable(session, relay, response)
 	if err != nil {
 		return nil, fmt.Errorf("Error calculating relay service digest: %w", err)
 	}
@@ -128,55 +138,49 @@ func (s *servicer) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse
 		return response, nil
 	}
 
-	session, err := s.getSession(relay)
-	if err != nil {
-		return nil, err
-	}
-
-	localCtx, err := s.GetBus().GetPersistenceModule().NewLocalContext()
+	localCtx, err := s.GetBus().GetPersistenceModule().GetLocalContext()
 	if err != nil {
 		return nil, fmt.Errorf("Error getting a local context to update token usage for application %s: %w", relay.Meta.ApplicationAddress, err)
 	}
 
-	if err := localCtx.StoreServiceRelay(session, relay.Meta.ApplicationAddress, relayDigest, relayReqResBytes); err != nil {
+	if err := localCtx.StoreServicedRelay(session, relayDigest, relayReqResBytes); err != nil {
 		return nil, fmt.Errorf("Error recording service proof for application %s: %w", relay.Meta.ApplicationAddress, err)
-	}
-
-	if err := localCtx.Release(); err != nil {
-		s.logger.Warn().Err(err).Msg("failed to release local context")
 	}
 
 	return response, nil
 }
 
 // isRelayVolumeApplicable returns:
-//  1. The signed digest of a relay/response pair,
+//  1. The signed digest of a relay/response pair
 //  2. Whether there was a collision for the specific chain (i.e. should the service proof be stored for claiming later)
-func (s *servicer) isRelayVolumeApplicable(relay *coreTypes.Relay, response *coreTypes.RelayResponse) (digest, serializedRelayRes []byte, collides bool, err error) {
+func (s *servicer) isRelayVolumeApplicable(session *coreTypes.Session, relay *coreTypes.Relay, response *coreTypes.RelayResponse) (digest, serializedRelayRes []byte, collides bool, err error) {
 	relayReqResBytes, err := codec.GetCodec().Marshal(&coreTypes.RelayReqRes{Relay: relay, Response: response})
 	if err != nil {
 		return nil, nil, false, fmt.Errorf("Error marshalling relay and/or response: %w", err)
 	}
 
 	relayDigest := crypto.SHA3Hash(relayReqResBytes)
-
 	signedDigest := s.sign(relayDigest)
 	response.ServicerSignature = hex.EncodeToString(signedDigest)
-	collision, err := s.isRelayVolumeApplicableOnChain(relayDigest, relay.Meta.RelayChain.Id)
+	collision, err := s.isRelayVolumeApplicableOnChain(session, relayDigest)
 	if err != nil {
-		return nil, nil, false, fmt.Errorf("Error checking collision for chain %s: %w", relay.Meta.RelayChain.Id, err)
+		return nil, nil, false, fmt.Errorf("Error checking for relay replay by app %s for chain %s during session number %d: %w",
+			session.Application.Address, relay.Meta.RelayChain.Id, session.SessionNumber, err)
 	}
 
 	return signedDigest, relayReqResBytes, collision, nil
 }
 
-// INCOMPLETE: implement this
+// INCOMPLETE(#832): provide a private key to the servicer and use it to sign all relays
 func (s *servicer) sign(bz []byte) []byte {
 	return bz
 }
 
-// INCOMPLETE: implement this
-func (s *servicer) isRelayVolumeApplicableOnChain(digest []byte, relayChainId string) (bool, error) {
+// INCOMPLETE: implement this according to the comment below
+// isRelayVolumeApplicableOnChain returns whether the serialized serviced relay and the response, provided as `digest`, is eligible for reward
+//
+//	on the service/chain corresponding to the provided session.
+func (s *servicer) isRelayVolumeApplicableOnChain(session *coreTypes.Session, digest []byte) (bool, error) {
 	return false, nil
 }
 
@@ -235,15 +239,16 @@ func (s *servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable,
 	return nil
 }
 
-// validateApplication makes sure the application has not received more relays than allocated in the current session.
-func (s *servicer) validateApplication(session *coreTypes.Session) error {
-	// IMPROVE: use a function to get current height from the current session
-	servicerAppSessionTokens, err := s.calculateServicerAppSessionTokens(session)
+// ADDTEST: Need to add more unit tests to account for potential edge cases
+// shouldMineRelay makes sure the application has not received more relays than allocated in the current session.
+// returns nil if the servicer should attempt to mine another relay for the session provided
+func (s *servicer) shouldMineRelay(session *coreTypes.Session) error {
+	servicerAppSessionTokens, err := s.startingTokenCountAvailable(session)
 	if err != nil {
 		return fmt.Errorf("Error calculating servicer tokens for application: %w", err)
 	}
 
-	localCtx, err := s.GetBus().GetPersistenceModule().NewLocalContext()
+	localCtx, err := s.GetBus().GetPersistenceModule().GetLocalContext()
 	if err != nil {
 		return fmt.Errorf("Error getting local persistence context: application %s session number %d: %w", session.Application.PublicKey, session.SessionNumber, err)
 	}
@@ -254,7 +259,7 @@ func (s *servicer) validateApplication(session *coreTypes.Session) error {
 	}
 
 	if usedAppSessionTokens == nil || usedAppSessionTokens.Cmp(servicerAppSessionTokens) < 0 {
-		return nil
+		return nil // should attempt to mine a relay
 	}
 
 	return fmt.Errorf("application %s has exceeded its allocated relays %s for session %d",
@@ -263,6 +268,9 @@ func (s *servicer) validateApplication(session *coreTypes.Session) error {
 		session.SessionNumber)
 }
 
+// cachedAppTokens returns the cached number of starting tokens for a session.
+//
+//	This caching is done to remove the need for getting the starting number of tokens for a session every time a relay is being served.
 func (s *servicer) cachedAppTokens(session *coreTypes.Session) *sessionTokens {
 	s.rwlock.RLock()
 	defer s.rwlock.RUnlock()
@@ -270,13 +278,14 @@ func (s *servicer) cachedAppTokens(session *coreTypes.Session) *sessionTokens {
 	return s.totalTokens[session.Application.PublicKey]
 }
 
-// calculateServicerAppSessionTokens return the number of tokens the servicer has remaining for the Application in the session provided.
+// ADDTEST: Need to add more unit tests for the numerical portion of this functionality
+// startingTokenCountAvailable returns the total number of tokens the Application corresponding to the provided session has per servicer at the start of the session.
 //
 //	If nothing is cached, the maximum number of session tokens is computed.
-func (s *servicer) calculateServicerAppSessionTokens(session *coreTypes.Session) (*big.Int, error) {
+func (s *servicer) startingTokenCountAvailable(session *coreTypes.Session) (*big.Int, error) {
 	tokens := s.cachedAppTokens(session)
-	if tokens != nil && tokens.originalCountAvailable != nil && tokens.sessionNumber == session.SessionNumber {
-		return big.NewInt(1).Set(tokens.originalCountAvailable), nil
+	if tokens != nil && tokens.startingTokenCountAvailable != nil && tokens.sessionNumber == session.SessionNumber {
+		return big.NewInt(1).Set(tokens.startingTokenCountAvailable), nil
 	}
 
 	// Calculate this servicer's limit for the application in the current session.
@@ -305,10 +314,6 @@ func (s *servicer) calculateServicerAppSessionTokens(session *coreTypes.Session)
 func (s *servicer) setAppSessionTokens(session *coreTypes.Session, tokens *sessionTokens) {
 	s.rwlock.Lock()
 	defer s.rwlock.Unlock()
-
-	if len(s.totalTokens) == 0 {
-		s.totalTokens = make(map[string]*sessionTokens)
-	}
 
 	s.totalTokens[session.Application.PublicKey] = tokens
 }
@@ -359,13 +364,11 @@ func (s *servicer) admitRelay(relay *coreTypes.Relay) error {
 		return fmt.Errorf("%s: %w", err.Error(), errValidateRelayMeta)
 	}
 
-	// TODO: update the CLI to include ApplicationAddress(or Application Public Key) in the RelayMeta
 	session, err := s.getSession(relay)
 	if err != nil {
 		return err
 	}
 
-	// TODO: (REFACTOR) use a loop to run all validators: would also remove the need for passing the session around
 	if err := validateRelayBlockHeight(relay.Meta, session); err != nil {
 		return fmt.Errorf("%s: %w", err.Error(), errValidateBlockHeight)
 	}
@@ -374,14 +377,14 @@ func (s *servicer) admitRelay(relay *coreTypes.Relay) error {
 		return fmt.Errorf("%s: %s: %w", errPrefix, err.Error(), errValidateServicer)
 	}
 
-	if err := s.validateApplication(session); err != nil {
-		return fmt.Errorf("%s: %s: %w", errPrefix, err.Error(), errValidateApplication)
+	if err := s.shouldMineRelay(session); err != nil {
+		return fmt.Errorf("%s: %s: %w", errPrefix, err.Error(), errShouldMineRelay)
 	}
 
 	return nil
 }
 
-// DISCUSS: do we need to export this functionality as part of the utility module?
+// ADDTEST: Need to add more unit tests for the numerical portion of this functionality
 // calculateAppSessionTokens determines the number of "session tokens" an application gets at the beginning
 // of every session. Each servicer will serve a maximum of ~(Session Tokens / Number of Servicers in the Session) relays for the application
 func (s *servicer) calculateAppSessionTokens(session *coreTypes.Session) (*big.Int, error) {
@@ -390,7 +393,7 @@ func (s *servicer) calculateAppSessionTokens(session *coreTypes.Session) (*big.I
 		return nil, fmt.Errorf("Error processing application's staked amount %s: %w", session.Application.StakedAmount, coreTypes.ErrStringToBigInt(err))
 	}
 
-	// DOCUMENT: find the right document to explain the following:
+	// TODO(M5): find the right document to explain the following:
 	//	We assume that the value of certain parameters only changes/takes effect at the start of a session.
 	//	In this specific case, the `AppSessionTokensMultiplierParamName` parameter is retrieved for the height that
 	//		matches the beginning of the session.
@@ -400,8 +403,7 @@ func (s *servicer) calculateAppSessionTokens(session *coreTypes.Session) (*big.I
 	}
 	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
 
-	// DISCUSS: using an interface for returning each defined parameter seems less error-prone: also could return e.g. int64 in this case to remove the type cast
-	appStakeTokensMultiplier, err := readCtx.GetIntParam(typesUtil.AppSessionTokensMultiplierParamName, session.SessionHeight)
+	appStakeTokensMultiplier, err := persistence.GetParameter[int](readCtx, typesUtil.AppSessionTokensMultiplierParamName, session.SessionHeight)
 	if err != nil {
 		return nil, fmt.Errorf("error reading parameter %s at height %d from persistence: %w", typesUtil.AppSessionTokensMultiplierParamName, session.SessionHeight, err)
 	}
@@ -409,7 +411,7 @@ func (s *servicer) calculateAppSessionTokens(session *coreTypes.Session) (*big.I
 	return appStake.Mul(appStake, big.NewInt(int64(appStakeTokensMultiplier))), nil
 }
 
-// executeHTTPRequest performs the HTTP request that sends the relay to the chain's URL.
+// executeHTTPRequest performs the HTTP request that sends the relay to the chain's/service's URL.
 func (s *servicer) executeHTTPRelay(meta *coreTypes.RelayMeta, payload *coreTypes.JsonRpcPayload) (*coreTypes.RelayResponse, error) {
 	if meta == nil || meta.RelayChain == nil || meta.RelayChain.Id == "" {
 		return nil, fmt.Errorf("Relay for application %s does not specify relay chain", meta.ApplicationAddress)
@@ -420,13 +422,17 @@ func (s *servicer) executeHTTPRelay(meta *coreTypes.RelayMeta, payload *coreType
 		return nil, fmt.Errorf("Chain %s not found in servicer configuration: %w", meta.RelayChain.Id, errValidateRelayMeta)
 	}
 
-	chainUrl, err := url.Parse(serviceConfig.Url)
+	serviceUrl, err := url.Parse(serviceConfig.Url)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing chain URL %s: %w", serviceConfig.Url, err)
 	}
-	targetUrl := chainUrl.JoinPath(payload.HttpPath)
 
-	req, err := http.NewRequest(payload.Method, targetUrl.String(), bytes.NewBuffer([]byte(payload.Data)))
+	relayBytes, err := codec.GetCodec().Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("Error marshalling payload %s: %w", payload.String(), err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, serviceUrl.String(), bytes.NewBuffer(relayBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -434,15 +440,15 @@ func (s *servicer) executeHTTPRelay(meta *coreTypes.RelayMeta, payload *coreType
 		req.SetBasicAuth(serviceConfig.BasicAuth.UserName, serviceConfig.BasicAuth.Password)
 	}
 
-	// DISCUSS: do we need a default user-agent for HTTP requests?
+	// INVESTIGATE: do we need a default user-agent for HTTP requests?
 	for k, v := range payload.Headers {
 		req.Header.Set(k, v)
 	}
-	if len(payload.Headers) == 0 {
+	if req.Header.Get("Content-Type") == "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	// DISCUSS: we need to optimize usage of HTTP client, e.g. for connection reuse, considering the expected volume of relays
+	// INCOMPLETE(#837): Optimize usage of HTTP client, e.g. connection reuse, depending on the volume of relays a servicer is expected to handle
 	resp, err := (&http.Client{Timeout: time.Duration(serviceConfig.TimeoutMsec) * time.Millisecond}).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Error performing the HTTP request for relay: %w", err)
