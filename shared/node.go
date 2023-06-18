@@ -97,6 +97,10 @@ func (node *Node) Start() error {
 		return err
 	}
 
+	if err := node.GetBus().GetIBCModule().Start(); err != nil {
+		return err
+	}
+
 	// The first event signaling that the node has started
 	signalNodeStartedEvent, err := messaging.PackMessage(&messaging.NodeStartedEvent{})
 	if err != nil {
