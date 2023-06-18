@@ -71,6 +71,9 @@ var (
 	DefaultKeybaseVaultAddr      = ""
 	DefaultKeybaseVaultToken     = ""
 	DefaultKeybaseVaultMountPath = ""
+
+	// ibc
+	DefaultIBCEnabled = false
 )
 
 var (

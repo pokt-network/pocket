@@ -1823,6 +1823,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 					},
 					Validator: &configs.ValidatorConfig{Enabled: true},
 					Fisherman: defaultCfg.Fisherman,
+					IBC:       &configs.IBCConfig{Enabled: true},
 				},
 				genesisState: expectedGenesis,
 				clock:        clock.New(),

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package configs;
+
+option go_package = "github.com/pokt-network/pocket/runtime/configs";
+
+message IBCConfig {
+    bool enabled = 1;
+}
