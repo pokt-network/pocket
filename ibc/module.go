@@ -148,7 +148,7 @@ func (m *ibcModule) newHost() (modules.IBCHost, error) {
 
 	host := &host{
 		logger: m.logger,
-		stores: stores.NewStoreManager(m.storesDir),
+		stores: stores.NewStoreManager(""),
 	}
 
 	m.host = host

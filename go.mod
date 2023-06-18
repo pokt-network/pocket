@@ -5,6 +5,8 @@ go 1.18
 // TECHDEBT: remove once upstream PR is merged (see: https://github.com/regen-network/gocuke/pull/12)
 replace github.com/regen-network/gocuke => github.com/pokt-network/gocuke v0.0.1
 
+replace github.com/cosmos/ics23/go => ../ics23/go
+
 // TECHDEBT: remove once upstream PR is merged (see: https://github.com/foxcpp/go-mockdns/pull/13)
 replace github.com/foxcpp/go-mockdns => github.com/pokt-network/go-mockdns v0.0.1
 

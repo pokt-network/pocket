@@ -54,14 +54,8 @@ func VerifyMembership(root *coreTypes.CommitmentRoot, proof *ics23.CommitmentPro
 // root as the one given. If it does, the key-value pair is not a member of the tree as the proof's
 // value is either the default nil value for the SMT or an unrelated value at the path
 func VerifyNonMembership(root *coreTypes.CommitmentRoot, proof *ics23.CommitmentProof, key []byte) bool {
-	// Verify the proof of the non-membership data doesn't belong to the key
-	valid := ics23.VerifyMembership(smtSpec, root.Hash, proof, key, proof.GetExist().GetValue())
-	// Verify the key was actually empty
-	if bytes.Equal(proof.GetExist().GetValue(), defaultValue) {
-		return valid
-	}
-	// Verify the key was present with unrelated data
-	return !valid
+	// verify the proof
+	return ics23.VerifyNonMembership(smtSpec, root.Hash, proof, key)
 }
 
 // createMembershipProof generates a CommitmentProof object verifying the membership of a key-value pair
@@ -71,11 +65,7 @@ func createMembershipProof(tree *smt.SMT, key, value []byte) (*ics23.CommitmentP
 	if err != nil {
 		return nil, coreTypes.ErrCreatingProof(err.Error())
 	}
-	return &ics23.CommitmentProof{
-		Proof: &ics23.CommitmentProof_Exist{
-			Exist: convertSMPToExistenceProof(&proof, key, value),
-		},
-	}, nil
+	return convertSMPToCommitmentProof(&proof, key, value), nil
 }
 
 // createNonMembershipProof generates a CommitmentProof object verifying the membership of an unrealted key at the given key in the SMT provided
@@ -86,20 +76,13 @@ func createNonMembershipProof(tree *smt.SMT, key []byte) (*ics23.CommitmentProof
 	}
 
 	value := defaultValue
-	if proof.NonMembershipLeafData != nil {
-		value = proof.NonMembershipLeafData[33:]
-	}
 
-	return &ics23.CommitmentProof{
-		Proof: &ics23.CommitmentProof_Exist{
-			Exist: convertSMPToExistenceProof(&proof, key, value),
-		},
-	}, nil
+	return convertSMPToCommitmentProof(&proof, key, value), nil
 }
 
 // convertSMPToExistenceProof converts a SparseMerkleProof to an ICS23 ExistenceProof used for
 // both membership and non-membership proof verification
-func convertSMPToExistenceProof(proof *smt.SparseMerkleProof, key, value []byte) *ics23.ExistenceProof {
+func convertSMPToCommitmentProof(proof *smt.SparseMerkleProof, key, value []byte) *ics23.CommitmentProof {
 	path := sha256.Sum256(key)
 	steps := make([]*ics23.InnerOp, 0, len(proof.SideNodes))
 	for i := 0; i < len(proof.SideNodes); i++ {
@@ -118,6 +101,35 @@ func convertSMPToExistenceProof(proof *smt.SparseMerkleProof, key, value []byte)
 		}
 		steps = append(steps, op)
 	}
+	if bytes.Equal(value, defaultValue) {
+		leaf := &ics23.LeafOp{
+			Hash:         ics23.HashOp_SHA256,
+			PrehashKey:   ics23.HashOp_NO_HASH,
+			PrehashValue: ics23.HashOp_NO_HASH,
+			Length:       ics23.LengthOp_NO_PREFIX,
+			Prefix:       []byte{0},
+		}
+		keyPath := sha256.Sum256(key)
+		actualPath := keyPath[:]
+		if proof.NonMembershipLeafData != nil {
+			actualPath = proof.NonMembershipLeafData[1:33]
+		}
+		actualValue := value
+		if proof.NonMembershipLeafData != nil {
+			actualValue = proof.NonMembershipLeafData[33:]
+		}
+		return &ics23.CommitmentProof{
+			Proof: &ics23.CommitmentProof_Exclusion{
+				Exclusion: &ics23.ExclusionProof{
+					Key:             key,
+					ActualPath:      actualPath[:],
+					ActualValueHash: actualValue,
+					Leaf:            leaf,
+					Path:            steps,
+				},
+			},
+		}
+	}
 	leaf := &ics23.LeafOp{
 		Hash:         ics23.HashOp_SHA256,
 		PrehashKey:   ics23.HashOp_SHA256,
@@ -125,11 +137,15 @@ func convertSMPToExistenceProof(proof *smt.SparseMerkleProof, key, value []byte)
 		Length:       ics23.LengthOp_NO_PREFIX,
 		Prefix:       []byte{0},
 	}
-	return &ics23.ExistenceProof{
-		Key:   key,
-		Value: value,
-		Leaf:  leaf,
-		Path:  steps,
+	return &ics23.CommitmentProof{
+		Proof: &ics23.CommitmentProof_Exist{
+			Exist: &ics23.ExistenceProof{
+				Key:   key,
+				Value: value,
+				Leaf:  leaf,
+				Path:  steps,
+			},
+		},
 	}
 }
 

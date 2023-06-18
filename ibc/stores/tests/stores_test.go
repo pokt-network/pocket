@@ -544,9 +544,15 @@ func TestProvableStore_GenerateCommitmentProofs(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.NotNil(t, proof)
-			require.Equal(t, tc.value, proof.GetExist().GetValue())
-			require.NotNil(t, proof.GetExist().GetLeaf())
-			require.NotNil(t, proof.GetExist().GetPath())
+			if tc.nonmembership {
+				require.Equal(t, tc.value, proof.GetExclusion().GetActualValueHash())
+				require.NotNil(t, proof.GetExclusion().GetLeaf())
+				require.NotNil(t, proof.GetExclusion().GetPath())
+			} else {
+				require.Equal(t, tc.value, proof.GetExist().GetValue())
+				require.NotNil(t, proof.GetExist().GetLeaf())
+				require.NotNil(t, proof.GetExist().GetPath())
+			}
 		})
 	}
 
@@ -574,7 +580,6 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		modify        func(proof *ics23.CommitmentProof)
 		key           []byte
 		value         []byte
 		nonmembership bool
@@ -582,7 +587,6 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 	}{
 		{
 			name:          "Successfully verifies a membership proof for a key-value stored pair",
-			modify:        nil,
 			key:           []byte("foo"),
 			value:         []byte("bar"),
 			nonmembership: false,
@@ -590,7 +594,6 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 		},
 		{
 			name:          "Successfully verifies a non-membership proof for a key-value pair not stored",
-			modify:        nil,
 			key:           []byte("not stored"),
 			value:         nil,
 			nonmembership: true,
@@ -598,25 +601,13 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 		},
 		{
 			name:          "Fails to verify a membership proof for a key-value pair not stored",
-			modify:        nil,
 			key:           []byte("baz"),
 			value:         []byte("bar"),
 			nonmembership: false,
 			valid:         false,
 		},
 		{
-			name: "Fails to verify a non-membership proof for a key-value pair stored",
-			modify: func(proof *ics23.CommitmentProof) {
-				proof.GetExist().Value = []byte("bar")
-			},
-			key:           []byte("foo"),
-			value:         nil,
-			nonmembership: true,
-			valid:         false,
-		},
-		{
 			name:          "Fails to verify a non-membership proof for a key stored in the tree",
-			modify:        nil,
 			key:           []byte("foo"),
 			value:         nil,
 			nonmembership: true,
@@ -637,10 +628,10 @@ func TestProvableStore_VerifyCommitmentProofs(t *testing.T) {
 
 			require.NoError(t, err)
 			require.NotNil(t, proof)
-			require.NotNil(t, proof.GetExist())
-
-			if tc.modify != nil {
-				tc.modify(proof)
+			if tc.nonmembership {
+				require.NotNil(t, proof.GetExclusion())
+			} else {
+				require.NotNil(t, proof.GetExist())
 			}
 
 			var valid bool
