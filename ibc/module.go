@@ -50,8 +50,7 @@ func (m *ibcModule) Start() error {
 	}
 	m.logger.Info().Msg("🪐 starting IBC module 🪐")
 	m.logger.Info().Msg("🛰️ creating IBC host 🛰️")
-	_, err := m.newHost()
-	if err != nil {
+	if err := m.newHost(); err != nil {
 		m.logger.Error().Err(err).Msg("❌ failed to create IBC host")
 		return err
 	}
@@ -71,9 +70,9 @@ func (m *ibcModule) GetModuleName() string {
 }
 
 // newHost returns a new IBC host instance if one is not already created
-func (m *ibcModule) newHost() (modules.IBCHost, error) {
+func (m *ibcModule) newHost() error {
 	if m.host != nil {
-		return nil, coreTypes.ErrHostAlreadyExists()
+		return coreTypes.ErrHostAlreadyExists()
 	}
 
 	host := &host{
@@ -82,5 +81,5 @@ func (m *ibcModule) newHost() (modules.IBCHost, error) {
 
 	m.host = host
 
-	return host, nil
+	return nil
 }
