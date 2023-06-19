@@ -20,56 +20,48 @@ import (
 	"github.com/pokt-network/smt"
 )
 
-var merkleTreeToString = map[merkleTree]string{
-	appMerkleTree:      "app",
-	valMerkleTree:      "val",
-	fishMerkleTree:     "fish",
-	servicerMerkleTree: "servicer",
-
-	accountMerkleTree: "account",
-	poolMerkleTree:    "pool",
-
-	transactionsMerkleTree: "transactions",
-	paramsMerkleTree:       "params",
-	flagsMerkleTree:        "flags",
-}
-
-var actorTypeToMerkleTreeName = map[coreTypes.ActorType]merkleTree{
-	coreTypes.ActorType_ACTOR_TYPE_APP:      appMerkleTree,
-	coreTypes.ActorType_ACTOR_TYPE_VAL:      valMerkleTree,
-	coreTypes.ActorType_ACTOR_TYPE_FISH:     fishMerkleTree,
-	coreTypes.ActorType_ACTOR_TYPE_SERVICER: servicerMerkleTree,
-}
-
-var merkleTreeToActorTypeName = map[merkleTree]coreTypes.ActorType{
-	appMerkleTree:      coreTypes.ActorType_ACTOR_TYPE_APP,
-	valMerkleTree:      coreTypes.ActorType_ACTOR_TYPE_VAL,
-	fishMerkleTree:     coreTypes.ActorType_ACTOR_TYPE_FISH,
-	servicerMerkleTree: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
-}
-
-type merkleTree float64
-
-// A list of Merkle Trees used to maintain the state hash.
 const (
-	// Actor Merkle Trees
-	appMerkleTree merkleTree = iota
-	valMerkleTree
-	fishMerkleTree
-	servicerMerkleTree
-
-	// Account Merkle Trees
-	accountMerkleTree
-	poolMerkleTree
-
-	// Data Merkle Trees
-	transactionsMerkleTree
-	paramsMerkleTree
-	flagsMerkleTree
-
-	// Used for iteration purposes only; see https://stackoverflow.com/a/64178235/768439 as a reference
-	numMerkleTrees
+	appTreeName          = "app"
+	valTreeName          = "val"
+	fishTreeName         = "fish"
+	servicerTreeName     = "servicer"
+	accountTreeName      = "account"
+	poolTreeName         = "pool"
+	transactionsTreeName = "transactions"
+	paramsTreeName       = "params"
+	flagsTreeName        = "flags"
 )
+
+var actorTypeToMerkleTreeName = map[coreTypes.ActorType]string{
+	coreTypes.ActorType_ACTOR_TYPE_APP:      appTreeName,
+	coreTypes.ActorType_ACTOR_TYPE_VAL:      valTreeName,
+	coreTypes.ActorType_ACTOR_TYPE_FISH:     fishTreeName,
+	coreTypes.ActorType_ACTOR_TYPE_SERVICER: servicerTreeName,
+}
+
+var merkleTreeNameToActorTypeName = map[string]coreTypes.ActorType{
+	appTreeName:      coreTypes.ActorType_ACTOR_TYPE_APP,
+	valTreeName:      coreTypes.ActorType_ACTOR_TYPE_VAL,
+	fishTreeName:     coreTypes.ActorType_ACTOR_TYPE_FISH,
+	servicerTreeName: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
+}
+
+var stateTreeNames = []string{
+	// Actor Trees
+	appTreeName, valTreeName, fishTreeName, servicerTreeName,
+	// Account Trees
+	accountTreeName, poolTreeName,
+	// Data Trees
+	transactionsTreeName, paramsTreeName, flagsTreeName,
+}
+
+// stateTree is a wrapper around the SMT that contains an identifying
+// key alongside the tree and nodeStore that backs the tree
+type stateTree struct {
+	key       []byte
+	tree      *smt.SMT
+	nodeStore kvstore.KVStore
+}
 
 // treeStore stores a set of merkle trees that
 // it manages. It fulfills the modules.TreeStore interface.
@@ -78,8 +70,7 @@ const (
 // functionality provided by the underlying smt library.
 type treeStore struct {
 	treeStoreDir string
-	merkleTrees  map[merkleTree]*smt.SMT
-	nodeStores   map[merkleTree]kvstore.KVStore
+	merkleTrees  map[string]*stateTree
 }
 
 // Update takes a transaction and a height and updates
@@ -95,17 +86,20 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 
 	stateTrees := &treeStore{
 		treeStoreDir: treesStoreDir,
-		merkleTrees:  make(map[merkleTree]*smt.SMT, int(numMerkleTrees)),
-		nodeStores:   make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
+		merkleTrees:  make(map[string]*stateTree, len(stateTreeNames)),
 	}
 
-	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", treesStoreDir, merkleTreeToString[tree]))
+	for i := 0; i < len(stateTreeNames); i++ {
+		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", treesStoreDir, stateTreeNames[i]))
 		if err != nil {
 			return nil, err
 		}
-		stateTrees.nodeStores[tree] = nodeStore
-		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
+		tree := &stateTree{
+			key:       []byte(stateTreeNames[i]),
+			tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
+			nodeStore: nodeStore,
+		}
+		stateTrees.merkleTrees[stateTreeNames[i]] = tree
 	}
 	return stateTrees, nil
 }
@@ -113,12 +107,12 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 // DebugClearAll is used by the debug cli to completely reset all merkle trees.
 // This should only be called by the debug CLI.
 func (t *treeStore) DebugClearAll() error {
-	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		nodeStore := t.nodeStores[treeType]
+	for i := 0; i < len(stateTreeNames); i++ {
+		nodeStore := t.merkleTrees[stateTreeNames[i]].nodeStore
 		if err := nodeStore.ClearAll(); err != nil {
-			return fmt.Errorf("failed to clear %s node store: %w", merkleTreeToString[treeType], err)
+			return fmt.Errorf("failed to clear %s node store: %w", string(t.merkleTrees[stateTreeNames[i]].key), err)
 		}
-		t.merkleTrees[treeType] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
+		t.merkleTrees[stateTreeNames[i]].tree = smt.NewSparseMerkleTree(nodeStore, sha256.New())
 	}
 
 	return nil
@@ -127,13 +121,16 @@ func (t *treeStore) DebugClearAll() error {
 // newMemStateTrees creates a new in-memory state tree
 func newMemStateTrees() (*treeStore, error) {
 	stateTrees := &treeStore{
-		merkleTrees: make(map[merkleTree]*smt.SMT, int(numMerkleTrees)),
-		nodeStores:  make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
+		merkleTrees: make(map[string]*stateTree, len(stateTreeNames)),
 	}
-	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
+	for i := 0; i < len(stateTreeNames); i++ {
 		nodeStore := kvstore.NewMemKVStore() // For testing, `smt.NewSimpleMap()` can be used as well
-		stateTrees.nodeStores[tree] = nodeStore
-		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
+		tree := &stateTree{
+			key:       []byte(stateTreeNames[i]),
+			tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
+			nodeStore: nodeStore,
+		}
+		stateTrees.merkleTrees[stateTreeNames[i]] = tree
 	}
 	return stateTrees, nil
 }
@@ -141,13 +138,13 @@ func newMemStateTrees() (*treeStore, error) {
 // updateMerkleTrees updates all of the merkle trees that TreeStore manages.
 // * it returns an hash of the output or an error.
 func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
-	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		switch treeType {
+	for i := 0; i < len(stateTreeNames); i++ {
+		switch key := string(t.merkleTrees[stateTreeNames[i]].key); key {
 		// Actor Merkle Trees
-		case appMerkleTree, valMerkleTree, fishMerkleTree, servicerMerkleTree:
-			actorType, ok := merkleTreeToActorTypeName[treeType]
+		case appTreeName, valTreeName, fishTreeName, servicerTreeName:
+			actorType, ok := merkleTreeNameToActorTypeName[key]
 			if !ok {
-				return "", fmt.Errorf("no actor type found for merkle tree: %v", treeType)
+				return "", fmt.Errorf("no actor type found for merkle tree: %s", key)
 			}
 
 			actors, err := sql.GetActors(pgtx, actorType, height)
@@ -156,11 +153,11 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 
 			if err := t.updateActorsTree(actorType, actors); err != nil {
-				return "", fmt.Errorf("failed to update actors tree for treeType: %v, actorType: %v - %w", treeType, actorType, err)
+				return "", fmt.Errorf("failed to update actors tree for treeType: %s, actorType: %v - %w", key, actorType, err)
 			}
 
 		// Account Merkle Trees
-		case accountMerkleTree:
+		case accountTreeName:
 			accounts, err := sql.GetAccounts(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get accounts: %w", err)
@@ -168,7 +165,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateAccountTrees(accounts); err != nil {
 				return "", fmt.Errorf("failed to update account trees: %w", err)
 			}
-		case poolMerkleTree:
+		case poolTreeName:
 			pools, err := sql.GetPools(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get transactions: %w", err)
@@ -178,7 +175,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 
 		// Data Merkle Trees
-		case transactionsMerkleTree:
+		case transactionsTreeName:
 			indexedTxs, err := sql.GetTransactions(txi, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get transactions: %w", err)
@@ -186,7 +183,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateTransactionsTree(indexedTxs); err != nil {
 				return "", fmt.Errorf("failed to update transactions: %w", err)
 			}
-		case paramsMerkleTree:
+		case paramsTreeName:
 			params, err := sql.GetParams(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get params: %w", err)
@@ -194,7 +191,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateParamsTree(params); err != nil {
 				return "", fmt.Errorf("failed to update params tree: %w", err)
 			}
-		case flagsMerkleTree:
+		case flagsTreeName:
 			flags, err := sql.GetFlags(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get flags from transaction: %w", err)
@@ -204,7 +201,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 		// Default
 		default:
-			panic(fmt.Sprintf("not handled in state commitment update. Merkle tree #{%v}", treeType))
+			panic(fmt.Sprintf("not handled in state commitment update. Merkle tree: %s", key))
 		}
 	}
 
@@ -215,9 +212,9 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 }
 
 func (t *treeStore) commit() error {
-	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		if err := t.merkleTrees[tree].Commit(); err != nil {
-			return fmt.Errorf("failed to commit %s: %w", merkleTreeToString[tree], err)
+	for i := 0; i < len(stateTreeNames); i++ {
+		if err := t.merkleTrees[stateTreeNames[i]].tree.Commit(); err != nil {
+			return fmt.Errorf("failed to commit %s: %w", string(t.merkleTrees[stateTreeNames[i]].key), err)
 		}
 	}
 	return nil
@@ -225,8 +222,8 @@ func (t *treeStore) commit() error {
 
 func (t *treeStore) getStateHash() string {
 	rootTree := smt.NewSparseMerkleTree(nil, sha256.New()) // don't need a nodestore as we operate in memory
-	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		rootTree.Update([]byte(merkleTreeToString[tree]), t.merkleTrees[tree].Root())
+	for i := 0; i < len(stateTreeNames); i++ {
+		rootTree.Update(t.merkleTrees[stateTreeNames[i]].key, t.merkleTrees[stateTreeNames[i]].tree.Root())
 	}
 	return hex.EncodeToString(rootTree.Root())
 }
@@ -252,7 +249,7 @@ func (t *treeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*co
 		if !ok {
 			return fmt.Errorf("no merkle tree found for actor type: %s", actorType)
 		}
-		if err := t.merkleTrees[merkleTreeName].Update(bzAddr, actorBz); err != nil {
+		if err := t.merkleTrees[merkleTreeName].tree.Update(bzAddr, actorBz); err != nil {
 			return err
 		}
 	}
@@ -276,7 +273,7 @@ func (t *treeStore) updateAccountTrees(accounts []*coreTypes.Account) error {
 			return err
 		}
 
-		if err := t.merkleTrees[accountMerkleTree].Update(bzAddr, accBz); err != nil {
+		if err := t.merkleTrees[accountTreeName].tree.Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}
@@ -296,7 +293,7 @@ func (t *treeStore) updatePoolTrees(pools []*coreTypes.Account) error {
 			return err
 		}
 
-		if err := t.merkleTrees[poolMerkleTree].Update(bzAddr, accBz); err != nil {
+		if err := t.merkleTrees[poolTreeName].tree.Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}
@@ -312,7 +309,7 @@ func (t *treeStore) updateTransactionsTree(indexedTxs []*coreTypes.IndexedTransa
 	for _, idxTx := range indexedTxs {
 		txBz := idxTx.GetTx()
 		txHash := crypto.SHA3Hash(txBz)
-		if err := t.merkleTrees[transactionsMerkleTree].Update(txHash, txBz); err != nil {
+		if err := t.merkleTrees[transactionsTreeName].tree.Update(txHash, txBz); err != nil {
 			return err
 		}
 	}
@@ -326,7 +323,7 @@ func (t *treeStore) updateParamsTree(params []*coreTypes.Param) error {
 		if err != nil {
 			return err
 		}
-		if err := t.merkleTrees[paramsMerkleTree].Update(paramKey, paramBz); err != nil {
+		if err := t.merkleTrees[paramsTreeName].tree.Update(paramKey, paramBz); err != nil {
 			return err
 		}
 	}
@@ -341,7 +338,7 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 		if err != nil {
 			return err
 		}
-		if err := t.merkleTrees[flagsMerkleTree].Update(flagKey, flagBz); err != nil {
+		if err := t.merkleTrees[flagsTreeName].tree.Update(flagKey, flagBz); err != nil {
 			return err
 		}
 	}
