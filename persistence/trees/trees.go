@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"log"
 
 	"github.com/jackc/pgx/v5"
 
@@ -223,7 +224,9 @@ func (t *treeStore) commit() error {
 func (t *treeStore) getStateHash() string {
 	rootTree := smt.NewSparseMerkleTree(nil, sha256.New()) // don't need a nodestore as we operate in memory
 	for i := 0; i < len(stateTreeNames); i++ {
-		rootTree.Update(t.merkleTrees[stateTreeNames[i]].key, t.merkleTrees[stateTreeNames[i]].tree.Root())
+		if err := rootTree.Update(t.merkleTrees[stateTreeNames[i]].key, t.merkleTrees[stateTreeNames[i]].tree.Root()); err != nil {
+			log.Fatalf("failed to update root tree: %s", err.Error())
+		}
 	}
 	return hex.EncodeToString(rootTree.Root())
 }
