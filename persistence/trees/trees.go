@@ -71,6 +71,7 @@ type stateTree struct {
 // functionality provided by the underlying smt library.
 type treeStore struct {
 	treeStoreDir string
+	rootTree     *stateTree
 	merkleTrees  map[string]*stateTree
 }
 
@@ -85,8 +86,19 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 		return newMemStateTrees()
 	}
 
+	nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", treesStoreDir, "root"))
+	if err != nil {
+		return nil, err
+	}
+	rootTree := &stateTree{
+		key:       []byte("root"),
+		tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
+		nodeStore: nodeStore,
+	}
+
 	stateTrees := &treeStore{
 		treeStoreDir: treesStoreDir,
+		rootTree:     rootTree,
 		merkleTrees:  make(map[string]*stateTree, len(stateTreeNames)),
 	}
 
@@ -108,6 +120,10 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 // DebugClearAll is used by the debug cli to completely reset all merkle trees.
 // This should only be called by the debug CLI.
 func (t *treeStore) DebugClearAll() error {
+	if err := t.rootTree.nodeStore.ClearAll(); err != nil {
+		return fmt.Errorf("failed to clear root node store: %w", err)
+	}
+	t.rootTree.tree = smt.NewSparseMerkleTree(t.rootTree.nodeStore, sha256.New())
 	for i := 0; i < len(stateTreeNames); i++ {
 		nodeStore := t.merkleTrees[stateTreeNames[i]].nodeStore
 		if err := nodeStore.ClearAll(); err != nil {
@@ -121,7 +137,14 @@ func (t *treeStore) DebugClearAll() error {
 
 // newMemStateTrees creates a new in-memory state tree
 func newMemStateTrees() (*treeStore, error) {
+	nodeStore := kvstore.NewMemKVStore()
+	rootTree := &stateTree{
+		key:       []byte("root"),
+		tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
+		nodeStore: nodeStore,
+	}
 	stateTrees := &treeStore{
+		rootTree:    rootTree,
 		merkleTrees: make(map[string]*stateTree, len(stateTreeNames)),
 	}
 	for i := 0; i < len(stateTreeNames); i++ {
@@ -213,22 +236,21 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 }
 
 func (t *treeStore) commit() error {
-	for i := 0; i < len(stateTreeNames); i++ {
-		if err := t.merkleTrees[stateTreeNames[i]].tree.Commit(); err != nil {
-			return fmt.Errorf("failed to commit %s: %w", string(t.merkleTrees[stateTreeNames[i]].key), err)
+	for treeName, stateTree := range t.merkleTrees {
+		if err := stateTree.tree.Commit(); err != nil {
+			return fmt.Errorf("failed to commit %s: %w", treeName, err)
 		}
 	}
 	return nil
 }
 
 func (t *treeStore) getStateHash() string {
-	rootTree := smt.NewSparseMerkleTree(nil, sha256.New()) // don't need a nodestore as we operate in memory
-	for i := 0; i < len(stateTreeNames); i++ {
-		if err := rootTree.Update(t.merkleTrees[stateTreeNames[i]].key, t.merkleTrees[stateTreeNames[i]].tree.Root()); err != nil {
+	for _, stateTree := range t.merkleTrees {
+		if err := t.rootTree.tree.Update(stateTree.key, stateTree.tree.Root()); err != nil {
 			log.Fatalf("failed to update root tree: %s", err.Error())
 		}
 	}
-	return hex.EncodeToString(rootTree.Root())
+	return hex.EncodeToString(t.rootTree.tree.Root())
 }
 
 ////////////////////////
