@@ -2,6 +2,9 @@ module github.com/pokt-network/pocket
 
 go 1.18
 
+// TECHDEBT: remove once upstream PR is merged (see: https://github.com/cosmos/ics23/pull/153)
+replace github.com/cosmos/ics23/go => ../ics23/go
+
 // TECHDEBT: remove once upstream PR is merged (see: https://github.com/regen-network/gocuke/pull/12)
 replace github.com/regen-network/gocuke => github.com/pokt-network/gocuke v0.0.1
 
@@ -21,6 +24,7 @@ require (
 
 require (
 	github.com/benbjohnson/clock v1.3.0
+	github.com/cosmos/ics23/go v0.10.0
 	github.com/deepmap/oapi-codegen v1.12.4
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/foxcpp/go-mockdns v1.0.0
@@ -87,6 +91,7 @@ require (
 	github.com/cockroachdb/apd/v3 v3.1.0 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
+	github.com/cosmos/gogoproto v1.4.3 // indirect
 	github.com/cucumber/common/messages/go/v19 v19.1.2 // indirect
 	github.com/cucumber/gherkin/go/v26 v26.0.3 // indirect
 	github.com/cucumber/messages/go/v21 v21.0.1 // indirect
