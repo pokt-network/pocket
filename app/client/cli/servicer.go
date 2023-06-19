@@ -138,7 +138,7 @@ func getCurrentSession(ctx context.Context, appAddress, chain string) (*rpc.Sess
 		return nil, fmt.Errorf("Error getting current session with request %v: %w", req, err)
 	}
 
-	// IMPROVE: move the HTTP response processing code to a separate function to enable reuse.
+	// CLEANUP: move the HTTP response processing code to a separate function to enable reuse.
 	if resp.HTTPResponse.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("Error getting current session: Unexpected status code %d for request %v", resp.HTTPResponse.StatusCode, req)
 	}
@@ -171,8 +171,8 @@ func getCurrentHeight(ctx context.Context) (int64, error) {
 	return resp.JSON200.Height, nil
 }
 
-// IMPROVE: [K8s][LocalNet] Publish Servicer(s) Host and Port as env. vars in K8s: similar to Validators: #823
-// REFACTOR: move package-level variables (e.g. remoteCLIURL) to a cli object and consider storing it in the context
+// IMPROVE(#823): [K8s][LocalNet] Publish Servicer(s) Host and Port as env. vars in K8s: similar to Validators
+// CONSIDERATION: move package-level variables (e.g. remoteCLIURL) to a cli object and consider storing it in the context
 func sendTrustlessRelay(ctx context.Context, servicerUrl string, relay *rpc.RelayRequest) (*rpc.PostV1ClientRelayResponse, error) {
 	client, err := rpc.NewClientWithResponses(servicerUrl)
 	if err != nil {

@@ -127,7 +127,7 @@ paths:
     post:
       tags:
         - client
-      summary: Sends a relay to the servicer to receive a response. The payload is the serialized form of one of the supported formats.
+      summary: Sends a relay to the servicer to receive a response. The payload is the serialized form of one of the supported formats in a protobuf.
       requestBody:
         description: Request a relay to be sent on behalf of your application. The server is responsible for unpacking the payload as one of the supported formats.
         content:

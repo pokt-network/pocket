@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRelayValidate(t *testing.T) {
+func TestRelay_Validate(t *testing.T) {
 	testCases := []struct {
 		name     string
 		relay    Relay
@@ -60,7 +60,7 @@ func TestRelayValidate(t *testing.T) {
 	}
 }
 
-func TestJsonRpcValidate(t *testing.T) {
+func TestRelay_ValidateJsonRpc(t *testing.T) {
 	testCases := []struct {
 		name     string
 		payload  JSONRPCPayload
@@ -90,7 +90,7 @@ func TestJsonRpcValidate(t *testing.T) {
 	}
 }
 
-func TestRESTValidate(t *testing.T) {
+func TestRelay_ValidateREST(t *testing.T) {
 	testCases := []struct {
 		name     string
 		payload  RESTPayload
