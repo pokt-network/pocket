@@ -30,6 +30,7 @@ func TestRelay_Validate(t *testing.T) {
 		},
 		{
 			name:     "invalid Relay: missing payload",
+			relay:    &Relay{},
 			expected: errInvalidRelayPayload,
 		},
 		{
