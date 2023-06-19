@@ -5,7 +5,6 @@
 package trees
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -53,12 +52,6 @@ type merkleTree float64
 
 // A list of Merkle Trees used to maintain the state hash.
 const (
-	// IMPORTANT: The order in which these trees are defined is important and strict. It implicitly
-	// defines the index of the root hash each independent as they are concatenated together
-	// to generate the state hash.
-
-	// TECHDEBT(#834): Remove the need for enforced ordering
-
 	// Actor Merkle Trees
 	appMerkleTree merkleTree = iota
 	valMerkleTree
@@ -231,19 +224,11 @@ func (t *treeStore) commit() error {
 }
 
 func (t *treeStore) getStateHash() string {
-	// create an order-matters list of roots
-	roots := make([][]byte, 0)
+	rootTree := smt.NewSparseMerkleTree(nil, sha256.New()) // don't need a nodestore as we operate in memory
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		roots = append(roots, t.merkleTrees[tree].Root())
+		rootTree.Update([]byte(merkleTreeToString[tree]), t.merkleTrees[tree].Root())
 	}
-
-	// combine them and hash the result
-	rootsConcat := bytes.Join(roots, []byte{})
-	stateHash := sha256.Sum256(rootsConcat)
-
-	// Convert the array to a slice and return it
-	// REF: https://stackoverflow.com/questions/28886616/convert-array-to-slice-in-go
-	return hex.EncodeToString(stateHash[:])
+	return hex.EncodeToString(rootTree.Root())
 }
 
 ////////////////////////
