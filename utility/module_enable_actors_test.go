@@ -36,9 +36,17 @@ func TestEnableActorModules(t *testing.T) {
 			expectedNames: []string{"fisherman"},
 		},
 		{
-			name: "validator only",
+			name: "validator plus default servicer",
 			config: &configs.Config{
 				Validator: &configs.ValidatorConfig{Enabled: true},
+			},
+			expectedNames: []string{"validator", "servicer"},
+		},
+		{
+			name: "validator only, disabled servicer",
+			config: &configs.Config{
+				Validator: &configs.ValidatorConfig{Enabled: true},
+				Servicer:  &configs.ServicerConfig{Enabled: false},
 			},
 			expectedNames: []string{"validator"},
 		},
