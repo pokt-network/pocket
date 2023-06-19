@@ -73,7 +73,7 @@ Will prompt the user for the *application* account passphrase`,
 					return fmt.Errorf("Error getting current session: %w", err)
 				}
 
-				servicer, err := validateServicer(cmd.Context(), session, servicerAddr)
+				servicer, err := validateServicer(session, servicerAddr)
 				if err != nil {
 					return fmt.Errorf("error getting servicer for the relay: %w", err)
 				}
@@ -104,10 +104,10 @@ Will prompt the user for the *application* account passphrase`,
 // TODO: add a cli command for fetching sessions
 // validateServicer returns the servicer specified by the <servicer> argument.
 // It validates that the <servicer> is the address of a servicer that is active in the current session.
-func validateServicer(ctx context.Context, session *rpc.Session, servicerAddress string) (*rpc.ProtocolActor, error) {
-	for _, s := range session.Servicers {
-		if s.Address == servicerAddress {
-			return &s, nil
+func validateServicer(session *rpc.Session, servicerAddress string) (*rpc.ProtocolActor, error) {
+	for i := range session.Servicers {
+		if session.Servicers[i].Address == servicerAddress {
+			return &session.Servicers[i], nil
 		}
 	}
 

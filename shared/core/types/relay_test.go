@@ -9,12 +9,12 @@ import (
 func TestRelay_Validate(t *testing.T) {
 	testCases := []struct {
 		name     string
-		relay    Relay
+		relay    *Relay
 		expected error
 	}{
 		{
 			name: "valid Relay: JSONRPC",
-			relay: Relay{
+			relay: &Relay{
 				RelayPayload: &Relay_JsonRpcPayload{
 					JsonRpcPayload: &JSONRPCPayload{JsonRpc: "2.0", Method: "eth_blockNumber"},
 				},
@@ -22,7 +22,7 @@ func TestRelay_Validate(t *testing.T) {
 		},
 		{
 			name: "valid Relay: REST",
-			relay: Relay{
+			relay: &Relay{
 				RelayPayload: &Relay_RestPayload{
 					RestPayload: &RESTPayload{Contents: `{"field1": "value1", "field2": "value2"}`},
 				},
@@ -34,7 +34,7 @@ func TestRelay_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid Relay: invalid JSONRPC Payload",
-			relay: Relay{
+			relay: &Relay{
 				RelayPayload: &Relay_JsonRpcPayload{
 					JsonRpcPayload: &JSONRPCPayload{JsonRpc: "foo"},
 				},
@@ -43,7 +43,7 @@ func TestRelay_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid Relay: invalid REST Payload",
-			relay: Relay{
+			relay: &Relay{
 				RelayPayload: &Relay_RestPayload{
 					RestPayload: &RESTPayload{Contents: "foo"},
 				},
@@ -63,21 +63,21 @@ func TestRelay_Validate(t *testing.T) {
 func TestRelay_ValidateJsonRpc(t *testing.T) {
 	testCases := []struct {
 		name     string
-		payload  JSONRPCPayload
+		payload  *JSONRPCPayload
 		expected error
 	}{
 		{
 			name:    "valid JSONRPC",
-			payload: JSONRPCPayload{JsonRpc: "2.0", Method: "eth_blockNumber"},
+			payload: &JSONRPCPayload{JsonRpc: "2.0", Method: "eth_blockNumber"},
 		},
 		{
 			name:     "invalid JSONRPC: invalid JsonRpc field value",
-			payload:  JSONRPCPayload{JsonRpc: "foo", Method: "eth_blockNumber"},
+			payload:  &JSONRPCPayload{JsonRpc: "foo", Method: "eth_blockNumber"},
 			expected: errInvalidJSONRPC,
 		},
 		{
 			name:     "invalid JSONRPC: Method field not set",
-			payload:  JSONRPCPayload{JsonRpc: "2.0"},
+			payload:  &JSONRPCPayload{JsonRpc: "2.0"},
 			expected: errInvalidJSONRPCMissingMethod,
 		},
 	}
@@ -93,16 +93,16 @@ func TestRelay_ValidateJsonRpc(t *testing.T) {
 func TestRelay_ValidateREST(t *testing.T) {
 	testCases := []struct {
 		name     string
-		payload  RESTPayload
+		payload  *RESTPayload
 		expected error
 	}{
 		{
 			name:    "valid REST",
-			payload: RESTPayload{Contents: `{"field1": "value1", "field2": "value2"}`},
+			payload: &RESTPayload{Contents: `{"field1": "value1", "field2": "value2"}`},
 		},
 		{
 			name:     "invalid REST payload: is not JSON-formatted",
-			payload:  RESTPayload{Contents: "foo"},
+			payload:  &RESTPayload{Contents: "foo"},
 			expected: errInvalidRESTPayload,
 		},
 	}

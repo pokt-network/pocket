@@ -112,7 +112,7 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 		Signature:         body.Meta.Signature,
 	}
 
-	relayRequest := buildJsonRPCRelayPayload(body)
+	relayRequest := buildJsonRPCRelayPayload(&body)
 	relayRequest.Meta = relayMeta
 
 	relayResponse, err := utility.HandleRelay(relayRequest)
@@ -217,7 +217,7 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 }
 
 // TECHDEBT: handle other relay payload types, e.g. JSON, GRPC, etc.
-func buildJsonRPCRelayPayload(body RelayRequest) *coreTypes.Relay {
+func buildJsonRPCRelayPayload(body *RelayRequest) *coreTypes.Relay {
 	payload := &coreTypes.Relay_JsonRpcPayload{
 		JsonRpcPayload: &coreTypes.JSONRPCPayload{
 			JsonRpc: body.Payload.Jsonrpc,

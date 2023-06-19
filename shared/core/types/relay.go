@@ -19,7 +19,7 @@ var (
 // IMPROVE: use a factory function to build test relays
 // INCOMPLETE: perform any possible metadata validation
 // Validate performs validation on the relay payload
-func (r Relay) Validate() error {
+func (r *Relay) Validate() error {
 	switch payload := r.RelayPayload.(type) {
 	case *Relay_JsonRpcPayload:
 		return payload.JsonRpcPayload.Validate()
@@ -33,7 +33,7 @@ func (r Relay) Validate() error {
 // Validate performs validation on JSONRPC payload. More specifically, it verifies that:
 //  1. The JSONRPC field is set to "2.0" as per the JSONRPC spec requirement, and
 //  2. The Method field is not empty
-func (p JSONRPCPayload) Validate() error {
+func (p *JSONRPCPayload) Validate() error {
 	if p.JsonRpc != jsonRpcVersion {
 		return fmt.Errorf("%w: %s", errInvalidJSONRPC, p.JsonRpc)
 	}
@@ -47,7 +47,7 @@ func (p JSONRPCPayload) Validate() error {
 }
 
 // Validate verifies that the payload is valid REST, i.e. valid JSON
-func (p RESTPayload) Validate() error {
+func (p *RESTPayload) Validate() error {
 	var parsed json.RawMessage
 	if err := json.Unmarshal([]byte(p.Contents), &parsed); err != nil {
 		return fmt.Errorf("%w: %s: %w", errInvalidRESTPayload, p.Contents, err)
