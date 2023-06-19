@@ -22,7 +22,7 @@ type Router interface {
 	RemovePeer(peer Peer) error
 }
 
-type RouterHandler func(data []byte) error
+type MessageHandler func(data []byte) error
 
 // RouterConfig is used to configure `Router` implementations and to test a
 // given configuration's validity.

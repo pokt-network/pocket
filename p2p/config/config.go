@@ -4,9 +4,19 @@ import (
 	"fmt"
 
 	"github.com/libp2p/go-libp2p/core/host"
-	"github.com/pokt-network/pocket/p2p/providers"
-	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/libp2p/go-libp2p/core/protocol"
 	"go.uber.org/multierr"
+
+	"github.com/pokt-network/pocket/p2p/providers"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
+)
+
+var (
+	_ typesP2P.RouterConfig = &baseConfig{}
+	_ typesP2P.RouterConfig = &UnicastRouterConfig{}
+	_ typesP2P.RouterConfig = &RainTreeConfig{}
 )
 
 // baseConfig implements `RouterConfig` using the given libp2p host and current
@@ -20,6 +30,14 @@ type baseConfig struct {
 	Addr                  crypto.Address
 	CurrentHeightProvider providers.CurrentHeightProvider
 	PeerstoreProvider     providers.PeerstoreProvider
+}
+
+type UnicastRouterConfig struct {
+	Logger         *modules.Logger
+	Host           host.Host
+	ProtocolID     protocol.ID
+	MessageHandler typesP2P.MessageHandler
+	PeerHandler    func(peer typesP2P.Peer) error
 }
 
 // BackgroundConfig implements `RouterConfig` for use with `BackgroundRouter`.
@@ -56,6 +74,30 @@ func (cfg *baseConfig) IsValid() (err error) {
 
 	if cfg.PeerstoreProvider == nil {
 		err = multierr.Append(err, fmt.Errorf("peerstore provider not configured"))
+	}
+	return nil
+}
+
+// IsValid implements the respective member of the `RouterConfig` interface.
+func (cfg *UnicastRouterConfig) IsValid() (err error) {
+	if cfg.Logger == nil {
+		err = multierr.Append(err, fmt.Errorf("logger not configured"))
+	}
+
+	if cfg.Host == nil {
+		err = multierr.Append(err, fmt.Errorf("host not configured"))
+	}
+
+	if cfg.ProtocolID == "" {
+		err = multierr.Append(err, fmt.Errorf("protocol id not configured"))
+	}
+
+	if cfg.MessageHandler == nil {
+		err = multierr.Append(err, fmt.Errorf("message handler not configured"))
+	}
+
+	if cfg.PeerHandler == nil {
+		err = multierr.Append(err, fmt.Errorf("peer handler not configured"))
 	}
 	return err
 }
