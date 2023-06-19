@@ -50,7 +50,7 @@ func (p *JSONRPCPayload) Validate() error {
 func (p *RESTPayload) Validate() error {
 	var parsed json.RawMessage
 	if err := json.Unmarshal([]byte(p.Contents), &parsed); err != nil {
-		return fmt.Errorf("%w: %s: %w", errInvalidRESTPayload, p.Contents, err)
+		return fmt.Errorf("%w: %s: %s", errInvalidRESTPayload, p.Contents, err.Error())
 	}
 	return nil
 }
