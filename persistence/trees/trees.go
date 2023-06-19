@@ -124,12 +124,12 @@ func (t *treeStore) DebugClearAll() error {
 		return fmt.Errorf("failed to clear root node store: %w", err)
 	}
 	t.rootTree.tree = smt.NewSparseMerkleTree(t.rootTree.nodeStore, sha256.New())
-	for i := 0; i < len(stateTreeNames); i++ {
-		nodeStore := t.merkleTrees[stateTreeNames[i]].nodeStore
+	for treeName, stateTree := range t.merkleTrees {
+		nodeStore := stateTree.nodeStore
 		if err := nodeStore.ClearAll(); err != nil {
-			return fmt.Errorf("failed to clear %s node store: %w", string(t.merkleTrees[stateTreeNames[i]].key), err)
+			return fmt.Errorf("failed to clear %s node store: %w", treeName, err)
 		}
-		t.merkleTrees[stateTreeNames[i]].tree = smt.NewSparseMerkleTree(nodeStore, sha256.New())
+		stateTree.tree = smt.NewSparseMerkleTree(nodeStore, sha256.New())
 	}
 
 	return nil
@@ -162,13 +162,13 @@ func newMemStateTrees() (*treeStore, error) {
 // updateMerkleTrees updates all of the merkle trees that TreeStore manages.
 // * it returns an hash of the output or an error.
 func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
-	for i := 0; i < len(stateTreeNames); i++ {
-		switch key := string(t.merkleTrees[stateTreeNames[i]].key); key {
+	for treeName := range t.merkleTrees {
+		switch treeName {
 		// Actor Merkle Trees
 		case appTreeName, valTreeName, fishTreeName, servicerTreeName:
-			actorType, ok := merkleTreeNameToActorTypeName[key]
+			actorType, ok := merkleTreeNameToActorTypeName[treeName]
 			if !ok {
-				return "", fmt.Errorf("no actor type found for merkle tree: %s", key)
+				return "", fmt.Errorf("no actor type found for merkle tree: %s", treeName)
 			}
 
 			actors, err := sql.GetActors(pgtx, actorType, height)
@@ -177,7 +177,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 
 			if err := t.updateActorsTree(actorType, actors); err != nil {
-				return "", fmt.Errorf("failed to update actors tree for treeType: %s, actorType: %v - %w", key, actorType, err)
+				return "", fmt.Errorf("failed to update actors tree for treeType: %s, actorType: %v - %w", treeName, actorType, err)
 			}
 
 		// Account Merkle Trees
@@ -225,7 +225,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 		// Default
 		default:
-			panic(fmt.Sprintf("not handled in state commitment update. Merkle tree: %s", key))
+			panic(fmt.Sprintf("not handled in state commitment update. Merkle tree: %s", treeName))
 		}
 	}
 
