@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/pokt-network/pocket/rpc"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -128,7 +129,7 @@ func getCurrentSession(ctx context.Context, appAddress, chain string) (*rpc.Sess
 		SessionHeight: currentHeight,
 	}
 
-	client, err := rpc.NewClientWithResponses(remoteCLIURL)
+	client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 	if err != nil {
 		return nil, fmt.Errorf("Error getting current session for app/chain/height: %s/%s/%d: %w", appAddress, chain, currentHeight, err)
 	}
@@ -152,7 +153,7 @@ func getCurrentSession(ctx context.Context, appAddress, chain string) (*rpc.Sess
 
 // REFACTOR: reuse this function in all the query commands
 func getCurrentHeight(ctx context.Context) (int64, error) {
-	client, err := rpc.NewClientWithResponses(remoteCLIURL)
+	client, err := rpc.NewClientWithResponses(flags.RemoteCLIURL)
 	if err != nil {
 		return 0, fmt.Errorf("Error getting current height: %w", err)
 	}
@@ -172,7 +173,7 @@ func getCurrentHeight(ctx context.Context) (int64, error) {
 }
 
 // IMPROVE(#823): [K8s][LocalNet] Publish Servicer(s) Host and Port as env. vars in K8s: similar to Validators
-// CONSIDERATION: move package-level variables (e.g. remoteCLIURL) to a cli object and consider storing it in the context
+// CONSIDERATION: move package-level variables (e.g. RemoteCLIURL) to a cli object and consider storing it in the context
 func sendTrustlessRelay(ctx context.Context, servicerUrl string, relay *rpc.RelayRequest) (*rpc.PostV1ClientRelayResponse, error) {
 	client, err := rpc.NewClientWithResponses(servicerUrl)
 	if err != nil {
@@ -220,14 +221,14 @@ func buildRelay(payload string, appPrivateKey crypto.PrivateKey, session *rpc.Se
 	return relay, nil
 }
 
-// TECHDEBT: remove use of package-level variables, such as nonInteractive, remoteCLIURL, pwd, etc.
+// TECHDEBT: remove use of package-level variables, such as NonInteractive, RemoteCLIURL, pwd, etc.
 func getPrivateKeyFromKeybase(address string) (crypto.PrivateKey, error) {
 	kb, err := keybaseForCLI()
 	if err != nil {
 		return nil, err
 	}
 
-	if !nonInteractive {
+	if !flags.NonInteractive {
 		pwd = readPassphrase(pwd)
 	}
 
