@@ -16,6 +16,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a comment on session.proto regarding use of maps for session's actors
 - Added two separate types for JSONRPC and JSON relays under relay proto
 
+## [0.0.0.61] - 2023-06-14
+
+- Replace AES-GCM in key encryption with Secretbox (XSalsa20+Poly1305)
+
+## [0.0.0.60] - 2023-06-13
+
+- Added `Factory` generic type
+- Improved godoc comments
+
+## [0.0.0.59] - 2023-06-01
+
+- Use ApplicationAddress in RelayMeta
+- Fix SessionHeight field meaning comment
+
+## [0.0.0.58] - 2023-06-01
+
+- Moved nonce field from RainTreeMessage to PocketEnvelope protobuf types
+
 ## [0.0.0.57] - 2023-05-04
 
 - Move `utility/types/errors.go` into `shared/core/types/`

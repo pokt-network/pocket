@@ -2,7 +2,6 @@ package types
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -40,12 +39,12 @@ type ITransaction interface {
 func (tx *Transaction) ValidateBasic() error {
 	// Nonce cannot be empty to avoid transaction replays
 	if tx.Nonce == "" {
-		return fmt.Errorf("nonce cannot be empty") // ErrEmptyNonce
+		return ErrEmptyNonce()
 	}
 
 	// Is there a signature we can verify?
 	if tx.Signature == nil {
-		return fmt.Errorf("signature cannot be empty") // ErrEmptySignature
+		return ErrEmptySignatureStructure()
 	}
 	if err := tx.Signature.ValidateBasic(); err != nil {
 		return err
@@ -54,21 +53,21 @@ func (tx *Transaction) ValidateBasic() error {
 	// Does the transaction have a valid key?
 	publicKey, err := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
 	if err != nil {
-		return err // ErrEmptyPublicKey or ErrNewPublicKeyFromBytes
+		return ErrNewPublicKeyFromBytes(err)
 	}
 
 	// Is there a valid msg that can be decoded?
 	if _, err := tx.GetMessage(); err != nil {
-		return err // ? ErrBadMessage
+		return ErrDecodeMessage(err)
 	}
 
 	signBytes, err := tx.SignableBytes()
 	if err != nil {
-		return err // ? ErrBadSignature
+		return ErrRetrievingSignableBytes(err)
 	}
 
 	if ok := publicKey.Verify(signBytes, tx.Signature.Signature); !ok {
-		return fmt.Errorf("signature verification failed") // ErrSignatureVerificationFailed
+		return ErrSignatureVerificationFailed()
 	}
 
 	return nil

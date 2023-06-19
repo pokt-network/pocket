@@ -9,7 +9,7 @@ We pre-configured the node to expose a web server on port `6060` for the collect
 Because of the performance overhead, it is disabled by default.
 In order to enable it, you can simply add the environment variable `PPROF_ENABLED=true` to the node.
 
-You can do that in several ways, the most obvious spot would be the `docker-compose.yml` file, in the `environment` section of the `node1.consensus` service.
+You can do that in several ways, the most obvious spot would be the `docker-compose.yml` file, in the `environment` section of the `validator1` service.
 
 ```yaml
 environment:

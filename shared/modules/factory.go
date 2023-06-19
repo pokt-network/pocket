@@ -4,25 +4,31 @@ package modules
 // a variadic `ModuleOption` argument(s) and returns a `Module`and an error.
 type ModuleFactoryWithOptions FactoryWithOptions[Module, ModuleOption]
 
-// FactoryWithConfig implements a `#Create()` factory method which takes a
-// required "config" argument of type K and returns a value of type T and an error.
-// TECHDEBT: apply enforcement across applicable "sub-modules" (see: `p2p/raintree/router.go`: `raintTreeFactory`)
-type FactoryWithConfig[T interface{}, K interface{}] interface {
-	Create(bus Bus, cfg K) (T, error)
+// Factory implements a `#Create()` factory method which takes a bus and returns
+// a value of type M and an error.
+type Factory[M any] interface {
+	Create(bus Bus) (M, error)
 }
 
-// FactoryWithOptions implements a `#Create()` factory method which takes a
-// variadic "optional" argument(s) of type O and returns a value of type T
+// FactoryWithConfig implements a `#Create()` factory method which takes a bus and
+// a required "config" argument of type C and returns a value of type M and an error.
+// TECHDEBT: apply enforcement across applicable "sub-modules" (see: `p2p/raintree/router.go`: `raintTreeFactory`)
+type FactoryWithConfig[T any, C any] interface {
+	Create(bus Bus, cfg C) (T, error)
+}
+
+// FactoryWithOptions implements a `#Create()` factory method which takes a bus
+// and a variadic "optional" argument(s) of type O and returns a value of type M
 // and an error.
 // TECHDEBT: apply enforcement across applicable "sub-modules"
-type FactoryWithOptions[T interface{}, O interface{}] interface {
-	Create(bus Bus, opts ...O) (T, error)
+type FactoryWithOptions[M any, O any] interface {
+	Create(bus Bus, opts ...O) (M, error)
 }
 
-// FactoryWithConfigAndOptions implements a `#Create()` factory method which
-// takes both a required "config" argument of type K and a variadic "optional"
-// argument(s) of type O and returns a value of type T and an error.
+// FactoryWithConfigAndOptions implements a `#Create()` factory method which takes
+// a bus, a required "config" argument of type C, and a variadic (optional)
+// argument(s) of type O and returns a value of type M and an error.
 // TECHDEBT: apply enforcement across applicable "sub-modules"
-type FactoryWithConfigAndOptions[T interface{}, K interface{}, O interface{}] interface {
-	Create(bus Bus, cfg K, opts ...O) (T, error)
+type FactoryWithConfigAndOptions[M any, C any, O any] interface {
+	Create(bus Bus, cfg C, opts ...O) (M, error)
 }

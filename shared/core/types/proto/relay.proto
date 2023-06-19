@@ -54,6 +54,7 @@ message RelayMeta {
     Identifiable relay_chain = 3;
     Identifiable geo_zone = 4;
     string signature = 5;  // TECHDEBT: Consolidate with `Signature` proto used elsewhere in the future
+    string application_address = 6;
 }
 
 message RelayResponse {

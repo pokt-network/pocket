@@ -30,10 +30,12 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, "cannot decode tx bytes")
 	}
 
+	// Validate the transaction and add it to the mempool
 	if err := s.GetBus().GetUtilityModule().HandleTransaction(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
+	// Broadcast the transaction to the rest of the network if it passed the basic validation above
 	if err := s.broadcastMessage(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
@@ -81,6 +83,13 @@ func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
 }
 
 func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
+	utility := s.GetBus().GetUtilityModule()
+	_, err := utility.GetServicerModule()
+
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, "node is not a servicer")
+	}
+
 	var body RelayRequest
 	if err := ctx.Bind(&body); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
@@ -106,7 +115,7 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 	relayRequest := buildJsonRPCRelayPayload(body)
 	relayRequest.Meta = relayMeta
 
-	relayResponse, err := s.GetBus().GetUtilityModule().HandleRelay(relayRequest)
+	relayResponse, err := utility.HandleRelay(relayRequest)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
