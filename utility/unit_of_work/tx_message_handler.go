@@ -225,13 +225,17 @@ func (u *baseUtilityUnitOfWork) handleMessageChangeParameter(message *typesUtil.
 	return u.updateParam(message.ParameterKey, v)
 }
 
-// TODO_IN_THIS_COMMIT: implement
 func (u *baseUtilityUnitOfWork) handleUpdateIbcStore(message *ibcTypes.UpdateIbcStore) coreTypes.Error {
+	if err := u.persistenceRWContext.SetIBCStoreEntry(message.Key, message.Value); err != nil {
+		return coreTypes.ErrUpdatingIBCStoreDB(err)
+	}
 	return nil
 }
 
-// TODO_IN_THIS_COMMIT: implement
 func (u *baseUtilityUnitOfWork) handlePruneIbcStore(message *ibcTypes.PruneIbcStore) coreTypes.Error {
+	if err := u.persistenceRWContext.SetIBCStoreEntry(message.Key, nil); err != nil {
+		return coreTypes.ErrUpdatingIBCStoreDB(err)
+	}
 	return nil
 }
 

@@ -133,6 +133,9 @@ type PersistenceWriteContext interface {
 	// Flag Operations
 	InitFlags() error
 	SetFlag(paramName string, value any, enabled bool) error
+
+	// IBC Operations
+	SetIBCStoreEntry(key, value []byte) error
 }
 
 type PersistenceReadContext interface {
