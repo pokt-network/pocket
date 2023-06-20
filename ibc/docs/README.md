@@ -10,7 +10,11 @@
 
 ![IBC High Level](./high-level-ibc.png)
 
-Inter-Blockchain Communication (IBC) is a protocol that facilitates the trustless communication between two chains. This allows them to interact with each other via the relaying of IBC packets. This works by having two IBC enabled chains: **chain A** and **chain B**; both of which will have a light client for the other running on their network. In order for **chain A** to transfer some of their native token to **chain B** a few things must be in place: a connection between the two chains, a channel and port must be opened between them on this connection, a light client for the opposing chain on each end of the connection and finally a relayer is needed to actually transfer the packet. Once all these are in place, **chain A** can commit an IBC packet to its state containing the information around the transaction, and generate a proof detailing its inclusion in the state at the specified height. The relayer will then submit this proof to **chain B** which will verify the proof and if valid **chain B** can then react to this packet in an appropriate fashion (ie. sending an IBC **chain A** token to the specified address on **chain B**).
+Inter-Blockchain Communication (IBC) is a protocol that enables trustless communication between two chains. It allows these chains to interact by relaying IBC packets. The process involves two IBC-enabled chains, referred to as **chain A** and **chain B**, each running a light client for the other chain on their network.
+
+To transfer native tokens from **chain A** to **chain B**, certain prerequisites must be met. First, a connection between the two chains must be established. Then, a channel and port need to be opened on this connection. Additionally, a light client for the opposing chain should be set up on both ends of the connection. Finally, a relayer is required to facilitate the actual transfer of the packet.
+
+Once these components are in place, **chain A** can commit an IBC packet to its state, which contains transaction information. It also generates a proof that specifies the inclusion of the packet in the state at a particular height. The relayer submits this proof to **chain B**, where it is verified. If the proof is valid, **chain B** can respond accordingly, such as by sending an IBC token from **chain A** to the designated address on **chain B**.
 
 ## IBC Module
 
