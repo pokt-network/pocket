@@ -41,9 +41,9 @@ func TestStateTree_Operations(t *testing.T) {
 	require.Equal(t, stateTree.GetNodeStore(), nodeStore)
 
 	// insert values into tree
-	stateTree.tree.Update([]byte("key1"), []byte("value1"))
-	stateTree.tree.Update([]byte("key2"), []byte("value2"))
-	stateTree.tree.Update([]byte("key3"), []byte("value3"))
+	require.NoError(t, stateTree.tree.Update([]byte("key1"), []byte("value1")))
+	require.NoError(t, stateTree.tree.Update([]byte("key2"), []byte("value2")))
+	require.NoError(t, stateTree.tree.Update([]byte("key3"), []byte("value3")))
 
 	root := stateTree.tree.Root()
 	require.Equal(t, root, stateTree.GetTree().Root())
