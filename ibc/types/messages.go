@@ -30,9 +30,6 @@ func (m *UpdateIbcStore) ValidateBasic() coreTypes.Error {
 	if m.Key == nil {
 		return coreTypes.ErrNilField("key")
 	}
-	if m.Prefix == nil {
-		return coreTypes.ErrNilField("prefix")
-	}
 	if m.Value == nil {
 		return coreTypes.ErrNilField("value")
 	}
@@ -42,9 +39,6 @@ func (m *UpdateIbcStore) ValidateBasic() coreTypes.Error {
 func (m *PruneIbcStore) ValidateBasic() coreTypes.Error {
 	if m.Key == nil {
 		return coreTypes.ErrNilField("key")
-	}
-	if m.Prefix == nil {
-		return coreTypes.ErrNilField("prefix")
 	}
 	return nil
 }
