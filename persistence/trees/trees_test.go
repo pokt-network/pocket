@@ -7,7 +7,7 @@ func TestTreeStore_Update(t *testing.T) {
 	t.Skip("TODO: Write test case for Update method")
 }
 
-func TestNewStateTrees(t *testing.T) {
+func TestTreeStore_New(t *testing.T) {
 	// TODO: Write test case for the NewStateTrees function
 	t.Skip("TODO: Write test case for NewStateTrees function")
 }
