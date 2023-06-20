@@ -165,6 +165,36 @@ func GetParams(pgtx pgx.Tx, height uint64) ([]*coreTypes.Param, error) {
 	return paramSlice, nil
 }
 
+// GetIBCStoreUpdates returns the set of key-value pairs updated at the current height for the IBC store
+func GetIBCStoreUpdates(pgtx pgx.Tx, height uint64) (keys [][]byte, values [][]byte, err error) {
+	fields := "key,value"
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE height=%d ORDER BY key ASC", fields, ptypes.IbcStoreTableName, height)
+	rows, err := pgtx.Query(context.TODO(), query)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	var hexKey, hexValue string
+	for rows.Next() {
+		if err := rows.Scan(&hexKey, &hexValue); err != nil {
+			return nil, nil, err
+		}
+		key, err := hex.DecodeString(hexKey)
+		if err != nil {
+			return nil, nil, err
+		}
+		value, err := hex.DecodeString(hexValue)
+		if err != nil {
+			return nil, nil, err
+		}
+		keys = append(keys, key)
+		values = append(values, value)
+	}
+
+	return keys, values, nil
+}
+
 func getActor(tx pgx.Tx, actorSchema ptypes.ProtocolActorSchema, address []byte, height int64) (actor *coreTypes.Actor, err error) {
 	ctx := context.TODO()
 	actor, height, err = getActorFromRow(actorSchema.GetActorType(), tx.QueryRow(ctx, actorSchema.GetQuery(hex.EncodeToString(address), height)))
