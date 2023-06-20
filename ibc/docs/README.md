@@ -3,6 +3,7 @@
 - [Overview](#overview)
 - [IBC Module](#ibc-module)
   - [Node Configuration](#node-configuration)
+  - [Persistence](#persistence)
 - [Components](#components)
   - [ICS-24 Host Requirements](#ics-24-host-requirements)
 
@@ -73,6 +74,10 @@ If a node enables the IBC module, and is a validator, then the IBC module will a
 **If the channel is to close without warning then tokens will be unable to be returned to their source. It is for this reason that only validators are able to become IBC hosts.**
 
 _Note_: Connections, Channels and Ports in IBC are not the same as networking connections, channels and ports. They are stored in the chain state and are used by relayers to signify where each IBC packet should go when being relayed. When closing a channel the IBC host must submit to the state a `ChanCloseInit` IBC packet. If this happens without warning, the funds transferred on this channel will become unrecoverable.
+
+### Persistence
+
+[ICS24][ics24] defines the IBC stores and these must be a part of the Pocket networks consensus state. As such the `ibcTree` is defined as one of the state trees used to generate the root hash. This tree contains the relevant information the hosts/relayers need to be able to use IBC, in accordance with ICS-24 and the other ICS components.
 
 ## Components
 
