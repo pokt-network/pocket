@@ -6,15 +6,17 @@ option go_package = "github.com/pokt-network/pocket/ibc/types";
 
 // update_ibc_store defines a message representing the addition of a key/value pair to the IBC store
 message update_ibc_store {
-    bytes prefix = 1;
-    bytes key = 2;
-    bytes value = 3;
+    bytes signer = 1;
+    bytes prefix = 2;
+    bytes key = 3;
+    bytes value = 4;
 }
 
 // prune_ibc_store defines a message representing the removal of a key from the IBC store
 message prune_ibc_store {
-    bytes prefix = 1;
-    bytes key = 2;
+    bytes signer = 1;
+    bytes prefix = 2;
+    bytes key = 3;
 }
 
 // ibc_message defines the different types of IBC message that can be sent across the network
