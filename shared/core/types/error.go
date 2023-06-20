@@ -38,7 +38,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 142
+// NextCode: 144
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -178,9 +178,11 @@ const (
 	CodeUnknownMessageType                Code = 131
 	CodeProposalBlockNotSet               Code = 133
 	CodeHostAlreadyExists                 Code = 138
-	CodeIBCInvalidID                      Code = 139
-	CodeIBCInvalidPath                    Code = 140
-	CodeCreatingProofError                Code = 141
+	CodeHostDoesNotExist                  Code = 139
+	CodeIBCInvalidID                      Code = 140
+	CodeIBCInvalidPath                    Code = 141
+	CodeCreatingProofError                Code = 142
+	CodeUnknownIBCMessageTypeError        Code = 143
 )
 
 const (
@@ -317,9 +319,11 @@ const (
 	UnknownActorTypeError             = "the actor type is not recognized"
 	UnknownMessageTypeError           = "the message being by the utility message is not recognized"
 	HostAlreadyExistsError            = "an ibc host already exists"
+	HostDoesNotExistError             = "an ibc host does not exist"
 	IBCInvalidIDError                 = "invalid ibc identifier"
 	IBCInvalidPathError               = "invalid ibc path"
 	CreatingProofError                = "an error occurred creating the CommitmentProof"
+	UnknownIBCMessageTypeError        = "the ibc message type is not recognized"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -859,6 +863,10 @@ func ErrHostAlreadyExists() Error {
 	return NewError(CodeHostAlreadyExists, HostAlreadyExistsError)
 }
 
+func ErrHostDoesNotExist() Error {
+	return NewError(CodeHostDoesNotExist, HostDoesNotExistError)
+}
+
 func ErrIBCInvalidID(identifier, msg string) Error {
 	return NewError(CodeIBCInvalidID, fmt.Sprintf("%s: %s (%s)", IBCInvalidIDError, identifier, msg))
 }
@@ -869,4 +877,8 @@ func ErrIBCInvalidPath(path string) Error {
 
 func ErrCreatingProof(err error) Error {
 	return NewError(CodeCreatingProofError, fmt.Sprintf("%s: %s", CreatingProofError, err.Error()))
+}
+
+func ErrUnknownIBCMessageType(messageType string) Error {
+	return NewError(CodeUnknownIBCMessageTypeError, fmt.Sprintf("%s: %s", UnknownIBCMessageTypeError, messageType))
 }
