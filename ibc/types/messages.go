@@ -63,9 +63,6 @@ func (m *PruneIbcStore) GetMessageName() string {
 func (m *UpdateIbcStore) GetMessageRecipient() string { return "" }
 func (m *PruneIbcStore) GetMessageRecipient() string  { return "" }
 
-func (m *UpdateIbcStore) GetSigner() []byte { return m.Signer }
-func (m *PruneIbcStore) GetSigner() []byte  { return m.Signer }
-
 func (m *UpdateIbcStore) GetActorType() coreTypes.ActorType {
 	return coreTypes.ActorType_ACTOR_TYPE_VAL
 }
