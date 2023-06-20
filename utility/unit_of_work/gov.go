@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"strings"
 
+	ibcTypes "github.com/pokt-network/pocket/ibc/types"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -24,9 +25,7 @@ func init() {
 	}
 }
 
-var (
-	govParamTypes map[string]int
-)
+var govParamTypes map[string]int
 
 const (
 	BIGINT int = iota
@@ -151,7 +150,8 @@ func (u *baseUtilityUnitOfWork) getParamOwner(paramName string) ([]byte, coreTyp
 
 func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreTypes.ActorType) (amount *big.Int, err coreTypes.Error) {
 	switch x := msg.(type) {
-	case *typesUtil.MessageSend:
+	// DISCUSS: What fee should be deducted for IBC store update messages
+	case *typesUtil.MessageSend, *ibcTypes.UpdateIbcStore, *ibcTypes.PruneIbcStore:
 		return getGovParam[*big.Int](u, typesUtil.MessageSendFee)
 	case *typesUtil.MessageStake:
 		switch actorType {

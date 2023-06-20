@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"math/big"
 
+	ibcTypes "github.com/pokt-network/pocket/ibc/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -26,6 +27,10 @@ func (u *baseUtilityUnitOfWork) handleMessage(msg typesUtil.Message) (err coreTy
 		return u.handleUnpauseMessage(x)
 	case *typesUtil.MessageChangeParameter:
 		return u.handleMessageChangeParameter(x)
+	case *ibcTypes.UpdateIbcStore:
+		return u.handleUpdateIbcStore(x)
+	case *ibcTypes.PruneIbcStore:
+		return u.handlePruneIbcStore(x)
 	default:
 		return coreTypes.ErrUnknownMessage(x)
 	}
@@ -218,6 +223,16 @@ func (u *baseUtilityUnitOfWork) handleMessageChangeParameter(message *typesUtil.
 		return coreTypes.ErrProtoFromAny(err)
 	}
 	return u.updateParam(message.ParameterKey, v)
+}
+
+// TODO_IN_THIS_COMMIT: implement
+func (u *baseUtilityUnitOfWork) handleUpdateIbcStore(message *ibcTypes.UpdateIbcStore) coreTypes.Error {
+	return nil
+}
+
+// TODO_IN_THIS_COMMIT: implement
+func (u *baseUtilityUnitOfWork) handlePruneIbcStore(message *ibcTypes.PruneIbcStore) coreTypes.Error {
+	return nil
 }
 
 func (u *baseUtilityUnitOfWork) checkBelowMaxChains(actorType coreTypes.ActorType, chains []string) coreTypes.Error {
