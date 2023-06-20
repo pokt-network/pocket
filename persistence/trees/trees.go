@@ -12,6 +12,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/sql"
@@ -59,22 +60,10 @@ var stateTreeNames = []string{
 
 // stateTree is a wrapper around the SMT that contains an identifying
 // key alongside the tree and nodeStore that backs the tree
-type StateTree struct {
-	key       []byte
+type stateTree struct {
+	name      string
 	tree      *smt.SMT
 	nodeStore kvstore.KVStore
-}
-
-func (s StateTree) GetKey() []byte {
-	return s.key
-}
-
-func (s StateTree) GetTree() *smt.SMT {
-	return s.tree
-}
-
-func (s StateTree) GetNodeStore() kvstore.KVStore {
-	return s.nodeStore
 }
 
 // treeStore stores a set of merkle trees that
@@ -84,17 +73,18 @@ func (s StateTree) GetNodeStore() kvstore.KVStore {
 // functionality provided by the underlying smt library.
 type treeStore struct {
 	treeStoreDir string
-	rootTree     *StateTree
-	merkleTrees  map[string]*StateTree
+	rootTree     *stateTree
+	merkleTrees  map[string]*stateTree
 }
 
-// GetTree returns an instance of a StateTree with the matching name or nil
-func (t *treeStore) GetTree(name string) *StateTree {
+// GetTree returns the name, root hash, and nodeStore for the matching tree tree
+// stored in the TreeStore. This enables the caller to import the smt
+func (t *treeStore) GetTree(name string) *smt.SMT {
 	if name == RootTreeName {
-		return t.rootTree
+		return t.rootTree.tree
 	}
 	if tree, ok := t.merkleTrees[name]; ok {
-		return tree
+		return tree.tree
 	}
 	return nil
 }
@@ -114,8 +104,8 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	rootTree := &StateTree{
-		key:       []byte("root"),
+	rootTree := &stateTree{
+		name:      RootTreeName,
 		tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
 		nodeStore: nodeStore,
 	}
@@ -123,7 +113,7 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 	stateTrees := &treeStore{
 		treeStoreDir: treesStoreDir,
 		rootTree:     rootTree,
-		merkleTrees:  make(map[string]*StateTree, len(stateTreeNames)),
+		merkleTrees:  make(map[string]*stateTree, len(stateTreeNames)),
 	}
 
 	for i := 0; i < len(stateTreeNames); i++ {
@@ -131,8 +121,8 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 		if err != nil {
 			return nil, err
 		}
-		tree := &StateTree{
-			key:       []byte(stateTreeNames[i]),
+		tree := &stateTree{
+			name:      stateTreeNames[i],
 			tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
 			nodeStore: nodeStore,
 		}
@@ -159,22 +149,22 @@ func (t *treeStore) DebugClearAll() error {
 	return nil
 }
 
-// newMemStateTrees creates a new in-memory state tree
+// newMemstateTrees creates a new in-memory state tree
 func newMemStateTrees() (*treeStore, error) {
 	nodeStore := kvstore.NewMemKVStore()
-	rootTree := &StateTree{
-		key:       []byte("root"),
+	rootTree := &stateTree{
+		name:      RootTreeName,
 		tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
 		nodeStore: nodeStore,
 	}
 	stateTrees := &treeStore{
 		rootTree:    rootTree,
-		merkleTrees: make(map[string]*StateTree, len(stateTreeNames)),
+		merkleTrees: make(map[string]*stateTree, len(stateTreeNames)),
 	}
 	for i := 0; i < len(stateTreeNames); i++ {
 		nodeStore := kvstore.NewMemKVStore() // For testing, `smt.NewSimpleMap()` can be used as well
-		tree := &StateTree{
-			key:       []byte(stateTreeNames[i]),
+		tree := &stateTree{
+			name:      stateTreeNames[i],
 			tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
 			nodeStore: nodeStore,
 		}
@@ -249,7 +239,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 		// Default
 		default:
-			panic(fmt.Sprintf("not handled in state commitment update. Merkle tree: %s", treeName))
+			log.Fatalf("not handled in state commitment update. Merkle tree: %s", treeName)
 		}
 	}
 
@@ -270,8 +260,8 @@ func (t *treeStore) commit() error {
 
 func (t *treeStore) getStateHash() string {
 	for _, stateTree := range t.merkleTrees {
-		if err := t.rootTree.tree.Update(stateTree.key, stateTree.tree.Root()); err != nil {
-			log.Fatalf("failed to update root tree: %s", err.Error())
+		if err := t.rootTree.tree.Update([]byte(stateTree.name), stateTree.tree.Root()); err != nil {
+			logger.Global.Err(err).Str("treeStore", "failed to update root tree: %s")
 		}
 	}
 	return hex.EncodeToString(t.rootTree.tree.Root())

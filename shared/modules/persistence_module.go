@@ -10,6 +10,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	moduleTypes "github.com/pokt-network/pocket/shared/modules/types"
+	"github.com/pokt-network/smt"
 )
 
 const PersistenceModuleName = "persistence"
@@ -53,6 +54,8 @@ type TreeStore interface {
 	Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error)
 	// DebugClearAll completely clears the state of the trees. For debugging purposes only.
 	DebugClearAll() error
+	// GetTree returns the name, state tree hash and nodeStore for a given tree name stored in the TreeStore
+	GetTree(string) *smt.SMT
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.
