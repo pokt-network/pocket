@@ -197,7 +197,13 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 				return "", fmt.Errorf("failed to update flags tree - %w", err)
 			}
 		case IbcTreeName:
-			// TODO: Implement IBC tree
+			keys, values, err := sql.GetIBCStoreUpdates(pgtx, height)
+			if err != nil {
+				return "", fmt.Errorf("failed to get IBC store updates: %w", err)
+			}
+			if err := t.updateIbcTree(keys, values); err != nil {
+				return "", fmt.Errorf("failed to update IBC tree: %w", err)
+			}
 		// Default
 		default:
 			t.logger.Panic().Msgf("unhandled merkle tree type: %s", treeName)
@@ -347,5 +353,25 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 		}
 	}
 
+	return nil
+}
+
+func (t *treeStore) updateIbcTree(keys [][]byte, values [][]byte) error {
+	if len(keys) != len(values) {
+		return fmt.Errorf("keys and values must be the same length")
+	}
+	for i := 0; i < len(keys); i++ {
+		key := keys[i]
+		value := values[i]
+		if value == nil {
+			if err := t.merkleTrees[IbcTreeName].tree.Delete(key); err != nil {
+				return err
+			}
+		} else {
+			if err := t.merkleTrees[IbcTreeName].tree.Update(key, value); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
