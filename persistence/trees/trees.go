@@ -84,13 +84,13 @@ func (s StateTree) GetNodeStore() kvstore.KVStore {
 // functionality provided by the underlying smt library.
 type treeStore struct {
 	treeStoreDir string
-	rootTree     *stateTree
-	merkleTrees  map[string]*stateTree
+	rootTree     *StateTree
+	merkleTrees  map[string]*StateTree
 }
 
 // GetTree returns an instance of a StateTree with the matching name or nil
 func (t *treeStore) GetTree(name string) *StateTree {
-	if name == rootTreeName {
+	if name == RootTreeName {
 		return t.rootTree
 	}
 	if tree, ok := t.merkleTrees[name]; ok {
@@ -114,7 +114,7 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	rootTree := &stateTree{
+	rootTree := &StateTree{
 		key:       []byte("root"),
 		tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
 		nodeStore: nodeStore,
@@ -123,7 +123,7 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 	stateTrees := &treeStore{
 		treeStoreDir: treesStoreDir,
 		rootTree:     rootTree,
-		merkleTrees:  make(map[string]*stateTree, len(stateTreeNames)),
+		merkleTrees:  make(map[string]*StateTree, len(stateTreeNames)),
 	}
 
 	for i := 0; i < len(stateTreeNames); i++ {
@@ -131,7 +131,7 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 		if err != nil {
 			return nil, err
 		}
-		tree := &stateTree{
+		tree := &StateTree{
 			key:       []byte(stateTreeNames[i]),
 			tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
 			nodeStore: nodeStore,
@@ -162,18 +162,18 @@ func (t *treeStore) DebugClearAll() error {
 // newMemStateTrees creates a new in-memory state tree
 func newMemStateTrees() (*treeStore, error) {
 	nodeStore := kvstore.NewMemKVStore()
-	rootTree := &stateTree{
+	rootTree := &StateTree{
 		key:       []byte("root"),
 		tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
 		nodeStore: nodeStore,
 	}
 	stateTrees := &treeStore{
 		rootTree:    rootTree,
-		merkleTrees: make(map[string]*stateTree, len(stateTreeNames)),
+		merkleTrees: make(map[string]*StateTree, len(stateTreeNames)),
 	}
 	for i := 0; i < len(stateTreeNames); i++ {
 		nodeStore := kvstore.NewMemKVStore() // For testing, `smt.NewSimpleMap()` can be used as well
-		tree := &stateTree{
+		tree := &StateTree{
 			key:       []byte(stateTreeNames[i]),
 			tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
 			nodeStore: nodeStore,
