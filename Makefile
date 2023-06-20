@@ -579,5 +579,5 @@ ggshield_secrets_scan: ## Scans the project for secrets using ggshield
 	ggshield secret scan path --recursive .
 
 .PHONY: ggshield_secrets_add
-ggshield_secrets_add: ## Ignore recently foudn secrets using ggshield
+ggshield_secrets_add: ## Ignore recently found secrets using ggshield
 	ggshield secret ignore --last-found
