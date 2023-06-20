@@ -181,6 +181,7 @@ func WithPK(pk string) func(*Config) {
 		cfg.PrivateKey = pk
 		cfg.Consensus.PrivateKey = pk
 		cfg.P2P.PrivateKey = pk
+		cfg.IBC.PrivateKey = pk
 	}
 }
 
