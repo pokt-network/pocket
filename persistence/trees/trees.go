@@ -148,8 +148,8 @@ func newMemStateTrees() (*treeStore, error) {
 	return stateTrees, nil
 }
 
-// updateMerkleTrees updates all of the merkle trees that TreeStore manages.
-// * it returns an hash of the output or an error.
+// updateMerkleTrees updates all of the merkle trees in order defined by `numMerkleTrees`
+// * it returns the new state hash capturing the state of all the trees or an error if one occured
 func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
