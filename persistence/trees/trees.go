@@ -23,9 +23,14 @@ import (
 	"github.com/pokt-network/smt"
 )
 
-// smtTreeHasher sets the hasher used by the tree SMT trees
-// as a package level variable for visibility and internal use.
-var smtTreeHasher hash.Hash = sha256.New()
+var (
+	// smtTreeHasher sets the hasher used by the tree SMT trees
+	// as a package level variable for visibility and internal use.
+	smtTreeHasher hash.Hash = sha256.New()
+	// smtValueHasher sets the hasher used by the tree SMT trees
+	// to be nil, which means that values are not prehashed
+	smtValueHasher smt.Option = smt.WithValueHasher(nil)
+)
 
 const (
 	RootTreeName         = "root"
@@ -38,6 +43,7 @@ const (
 	TransactionsTreeName = "transactions"
 	ParamsTreeName       = "params"
 	FlagsTreeName        = "flags"
+	IbcTreeName          = "ibc"
 )
 
 var actorTypeToMerkleTreeName = map[coreTypes.ActorType]string{
@@ -60,7 +66,7 @@ var stateTreeNames = []string{
 	// Account Trees
 	AccountTreeName, PoolTreeName,
 	// Data Trees
-	TransactionsTreeName, ParamsTreeName, FlagsTreeName,
+	TransactionsTreeName, ParamsTreeName, FlagsTreeName, IbcTreeName,
 }
 
 // stateTree is a wrapper around the SMT that contains an identifying
@@ -121,7 +127,7 @@ func (t *treeStore) DebugClearAll() error {
 		if err := nodeStore.ClearAll(); err != nil {
 			return fmt.Errorf("failed to clear %s node store: %w", treeName, err)
 		}
-		stateTree.tree = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
+		stateTree.tree = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher, smtValueHasher)
 	}
 	return nil
 }
@@ -190,7 +196,9 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateFlagsTree(flags); err != nil {
 				return "", fmt.Errorf("failed to update flags tree - %w", err)
 			}
-		// Default should not happen; panic and log the treeType - this is a strong code smell.
+		case IbcTreeName:
+			// TODO: Implement IBC tree
+		// Default
 		default:
 			t.logger.Panic().Msgf("unhandled merkle tree type: %s", treeName)
 		}
