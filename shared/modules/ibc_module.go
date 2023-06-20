@@ -2,6 +2,7 @@ package modules
 
 import (
 	ics23 "github.com/cosmos/ics23/go"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
