@@ -22,46 +22,59 @@ import (
 )
 
 const (
-	appTreeName          = "app"
-	valTreeName          = "val"
-	fishTreeName         = "fish"
-	servicerTreeName     = "servicer"
-	accountTreeName      = "account"
-	poolTreeName         = "pool"
-	transactionsTreeName = "transactions"
-	paramsTreeName       = "params"
-	flagsTreeName        = "flags"
+	RootTreeName         = "root"
+	AppTreeName          = "app"
+	ValTreeName          = "val"
+	FishTreeName         = "fish"
+	ServicerTreeName     = "servicer"
+	AccountTreeName      = "account"
+	PoolTreeName         = "pool"
+	TransactionsTreeName = "transactions"
+	ParamsTreeName       = "params"
+	FlagsTreeName        = "flags"
 )
 
 var actorTypeToMerkleTreeName = map[coreTypes.ActorType]string{
-	coreTypes.ActorType_ACTOR_TYPE_APP:      appTreeName,
-	coreTypes.ActorType_ACTOR_TYPE_VAL:      valTreeName,
-	coreTypes.ActorType_ACTOR_TYPE_FISH:     fishTreeName,
-	coreTypes.ActorType_ACTOR_TYPE_SERVICER: servicerTreeName,
+	coreTypes.ActorType_ACTOR_TYPE_APP:      AppTreeName,
+	coreTypes.ActorType_ACTOR_TYPE_VAL:      ValTreeName,
+	coreTypes.ActorType_ACTOR_TYPE_FISH:     FishTreeName,
+	coreTypes.ActorType_ACTOR_TYPE_SERVICER: ServicerTreeName,
 }
 
 var merkleTreeNameToActorTypeName = map[string]coreTypes.ActorType{
-	appTreeName:      coreTypes.ActorType_ACTOR_TYPE_APP,
-	valTreeName:      coreTypes.ActorType_ACTOR_TYPE_VAL,
-	fishTreeName:     coreTypes.ActorType_ACTOR_TYPE_FISH,
-	servicerTreeName: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
+	AppTreeName:      coreTypes.ActorType_ACTOR_TYPE_APP,
+	ValTreeName:      coreTypes.ActorType_ACTOR_TYPE_VAL,
+	FishTreeName:     coreTypes.ActorType_ACTOR_TYPE_FISH,
+	ServicerTreeName: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
 }
 
 var stateTreeNames = []string{
 	// Actor Trees
-	appTreeName, valTreeName, fishTreeName, servicerTreeName,
+	AppTreeName, ValTreeName, FishTreeName, ServicerTreeName,
 	// Account Trees
-	accountTreeName, poolTreeName,
+	AccountTreeName, PoolTreeName,
 	// Data Trees
-	transactionsTreeName, paramsTreeName, flagsTreeName,
+	TransactionsTreeName, ParamsTreeName, FlagsTreeName,
 }
 
 // stateTree is a wrapper around the SMT that contains an identifying
 // key alongside the tree and nodeStore that backs the tree
-type stateTree struct {
+type StateTree struct {
 	key       []byte
 	tree      *smt.SMT
 	nodeStore kvstore.KVStore
+}
+
+func (s StateTree) GetKey() []byte {
+	return s.key
+}
+
+func (s StateTree) GetTree() *smt.SMT {
+	return s.tree
+}
+
+func (s StateTree) GetNodeStore() kvstore.KVStore {
+	return s.nodeStore
 }
 
 // treeStore stores a set of merkle trees that
@@ -73,6 +86,17 @@ type treeStore struct {
 	treeStoreDir string
 	rootTree     *stateTree
 	merkleTrees  map[string]*stateTree
+}
+
+// GetTree returns an instance of a StateTree with the matching name or nil
+func (t *treeStore) GetTree(name string) *StateTree {
+	if name == rootTreeName {
+		return t.rootTree
+	}
+	if tree, ok := t.merkleTrees[name]; ok {
+		return tree
+	}
+	return nil
 }
 
 // Update takes a transaction and a height and updates
@@ -165,7 +189,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 	for treeName := range t.merkleTrees {
 		switch treeName {
 		// Actor Merkle Trees
-		case appTreeName, valTreeName, fishTreeName, servicerTreeName:
+		case AppTreeName, ValTreeName, FishTreeName, ServicerTreeName:
 			actorType, ok := merkleTreeNameToActorTypeName[treeName]
 			if !ok {
 				return "", fmt.Errorf("no actor type found for merkle tree: %s", treeName)
@@ -181,7 +205,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 
 		// Account Merkle Trees
-		case accountTreeName:
+		case AccountTreeName:
 			accounts, err := sql.GetAccounts(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get accounts: %w", err)
@@ -189,7 +213,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateAccountTrees(accounts); err != nil {
 				return "", fmt.Errorf("failed to update account trees: %w", err)
 			}
-		case poolTreeName:
+		case PoolTreeName:
 			pools, err := sql.GetPools(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get transactions: %w", err)
@@ -199,7 +223,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 
 		// Data Merkle Trees
-		case transactionsTreeName:
+		case TransactionsTreeName:
 			indexedTxs, err := sql.GetTransactions(txi, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get transactions: %w", err)
@@ -207,7 +231,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateTransactionsTree(indexedTxs); err != nil {
 				return "", fmt.Errorf("failed to update transactions: %w", err)
 			}
-		case paramsTreeName:
+		case ParamsTreeName:
 			params, err := sql.GetParams(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get params: %w", err)
@@ -215,7 +239,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateParamsTree(params); err != nil {
 				return "", fmt.Errorf("failed to update params tree: %w", err)
 			}
-		case flagsTreeName:
+		case FlagsTreeName:
 			flags, err := sql.GetFlags(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get flags from transaction: %w", err)
@@ -298,7 +322,7 @@ func (t *treeStore) updateAccountTrees(accounts []*coreTypes.Account) error {
 			return err
 		}
 
-		if err := t.merkleTrees[accountTreeName].tree.Update(bzAddr, accBz); err != nil {
+		if err := t.merkleTrees[AccountTreeName].tree.Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}
@@ -318,7 +342,7 @@ func (t *treeStore) updatePoolTrees(pools []*coreTypes.Account) error {
 			return err
 		}
 
-		if err := t.merkleTrees[poolTreeName].tree.Update(bzAddr, accBz); err != nil {
+		if err := t.merkleTrees[PoolTreeName].tree.Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}
@@ -334,7 +358,7 @@ func (t *treeStore) updateTransactionsTree(indexedTxs []*coreTypes.IndexedTransa
 	for _, idxTx := range indexedTxs {
 		txBz := idxTx.GetTx()
 		txHash := crypto.SHA3Hash(txBz)
-		if err := t.merkleTrees[transactionsTreeName].tree.Update(txHash, txBz); err != nil {
+		if err := t.merkleTrees[TransactionsTreeName].tree.Update(txHash, txBz); err != nil {
 			return err
 		}
 	}
@@ -348,7 +372,7 @@ func (t *treeStore) updateParamsTree(params []*coreTypes.Param) error {
 		if err != nil {
 			return err
 		}
-		if err := t.merkleTrees[paramsTreeName].tree.Update(paramKey, paramBz); err != nil {
+		if err := t.merkleTrees[ParamsTreeName].tree.Update(paramKey, paramBz); err != nil {
 			return err
 		}
 	}
@@ -363,7 +387,7 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 		if err != nil {
 			return err
 		}
-		if err := t.merkleTrees[flagsTreeName].tree.Update(flagKey, flagBz); err != nil {
+		if err := t.merkleTrees[FlagsTreeName].tree.Update(flagKey, flagBz); err != nil {
 			return err
 		}
 	}
