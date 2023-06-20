@@ -1,6 +1,7 @@
 package ibc
 
 import (
+	"encoding/hex"
 	"fmt"
 	"sync"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
@@ -20,9 +22,9 @@ var _ modules.IBCModule = &ibcModule{}
 type ibcModule struct {
 	base_modules.IntegratableModule
 
-	cfg *configs.IBCConfig
-	m   sync.Mutex
+	m sync.Mutex
 
+	cfg    *configs.IBCConfig
 	logger *modules.Logger
 
 	// Only a single host is allowed at a time
@@ -89,51 +91,59 @@ func (m *ibcModule) HandleMessage(message *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 
-	switch message.MessageName() {
-
-	case messaging.IbcMessageContentType:
-		msg, err := codec.GetCodec().FromAny(message)
-		if err != nil {
-			return err
-		}
-		ibcMessage, ok := msg.(*ibcTypes.IbcMessage)
-		if !ok {
-			return fmt.Errorf("failed to cast message to IBCMessage")
-		}
-		return m.handleIBCMessage(ibcMessage)
-
-	default:
+	// Check the message is actually a valid IBC message
+	if message.MessageName() != messaging.IbcMessageContentType {
 		return coreTypes.ErrUnknownIBCMessageType(string(message.MessageName()))
 	}
-}
-
-// handleIBCMessage unpacks the IBC message to its type and calls the appropriate handler
-func (m *ibcModule) handleIBCMessage(message *ibcTypes.IbcMessage) error {
-	switch msg := message.Event.(type) {
-	case *ibcTypes.IbcMessage_Update:
-		return m.handleUpdateMessage(msg.Update)
-	case *ibcTypes.IbcMessage_Prune:
-		return m.handlePruneMessage(msg.Prune)
-	default:
-		return coreTypes.ErrUnknownIBCMessageType(fmt.Sprintf("%T", msg))
+	msg, err := codec.GetCodec().FromAny(message)
+	if err != nil {
+		return err
 	}
-}
-
-// handleUpdateMessage adds the updated store entry to the IBC store change mempool
-func (m *ibcModule) handleUpdateMessage(message *ibcTypes.UpdateIbcStore) error {
-	if m.host == nil {
-		return coreTypes.ErrHostDoesNotExist()
+	ibcMessage, ok := msg.(*ibcTypes.IbcMessage)
+	if !ok {
+		return fmt.Errorf("failed to cast message to IBCMessage")
 	}
-	// TODO: implement this
-	return nil
-}
-
-// handlePruneMessage adds a removal entry to the IBC store change mempool
-func (m *ibcModule) handlePruneMessage(message *ibcTypes.PruneIbcStore) error {
-	if m.host == nil {
-		return coreTypes.ErrHostDoesNotExist()
+	if err := ibcMessage.ValidateBasic(); err != nil {
+		return err
 	}
-	// TODO: implement this
+
+	// Convert IBC message to a utility Transaction
+	tx, err := ConvertIBCMessageToTx(ibcMessage)
+	if err != nil {
+		return err
+	}
+
+	// Sign the transaction
+	pkBz, err := hex.DecodeString(m.cfg.PrivateKey)
+	if err != nil {
+		return err
+	}
+	pk, err := crypto.NewPrivateKeyFromBytes(pkBz)
+	if err != nil {
+		return err
+	}
+	signableBz, err := tx.SignableBytes()
+	if err != nil {
+		return err
+	}
+	signature, err := pk.Sign(signableBz)
+	if err != nil {
+		return err
+	}
+	tx.Signature = &coreTypes.Signature{
+		Signature: signature,
+		PublicKey: pk.PublicKey().Bytes(),
+	}
+
+	// Marshall the Transaction and send it to the utility module
+	txBz, err := codec.GetCodec().Marshal(tx)
+	if err != nil {
+		return err
+	}
+	if err := m.GetBus().GetUtilityModule().HandleTransaction(txBz); err != nil {
+		return err
+	}
+	m.logger.Info().Str("message_type", "IbcMessage").Msg("Successfully added a new message to the mempool!")
 	return nil
 }
 
