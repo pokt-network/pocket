@@ -1,5 +1,10 @@
 package modules
 
+import (
+	ics23 "github.com/cosmos/ics23/go"
+	"google.golang.org/protobuf/types/known/anypb"
+)
+
 //go:generate mockgen -destination=./mocks/ibc_module_mock.go github.com/pokt-network/pocket/shared/modules IBCModule,IBCHost,IBCHandler
 
 const IBCModuleName = "ibc"
@@ -9,6 +14,9 @@ type IBCModule interface {
 
 	// GetHost returns the IBC host of the modules
 	GetHost() IBCHost
+
+	// HandleMessage handles the given IBC message
+	HandleMessage(*anypb.Any) error
 }
 
 // IBCHost is the interface used by the host machine (a Pocket node) to interact with the IBC module
@@ -195,4 +203,14 @@ type IBCHandler interface {
 			relayer string,
 		) (Packet, error)
 	**/
+}
+
+type ProvableStore interface {
+	Get(key []byte) ([]byte, error)
+	Set(key, value []byte) error
+	Delete(key []byte) error
+	Root() []byte
+	GetCommitmentPrefix() coreTypes.CommitmentPrefix
+	CreateMembershipProof(key, value []byte) (*ics23.CommitmentProof, error)
+	CreateNonMembershipProof(key []byte) (*ics23.CommitmentProof, error)
 }
