@@ -82,8 +82,6 @@ func (s *rpcServer) PostV1ClientGetSession(ctx echo.Context) error {
 	})
 }
 
-// TECHDEBT: This will need to be changed when the HandleRelay function is actually implemented
-// because it copies data structures from v0. For example, AATs are no longer necessary in v1.
 func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 	utility := s.GetBus().GetUtilityModule()
 	_, err := utility.GetServicerModule()
@@ -114,22 +112,8 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 		Signature:         body.Meta.Signature,
 	}
 
-	payload := &coreTypes.RelayPayload{
-		Data:     body.Payload.Data,
-		Method:   body.Payload.Method,
-		HttpPath: body.Payload.Path,
-	}
-
-	headers := make(map[string]string)
-	for _, header := range body.Payload.Headers {
-		headers[header.Name] = header.Value
-	}
-	payload.Headers = headers
-
-	relayRequest := &coreTypes.Relay{
-		Payload: payload,
-		Meta:    relayMeta,
-	}
+	relayRequest := buildJsonRPCRelayPayload(&body)
+	relayRequest.Meta = relayMeta
 
 	relayResponse, err := utility.HandleRelay(relayRequest)
 	if err != nil {
@@ -230,4 +214,34 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 	}
 
 	return ctx.JSON(http.StatusOK, response)
+}
+
+// TECHDEBT: handle other relay payload types, e.g. JSON, GRPC, etc.
+func buildJsonRPCRelayPayload(body *RelayRequest) *coreTypes.Relay {
+	payload := &coreTypes.Relay_JsonRpcPayload{
+		JsonRpcPayload: &coreTypes.JSONRPCPayload{
+			JsonRpc: body.Payload.Jsonrpc,
+			Method:  body.Payload.Method,
+		},
+	}
+
+	if body.Payload.Id != nil {
+		payload.JsonRpcPayload.Id = []byte(*body.Payload.Id)
+	}
+
+	if body.Payload.Parameters != nil {
+		payload.JsonRpcPayload.Parameters = *body.Payload.Parameters
+	}
+
+	if body.Payload.Headers != nil {
+		headers := make(map[string]string)
+		for _, header := range *body.Payload.Headers {
+			headers[header.Name] = header.Value
+		}
+		payload.JsonRpcPayload.Headers = headers
+	}
+
+	return &coreTypes.Relay{
+		RelayPayload: payload,
+	}
 }
