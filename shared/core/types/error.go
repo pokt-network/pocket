@@ -38,7 +38,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 145
+// NextCode: 146
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -184,6 +184,7 @@ const (
 	CodeCreatingProofError                Code = 142
 	CodeUnknownIBCMessageTypeError        Code = 143
 	CodeNilFieldError                     Code = 144
+	CodeUpdatingIBCStoreDBError           Code = 145
 )
 
 const (
@@ -326,6 +327,7 @@ const (
 	CreatingProofError                = "an error occurred creating the CommitmentProof"
 	UnknownIBCMessageTypeError        = "the ibc message type is not recognized"
 	NilFieldError                     = "field cannot be nil"
+	UpdatingIBCStoreDBError           = "an error occurred updating the ibc store postgres database"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -887,4 +889,8 @@ func ErrUnknownIBCMessageType(messageType string) Error {
 
 func ErrNilField(field string) Error {
 	return NewError(CodeNilFieldError, fmt.Sprintf("%s: %s", NilFieldError, field))
+}
+
+func ErrUpdatingIBCStoreDB(err error) Error {
+	return NewError(CodeUpdatingIBCStoreDBError, fmt.Sprintf("%s: %s", UpdatingIBCStoreDBError, err.Error()))
 }
