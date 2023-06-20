@@ -1,5 +1,5 @@
 secret:
   ignored-matches:
-  - match: d1585b49ffa864bfb76b2432b26933a866c3cf621a9d5dd41690c1568edd85ed
-    name: Generic High Entropy Secret - /Users/olshansky/workspace/pocket/pocket/charts/pocket/templates/configmap-genesis.yaml
+    - match: d1585b49ffa864bfb76b2432b26933a866c3cf621a9d5dd41690c1568edd85ed
+      name: Generic High Entropy Secret - charts/pocket/templates/configmap-genesis.yaml
 version: 2
