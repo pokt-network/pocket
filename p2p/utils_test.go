@@ -83,6 +83,7 @@ func validatorId(i int) string {
 	return fmt.Sprintf(serviceURLFormat, i)
 }
 
+//nolint:unused // TODO(@bryanchriswhite): do we need this?
 func waitForNetworkSimulationCompletion(t *testing.T, wg *sync.WaitGroup) {
 	// Wait for all messages to be transmitted
 	done := make(chan struct{})
@@ -104,6 +105,8 @@ func waitForNetworkSimulationCompletion(t *testing.T, wg *sync.WaitGroup) {
 // ~~~~~~ RainTree Unit Test Mocks ~~~~~~
 
 // createP2PModules returns a map of configured p2pModules keyed by an incremental naming convention (eg: `val_1`, `val_2`, etc.)
+//
+//nolint:unused // TODO(@bryanchriswhite): do we need this?
 func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus, netMock mocknet.Mocknet) (p2pModules map[string]*p2pModule) {
 	peerIDs := setupMockNetPeers(t, netMock, len(busMocks))
 
@@ -117,6 +120,7 @@ func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus, netMock moc
 	return
 }
 
+//nolint:unused // TODO(@bryanchriswhite): do we need this?
 func setupMockNetPeers(t *testing.T, netMock mocknet.Mocknet, numPeers int) (peerIDs []libp2pPeer.ID) {
 	// Add a libp2p peers/hosts to the `MockNet` with the keypairs corresponding
 	// to the genesis validators' keypairs
@@ -146,6 +150,8 @@ func setupMockNetPeers(t *testing.T, netMock mocknet.Mocknet, numPeers int) (pee
 
 // createMockRuntimeMgrs creates `numValidators` instances of mocked `RuntimeMgr` that are essentially
 // representing the runtime environments of the validators that we will use in our tests
+//
+//nolint:unused // TODO(@bryanchriswhite): do we need this?
 func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr {
 	ctrl := gomock.NewController(t)
 	mockRuntimeMgrs := make([]modules.RuntimeMgr, numValidators)
@@ -180,6 +186,7 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 	return mockRuntimeMgrs
 }
 
+//nolint:unused // TODO(@bryanchriswhite): do we need this?
 func createMockBuses(t *testing.T, runtimeMgrs []modules.RuntimeMgr) []*mockModules.MockBus {
 	mockBuses := make([]*mockModules.MockBus, len(runtimeMgrs))
 	for i := range mockBuses {
@@ -227,6 +234,8 @@ func createMockGenesisState(valKeys []cryptoPocket.PrivateKey) *genesis.GenesisS
 }
 
 // Bus Mock - needed to return the appropriate modules when accessed
+//
+//nolint:unused // TODO(@bryanchriswhite): do we need this?
 func prepareBusMock(busMock *mockModules.MockBus,
 	persistenceMock *mockModules.MockPersistenceModule,
 	consensusMock *mockModules.MockConsensusModule,
@@ -238,6 +247,8 @@ func prepareBusMock(busMock *mockModules.MockBus,
 }
 
 // Consensus mock - only needed for validatorMap access
+//
+//nolint:unused // TODO(@bryanchriswhite): do we need this?
 func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus) *mockModules.MockConsensusModule {
 	ctrl := gomock.NewController(t)
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
@@ -279,6 +290,8 @@ func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisS
 }
 
 // Telemetry mock - Needed to help with proper counts for number of expected network writes
+//
+//nolint:unused // TODO(@bryanchriswhite): do we need this?
 func prepareTelemetryMock(t *testing.T, busMock *mockModules.MockBus, valId string, wg *sync.WaitGroup, expectedNumNetworkWrites int) *mockModules.MockTelemetryModule {
 	ctrl := gomock.NewController(t)
 	telemetryMock := mockModules.NewMockTelemetryModule(ctrl)
@@ -309,6 +322,8 @@ func prepareNoopTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAge
 }
 
 // Events metric mock - Needed to help with proper counts for number of expected network writes
+//
+//nolint:unused // TODO(@bryanchriswhite): do we need this?
 func prepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup, expectedNumNetworkWrites int) *mockModules.MockEventMetricsAgent {
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)

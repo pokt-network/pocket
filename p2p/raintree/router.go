@@ -55,7 +55,7 @@ type rainTreeRouter struct {
 	peersManager          *rainTreePeersManager
 	pstoreProvider        peerstore_provider.PeerstoreProvider
 	currentHeightProvider providers.CurrentHeightProvider
-	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
+	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64] //nolint:unused // TODO(@bryanchriswhite): do we need this?
 }
 
 func NewRainTreeRouter(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
