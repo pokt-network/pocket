@@ -5,8 +5,8 @@
   - [Code Review Guidelines](#code-review-guidelines)
     - [Expectations](#expectations)
   - [Best Practices](#best-practices)
-    - [Reviewing](#reviewing)
     - [Starting a Review](#starting-a-review)
+    - [Review Comments](#review-comments)
     - [A](#a)
     - [B](#b)
     - [Finishing a Review](#finishing-a-review)
@@ -58,7 +58,18 @@ Reviewers (and prospective reviewers) are encouraged to engage in reviews of cod
 
 ## Best Practices
 
-### Reviewing
+### Starting a Review
+
+Consider if it could be broken into smaller Pull Requests. If it is clear that it can be, summarize your thinking on how in your Review.
+
+If the commits be (re)organized (i.e. reordered and/or amended) such that there is a commit at which the tests are passing prior to the conclusion of the main change, that's a signal that there's likely a logic split which can be made at that point in such a (re)arrangement.
+
+Use the following guidelines to evaluate whether a Pull Request should be approved:
+
+- *Every* Pull Request should have tests or justification otherwise; esp. bug fixes.
+- *Every* Pull Request should have at least 1 approval from a team member internal or external to the project. Exceptions made by repository maintainer(s), as necessary, on a case-by-case basis.
+
+### Review Comments
 
 *tl;dr Use `SOS`, `TECHDEBT`, `TECHDEBT(XXX)`, `NIT` if you think it'll help the author get context on the next steps.*
 
@@ -70,17 +81,6 @@ When leaving review comments, consider if any of the following characterizations
 - `SOS`: Show Stopper. You feel strongly enought that it needs to be addressed now.
 
 Use the above to communicate next steps for the author to pursue based on the comment.
-
-### Starting a Review
-
-Consider if it could be broken into smaller Pull Requests. If it is clear that it can be, summarize your thinking on how in your Review.
-
-If the commits be (re)organized (i.e. reordered and/or amended) such that there is a commit at which the tests are passing prior to the conclusion of the main change, that's a signal that there's likely a logic split which can be made at that point in such a (re)arrangement.
-
-Use the following guidelines to evaluate whether a Pull Request should be approved:
-
-- *Every* Pull Request should have tests or justification otherwise; esp. bug fixes.
-- *Every* Pull Request should have at least 1 approval from a team member internal or external to the project. Exceptions made by repository maintainer(s), as necessary, on a case-by-case basis.
 
 During review, submit feedback using line comments (A); prefer "Add\[ing a\] single comment" over "Start[ing] a review" (B).
 
