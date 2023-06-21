@@ -81,13 +81,14 @@ type treeStore struct {
 }
 
 // GetTree returns the name, root hash, and nodeStore for the matching tree tree
-// stored in the TreeStore. This enables the caller to import the smt
-func (t *treeStore) GetTree(name string) *smt.SMT {
+// stored in the TreeStore. This enables the caller to import the smt and not
+// change the one stored
+func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 	if name == RootTreeName {
-		return t.rootTree.tree
+		return t.rootTree.tree.Root(), t.rootTree.nodeStore
 	}
 	if tree, ok := t.merkleTrees[name]; ok {
-		return tree.tree
+		return tree.tree.Root(), tree.nodeStore
 	}
 	return nil
 }
