@@ -4,6 +4,7 @@ package kvstore
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	badger "github.com/dgraph-io/badger/v3"
@@ -15,6 +16,10 @@ type KVStore interface {
 
 	// Lifecycle methods
 	Stop() error
+
+	// Atomic transaction methods
+	Prepare() error
+	Commit() error
 
 	// Accessors
 	// TODO: Add a proper iterator interface
@@ -137,6 +142,30 @@ func (store *badgerKVStore) Exists(key []byte) (bool, error) {
 		return false, err
 	}
 	return val != nil, nil
+}
+
+func (store *badgerKVStore) Prepare() error {
+	// updates := make(map[string]string)
+	// Start a writable transaction.
+	txn := store.db.NewTransaction(true)
+	defer txn.Discard()
+
+	// Use the transaction...
+	err := txn.Set([]byte("answer"), []byte("42"))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (store *badgerKVStore) Commit() error {
+	// Commit the transaction and check for error.
+	// txn := store.db.NewTransaction(true)
+	// if err := txn.Commit(); err != nil {
+	// 	return err
+	// }
+	return fmt.Errorf("not impl")
 }
 
 func (store *badgerKVStore) ClearAll() error {

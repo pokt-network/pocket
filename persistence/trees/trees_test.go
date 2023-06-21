@@ -1,8 +1,7 @@
-package trees
+package trees_test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"log"
 	"math/big"
 	"testing"
@@ -52,7 +51,7 @@ var (
 	genesisStateNumApplications = 1
 )
 
-func TestUpdate(t *testing.T) {
+func TestTreeStore_Update(t *testing.T) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	t.Cleanup(func() {
 		if err := pool.Purge(resource); err != nil {
@@ -60,21 +59,31 @@ func TestUpdate(t *testing.T) {
 		}
 	})
 
-	pmod := newTestPersistenceModule(t, dbUrl)
-	context := NewTestPostgresContext(t, 0, pmod)
-
 	t.Run("should update actor tree and commit", func(t *testing.T) {
+		pmod := newTestPersistenceModule(t, dbUrl)
+		context := NewTestPostgresContext(t, 0, pmod)
+
 		actor, err := createAndInsertDefaultTestApp(context)
 		assert.NoError(t, err)
+
 		t.Logf("actor inserted %+v", actor)
 		hash, err := context.ComputeStateHash()
 		assert.NoError(t, err)
-		t.Logf("hash: %+v", hash)
+		assert.NotEmpty(t, hash)
+	})
+
+	t.Run("should commit all", func(t *testing.T) {
+
+	})
+
+	t.Run("should rollback if any tree fails to update", func(t *testing.T) {
+
 	})
 }
 
 // createMockBus returns a mock bus with stubbed out functions for bus registration
 func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.MockBus {
+	t.Helper()
 	ctrl := gomock.NewController(t)
 	mockBus := mockModules.NewMockBus(ctrl)
 	mockBus.EXPECT().GetRuntimeMgr().Return(runtimeMgr).AnyTimes()
@@ -90,6 +99,7 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.Moc
 }
 
 func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.PersistenceModule {
+	t.Helper()
 	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
 	defer teardownDeterministicKeygen()
 
@@ -120,20 +130,8 @@ func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.Persiste
 	bus, err := runtime.CreateBus(runtimeMgr)
 	assert.NoError(t, err)
 
-	// txi, err := indexer.NewMemTxIndexer()
-	// assert.NoError(t, err)
-
-	// ts, err := trees.Create(
-	// 	bus,
-	// 	trees.WithTreeStoreDirectory(":memory:"),
-	// 	trees.WithTxIndexer(txi))
-	// assert.NoError(t, err)
-
 	persistenceMod, err := persistence.Create(bus)
 	assert.NoError(t, err)
-
-	fmt.Printf("bus.GetPersistenceModule().GetTxIndexer(): %v\n", bus.GetPersistenceModule().GetTxIndexer())
-	// fmt.Printf("ts: %v\n", ts)
 
 	return persistenceMod.(modules.PersistenceModule)
 }

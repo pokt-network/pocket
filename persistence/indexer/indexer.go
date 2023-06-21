@@ -29,6 +29,10 @@ type TxIndexer interface {
 	// GetByRecipient returns all transactions *sent to address*; may be ordered descending/ascending
 	GetByRecipient(recipient string, descending bool) ([]*coreTypes.IndexedTransaction, error)
 
+	// Transaction atomicity
+	Prepare() error
+	Commit() error
+
 	// Close stops the underlying db connection
 	Close() error
 }
@@ -104,6 +108,16 @@ func (indexer *txIndexer) GetBySender(sender string, descending bool) ([]*coreTy
 
 func (indexer *txIndexer) GetByRecipient(recipient string, descending bool) ([]*coreTypes.IndexedTransaction, error) {
 	return indexer.getAll(indexer.recipientKey(recipient), descending)
+}
+
+// Atmic transaction handling
+
+func (store *txIndexer) Prepare() error {
+	return fmt.Errorf("not impl")
+}
+
+func (store *txIndexer) Commit() error {
+	return fmt.Errorf("not impl")
 }
 
 func (indexer *txIndexer) Close() error {

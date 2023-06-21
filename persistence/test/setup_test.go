@@ -31,7 +31,6 @@ var (
 	DefaultChains     = []string{"0001"}
 	ChainsToUpdate    = []string{"0002"}
 	DefaultServiceURL = "https://foo.bar"
-	DefaultPoolName   = "TESTING_POOL"
 
 	DefaultDeltaBig   = big.NewInt(100)
 	DefaultAccountBig = big.NewInt(1000000)
@@ -44,9 +43,6 @@ var (
 	DefaultStakeStatus     = int32(coreTypes.StakeStatus_Staked)
 	DefaultPauseHeight     = int64(-1) // pauseHeight=-1 implies not paused
 	DefaultUnstakingHeight = int64(-1) // unstakingHeight=-1 implies not unstaking
-
-	OlshanskyURL    = "https://olshansky.info"
-	OlshanskyChains = []string{"OLSH"}
 
 	testSchema = "test_schema"
 

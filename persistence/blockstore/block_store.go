@@ -49,6 +49,19 @@ func NewBlockStore(path string) (BlockStore, error) {
 	}, nil
 }
 
+type Tx struct {
+	Height uint64
+	Block  *coreTypes.Block
+}
+
+func (store *blockStore) Prepare() error {
+	return fmt.Errorf("not impl")
+}
+
+func (store *blockStore) Commit() error {
+	return fmt.Errorf("not impl")
+}
+
 // StoreBlock accepts a coreType Block and stores it for the given height.
 func (bs *blockStore) StoreBlock(height uint64, block *coreTypes.Block) error {
 	b, err := codec.GetCodec().Marshal(block)

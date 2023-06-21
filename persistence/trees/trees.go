@@ -102,8 +102,7 @@ type treeStore struct {
 	txi indexer.TxIndexer
 }
 
-// Update takes a transaction and a height and updates
-// all of the trees in the treeStore for that height.
+// Update takes a pgx transaction and a height and updates all of the trees in the TreeStore for that height.
 func (t *treeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
 	return t.updateMerkleTrees(pgtx, t.txi, height)
 }
@@ -192,13 +191,10 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 		}
 	}
 
-	if err := t.commit(); err != nil {
-		return "", fmt.Errorf("failed to commit: %w", err)
-	}
 	return t.getStateHash(), nil
 }
 
-func (t *treeStore) commit() error {
+func (t *treeStore) Commit() error {
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
 		if err := t.merkleTrees[tree].Commit(); err != nil {
 			return fmt.Errorf("failed to commit %s: %w", merkleTreeToString[tree], err)
