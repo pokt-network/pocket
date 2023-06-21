@@ -105,30 +105,6 @@ func (t *treeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
 	return t.updateMerkleTrees(pgtx, txi, height)
 }
 
-// NewStateTrees is the constructor object for a treeStore and initializes and configures a new
-// tree for the appropriate type of store, i.e. in-memory vs file system storage.
-func NewStateTrees(treesStoreDir string) (*treeStore, error) {
-	if treesStoreDir == ":memory:" {
-		return newMemStateTrees()
-	}
-
-	stateTrees := &treeStore{
-		treeStoreDir: treesStoreDir,
-		merkleTrees:  make(map[merkleTree]*smt.SMT, int(numMerkleTrees)),
-		nodeStores:   make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
-	}
-
-	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", treesStoreDir, merkleTreeToString[tree]))
-		if err != nil {
-			return nil, err
-		}
-		stateTrees.nodeStores[tree] = nodeStore
-		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
-	}
-	return stateTrees, nil
-}
-
 // DebugClearAll is used by the debug cli to completely reset all merkle trees.
 // This should only be called by the debug CLI.
 // TECHDEBT: Move this into a separate file with a debug build flag to avoid accidental usage in prod
@@ -141,20 +117,6 @@ func (t *treeStore) DebugClearAll() error {
 		t.merkleTrees[treeType] = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
 	}
 	return nil
-}
-
-// newMemStateTrees creates a new in-memory state tree
-func newMemStateTrees() (*treeStore, error) {
-	stateTrees := &treeStore{
-		merkleTrees: make(map[merkleTree]*smt.SMT, int(numMerkleTrees)),
-		nodeStores:  make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees)),
-	}
-	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		nodeStore := kvstore.NewMemKVStore() // For testing, `smt.NewSimpleMap()` can be used as well
-		stateTrees.nodeStores[tree] = nodeStore
-		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
-	}
-	return stateTrees, nil
 }
 
 // updateMerkleTrees updates all of the merkle trees in order defined by `numMerkleTrees`
