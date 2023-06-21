@@ -57,7 +57,7 @@ Reviewers (and prospective reviewers) are encouraged to engage in reviews of cod
 
 ### Reviewing
 
-tl;dr Use SOS, TECHDEBT(XXX), TECHDEBT, NIT if you think it'll help the author get context on next steps.
+TL;DR Use SOS, TECHDEBT(XXX), TECHDEBT, NIT if you think it'll help the author get context on next steps.
 
 When you leave reviews, if it is unclear from the reviewer to the author, please make sure to mention if:
 
