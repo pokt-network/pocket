@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"hash"
 	"log"
 
 	"github.com/jackc/pgx/v5"
@@ -21,6 +22,8 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/smt"
 )
+
+var smtTreeHasher hash.Hash = sha256.New()
 
 const (
 	RootTreeName         = "root"
@@ -89,12 +92,12 @@ func (t *treeStore) GetTree(name string) *smt.SMT {
 	return nil
 }
 
-// Update takes a transaction and a height and updates
-// all of the trees in the treeStore for that height.
 func (t *treeStore) Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
 	return t.updateMerkleTrees(pgtx, txi, height)
 }
 
+// NewStateTrees is the constructor object for a treeStore and initializes and configures a new
+// tree for the appropriate type of store, i.e. in-memory vs file system storage.
 func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 	if treesStoreDir == ":memory:" {
 		return newMemStateTrees()
@@ -106,7 +109,7 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 	}
 	rootTree := &stateTree{
 		name:      RootTreeName,
-		tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
+		tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher),
 		nodeStore: nodeStore,
 	}
 
@@ -123,7 +126,7 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 		}
 		tree := &stateTree{
 			name:      stateTreeNames[i],
-			tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
+			tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher),
 			nodeStore: nodeStore,
 		}
 		stateTrees.merkleTrees[stateTreeNames[i]] = tree
@@ -133,19 +136,19 @@ func NewStateTrees(treesStoreDir string) (*treeStore, error) {
 
 // DebugClearAll is used by the debug cli to completely reset all merkle trees.
 // This should only be called by the debug CLI.
+// TECHDEBT: Move this into a separate file with a debug build flag to avoid accidental usage in prod
 func (t *treeStore) DebugClearAll() error {
 	if err := t.rootTree.nodeStore.ClearAll(); err != nil {
 		return fmt.Errorf("failed to clear root node store: %w", err)
 	}
-	t.rootTree.tree = smt.NewSparseMerkleTree(t.rootTree.nodeStore, sha256.New())
+	t.rootTree.tree = smt.NewSparseMerkleTree(t.rootTree.nodeStore, smtTreeHasher)
 	for treeName, stateTree := range t.merkleTrees {
 		nodeStore := stateTree.nodeStore
 		if err := nodeStore.ClearAll(); err != nil {
 			return fmt.Errorf("failed to clear %s node store: %w", treeName, err)
 		}
-		stateTree.tree = smt.NewSparseMerkleTree(nodeStore, sha256.New())
+		stateTree.tree = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
 	}
-
 	return nil
 }
 
@@ -154,7 +157,7 @@ func newMemStateTrees() (*treeStore, error) {
 	nodeStore := kvstore.NewMemKVStore()
 	rootTree := &stateTree{
 		name:      RootTreeName,
-		tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
+		tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher),
 		nodeStore: nodeStore,
 	}
 	stateTrees := &treeStore{
@@ -165,7 +168,7 @@ func newMemStateTrees() (*treeStore, error) {
 		nodeStore := kvstore.NewMemKVStore() // For testing, `smt.NewSimpleMap()` can be used as well
 		tree := &stateTree{
 			name:      stateTreeNames[i],
-			tree:      smt.NewSparseMerkleTree(nodeStore, sha256.New()),
+			tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher),
 			nodeStore: nodeStore,
 		}
 		stateTrees.merkleTrees[stateTreeNames[i]] = tree
@@ -173,8 +176,8 @@ func newMemStateTrees() (*treeStore, error) {
 	return stateTrees, nil
 }
 
-// updateMerkleTrees updates all of the merkle trees that TreeStore manages.
-// * it returns an hash of the output or an error.
+// updateMerkleTrees updates all of the merkle trees in order defined by `numMerkleTrees`
+// * it returns the new state hash capturing the state of all the trees or an error if one occurred
 func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
 	for treeName := range t.merkleTrees {
 		switch treeName {
