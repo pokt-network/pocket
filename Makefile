@@ -577,3 +577,11 @@ search_interfaces: ## Greps and outputs all of the structs in the project (exclu
 .PHONY: search_protos
 search_protos: ## Finds all of the proto files in the project (excluding vendor)
 	find . -name "*.proto" -not -path "./vendor/*"
+
+.PHONY: ggshield_secrets_scan
+ggshield_secrets_scan: ## Scans the project for secrets using ggshield
+	ggshield secret scan path --recursive .
+
+.PHONY: ggshield_secrets_add
+ggshield_secrets_add: ## A helper that adds the last results from `make ggshield_secrets_scan`, store in `.cache_ggshield` to `.gitguardian.yaml`. See `ggshield for more configuratiosn`
+	ggshield secret ignore --last-found

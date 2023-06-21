@@ -7,10 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.60] - 2023-06-16
+## [0.0.0.60] - 2023-06-21
 
 - Add a LocalContext type and place-holders for servicer token usage support to persistence 
 - Add a TODO comment for supporting different relay payload types in core types
+
+## [0.0.0.59] - 2023-06-14
+
+- Added validators for JSONRPC and REST payloads to shared types
+
+## [0.0.0.58] - 2023-05-28
+
+- Added a comment on session.proto regarding use of maps for session's actors
+- Added two separate types for JSONRPC and JSON relays under relay proto
 
 ## [0.0.0.61] - 2023-06-14
 

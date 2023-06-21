@@ -414,7 +414,7 @@ func (s *servicer) calculateAppSessionTokens(session *coreTypes.Session) (*big.I
 }
 
 // executeHTTPRequest performs the HTTP request that sends the relay to the chain's/service's URL.
-func (s *servicer) executeHTTPRelay(meta *coreTypes.RelayMeta, payload *coreTypes.JsonRpcPayload) (*coreTypes.RelayResponse, error) {
+func (s *servicer) executeHTTPRelay(meta *coreTypes.RelayMeta, payload *coreTypes.JSONRPCPayload) (*coreTypes.RelayResponse, error) {
 	if meta == nil || meta.RelayChain == nil || meta.RelayChain.Id == "" {
 		return nil, fmt.Errorf("Relay for application %s does not specify relay chain", meta.ApplicationAddress)
 	}
