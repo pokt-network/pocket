@@ -1,13 +1,16 @@
 # Table of Contents <!-- omit in toc -->
 
 - [Code Quality](#code-quality)
-- [Code Reviews](#code-reviews)
-- [Code Review Guidelines](#code-review-guidelines)
+  - [Code Reviews](#code-reviews)
+  - [Code Review Guidelines](#code-review-guidelines)
     - [Expectations](#expectations)
-- [Best Practices](#best-practices)
+  - [Best Practices](#best-practices)
     - [Reviewing](#reviewing)
     - [Starting a Review](#starting-a-review)
+    - [A](#a)
+    - [B](#b)
     - [Finishing a Review](#finishing-a-review)
+    - [C](#c)
     - [Merging](#merging)
 
 # Code Quality
@@ -57,16 +60,16 @@ Reviewers (and prospective reviewers) are encouraged to engage in reviews of cod
 
 ### Reviewing
 
-TL;DR Use SOS, TECHDEBT(XXX), TECHDEBT, NIT if you think it'll help the author get context on next steps.
+*tl;dr Use `SOS`, `TECHDEBT`, `TECHDEBT(XXX)`, `NIT` if you think it'll help the author get context on the next steps.*
 
-When you leave reviews, if it is unclear from the reviewer to the author, please make sure to mention if:
+When leaving review comments, consider if any of the following characterizations applies and prefix the comment, respectively:
 
-- NIT: Comment is a nitpick
-- TECHDEBT: Comment should have a TECHDEBT comment w/o a ticket
-- TECHDEBT(XXX): Comment should have a TECHDEBT comment but imporant enough that it requires a ticket to track the work in the near future
-- SOS: Show Stopper. You feel strongly it needs to be addressed now
+- `NIT`: Comment is a nitpick
+- `TECHDEBT`: Comment should have a TECHDEBT comment w/o a ticket
+- `TECHDEBT(XXX)`: Comment should have a TECHDEBT comment but imporant enough that it requires a ticket to track the work in the near future
+- `SOS`: Show Stopper. You feel strongly enought that it needs to be addressed now.
 
-Only use the above if you think normal comments / TODOs are not self explanatory enough.
+Use the above to communicate next steps for the author to pursue based on the comment.
 
 ### Starting a Review
 
