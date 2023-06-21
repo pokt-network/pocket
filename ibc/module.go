@@ -26,11 +26,11 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 }
 
 func (m *ibcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	m.logger.Info().Msg("🪐 creating IBC module 🪐")
 	*m = ibcModule{
 		cfg:    bus.GetRuntimeMgr().GetConfig().IBC,
 		logger: logger.Global.CreateLoggerForModule(modules.IBCModuleName),
 	}
+	m.logger.Info().Msg("🪐 creating IBC module 🪐")
 
 	for _, option := range options {
 		option(m)

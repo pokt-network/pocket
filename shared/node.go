@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/ibc"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
@@ -47,6 +48,7 @@ func (m *Node) Create(bus modules.Bus, options ...modules.ModuleOption) (modules
 		logger.Create,
 		rpc.Create,
 		p2p.Create,
+		ibc.Create,
 	} {
 		if _, err := mod(bus); err != nil {
 			return nil, err
