@@ -356,7 +356,7 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 	return nil
 }
 
-func (t *treeStore) updateIbcTree(keys [][]byte, values [][]byte) error {
+func (t *treeStore) updateIbcTree(keys, values [][]byte) error {
 	if len(keys) != len(values) {
 		return fmt.Errorf("keys and values must be the same length")
 	}

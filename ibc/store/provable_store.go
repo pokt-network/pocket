@@ -5,7 +5,6 @@ import (
 
 	ics23 "github.com/cosmos/ics23/go"
 	"github.com/pokt-network/pocket/ibc/host"
-	"github.com/pokt-network/pocket/persistence/kvstore"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/smt"
@@ -14,10 +13,12 @@ import (
 var _ modules.ProvableStore = &provableStore{}
 
 // provableStore implements the ProvableStore interface and wraps an SMT
+// it operates in memory and thus cannot make any changes to the underlying
+// database. All changes must be propagated through the `IbcMessage` type
+// and added to the mempool for inclusion in the next block
 type provableStore struct {
-	prefix    coreTypes.CommitmentPrefix
-	tree      *smt.SMT
-	nodeStore kvstore.KVStore
+	prefix coreTypes.CommitmentPrefix
+	tree   *smt.SMT
 }
 
 // GetCommitmentPrefix returns the commitment prefix of the provable store
