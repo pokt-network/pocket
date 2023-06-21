@@ -55,9 +55,10 @@ type servicer struct {
 	config *configs.ServicerConfig
 
 	// This lock is needed to allow multiple GO routines update the totalTokens cache as part of serving relays
+	// NB: per the description in pkg.go.dev/sync#Map, we have chosen explicitly not to use sync.Map
 	rwlock sync.RWMutex
 	// totalTokens is a mapping from application public keys to session metadata to keep track of session tokens
-	// INVESTIGATE: considering the computational complexity, should we skip caching this value?
+	// OPTIMIZE: There is an opportunity to simplify the code through various means such as, but not limited to, avoiding extra math.big operations or excess GetParam calls
 	totalTokens map[string]*sessionTokens
 }
 
@@ -152,7 +153,8 @@ func (s *servicer) HandleRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse
 
 // isRelayVolumeApplicable returns:
 //  1. The signed digest of a relay/response pair
-//  2. Whether there was a collision for the specific chain (i.e. should the service proof be stored for claiming later)
+//  2. Whether a legit relay eligible for claiming rewards
+//     Legit means satisfying at-least the following conditions: not-replay and having a proper signature,
 func (s *servicer) isRelayVolumeApplicable(session *coreTypes.Session, relay *coreTypes.Relay, response *coreTypes.RelayResponse) (digest, serializedRelayRes []byte, collides bool, err error) {
 	relayReqResBytes, err := codec.GetCodec().Marshal(&coreTypes.RelayReqRes{Relay: relay, Response: response})
 	if err != nil {
