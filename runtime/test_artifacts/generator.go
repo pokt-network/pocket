@@ -10,7 +10,6 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
-	"github.com/pokt-network/pocket/shared/core/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -64,7 +63,7 @@ func WithActors(actors []*coreTypes.Actor, actorKeys []string) func(*genesis.Gen
 		genesis.Accounts = append(genesis.Accounts, newActorAccounts...)
 		for _, actor := range actors {
 			switch actor.ActorType {
-			case types.ActorType_ACTOR_TYPE_APP:
+			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				genesis.Applications = append(genesis.Applications, actor)
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
 				genesis.Validators = append(genesis.Validators, actor)

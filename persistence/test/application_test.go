@@ -5,23 +5,24 @@ import (
 	"log"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/types"
+	ptypes "github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/stretchr/testify/require"
 )
 
 func FuzzApplication(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		newTestGenericActor(types.ApplicationActor, newTestApp),
-		getGenericActor(types.ApplicationActor, getTestApp),
-		types.ApplicationActor)
+		newTestGenericActor(ptypes.ApplicationActor, newTestApp),
+		getGenericActor(ptypes.ApplicationActor, getTestApp),
+		ptypes.ApplicationActor)
 }
 
 func TestGetApplicationsUpdatedAtHeight(t *testing.T) {
 	getApplicationsUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*coreTypes.Actor, error) {
-		return db.GetActorsUpdated(types.ApplicationActor, height)
+		return db.GetActorsUpdated(ptypes.ApplicationActor, height)
 	}
 	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestApp, getApplicationsUpdatedFunc, 1)
 }
