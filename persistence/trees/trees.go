@@ -24,6 +24,8 @@ import (
 	"github.com/pokt-network/smt"
 )
 
+// smtTreeHasher sets the hasher used by the tree SMT trees
+// as a package level variable for visibility and internal use.
 var smtTreeHasher hash.Hash = sha256.New()
 
 var merkleTreeToString = map[merkleTree]string{

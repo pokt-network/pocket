@@ -1,7 +1,6 @@
 package trees
 
 import (
-	"crypto/sha256"
 	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -54,7 +53,7 @@ func (t *treeStore) setupTrees() error {
 			return err
 		}
 		t.nodeStores[tree] = nodeStore
-		t.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
+		t.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
 	}
 
 	return nil
@@ -67,7 +66,7 @@ func (t *treeStore) setupInMemory() error {
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
 		nodeStore := kvstore.NewMemKVStore() // For testing, `smt.NewSimpleMap()` can be used as well
 		t.nodeStores[tree] = nodeStore
-		t.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
+		t.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
 	}
 
 	return nil
