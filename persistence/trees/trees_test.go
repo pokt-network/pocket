@@ -1,8 +1,6 @@
 package trees
 
-import (
-	"testing"
-)
+import "testing"
 
 // TECHDEBT #836: Tests added in https://github.com/pokt-network/pocket/pull/836
 func TestTreeStore_Update(t *testing.T) {
