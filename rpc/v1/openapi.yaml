@@ -129,9 +129,9 @@ paths:
     post:
       tags:
         - client
-      summary: Sends a relay to the servicer to receive a response
+      summary: Sends a relay to the servicer to receive a response. The payload is the serialized form of one of the supported formats in a protobuf.
       requestBody:
-        description: Request a relay to be sent on behalf of your application
+        description: Request a relay to be sent on behalf of your application. The server is responsible for unpacking the payload as one of the supported formats.
         content:
           application/json:
             schema:
@@ -1696,17 +1696,18 @@ components:
     Payload:
       type: object
       required:
-        - data
         - method
-        - path
-        - headers
+        - jsonrpc
       properties:
-        data:
+        id:
+          type: string
+        jsonrpc:
           type: string
         method:
           type: string
-        path:
+        parameters:
           type: string
+          format: byte
         headers:
           $ref: "#/components/schemas/Headers"
     Pool:
