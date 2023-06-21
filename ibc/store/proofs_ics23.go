@@ -133,7 +133,7 @@ func convertSideNodesToSteps(sideNodes [][]byte, path []byte) []*ics23.InnerOp {
 	for i := 0; i < len(sideNodes); i++ {
 		var prefix, suffix []byte
 		prefix = append(prefix, innerPrefix...)
-		if getPathBit(path[:], len(sideNodes)-1-i) == left {
+		if getPathBit(path, len(sideNodes)-1-i) == left {
 			suffix = make([]byte, 0, len(sideNodes[i]))
 			suffix = append(suffix, sideNodes[i]...)
 		} else {

@@ -3,7 +3,7 @@ module github.com/pokt-network/pocket
 go 1.18
 
 // TECHDEBT: remove once upstream PR is merged (see: https://github.com/cosmos/ics23/pull/153)
-replace github.com/cosmos/ics23/go => ../ics23/go
+replace github.com/cosmos/ics23/go => github.com/h5law/ics23/go v0.0.0-20230619152251-56d948cafb83
 
 // TECHDEBT: remove once upstream PR is merged (see: https://github.com/regen-network/gocuke/pull/12)
 replace github.com/regen-network/gocuke => github.com/pokt-network/gocuke v0.0.1
