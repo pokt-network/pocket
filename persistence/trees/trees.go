@@ -90,7 +90,7 @@ func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 	if tree, ok := t.merkleTrees[name]; ok {
 		return tree.tree.Root(), tree.nodeStore
 	}
-	return nil
+	return nil, nil
 }
 
 func (t *treeStore) Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
