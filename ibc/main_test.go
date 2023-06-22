@@ -53,6 +53,8 @@ func newTestIbcModule(bus modules.Bus) modules.IBCModule {
 }
 
 // Prepares a runtime environment for testing along with a genesis state, a persistence module and a utility module
+//
+//nolint:unparam // Test suite is not fully built out yet
 func prepareEnvironment(
 	t *testing.T,
 	numValidators, // nolint:unparam // we are not currently modifying parameter but want to keep it modifiable in the future
@@ -99,6 +101,7 @@ func prepareEnvironment(
 	return runtimeCfg, testUtilityMod, testPersistenceMod, testIbcMod
 }
 
+//nolint:unparam // Test suite is not fully built out yet
 func newTestRuntimeConfig(
 	numValidators,
 	numServicers,
