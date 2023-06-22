@@ -11,7 +11,6 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -92,9 +91,6 @@ func (m *ibcModule) HandleMessage(message *anypb.Any) error {
 	defer m.m.Unlock()
 
 	// Check the message is actually a valid IBC message
-	if message.MessageName() != messaging.IbcMessageContentType {
-		return coreTypes.ErrUnknownIBCMessageType(string(message.MessageName()))
-	}
 	msg, err := codec.GetCodec().FromAny(message)
 	if err != nil {
 		return err
