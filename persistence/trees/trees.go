@@ -213,7 +213,7 @@ func (t *treeStore) commit() error {
 func (t *treeStore) getStateHash() string {
 	for _, stateTree := range t.merkleTrees {
 		if err := t.rootTree.tree.Update([]byte(stateTree.name), stateTree.tree.Root()); err != nil {
-			logger.Global.Err(err).Str("treeStore", "failed to update root tree: %s")
+			log.Fatalf("failed to update root tree with %s tree's hash: %v", stateTree.name, err)
 		}
 	}
 	return hex.EncodeToString(t.rootTree.tree.Root())
