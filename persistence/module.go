@@ -235,6 +235,10 @@ func (m *persistenceModule) GetTxIndexer() indexer.TxIndexer {
 	return m.txIndexer
 }
 
+func (m *persistenceModule) GetTreeStore() modules.TreeStoreModule {
+	return m.stateTrees
+}
+
 func (m *persistenceModule) GetNetworkID() string {
 	return m.networkId
 }
