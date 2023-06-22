@@ -8,32 +8,41 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/multiformats/go-multiaddr"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/p2p/config"
+	"github.com/pokt-network/pocket/p2p/protocol"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mock_types "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/messaging"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 // https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2
 const testIP6ServiceURL = "[2a00:1450:4005:802::2004]:8080"
 
 // TECHDEBT(#609): move & de-dup.
-var testLocalServiceURL = fmt.Sprintf("127.0.0.1:%d", defaults.DefaultP2PPort)
+var (
+	testLocalServiceURL = fmt.Sprintf("127.0.0.1:%d", defaults.DefaultP2PPort)
+	noopHandler         = func(data []byte) error { return nil }
+)
 
 func TestBackgroundRouter_AddPeer(t *testing.T) {
-	testRouter := newTestRouter(t, nil)
+	testRouter := newTestRouter(t, nil, noopHandler)
 	libp2pPStore := testRouter.host.Peerstore()
 
 	// NB: assert initial state
@@ -81,7 +90,7 @@ func TestBackgroundRouter_AddPeer(t *testing.T) {
 }
 
 func TestBackgroundRouter_RemovePeer(t *testing.T) {
-	testRouter := newTestRouter(t, nil)
+	testRouter := newTestRouter(t, nil, noopHandler)
 	peerstore := testRouter.host.Peerstore()
 
 	// NB: assert initial state
@@ -114,6 +123,73 @@ func TestBackgroundRouter_RemovePeer(t *testing.T) {
 	require.Len(t, existingPeerstoreAddrs, 1)
 }
 
+func TestBackgroundRouter_Validation(t *testing.T) {
+	ctx := context.Background()
+	libp2pMockNet := mocknet.New()
+
+	invalidWireFormatData := []byte("test message")
+	invalidPocketEnvelope := &anypb.Any{
+		TypeUrl: "/test",
+		Value:   invalidWireFormatData,
+	}
+	invalidPocketEnvelopeBz, err := proto.Marshal(invalidPocketEnvelope)
+	require.NoError(t, err)
+
+	invalidMessages := [][]byte{
+		invalidWireFormatData,
+		invalidPocketEnvelopeBz,
+	}
+
+	receivedChan := make(chan struct{})
+
+	receiverPrivKey, receiverPeer := newTestPeer(t)
+	receiverHost := newTestHost(t, libp2pMockNet, receiverPrivKey)
+	receiverRouter := newRouterWithSelfPeerAndHost(t, receiverPeer, receiverHost, func(data []byte) error {
+		receivedChan <- struct{}{}
+		return nil
+	})
+
+	t.Cleanup(func() {
+		err := receiverRouter.Close()
+		require.NoError(t, err)
+	})
+
+	senderPrivKey, _ := newTestPeer(t)
+	senderHost := newTestHost(t, libp2pMockNet, senderPrivKey)
+	gossipPubsub, err := pubsub.NewGossipSub(ctx, senderHost)
+	require.NoError(t, err)
+
+	err = libp2pMockNet.LinkAll()
+	require.NoError(t, err)
+
+	receiverAddrInfo, err := utils.Libp2pAddrInfoFromPeer(receiverPeer)
+	require.NoError(t, err)
+
+	err = senderHost.Connect(ctx, receiverAddrInfo)
+	require.NoError(t, err)
+
+	topic, err := gossipPubsub.Join(protocol.BackgroundTopicStr)
+	require.NoError(t, err)
+
+	for _, invalidMessageBz := range invalidMessages {
+		err = topic.Publish(ctx, invalidMessageBz)
+		require.NoError(t, err)
+	}
+
+	select {
+	case <-time.After(time.Second * 2):
+		// TECHDEBT: find a better way to prove that pre-propagation validation
+		// works as expected. Ideally, we should be able to distinguish which
+		// invalid message was received in the event of failure.
+		//
+		// CONSIDERATION: we could use the telemetry module mock to set expectations
+		// for validation failure telemetry calls, which would probably be useful in
+		// their own right.
+	case <-receivedChan:
+		t.Fatal("expected message to not be received")
+	}
+}
+
 func TestBackgroundRouter_Broadcast(t *testing.T) {
 	const (
 		numPeers            = 4
@@ -138,17 +214,31 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 		libp2pMockNet   = mocknet.New()
 	)
 
-	// setup 4 libp2p hosts to listen for incoming streams from the test backgroundRouter
+	testPocketEnvelope, err := messaging.PackMessage(&anypb.Any{
+		TypeUrl: "/test",
+		Value:   []byte(testMsg),
+	})
+	require.NoError(t, err)
+
+	testPocketEnvelopeBz, err := proto.Marshal(testPocketEnvelope)
+	require.NoError(t, err)
+
+	// setup 4 receiver routers to listen for incoming messages from the sender router
 	for i := 0; i < numPeers; i++ {
 		broadcastWaitgroup.Add(1)
 		bootstrapWaitgroup.Add(1)
 
-		privKey, selfPeer := newTestPeer(t)
+		privKey, peer := newTestPeer(t)
 		host := newTestHost(t, libp2pMockNet, privKey)
 		testHosts = append(testHosts, host)
 		expectedPeerIDs[i] = host.ID().String()
-		rtr := newRouterWithSelfPeerAndHost(t, selfPeer, host)
-		go readSubscription(t, ctx, &broadcastWaitgroup, rtr, &seenMessagesMutext, seenMessages)
+		newRouterWithSelfPeerAndHost(t, peer, host, func(data []byte) error {
+			seenMessagesMutext.Lock()
+			broadcastWaitgroup.Done()
+			seenMessages[host.ID().String()] = struct{}{}
+			seenMessagesMutext.Unlock()
+			return nil
+		})
 	}
 
 	// bootstrap off of arbitrary testHost
@@ -156,12 +246,12 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 
 	// set up a test backgroundRouter
 	testRouterHost := newTestHost(t, libp2pMockNet, privKey)
-	testRouter := newRouterWithSelfPeerAndHost(t, selfPeer, testRouterHost)
+	testRouter := newRouterWithSelfPeerAndHost(t, selfPeer, testRouterHost, noopHandler)
 	testHosts = append(testHosts, testRouterHost)
 
 	// simulate network links between each to every other
 	// (i.e. fully-connected network)
-	err := libp2pMockNet.LinkAll()
+	err = libp2pMockNet.LinkAll()
 	require.NoError(t, err)
 
 	// setup notifee/notify BEFORE bootstrapping
@@ -189,7 +279,7 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 
 		// broadcast message
 		t.Log("broadcasting...")
-		err := testRouter.Broadcast([]byte(testMsg))
+		err := testRouter.Broadcast(testPocketEnvelopeBz)
 		require.NoError(t, err)
 
 		// wait for broadcast to be received by all peers
@@ -241,7 +331,7 @@ func bootstrap(t *testing.T, ctx context.Context, testHosts []libp2pHost.Host) {
 }
 
 // TECHDEBT(#609): move & de-duplicate
-func newTestRouter(t *testing.T, libp2pMockNet mocknet.Mocknet) *backgroundRouter {
+func newTestRouter(t *testing.T, libp2pMockNet mocknet.Mocknet, handler typesP2P.MessageHandler) *backgroundRouter {
 	t.Helper()
 
 	privKey, selfPeer := newTestPeer(t)
@@ -256,10 +346,10 @@ func newTestRouter(t *testing.T, libp2pMockNet mocknet.Mocknet) *backgroundRoute
 		require.NoError(t, err)
 	})
 
-	return newRouterWithSelfPeerAndHost(t, selfPeer, host)
+	return newRouterWithSelfPeerAndHost(t, selfPeer, host, handler)
 }
 
-func newRouterWithSelfPeerAndHost(t *testing.T, selfPeer typesP2P.Peer, host libp2pHost.Host) *backgroundRouter {
+func newRouterWithSelfPeerAndHost(t *testing.T, selfPeer typesP2P.Peer, host libp2pHost.Host, handler typesP2P.MessageHandler) *backgroundRouter {
 	t.Helper()
 
 	ctrl := gomock.NewController(t)
@@ -268,7 +358,7 @@ func newRouterWithSelfPeerAndHost(t *testing.T, selfPeer typesP2P.Peer, host lib
 		P2P: &configs.P2PConfig{
 			IsClientOnly: false,
 		},
-	})
+	}).AnyTimes()
 
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
@@ -289,6 +379,7 @@ func newRouterWithSelfPeerAndHost(t *testing.T, selfPeer typesP2P.Peer, host lib
 		PeerstoreProvider:     pstoreProviderMock,
 		CurrentHeightProvider: consensusMock,
 		Host:                  host,
+		Handler:               handler,
 	})
 	require.NoError(t, err)
 
@@ -344,32 +435,4 @@ func newTestHost(t *testing.T, mockNet mocknet.Mocknet, privKey cryptoPocket.Pri
 
 	// construct mock host
 	return newMockNetHostFromPeer(t, mockNet, privKey, peer)
-}
-
-func readSubscription(
-	t *testing.T,
-	ctx context.Context,
-	broadcastWaitGroup *sync.WaitGroup,
-	rtr *backgroundRouter,
-	mu *sync.Mutex,
-	seenMsgs map[string]struct{},
-) {
-	t.Helper()
-
-	for {
-		if err := ctx.Err(); err != nil {
-			if err != context.Canceled || err != context.DeadlineExceeded {
-				require.NoError(t, err)
-			}
-			return
-		}
-
-		_, err := rtr.subscription.Next(ctx)
-		require.NoError(t, err)
-
-		mu.Lock()
-		broadcastWaitGroup.Done()
-		seenMsgs[rtr.host.ID().String()] = struct{}{}
-		mu.Unlock()
-	}
 }

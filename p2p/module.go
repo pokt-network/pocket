@@ -67,20 +67,6 @@ func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, e
 	return new(p2pModule).Create(bus, options...)
 }
 
-// TODO_THIS_COMMIT: rename (WithHost) & consider moving to testutil file
-// WithHostOption associates an existing (i.e. "started") libp2p `host.Host`
-// with this module, instead of creating a new one on `#Start()`.
-// Primarily intended for testing.
-func WithHostOption(host libp2pHost.Host) modules.ModuleOption {
-	return func(m modules.InitializableModule) {
-		mod, ok := m.(*p2pModule)
-		if ok {
-			mod.host = host
-			mod.logger.Debug().Msg("using host provided via `WithHostOption`")
-		}
-	}
-}
-
 func (m *p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
 	logger.Global.Debug().Msg("Creating P2P module")
 	*m = p2pModule{
@@ -157,7 +143,7 @@ func (m *p2pModule) Start() (err error) {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	// Return early if host has already been started (e.g. via `WithHostOption`)
+	// Return early if host has already been started (e.g. via `WithHost`)
 	if m.host == nil {
 		// Libp2p hosts provided via `WithHost()` option are destroyed when
 		// `#Stop()`ing the module. Therefore, a new one must be created.
