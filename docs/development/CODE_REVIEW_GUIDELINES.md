@@ -1,13 +1,16 @@
 # Table of Contents <!-- omit in toc -->
 
 - [Code Quality](#code-quality)
-- [Code Reviews](#code-reviews)
-- [Code Review Guidelines](#code-review-guidelines)
+  - [Code Reviews](#code-reviews)
+  - [Code Review Guidelines](#code-review-guidelines)
     - [Expectations](#expectations)
-- [Best Practices](#best-practices)
-    - [Reviewing](#reviewing)
+  - [Best Practices](#best-practices)
     - [Starting a Review](#starting-a-review)
+    - [Review Comments](#review-comments)
+    - [A](#a)
+    - [B](#b)
     - [Finishing a Review](#finishing-a-review)
+    - [C](#c)
     - [Merging](#merging)
 
 # Code Quality
@@ -55,8 +58,6 @@ Reviewers (and prospective reviewers) are encouraged to engage in reviews of cod
 
 ## Best Practices
 
-### Reviewing
-
 ### Starting a Review
 
 Consider if it could be broken into smaller Pull Requests. If it is clear that it can be, summarize your thinking on how in your Review.
@@ -67,6 +68,19 @@ Use the following guidelines to evaluate whether a Pull Request should be approv
 
 - *Every* Pull Request should have tests or justification otherwise; esp. bug fixes.
 - *Every* Pull Request should have at least 1 approval from a team member internal or external to the project. Exceptions made by repository maintainer(s), as necessary, on a case-by-case basis.
+
+### Review Comments
+
+*tl;dr Use `SOS`, `TECHDEBT`, `TECHDEBT(XXX)`, `NIT` if you think it'll help the author get context on the next steps.*
+
+When leaving review comments, consider if any of the following characterizations applies and prefix the comment, respectively:
+
+- `NIT`: Comment is a nitpick
+- `TECHDEBT`: Comment should have a TECHDEBT comment w/o a ticket
+- `TECHDEBT(XXX)`: Comment should have a TECHDEBT comment but imporant enough that it requires a ticket to track the work in the near future
+- `SOS`: Show Stopper. You feel strongly enought that it needs to be addressed now.
+
+Use the above to communicate next steps for the author to pursue based on the comment.
 
 During review, submit feedback using line comments (A); prefer "Add\[ing a\] single comment" over "Start[ing] a review" (B).
 
