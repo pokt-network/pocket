@@ -55,7 +55,7 @@ func NewRainTreeRouter(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Ro
 }
 
 func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
-	routerLogger := logger.Global.CreateLoggerForModule("router")
+	routerLogger := logger.Global.CreateLoggerForModule("rainTreeRouter")
 	routerLogger.Info().Msg("Initializing rainTreeRouter")
 
 	if err := cfg.IsValid(); err != nil {
@@ -156,7 +156,7 @@ func (rtr *rainTreeRouter) sendInternal(data []byte, address cryptoPocket.Addres
 
 	peer := rtr.peersManager.GetPeerstore().GetPeer(address)
 	if peer == nil {
-		return fmt.Errorf("no known peer with pokt address %s", address)
+		return fmt.Errorf("%w: with pokt address %s", typesP2P.ErrUnknownPeer, address)
 	}
 
 	// debug logging
@@ -204,16 +204,14 @@ func (rtr *rainTreeRouter) handleRainTreeMsg(rainTreeMsgBz []byte) error {
 
 	var rainTreeMsg typesP2P.RainTreeMessage
 	if err := proto.Unmarshal(rainTreeMsgBz, &rainTreeMsg); err != nil {
+		// TECHDEBT: add telemetry
 		return err
 	}
 
-	// TECHDEBT(#763): refactor as "pre-propagation validation"
-	networkMessage := messaging.PocketEnvelope{}
-	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
-		rtr.logger.Error().Err(err).Msg("Error decoding network message")
-		return err
+	if err := rtr.validateRainTreeMsg(&rainTreeMsg); err != nil {
+		// TECHDEBT: add telemetry
+		return fmt.Errorf("validating raintree message: %w", err)
 	}
-	// --
 
 	// Continue RainTree propagation
 	if rainTreeMsg.Level > 0 {
@@ -233,6 +231,13 @@ func (rtr *rainTreeRouter) handleRainTreeMsg(rainTreeMsgBz []byte) error {
 		rtr.logger.Error().Err(err).Msg("handling raintree message")
 	}
 	return nil
+}
+
+// validateRainTreeMsg ensures that the `data` contained within the RainTree message
+// is a valid `PocketEnvelope` by attempting to deserialize it.
+func (rtr *rainTreeRouter) validateRainTreeMsg(rainTreeMsg *typesP2P.RainTreeMessage) error {
+	networkMessage := messaging.PocketEnvelope{}
+	return proto.Unmarshal(rainTreeMsg.Data, &networkMessage)
 }
 
 // GetPeerstore implements the respective member of `typesP2P.Router`.
