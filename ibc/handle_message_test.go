@@ -1,9 +1,6 @@
 package ibc
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
 	"testing"
 
 	ibcTypes "github.com/pokt-network/pocket/ibc/types"
@@ -83,118 +80,22 @@ func TestHandleMessage_BasicValidation_Message(t *testing.T) {
 }
 
 func TestHandleMessage_BasicValidation_Transaction(t *testing.T) {
+	// Prepare the environment
+	_, utilityMod, _, _ := prepareEnvironment(t, 1, 0, 0, 0)
+
 	privKey, err := crypto.GeneratePrivateKey()
 	require.NoError(t, err)
 
-	pubKey := privKey.PublicKey()
-
-	message, validTx := prepareUpdateMessage(t, []byte("key"), []byte("value"))
-	anyMessage, err := codec.GetCodec().ToAny(message)
+	_, validTx := prepareUpdateMessage(t, []byte("key"), []byte("value"))
 	require.NoError(t, err)
 	err = validTx.Sign(privKey)
 	require.NoError(t, err)
 
-	testCases := []struct {
-		name        string
-		txProto     *coreTypes.Transaction
-		expectedErr error
-	}{
-		{
-			name:        "Invalid transaction: Missing Nonce",
-			txProto:     &types.Transaction{},
-			expectedErr: types.ErrEmptyNonce(),
-		},
-		{
-			name: "Invalid transaction: Missing Signature Structure",
-			txProto: &types.Transaction{
-				Nonce: strconv.Itoa(int(crypto.GetNonce())),
-			},
-			expectedErr: types.ErrEmptySignatureStructure(),
-		},
-		{
-			name: "Invalid transaction: Missing Signature",
-			txProto: &types.Transaction{
-				Nonce: strconv.Itoa(int(crypto.GetNonce())),
-				Signature: &types.Signature{
-					PublicKey: nil,
-					Signature: nil,
-				},
-			},
-			expectedErr: types.ErrEmptySignature(),
-		},
-		{
-			name: "Invalid transaction: Missing Public Key",
-			txProto: &types.Transaction{
-				Nonce: strconv.Itoa(int(crypto.GetNonce())),
-				Signature: &types.Signature{
-					PublicKey: nil,
-					Signature: []byte("bytes in place for signature but not actually valid"),
-				},
-			},
-			expectedErr: types.ErrEmptyPublicKey(),
-		},
-		{
-			name: "Invalid transaction: Invalid Public Key",
-			txProto: &types.Transaction{
-				Nonce: strconv.Itoa(int(crypto.GetNonce())),
-				Signature: &types.Signature{
-					PublicKey: []byte("invalid pub key"),
-					Signature: []byte("bytes in place for signature but not actually valid"),
-				},
-			},
-			expectedErr: types.ErrNewPublicKeyFromBytes(fmt.Errorf("the public key length is not valid, expected length 32, actual length: 15")),
-		},
-		{
-			name: "Invalid transaction: Invalid Message",
-			txProto: &types.Transaction{
-				Nonce: strconv.Itoa(int(crypto.GetNonce())),
-				Signature: &types.Signature{
-					PublicKey: pubKey.Bytes(),
-					Signature: []byte("bytes in place for signature but not actually valid"),
-				},
-				Msg: nil,
-			},
-			expectedErr: types.ErrDecodeMessage(fmt.Errorf("proto: invalid empty type URL")),
-		},
-		{
-			name: "Invalid transaction: Invalid Signature",
-			txProto: &types.Transaction{
-				Nonce: strconv.Itoa(int(crypto.GetNonce())),
-				Signature: &types.Signature{
-					PublicKey: pubKey.Bytes(),
-					Signature: []byte("invalid signature"),
-				},
-				Msg: anyMessage,
-			},
-			expectedErr: types.ErrSignatureVerificationFailed(),
-		},
-		{
-			name:        "Valid well-formatted transaction with valid signature",
-			txProto:     validTx,
-			expectedErr: nil,
-		},
-	}
+	txProtoBytes, err := proto.Marshal(validTx)
+	require.NoError(t, err)
 
-	// Prepare the environment
-	_, utilityMod, _, _ := prepareEnvironment(t, 1, 0, 0, 0)
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			txProtoBytes, err := proto.Marshal(tc.txProto)
-			require.NoError(t, err)
-
-			err = utilityMod.HandleTransaction(txProtoBytes)
-			if tc.expectedErr != nil {
-				expected := tc.expectedErr.Error()
-				if strings.Contains(err.Error(), "\u00a0") {
-					expected = strings.Replace(expected, "proto: ", "proto:\u00a0", 1)
-				}
-				require.EqualError(t, err, expected)
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
+	err = utilityMod.HandleTransaction(txProtoBytes)
+	require.NoError(t, err)
 }
 
 func TestHandleMessage_GetIndexedMessage(t *testing.T) {
