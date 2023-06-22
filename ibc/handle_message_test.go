@@ -10,13 +10,12 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 )
 
 func TestHandleMessage_ErrorAlreadyInMempool(t *testing.T) {
 	// Prepare test data
 	_, tx := prepareUpdateMessage(t, []byte("key"), []byte("value"))
-	txProtoBytes, err := proto.Marshal(tx)
+	txProtoBytes, err := codec.GetCodec().Marshal(tx)
 	require.NoError(t, err)
 
 	// Prepare the environment
@@ -91,11 +90,44 @@ func TestHandleMessage_BasicValidation_Transaction(t *testing.T) {
 	err = validTx.Sign(privKey)
 	require.NoError(t, err)
 
-	txProtoBytes, err := proto.Marshal(validTx)
+	txProtoBytes, err := codec.GetCodec().Marshal(validTx)
 	require.NoError(t, err)
 
 	err = utilityMod.HandleTransaction(txProtoBytes)
 	require.NoError(t, err)
+
+	testCases := []struct {
+		name     string
+		msg      *ibcTypes.IbcMessage
+		expected error
+	}{
+		{
+			name:     "Invalid Update Message: Empty Key",
+			msg:      CreateUpdateStoreMessage(nil, []byte("value")),
+			expected: coreTypes.ErrEmptySignatureStructure(),
+		},
+		{
+			name:     "Invalid Update Message: Empty Value",
+			msg:      CreateUpdateStoreMessage([]byte("key"), nil),
+			expected: coreTypes.ErrEmptySignatureStructure(),
+		},
+		{
+			name:     "Invalid Prune Message: Empty Key",
+			msg:      CreatePruneStoreMessage(nil),
+			expected: coreTypes.ErrEmptySignatureStructure(),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tx, err := ConvertIBCMessageToTx(tc.msg)
+			require.NoError(t, err)
+			txProtoBytes, err := codec.GetCodec().Marshal(tx)
+			require.NoError(t, err)
+			err = utilityMod.HandleTransaction(txProtoBytes)
+			require.EqualError(t, err, tc.expected.Error())
+		})
+	}
 }
 
 func TestHandleMessage_GetIndexedMessage(t *testing.T) {
@@ -156,7 +188,7 @@ func preparePruneMessage(t *testing.T, key []byte) (*ibcTypes.IbcMessage, *coreT
 func prepareIndexedMessage(t *testing.T, txIndexer indexer.TxIndexer) *coreTypes.IndexedTransaction {
 	t.Helper()
 	_, tx := preparePruneMessage(t, []byte{})
-	txProtoBytes, err := proto.Marshal(tx)
+	txProtoBytes, err := codec.GetCodec().Marshal(tx)
 	require.NoError(t, err)
 
 	// Test data - Prepare IndexedTransaction
