@@ -163,8 +163,7 @@ func (rtr *rainTreeRouter) sendInternal(data []byte, address cryptoPocket.Addres
 	hostname := rtr.getHostname()
 	utils.LogOutgoingMsg(rtr.logger, hostname, peer)
 
-	if err := utils.Libp2pSendToPeer(rtr.host, data, peer); err != nil {
-		rtr.logger.Debug().Err(err).Msg("from libp2pSendInternal")
+	if err := utils.Libp2pSendToPeer(rtr.host, protocol.RaintreeProtocolID, data, peer); err != nil {
 		return err
 	}
 
@@ -287,7 +286,7 @@ func (rtr *rainTreeRouter) setupUnicastRouter() error {
 	unicastRouterCfg := config.UnicastRouterConfig{
 		Logger:         rtr.logger,
 		Host:           rtr.host,
-		ProtocolID:     protocol.PoktProtocolID,
+		ProtocolID:     protocol.RaintreeProtocolID,
 		MessageHandler: rtr.handleRainTreeMsg,
 		PeerHandler:    rtr.AddPeer,
 	}
