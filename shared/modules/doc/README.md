@@ -2,25 +2,28 @@
 
 This document outlines how we structured the code by splitting it into modules, what a module is and how to create one.
 
-<!-- IMPROVE: Add a PR example when a good example arises. -->
-
 ## Contents <!-- omit in toc -->
 
+- [tl;dr Just show me an example](#tldr-just-show-me-an-example)
 - [Definitions](#definitions)
-	- [Shared module interface](#shared-module-interface)
-	- [Module](#module)
-	- [Module mock](#module-mock)
-	- [Base module](#base-module)
+  - [Shared module interface](#shared-module-interface)
+  - [Module](#module)
+  - [Module mock](#module-mock)
+  - [Base module](#base-module)
 - [Code Organization](#code-organization)
 - [Modules in detail](#modules-in-detail)
-	- [Module creation](#module-creation)
-	- [Interacting \& Registering with the `bus`](#interacting--registering-with-the-bus)
-		- [Modules Registry](#modules-registry)
-			- [Modules Registry Example](#modules-registry-example)
-	- [Start the module](#start-the-module)
-	- [Add a logger to the module](#add-a-logger-to-the-module)
-	- [Get the module `bus`](#get-the-module-bus)
-	- [Stop the module](#stop-the-module)
+  - [Module creation](#module-creation)
+  - [Interacting \& Registering with the `bus`](#interacting--registering-with-the-bus)
+    - [Modules Registry](#modules-registry)
+      - [Modules Registry Example](#modules-registry-example)
+  - [Start the module](#start-the-module)
+  - [Add a logger to the module](#add-a-logger-to-the-module)
+  - [Get the module `bus`](#get-the-module-bus)
+  - [Stop the module](#stop-the-module)
+
+## tl;dr Just show me an example
+
+If you're just interested in an example PR that introduced a new module to the codebase, see #842 which added the first iteration of the IBC module
 
 ## Definitions
 
@@ -84,9 +87,7 @@ For examples of (sub-)modules that implement `ModuleFactoryWithConfig`, see:
 - [`p2pModule`](https://github.com/pokt-network/pocket/tree/main/p2p/module.go) - `WithHostOption`
 - [`rpcCurrentHeightProvider`](https://github.com/pokt-network/pocket/tree/main/p2p/providers/current_height_provider/rpc/provider.go) - `WithCustomRPCURL`
 
-
 Essentially the `ModuleOption` sets a custom RPC URL for the module at runtime.
-
 
 ### Interacting & Registering with the `bus`
 
@@ -103,7 +104,6 @@ We implemented a `ModulesRegistry` module [here](https://github.com/pokt-network
 This module is registered with the `bus` at the application level, it is accessible to all modules via the `bus` interface and it's also mockable as you would expect.
 
 Modules register themselves with the `bus` by calling `bus.RegisterModule(module)`. This is done in the `Create` function of the module. (For example, in the [consensus module](https://github.com/pokt-network/pocket/blob/19bf4d3f6507f5d406d9fafdb69b81359bccf110/consensus/module.go#L146))
-
 
 What the `bus` does is setting its reference to the module instance and delegating the registration to the `ModulesRegistry`.
 
