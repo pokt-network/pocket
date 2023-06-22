@@ -23,7 +23,7 @@ This document outlines how we structured the code by splitting it into modules, 
 
 ## tl;dr Just show me an example
 
-If you're just interested in an example PR that introduced a new module to the codebase, see #842 which added the first iteration of the IBC module
+If you're just interested in an example PR that introduced a new module to the codebase, see [#842](https://github.com/pokt-network/pocket/pull/842) which added the first iteration of the IBC module
 
 ## Definitions
 
