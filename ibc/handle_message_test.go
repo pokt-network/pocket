@@ -6,7 +6,6 @@ import (
 	ibcTypes "github.com/pokt-network/pocket/ibc/types"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/core/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
@@ -142,7 +141,7 @@ func TestHandleMessage_GetIndexedMessage(t *testing.T) {
 		expectErr    error
 	}{
 		{"returns indexed transaction when it exists", idxTx.Tx, true, nil},
-		{"returns error when transaction doesn't exist", []byte("Does not exist"), false, types.ErrTransactionNotCommitted()},
+		{"returns error when transaction doesn't exist", []byte("Does not exist"), false, coreTypes.ErrTransactionNotCommitted()},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
