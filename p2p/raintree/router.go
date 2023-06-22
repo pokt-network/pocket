@@ -79,6 +79,10 @@ func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (type
 	return typesP2P.Router(rtr), nil
 }
 
+func (rtr *rainTreeRouter) Close() error {
+	return nil
+}
+
 // NetworkBroadcast implements the respective member of `typesP2P.Router`.
 func (rtr *rainTreeRouter) Broadcast(data []byte) error {
 	return rtr.broadcastAtLevel(data, rtr.peersManager.GetMaxNumLevels())

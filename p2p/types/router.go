@@ -14,6 +14,7 @@ type Router interface {
 
 	Broadcast(data []byte) error
 	Send(data []byte, address cryptoPocket.Address) error
+	Close() error
 
 	// Address book helpers
 	// TECHDEBT: simplify - remove `GetPeerstore`
