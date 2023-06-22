@@ -22,7 +22,6 @@ const readStreamTimeout = time.Second * 10
 
 var _ unicastRouterFactory = &UnicastRouter{}
 
-// TODO_THIS_COMMIT: consider defining/(re)using `RouterFactory` type
 type unicastRouterFactory = modules.FactoryWithConfig[*UnicastRouter, *config.UnicastRouterConfig]
 
 type UnicastRouter struct {
@@ -36,8 +35,6 @@ type UnicastRouter struct {
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	host           libp2pHost.Host
 	messageHandler typesP2P.MessageHandler
-	// TODO_THIS_COMMIT: consider defining alongside `MessageHandler` type
-	// OR removing `MessageHandler` type
 	peerHandler func(peer typesP2P.Peer) error
 }
 
