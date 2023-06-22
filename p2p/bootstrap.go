@@ -76,14 +76,14 @@ func (m *p2pModule) bootstrap() error {
 
 	for _, peer := range pstore.GetPeerList() {
 		m.logger.Debug().Str("address", peer.GetAddress().String()).Msg("Adding peer to router")
-		if err := m.router.AddPeer(peer); err != nil {
+		if err := m.stakedActorRouter.AddPeer(peer); err != nil {
 			m.logger.Error().Err(err).
 				Str("pokt_address", peer.GetAddress().String()).
 				Msg("adding peer")
 		}
 	}
 
-	if m.router.GetPeerstore().Size() == 0 {
+	if m.stakedActorRouter.GetPeerstore().Size() == 0 {
 		return fmt.Errorf("bootstrap failed")
 	}
 	return nil
