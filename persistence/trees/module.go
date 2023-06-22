@@ -28,12 +28,20 @@ func Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeSt
 	return new(treeStore).Create(bus, options...)
 }
 
+// WithLogger assigns a logger for the tree store
+func WithLogger(logger *modules.Logger) modules.TreeStoreOption {
+	return func(m modules.TreeStoreModule) {
+		if mod, ok := m.(*treeStore); ok {
+			mod.logger = logger
+		}
+	}
+}
+
 // WithTreeStoreDirectory assigns the path where the tree store
 // saves its data.
 func WithTreeStoreDirectory(path string) modules.TreeStoreOption {
 	return func(m modules.TreeStoreModule) {
-		mod, ok := m.(*treeStore)
-		if ok {
+		if mod, ok := m.(*treeStore); ok {
 			mod.treeStoreDir = path
 		}
 	}
