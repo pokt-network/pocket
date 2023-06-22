@@ -1,12 +1,10 @@
 package persistence
 
 import (
-	"crypto/sha256"
 	"runtime/debug"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/messaging"
-	"github.com/pokt-network/smt"
 )
 
 // A list of functions to clear data from the DB not associated with protocol actors
@@ -118,16 +116,5 @@ func (p *PostgresContext) clearAllSQLState() error {
 }
 
 func (p *PostgresContext) clearAllTreeState() error {
-	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		nodeStore := p.stateTrees.nodeStores[treeType]
-
-		if err := nodeStore.ClearAll(); err != nil {
-			return err
-		}
-
-		// Needed in order to make sure the root is re-set correctly after clearing
-		p.stateTrees.merkleTrees[treeType] = smt.NewSparseMerkleTree(nodeStore, sha256.New())
-	}
-
-	return nil
+	return p.stateTrees.DebugClearAll()
 }
