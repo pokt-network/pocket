@@ -284,7 +284,7 @@ func newRouterWithSelfPeerAndHost(t *testing.T, selfPeer typesP2P.Peer, host lib
 	err := pstore.AddPeer(selfPeer)
 	require.NoError(t, err)
 
-	router, err := NewBackgroundRouter(busMock, &config.BackgroundConfig{
+	router, err := Create(busMock, &config.BackgroundConfig{
 		Addr:                  selfPeer.GetAddress(),
 		PeerstoreProvider:     pstoreProviderMock,
 		CurrentHeightProvider: consensusMock,

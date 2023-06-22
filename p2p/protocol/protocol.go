@@ -16,8 +16,4 @@ const (
 	// BackgroundTopicStr is a "default" pubsub topic string used when
 	// subscribing and broadcasting.
 	BackgroundTopicStr = "pokt/background"
-	// PeerDiscoveryNamespace used by both advertiser and discoverer to rendezvous
-	// during peer discovery. Advertiser(s) and discoverer(s) MUST have matching
-	// discovery namespaces to find one another.
-	PeerDiscoveryNamespace = "pokt/peer_discovery"
 )
