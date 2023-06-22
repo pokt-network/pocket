@@ -3,6 +3,7 @@ package modules
 //go:generate mockgen -destination=./mocks/persistence_module_mock.go github.com/pokt-network/pocket/shared/modules PersistenceModule,PersistenceRWContext,PersistenceReadContext,PersistenceWriteContext
 
 import (
+	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/runtime/genesis"
@@ -21,8 +22,13 @@ type PersistenceModule interface {
 	NewReadContext(height int64) (PersistenceReadContext, error)
 	ReleaseWriteContext() error // The module can maintain many read contexts, but only one write context can exist at a time
 
-	// BlockStore operations
+	// BlockStore maps a block height to an *coreTypes.IndexedTransaction
 	GetBlockStore() blockstore.BlockStore
+
+	// TreeStore manages atomic access to a set of merkle trees
+	// that compose the state hash.
+	GetTreeStore() TreeStore
+
 	NewWriteContext() PersistenceRWContext
 
 	// Indexer operations
@@ -31,6 +37,17 @@ type PersistenceModule interface {
 
 	// Debugging / development only
 	HandleDebugMessage(*messaging.DebugMessage) error
+}
+
+// TreeStore defines the interface for atomic updates and rollbacks to the internal
+// merkle trees that compose the state hash of pocket.
+type TreeStore interface {
+	// Update returns the new state hash for a given height.
+	// * Update inherits the pgx transaction's read view of the database and builds the trees according to that view.
+	// TODO(#808): Change interface to `Update(pgtx pgx.Tx, height uint64) (string, error)`
+	Update(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error)
+	// DebugClearAll completely clears the state of the trees. For debugging purposes only.
+	DebugClearAll() error
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.

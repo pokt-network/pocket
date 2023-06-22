@@ -16,8 +16,6 @@ spec:
     - name: cluster-manager
       image: cluster-manager-image
       imagePullPolicy: IfNotPresent
-      args:
-        - cluster-manager
       env:
         - name: POCKET_REMOTE_CLI_URL
           value: http://pocket-full-nodes:50832
