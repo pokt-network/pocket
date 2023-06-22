@@ -18,6 +18,7 @@ import (
 
 var (
 	_ modules.PersistenceModule = &persistenceModule{}
+	_ modules.PersistenceModule = &persistenceModule{}
 
 	_ modules.PersistenceRWContext = &PostgresContext{}
 )
@@ -43,7 +44,7 @@ type persistenceModule struct {
 
 	// stateTrees manages all of the merkle trees maintained by the
 	// persistence module that roll up into the state commitment.
-	stateTrees modules.TreeStoreModule
+	stateTrees modules.TreeStore
 
 	// Only one write context is allowed at a time
 	writeContext *PostgresContext
@@ -103,7 +104,8 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	treeModule, err := trees.Create(bus, trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir))
+	// TECHDEBT (#808): Make TreeStore into a full Module
+	stateTrees, err := trees.NewStateTrees(persistenceCfg.TreesStoreDir)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +116,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 
 	m.blockStore = blockStore
 	m.txIndexer = txIndexer
-	m.stateTrees = treeModule
+	m.stateTrees = stateTrees
 
 	// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
 	// 		     this forces the genesis state to be reloaded on every node startup until state
@@ -233,6 +235,10 @@ func (m *persistenceModule) GetBlockStore() blockstore.BlockStore {
 
 func (m *persistenceModule) GetTxIndexer() indexer.TxIndexer {
 	return m.txIndexer
+}
+
+func (m *persistenceModule) GetTreeStore() modules.TreeStore {
+	return m.stateTrees
 }
 
 func (m *persistenceModule) GetNetworkID() string {

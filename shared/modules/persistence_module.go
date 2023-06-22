@@ -25,6 +25,10 @@ type PersistenceModule interface {
 	// BlockStore maps a block height to an *coreTypes.IndexedTransaction
 	GetBlockStore() blockstore.BlockStore
 
+	// TreeStore manages atomic access to a set of merkle trees
+	// that compose the state hash.
+	GetTreeStore() TreeStore
+
 	NewWriteContext() PersistenceRWContext
 
 	// Indexer operations
