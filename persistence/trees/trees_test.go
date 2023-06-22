@@ -2,7 +2,7 @@ package trees
 
 import "testing"
 
-// TECHDEBT #836: Tests added in https://github.com/pokt-network/pocket/pull/836
+// TECHDEBT(#836): Tests added in https://github.com/pokt-network/pocket/pull/836
 func TestTreeStore_Update(t *testing.T) {
 	// TODO: Write test case for the Update method
 	t.Skip("TODO: Write test case for Update method")
