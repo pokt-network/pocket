@@ -40,9 +40,45 @@ ICS-24 has numerous sub components that must be implemented in order for the hos
 
 The IBC stores must be included in the networks consensus state as one of the many state trees. This is to ensure the IBC light clients verifying Pocket network's state can verify the inclusion or exclusion of IBC related information from the block headers.
 
-As the IBC host will make changes to the IBC store locally, in response to functions being called by relayers, they require these changes to be propagated throughout the network (i.e. the mempool) and included in all other node's IBC stores so that during block production these changes are reflected in the state transition. This is done by utilizing the existing transaction workflow, adding the IBC store change messages to the mempool and then handling them as a new message type in block production/application logic.
+The following is a simplified sequence diagram of an IBC fungible token transfer. This requires **Chain A** to commit to its state the packet data related to the transfer, so that **Chain B** can verify the inclusion of this packet data with the light client of **Chain A** it runs.
 
-TODO_IN_THIS_COMMIT: Mermaid Diagram Here
+```mermaid
+sequenceDiagram
+  actor UA as User A
+  box Blue Chain A
+    participant A1 as Validator A
+    participant A2 as IBC Host A
+    participant A3 as Light Client B
+  end
+  box Transparent Relayer
+    actor R1 as Relayer
+  end
+  box Red Chain B
+    participant B1 as Validator B
+    participant B2 as IBC Host B
+    participant B3 as Light Client A
+  end
+  actor UB as User B
+  R1->>R1: Watch(Chain A)
+  R1->>R1: Watch(Chain B)
+  UA->>A1: Send 10$POKT to User B
+  A1->>A1: Lock(10$POKT)
+  A1->>A2: Create(FungibleTokenPacketData)
+  A2->>A1: Commit(FungibleTokenPacketData)
+  A1->>A1: NewBlock()
+  R1->>R1: CheckNewBlockForIBCPackets()
+  R1->>A2: QueryAndProve(FungibleTokenPacketData)
+  A2->>R1: FungibleTokenPacketData
+  A2->>R1: Proof(FungibleTokenPacketData)
+  R1->>B2: Validate(FungibleTokenPacketData, Proof(FungibleTokenPacketData))
+  B2->>B3: Verify(Proof(FungibleTokenPacketData))
+  B3->>B2: FoundInState(FungibleTokenPacketData)
+  B2->>B1: Send 10$POKT to User B
+  B1->>B1: Mint(10$POKT)
+  B1->>UB: Receive 10$POKT from User A
+```
+
+As the IBC host will make changes to the IBC store locally, in response to functions being called by relayers, they require these changes to be propagated throughout the network (i.e. the mempool) and included in all other node's IBC stores so that during block production these changes are reflected in the state transition. This is done by utilizing the existing transaction workflow, adding the IBC store change messages to the mempool and then handling them as a new message type in block production/application logic.
 
 See: [IBC State](#ibc-state) below for more details on the IBC state transition process.
 
@@ -83,7 +119,32 @@ Upon a node receiving an `IbcMessage` from the event bus it will use the `Handle
 2. Sign the `Transaction` using the `IBCModule`'s private key
 3. Broadcast the `Transaction` throughout the mempool
 
-TODO_IN_THIS_COMMIT: Mermaid Diagram Here
+```mermaid
+graph LR
+  subgraph Bus
+    A[Events]
+  end
+  subgraph I[IBC Host]
+    I1["HandleMessage(Message)"]
+  end
+  subgraph Handler
+    H1["ConvertIbcMessageToTransaction(IbcMessage)"]
+    subgraph Transaction
+      T1["coreTypes.Transaction{Msg: IbcMessage}"]
+    end
+    H2["SignTransaction(Transaction)"]
+  end
+  subgraph Mempool
+    M1["ValidateTransaction(Transaction)"]
+    M2["AddToMempool(Transaction)"]
+  end
+  Bus--Message-->I
+  I--IbcMessage-->Handler
+  H1--IbcMessage-->Transaction
+  Transaction--Transaction-->H2
+  Handler--Transaction-->Mempool
+  M1--Transaction-->M2
+```
 
 See: [ibc/module.go](../module.go) for the specific implementation details.
 
