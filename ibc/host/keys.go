@@ -5,7 +5,8 @@ import (
 	"strings"
 )
 
-// Store key prefixes for IBC
+// Store key prefixes for IBC as defined in ICS-24
+// https://github.com/cosmos/ibc/blob/main/spec/core/ics-024-host-requirements/README.md
 const (
 	KeyClientStorePrefix       = "clients"
 	KeyClientState             = "clientState"

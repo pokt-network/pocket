@@ -40,35 +40,6 @@ func init() {
 	}
 }
 
-// basicValidation performs basic validation on the given identifier
-func basicValidation(id string, minLength, maxLength int) error {
-	if strings.TrimSpace(id) == "" {
-		return coreTypes.ErrIBCInvalidID(id, "cannot be blank")
-	}
-
-	if len(id) < minLength || len(id) > maxLength {
-		return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("length must be between %d and %d", minLength, maxLength))
-	}
-
-	if !strings.HasPrefix(id, identifierPrefix) {
-		return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("must start with '%s'", identifierPrefix))
-	}
-
-	for _, c := range invalidIdChars {
-		if _, ok := invalidIdMap[c]; ok {
-			return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("cannot contain '%s'", string(c)))
-		}
-	}
-
-	for _, c := range id {
-		if _, ok := validIdMap[c]; !ok {
-			return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("contains invalid character '%c'", c))
-		}
-	}
-
-	return nil
-}
-
 // ValidateClientID validates the client identifier string
 func ValidateClientID(id string) error {
 	return basicValidation(id, minClientIdLength, defaultMaxIdLength)
@@ -87,6 +58,26 @@ func ValidateChannelID(id string) error {
 // ValidatePortID validates the port identifier string
 func ValidatePortID(id string) error {
 	return basicValidation(id, minPortIdLength, maxPortIdLength)
+}
+
+// GenerateClientIdentifier generates a new client identifier
+func GenerateClientIdentifier() string {
+	return generateNewIdentifier(minClientIdLength, defaultMaxIdLength)
+}
+
+// GenerateConnectionIdentifier generates a new connection identifier
+func GenerateConnectionIdentifier() string {
+	return generateNewIdentifier(minConnectionIdLength, defaultMaxIdLength)
+}
+
+// GenerateChannelIdentifier generates a new channel identifier
+func GenerateChannelIdentifier() string {
+	return generateNewIdentifier(minChannelIdLength, defaultMaxIdLength)
+}
+
+// GeneratePortIdentifier generates a new port identifier
+func GeneratePortIdentifier() string {
+	return generateNewIdentifier(minPortIdLength, maxPortIdLength)
 }
 
 // generateNewIdentifier generates a new identifier in the given range
@@ -111,22 +102,31 @@ func generateNewIdentifierWithSeed(min, max int, seed int64) string {
 	return identifierPrefix + string(b)
 }
 
-// GenerateClientIdentifier generates a new client identifier
-func GenerateClientIdentifier() string {
-	return generateNewIdentifier(minClientIdLength, defaultMaxIdLength)
-}
+// basicValidation performs basic validation on the given identifier
+func basicValidation(id string, minLength, maxLength int) error {
+	if strings.TrimSpace(id) == "" {
+		return coreTypes.ErrIBCInvalidID(id, "cannot be blank")
+	}
 
-// GenerateConnectionIdentifier generates a new connection identifier
-func GenerateConnectionIdentifier() string {
-	return generateNewIdentifier(minConnectionIdLength, defaultMaxIdLength)
-}
+	if len(id) < minLength || len(id) > maxLength {
+		return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("length must be between %d and %d", minLength, maxLength))
+	}
 
-// GenerateChannelIdentifier generates a new channel identifier
-func GenerateChannelIdentifier() string {
-	return generateNewIdentifier(minChannelIdLength, defaultMaxIdLength)
-}
+	if !strings.HasPrefix(id, identifierPrefix) {
+		return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("must start with '%s'", identifierPrefix))
+	}
 
-// GeneratePortIdentifier generates a new port identifier
-func GeneratePortIdentifier() string {
-	return generateNewIdentifier(minPortIdLength, maxPortIdLength)
+	for _, c := range id {
+		if _, ok := invalidIdMap[c]; ok {
+			return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("cannot contain '%s'", string(c)))
+		}
+	}
+
+	for _, c := range id {
+		if _, ok := validIdMap[c]; !ok {
+			return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("contains invalid character '%c'", c))
+		}
+	}
+
+	return nil
 }

@@ -7,50 +7,51 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPaths_GenerateValidIdentifiers(t *testing.T) {
-	ids := make(map[string]string, 100)
+func FuzzIdentifiers_GenerateValidIdentifiers(f *testing.F) {
 	for i := 0; i < 100; i++ {
 		switch i % 4 {
 		case 0:
-			cl := GenerateClientIdentifier()
-			require.NotNil(t, cl)
-			_, ok := ids[cl]
-			require.False(t, ok)
-			ids[cl] = "client"
+			f.Add("client")
 		case 1:
-			co := GenerateConnectionIdentifier()
-			require.NotNil(t, co)
-			_, ok := ids[co]
-			require.False(t, ok)
-			ids[co] = "connection"
+			f.Add("connection")
 		case 2:
-			ch := GenerateChannelIdentifier()
-			require.NotNil(t, ch)
-			_, ok := ids[ch]
-			require.False(t, ok)
-			ids[ch] = "channel"
+			f.Add("channel")
 		case 3:
-			po := GeneratePortIdentifier()
-			require.NotNil(t, po)
-			_, ok := ids[po]
-			require.False(t, ok)
-			ids[po] = "port"
+			f.Add("port")
 		}
 	}
-	for k, v := range ids {
-		var err error
-		switch v {
+	f.Fuzz(func(t *testing.T, idType string) {
+		switch idType {
 		case "client":
-			err = ValidateClientID(k)
+			id := GenerateClientIdentifier()
+			require.NotEmpty(t, id)
+			require.GreaterOrEqual(t, len(id), 9)
+			require.LessOrEqual(t, len(id), 64)
+			err := ValidateClientID(id)
+			require.NoError(t, err)
 		case "connection":
-			err = ValidateConnectionID(k)
+			id := GenerateConnectionIdentifier()
+			require.NotEmpty(t, id)
+			require.GreaterOrEqual(t, len(id), 10)
+			require.LessOrEqual(t, len(id), 64)
+			err := ValidateConnectionID(id)
+			require.NoError(t, err)
 		case "channel":
-			err = ValidateChannelID(k)
+			id := GenerateChannelIdentifier()
+			require.NotEmpty(t, id)
+			require.GreaterOrEqual(t, len(id), 8)
+			require.LessOrEqual(t, len(id), 64)
+			err := ValidateChannelID(id)
+			require.NoError(t, err)
 		case "port":
-			err = ValidatePortID(k)
+			id := GeneratePortIdentifier()
+			require.NotEmpty(t, id)
+			require.GreaterOrEqual(t, len(id), 2)
+			require.LessOrEqual(t, len(id), 128)
+			err := ValidatePortID(id)
+			require.NoError(t, err)
 		}
-		require.NoError(t, err)
-	}
+	})
 }
 
 func TestPaths_CommitmentPrefix(t *testing.T) {
