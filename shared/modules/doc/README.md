@@ -235,7 +235,6 @@ This module is registered with the `bus` at the application level, it is accessi
 
 Modules register themselves with the `bus` by calling `bus.RegisterModule(module)`. This is done in the `Create` function of the module. (For example, in the [consensus module](https://github.com/pokt-network/pocket/blob/19bf4d3f6507f5d406d9fafdb69b81359bccf110/consensus/module.go#L146))
 
-
 What the `bus` does is setting its reference to the module instance and delegating the registration to the `ModulesRegistry`.
 
 ```golang
@@ -251,6 +250,8 @@ This is quite **important** because it unlocks a powerful concept **Dependency I
 
 This enables the developer to define different implementations of a module and to register the one that is needed at runtime. This is because we can only have one module registered with a unique name and also because, by convention, we keep module names defined as constants.
 This is useful not only for prototyping but also for different use cases such as the `p1` CLI and the `pocket` binary where different implementations of the same module are necessary due to the fact that the `p1` CLI doesn't have a persistence module but still needs to know what's going on in the network.
+
+Submodules can be registered the same way full Modules can be, by passing the Submodule to the RegisterModule function. Submodules should typically be registered to the bus for dependency injection reasons.
 
 ##### Modules Registry Example
 
