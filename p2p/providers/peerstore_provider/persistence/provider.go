@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	_ modules.Submodule                    = &persistencePeerstoreProvider{}
 	_ peerstore_provider.PeerstoreProvider = &persistencePeerstoreProvider{}
 	_ persistencePStoreProviderFactory     = &persistencePeerstoreProvider{}
 )

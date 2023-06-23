@@ -17,7 +17,6 @@ import (
 )
 
 var (
-	_ modules.Submodule                    = &rpcPeerstoreProvider{}
 	_ peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
 	_ rpcPeerstoreProviderFactory          = &rpcPeerstoreProvider{}
 )
