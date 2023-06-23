@@ -66,9 +66,6 @@ type ModuleOption func(InjectableModule)
 type InjectableModule interface {
 	// GetModuleName returns the name of the module.
 	GetModuleName() string
-
-	// Create creates a new instance of the module.
-	Create(bus Bus, options ...ModuleOption) (Module, error)
 }
 
 // KeyholderModule is a module that can provide a private key.
