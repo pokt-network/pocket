@@ -10,6 +10,12 @@ import (
 	"github.com/pokt-network/smt"
 )
 
+// Tx are applied in batches across KVStore
+type Tx struct {
+	Key   []byte
+	Value []byte
+}
+
 type KVStore interface {
 	smt.MapStore // Get, Set, Delete
 
@@ -137,6 +143,33 @@ func (store *badgerKVStore) Exists(key []byte) (bool, error) {
 		return false, err
 	}
 	return val != nil, nil
+}
+
+func (store *badgerKVStore) Prepare(txns []Tx) (*badger.Txn, error) {
+	txn := store.db.NewTransaction(true)
+
+	for _, tx := range txns {
+		if err := txn.Set(tx.Key, tx.Value); err != nil {
+			// if any fail, discard the transaction and return
+			txn.Discard()
+			return nil, err
+		}
+	}
+
+	return txn, nil
+}
+
+// Commit is probably better handled elsewhere, TODO in this commit
+func (store *badgerKVStore) Commit(txn *badger.Txn) error {
+	defer func() {
+		txn.Discard()
+	}()
+
+	// commit and return the error if any
+	if err := txn.Commit(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (store *badgerKVStore) ClearAll() error {

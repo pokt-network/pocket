@@ -49,6 +49,19 @@ func NewBlockStore(path string) (BlockStore, error) {
 	}, nil
 }
 
+type Tx struct {
+	Height uint64
+	Block  *coreTypes.Block
+}
+
+func (store *blockStore) Prepare([]kvstore.Tx) error {
+	return fmt.Errorf("not impl")
+}
+
+func (store *blockStore) Commit() error {
+	return fmt.Errorf("not impl")
+}
+
 // StoreBlock accepts a coreType Block and stores it for the given height.
 func (bs *blockStore) StoreBlock(height uint64, block *coreTypes.Block) error {
 	b, err := codec.GetCodec().Marshal(block)
@@ -97,4 +110,8 @@ func (bs *blockStore) Delete(key []byte) error         { return bs.kv.Delete(key
 func (bs *blockStore) Exists(key []byte) (bool, error) { return bs.kv.Exists(key) }
 func (bs *blockStore) GetAll(prefixKey []byte, descending bool) (keys, values [][]byte, err error) {
 	return bs.kv.GetAll(prefixKey, descending)
+}
+
+func (bs *blockStore) Rollback() error {
+	return fmt.Errorf("not impl")
 }

@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -103,9 +104,16 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	treeModule, err := trees.Create(bus, trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir))
+	treeModule, err := trees.Create(
+		bus,
+		trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir),
+		trees.WithTxIndexer(txIndexer))
 	if err != nil {
 		return nil, err
+	}
+	treeStoreModule, ok := treeModule.(modules.TreeStoreModule)
+	if !ok {
+		return nil, errors.New("error casting TreeStoreModule")
 	}
 
 	m.config = persistenceCfg
@@ -114,7 +122,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 
 	m.blockStore = blockStore
 	m.txIndexer = txIndexer
-	m.stateTrees = treeModule
+	m.stateTrees = treeStoreModule
 
 	// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
 	// 		     this forces the genesis state to be reloaded on every node startup until state
