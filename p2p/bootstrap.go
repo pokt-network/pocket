@@ -58,12 +58,13 @@ func (m *p2pModule) bootstrap() error {
 			continue
 		}
 
-		pstoreProvider := rpcABP.Create(
-			rpcABP.WithP2PConfig(
-				m.GetBus().GetRuntimeMgr().GetConfig().P2P,
-			),
+		pstoreProvider, err := rpcABP.Create(
+			m.GetBus(),
 			rpcABP.WithCustomRPCURL(bootstrapNode),
 		)
+		if err != nil {
+			return fmt.Errorf("creating RPC peerstore provider: %w", err)
+		}
 
 		currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(rpcCHP.WithCustomRPCURL(bootstrapNode))
 

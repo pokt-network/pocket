@@ -11,29 +11,40 @@ import (
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
-	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
-var _ peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
+var (
+	_ modules.Submodule                    = &rpcPeerstoreProvider{}
+	_ peerstore_provider.PeerstoreProvider = &rpcPeerstoreProvider{}
+	_ rpcPeerstoreProviderFactory          = &rpcPeerstoreProvider{}
+)
 
-// TECHDEBT(#810): refactor to implement `Submodule` interface.
+type rpcPeerstoreProviderOption func(*rpcPeerstoreProvider)
+type rpcPeerstoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, rpcPeerstoreProviderOption]
+
 type rpcPeerstoreProvider struct {
-	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
-	base_modules.IntegratableModule
-	base_modules.InterruptableModule
+	base_modules.IntegrableModule
 
 	rpcURL    string
 	p2pCfg    *configs.P2PConfig
 	rpcClient *rpc.ClientWithResponses
 }
 
-func Create(options ...modules.ModuleOption) *rpcPeerstoreProvider {
+func Create(bus modules.Bus, options ...rpcPeerstoreProviderOption) (peerstore_provider.PeerstoreProvider, error) {
+	return new(rpcPeerstoreProvider).Create(bus, options...)
+}
+
+func (*rpcPeerstoreProvider) Create(
+	bus modules.Bus,
+	options ...rpcPeerstoreProviderOption,
+) (peerstore_provider.PeerstoreProvider, error) {
 	rabp := &rpcPeerstoreProvider{
 		rpcURL: flags.RemoteCLIURL,
 	}
+	rabp.SetBus(bus)
 
 	for _, o := range options {
 		o(rabp)
@@ -41,12 +52,7 @@ func Create(options ...modules.ModuleOption) *rpcPeerstoreProvider {
 
 	rabp.initRPCClient()
 
-	return rabp
-}
-
-// TECHDEBT(#810): refactor to implement `Submodule` interface.
-func (*rpcPeerstoreProvider) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
-	return Create(options...), nil
+	return rabp, nil
 }
 
 func (*rpcPeerstoreProvider) GetModuleName() string {
@@ -99,15 +105,15 @@ func (rpcPSP *rpcPeerstoreProvider) initRPCClient() {
 // options
 
 // WithP2PConfig allows to specify a custom P2P config
-func WithP2PConfig(p2pCfg *configs.P2PConfig) modules.ModuleOption {
-	return func(rabp modules.InjectableModule) {
-		rabp.(*rpcPeerstoreProvider).p2pCfg = p2pCfg
+func WithP2PConfig(p2pCfg *configs.P2PConfig) rpcPeerstoreProviderOption {
+	return func(rpcPSP *rpcPeerstoreProvider) {
+		rpcPSP.p2pCfg = p2pCfg
 	}
 }
 
 // WithCustomRPCURL allows to specify a custom RPC URL
-func WithCustomRPCURL(rpcURL string) modules.ModuleOption {
-	return func(rabp modules.InjectableModule) {
-		rabp.(*rpcPeerstoreProvider).rpcURL = rpcURL
+func WithCustomRPCURL(rpcURL string) rpcPeerstoreProviderOption {
+	return func(rpcPSP *rpcPeerstoreProvider) {
+		rpcPSP.rpcURL = rpcURL
 	}
 }

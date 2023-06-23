@@ -16,7 +16,7 @@ import (
 var _ current_height_provider.CurrentHeightProvider = &rpcCurrentHeightProvider{}
 
 type rpcCurrentHeightProvider struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	base_modules.InterruptableModule
 
 	rpcURL    string
