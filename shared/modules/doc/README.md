@@ -24,26 +24,132 @@ This document outlines how we structured the code by splitting it into modules, 
 
 ## Definitions
 
-### Shared module interface
+### Class Diagram Overview
 
-A shared module interface is an interface that defines the methods that we modelled as common to multiple modules. For example: the ability to start/stop a module is pretty common and for that we defined the `InterruptableModule` interface.
+```mermaid
+classDiagram
+
+	class IntegrableModule {
+		<<interface>>
+		+GetBus() Bus
+		+SetBus(bus Bus)
+	}
+
+	class ModuleFactoryWithOptions {
+		<<interface>>
+		Create(bus Bus, options ...ModuleOption) (Module, error)
+	}
+
+	class Module {
+		<<interface>>
+	}
+	class InjectableModule {
+		<<interface>>
+		GetModuleName() string
+	}
+	class InterruptableModule {
+		<<interface>>
+		Start() error
+		Stop() error
+	}
+
+	Module --|> InjectableModule
+	Module --|> IntegrableModule
+	Module --|> InterruptableModule
+	Module --|> ModuleFactoryWithOptions
+
+	class Submodule {
+		<<interface>>
+	}
+
+	Submodule --|> InjectableModule
+	Submodule --|> IntegrableModule
+```
+
+### Shared module interfaces
+
+A shared module interface is an interface that defines the methods that we modelled as common to multiple modules.
+For example: the ability to start/stop a module is pretty common and for that we defined the `InterruptableModule` interface.
 There are some interfaces that are common to multiple modules and we followed the [Interface segregation principle](https://en.wikipedia.org/wiki/Interface_segregation_principle) and also [Rob Pike's Go Proverb](https://youtu.be/PAAkCSZUG1c?t=317):
 
 > The bigger the interface, the weaker the abstraction.
 
-These interfaces that can be embedded in modules are defined in `shared/modules/module.go`. GoDoc comments will provide you with more information about each interface.
+These interfaces that can be embedded in modules are defined in `shared/modules/module.go`.
+GoDoc comments will provide you with more information about each interface.
+
+### Factory interfaces
+
+In order to formalize and support the generalization of modules and submodule while still providing flexibility, we defined a set of generic factory interfaces which can be embedded or used directly to enforce consistent constructor semantics.
+These interfaces are [defined in `shared/modules/factory.go`](../factory.go) and outlined convenience:
+
+- `ModuleFactoryWithOptions`: Specialized factory interface for modules conforming to the "typical" signature above. Useful when creating modules that only require optional runtime configurations.
+- `FactoryWithConfig`: A generic type, used to create a module with a specific configuration type.
+- `FactoryWithOptions`: The generic form used to define `ModuleFactoryWithConfig`.
+- `FactoryWithConfigAndOptions`: Another generic type which combines the capabilities of the previous two. Suitable for creating modules that require both specific configuration and optional runtime configurations.
 
 ### Module
 
-A module is an abstraction (go interface) of a self-contained unit of functionality that carries out a specific task/set of tasks with the idea of being reusable, modular, testable and having a clear and concise API. A module might implement 0..N common interfaces. You can find additional details in the [Modules in detail](#modules-in-detail) section below.
+A module is an abstraction (go interface) of a self-contained unit of functionality that carries out a specific task/set of tasks with the idea of being reusable, modular, testable and having a clear and concise API.
+A module might implement 0..N common interfaces.
+Each module MUST be registered with the module registry such that it can be retrieved via the bus.
+You can find additional details in the [Modules in detail](#submodules-in-detail) section below.
 
 ### Module mock
 
-A mock is a stand-in, a fake or simplified implementation of a module that is used for testing purposes. It is used to simulate the behaviour of the module and to verify that the module is interacting with other modules correctly. Mocks are generated using `go:generate` directives together with the [`mockgen` tool](https://pkg.go.dev/github.com/golang/mock#readme-running-mockgen).
+A mock is a stand-in, a fake or simplified implementation of a module that is used for testing purposes.
+It is used to simulate the behaviour of the module and to verify that the module is interacting with other modules correctly.
+Mocks are generated using `go:generate` directives together with the [`mockgen` tool](https://pkg.go.dev/github.com/golang/mock#readme-running-mockgen).
 
 ### Base module
 
-A base module is a module that implements a common interface, exposing the most basic logic. Base modules are meant to be **embedded** in module structs which implement this common interface **and** don't need to override the respective interface member(s). The intention being to improve DRYness (Don't Repeat Yourself) and to reduce boilerplate code. You can find the base modules in the `shared/modules/base_modules` package.
+A base module is a module that implements a common interface, exposing the most basic logic.
+Base modules are meant to be **embedded** in module structs which implement this common interface **and** don't need to override the respective interface member(s).
+The intention being to improve DRYness (Don't Repeat Yourself) and to reduce boilerplate code.
+You can find the base modules in the `shared/modules/base_modules` package.
+
+### Submodule
+
+A submodule is a self-contained unit of functionality which is composed by a module and is necessary for that module to function.
+Each module MAY be registered with the module registry such that it can be retrieved via the bus.
+
+### Example Submodule Class Diagram
+
+```mermaid
+classDiagram
+
+	class IntegrableModule {
+		<<interface>>
+		+GetBus() Bus
+		+SetBus(bus Bus)
+	}
+	class InjectableModule {
+		<<interface>>
+		GetModuleName() string
+	}
+
+	class Submodule {
+		<<interface>>
+	}
+
+	Submodule --|> InjectableModule
+	Submodule --|> IntegrableModule
+
+	class ExampleSubmoduleInterface {
+		<<interface>>
+		...
+	}
+
+	class exampleSubmodule
+	class exampleSubmoduleFactory {
+		<<interface>>
+		Create(...) (ExampleSubmoduleInterface, error)
+	}
+
+	exampleSubmodule --|> Submodule
+	exampleSubmodule --|> ExampleSubmoduleInterface
+	exampleSubmodule --|> exampleSubmoduleFactory
+```
+
 
 ## Code Organization
 
@@ -57,7 +163,7 @@ A base module is a module that implements a common interface, exposing the most 
 └── types                   # Common types for the modules
 ```
 
-## Modules in detail
+## (Sub)Modules in detail
 
 We structured the code so that each module has its interface (and supporting interfaces, if any) defined in the `shared/modules` package, where the file containing the module interface follows the naming convention `[moduleName]_module.go`.
 You can start by looking at the interfaces of the modules we already implemented to get a better idea of what a module is and how it should be structured.
@@ -65,28 +171,53 @@ You might notice that these files include `go:generate` directives, these are us
 
 ### Module creation
 
-Module creation uses a typical constructor pattern signature `Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error)` where `options ...modules.ModuleOption` is an optional variadic argument that allows for the passing of options to the module.
-This is useful to configure the module at creation time and it's usually used during prototyping and in "sub-modules" that don't have a specific configuration file and where adding it would add unnecessary complexity and overhead. If a module has a lot of `ModuleOption`s, at that point a configuration file might be advisable.
+Module and submodule constructors both conform to the pattern established by the [factory interfaces](#factory-interfaces).
 
-To formalize the module creation convention, we've introduced a set of factory interfaces in [`shared/modules/factory.go`](https://github.com/pokt-network/pocket/tree/main/shared/modules/factory.go).
-These interfaces allow for more flexible module (or "sub-module"; see: [`RainTreeFactory`](https://github.com/pokt-network/pocket/tree/main/p2p/raintree/network.go)) creation and configuration, while maintaining a clear and concise API.
+In the case of modules, `ModuleFactoryWithConfig` MUST be applied, enforcing the following constructor signature:
+```
+Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error)
+```
+ 
+Where `options` is an (optional) variadic argument that allows for the passing of an arbitrary number options to the module.
+This is useful to configure the module at creation time.
 
-- `ModuleFactoryWithOptions`: Specialized factory interface for modules conforming to the "typical" signature above. Useful when creating modules that only require optional runtime configurations.
-- `FactoryWithConfig`: A generic type, used to create a module with a specific configuration type.
-- `FactoryWithOptions`: The generic form used to define `ModuleFactoryWithConfig`.
-- `FactoryWithConfigAndOptions`: Another generic type which combines the capabilities of the previous two. Suitable for creating modules that require both specific configuration and optional runtime configurations.
+As all modules, share this interface, each module MAY (or not) consider constructor options but MUST receive them.
+See `ModuleFactoryWithOptions`, also defined in `shared/modules/factory.go`.
 
-Module creation utilizes the factory interfaces defined above.
-Depending on your module's requirements, you can choose the most suitable factory interface for your module (or "sub-module").
+Options stand in contrast to values which are **required** in order for a (sub)module to function properly.
+These values SHOULD be composed in to a single config struct which can be received via the respective factory interface type.
 
-For examples of (sub-)modules that implement `ModuleFactoryWithConfig`, see:
+For modules, this config MUST be incorporated into the [`runtime.Config`](../../../runtime/configs/config.go) which automatically implies the following:
+- such config values can be set via the node's config file and overriden via environment variables
+- such config values MUST be serializable (i.e. no references to objects in memory)
 
-- [`p2pModule`](https://github.com/pokt-network/pocket/tree/main/p2p/module.go) - `WithHostOption`
-- [`rpcCurrentHeightProvider`](https://github.com/pokt-network/pocket/tree/main/p2p/providers/current_height_provider/rpc/provider.go) - `WithCustomRPCURL`
+This serializable config value constraint on modules will likely foster the creation of submodules anywhere modules depend on high-level (non-serializable) objects, thus moving the responsibility of managing those dependencies to the submodule.
 
+For examples of modules and options see:
 
-Essentially the `ModuleOption` sets a custom RPC URL for the module at runtime.
+- `Module`: [`p2pModule`](../../../p2p/module.go)
+- `ModuleOption`: [`WithHost`](../../../p2p/testutil.go)
+- `ModuleOption`: [`WithStakedActorRouter`](../../../p2p/testutil.go)
+- `ModuleOption`: [`WithUnstakedActorRouter`](../../../p2p/testutil.go)
 
+### Submodule creation
+
+Depending on your submodule's requirements, you SHOULD choose the most suitable factory interface.
+
+Options functions used in conjunction with submodules MAY accept either concrete or interface submodule types.
+If an option is only intended or only makes sense to be used with a specific concrete submodule type, then it SHOULD either accept that concrete type or be rewritten to apply to the respective interface type, generally.
+
+Options stand in contrast to values which are **required** in order for a (sub)module to function properly.
+These values SHOULD be composed in to a single config struct which can be received via the respective factory interface type.
+
+Submodules aren't required to conform to the `ModuleFactoryWithOptions` interface like modules are.
+Instead, each submodule SHOULD define its own factory interface using the applicable shared generic `Factory...` (see: [Factory Interfaces](#factory-interfaces)) interface, which it SHOULD also enforce.
+Each submodule factory interface type SHOULD (i.e. prefer to) return an interface type for the submodule, but it MAY be appropriate to return a concrete type in some cases.
+
+For examples of submodules, see:
+
+- `Submodule`: [`persistencePeerstoreProvider`](https://github.com/pokt-network/pocket/tree/main/p2p/providers/current_height_provider/rpc/provider.go)
+- `Submodule`: [`rpcPeerstoreProvider`](https://github.com/pokt-network/pocket/tree/main/p2p/providers/current_height_provider/rpc/provider.go)
 
 ### Interacting & Registering with the `bus`
 
@@ -98,7 +229,7 @@ When a module is constructed via the `Create(bus modules.Bus, options ...modules
 
 tl;dr Pocket module's version of dependency injection.
 
-We implemented a `ModulesRegistry` module [here](https://github.com/pokt-network/pocket/blob/19bf4d3f6507f5d406d9fafdb69b81359bccf110/runtime/modules_registry.go) that takes care of the module registration and retrieval.
+We implemented a [`ModulesRegistry` module](https://github.com/pokt-network/pocket/blob/19bf4d3f6507f5d406d9fafdb69b81359bccf110/runtime/modules_registry.go) that takes care of the module registration and retrieval.
 
 This module is registered with the `bus` at the application level, it is accessible to all modules via the `bus` interface and it's also mockable as you would expect.
 
@@ -116,7 +247,7 @@ func (m *bus) RegisterModule(module modules.Module) {
 
 Under the hood, the module name is used to map to the instance of the module so that it's possible to retrieve a module by its name.
 
-This is quite **important** because it unlock a powerful concept **Dependency Injection**.
+This is quite **important** because it unlocks a powerful concept **Dependency Injection**.
 
 This enables the developer to define different implementations of a module and to register the one that is needed at runtime. This is because we can only have one module registered with a unique name and also because, by convention, we keep module names defined as constants.
 This is useful not only for prototyping but also for different use cases such as the `p1` CLI and the `pocket` binary where different implementations of the same module are necessary due to the fact that the `p1` CLI doesn't have a persistence module but still needs to know what's going on in the network.
