@@ -13,15 +13,32 @@ const (
 	identifierPrefix  = "#"
 	identifierCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-#[]<>"
 	invalidIdChars    = "/"
+
 	// lengths for identifiers are measured in bytes
+	defaultMinIdLength    = 32 // use 32 bytes as a default minimum length to avoid collisions
+	defaultMaxIdLength    = 64
 	minClientIdLength     = 9
 	minConnectionIdLength = 10
 	minChannelIdLength    = 8
 	minPortIdLength       = 2
-	defaultMinIdLength    = 32 // use 32 bytes as a default minimum length to avoid collisions
-	defaultMaxIdLength    = 64
-	portMaxIdLength       = 128
+	maxPortIdLength       = 128
 )
+
+var (
+	invalidIdMap map[rune]struct{}
+	validIdMap   map[rune]struct{}
+)
+
+func init() {
+	invalidIdMap = make(map[rune]struct{}, 0)
+	for _, c := range invalidIdChars {
+		invalidIdMap[c] = struct{}{}
+	}
+	validIdMap = make(map[rune]struct{}, 0)
+	for _, c := range identifierCharset {
+		validIdMap[c] = struct{}{}
+	}
+}
 
 // basicValidation performs basic validation on the given identifier
 func basicValidation(id string, minLength, maxLength int) error {
@@ -38,13 +55,13 @@ func basicValidation(id string, minLength, maxLength int) error {
 	}
 
 	for _, c := range invalidIdChars {
-		if strings.Contains(id, string(c)) {
+		if _, ok := invalidIdMap[c]; ok {
 			return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("cannot contain '%s'", string(c)))
 		}
 	}
 
 	for _, c := range id {
-		if ok := strings.Contains(identifierCharset, string(c)); !ok {
+		if _, ok := validIdMap[c]; !ok {
 			return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("contains invalid character '%c'", c))
 		}
 	}
@@ -69,15 +86,17 @@ func ValidateChannelID(id string) error {
 
 // ValidatePortID validates the port identifier string
 func ValidatePortID(id string) error {
-	return basicValidation(id, minPortIdLength, portMaxIdLength)
+	return basicValidation(id, minPortIdLength, maxPortIdLength)
 }
 
-// generateNewIdentifier generates a new identifier in the given range with the identifier prefix
+// generateNewIdentifier generates a new identifier in the given range
+func generateNewIdentifier(min, max int) string {
+	return generateNewIdentifierWithSeed(min, max, time.Now().UnixNano())
+}
+
+// generateNewIdentifierWithSeed generates a new identifier in the given range with the identifier prefix
 // If the random seed provided is 0 it will use the current unix timestamp as the seed
-func generateNewIdentifier(min, max int, seed int64) string {
-	if seed == 0 {
-		seed = time.Now().UnixNano()
-	}
+func generateNewIdentifierWithSeed(min, max int, seed int64) string {
 	//nolint:gosec // weak random source okay - cryptographically secure randomness not required
 	r := rand.New(rand.NewSource(seed))
 	localMin := defaultMinIdLength - min
@@ -93,21 +112,21 @@ func generateNewIdentifier(min, max int, seed int64) string {
 }
 
 // GenerateClientIdentifier generates a new client identifier
-func GenerateClientIdentifier(seed int64) string {
-	return generateNewIdentifier(minClientIdLength, defaultMaxIdLength, seed)
+func GenerateClientIdentifier() string {
+	return generateNewIdentifier(minClientIdLength, defaultMaxIdLength)
 }
 
 // GenerateConnectionIdentifier generates a new connection identifier
-func GenerateConnectionIdentifier(seed int64) string {
-	return generateNewIdentifier(minConnectionIdLength, defaultMaxIdLength, seed)
+func GenerateConnectionIdentifier() string {
+	return generateNewIdentifier(minConnectionIdLength, defaultMaxIdLength)
 }
 
 // GenerateChannelIdentifier generates a new channel identifier
-func GenerateChannelIdentifier(seed int64) string {
-	return generateNewIdentifier(minChannelIdLength, defaultMaxIdLength, seed)
+func GenerateChannelIdentifier() string {
+	return generateNewIdentifier(minChannelIdLength, defaultMaxIdLength)
 }
 
 // GeneratePortIdentifier generates a new port identifier
-func GeneratePortIdentifier(seed int64) string {
-	return generateNewIdentifier(minPortIdLength, portMaxIdLength, seed)
+func GeneratePortIdentifier() string {
+	return generateNewIdentifier(minPortIdLength, maxPortIdLength)
 }

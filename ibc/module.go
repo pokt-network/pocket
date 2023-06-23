@@ -6,7 +6,6 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
-	"github.com/pokt-network/pocket/utility/validator"
 )
 
 var _ modules.IBCModule = &ibcModule{}
@@ -39,12 +38,9 @@ func (m *ibcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 	bus.RegisterModule(m)
 
 	// Only validators can be an IBC host due to the need for reliability
-	actors := m.GetBus().GetUtilityModule().GetActorModules()
 	isValidator := false
-	for _, actor := range actors {
-		if actor.GetModuleName() == validator.ValidatorModuleName {
-			isValidator = true
-		}
+	if _, err := m.GetBus().GetUtilityModule().GetValidatorModule(); err == nil {
+		isValidator = true
 	}
 	if isValidator && m.cfg.Enabled {
 		m.logger.Info().Msg("🛰️ creating IBC host 🛰️")
@@ -59,6 +55,7 @@ func (m *ibcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 
 func (m *ibcModule) Start() error {
 	if !m.cfg.Enabled {
+		m.logger.Info().Msg("🚫 IBC module disabled 🚫")
 		return nil
 	}
 	m.logger.Info().Msg("🪐 starting IBC module 🪐")

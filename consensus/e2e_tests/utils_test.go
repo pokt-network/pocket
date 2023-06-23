@@ -597,8 +597,8 @@ func baseIbcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockIBCModu
 	hostMock := mockModules.NewMockIBCHost(ctrl)
 
 	hostMock.EXPECT().GetTimestamp().DoAndReturn(func() uint64 {
-		unix := time.Now().Unix()
-		return uint64(unix)
+		timestamp := time.Now().Unix()
+		return uint64(timestamp)
 	}).AnyTimes()
 
 	ibcMock.EXPECT().Start().Return(nil).AnyTimes()

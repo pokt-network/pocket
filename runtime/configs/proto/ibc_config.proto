@@ -5,5 +5,11 @@ package configs;
 option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
 message IBCConfig {
+    // If IBC is enabled by a node there are two possible states depending on the
+    // node's actor type:
+    // 1. The node is a validator and thus when IBC enabled is automatically
+    //    an IBC host.
+    // 2. The node is a servicer and thus when IBC enabled is they are enabled
+    //    to relay IBC packets using an IBC relayer binary
     bool enabled = 1;
 }

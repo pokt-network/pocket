@@ -12,25 +12,25 @@ func TestPaths_GenerateValidIdentifiers(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		switch i % 4 {
 		case 0:
-			cl := GenerateClientIdentifier(int64(i))
+			cl := GenerateClientIdentifier()
 			require.NotNil(t, cl)
 			_, ok := ids[cl]
 			require.False(t, ok)
 			ids[cl] = "client"
 		case 1:
-			co := GenerateConnectionIdentifier(int64(i))
+			co := GenerateConnectionIdentifier()
 			require.NotNil(t, co)
 			_, ok := ids[co]
 			require.False(t, ok)
 			ids[co] = "connection"
 		case 2:
-			ch := GenerateChannelIdentifier(int64(i))
+			ch := GenerateChannelIdentifier()
 			require.NotNil(t, ch)
 			_, ok := ids[ch]
 			require.False(t, ok)
 			ids[ch] = "channel"
 		case 3:
-			po := GeneratePortIdentifier(int64(i))
+			po := GeneratePortIdentifier()
 			require.NotNil(t, po)
 			_, ok := ids[po]
 			require.False(t, ok)

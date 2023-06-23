@@ -20,7 +20,7 @@ type IBCModule interface {
 type IBCHost interface {
 	IBCHandler
 
-	// GetTimestamp returns the current unix timestamp for the hostmachine
+	// GetTimestamp returns the current unix timestamp for the host machine
 	GetTimestamp() uint64
 }
 
