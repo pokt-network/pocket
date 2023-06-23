@@ -29,7 +29,6 @@ type rpcPeerstoreProvider struct {
 	base_modules.IntegrableModule
 
 	rpcURL    string
-	p2pCfg    *configs.P2PConfig
 	rpcClient *rpc.ClientWithResponses
 }
 
@@ -103,13 +102,6 @@ func (rpcPSP *rpcPeerstoreProvider) initRPCClient() {
 }
 
 // options
-
-// WithP2PConfig allows to specify a custom P2P config
-func WithP2PConfig(p2pCfg *configs.P2PConfig) rpcPeerstoreProviderOption {
-	return func(rpcPSP *rpcPeerstoreProvider) {
-		rpcPSP.p2pCfg = p2pCfg
-	}
-}
 
 // WithCustomRPCURL allows to specify a custom RPC URL
 func WithCustomRPCURL(rpcURL string) rpcPeerstoreProviderOption {
