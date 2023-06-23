@@ -2,7 +2,7 @@
 // host to access the persistence module and thus the tree store in order to create local
 // copies of the IBC state tree with the GetProvableStore() function. Bus access also will
 // allow for the host to send any local changes to these stores as IbcMessage types through
-// the P2P module's Broadcast() function to allow them to be included in the next block.
+// the P2P module's Broadcast() function to allow them to propagate through the network's mempool.
 package ibc
 
 import (
@@ -23,9 +23,11 @@ func (h *host) GetTimestamp() uint64 {
 	return uint64(time.Now().Unix())
 }
 
-// GetProvableStore returns a copy of the IBC state tree where all operations happen
-// locally (in memory) and are not persisted to the database. All changes are instead
-// broadcasted to the network for inclusion in the next block.
+// GetProvableStore returns a copy of the IBC state tree where all operations observed by
+// this specific ibc light client were applied to its ephemeral (in memory) state and have not
+// yet been included in the next block. The aggregation of all light client-provable stores
+// propagated throughout the network are happen validated by the block proposer when reaping
+// the mempool, and lead to a valid on-chain state transition when consensus is reached.
 // TODO(#854): Implement this
 func (h *host) GetProvableStore(prefix coreTypes.CommitmentPrefix) (modules.ProvableStore, error) {
 	return nil, nil
