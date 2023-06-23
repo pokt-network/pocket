@@ -11,6 +11,11 @@ type Module interface {
 	ModuleFactoryWithOptions
 }
 
+type Submodule interface {
+	InjectableModule
+	IntegrableModule
+}
+
 // IntegrableModule is a module that integrates with the bus.
 // Essentially it's a module that is capable of communicating with the `bus` (see `shared/modules/bus_module.go`) for additional details.
 type IntegrableModule interface {
