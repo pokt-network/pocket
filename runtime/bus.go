@@ -45,7 +45,7 @@ func (m *bus) GetModulesRegistry() modules.ModulesRegistry {
 	return m.modulesRegistry
 }
 
-func (m *bus) RegisterModule(module modules.Module) {
+func (m *bus) RegisterModule(module modules.Submodule) {
 	module.SetBus(m)
 	m.modulesRegistry.RegisterModule(module)
 }
