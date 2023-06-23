@@ -35,7 +35,7 @@ type UnicastRouter struct {
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	host           libp2pHost.Host
 	messageHandler typesP2P.MessageHandler
-	peerHandler func(peer typesP2P.Peer) error
+	peerHandler    func(peer typesP2P.Peer) error
 }
 
 func Create(bus modules.Bus, cfg *config.UnicastRouterConfig) (*UnicastRouter, error) {
