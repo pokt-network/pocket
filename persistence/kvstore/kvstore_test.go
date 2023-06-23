@@ -56,7 +56,7 @@ func TestKVStore_BasicOperations(t *testing.T) {
 			expected: errors.Errorf("Key with size 65001 exceeded 65000 limit. Key:\n%s", hex.Dump(invalidKey[:1<<10])),
 		},
 		{
-			name:     "Successfully manages to retrieve a value from the store",
+			name:     "Successfully retrieve a value from the store",
 			op:       "get",
 			key:      []byte("foo"),
 			value:    []byte("bar"),
