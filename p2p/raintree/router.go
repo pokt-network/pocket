@@ -2,8 +2,8 @@ package raintree
 
 import (
 	"fmt"
+
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
-	"github.com/pokt-network/pocket/p2p/unicast"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/pokt-network/pocket/logger"
@@ -12,10 +12,10 @@ import (
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/p2p/unicast"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/mempool"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
@@ -47,7 +47,6 @@ type rainTreeRouter struct {
 	peersManager          *rainTreePeersManager
 	pstoreProvider        peerstore_provider.PeerstoreProvider
 	currentHeightProvider providers.CurrentHeightProvider
-	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 }
 
 func NewRainTreeRouter(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
