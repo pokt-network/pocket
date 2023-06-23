@@ -26,8 +26,8 @@ func TestKVStore_BasicOperations(t *testing.T) {
 		{
 			name:     "Successfully sets a value in the store",
 			op:       "set",
-			key:      []byte("foo"),
-			value:    []byte("baz"),
+			key:      []byte("testKey"),
+			value:    []byte("testValue"),
 			fail:     false,
 			expected: nil,
 		},
@@ -35,7 +35,7 @@ func TestKVStore_BasicOperations(t *testing.T) {
 			name:     "Successfully updates a value in the store",
 			op:       "set",
 			key:      []byte("foo"),
-			value:    []byte("bar"),
+			value:    []byte("new value"),
 			fail:     false,
 			expected: nil,
 		},
@@ -115,6 +115,9 @@ func TestKVStore_BasicOperations(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			err := store.ClearAll()
+			require.NoError(t, err)
+			setupStore(t, store)
 			switch tc.op {
 			case "set":
 				err := store.Set(tc.key, tc.value)
@@ -324,5 +327,13 @@ func TestKVStore_ClearAll(t *testing.T) {
 	require.Equal(t, 0, len(allValues))
 
 	err = store.Stop()
+	require.NoError(t, err)
+}
+
+func setupStore(t *testing.T, store KVStore) {
+	t.Helper()
+	err := store.Set([]byte("foo"), []byte("bar"))
+	require.NoError(t, err)
+	err = store.Set([]byte("baz"), []byte("bin"))
 	require.NoError(t, err)
 }
