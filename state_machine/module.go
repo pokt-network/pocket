@@ -14,7 +14,7 @@ import (
 var _ modules.StateMachineModule = &stateMachineModule{}
 
 type stateMachineModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	base_modules.InterruptableModule
 
 	*fsm.FSM

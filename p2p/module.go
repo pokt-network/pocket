@@ -36,7 +36,7 @@ import (
 var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	started        atomic.Bool
 	address        cryptoPocket.Address

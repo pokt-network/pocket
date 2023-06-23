@@ -25,7 +25,7 @@ var _ unicastRouterFactory = &UnicastRouter{}
 type unicastRouterFactory = modules.FactoryWithConfig[*UnicastRouter, *config.UnicastRouterConfig]
 
 type UnicastRouter struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	logger *modules.Logger
 	// messageHandler is the function to call when a message is received.
@@ -35,7 +35,7 @@ type UnicastRouter struct {
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	host           libp2pHost.Host
 	messageHandler typesP2P.MessageHandler
-	peerHandler func(peer typesP2P.Peer) error
+	peerHandler    func(peer typesP2P.Peer) error
 }
 
 func Create(bus modules.Bus, cfg *config.UnicastRouterConfig) (*UnicastRouter, error) {

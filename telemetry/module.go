@@ -14,7 +14,7 @@ var (
 )
 
 type telemetryModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	base_modules.InterruptableModule
 }
 

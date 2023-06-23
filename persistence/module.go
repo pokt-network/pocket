@@ -26,7 +26,7 @@ var (
 // TODO: convert address and public key to string not bytes in all account and actor functions
 // TODO: remove address parameter from all pool operations
 type persistenceModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	logger *modules.Logger
 

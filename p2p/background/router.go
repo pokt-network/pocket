@@ -27,16 +27,16 @@ import (
 )
 
 var (
-	_ typesP2P.Router            = &backgroundRouter{}
-	_ modules.IntegratableModule = &backgroundRouter{}
-	_ backgroundRouterFactory    = &backgroundRouter{}
+	_ typesP2P.Router          = &backgroundRouter{}
+	_ modules.IntegrableModule = &backgroundRouter{}
+	_ backgroundRouterFactory  = &backgroundRouter{}
 )
 
 type backgroundRouterFactory = modules.FactoryWithConfig[typesP2P.Router, *config.BackgroundConfig]
 
 // backgroundRouter implements `typesP2P.Router` for use with all P2P participants.
 type backgroundRouter struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	unicast.UnicastRouter
 
 	logger *modules.Logger

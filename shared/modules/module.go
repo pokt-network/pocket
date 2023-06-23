@@ -6,14 +6,14 @@ import (
 
 type Module interface {
 	InitializableModule
-	IntegratableModule
+	IntegrableModule
 	InterruptableModule
 	ModuleFactoryWithOptions
 }
 
-// IntegratableModule is a module that integrates with the bus.
+// IntegrableModule is a module that integrates with the bus.
 // Essentially it's a module that is capable of communicating with the `bus` (see `shared/modules/bus_module.go`) for additional details.
-type IntegratableModule interface {
+type IntegrableModule interface {
 	// SetBus sets the bus for the module.
 	//
 	// Generally it is called by the `bus` itself whenever a module is registered via `bus.RegisterModule(module modules.Module)`

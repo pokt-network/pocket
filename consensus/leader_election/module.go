@@ -14,7 +14,7 @@ type LeaderElectionModule interface {
 var _ LeaderElectionModule = &leaderElectionModule{}
 
 type leaderElectionModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	base_modules.InterruptableModule
 }
 

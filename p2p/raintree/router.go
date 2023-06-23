@@ -23,15 +23,15 @@ import (
 )
 
 var (
-	_ typesP2P.Router            = &rainTreeRouter{}
-	_ modules.IntegratableModule = &rainTreeRouter{}
-	_ rainTreeFactory            = &rainTreeRouter{}
+	_ typesP2P.Router          = &rainTreeRouter{}
+	_ modules.IntegrableModule = &rainTreeRouter{}
+	_ rainTreeFactory          = &rainTreeRouter{}
 )
 
 type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, *config.RainTreeConfig]
 
 type rainTreeRouter struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	unicast.UnicastRouter
 
 	logger *modules.Logger

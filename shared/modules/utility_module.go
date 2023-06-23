@@ -84,7 +84,7 @@ type UnstakingActor interface {
 
 // UtilityUnitOfWork is a unit of work (https://martinfowler.com/eaaCatalog/unitOfWork.html) that allows for atomicity and commit/rollback functionality
 type UtilityUnitOfWork interface {
-	IntegratableModule
+	IntegrableModule
 
 	// SetProposalBlock updates the utility unit of work with the proposed state transition.
 	// It does not apply, validate or commit the changes.
