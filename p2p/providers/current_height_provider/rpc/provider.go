@@ -80,7 +80,7 @@ func (rchp *rpcCurrentHeightProvider) initRPCClient() {
 
 // WithCustomRPCURL allows to specify a custom RPC URL
 func WithCustomRPCURL(rpcURL string) modules.ModuleOption {
-	return func(rabp modules.InitializableModule) {
+	return func(rabp modules.InjectableModule) {
 		rabp.(*rpcCurrentHeightProvider).rpcURL = rpcURL
 	}
 }

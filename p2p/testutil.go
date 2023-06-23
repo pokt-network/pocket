@@ -12,7 +12,7 @@ import (
 // with this module, instead of creating a new one on `#Start()`.
 // Primarily intended for testing.
 func WithHost(host libp2pHost.Host) modules.ModuleOption {
-	return func(m modules.InitializableModule) {
+	return func(m modules.InjectableModule) {
 		mod, ok := m.(*p2pModule)
 		if ok {
 			mod.host = host
@@ -22,7 +22,7 @@ func WithHost(host libp2pHost.Host) modules.ModuleOption {
 }
 
 func WithUnstakedActorRouter(router typesP2P.Router) modules.ModuleOption {
-	return func(m modules.InitializableModule) {
+	return func(m modules.InjectableModule) {
 		mod, ok := m.(*p2pModule)
 		if ok {
 			mod.unstakedActorRouter = router
@@ -31,7 +31,7 @@ func WithUnstakedActorRouter(router typesP2P.Router) modules.ModuleOption {
 }
 
 func WithStakedActorRouter(router typesP2P.Router) modules.ModuleOption {
-	return func(m modules.InitializableModule) {
+	return func(m modules.InjectableModule) {
 		mod, ok := m.(*p2pModule)
 		if ok {
 			mod.stakedActorRouter = router

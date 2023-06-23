@@ -100,14 +100,14 @@ func (rpcPSP *rpcPeerstoreProvider) initRPCClient() {
 
 // WithP2PConfig allows to specify a custom P2P config
 func WithP2PConfig(p2pCfg *configs.P2PConfig) modules.ModuleOption {
-	return func(rabp modules.InitializableModule) {
+	return func(rabp modules.InjectableModule) {
 		rabp.(*rpcPeerstoreProvider).p2pCfg = p2pCfg
 	}
 }
 
 // WithCustomRPCURL allows to specify a custom RPC URL
 func WithCustomRPCURL(rpcURL string) modules.ModuleOption {
-	return func(rabp modules.InitializableModule) {
+	return func(rabp modules.InjectableModule) {
 		rabp.(*rpcPeerstoreProvider).rpcURL = rpcURL
 	}
 }
