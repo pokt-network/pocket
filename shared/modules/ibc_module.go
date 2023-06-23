@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-//go:generate mockgen -destination=./mocks/ibc_module_mock.go github.com/pokt-network/pocket/shared/modules IBCModule,IBCHost,IBCHandler
+//go:generate mockgen -destination=./mocks/ibc_module_mock.go github.com/pokt-network/pocket/shared/modules IBCModule,IBCHost,IBCHandler,ProvableStore
 
 const IBCModuleName = "ibc"
 
