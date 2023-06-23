@@ -11,11 +11,11 @@ import (
 func (*treeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
 	m := &treeStore{}
 
+	bus.RegisterModule(m)
+
 	for _, option := range options {
 		option(m)
 	}
-
-	m.SetBus(bus)
 
 	if err := m.setupTrees(); err != nil {
 		return nil, err
