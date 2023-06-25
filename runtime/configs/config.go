@@ -36,10 +36,7 @@ type Config struct {
 
 // ParseConfig parses the config file and returns a Config struct
 func ParseConfig(cfgFile string) *Config {
-	defaultCfg := NewDefaultConfig()
-
-	// Bind environment variables so POCKET_ env vars work without having to set in config file
-	bindViperToEnvVariables(defaultCfg)
+	config := NewDefaultConfig()
 
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
@@ -50,6 +47,13 @@ func ParseConfig(cfgFile string) *Config {
 		viper.SetConfigName("config")        // name of config file (without extension)
 		viper.SetConfigType("json")          // REQUIRED if the config file does not have the extension in the name
 	}
+
+	// The lines below allow for environment variables configuration (12 factor app)
+	// Eg: POCKET_CONSENSUS_PRIVATE_KEY=somekey would override `consensus.private_key` in config.json
+	// If the key is not set in the config, the env var will not be used.
+	viper.SetEnvPrefix("POCKET")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
 
 	verbose := viper.GetBool("verbose")
 
@@ -69,30 +73,11 @@ func ParseConfig(cfgFile string) *Config {
 		}
 	}
 
-	customConfig := getConfigFromViper()
-	adjustConfigDefaults(customConfig, defaultCfg)
-	setViperDefaultConfig(defaultCfg)
-
-	// Read the configuration again, this time with adjusted default values set on viper. The first read was needed
-	//	to be able to make adjustments to the defaults based on the user-defined configuration.
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("[ERROR] failed to read adjusted default config %s", err.Error())
-	}
-
-	// Return the config resulting from merging of custom config and adjusted default config
-	return getConfigFromViper()
-}
-
-// getConfigFromViper returns the configuration from viper. It is used instead of simply using viper unmarshalling
-// to allow a fallback to json.Unmarshal if necessary.
-func getConfigFromViper() *Config {
 	decoderConfig := func(dc *mapstructure.DecoderConfig) {
 		// This is to leverage the `json` struct tags without having to add `mapstructure` ones.
 		// Until we have complex use cases, this should work just fine.
 		dc.TagName = "json"
 	}
-
-	var config *Config
 	// Detect if we need to use json.Unmarshal instead of viper.Unmarshal
 	if err := viper.Unmarshal(&config, decoderConfig); err != nil {
 		cfgData := viper.AllSettings()
@@ -107,60 +92,15 @@ func getConfigFromViper() *Config {
 	return config
 }
 
-// adjustConfigDefaults performs the necessary adjustments on the default configuration depending on the provided custom configuration.
-//
-//	This adjust of default configuration is needed to address cases where simply overriding the defaults
-//	with the user-supplied values is not sufficient. An example of this is when the custom configuration
-//	enables Fisherman, which means a Servicer should not be enabled on config, and therefore the default
-//	configuration should not include a default Servicer.
-func adjustConfigDefaults(customCfg, defaultCfg *Config) {
-	if customCfg == nil {
-		return
-	}
-
-	// Disable default servicer if the custom configuration has fisherman enabled.
-	if customCfg.Fisherman != nil && customCfg.Fisherman.Enabled {
-		defaultCfg.Servicer = &ServicerConfig{}
-	}
-}
-
-// bindViperToEnvVariables binds viper to environment variables with names dervied from the keys in the provided config.
-//
-//	This is needed so environment variable overrides work
-//
+// setViperDefaults this is a hacky way to set the default values for Viper so env var overrides work.
 // DISCUSS: is there a better way to do this?
-func bindViperToEnvVariables(cfg *Config) {
-	// The lines below allow for environment variables configuration (12 factor app)
-	// Eg: POCKET_CONSENSUS_PRIVATE_KEY=somekey would override `consensus.private_key` in config.json
-	// If the key is not set in the config, the env var will not be used.
-	viper.SetEnvPrefix("POCKET")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv()
-
+func setViperDefaults(cfg *Config) {
+	// convert the config struct to a map with the json tags as keys
 	cfgData, err := json.Marshal(cfg)
+
 	if err != nil {
 		log.Fatalf("[ERROR] failed to marshal config %s", err.Error())
 	}
-
-	var cfgMap map[string]any
-	if err := json.Unmarshal(cfgData, &cfgMap); err != nil {
-		log.Fatalf("[ERROR] failed to unmarshal config %s", err.Error())
-	}
-
-	// ADDTEST: test scenarios related to environment variables, e.g. override of default/configured values
-	for envVar := range cfgMap {
-		if err := viper.BindEnv(envVar); err != nil {
-			log.Fatalf("[ERROR] failed to bind env. var. %s: %s", envVar, err.Error())
-		}
-	}
-}
-
-func setViperDefaultConfig(cfg *Config) {
-	cfgData, err := json.Marshal(cfg)
-	if err != nil {
-		log.Fatalf("[ERROR] failed to marshal config %s", err.Error())
-	}
-
 	var cfgMap map[string]any
 	if err := json.Unmarshal(cfgData, &cfgMap); err != nil {
 		log.Fatalf("[ERROR] failed to unmarshal config %s", err.Error())
@@ -224,6 +164,9 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 	for _, option := range options {
 		option(cfg)
 	}
+
+	// set Viper defaults so POCKET_ env vars work without having to set in config file
+	setViperDefaults(cfg)
 
 	return cfg
 }
