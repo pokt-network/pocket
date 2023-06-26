@@ -222,6 +222,7 @@ func (rtr *rainTreeRouter) handleRainTreeMsg(rainTreeMsgBz []byte) error {
 	// There was no error, but we don't need to forward this to the app-specific bus.
 	// For example, the message has already been handled by the application.
 	if rainTreeMsg.Data == nil {
+		rtr.logger.Debug().Msg("no data in RainTree message")
 		return nil
 	}
 
