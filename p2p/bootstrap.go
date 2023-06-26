@@ -42,6 +42,7 @@ func (m *p2pModule) configureBootstrapNodes() error {
 }
 
 // bootstrap attempts to bootstrap from a bootstrap node
+// TECHDEBT(#859): refactor bootstrapping.
 func (m *p2pModule) bootstrap() error {
 	var pstore typesP2P.Peerstore
 
