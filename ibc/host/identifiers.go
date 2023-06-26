@@ -108,8 +108,9 @@ func basicValidation(id string, minLength, maxLength int) error {
 		return coreTypes.ErrIBCInvalidID(id, "cannot be blank")
 	}
 
-	if len(id) < minLength || len(id) > maxLength {
-		return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("length must be between %d and %d", minLength, maxLength))
+	length := len(id)
+	if length < minLength || length > maxLength {
+		return coreTypes.ErrIBCInvalidID(id, fmt.Sprintf("length (%d) must be between %d and %d", length, minLength, maxLength))
 	}
 
 	if !strings.HasPrefix(id, identifierPrefix) {
