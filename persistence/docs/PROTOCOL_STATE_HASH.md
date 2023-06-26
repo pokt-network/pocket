@@ -23,14 +23,14 @@ This document defines how Pocket V1 takes a snapshot of its world state. An intr
 
 ### Infrastructural Components
 
-| Component             | Data Type                             | Implementation Options - Examples                      | Implementation Selected - Current | Example             | Use Case                                                                         |
-| --------------------- | ------------------------------------- | ------------------------------------------------------ | --------------------------------- | ------------------- | -------------------------------------------------------------------------------- |
-| Data Tables           | SQL Database / Engine                 | MySQL, SQLite, PostgreSQL                              | PostgresSQL                       | Validator SQL Table | Validating & updating information when applying a transaction                    |
-| Merkle Trees          | Merkle Trie backed by Key-Value Store | Celestia's SMT, Libra's JMT, Cosmos' IAVL, Verkle Tree | Celestia's SMT                    | Fisherman Trie      | Maintains the state of all account based trees                                   |
-| Blocks                | Serialization Codec                   | Amino, Protobuf, Thrift, Avro                          | Protobuf                          | Block protobuf      | Serialized and inserted into the Block Store                                     |
-| Objects (e.g. Actors) | Serialization Codec                   | Amino, Protobuf, Thrift, Avro                          | Protobuf                          | Servicer protobuf   | Serialized and inserted into the corresponding Tree                              |
-| Block Store           | Key Value Store                       | LevelDB, BadgerDB, RocksDB, BoltDB                     | BadgerDb                          | Block Store         | Maintains a key-value store of the blockchain blocks                             |
-| Transaction Indexer   | Key Value Store                       | LevelDB, BadgerDB, RocksDB, BoltDB                     | BadgerDB                          | Tx Indexer          | Indexes transactions in different ways for fast queries, presence checks, etc... |
+| Component             | Data Type                             | Implementation Options - Examples                      | Implementation Selected - Current   | Example             | Use Case                                                                         |
+| --------------------- | ------------------------------------- | ------------------------------------------------------ | ----------------------------------- | ------------------- | -------------------------------------------------------------------------------- |
+| Data Tables           | SQL Database / Engine                 | MySQL, SQLite, PostgreSQL                              | PostgresSQL                         | Validator SQL Table | Validating & updating information when applying a transaction                    |
+| Merkle Trees          | Merkle Trie backed by Key-Value Store | Celestia's SMT, Libra's JMT, Cosmos' IAVL, Verkle Tree | Pocket's SMT (Forked from Celestia) | Fisherman Trie      | Maintains the state of all account based trees                                   |
+| Blocks                | Serialization Codec                   | Amino, Protobuf, Thrift, Avro                          | Protobuf                            | Block protobuf      | Serialized and inserted into the Block Store                                     |
+| Objects (e.g. Actors) | Serialization Codec                   | Amino, Protobuf, Thrift, Avro                          | Protobuf                            | Servicer protobuf   | Serialized and inserted into the corresponding Tree                              |
+| Block Store           | Key Value Store                       | LevelDB, BadgerDB, RocksDB, BoltDB                     | BadgerDb                            | Block Store         | Maintains a key-value store of the blockchain blocks                             |
+| Transaction Indexer   | Key Value Store                       | LevelDB, BadgerDB, RocksDB, BoltDB                     | BadgerDB                            | Tx Indexer          | Indexes transactions in different ways for fast queries, presence checks, etc... |
 
 ### Block Proto
 
@@ -39,8 +39,6 @@ The block protobuf that is serialized and store in the block store can be found 
 ### Trees
 
 An individual Merkle Tree is created for each type of actor, record or data type. Each of these is backed by its own key-value store.
-
-Note that the order in which the trees are defined (found in `persistence/state.go`) is important since it determines how the state hash is computed. _TODO(#361): Consider specifying the oder in a `.proto` `enum` rather than a `.go` `iota`._
 
 **Actor Merkle Trees**:
 
@@ -71,8 +69,8 @@ This flow shows the interaction between the `PostgresDB` and `MerkleTrees` liste
 3. Serialize each record using the corresponding underlying protobuf
 4. Insert the serialized record into the corresponding tree (which is back by a key-value store)
 5. Compute the root hash of each tree
-6. Aggregate all the root hashes by concatenating them together
-7. Compute the new `stateHash` by taking a hash of the concatenated hash list
+6. Insert the name of the tree and its root hash into the root tree
+7. Compute the new `stateHash` by hex encoding the root tree's root hash
 
 ```mermaid
 sequenceDiagram
@@ -89,14 +87,14 @@ sequenceDiagram
         end
         P->>+PKV: GetRoot()
         PKV->>-P: rootHash
+        P->>P: rootTree.Update(stateTreeName, rootHash)
     end
 
-    P->>P: stateHash = hash(concat(rootHashes))
+    P->>P: stateHash = hex(rootTree.Root())
+
     activate P
     deactivate P
 ```
-
-_IMPORTANT: The order in which the `rootHashes` are concatenated is based on the definition in which the trees are ordered in within `state.go`._
 
 ## Store Block (Commit)
 

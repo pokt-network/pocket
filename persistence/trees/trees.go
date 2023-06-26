@@ -5,14 +5,13 @@
 package trees
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"hash"
+	"log"
 
 	"github.com/jackc/pgx/v5"
-
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/sql"
@@ -28,63 +27,50 @@ import (
 // as a package level variable for visibility and internal use.
 var smtTreeHasher hash.Hash = sha256.New()
 
-var merkleTreeToString = map[merkleTree]string{
-	appMerkleTree:      "app",
-	valMerkleTree:      "val",
-	fishMerkleTree:     "fish",
-	servicerMerkleTree: "servicer",
-
-	accountMerkleTree: "account",
-	poolMerkleTree:    "pool",
-
-	transactionsMerkleTree: "transactions",
-	paramsMerkleTree:       "params",
-	flagsMerkleTree:        "flags",
-}
-
-var actorTypeToMerkleTreeName = map[coreTypes.ActorType]merkleTree{
-	coreTypes.ActorType_ACTOR_TYPE_APP:      appMerkleTree,
-	coreTypes.ActorType_ACTOR_TYPE_VAL:      valMerkleTree,
-	coreTypes.ActorType_ACTOR_TYPE_FISH:     fishMerkleTree,
-	coreTypes.ActorType_ACTOR_TYPE_SERVICER: servicerMerkleTree,
-}
-
-var merkleTreeToActorTypeName = map[merkleTree]coreTypes.ActorType{
-	appMerkleTree:      coreTypes.ActorType_ACTOR_TYPE_APP,
-	valMerkleTree:      coreTypes.ActorType_ACTOR_TYPE_VAL,
-	fishMerkleTree:     coreTypes.ActorType_ACTOR_TYPE_FISH,
-	servicerMerkleTree: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
-}
-
-type merkleTree float64
-
-// A list of Merkle Trees used to maintain the state hash.
 const (
-	// IMPORTANT: The order in which these trees are defined is important and strict. It implicitly // defines the index of the root hash each independent as they are concatenated together
-	// to generate the state hash.
-
-	// TECHDEBT(#834): Remove the need for enforced ordering
-
-	// Actor Merkle Trees
-	appMerkleTree merkleTree = iota
-	valMerkleTree
-	fishMerkleTree
-	servicerMerkleTree
-
-	// Account Merkle Trees
-	accountMerkleTree
-	poolMerkleTree
-
-	// Data Merkle Trees
-	transactionsMerkleTree
-	paramsMerkleTree
-	flagsMerkleTree
-
-	// Used for iteration purposes only; see https://stackoverflow.com/a/64178235/768439 as a reference
-	numMerkleTrees
+	RootTreeName         = "root"
+	AppTreeName          = "app"
+	ValTreeName          = "val"
+	FishTreeName         = "fish"
+	ServicerTreeName     = "servicer"
+	AccountTreeName      = "account"
+	PoolTreeName         = "pool"
+	TransactionsTreeName = "transactions"
+	ParamsTreeName       = "params"
+	FlagsTreeName        = "flags"
 )
 
-// Ensure treeStore implements TreeStore
+var actorTypeToMerkleTreeName = map[coreTypes.ActorType]string{
+	coreTypes.ActorType_ACTOR_TYPE_APP:      AppTreeName,
+	coreTypes.ActorType_ACTOR_TYPE_VAL:      ValTreeName,
+	coreTypes.ActorType_ACTOR_TYPE_FISH:     FishTreeName,
+	coreTypes.ActorType_ACTOR_TYPE_SERVICER: ServicerTreeName,
+}
+
+var merkleTreeNameToActorTypeName = map[string]coreTypes.ActorType{
+	AppTreeName:      coreTypes.ActorType_ACTOR_TYPE_APP,
+	ValTreeName:      coreTypes.ActorType_ACTOR_TYPE_VAL,
+	FishTreeName:     coreTypes.ActorType_ACTOR_TYPE_FISH,
+	ServicerTreeName: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
+}
+
+var stateTreeNames = []string{
+	// Actor Trees
+	AppTreeName, ValTreeName, FishTreeName, ServicerTreeName,
+	// Account Trees
+	AccountTreeName, PoolTreeName,
+	// Data Trees
+	TransactionsTreeName, ParamsTreeName, FlagsTreeName,
+}
+
+// stateTree is a wrapper around the SMT that contains an identifying
+// key alongside the tree and nodeStore that backs the tree
+type stateTree struct {
+	name      string
+	tree      *smt.SMT
+	nodeStore kvstore.KVStore
+}
+
 var _ modules.TreeStoreModule = &treeStore{}
 
 // treeStore stores a set of merkle trees that
@@ -96,8 +82,21 @@ type treeStore struct {
 	base_modules.IntegratableModule
 
 	treeStoreDir string
-	merkleTrees  map[merkleTree]*smt.SMT
-	nodeStores   map[merkleTree]kvstore.KVStore
+	rootTree     *stateTree
+	merkleTrees  map[string]*stateTree
+}
+
+// GetTree returns the name, root hash, and nodeStore for the matching tree tree
+// stored in the TreeStore. This enables the caller to import the smt and not
+// change the one stored
+func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
+	if name == RootTreeName {
+		return t.rootTree.tree.Root(), t.rootTree.nodeStore
+	}
+	if tree, ok := t.merkleTrees[name]; ok {
+		return tree.tree.Root(), tree.nodeStore
+	}
+	return nil, nil
 }
 
 // Update takes a transaction and a height and updates
@@ -111,12 +110,16 @@ func (t *treeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
 // This should only be called by the debug CLI.
 // TECHDEBT: Move this into a separate file with a debug build flag to avoid accidental usage in prod
 func (t *treeStore) DebugClearAll() error {
-	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		nodeStore := t.nodeStores[treeType]
+	if err := t.rootTree.nodeStore.ClearAll(); err != nil {
+		return fmt.Errorf("failed to clear root node store: %w", err)
+	}
+	t.rootTree.tree = smt.NewSparseMerkleTree(t.rootTree.nodeStore, smtTreeHasher)
+	for treeName, stateTree := range t.merkleTrees {
+		nodeStore := stateTree.nodeStore
 		if err := nodeStore.ClearAll(); err != nil {
-			return fmt.Errorf("failed to clear %s node store: %w", merkleTreeToString[treeType], err)
+			return fmt.Errorf("failed to clear %s node store: %w", treeName, err)
 		}
-		t.merkleTrees[treeType] = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
+		stateTree.tree = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
 	}
 	return nil
 }
@@ -124,13 +127,13 @@ func (t *treeStore) DebugClearAll() error {
 // updateMerkleTrees updates all of the merkle trees in order defined by `numMerkleTrees`
 // * it returns the new state hash capturing the state of all the trees or an error if one occurred
 func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
-	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		switch treeType {
+	for treeName := range t.merkleTrees {
+		switch treeName {
 		// Actor Merkle Trees
-		case appMerkleTree, valMerkleTree, fishMerkleTree, servicerMerkleTree:
-			actorType, ok := merkleTreeToActorTypeName[treeType]
+		case AppTreeName, ValTreeName, FishTreeName, ServicerTreeName:
+			actorType, ok := merkleTreeNameToActorTypeName[treeName]
 			if !ok {
-				return "", fmt.Errorf("no actor type found for merkle tree: %v", treeType)
+				return "", fmt.Errorf("no actor type found for merkle tree: %s", treeName)
 			}
 
 			actors, err := sql.GetActors(pgtx, actorType, height)
@@ -139,11 +142,11 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 
 			if err := t.updateActorsTree(actorType, actors); err != nil {
-				return "", fmt.Errorf("failed to update actors tree for treeType: %v, actorType: %v - %w", treeType, actorType, err)
+				return "", fmt.Errorf("failed to update actors tree for treeType: %s, actorType: %v - %w", treeName, actorType, err)
 			}
 
 		// Account Merkle Trees
-		case accountMerkleTree:
+		case AccountTreeName:
 			accounts, err := sql.GetAccounts(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get accounts: %w", err)
@@ -151,7 +154,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateAccountTrees(accounts); err != nil {
 				return "", fmt.Errorf("failed to update account trees: %w", err)
 			}
-		case poolMerkleTree:
+		case PoolTreeName:
 			pools, err := sql.GetPools(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get transactions: %w", err)
@@ -161,7 +164,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 
 		// Data Merkle Trees
-		case transactionsMerkleTree:
+		case TransactionsTreeName:
 			indexedTxs, err := sql.GetTransactions(txi, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get transactions: %w", err)
@@ -169,7 +172,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateTransactionsTree(indexedTxs); err != nil {
 				return "", fmt.Errorf("failed to update transactions: %w", err)
 			}
-		case paramsMerkleTree:
+		case ParamsTreeName:
 			params, err := sql.GetParams(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get params: %w", err)
@@ -177,7 +180,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateParamsTree(params); err != nil {
 				return "", fmt.Errorf("failed to update params tree: %w", err)
 			}
-		case flagsMerkleTree:
+		case FlagsTreeName:
 			flags, err := sql.GetFlags(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get flags from transaction: %w", err)
@@ -187,7 +190,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			}
 		// Default
 		default:
-			panic(fmt.Sprintf("not handled in state commitment update. Merkle tree #{%v}", treeType))
+			log.Fatalf("not handled in state commitment update. Merkle tree: %s", treeName)
 		}
 	}
 
@@ -198,28 +201,21 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 }
 
 func (t *treeStore) commit() error {
-	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		if err := t.merkleTrees[tree].Commit(); err != nil {
-			return fmt.Errorf("failed to commit %s: %w", merkleTreeToString[tree], err)
+	for treeName, stateTree := range t.merkleTrees {
+		if err := stateTree.tree.Commit(); err != nil {
+			return fmt.Errorf("failed to commit %s: %w", treeName, err)
 		}
 	}
 	return nil
 }
 
 func (t *treeStore) getStateHash() string {
-	// create an order-matters list of roots
-	roots := make([][]byte, 0)
-	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		roots = append(roots, t.merkleTrees[tree].Root())
+	for _, stateTree := range t.merkleTrees {
+		if err := t.rootTree.tree.Update([]byte(stateTree.name), stateTree.tree.Root()); err != nil {
+			log.Fatalf("failed to update root tree with %s tree's hash: %v", stateTree.name, err)
+		}
 	}
-
-	// combine them and hash the result
-	rootsConcat := bytes.Join(roots, []byte{})
-	stateHash := sha256.Sum256(rootsConcat)
-
-	// Convert the array to a slice and return it
-	// REF: https://stackoverflow.com/questions/28886616/convert-array-to-slice-in-go
-	return hex.EncodeToString(stateHash[:])
+	return hex.EncodeToString(t.rootTree.tree.Root())
 }
 
 ////////////////////////
@@ -243,7 +239,7 @@ func (t *treeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*co
 		if !ok {
 			return fmt.Errorf("no merkle tree found for actor type: %s", actorType)
 		}
-		if err := t.merkleTrees[merkleTreeName].Update(bzAddr, actorBz); err != nil {
+		if err := t.merkleTrees[merkleTreeName].tree.Update(bzAddr, actorBz); err != nil {
 			return err
 		}
 	}
@@ -267,7 +263,7 @@ func (t *treeStore) updateAccountTrees(accounts []*coreTypes.Account) error {
 			return err
 		}
 
-		if err := t.merkleTrees[accountMerkleTree].Update(bzAddr, accBz); err != nil {
+		if err := t.merkleTrees[AccountTreeName].tree.Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}
@@ -287,7 +283,7 @@ func (t *treeStore) updatePoolTrees(pools []*coreTypes.Account) error {
 			return err
 		}
 
-		if err := t.merkleTrees[poolMerkleTree].Update(bzAddr, accBz); err != nil {
+		if err := t.merkleTrees[PoolTreeName].tree.Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}
@@ -303,7 +299,7 @@ func (t *treeStore) updateTransactionsTree(indexedTxs []*coreTypes.IndexedTransa
 	for _, idxTx := range indexedTxs {
 		txBz := idxTx.GetTx()
 		txHash := crypto.SHA3Hash(txBz)
-		if err := t.merkleTrees[transactionsMerkleTree].Update(txHash, txBz); err != nil {
+		if err := t.merkleTrees[TransactionsTreeName].tree.Update(txHash, txBz); err != nil {
 			return err
 		}
 	}
@@ -317,7 +313,7 @@ func (t *treeStore) updateParamsTree(params []*coreTypes.Param) error {
 		if err != nil {
 			return err
 		}
-		if err := t.merkleTrees[paramsMerkleTree].Update(paramKey, paramBz); err != nil {
+		if err := t.merkleTrees[ParamsTreeName].tree.Update(paramKey, paramBz); err != nil {
 			return err
 		}
 	}
@@ -332,7 +328,7 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 		if err != nil {
 			return err
 		}
-		if err := t.merkleTrees[flagsMerkleTree].Update(flagKey, flagBz); err != nil {
+		if err := t.merkleTrees[FlagsTreeName].tree.Update(flagKey, flagBz); err != nil {
 			return err
 		}
 	}
