@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
+	"github.com/pokt-network/pocket/persistence/trees"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -16,7 +17,6 @@ import (
 )
 
 var (
-	_ modules.PersistenceModule = &persistenceModule{}
 	_ modules.PersistenceModule = &persistenceModule{}
 
 	_ modules.PersistenceRWContext = &PostgresContext{}
@@ -36,13 +36,14 @@ type persistenceModule struct {
 	// A key-value store mapping heights to blocks. Needed for block synchronization.
 	blockStore blockstore.BlockStore
 
-	// A tx indexer (i.e. key-value store) mapping transaction hashes to transactions. Needed for
-	// avoiding tx replays attacks, and is also used as the backing database for the transaction
-	// tx merkle tree.
+	// txIndexer is a key-value store mapping transaction hashes to `IndexedTransaction` protos.
+	// It is needed to avoid tx replay attacks and for business logic around transaction validation.
+	// IMPORTANT: It doubles as the data store for the transaction tree in state tree set.
 	txIndexer indexer.TxIndexer
 
-	// A list of all the merkle trees maintained by the persistence module that roll up into the state commitment.
-	stateTrees *stateTrees
+	// stateTrees manages all of the merkle trees maintained by the
+	// persistence module that roll up into the state commitment.
+	stateTrees modules.TreeStoreModule
 
 	// Only one write context is allowed at a time
 	writeContext *PostgresContext
@@ -102,7 +103,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	stateTrees, err := newStateTrees(persistenceCfg.TreesStoreDir)
+	treeModule, err := trees.Create(bus, trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir))
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +114,7 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 
 	m.blockStore = blockStore
 	m.txIndexer = txIndexer
-	m.stateTrees = stateTrees
+	m.stateTrees = treeModule
 
 	// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
 	// 		     this forces the genesis state to be reloaded on every node startup until state
@@ -232,6 +233,10 @@ func (m *persistenceModule) GetBlockStore() blockstore.BlockStore {
 
 func (m *persistenceModule) GetTxIndexer() indexer.TxIndexer {
 	return m.txIndexer
+}
+
+func (m *persistenceModule) GetTreeStore() modules.TreeStoreModule {
+	return m.stateTrees
 }
 
 func (m *persistenceModule) GetNetworkID() string {

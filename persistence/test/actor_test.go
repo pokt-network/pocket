@@ -3,8 +3,9 @@ package test
 import (
 	"testing"
 
-	"github.com/pokt-network/pocket/shared/core/types"
 	"github.com/stretchr/testify/require"
+
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 func TestGetAllStakedActors(t *testing.T) {
@@ -21,13 +22,13 @@ func TestGetAllStakedActors(t *testing.T) {
 	actualFishermen := 0
 	for _, actor := range actors {
 		switch actor.ActorType {
-		case types.ActorType_ACTOR_TYPE_VAL:
+		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			actualValidators++
-		case types.ActorType_ACTOR_TYPE_SERVICER:
+		case coreTypes.ActorType_ACTOR_TYPE_SERVICER:
 			actualServicers++
-		case types.ActorType_ACTOR_TYPE_APP:
+		case coreTypes.ActorType_ACTOR_TYPE_APP:
 			actualApplications++
-		case types.ActorType_ACTOR_TYPE_FISH:
+		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			actualFishermen++
 		}
 	}
