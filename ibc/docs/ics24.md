@@ -1,7 +1,9 @@
 # ICS-24 Host Requirements <!-- omit in toc -->
 
 - [Overview](#overview)
+- [Host Configuration](#host-configuration)
 - [Implementation](#implementation)
+  - [Persistence](#persistence)
   - [Paths and Identifiers](#paths-and-identifiers)
   - [Timestamps](#timestamps)
 - [IBC State](#ibc-state)
@@ -45,7 +47,7 @@ The following is a simplified sequence diagram of an IBC fungible token transfer
 ```mermaid
 sequenceDiagram
   actor UA as User A
-  box Blue Chain A
+  box Transparent Chain A
     participant A1 as Validator A
     participant A2 as IBC Host A
     participant A3 as Light Client B
@@ -53,7 +55,7 @@ sequenceDiagram
   box Transparent Relayer
     actor R1 as Relayer
   end
-  box Red Chain B
+  box Transparent Chain B
     participant B1 as Validator B
     participant B2 as IBC Host B
     participant B3 as Light Client A
@@ -152,23 +154,12 @@ See: [ibc/module.go](../module.go) for the specific implementation details.
 
 With the `IbcMessage` now propagated through the network's mempool, when it is reaped (by the block proposer) the message's validity will be handled by first determining the type of the `IbcMessage`:
 
-- `UpdateIbcStore`: The `key` and `value` fields of the `IbcMessage` are inserted into the `ibc_messages` Postgres table along with the current height
-- `PruneIbcStore`: The `key` with a `nil` value is passed into the `ibc_messages` Postgres table along with the current height
-
-_Note: Prior to insertion the `key` and `value` fields of the messages are hexadecimally encoded into strings._
+- `UpdateIbcStore`: The `key` and `value` fields are tracked by persistence and used to update the `ibc` store state tree
+- `PruneIbcStore`: The `key` field is tracked by persistence and marked for removal in the `ibc` store state tree
 
 ### State Transition
 
-When the new state hash is computed, the different state trees read the updates from their respective Postgres tables and update the trees accordingly. For each entry in the `ibc_message` table depending on the entries `value` field the tree will perform one of two operations:
-
-- `value == nil`
-  - This is a `PruneIbcStore` message and thus the tree will delete the entry with the given `key`
-  - `ibcTree.Delete(key)`
-- `value != nil`
-  - This is an `UpdateIbcStore` message and thus the tree will update the entry with the given `key` to have the given `value`
-  - `ibcTree.Update(key, value)`
-
-The new root hash of the IBC store tree is then included in the `rootTree` and the new state hash is computed, ensuring the IBC store's state is consistent across the network.
+See: [PROTOCOL_STATE_HASH.md](../../persistence/docs/PROTOCOL_STATE_HASH.md#ibc-state-tree) for more information on how the persistence module uses the data it has tracked from the `IbcMessage` objects, in order to update the actual state trees and in turn the root hash.
 
 [ics24]: https://github.com/cosmos/ibc/blob/main/spec/core/ics-024-host-requirements/README.md
 [ics20]: https://github.com/cosmos/ibc/blob/main/spec/app/ics-020-fungible-token-transfer/README.md
