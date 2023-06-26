@@ -14,7 +14,7 @@ import (
 // of too many concurrent streams).
 //
 // This could ultimately be actuated from the CLI via flags, configs, and/or env
-// vars. Initially, weo could consider coupling to a `--verbose` persistent flag.
+// vars. Initially, we could consider coupling to a `--verbose` persistent flag.
 //
 
 // logStream logs the incoming stream and its scope stats
