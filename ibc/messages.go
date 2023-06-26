@@ -10,24 +10,22 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func CreateUpdateStoreMessage(prefix coreTypes.CommitmentPrefix, key, value []byte) *types.IbcMessage {
+func CreateUpdateStoreMessage(key, value []byte) *types.IbcMessage {
 	return &types.IbcMessage{
 		Event: &types.IbcMessage_Update{
 			Update: &types.UpdateIbcStore{
-				Prefix: prefix,
-				Key:    key,
-				Value:  value,
+				Key:   key,
+				Value: value,
 			},
 		},
 	}
 }
 
-func CreatePruneStoreMessage(prefix coreTypes.CommitmentPrefix, key []byte) *types.IbcMessage {
+func CreatePruneStoreMessage(key []byte) *types.IbcMessage {
 	return &types.IbcMessage{
 		Event: &types.IbcMessage_Prune{
 			Prune: &types.PruneIbcStore{
-				Prefix: prefix,
-				Key:    key,
+				Key: key,
 			},
 		},
 	}
