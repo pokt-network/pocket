@@ -2,6 +2,7 @@ package raintree
 
 import (
 	"fmt"
+
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	"github.com/pokt-network/pocket/p2p/unicast"
 	"google.golang.org/protobuf/proto"
