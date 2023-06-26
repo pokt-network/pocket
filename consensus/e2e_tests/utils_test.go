@@ -15,6 +15,7 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/internal/testutil"
+	ibcUtils "github.com/pokt-network/pocket/internal/testutil/ibc"
 	persistenceMocks "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -24,7 +25,6 @@ import (
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -122,7 +122,7 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
-	ibcMock := baseIbcMock(t, eventsChannel)
+	ibcMock := ibcUtils.IbcMockWithHost(t, eventsChannel)
 
 	for _, module := range []modules.Module{
 		p2pMock,
@@ -591,24 +591,6 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModu
 	return rpcMock
 }
 
-func baseIbcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockIBCModule {
-	ctrl := gomock.NewController(t)
-	ibcMock := mockModules.NewMockIBCModule(ctrl)
-	hostMock := mockModules.NewMockIBCHost(ctrl)
-
-	hostMock.EXPECT().GetTimestamp().DoAndReturn(func() uint64 {
-		timestamp := time.Now().Unix()
-		return uint64(timestamp)
-	}).AnyTimes()
-
-	ibcMock.EXPECT().Start().Return(nil).AnyTimes()
-	ibcMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
-	ibcMock.EXPECT().GetModuleName().Return(modules.IBCModuleName).AnyTimes()
-	ibcMock.EXPECT().GetHost().Return(hostMock).AnyTimes()
-
-	return ibcMock
-}
-
 func WaitForNextBlock(
 	t *testing.T,
 	clck *clock.Mock,
@@ -799,7 +781,7 @@ func waitForNodeToCatchUp(
 	return nil
 }
 
-func generatePlaceholderBlock(height uint64, leaderAddrr crypto.Address) *coreTypes.Block {
+func generatePlaceholderBlock(height uint64, leaderAddrr cryptoPocket.Address) *coreTypes.Block {
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            height,
 		StateHash:         stateHash,
