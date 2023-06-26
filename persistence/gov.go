@@ -8,7 +8,6 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/genesis"
-	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -156,48 +155,6 @@ func getParamOrFlag[T int | string | []byte](p *PostgresContext, tableName, para
 	return
 }
 
-func (p *PostgresContext) getParamsUpdated(height int64) ([]*coreTypes.Param, error) {
-	ctx, tx := p.getCtxAndTx()
-	// Get all parameters / flags at current height
-	rows, err := tx.Query(ctx, p.getParamsOrFlagsUpdateAtHeightQuery(types.ParamsTableName, height))
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var paramSlice []*coreTypes.Param // Store returned rows
-	// Loop over all rows returned and load them into the ParamOrFlag struct array
-	for rows.Next() {
-		param := new(coreTypes.Param)
-		if err := rows.Scan(&param.Name, &param.Value); err != nil {
-			return nil, err
-		}
-		param.Height = height
-		paramSlice = append(paramSlice, param)
-	}
-	return paramSlice, nil
-}
-
-func (p *PostgresContext) getFlagsUpdated(height int64) ([]*coreTypes.Flag, error) {
-	ctx, tx := p.getCtxAndTx()
-	// Get all parameters / flags at current height
-	rows, err := tx.Query(ctx, p.getParamsOrFlagsUpdateAtHeightQuery(types.FlagsTableName, height))
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var flagSlice []*coreTypes.Flag // Store returned rows
-	// Loop over all rows returned and load them into the ParamOrFlag struct array
-	for rows.Next() {
-		flag := new(coreTypes.Flag)
-		if err := rows.Scan(&flag.Name, &flag.Value, &flag.Enabled); err != nil {
-			return nil, err
-		}
-		flag.Height = height
-		flagSlice = append(flagSlice, flag)
-	}
-	return flagSlice, nil
-}
-
 // GetAllParams returns a map of the current latest updated values for all parameters
 // and their values in the form map[parameterName] = parameterValue
 func (p *PostgresContext) GetAllParams() ([][]string, error) {
@@ -217,15 +174,6 @@ func (p *PostgresContext) GetAllParams() ([][]string, error) {
 		paramSlice = append(paramSlice, []string{paramName, paramValue})
 	}
 	return paramSlice, nil
-}
-
-func (p *PostgresContext) getParamsOrFlagsUpdateAtHeightQuery(tableName string, height int64) string {
-	fields := "name,value"
-	if tableName == types.FlagsTableName {
-		fields += ",enabled"
-	}
-	// Build correct query to get all Params/Flags at certain height ordered by their name values
-	return fmt.Sprintf("SELECT %s FROM %s WHERE height=%d ORDER BY name ASC", fields, tableName, height)
 }
 
 func (p *PostgresContext) getLatestParamsOrFlagsQuery(tableName string) string {

@@ -5,18 +5,19 @@ import (
 	"log"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/types"
+	ptypes "github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/stretchr/testify/require"
 )
 
 func FuzzFisherman(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		newTestGenericActor(types.FishermanActor, newTestFisherman),
-		getGenericActor(types.FishermanActor, getTestFisherman),
-		types.FishermanActor)
+		newTestGenericActor(ptypes.FishermanActor, newTestFisherman),
+		getGenericActor(ptypes.FishermanActor, getTestFisherman),
+		ptypes.FishermanActor)
 }
 
 func TestGetSetFishermanStakeAmount(t *testing.T) {
@@ -26,7 +27,7 @@ func TestGetSetFishermanStakeAmount(t *testing.T) {
 
 func TestGetFishermanUpdatedAtHeight(t *testing.T) {
 	getFishermanUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*coreTypes.Actor, error) {
-		return db.GetActorsUpdated(types.FishermanActor, height)
+		return db.GetActorsUpdated(ptypes.FishermanActor, height)
 	}
 	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestFisherman, getFishermanUpdatedFunc, 1)
 }

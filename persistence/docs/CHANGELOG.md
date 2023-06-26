@@ -7,9 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.58] - 2023-06-12
+## [0.0.0.60] - 2023-06-26
 
 - Add place-holder for local context and servicer token usage support methods
+
+## [0.0.0.59] - 2023-06-14
+
+- Refactors the persistence treeStore to be an IntegratableModule
+
+## [0.0.0.58] - 2023-06-13
+
+- Refactors the stateTrees implementation off of the PersistenceContext and into its in module
+- Implements the new Update and Commit pattern with the SMT trees in the trees module
 
 ## [0.0.0.57] - 2023-06-06
 

@@ -26,13 +26,17 @@ type PersistenceModule interface {
 	NewReadContext(height int64) (PersistenceReadContext, error)
 	ReleaseWriteContext() error // The module can maintain many read contexts, but only one write context can exist at a time
 
-	// BlockStore operations
+	// BlockStore maps a block height to an *coreTypes.IndexedTransaction
 	GetBlockStore() blockstore.BlockStore
+
 	NewWriteContext() PersistenceRWContext
 
 	// Indexer operations
 	GetTxIndexer() indexer.TxIndexer
 	TransactionExists(transactionHash string) (bool, error)
+
+	// TreeStore operations
+	GetTreeStore() TreeStoreModule
 
 	// Debugging / development only
 	HandleDebugMessage(*messaging.DebugMessage) error

@@ -8,12 +8,13 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/utils"
-	"github.com/stretchr/testify/require"
 )
 
 func FuzzAccountAmount(f *testing.F) {
