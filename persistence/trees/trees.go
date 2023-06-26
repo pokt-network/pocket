@@ -71,15 +71,18 @@ type stateTree struct {
 	nodeStore kvstore.KVStore
 }
 
-var _ modules.TreeStoreModule = &treeStore{}
+var _ modules.TreeStoreModule = &TreeStore{}
 
-// treeStore stores a set of merkle trees that
+// TreeStore stores a set of merkle trees that
 // it manages. It fulfills the modules.TreeStore interface.
 // * It is responsible for atomic commit or rollback behavior
 // of the underlying trees by utilizing the lazy loading
 // functionality provided by the underlying smt library.
-type treeStore struct {
+type TreeStore struct {
 	base_modules.IntegratableModule
+
+	bus modules.Bus
+	txi indexer.TxIndexer
 
 	treeStoreDir string
 	rootTree     *stateTree
@@ -89,7 +92,7 @@ type treeStore struct {
 // GetTree returns the name, root hash, and nodeStore for the matching tree tree
 // stored in the TreeStore. This enables the caller to import the smt and not
 // change the one stored
-func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
+func (t *TreeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 	if name == RootTreeName {
 		return t.rootTree.tree.Root(), t.rootTree.nodeStore
 	}
@@ -99,17 +102,39 @@ func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 	return nil, nil
 }
 
-// Update takes a transaction and a height and updates
-// all of the trees in the treeStore for that height.
-func (t *treeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
-	txi := t.GetBus().GetPersistenceModule().GetTxIndexer()
-	return t.updateMerkleTrees(pgtx, txi, height)
+// Worldstate holds a ser/deserializable view of the entire tree state.
+type Worldstate struct {
+	TreeStoreDir string
+	RootTree     *stateTree
+	MerkleTrees  map[string]*stateTree
+}
+
+// Update takes a pgx transaction and a height and updates all of the trees in the TreeStore for that height.
+func (t *TreeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
+	previous, err := t.save()
+	if err != nil {
+		return "", fmt.Errorf("failed to create valid rollback point: %w", err)
+	}
+
+	fmt.Printf("previous: %v\n", previous)
+
+	hash, err := t.updateMerkleTrees(pgtx, t.txi, height)
+	if err != nil {
+		// TODO t.load(previous) and take
+		return "", fmt.Errorf("err not handled")
+	}
+	if err := t.Commit(); err != nil {
+		// TODO t.load(previous) state
+		return "", fmt.Errorf("failed to commit tree state: %w", err)
+	}
+
+	return hash, nil
 }
 
 // DebugClearAll is used by the debug cli to completely reset all merkle trees.
 // This should only be called by the debug CLI.
 // TECHDEBT: Move this into a separate file with a debug build flag to avoid accidental usage in prod
-func (t *treeStore) DebugClearAll() error {
+func (t *TreeStore) DebugClearAll() error {
 	if err := t.rootTree.nodeStore.ClearAll(); err != nil {
 		return fmt.Errorf("failed to clear root node store: %w", err)
 	}
@@ -126,7 +151,7 @@ func (t *treeStore) DebugClearAll() error {
 
 // updateMerkleTrees updates all of the merkle trees in order defined by `numMerkleTrees`
 // * it returns the new state hash capturing the state of all the trees or an error if one occurred
-func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
+func (t *TreeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {
 	for treeName := range t.merkleTrees {
 		switch treeName {
 		// Actor Merkle Trees
@@ -194,13 +219,28 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 		}
 	}
 
-	if err := t.commit(); err != nil {
-		return "", fmt.Errorf("failed to commit: %w", err)
+	if err := t.Commit(); err != nil {
+		return "", err
 	}
+
 	return t.getStateHash(), nil
 }
 
-func (t *treeStore) commit() error {
+func (t *TreeStore) Prepare(tx modules.Tx) error {
+	return fmt.Errorf("not impl")
+}
+
+func (t *TreeStore) save() (*Worldstate, error) {
+	w := &Worldstate{
+		MerkleTrees: map[string]*stateTree{},
+	}
+
+	fmt.Printf("w: %v\n", w)
+
+	return w, nil
+}
+
+func (t *TreeStore) Commit() error {
 	for treeName, stateTree := range t.merkleTrees {
 		if err := stateTree.tree.Commit(); err != nil {
 			return fmt.Errorf("failed to commit %s: %w", treeName, err)
@@ -209,7 +249,11 @@ func (t *treeStore) commit() error {
 	return nil
 }
 
-func (t *treeStore) getStateHash() string {
+func (t *TreeStore) Rollback() {
+	panic("treestore not impl")
+}
+
+func (t *TreeStore) getStateHash() string {
 	for _, stateTree := range t.merkleTrees {
 		if err := t.rootTree.tree.Update([]byte(stateTree.name), stateTree.tree.Root()); err != nil {
 			log.Fatalf("failed to update root tree with %s tree's hash: %v", stateTree.name, err)
@@ -223,7 +267,7 @@ func (t *treeStore) getStateHash() string {
 ////////////////////////
 
 // NB: I think this needs to be done manually for all 4 types.
-func (t *treeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*coreTypes.Actor) error {
+func (t *TreeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*coreTypes.Actor) error {
 	for _, actor := range actors {
 		bzAddr, err := hex.DecodeString(actor.GetAddress())
 		if err != nil {
@@ -251,7 +295,7 @@ func (t *treeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*co
 // Account Tree Helpers //
 //////////////////////////
 
-func (t *treeStore) updateAccountTrees(accounts []*coreTypes.Account) error {
+func (t *TreeStore) updateAccountTrees(accounts []*coreTypes.Account) error {
 	for _, account := range accounts {
 		bzAddr, err := hex.DecodeString(account.GetAddress())
 		if err != nil {
@@ -271,7 +315,7 @@ func (t *treeStore) updateAccountTrees(accounts []*coreTypes.Account) error {
 	return nil
 }
 
-func (t *treeStore) updatePoolTrees(pools []*coreTypes.Account) error {
+func (t *TreeStore) updatePoolTrees(pools []*coreTypes.Account) error {
 	for _, pool := range pools {
 		bzAddr, err := hex.DecodeString(pool.GetAddress())
 		if err != nil {
@@ -295,7 +339,7 @@ func (t *treeStore) updatePoolTrees(pools []*coreTypes.Account) error {
 // Data Tree Helpers //
 ///////////////////////
 
-func (t *treeStore) updateTransactionsTree(indexedTxs []*coreTypes.IndexedTransaction) error {
+func (t *TreeStore) updateTransactionsTree(indexedTxs []*coreTypes.IndexedTransaction) error {
 	for _, idxTx := range indexedTxs {
 		txBz := idxTx.GetTx()
 		txHash := crypto.SHA3Hash(txBz)
@@ -306,7 +350,7 @@ func (t *treeStore) updateTransactionsTree(indexedTxs []*coreTypes.IndexedTransa
 	return nil
 }
 
-func (t *treeStore) updateParamsTree(params []*coreTypes.Param) error {
+func (t *TreeStore) updateParamsTree(params []*coreTypes.Param) error {
 	for _, param := range params {
 		paramBz, err := codec.GetCodec().Marshal(param)
 		paramKey := crypto.SHA3Hash([]byte(param.Name))
@@ -321,7 +365,7 @@ func (t *treeStore) updateParamsTree(params []*coreTypes.Param) error {
 	return nil
 }
 
-func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
+func (t *TreeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 	for _, flag := range flags {
 		flagBz, err := codec.GetCodec().Marshal(flag)
 		flagKey := crypto.SHA3Hash([]byte(flag.Name))

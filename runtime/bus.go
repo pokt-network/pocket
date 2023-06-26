@@ -71,6 +71,10 @@ func (m *bus) GetPersistenceModule() modules.PersistenceModule {
 	return getModuleFromRegistry[modules.PersistenceModule](m, modules.PersistenceModuleName)
 }
 
+func (m *bus) GetTreeStoreModule() modules.TreeStoreModule {
+	return getModuleFromRegistry[modules.TreeStoreModule](m, modules.TreeStoreModuleName)
+}
+
 func (m *bus) GetP2PModule() modules.P2PModule {
 	return getModuleFromRegistry[modules.P2PModule](m, modules.P2PModuleName)
 }

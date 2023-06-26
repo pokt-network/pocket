@@ -37,6 +37,18 @@ type PersistenceModule interface {
 	HandleDebugMessage(*messaging.DebugMessage) error
 }
 
+// Tx is fed to an AtomicStore by a StoreManager to atomically apply a block to the persistence layer.
+type Tx struct {
+	Block *coreTypes.Block
+}
+
+// AtomicStore defines the interface for stores to implement to guarantee atomic commits to the persistence layer
+type AtomicStore interface {
+	Prepare(tx Tx) error
+	Commit() error
+	Rollback()
+}
+
 // Interface defining the context within which the node can operate with the persistence layer.
 // Operations in the context of a PersistenceContext are isolated from other operations and
 // other persistence contexts until committed, enabling parallelizability along other operations.

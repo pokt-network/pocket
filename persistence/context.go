@@ -5,6 +5,7 @@ package persistence
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -47,7 +48,6 @@ func (p *PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	return p.tx.Rollback(context.TODO())
 }
 
-// IMPROVE(#361): Guarantee the integrity of the state
 // Full details in the thread from the PR review: https://github.com/pokt-network/pocket/pull/285#discussion_r1018471719
 func (p *PostgresContext) ComputeStateHash() (string, error) {
 	stateHash, err := p.stateTrees.Update(p.tx, uint64(p.Height))
@@ -58,10 +58,26 @@ func (p *PostgresContext) ComputeStateHash() (string, error) {
 	return p.stateHash, nil
 }
 
+// Apply applies an atomnic commit to the StoreManager for the given Stores at the current height.
+func (p *PostgresContext) Apply(transaction modules.Tx) error {
+	manager := &StoreManager{
+		stores: []modules.AtomicStore{
+			p.stateTrees,
+		},
+		tx: transaction,
+	}
+	if ok := manager.Commit(); !ok {
+		return fmt.Errorf("failed to commit transaction %+v", transaction)
+	}
+	return nil
+}
+
 // TECHDEBT(#327): Make sure these operations are atomic
 func (p *PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 	p.logger.Info().Int64("height", p.Height).Msg("About to commit block & context")
 
+	// TODO_IN_THIS_COMMIT this is technically a prepare step
+	//
 	// Create a persistence block proto
 	block, err := p.prepareBlock(proposerAddr, quorumCert)
 	if err != nil {
