@@ -1,0 +1,12 @@
+Tests to add:
+    - Add integration tests to cover the following:
+        - Local IBC store change is propagated through the network
+            - Check via P2P magic
+        - Local IBC store change is included in PostgresDB
+            - Check via SQL query
+    - Add E2E tests to cover the following:
+        - Local IBC store change gets included in the next block
+            - Check via inclusion proof
+        - Local IBC store change that is not included in next block stays in mempool
+            - Check by querying mempool
+            - Check via exclusion proof
