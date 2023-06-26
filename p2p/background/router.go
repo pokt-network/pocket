@@ -232,17 +232,13 @@ func (rtr *backgroundRouter) setupDependencies(ctx context.Context, cfg *config.
 	}
 
 	if err := rtr.setupPeerstore(
-		ctx,
-		cfg.PeerstoreProvider,
-		cfg.CurrentHeightProvider,
-	); err != nil {
+		cfg.PeerstoreProvider, cfg.CurrentHeightProvider); err != nil {
 		return fmt.Errorf("setting up peerstore: %w", err)
 	}
 	return nil
 }
 
 func (rtr *backgroundRouter) setupPeerstore(
-	ctx context.Context,
 	pstoreProvider providers.PeerstoreProvider,
 	currentHeightProvider providers.CurrentHeightProvider,
 ) (err error) {
@@ -254,32 +250,6 @@ func (rtr *backgroundRouter) setupPeerstore(
 		return err
 	}
 
-	// CONSIDERATION: add `GetPeers` method to `PeerstoreProvider` interface
-	// to avoid this loop.
-	for _, peer := range rtr.pstore.GetPeerList() {
-		if err := utils.AddPeerToLibp2pHost(rtr.host, peer); err != nil {
-			return err
-		}
-
-		// TODO: refactor: #bootstrap()
-		libp2pAddrInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
-		if err != nil {
-			return fmt.Errorf(
-				"converting peer info, pokt address: %s: %w",
-				peer.GetAddress(),
-				err,
-			)
-		}
-
-		// don't attempt to connect to self
-		if rtr.host.ID() == libp2pAddrInfo.ID {
-			return nil
-		}
-
-		if err := rtr.host.Connect(ctx, libp2pAddrInfo); err != nil {
-			return fmt.Errorf("connecting to peer: %w", err)
-		}
-	}
 	return nil
 }
 
@@ -330,6 +300,36 @@ func (rtr *backgroundRouter) setupSubscription() (err error) {
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p-pubsub#WithBufferSize)
 	rtr.subscription, err = rtr.topic.Subscribe()
 	return err
+}
+
+//nolint:unused // TECHDEBT(#859): refactor bootstrapping
+func (rtr *backgroundRouter) bootstrap(ctx context.Context) error {
+	// CONSIDERATION: add `GetPeers` method to `PeerstoreProvider` interface
+	// to avoid this loop.
+	for _, peer := range rtr.pstore.GetPeerList() {
+		if err := utils.AddPeerToLibp2pHost(rtr.host, peer); err != nil {
+			return err
+		}
+
+		libp2pAddrInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
+		if err != nil {
+			return fmt.Errorf(
+				"converting peer info, pokt address: %s: %w",
+				peer.GetAddress(),
+				err,
+			)
+		}
+
+		// don't attempt to connect to self
+		if rtr.host.ID() == libp2pAddrInfo.ID {
+			return nil
+		}
+
+		if err := rtr.host.Connect(ctx, libp2pAddrInfo); err != nil {
+			return fmt.Errorf("connecting to peer: %w", err)
+		}
+	}
+	return nil
 }
 
 // topicValidator is used in conjunction with libp2p-pubsub's notion of "topic
