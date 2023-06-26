@@ -28,12 +28,12 @@ type UnicastRouter struct {
 	base_modules.IntegrableModule
 
 	logger *modules.Logger
+	host   libp2pHost.Host
 	// messageHandler is the function to call when a message is received.
 	// host represents a libp2p network node, it encapsulates a libp2p peerstore
 	// & connection manager. `libp2p.New` configures and starts listening
 	// according to options.
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
-	host           libp2pHost.Host
 	messageHandler typesP2P.MessageHandler
 	peerHandler    func(peer typesP2P.Peer) error
 }
