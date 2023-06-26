@@ -38,7 +38,7 @@ type PersistenceModule interface {
 	HandleDebugMessage(*messaging.DebugMessage) error
 
 	// GetLocalContext returns a local persistence context that can be used to store/retrieve node-specific, i.e. off-chain, data
-	// The module can maintain a single local context for both read and write operations: subsequent calls to GetLocalContext return
+	// The module can maintain a single (i.e. a singleton) local context for both read and write operations: subsequent calls to GetLocalContext return
 	// the same local context.
 	GetLocalContext() (PersistenceLocalContext, error)
 }

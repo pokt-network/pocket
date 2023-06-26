@@ -22,7 +22,7 @@ type persistenceLocalContext struct {
 	databasePath string
 }
 
-func WithLocalContextConfig(databasePath string) modules.ModuleOption {
+func WithLocalDatabasePath(databasePath string) modules.ModuleOption {
 	return func(m modules.InitializableModule) {
 		if plc, ok := m.(*persistenceLocalContext); ok {
 			plc.databasePath = databasePath

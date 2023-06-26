@@ -5,7 +5,7 @@ package configs;
 
 option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
-// TODO: Reevalute whether each utility actor should contain address/pubKey configs or if it should be shared
+// TODO: Reevaluate whether each utility actor should contain address/pubKey configs or if it should be shared
 // ServicerConfig defines the configuration for the node acting as a servicer. Servicers earn rewards for providing Web3 access over a function of volume and quality
 message ServicerConfig {
   // Enabled defines whether or not the node is a servicer.

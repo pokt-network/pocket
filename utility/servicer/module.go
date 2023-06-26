@@ -192,9 +192,9 @@ func (s *servicer) executeRelay(relay *coreTypes.Relay) (*coreTypes.RelayRespons
 	case *coreTypes.Relay_JsonRpcPayload:
 		return s.executeHTTPRelay(relay.Meta, payload.JsonRpcPayload)
 	case *coreTypes.Relay_RestPayload:
-		return nil, fmt.Errorf("Error executing relay on application %s: REST not supported", relay.Meta.ApplicationAddress)
+		return s.executeRESTRelay(relay.Meta, payload.RestPayload)
 	default:
-		return nil, fmt.Errorf("Error exeucting relay on application %s: Unsupported type on payload %s", relay.Meta.ApplicationAddress, payload)
+		return nil, fmt.Errorf("Error executing relay on application %s: Unsupported type on payload %s", relay.Meta.ApplicationAddress, payload)
 	}
 }
 
@@ -463,6 +463,15 @@ func (s *servicer) executeHTTPRelay(meta *coreTypes.RelayMeta, payload *coreType
 	}
 
 	return &coreTypes.RelayResponse{Payload: string(body)}, nil
+}
+
+// INCOMPLETE(#860): RESTful service relays: basic checks and execution through HTTP calls
+func (s *servicer) executeRESTRelay(meta *coreTypes.RelayMeta, payload *coreTypes.RESTPayload) (*coreTypes.RelayResponse, error) {
+	_, ok := s.config.Services[meta.RelayChain.Id]
+	if !ok {
+		return nil, fmt.Errorf("Chain %s not found in servicer configuration: %w", meta.RelayChain.Id, errValidateRelayMeta)
+	}
+	return nil, nil
 }
 
 // IMPROVE: Add session height tolerance to account for session rollovers

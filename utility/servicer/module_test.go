@@ -171,6 +171,10 @@ func TestRelay_Execute(t *testing.T) {
 			name:  "Relay for accepted service is executed",
 			relay: testRelay(),
 		},
+		{
+			name:  "JSONRPC Relay is executed",
+			relay: testRelay(testEthGoerliRelay()),
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -213,6 +217,19 @@ func testRelayHeight(height int64) relayEditor {
 	}
 }
 
+func testEthGoerliRelay() relayEditor {
+	return func(relay *coreTypes.Relay) {
+		relay.Meta.RelayChain.Id = "ETH-Goerli"
+		relay.RelayPayload = &coreTypes.Relay_JsonRpcPayload{
+			JsonRpcPayload: &coreTypes.JSONRPCPayload{
+				Id:      []byte("1"),
+				JsonRpc: "2.0",
+				Method:  "eth_blockNumber",
+			},
+		}
+	}
+}
+
 func testRelay(editors ...relayEditor) *coreTypes.Relay {
 	relay := &coreTypes.Relay{
 		Meta: &coreTypes.RelayMeta{
@@ -226,11 +243,10 @@ func testRelay(editors ...relayEditor) *coreTypes.Relay {
 				Id: "geozone",
 			},
 		},
-		RelayPayload: &coreTypes.Relay_JsonRpcPayload{
-			JsonRpcPayload: &coreTypes.JSONRPCPayload{
-				Id:      []byte("1"),
-				JsonRpc: "2.0",
-				Method:  "eth_blockNumber",
+		RelayPayload: &coreTypes.Relay_RestPayload{
+			RestPayload: &coreTypes.RESTPayload{
+				HttpPath:    "/v1/height",
+				RequestType: coreTypes.RESTRequestType_RESTRequestTypeGET,
 			},
 		},
 	}
@@ -248,6 +264,7 @@ func testServicerConfig() configs.ServicerConfig {
 		Address:   testServicer1.Address,
 		Services: map[string]*configs.ServiceConfig{
 			"POKT-UnitTestNet": testServiceConfig1,
+			"ETH-Goerli":       testServiceConfig1,
 		},
 	}
 }
