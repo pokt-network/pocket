@@ -1,6 +1,8 @@
 package ibc
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 
 	ibcTypes "github.com/pokt-network/pocket/ibc/types"
@@ -42,16 +44,21 @@ func TestHandleMessage_ErrorAlreadyCommitted(t *testing.T) {
 }
 
 func TestHandleMessage_BasicValidation_Message(t *testing.T) {
-	updateMsg, _ := prepareUpdateMessage(t, []byte("key"), []byte("value"))
-	require.NoError(t, updateMsg.ValidateBasic())
-	pruneMsg, _ := preparePruneMessage(t, []byte("key"))
-	require.NoError(t, pruneMsg.ValidateBasic())
-
 	testCases := []struct {
 		name     string
 		msg      *ibcTypes.IbcMessage
 		expected error
 	}{
+		{
+			name:     "Valid Update Message",
+			msg:      CreateUpdateStoreMessage([]byte("key"), []byte("value")),
+			expected: nil,
+		},
+		{
+			name:     "Valid Prune Message",
+			msg:      CreatePruneStoreMessage([]byte("key")),
+			expected: nil,
+		},
 		{
 			name:     "Invalid Update Message: Empty Key",
 			msg:      CreateUpdateStoreMessage(nil, []byte("value")),
@@ -72,7 +79,11 @@ func TestHandleMessage_BasicValidation_Message(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
-			require.EqualError(t, err, tc.expected.Error())
+			if tc.expected != nil {
+				require.EqualError(t, err, tc.expected.Error())
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }
@@ -83,48 +94,136 @@ func TestHandleMessage_BasicValidation_Transaction(t *testing.T) {
 
 	privKey, err := crypto.GeneratePrivateKey()
 	require.NoError(t, err)
-
-	_, validTx := prepareUpdateMessage(t, []byte("key"), []byte("value"))
-	require.NoError(t, err)
-	err = validTx.Sign(privKey)
+	falseKey, err := crypto.GeneratePrivateKey()
 	require.NoError(t, err)
 
-	txProtoBytes, err := codec.GetCodec().Marshal(validTx)
+	validUpdateMsg, validUpdateTx := prepareUpdateMessage(t, []byte("key"), []byte("value"))
+	require.NoError(t, err)
+	err = validUpdateTx.Sign(privKey)
+	require.NoError(t, err)
+	updateAny, err := codec.GetCodec().ToAny(validUpdateMsg.GetUpdate())
+	require.NoError(t, err)
+	bz, err := validUpdateTx.SignableBytes()
+	require.NoError(t, err)
+	falseUpdateSig, err := falseKey.Sign(bz)
 	require.NoError(t, err)
 
-	err = utilityMod.HandleTransaction(txProtoBytes)
+	validPruneMsg, validPruneTx := preparePruneMessage(t, []byte("key"))
+	require.NoError(t, err)
+	err = validPruneTx.Sign(privKey)
+	require.NoError(t, err)
+	pruneAny, err := codec.GetCodec().ToAny(validPruneMsg.GetPrune())
+	require.NoError(t, err)
+	bz, err = validPruneTx.SignableBytes()
+	require.NoError(t, err)
+	falsePruneSig, err := falseKey.Sign(bz)
 	require.NoError(t, err)
 
 	testCases := []struct {
 		name     string
-		msg      *ibcTypes.IbcMessage
+		tx       *coreTypes.Transaction
 		expected error
 	}{
 		{
-			name:     "Invalid Update Message: Empty Key",
-			msg:      CreateUpdateStoreMessage(nil, []byte("value")),
+			name:     "Valid Update Transaction",
+			tx:       validUpdateTx,
+			expected: nil,
+		},
+		{
+			name:     "Valid Prune Transaction",
+			tx:       validPruneTx,
+			expected: nil,
+		},
+		{
+			name: "Invalid Update Transaction: Empty Nonce",
+			tx: &coreTypes.Transaction{
+				Msg: updateAny,
+			},
+			expected: coreTypes.ErrEmptyNonce(),
+		},
+		{
+			name: "Invalid Prune Transaction: Empty Nonce",
+			tx: &coreTypes.Transaction{
+				Msg: pruneAny,
+			},
+			expected: coreTypes.ErrEmptyNonce(),
+		},
+		{
+			name: "Invalid Update Transaction: Empty Signature",
+			tx: &coreTypes.Transaction{
+				Msg:   updateAny,
+				Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
+			},
 			expected: coreTypes.ErrEmptySignatureStructure(),
 		},
 		{
-			name:     "Invalid Update Message: Empty Value",
-			msg:      CreateUpdateStoreMessage([]byte("key"), nil),
+			name: "Invalid Prune Transaction: Empty Signature",
+			tx: &coreTypes.Transaction{
+				Msg:   pruneAny,
+				Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
+			},
 			expected: coreTypes.ErrEmptySignatureStructure(),
 		},
 		{
-			name:     "Invalid Prune Message: Empty Key",
-			msg:      CreatePruneStoreMessage(nil),
-			expected: coreTypes.ErrEmptySignatureStructure(),
+			name: "Invalid Update Transaction: Bad Key",
+			tx: &coreTypes.Transaction{
+				Msg:   updateAny,
+				Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
+				Signature: &coreTypes.Signature{
+					PublicKey: []byte("bad key"),
+					Signature: falsePruneSig,
+				},
+			},
+			expected: coreTypes.ErrNewPublicKeyFromBytes(errors.New("the public key length is not valid, expected length 32, actual length: 7")),
+		},
+		{
+			name: "Invalid Prune Transaction: Bad Signature",
+			tx: &coreTypes.Transaction{
+				Msg:   pruneAny,
+				Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
+				Signature: &coreTypes.Signature{
+					PublicKey: []byte("bad key"),
+					Signature: falsePruneSig,
+				},
+			},
+			expected: coreTypes.ErrNewPublicKeyFromBytes(errors.New("the public key length is not valid, expected length 32, actual length: 7")),
+		},
+		{
+			name: "Invalid Update Transaction: Bad Signature",
+			tx: &coreTypes.Transaction{
+				Msg:   updateAny,
+				Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
+				Signature: &coreTypes.Signature{
+					PublicKey: privKey.PublicKey().Bytes(),
+					Signature: falseUpdateSig,
+				},
+			},
+			expected: coreTypes.ErrSignatureVerificationFailed(),
+		},
+		{
+			name: "Invalid Prune Transaction: Bad Key",
+			tx: &coreTypes.Transaction{
+				Msg:   pruneAny,
+				Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
+				Signature: &coreTypes.Signature{
+					PublicKey: privKey.PublicKey().Bytes(),
+					Signature: falsePruneSig,
+				},
+			},
+			expected: coreTypes.ErrSignatureVerificationFailed(),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tx, err := ConvertIBCMessageToTx(tc.msg)
-			require.NoError(t, err)
-			txProtoBytes, err := codec.GetCodec().Marshal(tx)
+			txProtoBytes, err := codec.GetCodec().Marshal(tc.tx)
 			require.NoError(t, err)
 			err = utilityMod.HandleTransaction(txProtoBytes)
-			require.EqualError(t, err, tc.expected.Error())
+			if tc.expected != nil {
+				require.EqualError(t, err, tc.expected.Error())
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }
