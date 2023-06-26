@@ -24,3 +24,7 @@ func InsertIbcStoreEntryQuery(height int64, key, value []byte) string {
 		hex.EncodeToString(value),
 	)
 }
+
+func ClearAllIbcQuery() string {
+	return fmt.Sprintf(`DELETE FROM %s`, IbcStoreTableName)
+}

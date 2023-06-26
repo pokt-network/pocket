@@ -14,6 +14,7 @@ var nonActorClearFunctions = []func() string{
 	types.ClearAllGovParamsQuery,
 	types.ClearAllGovFlagsQuery,
 	types.ClearAllBlocksQuery,
+	types.ClearAllIbcQuery,
 }
 
 func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMessage) error {
