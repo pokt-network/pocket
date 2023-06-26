@@ -1,5 +1,8 @@
 # IBC <!-- omit in toc -->
 
+- [Definitions](#definitions)
+  - ["host"](#host)
+  - ["light client"](#light-client)
 - [Overview](#overview)
 - [IBC Module](#ibc-module)
   - [Node Configuration](#node-configuration)
@@ -7,13 +10,21 @@
 - [Components](#components)
   - [ICS-24 Host Requirements](#ics-24-host-requirements)
 
+## Definitions
+
+### "host"
+
+An IBC host refers to the node (host machine) that is running the IBC module. Relayers will interact with the hosts on each chain in order to call any IBC related functions. The IBC host is responsible for storing and interfacing with the IBC state and handling any IBC related transactions.
+
+### "light client"
+
+An IBC light client refers to a consensus state verification algorithm. This is different from the traditional meaning of the term. An IBC light client will be only used for state verification and will lack many of the other features commonly found in traditional light clients.
+
 ## Overview
 
 ![IBC High Level](./high-level-ibc.png)
 
 Inter-Blockchain Communication (IBC) is a protocol that enables trustless communication between two chains. It allows these chains to interact by relaying IBC packets. The process involves two IBC-enabled chains, referred to as **chain A** and **chain B**, each running a light client for the other chain on their network.
-
-_**NOTE**_: The term "light client" in regards to IBC refers to a consensus state verification algorithm. This is different from the traditional meaning of the term. An IBC light client will be only used for state verification and will lack many of the other features commonly found in traditional light clients.
 
 To transfer native tokens from **chain A** to **chain B**, certain prerequisites must be met. First, a connection between the two chains must be established. Then, a channel and port need to be opened on this connection. Additionally, a light client for the opposing chain should be set up on both ends of the connection. Finally, a relayer is required to facilitate the actual transfer of the packet.
 
