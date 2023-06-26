@@ -1817,7 +1817,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 						UseCors: false,
 					},
 					Keybase:   defaultCfg.Keybase,
-					Servicer:  defaultCfg.Servicer,
+					Servicer:  &configs.ServicerConfig{Enabled: true},
 					Validator: &configs.ValidatorConfig{Enabled: true},
 					Fisherman: defaultCfg.Fisherman,
 				},

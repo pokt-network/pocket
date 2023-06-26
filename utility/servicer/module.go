@@ -466,7 +466,7 @@ func (s *servicer) executeHTTPRelay(meta *coreTypes.RelayMeta, payload *coreType
 }
 
 // INCOMPLETE(#860): RESTful service relays: basic checks and execution through HTTP calls
-func (s *servicer) executeRESTRelay(meta *coreTypes.RelayMeta, payload *coreTypes.RESTPayload) (*coreTypes.RelayResponse, error) {
+func (s *servicer) executeRESTRelay(meta *coreTypes.RelayMeta, _ *coreTypes.RESTPayload) (*coreTypes.RelayResponse, error) {
 	_, ok := s.config.Services[meta.RelayChain.Id]
 	if !ok {
 		return nil, fmt.Errorf("Chain %s not found in servicer configuration: %w", meta.RelayChain.Id, errValidateRelayMeta)
