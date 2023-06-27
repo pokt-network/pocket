@@ -8,11 +8,14 @@ import (
 	"github.com/pokt-network/smt"
 )
 
+// position refers to whether the node is either the left or right child of its parent
+// Ref: https://github.com/pokt-network/smt/blob/main/types.go
 type position int
 
 const (
-	left  position = iota // 0
-	right                 // 1
+	left     position = iota // 0
+	right                    // 1
+	hashSize = 32
 )
 
 var (
@@ -27,10 +30,10 @@ var (
 		},
 		InnerSpec: &ics23.InnerSpec{
 			ChildOrder:      []int32{0, 1},
-			ChildSize:       32,
+			ChildSize:       hashSize,
 			MinPrefixLength: 1,
 			MaxPrefixLength: 1,
-			EmptyChild:      make([]byte, 32),
+			EmptyChild:      make([]byte, hashSize),
 			Hash:            ics23.HashOp_SHA256,
 		},
 		MaxDepth:                   256,
@@ -39,7 +42,7 @@ var (
 	innerPrefix = []byte{1}
 
 	// defaultValue is the default placeholder value in a SparseMerkleTree
-	defaultValue = make([]byte, 32)
+	defaultValue = make([]byte, hashSize)
 )
 
 // VerifyMembership verifies the CommitmentProof provided, checking whether it produces the same
@@ -94,7 +97,7 @@ func convertSMPToExistenceProof(proof *smt.SparseMerkleProof, key, value []byte)
 	}
 }
 
-// convertSMPToExistenceProof converts a SparseMerkleProof to an ics23
+// convertSMPToExclusionProof converts a SparseMerkleProof to an ics23
 // ExclusionProof to verify non-membership of an element
 func convertSMPToExclusionProof(proof *smt.SparseMerkleProof, key []byte) *ics23.CommitmentProof {
 	path := sha256.Sum256(key)
@@ -110,8 +113,8 @@ func convertSMPToExclusionProof(proof *smt.SparseMerkleProof, key []byte) *ics23
 	actualPath := path[:]
 	actualValue := defaultValue
 	if proof.NonMembershipLeafData != nil {
-		actualPath = proof.NonMembershipLeafData[1:33]
-		actualValue = proof.NonMembershipLeafData[33:]
+		actualPath = proof.NonMembershipLeafData[1 : 1+hashSize] // len(prefix): len(prefix) + hashSize
+		actualValue = proof.NonMembershipLeafData[1+hashSize:]
 	}
 	return &ics23.CommitmentProof{
 		Proof: &ics23.CommitmentProof_Exclusion{
@@ -134,9 +137,11 @@ func convertSideNodesToSteps(sideNodes [][]byte, path []byte) []*ics23.InnerOp {
 		var prefix, suffix []byte
 		prefix = append(prefix, innerPrefix...)
 		if getPathBit(path, len(sideNodes)-1-i) == left {
+			// path is on the left so sidenode must be on the right
 			suffix = make([]byte, 0, len(sideNodes[i]))
 			suffix = append(suffix, sideNodes[i]...)
 		} else {
+			// path is on the right so sidenode must be on the left
 			prefix = append(prefix, sideNodes[i]...)
 		}
 		op := &ics23.InnerOp{
@@ -149,9 +154,22 @@ func convertSideNodesToSteps(sideNodes [][]byte, path []byte) []*ics23.InnerOp {
 	return steps
 }
 
-// getPathBit determines whether the hash of a node at a certain depth in the tree is the
-// left or the right child of its parent
+// getPathBit takes the hash of a key (the path) and a position (depth) and returns whether at
+// that position in the tree the path goes left or right. This is used to determine the order
+// of child nodes and the order in which they are hashed when verifying proofs.
+// Ref: https://github.com/pokt-network/smt/blob/main/utils.go
 func getPathBit(data []byte, position int) position {
+	// get the byte at the position and then left shift one by the offset of the position
+	// from the leftmost bit in the byte. Check if the bitwise and is the same
+	// Path: []byte{ {0 1 0 1 1 0 1 0}, {0 1 1 0 1 1 0 1}, {1 0 0 1 0 0 1 0} } (length = 24 bits / 3 bytes)
+	// Position: 13 - 13/8=1
+	// Path[1] = {0 1 1 0 1 1 0 1}
+	// uint(13)%8 = 5, 8-1-5=2
+	// 00000001 << 2 = 00000100
+	//   {0 1 1 0 1 1 0 1}
+	// & {0 0 0 0 0 1 0 0}
+	// = {0 0 0 0 0 1 0 0}
+	// > 0 so Path is on the right at position 13
 	if int(data[position/8])&(1<<(8-1-uint(position)%8)) > 0 {
 		return right
 	}

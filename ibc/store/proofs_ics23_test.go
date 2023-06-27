@@ -27,43 +27,43 @@ func TestICS23Proofs_GenerateCommitmentProofs(t *testing.T) {
 	require.NoError(t, err)
 
 	testCases := []struct {
-		name          string
-		key           []byte
-		value         []byte
-		nonmembership bool
-		fails         bool
-		expected      error
+		name            string
+		key             []byte
+		value           []byte
+		isNonMembership bool
+		fails           bool
+		expected        error
 	}{
 		{
-			name:          "Successfully generates a membership proof for a key stored",
-			key:           []byte("foo"),
-			value:         []byte("bar"),
-			nonmembership: false,
-			fails:         false,
-			expected:      nil,
+			name:            "Successfully generates a membership proof for a key stored",
+			key:             []byte("foo"),
+			value:           []byte("bar"),
+			isNonMembership: false,
+			fails:           false,
+			expected:        nil,
 		},
 		{
-			name:          "Successfully generates a non-membership proof for a key not stored",
-			key:           []byte("baz"),
-			value:         []byte("testValue2"), // unrelated leaf data
-			nonmembership: true,
-			fails:         false,
-			expected:      nil,
+			name:            "Successfully generates a non-membership proof for a key not stored",
+			key:             []byte("baz"),
+			value:           []byte("testValue2"), // unrelated leaf data
+			isNonMembership: true,
+			fails:           false,
+			expected:        nil,
 		},
 		{
-			name:          "Successfully generates a non-membership proof for an unset nil key",
-			key:           nil,
-			value:         []byte("foo"), // unrelated leaf data
-			nonmembership: true,
-			fails:         false,
-			expected:      nil,
+			name:            "Successfully generates a non-membership proof for an unset nil key",
+			key:             nil,
+			value:           []byte("foo"), // unrelated leaf data
+			isNonMembership: true,
+			fails:           false,
+			expected:        nil,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var proof *ics23.CommitmentProof
-			if tc.nonmembership {
+			if tc.isNonMembership {
 				proof, err = createNonMembershipProof(tree, tc.key)
 			} else {
 				proof, err = createMembershipProof(tree, tc.key, tc.value)
@@ -75,7 +75,7 @@ func TestICS23Proofs_GenerateCommitmentProofs(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.NotNil(t, proof)
-			if tc.nonmembership {
+			if tc.isNonMembership {
 				require.Equal(t, tc.value, proof.GetExclusion().GetActualValueHash())
 				require.NotNil(t, proof.GetExclusion().GetLeaf())
 				require.NotNil(t, proof.GetExclusion().GetPath())
@@ -110,39 +110,39 @@ func TestICS23Proofs_VerifyCommitmentProofs(t *testing.T) {
 	require.NotNil(t, root)
 
 	testCases := []struct {
-		name          string
-		key           []byte
-		value         []byte
-		nonmembership bool
-		valid         bool
+		name            string
+		key             []byte
+		value           []byte
+		isNonMembership bool
+		valid           bool
 	}{
 		{
-			name:          "Successfully verifies a membership proof for a key-value stored pair",
-			key:           []byte("foo"),
-			value:         []byte("bar"),
-			nonmembership: false,
-			valid:         true,
+			name:            "Successfully verifies a membership proof for a key-value stored pair",
+			key:             []byte("foo"),
+			value:           []byte("bar"),
+			isNonMembership: false,
+			valid:           true,
 		},
 		{
-			name:          "Successfully verifies a non-membership proof for a key-value pair not stored",
-			key:           []byte("not stored"),
-			value:         nil,
-			nonmembership: true,
-			valid:         true,
+			name:            "Successfully verifies a non-membership proof for a key-value pair not stored",
+			key:             []byte("not stored"),
+			value:           nil,
+			isNonMembership: true,
+			valid:           true,
 		},
 		{
-			name:          "Fails to verify a membership proof for a key-value pair not stored",
-			key:           []byte("baz"),
-			value:         []byte("bar"),
-			nonmembership: false,
-			valid:         false,
+			name:            "Fails to verify a membership proof for a key-value pair not stored",
+			key:             []byte("baz"),
+			value:           []byte("bar"),
+			isNonMembership: false,
+			valid:           false,
 		},
 		{
-			name:          "Fails to verify a non-membership proof for a key stored in the tree",
-			key:           []byte("foo"),
-			value:         nil,
-			nonmembership: true,
-			valid:         false,
+			name:            "Fails to verify a non-membership proof for a key stored in the tree",
+			key:             []byte("foo"),
+			value:           nil,
+			isNonMembership: true,
+			valid:           false,
 		},
 	}
 
@@ -150,7 +150,7 @@ func TestICS23Proofs_VerifyCommitmentProofs(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var err error
-			if tc.nonmembership {
+			if tc.isNonMembership {
 				proof, err = createNonMembershipProof(tree, tc.key)
 			} else {
 				proof, err = createMembershipProof(tree, tc.key, tc.value)
@@ -158,24 +158,20 @@ func TestICS23Proofs_VerifyCommitmentProofs(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, proof)
 
-			if tc.nonmembership {
+			if tc.isNonMembership {
 				require.NotNil(t, proof.GetExclusion())
 			} else {
 				require.NotNil(t, proof.GetExist())
 			}
 
 			var valid bool
-			if tc.nonmembership {
+			if tc.isNonMembership {
 				valid = VerifyNonMembership(root, proof, tc.key)
 			} else {
 				valid = VerifyMembership(root, proof, tc.key, tc.value)
 			}
 
-			if tc.valid {
-				require.True(t, valid)
-			} else {
-				require.False(t, valid)
-			}
+			require.Equal(t, tc.valid, valid)
 		})
 	}
 
