@@ -65,14 +65,14 @@ func TestPaths_CommitmentPrefix(t *testing.T) {
 		result   string
 	}{
 		{
-			// Successfully applies and removes prefix to produce the same path
+			name:     "Successfully applies and removes prefix to produce the same path",
 			path:     "path",
 			prefix:   coreTypes.CommitmentPrefix([]byte("test")),
 			expected: []byte("test/path"),
 			result:   "path",
 		},
 		{
-			// Fails to produce input path when given a different prefix
+			name:     "Fails to produce input path when given a different prefix",
 			path:     "path",
 			prefix:   coreTypes.CommitmentPrefix([]byte("test2")),
 			expected: []byte("test/path"),
@@ -81,12 +81,14 @@ func TestPaths_CommitmentPrefix(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		commitment := ApplyPrefix(prefix, tc.path)
-		require.NotNil(t, commitment)
-		require.Equal(t, []byte(commitment), tc.expected)
+		t.Run(tc.name, func(t *testing.T) {
+			commitment := ApplyPrefix(prefix, tc.path)
+			require.NotNil(t, commitment)
+			require.Equal(t, []byte(commitment), tc.expected)
 
-		path := RemovePrefix(tc.prefix, commitment)
-		require.NotNil(t, path)
-		require.Equal(t, path, tc.result)
+			path := RemovePrefix(tc.prefix, commitment)
+			require.NotNil(t, path)
+			require.Equal(t, path, tc.result)
+		})
 	}
 }
