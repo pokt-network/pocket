@@ -24,6 +24,10 @@ This document outlines how we structured the code by splitting it into modules, 
 
 ## Definitions
 
+### Requirement Level Keywords
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
+
 ### Class Diagram Overview
 
 ```mermaid
@@ -89,28 +93,33 @@ These interfaces are [defined in `shared/modules/factory.go`](../factory.go) and
 
 ### Module
 
-A module is an abstraction (go interface) of a self-contained unit of functionality that carries out a specific task/set of tasks with the idea of being reusable, modular, testable and having a clear and concise API.
-A module might implement 0..N common interfaces.
-Each module MUST be registered with the module registry such that it can be retrieved via the bus.
+A module is an abstraction (go interface) of a self-contained unit of functionality that carries out a specific task/set of tasks with the idea of being reusable, modular, replacable, mockable, testable and exposing a clear and concise API.
+
+A module MAY implement 0..N common interfaces.
+
+Each *shared* module MUST be registered with the module registry such that it can be retrieved via the bus.
 You can find additional details in the [Modules in detail](#submodules-in-detail) section below.
 
 ### Module mock
 
 A mock is a stand-in, a fake or simplified implementation of a module that is used for testing purposes.
 It is used to simulate the behaviour of the module and to verify that the module is interacting with other modules correctly.
-Mocks are generated using `go:generate` directives together with the [`mockgen` tool](https://pkg.go.dev/github.com/golang/mock#readme-running-mockgen).
+Mocks are generated using `go:generate` directives together with the [`mockgen` tool](https://pkg.go.dev/github.com/golang/mock#readme-running-mockgen).o
+
+A global search of `mockgen` in the codebase will provide examples of where and how it's used.
 
 ### Base module
 
 A base module is a module that implements a common interface, exposing the most basic logic.
 Base modules are meant to be **embedded** in module structs which implement this common interface **and** don't need to override the respective interface member(s).
+
 The intention being to improve DRYness (Don't Repeat Yourself) and to reduce boilerplate code.
 You can find the base modules in the `shared/modules/base_modules` package.
 
 ### Submodule
 
 A submodule is a self-contained unit of functionality which is composed by a module and is necessary for that module to function.
-Each module MAY be registered with the module registry such that it can be retrieved via the bus.
+Each module SHOULD be registered with the module registry such that it can be retrieved via the bus.
 
 ### Example Submodule Class Diagram
 
@@ -145,9 +154,10 @@ classDiagram
 		Create(...) (ExampleSubmoduleInterface, error)
 	}
 
-	exampleSubmodule --|> Submodule
 	exampleSubmodule --|> ExampleSubmoduleInterface
-	exampleSubmodule --|> exampleSubmoduleFactory
+	ExampleSubmoduleInterface --|> Submodule : (embed)
+	ExampleSubmoduleInterface --|> exampleSubmoduleFactory :(embed)
+%%	exampleSubmodule --|> exampleSubmoduleFactory
 ```
 
 
@@ -171,9 +181,7 @@ You might notice that these files include `go:generate` directives, these are us
 
 ### Module creation
 
-Module and submodule constructors both conform to the pattern established by the [factory interfaces](#factory-interfaces).
-
-In the case of modules, `ModuleFactoryWithConfig` MUST be applied, enforcing the following constructor signature:
+Modules MUST implement the `ModuleFactoryWithConfig` flavor of [factory interfaces](#factory-interfaces), enforcing the following constructor signature:
 ```
 Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error)
 ```
@@ -181,40 +189,108 @@ Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error)
 Where `options` is an (optional) variadic argument that allows for the passing of an arbitrary number options to the module.
 This is useful to configure the module at creation time.
 
-As all modules, share this interface, each module MAY (or not) consider constructor options but MUST receive them.
+Each module constructor MUST receive this variadic option argument as all modules share this interface.
+Additionally, each module MUST consider these options (i.e. loop over and call them) as support may be added for new options at any time.
+
 See `ModuleFactoryWithOptions`, also defined in `shared/modules/factory.go`.
 
-Options stand in contrast to values which are **required** in order for a (sub)module to function properly.
-These values SHOULD be composed in to a single config struct which can be received via the respective factory interface type.
+### Module options vs configs
 
-For modules, this config MUST be incorporated into the [`runtime.Config`](../../../runtime/configs/config.go) which automatically implies the following:
-- such config values can be set via the node's config file and overriden via environment variables
-- such config values MUST be serializable (i.e. no references to objects in memory)
+Modules MAY depend on **optional** values; i.e. not necessary in order for a module to function properly.
 
-This serializable config value constraint on modules will likely foster the creation of submodules anywhere modules depend on high-level (non-serializable) objects, thus moving the responsibility of managing those dependencies to the submodule.
+An option function type MUST be defined for each optional value dependency.
+Such option functions receive the module for option assignment by implementing `ModuleOption`.
+
+Module MAY depend on some **required** values; i.e. necessary in order for a module to function properly.
+Any such required values MUST be composed into a single config struct which can be received via the respective factory interface type.
+
+Such a config type SHOULD implement a `#IsValid()` method which is likely called in the module constructor.
+
+_(TODO: consider if it would be appropriate to enforce this via an interface)_
+
+For modules, this config type MUST be defined as a protobuf type and incorporated into the [`runtime.Config`](../../../runtime/configs/config.go).
+This automatically implies the following:
+- config values can be set via the node's config file and overriden via environment variables
+- config values MUST be serializable (i.e. no references to high-level objects in memory)
+
+This serializable constraint on modules' configs will likely foster the creation of submodules through refactoring anywhere high-level, non-serializable, and non-submodule dependencies arise.
 
 For examples of modules and options see:
 
 - `Module`: [`p2pModule`](../../../p2p/module.go)
+- `P2PConfig`: [`P2PConfig`](../../../runtime/configs/proto/p2p_config.proto)
 - `ModuleOption`: [`WithHost`](../../../p2p/testutil.go)
 - `ModuleOption`: [`WithStakedActorRouter`](../../../p2p/testutil.go)
 - `ModuleOption`: [`WithUnstakedActorRouter`](../../../p2p/testutil.go)
 
 ### Submodule creation
 
-Depending on your submodule's requirements, you SHOULD choose the most suitable factory interface.
+Submodules MUST define their own concrete factory interface type derived from the most applicable [generic factory interface type](#factory-interfaces).
+Depending on your submodule's requirements, you should choose the most suitable factory interface.
 
-Options functions used in conjunction with submodules MAY accept either concrete or interface submodule types.
-If an option is only intended or only makes sense to be used with a specific concrete submodule type, then it SHOULD either accept that concrete type or be rewritten to apply to the respective interface type, generally.
+Each submodule factory interface type SHOULD return an interface type for the submodule; however it MAY be appropriate to return a concrete type in some cases.
 
-Options stand in contrast to values which are **required** in order for a (sub)module to function properly.
-These values SHOULD be composed in to a single config struct which can be received via the respective factory interface type.
+### Submodule options
 
-Submodules aren't required to conform to the `ModuleFactoryWithOptions` interface like modules are.
-Instead, each submodule SHOULD define its own factory interface using the applicable shared generic `Factory...` (see: [Factory Interfaces](#factory-interfaces)) interface, which it SHOULD also enforce.
-Each submodule factory interface type SHOULD (i.e. prefer to) return an interface type for the submodule, but it MAY be appropriate to return a concrete type in some cases.
+Submodules MAY depend on **optional** values.
 
-For examples of submodules, see:
+An option function type MUST be defined for each optional value dependency.
+Such option functions MUST receive the submodule for option assignment (similar to `ModuleOption`) in accordance with the respective factory interface type.
+
+Option functions SHOULD be written in terms of interface submodule types but MAY instead be written in terms of concrete submodule types if they are only intended or only make sense to be used with a specific concrete submodule type.
+
+Submodules SHOULD NOT consider options when none exist, this should be reflected in the respective factory interface type applied (i.e. no variadic options argument).
+
+### Submodule configs
+
+Submodules MAY also depend on some **required** values; i.e. necessary in order for a submodule to function properly.
+Any such values MUST be composed in to a single config struct in accordance with the respective factory interface type.
+
+
+
+### Comprehensive Submodule Example:
+```go
+var _ MySubmoduleInterface = &mySubmodule{}
+
+type MySubmoduleInterface interface {
+	modules.Submodule
+	mySubmoduleFactory
+}
+
+type mySubmoduleConfig struct {
+	someRequiredValue func(data []byte) error
+}
+type mySubmoduleOption func(*mySubmodule)
+type mySubmoduleFactory = FactoryWithConfigAndOptions[
+	MySubmoduleInterface,
+	mySubmoduleConfig,
+	mySubmoduleOption
+]
+
+type mySubmodule struct {
+	someRequiredValue func(data []byte) error
+	someOptionalValue string
+}
+
+func (*mySubmodule) Create(bus modules.Bus, cfg mySubmoduleConfig, opts ...mySubmoduleOption) (MySubmoduleInterface, error) {
+	sub := &mySubmodule{
+		someRequiredValue: cfg.someRequiredValue,
+	}
+	
+	for _, opt := range opts {
+		opt(sub)
+	}
+	return sub, nil
+}
+
+func WithSomeOption(someOption string) mySubmoduleOption {
+	return func(s *mySubmodule) {
+		s.someOptionalValue = someOption
+	}
+}
+```
+
+For more / real examples of submodules, see:
 
 - `Submodule`: [`persistencePeerstoreProvider`](https://github.com/pokt-network/pocket/tree/main/p2p/providers/current_height_provider/rpc/provider.go)
 - `Submodule`: [`rpcPeerstoreProvider`](https://github.com/pokt-network/pocket/tree/main/p2p/providers/current_height_provider/rpc/provider.go)
