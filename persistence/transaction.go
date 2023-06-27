@@ -29,11 +29,14 @@ func (c *StoreManager) Commit() bool {
 			defer wg.Done()
 
 			// Prepare phase
-			fmt.Printf("store %v: received PREPARE for transaction\n", store)
-			prepared := prepare(store, c.tx)
+			err := store.Prepare(c.tx)
 
 			// Sending vote to the coordinator
-			results <- prepared
+			if err != nil {
+				results <- false
+			} else {
+				results <- true
+			}
 		}(store)
 	}
 
@@ -46,7 +49,6 @@ func (c *StoreManager) Commit() bool {
 	for result := range results {
 		if !result {
 			c.rollback()
-			fmt.Println("TODO trigger a rollback on all module stores")
 			return false
 		}
 	}
@@ -55,12 +57,11 @@ func (c *StoreManager) Commit() bool {
 	for _, store := range c.stores {
 		fmt.Printf("mod %v: COMMIT transaction\n", store)
 		if err := store.Commit(); err != nil {
-			// trigger coordinator rollback if any one commit fails
 			c.rollback()
+			return false
 		}
 	}
 
-	fmt.Println("Transaction commit")
 	return true
 }
 
@@ -88,12 +89,4 @@ func Apply(stores []modules.AtomicStore, txn modules.Tx) error {
 		return fmt.Errorf("ErrNoCommit: %v", txn)
 	}
 	return nil
-}
-
-func prepare(node modules.AtomicStore, tx modules.Tx) bool {
-	// prepare node by creating a savepoint here
-	if err := node.Prepare(tx); err != nil {
-		return false
-	}
-	return true
 }

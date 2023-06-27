@@ -87,6 +87,7 @@ type TreeStore struct {
 	treeStoreDir string
 	rootTree     *stateTree
 	merkleTrees  map[string]*stateTree
+	prev         *Worldstate
 }
 
 // GetTree returns the name, root hash, and nodeStore for the matching tree tree
@@ -226,16 +227,26 @@ func (t *TreeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 	return t.getStateHash(), nil
 }
 
-func (t *TreeStore) Prepare(tx modules.Tx) error {
-	return fmt.Errorf("not impl")
+func (t *TreeStore) Prepare(_ modules.Tx) error {
+	w, err := t.save()
+	if err != nil {
+		return fmt.Errorf("failed to save worldstate: %w", err)
+	}
+	t.prev = w
+
+	return nil
 }
 
 func (t *TreeStore) save() (*Worldstate, error) {
 	w := &Worldstate{
-		MerkleTrees: map[string]*stateTree{},
+		TreeStoreDir: t.treeStoreDir,
+		MerkleTrees:  map[string]*stateTree{},
+		RootTree:     t.rootTree,
 	}
 
-	fmt.Printf("w: %v\n", w)
+	for k, st := range t.merkleTrees {
+		w.MerkleTrees[k] = st
+	}
 
 	return w, nil
 }
@@ -250,7 +261,9 @@ func (t *TreeStore) Commit() error {
 }
 
 func (t *TreeStore) Rollback() {
-	panic("treestore not impl")
+	t.merkleTrees = t.prev.MerkleTrees
+	t.rootTree = t.prev.RootTree
+	t.prev = nil
 }
 
 func (t *TreeStore) getStateHash() string {
