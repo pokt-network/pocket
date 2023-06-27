@@ -109,7 +109,7 @@ See: [ICS-24](./ics24.md) for more details on the specifics of the ICS-24 implem
 
 ### ICS-23 Vector Commitments
 
-[ICS-23][ics23] defines the `CommitmentProof` type that is used to prove the membership/non-membership of a key-value pair in the IBC stores. As this type is serialisable the relayers can relay these proofs to a counterparty chain, as described above, for their light client (of the source chain) to verify the proof and thus react accordingly. In order to implement ICS-23, the `cosmos/ics23` library was used, specifically its `CommitmentProof` type and its methods to verify the proofs in a way that does not require the tree itself.
+[ICS-23][ics23] defines the `CommitmentProof` type that is used to prove the membership/non-membership of a key-value pair in the IBC stores. As this type is serialisable the relayers can relay these proofs to a counterparty chain, as described above, for their ibc specific light client (of the source chain) to verify the proof and thus react accordingly. In order to implement ICS-23, the `cosmos/ics23` library was used, specifically its `CommitmentProof` type and its methods to verify the proofs in a way that does not require the tree itself.
 
 See: [ICS-23](./ics23.md) for more details on the specifics of the ICS-23 implementation for Pocket.
 
