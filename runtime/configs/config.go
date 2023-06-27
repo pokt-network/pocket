@@ -32,6 +32,7 @@ type Config struct {
 	Validator   *ValidatorConfig   `json:"validator"`
 	Servicer    *ServicerConfig    `json:"servicer"`
 	Fisherman   *FishermanConfig   `json:"fisherman"`
+	IBC         *IBCConfig         `json:"ibc"`
 }
 
 // ParseConfig parses the config file and returns a Config struct
@@ -97,7 +98,6 @@ func ParseConfig(cfgFile string) *Config {
 func setViperDefaults(cfg *Config) {
 	// convert the config struct to a map with the json tags as keys
 	cfgData, err := json.Marshal(cfg)
-
 	if err != nil {
 		log.Fatalf("[ERROR] failed to marshal config %s", err.Error())
 	}
@@ -159,6 +159,9 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 		Validator: &ValidatorConfig{},
 		Servicer:  &ServicerConfig{},
 		Fisherman: &FishermanConfig{},
+		IBC: &IBCConfig{
+			Enabled: defaults.DefaultIBCEnabled,
+		},
 	}
 
 	for _, option := range options {
