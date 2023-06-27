@@ -38,7 +38,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 141
+// NextCode: 142
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
