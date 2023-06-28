@@ -54,9 +54,7 @@ func NewRainTreeRouter(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Ro
 }
 
 func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
-	routerLogger := logger.Global.CreateLoggerForModule("rainTreeRouter")
-	routerLogger.Info().Msg("Initializing rainTreeRouter")
-
+	rainTreeLogger := logger.Global.CreateLoggerForModule("rainTreeRouter")
 	if err := cfg.IsValid(); err != nil {
 		return nil, err
 	}
@@ -66,10 +64,23 @@ func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (type
 		selfAddr:              cfg.Addr,
 		pstoreProvider:        cfg.PeerstoreProvider,
 		currentHeightProvider: cfg.CurrentHeightProvider,
-		logger:                routerLogger,
+		logger:                rainTreeLogger,
 		handler:               cfg.Handler,
 	}
 	rtr.SetBus(bus)
+
+	height := rtr.currentHeightProvider.CurrentHeight()
+	pstore, err := rtr.pstoreProvider.GetStakedPeerstoreAtHeight(height)
+	if err != nil {
+		return nil, fmt.Errorf("getting staked peerstore at height %d: %w", height, err)
+	}
+	rainTreeLogger.Info().Fields(map[string]any{
+		"address":        cfg.Addr,
+		"host_id":        cfg.Host.ID(),
+		"protocol_id":    protocol.BackgroundProtocolID,
+		"current_height": height,
+		"peerstore_size": pstore.Size(),
+	}).Msg("initializing raintree router")
 
 	if err := rtr.setupDependencies(); err != nil {
 		return nil, err

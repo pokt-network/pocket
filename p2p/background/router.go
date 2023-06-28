@@ -77,8 +77,7 @@ func Create(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2P.Router, err
 }
 
 func (*backgroundRouter) Create(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2P.Router, error) {
-	networkLogger := logger.Global.CreateLoggerForModule("backgroundRouter")
-	networkLogger.Info().Msg("initializing background router")
+	bgRouterLogger := logger.Global.CreateLoggerForModule("backgroundRouter")
 
 	if err := cfg.IsValid(); err != nil {
 		return nil, err
@@ -88,12 +87,18 @@ func (*backgroundRouter) Create(bus modules.Bus, cfg *config.BackgroundConfig) (
 	ctx, cancel := context.WithCancel(context.TODO())
 
 	rtr := &backgroundRouter{
-		logger:    networkLogger,
+		logger:    bgRouterLogger,
 		handler:   cfg.Handler,
 		host:      cfg.Host,
 		cancelCtx: cancel,
 	}
 	rtr.SetBus(bus)
+
+	bgRouterLogger.Info().Fields(map[string]any{
+		"host_id":                cfg.Host.ID(),
+		"unicast_protocol_id":    protocol.BackgroundProtocolID,
+		"broadcast_pubsub_topic": protocol.BackgroundTopicStr,
+	}).Msg("initializing background router")
 
 	if err := rtr.setupDependencies(ctx, cfg); err != nil {
 		return nil, err
