@@ -47,9 +47,9 @@ type backgroundRouter struct {
 	// according to options.
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	host libp2pHost.Host
-	// cancelCtx is the cancel function for the context which is provided to the
-	// gossipsub subscription. Used to terminate the `readSubscription()` go routine.
-	cancelCtx context.CancelFunc
+	// cancelReadSubscription is the cancel function for the context which is
+	// monitored in the `#readSubscription()` go routine. Call to terminate it.
+	cancelReadSubscription context.CancelFunc
 
 	// Fields below are assigned during creation via `#setupDependencies()`.
 
@@ -87,10 +87,10 @@ func (*backgroundRouter) Create(bus modules.Bus, cfg *config.BackgroundConfig) (
 	ctx, cancel := context.WithCancel(context.TODO())
 
 	rtr := &backgroundRouter{
-		logger:    bgRouterLogger,
-		handler:   cfg.Handler,
-		host:      cfg.Host,
-		cancelCtx: cancel,
+		logger:                 bgRouterLogger,
+		handler:                cfg.Handler,
+		host:                   cfg.Host,
+		cancelReadSubscription: cancel,
 	}
 	rtr.SetBus(bus)
 
@@ -112,7 +112,7 @@ func (*backgroundRouter) Create(bus modules.Bus, cfg *config.BackgroundConfig) (
 func (rtr *backgroundRouter) Close() error {
 	rtr.logger.Debug().Msg("closing background router")
 
-	rtr.cancelCtx()
+	rtr.cancelReadSubscription()
 	rtr.subscription.Cancel()
 
 	var topicCloseErr error
