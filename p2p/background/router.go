@@ -237,6 +237,7 @@ func (rtr *backgroundRouter) setupDependencies(ctx context.Context, cfg *config.
 	}
 
 	if err := rtr.setupPeerstore(
+		ctx,
 		cfg.PeerstoreProvider, cfg.CurrentHeightProvider); err != nil {
 		return fmt.Errorf("setting up peerstore: %w", err)
 	}
@@ -244,6 +245,7 @@ func (rtr *backgroundRouter) setupDependencies(ctx context.Context, cfg *config.
 }
 
 func (rtr *backgroundRouter) setupPeerstore(
+	ctx context.Context,
 	pstoreProvider providers.PeerstoreProvider,
 	currentHeightProvider providers.CurrentHeightProvider,
 ) (err error) {
@@ -253,6 +255,10 @@ func (rtr *backgroundRouter) setupPeerstore(
 	)
 	if err != nil {
 		return err
+	}
+
+	if err := rtr.bootstrap(ctx); err != nil {
+		return fmt.Errorf("bootstrapping peerstore: %w", err)
 	}
 
 	return nil
@@ -307,7 +313,6 @@ func (rtr *backgroundRouter) setupSubscription() (err error) {
 	return err
 }
 
-//nolint:unused // TECHDEBT(#859): refactor bootstrapping
 func (rtr *backgroundRouter) bootstrap(ctx context.Context) error {
 	// CONSIDERATION: add `GetPeers` method to `PeerstoreProvider` interface
 	// to avoid this loop.
