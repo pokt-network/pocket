@@ -26,23 +26,25 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 
 		if isStaked, err := m.isStakedActor(); err != nil {
 			return err
-		} else if isStaked {
-			oldPeerList := m.stakedActorRouter.GetPeerstore().GetPeerList()
-			updatedPeerstore, err := m.pstoreProvider.GetStakedPeerstoreAtHeight(consensusNewHeightEvent.Height)
-			if err != nil {
+		} else if !isStaked {
+			return nil
+		}
+
+		oldPeerList := m.stakedActorRouter.GetPeerstore().GetPeerList()
+		updatedPeerstore, err := m.pstoreProvider.GetStakedPeerstoreAtHeight(consensusNewHeightEvent.Height)
+		if err != nil {
+			return err
+		}
+
+		added, removed := oldPeerList.Delta(updatedPeerstore.GetPeerList())
+		for _, add := range added {
+			if err := m.stakedActorRouter.AddPeer(add); err != nil {
 				return err
 			}
-
-			added, removed := oldPeerList.Delta(updatedPeerstore.GetPeerList())
-			for _, add := range added {
-				if err := m.stakedActorRouter.AddPeer(add); err != nil {
-					return err
-				}
-			}
-			for _, rm := range removed {
-				if err := m.stakedActorRouter.RemovePeer(rm); err != nil {
-					return err
-				}
+		}
+		for _, rm := range removed {
+			if err := m.stakedActorRouter.RemovePeer(rm); err != nil {
+				return err
 			}
 		}
 
