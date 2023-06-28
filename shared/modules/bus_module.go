@@ -32,6 +32,7 @@ type Bus interface {
 	GetLoggerModule() LoggerModule
 	GetRPCModule() RPCModule
 	GetStateMachineModule() StateMachineModule
+	GetIBCModule() IBCModule
 
 	// Runtime
 	GetRuntimeMgr() RuntimeMgr

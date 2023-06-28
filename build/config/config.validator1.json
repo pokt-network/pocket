@@ -57,5 +57,8 @@
   "servicer": {
     "enabled": true,
     "chains": ["0001"]
+  },
+  "ibc": {
+    "enabled": true
   }
 }
