@@ -28,12 +28,20 @@ func Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeSt
 	return new(treeStore).Create(bus, options...)
 }
 
+// WithLogger assigns a logger for the tree store
+func WithLogger(logger *modules.Logger) modules.TreeStoreOption {
+	return func(m modules.TreeStoreModule) {
+		if mod, ok := m.(*treeStore); ok {
+			mod.logger = logger
+		}
+	}
+}
+
 // WithTreeStoreDirectory assigns the path where the tree store
 // saves its data.
 func WithTreeStoreDirectory(path string) modules.TreeStoreOption {
 	return func(m modules.TreeStoreModule) {
-		mod, ok := m.(*treeStore)
-		if ok {
+		if mod, ok := m.(*treeStore); ok {
 			mod.treeStoreDir = path
 		}
 	}
@@ -44,30 +52,47 @@ func (t *treeStore) setupTrees() error {
 		return t.setupInMemory()
 	}
 
-	t.merkleTrees = make(map[merkleTree]*smt.SMT, int(numMerkleTrees))
-	t.nodeStores = make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees))
+	nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, RootTreeName))
+	if err != nil {
+		return err
+	}
+	t.rootTree = &stateTree{
+		name:      RootTreeName,
+		tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher),
+		nodeStore: nodeStore,
+	}
+	t.merkleTrees = make(map[string]*stateTree, len(stateTreeNames))
 
-	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, merkleTreeToString[tree]))
+	for i := 0; i < len(stateTreeNames); i++ {
+		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, stateTreeNames[i]))
 		if err != nil {
 			return err
 		}
-		t.nodeStores[tree] = nodeStore
-		t.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
+		t.merkleTrees[stateTreeNames[i]] = &stateTree{
+			name:      stateTreeNames[i],
+			tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher),
+			nodeStore: nodeStore,
+		}
 	}
 
 	return nil
 }
 
 func (t *treeStore) setupInMemory() error {
-	t.merkleTrees = make(map[merkleTree]*smt.SMT, int(numMerkleTrees))
-	t.nodeStores = make(map[merkleTree]kvstore.KVStore, int(numMerkleTrees))
-
-	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
-		nodeStore := kvstore.NewMemKVStore() // For testing, `smt.NewSimpleMap()` can be used as well
-		t.nodeStores[tree] = nodeStore
-		t.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
+	nodeStore := kvstore.NewMemKVStore()
+	t.rootTree = &stateTree{
+		name:      RootTreeName,
+		tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher),
+		nodeStore: nodeStore,
 	}
-
+	t.merkleTrees = make(map[string]*stateTree, len(stateTreeNames))
+	for i := 0; i < len(stateTreeNames); i++ {
+		nodeStore := kvstore.NewMemKVStore() // For testing, `smt.NewSimpleMap()` can be used as well
+		t.merkleTrees[stateTreeNames[i]] = &stateTree{
+			name:      stateTreeNames[i],
+			tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher),
+			nodeStore: nodeStore,
+		}
+	}
 	return nil
 }

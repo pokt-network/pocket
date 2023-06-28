@@ -15,6 +15,7 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/internal/testutil"
+	ibcUtils "github.com/pokt-network/pocket/internal/testutil/ibc"
 	persistenceMocks "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -24,7 +25,6 @@ import (
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -122,6 +122,7 @@ func CreateTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, eventsChannel)
 	loggerMock := baseLoggerMock(t, eventsChannel)
 	rpcMock := baseRpcMock(t, eventsChannel)
+	ibcMock := ibcUtils.IbcMockWithHost(t, eventsChannel)
 
 	for _, module := range []modules.Module{
 		p2pMock,
@@ -129,6 +130,7 @@ func CreateTestConsensusPocketNode(
 		telemetryMock,
 		loggerMock,
 		rpcMock,
+		ibcMock,
 	} {
 		bus.RegisterModule(module)
 	}
@@ -669,7 +671,6 @@ func waitForProposalMsgs(
 	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
 ) ([]*anypb.Any, error) {
-
 	proposalMsgs, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, typesCons.HotstuffStep(step), consensus.Propose, numExpectedMsgs, maxWaitTime, failOnExtraMessages)
 	if err != nil {
 		return nil, err
@@ -751,7 +752,6 @@ func waitForNodeToRequestMissingBlock(
 	startingHeight uint64,
 	targetHeight uint64,
 ) (*anypb.Any, error) {
-
 	return &anypb.Any{}, nil
 }
 
@@ -765,7 +765,6 @@ func waitForNodeToReceiveMissingBlock(
 	allNodes IdToNodeMapping,
 	blockReq *anypb.Any,
 ) (*anypb.Any, error) {
-
 	return &anypb.Any{}, nil
 }
 
@@ -779,11 +778,10 @@ func waitForNodeToCatchUp(
 	blockResponse *anypb.Any,
 	targetHeight uint64,
 ) error {
-
 	return nil
 }
 
-func generatePlaceholderBlock(height uint64, leaderAddrr crypto.Address) *coreTypes.Block {
+func generatePlaceholderBlock(height uint64, leaderAddrr cryptoPocket.Address) *coreTypes.Block {
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            height,
 		StateHash:         stateHash,

@@ -15,7 +15,6 @@ import (
 //
 // This could ultimately be actuated from the CLI via flags, configs, and/or env
 // vars. Initially, we could consider coupling to a `--verbose` persistent flag.
-//
 
 // logStream logs the incoming stream and its scope stats
 func (rtr *UnicastRouter) logStream(stream libp2pNetwork.Stream) {

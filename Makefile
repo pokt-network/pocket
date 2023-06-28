@@ -423,6 +423,10 @@ test_p2p_raintree: ## Run all p2p raintree related tests
 test_p2p_raintree_addrbook: ## Run all p2p raintree addr book related tests
 	go test ${VERBOSE_TEST} -count=1 -tags=test -run RainTreeAddrBook -count=1 ./p2p/...
 
+.PHONY: test_ibc
+test_ibc: ## Run all go unit tests in the IBC module
+	go test ${VERBOSE_TEST} -count=1 -tags=test -p=1 ./ibc/...
+
 # TIP: For benchmarks, consider appending `-run=^#` to avoid running unit tests in the same package
 
 .PHONY: benchmark_persistence_state_hash

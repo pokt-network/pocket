@@ -47,11 +47,17 @@ type p2pModule struct {
 	identity       libp2p.Option
 	listenAddrs    libp2p.Option
 
+	// TECHDEBT(#810): register the providers to the module registry instead of
+	// holding a reference in the module struct and passing via router config.
+	//
 	// Assigned during creation via `#setupDependencies()`.
 	currentHeightProvider providers.CurrentHeightProvider
 	pstoreProvider        providers.PeerstoreProvider
 	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 
+	// TECHDEBT(#810): register the routers to the module registry instead of
+	// holding a reference in the module struct. This will improve testability.
+	//
 	// Assigned during `#Start()`. TLDR; `host` listens on instantiation.
 	// `stakedActorRouter` and `unstakedActorRouter` depends on `host`.
 	stakedActorRouter   typesP2P.Router
@@ -316,6 +322,9 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 	if !ok {
 		return fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
 	}
+
+	// TECHDEBT(#810): register the provider to the module registry instead of
+	// holding a reference in the module struct and passing via router config.
 	m.pstoreProvider = pstoreProvider
 
 	return nil
@@ -324,6 +333,7 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 // setupCurrentHeightProvider attempts to retrieve the current height provider
 // from the bus registry, falls back to the consensus module if none is registered.
 func (m *p2pModule) setupCurrentHeightProvider() error {
+	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
 	m.logger.Debug().Msg("setupCurrentHeightProvider")
 	currentHeightProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(current_height_provider.ModuleName)
 	if err != nil {
@@ -340,6 +350,9 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 	if !ok {
 		return fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
 	}
+
+	// TECHDEBT(#810): register the provider to the module registry instead of
+	// holding a reference in the module struct and passing via router config.
 	m.currentHeightProvider = currentHeightProvider
 
 	return nil
@@ -358,6 +371,8 @@ func (m *p2pModule) setupNonceDeduper() error {
 
 // setupRouters instantiates the configured router implementations.
 func (m *p2pModule) setupRouters() (err error) {
+	// TECHDEBT(#810): register the routers to the module registry instead of
+	// holding a reference in the module struct. This will improve testability.
 	if err := m.setupStakedRouter(); err != nil {
 		return err
 	}

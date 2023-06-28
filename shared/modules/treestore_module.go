@@ -2,6 +2,7 @@ package modules
 
 import (
 	"github.com/jackc/pgx/v5"
+	"github.com/pokt-network/pocket/persistence/kvstore"
 )
 
 const (
@@ -27,4 +28,6 @@ type TreeStoreModule interface {
 	Update(pgtx pgx.Tx, height uint64) (string, error)
 	// DebugClearAll completely clears the state of the trees. For debugging purposes only.
 	DebugClearAll() error
+	// GetTree returns the specified tree's root and nodeStore in order to be imported elsewhere
+	GetTree(name string) ([]byte, kvstore.KVStore)
 }
