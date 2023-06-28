@@ -21,6 +21,10 @@ func WithHost(host libp2pHost.Host) modules.ModuleOption {
 	}
 }
 
+// WithUnstakedActorRouter assigns the given router to the P2P modules
+// `#unstakedActor` field, used to communicate between unstaked actors
+// and the rest of the network, plus as a redundancy to the staked actor
+// router when broadcasting.
 func WithUnstakedActorRouter(router typesP2P.Router) modules.ModuleOption {
 	return func(m modules.InitializableModule) {
 		mod, ok := m.(*p2pModule)
@@ -30,6 +34,8 @@ func WithUnstakedActorRouter(router typesP2P.Router) modules.ModuleOption {
 	}
 }
 
+// WithStakedActorRouter assigns the given router to the P2P modules'
+// `#stakedActor` field, exclusively used to communicate between staked actors.
 func WithStakedActorRouter(router typesP2P.Router) modules.ModuleOption {
 	return func(m modules.InitializableModule) {
 		mod, ok := m.(*p2pModule)
