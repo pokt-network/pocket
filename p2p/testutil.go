@@ -30,6 +30,7 @@ func WithUnstakedActorRouter(router typesP2P.Router) modules.ModuleOption {
 		mod, ok := m.(*p2pModule)
 		if ok {
 			mod.unstakedActorRouter = router
+			mod.logger.Debug().Msg("using unstaked actor router provided via `WithUnstakeActorRouter`")
 		}
 	}
 }
@@ -41,6 +42,7 @@ func WithStakedActorRouter(router typesP2P.Router) modules.ModuleOption {
 		mod, ok := m.(*p2pModule)
 		if ok {
 			mod.stakedActorRouter = router
+			mod.logger.Debug().Msg("using staked actor router provided via `WithStakeActorRouter`")
 		}
 	}
 }
