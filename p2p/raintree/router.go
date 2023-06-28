@@ -228,7 +228,7 @@ func (rtr *rainTreeRouter) handleRainTreeMsg(rainTreeMsgBz []byte) error {
 
 	// Call configured message handler with the serialized `PocketEnvelope`.
 	if err := rtr.handler(rainTreeMsg.Data); err != nil {
-		rtr.logger.Error().Err(err).Msg("handling raintree message")
+		return fmt.Errorf("handling raintree message: %w", err)
 	}
 	return nil
 }
