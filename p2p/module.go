@@ -250,32 +250,28 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 		return err
 	}
 
-	unstakedSendErr := m.unstakedActorRouter.Send(poktEnvelopeBz, addr)
-
 	isStaked, err := m.isStakedActor()
 	if err != nil {
 		return err
 	}
 
-	var stakedSendErr error
-	if isStaked {
-		stakedSendErr = m.stakedActorRouter.Send(poktEnvelopeBz, addr)
+	// Send via the staked actor router both if this node and the peer are staked
+	// actors; otherwise, send via the unstaked actor router.
+	if !isStaked {
+		return m.unstakedActorRouter.Send(poktEnvelopeBz, addr)
 	}
 
-	if errors.Is(unstakedSendErr, typesP2P.ErrUnknownPeer) &&
-		errors.Is(stakedSendErr, typesP2P.ErrUnknownPeer) {
-		return typesP2P.ErrUnknownPeer
-	}
+	stakedActorSendErr := m.stakedActorRouter.Send(poktEnvelopeBz, addr)
 
-	if errors.Is(unstakedSendErr, typesP2P.ErrUnknownPeer) {
-		return stakedSendErr
-	}
+	// Peer is not a staked actor.
+	if errors.Is(stakedActorSendErr, typesP2P.ErrUnknownPeer) {
+		m.logger.Warn().
+			Str("address", addr.String()).
+			Msgf("attempting to send to unstaked actor")
 
-	if errors.Is(stakedSendErr, typesP2P.ErrUnknownPeer) {
-		return unstakedSendErr
+		return m.unstakedActorRouter.Send(poktEnvelopeBz, addr)
 	}
-
-	return multierr.Append(unstakedSendErr, stakedSendErr)
+	return nil
 }
 
 // TECHDEBT(#348): Define what the node identity is throughout the codebase
