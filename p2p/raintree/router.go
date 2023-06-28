@@ -211,7 +211,6 @@ func (rtr *rainTreeRouter) handleRainTreeMsg(rainTreeMsgBz []byte) error {
 		rtr.logger.Error().Err(err).Msg("Error decoding network message")
 		return err
 	}
-	// --
 
 	// Continue RainTree propagation
 	if rainTreeMsg.Level > 0 {
@@ -227,7 +226,7 @@ func (rtr *rainTreeRouter) handleRainTreeMsg(rainTreeMsgBz []byte) error {
 		return nil
 	}
 
-	// call configured handler to forward to app-specific bus
+	// Call configured message handler with the serialized `PocketEnvelope`.
 	if err := rtr.handler(rainTreeMsg.Data); err != nil {
 		rtr.logger.Error().Err(err).Msg("handling raintree message")
 	}

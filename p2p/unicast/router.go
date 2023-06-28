@@ -53,6 +53,10 @@ func (*UnicastRouter) Create(bus modules.Bus, cfg *config.UnicastRouterConfig) (
 		messageHandler: cfg.MessageHandler,
 		peerHandler:    cfg.PeerHandler,
 	}
+
+	// `UnicastRouter` is not a submodule and therefore does not register with the
+	// module registry. However, as it does depend on the bus and therefore MUST
+	// embed the base `IntegrableModule` and call `#SetBus()`.
 	rtr.SetBus(bus)
 
 	// Don't handle incoming streams in client debug mode.
@@ -73,6 +77,9 @@ func (rtr *UnicastRouter) handleStream(stream libp2pNetwork.Stream) {
 			Str("address", peer.GetAddress().String()).
 			Msg("parsing remote peer identity")
 
+		// Reset stream to signal the sender to give up and move on.
+		// NB: failing to reset the stream can easily max out the number of available
+		// network connections on the receiver's side.
 		if err = stream.Reset(); err != nil {
 			rtr.logger.Error().Err(err).Msg("resetting stream")
 		}
@@ -85,6 +92,7 @@ func (rtr *UnicastRouter) handleStream(stream libp2pNetwork.Stream) {
 			Msg("adding remote peer to router")
 	}
 
+	// concurrently read messages out of incoming streams for handling.
 	go rtr.readStream(stream)
 }
 
