@@ -35,7 +35,10 @@ type UnicastRouter struct {
 	// according to options.
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	messageHandler typesP2P.MessageHandler
-	peerHandler    func(peer typesP2P.Peer) error
+	// peerHandler is called whenever a new incoming stream is established.
+	// TECHDEBT(#749,#747): this may not be needed once we've adopted libp2p
+	// peer IDs and multiaddr natively.
+	peerHandler func(peer typesP2P.Peer) error
 }
 
 func Create(bus modules.Bus, cfg *config.UnicastRouterConfig) (*UnicastRouter, error) {

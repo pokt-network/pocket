@@ -259,6 +259,7 @@ func (rtr *rainTreeRouter) AddPeer(peer typesP2P.Peer) error {
 	return nil
 }
 
+// RemovePeer implements the respective member of `typesP2P.Router`.
 func (rtr *rainTreeRouter) RemovePeer(peer typesP2P.Peer) error {
 	rtr.peersManager.HandleEvent(
 		typesP2P.PeerManagerEvent{
@@ -280,6 +281,7 @@ func shouldSendToTarget(target target) bool {
 	return !target.isSelf
 }
 
+// setupUnicastRouter configures and assigns `rtr.UnicastRouter`.
 func (rtr *rainTreeRouter) setupUnicastRouter() error {
 	unicastRouterCfg := config.UnicastRouterConfig{
 		Logger:         rtr.logger,
