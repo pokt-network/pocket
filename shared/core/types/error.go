@@ -38,7 +38,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 146
+// NextCode: 147
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -182,9 +182,10 @@ const (
 	CodeIBCInvalidID                      Code = 140
 	CodeIBCInvalidPath                    Code = 141
 	CodeCreatingProofError                Code = 142
-	CodeUnknownIBCMessageTypeError        Code = 143
+	CodeIBCUnknownMessageTypeError        Code = 143
 	CodeNilFieldError                     Code = 144
-	CodeUpdatingIBCStoreDBError           Code = 145
+	CodeIBCUpdatingStoreError             Code = 145
+	CodeIBCStoreAlreadyExistsError        Code = 146
 )
 
 const (
@@ -325,9 +326,10 @@ const (
 	IBCInvalidIDError                 = "invalid ibc identifier"
 	IBCInvalidPathError               = "invalid ibc path"
 	IBCCreatingProofError             = "an error occurred creating the CommitmentProof"
-	IBCUnknownIBCMessageTypeError     = "the ibc message type is not recognized"
+	IBCUnknownMessageTypeError        = "the ibc message type is not recognized"
 	NilFieldError                     = "field cannot be nil"
-	IBCUpdatingIBCStoreDBError        = "an error occurred updating the ibc store postgres database"
+	IBCUpdatingStoreError             = "an error occurred updating the ibc store postgres database"
+	IBCStoreAlreadyExistsError        = "ibc store already exists in the store manager"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -863,11 +865,11 @@ func ErrUnknownMessageType(messageType any) Error {
 	return NewError(CodeUnknownMessageType, fmt.Sprintf("%s: %v", UnknownMessageTypeError, messageType))
 }
 
-func ErrHostAlreadyExists() Error {
+func ErrIBCHostAlreadyExists() Error {
 	return NewError(CodeHostAlreadyExists, IBCHostAlreadyExistsError)
 }
 
-func ErrHostDoesNotExist() Error {
+func ErrIBCHostDoesNotExist() Error {
 	return NewError(CodeHostDoesNotExist, IBCHostDoesNotExistError)
 }
 
@@ -879,18 +881,22 @@ func ErrIBCInvalidPath(path string) Error {
 	return NewError(CodeIBCInvalidPath, fmt.Sprintf("%s: %s", IBCInvalidPathError, path))
 }
 
-func ErrCreatingProof(err error) Error {
+func ErrIBCCreatingProof(err error) Error {
 	return NewError(CodeCreatingProofError, fmt.Sprintf("%s: %s", IBCCreatingProofError, err.Error()))
 }
 
-func ErrUnknownIBCMessageType(messageType string) Error {
-	return NewError(CodeUnknownIBCMessageTypeError, fmt.Sprintf("%s: %s", IBCUnknownIBCMessageTypeError, messageType))
+func ErrIBCUnknownMessageType(messageType string) Error {
+	return NewError(CodeIBCUnknownMessageTypeError, fmt.Sprintf("%s: %s", IBCUnknownMessageTypeError, messageType))
 }
 
 func ErrNilField(field string) Error {
 	return NewError(CodeNilFieldError, fmt.Sprintf("%s: %s", NilFieldError, field))
 }
 
-func ErrUpdatingIBCStoreDB(err error) Error {
-	return NewError(CodeUpdatingIBCStoreDBError, fmt.Sprintf("%s: %s", IBCUpdatingIBCStoreDBError, err.Error()))
+func ErrIBCUpdatingStore(err error) Error {
+	return NewError(CodeIBCUpdatingStoreError, fmt.Sprintf("%s: %s", IBCUpdatingStoreError, err.Error()))
+}
+
+func ErrIBCStoreAlreadyExists(name string) Error {
+	return NewError(CodeIBCStoreAlreadyExistsError, fmt.Sprintf("%s: %s", IBCStoreAlreadyExistsError, name))
 }

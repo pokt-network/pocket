@@ -22,7 +22,7 @@ func (m *IBCMessage) ValidateBasic() coreTypes.Error {
 	case *IBCMessage_Prune:
 		return msg.Prune.ValidateBasic()
 	default:
-		return coreTypes.ErrUnknownIBCMessageType(fmt.Sprintf("%T", msg))
+		return coreTypes.ErrIBCUnknownMessageType(fmt.Sprintf("%T", msg))
 	}
 }
 

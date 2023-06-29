@@ -40,7 +40,7 @@ func ConvertIBCMessageToTx(ibcMessage *types.IBCMessage) (*coreTypes.Transaction
 	case *types.IBCMessage_Prune:
 		anyMsg, err = codec.GetCodec().ToAny(event.Prune)
 	default:
-		return nil, coreTypes.ErrUnknownIBCMessageType(fmt.Sprintf("%T", event))
+		return nil, coreTypes.ErrIBCUnknownMessageType(fmt.Sprintf("%T", event))
 	}
 	if err != nil {
 		return nil, err

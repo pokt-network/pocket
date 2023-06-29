@@ -146,7 +146,7 @@ func (m *ibcModule) HandleMessage(message *anypb.Any) error {
 // newHost returns a new IBC host instance if one is not already created
 func (m *ibcModule) newHost() error {
 	if m.host != nil {
-		return coreTypes.ErrHostAlreadyExists()
+		return coreTypes.ErrIBCHostAlreadyExists()
 	}
 	host := &host{
 		logger: m.logger,

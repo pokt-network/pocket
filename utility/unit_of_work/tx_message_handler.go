@@ -227,14 +227,14 @@ func (u *baseUtilityUnitOfWork) handleMessageChangeParameter(message *typesUtil.
 
 func (u *baseUtilityUnitOfWork) handleUpdateIBCStore(message *ibcTypes.UpdateIBCStore) coreTypes.Error {
 	if err := u.persistenceRWContext.SetIBCStoreEntry(message.Key, message.Value); err != nil {
-		return coreTypes.ErrUpdatingIBCStoreDB(err)
+		return coreTypes.ErrIBCUpdatingStore(err)
 	}
 	return nil
 }
 
 func (u *baseUtilityUnitOfWork) handlePruneIBCStore(message *ibcTypes.PruneIBCStore) coreTypes.Error {
 	if err := u.persistenceRWContext.SetIBCStoreEntry(message.Key, nil); err != nil {
-		return coreTypes.ErrUpdatingIBCStoreDB(err)
+		return coreTypes.ErrIBCUpdatingStore(err)
 	}
 	return nil
 }
