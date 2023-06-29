@@ -11,22 +11,22 @@ import (
 
 // Implement the Message interface
 var (
-	_ utilityTypes.Message = &UpdateIbcStore{}
-	_ utilityTypes.Message = &PruneIbcStore{}
+	_ utilityTypes.Message = &UpdateIBCStore{}
+	_ utilityTypes.Message = &PruneIBCStore{}
 )
 
-func (m *IbcMessage) ValidateBasic() coreTypes.Error {
+func (m *IBCMessage) ValidateBasic() coreTypes.Error {
 	switch msg := m.Event.(type) {
-	case *IbcMessage_Update:
+	case *IBCMessage_Update:
 		return msg.Update.ValidateBasic()
-	case *IbcMessage_Prune:
+	case *IBCMessage_Prune:
 		return msg.Prune.ValidateBasic()
 	default:
 		return coreTypes.ErrUnknownIBCMessageType(fmt.Sprintf("%T", msg))
 	}
 }
 
-func (m *UpdateIbcStore) ValidateBasic() coreTypes.Error {
+func (m *UpdateIBCStore) ValidateBasic() coreTypes.Error {
 	if m.Key == nil {
 		return coreTypes.ErrNilField("key")
 	}
@@ -36,36 +36,36 @@ func (m *UpdateIbcStore) ValidateBasic() coreTypes.Error {
 	return nil
 }
 
-func (m *PruneIbcStore) ValidateBasic() coreTypes.Error {
+func (m *PruneIBCStore) ValidateBasic() coreTypes.Error {
 	if m.Key == nil {
 		return coreTypes.ErrNilField("key")
 	}
 	return nil
 }
 
-func (m *UpdateIbcStore) SetSigner(signer []byte) { m.Signer = signer }
-func (m *PruneIbcStore) SetSigner(signer []byte)  { m.Signer = signer }
+func (m *UpdateIBCStore) SetSigner(signer []byte) { m.Signer = signer }
+func (m *PruneIBCStore) SetSigner(signer []byte)  { m.Signer = signer }
 
-func (m *UpdateIbcStore) GetMessageName() string {
+func (m *UpdateIBCStore) GetMessageName() string {
 	return string(m.ProtoReflect().Descriptor().Name())
 }
 
-func (m *PruneIbcStore) GetMessageName() string {
+func (m *PruneIBCStore) GetMessageName() string {
 	return string(m.ProtoReflect().Descriptor().Name())
 }
 
-func (m *UpdateIbcStore) GetMessageRecipient() string { return "" }
-func (m *PruneIbcStore) GetMessageRecipient() string  { return "" }
+func (m *UpdateIBCStore) GetMessageRecipient() string { return "" }
+func (m *PruneIBCStore) GetMessageRecipient() string  { return "" }
 
-func (m *UpdateIbcStore) GetActorType() coreTypes.ActorType {
+func (m *UpdateIBCStore) GetActorType() coreTypes.ActorType {
 	return coreTypes.ActorType_ACTOR_TYPE_VAL
 }
 
-func (m *PruneIbcStore) GetActorType() coreTypes.ActorType {
+func (m *PruneIBCStore) GetActorType() coreTypes.ActorType {
 	return coreTypes.ActorType_ACTOR_TYPE_VAL
 }
 
-func (m *UpdateIbcStore) GetCanonicalBytes() []byte {
+func (m *UpdateIBCStore) GetCanonicalBytes() []byte {
 	bz, err := codec.GetCodec().Marshal(m)
 	if err != nil {
 		log.Fatalf("must marshal %v", err)
@@ -73,7 +73,7 @@ func (m *UpdateIbcStore) GetCanonicalBytes() []byte {
 	return bz // DISCUSS(#142): should we also sort the JSON like in V0?
 }
 
-func (m *PruneIbcStore) GetCanonicalBytes() []byte {
+func (m *PruneIBCStore) GetCanonicalBytes() []byte {
 	bz, err := codec.GetCodec().Marshal(m)
 	if err != nil {
 		log.Fatalf("must marshal %v", err)

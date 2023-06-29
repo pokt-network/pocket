@@ -151,7 +151,7 @@ func (u *baseUtilityUnitOfWork) getParamOwner(paramName string) ([]byte, coreTyp
 func (u *baseUtilityUnitOfWork) getFee(msg typesUtil.Message, actorType coreTypes.ActorType) (amount *big.Int, err coreTypes.Error) {
 	switch x := msg.(type) {
 	// TECHDEBT(M6): Decide on IBC store change fees and move into a governance parameter
-	case *typesUtil.MessageSend, *ibcTypes.UpdateIbcStore, *ibcTypes.PruneIbcStore:
+	case *typesUtil.MessageSend, *ibcTypes.UpdateIBCStore, *ibcTypes.PruneIBCStore:
 		return getGovParam[*big.Int](u, typesUtil.MessageSendFee)
 	case *typesUtil.MessageStake:
 		switch actorType {

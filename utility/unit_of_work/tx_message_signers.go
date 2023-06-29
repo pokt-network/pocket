@@ -25,10 +25,10 @@ func (u *baseUtilityUnitOfWork) getSignerCandidates(msg typesUtil.Message) ([][]
 		return u.getMessageUnpauseSignerCandidates(x)
 	case *typesUtil.MessageChangeParameter:
 		return u.getMessageChangeParameterSignerCandidates(x)
-	case *ibcTypes.UpdateIbcStore:
-		return u.getUpdateIbcStoreSingerCandidates(x)
-	case *ibcTypes.PruneIbcStore:
-		return u.getPruneIbcStoreSingerCandidates(x)
+	case *ibcTypes.UpdateIBCStore:
+		return u.getUpdateIBCStoreSingerCandidates(x)
+	case *ibcTypes.PruneIBCStore:
+		return u.getPruneIBCStoreSingerCandidates(x)
 	default:
 		return nil, coreTypes.ErrUnknownMessage(x)
 	}
@@ -78,10 +78,10 @@ func (u *baseUtilityUnitOfWork) getMessageSendSignerCandidates(msg *typesUtil.Me
 	return [][]byte{msg.FromAddress}, nil
 }
 
-func (u *baseUtilityUnitOfWork) getUpdateIbcStoreSingerCandidates(msg *ibcTypes.UpdateIbcStore) ([][]byte, coreTypes.Error) {
+func (u *baseUtilityUnitOfWork) getUpdateIBCStoreSingerCandidates(msg *ibcTypes.UpdateIBCStore) ([][]byte, coreTypes.Error) {
 	return [][]byte{msg.Signer}, nil
 }
 
-func (u *baseUtilityUnitOfWork) getPruneIbcStoreSingerCandidates(msg *ibcTypes.PruneIbcStore) ([][]byte, coreTypes.Error) {
+func (u *baseUtilityUnitOfWork) getPruneIBCStoreSingerCandidates(msg *ibcTypes.PruneIBCStore) ([][]byte, coreTypes.Error) {
 	return [][]byte{msg.Signer}, nil
 }

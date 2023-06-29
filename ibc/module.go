@@ -95,7 +95,7 @@ func (m *ibcModule) HandleMessage(message *anypb.Any) error {
 	if err != nil {
 		return err
 	}
-	ibcMessage, ok := msg.(*ibcTypes.IbcMessage)
+	ibcMessage, ok := msg.(*ibcTypes.IBCMessage)
 	if !ok {
 		return fmt.Errorf("failed to cast message to IBCMessage")
 	}
@@ -139,7 +139,7 @@ func (m *ibcModule) HandleMessage(message *anypb.Any) error {
 	if err := m.GetBus().GetUtilityModule().HandleTransaction(txBz); err != nil {
 		return err
 	}
-	m.logger.Info().Str("message_type", "IbcMessage").Msg("Successfully added a new message to the mempool!")
+	m.logger.Info().Str("message_type", "IBCMessage").Msg("Successfully added a new message to the mempool!")
 	return nil
 }
 

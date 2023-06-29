@@ -46,7 +46,7 @@ func TestHandleMessage_ErrorAlreadyCommitted(t *testing.T) {
 func TestHandleMessage_BasicValidation_Message(t *testing.T) {
 	testCases := []struct {
 		name     string
-		msg      *ibcTypes.IbcMessage
+		msg      *ibcTypes.IBCMessage
 		expected error
 	}{
 		{
@@ -272,7 +272,7 @@ func TestHandleMessage_AddToMempool(t *testing.T) {
 	txProto := &coreTypes.Transaction{}
 	err = codec.GetCodec().Unmarshal(mTx, txProto)
 	require.NoError(t, err)
-	ibcMsg := &ibcTypes.UpdateIbcStore{}
+	ibcMsg := &ibcTypes.UpdateIBCStore{}
 	require.NoError(t, txProto.GetMsg().UnmarshalTo(ibcMsg))
 
 	// Compare messages are equal
@@ -283,7 +283,7 @@ func TestHandleMessage_AddToMempool(t *testing.T) {
 	require.Equal(t, origBz, ibcMsgBz)
 }
 
-func prepareUpdateMessage(t *testing.T, key, value []byte) (*ibcTypes.IbcMessage, *coreTypes.Transaction) {
+func prepareUpdateMessage(t *testing.T, key, value []byte) (*ibcTypes.IBCMessage, *coreTypes.Transaction) {
 	t.Helper()
 	msg := CreateUpdateStoreMessage(key, value)
 	tx, err := ConvertIBCMessageToTx(msg)
@@ -291,7 +291,7 @@ func prepareUpdateMessage(t *testing.T, key, value []byte) (*ibcTypes.IbcMessage
 	return msg, tx
 }
 
-func preparePruneMessage(t *testing.T, key []byte) (*ibcTypes.IbcMessage, *coreTypes.Transaction) {
+func preparePruneMessage(t *testing.T, key []byte) (*ibcTypes.IBCMessage, *coreTypes.Transaction) {
 	t.Helper()
 	msg := CreatePruneStoreMessage(key)
 	tx, err := ConvertIBCMessageToTx(msg)

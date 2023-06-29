@@ -27,10 +27,10 @@ func (u *baseUtilityUnitOfWork) handleMessage(msg typesUtil.Message) (err coreTy
 		return u.handleUnpauseMessage(x)
 	case *typesUtil.MessageChangeParameter:
 		return u.handleMessageChangeParameter(x)
-	case *ibcTypes.UpdateIbcStore:
-		return u.handleUpdateIbcStore(x)
-	case *ibcTypes.PruneIbcStore:
-		return u.handlePruneIbcStore(x)
+	case *ibcTypes.UpdateIBCStore:
+		return u.handleUpdateIBCStore(x)
+	case *ibcTypes.PruneIBCStore:
+		return u.handlePruneIBCStore(x)
 	default:
 		return coreTypes.ErrUnknownMessage(x)
 	}
@@ -225,14 +225,14 @@ func (u *baseUtilityUnitOfWork) handleMessageChangeParameter(message *typesUtil.
 	return u.updateParam(message.ParameterKey, v)
 }
 
-func (u *baseUtilityUnitOfWork) handleUpdateIbcStore(message *ibcTypes.UpdateIbcStore) coreTypes.Error {
+func (u *baseUtilityUnitOfWork) handleUpdateIBCStore(message *ibcTypes.UpdateIBCStore) coreTypes.Error {
 	if err := u.persistenceRWContext.SetIBCStoreEntry(message.Key, message.Value); err != nil {
 		return coreTypes.ErrUpdatingIBCStoreDB(err)
 	}
 	return nil
 }
 
-func (u *baseUtilityUnitOfWork) handlePruneIbcStore(message *ibcTypes.PruneIbcStore) coreTypes.Error {
+func (u *baseUtilityUnitOfWork) handlePruneIBCStore(message *ibcTypes.PruneIBCStore) coreTypes.Error {
 	if err := u.persistenceRWContext.SetIBCStoreEntry(message.Key, nil); err != nil {
 		return coreTypes.ErrUpdatingIBCStoreDB(err)
 	}

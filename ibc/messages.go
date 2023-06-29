@@ -10,10 +10,10 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func CreateUpdateStoreMessage(key, value []byte) *types.IbcMessage {
-	return &types.IbcMessage{
-		Event: &types.IbcMessage_Update{
-			Update: &types.UpdateIbcStore{
+func CreateUpdateStoreMessage(key, value []byte) *types.IBCMessage {
+	return &types.IBCMessage{
+		Event: &types.IBCMessage_Update{
+			Update: &types.UpdateIBCStore{
 				Key:   key,
 				Value: value,
 			},
@@ -21,23 +21,23 @@ func CreateUpdateStoreMessage(key, value []byte) *types.IbcMessage {
 	}
 }
 
-func CreatePruneStoreMessage(key []byte) *types.IbcMessage {
-	return &types.IbcMessage{
-		Event: &types.IbcMessage_Prune{
-			Prune: &types.PruneIbcStore{
+func CreatePruneStoreMessage(key []byte) *types.IBCMessage {
+	return &types.IBCMessage{
+		Event: &types.IBCMessage_Prune{
+			Prune: &types.PruneIBCStore{
 				Key: key,
 			},
 		},
 	}
 }
 
-func ConvertIBCMessageToTx(ibcMessage *types.IbcMessage) (*coreTypes.Transaction, error) {
+func ConvertIBCMessageToTx(ibcMessage *types.IBCMessage) (*coreTypes.Transaction, error) {
 	var anyMsg *anypb.Any
 	var err error
 	switch event := ibcMessage.Event.(type) {
-	case *types.IbcMessage_Update:
+	case *types.IBCMessage_Update:
 		anyMsg, err = codec.GetCodec().ToAny(event.Update)
-	case *types.IbcMessage_Prune:
+	case *types.IBCMessage_Prune:
 		anyMsg, err = codec.GetCodec().ToAny(event.Prune)
 	default:
 		return nil, coreTypes.ErrUnknownIBCMessageType(fmt.Sprintf("%T", event))
