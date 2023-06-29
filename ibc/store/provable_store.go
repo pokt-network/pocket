@@ -13,21 +13,23 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
+var _ modules.ProvableStore = &provableStore{}
+
 // CachedEntry represents a local change made to the IBC store prior to it being
 // committed to the state tree. These should be written to disk in the to prevent a
 // loss of data and pruned when included in the state tree
 // written to disk as follows:
 // "{height}/{prefixedKey}" => value
 type cachedEntry struct {
-	name        string
+	storeName   string
 	height      uint64
 	prefixedKey []byte
 	value       []byte
 }
 
 // prepare returns the key and value to be written to disk
-func (c *cachedEntry) prepare() ([]byte, []byte) {
-	return []byte(fmt.Sprintf("%s/%d/%s", c.name, c.height, string(c.prefixedKey))), c.value
+func (c *cachedEntry) prepare() (key []byte, value []byte) {
+	return []byte(fmt.Sprintf("%s/%d/%s", c.storeName, c.height, string(c.prefixedKey))), c.value
 }
 
 // provableStore is a struct that interfaces with the PostgresDB instance
@@ -78,7 +80,7 @@ func (p *provableStore) GetAndProve(key []byte, membership bool) ([]byte, *ics23
 		return nil, nil, err
 	}
 	defer rCtx.Release()
-	proof := new(ics23.CommitmentProof)
+	var proof *ics23.CommitmentProof
 	if membership {
 		proof, err = p.CreateMembershipProof(key, value)
 	} else {
@@ -97,7 +99,7 @@ func (p *provableStore) CreateMembershipProof(key, value []byte) (*ics23.Commitm
 	// TODO(#854): Implement tree retrieval
 	/**
 	prefixed := applyPrefix(p.prefix, key)
-	root, nodeStore := p.bus.GetTreeStore()
+	root, nodeStore := p.bus.GetTreeStore().GetTree(trees.IBCStateTree)
 	lazy := smt.ImportSparseMerkleTree(nodeStore, root, sha256.New())
 	return createMembershipProof(lazy, prefixed, value)
 	**/
@@ -111,7 +113,7 @@ func (p *provableStore) CreateNonMembershipProof(key []byte) (*ics23.CommitmentP
 	// TODO(#854): Implement tree retrieval
 	/**
 	prefixed := applyPrefix(p.prefix, key)
-	root, nodeStore := p.bus.GetTreeStore()
+	root, nodeStore := p.bus.GetTreeStore().GetTree(trees.IBCStateTree)
 	lazy := smt.ImportSparseMerkleTree(nodeStore, root, sha256.New())
 	return createNonMembershipProof(lazy, prefixed)
 	**/
@@ -119,7 +121,7 @@ func (p *provableStore) CreateNonMembershipProof(key []byte) (*ics23.CommitmentP
 }
 
 // Set updates the persistence layer with the new key-value pair at the latest height and
-// emits an UpdateIBCStore event to the bus for propogation throughout the network, to be
+// emits an UpdateIBCStore event to the bus for propagation throughout the network, to be
 // included in each node's mempool and thus the next block
 func (p *provableStore) Set(key, value []byte) error {
 	prefixed := applyPrefix(p.prefix, key)
@@ -132,13 +134,19 @@ func (p *provableStore) Set(key, value []byte) error {
 	if err := rwCtx.SetIBCStoreEntry(prefixed, value); err != nil {
 		return err
 	}
+	p.cache = append(p.cache, &cachedEntry{
+		storeName:   p.name,
+		height:      uint64(currHeight),
+		prefixedKey: prefixed,
+		value:       value,
+	})
 	// TODO(#854): Implement emit functions
 	// return emitUpdateStoreEvent(p.prefix, key, value)
 	return nil
 }
 
 // Delete updates the persistence layer with the key and nil value pair at the latest height
-// and emits an PruneIBCStore event to the bus for propogation throughout the network, to be
+// and emits an PruneIBCStore event to the bus for propagation throughout the network, to be
 // included in each node's mempool and thus the next block
 func (p *provableStore) Delete(key []byte) error {
 	prefixed := applyPrefix(p.prefix, key)
@@ -151,8 +159,27 @@ func (p *provableStore) Delete(key []byte) error {
 	if err := rwCtx.SetIBCStoreEntry(prefixed, nil); err != nil {
 		return err
 	}
+	p.cache = append(p.cache, &cachedEntry{
+		storeName:   p.name,
+		height:      uint64(currHeight),
+		prefixedKey: prefixed,
+		value:       nil,
+	})
 	// TODO(#854): Implement emit functions
 	// return emitPruneStoreEvent(p.prefix, key)
+	return nil
+}
+
+// GetCommitmentPrefix returns the CommitmentPrefix for the store
+func (p *provableStore) GetCommitmentPrefix() coreTypes.CommitmentPrefix { return p.prefix }
+
+// Root returns the current root of the IBC state tree
+func (p *provableStore) Root() ics23.CommitmentRoot {
+	// TODO(#854): Implement tree retrieval
+	/**
+	root, _ := p.bus.GetTreeStore().GetTree(trees.IBCStateTree)
+	return root
+	**/
 	return nil
 }
 
@@ -196,7 +223,7 @@ func (p *provableStore) RestoreCache(store kvstore.KVStore) error {
 		}
 		value := values[i]
 		p.cache = append(p.cache, &cachedEntry{
-			name:        parts[0],
+			storeName:   parts[0],
 			height:      height,
 			prefixedKey: []byte(parts[2]),
 			value:       value,

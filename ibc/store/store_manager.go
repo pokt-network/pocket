@@ -9,7 +9,10 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var cacheDirs = func(storesDir string) string { return fmt.Sprintf("%s/caches", storesDir) }
+var (
+	_         modules.IBCStoreManager = &storeManager{}
+	cacheDirs                         = func(storesDir string) string { return fmt.Sprintf("%s/caches", storesDir) }
+)
 
 // storeManager holds an in-memory map of all the provable stores in use
 type storeManager struct {
@@ -29,19 +32,19 @@ func newStoreManager(storesDir string) *storeManager {
 
 // AddStore creates and adds a provableStore to the storeManager
 // if one of the same name does not already exist
-func (s *storeManager) AddStore(prefix coreTypes.CommitmentPrefix, bus modules.Bus) error {
+func (s *storeManager) AddStore(name string, bus modules.Bus) error {
 	s.m.Lock()
 	defer s.m.Unlock()
-	if _, ok := s.stores[string(prefix)]; ok {
-		return coreTypes.ErrIBCStoreAlreadyExists(string(prefix))
+	if _, ok := s.stores[name]; ok {
+		return coreTypes.ErrIBCStoreAlreadyExists(name)
 	}
-	store := newProvableStore(bus, prefix)
+	store := newProvableStore(bus, coreTypes.CommitmentPrefix(name))
 	s.stores[store.name] = store
 	return nil
 }
 
 // GetStore returns the provableStore with the given name
-func (s *storeManager) GetStore(name string) (*provableStore, error) {
+func (s *storeManager) GetStore(name string) (modules.ProvableStore, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 	store, ok := s.stores[name]
