@@ -121,11 +121,6 @@ func (t *treeStore) DebugClearAll() error {
 	return nil
 }
 
-// GetModuleName implements the respective `TreeStoreModule` interface method.
-func (t *treeStore) GetModuleName() string {
-	return modules.TreeStoreModuleName
-}
-
 // updateMerkleTrees updates all of the merkle trees in order defined by `numMerkleTrees`
 // * it returns the new state hash capturing the state of all the trees or an error if one occurred
 func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height uint64) (string, error) {

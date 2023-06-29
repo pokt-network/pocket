@@ -25,6 +25,7 @@ type Bus interface {
 
 	// Pocket modules
 	GetPersistenceModule() PersistenceModule
+	GetTreeStoreModule() TreeStoreModule
 	GetP2PModule() P2PModule
 	GetUtilityModule() UtilityModule
 	GetConsensusModule() ConsensusModule
