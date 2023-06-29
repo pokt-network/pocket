@@ -341,7 +341,7 @@ func prepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)
 
-	// DISCUSS_THIS_COMMIT: The number of times each telemetry event is expected
+	// TECHDEBT: The number of times each telemetry event is expected
 	// (below) is dependent on the number of redundant messages all validators see,
 	// which is a function of the network size. Until this function is derived and
 	// implemented, we cannot predict the number of times each event is expected.
