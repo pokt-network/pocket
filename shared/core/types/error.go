@@ -320,14 +320,14 @@ const (
 	NegativeAmountError               = "the amount is negative"
 	UnknownActorTypeError             = "the actor type is not recognized"
 	UnknownMessageTypeError           = "the message being by the utility message is not recognized"
-	HostAlreadyExistsError            = "an ibc host already exists"
-	HostDoesNotExistError             = "an ibc host does not exist"
+	IBCHostAlreadyExistsError         = "an ibc host already exists"
+	IBCHostDoesNotExistError          = "an ibc host does not exist"
 	IBCInvalidIDError                 = "invalid ibc identifier"
 	IBCInvalidPathError               = "invalid ibc path"
-	CreatingProofError                = "an error occurred creating the CommitmentProof"
-	UnknownIBCMessageTypeError        = "the ibc message type is not recognized"
+	IBCCreatingProofError             = "an error occurred creating the CommitmentProof"
+	IBCUnknownIBCMessageTypeError     = "the ibc message type is not recognized"
 	NilFieldError                     = "field cannot be nil"
-	UpdatingIBCStoreDBError           = "an error occurred updating the ibc store postgres database"
+	IBCUpdatingIBCStoreDBError        = "an error occurred updating the ibc store postgres database"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -864,11 +864,11 @@ func ErrUnknownMessageType(messageType any) Error {
 }
 
 func ErrHostAlreadyExists() Error {
-	return NewError(CodeHostAlreadyExists, HostAlreadyExistsError)
+	return NewError(CodeHostAlreadyExists, IBCHostAlreadyExistsError)
 }
 
 func ErrHostDoesNotExist() Error {
-	return NewError(CodeHostDoesNotExist, HostDoesNotExistError)
+	return NewError(CodeHostDoesNotExist, IBCHostDoesNotExistError)
 }
 
 func ErrIBCInvalidID(identifier, msg string) Error {
@@ -880,11 +880,11 @@ func ErrIBCInvalidPath(path string) Error {
 }
 
 func ErrCreatingProof(err error) Error {
-	return NewError(CodeCreatingProofError, fmt.Sprintf("%s: %s", CreatingProofError, err.Error()))
+	return NewError(CodeCreatingProofError, fmt.Sprintf("%s: %s", IBCCreatingProofError, err.Error()))
 }
 
 func ErrUnknownIBCMessageType(messageType string) Error {
-	return NewError(CodeUnknownIBCMessageTypeError, fmt.Sprintf("%s: %s", UnknownIBCMessageTypeError, messageType))
+	return NewError(CodeUnknownIBCMessageTypeError, fmt.Sprintf("%s: %s", IBCUnknownIBCMessageTypeError, messageType))
 }
 
 func ErrNilField(field string) Error {
@@ -892,5 +892,5 @@ func ErrNilField(field string) Error {
 }
 
 func ErrUpdatingIBCStoreDB(err error) Error {
-	return NewError(CodeUpdatingIBCStoreDBError, fmt.Sprintf("%s: %s", UpdatingIBCStoreDBError, err.Error()))
+	return NewError(CodeUpdatingIBCStoreDBError, fmt.Sprintf("%s: %s", IBCUpdatingIBCStoreDBError, err.Error()))
 }
