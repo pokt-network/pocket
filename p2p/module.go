@@ -333,6 +333,9 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 	m.logger.Debug().Msg("setupCurrentHeightProvider")
 	currentHeightProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(current_height_provider.ModuleName)
 	if err != nil {
+		// TECHDEBT(#810): add a `consensusCurrentHeightProvider` submodule to wrap
+		// the consensus module usage (similar to how `persistencePeerstoreProvider`
+		// wraps persistence).
 		currentHeightProviderModule = m.GetBus().GetConsensusModule()
 	}
 
