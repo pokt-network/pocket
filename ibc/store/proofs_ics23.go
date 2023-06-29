@@ -68,7 +68,7 @@ func createMembershipProof(tree *smt.SMT, key, value []byte) (*ics23.CommitmentP
 	if err != nil {
 		return nil, coreTypes.ErrCreatingProof(err)
 	}
-	return convertSMPToExistenceProof(&proof, key, value), nil
+	return convertSMPToExistenceProof(proof, key, value), nil
 }
 
 // createNonMembershipProof generates a CommitmentProof object verifying the membership of an unrealted key at the given key in the SMT provided
@@ -78,7 +78,7 @@ func createNonMembershipProof(tree *smt.SMT, key []byte) (*ics23.CommitmentProof
 		return nil, coreTypes.ErrCreatingProof(err)
 	}
 
-	return convertSMPToExclusionProof(&proof, key), nil
+	return convertSMPToExclusionProof(proof, key), nil
 }
 
 // convertSMPToExistenceProof converts a SparseMerkleProof to an ics23
