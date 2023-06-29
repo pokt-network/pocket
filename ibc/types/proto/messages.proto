@@ -5,17 +5,17 @@ package types;
 option go_package = "github.com/pokt-network/pocket/ibc/types";
 
 // UpdateIBCStore defines a message representing the addition of a key/value pair to the IBC store
-// the key field should be the full key - prefixed with the stores CommitmentPrefix
+// the key field should be the full key - prefixed with the store's CommitmentPrefix
 message UpdateIBCStore {
-    bytes signer = 1;
+    bytes signer = 1; // signer should be the address of the node that sent the message
     bytes key = 2;
     bytes value = 3;
 }
 
 // PruneIBCStore defines a message representing the removal of a key from the IBC store
-// the key field should be the full key - prefixed with the stores CommitmentPrefix
+// the key field should be the full key - prefixed with the store's CommitmentPrefix
 message PruneIBCStore {
-    bytes signer = 1;
+    bytes signer = 1; // signer should be the address of the node that sent the message
     bytes key = 2;
 }
 
