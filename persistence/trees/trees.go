@@ -23,14 +23,9 @@ import (
 	"github.com/pokt-network/smt"
 )
 
-var (
-	// smtTreeHasher sets the hasher used by the tree SMT trees
-	// as a package level variable for visibility and internal use.
-	smtTreeHasher hash.Hash = sha256.New()
-	// smtValueHasher sets the hasher used by the tree SMT trees
-	// to be nil, which means that values are not prehashed
-	smtValueHasher smt.Option = smt.WithValueHasher(nil)
-)
+// smtTreeHasher sets the hasher used by the tree SMT trees
+// as a package level variable for visibility and internal use.
+var smtTreeHasher hash.Hash = sha256.New()
 
 const (
 	RootTreeName         = "root"
@@ -127,7 +122,7 @@ func (t *treeStore) DebugClearAll() error {
 		if err := nodeStore.ClearAll(); err != nil {
 			return fmt.Errorf("failed to clear %s node store: %w", treeName, err)
 		}
-		stateTree.tree = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher, smtValueHasher)
+		stateTree.tree = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
 	}
 	return nil
 }

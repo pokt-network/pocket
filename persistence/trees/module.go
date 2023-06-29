@@ -70,7 +70,7 @@ func (t *treeStore) setupTrees() error {
 		}
 		t.merkleTrees[stateTreeNames[i]] = &stateTree{
 			name:      stateTreeNames[i],
-			tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher, smtValueHasher),
+			tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher),
 			nodeStore: nodeStore,
 		}
 	}
@@ -90,7 +90,7 @@ func (t *treeStore) setupInMemory() error {
 		nodeStore := kvstore.NewMemKVStore() // For testing, `smt.NewSimpleMap()` can be used as well
 		t.merkleTrees[stateTreeNames[i]] = &stateTree{
 			name:      stateTreeNames[i],
-			tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher, smtValueHasher),
+			tree:      smt.NewSparseMerkleTree(nodeStore, smtTreeHasher),
 			nodeStore: nodeStore,
 		}
 	}
