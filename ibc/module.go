@@ -105,7 +105,7 @@ func (m *ibcModule) HandleMessage(message *anypb.Any) error {
 	}
 
 	// Convert IBC message to a utility Transaction
-	tx, err := ConvertIBCMessageToTx(ibcMessage)
+	tx, err := ibcTypes.ConvertIBCMessageToTx(ibcMessage)
 	if err != nil {
 		return err
 	}

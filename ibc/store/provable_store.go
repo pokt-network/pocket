@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	ics23 "github.com/cosmos/ics23/go"
-	"github.com/pokt-network/pocket/ibc/host"
+	"github.com/pokt-network/pocket/ibc/path"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -240,5 +240,5 @@ func applyPrefix(prefix coreTypes.CommitmentPrefix, key []byte) coreTypes.Commit
 	if bytes.Equal(prefix[:len(slashed)], slashed) {
 		return key
 	}
-	return host.ApplyPrefix(prefix, string(key))
+	return path.ApplyPrefix(prefix, string(key))
 }

@@ -51,27 +51,27 @@ func TestHandleMessage_BasicValidation_Message(t *testing.T) {
 	}{
 		{
 			name:     "Valid Update Message",
-			msg:      CreateUpdateStoreMessage([]byte("key"), []byte("value")),
+			msg:      ibcTypes.CreateUpdateStoreMessage([]byte("key"), []byte("value")),
 			expected: nil,
 		},
 		{
 			name:     "Valid Prune Message",
-			msg:      CreatePruneStoreMessage([]byte("key")),
+			msg:      ibcTypes.CreatePruneStoreMessage([]byte("key")),
 			expected: nil,
 		},
 		{
 			name:     "Invalid Update Message: Empty Key",
-			msg:      CreateUpdateStoreMessage(nil, []byte("value")),
+			msg:      ibcTypes.CreateUpdateStoreMessage(nil, []byte("value")),
 			expected: coreTypes.ErrNilField("key"),
 		},
 		{
 			name:     "Invalid Update Message: Empty Value",
-			msg:      CreateUpdateStoreMessage([]byte("key"), nil),
+			msg:      ibcTypes.CreateUpdateStoreMessage([]byte("key"), nil),
 			expected: coreTypes.ErrNilField("value"),
 		},
 		{
 			name:     "Invalid Prune Message: Empty Key",
-			msg:      CreatePruneStoreMessage(nil),
+			msg:      ibcTypes.CreatePruneStoreMessage(nil),
 			expected: coreTypes.ErrNilField("key"),
 		},
 	}
@@ -285,16 +285,16 @@ func TestHandleMessage_AddToMempool(t *testing.T) {
 
 func prepareUpdateMessage(t *testing.T, key, value []byte) (*ibcTypes.IBCMessage, *coreTypes.Transaction) {
 	t.Helper()
-	msg := CreateUpdateStoreMessage(key, value)
-	tx, err := ConvertIBCMessageToTx(msg)
+	msg := ibcTypes.CreateUpdateStoreMessage(key, value)
+	tx, err := ibcTypes.ConvertIBCMessageToTx(msg)
 	require.NoError(t, err)
 	return msg, tx
 }
 
 func preparePruneMessage(t *testing.T, key []byte) (*ibcTypes.IBCMessage, *coreTypes.Transaction) {
 	t.Helper()
-	msg := CreatePruneStoreMessage(key)
-	tx, err := ConvertIBCMessageToTx(msg)
+	msg := ibcTypes.CreatePruneStoreMessage(key)
+	tx, err := ibcTypes.ConvertIBCMessageToTx(msg)
 	require.NoError(t, err)
 	return msg, tx
 }
