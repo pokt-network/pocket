@@ -63,19 +63,19 @@ sequenceDiagram
   actor UB as User B
   R1->>R1: Watch(Chain A)
   R1->>R1: Watch(Chain B)
-  UA->>A1: Send 10$POKT to User B
+  UA->>+A1: Send 10$POKT to User B
   A1->>A1: Lock(10$POKT)
-  A1->>A2: Create(FungibleTokenPacketData)
-  A2->>A1: Commit(FungibleTokenPacketData)
-  A1->>A1: NewBlock()
+  A1->>+A2: Create(FungibleTokenPacketData)
+  A2->>-A1: Commit(FungibleTokenPacketData)
+  A1->>-A1: NewBlock()
   R1->>R1: CheckNewBlockForIBCPackets()
-  R1->>A2: QueryAndProve(FungibleTokenPacketData)
+  R1->>+A2: QueryAndProve(FungibleTokenPacketData)
   A2->>R1: FungibleTokenPacketData
-  A2->>R1: Proof(FungibleTokenPacketData)
-  R1->>B2: Validate(FungibleTokenPacketData, Proof(FungibleTokenPacketData))
-  B2->>B3: Verify(Proof(FungibleTokenPacketData))
-  B3->>B2: FoundInState(FungibleTokenPacketData)
-  B2->>B1: Send 10$POKT to User B
+  A2->>-R1: Proof(FungibleTokenPacketData)
+  R1->>+B2: Validate(FungibleTokenPacketData, Proof(FungibleTokenPacketData))
+  B2->>+B3: Verify(Proof(FungibleTokenPacketData))
+  B3->>-B2: FoundInState(FungibleTokenPacketData)
+  B2->>-B1: Send 10$POKT to User B
   B1->>B1: Mint(10$POKT)
   B1->>UB: Receive 10$POKT from User A
 ```
@@ -96,7 +96,7 @@ The `GetTimestamp()` function returns the current unix timestamp of the host mac
 
 ## IBC State
 
-As mentioned [above](#persistence) the IBC store **must** be included in the consensus state of the network. As such the IBC store as defined in [ICS-24][ics24] has been implemented as a single IBC state tree.
+As mentioned [above](#persistence) the IBC store **MUST** be included in the consensus state of the network. As such the IBC store as defined in [ICS-24][ics24] has been implemented as a single IBC state tree.
 
 ### IBC State Tree
 
@@ -104,7 +104,9 @@ The IBC state tree is a non-value hashing `SMT` backed by a persistent `KVStore`
 
 ### IBC Messages
 
-As the hosts make changes to this IBC store locally (creating light clients, opening connections, and sending packets for example); these changes must be propagated throughout the network to ensure the IBC state tree is consistent across all nodes. This is achieved by the new `IbcMessage` type defined in [ibc/types/proto/messages.proto](../types/proto/messages.proto). This type acts as an enum representing two possible state transition events:
+Hosts maintain uncommitted changes in a local ephemeral IBC store while messages propagate through the mempool.
+
+These messages enable a variety of IBC related state changes such as creating light clients, opening connections, sending packets, etc... This is enabled by propagating `IbcMessage` types defined in [ibc/types/proto/messages.proto](../types/proto/messages.proto). This type acts as an enum representing two possible state transition events:
 
 - `UpdateIbcStore`: Updating the store with a key-value pair; adding a new or updating an existing element
 - `PruneIbcStore`: Pruning the store via its key; removal of an existing element
