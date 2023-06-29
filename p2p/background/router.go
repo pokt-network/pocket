@@ -197,6 +197,7 @@ func (rtr *backgroundRouter) RemovePeer(peer typesP2P.Peer) error {
 	return rtr.pstore.RemovePeer(peer.GetAddress())
 }
 
+// setupUnicastRouter configures and assigns `rtr.UnicastRouter`.
 func (rtr *backgroundRouter) setupUnicastRouter() error {
 	unicastRouterCfg := config.UnicastRouterConfig{
 		Logger:         rtr.logger,
