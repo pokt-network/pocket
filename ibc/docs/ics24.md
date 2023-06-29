@@ -8,6 +8,7 @@
   - [Timestamps](#timestamps)
 - [IBC State](#ibc-state)
   - [IBC State Tree](#ibc-state-tree)
+  - [Data Retrieval](#data-retrieval)
   - [IBC Messages](#ibc-messages)
   - [IBC Message Handling](#ibc-message-handling)
   - [Mempool](#mempool)
@@ -26,7 +27,8 @@ Only validators can be configured to be IBC hosts. If the IBC module, during its
 ```json
 "ibc": {
     "enabled": bool,
-    "private_key": string
+    "private_key": string,
+    "stores_dir": string
 }
 ```
 
@@ -86,9 +88,9 @@ See: [IBC State](#ibc-state) below for more details on the IBC state transition 
 
 ### Paths and Identifiers
 
-Paths are defined as bytestrings that are used to access the elements in the different stores. They are built with the function `ApplyPrefix()` which takes a store key as a prefix and a path string and will return the key to access an element in the specific store. The logic for paths can be found in [host/keys.go](../host/keys.go) and [host/prefix.go](../host/prefix.go)
+Paths are defined as bytestrings that are used to access the elements in the different stores. They are built with the function `ApplyPrefix()` which takes a store key as a prefix and a path string and will return the key to access an element in the specific store. The logic for paths can be found in [path/keys.go](../path/keys.go) and [path/prefix.go](../path/prefix.go)
 
-Identifiers are bytestrings constrained to specific characters and lengths depending on their usages. They are used to identify: channels, clients, connections and ports. Although the minimum length of the identifiers is much less we use a minimum length of 32 bytes and a maximum length that varies depending on the use case to randomly generate identifiers. This allows for an extremely low chance of collision between identifiers. Identifiers have no significance beyond their use to store different elements in the IBC stores and as such there is no need for non-random identifiers. The logic for identifiers can be found in [host/identifiers.go](../host/identifiers.go).
+Identifiers are bytestrings constrained to specific characters and lengths depending on their usages. They are used to identify: channels, clients, connections and ports. Although the minimum length of the identifiers is much less we use a minimum length of 32 bytes and a maximum length that varies depending on the use case to randomly generate identifiers. This allows for an extremely low chance of collision between identifiers. Identifiers have no significance beyond their use to store different elements in the IBC stores and as such there is no need for non-random identifiers. The logic for identifiers can be found in [path/identifiers.go](../path/identifiers.go).
 
 ### Timestamps
 
@@ -100,7 +102,15 @@ As mentioned [above](#persistence) the IBC store **MUST** be included in the con
 
 ### IBC State Tree
 
-The IBC state tree is a non-value hashing `SMT` backed by a persistent `KVStore`, this is due to its need for data retrieval as well as proof generation/verification. The root hash of the IBC state tree is included in the `rootTree` which computes the networks state hash for any given block. This allows verifiers to not only verify the inclusion/exclusion of any element in the IBC state tree itself but also that the IBC state tree was used to compute the network's state hash, by utilising the `CommitmentProof` object defined in [ICS-23][ics23].
+The IBC state tree is an `SMT` backed by a persistent `KVStore`, this is used for proof generation/verification. Data retrieval uses the `peristence` layer, see the [data retrieval](#data-retrieval) section below for more details.
+
+The root hash of the IBC state tree is included in the `rootTree` which computes the network's state hash for any given block. This allows verifiers to not only verify the inclusion/exclusion of any element in the IBC state tree itself but also that the IBC state tree was used to compute the network's state hash, by utilising the `CommitmentProof` object defined in [ICS-23][ics23].
+
+### Data Retrieval
+
+In order to query the IBC store the `persistence` layer is leveraged. All local changes to the IBC store are broadcasted as [IBC messages](#ibc-messages) and ultimately stored in each node's `peristence` layer. This allows for the efficient querying of the IBC store instead of having to query the IBC state tree directly.
+
+When attempting to generate a proof for a specific `key` in the IBC state tree the IBC host will import a local copy of the IBC state tree and use this to generate the proof. Otherwise all queries are handled by the `peristence` layer's underlying database.
 
 ### IBC Messages
 
