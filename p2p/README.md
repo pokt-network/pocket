@@ -119,7 +119,7 @@ Depending on the necessary routing scheme (unicast / broadcast) and whether the 
 |----------------|----------------|-----------------|------------------------------------------------------|
 | Staked Actor   | Staked Actor   | Raintree only   | Consensus (state sync) messages (to validators only) |
 | Unstaked Actor | Staked Actor   | Background only | Consensus (state sync) messages (to validators only) |
-| Unstaked Actor | Unstaked Actor | Background only | Debug messages (debug CLI)                           |
+| Unstaked Actor | Unstaked Actor | Background only | Consensus (state sync) & Debug (CLI) messages        |
 
 **Broadcast**
 
