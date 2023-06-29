@@ -18,8 +18,7 @@ import (
 )
 
 var (
-	_ modules.PersistenceModule = &persistenceModule{}
-
+	_ modules.PersistenceModule    = &persistenceModule{}
 	_ modules.PersistenceRWContext = &PostgresContext{}
 )
 
@@ -104,7 +103,10 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	treeModule, err := trees.Create(bus, trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir))
+	treeModule, err := trees.Create(
+		bus,
+		trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir),
+		trees.WithLogger(m.logger))
 	if err != nil {
 		return nil, err
 	}

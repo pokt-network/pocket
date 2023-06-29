@@ -15,7 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Refactors the persistence treeStore to be an IntegratableModule
 
-## [0.0.0.58] - 2023-06-13
+## [0.0.0.58] - 2023-06-07
+
+- Adds a logger to TreeStore
+
+## [0.0.0.57] - 2023-06-07
 
 - Refactors the stateTrees implementation off of the PersistenceContext and into its in module
 - Implements the new Update and Commit pattern with the SMT trees in the trees module

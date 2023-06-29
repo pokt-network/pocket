@@ -81,6 +81,7 @@ var _ modules.TreeStoreModule = &treeStore{}
 type treeStore struct {
 	base_modules.IntegratableModule
 
+	logger       *modules.Logger
 	treeStoreDir string
 	rootTree     *stateTree
 	merkleTrees  map[string]*stateTree
@@ -103,6 +104,7 @@ func (t *treeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 // all of the trees in the treeStore for that height.
 func (t *treeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
 	txi := t.GetBus().GetPersistenceModule().GetTxIndexer()
+	t.logger.Info().Msgf("🌴 updating state trees at height %d", height)
 	return t.updateMerkleTrees(pgtx, txi, height)
 }
 
@@ -138,7 +140,7 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 
 			actors, err := sql.GetActors(pgtx, actorType, height)
 			if err != nil {
-				return "", fmt.Errorf("failed to get actors at height: %w", err)
+				return "", fmt.Errorf("failed to get actors at height %d: %w", height, err)
 			}
 
 			if err := t.updateActorsTree(actorType, actors); err != nil {
@@ -188,9 +190,9 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateFlagsTree(flags); err != nil {
 				return "", fmt.Errorf("failed to update flags tree - %w", err)
 			}
-		// Default
+		// Default should not happen; panic and log the treeType - this is a strong code smell.
 		default:
-			log.Fatalf("not handled in state commitment update. Merkle tree: %s", treeName)
+			t.logger.Panic().Msgf("unhandled merkle tree type: %s", treeName)
 		}
 	}
 
@@ -215,7 +217,11 @@ func (t *treeStore) getStateHash() string {
 			log.Fatalf("failed to update root tree with %s tree's hash: %v", stateTree.name, err)
 		}
 	}
-	return hex.EncodeToString(t.rootTree.tree.Root())
+	// Convert the array to a slice and return it
+	// REF: https://stackoverflow.com/questions/28886616/convert-array-to-slice-in-go
+	hexHash := hex.EncodeToString(t.rootTree.tree.Root())
+	t.logger.Info().Msgf("#️⃣ calculated state hash: %s", hexHash)
+	return hexHash
 }
 
 ////////////////////////
