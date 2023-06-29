@@ -25,6 +25,16 @@ func InsertIBCStoreEntryQuery(height int64, key, value []byte) string {
 	)
 }
 
+// Return the latest value for the key at the height provided or at the last updated height
+func GetIBCStoreEntryQuery(height int64, key []byte) string {
+	return fmt.Sprintf(
+		`SELECT value FROM %s WHERE height <= %d AND key = '%s' ORDER BY height DESC LIMIT 1`,
+		IBCStoreTableName,
+		height,
+		hex.EncodeToString(key),
+	)
+}
+
 func ClearAllIBCQuery() string {
 	return fmt.Sprintf(`DELETE FROM %s`, IBCStoreTableName)
 }

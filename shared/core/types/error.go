@@ -38,7 +38,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 147
+// NextCode: 148
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -186,6 +186,7 @@ const (
 	CodeNilFieldError                     Code = 144
 	CodeIBCUpdatingStoreError             Code = 145
 	CodeIBCStoreAlreadyExistsError        Code = 146
+	CodeIBCStoreDoesNotExistError         Code = 147
 )
 
 const (
@@ -330,6 +331,7 @@ const (
 	NilFieldError                     = "field cannot be nil"
 	IBCUpdatingStoreError             = "an error occurred updating the ibc store postgres database"
 	IBCStoreAlreadyExistsError        = "ibc store already exists in the store manager"
+	IBCStoreDoesNotExistError         = "ibc store does not exist in the store manager"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -899,4 +901,8 @@ func ErrIBCUpdatingStore(err error) Error {
 
 func ErrIBCStoreAlreadyExists(name string) Error {
 	return NewError(CodeIBCStoreAlreadyExistsError, fmt.Sprintf("%s: %s", IBCStoreAlreadyExistsError, name))
+}
+
+func ErrIBCStoreDoesNotExist(name string) Error {
+	return NewError(CodeIBCStoreDoesNotExistError, fmt.Sprintf("%s: %s", IBCStoreDoesNotExistError, name))
 }

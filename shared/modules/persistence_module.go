@@ -226,4 +226,7 @@ type PersistenceReadContext interface {
 	GetIntFlag(paramName string, height int64) (int, bool, error)
 	GetStringFlag(paramName string, height int64) (string, bool, error)
 	GetBytesFlag(paramName string, height int64) ([]byte, bool, error)
+
+	// IBC Queries
+	GetIBCStoreEntry(key []byte, height int64) ([]byte, error)
 }
