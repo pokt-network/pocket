@@ -57,8 +57,6 @@ github.com/OneOfOne/xxhash v1.2.2 h1:KMrpdQIwFcEqXDklaen+P1axHaj9BSKzvpUUfnHldSE
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/ProtonMail/go-ecvrf v0.0.1 h1:wv45+kZ0mG4G9oSTMjAlbgKqa4tPbNr4WLoCWqz5/bo=
 github.com/ProtonMail/go-ecvrf v0.0.1/go.mod h1:fhZbiRYn62/JGnBG2NGwCx0oT+gr/+I5R/hwiyAFpAU=
-github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
-github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/RaveNoX/go-jsoncommentstrip v1.0.0/go.mod h1:78ihd09MekBnJnxpICcwzCMzGrKSKYe4AqU6PDYYpjk=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
@@ -152,7 +150,6 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/davidlazar/go-crypto v0.0.0-20200604182044-b73af7476f6c h1:pFUpOrbxDR6AkioZ1ySsx5yxlDQZ8stG2b88gTPxgJU=
 github.com/davidlazar/go-crypto v0.0.0-20200604182044-b73af7476f6c/go.mod h1:6UhI8N9EjYm1c2odKpFpAYeR8dsBeM7PtzQhRgxRr9U=
 github.com/decred/dcrd/crypto/blake256 v1.0.0 h1:/8DMNYp9SGi5f0w7uCm6d6M4OU2rGFK09Y2A4Xv7EE0=
-github.com/decred/dcrd/crypto/blake256 v1.0.0/go.mod h1:sQl2p6Y26YV+ZOcSTP6thNdn47hh8kt6rqSlvmrXFAc=
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 h1:HbphB4TFFXpv7MNrT52FGrrgVXF1owhMVTHFZIlnvd4=
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0/go.mod h1:DZGJHZMqrU4JJqFAWUS2UO1+lbSKsdiOoYi9Zzey7Fc=
 github.com/deepmap/oapi-codegen v1.12.4 h1:pPmn6qI9MuOtCz82WY2Xaw46EQjgvxednXXrP7g5Q2s=
@@ -705,8 +702,8 @@ github.com/pokt-network/go-mockdns v0.0.1 h1:1Kb/kIFH6bNtY9F1bFhJyMRMCc7WyiqfGg0
 github.com/pokt-network/go-mockdns v0.0.1/go.mod h1:lgRN6+KxQBawyIghpnl5CezHFGS9VLzvtVlwxvzXTQ4=
 github.com/pokt-network/gocuke v0.0.1 h1:qJ/Ryf+hi5L6T9lsOZDNbiAclHkLlDio5/eVKQEYhgE=
 github.com/pokt-network/gocuke v0.0.1/go.mod h1:BowLKW4++696gTTU33teodtIhjjyaphEbhQT9D5Refw=
-github.com/pokt-network/smt v0.6.0 h1:W4NS6L0N5N0sDRq+2MskbWtCTnBiwzsgIJHxlHbwbgk=
-github.com/pokt-network/smt v0.6.0/go.mod h1:CWgC9UzDxXJNkL7TEADnJXutZVMYzK/+dmBb37RWkeQ=
+github.com/pokt-network/smt v0.6.1 h1:u5yTGNNND6edXv3vMQrAcjku1Ig4osehdu+EMYSXHUU=
+github.com/pokt-network/smt v0.6.1/go.mod h1:CWgC9UzDxXJNkL7TEADnJXutZVMYzK/+dmBb37RWkeQ=
 github.com/polydawn/refmt v0.89.0 h1:ADJTApkvkeBZsN0tBTx8QjpD9JkmxbKp0cxfr9qszm4=
 github.com/polydawn/refmt v0.89.0/go.mod h1:/zvteZs/GwLtCgZ4BL6CBsk9IKIlexP43ObX9AxTqTw=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=

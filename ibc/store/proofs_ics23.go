@@ -11,11 +11,9 @@ import (
 // position refers to whether the node is either the left or right child of its parent
 // for the binary SMT
 // Ref: https://github.com/pokt-network/smt/blob/main/types.go
-type position int
-
 const (
-	left     position = iota // 0
-	right                    // 1
+	left     int = iota // 0
+	right               // 1
 	hashSize = 32
 )
 
