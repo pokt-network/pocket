@@ -74,13 +74,40 @@ Membership proofs are verified as follows:
 
 Non-membership proofs are verified as follows:
 
-1. If the `ActualValueHash` field in the `ExclusionProof` is the SMT's placeholder value, then use the placeholder value as the leaf node hash and skip to step 3 below
-2. If the `ActualValueHash` field is not the placeholder value, then use the `ActualPath` and `ActualValueHash` fields to generate the leaf node hash.
+1. If the `ActualValueHash` field in the `ExclusionProof` is the SMT's placeholder value (`[32]byte`, i.e. the key is not set in the tree), then use the placeholder value as the leaf node hash and skip to step 3 below
+2. If the `ActualValueHash` field is not the placeholder value, then use the `ActualPath` and `ActualValueHash` fields (provided via `NonMembershipLeafData`) to generate the leaf node hash.
    - **IMPORTANT**: DO NOT hash these values before hashing the node as they are populated from the SMT proof's `NonMembershipLeafData` field and thus are already hashed
 3. Hash the leaf node hash with the `SideNodes` found in the `Path` field of the `ExclusionProof` to generate the root hash
 4. Compare the root hash with the one provided
-   - As the non-membership proof uses the `ActualValueHash` field to generate the leaf node hash, the non-membership proof is actually proving membership of either a placeholder key or an unrelated key in the tree.
-   - This means that if the root hash computed and the one provided are equal then the key we were looking for was not in the tree. If they are not equal the proof is invalid and the key is in the tree.
+   - if `computedRootHash == providedRootHash`
+     - `key` not in tree -> `Proof` is valid -> exclusion QED
+   - if `computedRootHash != providedRootHash`
+     - `key` is in tree -> `Proof` is invalid -> exclusion QED
+
+```mermaid
+flowchart TD
+    I["Proof,Key"]
+    NMD{"proof.NonMembershipLeafData == nil ?"}
+    KP1["actualPath = sha256(key) \n actualValue = placeholder\ncurrentHash = [32]byte"]
+    KP2["actualPath = ProvidedKeyHash \n actualValue = ProvidedValueHash\ncurrentHash = sha256([]byte{0}+actualPath+actualValueHash)"]
+	C["nextHash = sha256(currentHash+sideNodeHash)"]
+    Compare{"ComputedRootHash == ProvidedRootHash ?"}
+    EV["Exclusion Prove VALID"]
+    EI["Exclusion Prove INVALID"]
+
+    I --> NMD
+    NMD -- Yes --> KP1
+    NMD -- No --> KP2
+
+    KP1 -- CurrentHash --> C
+    KP2 -- CurrentHash --> C
+
+	C -- while NextSideNode != nil --> C
+
+	C -- ComputedRootHash --> Compare
+    Compare -- Yes --> EV
+    Compare -- No --> EI
+```
 
 The full implementation of this logic can be found [here](../store/proofs_ics23.go) as well as in the `cosmos/ics23` [library](https://github.com/h5law/ics23/blob/56d948cafb83ded78dc4b9de3c8b04582734851a/go/proof.go#L171).
 

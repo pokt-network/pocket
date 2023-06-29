@@ -9,6 +9,7 @@ import (
 )
 
 // position refers to whether the node is either the left or right child of its parent
+// for the binary SMT
 // Ref: https://github.com/pokt-network/smt/blob/main/types.go
 type position int
 
@@ -154,6 +155,7 @@ func convertSideNodesToSteps(sideNodes [][]byte, path []byte) []*ics23.InnerOp {
 	return steps
 }
 
+// TECHDEBT(smt #14): Use exposed method from SMT library
 // getPathBit takes the hash of a key (the path) and a position (depth) and returns whether at
 // that position in the tree the path goes left or right. This is used to determine the order
 // of child nodes and the order in which they are hashed when verifying proofs.

@@ -116,3 +116,4 @@ See: [ICS-23](./ics23.md) for more details on the specifics of the ICS-23 implem
 [ibc-spec]: https://github.com/cosmos/ibc
 [ics24]: https://github.com/cosmos/ibc/blob/main/spec/core/ics-024-host-requirements/README.md
 [ics23]: https://github.com/cosmos/ibc/blob/main/spec/core/ics-023-vector-commitments/README.md
+[smt]: https://github.com/pokt-network/smt

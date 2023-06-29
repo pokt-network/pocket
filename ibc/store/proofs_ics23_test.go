@@ -16,7 +16,7 @@ func TestICS23Proofs_GenerateCommitmentProofs(t *testing.T) {
 	tree := smt.NewSparseMerkleTree(nodeStore, sha256.New(), smt.WithValueHasher(nil))
 	require.NotNil(t, tree)
 
-	// Set a value in the store
+	// Prepare a tree with a predetermined set of key-value pairs
 	err := tree.Update([]byte("foo"), []byte("bar"))
 	require.NoError(t, err)
 	err = tree.Update([]byte("bar"), []byte("foo"))
@@ -96,7 +96,7 @@ func TestICS23Proofs_VerifyCommitmentProofs(t *testing.T) {
 	tree := smt.NewSparseMerkleTree(nodeStore, sha256.New(), smt.WithValueHasher(nil))
 	require.NotNil(t, tree)
 
-	// Set a value in the store
+	// Prepare a tree with a predetermined set of key-value pairs
 	err := tree.Update([]byte("foo"), []byte("bar"))
 	require.NoError(t, err)
 	err = tree.Update([]byte("bar"), []byte("foo"))
