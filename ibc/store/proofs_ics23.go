@@ -137,7 +137,7 @@ func convertSideNodesToSteps(sideNodes [][]byte, path []byte) []*ics23.InnerOp {
 	for i := 0; i < len(sideNodes); i++ {
 		var prefix, suffix []byte
 		prefix = append(prefix, innerPrefix...)
-		if getPathBit(path, len(sideNodes)-1-i) == left {
+		if isLeft(path, len(sideNodes)-1-i) {
 			// path is on the left so sidenode must be on the right
 			suffix = make([]byte, 0, len(sideNodes[i]))
 			suffix = append(suffix, sideNodes[i]...)
@@ -155,25 +155,7 @@ func convertSideNodesToSteps(sideNodes [][]byte, path []byte) []*ics23.InnerOp {
 	return steps
 }
 
-// TECHDEBT(smt #14): Use exposed method from SMT library
-// getPathBit takes the hash of a key (the path) and a position (depth) and returns whether at
-// that position in the tree the path goes left or right. This is used to determine the order
-// of child nodes and the order in which they are hashed when verifying proofs.
-// Ref: https://github.com/pokt-network/smt/blob/main/utils.go
-func getPathBit(data []byte, position int) position {
-	// get the byte at the position and then left shift one by the offset of the position
-	// from the leftmost bit in the byte. Check if the bitwise and is the same
-	// Path: []byte{ {0 1 0 1 1 0 1 0}, {0 1 1 0 1 1 0 1}, {1 0 0 1 0 0 1 0} } (length = 24 bits / 3 bytes)
-	// Position: 13 - 13/8=1
-	// Path[1] = {0 1 1 0 1 1 0 1}
-	// uint(13)%8 = 5, 8-1-5=2
-	// 00000001 << 2 = 00000100
-	//   {0 1 1 0 1 1 0 1}
-	// & {0 0 0 0 0 1 0 0}
-	// = {0 0 0 0 0 1 0 0}
-	// > 0 so Path is on the right at position 13
-	if int(data[position/8])&(1<<(8-1-uint(position)%8)) > 0 {
-		return right
-	}
-	return left
+// isLeft returns true is the i-th bit of path is a left child in the SMT
+func isLeft(path []byte, i int) bool {
+	return smt.GetPathBit(path, i) == left
 }
