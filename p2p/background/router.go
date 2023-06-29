@@ -142,8 +142,6 @@ func (rtr *backgroundRouter) Broadcast(pocketEnvelopeBz []byte) error {
 
 // Send implements the respective `typesP2P.Router` interface  method.
 func (rtr *backgroundRouter) Send(pocketEnvelopeBz []byte, address cryptoPocket.Address) error {
-	rtr.logger.Warn().Str("address", address.String()).Msg("sending background message to peer")
-
 	backgroundMessage := &typesP2P.BackgroundMessage{
 		Data: pocketEnvelopeBz,
 	}
