@@ -190,7 +190,7 @@ func (s *servicer) isRelayVolumeApplicableOnChain(session *coreTypes.Session, di
 func (s *servicer) executeRelay(relay *coreTypes.Relay) (*coreTypes.RelayResponse, error) {
 	switch payload := relay.RelayPayload.(type) {
 	case *coreTypes.Relay_JsonRpcPayload:
-		return s.executeHTTPRelay(relay.Meta, payload.JsonRpcPayload)
+		return s.executeJsonRPCRelay(relay.Meta, payload.JsonRpcPayload)
 	case *coreTypes.Relay_RestPayload:
 		return s.executeRESTRelay(relay.Meta, payload.RestPayload)
 	default:
@@ -413,8 +413,8 @@ func (s *servicer) calculateAppSessionTokens(session *coreTypes.Session) (*big.I
 	return appStake.Mul(appStake, big.NewInt(int64(appStakeTokensMultiplier))), nil
 }
 
-// executeHTTPRequest performs the HTTP request that sends the relay to the chain's/service's URL.
-func (s *servicer) executeHTTPRelay(meta *coreTypes.RelayMeta, payload *coreTypes.JSONRPCPayload) (*coreTypes.RelayResponse, error) {
+// executeJsonRPCRelay performs the relay for JSON-RPC payloads, sending them to the chain's/service's URL.
+func (s *servicer) executeJsonRPCRelay(meta *coreTypes.RelayMeta, payload *coreTypes.JSONRPCPayload) (*coreTypes.RelayResponse, error) {
 	if meta == nil || meta.RelayChain == nil || meta.RelayChain.Id == "" {
 		return nil, fmt.Errorf("Relay for application %s does not specify relay chain", meta.ApplicationAddress)
 	}
@@ -424,26 +424,43 @@ func (s *servicer) executeHTTPRelay(meta *coreTypes.RelayMeta, payload *coreType
 		return nil, fmt.Errorf("Chain %s not found in servicer configuration: %w", meta.RelayChain.Id, errValidateRelayMeta)
 	}
 
-	serviceUrl, err := url.Parse(serviceConfig.Url)
-	if err != nil {
-		return nil, fmt.Errorf("Error parsing chain URL %s: %w", serviceConfig.Url, err)
-	}
-
 	relayBytes, err := codec.GetCodec().Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("Error marshalling payload %s: %w", payload.String(), err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, serviceUrl.String(), bytes.NewBuffer(relayBytes))
+	return s.executeHTTPRelay(serviceConfig, meta, relayBytes, payload.Headers)
+}
+
+// executeRESTRelay performs the relay for REST payloads, sending them to the chain's/service's URL.
+// INCOMPLETE(#860): RESTful service relays: basic checks and execution through HTTP calls.
+func (s *servicer) executeRESTRelay(meta *coreTypes.RelayMeta, _ *coreTypes.RESTPayload) (*coreTypes.RelayResponse, error) {
+	_, ok := s.config.Services[meta.RelayChain.Id]
+	if !ok {
+		return nil, fmt.Errorf("Chain %s not found in servicer configuration: %w", meta.RelayChain.Id, errValidateRelayMeta)
+	}
+	return nil, nil
+}
+
+// executeHTTPRequest performs the HTTP request that sends the relay to the chain's/service's URL.
+func (s *servicer) executeHTTPRelay(serviceConfig *configs.ServiceConfig, meta *coreTypes.RelayMeta, payload []byte, headers map[string]string) (*coreTypes.RelayResponse, error) {
+	serviceUrl, err := url.Parse(serviceConfig.Url)
+	if err != nil {
+		return nil, fmt.Errorf("Error parsing chain URL %s: %w", serviceConfig.Url, err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, serviceUrl.String(), bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, err
 	}
-	if serviceConfig.BasicAuth != nil && serviceConfig.BasicAuth.UserName != "" {
-		req.SetBasicAuth(serviceConfig.BasicAuth.UserName, serviceConfig.BasicAuth.Password)
+
+	auth := serviceConfig.BasicAuth
+	if auth != nil && auth.UserName != "" {
+		req.SetBasicAuth(auth.UserName, auth.Password)
 	}
 
 	// INVESTIGATE: do we need a default user-agent for HTTP requests?
-	for k, v := range payload.Headers {
+	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
 	if req.Header.Get("Content-Type") == "" {
@@ -463,15 +480,6 @@ func (s *servicer) executeHTTPRelay(meta *coreTypes.RelayMeta, payload *coreType
 	}
 
 	return &coreTypes.RelayResponse{Payload: string(body)}, nil
-}
-
-// INCOMPLETE(#860): RESTful service relays: basic checks and execution through HTTP calls
-func (s *servicer) executeRESTRelay(meta *coreTypes.RelayMeta, _ *coreTypes.RESTPayload) (*coreTypes.RelayResponse, error) {
-	_, ok := s.config.Services[meta.RelayChain.Id]
-	if !ok {
-		return nil, fmt.Errorf("Chain %s not found in servicer configuration: %w", meta.RelayChain.Id, errValidateRelayMeta)
-	}
-	return nil, nil
 }
 
 // IMPROVE: Add session height tolerance to account for session rollovers
