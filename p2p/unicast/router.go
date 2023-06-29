@@ -103,9 +103,11 @@ func (rtr *UnicastRouter) handleStream(stream libp2pNetwork.Stream) {
 // the configured `rtr.messageHandler`. Intended to be called in a go routine.
 func (rtr *UnicastRouter) readStream(stream libp2pNetwork.Stream) {
 	// Time out if no data is sent to free resources.
-	// NB: tests using libp2p's `mocknet` rely on this not returning an error.
 	if err := stream.SetReadDeadline(newReadStreamDeadline()); err != nil {
-		// `SetReadDeadline` not supported by `mocknet` streams.
+		// Not returning an error for testing purposes; i.e. `SetReadDeadline` is
+		// not supported by libp2p `mocknet` streams. This should only produce an
+		// error if a node advertises and listens via an unsupported transport
+		// protocol, which should never happen in prod.
 		rtr.logger.Error().Err(err).Msg("setting stream read deadline")
 	}
 
