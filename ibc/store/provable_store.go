@@ -14,7 +14,7 @@ var _ modules.ProvableStore = &provableStore{}
 
 // provableStore implements the ProvableStore interface and wraps an SMT
 // it operates in memory and thus cannot make any changes to the underlying
-// database. All changes must be propagated through the `IbcMessage` type
+// database. All changes must be propagated through the `IBCMessage` type
 // and added to the mempool for inclusion in the next block
 type provableStore struct {
 	prefix coreTypes.CommitmentPrefix

@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	IbcStoreTableName   = "ibc_messages"
-	IbcStoreTableSchema = `(
+	IBCStoreTableName   = "ibc_entries"
+	IBCStoreTableSchema = `(
 		height BIGINT NOT NULL,
 		key TEXT NOT NULL,
 		value TEXT,
@@ -15,16 +15,16 @@ const (
 	)`
 )
 
-func InsertIbcStoreEntryQuery(height int64, key, value []byte) string {
+func InsertIBCStoreEntryQuery(height int64, key, value []byte) string {
 	return fmt.Sprintf(
 		`INSERT INTO %s(height, key, value) VALUES(%d, '%s', '%s')`,
-		IbcStoreTableName,
+		IBCStoreTableName,
 		height,
 		hex.EncodeToString(key),
 		hex.EncodeToString(value),
 	)
 }
 
-func ClearAllIbcQuery() string {
-	return fmt.Sprintf(`DELETE FROM %s`, IbcStoreTableName)
+func ClearAllIBCQuery() string {
+	return fmt.Sprintf(`DELETE FROM %s`, IBCStoreTableName)
 }

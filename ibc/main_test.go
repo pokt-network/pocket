@@ -44,7 +44,7 @@ func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
 	return persistenceMod.(modules.PersistenceModule)
 }
 
-func newTestIbcModule(bus modules.Bus) modules.IBCModule {
+func newTestIBCModule(bus modules.Bus) modules.IBCModule {
 	ibcMod, err := Create(bus)
 	if err != nil {
 		log.Fatalf("Error creating ibc module: %s", err)
@@ -77,8 +77,8 @@ func prepareEnvironment(
 	err = testUtilityMod.Start()
 	require.NoError(t, err)
 
-	testIbcMod := newTestIbcModule(bus)
-	err = testIbcMod.Start()
+	testIBCMod := newTestIBCModule(bus)
+	err = testIBCMod.Start()
 	require.NoError(t, err)
 
 	// Reset database to genesis before every test
@@ -94,11 +94,11 @@ func prepareEnvironment(
 		require.NoError(t, err)
 		err = testUtilityMod.Stop()
 		require.NoError(t, err)
-		err = testIbcMod.Stop()
+		err = testIBCMod.Stop()
 		require.NoError(t, err)
 	})
 
-	return runtimeCfg, testUtilityMod, testPersistenceMod, testIbcMod
+	return runtimeCfg, testUtilityMod, testPersistenceMod, testIBCMod
 }
 
 //nolint:unparam // Test suite is not fully built out yet

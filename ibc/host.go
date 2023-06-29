@@ -1,7 +1,7 @@
 // TECHDEBT(#854): The host should be a submodule with access to the bus, this allows for the
 // host to access the persistence module and thus the tree store in order to create local
 // copies of the IBC state tree with the GetProvableStore() function. Bus access also will
-// allow for the host to send any local changes to these stores as IbcMessage types through
+// allow for the host to send any local changes to these stores as IBCMessage types through
 // the P2P module's Broadcast() function to allow them to propagate through the network's mempool.
 package ibc
 

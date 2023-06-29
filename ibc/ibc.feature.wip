@@ -3,10 +3,17 @@ Tests to add:
         - Local IBC store change is propagated through the network
             - Check via P2P magic
         - Local IBC store change is included in PostgresDB
-            - Check via SQL query
+            - Check via SQL query/magic
+        - Duplicate IBC messages w/in the same block
+            - Check via SQL query/magic
+            - Shouldn't allow duplicates
+        - Invalid IBC messages
+            - Should error before going to the network
     - Add E2E tests to cover the following:
         - Local IBC store change gets included in the next block
             - Check via inclusion proof
         - Local IBC store change that is not included in next block stays in mempool
             - Check by querying mempool
             - Check via exclusion proof
+        - Duplicate IBC messages in subsequent blocks
+            - Changes that don't change the state should be noop and not included

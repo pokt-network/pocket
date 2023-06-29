@@ -168,7 +168,7 @@ func GetParams(pgtx pgx.Tx, height uint64) ([]*coreTypes.Param, error) {
 // GetIBCStoreUpdates returns the set of key-value pairs updated at the current height for the IBC store
 func GetIBCStoreUpdates(pgtx pgx.Tx, height uint64) (keys, values [][]byte, err error) {
 	fields := "key,value"
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE height=%d ORDER BY key ASC", fields, ptypes.IbcStoreTableName, height)
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE height=%d ORDER BY key ASC", fields, ptypes.IBCStoreTableName, height)
 	rows, err := pgtx.Query(context.TODO(), query)
 	if err != nil {
 		return nil, nil, err

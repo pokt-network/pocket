@@ -106,20 +106,20 @@ The IBC state tree is a non-value hashing `SMT` backed by a persistent `KVStore`
 
 Hosts maintain uncommitted changes in a local ephemeral IBC store while messages propagate through the mempool.
 
-These messages enable a variety of IBC related state changes such as creating light clients, opening connections, sending packets, etc... This is enabled by propagating `IbcMessage` types defined in [ibc/types/proto/messages.proto](../types/proto/messages.proto). This type acts as an enum representing two possible state transition events:
+These messages enable a variety of IBC related state changes such as creating light clients, opening connections, sending packets, etc... This is enabled by propagating `IBCMessage` types defined in [ibc/types/proto/messages.proto](../types/proto/messages.proto). This type acts as an enum representing two possible state transition events:
 
-- `UpdateIbcStore`: Updating the store with a key-value pair; adding a new or updating an existing element
-- `PruneIbcStore`: Pruning the store via its key; removal of an existing element
+- `UpdateIBCStore`: Updating the store with a key-value pair; adding a new or updating an existing element
+- `PruneIBCStore`: Pruning the store via its key; removal of an existing element
 
 _Note: In both types described above the `key` field **must** already be prefixed with the `CommitmentPrefix` and should be a valid path in the store._
 
-When changes are made locally they are not committed to the IBC store itself but are instead used to create an `IbcMessage` which is broadcasted to the network. This is akin to a simple send transaction that has been propagated throughout the mempool but has not been committed to the on-chain state.
+When changes are made locally they are not committed to the IBC store itself but are instead used to create an `IBCMessage` which is broadcasted to the network. This is akin to a simple send transaction that has been propagated throughout the mempool but has not been committed to the on-chain state.
 
 ### IBC Message Handling
 
-Upon a node receiving an `IbcMessage` from the event bus it will use the `HandleMessage()` method of the `IBCModule` to add this message to the transactions mempool via the following steps:
+Upon a node receiving an `IBCMessage` from the event bus it will use the `HandleMessage()` method of the `IBCModule` to add this message to the transactions mempool via the following steps:
 
-1. Wrap the `IbcMessage` within a `Transaction`
+1. Wrap the `IBCMessage` within a `Transaction`
 2. Sign the `Transaction` using the `IBCModule`'s private key
 3. Broadcast the `Transaction` throughout the mempool
 
@@ -132,9 +132,9 @@ graph LR
     I1["HandleMessage(Message)"]
   end
   subgraph Handler
-    H1["ConvertIbcMessageToTransaction(IbcMessage)"]
+    H1["ConvertIBCMessageToTransaction(IBCMessage)"]
     subgraph Transaction
-      T1["coreTypes.Transaction{Msg: IbcMessage}"]
+      T1["coreTypes.Transaction{Msg: IBCMessage}"]
     end
     H2["SignTransaction(Transaction)"]
   end
@@ -143,8 +143,8 @@ graph LR
     M2["AddToMempool(Transaction)"]
   end
   Bus--Message-->I
-  I--IbcMessage-->Handler
-  H1--IbcMessage-->Transaction
+  I--IBCMessage-->Handler
+  H1--IBCMessage-->Transaction
   Transaction--Transaction-->H2
   Handler--Transaction-->Mempool
   M1--Transaction-->M2
@@ -154,14 +154,14 @@ See: [ibc/module.go](../module.go) for the specific implementation details.
 
 ### Mempool
 
-With the `IbcMessage` now propagated through the network's mempool, when it is reaped (by the block proposer) the message's validity will be handled by first determining the type of the `IbcMessage`:
+With the `IBCMessage` now propagated through the network's mempool, when it is reaped (by the block proposer) the message's validity will be handled by first determining the type of the `IBCMessage`:
 
-- `UpdateIbcStore`: The `key` and `value` fields are tracked by persistence and used to update the `ibc` store state tree
-- `PruneIbcStore`: The `key` field is tracked by persistence and marked for removal in the `ibc` store state tree
+- `UpdateIBCStore`: The `key` and `value` fields are tracked by persistence and used to update the `ibc` store state tree
+- `PruneIBCStore`: The `key` field is tracked by persistence and marked for removal in the `ibc` store state tree
 
 ### State Transition
 
-See: [PROTOCOL_STATE_HASH.md](../../persistence/docs/PROTOCOL_STATE_HASH.md#ibc-state-tree) for more information on how the persistence module uses the data it has tracked from the `IbcMessage` objects, in order to update the actual state trees and in turn the root hash.
+See: [PROTOCOL_STATE_HASH.md](../../persistence/docs/PROTOCOL_STATE_HASH.md#ibc-state-tree) for more information on how the persistence module uses the data it has tracked from the `IBCMessage` objects, in order to update the actual state trees and in turn the root hash.
 
 [ics24]: https://github.com/cosmos/ibc/blob/main/spec/core/ics-024-host-requirements/README.md
 [ics20]: https://github.com/cosmos/ibc/blob/main/spec/app/ics-020-fungible-token-transfer/README.md

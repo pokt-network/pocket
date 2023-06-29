@@ -14,7 +14,7 @@ const (
 	TxGossipMessageContentType = "utility.TxGossipMessage"
 
 	// IBC
-	IbcMessageContentType = "ibc.IbcMessage"
+	IBCMessageContentType = "ibc.IBCMessage"
 )
 
 // Helper logger for state sync tranition events

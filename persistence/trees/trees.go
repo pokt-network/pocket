@@ -43,7 +43,7 @@ const (
 	TransactionsTreeName = "transactions"
 	ParamsTreeName       = "params"
 	FlagsTreeName        = "flags"
-	IbcTreeName          = "ibc"
+	IBCTreeName          = "ibc"
 )
 
 var actorTypeToMerkleTreeName = map[coreTypes.ActorType]string{
@@ -66,7 +66,7 @@ var stateTreeNames = []string{
 	// Account Trees
 	AccountTreeName, PoolTreeName,
 	// Data Trees
-	TransactionsTreeName, ParamsTreeName, FlagsTreeName, IbcTreeName,
+	TransactionsTreeName, ParamsTreeName, FlagsTreeName, IBCTreeName,
 }
 
 // stateTree is a wrapper around the SMT that contains an identifying
@@ -196,12 +196,12 @@ func (t *treeStore) updateMerkleTrees(pgtx pgx.Tx, txi indexer.TxIndexer, height
 			if err := t.updateFlagsTree(flags); err != nil {
 				return "", fmt.Errorf("failed to update flags tree - %w", err)
 			}
-		case IbcTreeName:
+		case IBCTreeName:
 			keys, values, err := sql.GetIBCStoreUpdates(pgtx, height)
 			if err != nil {
 				return "", fmt.Errorf("failed to get IBC store updates: %w", err)
 			}
-			if err := t.updateIbcTree(keys, values); err != nil {
+			if err := t.updateIBCTree(keys, values); err != nil {
 				return "", fmt.Errorf("failed to update IBC tree: %w", err)
 			}
 		// Default
@@ -356,7 +356,7 @@ func (t *treeStore) updateFlagsTree(flags []*coreTypes.Flag) error {
 	return nil
 }
 
-func (t *treeStore) updateIbcTree(keys, values [][]byte) error {
+func (t *treeStore) updateIBCTree(keys, values [][]byte) error {
 	if len(keys) != len(values) {
 		return fmt.Errorf("keys and values must be the same length")
 	}
@@ -364,11 +364,11 @@ func (t *treeStore) updateIbcTree(keys, values [][]byte) error {
 		key := keys[i]
 		value := values[i]
 		if value == nil {
-			if err := t.merkleTrees[IbcTreeName].tree.Delete(key); err != nil {
+			if err := t.merkleTrees[IBCTreeName].tree.Delete(key); err != nil {
 				return err
 			}
 		} else {
-			if err := t.merkleTrees[IbcTreeName].tree.Update(key, value); err != nil {
+			if err := t.merkleTrees[IBCTreeName].tree.Update(key, value); err != nil {
 				return err
 			}
 		}

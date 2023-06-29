@@ -189,7 +189,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
 		// TODO: Remove this lib once we move to Go 1.2
 		return multierr.Combine(err_consensus, err_p2p)
-	case messaging.IbcMessageContentType:
+	case messaging.IBCMessageContentType:
 		return node.GetBus().GetIBCModule().HandleMessage(message.Content)
 	default:
 		logger.Global.Warn().Msgf("Unsupported message content type: %s", contentType)

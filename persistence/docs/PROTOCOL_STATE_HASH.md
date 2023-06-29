@@ -101,15 +101,15 @@ sequenceDiagram
 
 When the new state hash is computed, the different state trees read the updates from their respective Postgres tables and update the trees accordingly.
 
-`IbcMessage` objects are inserted into the `ibc_message` table in two ways., depending on the IBC messages' type: 1. `UpdateIbcStore`: the `key` and `value` fields are inserted with the height into the table 2. `PruneIbcStore`: the `key` with a `nil` value is inserted into the table
+`IBCMessage` objects are inserted into the `ibc_entries` table in two ways., depending on the IBC messages' type: 1. `UpdateIBCStore`: the `key` and `value` fields are inserted with the height into the table 2. `PruneIBCStore`: the `key` with a `nil` value is inserted into the table
 
 For each entry in the `ibc_message` table depending on the entries `value` field the tree will perform one of two operations:
 
 - `value == nil`
-  - This is a `PruneIbcStore` message and thus the tree will delete the entry with the given `key`
+  - This is a `PruneIBCStore` message and thus the tree will delete the entry with the given `key`
   - `ibcTree.Delete(key)`
 - `value != nil`
-  - This is an `UpdateIbcStore` message and thus the tree will update the entry with the given `key` to have the given `value`
+  - This is an `UpdateIBCStore` message and thus the tree will update the entry with the given `key` to have the given `value`
   - `ibcTree.Update(key, value)`
 
 _Note: Prior to insertion the `key` and `value` fields of the messages are hexadecimally encoded into strings._
