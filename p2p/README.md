@@ -5,11 +5,13 @@ This document is meant to be a supplement to the living specification of [1.0 Po
 ## Table of Contents <!-- omit in toc -->
 
 - [Definitions](#definitions)
-- [Interface](#interface)
-- [Implementation](#implementation)
-  - [Code Architecture - P2P Module](#code-architecture---p2p-module)
-  - [Code Architecture - Network Module](#code-architecture---network-module)
-  - [Code Organization](#code-organization)
+- [Interface & Integration](#interface--integration)
+- [Module Architecture](#module-architecture)
+  - [P2P Module / Router Decoupling](#p2p-module--router-decoupling)
+  - [Message Propagation & Handling](#message-propagation--handling)
+  - [Message Deduplication](#message-deduplication)
+  - [Peer Discovery](#peer-discovery)
+  - [Code Organization](#code-organization) 
 - [Testing](#testing)
   - [Running Unit Tests](#running-unit-tests)
   - [RainTree testing framework](#raintree-testing-framework)
