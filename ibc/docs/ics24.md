@@ -13,6 +13,8 @@
   - [IBC Message Handling](#ibc-message-handling)
   - [Mempool](#mempool)
   - [State Transition](#state-transition)
+- [Provable Stores](#provable-stores)
+  - [Caching](#caching)
 
 ## Overview
 
@@ -172,6 +174,22 @@ With the `IBCMessage` now propagated through the network's mempool, when it is r
 ### State Transition
 
 See: [PROTOCOL_STATE_HASH.md](../../persistence/docs/PROTOCOL_STATE_HASH.md#ibc-state-tree) for more information on how the persistence module uses the data it has tracked from the `IBCMessage` objects, in order to update the actual state trees and in turn the root hash.
+
+## Provable Stores
+
+The `ProvableStore` interface defined in [shared/modules/ibc_module.go](../../shared/modules/ibc_module.go) is implemented by the [`provableStore`](../store/provable_store.go) type and managed by the [`StoreManager`](../store/store_manager.go).
+
+The provable stores are each assigned a `prefix`. This represents the specific sub-store that they are able to access and interact with in the IBC state tree. When doing any operation `get`/`set`/`delete` the `prefix` is applied to the `key` provided to generate the `CommitmentPath` to the element in the IBC state tree.
+
+The provable stores do not directly interface with the IBC state tree but instead utliise the `peristence` layer to query the data locally. This allows for the efficient querying of the IBC store instead of having to query the IBC state tree directly. Any changes made by the `ProvableStore` instance are broadcasted to the network for inclusion in the next block, being stored in their mempools.
+
+### Caching
+
+Every local change made to the IBC store (`update`/`delete`) is stored in an in-memory cache. These caches are written to disk by the [`StoreManager`](../store/store_manager.go).
+
+In the event of a node failure, or local changes not being propagated correctly. Any changes stored in the cache can be "replayed" by the node and broadcasted to the network for inclusion in the next block.
+
+_TODO: Implement this functionality_
 
 [ics24]: https://github.com/cosmos/ibc/blob/main/spec/core/ics-024-host-requirements/README.md
 [ics20]: https://github.com/cosmos/ibc/blob/main/spec/app/ics-020-fungible-token-transfer/README.md
