@@ -9,8 +9,11 @@ import (
 
 	"github.com/foxcpp/go-mockdns"
 	"github.com/golang/mock/gomock"
+	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/host/peerstore/pstoremem"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/pokt-network/pocket/internal/testutil"
 	"github.com/pokt-network/pocket/p2p/config"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -18,7 +21,6 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -290,7 +292,8 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 
 	hostMock := mocksP2P.NewMockHost(ctrl)
 	hostMock.EXPECT().Peerstore().Return(libp2pPStore).AnyTimes()
-	hostMock.EXPECT().SetStreamHandler(gomock.Any(), gomock.Any()).Times(1)
+	hostMock.EXPECT().SetStreamHandler(gomock.Any(), gomock.Any()).AnyTimes()
+	hostMock.EXPECT().ID().Return(libp2pPeer.ID("")).AnyTimes()
 
 	rtCfg := &config.RainTreeConfig{
 		Host:                  hostMock,
