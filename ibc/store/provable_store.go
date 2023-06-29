@@ -28,7 +28,7 @@ type cachedEntry struct {
 }
 
 // prepare returns the key and value to be written to disk
-func (c *cachedEntry) prepare() (key []byte, value []byte) {
+func (c *cachedEntry) prepare() (key, value []byte) {
 	return []byte(fmt.Sprintf("%s/%d/%s", c.storeName, c.height, string(c.prefixedKey))), c.value
 }
 
