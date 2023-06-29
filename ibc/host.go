@@ -15,7 +15,9 @@ import (
 var _ modules.IBCHost = &host{}
 
 type host struct {
-	logger *modules.Logger
+	logger       *modules.Logger
+	storesDir    string
+	storeManager modules.IBCStoreManager
 }
 
 // GetTimestamp returns the current unix timestamp

@@ -13,4 +13,5 @@ message IBCConfig {
     //    to relay IBC packets using an IBC relayer binary
     bool enabled = 1;
     string private_key = 2; // hex encoded
+    string stores_dir = 3;
 }

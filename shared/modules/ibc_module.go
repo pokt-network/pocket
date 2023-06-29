@@ -209,7 +209,7 @@ type IBCHandler interface {
 
 // IBCStoreManager manages the different ProvableStore instances created by the IBC host
 type IBCStoreManager interface {
-	AddStore(name string, bus Bus) error
+	AddStore(name string) error
 	GetStore(name string) (ProvableStore, error)
 	RemoveStore(name string) error
 	CacheAllEntries() error

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pokt-network/pocket/ibc/store"
 	ibcTypes "github.com/pokt-network/pocket/ibc/types"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -149,7 +150,9 @@ func (m *ibcModule) newHost() error {
 		return coreTypes.ErrIBCHostAlreadyExists()
 	}
 	host := &host{
-		logger: m.logger,
+		logger:       m.logger,
+		storesDir:    m.cfg.StoresDir,
+		storeManager: store.NewStoreManager(m.cfg.StoresDir),
 	}
 	m.host = host
 	return nil
