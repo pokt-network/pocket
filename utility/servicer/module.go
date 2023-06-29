@@ -435,8 +435,7 @@ func (s *servicer) executeJsonRPCRelay(meta *coreTypes.RelayMeta, payload *coreT
 // executeRESTRelay performs the relay for REST payloads, sending them to the chain's/service's URL.
 // INCOMPLETE(#860): RESTful service relays: basic checks and execution through HTTP calls.
 func (s *servicer) executeRESTRelay(meta *coreTypes.RelayMeta, _ *coreTypes.RESTPayload) (*coreTypes.RelayResponse, error) {
-	_, ok := s.config.Services[meta.RelayChain.Id]
-	if !ok {
+	if _, ok := s.config.Services[meta.RelayChain.Id]; !ok {
 		return nil, fmt.Errorf("Chain %s not found in servicer configuration: %w", meta.RelayChain.Id, errValidateRelayMeta)
 	}
 	return nil, nil
@@ -454,8 +453,7 @@ func (s *servicer) executeHTTPRelay(serviceConfig *configs.ServiceConfig, payloa
 		return nil, err
 	}
 
-	auth := serviceConfig.BasicAuth
-	if auth != nil && auth.UserName != "" {
+	if auth := serviceConfig.BasicAuth; auth != nil && auth.UserName != "" {
 		req.SetBasicAuth(auth.UserName, auth.Password)
 	}
 
