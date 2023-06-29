@@ -411,6 +411,10 @@ test_persistence: ## Run all go unit tests in the Persistence module
 test_persistence_state_hash: ## Run all go unit tests in the Persistence module related to the state hash
 	go test ${VERBOSE_TEST} -count=1 -tags=test -run TestStateHash ./persistence/...
 
+.PHONY: test_servicer_relay
+test_servicer_relay: ## Run all go unit tests related to servicer relays
+	go test ${VERBOSE_TEST} -count=1 -tags=test ./utility/servicer -run TestRelay
+
 .PHONY: test_p2p
 test_p2p: ## Run all p2p related tests
 	go test ${VERBOSE_TEST} -count=1 -tags=test ./p2p/...
@@ -422,6 +426,10 @@ test_p2p_raintree: ## Run all p2p raintree related tests
 .PHONY: test_p2p_raintree_addrbook
 test_p2p_raintree_addrbook: ## Run all p2p raintree addr book related tests
 	go test ${VERBOSE_TEST} -count=1 -tags=test -run RainTreeAddrBook -count=1 ./p2p/...
+
+.PHONY: test_ibc
+test_ibc: ## Run all go unit tests in the IBC module
+	go test ${VERBOSE_TEST} -count=1 -tags=test -p=1 ./ibc/...
 
 # TIP: For benchmarks, consider appending `-run=^#` to avoid running unit tests in the same package
 

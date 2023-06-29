@@ -32,6 +32,7 @@ type Config struct {
 	Validator   *ValidatorConfig   `json:"validator"`
 	Servicer    *ServicerConfig    `json:"servicer"`
 	Fisherman   *FishermanConfig   `json:"fisherman"`
+	IBC         *IBCConfig         `json:"ibc"`
 }
 
 // ParseConfig parses the config file and returns a Config struct
@@ -97,7 +98,6 @@ func ParseConfig(cfgFile string) *Config {
 func setViperDefaults(cfg *Config) {
 	// convert the config struct to a map with the json tags as keys
 	cfgData, err := json.Marshal(cfg)
-
 	if err != nil {
 		log.Fatalf("[ERROR] failed to marshal config %s", err.Error())
 	}
@@ -157,8 +157,12 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 			VaultMountPath: defaults.DefaultKeybaseVaultMountPath,
 		},
 		Validator: &ValidatorConfig{},
+		// INCOMPLETE(#858): use defaultServicerConfig once the default configuration issue is resolved, i.e. once configuring fisherman disables default servicer
 		Servicer:  &ServicerConfig{},
 		Fisherman: &FishermanConfig{},
+		IBC: &IBCConfig{
+			Enabled: defaults.DefaultIBCEnabled,
+		},
 	}
 
 	for _, option := range options {
@@ -210,4 +214,24 @@ func CreateTempConfig(cfg *Config) (*Config, error) {
 	}
 
 	return ParseConfig(tmpfile.Name()), nil
+}
+
+// INCOMPLETE(#858): enable default servicer config once the default config is adjusted based on user-defined config
+// nolint:unused // Use the servicer default config once #858 is resolved: see above description
+func defaultServicerConfig() *ServicerConfig {
+	return &ServicerConfig{
+		Enabled:                   true,
+		RelayMiningVolumeAccuracy: 0.2,
+		Services: map[string]*ServiceConfig{
+			// TODO(#831): Design how Chain/Service IDs should be described/defined.
+			"POKT-LocalNet": {
+				Url:         "http://localhost",
+				TimeoutMsec: 5000,
+				BasicAuth: &BasicAuth{
+					UserName: "user",
+					Password: "password",
+				},
+			},
+		},
+	}
 }

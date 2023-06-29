@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/persistence/blockstore"
 	"github.com/pokt-network/pocket/persistence/indexer"
+	"github.com/pokt-network/pocket/persistence/local"
 	"github.com/pokt-network/pocket/persistence/trees"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
@@ -17,8 +18,7 @@ import (
 )
 
 var (
-	_ modules.PersistenceModule = &persistenceModule{}
-
+	_ modules.PersistenceModule    = &persistenceModule{}
 	_ modules.PersistenceRWContext = &PostgresContext{}
 )
 
@@ -103,7 +103,10 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	treeModule, err := trees.Create(bus, trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir))
+	treeModule, err := trees.Create(
+		bus,
+		trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir),
+		trees.WithLogger(m.logger))
 	if err != nil {
 		return nil, err
 	}
@@ -245,6 +248,12 @@ func (m *persistenceModule) GetNetworkID() string {
 
 func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 	return m.writeContext
+}
+
+// INCOMPLETE(#826): implement this
+// GetLocalContext returns a new local context for storing off-chain, i.e. node-specific, data.
+func (m *persistenceModule) GetLocalContext() (modules.PersistenceLocalContext, error) {
+	return local.CreateLocalContext(m.GetBus())
 }
 
 // HACK(olshansky): Simplify and externalize the logic for whether genesis should be populated and

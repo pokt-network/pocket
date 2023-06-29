@@ -42,7 +42,7 @@ func TestMain(m *testing.M) {
 	// pulls an image, creates a container based on it and runs it
 	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "vault",
-		Tag:        "latest",
+		Tag:        "1.13.3",
 		Env: []string{
 			"VAULT_DEV_ROOT_TOKEN_ID=dev-only-token",
 			"VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200",

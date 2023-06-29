@@ -15,6 +15,7 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/internal/testutil"
+	ibcUtils "github.com/pokt-network/pocket/internal/testutil/ibc"
 	persistenceMocks "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -24,7 +25,6 @@ import (
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -138,6 +138,7 @@ func createTestConsensusPocketNode(
 	telemetryMock := baseTelemetryMock(t, sharedNetworkChannel)
 	loggerMock := baseLoggerMock(t, sharedNetworkChannel)
 	rpcMock := baseRpcMock(t, sharedNetworkChannel)
+	ibcMock := ibcUtils.IbcMockWithHost(t, sharedNetworkChannel)
 
 	for _, module := range []modules.Module{
 		p2pMock,
@@ -145,6 +146,7 @@ func createTestConsensusPocketNode(
 		telemetryMock,
 		loggerMock,
 		rpcMock,
+		ibcMock,
 	} {
 		bus.RegisterModule(module)
 	}
@@ -692,7 +694,11 @@ func waitForProposalMsgs(
 	maxWaitTime time.Duration,
 	failOnExtraMessages bool,
 ) ([]*anypb.Any, error) {
+<<<<<<< HEAD
 	proposalMsgs, err := waitForNetworkConsensusEvents(t, clck, sharedNetworkChannel, typesCons.HotstuffStep(step), consensus.Propose, numExpectedMsgs, maxWaitTime, failOnExtraMessages)
+=======
+	proposalMsgs, err := WaitForNetworkConsensusEvents(t, clck, eventsChannel, typesCons.HotstuffStep(step), consensus.Propose, numExpectedMsgs, maxWaitTime, failOnExtraMessages)
+>>>>>>> main
 	if err != nil {
 		return nil, err
 	}
@@ -732,9 +738,52 @@ func triggerNextView(t *testing.T, pocketNodes idToNodeMapping) {
 	for _, node := range pocketNodes {
 		triggerDebugMessage(t, node, messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
 	}
+<<<<<<< HEAD
+=======
+	return nil
 }
 
-func generatePlaceholderBlock(height uint64, leaderAddrr crypto.Address) *coreTypes.Block {
+// TODO(#352): implement this function.
+// waitForNodeToRequestMissingBlock waits for unsynced node to request missing block form the network
+func waitForNodeToRequestMissingBlock(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	allNodes IdToNodeMapping,
+	startingHeight uint64,
+	targetHeight uint64,
+) (*anypb.Any, error) {
+	return &anypb.Any{}, nil
+}
+
+// TODO(#352): implement this function.
+// waitForNodeToReceiveMissingBlock requests block request of the unsynced node
+// for given node to node to catch up to the target height by sending the requested block.
+func waitForNodeToReceiveMissingBlock(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	allNodes IdToNodeMapping,
+	blockReq *anypb.Any,
+) (*anypb.Any, error) {
+	return &anypb.Any{}, nil
+}
+
+// TODO(#352): implement this function.
+// waitForNodeToCatchUp waits for given node to node to catch up to the target height by sending the requested block.
+func waitForNodeToCatchUp(
+	t *testing.T,
+	clck *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	unsyncedNode *shared.Node,
+	blockResponse *anypb.Any,
+	targetHeight uint64,
+) error {
+	return nil
+>>>>>>> main
+}
+
+func generatePlaceholderBlock(height uint64, leaderAddrr cryptoPocket.Address) *coreTypes.Block {
 	blockHeader := &coreTypes.BlockHeader{
 		Height:            height,
 		StateHash:         dummyStateHash,

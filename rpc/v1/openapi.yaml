@@ -1696,11 +1696,12 @@ components:
     Payload:
       type: object
       required:
-        - method
         - jsonrpc
+        - method
       properties:
         id:
           type: string
+          format: byte
         jsonrpc:
           type: string
         method:
