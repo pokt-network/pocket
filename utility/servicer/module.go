@@ -429,7 +429,7 @@ func (s *servicer) executeJsonRPCRelay(meta *coreTypes.RelayMeta, payload *coreT
 		return nil, fmt.Errorf("Error marshalling payload %s: %w", payload.String(), err)
 	}
 
-	return s.executeHTTPRelay(serviceConfig, meta, relayBytes, payload.Headers)
+	return s.executeHTTPRelay(serviceConfig, relayBytes, payload.Headers)
 }
 
 // executeRESTRelay performs the relay for REST payloads, sending them to the chain's/service's URL.
@@ -443,7 +443,7 @@ func (s *servicer) executeRESTRelay(meta *coreTypes.RelayMeta, _ *coreTypes.REST
 }
 
 // executeHTTPRequest performs the HTTP request that sends the relay to the chain's/service's URL.
-func (s *servicer) executeHTTPRelay(serviceConfig *configs.ServiceConfig, meta *coreTypes.RelayMeta, payload []byte, headers map[string]string) (*coreTypes.RelayResponse, error) {
+func (s *servicer) executeHTTPRelay(serviceConfig *configs.ServiceConfig, payload []byte, headers map[string]string) (*coreTypes.RelayResponse, error) {
 	serviceUrl, err := url.Parse(serviceConfig.Url)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing chain URL %s: %w", serviceConfig.Url, err)
