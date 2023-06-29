@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"testing"
 
 	"github.com/foxcpp/go-mockdns"
-	"github.com/stretchr/testify/require"
 )
 
-func PrepareDNSMockFromServiceURLs(t *testing.T, serviceURLs []string) (done func()) {
+func PrepareDNSMockFromServiceURLs(serviceURLs []string) (done func(), err error) {
 	zones := make(map[string]mockdns.Zone)
 	for i, u := range serviceURLs {
 		// Perpend `scheme://` as serviceURLs are currently scheme-less.
 		// Required for parsing to produce useful results.
 		// (see: https://pkg.go.dev/net/url@go1.20.2#URL)
 		serviceURL, err := url.Parse(fmt.Sprintf("scheme://%s", u))
-		require.NoError(t, err)
+		if err != nil {
+			return nil, err
+		}
 
 		ipStr := fmt.Sprintf("10.0.0.%d", i+1)
 
@@ -30,7 +30,7 @@ func PrepareDNSMockFromServiceURLs(t *testing.T, serviceURLs []string) (done fun
 		}
 	}
 
-	return PrepareDNSMock(zones)
+	return PrepareDNSMock(zones), nil
 }
 
 func PrepareDNSMock(zones map[string]mockdns.Zone) (done func()) {
