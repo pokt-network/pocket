@@ -21,7 +21,7 @@ func TestHandleMessage_ErrorAlreadyInMempool(t *testing.T) {
 	require.NoError(t, err)
 
 	// Prepare the environment
-	_, utilityMod, _, _ := prepareEnvironment(t, 1, 0, 0, 0)
+	_, _, utilityMod, _, _ := prepareEnvironment(t, 1, 0, 0, 0)
 
 	// Manually add the tx to the mempool
 	err = utilityMod.GetMempool().AddTx(txProtoBytes)
@@ -35,7 +35,7 @@ func TestHandleMessage_ErrorAlreadyInMempool(t *testing.T) {
 
 func TestHandleMessage_ErrorAlreadyCommitted(t *testing.T) {
 	// Prepare the environment
-	_, utilityMod, persistenceMod, _ := prepareEnvironment(t, 0, 0, 0, 0)
+	_, _, utilityMod, persistenceMod, _ := prepareEnvironment(t, 0, 0, 0, 0)
 	idxTx := prepareIndexedMessage(t, persistenceMod.GetTxIndexer())
 
 	// Error on having an indexed transaction
@@ -91,7 +91,7 @@ func TestHandleMessage_BasicValidation_Message(t *testing.T) {
 
 func TestHandleMessage_BasicValidation_Transaction(t *testing.T) {
 	// Prepare the environment
-	_, utilityMod, _, _ := prepareEnvironment(t, 1, 0, 0, 0)
+	_, _, utilityMod, _, _ := prepareEnvironment(t, 1, 0, 0, 0)
 
 	privKey, err := crypto.GeneratePrivateKey()
 	require.NoError(t, err)
@@ -231,7 +231,7 @@ func TestHandleMessage_BasicValidation_Transaction(t *testing.T) {
 
 func TestHandleMessage_GetIndexedMessage(t *testing.T) {
 	// Prepare the environment
-	_, utilityMod, persistenceMod, _ := prepareEnvironment(t, 1, 0, 0, 0)
+	_, _, utilityMod, persistenceMod, _ := prepareEnvironment(t, 1, 0, 0, 0)
 	idxTx := prepareIndexedMessage(t, persistenceMod.GetTxIndexer())
 
 	tests := []struct {
@@ -259,7 +259,7 @@ func TestHandleMessage_GetIndexedMessage(t *testing.T) {
 
 func TestHandleMessage_AddToMempool(t *testing.T) {
 	// prepare the environment
-	_, _, _, ibcMod := prepareEnvironment(t, 1, 0, 0, 0)
+	_, _, _, _, ibcMod := prepareEnvironment(t, 1, 0, 0, 0)
 	require.Len(t, ibcMod.GetBus().GetUtilityModule().GetMempool().GetAll(), 0)
 	msg, _ := prepareUpdateMessage(t, []byte("key"), []byte("value"))
 	anyMsg, err := codec.GetCodec().ToAny(msg)
