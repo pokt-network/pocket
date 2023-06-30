@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/stretchr/testify/require"
 )
 
@@ -286,6 +287,9 @@ func TestHandleMessage_AddToMempool(t *testing.T) {
 func prepareUpdateMessage(t *testing.T, key, value []byte) (*ibcTypes.IBCMessage, *coreTypes.Transaction) {
 	t.Helper()
 	msg := ibcTypes.CreateUpdateStoreMessage(key, value)
+	letter, err := messaging.PackMessage(msg)
+	require.NoError(t, err)
+	t.Log(letter.GetContent().GetTypeUrl())
 	tx, err := ibcTypes.ConvertIBCMessageToTx(msg)
 	require.NoError(t, err)
 	return msg, tx
