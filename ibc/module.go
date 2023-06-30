@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/pokt-network/pocket/ibc/store"
+	"github.com/pokt-network/pocket/ibc/host"
 	ibcTypes "github.com/pokt-network/pocket/ibc/types"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -27,8 +27,7 @@ type ibcModule struct {
 	cfg    *configs.IBCConfig
 	logger *modules.Logger
 
-	// Only a single host is allowed at a time
-	host *host
+	host modules.IBCHostModule
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -54,7 +53,6 @@ func (m *ibcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 		isValidator = true
 	}
 	if isValidator && m.cfg.Enabled {
-		m.logger.Info().Msg("🛰️ creating IBC host 🛰️")
 		if err := m.newHost(); err != nil {
 			m.logger.Error().Err(err).Msg("❌ failed to create IBC host")
 			return nil, err
@@ -69,17 +67,11 @@ func (m *ibcModule) Start() error {
 		m.logger.Info().Msg("🚫 IBC module disabled 🚫")
 		return nil
 	}
-	m.logger.Info().Msg("🪐 starting IBC module 🪐")
-	// TODO: start the host logic
 	return nil
 }
 
 func (m *ibcModule) Stop() error {
 	return nil
-}
-
-func (m *ibcModule) GetHost() modules.IBCHost {
-	return m.host
 }
 
 func (m *ibcModule) GetModuleName() string {
@@ -149,10 +141,9 @@ func (m *ibcModule) newHost() error {
 	if m.host != nil {
 		return coreTypes.ErrIBCHostAlreadyExists()
 	}
-	host := &host{
-		logger:       m.logger,
-		storesDir:    m.cfg.StoresDir,
-		storeManager: store.NewStoreManager(m.cfg.StoresDir),
+	host, err := host.Create(m.GetBus(), host.WithLogger(m.logger), host.WithStoresDir(m.cfg.StoresDir))
+	if err != nil {
+		return err
 	}
 	m.host = host
 	return nil
