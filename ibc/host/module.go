@@ -51,10 +51,11 @@ func (*ibcHost) Create(bus modules.Bus, options ...modules.IBCHostOption) (modul
 		option(h)
 	}
 	h.logger.Info().Msg("🛰️ creating IBC host 🛰️")
+	bus.RegisterModule(h)
 	if h.storesDir == "" {
 		return nil, fmt.Errorf("stores directory not set")
 	}
-	sm := store.NewStoreManager(h.storesDir)
+	sm := store.NewStoreManager(h.bus, h.storesDir)
 	h.storeManager = sm
 	return h, nil
 }
