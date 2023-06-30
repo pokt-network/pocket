@@ -38,7 +38,7 @@ func NewError(code Code, msg string) Error {
 	}
 }
 
-// NextCode: 141
+// NextCode: 142
 type Code float64 // CONSIDERATION: Should these be a proto enum or a golang iota?
 
 //nolint:gosec // G101 - Not hard-coded credentials
@@ -180,6 +180,7 @@ const (
 	CodeHostAlreadyExists                 Code = 138
 	CodeIBCInvalidID                      Code = 139
 	CodeIBCInvalidPath                    Code = 140
+	CodeCreatingProofError                Code = 141
 )
 
 const (
@@ -318,6 +319,7 @@ const (
 	HostAlreadyExistsError            = "an ibc host already exists"
 	IBCInvalidIDError                 = "invalid ibc identifier"
 	IBCInvalidPathError               = "invalid ibc path"
+	CreatingProofError                = "an error occurred creating the CommitmentProof"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -863,4 +865,8 @@ func ErrIBCInvalidID(identifier, msg string) Error {
 
 func ErrIBCInvalidPath(path string) Error {
 	return NewError(CodeIBCInvalidPath, fmt.Sprintf("%s: %s", IBCInvalidPathError, path))
+}
+
+func ErrCreatingProof(err error) Error {
+	return NewError(CodeCreatingProofError, fmt.Sprintf("%s: %s", CreatingProofError, err.Error()))
 }
