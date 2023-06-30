@@ -17,8 +17,7 @@ import (
 )
 
 var (
-	_ modules.PersistenceModule = &persistenceModule{}
-
+	_ modules.PersistenceModule    = &persistenceModule{}
 	_ modules.PersistenceRWContext = &PostgresContext{}
 )
 
@@ -103,7 +102,10 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	treeModule, err := trees.Create(bus, trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir))
+	treeModule, err := trees.Create(
+		bus,
+		trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir),
+		trees.WithLogger(m.logger))
 	if err != nil {
 		return nil, err
 	}
@@ -233,6 +235,10 @@ func (m *persistenceModule) GetBlockStore() blockstore.BlockStore {
 
 func (m *persistenceModule) GetTxIndexer() indexer.TxIndexer {
 	return m.txIndexer
+}
+
+func (m *persistenceModule) GetTreeStore() modules.TreeStoreModule {
+	return m.stateTrees
 }
 
 func (m *persistenceModule) GetNetworkID() string {

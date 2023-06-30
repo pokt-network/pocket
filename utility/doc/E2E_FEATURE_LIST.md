@@ -35,6 +35,7 @@
   - [2. Enabling Feature 🔴](#2-enabling-feature-)
   - [3. Disabling Feature 🔴](#3-disabling-feature-)
   - [4. Modifying Feature Value 🔴](#4-modifying-feature-value-)
+  - [5. Protocol Upgrades 🔴](#5-protocol-upgrades-)
 - [G. E2E Governance 🔴](#g-e2e-governance-)
 
 ## Legend
@@ -120,6 +121,8 @@ _NOTE: Actor may refer to any relevant actor and custom paths may need to be cre
 
 ## F. E2E Feature Flags 🔴
 
+_Note: If it is easier, features 1-4 can be captured in a single ticket_
+
 ### 1. Adding New Feature 🔴
 
 ### 2. Enabling Feature 🔴
@@ -127,5 +130,7 @@ _NOTE: Actor may refer to any relevant actor and custom paths may need to be cre
 ### 3. Disabling Feature 🔴
 
 ### 4. Modifying Feature Value 🔴
+
+### 5. Protocol Upgrades 🔴
 
 ## G. E2E Governance 🔴

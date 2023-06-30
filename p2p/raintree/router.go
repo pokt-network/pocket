@@ -54,9 +54,7 @@ func NewRainTreeRouter(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Ro
 }
 
 func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {
-	routerLogger := logger.Global.CreateLoggerForModule("rainTreeRouter")
-	routerLogger.Info().Msg("Initializing rainTreeRouter")
-
+	rainTreeLogger := logger.Global.CreateLoggerForModule("rainTreeRouter")
 	if err := cfg.IsValid(); err != nil {
 		return nil, err
 	}
@@ -66,10 +64,23 @@ func (*rainTreeRouter) Create(bus modules.Bus, cfg *config.RainTreeConfig) (type
 		selfAddr:              cfg.Addr,
 		pstoreProvider:        cfg.PeerstoreProvider,
 		currentHeightProvider: cfg.CurrentHeightProvider,
-		logger:                routerLogger,
+		logger:                rainTreeLogger,
 		handler:               cfg.Handler,
 	}
 	rtr.SetBus(bus)
+
+	height := rtr.currentHeightProvider.CurrentHeight()
+	pstore, err := rtr.pstoreProvider.GetStakedPeerstoreAtHeight(height)
+	if err != nil {
+		return nil, fmt.Errorf("getting staked peerstore at height %d: %w", height, err)
+	}
+	rainTreeLogger.Info().Fields(map[string]any{
+		"address":        cfg.Addr,
+		"host_id":        cfg.Host.ID(),
+		"protocol_id":    protocol.BackgroundProtocolID,
+		"current_height": height,
+		"peerstore_size": pstore.Size(),
+	}).Msg("initializing raintree router")
 
 	if err := rtr.setupDependencies(); err != nil {
 		return nil, err
@@ -226,9 +237,9 @@ func (rtr *rainTreeRouter) handleRainTreeMsg(rainTreeMsgBz []byte) error {
 		return nil
 	}
 
-	// call configured handler to forward to app-specific bus
+	// Call configured message handler with the serialized `PocketEnvelope`.
 	if err := rtr.handler(rainTreeMsg.Data); err != nil {
-		rtr.logger.Error().Err(err).Msg("handling raintree message")
+		return fmt.Errorf("handling raintree message: %w", err)
 	}
 	return nil
 }
@@ -266,6 +277,7 @@ func (rtr *rainTreeRouter) AddPeer(peer typesP2P.Peer) error {
 	return nil
 }
 
+// RemovePeer implements the respective member of `typesP2P.Router`.
 func (rtr *rainTreeRouter) RemovePeer(peer typesP2P.Peer) error {
 	rtr.peersManager.HandleEvent(
 		typesP2P.PeerManagerEvent{
@@ -287,6 +299,7 @@ func shouldSendToTarget(target target) bool {
 	return !target.isSelf
 }
 
+// setupUnicastRouter configures and assigns `rtr.UnicastRouter`.
 func (rtr *rainTreeRouter) setupUnicastRouter() error {
 	unicastRouterCfg := config.UnicastRouterConfig{
 		Logger:         rtr.logger,

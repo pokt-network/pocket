@@ -47,9 +47,9 @@ type backgroundRouter struct {
 	// according to options.
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	host libp2pHost.Host
-	// cancelCtx is the cancel function for the context which is provided to the
-	// gossipsub subscription. Used to terminate the `readSubscription()` go routine.
-	cancelCtx context.CancelFunc
+	// cancelReadSubscription is the cancel function for the context which is
+	// monitored in the `#readSubscription()` go routine. Call to terminate it.
+	cancelReadSubscription context.CancelFunc
 
 	// Fields below are assigned during creation via `#setupDependencies()`.
 
@@ -77,8 +77,7 @@ func Create(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2P.Router, err
 }
 
 func (*backgroundRouter) Create(bus modules.Bus, cfg *config.BackgroundConfig) (typesP2P.Router, error) {
-	networkLogger := logger.Global.CreateLoggerForModule("backgroundRouter")
-	networkLogger.Info().Msg("initializing background router")
+	bgRouterLogger := logger.Global.CreateLoggerForModule("backgroundRouter")
 
 	if err := cfg.IsValid(); err != nil {
 		return nil, err
@@ -88,12 +87,18 @@ func (*backgroundRouter) Create(bus modules.Bus, cfg *config.BackgroundConfig) (
 	ctx, cancel := context.WithCancel(context.TODO())
 
 	rtr := &backgroundRouter{
-		logger:    networkLogger,
-		handler:   cfg.Handler,
-		host:      cfg.Host,
-		cancelCtx: cancel,
+		logger:                 bgRouterLogger,
+		handler:                cfg.Handler,
+		host:                   cfg.Host,
+		cancelReadSubscription: cancel,
 	}
 	rtr.SetBus(bus)
+
+	bgRouterLogger.Info().Fields(map[string]any{
+		"host_id":                cfg.Host.ID(),
+		"unicast_protocol_id":    protocol.BackgroundProtocolID,
+		"broadcast_pubsub_topic": protocol.BackgroundTopicStr,
+	}).Msg("initializing background router")
 
 	if err := rtr.setupDependencies(ctx, cfg); err != nil {
 		return nil, err
@@ -107,7 +112,7 @@ func (*backgroundRouter) Create(bus modules.Bus, cfg *config.BackgroundConfig) (
 func (rtr *backgroundRouter) Close() error {
 	rtr.logger.Debug().Msg("closing background router")
 
-	rtr.cancelCtx()
+	rtr.cancelReadSubscription()
 	rtr.subscription.Cancel()
 
 	var topicCloseErr error
@@ -137,8 +142,6 @@ func (rtr *backgroundRouter) Broadcast(pocketEnvelopeBz []byte) error {
 
 // Send implements the respective `typesP2P.Router` interface  method.
 func (rtr *backgroundRouter) Send(pocketEnvelopeBz []byte, address cryptoPocket.Address) error {
-	rtr.logger.Warn().Str("address", address.String()).Msg("sending background message to peer")
-
 	backgroundMessage := &typesP2P.BackgroundMessage{
 		Data: pocketEnvelopeBz,
 	}
@@ -192,6 +195,7 @@ func (rtr *backgroundRouter) RemovePeer(peer typesP2P.Peer) error {
 	return rtr.pstore.RemovePeer(peer.GetAddress())
 }
 
+// setupUnicastRouter configures and assigns `rtr.UnicastRouter`.
 func (rtr *backgroundRouter) setupUnicastRouter() error {
 	unicastRouterCfg := config.UnicastRouterConfig{
 		Logger:         rtr.logger,
@@ -256,8 +260,9 @@ func (rtr *backgroundRouter) setupPeerstore(
 
 	// TECHDEBT(#859): refactor bootstrapping
 	if err := rtr.bootstrap(ctx); err != nil {
-		return err
+		return fmt.Errorf("bootstrapping peerstore: %w", err)
 	}
+
 	return nil
 }
 

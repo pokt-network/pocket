@@ -35,7 +35,10 @@ type UnicastRouter struct {
 	// according to options.
 	// (see: https://pkg.go.dev/github.com/libp2p/go-libp2p#section-readme)
 	messageHandler typesP2P.MessageHandler
-	peerHandler    func(peer typesP2P.Peer) error
+	// peerHandler is called whenever a new incoming stream is established.
+	// TECHDEBT(#749,#747): this may not be needed once we've adopted libp2p
+	// peer IDs and multiaddr natively.
+	peerHandler func(peer typesP2P.Peer) error
 }
 
 func Create(bus modules.Bus, cfg *config.UnicastRouterConfig) (*UnicastRouter, error) {
@@ -53,6 +56,10 @@ func (*UnicastRouter) Create(bus modules.Bus, cfg *config.UnicastRouterConfig) (
 		messageHandler: cfg.MessageHandler,
 		peerHandler:    cfg.PeerHandler,
 	}
+
+	// `UnicastRouter` is not a submodule and therefore does not register with the
+	// module registry. However, as it does depend on the bus and therefore MUST
+	// embed the base `IntegrableModule` and call `#SetBus()`.
 	rtr.SetBus(bus)
 
 	// Don't handle incoming streams in client debug mode.
@@ -73,6 +80,9 @@ func (rtr *UnicastRouter) handleStream(stream libp2pNetwork.Stream) {
 			Str("address", peer.GetAddress().String()).
 			Msg("parsing remote peer identity")
 
+		// Reset stream to signal the sender to give up and move on.
+		// NB: failing to reset the stream can easily max out the number of available
+		// network connections on the receiver's side.
 		if err = stream.Reset(); err != nil {
 			rtr.logger.Error().Err(err).Msg("resetting stream")
 		}
@@ -85,6 +95,7 @@ func (rtr *UnicastRouter) handleStream(stream libp2pNetwork.Stream) {
 			Msg("adding remote peer to router")
 	}
 
+	// concurrently read messages out of incoming streams for handling.
 	go rtr.readStream(stream)
 }
 
@@ -92,9 +103,11 @@ func (rtr *UnicastRouter) handleStream(stream libp2pNetwork.Stream) {
 // the configured `rtr.messageHandler`. Intended to be called in a go routine.
 func (rtr *UnicastRouter) readStream(stream libp2pNetwork.Stream) {
 	// Time out if no data is sent to free resources.
-	// NB: tests using libp2p's `mocknet` rely on this not returning an error.
 	if err := stream.SetReadDeadline(newReadStreamDeadline()); err != nil {
-		// `SetReadDeadline` not supported by `mocknet` streams.
+		// Not returning an error for testing purposes; i.e. `SetReadDeadline` is
+		// not supported by libp2p `mocknet` streams. This should only produce an
+		// error if a node advertises and listens via an unsupported transport
+		// protocol, which should never happen in prod.
 		rtr.logger.Error().Err(err).Msg("setting stream read deadline")
 	}
 

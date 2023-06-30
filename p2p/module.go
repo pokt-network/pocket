@@ -47,11 +47,17 @@ type p2pModule struct {
 	identity       libp2p.Option
 	listenAddrs    libp2p.Option
 
+	// TECHDEBT(#810): register the providers to the module registry instead of
+	// holding a reference in the module struct and passing via router config.
+	//
 	// Assigned during creation via `#setupDependencies()`.
 	currentHeightProvider providers.CurrentHeightProvider
 	pstoreProvider        providers.PeerstoreProvider
 	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 
+	// TECHDEBT(#810): register the routers to the module registry instead of
+	// holding a reference in the module struct. This will improve testability.
+	//
 	// Assigned during `#Start()`. TLDR; `host` listens on instantiation.
 	// `stakedActorRouter` and `unstakedActorRouter` depends on `host`.
 	stakedActorRouter   typesP2P.Router
@@ -244,32 +250,28 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 		return err
 	}
 
-	unstakedSendErr := m.unstakedActorRouter.Send(poktEnvelopeBz, addr)
-
 	isStaked, err := m.isStakedActor()
 	if err != nil {
 		return err
 	}
 
-	var stakedSendErr error
-	if isStaked {
-		stakedSendErr = m.stakedActorRouter.Send(poktEnvelopeBz, addr)
+	// Send via the staked actor router both if this node and the peer are staked
+	// actors; otherwise, send via the unstaked actor router.
+	if !isStaked {
+		return m.unstakedActorRouter.Send(poktEnvelopeBz, addr)
 	}
 
-	if errors.Is(unstakedSendErr, typesP2P.ErrUnknownPeer) &&
-		errors.Is(stakedSendErr, typesP2P.ErrUnknownPeer) {
-		return typesP2P.ErrUnknownPeer
-	}
+	stakedActorSendErr := m.stakedActorRouter.Send(poktEnvelopeBz, addr)
 
-	if errors.Is(unstakedSendErr, typesP2P.ErrUnknownPeer) {
-		return stakedSendErr
-	}
+	// Peer is not a staked actor.
+	if errors.Is(stakedActorSendErr, typesP2P.ErrUnknownPeer) {
+		m.logger.Warn().
+			Str("address", addr.String()).
+			Msgf("attempting to send to unstaked actor")
 
-	if errors.Is(stakedSendErr, typesP2P.ErrUnknownPeer) {
-		return unstakedSendErr
+		return m.unstakedActorRouter.Send(poktEnvelopeBz, addr)
 	}
-
-	return multierr.Append(unstakedSendErr, stakedSendErr)
+	return nil
 }
 
 // TECHDEBT(#348): Define what the node identity is throughout the codebase
@@ -316,6 +318,9 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 	if !ok {
 		return fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
 	}
+
+	// TECHDEBT(#810): register the provider to the module registry instead of
+	// holding a reference in the module struct and passing via router config.
 	m.pstoreProvider = pstoreProvider
 
 	return nil
@@ -324,9 +329,13 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 // setupCurrentHeightProvider attempts to retrieve the current height provider
 // from the bus registry, falls back to the consensus module if none is registered.
 func (m *p2pModule) setupCurrentHeightProvider() error {
+	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
 	m.logger.Debug().Msg("setupCurrentHeightProvider")
 	currentHeightProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(current_height_provider.ModuleName)
 	if err != nil {
+		// TECHDEBT(#810): add a `consensusCurrentHeightProvider` submodule to wrap
+		// the consensus module usage (similar to how `persistencePeerstoreProvider`
+		// wraps persistence).
 		currentHeightProviderModule = m.GetBus().GetConsensusModule()
 	}
 
@@ -340,6 +349,9 @@ func (m *p2pModule) setupCurrentHeightProvider() error {
 	if !ok {
 		return fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
 	}
+
+	// TECHDEBT(#810): register the provider to the module registry instead of
+	// holding a reference in the module struct and passing via router config.
 	m.currentHeightProvider = currentHeightProvider
 
 	return nil
@@ -358,6 +370,8 @@ func (m *p2pModule) setupNonceDeduper() error {
 
 // setupRouters instantiates the configured router implementations.
 func (m *p2pModule) setupRouters() (err error) {
+	// TECHDEBT(#810): register the routers to the module registry instead of
+	// holding a reference in the module struct. This will improve testability.
 	if err := m.setupStakedRouter(); err != nil {
 		return err
 	}

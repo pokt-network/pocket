@@ -110,9 +110,9 @@ func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus, netMock moc
 	peerIDs := setupMockNetPeers(t, netMock, len(busMocks))
 
 	ctrl := gomock.NewController(t)
-	backgroundRouterMock := mock_types.NewMockRouter(ctrl)
-	backgroundRouterMock.EXPECT().Broadcast(gomock.Any()).Times(1)
-	backgroundRouterMock.EXPECT().Close().Times(len(busMocks))
+	noopBackgroundRouterMock := mock_types.NewMockRouter(ctrl)
+	noopBackgroundRouterMock.EXPECT().Broadcast(gomock.Any()).Times(1)
+	noopBackgroundRouterMock.EXPECT().Close().Times(len(busMocks))
 
 	p2pModules = make(map[string]*p2pModule, len(busMocks))
 	for i := range busMocks {
@@ -121,7 +121,7 @@ func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus, netMock moc
 			busMocks[i],
 			WithHost(host),
 			// mock background router to prevent background message propagation.
-			WithUnstakedActorRouter(backgroundRouterMock),
+			WithUnstakedActorRouter(noopBackgroundRouterMock),
 		)
 		require.NoError(t, err)
 		p2pModules[validatorId(i+1)] = p2pMod.(*p2pModule)
@@ -341,7 +341,7 @@ func prepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)
 
-	// DISCUSS_THIS_COMMIT: The number of times each telemetry event is expected
+	// TECHDEBT: The number of times each telemetry event is expected
 	// (below) is dependent on the number of redundant messages all validators see,
 	// which is a function of the network size. Until this function is derived and
 	// implemented, we cannot predict the number of times each event is expected.
