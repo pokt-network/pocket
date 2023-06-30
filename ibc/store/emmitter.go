@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
+// emitUpdateStoreEvent emits an UpdateIBCStore event to the local bus and broadcasts it to the network
 func emitUpdateStoreEvent(bus modules.Bus, key, value []byte) error {
 	updateMsg := ibcTypes.CreateUpdateStoreMessage(key, value)
 	letter, err := messaging.PackMessage(updateMsg)
@@ -26,6 +27,7 @@ func emitUpdateStoreEvent(bus modules.Bus, key, value []byte) error {
 	return nil
 }
 
+// emitDeleteStoreEvent emits a PruneIBCStore event to the local bus and broadcasts it to the network
 func emitPruneStoreEvent(bus modules.Bus, key []byte) error {
 	pruneMsg := ibcTypes.CreatePruneStoreMessage(key)
 	letter, err := messaging.PackMessage(pruneMsg)
