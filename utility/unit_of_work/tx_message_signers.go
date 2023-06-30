@@ -13,6 +13,7 @@ import (
 // the logic in this will likely grow in complexity.
 
 // IMPROVE: Consider return a slice of `crypto.Address` types instead of `[][]byte`
+// TODO(0xbigboss): Will need signer candidate verification
 func (u *baseUtilityUnitOfWork) getSignerCandidates(msg typesUtil.Message) ([][]byte, coreTypes.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageSend:

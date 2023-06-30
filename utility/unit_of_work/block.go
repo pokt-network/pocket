@@ -32,6 +32,7 @@ func (uow *baseUtilityUnitOfWork) beginBlock() coreTypes.Error {
 		return err
 	}
 	// INCOMPLETE: Identify what else needs to be done in the begin block lifecycle phase
+	// TODO(0xbigboss): potential location for pausing if not upgraded to the latest protocol version
 	return nil
 }
 
@@ -60,6 +61,7 @@ func (uow *baseUtilityUnitOfWork) endBlock(proposer []byte) coreTypes.Error {
 	}
 
 	// INCOMPLETE: Identify what else needs to be done in the begin block lifecycle phase
+	// TODO(0xbigboss): potential location for doing state migrations if upgrade occurs at this block height
 	return nil
 }
 

@@ -13,6 +13,8 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
+// TODO(0xbigboss): Consider renaming this to gov_params.go
+
 func init() {
 	govParamTypes = prepareGovParamParamTypesMap()
 	for _, key := range utils.GovParamMetadataKeys {

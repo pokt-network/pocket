@@ -39,6 +39,7 @@ func CreateNode(bus modules.Bus, options ...modules.ModuleOption) (modules.Modul
 }
 
 func (m *Node) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	// TODO(0xbigboss): create the upgrade module
 	for _, mod := range []func(modules.Bus, ...modules.ModuleOption) (modules.Module, error){
 		state_machine.Create,
 		persistence.Create,
@@ -82,6 +83,8 @@ func (node *Node) Start() error {
 	if err := node.GetBus().GetPersistenceModule().Start(); err != nil {
 		return err
 	}
+
+	// TODO(0xbigboss): start the upgrade module, check for upgrades, and apply them
 
 	if err := node.GetBus().GetP2PModule().Start(); err != nil {
 		return err

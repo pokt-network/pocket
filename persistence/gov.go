@@ -11,7 +11,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TODO: Implement this function
+// TODO(0xbigboss): Implement this function
 func (p *PostgresContext) GetVersionAtHeight(height int64) (string, error) {
 	// This is a placeholder function for the RPC endpoint "v1/query/upgrade"
 	return "", nil
@@ -74,7 +74,7 @@ func (p *PostgresContext) SetParam(paramName string, value any) error {
 }
 
 func (p *PostgresContext) InitFlags() error {
-	// TODO: not implemented
+	// TODO(0xbigboss): not implemented
 	return nil
 }
 
