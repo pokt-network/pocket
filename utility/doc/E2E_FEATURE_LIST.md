@@ -59,7 +59,7 @@
 
 ### 1. Trustless Relay 🟡
 
-#754
+[#754](https://github.com/pokt-network/pocket/issues/754)
 
 ### 2. Delegated Relay 🟡
 
@@ -69,7 +69,7 @@
 
 ### 1. QoS - Single Check ⭐
 
-#755
+[#755](https://github.com/pokt-network/pocket/issues/755)
 
 ### 2. QoS - Test Score Submission ⭐
 
@@ -120,6 +120,8 @@ _NOTE: Actor may refer to any relevant actor and custom paths may need to be cre
 ### 8. Delegated Actor Staking 🔵
 
 ## F. E2E Feature Flags 🔴
+
+[#822](https://github.com/pokt-network/pocket/issues/822)
 
 _Note: If it is easier, features 1-4 can be captured in a single ticket_
 
