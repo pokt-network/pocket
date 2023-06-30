@@ -52,15 +52,11 @@ func newTestP2PModule(t *testing.T, bus modules.Bus) modules.P2PModule {
 	p2pMock.EXPECT().
 		Broadcast(gomock.Any()).
 		Do(func(msg *anypb.Any) {
-			// e := &messaging.PocketEnvelope{Content: msg}
-			// eventsChannel <- e
 		}).
 		AnyTimes()
 	p2pMock.EXPECT().
 		Send(gomock.Any(), gomock.Any()).
 		Do(func(addr cryptoPocket.Address, msg *anypb.Any) {
-			// e := &messaging.PocketEnvelope{Content: msg}
-			// eventsChannel <- e
 		}).
 		AnyTimes()
 	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()

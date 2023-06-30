@@ -78,9 +78,9 @@ func (h *ibcHost) GetProvableStore(name string) (modules.ProvableStore, error) {
 	if err := h.storeManager.AddStore(name); err != nil && !errors.Is(err, coreTypes.ErrIBCStoreAlreadyExists(name)) {
 		return nil, err
 	}
-	store, err := h.storeManager.GetStore(name)
+	provableStore, err := h.storeManager.GetStore(name)
 	if err != nil {
 		return nil, err
 	}
-	return store, nil
+	return provableStore, nil
 }

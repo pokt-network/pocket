@@ -142,10 +142,10 @@ func (m *ibcModule) newHost() error {
 	if m.host != nil {
 		return coreTypes.ErrIBCHostAlreadyExists()
 	}
-	host, err := host.Create(m.GetBus(), host.WithLogger(m.logger), host.WithStoresDir(m.cfg.StoresDir))
+	hostMod, err := host.Create(m.GetBus(), host.WithLogger(m.logger), host.WithStoresDir(m.cfg.StoresDir))
 	if err != nil {
 		return err
 	}
-	m.host = host
+	m.host = hostMod
 	return nil
 }

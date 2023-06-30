@@ -27,7 +27,7 @@ type IBCHostModule interface {
 	GetProvableStore(name string) (ProvableStore, error)
 }
 
-// TODO: Split into mutliple interfaces per ICS component and embed in the handler
+// TODO: Split into multiple interfaces per ICS component and embed in the handler
 // IBCHandler is the interface through which the different IBC sub-modules can be interacted with
 // https://github.com/cosmos/ibc/tree/main/spec/core/ics-025-handler-interface
 type IBCHandler interface {
