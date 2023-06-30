@@ -147,7 +147,7 @@ type PersistenceWriteContext interface {
 	// IBC Operations
 	SetIBCStoreEntry(key, value []byte) error
 
-  // Relay Operations
+	// Relay Operations
 	RecordRelayService(applicationAddress string, key []byte, relay *coreTypes.Relay, response *coreTypes.RelayResponse) error
 }
 
