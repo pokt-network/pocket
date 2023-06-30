@@ -15,7 +15,7 @@ const ModuleName = "peerstore_provider"
 
 // PeerstoreProvider is an interface that provides Peerstore accessors
 type PeerstoreProvider interface {
-	modules.IntegratableModule
+	modules.Submodule
 
 	// GetStakedPeerstoreAtHeight returns a peerstore containing all staked peers
 	// at a given height. These peers communicate via the p2p module's staked actor

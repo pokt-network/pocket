@@ -2,24 +2,24 @@ package base_modules
 
 import "github.com/pokt-network/pocket/shared/modules"
 
-var _ modules.IntegratableModule = &IntegratableModule{}
+var _ modules.IntegrableModule = &IntegrableModule{}
 
-// IntegratableModule is a base struct that is meant to be embedded in module structs that implement the interface `modules.IntegratableModule`.
+// IntegrableModule is a base struct that is meant to be embedded in module structs that implement the interface `modules.IntegrableModule`.
 //
 // It provides the basic logic for the `SetBus` and `GetBus` methods and allows the implementer to reduce boilerplate code keeping the code
 // DRY (Don't Repeat Yourself) while preserving the ability to override the methods if needed.
-type IntegratableModule struct {
+type IntegrableModule struct {
 	bus modules.Bus
 }
 
-func NewIntegratableModule(bus modules.Bus) *IntegratableModule {
-	return &IntegratableModule{bus: bus}
+func NewIntegrableModule(bus modules.Bus) *IntegrableModule {
+	return &IntegrableModule{bus: bus}
 }
 
-func (m *IntegratableModule) GetBus() modules.Bus {
+func (m *IntegrableModule) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (m *IntegratableModule) SetBus(bus modules.Bus) {
+func (m *IntegrableModule) SetBus(bus modules.Bus) {
 	m.bus = bus
 }

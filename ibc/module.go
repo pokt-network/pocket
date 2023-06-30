@@ -20,7 +20,7 @@ import (
 var _ modules.IBCModule = &ibcModule{}
 
 type ibcModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	m sync.Mutex
 

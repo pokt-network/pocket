@@ -6,10 +6,11 @@ import (
 	"time"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
-	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/p2p/protocol"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	libp2pProtocol "github.com/libp2p/go-libp2p/core/protocol"
 	"go.uber.org/multierr"
+
+	"github.com/pokt-network/pocket/logger"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 )
 
 const (
@@ -76,7 +77,7 @@ func RemovePeerFromLibp2pHost(host libp2pHost.Host, peer typesP2P.Peer) error {
 }
 
 // Libp2pSendToPeer sends data to the given pocket peer from the given libp2p host.
-func Libp2pSendToPeer(host libp2pHost.Host, data []byte, peer typesP2P.Peer) error {
+func Libp2pSendToPeer(host libp2pHost.Host, protocolID libp2pProtocol.ID, data []byte, peer typesP2P.Peer) error {
 	// TECHDEBT(#595): add ctx to interface methods and propagate down.
 	ctx := context.TODO()
 
@@ -94,7 +95,7 @@ func Libp2pSendToPeer(host libp2pHost.Host, data []byte, peer typesP2P.Peer) err
 		logger.Global.Debug().Err(err).Msg("logging resource scope stats")
 	}
 
-	stream, err := host.NewStream(ctx, peerInfo.ID, protocol.PoktProtocolID)
+	stream, err := host.NewStream(ctx, peerInfo.ID, protocolID)
 	if err != nil {
 		return fmt.Errorf("opening stream: %w", err)
 	}
