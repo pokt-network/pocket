@@ -121,11 +121,6 @@ func (p *provableStore) CreateNonMembershipProof(key []byte) (*ics23.CommitmentP
 func (p *provableStore) Set(key, value []byte) error {
 	prefixed := applyPrefix(p.prefix, key)
 	currHeight := int64(p.bus.GetConsensusModule().CurrentHeight())
-	rwCtx, err := p.bus.GetPersistenceModule().NewRWContext(currHeight)
-	if err != nil {
-		return err
-	}
-	defer rwCtx.Release()
 	p.cache = append(p.cache, &cachedEntry{
 		storeName:   p.name,
 		height:      uint64(currHeight),
@@ -141,11 +136,6 @@ func (p *provableStore) Set(key, value []byte) error {
 func (p *provableStore) Delete(key []byte) error {
 	prefixed := applyPrefix(p.prefix, key)
 	currHeight := int64(p.bus.GetConsensusModule().CurrentHeight())
-	rwCtx, err := p.bus.GetPersistenceModule().NewRWContext(currHeight)
-	if err != nil {
-		return err
-	}
-	defer rwCtx.Release()
 	p.cache = append(p.cache, &cachedEntry{
 		storeName:   p.name,
 		height:      uint64(currHeight),
