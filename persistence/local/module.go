@@ -16,14 +16,14 @@ const (
 var _ modules.PersistenceLocalContext = &persistenceLocalContext{}
 
 type persistenceLocalContext struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	logger       *modules.Logger
 	databasePath string
 }
 
 func WithLocalDatabasePath(databasePath string) modules.ModuleOption {
-	return func(m modules.InitializableModule) {
+	return func(m modules.InjectableModule) {
 		if plc, ok := m.(*persistenceLocalContext); ok {
 			plc.databasePath = databasePath
 		}
