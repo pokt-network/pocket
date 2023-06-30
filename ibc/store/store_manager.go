@@ -23,9 +23,10 @@ type storeManager struct {
 }
 
 // NewStoreManager returns a new storeManager instance
-func NewStoreManager(storesDir string) *storeManager {
+func NewStoreManager(bus modules.Bus, storesDir string) *storeManager {
 	return &storeManager{
 		m:         sync.Mutex{},
+		bus:       bus,
 		storesDir: storesDir,
 		stores:    make(map[string]*provableStore, 0),
 	}
@@ -66,11 +67,22 @@ func (s *storeManager) RemoveStore(name string) error {
 	return nil
 }
 
+// GetAllStores returns the map of stores to their store names
+func (s *storeManager) GetAllStores() map[string]modules.ProvableStore {
+	s.m.Lock()
+	defer s.m.Unlock()
+	stores := make(map[string]modules.ProvableStore, len(s.stores))
+	for name, store := range s.stores {
+		stores[name] = store
+	}
+	return stores
+}
+
 // CacheAllEntries caches all the entries for all stores in the storeManager
 func (s *storeManager) CacheAllEntries() error {
 	s.m.Lock()
 	defer s.m.Unlock()
-	disk, err := kvstore.NewKVStore(cacheDirs(s.storesDir))
+	disk, err := newKVStore(s.storesDir)
 	if err != nil {
 		return err
 	}
@@ -86,7 +98,7 @@ func (s *storeManager) CacheAllEntries() error {
 func (s *storeManager) PruneCaches(height uint64) error {
 	s.m.Lock()
 	defer s.m.Unlock()
-	disk, err := kvstore.NewKVStore(cacheDirs(s.storesDir))
+	disk, err := newKVStore(s.storesDir)
 	if err != nil {
 		return err
 	}
@@ -102,7 +114,7 @@ func (s *storeManager) PruneCaches(height uint64) error {
 func (s *storeManager) RestoreCaches() error {
 	s.m.Lock()
 	defer s.m.Unlock()
-	disk, err := kvstore.NewKVStore(cacheDirs(s.storesDir))
+	disk, err := newKVStore(s.storesDir)
 	if err != nil {
 		return err
 	}
@@ -112,4 +124,15 @@ func (s *storeManager) RestoreCaches() error {
 		}
 	}
 	return disk.Stop()
+}
+
+func newKVStore(dir string) (kvstore.KVStore, error) {
+	if dir == ":memory:" {
+		return kvstore.NewMemKVStore(), nil
+	}
+	store, err := kvstore.NewKVStore(cacheDirs(dir))
+	if err != nil {
+		return nil, err
+	}
+	return store, nil
 }
