@@ -120,8 +120,11 @@ docker_build_with_restart(
     "client-image",
     root_dir,
     dockerfile_contents="""FROM debian:bullseye
-RUN apt-get update && apt-get install -y procps
-WORKDIR /
+RUN apt-get update && apt-get install -y procps bash-completion
+RUN echo "source /etc/bash_completion" >> ~/.bashrc
+# tail -n +2 removes the first line of the completion script since the CLI spits out some logs
+RUN echo "source <(p1 completion bash | tail -n +2)" >> ~/.bashrc
+WORKDIR /root
 COPY bin/p1-linux /usr/local/bin/p1
 """,
     only=["bin/p1-linux"],
