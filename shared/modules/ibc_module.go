@@ -23,7 +23,8 @@ type IBCStoreManager interface {
 	AddStore(name string) error
 	GetStore(name string) (ProvableStore, error)
 	RemoveStore(name string) error
-	FlushAllEntries() error
+	GetAllStores() map[string]ProvableStore
+	CacheAllEntries() error
 	PruneCaches(height uint64) error
 	RestoreCaches() error
 }
