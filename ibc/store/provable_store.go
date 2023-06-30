@@ -2,6 +2,7 @@ package store
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"strconv"
 	"strings"
@@ -10,8 +11,10 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 	"github.com/pokt-network/pocket/ibc/path"
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/pokt-network/pocket/persistence/trees"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/smt"
 )
 
 var _ modules.ProvableStore = &provableStore{}
@@ -98,28 +101,20 @@ func (p *provableStore) GetAndProve(key []byte, membership bool) ([]byte, *ics23
 // prefixed with the CommitmentPrefix, by importing the state tree from the TreeStore
 func (p *provableStore) CreateMembershipProof(key, value []byte) (*ics23.CommitmentProof, error) {
 	// import IBC state tree
-	// TODO(#854): Implement tree retrieval
-	/**
 	prefixed := applyPrefix(p.prefix, key)
-	root, nodeStore := p.bus.GetTreeStore().GetTree(trees.IBCStateTree)
-	lazy := smt.ImportSparseMerkleTree(nodeStore, root, sha256.New())
+	root, nodeStore := p.bus.GetTreeStore().GetTree(trees.IBCTreeName)
+	lazy := smt.ImportSparseMerkleTree(nodeStore, sha256.New(), root)
 	return createMembershipProof(lazy, prefixed, value)
-	**/
-	return nil, nil
 }
 
 // CreateNonMembershipProof creates a non-membership proof for the key prefixed with the
 // CommitmentPrefix, by importing the state tree from the TreeStore
 func (p *provableStore) CreateNonMembershipProof(key []byte) (*ics23.CommitmentProof, error) {
 	// import IBC state tree
-	// TODO(#854): Implement tree retrieval
-	/**
 	prefixed := applyPrefix(p.prefix, key)
-	root, nodeStore := p.bus.GetTreeStore().GetTree(trees.IBCStateTree)
-	lazy := smt.ImportSparseMerkleTree(nodeStore, root, sha256.New())
+	root, nodeStore := p.bus.GetTreeStore().GetTree(trees.IBCTreeName)
+	lazy := smt.ImportSparseMerkleTree(nodeStore, sha256.New(), root)
 	return createNonMembershipProof(lazy, prefixed)
-	**/
-	return nil, nil
 }
 
 // Set updates the persistence layer with the new key-value pair at the latest height and
@@ -133,9 +128,6 @@ func (p *provableStore) Set(key, value []byte) error {
 		return err
 	}
 	defer rwCtx.Release()
-	if err := rwCtx.SetIBCStoreEntry(prefixed, value); err != nil {
-		return err
-	}
 	p.m.Lock()
 	defer p.m.Unlock()
 	p.cache[string(prefixed)] = &cachedEntry{
@@ -144,9 +136,7 @@ func (p *provableStore) Set(key, value []byte) error {
 		prefixedKey: prefixed,
 		value:       value,
 	}
-	// TODO(#854): Implement emit functions
-	// return emitUpdateStoreEvent(p.prefix, key, value)
-	return nil
+	return emitUpdateStoreEvent(p.bus, key, value)
 }
 
 // Delete updates the persistence layer with the key and nil value pair at the latest height
@@ -160,9 +150,6 @@ func (p *provableStore) Delete(key []byte) error {
 		return err
 	}
 	defer rwCtx.Release()
-	if err := rwCtx.SetIBCStoreEntry(prefixed, nil); err != nil {
-		return err
-	}
 	p.m.Lock()
 	defer p.m.Unlock()
 	p.cache[string(prefixed)] = &cachedEntry{
@@ -171,9 +158,7 @@ func (p *provableStore) Delete(key []byte) error {
 		prefixedKey: prefixed,
 		value:       nil,
 	}
-	// TODO(#854): Implement emit functions
-	// return emitPruneStoreEvent(p.prefix, key)
-	return nil
+	return emitPruneStoreEvent(p.bus, key)
 }
 
 // GetCommitmentPrefix returns the CommitmentPrefix for the store
@@ -181,12 +166,8 @@ func (p *provableStore) GetCommitmentPrefix() coreTypes.CommitmentPrefix { retur
 
 // Root returns the current root of the IBC state tree
 func (p *provableStore) Root() ics23.CommitmentRoot {
-	// TODO(#854): Implement tree retrieval
-	/**
-	root, _ := p.bus.GetTreeStore().GetTree(trees.IBCStateTree)
+	root, _ := p.bus.GetTreeStore().GetTree(trees.IBCTreeName)
 	return root
-	**/
-	return nil
 }
 
 // FlushEntries writes all local changes to disk and clears the in-memory cache

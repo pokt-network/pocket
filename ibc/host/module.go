@@ -1,10 +1,12 @@
 package host
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/pokt-network/pocket/ibc/store"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
@@ -64,4 +66,20 @@ func (h *ibcHost) SetBus(bus modules.Bus) { h.bus = bus }
 // GetTimestamp returns the current unix timestamp
 func (h *ibcHost) GetTimestamp() uint64 {
 	return uint64(time.Now().Unix())
+}
+
+// GetProvableStore returns an instance of a provable store with the given name with the
+// CommitmentPrefix set to []byte(name). The store is created if it does not exist. Any changes
+// made using the store are handled locally and propagated through the bus, added to all nodes'
+// mempools ready for inclusion in the next block to transition the IBC store state tree.
+// Any operations will ensure the CommitmentPrefix is prepended to the key if not present already.
+func (h *ibcHost) GetProvableStore(name string) (modules.ProvableStore, error) {
+	if err := h.storeManager.AddStore(name); err != nil && !errors.Is(err, coreTypes.ErrIBCStoreAlreadyExists(name)) {
+		return nil, err
+	}
+	store, err := h.storeManager.GetStore(name)
+	if err != nil {
+		return nil, err
+	}
+	return store, nil
 }

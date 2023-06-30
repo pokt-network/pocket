@@ -22,6 +22,9 @@ type IBCHostModule interface {
 
 	// GetTimestamp returns the current unix timestamp for the host machine
 	GetTimestamp() uint64
+
+	// GetProvableStore returns an instance of a ProvableStore managed by the StoreManager
+	GetProvableStore(name string) (ProvableStore, error)
 }
 
 // TODO: Split into mutliple interfaces per ICS component and embed in the handler
