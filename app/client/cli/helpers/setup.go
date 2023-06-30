@@ -27,21 +27,27 @@ func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 	bus := runtimeMgr.GetBus()
 	SetValueInCLIContext(cmd, BusCLICtxKey, bus)
 
-	setupPeerstoreProvider(*runtimeMgr, flags.RemoteCLIURL)
+	if err := setupPeerstoreProvider(*runtimeMgr, flags.RemoteCLIURL); err != nil {
+		return err
+	}
 	setupCurrentHeightProvider(*runtimeMgr, flags.RemoteCLIURL)
 	setupAndStartP2PModule(*runtimeMgr)
 
 	return nil
 }
 
-func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) {
+func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) error {
 	bus := rm.GetBus()
-	modulesRegistry := bus.GetModulesRegistry()
-	pstoreProvider := rpcPSP.Create(
-		rpcPSP.WithP2PConfig(rm.GetConfig().P2P),
+	pstoreProvider, err := rpcPSP.Create(
+		bus,
 		rpcPSP.WithCustomRPCURL(rpcURL),
 	)
-	modulesRegistry.RegisterModule(pstoreProvider)
+	if err != nil {
+		return err
+	}
+
+	bus.RegisterModule(pstoreProvider)
+	return nil
 }
 
 func setupCurrentHeightProvider(rm runtime.Manager, rpcURL string) {

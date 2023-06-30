@@ -15,9 +15,8 @@ var (
 type persistencePStoreProviderOption func(*persistencePeerstoreProvider)
 type persistencePStoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, persistencePStoreProviderOption]
 
-// TECHDEBT(#810): refactor to implement `Submodule` interface.
 type persistencePeerstoreProvider struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 }
 
 func Create(bus modules.Bus, options ...persistencePStoreProviderOption) (peerstore_provider.PeerstoreProvider, error) {
@@ -26,8 +25,9 @@ func Create(bus modules.Bus, options ...persistencePStoreProviderOption) (peerst
 
 func (*persistencePeerstoreProvider) Create(bus modules.Bus, options ...persistencePStoreProviderOption) (peerstore_provider.PeerstoreProvider, error) {
 	persistencePSP := &persistencePeerstoreProvider{
-		IntegratableModule: *base_modules.NewIntegratableModule(bus),
+		IntegrableModule: *base_modules.NewIntegrableModule(bus),
 	}
+	bus.RegisterModule(persistencePSP)
 
 	for _, o := range options {
 		o(persistencePSP)
