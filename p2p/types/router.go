@@ -10,10 +10,11 @@ import (
 // TECHDEBT(olshansky): When we delete `stdnetwork` and only go with `raintree`, this interface
 // can be simplified greatly.
 type Router interface {
-	modules.IntegratableModule
+	modules.IntegrableModule
 
 	Broadcast(data []byte) error
 	Send(data []byte, address cryptoPocket.Address) error
+	Close() error
 
 	// GetPeerstore is used by the P2P module to update the staked actor router's
 	// (`RainTreeRouter`) peerstore.

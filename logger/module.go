@@ -14,7 +14,7 @@ import (
 var _ modules.Module = &loggerModule{}
 
 type loggerModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	base_modules.InterruptableModule
 
 	zerolog.Logger

@@ -11,7 +11,7 @@ const (
 )
 
 type validator struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	logger *modules.Logger
 }
 

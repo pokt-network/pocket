@@ -5,11 +5,13 @@ This document is meant to be a supplement to the living specification of [1.0 Po
 ## Table of Contents <!-- omit in toc -->
 
 - [Definitions](#definitions)
-- [Interface](#interface)
-- [Implementation](#implementation)
-  - [Code Architecture - P2P Module](#code-architecture---p2p-module)
-  - [Code Architecture - Network Module](#code-architecture---network-module)
-  - [Code Organization](#code-organization)
+- [Interface & Integration](#interface--integration)
+- [Module Architecture](#module-architecture)
+  - [P2P Module / Router Decoupling](#p2p-module--router-decoupling)
+  - [Message Propagation & Handling](#message-propagation--handling)
+  - [Message Deduplication](#message-deduplication)
+  - [Peer Discovery](#peer-discovery)
+  - [Code Organization](#code-organization) 
 - [Testing](#testing)
   - [Running Unit Tests](#running-unit-tests)
   - [RainTree testing framework](#raintree-testing-framework)
@@ -34,14 +36,11 @@ A structured "gossip" protocol (and implementation) which uses the raintree algo
 
 A "gossip" protocol (implementation TBD) which facilitates "gossip" to all P2P participants, including non-staked actors (e.g. full-nodes).
 
-## Interface
+## Interface & Integration
 
-This module aims to implement the interface specified in `pocket/shared/modules/p2p_module.go` using the specification above.
+This module aims to implement the interface specified in [`pocket/shared/modules/p2p_module.go`](../shared/modules/p2p_module.go).
 
-## Implementation
-
-### P2P Module Architecture
-
+_(TODO: diagram legend)_
 ```mermaid
 flowchart TD
     subgraph P2P["P2P Module"]
@@ -67,105 +66,431 @@ flowchart TD
     class PN pocket_network
 ```
 
-`Routers` is where [RainTree](https://github.com/pokt-network/pocket/files/9853354/raintree.pdf) (or the simpler basic approach) is implemented. See `raintree/router.go` for the specific implementation of RainTree, but please refer to the [specifications](https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p) for more details.
+`Routers` is where [RainTree](https://github.com/pokt-network/pocket/files/9853354/raintree.pdf) is implemented.
+See [`raintree/router.go`](./raintree/router.go) for the specific implementation of RainTree, but please refer to the [specifications](https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p) for more details.
+
+## Module Architecture
+
+### Legends
+```mermaid
+flowchart
+subgraph Legend
+    m[[`Method`]]
+    c[Component]
+
+    m -- "unconditional usage" --> c
+    m -. "conditional usage" .-> c
+    m -. "ignored" .-x c
+end
+```
+
+```mermaid
+classDiagram
+class ConcreteType {
+  +ExportedField
+  -unexportedField
+  +ExportedMethod(argType) returnType
+  -unexportedMethod()
+}
+
+class InterfaceType {
+    <<interface>>
+    +Method(argType) (returnType1, returnType2)
+}
+
+ConcreteType --|> InterfaceType : Interface realization
+
+ConcreteType --> OtherType : Direct usage
+ConcreteType --o OtherType : Composition
+ConcreteType --* OtherType : Aggregatation
+ConcreteType ..*  "(cardinality)" OtherType : Indirect (via interface)
+```
+
+### P2P Module / Router Decoupling
+
+The P2P module encapsulates the `RaiTreeRouter` and `BackgroundRouter` submodules.
+The P2P module internally refers to these as the `stakedActorRouter` and `unstakedActorRouter`, respectively.
+
+Depending on the necessary routing scheme (unicast / broadcast) and whether the peers involved are staked actors, a node will use one or both of these routers.
+
+**Unicast**
+
+| Sender         | Receiver       | Router          | Example Usage                                        |
+|----------------|----------------|-----------------|------------------------------------------------------|
+| Staked Actor   | Staked Actor   | Raintree only   | Consensus (state sync) messages (to validators only) |
+| Unstaked Actor | Staked Actor   | Background only | Consensus (state sync) messages (to validators only) |
+| Unstaked Actor | Unstaked Actor | Background only | Consensus (state sync) & Debug (CLI) messages        |
+
+**Broadcast**
+
+| Broadcaster    | Receiver       | Router                | Example Usage                              |
+|----------------|----------------|-----------------------|--------------------------------------------|
+| Staked Actor   | Staked Actor   | Raintree + Background | Utility tx messages                        |
+| Unstaked Actor | Staked Actor   | Background only       | Utility tx messages (gossipsub redundancy) |
+| Unstaked Actor | Unstaked Actor | Background only       | Utility tx messages                        |
+
+Both router submodule implementations embed a `UnicastRouter` which enables them to send and receive messages directly to/from a single peer.
+
+**Class Diagram**
+
+```mermaid
+classDiagram
+    class p2pModule {
+        -stakedActorRouter Router
+        -unstakedActorRouter Router
+        -handlePocketEnvelope([]byte) error
+    }
+
+    class P2PModule {
+        <<interface>>
+        GetAddress() (Address, error)
+        HandleEvent(*anypb.Any) error
+        Send([]byte, Address) error
+        Broadcast([]byte) error
+    }
+    p2pModule --|> P2PModule
+
+    class RainTreeRouter {
+        UnicastRouter
+        -handler MessageHandler
+        +Broadcast([]byte) error
+        -handleRainTreeMsg([]byte) error
+    }
+
+    class BackgroundRouter {
+        UnicastRouter
+        -handler MessageHandler
+        +Broadcast([]byte) error
+        -handleBackgroundMsg([]byte) error
+        -readSubscription(subscription *pubsub.Subscription)
+    }
+
+    class UnicastRouter {
+        -messageHandler MessageHandler
+        -peerHandler PeerHandler
+        +Send([]byte, Address) error
+        -handleStream(libp2pNetwork.Stream)
+        -readStream(libp2pNetwork.Stream)
+    }
+    RainTreeRouter --* UnicastRouter : (embedded)
+    BackgroundRouter --* UnicastRouter : (embedded)
+
+    p2pModule --o "2" Router
+    p2pModule ..* RainTreeRouter : (`stakedActorRouter`)
+    p2pModule ..* BackgroundRouter : (`unstakedActorRouter`)
+    
+    class Router {
+        <<interface>>
+        +Send([]byte, Address) error
+        +Broadcast([]byte) error
+    }
+    BackgroundRouter --|> Router
+    RainTreeRouter --|> Router
+```
+
+### Message Propagation & Handling
+
+**Unicast**
+
+```mermaid
+flowchart
+    subgraph lp2p["Local P2P Module (outgoing)"]
+        lps[[`Send`]]
+        lps -. "(iff local & remote peer are staked)" ..-> lrtu
+        lps -. "(if local or remote peer are not staked)" .-> lbgu
+
+        lbgu -- "opens stream\nto target peer" ---> lhost
+
+        lhost[Libp2p Host]
+
+        subgraph lrt[RainTree Router]
+            subgraph lRTPS[Raintree Peerstore]
+              lStakedPS([staked actors only])
+            end
+            
+            lrtu[UnicastRouter]
+
+            lrtu -- "network address lookup" --> lRTPS
+        end
+
+        lrtu -- "opens a stream\nto target peer" ---> lhost
+
+        subgraph lbg[Background Router]
+            lbgu[UnicastRouter]
+            subgraph lBGPS[Background Peerstore]
+              lNetPS([all P2P participants])
+            end
+
+            lbgu -- "network address lookup" --> lBGPS
+        end
+    end
+
+    subgraph rp2p["Remote P2P Module (incoming)"]
+        rhost[Libp2p Host]
+
+        subgraph rrt[RainTree Router]
+            rrth[[`RainTreeMessage` Handler]]
+            rrtu[UnicastRouter]
+        end
+
+        subgraph rbg[Background Router]
+            rbgh[[`BackgroundMessage` Handler]]
+            rbgu[UnicastRouter]
+            rbgu --> rbgh
+        end
+
+        rp2ph[[`PocketEnvelope` Handler]]
+        rbus[bus]
+        rhost -. "new stream" .-> rrtu
+        rhost -- "new subscription message" --> rbgu
+        rrtu --> rrth
+
+        rnd[Nonce Deduper]
+        rp2ph -- "deduplicate msg mempool" --> rnd
+    end
+
+
+    rp2ph -. "(iff not duplicate msg)\npublish event" .-> rbus
+
+    rrth --> rp2ph
+    rbgh --> rp2ph
+
+    lhost --> rhost
+```
+
+**Broadcast**
+
+```mermaid
+flowchart
+  subgraph lp2p["Local P2P Module (outgoing)"]
+    lpb[[`Broadcast`]]
+    lpb -. "(iff local & remote peer are staked)" ..-> lrtu
+    lpb -- "(always)" --> lbggt
+    
+    lbggt -- "msg published\n(gossipsub protocol)" ---> lhost
+    
+    lhost[Libp2p Host]
+
+    subgraph lrt[RainTree Router]
+      subgraph lRTPS[Raintree Peerstore]
+        lStakedPS([staked actors only])
+      end
+      
+      lrtu[UnicastRouter]
+      
+      lrtu -- "network address lookup" --> lRTPS
+    end
+    
+    lrtu -- "opens a stream\nto target peer" ---> lhost
+
+    subgraph lbg[Background Router]
+      lbggt[Gossipsub Topic]
+      subgraph lBGPS[Background Peerstore]
+        lNetPS([all P2P participants])
+      end
+      
+      lbggt -- "network address lookup" --> lBGPS
+    end
+  end
+
+  subgraph rp2p["Remote P2P Module (incoming)"]
+    rhost[Libp2p Host]
+
+    subgraph rrt[RainTree Router]
+      rrth[[`RainTreeMessage` Handler]]
+      rrtu[UnicastRouter]
+    end
+
+    subgraph rbg[Background Router]
+      rbgh[[`BackgroundMessage` Handler]]
+      rbgg[Gossipsub Subscription]
+      rbggt[Gossipsub Topic]
+      rbgg --> rbgh
+      rbgh -- "(background msg\npropagation cont.)" ---> rbggt
+    end
+
+    rp2ph[[`PocketEnvelope` Handler]]
+    rbus[bus]
+    rhost -. "new stream" ..-> rrtu
+    rhost -- "new subscription message" --> rbgg
+    rbggt -- "(background msg\npropagation cont.)" --> rhost
+    rrtu --> rrth
+    rrth -. "(iff level > 0)\n(raintree msg\npropagation cont.)" .-> rrtu
+    rrtu -- "(raintree msg\npropagation cont.)" --> rhost
+
+    rnd[Nonce Deduper]
+    rp2ph -- "deduplicate msg mempool" --> rnd
+  end
+
+
+  rp2ph -. "(iff not duplicate msg)\npublish event" .-> rbus
+
+  rrth --> rp2ph
+  rbgh --> rp2ph
+
+  lhost --> rhost
+```
+
+### Message Deduplication
+
+Messages MUST be deduplicated before broadcasting their respective event over the bus since it is expected that nodes will receive duplicate messages (for multiple reasons).
+
+The responsibility of deduplication is encapsulated by the P2P module, As such duplicate messages may come from multiple routers in some of these scenarios.
+
+```mermaid
+classDiagram
+    class RainTreeMessage {
+        <<protobuf>>
+        +Level uint32
+        +Data []byte
+    }
+
+    class BackgroundMessage {
+        <<protobuf>>
+        +Data []byte
+    }
+    
+    class PocketEnvelope {
+        <<protobuf>>
+        +Content *anypb.Any
+        +Nonce uint64
+    }
+
+    RainTreeMessage --* PocketEnvelope : serialized as `Data`
+    BackgroundMessage --* PocketEnvelope : serialized as `Data`
+    
+    
+    class p2pModule {
+        -handlePocketEnvelope([]byte) error
+    }
+
+    class P2PModule {
+        <<interface>>
+        GetAddress() (Address, error)
+        HandleEvent(*anypb.Any) error
+        Send([]byte, address Address) error
+        Broadcast([]byte) error
+    }
+    p2pModule --|> P2PModule
+
+    class RainTreeRouter {
+        UnicastRouter
+        -handler MessageHandler
+        +Broadcast([]byte) error
+        -handleRainTreeMsg([]byte) error
+    }
+
+    class NonceDeduper {
+        Push(Nonce) error
+        Contains(Nonce) bool
+    }
+
+  class Bus {
+    <<interface>>
+    PublishEventToBus(PocketEnvelope)
+    GetBusEvent() PocketEnvelope
+  }
+  p2pModule --> Bus
+
+    class BackgroundRouter {
+        UnicastRouter
+        -handler MessageHandler
+        +Broadcast([]byte) error
+        -handleBackgroundMsg([]byte) error
+        -readSubscription(subscription *pubsub.Subscription)
+    }
+
+    class UnicastRouter {
+        -messageHandler MessageHandler
+        -peerHandler PeerHandler
+        +Send([]byte, address Address) error
+        -handleStream(stream libp2pNetwork.Stream)
+        -readStream(stream libp2pNetwork.Stream)
+    }
+    RainTreeRouter --* UnicastRouter : (embedded)
+    BackgroundRouter --* UnicastRouter : (embedded)
+
+    p2pModule ..* RainTreeRouter
+    RainTreeRouter --o RainTreeMessage
+    
+    p2pModule ..* BackgroundRouter
+    BackgroundRouter --o BackgroundMessage
+
+    p2pModule --o PocketEnvelope
+    p2pModule --* NonceDeduper
+```
+
+### Peer Discovery
+Peer discovery involves pairing peer IDs to their network addresses (multiaddr).
+This pairing always has an associated TTL (time-to-live), near the end of which it must
+be refreshed.
+
+In the background gossip overlay network (`backgroundRouter`), peers will re-advertise themselves 7/8th through their TTL.
+This refreshes the libp2p peerstore automatically.
+
+In the raintree gossip overlay network (`raintreeRouter`), the libp2p peerstore is **NOT** currently refreshed _(TODO: [#859](https://github.com/pokt-network/network/isues/859))_.
+
+```mermaid
+flowchart TD
+  subgraph bus
+  end
+  
+  subgraph pers[Persistence Module]
+  end
+
+  subgraph cons[Consensus Module]
+  end
+
+  cons -- "(staked actor set changed)\npublish event" --> bus
+  bus --> rPM
+  rPM -- "get staked actors\nat current height" --> pers
+
+  subgraph p2p["P2P Module"]
+    host[Libp2p Host]
+    host -- "incoming\nraintree message" --> rtu
+    host -- "incoming\nbackground message" --> bgu
+    host -- "incoming\ntopic message" --> bgr
+    host -- "DHT peer discovery" --> rDHT
+  
+    subgraph rt[RainTree Router]
+      subgraph rPS[Raintree Peerstore]
+        rStakedPS([staked actors only])
+      end
+
+      subgraph rPM[PeerManager]
+      end
+
+      rtu[UnicastRouter]
+      
+      rPM -- "synchronize\n(add/remove)" --> rPS
+      rtu -. "(no discovery)" .-x rPS
+    end
+
+    subgraph bg[Background Router]
+      subgraph rBGPS[Background Peerstore]
+        rNetPS([all P2P participants])
+      end
+
+      subgraph bgr[GossipSub Topic\nSubscription]
+      end
+
+      subgraph rDHT[Kademlia DHT]
+      end
+
+      bgu -- "add if new" --> rBGPS
+      bgr -- "add if new" --> rBGPS
+      rDHT -- "continuous import" --> rBGPS
+         
+      bgu[UnicastRouter]
+    end
+
+  end
+```
 
 ### Raintree Router Architecture
 
 _DISCUSS(team): If you feel this needs a diagram, please reach out to the team for additional details._
 _TODO(olshansky, BenVan): Link to RainTree visualizations once it is complete._
-
-### Message Propagation
-
-Given `Local P2P Module` has a message that it needs to propagate:
-
-<ul style="list-style-type: none;">
-    <li>1a. <code>Raintree Router</code> selects targets from the <code>Pokt Peerstore</code>, <strong>which only includes staked actors</strong></li>
-    <li>1b. <code>Background Router</code> selects targets from the libp2p <code>Peerstore</code>, <strong>which includes all P2P participants</strong></li>
-    <li>2. Libp2p <code>Host</code> manages opening and closing streams to targeted peers</li>
-    <li>3. <code>Remote P2P module</code>'s (i.e. receiver's) <code>handleStream</code> is called (having been registered via <code>setStreamHandler()</code>)</li>
-    <li>4a. <code>handleStream</code> propagates message via <code>Raintree Router</code></li>
-    <li>4b. <code>handleStream</code> propagates message via <code>Background Router</code></li>
-    <li>5a. Repeat step 1a from <code>Remote P2P Module</code>'s perspective targeting its next peers</li>
-    <li>5b. Repeat step 1b from <code>Remote P2P Module</code>'s perspective targeting its next peers</li>
-</ul>
-
-```mermaid
-flowchart TD
-  subgraph lMod[Local P2P Module]
-    subgraph lHost[Libp2p `Host`]
-    end
-    subgraph lRT[Raintree Router]
-      subgraph lRTPS[Raintree Peerstore]
-        lStakedPS([staked actors only])
-      end
-
-      subgraph lPM[PeerManager]
-      end
-      lPM --> lRTPS
-    end
-
-    subgraph lBG[Background Router]
-      subgraph lBGPS[Background Peerstore]
-        lNetPS([all P2P participants])
-      end
-
-      subgraph lGossipSub[GossipSub]
-      end
-
-      subgraph lDHT[Kademlia DHT]
-      end
-
-      lGossipSub --> lBGPS
-      lDHT --> lBGPS
-    end
-
-    lRT --1a--> lHost
-    lBG --1b--> lHost
-  end
-
-subgraph rMod[Remote P2P Module]
-subgraph rHost[Libp2p `Host`]
-end
-subgraph rRT[Raintree Router]
-subgraph rPS[Raintree Peerstore]
-rStakedPS([staked actors only])
-end
-
-subgraph rPM[PeerManager]
-end
-
-rPM --> rStakedPS
-end
-
-subgraph rBG[Background Router]
-subgraph rBGPS[Background Peerstore]
-rNetPS([all P2P participants])
-end
-
-subgraph rGossipSub[GossipSub]
-end
-
-subgraph rDHT[Kademlia DHT]
-end
-
-rGossipSub --> rBGPS
-rDHT --> rBGPS
-end
-
-rHost -. "3 (setStreamHandler())" .-> hs[[handleStream]]
-
-hs --4a--> rRT
-hs --4b--> rBG
-rBG  --"5a (cont. propagation)"--> rHost
-linkStyle 11 stroke:#ff3
-rRT  --"5b (cont. propagation)"--> rHost
-linkStyle 12 stroke:#ff3
-end
-
-lHost --2--> rHost
-```
-
-The `Network Module` is where [RainTree](https://github.com/pokt-network/pocket/files/9853354/raintree.pdf) (or the simpler basic approach) is implemented. See `raintree/network.go` for the specific implementation of RainTree, but please refer to the [specifications](https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p) for more details.
 
 ### Code Organization
 
@@ -177,6 +502,8 @@ p2p
 │   └── router_test.go                  # `BackgroundRouter` functional tests
 ├── bootstrap.go                              # `p2pModule` bootstrap related method(s)
 ├── CHANGELOG.md
+├── config
+│   └── config.go
 ├── event_handler.go
 ├── module.go                                 # `p2pModule` definition
 ├── module_raintree_test.go                   # `p2pModule` & `RainTreeRouter` functional tests (routing)
@@ -189,21 +516,18 @@ p2p
 │   ├── peerstore_provider
 │   └── providers.go
 ├── raintree
-│   ├── nonce_deduper.go
-│   ├── nonce_deduper_test.go
 │   ├── peers_manager.go              # `rainTreePeersManager` implementation of `PeersManager` interface
 │   ├── peers_manager_test.go
 │   ├── peerstore_utils.go            # Raintree routing helpers
 │   ├── router.go                     # `RainTreeRouter` implementation of `Router` interface
 │   ├── router_test.go                # `RainTreeRouter` functional tests
 │   ├── target.go                     # `target` definition
-│   ├── types
-│   │   └── proto
-│   │       └── raintree.proto
+│   ├── testutil.go
 │   └── utils_test.go
-├── README.md
+├── testutil.go
 ├── transport_encryption_test.go            # Libp2p transport security integration test
 ├── types
+│   ├── background.pb.go
 │   ├── errors.go
 │   ├── libp2p_mocks.go
 │   ├── mocks
@@ -213,12 +537,18 @@ p2p
 │   ├── peerstore.go                  # `Peerstore` interface & `PeerAddrMap` implementation definitions
 │   ├── peers_view.go                 # `PeersView` interface & `sortedPeersView` implementation definitions
 │   ├── peers_view_test.go
+│   ├── proto
 │   ├── raintree.pb.go
 │   └── router.go                     # `Router` interface definition
+├── unicast
+│   ├── logging.go
+│   ├── router.go
+│   └── testutil.go
 ├── utils
-│   ├── config.go                     # `RouterConfig` definition
 │   ├── host.go                       # Helpers for working with libp2p hosts
 │   ├── logging.go                    # Helpers for logging
+│   ├── nonce_deduper.go
+│   ├── nonce_deduper_test.go
 │   ├── peer_conversion.go            # Helpers for converting between "native" and libp2p peer representations
 │   ├── url_conversion.go             # Helpers for converting between  "native" and libp2p network address representations
 │   └── url_conversion_test.go

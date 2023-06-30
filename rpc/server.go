@@ -11,14 +11,14 @@ import (
 )
 
 type rpcServer struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	logger modules.Logger
 }
 
 var (
-	_ ServerInterface            = &rpcServer{}
-	_ modules.IntegratableModule = &rpcServer{}
+	_ ServerInterface          = &rpcServer{}
+	_ modules.IntegrableModule = &rpcServer{}
 )
 
 func NewRPCServer(bus modules.Bus) *rpcServer {

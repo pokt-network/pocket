@@ -31,7 +31,7 @@ const (
 )
 
 type consensusModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	privateKey cryptoPocket.Ed25519PrivateKey
 
@@ -209,7 +209,7 @@ func (m *consensusModule) GetModuleName() string {
 }
 
 func (m *consensusModule) SetBus(pocketBus modules.Bus) {
-	m.IntegratableModule.SetBus(pocketBus)
+	m.IntegrableModule.SetBus(pocketBus)
 	if m.paceMaker != nil {
 		m.paceMaker.SetBus(pocketBus)
 	}
