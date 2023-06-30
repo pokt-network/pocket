@@ -5,11 +5,34 @@ package configs;
 
 option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
+// TODO: Reevaluate whether each utility actor should contain address/pubKey configs or if it should be shared
 // ServicerConfig defines the configuration for the node acting as a servicer. Servicers earn rewards for providing Web3 access over a function of volume and quality
 message ServicerConfig {
   // Enabled defines whether or not the node is a servicer.
   bool enabled = 1;
   string public_key = 2;
   string address = 3;
-  repeated string chains = 4;
+  map<string, ServiceConfig> services = 4;
+
+  // relay_mining_volume_accuracy is a parameter used to adjust the calculated number of service tokens for an application.
+  // It is introduced to minimize the chance of under-utilization of application's tokens, while removing the overhead of
+  // communication between servicers which would be necessary otherwise.
+  // See the following for more details:
+  //	https://arxiv.org/abs/2305.10672
+  double relay_mining_volume_accuracy = 5;
+}
+
+// ServiceConfig holds configurations related to where/how the application/client can access the backing RPC service. It is analogous to "ChainConfig" in v0 but can support any RPC service.
+message ServiceConfig {
+  string url = 1; // url specifies the URL at which the service is provided/requested
+  uint64 timeout_msec = 2; // timeout specifes the maximum amount of time, in milliseconds, to allow for the service to return a response
+  BasicAuth basic_auth = 3; // optional: basic authentication for HTTP services.
+}
+
+// BasicAuth stores authentication data for HTTP services
+// When supplied, this data will be used as specified by the HTTP basic authentication scheme.
+message BasicAuth {
+  string user_name = 1;
+  // IMPROVE: enforce encryption of plaintext password
+  string password = 2;
 }
