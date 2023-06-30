@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -26,6 +28,22 @@ func TestMain(m *testing.M) {
 	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
 	os.Exit(exitCode)
+}
+
+func newTestConsensusModule(bus modules.Bus) modules.ConsensusModule {
+	consensusMod, err := consensus.Create(bus)
+	if err != nil {
+		log.Fatalf("Error creating consensus module: %s", err)
+	}
+	return consensusMod.(modules.ConsensusModule)
+}
+
+func newTestP2PModule(bus modules.Bus) modules.P2PModule {
+	p2pMod, err := p2p.Create(bus)
+	if err != nil {
+		log.Fatalf("Error creating p2p module: %s", err)
+	}
+	return p2pMod.(modules.P2PModule)
 }
 
 func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
@@ -62,7 +80,7 @@ func prepareEnvironment(
 	numApplications,
 	numFisherman int,
 	genesisOpts ...test_artifacts.GenesisOption,
-) (*runtime.Manager, modules.UtilityModule, modules.PersistenceModule, modules.IBCModule) {
+) (*runtime.Manager, modules.ConsensusModule, modules.UtilityModule, modules.PersistenceModule, modules.IBCModule) {
 	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
 
 	runtimeCfg := newTestRuntimeConfig(numValidators, numServicers, numApplications, numFisherman, genesisOpts...)
@@ -72,6 +90,17 @@ func prepareEnvironment(
 	testPersistenceMod := newTestPersistenceModule(bus)
 	err = testPersistenceMod.Start()
 	require.NoError(t, err)
+
+	testConsensusMod := newTestConsensusModule(bus)
+	err = testConsensusMod.Start()
+	require.NoError(t, err)
+
+	// TODO: I want to mock this as using a real p2p module is hard to test
+	/**
+	testP2PMod := newTestP2PModule(bus)
+	err = testP2PMod.Start()
+	require.NoError(t, err)
+	**/
 
 	testUtilityMod := newTestUtilityModule(bus)
 	err = testUtilityMod.Start()
@@ -98,7 +127,7 @@ func prepareEnvironment(
 		require.NoError(t, err)
 	})
 
-	return runtimeCfg, testUtilityMod, testPersistenceMod, testIBCMod
+	return runtimeCfg, testConsensusMod, testUtilityMod, testPersistenceMod, testIBCMod
 }
 
 //nolint:unparam // Test suite is not fully built out yet
@@ -110,6 +139,16 @@ func newTestRuntimeConfig(
 	genesisOpts ...test_artifacts.GenesisOption,
 ) *runtime.Manager {
 	cfg, err := configs.CreateTempConfig(&configs.Config{
+		Consensus: &configs.ConsensusConfig{
+			PrivateKey: "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
+		},
+		/**
+		P2P: &configs.P2PConfig{
+			Hostname:   "localhost",
+			Port:       42069,
+			PrivateKey: "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
+		},
+		**/
 		Utility: &configs.UtilityConfig{
 			MaxMempoolTransactionBytes: 1000000,
 			MaxMempoolTransactions:     1000,
@@ -130,6 +169,7 @@ func newTestRuntimeConfig(
 		IBC: &configs.IBCConfig{
 			Enabled:    true,
 			PrivateKey: "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
+			StoresDir:  ":memory:",
 		},
 	})
 	if err != nil {
