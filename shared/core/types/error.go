@@ -177,11 +177,11 @@ const (
 	CodeUnknownActorType                  Code = 130
 	CodeUnknownMessageType                Code = 131
 	CodeProposalBlockNotSet               Code = 133
-	CodeHostAlreadyExists                 Code = 138
-	CodeHostDoesNotExist                  Code = 139
+	CodeIBCHostAlreadyExists              Code = 138
+	CodeIBCHostDoesNotExist               Code = 139
 	CodeIBCInvalidID                      Code = 140
 	CodeIBCInvalidPath                    Code = 141
-	CodeCreatingProofError                Code = 142
+	CodeIBCCreatingProofError             Code = 142
 	CodeIBCUnknownMessageTypeError        Code = 143
 	CodeNilFieldError                     Code = 144
 	CodeIBCUpdatingStoreError             Code = 145
@@ -868,11 +868,11 @@ func ErrUnknownMessageType(messageType any) Error {
 }
 
 func ErrIBCHostAlreadyExists() Error {
-	return NewError(CodeHostAlreadyExists, IBCHostAlreadyExistsError)
+	return NewError(CodeIBCHostAlreadyExists, IBCHostAlreadyExistsError)
 }
 
 func ErrIBCHostDoesNotExist() Error {
-	return NewError(CodeHostDoesNotExist, IBCHostDoesNotExistError)
+	return NewError(CodeIBCHostDoesNotExist, IBCHostDoesNotExistError)
 }
 
 func ErrIBCInvalidID(identifier, msg string) Error {
@@ -884,7 +884,7 @@ func ErrIBCInvalidPath(path string) Error {
 }
 
 func ErrIBCCreatingProof(err error) Error {
-	return NewError(CodeCreatingProofError, fmt.Sprintf("%s: %s", IBCCreatingProofError, err.Error()))
+	return NewError(CodeIBCCreatingProofError, fmt.Sprintf("%s: %s", IBCCreatingProofError, err.Error()))
 }
 
 func ErrIBCUnknownMessageType(messageType string) Error {
