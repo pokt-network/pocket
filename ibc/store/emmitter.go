@@ -14,8 +14,17 @@ func emitUpdateStoreEvent(bus modules.Bus, key, value []byte) error {
 	if err != nil {
 		return err
 	}
+
+	anyUpdate, err := codec.GetCodec().ToAny(updateMsg)
+	if err != nil {
+		return err
+	}
+
 	// Publish the message to the bus to be handled locally
-	bus.PublishEventToBus(letter)
+	if err := bus.GetIBCModule().HandleMessage(anyUpdate); err != nil {
+		return err
+	}
+	// bus.PublishEventToBus(letter)
 	// Broadcast event to the network
 	anyLetter, err := codec.GetCodec().ToAny(letter)
 	if err != nil {

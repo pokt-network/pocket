@@ -5,17 +5,20 @@ import (
 	"os"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
-	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/utility"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var dbURL string
@@ -38,12 +41,33 @@ func newTestConsensusModule(bus modules.Bus) modules.ConsensusModule {
 	return consensusMod.(modules.ConsensusModule)
 }
 
-func newTestP2PModule(bus modules.Bus) modules.P2PModule {
-	p2pMod, err := p2p.Create(bus)
-	if err != nil {
-		log.Fatalf("Error creating p2p module: %s", err)
-	}
-	return p2pMod.(modules.P2PModule)
+func newTestP2PModule(t *testing.T, bus modules.Bus) modules.P2PModule {
+	t.Helper()
+
+	ctrl := gomock.NewController(t)
+	p2pMock := mockModules.NewMockP2PModule(ctrl)
+
+	p2pMock.EXPECT().Start().Return(nil).AnyTimes()
+	p2pMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+	p2pMock.EXPECT().
+		Broadcast(gomock.Any()).
+		Do(func(msg *anypb.Any) {
+			// e := &messaging.PocketEnvelope{Content: msg}
+			// eventsChannel <- e
+		}).
+		AnyTimes()
+	p2pMock.EXPECT().
+		Send(gomock.Any(), gomock.Any()).
+		Do(func(addr cryptoPocket.Address, msg *anypb.Any) {
+			// e := &messaging.PocketEnvelope{Content: msg}
+			// eventsChannel <- e
+		}).
+		AnyTimes()
+	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()
+	p2pMock.EXPECT().HandleEvent(gomock.Any()).Return(nil).AnyTimes()
+	bus.RegisterModule(p2pMock)
+
+	return p2pMock
 }
 
 func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
@@ -95,12 +119,9 @@ func prepareEnvironment(
 	err = testConsensusMod.Start()
 	require.NoError(t, err)
 
-	// TODO: I want to mock this as using a real p2p module is hard to test
-	/**
-	testP2PMod := newTestP2PModule(bus)
-	err = testP2PMod.Start()
+	testP2PMock := newTestP2PModule(t, bus)
+	err = testP2PMock.Start()
 	require.NoError(t, err)
-	**/
 
 	testUtilityMod := newTestUtilityModule(bus)
 	err = testUtilityMod.Start()
@@ -142,13 +163,6 @@ func newTestRuntimeConfig(
 		Consensus: &configs.ConsensusConfig{
 			PrivateKey: "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
 		},
-		/**
-		P2P: &configs.P2PConfig{
-			Hostname:   "localhost",
-			Port:       42069,
-			PrivateKey: "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
-		},
-		**/
 		Utility: &configs.UtilityConfig{
 			MaxMempoolTransactionBytes: 1000000,
 			MaxMempoolTransactions:     1000,
