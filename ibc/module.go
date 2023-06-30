@@ -103,6 +103,7 @@ func (m *ibcModule) HandleMessage(message *anypb.Any) error {
 	}
 
 	// Sign the transaction
+	// TODO: The signature should come from the proposer of the change not different for all nodes
 	pkBz, err := hex.DecodeString(m.cfg.PrivateKey)
 	if err != nil {
 		return err
