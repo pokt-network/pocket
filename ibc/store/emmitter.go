@@ -7,25 +7,22 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// emitUpdateStoreEvent emits an UpdateIBCStore event to the local bus and broadcasts it to the network
+// emitUpdateStoreEvent handles an UpdateIBCStore event locally and then broadcasts it to the network
 func emitUpdateStoreEvent(bus modules.Bus, key, value []byte) error {
 	updateMsg := ibcTypes.CreateUpdateStoreMessage(key, value)
-	letter, err := messaging.PackMessage(updateMsg)
-	if err != nil {
-		return err
-	}
-
 	anyUpdate, err := codec.GetCodec().ToAny(updateMsg)
 	if err != nil {
 		return err
 	}
-
-	// Publish the message to the bus to be handled locally
 	if err := bus.GetIBCModule().HandleMessage(anyUpdate); err != nil {
 		return err
 	}
-	// bus.PublishEventToBus(letter)
+
 	// Broadcast event to the network
+	letter, err := messaging.PackMessage(updateMsg)
+	if err != nil {
+		return err
+	}
 	anyLetter, err := codec.GetCodec().ToAny(letter)
 	if err != nil {
 		return err
@@ -33,19 +30,26 @@ func emitUpdateStoreEvent(bus modules.Bus, key, value []byte) error {
 	if err := bus.GetP2PModule().Broadcast(anyLetter); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-// emitDeleteStoreEvent emits a PruneIBCStore event to the local bus and broadcasts it to the network
+// emitPruneStoreEvent handles an PruneIBCStore event locally and then broadcasts it to the network
 func emitPruneStoreEvent(bus modules.Bus, key []byte) error {
 	pruneMsg := ibcTypes.CreatePruneStoreMessage(key)
+	anyPrune, err := codec.GetCodec().ToAny(pruneMsg)
+	if err != nil {
+		return err
+	}
+	if err := bus.GetIBCModule().HandleMessage(anyPrune); err != nil {
+		return err
+	}
+
+	// Broadcast event to the network
 	letter, err := messaging.PackMessage(pruneMsg)
 	if err != nil {
 		return err
 	}
-	// Publish the message to the bus to be handled locally
-	bus.PublishEventToBus(letter)
-	// Broadcast event to the network
 	anyLetter, err := codec.GetCodec().ToAny(letter)
 	if err != nil {
 		return err
@@ -53,5 +57,6 @@ func emitPruneStoreEvent(bus modules.Bus, key []byte) error {
 	if err := bus.GetP2PModule().Broadcast(anyLetter); err != nil {
 		return err
 	}
+
 	return nil
 }
