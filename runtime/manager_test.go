@@ -1816,11 +1816,8 @@ func TestNewManagerFromReaders(t *testing.T) {
 						Timeout: 30000,
 						UseCors: false,
 					},
-					Keybase: defaultCfg.Keybase,
-					Servicer: &configs.ServicerConfig{
-						Enabled: true,
-						Chains:  []string{"0001"},
-					},
+					Keybase:   defaultCfg.Keybase,
+					Servicer:  &configs.ServicerConfig{Enabled: true},
 					Validator: &configs.ValidatorConfig{Enabled: true},
 					Fisherman: defaultCfg.Fisherman,
 					IBC: &configs.IBCConfig{

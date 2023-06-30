@@ -1,7 +1,12 @@
 package servicer
 
 import (
-	"errors"
+	"fmt"
+	"log"
+	"math/big"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -9,27 +14,86 @@ import (
 
 	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-var testServicer1 = &coreTypes.Actor{
-	ActorType: coreTypes.ActorType_ACTOR_TYPE_SERVICER,
-	Address:   "a3d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
-	PublicKey: "a6cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d75a998b",
-	Chains:    []string{"0021"},
+const (
+	testAppsTokensMultiplier = int(2)
+	testCurrentHeight        = int64(9)
+)
+
+// INCOMPLETE(#833) add e2e testing on servicer's features
+
+var (
+	// Initialized in TestMain
+	testServicer1 *coreTypes.Actor
+
+	// Initialized in TestMain
+	testApp1 *coreTypes.Actor
+
+	// Initialized in TestMain
+	testServiceConfig1 *configs.ServiceConfig
+)
+
+// testPublicKey is a helper that returns a public key and its corresponding address
+func testPublicKey() (publicKey, address string) {
+	pk, err := crypto.GeneratePublicKey()
+	if err != nil {
+		log.Fatalf("Error creating public key: %s", err)
+	}
+
+	return pk.String(), pk.Address().String()
 }
 
-func TestAdmitRelay(t *testing.T) {
-	currentHeight := uint64(9)
+// TestMain initialized the test fixtures for all the unit tests in the servicer package
+func TestMain(m *testing.M) {
+	servicerPublicKey, servicerAddr := testPublicKey()
+	testServicer1 = &coreTypes.Actor{
+		ActorType:    coreTypes.ActorType_ACTOR_TYPE_SERVICER,
+		Address:      servicerAddr,
+		PublicKey:    servicerPublicKey,
+		Chains:       []string{"POKT-UnitTestNet"},
+		StakedAmount: "1000",
+	}
+
+	appPublicKey, appAddr := testPublicKey()
+	testApp1 = &coreTypes.Actor{
+		ActorType:    coreTypes.ActorType_ACTOR_TYPE_APP,
+		Address:      appAddr,
+		PublicKey:    appPublicKey,
+		StakedAmount: "1000",
+	}
+
+	testServiceConfig1 = &configs.ServiceConfig{
+		Url:         "http://chain-url.pokt.network",
+		TimeoutMsec: 1234,
+		BasicAuth: &configs.BasicAuth{
+			UserName: "user1",
+			Password: "password1",
+		},
+	}
+
+	os.Exit(m.Run())
+}
+
+func TestRelay_Admit(t *testing.T) {
+	const (
+		currentSessionNumber      = 2
+		testSessionStartingHeight = 8
+	)
+
 	testCases := []struct {
-		name     string
-		relay    *coreTypes.Relay
-		expected error
+		name              string
+		usedSessionTokens int64
+		relay             *coreTypes.Relay
+		expected          error
 	}{
 		{
 			name:  "valid relay is admitted",
-			relay: testRelay("0021", int64(currentHeight)),
+			relay: testRelay(),
 		},
 		{
 			name:     "Relay with empty Meta is rejected",
@@ -42,19 +106,30 @@ func TestAdmitRelay(t *testing.T) {
 			expected: errValidateRelayMeta,
 		},
 		{
-			name:     "Relay for unsupported chain is rejected",
-			relay:    testRelay("foo", 8),
+			name:     "Relay for unsupported service is rejected",
+			relay:    testRelay(testRelayChain("foo")),
 			expected: errValidateRelayMeta,
 		},
 		{
 			name:     "Relay with height set in a past session is rejected",
-			relay:    testRelay("0021", 5),
+			relay:    testRelay(testRelayHeight(5)),
 			expected: errValidateBlockHeight,
 		},
 		{
 			name:     "Relay with height set in a future session is rejected",
-			relay:    testRelay("0021", 9999),
+			relay:    testRelay(testRelayHeight(9999)),
 			expected: errValidateBlockHeight,
+		},
+		{
+			name:     "Relay not matching the servicer in this session is rejected",
+			relay:    testRelay(testRelayServicer("bar")),
+			expected: errValidateServicer,
+		},
+		{
+			name:              "Relay for app out of quota is rejected",
+			relay:             testRelay(),
+			usedSessionTokens: 999999,
+			expected:          errShouldMineRelay,
 		},
 	}
 
@@ -62,44 +137,135 @@ func TestAdmitRelay(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			config := testServicerConfig()
 			session := testSession(
-				sessionNumber(2),
+				sessionNumber(currentSessionNumber),
 				sessionBlocks(4),
-				sessionHeight(2),
+				sessionHeight(testSessionStartingHeight),
 				sessionServicers(testServicer1),
 			)
-			mockBus := mockBus(t, &config, currentHeight, session)
+			mockBus := mockBus(t, &config, uint64(testCurrentHeight), session, testCase.usedSessionTokens)
 
 			servicerMod, err := CreateServicer(mockBus)
 			require.NoError(t, err)
 
-			err = servicerMod.(*servicer).admitRelay(testCase.relay)
-			if !errors.Is(err, testCase.expected) {
-				t.Fatalf("Expected error %v got: %v", testCase.expected, err)
-			}
+			servicer, ok := servicerMod.(*servicer)
+			require.True(t, ok)
+
+			err = servicer.admitRelay(testCase.relay)
+			require.ErrorIs(t, err, testCase.expected)
 		})
 	}
 }
 
-func testRelay(chain string, height int64) *coreTypes.Relay {
-	return &coreTypes.Relay{
+func TestRelay_Execute(t *testing.T) {
+	testCases := []struct {
+		name        string
+		relay       *coreTypes.Relay
+		expectedErr error
+	}{
+		{
+			name:        "relay is rejected if service is not specified in the config",
+			relay:       testRelay(testRelayChain("foo")),
+			expectedErr: errValidateRelayMeta,
+		},
+		{
+			name:  "Relay for accepted service is executed",
+			relay: testRelay(),
+		},
+		{
+			name:  "JSONRPC Relay is executed",
+			relay: testRelay(testEthGoerliRelay()),
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				fmt.Fprintln(w, `{"0x1234"}`)
+			}))
+			defer ts.Close()
+
+			config := testServicerConfig()
+			for svc := range config.Services {
+				config.Services[svc].Url = ts.URL
+			}
+
+			servicer := &servicer{config: &config}
+			_, err := servicer.executeRelay(testCase.relay)
+			require.ErrorIs(t, err, testCase.expectedErr)
+			// INCOMPLETE(@adshmh): verify HTTP request properties: payload/headers/user-agent/etc.
+		})
+	}
+}
+
+type relayEditor func(*coreTypes.Relay)
+
+func testRelayServicer(publicKey string) relayEditor {
+	return func(relay *coreTypes.Relay) {
+		relay.Meta.ServicerPublicKey = publicKey
+	}
+}
+
+func testRelayChain(chain string) relayEditor {
+	return func(relay *coreTypes.Relay) {
+		relay.Meta.RelayChain = &coreTypes.Identifiable{Id: chain}
+	}
+}
+
+func testRelayHeight(height int64) relayEditor {
+	return func(relay *coreTypes.Relay) {
+		relay.Meta.BlockHeight = height
+	}
+}
+
+func testEthGoerliRelay() relayEditor {
+	return func(relay *coreTypes.Relay) {
+		relay.Meta.RelayChain.Id = "ETH-Goerli"
+		relay.RelayPayload = &coreTypes.Relay_JsonRpcPayload{
+			JsonRpcPayload: &coreTypes.JSONRPCPayload{
+				Id:      []byte("1"),
+				JsonRpc: "2.0",
+				Method:  "eth_blockNumber",
+			},
+		}
+	}
+}
+
+func testRelay(editors ...relayEditor) *coreTypes.Relay {
+	relay := &coreTypes.Relay{
 		Meta: &coreTypes.RelayMeta{
-			ServicerPublicKey: testServicer1.PublicKey,
-			BlockHeight:       height,
+			ServicerPublicKey:  testServicer1.PublicKey,
+			ApplicationAddress: testApp1.Address,
+			BlockHeight:        testCurrentHeight,
 			RelayChain: &coreTypes.Identifiable{
-				Id: chain,
+				Id: "POKT-UnitTestNet",
 			},
 			GeoZone: &coreTypes.Identifiable{
 				Id: "geozone",
 			},
 		},
+		RelayPayload: &coreTypes.Relay_RestPayload{
+			RestPayload: &coreTypes.RESTPayload{
+				HttpPath:    "/v1/height",
+				RequestType: coreTypes.RESTRequestType_RESTRequestTypeGET,
+			},
+		},
 	}
+
+	for _, editor := range editors {
+		editor(relay)
+	}
+
+	return relay
 }
 
 func testServicerConfig() configs.ServicerConfig {
 	return configs.ServicerConfig{
 		PublicKey: testServicer1.PublicKey,
 		Address:   testServicer1.Address,
-		Chains:    testServicer1.Chains,
+		Services: map[string]*configs.ServiceConfig{
+			"POKT-UnitTestNet": testServiceConfig1,
+			"ETH-Goerli":       testServiceConfig1,
+		},
 	}
 }
 
@@ -131,7 +297,8 @@ func sessionServicers(servicers ...*coreTypes.Actor) func(*coreTypes.Session) {
 
 func testSession(editors ...sessionModifier) *coreTypes.Session {
 	session := coreTypes.Session{
-		Id: "session-1",
+		Id:          "session-1",
+		Application: testApp1,
 	}
 	for _, editor := range editors {
 		editor(&session)
@@ -140,7 +307,7 @@ func testSession(editors ...sessionModifier) *coreTypes.Session {
 }
 
 // Create a mockBus with mock implementations of consensus and utility modules
-func mockBus(t *testing.T, cfg *configs.ServicerConfig, height uint64, session *coreTypes.Session) *mockModules.MockBus {
+func mockBus(t *testing.T, cfg *configs.ServicerConfig, height uint64, session *coreTypes.Session, usedSessionTokens int64) *mockModules.MockBus {
 	ctrl := gomock.NewController(t)
 	runtimeMgrMock := mockModules.NewMockRuntimeMgr(ctrl)
 	runtimeMgrMock.EXPECT().GetConfig().Return(&configs.Config{Servicer: cfg}).AnyTimes()
@@ -148,15 +315,22 @@ func mockBus(t *testing.T, cfg *configs.ServicerConfig, height uint64, session *
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(height).AnyTimes()
 
-	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
 	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
-	persistenceReadContextMock.EXPECT().GetServicer(gomock.Any(), gomock.Any()).Return(testServicer1, nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().Release().AnyTimes()
+	persistenceReadContextMock.EXPECT().GetServicer(gomock.Any(), gomock.Any()).Return(testServicer1, nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().GetIntParam(typesUtil.AppSessionTokensMultiplierParamName, session.SessionHeight).
+		Return(testAppsTokensMultiplier, nil).AnyTimes()
 
+	persistenceLocalContextMock := mockModules.NewMockPersistenceLocalContext(ctrl)
+	persistenceLocalContextMock.EXPECT().StoreServicedRelay(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	persistenceLocalContextMock.EXPECT().GetSessionTokensUsed(gomock.Any()).Return(big.NewInt(usedSessionTokens), nil).AnyTimes()
+
+	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
+	persistenceMock.EXPECT().GetLocalContext().Return(persistenceLocalContextMock, nil).AnyTimes()
 
 	busMock := mockModules.NewMockBus(ctrl)
 	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()

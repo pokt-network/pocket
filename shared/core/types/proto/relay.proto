@@ -6,6 +6,7 @@ option go_package = "github.com/pokt-network/pocket/shared/core/types";
 
 message Relay {
     RelayMeta meta = 1;
+    // Every different chain/service may have its own custom payload (e.g. HTTP, JSON, GRPC, non-chain services)
     oneof relay_payload {
         JSONRPCPayload json_rpc_payload = 2;
         RESTPayload rest_payload = 3;
@@ -16,6 +17,7 @@ message Relay {
     }
 }
 
+// INCOMPLETE: add REST relay payload fields
 message RESTPayload {
     string contents = 1;
     string http_path = 2;
@@ -50,7 +52,8 @@ message JSONRPCPayload {
 message RelayMeta {
     int64 block_height = 1;
     string servicer_public_key = 2;
-    // TODO: Make Chain identifier type consistent in Session and Meta: use Identifiable for Chain in Session (or a string here to match the session)
+    // TODO(M5): Consider renaming `relay_chain` to `rpc_service` or something similar
+    // TODO: Make Chain/Service identifier type consistent in Session and Meta: use Identifiable for Chain/Service in Session (or a string here to match the session)
     Identifiable relay_chain = 3;
     Identifiable geo_zone = 4;
     string signature = 5;  // TECHDEBT: Consolidate with `Signature` proto used elsewhere in the future
@@ -72,4 +75,11 @@ message AAT {
 message Identifiable {
     string id = 1;
     string name = 2;
+}
+
+
+// RelayReqRes contains a relay request and its response, used for persistence of relay service evidence
+message RelayReqRes {
+    Relay relay = 1;
+    RelayResponse response = 2;
 }

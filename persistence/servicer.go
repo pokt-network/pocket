@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/hex"
+	"math/big"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -78,4 +79,16 @@ func (p *PostgresContext) SetServicerPauseHeight(address []byte, height int64) e
 
 func (p *PostgresContext) GetServicerOutputAddress(operator []byte, height int64) (output []byte, err error) {
 	return p.GetActorOutputAddress(types.ServicerActor, operator, height)
+}
+
+// INCOMPLETE: implement this
+// DISCUSS: both the relay and the response can be large structures: we may need to truncate the stored values
+func (p *PostgresContext) RecordRelayService(applicationAddress string, key []byte, relay *coreTypes.Relay, response *coreTypes.RelayResponse) error {
+	return nil
+}
+
+// INCOMPLETE: implement this
+// GetServicerTokenUsage returns the number of tokens used by the servicer in the current session, i.e. for the application associated with the session
+func (p *PostgresContext) GetServicerTokenUsage(session *coreTypes.Session) (*big.Int, error) {
+	return nil, nil
 }
