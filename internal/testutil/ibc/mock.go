@@ -10,34 +10,31 @@ import (
 )
 
 // BaseIBCMock returns a mock IBC module without a Host
-func BaseIBCMock(t gocuke.TestingT, busMock *mockModules.MockBus) *mockModules.MockIBCModule {
+func BaseIBCMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockIBCModule {
 	ctrl := gomock.NewController(t)
 	ibcMock := mockModules.NewMockIBCModule(ctrl)
 
 	ibcMock.EXPECT().Start().Return(nil).AnyTimes()
-	ibcMock.EXPECT().SetBus(busMock).Return().AnyTimes()
-	ibcMock.EXPECT().GetBus().Return(busMock).AnyTimes()
+	ibcMock.EXPECT().SetBus(bus).Return().AnyTimes()
+	ibcMock.EXPECT().GetBus().Return(bus).AnyTimes()
 	ibcMock.EXPECT().GetModuleName().Return(modules.IBCModuleName).AnyTimes()
+	ibcMock.EXPECT().HandleMessage(gomock.Any()).Return(nil).AnyTimes()
 
 	return ibcMock
 }
 
-// IBCMockWithHost returns a mock IBC module with a Host
-func IBCMockWithHost(t gocuke.TestingT, _ modules.EventsChannel) *mockModules.MockIBCModule {
+// BaseIBCHostMock returns a mock IBC Host submodule
+func BaseIBCHostMock(t gocuke.TestingT, busMock *mockModules.MockBus) *mockModules.MockIBCHostModule {
 	ctrl := gomock.NewController(t)
-	ibcMock := mockModules.NewMockIBCModule(ctrl)
+	hostMock := mockModules.NewMockIBCHostModule(ctrl)
 
-	ibcMock.EXPECT().Start().Return(nil).AnyTimes()
-	ibcMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
-	ibcMock.EXPECT().GetModuleName().Return(modules.IBCModuleName).AnyTimes()
-
-	hostMock := mockModules.NewMockIBCHost(ctrl)
+	hostMock.EXPECT().SetBus(busMock).Return().AnyTimes()
+	hostMock.EXPECT().GetBus().Return(busMock).AnyTimes()
+	hostMock.EXPECT().GetModuleName().Return(modules.IBCHostModuleName).AnyTimes()
 	hostMock.EXPECT().GetTimestamp().DoAndReturn(func() uint64 {
-		timestamp := time.Now().Unix()
-		return uint64(timestamp)
-	}).AnyTimes()
+		unix := time.Now().Unix()
+		return uint64(unix)
+	})
 
-	ibcMock.EXPECT().GetHost().Return(hostMock).AnyTimes()
-
-	return ibcMock
+	return hostMock
 }
