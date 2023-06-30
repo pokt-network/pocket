@@ -127,6 +127,10 @@ func (m *bus) GetTreeStore() modules.TreeStoreModule {
 	return getModuleFromRegistry[modules.TreeStoreModule](m, modules.TreeStoreModuleName)
 }
 
+func (m *bus) GetIBCHost() modules.IBCHostModule {
+	return getModuleFromRegistry[modules.IBCHostModule](m, modules.IBCHostModuleName)
+}
+
 // getModuleFromRegistry is a helper function to get a module from the registry that handles errors and casting via generics
 func getModuleFromRegistry[T modules.Submodule](m *bus, moduleName string) T {
 	mod, err := m.modulesRegistry.GetModule(moduleName)
