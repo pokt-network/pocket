@@ -21,6 +21,8 @@ type ibcHost struct {
 	logger       *modules.Logger
 	storesDir    string
 	storeManager modules.IBCStoreManager
+
+	privateKey string
 }
 
 func Create(bus modules.Bus, options ...modules.IBCHostOption) (modules.IBCHostModule, error) {
@@ -45,6 +47,15 @@ func WithStoresDir(dir string) modules.IBCHostOption {
 	}
 }
 
+// WithPrivateKey assigns the IBC host's private key
+func WithPrivateKey(pkHex string) modules.IBCHostOption {
+	return func(m modules.IBCHostModule) {
+		if mod, ok := m.(*ibcHost); ok {
+			mod.privateKey = pkHex
+		}
+	}
+}
+
 func (*ibcHost) Create(bus modules.Bus, options ...modules.IBCHostOption) (modules.IBCHostModule, error) {
 	h := &ibcHost{}
 	for _, option := range options {
@@ -55,7 +66,7 @@ func (*ibcHost) Create(bus modules.Bus, options ...modules.IBCHostOption) (modul
 	if h.storesDir == "" {
 		return nil, fmt.Errorf("stores directory not set")
 	}
-	sm := store.NewStoreManager(h.bus, h.storesDir)
+	sm := store.NewStoreManager(h.bus, h.storesDir, h.privateKey)
 	h.storeManager = sm
 	return h, nil
 }

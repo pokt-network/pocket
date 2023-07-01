@@ -257,33 +257,6 @@ func TestHandleMessage_GetIndexedMessage(t *testing.T) {
 	}
 }
 
-func TestHandleMessage_AddToMempool(t *testing.T) {
-	// prepare the environment
-	_, _, _, _, ibcMod := prepareEnvironment(t, 1, 0, 0, 0)
-	require.Len(t, ibcMod.GetBus().GetUtilityModule().GetMempool().GetAll(), 0)
-	msg, _ := prepareUpdateMessage(t, []byte("key"), []byte("value"))
-	anyMsg, err := codec.GetCodec().ToAny(msg)
-	require.NoError(t, err)
-	require.NoError(t, ibcMod.HandleMessage(anyMsg))
-	mempoolTxs := ibcMod.GetBus().GetUtilityModule().GetMempool().GetAll()
-
-	require.Len(t, mempoolTxs, 1)
-	mTx := mempoolTxs[0]
-	require.NotNil(t, mTx)
-	txProto := &coreTypes.Transaction{}
-	err = codec.GetCodec().Unmarshal(mTx, txProto)
-	require.NoError(t, err)
-	ibcMsg := &ibcTypes.UpdateIBCStore{}
-	require.NoError(t, txProto.GetMsg().UnmarshalTo(ibcMsg))
-
-	// Compare messages are equal
-	origBz, err := codec.GetCodec().Marshal(msg.GetUpdate())
-	require.NoError(t, err)
-	ibcMsgBz, err := codec.GetCodec().Marshal(ibcMsg)
-	require.NoError(t, err)
-	require.Equal(t, origBz, ibcMsgBz)
-}
-
 func prepareUpdateMessage(t *testing.T, key, value []byte) (*ibcTypes.IBCMessage, *coreTypes.Transaction) {
 	t.Helper()
 	msg := ibcTypes.CreateUpdateStoreMessage(key, value)

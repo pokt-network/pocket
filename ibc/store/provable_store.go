@@ -40,20 +40,23 @@ func (c *cachedEntry) prepare() (key, value []byte) {
 // the creation of IBC messages that are broadcasted through the network and
 // included in the mempool/next block to change the state of the IBC tree
 type provableStore struct {
-	m      sync.Mutex
-	bus    modules.Bus                // used to interact with persistence (passed from IBCHost)
-	name   string                     // store name in storeManager
-	prefix coreTypes.CommitmentPrefix // []byte(name)
-	cache  map[string]*cachedEntry    // in-memory cache of local changes to be written to disk
+	m          sync.Mutex
+	bus        modules.Bus                // used to interact with persistence (passed from IBCHost)
+	name       string                     // store name in storeManager
+	prefix     coreTypes.CommitmentPrefix // []byte(name)
+	cache      map[string]*cachedEntry    // in-memory cache of local changes to be written to disk
+	privateKey string
 }
 
 // newProvableStore returns a new instance of provableStore with the bus and prefix provided
-func newProvableStore(bus modules.Bus, prefix coreTypes.CommitmentPrefix) *provableStore {
+func newProvableStore(bus modules.Bus, prefix coreTypes.CommitmentPrefix, privateKey string) *provableStore {
 	return &provableStore{
-		bus:    bus,
-		name:   string(prefix),
-		prefix: prefix,
-		cache:  make(map[string]*cachedEntry, 0),
+		m:          sync.Mutex{},
+		bus:        bus,
+		name:       string(prefix),
+		prefix:     prefix,
+		cache:      make(map[string]*cachedEntry, 0),
+		privateKey: privateKey,
 	}
 }
 
@@ -67,24 +70,24 @@ func (p *provableStore) Get(key []byte) ([]byte, error) {
 		return nil, err
 	}
 	defer rCtx.Release()
-	return rCtx.GetIBCStoreEntry(prefixed, currHeight) // returns latest value stored
-}
-
-// Get queries the persistence layer for the latest value stored in the IBC state tree
-// it then generates a proof by importing the IBC state tree from the TreeStore
-// keys are automatically prefixed with the CommitmentPrefix if not present
-func (p *provableStore) GetAndProve(key []byte, membership bool) ([]byte, *ics23.CommitmentProof, error) {
-	prefixed := applyPrefix(p.prefix, key)
-	currHeight := int64(p.bus.GetConsensusModule().CurrentHeight())
-	rCtx, err := p.bus.GetPersistenceModule().NewReadContext(currHeight)
-	if err != nil {
-		return nil, nil, err
-	}
 	value, err := rCtx.GetIBCStoreEntry(prefixed, currHeight) // returns latest value stored
 	if err != nil {
+		return nil, err
+	}
+	if value == nil {
+		return nil, coreTypes.ErrIBCKeyDoesNotExist(string(key))
+	}
+	return value, nil
+}
+
+// GetAndProve queries the persistence layer for the latest value stored in the IBC state
+// tree it then generates a proof by importing the IBC state tree from the TreeStore
+// keys are automatically prefixed with the CommitmentPrefix if not present
+func (p *provableStore) GetAndProve(key []byte, membership bool) ([]byte, *ics23.CommitmentProof, error) {
+	value, err := p.Get(key)
+	if err != nil {
 		return nil, nil, err
 	}
-	defer rCtx.Release()
 	var proof *ics23.CommitmentProof
 	if membership {
 		proof, err = p.CreateMembershipProof(key, value)
@@ -131,7 +134,7 @@ func (p *provableStore) Set(key, value []byte) error {
 		prefixedKey: prefixed,
 		value:       value,
 	}
-	return emitUpdateStoreEvent(p.bus, key, value)
+	return emitUpdateStoreEvent(p.bus, p.privateKey, key, value)
 }
 
 // Delete updates the persistence layer with the key and nil value pair at the latest height
@@ -148,7 +151,7 @@ func (p *provableStore) Delete(key []byte) error {
 		prefixedKey: prefixed,
 		value:       nil,
 	}
-	return emitPruneStoreEvent(p.bus, key)
+	return emitPruneStoreEvent(p.bus, p.privateKey, key)
 }
 
 // GetCommitmentPrefix returns the CommitmentPrefix for the store

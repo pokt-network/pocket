@@ -4,7 +4,6 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 //go:generate mockgen -destination=./mocks/ibc_module_mock.go github.com/pokt-network/pocket/shared/modules IBCModule,IBCStoreManager,ProvableStore
@@ -13,9 +12,6 @@ const IBCModuleName = "ibc"
 
 type IBCModule interface {
 	Module
-
-	// HandleMessage handles the given IBC message
-	HandleMessage(*anypb.Any) error
 }
 
 // IBCStoreManager manages the different ProvableStore instances created by the IBC host

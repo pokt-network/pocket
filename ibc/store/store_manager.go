@@ -16,19 +16,21 @@ var (
 
 // storeManager holds an in-memory map of all the provable stores in use
 type storeManager struct {
-	m         sync.Mutex
-	bus       modules.Bus
-	storesDir string
-	stores    map[string]*provableStore
+	m          sync.Mutex
+	bus        modules.Bus
+	storesDir  string
+	stores     map[string]*provableStore
+	privateKey string
 }
 
 // NewStoreManager returns a new storeManager instance
-func NewStoreManager(bus modules.Bus, storesDir string) *storeManager {
+func NewStoreManager(bus modules.Bus, storesDir, privateKey string) *storeManager {
 	return &storeManager{
-		m:         sync.Mutex{},
-		bus:       bus,
-		storesDir: storesDir,
-		stores:    make(map[string]*provableStore, 0),
+		m:          sync.Mutex{},
+		bus:        bus,
+		storesDir:  storesDir,
+		stores:     make(map[string]*provableStore, 0),
+		privateKey: privateKey,
 	}
 }
 
@@ -40,7 +42,7 @@ func (s *storeManager) AddStore(name string) error {
 	if _, ok := s.stores[name]; ok {
 		return coreTypes.ErrIBCStoreAlreadyExists(name)
 	}
-	store := newProvableStore(s.bus, coreTypes.CommitmentPrefix(name))
+	store := newProvableStore(s.bus, coreTypes.CommitmentPrefix(name), s.privateKey)
 	s.stores[store.name] = store
 	return nil
 }
