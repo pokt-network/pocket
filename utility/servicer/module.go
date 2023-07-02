@@ -2,7 +2,9 @@ package servicer
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -228,8 +230,16 @@ func (s *servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable,
 	}
 	defer readCtx.Release() //nolint:errcheck // We only need to make sure the readCtx is released
 
-	// DISCUSS: should we update the GetServicer signature to take a string instead?
-	servicer, err := readCtx.GetServicer([]byte(s.config.Address), currentHeight)
+
+	// The servicer address needs to be passed to persistence module, which uses hex.EncodeToString to convert the byte array to string.
+	//	Therefore, the address needs to be decoded as a byte array before passing it to the persistence module.
+	servicerAddrBz, err := hex.DecodeString(s.config.Address)
+	if err != nil {
+		return fmt.Errorf("error decoding servicer address %s: %w", s.config.Address, err)
+	}
+
+	// DISCUSS: should we update the GetServicer signature to take a string instead? alternatively, we could use []byte as type of servicer address
+	servicer, err := readCtx.GetServicer(servicerAddrBz, currentHeight)
 	if err != nil {
 		return fmt.Errorf("error reading servicer from persistence: %w", err)
 	}
@@ -424,7 +434,8 @@ func (s *servicer) executeJsonRPCRelay(meta *coreTypes.RelayMeta, payload *coreT
 		return nil, fmt.Errorf("Chain %s not found in servicer configuration: %w", meta.RelayChain.Id, errValidateRelayMeta)
 	}
 
-	relayBytes, err := codec.GetCodec().Marshal(payload)
+	// JSONRPC endpoints expect json-encoded payload, so codec package would not work here as it uses proto serialization
+	relayBytes, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("Error marshalling payload %s: %w", payload.String(), err)
 	}
@@ -466,7 +477,9 @@ func (s *servicer) executeHTTPRelay(serviceConfig *configs.ServiceConfig, payloa
 	}
 
 	// INCOMPLETE(#837): Optimize usage of HTTP client, e.g. connection reuse, depending on the volume of relays a servicer is expected to handle
-	resp, err := (&http.Client{Timeout: time.Duration(serviceConfig.TimeoutMsec) * time.Millisecond}).Do(req)
+	// ADDPR: allow configuration of TLS Settings for HTTPS services
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	resp, err := (&http.Client{Transport: tr, Timeout: time.Duration(serviceConfig.TimeoutMsec) * time.Millisecond}).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Error performing the HTTP request for relay: %w", err)
 	}

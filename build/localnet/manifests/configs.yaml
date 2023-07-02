@@ -1699,7 +1699,7 @@ data:
           "address": "001022b138896c4c5466ac86b24a9bbe249905c2",
           "public_key": "56915c1270bc8d9280a633e0be51647f62388a851318381614877ef2ed84a495",
           "chains": ["0001"],
-          "service_url": "servicer-001-pocket:42069",
+          "service_url": "http://servicer-001-pocket:50832",
           "staked_amount": "1000000000000",
           "paused_height": -1,
           "unstaking_height": -1,

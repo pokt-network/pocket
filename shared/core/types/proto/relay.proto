@@ -39,7 +39,7 @@ message JSONRPCPayload {
     // JSONRPC version 2 expects a field named "jsonrpc" with a value of "2.0".
     // See the JSONRPC spec in the following link for more details:
     //   https://www.jsonrpc.org/specification#request_object
-    string json_rpc = 2;
+    string jsonrpc = 2;
     string method = 3;
     // The parameters field can be empty, an array or a structure. It is on the server to decide which one
     // has been sent to it and whether the supplied value is valid.

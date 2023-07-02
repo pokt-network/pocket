@@ -32,6 +32,10 @@ const (
 	// validatorB maps to suffix ID 002 and receives in the Send test.
 	validatorB = "002"
 	chainId    = "0001"
+
+	servicerA = "001"
+	appA      = "000"
+	serviceA  = "0001"
 )
 
 type rootSuite struct {
@@ -45,6 +49,14 @@ type rootSuite struct {
 	// validator holds command results between runs and reports errors to the test suite
 	validator *validatorPod
 	// validatorA maps to suffix ID 001 of the kube pod that we use as our control agent
+
+	// servicerKeys is hydrated by the clientset with credentials for all servicers.
+	// servicerKeys maps servicer IDs to their private key as a hex string.
+	servicerKeys map[string]string
+
+	// appKeys is hydrated by the clientset with credentials for all apps.
+	// appKeys maps app IDs to their private key as a hex string.
+	appKeys map[string]string
 }
 
 func (s *rootSuite) Before() {
@@ -59,6 +71,18 @@ func (s *rootSuite) Before() {
 	s.validator = new(validatorPod)
 	s.clientset = clientSet
 	s.validatorKeys = vkmap
+
+	// ADDPR: use pocketk8s to populate
+	s.servicerKeys = map[string]string{
+		// 000 servicer NOT in session
+		"000": "acbca21f295caefdfe480ceba85f3fed31a50915162f94867f9c23d8f474f4c6d1130c5eb920af8edd5b6bfa39d33aa787f421c8ba0786de4ca4e7703553bb97",
+		// 001 servicer in session
+		"001": "eec4072b095acf60be9d6be4093b14a24e2ddb6e9d385d980a635815961d025856915c1270bc8d9280a633e0be51647f62388a851318381614877ef2ed84a495",
+	}
+
+	s.appKeys = map[string]string{
+		"000": "468cc03083d72f2440d3d08d12143b9b74cca9460690becaa2499a4f04fddaa805a25e527bf6f51676f61f2f1a96efaa748218ac82f54d3cdc55a4881389eb60",
+	}
 }
 
 // TestFeatures runs the e2e tests specified in any .features files in this directory
@@ -152,6 +176,57 @@ func (s *rootSuite) getPrivateKey(
 	validatorId string,
 ) cryptoPocket.PrivateKey {
 	privHexString := s.validatorKeys[validatorId]
+	privateKey, err := cryptoPocket.NewPrivateKey(privHexString)
+	require.NoErrorf(s, err, "failed to extract privkey")
+
+	return privateKey
+}
+
+func (s *rootSuite) TheUserSendsARelayToAServicer() {
+	// ADDPR: Verify the response: correct id, correct jsonrpc, and result should be greater than a known block number
+	relayContents := `{"jsonrpc": "2.0", "method": "eth_blockNumber"}`
+	servicerPrivateKey := s.getServicerPrivateKey(servicerA)
+	appPrivateKey := s.getAppPrivateKey(appA)
+
+	s.sendTrustlessRelay(relayContents, servicerPrivateKey.Address().String(), appPrivateKey.Address().String())
+}
+
+func (s *rootSuite) sendTrustlessRelay(relayPayload string, servicerAddr, appAddr string) {
+	args := []string{
+		"Servicer",
+		"Relay",
+		appAddr,
+		servicerAddr,
+		// IMPROVE: add ETH_Goerli as a chain/service to genesis
+		serviceA,
+		relayPayload,
+	}
+
+	// DISCUSS: does this need to be run from a client, i.e. not a validator, pod?
+	res, err := s.validator.RunCommand(args...)
+
+	fmt.Printf("Result: %s\n%s\n", res.Stdout, res.Stderr)
+	require.NoError(s, err)
+
+	s.validator.result = res
+}
+
+// getAppPrivateKey generates a new keypair from the application private hex key that we get from the clientset
+func (s *rootSuite) getAppPrivateKey(
+	appId string,
+) cryptoPocket.PrivateKey {
+	privHexString := s.appKeys[appId]
+	privateKey, err := cryptoPocket.NewPrivateKey(privHexString)
+	require.NoErrorf(s, err, "failed to extract privkey")
+
+	return privateKey
+}
+
+// getServicerPrivateKey generates a new keypair from the servicer private hex key that we get from the clientset
+func (s *rootSuite) getServicerPrivateKey(
+	servicerId string,
+) cryptoPocket.PrivateKey {
+	privHexString := s.servicerKeys[servicerId]
 	privateKey, err := cryptoPocket.NewPrivateKey(privHexString)
 	require.NoErrorf(s, err, "failed to extract privkey")
 

@@ -34,8 +34,8 @@ func (r *Relay) Validate() error {
 //  1. The JSONRPC field is set to "2.0" as per the JSONRPC spec requirement, and
 //  2. The Method field is not empty
 func (p *JSONRPCPayload) Validate() error {
-	if p.JsonRpc != jsonRpcVersion {
-		return fmt.Errorf("%w: %s", errInvalidJSONRPC, p.JsonRpc)
+	if p.Jsonrpc != jsonRpcVersion {
+		return fmt.Errorf("%w: %s", errInvalidJSONRPC, p.Jsonrpc)
 	}
 
 	// DISCUSS: do we need/want chain-specific validation? Potential for reusing the existing logic of Portal V2/pocket-go

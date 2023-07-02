@@ -110,6 +110,7 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 		RelayChain:        chain,
 		GeoZone:           geozone,
 		Signature:         body.Meta.Signature,
+		ApplicationAddress: body.Meta.ApplicationAddress,
 	}
 
 	relayRequest := buildJsonRPCRelayPayload(&body)
@@ -220,7 +221,7 @@ func (s *rpcServer) GetV1P2pStakedActorsAddressBook(ctx echo.Context, params Get
 func buildJsonRPCRelayPayload(body *RelayRequest) *coreTypes.Relay {
 	payload := &coreTypes.Relay_JsonRpcPayload{
 		JsonRpcPayload: &coreTypes.JSONRPCPayload{
-			JsonRpc: body.Payload.Jsonrpc,
+			Jsonrpc: body.Payload.Jsonrpc,
 			Method:  body.Payload.Method,
 		},
 	}

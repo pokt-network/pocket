@@ -50,6 +50,8 @@ func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]stri
 	return validatorKeysMap, nil
 }
 
+// ADDPR: add the following functions in a separate PR: FetchServicerPrivateKeys and FetchAppPrivateKeys
+
 func getNamespace() (string, error) {
 	_, err := os.Stat(kubernetesServiceAccountNamespaceFile)
 	if err == nil {
