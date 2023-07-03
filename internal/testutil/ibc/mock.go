@@ -18,7 +18,6 @@ func BaseIBCMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockIBCModule 
 	ibcMock.EXPECT().SetBus(bus).Return().AnyTimes()
 	ibcMock.EXPECT().GetBus().Return(bus).AnyTimes()
 	ibcMock.EXPECT().GetModuleName().Return(modules.IBCModuleName).AnyTimes()
-	ibcMock.EXPECT().HandleMessage(gomock.Any()).Return(nil).AnyTimes()
 
 	return ibcMock
 }
@@ -35,6 +34,9 @@ func BaseIBCHostMock(t gocuke.TestingT, busMock *mockModules.MockBus) *mockModul
 		unix := time.Now().Unix()
 		return uint64(unix)
 	})
+
+	prov := mockModules.NewMockProvableStore(ctrl)
+	hostMock.EXPECT().GetProvableStore(prov).AnyTimes()
 
 	return hostMock
 }
