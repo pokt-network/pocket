@@ -3,6 +3,7 @@ package ibc
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	ibcTypes "github.com/pokt-network/pocket/ibc/types"
@@ -14,37 +15,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHandleMessage_ErrorAlreadyInMempool(t *testing.T) {
-	// Prepare test data
-	_, tx := prepareUpdateMessage(t, []byte("key"), []byte("value"))
-	txProtoBytes, err := codec.GetCodec().Marshal(tx)
+func TestEmitMessage_MessageAddedToLocalMempool(t *testing.T) {
+	_, _, utilityMod, _, ibcMod := prepareEnvironment(t, 1, 0, 0, 0)
+	ibcHost := ibcMod.GetBus().GetIBCHost()
+
+	// update store
+	store, err := ibcHost.GetProvableStore("test")
 	require.NoError(t, err)
 
-	// Prepare the environment
-	_, _, utilityMod, _, _ := prepareEnvironment(t, 1, 0, 0, 0)
-
-	// Manually add the tx to the mempool
-	err = utilityMod.GetMempool().AddTx(txProtoBytes)
+	err = store.Set([]byte("key"), []byte("value"))
 	require.NoError(t, err)
 
-	// Error on having a duplciate transaction
-	err = utilityMod.HandleTransaction(txProtoBytes)
-	require.Error(t, err)
-	require.EqualError(t, err, coreTypes.ErrDuplicateTransaction().Error())
+	mempool := utilityMod.GetMempool()
+	require.Len(t, mempool.GetAll(), 1)
 }
 
-func TestHandleMessage_ErrorAlreadyCommitted(t *testing.T) {
-	// Prepare the environment
-	_, _, utilityMod, persistenceMod, _ := prepareEnvironment(t, 0, 0, 0, 0)
-	idxTx := prepareIndexedMessage(t, persistenceMod.GetTxIndexer())
-
-	// Error on having an indexed transaction
-	err := utilityMod.HandleTransaction(idxTx.Tx)
-	require.Error(t, err)
-	require.EqualError(t, err, coreTypes.ErrTransactionAlreadyCommitted().Error())
-}
-
-func TestHandleMessage_BasicValidation_Message(t *testing.T) {
+func TestIBCMessage_BasicValidation_Message(t *testing.T) {
 	testCases := []struct {
 		name     string
 		msg      *ibcTypes.IBCMessage
@@ -89,7 +75,7 @@ func TestHandleMessage_BasicValidation_Message(t *testing.T) {
 	}
 }
 
-func TestHandleMessage_BasicValidation_Transaction(t *testing.T) {
+func TestIBCMessage_BasicValidation_Transaction(t *testing.T) {
 	// Prepare the environment
 	_, _, utilityMod, _, _ := prepareEnvironment(t, 1, 0, 0, 0)
 
@@ -213,6 +199,18 @@ func TestHandleMessage_BasicValidation_Transaction(t *testing.T) {
 			},
 			expected: coreTypes.ErrSignatureVerificationFailed(),
 		},
+		{
+			name: "Invalid Transaction: Invalid Message",
+			tx: &coreTypes.Transaction{
+				Msg:   nil,
+				Nonce: fmt.Sprintf("%d", crypto.GetNonce()),
+				Signature: &coreTypes.Signature{
+					PublicKey: privKey.PublicKey().Bytes(),
+					Signature: []byte("bytes in place for signature but not actually valid"),
+				},
+			},
+			expected: coreTypes.ErrDecodeMessage(fmt.Errorf("proto: invalid empty type URL")),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -221,12 +219,44 @@ func TestHandleMessage_BasicValidation_Transaction(t *testing.T) {
 			require.NoError(t, err)
 			err = utilityMod.HandleTransaction(txProtoBytes)
 			if tc.expected != nil {
-				require.EqualError(t, err, tc.expected.Error())
+				errMsg := err.Error()
+				errMsg = strings.Replace(errMsg, string('\u00a0'), " ", 1)
+				require.Equal(t, errMsg, tc.expected.Error())
 			} else {
 				require.NoError(t, err)
 			}
 		})
 	}
+}
+
+func TestHandleMessage_ErrorAlreadyInMempool(t *testing.T) {
+	// Prepare test data
+	_, tx := prepareUpdateMessage(t, []byte("key"), []byte("value"))
+	txProtoBytes, err := codec.GetCodec().Marshal(tx)
+	require.NoError(t, err)
+
+	// Prepare the environment
+	_, _, utilityMod, _, _ := prepareEnvironment(t, 1, 0, 0, 0)
+
+	// Manually add the tx to the mempool
+	err = utilityMod.GetMempool().AddTx(txProtoBytes)
+	require.NoError(t, err)
+
+	// Error on having a duplciate transaction
+	err = utilityMod.HandleTransaction(txProtoBytes)
+	require.Error(t, err)
+	require.EqualError(t, err, coreTypes.ErrDuplicateTransaction().Error())
+}
+
+func TestHandleMessage_ErrorAlreadyCommitted(t *testing.T) {
+	// Prepare the environment
+	_, _, utilityMod, persistenceMod, _ := prepareEnvironment(t, 0, 0, 0, 0)
+	idxTx := prepareIndexedMessage(t, persistenceMod.GetTxIndexer())
+
+	// Error on having an indexed transaction
+	err := utilityMod.HandleTransaction(idxTx.Tx)
+	require.Error(t, err)
+	require.EqualError(t, err, coreTypes.ErrTransactionAlreadyCommitted().Error())
 }
 
 func TestHandleMessage_GetIndexedMessage(t *testing.T) {
