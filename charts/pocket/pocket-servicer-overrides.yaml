@@ -1,6 +1,8 @@
 config:
   servicer:
     enabled: true
+    # The address and public_key fields are taken from the genesis section of the config file:
+    #   https://github.com/pokt-network/pocket/blob/40f325305c1756bbfd069bf139fa67545419981c/build/localnet/manifests/configs.yaml#L1699
     address: "001022b138896c4c5466ac86b24a9bbe249905c2"
     public_key: "56915c1270bc8d9280a633e0be51647f62388a851318381614877ef2ed84a495"
     services:
