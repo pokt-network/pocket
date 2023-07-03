@@ -45,7 +45,8 @@ message JSONRPCPayload {
     // has been sent to it and whether the supplied value is valid.
     // See the JSONRPC spec in the following link for more details:
     //   https://www.jsonrpc.org/specification#parameter_structures
-    bytes parameters = 4;
+    // INCOMPLETE: decide the type for params field, considering the above description and interaction with OpenAPI
+    repeated string params = 4;
     map<string, string> headers = 5;
 }
 

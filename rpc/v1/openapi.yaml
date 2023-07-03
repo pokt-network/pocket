@@ -1706,9 +1706,11 @@ components:
           type: string
         method:
           type: string
-        parameters:
-          type: string
-          format: byte
+        # ADDPR: DISCUSS: params can be anything: should we use AnyValue for it?
+        params:
+          type: array
+          items:
+            type: string
         headers:
           $ref: "#/components/schemas/Headers"
     Pool:

@@ -88,7 +88,10 @@ func (s *rootSuite) Before() {
 // TestFeatures runs the e2e tests specified in any .features files in this directory
 // * This test suite assumes that a LocalNet is running that can be accessed by `kubectl`
 func TestFeatures(t *testing.T) {
-	gocuke.NewRunner(t, &rootSuite{}).Path("*.feature").Run()
+	runner := gocuke.NewRunner(t, &rootSuite{}).Path("*.feature")
+	// DISCUSS: is there a better way to make gocuke pickup the balance, i.e. a hexadecimal, as a string in function argument?
+	runner.Step(`^the\srelay\sresponse\scontains\s([[:alnum:]]+)$`, (*rootSuite).TheRelayResponseContains)
+	runner.Run()
 }
 
 // InitializeScenario registers step regexes to function handlers
@@ -182,13 +185,26 @@ func (s *rootSuite) getPrivateKey(
 	return privateKey
 }
 
-func (s *rootSuite) TheUserSendsARelayToAServicer() {
-	// ADDPR: Verify the response: correct id, correct jsonrpc, and result should be greater than a known block number
-	relayContents := `{"jsonrpc": "2.0", "method": "eth_blockNumber"}`
+// An Application requests the account balance of a specific address at a specific height
+func (s *rootSuite) TheApplicationSendsARelayToAServicer() {
+	// ADDPR: Add a servicer staked for the Ethereum RelayChain
+	// ADDPR: Verify the response: correct id, correct jsonrpc, and the returned balance
+	// ADDPR: move the method and account to the feature file
+
+	// ETH
+	// Account: 0x8315177aB297bA92A06054cE80a67Ed4DBd7ed3a   (Arbitrum Bridge)
+	// Balance: 1,160,126.46817237178258965 ETH  = 0xf5aa94f49d4fd1f8dcd2
+	// BlockNumber: 17605670 = 0x10CA426
+	checkBalanceRelay := `{"method": "eth_getBalance", "params": ["0x8315177aB297bA92A06054cE80a67Ed4DBd7ed3a", "0x10CA426"], "id": "1", "jsonrpc": "2.0"}`
+
 	servicerPrivateKey := s.getServicerPrivateKey(servicerA)
 	appPrivateKey := s.getAppPrivateKey(appA)
 
-	s.sendTrustlessRelay(relayContents, servicerPrivateKey.Address().String(), appPrivateKey.Address().String())
+	s.sendTrustlessRelay(checkBalanceRelay, servicerPrivateKey.Address().String(), appPrivateKey.Address().String())
+}
+
+func (s *rootSuite) TheRelayResponseContains(arg1 string) {
+	require.Contains(s, s.validator.result.Stdout, arg1)
 }
 
 func (s *rootSuite) sendTrustlessRelay(relayPayload string, servicerAddr, appAddr string) {
@@ -205,7 +221,6 @@ func (s *rootSuite) sendTrustlessRelay(relayPayload string, servicerAddr, appAdd
 	// DISCUSS: does this need to be run from a client, i.e. not a validator, pod?
 	res, err := s.validator.RunCommand(args...)
 
-	fmt.Printf("Result: %s\n%s\n", res.Stdout, res.Stderr)
 	require.NoError(s, err)
 
 	s.validator.result = res

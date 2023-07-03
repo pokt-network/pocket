@@ -105,11 +105,11 @@ func (s *rpcServer) PostV1ClientRelay(ctx echo.Context) error {
 		Name: body.Meta.Geozone.Name,
 	}
 	relayMeta := &coreTypes.RelayMeta{
-		BlockHeight:       body.Meta.BlockHeight,
-		ServicerPublicKey: body.Meta.ServicerPubKey,
-		RelayChain:        chain,
-		GeoZone:           geozone,
-		Signature:         body.Meta.Signature,
+		BlockHeight:        body.Meta.BlockHeight,
+		ServicerPublicKey:  body.Meta.ServicerPubKey,
+		RelayChain:         chain,
+		GeoZone:            geozone,
+		Signature:          body.Meta.Signature,
 		ApplicationAddress: body.Meta.ApplicationAddress,
 	}
 
@@ -230,8 +230,9 @@ func buildJsonRPCRelayPayload(body *RelayRequest) *coreTypes.Relay {
 		payload.JsonRpcPayload.Id = []byte(*body.Payload.Id)
 	}
 
-	if body.Payload.Parameters != nil {
-		payload.JsonRpcPayload.Parameters = *body.Payload.Parameters
+	if body.Payload.Params != nil {
+		// ADDPR: Need a decision and implementation on Params field and conversion from rpc to proto
+		payload.JsonRpcPayload.Params = *body.Payload.Params
 	}
 
 	if body.Payload.Headers != nil {
