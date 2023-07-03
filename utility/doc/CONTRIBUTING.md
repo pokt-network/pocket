@@ -1,6 +1,6 @@
 # Contribution guide
 
-- For reference, [here is the detailed version](https://github.com/pokt-network/pocket/blob/main/utility/doc/E2E_FEATURE_PATH_TEMPLATE.md#e2e-feature-implementation)
+- For reference, [here is the detailed version](https://github.com/pokt-network/pocket/blob/main/utility/doc/E2E_FEATURE_PATH_TEMPLATE.md#e2e-feature-implementation).
   
 - This doc assumes you know exactly what to work on, i.e. you are assigned [an issue with details hashed out](https://github.com/pokt-network/pocket/issues/754).
 
