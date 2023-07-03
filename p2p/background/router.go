@@ -342,7 +342,7 @@ func (rtr *backgroundRouter) bootstrap(ctx context.Context) error {
 }
 
 // topicValidator is used in conjunction with libp2p-pubsub's notion of "topic
-// validaton". It is usefed for arbitrary and concurrent pre-propagation validation
+// validaton". It is used for arbitrary and concurrent pre-propagation validation
 // of messages.
 //
 // (see: https://github.com/libp2p/specs/tree/master/pubsub#topic-validation
