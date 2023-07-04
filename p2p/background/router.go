@@ -49,6 +49,7 @@ type backgroundRouter struct {
 	host libp2pHost.Host
 	// cancelReadSubscription is the cancel function for the context which is
 	// monitored in the `#readSubscription()` go routine. Call to terminate it.
+	// only one read subscription exists per router at any point in time
 	cancelReadSubscription context.CancelFunc
 
 	// Fields below are assigned during creation via `#setupDependencies()`.
@@ -215,6 +216,7 @@ func (rtr *backgroundRouter) setupUnicastRouter() error {
 }
 
 func (rtr *backgroundRouter) setupDependencies(ctx context.Context, cfg *config.BackgroundConfig) error {
+	// NB: The order in which the internal components are setup below is important
 	if err := rtr.setupUnicastRouter(); err != nil {
 		return err
 	}
@@ -266,6 +268,7 @@ func (rtr *backgroundRouter) setupPeerstore(
 	return nil
 }
 
+// setupPeerDiscovery sets up the Kademlia Distributed Hash Table (DHT)
 func (rtr *backgroundRouter) setupPeerDiscovery(ctx context.Context) (err error) {
 	dhtMode := dht.ModeAutoServer
 	// NB: don't act as a bootstrap node in peer discovery in client debug mode
@@ -277,6 +280,7 @@ func (rtr *backgroundRouter) setupPeerDiscovery(ctx context.Context) (err error)
 	return err
 }
 
+// setupPubsub sets up a new gossip sub topic using libp2p
 func (rtr *backgroundRouter) setupPubsub(ctx context.Context) (err error) {
 	// TECHDEBT(#730): integrate libp2p tracing via `pubsub.WithEventTracer()`.
 
@@ -345,7 +349,7 @@ func (rtr *backgroundRouter) bootstrap(ctx context.Context) error {
 }
 
 // topicValidator is used in conjunction with libp2p-pubsub's notion of "topic
-// validaton". It is usefed for arbitrary and concurrent pre-propagation validation
+// validaton". It is used for arbitrary and concurrent pre-propagation validation
 // of messages.
 //
 // (see: https://github.com/libp2p/specs/tree/master/pubsub#topic-validation
@@ -371,6 +375,8 @@ func (rtr *backgroundRouter) topicValidator(_ context.Context, _ libp2pPeer.ID, 
 	return true
 }
 
+// readSubscription is a while loop for receiving and handling messages from the
+// subscription. It is intended to be called as a goroutine.
 func (rtr *backgroundRouter) readSubscription(ctx context.Context) {
 	for {
 		if err := ctx.Err(); err != nil {
