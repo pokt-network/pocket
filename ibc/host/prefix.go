@@ -17,5 +17,8 @@ func ApplyPrefix(prefix coreTypes.CommitmentPrefix, path string) coreTypes.Commi
 
 // RemovePrefix removes the prefix from the provided CommitmentPath returning a path string
 func RemovePrefix(prefix coreTypes.CommitmentPrefix, path coreTypes.CommitmentPath) string {
+    if len(path) < len(prefix)+len(delimiter) {
+        return ""
+    }
 	return string(path[len(prefix)+len(delimiter):])
 }
