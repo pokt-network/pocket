@@ -40,4 +40,5 @@ type Bus interface {
 	// Submodules
 	GetTreeStore() TreeStoreModule
 	GetIBCHost() IBCHostModule
+	GetBulkStoreCacher() BulkStoreCacher
 }

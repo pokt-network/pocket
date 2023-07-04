@@ -18,8 +18,6 @@ type ibcHost struct {
 
 	cfg    *configs.IBCHostConfig
 	logger *modules.Logger
-
-	storeManager modules.IBCStoreManager
 }
 
 func Create(bus modules.Bus, config *configs.IBCHostConfig, options ...modules.IBCHostOption) (modules.IBCHostModule, error) {
@@ -44,8 +42,14 @@ func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options .
 	}
 	h.logger.Info().Msg("🛰️ creating IBC host 🛰️")
 	bus.RegisterModule(h)
-	sm := store.NewStoreManager(h.GetBus(), h.cfg.StoresDir, h.cfg.PrivateKey)
-	h.storeManager = sm
+	_, err := store.Create(h.GetBus(),
+		store.WithLogger(h.logger),
+		store.WithStoresDir(h.cfg.StoresDir),
+		store.WithPrivateKey(h.cfg.PrivateKey),
+	)
+	if err != nil {
+		return nil, err
+	}
 	return h, nil
 }
 
@@ -62,10 +66,10 @@ func (h *ibcHost) GetTimestamp() uint64 {
 // mempools ready for inclusion in the next block to transition the IBC store state tree.
 // Any operations will ensure the CommitmentPrefix is prepended to the key if not present already.
 func (h *ibcHost) GetProvableStore(name string) (modules.ProvableStore, error) {
-	if err := h.storeManager.AddStore(name); err != nil && !errors.Is(err, coreTypes.ErrIBCStoreAlreadyExists(name)) {
+	if err := h.GetBus().GetBulkStoreCacher().AddStore(name); err != nil && !errors.Is(err, coreTypes.ErrIBCStoreAlreadyExists(name)) {
 		return nil, err
 	}
-	provableStore, err := h.storeManager.GetStore(name)
+	provableStore, err := h.GetBus().GetBulkStoreCacher().GetStore(name)
 	if err != nil {
 		return nil, err
 	}
