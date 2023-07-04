@@ -66,8 +66,8 @@ func (s *storeManager) RemoveStore(name string) error {
 	return nil
 }
 
-// CacheAllEntries caches all the entries for all stores in the storeManager
-func (s *storeManager) CacheAllEntries() error {
+// FlushAllEntries caches all the entries for all stores in the storeManager
+func (s *storeManager) FlushAllEntries() error {
 	s.m.Lock()
 	defer s.m.Unlock()
 	disk, err := kvstore.NewKVStore(cacheDirs(s.storesDir))
@@ -75,7 +75,7 @@ func (s *storeManager) CacheAllEntries() error {
 		return err
 	}
 	for _, store := range s.stores {
-		if err := store.CacheEntries(disk); err != nil {
+		if err := store.FlushEntries(disk); err != nil {
 			return err
 		}
 	}

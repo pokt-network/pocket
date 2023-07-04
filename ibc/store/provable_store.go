@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	ics23 "github.com/cosmos/ics23/go"
 	"github.com/pokt-network/pocket/ibc/path"
@@ -15,11 +16,9 @@ import (
 
 var _ modules.ProvableStore = &provableStore{}
 
-// CachedEntry represents a local change made to the IBC store prior to it being
-// committed to the state tree. These should be written to disk in the to prevent a
+// cachedEntry represents a local change made to the IBC store prior to it being
+// committed to the state tree. These are written to disk in the to prevent a
 // loss of data and pruned when included in the state tree
-// written to disk as follows:
-// "{height}/{prefixedKey}" => value
 type cachedEntry struct {
 	storeName   string
 	height      uint64
@@ -28,18 +27,21 @@ type cachedEntry struct {
 }
 
 // prepare returns the key and value to be written to disk
+// "{height}/{prefixedKey}" => value
 func (c *cachedEntry) prepare() (key, value []byte) {
 	return []byte(fmt.Sprintf("%s/%d/%s", c.storeName, c.height, string(c.prefixedKey))), c.value
 }
 
-// provableStore is a struct that interfaces with the PostgresDB instance
-// obtained from Persistence. It is used to Get/Set/Delete the keys in the
-// IBC state tree, in doing so it will trigger the creation of
+// provableStore is a struct that interfaces with the persistence layer to
+// Get/Set/Delete the keys in the IBC state tree, in doing so it will trigger
+// the creation of IBC messages that are broadcasted through the network and
+// included in the mempool/next block to change the state of the IBC tree
 type provableStore struct {
+	m      sync.Mutex
 	bus    modules.Bus                // used to interact with persistence (passed from IBCHost)
 	name   string                     // store name in storeManager
 	prefix coreTypes.CommitmentPrefix // []byte(name)
-	cache  []*cachedEntry             // in-memory cache of local changes to be written to disk
+	cache  map[string]*cachedEntry    // in-memory cache of local changes to be written to disk
 }
 
 // newProvableStore returns a new instance of provableStore with the bus and prefix provided
@@ -48,7 +50,7 @@ func newProvableStore(bus modules.Bus, prefix coreTypes.CommitmentPrefix) *prova
 		bus:    bus,
 		name:   string(prefix),
 		prefix: prefix,
-		cache:  make([]*cachedEntry, 0),
+		cache:  make(map[string]*cachedEntry, 0),
 	}
 }
 
@@ -134,12 +136,14 @@ func (p *provableStore) Set(key, value []byte) error {
 	if err := rwCtx.SetIBCStoreEntry(prefixed, value); err != nil {
 		return err
 	}
-	p.cache = append(p.cache, &cachedEntry{
+	p.m.Lock()
+	defer p.m.Unlock()
+	p.cache[string(prefixed)] = &cachedEntry{
 		storeName:   p.name,
 		height:      uint64(currHeight),
 		prefixedKey: prefixed,
 		value:       value,
-	})
+	}
 	// TODO(#854): Implement emit functions
 	// return emitUpdateStoreEvent(p.prefix, key, value)
 	return nil
@@ -159,12 +163,14 @@ func (p *provableStore) Delete(key []byte) error {
 	if err := rwCtx.SetIBCStoreEntry(prefixed, nil); err != nil {
 		return err
 	}
-	p.cache = append(p.cache, &cachedEntry{
+	p.m.Lock()
+	defer p.m.Unlock()
+	p.cache[string(prefixed)] = &cachedEntry{
 		storeName:   p.name,
 		height:      uint64(currHeight),
 		prefixedKey: prefixed,
 		value:       nil,
-	})
+	}
 	// TODO(#854): Implement emit functions
 	// return emitPruneStoreEvent(p.prefix, key)
 	return nil
@@ -183,20 +189,24 @@ func (p *provableStore) Root() ics23.CommitmentRoot {
 	return nil
 }
 
-// CacheEntries writes all local changes to disk and clears the in-memory cache
-func (p *provableStore) CacheEntries(store kvstore.KVStore) error {
+// FlushEntries writes all local changes to disk and clears the in-memory cache
+func (p *provableStore) FlushEntries(store kvstore.KVStore) error {
+	p.m.Lock()
+	defer p.m.Unlock()
 	for _, entry := range p.cache {
 		key, value := entry.prepare()
 		if err := store.Set(key, value); err != nil {
 			return err
 		}
+		delete(p.cache, string(entry.prefixedKey))
 	}
-	p.cache = make([]*cachedEntry, 0)
 	return nil
 }
 
 // PruneCache removes all entries from the cache at the given height
 func (p *provableStore) PruneCache(store kvstore.KVStore, height uint64) error {
+	p.m.Lock()
+	defer p.m.Unlock()
 	keys, _, err := store.GetAll([]byte(fmt.Sprintf("%s/%d", p.name, height)), false)
 	if err != nil {
 		return err
@@ -211,23 +221,25 @@ func (p *provableStore) PruneCache(store kvstore.KVStore, height uint64) error {
 
 // RestoreCache loads all entries from disk into the cache
 func (p *provableStore) RestoreCache(store kvstore.KVStore) error {
+	p.m.Lock()
+	defer p.m.Unlock()
 	keys, values, err := store.GetAll(p.prefix, false)
 	if err != nil {
 		return err
 	}
-	for i := 0; i < len(keys); i++ {
-		parts := strings.SplitN(string(keys[i]), "/", 2) // name, heightStr, prefixedKeyStr
+	for i, key := range keys {
+		parts := strings.SplitN(string(key), "/", 2) // name, heightStr, prefixedKeyStr
 		height, err := strconv.ParseUint(parts[1], 10, 64)
 		if err != nil {
 			return err
 		}
 		value := values[i]
-		p.cache = append(p.cache, &cachedEntry{
+		p.cache[parts[2]] = &cachedEntry{
 			storeName:   parts[0],
 			height:      height,
 			prefixedKey: []byte(parts[2]),
 			value:       value,
-		})
+		}
 	}
 	return nil
 }

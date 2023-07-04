@@ -212,7 +212,7 @@ type IBCStoreManager interface {
 	AddStore(name string) error
 	GetStore(name string) (ProvableStore, error)
 	RemoveStore(name string) error
-	CacheAllEntries() error
+	FlushAllEntries() error
 	PruneCaches(height uint64) error
 	RestoreCaches() error
 }
@@ -228,7 +228,7 @@ type ProvableStore interface {
 	Delete(key []byte) error
 	GetCommitmentPrefix() coreTypes.CommitmentPrefix
 	Root() ics23.CommitmentRoot
-	CacheEntries(kvstore.KVStore) error
+	FlushEntries(kvstore.KVStore) error
 	PruneCache(store kvstore.KVStore, height uint64) error
 	RestoreCache(kvstore.KVStore) error
 }

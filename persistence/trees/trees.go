@@ -355,8 +355,7 @@ func (t *treeStore) updateIBCTree(keys, values [][]byte) error {
 	if len(keys) != len(values) {
 		return fmt.Errorf("keys and values must be the same length")
 	}
-	for i := 0; i < len(keys); i++ {
-		key := keys[i]
+	for i, key := range keys {
 		value := values[i]
 		if value == nil {
 			if err := t.merkleTrees[IBCTreeName].tree.Delete(key); err != nil {

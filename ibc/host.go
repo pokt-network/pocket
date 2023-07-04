@@ -28,7 +28,7 @@ func (h *host) GetTimestamp() uint64 {
 // GetProvableStore returns a copy of the IBC state tree where all operations observed by
 // this specific ibc light client were applied to its ephemeral (in memory) state and have not
 // yet been included in the next block. The aggregation of all light client-provable stores
-// propagated throughout the network are happen validated by the block proposer when reaping
+// propagated throughout the network are validated by the block proposer when reaping
 // the mempool, and lead to a valid on-chain state transition when consensus is reached.
 // TODO(#854): Implement this
 func (h *host) GetProvableStore(prefix coreTypes.CommitmentPrefix) (modules.ProvableStore, error) {

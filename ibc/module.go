@@ -86,7 +86,7 @@ func (m *ibcModule) GetModuleName() string {
 	return modules.IBCModuleName
 }
 
-// HandleMessage accepts a generic IBC message and routes it to the specific handler
+// HandleMessage accepts a generic IBC message and routes it to the utility mempool
 func (m *ibcModule) HandleMessage(message *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()

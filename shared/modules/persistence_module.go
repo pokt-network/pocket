@@ -145,6 +145,9 @@ type PersistenceWriteContext interface {
 	SetFlag(paramName string, value any, enabled bool) error
 
 	// IBC Operations
+	// SetIBCStoreEntry sets the key-value pair in the ibc_entries table at the current height the
+	// key-value pairs represent the same key-value pairings in the IBC state tree. This table is
+	// used for data retrieval purposes and to update the state tree from the mempool of IBC transactions.
 	SetIBCStoreEntry(key, value []byte) error
 
 	// Relay Operations
@@ -241,6 +244,7 @@ type PersistenceReadContext interface {
 	GetBytesFlag(paramName string, height int64) ([]byte, bool, error)
 
 	// IBC Queries
+	// GetIBCStoreEntry returns the value of the key at the given height from the ibc_entries table
 	GetIBCStoreEntry(key []byte, height int64) ([]byte, error)
 }
 
