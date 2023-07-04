@@ -124,7 +124,7 @@ func (m *bus) GetIBCModule() modules.IBCModule {
 }
 
 // getModuleFromRegistry is a helper function to get a module from the registry that handles errors and casting via generics
-func getModuleFromRegistry[T modules.Module](m *bus, moduleName string) T {
+func getModuleFromRegistry[T modules.Submodule](m *bus, moduleName string) T {
 	mod, err := m.modulesRegistry.GetModule(moduleName)
 	if err != nil {
 		logger.Global.Logger.Fatal().
