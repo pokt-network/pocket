@@ -240,8 +240,8 @@ func (rtr *backgroundRouter) setupDependencies(ctx context.Context, cfg *config.
 	if err := rtr.setupPeerstore(
 		ctx,
 		cfg.PeerstoreProvider,
-		 cfg.CurrentHeightProvider,
-	 ); err != nil {
+		cfg.CurrentHeightProvider,
+	); err != nil {
 		return fmt.Errorf("setting up peerstore: %w", err)
 	}
 	return nil
