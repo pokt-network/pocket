@@ -238,7 +238,6 @@ func (s *servicer) validateRelayChainSupport(relayChain *coreTypes.Identifiable,
 		return fmt.Errorf("error decoding servicer address %s: %w", s.config.Address, err)
 	}
 
-	// DISCUSS: should we update the GetServicer signature to take a string instead? alternatively, we could use []byte as type of servicer address
 	servicer, err := readCtx.GetServicer(servicerAddrBz, currentHeight)
 	if err != nil {
 		return fmt.Errorf("error reading servicer from persistence: %w", err)
