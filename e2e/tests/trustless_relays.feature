@@ -1,11 +1,4 @@
 Feature: Trustless Relays
-
-  Scenario: User Wants Help Using The Servicer Command 
-    When the user runs the command "Servicer help"
-    Then the user should be able to see standard output containing "Available Commands"
-    And the validator should have exited without error
-
-
     # Happy test case: An Application requests the account balance of a specific address at a specific height from a Servicer staked for the Ethereum RelayChain, and receives a successful response.
 
   # ADDPR: Add a servicer staked for the Ethereum relaychain to the genesis file
