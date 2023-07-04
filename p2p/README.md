@@ -72,6 +72,8 @@ See [`raintree/router.go`](./raintree/router.go) for the specific implementation
 ## Module Architecture
 
 ### Legends
+
+_NOTE: the architecture design language is based on [UML](https://www.uml-diagrams.org/) but limited by mermaid's constraints (see: [component](https://www.uml-diagrams.org/component-diagrams.html) and [class](https://www.uml-diagrams.org/class-diagrams-overview.html) diagrams)._
 ```mermaid
 flowchart
 subgraph Legend
@@ -89,8 +91,8 @@ classDiagram
 class ConcreteType {
   +ExportedField
   -unexportedField
-  +ExportedMethod(argType) returnType
-  -unexportedMethod()
+  +ExportedMethod(...args) (...returnTypes)
+  -unexportedMethod(...args) (...returnTypes)
 }
 
 class InterfaceType {
@@ -108,7 +110,7 @@ ConcreteType ..*  "(cardinality)" OtherType : Indirect (via interface)
 
 ### P2P Module / Router Decoupling
 
-The P2P module encapsulates the `RaiTreeRouter` and `BackgroundRouter` submodules.
+The P2P module encapsulates the `RainTreeRouter` and `BackgroundRouter` submodules.
 The P2P module internally refers to these as the `stakedActorRouter` and `unstakedActorRouter`, respectively.
 
 Depending on the necessary routing scheme (unicast / broadcast) and whether the peers involved are staked actors, a node will use one or both of these routers.
@@ -337,6 +339,8 @@ Messages MUST be deduplicated before broadcasting their respective event over th
 
 The responsibility of deduplication is encapsulated by the P2P module, As such duplicate messages may come from multiple routers in some of these scenarios.
 
+The `NondeDeduper` state is not persisted outside of memory and therefore is cleared during node restarts.
+
 ```mermaid
 classDiagram
     class RainTreeMessage {
@@ -419,6 +423,10 @@ classDiagram
     p2pModule --o PocketEnvelope
     p2pModule --* NonceDeduper
 ```
+
+#### Configuration
+
+The size of the `NonceDeduper` queue is configurable via the `P2PConfig.MaxNonces` field.
 
 ### Peer Discovery
 

@@ -226,7 +226,7 @@ func createMockBus(
 			if readWriteWaitGroup != nil {
 				readWriteWaitGroup.Done()
 			}
-		}).AnyTimes() // TODO: specific times
+		}).AnyTimes() // TECHDEBT: assert number of times. Consider `waitForEventsInternal` or similar as in consensus.
 	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
 	return mockBus
 }
