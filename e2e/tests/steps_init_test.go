@@ -109,6 +109,17 @@ func (s *rootSuite) Before() {
 // * This test suite assumes that a LocalNet is running that can be accessed by `kubectl`
 func TestFeatures(t *testing.T) {
 	runner := gocuke.NewRunner(t, &rootSuite{}).Path("*.feature")
+	runTests(runner)
+}
+
+// TestRelay builds a test runner which only includes relay tests
+func TestRelay(t *testing.T) {
+	runner := gocuke.NewRunner(t, &rootSuite{}).Path("*_relays.feature")
+	runTests(runner)
+}
+
+// runTests adds steps that need to be registered manually and runs the tests
+func runTests(runner *gocuke.Runner) {
 	// DISCUSS: is there a better way to make gocuke pickup the balance, i.e. a hexadecimal, as a string in function argument?
 	runner.Step(`^the\srelay\sresponse\scontains\s([[:alnum:]]+)$`, (*rootSuite).TheRelayResponseContains)
 	runner.Run()

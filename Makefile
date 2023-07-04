@@ -347,6 +347,11 @@ test_e2e: kubectl_check ## Run all E2E tests
 	echo "IMPROVE(#759): Make sure you ran 'make localnet_up' in case this fails with infrastructure related errors."
 	go test ${VERBOSE_TEST} -count=1 -tags=test,e2e ./e2e/tests/...
 
+.PHONY: test_e2e_relay
+test_e2e_relay: kubectl_check
+	echo "IMPROVE(#759): Make sure you ran 'make localnet_up' in case this fails with infrastructure related errors."
+	go test ${VERBOSE_TEST} -count=1 -tags=test,e2e -run TestRelay ./e2e/tests/...
+
 .PHONY: test_all_with_json_coverage
 test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, output results & coverage into json & coverage files
 	go test -p=1 -count=1 -tags=test -json ./... -covermode=count -coverprofile=coverage.out | tee test_results.json | jq
