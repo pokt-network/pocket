@@ -71,9 +71,22 @@ See [`raintree/router.go`](./raintree/router.go) for the specific implementation
 
 ## Module Architecture
 
+### Architecture Design Language
+
+The architecture design language expressed in this documentation is based on [UML](https://www.uml-diagrams.org/).
+Due to limitations in the current version of mermaid, class diagrams are much more adherant to the UML component specification.
+Component diagrams however are much more loosely inspired by their UML counterparts.
+
+Regardless, each architecture diagram should be accompanied by a legend which covers all the design language features used to provide disambiguation. 
+
+References:
+- [Class Diagrams](https://www.uml-diagrams.org/class-diagrams-overview.html)
+- [Component Diagrams](https://www.uml-diagrams.org/component-diagrams.html)
+
+  _NOTE: mermaid does not support ports, interfaces, ... in component diagrams ("flowcharts)._
+
 ### Legends
 
-_NOTE: the architecture design language is based on [UML](https://www.uml-diagrams.org/) but limited by mermaid's constraints (see: [component](https://www.uml-diagrams.org/component-diagrams.html) and [class](https://www.uml-diagrams.org/class-diagrams-overview.html) diagrams)._
 ```mermaid
 flowchart
 subgraph Legend
@@ -91,13 +104,13 @@ classDiagram
 class ConcreteType {
   +ExportedField
   -unexportedField
-  +ExportedMethod(...args) (...returnTypes)
-  -unexportedMethod(...args) (...returnTypes)
+  +ExportedMethod(...argTypes) (...returnTypes)
+  -unexportedMethod(...argTypes) (...returnTypes)
 }
 
 class InterfaceType {
     <<interface>>
-    +Method(argType) (returnType1, returnType2)
+    +Method(...argTypes) (...returnTypes)
 }
 
 ConcreteType --|> InterfaceType : Interface realization
@@ -107,6 +120,45 @@ ConcreteType --o OtherType : Composition
 ConcreteType --* OtherType : Aggregatation
 ConcreteType ..*  "(cardinality)" OtherType : Indirect (via interface)
 ```
+
+#### Interface Realization
+
+> Realization is a specialized abstraction relationship between two sets of model elements, one representing a specification (the supplier) and the other represents an implementation of the latter (the client).
+
+> Realization can be used to model stepwise refinement, optimizations, transformations, templates, model synthesis, framework composition, etc.
+
+_(see: [UML Realization](https://www.uml-diagrams.org/realization.html))_
+
+#### Direct Usage
+
+> Dependency is a directed relationship which is used to show that some UML element or a set of elements requires, needs or depends on other model elements for specification or implementation. Because of this, dependency is called a supplier - client relationship, where supplier provides something to the client, and thus the client is in some sense incomplete while semantically or structurally dependent on the supplier element(s). Modification of the supplier may impact the client elements.
+
+> Usage is a dependency in which one named element (client) requires another named element (supplier) for its full definition or implementation.
+
+_(see: [UML Dependency](https://www.uml-diagrams.org/dependency.html))_
+
+#### Composition
+
+> A "strong" form of aggregation
+
+> If a composite (whole) is deleted, all of its composite parts are "normally" deleted with it.
+
+_(see: [UML Shared composition](https://www.uml-diagrams.org/composition.html))_
+
+#### Aggregation
+
+> A "weak" form of composition
+
+> Shared part could be included in several composites, and if some or all of the composites are deleted, shared part may still exist.
+
+_(see: [UML Shared aggregation](https://www.uml-diagrams.org/aggregation.html))_
+
+#### Cardinality
+
+Cardinality indicates the number or range of simultaneous instances of the classifier at the "cardinality-side" association end that are associated with the classifier at the other end of the given association type.
+
+_(see: [UML Association](https://www.uml-diagrams.org/association.html#association-end))_
+
 
 ### P2P Module / Router Decoupling
 
