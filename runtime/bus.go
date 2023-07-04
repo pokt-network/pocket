@@ -51,6 +51,12 @@ func (m *bus) RegisterModule(module modules.Module) {
 }
 
 func (m *bus) PublishEventToBus(e *messaging.PocketEnvelope) {
+	// Check if channel is at capacity
+	if len(m.channel) == cap(m.channel) {
+		logger.Global.Logger.Warn().
+			Msg("event channel at capacity, dropping event")
+		return
+	}
 	m.channel <- e
 }
 
