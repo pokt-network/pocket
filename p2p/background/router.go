@@ -319,8 +319,8 @@ func (rtr *backgroundRouter) setupSubscription() (err error) {
 }
 
 func (rtr *backgroundRouter) bootstrap(ctx context.Context) error {
-	// CONSIDERATION: add `GetPeers` method to `PeerstoreProvider` interface
-	// to avoid this loop.
+	// CONSIDERATION: add `GetPeers` method, which returns a map,
+	// to the `PeerstoreProvider` interface to simplify this loop.
 	for _, peer := range rtr.pstore.GetPeerList() {
 		if err := utils.AddPeerToLibp2pHost(rtr.host, peer); err != nil {
 			return err
@@ -362,12 +362,13 @@ func (rtr *backgroundRouter) topicValidator(_ context.Context, _ libp2pPeer.ID, 
 	}
 
 	if backgroundMsg.Data == nil {
+		rtr.logger.Debug().Msg("no data in Background message")
 		return false
 	}
 
-	networkMessage := messaging.PocketEnvelope{}
-	if err := proto.Unmarshal(backgroundMsg.Data, &networkMessage); err != nil {
-		rtr.logger.Error().Err(err).Msg("Error decoding network message")
+	poktEnvelope := messaging.PocketEnvelope{}
+	if err := proto.Unmarshal(backgroundMsg.Data, &poktEnvelope); err != nil {
+		rtr.logger.Error().Err(err).Msg("Error decoding Background message")
 		return false
 	}
 
