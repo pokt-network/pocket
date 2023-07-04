@@ -40,6 +40,7 @@ const (
 	relaychainEth = "RelayChainETH" // used to refer to Ethereum chain when retrieving relaychain settings
 )
 
+// TODO(#874, olshansky): Populate the app & servicer keys with the full set
 type rootSuite struct {
 	gocuke.TestingT
 
