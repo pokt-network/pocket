@@ -12,6 +12,10 @@ message IBCConfig {
     // 2. The node is a servicer and thus when IBC enabled is they are enabled
     //    to relay IBC packets using an IBC relayer binary
     bool enabled = 1;
-    string private_key = 2; // hex encoded
-    string stores_dir = 3;
+    IBCHostConfig host = 2;
+}
+
+message IBCHostConfig {
+    string private_key = 1; // hex encoded
+    string stores_dir = 2;
 }

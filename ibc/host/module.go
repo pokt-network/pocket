@@ -2,10 +2,10 @@ package host
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/pokt-network/pocket/ibc/store"
+	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
@@ -18,15 +18,14 @@ type ibcHost struct {
 
 	bus modules.Bus
 
-	logger       *modules.Logger
-	storesDir    string
-	storeManager modules.IBCStoreManager
+	cfg    *configs.IBCHostConfig
+	logger *modules.Logger
 
-	privateKey string
+	storeManager modules.IBCStoreManager
 }
 
-func Create(bus modules.Bus, options ...modules.IBCHostOption) (modules.IBCHostModule, error) {
-	return new(ibcHost).Create(bus, options...)
+func Create(bus modules.Bus, config *configs.IBCHostConfig, options ...modules.IBCHostOption) (modules.IBCHostModule, error) {
+	return new(ibcHost).Create(bus, config, options...)
 }
 
 // WithLogger assigns a logger for the IBC host
@@ -38,35 +37,16 @@ func WithLogger(logger *modules.Logger) modules.IBCHostOption {
 	}
 }
 
-// WithStoresDir assigns the IBC host's stores directory
-func WithStoresDir(dir string) modules.IBCHostOption {
-	return func(m modules.IBCHostModule) {
-		if mod, ok := m.(*ibcHost); ok {
-			mod.storesDir = fmt.Sprintf("%s/host", dir)
-		}
+func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options ...modules.IBCHostOption) (modules.IBCHostModule, error) {
+	h := &ibcHost{
+		cfg: config,
 	}
-}
-
-// WithPrivateKey assigns the IBC host's private key
-func WithPrivateKey(pkHex string) modules.IBCHostOption {
-	return func(m modules.IBCHostModule) {
-		if mod, ok := m.(*ibcHost); ok {
-			mod.privateKey = pkHex
-		}
-	}
-}
-
-func (*ibcHost) Create(bus modules.Bus, options ...modules.IBCHostOption) (modules.IBCHostModule, error) {
-	h := &ibcHost{}
 	for _, option := range options {
 		option(h)
 	}
 	h.logger.Info().Msg("🛰️ creating IBC host 🛰️")
 	bus.RegisterModule(h)
-	if h.storesDir == "" {
-		return nil, fmt.Errorf("stores directory not set")
-	}
-	sm := store.NewStoreManager(h.bus, h.storesDir, h.privateKey)
+	sm := store.NewStoreManager(h.bus, h.cfg.StoresDir, h.cfg.PrivateKey)
 	h.storeManager = sm
 	return h, nil
 }

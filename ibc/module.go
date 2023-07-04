@@ -74,9 +74,8 @@ func (m *ibcModule) newHost() error {
 		return coreTypes.ErrIBCHostAlreadyExists()
 	}
 	hostMod, err := host.Create(m.GetBus(),
+		m.cfg.Host,
 		host.WithLogger(m.logger),
-		host.WithStoresDir(m.cfg.StoresDir),
-		host.WithPrivateKey(m.cfg.PrivateKey),
 	)
 	if err != nil {
 		return err

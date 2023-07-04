@@ -1,12 +1,14 @@
 package modules
 
+import "github.com/pokt-network/pocket/runtime/configs"
+
 //go:generate mockgen -destination=./mocks/ibc_host_module_mock.go github.com/pokt-network/pocket/shared/modules IBCHostModule,IBCHandler
 
 const IBCHostModuleName = "ibc_host"
 
 type IBCHostOption func(IBCHostModule)
 
-type IBCHostFactory = FactoryWithOptions[IBCHostModule, IBCHostOption]
+type IBCHostFactory = FactoryWithConfigAndOptions[IBCHostModule, configs.IBCHostConfig, IBCHostOption]
 
 // IBCHost is the interface used by the host machine (a Pocket node) to interact with the IBC module
 // the host is responsible for managing the IBC state and interacting with consensus in order for
