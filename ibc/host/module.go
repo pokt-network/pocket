@@ -51,9 +51,7 @@ func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options .
 	return h, nil
 }
 
-func (h *ibcHost) GetModuleName() string  { return modules.IBCHostModuleName }
-func (h *ibcHost) GetBus() modules.Bus    { return h.bus }
-func (h *ibcHost) SetBus(bus modules.Bus) { h.bus = bus }
+func (h *ibcHost) GetModuleName() string { return modules.IBCHostModuleName }
 
 // GetTimestamp returns the current unix timestamp
 func (h *ibcHost) GetTimestamp() uint64 {
