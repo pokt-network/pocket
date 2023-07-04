@@ -421,6 +421,7 @@ classDiagram
 ```
 
 ### Peer Discovery
+
 Peer discovery involves pairing peer IDs to their network addresses (multiaddr).
 This pairing always has an associated TTL (time-to-live), near the end of which it must
 be refreshed.
@@ -489,8 +490,7 @@ flowchart TD
 
 ### Raintree Router Architecture
 
-_DISCUSS(team): If you feel this needs a diagram, please reach out to the team for additional details._
-_TODO(olshansky, BenVan): Link to RainTree visualizations once it is complete._
+_NOTE: If you (the reader) feel this needs a diagram, please reach out to the team for additional details._
 
 ### Code Organization
 

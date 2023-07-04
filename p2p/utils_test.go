@@ -120,7 +120,7 @@ func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus, netMock moc
 		p2pMod, err := Create(
 			busMocks[i],
 			WithHost(host),
-			// mock background router to prevent background message propagation.
+			// mock background router to prevent & ignore background message propagation.
 			WithUnstakedActorRouter(noopBackgroundRouterMock),
 		)
 		require.NoError(t, err)
