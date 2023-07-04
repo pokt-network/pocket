@@ -33,7 +33,7 @@ type BulkStoreCacher interface {
 // any element in the store (or not in the store). Its provable nature allows for the retrieval of
 // the root hash of the underlying tree structure that backs the ProvableStore instance.
 // The ProvableStore also maintains a cache of any changes it makes to the underlying store, which
-// can be flushed to a seperate database, pruned and restored when necessary.
+// can be flushed to a separate database, pruned and restored when necessary.
 type ProvableStore interface {
 	Get(key []byte) ([]byte, error)
 	GetAndProve(key []byte, membership bool) ([]byte, *ics23.CommitmentProof, error)
