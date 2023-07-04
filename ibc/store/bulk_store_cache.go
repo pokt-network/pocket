@@ -16,6 +16,7 @@ var (
 )
 
 // bulkStoreCache holds an in-memory map of all the provable stores in use
+// TECHDEBT: add a background process to periodically flush the cache to disk
 type bulkStoreCache struct {
 	base_modules.IntegrableModule
 
@@ -65,6 +66,7 @@ func (*bulkStoreCache) Create(bus modules.Bus, options ...modules.BulkStoreCache
 		option(s)
 	}
 	bus.RegisterModule(s)
+	s.m = sync.Mutex{}
 	s.stores = make(map[string]*provableStore)
 	return s, nil
 }
