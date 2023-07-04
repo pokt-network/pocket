@@ -90,6 +90,7 @@ func (s *rootSuite) Before() {
 	// ADDPR: use pocketk8s to populate
 	s.servicerKeys = map[string]string{
 		// 000 servicer NOT in session
+		//	The list of servicers in the session is decided by the 'servicers' section of the genesis, from 'build/localnet/manifest/configs.yaml' file
 		"000": "acbca21f295caefdfe480ceba85f3fed31a50915162f94867f9c23d8f474f4c6d1130c5eb920af8edd5b6bfa39d33aa787f421c8ba0786de4ca4e7703553bb97",
 		// 001 servicer in session
 		"001": "eec4072b095acf60be9d6be4093b14a24e2ddb6e9d385d980a635815961d025856915c1270bc8d9280a633e0be51647f62388a851318381614877ef2ed84a495",
