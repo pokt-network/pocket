@@ -70,8 +70,8 @@ type rootSuite struct {
 
 // relaychainSettings holds the settings for a specific relaychain
 type relaychainSettings struct {
-	Account string
-	Height  string
+	account string
+	height  string
 }
 
 func (s *rootSuite) Before() {
@@ -209,7 +209,7 @@ func (s *rootSuite) getPrivateKey(
 //	"Given the application has a valid ethereum relaychain account"
 func (s *rootSuite) TheApplicationHasAValidEthereumRelaychainAccount() {
 	// Account: 0x8315177aB297bA92A06054cE80a67Ed4DBd7ed3a   (Arbitrum Bridge)
-	s.relaychains[relaychainEth].Account = "0x8315177aB297bA92A06054cE80a67Ed4DBd7ed3a"
+	s.relaychains[relaychainEth].account = "0x8315177aB297bA92A06054cE80a67Ed4DBd7ed3a"
 }
 
 // TheApplicationHasAValidEthereumRelaychaindHeight fullfils the following condition from feature file:
@@ -217,7 +217,7 @@ func (s *rootSuite) TheApplicationHasAValidEthereumRelaychainAccount() {
 //	"Given the application has a valid ethereum relaychain height"
 func (s *rootSuite) TheApplicationHasAValidEthereumRelaychainHeight() {
 	// Ethereum relaychain BlockNumber: 17605670 = 0x10CA426
-	s.relaychains[relaychainEth].Height = "0x10CA426"
+	s.relaychains[relaychainEth].height = "0x10CA426"
 }
 
 // TheApplicationHasAValidServicer fullfils the following condition from feature file:
@@ -231,7 +231,7 @@ func (s *rootSuite) TheApplicationHasAValidServicer() {
 func (s *rootSuite) TheApplicationSendsARelayToAServicer() {
 	// ADDPR: Add a servicer staked for the Ethereum RelayChain
 	// ADDPR: Verify the response: correct id and correct jsonrpc
-	params := fmt.Sprintf("%q: [%q, %q]", "params", s.relaychains[relaychainEth].Account, s.relaychains[relaychainEth].Height)
+	params := fmt.Sprintf("%q: [%q, %q]", "params", s.relaychains[relaychainEth].account, s.relaychains[relaychainEth].height)
 	checkBalanceRelay := fmt.Sprintf("{%s, %s}", `"method": "eth_getBalance", "id": "1", "jsonrpc": "2.0"`, params)
 
 	servicerPrivateKey := s.getServicerPrivateKey(s.servicer)
