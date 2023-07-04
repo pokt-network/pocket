@@ -1,6 +1,6 @@
 # E2E Feature Path <!-- omit in toc -->
 
-_IMPROVE(olshansky): Once we've completed the entire process at least once, we'll add links to each step._
+_IMPROVE(olshansky): Once we've completed the entire process at least once, we'll add links to each step. [A potential example to use](https://github.com/pokt-network/pocket/pull/869#issuecomment-1618484939)._
 
 - [Introduction \& Goals](#introduction--goals)
 - [Developer Journey](#developer-journey)
@@ -180,7 +180,9 @@ Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&
 
 ### POC: Proof of Concept
 
-Create a single PR where you _"do everything"_ with the knowledge that it'll be closed without being merged in. This is an opportunity to get your hands dirty, understand the problem more deeply and have some fun. This PR may be split into multiple smaller PRs or just refactored altogether.
+Create a single PR where you _"do everything"_ with the knowledge that it'll be closed without being merged in. This is an opportunity to get your hands dirty, understand the problem more deeply and have some fun. This PR may be split into multiple smaller PRs or just refactored altogether. A reasonable set of goals for this PR would be: A) get a review on the approach and B) breakup the work into a list of upcoming PRs.
+
+As an example, here is a PR adding [a `.feature` file](https://github.com/pokt-network/pocket/pull/869/files#diff-30c6c02e8594cf72662ab975e75a810a5bbd702f274e2eaf160c97ec14f5e642) and [the updated `.go` steps file](https://github.com/pokt-network/pocket/pull/869/files#diff-01dec4121ae8acb7a1f4bb72a6c2104827d2c2d2197eb5f45fa5c032ffba32cd).
 
 _TODO(example): Link to Alessandro's KISS or Bryan's P2P._
 
@@ -195,19 +197,6 @@ This is the 🥩 (or 🥙) of the whole feature. In several PRs, you will implem
 - Updates to the [RPC](../../rpc/) service
 - Additions / modifications to the [E2E testing framework](../../e2e)
 - Additions / modifications to the documentation, code structure and diagrams
-
-### Deliverables
-
-1. [The POC PR](https://github.com/pokt-network/pocket/blob/main/utility/doc/E2E_FEATURE_PATH_TEMPLATE.md#poc-proof-of-concept).
-
-   - This will not be merged, but used to A) get a review on the approach and B) breakup the work into a list of PRs
-   - Should include the bare minimum E2E test(s) to test/demo the assigned feature: [a `.feature` file](https://github.com/pokt-network/pocket/pull/869/files#diff-30c6c02e8594cf72662ab975e75a810a5bbd702f274e2eaf160c97ec14f5e642) and [the updated `.go` steps file](https://github.com/pokt-network/pocket/pull/869/files#diff-01dec4121ae8acb7a1f4bb72a6c2104827d2c2d2197eb5f45fa5c032ffba32cd)
-
-2. [The list of PRs needed for making the E2E test pass](https://github.com/pokt-network/pocket/pull/869#issuecomment-1618484939)
-
-3. PRs matching the above list
-
-   - Each PR should be about a single change and the corresponding tests
 
 ### PROD: Production
 
