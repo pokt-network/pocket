@@ -16,8 +16,6 @@ var _ modules.IBCHostModule = &ibcHost{}
 type ibcHost struct {
 	base_modules.IntegrableModule
 
-	bus modules.Bus
-
 	cfg    *configs.IBCHostConfig
 	logger *modules.Logger
 
@@ -46,7 +44,7 @@ func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options .
 	}
 	h.logger.Info().Msg("🛰️ creating IBC host 🛰️")
 	bus.RegisterModule(h)
-	sm := store.NewStoreManager(h.bus, h.cfg.StoresDir, h.cfg.PrivateKey)
+	sm := store.NewStoreManager(h.GetBus(), h.cfg.StoresDir, h.cfg.PrivateKey)
 	h.storeManager = sm
 	return h, nil
 }

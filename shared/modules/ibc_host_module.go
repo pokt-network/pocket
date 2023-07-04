@@ -8,7 +8,7 @@ const IBCHostModuleName = "ibc_host"
 
 type IBCHostOption func(IBCHostModule)
 
-type IBCHostFactory = FactoryWithConfigAndOptions[IBCHostModule, configs.IBCHostConfig, IBCHostOption]
+type ibcHostFactory = FactoryWithConfigAndOptions[IBCHostModule, *configs.IBCHostConfig, IBCHostOption]
 
 // IBCHost is the interface used by the host machine (a Pocket node) to interact with the IBC module
 // the host is responsible for managing the IBC state and interacting with consensus in order for
@@ -18,6 +18,7 @@ type IBCHostFactory = FactoryWithConfigAndOptions[IBCHostModule, configs.IBCHost
 // https://github.com/cosmos/ibc/tree/main/spec/core/ics-024-host-requirements
 type IBCHostModule interface {
 	Submodule
+	ibcHostFactory
 
 	// IBC related operations
 	IBCHandler
