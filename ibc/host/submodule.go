@@ -11,7 +11,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
 )
 
-var _ modules.IBCHostModule = &ibcHost{}
+var _ modules.IBCHostSubmodule = &ibcHost{}
 
 type ibcHost struct {
 	base_modules.IntegrableModule
@@ -20,20 +20,20 @@ type ibcHost struct {
 	logger *modules.Logger
 }
 
-func Create(bus modules.Bus, config *configs.IBCHostConfig, options ...modules.IBCHostOption) (modules.IBCHostModule, error) {
+func Create(bus modules.Bus, config *configs.IBCHostConfig, options ...modules.IBCHostOption) (modules.IBCHostSubmodule, error) {
 	return new(ibcHost).Create(bus, config, options...)
 }
 
 // WithLogger assigns a logger for the IBC host
 func WithLogger(logger *modules.Logger) modules.IBCHostOption {
-	return func(m modules.IBCHostModule) {
+	return func(m modules.IBCHostSubmodule) {
 		if mod, ok := m.(*ibcHost); ok {
 			mod.logger = logger
 		}
 	}
 }
 
-func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options ...modules.IBCHostOption) (modules.IBCHostModule, error) {
+func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options ...modules.IBCHostOption) (modules.IBCHostSubmodule, error) {
 	h := &ibcHost{
 		cfg: config,
 	}
@@ -53,7 +53,7 @@ func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options .
 	return h, nil
 }
 
-func (h *ibcHost) GetModuleName() string { return modules.IBCHostModuleName }
+func (h *ibcHost) GetModuleName() string { return modules.IBCHostSubmoduleName }
 
 // GetTimestamp returns the current unix timestamp
 func (h *ibcHost) GetTimestamp() uint64 {

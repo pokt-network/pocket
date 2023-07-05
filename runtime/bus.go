@@ -127,8 +127,8 @@ func (m *bus) GetTreeStore() modules.TreeStoreModule {
 	return getModuleFromRegistry[modules.TreeStoreModule](m, modules.TreeStoreModuleName)
 }
 
-func (m *bus) GetIBCHost() modules.IBCHostModule {
-	return getModuleFromRegistry[modules.IBCHostModule](m, modules.IBCHostModuleName)
+func (m *bus) GetIBCHost() modules.IBCHostSubmodule {
+	return getModuleFromRegistry[modules.IBCHostSubmodule](m, modules.IBCHostSubmoduleName)
 }
 
 func (m *bus) GetBulkStoreCacher() modules.BulkStoreCacher {

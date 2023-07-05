@@ -1,7 +1,6 @@
 package ibc
 
 import (
-	"log"
 	"os"
 	"testing"
 
@@ -33,10 +32,11 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func newTestConsensusModule(bus modules.Bus) modules.ConsensusModule {
+func newTestConsensusModule(t *testing.T, bus modules.Bus) modules.ConsensusModule {
+	t.Helper()
 	consensusMod, err := consensus.Create(bus)
 	if err != nil {
-		log.Fatalf("Error creating consensus module: %s", err)
+		t.Fatalf("Error creating consensus module: %s", err)
 	}
 	return consensusMod.(modules.ConsensusModule)
 }
@@ -66,26 +66,29 @@ func newTestP2PModule(t *testing.T, bus modules.Bus) modules.P2PModule {
 	return p2pMock
 }
 
-func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
+func newTestUtilityModule(t *testing.T, bus modules.Bus) modules.UtilityModule {
+	t.Helper()
 	utilityMod, err := utility.Create(bus)
 	if err != nil {
-		log.Fatalf("Error creating utility module: %s", err)
+		t.Fatalf("Error creating utility module: %s", err)
 	}
 	return utilityMod.(modules.UtilityModule)
 }
 
-func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
+func newTestPersistenceModule(t *testing.T, bus modules.Bus) modules.PersistenceModule {
+	t.Helper()
 	persistenceMod, err := persistence.Create(bus)
 	if err != nil {
-		log.Fatalf("Error creating persistence module: %s", err)
+		t.Fatalf("Error creating persistence module: %s", err)
 	}
 	return persistenceMod.(modules.PersistenceModule)
 }
 
-func newTestIBCModule(bus modules.Bus) modules.IBCModule {
+func newTestIBCModule(t *testing.T, bus modules.Bus) modules.IBCModule {
+	t.Helper()
 	ibcMod, err := Create(bus)
 	if err != nil {
-		log.Fatalf("Error creating ibc module: %s", err)
+		t.Fatalf("Error creating ibc module: %s", err)
 	}
 	return ibcMod.(modules.IBCModule)
 }
@@ -101,17 +104,18 @@ func prepareEnvironment(
 	numFisherman int,
 	genesisOpts ...test_artifacts.GenesisOption,
 ) (*runtime.Manager, modules.ConsensusModule, modules.UtilityModule, modules.PersistenceModule, modules.IBCModule) {
+	t.Helper()
 	teardownDeterministicKeygen := keygen.GetInstance().SetSeed(42)
 
-	runtimeCfg := newTestRuntimeConfig(numValidators, numServicers, numApplications, numFisherman, genesisOpts...)
+	runtimeCfg := newTestRuntimeConfig(t, numValidators, numServicers, numApplications, numFisherman, genesisOpts...)
 	bus, err := runtime.CreateBus(runtimeCfg)
 	require.NoError(t, err)
 
-	testPersistenceMod := newTestPersistenceModule(bus)
+	testPersistenceMod := newTestPersistenceModule(t, bus)
 	err = testPersistenceMod.Start()
 	require.NoError(t, err)
 
-	testConsensusMod := newTestConsensusModule(bus)
+	testConsensusMod := newTestConsensusModule(t, bus)
 	err = testConsensusMod.Start()
 	require.NoError(t, err)
 
@@ -119,11 +123,11 @@ func prepareEnvironment(
 	err = testP2PMock.Start()
 	require.NoError(t, err)
 
-	testUtilityMod := newTestUtilityModule(bus)
+	testUtilityMod := newTestUtilityModule(t, bus)
 	err = testUtilityMod.Start()
 	require.NoError(t, err)
 
-	testIBCMod := newTestIBCModule(bus)
+	testIBCMod := newTestIBCModule(t, bus)
 	err = testIBCMod.Start()
 	require.NoError(t, err)
 
@@ -149,12 +153,14 @@ func prepareEnvironment(
 
 //nolint:unparam // Test suite is not fully built out yet
 func newTestRuntimeConfig(
+	t *testing.T,
 	numValidators,
 	numServicers,
 	numApplications,
 	numFisherman int,
 	genesisOpts ...test_artifacts.GenesisOption,
 ) *runtime.Manager {
+	t.Helper()
 	cfg, err := configs.CreateTempConfig(&configs.Config{
 		Consensus: &configs.ConsensusConfig{
 			PrivateKey: "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
@@ -185,7 +191,7 @@ func newTestRuntimeConfig(
 		},
 	})
 	if err != nil {
-		log.Fatalf("Error creating config: %s", err)
+		t.Fatalf("Error creating config: %s", err)
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(
 		numValidators,

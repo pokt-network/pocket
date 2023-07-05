@@ -17,7 +17,7 @@ type ibcModule struct {
 	cfg    *configs.IBCConfig
 	logger *modules.Logger
 
-	host modules.IBCHostModule
+	host modules.IBCHostSubmodule
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {

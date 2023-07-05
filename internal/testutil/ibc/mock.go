@@ -11,6 +11,7 @@ import (
 
 // BaseIBCMock returns a mock IBC module without a Host
 func BaseIBCMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockIBCModule {
+	t.Helper()
 	ctrl := gomock.NewController(t)
 	ibcMock := mockModules.NewMockIBCModule(ctrl)
 
@@ -23,13 +24,14 @@ func BaseIBCMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockIBCModule 
 }
 
 // BaseIBCHostMock returns a mock IBC Host submodule
-func BaseIBCHostMock(t gocuke.TestingT, busMock *mockModules.MockBus) *mockModules.MockIBCHostModule {
+func BaseIBCHostMock(t gocuke.TestingT, busMock *mockModules.MockBus) *mockModules.MockIBCHostSubmodule {
+	t.Helper()
 	ctrl := gomock.NewController(t)
-	hostMock := mockModules.NewMockIBCHostModule(ctrl)
+	hostMock := mockModules.NewMockIBCHostSubmodule(ctrl)
 
 	hostMock.EXPECT().SetBus(busMock).Return().AnyTimes()
 	hostMock.EXPECT().GetBus().Return(busMock).AnyTimes()
-	hostMock.EXPECT().GetModuleName().Return(modules.IBCHostModuleName).AnyTimes()
+	hostMock.EXPECT().GetModuleName().Return(modules.IBCHostSubmoduleName).AnyTimes()
 	hostMock.EXPECT().GetTimestamp().DoAndReturn(func() uint64 {
 		unix := time.Now().Unix()
 		return uint64(unix)

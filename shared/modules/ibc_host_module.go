@@ -2,13 +2,13 @@ package modules
 
 import "github.com/pokt-network/pocket/runtime/configs"
 
-//go:generate mockgen -destination=./mocks/ibc_host_module_mock.go github.com/pokt-network/pocket/shared/modules IBCHostModule,IBCHandler
+//go:generate mockgen -destination=./mocks/ibc_host_module_mock.go github.com/pokt-network/pocket/shared/modules IBCHostSubmodule,IBCHandler
 
-const IBCHostModuleName = "ibc_host"
+const IBCHostSubmoduleName = "ibc_host"
 
-type IBCHostOption func(IBCHostModule)
+type IBCHostOption func(IBCHostSubmodule)
 
-type ibcHostFactory = FactoryWithConfigAndOptions[IBCHostModule, *configs.IBCHostConfig, IBCHostOption]
+type ibcHostFactory = FactoryWithConfigAndOptions[IBCHostSubmodule, *configs.IBCHostConfig, IBCHostOption]
 
 // IBCHost is the interface used by the host machine (a Pocket node) to interact with the IBC module
 // the host is responsible for managing the IBC state and interacting with consensus in order for
@@ -16,7 +16,7 @@ type ibcHostFactory = FactoryWithConfigAndOptions[IBCHostModule, *configs.IBCHos
 // are also responsible for receiving any IBC packets from another chain and verifying them through
 // the light clients they manage
 // https://github.com/cosmos/ibc/tree/main/spec/core/ics-024-host-requirements
-type IBCHostModule interface {
+type IBCHostSubmodule interface {
 	Submodule
 	ibcHostFactory
 
