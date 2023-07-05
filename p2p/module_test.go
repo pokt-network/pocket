@@ -280,6 +280,8 @@ func newMockNetHost(
 
 // TECHDEBT(#609): move & de-duplicate
 func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockTelemetryModule {
+	t.Helper()
+
 	ctrl := gomock.NewController(t)
 	telemetryMock := mockModules.NewMockTelemetryModule(ctrl)
 	timeSeriesAgentMock := baseTelemetryTimeSeriesAgentMock(t)
@@ -296,6 +298,8 @@ func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockT
 
 // TECHDEBT(#609): move & de-duplicate
 func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAgent {
+	t.Helper()
+
 	ctrl := gomock.NewController(t)
 	timeSeriesAgentMock := mockModules.NewMockTimeSeriesAgent(ctrl)
 	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
@@ -305,6 +309,8 @@ func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesA
 
 // TECHDEBT(#609): move & de-duplicate
 func baseTelemetryEventMetricsAgentMock(t *testing.T) *mockModules.MockEventMetricsAgent {
+	t.Helper()
+
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
