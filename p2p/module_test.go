@@ -1,3 +1,5 @@
+//go:build test
+
 package p2p
 
 import (
@@ -9,11 +11,15 @@ import (
 	libp2pCrypto "github.com/libp2p/go-libp2p/core/crypto"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
@@ -109,6 +115,8 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			libp2pMockNet := mocknet.New()
+
 			ctrl := gomock.NewController(t)
 			mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
 			mockBus := createMockBus(t, mockRuntimeMgr)
@@ -136,7 +144,7 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 				ServiceURL: testLocalServiceURL,
 			}
 
-			host := newLibp2pMockNetHost(t, privKey, peer)
+			host := newMockNetHost(t, libp2pMockNet, privKey, peer)
 			p2pMod, err := Create(mockBus, WithHostOption(host))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("p2pModule.Create() error = %v, wantErr %v", err, tt.wantErr)
@@ -151,9 +159,73 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 }
 
 func TestP2pModule_WithHostOption_Restart(t *testing.T) {
+	privKey := cryptoPocket.GetPrivKeySeed(1)
+
+	peer := &typesP2P.NetworkPeer{
+		PublicKey:  privKey.PublicKey(),
+		Address:    privKey.Address(),
+		ServiceURL: testLocalServiceURL,
+	}
+
+	libp2pMockNet := mocknet.New()
+	host := newMockNetHost(t, libp2pMockNet, privKey, peer)
+
+	mod := newP2PModule(t, privKey, WithHostOption(host))
+
+	// start the module; should not create a new host
+	err := mod.Start()
+	require.NoError(t, err)
+
+	// assert initial host matches the one provided via `WithHost`
+	require.Equal(t, host, mod.host, "initial hosts don't match")
+
+	// stop the module; destroys module's host
+	err = mod.Stop()
+	require.NoError(t, err)
+
+	// assert host does *not* match after restart
+	err = mod.Start()
+	require.NoError(t, err)
+	require.NotEqual(t, host, mod.host, "post-restart hosts don't match")
+}
+
+func TestP2pModule_InvalidNonce(t *testing.T) {
+	privKey := cryptoPocket.GetPrivKeySeed(1)
+
+	peer := &typesP2P.NetworkPeer{
+		PublicKey:  privKey.PublicKey(),
+		Address:    privKey.Address(),
+		ServiceURL: testLocalServiceURL,
+	}
+
+	libp2pMockNet := mocknet.New()
+	host := newMockNetHost(t, libp2pMockNet, privKey, peer)
+
+	mod := newP2PModule(
+		t, privKey,
+		WithHostOption(host),
+	)
+	err := mod.Start()
+	require.NoError(t, err)
+
+	poktEnvelope := &messaging.PocketEnvelope{
+		Content: &anypb.Any{},
+		// 0 should be an invalid nonce value
+		Nonce: 0,
+	}
+	poktEnvelopeBz, err := proto.Marshal(poktEnvelope)
+	require.NoError(t, err)
+
+	err = mod.handlePocketEnvelope(poktEnvelopeBz)
+	require.ErrorIs(t, err, typesP2P.ErrInvalidNonce)
+}
+
+// TECHDEBT(#609): move & de-duplicate
+func newP2PModule(t *testing.T, privKey cryptoPocket.PrivateKey, opts ...modules.ModuleOption) *p2pModule {
+	t.Helper()
+
 	ctrl := gomock.NewController(t)
 
-	privKey := cryptoPocket.GetPrivKeySeed(1)
 	mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
 	mockBus := createMockBus(t, mockRuntimeMgr)
 
@@ -176,46 +248,30 @@ func TestP2pModule_WithHostOption_Restart(t *testing.T) {
 		},
 	}).AnyTimes()
 	mockBus.EXPECT().GetRuntimeMgr().Return(mockRuntimeMgr).AnyTimes()
-
-	peer := &typesP2P.NetworkPeer{
-		PublicKey:  privKey.PublicKey(),
-		Address:    privKey.Address(),
-		ServiceURL: testLocalServiceURL,
-	}
-
-	mockNetHost := newLibp2pMockNetHost(t, privKey, peer)
-	p2pMod, err := Create(mockBus, WithHostOption(mockNetHost))
+	p2pMod, err := Create(mockBus, opts...)
 	require.NoError(t, err)
 
 	mod, ok := p2pMod.(*p2pModule)
 	require.Truef(t, ok, "unknown module type: %T", mod)
 
-	// start the module; should not create a new host
-	err = mod.Start()
-	require.NoError(t, err)
-
-	// assert initial host matches the one provided via `WithHost`
-	require.Equal(t, mockNetHost, mod.host, "initial hosts don't match")
-
-	// stop the module; destroys module's host
-	err = mod.Stop()
-	require.NoError(t, err)
-
-	// assert host does *not* match after restart
-	err = mod.Start()
-	require.NoError(t, err)
-	require.NotEqual(t, mockNetHost, mod.host, "post-restart hosts don't match")
+	return mod
 }
 
 // TECHDEBT(#609): move & de-duplicate
-func newLibp2pMockNetHost(t *testing.T, privKey cryptoPocket.PrivateKey, peer *typesP2P.NetworkPeer) libp2pHost.Host {
+func newMockNetHost(
+	t *testing.T,
+	libp2pMockNet mocknet.Mocknet,
+	privKey cryptoPocket.PrivateKey,
+	peer *typesP2P.NetworkPeer,
+) libp2pHost.Host {
+	t.Helper()
+
 	libp2pPrivKey, err := libp2pCrypto.UnmarshalEd25519PrivateKey(privKey.Bytes())
 	require.NoError(t, err)
 
 	libp2pMultiAddr, err := utils.Libp2pMultiaddrFromServiceURL(peer.ServiceURL)
 	require.NoError(t, err)
 
-	libp2pMockNet := mocknet.New()
 	host, err := libp2pMockNet.AddPeer(libp2pPrivKey, libp2pMultiAddr)
 	require.NoError(t, err)
 

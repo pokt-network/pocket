@@ -374,6 +374,14 @@ func (m *p2pModule) handlePocketEnvelope(pocketEnvelopeBz []byte) error {
 		return fmt.Errorf("decoding network message: %w", err)
 	}
 
+	if poktEnvelope.Nonce == 0 {
+		return fmt.Errorf(
+			"handling pocket envelope: %w (hex-encoded): %x",
+			typesP2P.ErrInvalidNonce,
+			poktEnvelope.Nonce,
+		)
+	}
+
 	if m.isNonceAlreadyObserved(poktEnvelope.Nonce) {
 		// skip passing redundant message to application layer
 		return nil
