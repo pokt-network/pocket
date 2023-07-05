@@ -22,6 +22,15 @@ We have kept the goals and details in this document short, but feel free to reac
 
 **Iterate Dates**: June 15th - June 30th, 2023
 
+🔥 The team frikkin killed it 🔥
+
+```bash
+git diff 2074a1b0c27ec2c73168b02852cc6145b657c0af --stat
+# 107 files changed, 9032 insertions(+), 10508 deletions(-)
+```
+
+Note that this exclude the work we did on infrastructure support, internal documentation, v0 work, SMT repo, collaboration with other projects and a lot more that happens behind the scenes!
+
 ### V0
 
 - 🟢 **TestNet Rehearsal**
