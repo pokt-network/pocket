@@ -290,9 +290,9 @@ func TestHandleMessage_GetIndexedMessage(t *testing.T) {
 func prepareUpdateMessage(t *testing.T, key, value []byte) (*ibcTypes.IBCMessage, *coreTypes.Transaction) {
 	t.Helper()
 	msg := ibcTypes.CreateUpdateStoreMessage(key, value)
-	letter, err := messaging.PackMessage(msg)
+	poktEnvelope, err := messaging.PackMessage(msg)
 	require.NoError(t, err)
-	t.Log(letter.GetContent().GetTypeUrl())
+	t.Log(poktEnvelope.GetContent().GetTypeUrl())
 	tx, err := ibcTypes.ConvertIBCMessageToTx(msg)
 	require.NoError(t, err)
 	return msg, tx
