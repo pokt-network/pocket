@@ -45,7 +45,7 @@ We have kept the goals and details in this document short, but feel free to reac
 
 - 🟡 **Persistence - MVP of the full commit & rollback DEMO**
 
-  - **Grade**: / 10
+  - **Grade**: 7 / 10
 
 - 🟡 **P2P - Attempt #N: Finishing off and merging in everything related to gossip and background**
   - **Grade**: / 10
