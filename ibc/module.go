@@ -19,6 +19,7 @@ type ibcModule struct {
 	cfg    *configs.IBCConfig
 	logger *modules.Logger
 
+	// Only a single host is allowed at a time
 	host modules.IBCHostSubmodule
 
 	ctx    context.Context
