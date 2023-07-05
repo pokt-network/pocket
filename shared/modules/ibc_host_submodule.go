@@ -1,6 +1,10 @@
 package modules
 
-import "github.com/pokt-network/pocket/runtime/configs"
+import (
+	"context"
+
+	"github.com/pokt-network/pocket/runtime/configs"
+)
 
 //go:generate mockgen -destination=./mocks/ibc_host_module_mock.go github.com/pokt-network/pocket/shared/modules IBCHostSubmodule,IBCHandler
 
@@ -19,6 +23,9 @@ type ibcHostFactory = FactoryWithConfigAndOptions[IBCHostSubmodule, *configs.IBC
 type IBCHostSubmodule interface {
 	Submodule
 	ibcHostFactory
+
+	// Background functionality
+	StartBackgroundTasks(context.Context) error
 
 	// IBC related operations
 	IBCHandler

@@ -43,6 +43,7 @@ func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options .
 	h.logger.Info().Msg("🛰️ creating IBC host 🛰️")
 	bus.RegisterModule(h)
 	_, err := store.Create(h.GetBus(),
+		h.cfg.BulkStoreCacher,
 		store.WithLogger(h.logger),
 		store.WithStoresDir(h.cfg.StoresDir),
 		store.WithPrivateKey(h.cfg.PrivateKey),

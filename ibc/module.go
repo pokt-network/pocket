@@ -1,6 +1,8 @@
 package ibc
 
 import (
+	"context"
+
 	"github.com/pokt-network/pocket/ibc/host"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -18,6 +20,9 @@ type ibcModule struct {
 	logger *modules.Logger
 
 	host modules.IBCHostSubmodule
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -44,10 +49,13 @@ func (m *ibcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 	}
 	if isValidator && m.cfg.Enabled {
 		if err := m.newHost(); err != nil {
-			m.logger.Error().Err(err).Msg("❌ failed to create IBC host")
+			m.logger.Error().Err(err).Msg("❌ failed to create IBC host ❌")
 			return nil, err
 		}
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+	m.ctx = ctx
+	m.cancel = cancel
 
 	return m, nil
 }
@@ -57,10 +65,17 @@ func (m *ibcModule) Start() error {
 		m.logger.Info().Msg("🚫 IBC module disabled 🚫")
 		return nil
 	}
+	if m.host != nil {
+		if err := m.host.StartBackgroundTasks(m.ctx); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 func (m *ibcModule) Stop() error {
+	m.logger.Info().Msg("🛑 Stopping IBC Module 🛑")
+	m.cancel()
 	return nil
 }
 
@@ -68,7 +83,7 @@ func (m *ibcModule) GetModuleName() string {
 	return modules.IBCModuleName
 }
 
-// newHost returns a new IBC host instance if one is not already created
+// newHost creates a new IBC host and sets it in the ibcModule struct if it is not already set
 func (m *ibcModule) newHost() error {
 	if m.host != nil {
 		return coreTypes.ErrIBCHostAlreadyExists()

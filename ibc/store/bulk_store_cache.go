@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
@@ -16,12 +17,13 @@ var (
 )
 
 // bulkStoreCache holds an in-memory map of all the provable stores in use
-// TECHDEBT: add a background process to periodically flush the cache to disk
+// INCOMPLETE: add a background process to prune the bulkStoreCache past the max stored height
 type bulkStoreCache struct {
 	base_modules.IntegrableModule
 
 	m sync.Mutex
 
+	cfg        *configs.BulkStoreCacherConfig
 	logger     *modules.Logger
 	storesDir  string
 	privateKey string
@@ -29,8 +31,8 @@ type bulkStoreCache struct {
 	stores map[string]*provableStore
 }
 
-func Create(bus modules.Bus, options ...modules.BulkStoreCacherOption) (modules.BulkStoreCacher, error) {
-	return new(bulkStoreCache).Create(bus, options...)
+func Create(bus modules.Bus, config *configs.BulkStoreCacherConfig, options ...modules.BulkStoreCacherOption) (modules.BulkStoreCacher, error) {
+	return new(bulkStoreCache).Create(bus, config, options...)
 }
 
 // WithLogger assigns a logger for the bulk store cache
@@ -60,11 +62,14 @@ func WithStoresDir(storesDir string) modules.BulkStoreCacherOption {
 	}
 }
 
-func (*bulkStoreCache) Create(bus modules.Bus, options ...modules.BulkStoreCacherOption) (modules.BulkStoreCacher, error) {
-	s := &bulkStoreCache{}
+func (*bulkStoreCache) Create(bus modules.Bus, config *configs.BulkStoreCacherConfig, options ...modules.BulkStoreCacherOption) (modules.BulkStoreCacher, error) {
+	s := &bulkStoreCache{
+		cfg: config,
+	}
 	for _, option := range options {
 		option(s)
 	}
+	s.logger.Info().Msg("💾 Creating Bulk Store Cacher 💾")
 	bus.RegisterModule(s)
 	s.m = sync.Mutex{}
 	s.stores = make(map[string]*provableStore)
@@ -123,6 +128,7 @@ func (s *bulkStoreCache) GetAllStores() map[string]modules.ProvableStore {
 func (s *bulkStoreCache) FlushAllEntries() error {
 	s.m.Lock()
 	defer s.m.Unlock()
+	s.logger.Info().Msg("🚽 Flushing All Cache Entries to Disk 🚽")
 	disk, err := newKVStore(s.storesDir)
 	if err != nil {
 		return err
@@ -139,6 +145,7 @@ func (s *bulkStoreCache) FlushAllEntries() error {
 func (s *bulkStoreCache) PruneCaches(height uint64) error {
 	s.m.Lock()
 	defer s.m.Unlock()
+	s.logger.Info().Uint64("height", height).Msg("✂️  Pruning Cache Entries at Height ✂️ ")
 	disk, err := newKVStore(s.storesDir)
 	if err != nil {
 		return err
@@ -155,6 +162,7 @@ func (s *bulkStoreCache) PruneCaches(height uint64) error {
 func (s *bulkStoreCache) RestoreCaches() error {
 	s.m.Lock()
 	defer s.m.Unlock()
+	s.logger.Info().Msg("📥 Restoring Cache Entries from Disk 📥")
 	disk, err := newKVStore(s.storesDir)
 	if err != nil {
 		return err

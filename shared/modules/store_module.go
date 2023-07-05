@@ -3,6 +3,7 @@ package modules
 import (
 	ics23 "github.com/cosmos/ics23/go"
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/pokt-network/pocket/runtime/configs"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
@@ -12,7 +13,7 @@ const BulkStoreCacherModuleName = "bulk_store_cache"
 
 type BulkStoreCacherOption func(BulkStoreCacher)
 
-type bulkStoreCacheFactory = FactoryWithOptions[BulkStoreCacher, BulkStoreCacherOption]
+type bulkStoreCacheFactory = FactoryWithConfigAndOptions[BulkStoreCacher, *configs.BulkStoreCacherConfig, BulkStoreCacherOption]
 
 // BulkStoreCacher is a submodule that interacts with the different stores it manages and handles the
 // flushing, pruning and restoration of their caches in bulk
