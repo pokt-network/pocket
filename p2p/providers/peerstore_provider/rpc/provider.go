@@ -31,7 +31,10 @@ type rpcPeerstoreProvider struct {
 	rpcClient *rpc.ClientWithResponses
 }
 
-func Create(bus modules.Bus, options ...rpcPeerstoreProviderOption) (peerstore_provider.PeerstoreProvider, error) {
+func Create(
+	bus modules.Bus,
+	options ...rpcPeerstoreProviderOption,
+) (peerstore_provider.PeerstoreProvider, error) {
 	return new(rpcPeerstoreProvider).Create(bus, options...)
 }
 
@@ -39,18 +42,18 @@ func (*rpcPeerstoreProvider) Create(
 	bus modules.Bus,
 	options ...rpcPeerstoreProviderOption,
 ) (peerstore_provider.PeerstoreProvider, error) {
-	rabp := &rpcPeerstoreProvider{
+	rpcPSP := &rpcPeerstoreProvider{
 		rpcURL: flags.RemoteCLIURL,
 	}
-	rabp.SetBus(bus)
+	bus.RegisterModule(rpcPSP)
 
 	for _, o := range options {
-		o(rabp)
+		o(rpcPSP)
 	}
 
-	rabp.initRPCClient()
+	rpcPSP.initRPCClient()
 
-	return rabp, nil
+	return rpcPSP, nil
 }
 
 func (*rpcPeerstoreProvider) GetModuleName() string {
