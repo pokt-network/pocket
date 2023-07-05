@@ -9,11 +9,15 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/pokt-network/pocket/app/client/cli/cache"
 	"github.com/pokt-network/pocket/app/client/cli/flags"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/rpc"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
+
+const sessionCacheDBPath = "/tmp"
 
 func init() {
 	rootCmd.AddCommand(NewServicerCommand())
@@ -115,11 +119,41 @@ func validateServicer(session *rpc.Session, servicerAddress string) (*rpc.Protoc
 	return nil, fmt.Errorf("Error getting servicer: address %s does not match any servicers in the session %d", servicerAddress, session.SessionNumber)
 }
 
+// ADDTEST: add either unit tests or integration tests using kvstore
+// getSessionFrom uses the client-side session cache to retrieve a session for app/chain combination at the provided height, if one has already been retrieved and cached.
+func getSessionFromCache(sessionCache *cache.SessionCache, appAddress, chain string, height int64) (*rpc.Session, error) {
+	if sessionCache == nil {
+		return nil, fmt.Errorf("got nil session cache")
+	}
+
+	session, err := sessionCache.Get(appAddress, chain)
+	if err != nil {
+		return nil, err
+	}
+
+	// verify the cached session is valid
+	if height >= session.SessionHeight && height < session.SessionHeight+session.NumSessionBlocks {
+		return session, nil
+	}
+
+	return nil, fmt.Errorf("no valid session found")
+}
+
 func getCurrentSession(ctx context.Context, appAddress, chain string) (*rpc.Session, error) {
 	// CONSIDERATION: passing 0 as the height value to get the current session seems more optimal than this.
 	currentHeight, err := getCurrentHeight(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Error getting current session: %w", err)
+	}
+
+	sessionCache, err := cache.NewSessionCache(sessionCacheDBPath)
+	if err != nil {
+		logger.Global.Warn().Err(err).Msg("failed to initialize session cache")
+	}
+
+	session, err := getSessionFromCache(sessionCache, appAddress, chain, currentHeight)
+	if err == nil {
+		return session, nil
 	}
 
 	req := rpc.SessionRequest{
@@ -148,7 +182,16 @@ func getCurrentSession(ctx context.Context, appAddress, chain string) (*rpc.Sess
 		return nil, fmt.Errorf("Error getting current session: Unexpected response %v", resp)
 	}
 
-	return resp.JSON200, nil
+	session = resp.JSON200
+	if sessionCache == nil {
+		return session, nil
+	}
+
+	if err := sessionCache.Set(session); err != nil {
+		logger.Global.Warn().Err(err).Msg("failed to store session in cache")
+	}
+
+	return session, nil
 }
 
 // REFACTOR: reuse this function in all the query commands
