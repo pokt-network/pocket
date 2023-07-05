@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	_         modules.BulkStoreCacher = &bulkStoreCache{}
-	cacheDirs                         = func(storesDir string) string { return fmt.Sprintf("%s/caches", storesDir) }
+	_ modules.BulkStoreCacher = &bulkStoreCache{}
+
+	cacheDirs = func(storesDir string) string { return fmt.Sprintf("%s/caches", storesDir) }
 )
 
 // bulkStoreCache holds an in-memory map of all the provable stores in use
