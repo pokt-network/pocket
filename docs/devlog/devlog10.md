@@ -65,7 +65,7 @@ We have kept the goals and details in this document short, but feel free to reac
   - Session caching on the client
   - Finish all the PRs in flight (review, merge in)
   - Provide an E2E test that works, blocks CI if it breaks, documented and visible (DEMO)
-  - **Grade**: / 10
+  - **Grade**: 8 / 10
 
 - 🟡 **Feature Flags**
   - Scope out the work necessary and create an E2E Feature Path github ticket using the template we created
