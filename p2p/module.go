@@ -300,8 +300,11 @@ func (m *p2pModule) setupDependencies() error {
 func (m *p2pModule) setupPeerstoreProvider() error {
 	m.logger.Debug().Msg("setupPeerstoreProvider")
 
-	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
-	pstoreProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(peerstore_provider.ModuleName)
+	// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
+	// is retrievable as a proper submodule
+	pstoreProviderModule, err := m.GetBus().
+		GetModulesRegistry().
+		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
 	if err != nil {
 		m.logger.Debug().Msg("creating new persistence peerstore...")
 		pstoreProvider, err := persPSP.Create(m.GetBus())

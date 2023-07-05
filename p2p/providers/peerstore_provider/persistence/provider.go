@@ -37,7 +37,7 @@ func (*persistencePeerstoreProvider) Create(bus modules.Bus, options ...persiste
 }
 
 func (*persistencePeerstoreProvider) GetModuleName() string {
-	return peerstore_provider.ModuleName
+	return peerstore_provider.PeerstoreProviderSubmoduleName
 }
 
 // GetStakedPeerstoreAtHeight implements the respective `PeerstoreProvider` interface method.

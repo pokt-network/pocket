@@ -54,7 +54,7 @@ func (*rpcPeerstoreProvider) Create(
 }
 
 func (*rpcPeerstoreProvider) GetModuleName() string {
-	return peerstore_provider.ModuleName
+	return peerstore_provider.PeerstoreProviderSubmoduleName
 }
 
 func (rpcPSP *rpcPeerstoreProvider) GetStakedPeerstoreAtHeight(height uint64) (typesP2P.Peerstore, error) {
