@@ -1,7 +1,12 @@
 package persistence
 
 import (
+	"database/sql"
+	"encoding/hex"
+	"errors"
+
 	pTypes "github.com/pokt-network/pocket/persistence/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 // SetIBCStoreEntry sets the key value pair in the IBC store postgres table at the current height
@@ -17,8 +22,15 @@ func (p *PostgresContext) SetIBCStoreEntry(key, value []byte) error {
 func (p *PostgresContext) GetIBCStoreEntry(key []byte, height int64) ([]byte, error) {
 	ctx, tx := p.getCtxAndTx()
 	row := tx.QueryRow(ctx, pTypes.GetIBCStoreEntryQuery(height, key))
-	var value []byte
-	if err := row.Scan(&value); err != nil {
+	var valueHex string
+	err := row.Scan(&valueHex)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, coreTypes.ErrIBCKeyDoesNotExist(string(key))
+	} else if err != nil {
+		return nil, err
+	}
+	value, err := hex.DecodeString(valueHex)
+	if err != nil {
 		return nil, err
 	}
 	return value, nil

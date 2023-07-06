@@ -3,6 +3,7 @@ package store
 import (
 	"bytes"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -32,7 +33,7 @@ type cachedEntry struct {
 // prepare returns the key and value to be written to disk
 // "{height}/{prefixedKey}" => value
 func (c *cachedEntry) prepare() (key, value []byte) {
-	return []byte(fmt.Sprintf("%s/%d/%s", c.storeName, c.height, string(c.prefixedKey))), c.value
+	return []byte(fmt.Sprintf("%d/%s", c.height, string(c.prefixedKey))), c.value
 }
 
 // provableStore is a struct that interfaces with the persistence layer to
@@ -74,7 +75,7 @@ func (p *provableStore) Get(key []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if value == nil {
+	if bytes.Equal(value, nil) {
 		return nil, coreTypes.ErrIBCKeyDoesNotExist(string(key))
 	}
 	return value, nil
@@ -83,13 +84,16 @@ func (p *provableStore) Get(key []byte) ([]byte, error) {
 // GetAndProve queries the persistence layer for the latest value stored in the IBC state
 // tree it then generates a proof by importing the IBC state tree from the TreeStore
 // keys are automatically prefixed with the CommitmentPrefix if not present
-func (p *provableStore) GetAndProve(key []byte, membership bool) ([]byte, *ics23.CommitmentProof, error) {
+func (p *provableStore) GetAndProve(key []byte) ([]byte, *ics23.CommitmentProof, error) {
+	found := true
 	value, err := p.Get(key)
-	if err != nil {
+	if errors.Is(err, coreTypes.ErrIBCKeyDoesNotExist(string(key))) {
+		found = false // key not found create non-membership proof
+	} else if err != nil {
 		return nil, nil, err
 	}
 	var proof *ics23.CommitmentProof
-	if membership {
+	if found {
 		proof, err = p.CreateMembershipProof(key, value)
 	} else {
 		proof, err = p.CreateNonMembershipProof(key)
@@ -181,7 +185,7 @@ func (p *provableStore) FlushEntries(store kvstore.KVStore) error {
 func (p *provableStore) PruneCache(store kvstore.KVStore, height uint64) error {
 	p.m.Lock()
 	defer p.m.Unlock()
-	keys, _, err := store.GetAll([]byte(fmt.Sprintf("%s/%d", p.name, height)), false)
+	keys, _, err := store.GetAll([]byte(fmt.Sprintf("%d", height)), false)
 	if err != nil {
 		return err
 	}
@@ -202,16 +206,17 @@ func (p *provableStore) RestoreCache(store kvstore.KVStore) error {
 		return err
 	}
 	for i, key := range keys {
-		parts := strings.SplitN(string(key), "/", 2) // name, heightStr, prefixedKeyStr
-		height, err := strconv.ParseUint(parts[1], 10, 64)
+		parts := strings.SplitN(string(key), "/", 1) // heightStr, prefixedKeyStr
+		height, err := strconv.ParseUint(parts[0], 10, 64)
 		if err != nil {
 			return err
 		}
+		name := strings.SplitN(parts[1], "/", 1)[0] // storeName
 		value := values[i]
-		p.cache[parts[2]] = &cachedEntry{
-			storeName:   parts[0],
+		p.cache[parts[1]] = &cachedEntry{
+			storeName:   name,
 			height:      height,
-			prefixedKey: []byte(parts[2]),
+			prefixedKey: []byte(parts[1]),
 			value:       value,
 		}
 	}
@@ -220,10 +225,11 @@ func (p *provableStore) RestoreCache(store kvstore.KVStore) error {
 
 // applyPrefix will apply the CommitmentPrefix to the key provided if not already applied
 func applyPrefix(prefix coreTypes.CommitmentPrefix, key []byte) coreTypes.CommitmentPath {
-	slashed := make([]byte, 0, len(key)+1)
+	delim := []byte("/")
+	slashed := make([]byte, 0, len(key)+len(delim))
 	slashed = append(slashed, key...)
-	slashed = append(slashed, []byte("/")...)
-	if bytes.Equal(prefix[:len(slashed)], slashed) {
+	slashed = append(slashed, delim...)
+	if len(prefix) > len(slashed) && bytes.Equal(prefix[:len(slashed)], slashed) {
 		return key
 	}
 	return path.ApplyPrefix(prefix, string(key))
