@@ -194,11 +194,11 @@ Depending on the necessary routing scheme (unicast / broadcast) and whether the 
 
 **Broadcast**
 
-| Broadcaster    | Receiver       | Router                | Example Usage                              |
-|----------------|----------------|-----------------------|--------------------------------------------|
-| Staked Actor   | Staked Actor   | Raintree + Background | Utility tx messages                        |
-| Unstaked Actor | Staked Actor   | Background only       | Utility tx messages (gossipsub redundancy) |
-| Unstaked Actor | Unstaked Actor | Background only       | Utility tx messages                        |
+| Broadcaster    | Receiver       | Router                | Example Usage                                     |
+|----------------|----------------|-----------------------|---------------------------------------------------|
+| Staked Actor   | Staked Actor   | Raintree + Background | Utility tx messages                               |
+| Unstaked Actor | Staked Actor   | Background only       | Utility tx messages (libp2p gossipsub redundancy) |
+| Unstaked Actor | Unstaked Actor | Background only       | Utility tx messages                               |
 
 Both router submodule implementations embed a `UnicastRouter` which enables them to send and receive messages directly to/from a single peer.
 
