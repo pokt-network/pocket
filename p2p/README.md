@@ -127,6 +127,8 @@ ConcreteType ..*  "(cardinality)" OtherType : Indirect (via interface)
 
 #### Interface Realization
 
+_TL;DR An instance (i.e. client) implements the associated interface (i.e. supplierl)._
+
 > Realization is a specialized abstraction relationship between two sets of model elements, one representing a specification (the supplier) and the other represents an implementation of the latter (the client).
 
 > Realization can be used to model stepwise refinement, optimizations, transformations, templates, model synthesis, framework composition, etc.
@@ -134,6 +136,8 @@ ConcreteType ..*  "(cardinality)" OtherType : Indirect (via interface)
 _(see: [UML Realization](https://www.uml-diagrams.org/realization.html))_
 
 #### Direct Usage
+
+_TL;DR one instance (i.e. client) is dependent the associated instance(s) (i.e. supplier) to function properly._
 
 > Dependency is a directed relationship which is used to show that some UML element or a set of elements requires, needs or depends on other model elements for specification or implementation. Because of this, dependency is called a supplier - client relationship, where supplier provides something to the client, and thus the client is in some sense incomplete while semantically or structurally dependent on the supplier element(s). Modification of the supplier may impact the client elements.
 
@@ -143,6 +147,8 @@ _(see: [UML Dependency](https://www.uml-diagrams.org/dependency.html))_
 
 #### Composition
 
+_TL;DR deleting an instance also deletes the associated instance(s)._
+
 > A "strong" form of aggregation
 
 > If a composite (whole) is deleted, all of its composite parts are "normally" deleted with it.
@@ -151,7 +157,10 @@ _(see: [UML Shared composition](https://www.uml-diagrams.org/composition.html))_
 
 #### Aggregation
 
-> A "weak" form of composition
+
+_TL;DR deleting an instance does not necessarily delete the associated instance(s)._
+
+> A "weak" form of aggregation
 
 > Shared part could be included in several composites, and if some or all of the composites are deleted, shared part may still exist.
 
@@ -159,7 +168,11 @@ _(see: [UML Shared aggregation](https://www.uml-diagrams.org/aggregation.html))_
 
 #### Cardinality
 
-Cardinality indicates the number or range of simultaneous instances of the classifier at the "cardinality-side" association end that are associated with the classifier at the other end of the given association type.
+_TL;DR indicates a number, or range of instances associated (i.e. supplier(s))_
+
+Cardinality indicates the number or range of simultaneous instances of supplier that are associated with the client.
+Applicable to multiple association types.
+Can be expressed arbitrarily (e.g. wildcards, variable, equation, etc.)
 
 _(see: [UML Association](https://www.uml-diagrams.org/association.html#association-end))_
 
