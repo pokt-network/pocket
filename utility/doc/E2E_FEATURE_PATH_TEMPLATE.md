@@ -180,7 +180,11 @@ Open a [new issue](https://github.com/pokt-network/pocket/issues/new?assignees=&
 
 ### POC: Proof of Concept
 
-Create a single PR where you _"do everything"_ with the knowledge that it'll be closed without being merged in. This is an opportunity to get your hands dirty, understand the problem more deeply and have some fun. This PR may be split into multiple smaller PRs or just refactored altogether. A reasonable set of goals for this PR would be: A) get a review on the approach and B) breakup the work into a list of upcoming PRs.
+Create a single PR where you _"do everything"_ with the knowledge that it'll be closed without being merged in. This is an opportunity to get your hands dirty, understand the problem more deeply and have some fun. This PR may be split into multiple smaller PRs or just refactored altogether.
+
+A reasonable set of goals for this PR would be:
+ - A) Get a review on the approach
+ - B) Breakup the work into a list of upcoming PRs.
 
 As an example, here is a PR adding [a `.feature` file](https://github.com/pokt-network/pocket/pull/869/files#diff-30c6c02e8594cf72662ab975e75a810a5bbd702f274e2eaf160c97ec14f5e642) and [the updated `.go` steps file](https://github.com/pokt-network/pocket/pull/869/files#diff-01dec4121ae8acb7a1f4bb72a6c2104827d2c2d2197eb5f45fa5c032ffba32cd).
 
