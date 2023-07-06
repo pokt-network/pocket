@@ -476,7 +476,7 @@ func (s *servicer) executeHTTPRelay(serviceConfig *configs.ServiceConfig, payloa
 	}
 
 	// INCOMPLETE(#837): Optimize usage of HTTP client, e.g. connection reuse, depending on the volume of relays a servicer is expected to handle
-	// ADDPR: allow configuration of TLS Settings for HTTPS services
+	// INCOMPLETE(#887): allow configuration of TLS Settings for HTTPS services
 	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	resp, err := (&http.Client{Transport: tr, Timeout: time.Duration(serviceConfig.TimeoutMsec) * time.Millisecond}).Do(req)
 	if err != nil {

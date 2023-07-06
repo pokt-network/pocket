@@ -62,11 +62,11 @@ type rootSuite struct {
 	appKeys map[string]string
 
 	// relaychains holds settings for all relaychains used in the tests
-	//	the map key is a constant selected as the identifier for the relaychain, e.g. "RelayChainETH" for Ethereum
+	//	the map key is a constant selected as the identifier for the relaychain, e.g. "RelayChainETH" represented as "0001" in other parts of the codebase for Ethereum
 	relaychains map[string]*relaychainSettings
 
 	// servicer holds the key for the servicer that should received the relay
-	servicer string
+	servicerKey string
 }
 
 // relaychainSettings holds the settings for a specific relaychain
@@ -88,7 +88,7 @@ func (s *rootSuite) Before() {
 	s.clientset = clientSet
 	s.validatorKeys = vkmap
 
-	// ADDPR: use pocketk8s to populate
+	// ADD_IN_THIS_PR: use pocketk8s to populate
 	s.servicerKeys = map[string]string{
 		// 000 servicer NOT in session
 		//	The list of servicers in the session is decided by the 'servicers' section of the genesis, from 'build/localnet/manifest/configs.yaml' file
@@ -241,9 +241,9 @@ func (s *rootSuite) TheApplicationHasAValidServicer() {
 }
 
 // An Application requests the account balance of a specific address at a specific height
-func (s *rootSuite) TheApplicationSendsARelayToAServicer() {
-	// ADDPR: Add a servicer staked for the Ethereum RelayChain
-	// ADDPR: Verify the response: correct id and correct jsonrpc
+ func (s *rootSuite) TheApplicationSendsAGetBalanceRelayAtASpecificHeightToAnEthereumServicer() {
+	// ADD_IN_THIS_PR: Add a servicer staked for the Ethereum RelayChain
+	// ADD_IN_THIS_PR: Verify the response: correct id and correct jsonrpc
 	params := fmt.Sprintf("%q: [%q, %q]", "params", s.relaychains[relaychainEth].account, s.relaychains[relaychainEth].height)
 	checkBalanceRelay := fmt.Sprintf("{%s, %s}", `"method": "eth_getBalance", "id": "1", "jsonrpc": "2.0"`, params)
 
@@ -253,8 +253,8 @@ func (s *rootSuite) TheApplicationSendsARelayToAServicer() {
 	s.sendTrustlessRelay(checkBalanceRelay, servicerPrivateKey.Address().String(), appPrivateKey.Address().String())
 }
 
-func (s *rootSuite) TheRelayResponseContains(arg1 string) {
-	require.Contains(s, s.validator.result.Stdout, arg1)
+func (s *rootSuite) TheRelayResponseContains(relayResponse string) {
+	require.Contains(s, s.validator.result.Stdout, relayResponse)
 }
 
 func (s *rootSuite) sendTrustlessRelay(relayPayload string, servicerAddr, appAddr string) {
@@ -268,7 +268,7 @@ func (s *rootSuite) sendTrustlessRelay(relayPayload string, servicerAddr, appAdd
 		relayPayload,
 	}
 
-	// DISCUSS: does this need to be run from a client, i.e. not a validator, pod?
+	// TECHDEBT: run the command from a client, i.e. not a validator, pod.
 	res, err := s.validator.RunCommand(args...)
 
 	require.NoError(s, err)
@@ -282,7 +282,7 @@ func (s *rootSuite) getAppPrivateKey(
 ) cryptoPocket.PrivateKey {
 	privHexString := s.appKeys[appId]
 	privateKey, err := cryptoPocket.NewPrivateKey(privHexString)
-	require.NoErrorf(s, err, "failed to extract privkey")
+	require.NoErrorf(s, err, "failed to extract privkey for app with id %s", appId)
 
 	return privateKey
 }
@@ -293,7 +293,7 @@ func (s *rootSuite) getServicerPrivateKey(
 ) cryptoPocket.PrivateKey {
 	privHexString := s.servicerKeys[servicerId]
 	privateKey, err := cryptoPocket.NewPrivateKey(privHexString)
-	require.NoErrorf(s, err, "failed to extract privkey")
+	require.NoErrorf(s, err, "failed to extract privkey for servicer with id %s", servicerId)
 
 	return privateKey
 }

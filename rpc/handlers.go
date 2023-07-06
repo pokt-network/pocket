@@ -231,7 +231,7 @@ func buildJsonRPCRelayPayload(body *RelayRequest) *coreTypes.Relay {
 	}
 
 	if body.Payload.Params != nil {
-		// ADDPR: Need a decision and implementation on Params field and conversion from rpc to proto
+		// ADD_IN_THIS_PR: Need a decision and implementation on Params field and conversion from rpc to proto
 		payload.JsonRpcPayload.Params = *body.Payload.Params
 	}
 
