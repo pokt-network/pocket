@@ -59,7 +59,7 @@ func (s *SessionCache) Set(session *rpc.Session) error {
 	}
 
 	key := sessionKey(session.Application.Address, session.Chain)
-	if s.store.Set(key, bz); err != nil {
+	if err := s.store.Set(key, bz); err != nil {
 		return fmt.Errorf("error storing session for app: %s, chain: %s, session height: %d in the cache: %w", session.Application.Address, session.Chain, session.SessionHeight, err)
 	}
 	return nil
