@@ -14,8 +14,7 @@ import (
 // Blocks merge if IN_THIS_COMMIT comments are present
 func BlockInThisCommitComment(m dsl.Matcher) {
 	m.Match(`//$text`).
-		Where(isFileExcludedForInThisComment(m)).
-		Where(m["text"].Text.Matches(`IN_THIS_COMMIT`)).
+		Where(isFileExcludedForInThisComment(m) && m["text"].Text.Matches(`IN_THIS_COMMIT`)).
 		Report(`IN_THIS_COMMIT comment must be addressed before merging to main`)
 
 }
@@ -23,8 +22,7 @@ func BlockInThisCommitComment(m dsl.Matcher) {
 // Blocks merge if IN_THIS_PR comments are present
 func BlockInThisPRComment(m dsl.Matcher) {
 	m.Match(`//$text`).
-		Where(isFileExcludedForInThisComment(m)).
-		Where(m["text"].Text.Matches(`IN_THIS_PR`)).
+		Where(isFileExcludedForInThisComment(m) && m["text"].Text.Matches(`IN_THIS_PR`)).
 		Report(`IN_THIS_PR comment must be addressed before merging to main`)
 }
 
