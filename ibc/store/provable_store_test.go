@@ -176,7 +176,6 @@ func TestProvableStore_FlushEntries(t *testing.T) {
 		}
 	}
 	cache := kvstore.NewMemKVStore()
-	defer cache.Stop()
 	err := provableStore.FlushEntries(cache)
 	require.NoError(t, err)
 	keys, values, err := cache.GetAll([]byte{}, false)
@@ -190,6 +189,7 @@ func TestProvableStore_FlushEntries(t *testing.T) {
 			require.Equal(t, values[i], kvs[i].value)
 		}
 	}
+	require.NoError(t, cache.Stop())
 }
 
 func TestProvableStore_PruneCache(t *testing.T) {
@@ -221,13 +221,13 @@ func TestProvableStore_PruneCache(t *testing.T) {
 		}
 	}
 	cache := kvstore.NewMemKVStore()
-	defer cache.Stop()
 	err := provableStore.FlushEntries(cache)
 	require.NoError(t, err)
 	keys, _, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, keys, 3)
-	cache.Set([]byte("2/test/testKey1"), []byte("testValue1"))
+	err = cache.Set([]byte("2/test/testKey1"), []byte("testValue1"))
+	require.NoError(t, err)
 	err = provableStore.PruneCache(cache, 1)
 	require.NoError(t, err)
 	keys, values, err := cache.GetAll([]byte{}, false)
@@ -235,6 +235,7 @@ func TestProvableStore_PruneCache(t *testing.T) {
 	require.Len(t, keys, 1)
 	require.Equal(t, string(keys[0]), "2/test/testKey1")
 	require.Equal(t, values[0], []byte("testValue1"))
+	require.NoError(t, cache.Stop())
 }
 
 func TestProvableStore_RestoreCache(t *testing.T) {
@@ -266,7 +267,6 @@ func TestProvableStore_RestoreCache(t *testing.T) {
 		}
 	}
 	cache := kvstore.NewMemKVStore()
-	defer cache.Stop()
 	err := provableStore.FlushEntries(cache)
 	require.NoError(t, err)
 	keys, values, err := cache.GetAll([]byte{}, false)
@@ -291,6 +291,7 @@ func TestProvableStore_RestoreCache(t *testing.T) {
 		require.Equal(t, key, keys[i])
 		require.Equal(t, newValues[i], values[i])
 	}
+	require.NoError(t, cache.Stop())
 }
 
 func TestProvableStore_Root(t *testing.T) {
@@ -379,7 +380,7 @@ func newConsensusMock(t *testing.T, bus modules.Bus) *mockModules.MockConsensusM
 	consensusMock.EXPECT().GetModuleName().Return(modules.ConsensusModuleName).AnyTimes()
 	consensusMock.EXPECT().Start().Return(nil).AnyTimes()
 	consensusMock.EXPECT().Stop().Return(nil).AnyTimes()
-	consensusMock.EXPECT().SetBus(bus).Return().AnyTimes()
+	consensusMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	consensusMock.EXPECT().GetBus().Return(bus).AnyTimes()
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
 
@@ -415,6 +416,7 @@ func newPersistenceMock(t *testing.T,
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().Stop().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+	persistenceMock.EXPECT().GetBus().Return(bus).AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
 
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
@@ -457,7 +459,7 @@ func newTreeStoreMock(t *testing.T,
 	ctrl := gomock.NewController(t)
 	treeStoreMock := mockModules.NewMockTreeStoreModule(ctrl)
 	treeStoreMock.EXPECT().GetModuleName().Return(modules.TreeStoreModuleName).AnyTimes()
-	treeStoreMock.EXPECT().SetBus(bus).Return().AnyTimes()
+	treeStoreMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	treeStoreMock.EXPECT().GetBus().Return(bus).AnyTimes()
 
 	treeStoreMock.
@@ -481,6 +483,7 @@ func newTestP2PModule(t *testing.T, bus modules.Bus) modules.P2PModule {
 	p2pMock.EXPECT().Start().Return(nil).AnyTimes()
 	p2pMock.EXPECT().Stop().Return(nil).AnyTimes()
 	p2pMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+	p2pMock.EXPECT().GetBus().Return(bus).AnyTimes()
 	p2pMock.EXPECT().
 		Broadcast(gomock.Any()).
 		Do(func(msg *anypb.Any) {
