@@ -7,6 +7,8 @@ This document is meant to be a supplement to the living specification of [1.0 Po
 - [Definitions](#definitions)
 - [Interface & Integration](#interface--integration)
 - [Module Architecture](#module-architecture)
+  - [Architecture Design Language](#architecture-design-language)
+  - [Legends](#legends)
   - [P2P Module / Router Decoupling](#p2p-module--router-decoupling)
   - [Message Propagation & Handling](#message-propagation--handling)
   - [Message Deduplication](#message-deduplication)
