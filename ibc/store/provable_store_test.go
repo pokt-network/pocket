@@ -182,7 +182,7 @@ func TestProvableStore_FlushEntries(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, keys, 3)
 	for i, key := range keys {
-		require.Equal(t, string(key), "1/test/"+string(kvs[i].key))
+		require.Equal(t, string(key), "test/1/test/"+string(kvs[i].key))
 		if kvs[i].value == nil {
 			require.Equal(t, values[i], []byte{})
 		} else {
@@ -226,14 +226,14 @@ func TestProvableStore_PruneCache(t *testing.T) {
 	keys, _, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, keys, 3)
-	err = cache.Set([]byte("2/test/testKey1"), []byte("testValue1"))
+	err = cache.Set([]byte("test/2/test/testKey1"), []byte("testValue1"))
 	require.NoError(t, err)
 	err = provableStore.PruneCache(cache, 1)
 	require.NoError(t, err)
 	keys, values, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, keys, 1)
-	require.Equal(t, string(keys[0]), "2/test/testKey1")
+	require.Equal(t, string(keys[0]), "test/2/test/testKey1")
 	require.Equal(t, values[0], []byte("testValue1"))
 	require.NoError(t, cache.Stop())
 }

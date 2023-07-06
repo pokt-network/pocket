@@ -33,7 +33,7 @@ type cachedEntry struct {
 // prepare returns the key and value to be written to disk
 // "{height}/{prefixedKey}" => value
 func (c *cachedEntry) prepare() (key, value []byte) {
-	return []byte(fmt.Sprintf("%d/%s", c.height, string(c.prefixedKey))), c.value
+	return []byte(fmt.Sprintf("%s/%d/%s", c.storeName, c.height, string(c.prefixedKey))), c.value
 }
 
 // provableStore is a struct that interfaces with the persistence layer to
@@ -185,7 +185,7 @@ func (p *provableStore) FlushEntries(store kvstore.KVStore) error {
 func (p *provableStore) PruneCache(store kvstore.KVStore, height uint64) error {
 	p.m.Lock()
 	defer p.m.Unlock()
-	keys, _, err := store.GetAll([]byte(fmt.Sprintf("%d", height)), false)
+	keys, _, err := store.GetAll([]byte(fmt.Sprintf("%s/%d", p.name, height)), false)
 	if err != nil {
 		return err
 	}
@@ -201,22 +201,21 @@ func (p *provableStore) PruneCache(store kvstore.KVStore, height uint64) error {
 func (p *provableStore) RestoreCache(store kvstore.KVStore) error {
 	p.m.Lock()
 	defer p.m.Unlock()
-	keys, values, err := store.GetAll(p.prefix, false)
+	keys, values, err := store.GetAll([]byte(fmt.Sprintf("%s/", p.name)), false)
 	if err != nil {
 		return err
 	}
 	for i, key := range keys {
-		parts := strings.SplitN(string(key), "/", 1) // heightStr, prefixedKeyStr
-		height, err := strconv.ParseUint(parts[0], 10, 64)
+		parts := strings.SplitN(string(key), "/", 3) // name, heightStr, prefixedKeyStr
+		height, err := strconv.ParseUint(parts[1], 10, 64)
 		if err != nil {
 			return err
 		}
-		name := strings.SplitN(parts[1], "/", 1)[0] // storeName
 		value := values[i]
 		p.cache[parts[1]] = &cachedEntry{
-			storeName:   name,
+			storeName:   parts[0],
 			height:      height,
-			prefixedKey: []byte(parts[1]),
+			prefixedKey: []byte(parts[2]),
 			value:       value,
 		}
 	}
