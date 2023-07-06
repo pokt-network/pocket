@@ -38,8 +38,7 @@ func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 
 func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) error {
 	// Ensure `PeerstoreProvider` exists in the modules registry.
-	_, err := rpcPSP.Create(rm.GetBus(), rpcPSP.WithCustomRPCURL(rpcURL))
-	if err != nil {
+	if _, err := rpcPSP.Create(rm.GetBus(), rpcPSP.WithCustomRPCURL(rpcURL)); err != nil {
 		return err
 	}
 	return nil
