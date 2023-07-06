@@ -212,12 +212,12 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 
 	if isStaked {
 		if m.stakedActorRouter == nil {
-			return fmt.Errorf("staked actor router not started")
+			return fmt.Errorf("broadcasting: staked actor router not started")
 		}
 	}
 
 	if m.unstakedActorRouter == nil {
-		return fmt.Errorf("unstaked actor router not started")
+		return fmt.Errorf("broadcasting: unstaked actor router not started")
 	}
 
 	poktEnvelope := &messaging.PocketEnvelope{

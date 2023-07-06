@@ -226,7 +226,7 @@ func createMockBus(
 			if readWriteWaitGroup != nil {
 				readWriteWaitGroup.Done()
 			}
-		}).AnyTimes() // TODO: specific times
+		}).AnyTimes() // TECHDEBT: assert number of times. Consider `waitForEventsInternal` or similar as in consensus.
 	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
 	return mockBus
 }
@@ -341,7 +341,7 @@ func prepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)
 
-	// TECHDEBT: The number of times each telemetry event is expected
+	// TECHDEBT(#886): The number of times each telemetry event is expected
 	// (below) is dependent on the number of redundant messages all validators see,
 	// which is a function of the network size. Until this function is derived and
 	// implemented, we cannot predict the number of times each event is expected.
