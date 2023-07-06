@@ -163,7 +163,7 @@ These interfaces are [defined in `shared/modules/factory.go`](../factory.go) and
 
 #### Shared (sub)module interfaces
 
-Each module (and shared submodule) defined its module interface (and supporting interfaces, if any) defined in the `shared/modules` package, where the file containing the module interface follows the naming convention `[moduleName]_module.go`.
+Each module and submodule defines its module interface (and supporting interfaces, if any) in the `shared/modules` package, where the file containing the module interface follows the naming convention `[moduleName]_[sub]module.go`.
 You can start by looking at the interfaces of the modules we already implemented to get a better idea of what a module is and how it should be structured.
 You might notice that these files include `go:generate` directives, these are used to generate the module mocks for testing purposes.
 
