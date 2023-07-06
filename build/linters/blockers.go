@@ -11,9 +11,9 @@ import (
 	"github.com/quasilyte/go-ruleguard/dsl"
 )
 
-// Blocks merge if _IN_THIS_ comments are present
+// Blocks merge if IN_THIS_ comments are present
 func BlockInThisCommitPRComment(m dsl.Matcher) {
-	m.MatchComment(`//.*_IN_THIS_.*`).
+	m.MatchComment(`//.*IN_THIS_.*`).
 		Where(!m.File().Name.Matches(`Makefile`) && !m.File().Name.Matches(`blockers.go`)).
-		Report("'_IN_THIS_' comments must be addressed before merging to main")
+		Report("'IN_THIS_' comments must be addressed before merging to main")
 }
