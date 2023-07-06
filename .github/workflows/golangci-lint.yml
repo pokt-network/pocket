@@ -24,4 +24,3 @@ jobs:
           version: latest
           args: --timeout=10m --build-tags=test
           skip-cache: true
-          only-new-issues: true
