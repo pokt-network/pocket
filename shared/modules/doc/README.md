@@ -7,20 +7,32 @@ This document outlines how we structured the code by splitting it into modules, 
 ## Contents <!-- omit in toc -->
 
 - [Definitions](#definitions)
-	- [Shared module interface](#shared-module-interface)
-	- [Module](#module)
-	- [Module mock](#module-mock)
-	- [Base module](#base-module)
+  - [Requirement Level Keywords](#requirement-level-keywords)
+  - [Module](#module)
+  - [Module mock](#module-mock)
+  - [Shared module interfaces](#shared-module-interfaces)
+  - [Base module](#base-module)
+  - [Submodule](#submodule)
+  - [Shared submodule](#shared-submodule)
+  - [Class Diagram Legend](#class-diagram-legend)
+  - [Module, Submodule \& Shared Interfaces](#module-submodule--shared-interfaces)
+  - [Factory interfaces](#factory-interfaces)
 - [Code Organization](#code-organization)
-- [Modules in detail](#modules-in-detail)
-	- [Module creation](#module-creation)
-	- [Interacting \& Registering with the `bus`](#interacting--registering-with-the-bus)
-		- [Modules Registry](#modules-registry)
-			- [Modules Registry Example](#modules-registry-example)
-	- [Start the module](#start-the-module)
-	- [Add a logger to the module](#add-a-logger-to-the-module)
-	- [Get the module `bus`](#get-the-module-bus)
-	- [Stop the module](#stop-the-module)
+- [(Sub)Modules in detail](#submodules-in-detail) - [Shared (sub)module interfaces](#shared-submodule-interfaces) - [Construction parameters \& non-(sub)module dependencies](#construction-parameters--non-submodule-dependencies)
+  - [Module creation](#module-creation)
+  - [Module configs \& options](#module-configs--options)
+  - [Submodule creation](#submodule-creation)
+  - [Submodule configs \& options](#submodule-configs--options)
+    - [Configs](#configs)
+    - [Options](#options)
+  - [Comprehensive Submodule Example:](#comprehensive-submodule-example)
+  - [Interacting \& Registering with the `bus`](#interacting--registering-with-the-bus)
+    - [Modules Registry](#modules-registry)
+      - [Modules Registry Example](#modules-registry-example)
+  - [Start the module](#start-the-module)
+  - [Add a logger to the module](#add-a-logger-to-the-module)
+  - [Get the module `bus`](#get-the-module-bus)
+  - [Stop the module](#stop-the-module)
 
 ## Definitions
 
@@ -32,47 +44,55 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 A module is an abstraction (go interface) of a self-contained unit of functionality that carries out a specific task/set of tasks with the idea of being reusable, modular, replacable, mockable, testable and exposing a clear and concise API.
 
-A module MAY implement 0..N common interfaces.
+A module **MAY** implement 0..N common interfaces.
 
-Each *shared* module MUST be registered with the module registry such that it can be retrieved via the bus.
+Each _shared_ module **MUST** be registered with the module registry such that it can be retrieved via the bus.
+
 You can find additional details in the [Modules in detail](#submodules-in-detail) section below.
 
 ### Module mock
 
 A mock is a stand-in, a fake or simplified implementation of a module that is used for testing purposes.
+
 It is used to simulate the behaviour of the module and to verify that the module is interacting with other modules correctly.
-Mocks are generated using `go:generate` directives together with the [`mockgen` tool](https://pkg.go.dev/github.com/golang/mock#readme-running-mockgen).o
+
+Mocks are generated using `go:generate` directives together with the [`mockgen` tool](https://pkg.go.dev/github.com/golang/mock#readme-running-mockgen).
 
 A global search of `mockgen` in the codebase will provide examples of where and how it's used.
 
 ### Shared module interfaces
 
 A shared module interface is an interface that defines the methods that we modelled as common to multiple modules.
-For example: the ability to start/stop a module is pretty common and for that we defined the `InterruptableModule` interface.
+
+**For example**: the ability to start/stop a module is pretty common and for that we defined the `InterruptableModule` interface.
+
 There are some interfaces that are common to multiple modules and we followed the [Interface segregation principle](https://en.wikipedia.org/wiki/Interface_segregation_principle) and also [Rob Pike's Go Proverb](https://youtu.be/PAAkCSZUG1c?t=317):
 
 > The bigger the interface, the weaker the abstraction.
 
-These interfaces that can be embedded in modules are defined in `shared/modules/module.go`.
-GoDoc comments will provide you with more information about each interface.
+These interfaces that can be embedded in modules are defined in `shared/modules/module.go`. GoDoc comments will provide you with more information about each interface.
 
 ### Base module
 
 A base module is a module that implements a common interface, exposing the most basic logic.
+
 Base modules are meant to be **embedded** in module structs which implement this common interface **and** don't need to override the respective interface member(s).
 
-The intention being to improve DRYness (Don't Repeat Yourself) and to reduce boilerplate code.
+The intention being to improve **DRYness (Don't Repeat Yourself)** and to reduce boilerplate code.
+
 You can find the base modules in the `shared/modules/base_modules` package.
 
 ### Submodule
 
 A submodule is a self-contained unit of functionality which is composed by a module and is necessary for that module to function.
-Each module SHOULD be registered with the module registry such that it can be retrieved via the bus.
+
+Each module **SHOULD** be registered with the module registry such that it can be retrieved via the bus.
 
 ### Shared submodule
 
-A shared submodule is any submodule which is a depencency of more than one module.
-Shared submodules MUST define their respective interface type in the `shared/modules` package to avoid import cycles.
+A shared submodule is any submodule which is a dependency of more than one module.
+
+Shared submodules **MUST** define their respective interface type in the `shared/modules` package to avoid import cycles.
 
 _NOTE: "interface types" of "shared submodules" are distinctly different from "shared module interfaces"._
 
@@ -81,14 +101,14 @@ _NOTE: "interface types" of "shared submodules" are distinctly different from "s
 ```mermaid
 classDiagram
     direction LR
-    
+
     class concreteType
-	
+
     class InterfaceType {
 		<<interface>>
 		InterfaceMethod()
 	}
-	
+
 	concreteType --|> InterfaceType : realizes interface
 	concreteType ..|> InterfaceType : realizes one of (this)
 	concreteType ..|> InterfaceType : realizes one of (or this)
@@ -140,6 +160,7 @@ classDiagram
 ### Factory interfaces
 
 In order to formalize and support the generalization of modules and submodule while still providing flexibility, we defined a set of generic factory interfaces which can be embedded or used directly to enforce consistent constructor semantics.
+
 These interfaces are [defined in `shared/modules/factory.go`](../factory.go) and outlined convenience:
 
 - `ModuleFactoryWithOptions`: Specialized factory interface for modules conforming to the "typical" signature above. Useful when creating modules that only require optional runtime configurations.
@@ -164,7 +185,9 @@ These interfaces are [defined in `shared/modules/factory.go`](../factory.go) and
 #### Shared (sub)module interfaces
 
 Each module and submodule defines its module interface (and supporting interfaces, if any) in the `shared/modules` package, where the file containing the module interface follows the naming convention `[moduleName]_[sub]module.go`.
-You can start by looking at the interfaces of the modules we already implemented to get a better idea of what a module is and how it should be structured.
+
+You should start by looking at the interfaces of the modules we already implemented to get a better idea of what a module is and how it should be structured.
+
 You might notice that these files include `go:generate` directives, these are used to generate the module mocks for testing purposes.
 
 #### Construction parameters & non-(sub)module dependencies
@@ -174,23 +197,25 @@ Modules and submodules MAY have zero or more REQUIRED and/or OPTIONAL constructi
 _NOTE: Would-be dependencies/parameters which are modules or submodules should be retrieved via the [module registry](#modules-registry) instead._
 
 |                                          | Module                                                                                                                                                                                                                                                       | Submodule                                                                                                                                  |
-|------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | **has no construction parameters**       | Constructor MUST receive and SHOULD call option function arguments.                                                                                                                                                                                          | Submodule SHOULD use a factory interface type based on `Factory`.                                                                          |
 | **has REQUIRED construction parameters** | Parameter arguments MUST be represented as primitive/serializable types & consolidated into a protobuf type to be included in the runtime module's config. Subsequently referenced via the bus. High-level objects MAY be derived in the module constructor. | Parameter arguments MUST be consolidated and passed as a single "config" type using a factory interface type based on `FactoryWithConfig`. |
 | **has OPTIONAL construction parameters** | Constructor MUST receive and SHOULD call option function arguments.                                                                                                                                                                                          | Constructor MUST receive option function arguments using a factory interface type based on `FactoryWithOptions`.                           |
 
 ### Module creation
 
-Modules MUST implement the `ModuleFactoryWithConfig` flavor of [factory interfaces](#factory-interfaces), enforcing the following constructor signature:
-```
+Modules **MUST** implement the `ModuleFactoryWithConfig` flavor of [factory interfaces](#factory-interfaces), enforcing the following constructor signature:
+
+```go
 Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error)
 ```
- 
+
 Where `options` is an (optional) variadic argument that allows for the passing of an arbitrary number options to the module.
 This is useful to configure the module at creation time.
 
-Each module constructor MUST receive this variadic option argument as all modules share this interface.
-Additionally, each module SHOULD consider these options (i.e. loop over and call them) as support may be added for new options at any time.
+Each module constructor **MUST** receive this variadic option argument as all modules share this interface.
+
+Additionally, each module **SHOULD** consider these options (i.e. loop over and call them) as support may be added for new options at any time.
 
 See `ModuleFactoryWithOptions`, also defined in `shared/modules/factory.go`.
 
@@ -198,7 +223,7 @@ See `ModuleFactoryWithOptions`, also defined in `shared/modules/factory.go`.
 
 _(see: [constructor parameters](#construction-parameters--non-submodule-dependencies))_
 
-Modules MAY depend on **optional** values; i.e. not necessary in order for a module to function properly.
+Modules **MAY** depend on **optional** values; i.e. not necessary in order for a module to function properly.
 
 An option function type MUST be defined for each optional value dependency.
 Such option functions receive the module for option assignment by implementing `ModuleOption`:
@@ -211,16 +236,17 @@ type WithFooOption func(foo string) ModuleOption {
 }
 ```
 
-Module MAY depend on some **required** values; i.e. necessary in order for a module to function properly.
+Module **MAY** depend on some **required** values; i.e. necessary in order for a module to function properly.
 
-Any such required values MUST be composed into a single "config" struct which can be received via the respective factory interface type.
+Any such required values **MUST** be composed into a single "config" struct which can be received via the respective factory interface type.
 
-Such a config type SHOULD implement a `#IsValid()` method which is likely called in the module constructor.
+Such a config type **SHOULD** implement a `#IsValid()` method which is likely called in the module constructor.
 
 _(TODO: consider if it would be appropriate to enforce this via an interface)_
 
 For modules, this config type MUST be defined as a protobuf type and incorporated into the [`runtime.Config`](../../../runtime/configs/config.go).
 This automatically implies the following:
+
 - config values can be set via the node's config file and overriden via environment variables
 - config values MUST be serializable (i.e. no references to high-level objects in memory)
 
@@ -236,7 +262,8 @@ For examples of modules and options see:
 
 ### Submodule creation
 
-Submodules MUST define their own concrete factory interface type derived from the most applicable [generic factory interface type](#factory-interfaces).
+Submodules **MUST** define their own concrete factory interface type derived from the most applicable [generic factory interface type](#factory-interfaces).
+
 Depending on your submodule's requirements, you should choose the most suitable factory interface.
 
 Each submodule factory interface type SHOULD return an interface type for the submodule; however it MAY be appropriate to return a concrete type in some cases.
@@ -288,21 +315,24 @@ _(see: [constructor parameters](#construction-parameters--non-submodule-dependen
 
 #### Configs
 
-Submodules MAY also depend on some **required** values; i.e. necessary in order for a submodule to function properly.
-Any such values MUST be composed in to a single config struct in accordance with the respective factory interface type.
+Submodules **MAY** also depend on some **required** values; i.e. necessary in order for a submodule to function properly.
+
+Any such values **MUST** be composed in to a single config struct in accordance with the respective factory interface type.
 
 #### Options
 
-Submodules MAY depend on **optional** values; i.e. not  necessary in order for a submodule to function properly.
+Submodules **MAY** depend on **optional** values; i.e. not necessary in order for a submodule to function properly.
 
-An option function type MUST be defined for each optional value dependency.
-Such option functions MUST receive the submodule for option assignment (similar to `ModuleOption`) in accordance with the respective factory interface type.
+An option function type **MUST** be defined for each optional value dependency.
 
-Option functions SHOULD be written in terms of interface submodule types but MAY instead be written in terms of concrete submodule types if they are only intended or only make sense to be used with a specific concrete submodule type.
+Such option functions **MUST** receive the submodule for option assignment (similar to `ModuleOption`) in accordance with the respective factory interface type.
 
-Submodules SHOULD NOT consider options when none exist, this should be reflected in the respective factory interface type applied (i.e. no variadic options argument).
+Option functions **SHOULD** be written in terms of interface submodule types but MAY instead be written in terms of concrete submodule types if they are only intended or only make sense to be used with a specific concrete submodule type.
+
+Submodules **SHOULD NOT** consider options when none exist, this should be reflected in the respective factory interface type applied (i.e. no variadic options argument).
 
 ### Comprehensive Submodule Example:
+
 ```go
 // Enforce the submodule interface type
 var _ ExampleSubmoduleInterface = &exampleSubmodule{}
@@ -345,7 +375,7 @@ func (*exampleSubmodule) Create(
 	sub := &exampleSubmodule{
 		someRequiredValue: cfg.someRequiredValue,
 	}
-	
+
 	// Apply option functions.
 	for _, opt := range opts {
 		opt(sub)
