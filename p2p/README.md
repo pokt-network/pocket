@@ -73,6 +73,8 @@ See [`raintree/router.go`](./raintree/router.go) for the specific implementation
 
 ## Module Architecture
 
+_(TODO: move "arch. design lang." & "legends" sections into `shared` to support common usage)_
+
 ### Architecture Design Language
 
 The architecture design language expressed in this documentation is based on [UML](https://www.uml-diagrams.org/).
