@@ -11,7 +11,7 @@ import (
 	"github.com/quasilyte/go-ruleguard/dsl"
 )
 
-// This is a custom linter that checks ensures a use of require.Equal
+// This is a custom linter that ensures the use of require.Equal
 func EqualInsteadOfTrue(m dsl.Matcher) {
 	m.Match(`require.True($t, $x == $y, $*args)`).
 		Suggest(`require.Equal($t, $x, $y, $args)`).

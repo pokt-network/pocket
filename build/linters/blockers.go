@@ -11,21 +11,9 @@ import (
 	"github.com/quasilyte/go-ruleguard/dsl"
 )
 
-// Blocks merge if IN_THIS_COMMIT comments are present
-func BlockInThisCommitComment(m dsl.Matcher) {
-	m.Match(`//$text`).
-		Where(isFileExcludedForInThisComment(m) && m["text"].Text.Matches(`IN_THIS_COMMIT`)).
-		Report(`IN_THIS_COMMIT comment must be addressed before merging to main`)
-
-}
-
-// Blocks merge if IN_THIS_PR comments are present
-func BlockInThisPRComment(m dsl.Matcher) {
-	m.Match(`//$text`).
-		Where(isFileExcludedForInThisComment(m) && m["text"].Text.Matches(`IN_THIS_PR`)).
-		Report(`IN_THIS_PR comment must be addressed before merging to main`)
-}
-
-func isFileExcludedForInThisComment(m dsl.Matcher) bool {
-	return m.File().Name == `Makefile` || m.File().Name != `blockers.go`
+// Blocks merge if _IN_THIS_ comments are present
+func BlockInThisCommitPRComment(m dsl.Matcher) {
+	m.MatchComment(`//.*_IN_THIS_.*`).
+		Where(!m.File().Name.Matches(`Makefile`) && !m.File().Name.Matches(`blockers.go`)).
+		Report("'_IN_THIS_' comments must be addressed before merging to main")
 }
