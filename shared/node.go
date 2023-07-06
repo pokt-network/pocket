@@ -2,6 +2,7 @@ package shared
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pokt-network/pocket/consensus"
@@ -183,7 +184,16 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
 	case messaging.ConsensusNewHeightEventType:
-		return node.GetBus().GetP2PModule().HandleEvent(message.Content)
+		if err := node.GetBus().GetP2PModule().HandleEvent(message.Content); err != nil {
+			return err
+		}
+		// flush cache entries for IBC store to disk on new height
+		bsc := node.GetBus().GetBulkStoreCacher()
+		fmt.Printf("bsc: %v\n%T\n", bsc, bsc)
+		if bsc == nil {
+			return nil // no BulkStoreCacher == no IBCHostModule
+		}
+		return bsc.FlushAllEntries()
 	case messaging.StateMachineTransitionEventType:
 		err_consensus := node.GetBus().GetConsensusModule().HandleEvent(message.Content)
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)

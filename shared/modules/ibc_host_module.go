@@ -1,8 +1,6 @@
 package modules
 
 import (
-	"context"
-
 	"github.com/pokt-network/pocket/runtime/configs"
 )
 
@@ -23,9 +21,6 @@ type ibcHostFactory = FactoryWithConfigAndOptions[IBCHostSubmodule, *configs.IBC
 type IBCHostSubmodule interface {
 	Submodule
 	ibcHostFactory
-
-	// Background functionality
-	StartBackgroundTasks(context.Context) error
 
 	// IBC related operations
 	IBCHandler

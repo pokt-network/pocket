@@ -1,8 +1,6 @@
 package ibc
 
 import (
-	"context"
-
 	"github.com/pokt-network/pocket/ibc/host"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -21,9 +19,6 @@ type ibcModule struct {
 
 	// Only a single host is allowed at a time
 	host modules.IBCHostSubmodule
-
-	ctx    context.Context
-	cancel context.CancelFunc
 }
 
 func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
@@ -54,9 +49,6 @@ func (m *ibcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 			return nil, err
 		}
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	m.ctx = ctx
-	m.cancel = cancel
 
 	return m, nil
 }
@@ -66,17 +58,12 @@ func (m *ibcModule) Start() error {
 		m.logger.Info().Msg("🚫 IBC module disabled 🚫")
 		return nil
 	}
-	if m.host != nil {
-		if err := m.host.StartBackgroundTasks(m.ctx); err != nil {
-			return err
-		}
-	}
+	m.logger.Info().Msg("✅ Starting IBC Module ✅")
 	return nil
 }
 
 func (m *ibcModule) Stop() error {
 	m.logger.Info().Msg("🛑 Stopping IBC Module 🛑")
-	m.cancel()
 	return nil
 }
 

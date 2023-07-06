@@ -22,6 +22,5 @@ message IBCHostConfig {
 }
 
 message BulkStoreCacherConfig {
-    uint64 flush_interval_seconds = 1; // seconds between each background flushing of the cache
-    uint64 max_height_stored = 2;      // maximum number of heights to be stored in the cache before pruning
+    uint64 max_height_stored = 1;      // maximum number of heights to be stored in the cache before pruning
 }

@@ -75,7 +75,6 @@ var (
 	// ibc
 	DefaultIBCEnabled              = false
 	DefaultIBCStoresDir            = "/var/ibc"
-	DefaultIBCCacheFlushFrequency  = uint64(1800) // 2 15 minute blocks
 	DefaultIBCCacheMaxHeightStored = uint64(5)
 )
 
