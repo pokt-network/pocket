@@ -260,7 +260,7 @@ func (rtr *backgroundRouter) setupPeerstore(
 		return err
 	}
 
-	// TECHDEBT(#859): refactor bootstrapping
+	// TECHDEBT(#859): integrate with `p2pModule#bootstrap()`.
 	if err := rtr.bootstrap(ctx); err != nil {
 		return fmt.Errorf("bootstrapping peerstore: %w", err)
 	}
@@ -319,6 +319,7 @@ func (rtr *backgroundRouter) setupSubscription() (err error) {
 	return err
 }
 
+// TECHDEBT(#859): integrate with `p2pModule#bootstrap()`.
 func (rtr *backgroundRouter) bootstrap(ctx context.Context) error {
 	// CONSIDERATION: add `GetPeers` method, which returns a map,
 	// to the `PeerstoreProvider` interface to simplify this loop.
