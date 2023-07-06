@@ -7,7 +7,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
-//go:generate mockgen -destination=./mocks/store_module_mock.go github.com/pokt-network/pocket/shared/modules BulkStoreCacher,ProvableStore
+//go:generate mockgen -destination=./mocks/ibc_store_module_mock.go github.com/pokt-network/pocket/shared/modules BulkStoreCacher,ProvableStore
 
 const BulkStoreCacherModuleName = "bulk_store_cache"
 
@@ -37,7 +37,7 @@ type BulkStoreCacher interface {
 // can be flushed to a separate database, pruned and restored when necessary.
 type ProvableStore interface {
 	Get(key []byte) ([]byte, error)
-	GetAndProve(key []byte, membership bool) ([]byte, *ics23.CommitmentProof, error)
+	GetAndProve(key []byte) ([]byte, *ics23.CommitmentProof, error)
 	CreateMembershipProof(key, value []byte) (*ics23.CommitmentProof, error)
 	CreateNonMembershipProof(key []byte) (*ics23.CommitmentProof, error)
 	Set(key, value []byte) error
