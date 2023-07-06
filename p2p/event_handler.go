@@ -87,9 +87,20 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 			}
 		}
 
+	case messaging.DebugMessageEventType:
+		debugMessage, ok := evt.(*messaging.DebugMessage)
+		if !ok {
+			return fmt.Errorf("unexpected DebugMessage type: %T", evt)
+		}
+
+		return m.handleDebugMessage(debugMessage)
 	default:
 		return fmt.Errorf("unknown event type: %s", event.MessageName())
 	}
 
+	return nil
+}
+
+func (m *p2pModule) handleDebugMessage(msg *messaging.DebugMessage) error {
 	return nil
 }

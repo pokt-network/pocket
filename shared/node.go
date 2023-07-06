@@ -181,7 +181,12 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.TxGossipMessageContentType:
 		return node.GetBus().GetUtilityModule().HandleUtilityMessage(message.Content)
 	case messaging.DebugMessageEventType:
-		return node.handleDebugMessage(message)
+		if err := node.GetBus().GetP2PModule().HandleEvent(message.Content); err != nil {
+			return err
+		}
+		if err := node.handleDebugMessage(message); err != nil {
+			return err
+		}
 	case messaging.ConsensusNewHeightEventType:
 		err_p2p := node.GetBus().GetP2PModule().HandleEvent(message.Content)
 		err_ibc := node.GetBus().GetIBCModule().HandleEvent(message.Content)
