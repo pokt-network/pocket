@@ -18,7 +18,6 @@ linters:
     # Gocritic allows to use ruleguard; custom linting rules
     - gocritic
 
-    # - typecheck # Not a real linter, but a type checker. We compile the code anyway, so this is redundant.
 linters-settings:
   # Gocritic settings; https://go-critic.com/overview
   gocritic:
