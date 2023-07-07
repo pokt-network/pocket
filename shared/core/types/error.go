@@ -31,6 +31,16 @@ func (se *stdErr) Code() Code {
 	return se.CodeError
 }
 
+func (se *stdErr) Is(target error) bool {
+	err, ok := target.(*stdErr)
+	if !ok {
+		return false
+	}
+	codeEq := se.Code() == err.Code()
+	msgEq := se.Error() == err.Error()
+	return codeEq && msgEq
+}
+
 func NewError(code Code, msg string) Error {
 	return &stdErr{
 		CodeError: code,
