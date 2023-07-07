@@ -13,7 +13,7 @@ import (
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
 	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	libp2pPeer "github.com/libp2p/go-libp2p/core/peer"
-	mocknet "github.com/libp2p/go-libp2p/p2p/net/mock"
+	"github.com/libp2p/go-libp2p/p2p/net/mock"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -33,7 +33,10 @@ import (
 )
 
 // https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2
-const testIP6ServiceURL = "[2a00:1450:4005:802::2004]:8080"
+const (
+	testIP6ServiceURL     = "[2a00:1450:4005:802::2004]:8080"
+	invalidReceiveTimeout = time.Millisecond * 500
+)
 
 // TECHDEBT(#609): move & de-dup.
 var (
@@ -42,7 +45,7 @@ var (
 )
 
 func TestBackgroundRouter_AddPeer(t *testing.T) {
-	testRouter := newTestRouter(t, nil, noopHandler)
+	testRouter := newTestRouter(t, nil, nil)
 	libp2pPStore := testRouter.host.Peerstore()
 
 	// NB: assert initial state
@@ -90,7 +93,7 @@ func TestBackgroundRouter_AddPeer(t *testing.T) {
 }
 
 func TestBackgroundRouter_RemovePeer(t *testing.T) {
-	testRouter := newTestRouter(t, nil, noopHandler)
+	testRouter := newTestRouter(t, nil, nil)
 	peerstore := testRouter.host.Peerstore()
 
 	// NB: assert initial state
@@ -124,69 +127,112 @@ func TestBackgroundRouter_RemovePeer(t *testing.T) {
 }
 
 func TestBackgroundRouter_Validation(t *testing.T) {
+	invalidProtoMessage := anypb.Any{
+		TypeUrl: "/notADefinedProtobufType",
+		Value:   []byte("not a serialized protobuf"),
+	}
+
+	testCases := []struct {
+		name  string
+		msgBz []byte
+	}{
+		{
+			name: "invalid BackgroundMessage",
+			// NB: `msgBz` would normally be a serialized `BackgroundMessage`.
+			msgBz: mustMarshal(t, &invalidProtoMessage),
+		},
+		{
+			name: "empty PocketEnvelope",
+			msgBz: mustMarshal(t, &typesP2P.BackgroundMessage{
+				// NB: `Data` is normally a serialized `PocketEnvelope`.
+				Data: nil,
+			}),
+		},
+		{
+			name: "invalid PoketEnvelope",
+			msgBz: mustMarshal(t, &typesP2P.BackgroundMessage{
+				// NB: `Data` is normally a serialized `PocketEnvelope`.
+				Data: mustMarshal(t, &invalidProtoMessage),
+			}),
+		},
+	}
+
+	// Set up test router as the receiver.
 	ctx := context.Background()
 	libp2pMockNet := mocknet.New()
 
-	invalidWireFormatData := []byte("test message")
-	invalidPocketEnvelope := &anypb.Any{
-		TypeUrl: "/test",
-		Value:   invalidWireFormatData,
-	}
-	invalidPocketEnvelopeBz, err := proto.Marshal(invalidPocketEnvelope)
-	require.NoError(t, err)
-
-	invalidMessages := [][]byte{
-		invalidWireFormatData,
-		invalidPocketEnvelopeBz,
-	}
-
-	receivedChan := make(chan struct{})
-
+	receivedChan := make(chan []byte, 1)
 	receiverPrivKey, receiverPeer := newTestPeer(t)
 	receiverHost := newTestHost(t, libp2pMockNet, receiverPrivKey)
-	receiverRouter := newRouterWithSelfPeerAndHost(t, receiverPeer, receiverHost, func(data []byte) error {
-		receivedChan <- struct{}{}
-		return nil
-	})
+	receiverRouter := newRouterWithSelfPeerAndHost(
+		t, receiverPeer,
+		receiverHost,
+		func(data []byte) error {
+			receivedChan <- data
+			return nil
+		},
+	)
 
 	t.Cleanup(func() {
 		err := receiverRouter.Close()
 		require.NoError(t, err)
 	})
 
-	senderPrivKey, _ := newTestPeer(t)
-	senderHost := newTestHost(t, libp2pMockNet, senderPrivKey)
-	gossipPubsub, err := pubsub.NewGossipSub(ctx, senderHost)
+	// Wrap `receiverRouter#topicValidator` to make assertions by.
+	// Existing topic validator must be unregistered first.
+	err := receiverRouter.gossipSub.UnregisterTopicValidator(protocol.BackgroundTopicStr)
 	require.NoError(t, err)
 
-	err = libp2pMockNet.LinkAll()
+	// Register topic validator wrapper.
+	err = receiverRouter.gossipSub.RegisterTopicValidator(
+		protocol.BackgroundTopicStr,
+		func(ctx context.Context, peerID libp2pPeer.ID, msg *pubsub.Message) bool {
+			msgIsValid := receiverRouter.topicValidator(ctx, peerID, msg)
+			require.Falsef(t, msgIsValid, "expected message to be invalid")
+
+			return msgIsValid
+		},
+	)
 	require.NoError(t, err)
 
-	receiverAddrInfo, err := utils.Libp2pAddrInfoFromPeer(receiverPeer)
-	require.NoError(t, err)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			senderPrivKey, _ := newTestPeer(t)
+			senderHost := newTestHost(t, libp2pMockNet, senderPrivKey)
+			gossipPubsub, err := pubsub.NewGossipSub(ctx, senderHost)
+			require.NoError(t, err)
 
-	err = senderHost.Connect(ctx, receiverAddrInfo)
-	require.NoError(t, err)
+			err = libp2pMockNet.LinkAll()
+			require.NoError(t, err)
 
-	topic, err := gossipPubsub.Join(protocol.BackgroundTopicStr)
-	require.NoError(t, err)
+			receiverAddrInfo, err := utils.Libp2pAddrInfoFromPeer(receiverPeer)
+			require.NoError(t, err)
 
-	for _, invalidMessageBz := range invalidMessages {
-		err = topic.Publish(ctx, invalidMessageBz)
-		require.NoError(t, err)
-	}
+			err = senderHost.Connect(ctx, receiverAddrInfo)
+			require.NoError(t, err)
 
-	select {
-	case <-time.After(time.Second * 2):
-		// TECHDEBT: find a better way to prove that pre-propagation validation
-		// works as expected. Ideally, we should be able to distinguish which
-		// invalid message was received in the event of failure.
-		//
-		// CONSIDERATION: we could use the telemetry module mock to set expectations
-		// for validation failure telemetry calls, which would probably be useful in
-		// their own right.
-	case <-receivedChan:
-		t.Fatal("expected message to not be received")
+			topic, err := gossipPubsub.Join(protocol.BackgroundTopicStr)
+			require.NoError(t, err)
+
+			err = topic.Publish(ctx, testCase.msgBz)
+			require.NoError(t, err)
+
+			// Destroy previous topic and sender instances to start with new ones
+			// for each test case.
+			t.Cleanup(func() {
+				_ = topic.Close()
+				_ = senderHost.Close()
+			})
+
+			// Ensure no messages were handled at the end of each test case for
+			// async errors.
+			select {
+			case <-receivedChan:
+				t.Fatal("no messages should have been handled by receiver router")
+			case <-time.After(invalidReceiveTimeout):
+				// no error, continue
+			}
+		})
 	}
 }
 
@@ -234,9 +280,9 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 		expectedPeerIDs[i] = host.ID().String()
 		newRouterWithSelfPeerAndHost(t, peer, host, func(data []byte) error {
 			seenMessagesMutext.Lock()
-			broadcastWaitgroup.Done()
+			defer seenMessagesMutext.Unlock()
 			seenMessages[host.ID().String()] = struct{}{}
-			seenMessagesMutext.Unlock()
+			broadcastWaitgroup.Done()
 			return nil
 		})
 	}
@@ -246,7 +292,7 @@ func TestBackgroundRouter_Broadcast(t *testing.T) {
 
 	// set up a test backgroundRouter
 	testRouterHost := newTestHost(t, libp2pMockNet, privKey)
-	testRouter := newRouterWithSelfPeerAndHost(t, selfPeer, testRouterHost, noopHandler)
+	testRouter := newRouterWithSelfPeerAndHost(t, selfPeer, testRouterHost, nil)
 	testHosts = append(testHosts, testRouterHost)
 
 	// simulate network links between each to every other
@@ -331,7 +377,11 @@ func bootstrap(t *testing.T, ctx context.Context, testHosts []libp2pHost.Host) {
 }
 
 // TECHDEBT(#609): move & de-duplicate
-func newTestRouter(t *testing.T, libp2pMockNet mocknet.Mocknet, handler typesP2P.MessageHandler) *backgroundRouter {
+func newTestRouter(
+	t *testing.T,
+	libp2pMockNet mocknet.Mocknet,
+	handler typesP2P.MessageHandler,
+) *backgroundRouter {
 	t.Helper()
 
 	privKey, selfPeer := newTestPeer(t)
@@ -349,7 +399,12 @@ func newTestRouter(t *testing.T, libp2pMockNet mocknet.Mocknet, handler typesP2P
 	return newRouterWithSelfPeerAndHost(t, selfPeer, host, handler)
 }
 
-func newRouterWithSelfPeerAndHost(t *testing.T, selfPeer typesP2P.Peer, host libp2pHost.Host, handler typesP2P.MessageHandler) *backgroundRouter {
+func newRouterWithSelfPeerAndHost(
+	t *testing.T,
+	selfPeer typesP2P.Peer,
+	host libp2pHost.Host,
+	handler typesP2P.MessageHandler,
+) *backgroundRouter {
 	t.Helper()
 
 	ctrl := gomock.NewController(t)
@@ -373,6 +428,10 @@ func newRouterWithSelfPeerAndHost(t *testing.T, selfPeer typesP2P.Peer, host lib
 
 	err := pstore.AddPeer(selfPeer)
 	require.NoError(t, err)
+
+	if handler == nil {
+		handler = noopHandler
+	}
 
 	router, err := Create(busMock, &config.BackgroundConfig{
 		Addr:                  selfPeer.GetAddress(),
@@ -423,7 +482,11 @@ func newMockNetHostFromPeer(
 	return host
 }
 
-func newTestHost(t *testing.T, mockNet mocknet.Mocknet, privKey cryptoPocket.PrivateKey) libp2pHost.Host {
+func newTestHost(
+	t *testing.T,
+	mockNet mocknet.Mocknet,
+	privKey cryptoPocket.PrivateKey,
+) libp2pHost.Host {
 	t.Helper()
 
 	// listen on random port on loopback interface
@@ -435,4 +498,13 @@ func newTestHost(t *testing.T, mockNet mocknet.Mocknet, privKey cryptoPocket.Pri
 
 	// construct mock host
 	return newMockNetHostFromPeer(t, mockNet, privKey, peer)
+}
+
+func mustMarshal(t *testing.T, msg proto.Message) []byte {
+	t.Helper()
+
+	msgBz, err := proto.Marshal(msg)
+	require.NoError(t, err)
+
+	return msgBz
 }
