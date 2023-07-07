@@ -7,7 +7,7 @@ linters:
     - govet
     - ineffassign
     - staticcheck
-    - typecheck
+    # - typecheck # Not a real linter, but a type checker. We compile the code anyway, so this is redundant.
     - unused
 
     # Additional linters
