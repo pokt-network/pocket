@@ -30,7 +30,7 @@ func (m *ibcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 		cfg:    bus.GetRuntimeMgr().GetConfig().IBC,
 		logger: logger.Global.CreateLoggerForModule(modules.IBCModuleName),
 	}
-	m.logger.Info().Msg("🪐 creating IBC module 🪐")
+	m.logger.Info().Msg("🪐 Creating IBC module 🪐")
 
 	for _, option := range options {
 		option(m)
@@ -45,7 +45,7 @@ func (m *ibcModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 	}
 	if isValidator && m.cfg.Enabled {
 		if err := m.newHost(); err != nil {
-			m.logger.Error().Err(err).Msg("❌ failed to create IBC host ❌")
+			m.logger.Error().Err(err).Msg("❌ Failed to create IBC host ❌")
 			return nil, err
 		}
 	}

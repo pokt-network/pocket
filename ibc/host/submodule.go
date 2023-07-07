@@ -40,7 +40,7 @@ func (*ibcHost) Create(bus modules.Bus, config *configs.IBCHostConfig, options .
 	for _, option := range options {
 		option(h)
 	}
-	h.logger.Info().Msg("🛰️ creating IBC host 🛰️")
+	h.logger.Info().Msg("🛰️ Creating IBC host 🛰️")
 	bus.RegisterModule(h)
 	_, err := store.Create(h.GetBus(),
 		h.cfg.BulkStoreCacher,
