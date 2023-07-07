@@ -1,3 +1,7 @@
+# - This is an override of the shared config: <https://github.com/pokt-network/pocket/blob/40f325305c1756bbfd069bf139fa67545419981c/charts/pocket/values.yaml#L116C12-L117>
+# - This is a reference of how we can utilize Helm to configure the service
+# - Configs can also be overrident without an explicit config file: https://github.com/pokt-network/pocket/blob/main/build/localnet/Tiltfile#L216
+# - Settings specific to a single instance of the servicer, e.g. public key and address, are a good fit for this file
 config:
   servicer:
     enabled: true
