@@ -1,5 +1,6 @@
 linters:
   # Full list available at https://golangci-lint.run/usage/linters/#disabled-by-default
+  disable-all: true
   enable:
     # Default linters
     - errcheck
@@ -8,18 +9,16 @@ linters:
     - ineffassign
     - staticcheck
     - unused
-
     # Additional linters
     - gosec
     - misspell
     - promlinter
     - unparam
     - goimports
-
     # Gocritic allows to use ruleguard; custom linting rules
     - gocritic
-  disable:
-    - typecheck # Not a real linter, but a type checker. We compile the code anyway, so this is redundant.
+
+    # - typecheck # Not a real linter, but a type checker. We compile the code anyway, so this is redundant.
 linters-settings:
   # Gocritic settings; https://go-critic.com/overview
   gocritic:
