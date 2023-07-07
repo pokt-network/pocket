@@ -2,10 +2,9 @@
 
 This document outlines how we structured the code by splitting it into modules, what a module is and how to create one.
 
-<!-- IMPROVE: Add a PR example when a good example arises. -->
-
 ## Contents <!-- omit in toc -->
 
+- [tl;dr Just show me an example](#tldr-just-show-me-an-example)
 - [Definitions](#definitions)
   - [Requirement Level Keywords](#requirement-level-keywords)
   - [Module](#module)
@@ -33,6 +32,10 @@ This document outlines how we structured the code by splitting it into modules, 
   - [Add a logger to the module](#add-a-logger-to-the-module)
   - [Get the module `bus`](#get-the-module-bus)
   - [Stop the module](#stop-the-module)
+
+## tl;dr Just show me an example
+
+If you're just interested in an example PR that introduced a new module to the codebase, see [#842](https://github.com/pokt-network/pocket/pull/842) which added the first iteration of the IBC module
 
 ## Definitions
 
