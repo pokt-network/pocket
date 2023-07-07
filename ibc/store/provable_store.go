@@ -75,9 +75,6 @@ func (p *provableStore) Get(key []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if bytes.Equal(value, nil) {
-		return nil, coreTypes.ErrIBCKeyDoesNotExist(string(key))
-	}
 	return value, nil
 }
 

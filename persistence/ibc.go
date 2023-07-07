@@ -1,10 +1,11 @@
 package persistence
 
 import (
-	"database/sql"
+	"bytes"
 	"encoding/hex"
 	"errors"
 
+	"github.com/jackc/pgx/v5"
 	pTypes "github.com/pokt-network/pocket/persistence/types"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
@@ -24,7 +25,7 @@ func (p *PostgresContext) GetIBCStoreEntry(key []byte, height int64) ([]byte, er
 	row := tx.QueryRow(ctx, pTypes.GetIBCStoreEntryQuery(height, key))
 	var valueHex string
 	err := row.Scan(&valueHex)
-	if errors.Is(err, sql.ErrNoRows) {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, coreTypes.ErrIBCKeyDoesNotExist(string(key))
 	} else if err != nil {
 		return nil, err
@@ -32,6 +33,9 @@ func (p *PostgresContext) GetIBCStoreEntry(key []byte, height int64) ([]byte, er
 	value, err := hex.DecodeString(valueHex)
 	if err != nil {
 		return nil, err
+	}
+	if bytes.Equal(value, nil) {
+		return nil, coreTypes.ErrIBCKeyDoesNotExist(string(key))
 	}
 	return value, nil
 }
