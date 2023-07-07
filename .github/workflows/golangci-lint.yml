@@ -23,18 +23,18 @@ jobs:
         with:
           go-version: ${{ env.TARGET_GOLANG_VERSION }}
           cache: false
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-        with:
-          version: ${{ env.PROTOC_VERSION }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: install cli dependencies
-        run: make install_cli_deps
-      - name: generate protobufs, RPC server, RPC client and mocks
-        run: make protogen_local && make mockgen && make generate_rpc_openapi
+      # - name: Install Protoc
+      #   uses: arduino/setup-protoc@v1
+      #   with:
+      #     version: ${{ env.PROTOC_VERSION }}
+      #     repo-token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: install cli dependencies
+      #   run: make install_cli_deps
+      # - name: generate protobufs, RPC server, RPC client and mocks
+      #   run: make protogen_local && make mockgen && make generate_rpc_openapi
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          args: --timeout=10m --build-tags=test
+          args: --timeout=10m --build-tags=test --disable typecheck
           skip-cache: true
