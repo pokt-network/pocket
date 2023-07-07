@@ -142,6 +142,8 @@ func prepareEnvironment(
 		teardownDeterministicKeygen()
 		err := testPersistenceMod.Stop()
 		require.NoError(t, err)
+		err = testConsensusMod.Stop()
+		require.NoError(t, err)
 		err = testUtilityMod.Stop()
 		require.NoError(t, err)
 		err = testIBCMod.Stop()
