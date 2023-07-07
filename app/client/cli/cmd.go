@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/pokt-network/pocket/app/client/cli/flags"
-	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 )
 
@@ -16,8 +15,6 @@ const (
 	cliExecutableName = "p1"
 	flagBindErrFormat = "could not bind flag %q: %v"
 )
-
-var cfg *configs.Config
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&flags.RemoteCLIURL, "remote_cli_url", defaults.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host>:<port> (uses RPC Port)")
@@ -42,17 +39,10 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   cliExecutableName,
-	Short: "Pocket Network Command Line Interface (CLI)",
-	Long:  "The CLI is meant to be an user but also a machine friendly way for interacting with Pocket Network.",
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		// by this time, the config path should be set
-		cfg = configs.ParseConfig(flags.ConfigPath)
-
-		// set final `remote_cli_url` value; order of precedence: flag > env var > config > default
-		flags.RemoteCLIURL = viper.GetString("remote_cli_url")
-		return nil
-	},
+	Use:               cliExecutableName,
+	Short:             "Pocket Network Command Line Interface (CLI)",
+	Long:              "The CLI is meant to be an user but also a machine friendly way for interacting with Pocket Network.",
+	PersistentPreRunE: flags.ParseConfigAndFlags,
 }
 
 func ExecuteContext(ctx context.Context) error {

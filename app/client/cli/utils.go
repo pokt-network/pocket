@@ -311,7 +311,7 @@ func attachKeybaseFlagsToSubcommands() []cmdOption {
 }
 
 func keybaseForCLI() (keybase.Keybase, error) {
-	return keybase.NewKeybase(cfg.Keybase)
+	return keybase.NewKeybase(flags.Cfg.Keybase)
 }
 
 func unableToConnectToRpc(err error) error {

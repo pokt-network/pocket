@@ -17,6 +17,11 @@ import (
 // P2PDependenciesPreRunE initializes peerstore & current height providers, and a
 // p2p module which consumes them. Everything is registered to the bus.
 func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
+	if err := flags.ParseConfigAndFlags(nil, nil); err != nil {
+		return err
+	}
+
+	// TODO_THIS_COMMIT: figure out what to do with this vvv
 	// TECHDEBT: this is to keep backwards compatibility with localnet
 	flags.ConfigPath = runtime.GetEnv("CONFIG_PATH", "build/config/config.validator1.json")
 
