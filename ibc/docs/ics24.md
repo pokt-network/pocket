@@ -10,10 +10,11 @@
   - [IBC State Tree](#ibc-state-tree)
   - [Data Retrieval](#data-retrieval)
   - [IBC Messages](#ibc-messages)
-  - [IBC Message Handling](#ibc-message-handling)
+  - [IBC Message Broadcasting](#ibc-message-broadcasting)
   - [Mempool](#mempool)
   - [State Transition](#state-transition)
 - [Provable Stores](#provable-stores)
+- [Bulk Store Cacher](#bulk-store-cacher)
   - [Caching](#caching)
 
 ## Overview
@@ -26,11 +27,18 @@ As token transfers as defined in [ICS-20][ics20] work on a lock and mint pattern
 
 Only validators can be configured to be IBC hosts. If the IBC module, during its creation, detects the node is a validator (and the IBC `enabled` field in the config is `true`) it will automatically create a host.
 
+An example of the JSON configuration for the IBC module is as follows:
+
 ```json
 "ibc": {
-    "enabled": bool,
-    "private_key": string,
-    "stores_dir": string
+  "enabled": true,
+  "host": {
+    "private_key": "private key hex string",
+    "stores_dir": "/var/ibc",
+    "bulk_store_cacher": {
+      "max_height_stored": 5
+    }
+  }
 }
 ```
 
@@ -116,7 +124,7 @@ When attempting to generate a proof for a specific `key` in the IBC state tree t
 
 ### IBC Messages
 
-Hosts maintain uncommitted changes in a local ephemeral IBC store while messages propagate through the mempool.
+Hosts propagate any local changes they propose to the IBC store throughout the network's existing `Transaction` flow, and they handle them locally.
 
 These messages enable a variety of IBC related state changes such as creating light clients, opening connections, sending packets, etc... This is enabled by propagating `IBCMessage` types defined in [ibc/types/proto/messages.proto](../types/proto/messages.proto). This type acts as an enum representing two possible state transition events:
 
@@ -127,42 +135,19 @@ _Note: In both types described above the `key` field **must** already be prefixe
 
 When changes are made locally they are not committed to the IBC store itself but are instead used to create an `IBCMessage` which is broadcasted to the network. This is akin to a simple send transaction that has been propagated throughout the mempool but has not been committed to the on-chain state.
 
-### IBC Message Handling
+### IBC Message Broadcasting
 
-Upon a node receiving an `IBCMessage` from the event bus it will use the `HandleMessage()` method of the `IBCModule` to add this message to the transactions mempool via the following steps:
+Upon making a local change to the IBC store the host will:
 
-1. Wrap the `IBCMessage` within a `Transaction`
-2. Sign the `Transaction` using the `IBCModule`'s private key
-3. Broadcast the `Transaction` throughout the mempool
+1. Create the relevent `IBCMessage` type
+   - `UpdateIBCStore`: for creation/update events
+   - `PruneIBCStore`: for deletion events
+2. Wrap the `IBCMessage` within a `Transaction`
+3. Sign the `Transaction` using the IBC Host's private key
+4. Add the `Transaction` to the local mempool
+5. Broadcast the `Transaction` via the `P2P` module for the other nodes to include it in their mempools
 
-```mermaid
-graph LR
-  subgraph Bus
-    A[Events]
-  end
-  subgraph I[IBC Host]
-    I1["HandleMessage(Message)"]
-  end
-  subgraph Handler
-    H1["ConvertIBCMessageToTransaction(IBCMessage)"]
-    subgraph Transaction
-      T1["coreTypes.Transaction{Msg: IBCMessage}"]
-    end
-    H2["SignTransaction(Transaction)"]
-  end
-  subgraph Mempool
-    M1["ValidateTransaction(Transaction)"]
-    M2["AddToMempool(Transaction)"]
-  end
-  Bus--Message-->I
-  I--IBCMessage-->Handler
-  H1--IBCMessage-->Transaction
-  Transaction--Transaction-->H2
-  Handler--Transaction-->Mempool
-  M1--Transaction-->M2
-```
-
-See: [ibc/module.go](../module.go) for the specific implementation details.
+See: [emitter.go](../store/emitter.go) for the specific implementation details.
 
 ### Mempool
 
@@ -177,15 +162,29 @@ See: [PROTOCOL_STATE_HASH.md](../../persistence/docs/PROTOCOL_STATE_HASH.md#ibc-
 
 ## Provable Stores
 
-The `ProvableStore` interface defined in [shared/modules/ibc_module.go](../../shared/modules/ibc_module.go) is implemented by the [`provableStore`](../store/provable_store.go) type and managed by the [`StoreManager`](../store/store_manager.go).
+The `ProvableStore` interface defined in [ibc_store_module.go](../../shared/modules/ibc_store_module.go) is implemented by the [`provableStore`](../store/provable_store.go) type and managed by the [`BulkStoreCacher`](../store/bulk_store_cache.go).
 
-The provable stores are each assigned a `prefix`. This represents the specific sub-store that they are able to access and interact with in the IBC state tree. When doing any operation `get`/`set`/`delete` the `prefix` is applied to the `key` provided to generate the `CommitmentPath` to the element in the IBC state tree.
+The provable stores are each assigned a `prefix`. This represents the specific sub-store that they are able to access and interact with in the IBC state tree. When doing any operation `get`/`set`/`delete` the `prefix` is applied to the `key` provided (if not already present) to generate the `CommitmentPath` to the element in the IBC state tree. The `CommitmentPrefix` for any provable store can be obtained through the following method:
+
+```go
+type ProvableStore interface {
+  ...
+  GetCommitmentPrefix() CommitmentPrefix
+  ...
+}
+```
 
 The provable stores do not directly interface with the IBC state tree but instead utliise the `peristence` layer to query the data locally. This allows for the efficient querying of the IBC store instead of having to query the IBC state tree directly. Any changes made by the `ProvableStore` instance are broadcasted to the network for inclusion in the next block, being stored in their mempools.
 
+## Bulk Store Cacher
+
+The [`BulkStoreCacher`](../store/bulk_store_cache.go) manages all the different provable store instances. It keeps an in-memory map of the current active provable stores, and also manages their caches in bulk.
+
 ### Caching
 
-Every local change made to the IBC store (`update`/`delete`) is stored in an in-memory cache. These caches are written to disk by the [`StoreManager`](../store/store_manager.go).
+Every local change made to the IBC store (`update`/`delete`) is stored in an in-memory cache. These caches are written to disk by the `BulkStoreCacher`, upon the receipt of a new height event from consensus. This means that the cache for any given height is always written to disk all at once.
+
+The `BulkStoreCacher` also keeps track of the maximum height stored in the cache. The `max_height_stored` value (default `5`) is used when a new height event comes in to prune old entries in the cache stored on disk.
 
 In the event of a node failure, or local changes not being propagated correctly. Any changes stored in the cache can be "replayed" by the node and broadcasted to the network for inclusion in the next block.
 

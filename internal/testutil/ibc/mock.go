@@ -75,7 +75,7 @@ func BaseBulkStoreCacherMock(t gocuke.TestingT, bus modules.Bus) *mockModules.Mo
 	storeMock.EXPECT().RemoveStore(gomock.Any()).Return(nil).AnyTimes()
 	storeMock.EXPECT().FlushAllEntries().Return(nil).AnyTimes()
 	storeMock.EXPECT().PruneCaches(gomock.Any()).Return(nil).AnyTimes()
-	storeMock.EXPECT().RestoreCaches().Return(nil).AnyTimes()
+	storeMock.EXPECT().RestoreCaches(gomock.Any()).Return(nil).AnyTimes()
 
 	return storeMock
 }
