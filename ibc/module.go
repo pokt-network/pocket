@@ -1,12 +1,17 @@
 package ibc
 
 import (
+	"fmt"
+
 	"github.com/pokt-network/pocket/ibc/host"
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/modules/base_modules"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var _ modules.IBCModule = &ibcModule{}
@@ -69,6 +74,42 @@ func (m *ibcModule) Stop() error {
 
 func (m *ibcModule) GetModuleName() string {
 	return modules.IBCModuleName
+}
+
+func (m *ibcModule) HandleEvent(event *anypb.Any) error {
+	evt, err := codec.GetCodec().FromAny(event)
+	if err != nil {
+		return err
+	}
+
+	switch event.MessageName() {
+	case messaging.ConsensusNewHeightEventType:
+		consensusNewHeightEvent, ok := evt.(*messaging.ConsensusNewHeightEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast event to ConsensusNewHeightEvent")
+		}
+		newHeight := consensusNewHeightEvent.GetHeight()
+		// check if host was created exit if not
+		if m.host == nil {
+			break
+		}
+		// Flush all caches to disk for last height
+		bsc := m.GetBus().GetBulkStoreCacher()
+		if err := bsc.FlushAllEntries(); err != nil {
+			return err
+		}
+		// Prune old cache entries
+		if newHeight <= m.cfg.Host.BulkStoreCacher.MaxHeightStored {
+			break
+		}
+		pruneHeight := newHeight - m.cfg.Host.BulkStoreCacher.MaxHeightStored
+		if err := bsc.PruneCaches(pruneHeight); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unhandled event type: %s", event.MessageName())
+	}
+	return nil
 }
 
 // newHost creates a new IBC host and sets it in the ibcModule struct if it is not already set

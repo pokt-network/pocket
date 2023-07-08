@@ -18,7 +18,6 @@ var (
 )
 
 // bulkStoreCache holds an in-memory map of all the provable stores in use
-// INCOMPLETE: add a background process to prune the bulkStoreCache past the max stored height
 type bulkStoreCache struct {
 	base_modules.IntegrableModule
 

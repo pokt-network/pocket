@@ -19,6 +19,7 @@ func BaseIBCMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockIBCModule 
 	ibcMock.EXPECT().SetBus(bus).Return().AnyTimes()
 	ibcMock.EXPECT().GetBus().Return(bus).AnyTimes()
 	ibcMock.EXPECT().GetModuleName().Return(modules.IBCModuleName).AnyTimes()
+	ibcMock.EXPECT().HandleEvent(gomock.Any()).Return(nil).AnyTimes()
 
 	return ibcMock
 }
