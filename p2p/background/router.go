@@ -49,6 +49,7 @@ type backgroundRouter struct {
 	host libp2pHost.Host
 	// cancelReadSubscription is the cancel function for the context which is
 	// monitored in the `#readSubscription()` go routine. Call to terminate it.
+	// only one read subscription exists per router at any point in time
 	cancelReadSubscription context.CancelFunc
 
 	// Fields below are assigned during creation via `#setupDependencies()`.
@@ -215,6 +216,7 @@ func (rtr *backgroundRouter) setupUnicastRouter() error {
 }
 
 func (rtr *backgroundRouter) setupDependencies(ctx context.Context, cfg *config.BackgroundConfig) error {
+	// NB: The order in which the internal components are setup below is important
 	if err := rtr.setupUnicastRouter(); err != nil {
 		return err
 	}
@@ -258,7 +260,7 @@ func (rtr *backgroundRouter) setupPeerstore(
 		return err
 	}
 
-	// TECHDEBT(#859): refactor bootstrapping
+	// TECHDEBT(#859): integrate with `p2pModule#bootstrap()`.
 	if err := rtr.bootstrap(ctx); err != nil {
 		return fmt.Errorf("bootstrapping peerstore: %w", err)
 	}
@@ -266,6 +268,7 @@ func (rtr *backgroundRouter) setupPeerstore(
 	return nil
 }
 
+// setupPeerDiscovery sets up the Kademlia Distributed Hash Table (DHT)
 func (rtr *backgroundRouter) setupPeerDiscovery(ctx context.Context) (err error) {
 	dhtMode := dht.ModeAutoServer
 	// NB: don't act as a bootstrap node in peer discovery in client debug mode
@@ -277,6 +280,7 @@ func (rtr *backgroundRouter) setupPeerDiscovery(ctx context.Context) (err error)
 	return err
 }
 
+// setupPubsub sets up a new gossip sub topic using libp2p
 func (rtr *backgroundRouter) setupPubsub(ctx context.Context) (err error) {
 	// TECHDEBT(#730): integrate libp2p tracing via `pubsub.WithEventTracer()`.
 
@@ -315,9 +319,10 @@ func (rtr *backgroundRouter) setupSubscription() (err error) {
 	return err
 }
 
+// TECHDEBT(#859): integrate with `p2pModule#bootstrap()`.
 func (rtr *backgroundRouter) bootstrap(ctx context.Context) error {
-	// CONSIDERATION: add `GetPeers` method to `PeerstoreProvider` interface
-	// to avoid this loop.
+	// CONSIDERATION: add `GetPeers` method, which returns a map,
+	// to the `PeerstoreProvider` interface to simplify this loop.
 	for _, peer := range rtr.pstore.GetPeerList() {
 		if err := utils.AddPeerToLibp2pHost(rtr.host, peer); err != nil {
 			return err
@@ -345,7 +350,7 @@ func (rtr *backgroundRouter) bootstrap(ctx context.Context) error {
 }
 
 // topicValidator is used in conjunction with libp2p-pubsub's notion of "topic
-// validaton". It is usefed for arbitrary and concurrent pre-propagation validation
+// validaton". It is used for arbitrary and concurrent pre-propagation validation
 // of messages.
 //
 // (see: https://github.com/libp2p/specs/tree/master/pubsub#topic-validation
@@ -359,18 +364,21 @@ func (rtr *backgroundRouter) topicValidator(_ context.Context, _ libp2pPeer.ID, 
 	}
 
 	if backgroundMsg.Data == nil {
+		rtr.logger.Debug().Msg("no data in Background message")
 		return false
 	}
 
-	networkMessage := messaging.PocketEnvelope{}
-	if err := proto.Unmarshal(backgroundMsg.Data, &networkMessage); err != nil {
-		rtr.logger.Error().Err(err).Msg("Error decoding network message")
+	poktEnvelope := messaging.PocketEnvelope{}
+	if err := proto.Unmarshal(backgroundMsg.Data, &poktEnvelope); err != nil {
+		rtr.logger.Error().Err(err).Msg("Error decoding Background message")
 		return false
 	}
 
 	return true
 }
 
+// readSubscription is a while loop for receiving and handling messages from the
+// subscription. It is intended to be called as a goroutine.
 func (rtr *backgroundRouter) readSubscription(ctx context.Context) {
 	for {
 		if err := ctx.Err(); err != nil {
@@ -381,7 +389,6 @@ func (rtr *backgroundRouter) readSubscription(ctx context.Context) {
 			return
 		}
 		msg, err := rtr.subscription.Next(ctx)
-
 		if err != nil {
 			rtr.logger.Error().Err(err).
 				Msg("error reading from background topic subscription")

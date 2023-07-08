@@ -130,6 +130,7 @@ func (m *p2pModule) Create(bus modules.Bus, options ...modules.ModuleOption) (mo
 
 	return m, nil
 }
+
 func (m *p2pModule) GetModuleName() string {
 	return modules.P2PModuleName
 }
@@ -212,12 +213,12 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 
 	if isStaked {
 		if m.stakedActorRouter == nil {
-			return fmt.Errorf("staked actor router not started")
+			return fmt.Errorf("broadcasting: staked actor router not started")
 		}
 	}
 
 	if m.unstakedActorRouter == nil {
-		return fmt.Errorf("unstaked actor router not started")
+		return fmt.Errorf("broadcasting: unstaked actor router not started")
 	}
 
 	poktEnvelope := &messaging.PocketEnvelope{
@@ -300,8 +301,11 @@ func (m *p2pModule) setupDependencies() error {
 func (m *p2pModule) setupPeerstoreProvider() error {
 	m.logger.Debug().Msg("setupPeerstoreProvider")
 
-	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
-	pstoreProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(peerstore_provider.ModuleName)
+	// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
+	// is retrievable as a proper submodule
+	pstoreProviderModule, err := m.GetBus().
+		GetModulesRegistry().
+		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
 	if err != nil {
 		m.logger.Debug().Msg("creating new persistence peerstore...")
 		pstoreProvider, err := persPSP.Create(m.GetBus())

@@ -11,7 +11,7 @@ import (
 	"go.uber.org/multierr"
 )
 
-const ModuleName = "peerstore_provider"
+const PeerstoreProviderSubmoduleName = "peerstore_provider"
 
 // PeerstoreProvider is an interface that provides Peerstore accessors
 type PeerstoreProvider interface {

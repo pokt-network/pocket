@@ -120,7 +120,7 @@ func createP2PModules(t *testing.T, busMocks []*mockModules.MockBus, netMock moc
 		p2pMod, err := Create(
 			busMocks[i],
 			WithHost(host),
-			// mock background router to prevent background message propagation.
+			// mock background router to prevent & ignore background message propagation.
 			WithUnstakedActorRouter(noopBackgroundRouterMock),
 		)
 		require.NoError(t, err)
@@ -216,7 +216,7 @@ func createMockBus(
 		m.SetBus(mockBus)
 	}).AnyTimes()
 	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
-	mockModulesRegistry.EXPECT().GetModule(peerstore_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(peerstore_provider.ModuleName)).AnyTimes()
+	mockModulesRegistry.EXPECT().GetModule(peerstore_provider.PeerstoreProviderSubmoduleName).Return(nil, runtime.ErrModuleNotRegistered(peerstore_provider.PeerstoreProviderSubmoduleName)).AnyTimes()
 	mockModulesRegistry.EXPECT().GetModule(current_height_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(current_height_provider.ModuleName)).AnyTimes()
 	mockBus.EXPECT().GetModulesRegistry().Return(mockModulesRegistry).AnyTimes()
 	mockBus.EXPECT().PublishEventToBus(gomock.AssignableToTypeOf(&messaging.PocketEnvelope{})).
@@ -226,7 +226,7 @@ func createMockBus(
 			if readWriteWaitGroup != nil {
 				readWriteWaitGroup.Done()
 			}
-		}).AnyTimes() // TODO: specific times
+		}).AnyTimes() // TECHDEBT: assert number of times. Consider `waitForEventsInternal` or similar as in consensus.
 	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
 	return mockBus
 }
@@ -341,7 +341,7 @@ func prepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)
 
-	// TECHDEBT: The number of times each telemetry event is expected
+	// TECHDEBT(#886): The number of times each telemetry event is expected
 	// (below) is dependent on the number of redundant messages all validators see,
 	// which is a function of the network size. Until this function is derived and
 	// implemented, we cannot predict the number of times each event is expected.

@@ -7,11 +7,13 @@ This document is meant to be a supplement to the living specification of [1.0 Po
 - [Definitions](#definitions)
 - [Interface & Integration](#interface--integration)
 - [Module Architecture](#module-architecture)
+  - [Architecture Design Language](#architecture-design-language)
+  - [Legends](#legends)
   - [P2P Module / Router Decoupling](#p2p-module--router-decoupling)
   - [Message Propagation & Handling](#message-propagation--handling)
   - [Message Deduplication](#message-deduplication)
   - [Peer Discovery](#peer-discovery)
-  - [Code Organization](#code-organization) 
+  - [Code Organization](#code-organization)
 - [Testing](#testing)
   - [Running Unit Tests](#running-unit-tests)
   - [RainTree testing framework](#raintree-testing-framework)
@@ -71,7 +73,24 @@ See [`raintree/router.go`](./raintree/router.go) for the specific implementation
 
 ## Module Architecture
 
+_(TODO: move "arch. design lang." & "legends" sections into `shared` to support common usage)_
+
+### Architecture Design Language
+
+The architecture design language expressed in this documentation is based on [UML](https://www.uml-diagrams.org/).
+Due to limitations in the current version of mermaid, class diagrams are much more adherant to the UML component specification.
+Component diagrams however are much more loosely inspired by their UML counterparts.
+
+Regardless, each architecture diagram should be accompanied by a legend which covers all the design language features used to provide disambiguation.
+
+References:
+- [Class Diagrams](https://www.uml-diagrams.org/class-diagrams-overview.html)
+- [Component Diagrams](https://www.uml-diagrams.org/component-diagrams.html)
+
+  _NOTE: mermaid does not support ports, interfaces, ... in component diagrams ("flowcharts)._
+
 ### Legends
+
 ```mermaid
 flowchart
 subgraph Legend
@@ -89,13 +108,13 @@ classDiagram
 class ConcreteType {
   +ExportedField
   -unexportedField
-  +ExportedMethod(argType) returnType
-  -unexportedMethod()
+  +ExportedMethod(...argTypes) (...returnTypes)
+  -unexportedMethod(...argTypes) (...returnTypes)
 }
 
 class InterfaceType {
     <<interface>>
-    +Method(argType) (returnType1, returnType2)
+    +Method(...argTypes) (...returnTypes)
 }
 
 ConcreteType --|> InterfaceType : Interface realization
@@ -106,9 +125,61 @@ ConcreteType --* OtherType : Aggregatation
 ConcreteType ..*  "(cardinality)" OtherType : Indirect (via interface)
 ```
 
+#### Interface Realization
+
+_TL;DR An instance (i.e. client) implements the associated interface (i.e. supplierl)._
+
+> Realization is a specialized abstraction relationship between two sets of model elements, one representing a specification (the supplier) and the other represents an implementation of the latter (the client).
+
+> Realization can be used to model stepwise refinement, optimizations, transformations, templates, model synthesis, framework composition, etc.
+
+_(see: [UML Realization](https://www.uml-diagrams.org/realization.html))_
+
+#### Direct Usage
+
+_TL;DR one instance (i.e. client) is dependent the associated instance(s) (i.e. supplier) to function properly._
+
+> Dependency is a directed relationship which is used to show that some UML element or a set of elements requires, needs or depends on other model elements for specification or implementation. Because of this, dependency is called a supplier - client relationship, where supplier provides something to the client, and thus the client is in some sense incomplete while semantically or structurally dependent on the supplier element(s). Modification of the supplier may impact the client elements.
+
+> Usage is a dependency in which one named element (client) requires another named element (supplier) for its full definition or implementation.
+
+_(see: [UML Dependency](https://www.uml-diagrams.org/dependency.html))_
+
+#### Composition
+
+_TL;DR deleting an instance also deletes the associated instance(s)._
+
+> A "strong" form of aggregation
+
+> If a composite (whole) is deleted, all of its composite parts are "normally" deleted with it.
+
+_(see: [UML Shared composition](https://www.uml-diagrams.org/composition.html))_
+
+#### Aggregation
+
+
+_TL;DR deleting an instance does not necessarily delete the associated instance(s)._
+
+> A "weak" form of aggregation
+
+> Shared part could be included in several composites, and if some or all of the composites are deleted, shared part may still exist.
+
+_(see: [UML Shared aggregation](https://www.uml-diagrams.org/aggregation.html))_
+
+#### Cardinality
+
+_TL;DR indicates a number, or range of instances associated (i.e. supplier(s))_
+
+Cardinality indicates the number or range of simultaneous instances of supplier that are associated with the client.
+Applicable to multiple association types.
+Can be expressed arbitrarily (e.g. wildcards, variable, equation, etc.)
+
+_(see: [UML Association](https://www.uml-diagrams.org/association.html#association-end))_
+
+
 ### P2P Module / Router Decoupling
 
-The P2P module encapsulates the `RaiTreeRouter` and `BackgroundRouter` submodules.
+The P2P module encapsulates the `RainTreeRouter` and `BackgroundRouter` submodules.
 The P2P module internally refers to these as the `stakedActorRouter` and `unstakedActorRouter`, respectively.
 
 Depending on the necessary routing scheme (unicast / broadcast) and whether the peers involved are staked actors, a node will use one or both of these routers.
@@ -123,11 +194,11 @@ Depending on the necessary routing scheme (unicast / broadcast) and whether the 
 
 **Broadcast**
 
-| Broadcaster    | Receiver       | Router                | Example Usage                              |
-|----------------|----------------|-----------------------|--------------------------------------------|
-| Staked Actor   | Staked Actor   | Raintree + Background | Utility tx messages                        |
-| Unstaked Actor | Staked Actor   | Background only       | Utility tx messages (gossipsub redundancy) |
-| Unstaked Actor | Unstaked Actor | Background only       | Utility tx messages                        |
+| Broadcaster    | Receiver       | Router                | Example Usage                                     |
+|----------------|----------------|-----------------------|---------------------------------------------------|
+| Staked Actor   | Staked Actor   | Raintree + Background | Utility tx messages                               |
+| Unstaked Actor | Staked Actor   | Background only       | Utility tx messages (libp2p gossipsub redundancy) |
+| Unstaked Actor | Unstaked Actor | Background only       | Utility tx messages                               |
 
 Both router submodule implementations embed a `UnicastRouter` which enables them to send and receive messages directly to/from a single peer.
 
@@ -178,7 +249,7 @@ classDiagram
     p2pModule --o "2" Router
     p2pModule ..* RainTreeRouter : (`stakedActorRouter`)
     p2pModule ..* BackgroundRouter : (`unstakedActorRouter`)
-    
+
     class Router {
         <<interface>>
         +Send([]byte, Address) error
@@ -207,7 +278,7 @@ flowchart
             subgraph lRTPS[Raintree Peerstore]
               lStakedPS([staked actors only])
             end
-            
+
             lrtu[UnicastRouter]
 
             lrtu -- "network address lookup" --> lRTPS
@@ -266,21 +337,21 @@ flowchart
     lpb[[`Broadcast`]]
     lpb -. "(iff local & remote peer are staked)" ..-> lrtu
     lpb -- "(always)" --> lbggt
-    
+
     lbggt -- "msg published\n(gossipsub protocol)" ---> lhost
-    
+
     lhost[Libp2p Host]
 
     subgraph lrt[RainTree Router]
       subgraph lRTPS[Raintree Peerstore]
         lStakedPS([staked actors only])
       end
-      
+
       lrtu[UnicastRouter]
-      
+
       lrtu -- "network address lookup" --> lRTPS
     end
-    
+
     lrtu -- "opens a stream\nto target peer" ---> lhost
 
     subgraph lbg[Background Router]
@@ -288,7 +359,7 @@ flowchart
       subgraph lBGPS[Background Peerstore]
         lNetPS([all P2P participants])
       end
-      
+
       lbggt -- "network address lookup" --> lBGPS
     end
   end
@@ -337,6 +408,8 @@ Messages MUST be deduplicated before broadcasting their respective event over th
 
 The responsibility of deduplication is encapsulated by the P2P module, As such duplicate messages may come from multiple routers in some of these scenarios.
 
+The `NondeDeduper` state is not persisted outside of memory and therefore is cleared during node restarts.
+
 ```mermaid
 classDiagram
     class RainTreeMessage {
@@ -349,7 +422,7 @@ classDiagram
         <<protobuf>>
         +Data []byte
     }
-    
+
     class PocketEnvelope {
         <<protobuf>>
         +Content *anypb.Any
@@ -358,8 +431,8 @@ classDiagram
 
     RainTreeMessage --* PocketEnvelope : serialized as `Data`
     BackgroundMessage --* PocketEnvelope : serialized as `Data`
-    
-    
+
+
     class p2pModule {
         -handlePocketEnvelope([]byte) error
     }
@@ -412,7 +485,7 @@ classDiagram
 
     p2pModule ..* RainTreeRouter
     RainTreeRouter --o RainTreeMessage
-    
+
     p2pModule ..* BackgroundRouter
     BackgroundRouter --o BackgroundMessage
 
@@ -420,7 +493,12 @@ classDiagram
     p2pModule --* NonceDeduper
 ```
 
+#### Configuration
+
+The size of the `NonceDeduper` queue is configurable via the `P2PConfig.MaxNonces` field.
+
 ### Peer Discovery
+
 Peer discovery involves pairing peer IDs to their network addresses (multiaddr).
 This pairing always has an associated TTL (time-to-live), near the end of which it must
 be refreshed.
@@ -434,7 +512,7 @@ In the raintree gossip overlay network (`raintreeRouter`), the libp2p peerstore 
 flowchart TD
   subgraph bus
   end
-  
+
   subgraph pers[Persistence Module]
   end
 
@@ -451,7 +529,7 @@ flowchart TD
     host -- "incoming\nbackground message" --> bgu
     host -- "incoming\ntopic message" --> bgr
     host -- "DHT peer discovery" --> rDHT
-  
+
     subgraph rt[RainTree Router]
       subgraph rPS[Raintree Peerstore]
         rStakedPS([staked actors only])
@@ -461,7 +539,7 @@ flowchart TD
       end
 
       rtu[UnicastRouter]
-      
+
       rPM -- "synchronize\n(add/remove)" --> rPS
       rtu -. "(no discovery)" .-x rPS
     end
@@ -480,7 +558,7 @@ flowchart TD
       bgu -- "add if new" --> rBGPS
       bgr -- "add if new" --> rBGPS
       rDHT -- "continuous import" --> rBGPS
-         
+
       bgu[UnicastRouter]
     end
 
@@ -489,8 +567,7 @@ flowchart TD
 
 ### Raintree Router Architecture
 
-_DISCUSS(team): If you feel this needs a diagram, please reach out to the team for additional details._
-_TODO(olshansky, BenVan): Link to RainTree visualizations once it is complete._
+_NOTE: If you (the reader) feel this needs a diagram, please reach out to the team for additional details._
 
 ### Code Organization
 

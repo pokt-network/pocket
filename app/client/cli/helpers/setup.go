@@ -37,20 +37,16 @@ func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 }
 
 func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) error {
-	bus := rm.GetBus()
-	pstoreProvider, err := rpcPSP.Create(
-		bus,
-		rpcPSP.WithCustomRPCURL(rpcURL),
-	)
-	if err != nil {
+	// Ensure `PeerstoreProvider` exists in the modules registry.
+	if _, err := rpcPSP.Create(rm.GetBus(), rpcPSP.WithCustomRPCURL(rpcURL)); err != nil {
 		return err
 	}
-
-	bus.RegisterModule(pstoreProvider)
 	return nil
 }
 
 func setupCurrentHeightProvider(rm runtime.Manager, rpcURL string) {
+	// TECHDEBT(#810): simplify after current height provider is refactored as
+	// a submodule.
 	bus := rm.GetBus()
 	modulesRegistry := bus.GetModulesRegistry()
 	currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(

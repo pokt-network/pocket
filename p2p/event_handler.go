@@ -27,7 +27,7 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		if isStaked, err := m.isStakedActor(); err != nil {
 			return err
 		} else if !isStaked {
-			return nil
+			return nil // unstaked actors do not use RainTree and therefore do not need to update this router
 		}
 
 		oldPeerList := m.stakedActorRouter.GetPeerstore().GetPeerList()
