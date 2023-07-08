@@ -215,7 +215,9 @@ func (p *provableStore) RestoreCache(store kvstore.KVStore, height uint64) error
 			prefixedKey: []byte(parts[2]),
 			value:       value,
 		}
-		store.Delete(key)
+		if err := store.Delete(key); err != nil {
+			return err
+		}
 	}
 	return nil
 }
