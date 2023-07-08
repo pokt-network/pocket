@@ -18,6 +18,7 @@ var (
 )
 
 // bulkStoreCache holds an in-memory map of all the provable stores in use
+// RESEARCH: Look into parrelising the caching methods
 type bulkStoreCache struct {
 	base_modules.IntegrableModule
 
