@@ -159,7 +159,7 @@ func (s *bulkStoreCache) PruneCaches(height uint64) error {
 }
 
 // RestoreCaches restores the caches from disk for all stores in the bulkStoreCache
-func (s *bulkStoreCache) RestoreCaches() error {
+func (s *bulkStoreCache) RestoreCaches(height uint64) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 	s.logger.Info().Msg("📥 Restoring Cache Entries from Disk 📥")
@@ -168,7 +168,7 @@ func (s *bulkStoreCache) RestoreCaches() error {
 		return err
 	}
 	for _, store := range s.stores {
-		if err := store.RestoreCache(disk); err != nil {
+		if err := store.RestoreCache(disk, height); err != nil {
 			return err
 		}
 	}

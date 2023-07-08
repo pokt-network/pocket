@@ -176,8 +176,7 @@ func TestProvableStore_FlushEntries(t *testing.T) {
 		}
 	}
 	cache := kvstore.NewMemKVStore()
-	err := provableStore.FlushEntries(cache)
-	require.NoError(t, err)
+	require.NoError(t, provableStore.FlushEntries(cache))
 	keys, values, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, keys, 3)
@@ -221,15 +220,13 @@ func TestProvableStore_PruneCache(t *testing.T) {
 		}
 	}
 	cache := kvstore.NewMemKVStore()
-	err := provableStore.FlushEntries(cache)
-	require.NoError(t, err)
+	require.NoError(t, provableStore.FlushEntries(cache))
 	keys, _, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, keys, 3)
 	err = cache.Set([]byte("test/2/test/testKey1"), []byte("testValue1"))
 	require.NoError(t, err)
-	err = provableStore.PruneCache(cache, 1)
-	require.NoError(t, err)
+	require.NoError(t, provableStore.PruneCache(cache, 1))
 	keys, values, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, keys, 1)
@@ -259,31 +256,34 @@ func TestProvableStore_RestoreCache(t *testing.T) {
 	}
 	for _, kv := range kvs {
 		if bytes.Equal(kv.value, nil) {
-			err := provableStore.Delete(kv.key)
-			require.NoError(t, err)
+			require.NoError(t, provableStore.Delete(kv.key))
 		} else {
-			err := provableStore.Set(kv.key, kv.value)
-			require.NoError(t, err)
+			require.NoError(t, provableStore.Set(kv.key, kv.value))
 		}
 	}
+
 	cache := kvstore.NewMemKVStore()
-	err := provableStore.FlushEntries(cache)
-	require.NoError(t, err)
+	require.NoError(t, provableStore.FlushEntries(cache))
 	keys, values, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, keys, 3)
-	err = cache.ClearAll()
-	require.NoError(t, err)
-	err = provableStore.FlushEntries(cache)
-	require.NoError(t, err)
+	require.NoError(t, cache.ClearAll())
+	require.NoError(t, provableStore.FlushEntries(cache))
 	newKeys, _, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, newKeys, 0)
 	for i, key := range keys {
 		require.NoError(t, cache.Set(key, values[i]))
 	}
-	err = provableStore.RestoreCache(cache)
+	keys, values, err = cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
+	require.Len(t, keys, 3)
+
+	require.NoError(t, provableStore.RestoreCache(cache, 1))
+	newKeys, _, err = cache.GetAll([]byte{}, false)
+	require.NoError(t, err)
+	require.Len(t, newKeys, 0)
+	require.NoError(t, provableStore.FlushEntries(cache))
 	newKeys, newValues, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
 	require.Len(t, newKeys, 3)

@@ -27,7 +27,7 @@ type BulkStoreCacher interface {
 	GetAllStores() map[string]ProvableStore
 	FlushAllEntries() error
 	PruneCaches(height uint64) error
-	RestoreCaches() error
+	RestoreCaches(height uint64) error
 }
 
 // ProvableStore allows for the Get/Set/Delete operations as well as the generation of proofs for
@@ -46,5 +46,5 @@ type ProvableStore interface {
 	Root() ics23.CommitmentRoot
 	FlushEntries(kvstore.KVStore) error
 	PruneCache(store kvstore.KVStore, height uint64) error
-	RestoreCache(kvstore.KVStore) error
+	RestoreCache(store kvstore.KVStore, height uint64) error
 }

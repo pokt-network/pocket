@@ -195,26 +195,27 @@ func (p *provableStore) PruneCache(store kvstore.KVStore, height uint64) error {
 }
 
 // RestoreCache loads all entries from disk into the cache
-func (p *provableStore) RestoreCache(store kvstore.KVStore) error {
+func (p *provableStore) RestoreCache(store kvstore.KVStore, height uint64) error {
 	p.m.Lock()
 	defer p.m.Unlock()
-	keys, values, err := store.GetAll([]byte(fmt.Sprintf("%s/", p.name)), false)
+	keys, values, err := store.GetAll([]byte(fmt.Sprintf("%s/%d", p.name, height)), false)
 	if err != nil {
 		return err
 	}
 	for i, key := range keys {
 		parts := strings.SplitN(string(key), "/", 3) // name, heightStr, prefixedKeyStr
-		height, err := strconv.ParseUint(parts[1], 10, 64)
+		storedHeight, err := strconv.ParseUint(parts[1], 10, 64)
 		if err != nil {
 			return err
 		}
 		value := values[i]
-		p.cache[parts[1]] = &cachedEntry{
+		p.cache[parts[2]] = &cachedEntry{
 			storeName:   parts[0],
-			height:      height,
+			height:      storedHeight,
 			prefixedKey: []byte(parts[2]),
 			value:       value,
 		}
+		store.Delete(key)
 	}
 	return nil
 }
