@@ -16,6 +16,7 @@
 - [Provable Stores](#provable-stores)
 - [Bulk Store Cacher](#bulk-store-cacher)
   - [Caching](#caching)
+- [Event Logging System](#event-logging-system)
 
 ## Overview
 
@@ -189,6 +190,14 @@ The `BulkStoreCacher` also keeps track of the maximum height stored in the cache
 In the event of a node failure, or local changes not being propagated correctly. Any changes stored in the cache can be "replayed" by the node and broadcasted to the network for inclusion in the next block.
 
 _TODO: Implement this functionality_
+
+## Event Logging System
+
+The `EventLogger` submodule defined in [ibc_event_module.go](../../shared/modules/ibc_event_module.go) implements the Event Logging system defined in the [ICS-24 specification][ics24]. This is used to store and query IBC related events for the relayers to read packet data and timeouts, as only the proofs of these are stored in the chain state.
+
+Events are `IBCEvent` types defined in [ibc_events.proto](../../shared/core/types/proto/ibc_events.proto). They hold the height at which they were created, a string defining their topic (what type of event it represents) and a series of key-value pairs that represent the data of the event.
+
+The persistence layer is used for event storage and retrieval.
 
 [ics24]: https://github.com/cosmos/ibc/blob/main/spec/core/ics-024-host-requirements/README.md
 [ics20]: https://github.com/cosmos/ibc/blob/main/spec/app/ics-020-fungible-token-transfer/README.md
