@@ -32,7 +32,7 @@ func InsertIBCStoreEntryQuery(height int64, key, value []byte) string {
 	)
 }
 
-func InsertIBCEventQuery(height int64, topic string, eventHex string) string {
+func InsertIBCEventQuery(height int64, topic, eventHex string) string {
 	return fmt.Sprintf(
 		`INSERT INTO %s(height, topic, event) VALUES(%d, '%s', '%s')`,
 		IBCEventLogTableName,
