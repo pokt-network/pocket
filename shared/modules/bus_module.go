@@ -41,4 +41,5 @@ type Bus interface {
 	GetTreeStore() TreeStoreModule
 	GetIBCHost() IBCHostSubmodule
 	GetBulkStoreCacher() BulkStoreCacher
+	GetEventLogger() EventLogger
 }

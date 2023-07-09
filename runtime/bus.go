@@ -135,6 +135,10 @@ func (m *bus) GetBulkStoreCacher() modules.BulkStoreCacher {
 	return getModuleFromRegistry[modules.BulkStoreCacher](m, modules.BulkStoreCacherModuleName)
 }
 
+func (m *bus) GetEventLogger() modules.EventLogger {
+	return getModuleFromRegistry[modules.EventLogger](m, modules.EventLoggerModuleName)
+}
+
 // getModuleFromRegistry is a helper function to get a module from the registry that handles errors and casting via generics
 func getModuleFromRegistry[T modules.Submodule](m *bus, moduleName string) T {
 	mod, err := m.modulesRegistry.GetModule(moduleName)
