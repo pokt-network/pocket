@@ -126,7 +126,7 @@ install_cli_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag'
 	curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 .PHONY: install_ci_deps
-install_ci_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag' necessary for CI
+install_ci_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag' and other tools necessary for CI
 	go install "google.golang.org/protobuf/cmd/protoc-gen-go@v1.28" && protoc-gen-go --version
 	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
 	go install "github.com/favadi/protoc-go-inject-tag@latest"
