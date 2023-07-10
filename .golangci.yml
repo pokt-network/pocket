@@ -1,6 +1,5 @@
 linters:
   # Full list available at https://golangci-lint.run/usage/linters/#disabled-by-default
-  disable-all: true
   enable:
     # Default linters
     - errcheck
