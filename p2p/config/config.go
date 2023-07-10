@@ -75,7 +75,8 @@ func (cfg *baseConfig) IsValid() (err error) {
 	if cfg.PeerstoreProvider == nil {
 		err = multierr.Append(err, fmt.Errorf("peerstore provider not configured"))
 	}
-	return nil
+
+	return err
 }
 
 // IsValid implements the respective member of the `RouterConfig` interface.
