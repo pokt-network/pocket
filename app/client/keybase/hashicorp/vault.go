@@ -1,7 +1,6 @@
 // Keybase using HashiCorp vault
 package hashicorp
 
-// IN_THIS_COMMIT: Block merge
 import (
 	"context"
 	"encoding/json"

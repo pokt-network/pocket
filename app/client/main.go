@@ -10,7 +10,6 @@ import (
 	"github.com/pokt-network/pocket/logger"
 )
 
-// IN_THIS_PR: Block merge
 func main() {
 	ctx := newCLIContext()
 	err := cli.ExecuteContext(ctx)
