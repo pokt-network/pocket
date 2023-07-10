@@ -120,7 +120,7 @@ go_fmt: ## Format all the .go files in the project in place.
 	gofmt -w -s .
 
 .PHONY: install_cli_deps
-install_cli_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag' and other tooling
+install_cli_deps: ## Installs `helm`, `tilt` and the underlying `ci_deps`
 	make install_ci_deps
 	curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
 	curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
