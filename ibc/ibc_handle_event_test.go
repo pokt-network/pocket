@@ -181,7 +181,8 @@ func TestHandleEvent_PruneCaches(t *testing.T) {
 			}
 
 			cache, err := kvstore.NewKVStore(tmpDir)
-			defer cache.Stop() // incase of errors close store
+			//nolint:errcheck // ignore error just make sure closes incase anything else fails
+			defer cache.Stop()
 			require.NoError(t, err)
 			keys, values, err := cache.GetAll([]byte{}, false)
 			require.NoError(t, err)
