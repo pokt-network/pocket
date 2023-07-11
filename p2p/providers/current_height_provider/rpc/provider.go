@@ -16,7 +16,7 @@ import (
 var _ current_height_provider.CurrentHeightProvider = &rpcCurrentHeightProvider{}
 
 type rpcCurrentHeightProvider struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	base_modules.InterruptableModule
 
 	rpcURL    string
@@ -80,7 +80,7 @@ func (rchp *rpcCurrentHeightProvider) initRPCClient() {
 
 // WithCustomRPCURL allows to specify a custom RPC URL
 func WithCustomRPCURL(rpcURL string) modules.ModuleOption {
-	return func(rabp modules.InitializableModule) {
+	return func(rabp modules.InjectableModule) {
 		rabp.(*rpcCurrentHeightProvider).rpcURL = rpcURL
 	}
 }

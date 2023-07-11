@@ -10,7 +10,7 @@ import (
 var _ modules.RPCModule = &noopRpcModule{}
 
 type noopRpcModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	base_modules.InterruptableModule
 }
 
