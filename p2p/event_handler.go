@@ -57,13 +57,25 @@ func (m *p2pModule) HandleEvent(event *anypb.Any) error {
 		m.logger.Debug().Fields(messaging.TransitionEventToMap(stateMachineTransitionEvent)).Msg("Received state machine transition event")
 
 		if stateMachineTransitionEvent.NewState == string(coreTypes.StateMachineState_P2P_Bootstrapping) {
-			if m.stakedActorRouter.GetPeerstore().Size() == 0 {
-				m.logger.Warn().Msg("No peers in addrbook, bootstrapping")
+			staked, err := m.isStakedActor()
+			if err != nil {
+				return err
+			}
+			if staked {
+				// TECHDEBT(#859): this will never happen as the peerstore is
+				// seeded from consensus during P2P module construction.
+				if m.stakedActorRouter.GetPeerstore().Size() == 0 {
+					m.logger.Warn().Msg("No peers in peerstore, bootstrapping")
 
-				if err := m.bootstrap(); err != nil {
-					return err
+					if err := m.bootstrap(); err != nil {
+						return err
+					}
 				}
 			}
+
+			// TECHDEBT(#859): for unstaked actors, unstaked actor (background)
+			// router bootstrapping SHOULD complete before the event below is sent.
+
 			m.logger.Info().Bool("TODO", true).Msg("Advertise self to network")
 			if err := m.GetBus().GetStateMachineModule().SendEvent(coreTypes.StateMachineEvent_P2P_IsBootstrapped); err != nil {
 				return err

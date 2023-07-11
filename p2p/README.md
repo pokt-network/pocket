@@ -186,19 +186,21 @@ Depending on the necessary routing scheme (unicast / broadcast) and whether the 
 
 **Unicast**
 
-| Sender         | Receiver       | Router          | Example Usage                                        |
-|----------------|----------------|-----------------|------------------------------------------------------|
-| Staked Actor   | Staked Actor   | Raintree only   | Consensus (state sync) messages (to validators only) |
-| Unstaked Actor | Staked Actor   | Background only | Consensus (state sync) messages (to validators only) |
-| Unstaked Actor | Unstaked Actor | Background only | Consensus (state sync) & Debug (CLI) messages        |
+| Sender         | Receiver       | Router          | Example Usage                                                        |
+|----------------|----------------|-----------------|----------------------------------------------------------------------|
+| Staked Actor   | Staked Actor   | Raintree only   | Consensus hotstuff messages (validators only) & state sync responses |
+| Staked Actor   | Untaked Actor  | Background only | Consensus state sync responses                                       |
+| Unstaked Actor | Staked Actor   | Background only | Consensus state sync responses, debug messages                       |
+| Unstaked Actor | Unstaked Actor | Background only | Consensus state sync responses, debug messages                       |
 
 **Broadcast**
 
-| Broadcaster    | Receiver       | Router                | Example Usage                                     |
-|----------------|----------------|-----------------------|---------------------------------------------------|
-| Staked Actor   | Staked Actor   | Raintree + Background | Utility tx messages                               |
-| Unstaked Actor | Staked Actor   | Background only       | Utility tx messages (libp2p gossipsub redundancy) |
-| Unstaked Actor | Unstaked Actor | Background only       | Utility tx messages                               |
+| Broadcaster    | Receiver       | Router                | Example Usage                                                   |
+|----------------|----------------|-----------------------|-----------------------------------------------------------------|
+| Staked Actor   | Staked Actor   | Raintree + Background | Utility tx messages, consensus state sync requests              |
+| Staked Actor   | Untaked Actor  | Background only       | Utility tx messages (redundancy), consensus state sync requests |
+| Unstaked Actor | Staked Actor   | Background only       | Utility tx messages (redundancy), consensus state sync requests |
+| Unstaked Actor | Unstaked Actor | Background only       | Utility tx messages, consensus state sync requests              |
 
 Both router submodule implementations embed a `UnicastRouter` which enables them to send and receive messages directly to/from a single peer.
 
@@ -503,7 +505,7 @@ Peer discovery involves pairing peer IDs to their network addresses (multiaddr).
 This pairing always has an associated TTL (time-to-live), near the end of which it must
 be refreshed.
 
-In the background gossip overlay network (`backgroundRouter`), peers will re-advertise themselves 7/8th through their TTL.
+In the background gossip overlay network (`backgroundRouter`), peers will re-advertise themselves every 3 hours through their TTL (see: [`RoutingDiscovery#Advertise()`](https://github.com/libp2p/go-libp2p/blob/87c2561238cb0340ddb182c61be8dbbc7a12a780/p2p/discovery/routing/routing.go#L34) and [`ProviderManager#AddProvider()`](https://github.com/libp2p/go-libp2p-kad-dht/blob/v0.24.2/providers/providers_manager.go#L255)).
 This refreshes the libp2p peerstore automatically.
 
 In the raintree gossip overlay network (`raintreeRouter`), the libp2p peerstore is **NOT** currently refreshed _(TODO: [#859](https://github.com/pokt-network/network/isues/859))_.

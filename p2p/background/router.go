@@ -360,6 +360,7 @@ func (rtr *backgroundRouter) bootstrap(ctx context.Context) error {
 func (rtr *backgroundRouter) topicValidator(_ context.Context, _ libp2pPeer.ID, msg *pubsub.Message) bool {
 	var backgroundMsg typesP2P.BackgroundMessage
 	if err := proto.Unmarshal(msg.Data, &backgroundMsg); err != nil {
+		rtr.logger.Error().Err(err).Msg("unmarshalling Background message")
 		return false
 	}
 
