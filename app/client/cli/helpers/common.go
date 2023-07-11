@@ -25,9 +25,9 @@ var (
 
 // fetchPeerstore retrieves the providers from the CLI context and uses them to retrieve the address book for the current height
 func FetchPeerstore(cmd *cobra.Command) (types.Peerstore, error) {
-	bus, ok := GetValueFromCLIContext[modules.Bus](cmd, BusCLICtxKey)
-	if !ok || bus == nil {
-		return nil, errors.New("retrieving bus from CLI context")
+	bus, err := GetBusFromCmd(cmd)
+	if err != nil {
+		return nil, err
 	}
 	// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
 	// is retrievable as a proper submodule
