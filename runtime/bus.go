@@ -143,6 +143,10 @@ func (m *bus) GetEventLogger() modules.EventLogger {
 	return getModuleFromRegistry[modules.EventLogger](m, modules.EventLoggerModuleName)
 }
 
+func (m *bus) GetClientManager() modules.ClientManager {
+	return getModuleFromRegistry[modules.ClientManager](m, modules.ClientManagerModuleName)
+}
+
 func (m *bus) GetCurrentHeightProvider() modules.CurrentHeightProvider {
 	return getModuleFromRegistry[modules.CurrentHeightProvider](m, modules.CurrentHeightProviderSubmoduleName)
 }
