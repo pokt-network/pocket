@@ -65,7 +65,7 @@ type backgroundRouter struct {
 	subscription *pubsub.Subscription
 	// kadDHT is a kademlia distributed hash table used for routing and peer discovery.
 	kadDHT *dht.IpfsDHT
-	// TECHDEBT: `pstore` will likely be removed in future refactoring / simplification
+	// TECHDEBT(#747, #749): `pstore` will likely be removed in future refactoring / simplification
 	// of the `Router` interface.
 	// pstore is the background router's peerstore. Assigned in `backgroundRouter#setupPeerstore()`.
 	pstore typesP2P.Peerstore
@@ -250,8 +250,6 @@ func (rtr *backgroundRouter) setupDependencies(ctx context.Context, _ *config.Ba
 }
 
 func (rtr *backgroundRouter) setupPeerstore(ctx context.Context) (err error) {
-	rtr.logger.Warn().Msg("setting up peerstore...")
-
 	// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
 	// is retrievable as a proper submodule
 	pstoreProviderModule, err := rtr.GetBus().GetModulesRegistry().
@@ -276,10 +274,7 @@ func (rtr *backgroundRouter) setupPeerstore(ctx context.Context) (err error) {
 	}
 
 	// TECHDEBT(#859): integrate with `p2pModule#bootstrap()`.
-	if err := rtr.bootstrap(ctx); err != nil {
-		return fmt.Errorf("bootstrapping peerstore: %w", err)
-	}
-
+	rtr.bootstrap(ctx)
 	return nil
 }
 
@@ -335,33 +330,36 @@ func (rtr *backgroundRouter) setupSubscription() (err error) {
 }
 
 // TECHDEBT(#859): integrate with `p2pModule#bootstrap()`.
-func (rtr *backgroundRouter) bootstrap(ctx context.Context) error {
+func (rtr *backgroundRouter) bootstrap(ctx context.Context) {
 	// CONSIDERATION: add `GetPeers` method, which returns a map,
 	// to the `PeerstoreProvider` interface to simplify this loop.
 	for _, peer := range rtr.pstore.GetPeerList() {
 		if err := utils.AddPeerToLibp2pHost(rtr.host, peer); err != nil {
-			return err
+			rtr.logger.Error().Err(err).Msg("adding peer to libp2p host")
+			continue
 		}
 
 		libp2pAddrInfo, err := utils.Libp2pAddrInfoFromPeer(peer)
 		if err != nil {
-			return fmt.Errorf(
-				"converting peer info, pokt address: %s: %w",
-				peer.GetAddress(),
-				err,
-			)
+			rtr.logger.Error().Err(err).Msg("converting peer info")
+			continue
 		}
 
 		// don't attempt to connect to self
 		if rtr.host.ID() == libp2pAddrInfo.ID {
-			return nil
+			rtr.logger.Debug().Msg("not bootstrapping against self")
+			continue
 		}
 
+		rtr.logger.Debug().Fields(map[string]any{
+			"peer_id":   libp2pAddrInfo.ID.String(),
+			"peer_addr": libp2pAddrInfo.Addrs[0].String(),
+		}).Msg("connecting to peer")
 		if err := rtr.host.Connect(ctx, libp2pAddrInfo); err != nil {
-			return fmt.Errorf("connecting to peer: %w", err)
+			rtr.logger.Error().Err(err).Msg("connecting to bootstrap peer")
+			continue
 		}
 	}
-	return nil
 }
 
 // topicValidator is used in conjunction with libp2p-pubsub's notion of "topic

@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
-	rpcABP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
+	rpcPSP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime/defaults"
@@ -59,9 +59,9 @@ func (m *p2pModule) bootstrap() error {
 			continue
 		}
 
-		pstoreProvider, err := rpcABP.Create(
+		pstoreProvider, err := rpcPSP.Create(
 			m.GetBus(),
-			rpcABP.WithCustomRPCURL(bootstrapNode),
+			rpcPSP.WithCustomRPCURL(bootstrapNode),
 		)
 		if err != nil {
 			return fmt.Errorf("creating RPC peerstore provider: %w", err)
@@ -81,20 +81,30 @@ func (m *p2pModule) bootstrap() error {
 			m.logger.Warn().Err(err).Str("endpoint", bootstrapNode).Msg("Error getting address book from bootstrap node")
 			continue
 		}
-	}
 
-	for _, peer := range pstore.GetPeerList() {
-		m.logger.Debug().Str("address", peer.GetAddress().String()).Msg("Adding peer to router")
-		if err := m.stakedActorRouter.AddPeer(peer); err != nil {
-			m.logger.Error().Err(err).
-				Str("pokt_address", peer.GetAddress().String()).
-				Msg("adding peer")
+		for _, peer := range pstore.GetPeerList() {
+			m.logger.Debug().Str("address", peer.GetAddress().String()).Msg("Adding peer to router")
+			isStaked, err := m.isStakedActor()
+			if err != nil {
+				m.logger.Error().Err(err).Msg("checking if node is staked")
+			}
+			if isStaked {
+				if err := m.stakedActorRouter.AddPeer(peer); err != nil {
+					m.logger.Error().Err(err).
+						Str("pokt_address", peer.GetAddress().String()).
+						Msg("adding peer to staked actor router")
+				}
+			}
+
+			if err := m.unstakedActorRouter.AddPeer(peer); err != nil {
+				m.logger.Error().Err(err).
+					Str("pokt_address", peer.GetAddress().String()).
+					Msg("adding peer to unstaked actor router")
+			}
 		}
 	}
 
-	if m.stakedActorRouter.GetPeerstore().Size() == 0 {
-		return fmt.Errorf("bootstrap failed")
-	}
+	// TECHDEBT(#859): determine bootstrapping success/error conditions.
 	return nil
 }
 

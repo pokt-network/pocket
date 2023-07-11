@@ -363,18 +363,13 @@ func bootstrap(t *testing.T, ctx context.Context, testHosts []libp2pHost.Host) {
 			continue
 		}
 
-		p2pAddr, err := multiaddr.NewMultiaddr(fmt.Sprintf("/p2p/%s", bootstrapHost.ID()))
-		require.NoError(t, err)
-
 		addrInfo := libp2pPeer.AddrInfo{
-			ID: bootstrapHost.ID(),
-			Addrs: []multiaddr.Multiaddr{
-				bootstrapAddr.Encapsulate(p2pAddr),
-			},
+			ID:    bootstrapHost.ID(),
+			Addrs: []multiaddr.Multiaddr{bootstrapAddr},
 		}
 
 		t.Logf("connecting to %s...", addrInfo.ID.String())
-		err = h.Connect(ctx, addrInfo)
+		err := h.Connect(ctx, addrInfo)
 		require.NoError(t, err)
 	}
 }
