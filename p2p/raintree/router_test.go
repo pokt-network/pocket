@@ -57,6 +57,7 @@ func TestRainTreeRouter_AddPeer(t *testing.T) {
 		Addr:                  selfAddr,
 		PeerstoreProvider:     peerstoreProviderMock,
 		CurrentHeightProvider: currentHeightProviderMock,
+		Handler:               noopHandler,
 	}
 
 	router, err := NewRainTreeRouter(busMock, rtCfg)
@@ -119,6 +120,7 @@ func TestRainTreeRouter_RemovePeer(t *testing.T) {
 		Addr:                  selfAddr,
 		PeerstoreProvider:     peerstoreProviderMock,
 		CurrentHeightProvider: currentHeightProviderMock,
+		Handler:               noopHandler,
 	}
 
 	router, err := NewRainTreeRouter(busMock, rtCfg)
