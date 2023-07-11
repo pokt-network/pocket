@@ -11,9 +11,9 @@ import (
 	"github.com/quasilyte/go-ruleguard/dsl"
 )
 
-// This is a custom linter that ensures the use of require.Equal
-func EqualInsteadOfTrue(m dsl.Matcher) {
-	m.Match(`require.True($t, $x == $y, $*args)`).
-		Suggest(`require.Equal($t, $x, $y, $args)`).
-		Report(`use require.Equal instead of require.True`)
+// Blocks merge if IN_THIS_ comments are present
+func BlockInThisCommitPRComment(m dsl.Matcher) {
+	m.MatchComment(`//.*IN_THIS_.*`).
+		Where(!m.File().Name.Matches(`Makefile`) && !m.File().Name.Matches(`blockers.go`)).
+		Report("'IN_THIS_' comments must be addressed before merging to main")
 }
