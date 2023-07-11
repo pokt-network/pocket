@@ -13,7 +13,7 @@ This document is meant to be a supplement to the living specification of [1.0 Po
   - [Message Propagation & Handling](#message-propagation--handling)
   - [Message Deduplication](#message-deduplication)
   - [Peer Discovery](#peer-discovery)
-  - [Code Organization](#code-organization)
+  - [Code Organization](#code-organization) 
 - [Testing](#testing)
   - [Running Unit Tests](#running-unit-tests)
   - [RainTree testing framework](#raintree-testing-framework)
@@ -81,7 +81,7 @@ The architecture design language expressed in this documentation is based on [UM
 Due to limitations in the current version of mermaid, class diagrams are much more adherant to the UML component specification.
 Component diagrams however are much more loosely inspired by their UML counterparts.
 
-Regardless, each architecture diagram should be accompanied by a legend which covers all the design language features used to provide disambiguation.
+Regardless, each architecture diagram should be accompanied by a legend which covers all the design language features used to provide disambiguation. 
 
 References:
 - [Class Diagrams](https://www.uml-diagrams.org/class-diagrams-overview.html)
@@ -186,19 +186,21 @@ Depending on the necessary routing scheme (unicast / broadcast) and whether the 
 
 **Unicast**
 
-| Sender         | Receiver       | Router          | Example Usage                                        |
-|----------------|----------------|-----------------|------------------------------------------------------|
-| Staked Actor   | Staked Actor   | Raintree only   | Consensus (state sync) messages (to validators only) |
-| Unstaked Actor | Staked Actor   | Background only | Consensus (state sync) messages (to validators only) |
-| Unstaked Actor | Unstaked Actor | Background only | Consensus (state sync) & Debug (CLI) messages        |
+| Sender         | Receiver       | Router          | Example Usage                                                        |
+|----------------|----------------|-----------------|----------------------------------------------------------------------|
+| Staked Actor   | Staked Actor   | Raintree only   | Consensus hotstuff messages (validators only) & state sync responses |
+| Staked Actor   | Untaked Actor  | Background only | Consensus state sync responses                                       |
+| Unstaked Actor | Staked Actor   | Background only | Consensus state sync responses, debug messages                       |
+| Unstaked Actor | Unstaked Actor | Background only | Consensus state sync responses, debug messages                       |
 
 **Broadcast**
 
-| Broadcaster    | Receiver       | Router                | Example Usage                                     |
-|----------------|----------------|-----------------------|---------------------------------------------------|
-| Staked Actor   | Staked Actor   | Raintree + Background | Utility tx messages                               |
-| Unstaked Actor | Staked Actor   | Background only       | Utility tx messages (libp2p gossipsub redundancy) |
-| Unstaked Actor | Unstaked Actor | Background only       | Utility tx messages                               |
+| Broadcaster    | Receiver       | Router                | Example Usage                                                   |
+|----------------|----------------|-----------------------|-----------------------------------------------------------------|
+| Staked Actor   | Staked Actor   | Raintree + Background | Utility tx messages, consensus state sync requests              |
+| Staked Actor   | Untaked Actor  | Background only       | Utility tx messages (redundancy), consensus state sync requests |
+| Unstaked Actor | Staked Actor   | Background only       | Utility tx messages (redundancy), consensus state sync requests |
+| Unstaked Actor | Unstaked Actor | Background only       | Utility tx messages, consensus state sync requests              |
 
 Both router submodule implementations embed a `UnicastRouter` which enables them to send and receive messages directly to/from a single peer.
 
@@ -249,7 +251,7 @@ classDiagram
     p2pModule --o "2" Router
     p2pModule ..* RainTreeRouter : (`stakedActorRouter`)
     p2pModule ..* BackgroundRouter : (`unstakedActorRouter`)
-
+    
     class Router {
         <<interface>>
         +Send([]byte, Address) error
@@ -278,7 +280,7 @@ flowchart
             subgraph lRTPS[Raintree Peerstore]
               lStakedPS([staked actors only])
             end
-
+            
             lrtu[UnicastRouter]
 
             lrtu -- "network address lookup" --> lRTPS
@@ -320,7 +322,6 @@ flowchart
         rp2ph -- "deduplicate msg mempool" --> rnd
     end
 
-
     rp2ph -. "(iff not duplicate msg)\npublish event" .-> rbus
 
     rrth --> rp2ph
@@ -337,21 +338,21 @@ flowchart
     lpb[[`Broadcast`]]
     lpb -. "(iff local & remote peer are staked)" ..-> lrtu
     lpb -- "(always)" --> lbggt
-
+    
     lbggt -- "msg published\n(gossipsub protocol)" ---> lhost
-
+    
     lhost[Libp2p Host]
 
     subgraph lrt[RainTree Router]
       subgraph lRTPS[Raintree Peerstore]
         lStakedPS([staked actors only])
       end
-
+      
       lrtu[UnicastRouter]
-
+      
       lrtu -- "network address lookup" --> lRTPS
     end
-
+    
     lrtu -- "opens a stream\nto target peer" ---> lhost
 
     subgraph lbg[Background Router]
@@ -359,7 +360,7 @@ flowchart
       subgraph lBGPS[Background Peerstore]
         lNetPS([all P2P participants])
       end
-
+      
       lbggt -- "network address lookup" --> lBGPS
     end
   end
@@ -422,7 +423,7 @@ classDiagram
         <<protobuf>>
         +Data []byte
     }
-
+    
     class PocketEnvelope {
         <<protobuf>>
         +Content *anypb.Any
@@ -431,8 +432,8 @@ classDiagram
 
     RainTreeMessage --* PocketEnvelope : serialized as `Data`
     BackgroundMessage --* PocketEnvelope : serialized as `Data`
-
-
+    
+    
     class p2pModule {
         -handlePocketEnvelope([]byte) error
     }
@@ -485,7 +486,7 @@ classDiagram
 
     p2pModule ..* RainTreeRouter
     RainTreeRouter --o RainTreeMessage
-
+    
     p2pModule ..* BackgroundRouter
     BackgroundRouter --o BackgroundMessage
 
@@ -503,7 +504,7 @@ Peer discovery involves pairing peer IDs to their network addresses (multiaddr).
 This pairing always has an associated TTL (time-to-live), near the end of which it must
 be refreshed.
 
-In the background gossip overlay network (`backgroundRouter`), peers will re-advertise themselves 7/8th through their TTL.
+In the background gossip overlay network (`backgroundRouter`), peers will re-advertise themselves every 3 hours through their TTL (see: [`RoutingDiscovery#Advertise()`](https://github.com/libp2p/go-libp2p/blob/87c2561238cb0340ddb182c61be8dbbc7a12a780/p2p/discovery/routing/routing.go#L34) and [`ProviderManager#AddProvider()`](https://github.com/libp2p/go-libp2p-kad-dht/blob/v0.24.2/providers/providers_manager.go#L255)).
 This refreshes the libp2p peerstore automatically.
 
 In the raintree gossip overlay network (`raintreeRouter`), the libp2p peerstore is **NOT** currently refreshed _(TODO: [#859](https://github.com/pokt-network/network/isues/859))_.
@@ -512,7 +513,7 @@ In the raintree gossip overlay network (`raintreeRouter`), the libp2p peerstore 
 flowchart TD
   subgraph bus
   end
-
+  
   subgraph pers[Persistence Module]
   end
 
@@ -529,7 +530,7 @@ flowchart TD
     host -- "incoming\nbackground message" --> bgu
     host -- "incoming\ntopic message" --> bgr
     host -- "DHT peer discovery" --> rDHT
-
+  
     subgraph rt[RainTree Router]
       subgraph rPS[Raintree Peerstore]
         rStakedPS([staked actors only])
@@ -539,7 +540,7 @@ flowchart TD
       end
 
       rtu[UnicastRouter]
-
+      
       rPM -- "synchronize\n(add/remove)" --> rPS
       rtu -. "(no discovery)" .-x rPS
     end
@@ -558,7 +559,7 @@ flowchart TD
       bgu -- "add if new" --> rBGPS
       bgr -- "add if new" --> rBGPS
       rDHT -- "continuous import" --> rBGPS
-
+         
       bgu[UnicastRouter]
     end
 

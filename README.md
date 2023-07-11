@@ -41,7 +41,7 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 
 - [Shared Architecture](shared/README.md)
 - [Utility Architecture](utility/doc/README.md)
-- _Coming Soon: Consensus Architecture_ // TODO(olshansky): needs a README file with proper code structure
+- [Consensus Architecture](consensus/README.md)
 - [Persistence Architecture](persistence/docs/README.md)
 - [P2P Architecture](p2p/README.md)
 - [APP Architecture](app/client/doc/README.md)

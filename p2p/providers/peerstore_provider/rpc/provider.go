@@ -21,10 +21,8 @@ var (
 	_ rpcPeerstoreProviderFactory          = &rpcPeerstoreProvider{}
 )
 
-type (
-	rpcPeerstoreProviderOption  func(*rpcPeerstoreProvider)
-	rpcPeerstoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, rpcPeerstoreProviderOption]
-)
+type rpcPeerstoreProviderOption func(*rpcPeerstoreProvider)
+type rpcPeerstoreProviderFactory = modules.FactoryWithOptions[peerstore_provider.PeerstoreProvider, rpcPeerstoreProviderOption]
 
 type rpcPeerstoreProvider struct {
 	base_modules.IntegrableModule

@@ -33,9 +33,9 @@ An example of the JSON configuration for the IBC module is as follows:
 ```json
 "ibc": {
   "enabled": true,
+  "stores_dir": "/var/ibc",
   "host": {
     "private_key": "private key hex string",
-    "stores_dir": "/var/ibc",
     "bulk_store_cacher": {
       "max_height_stored": 5
     }
@@ -183,9 +183,9 @@ The [`BulkStoreCacher`](../store/bulk_store_cache.go) manages all the different 
 
 ### Caching
 
-Every local change made to the IBC store (`update`/`delete`) is stored in an in-memory cache. These caches are written to disk by the `BulkStoreCacher`, upon the receipt of a new height event from consensus. This means that the cache for any given height is always written to disk all at once.
+Every local change made to the IBC store (`update`/`delete`) is stored in an in-memory cache. These caches are written to disk (i.e. flushed) by the `BulkStoreCacher`, upon the receipt of a new height event from consensus. This means that the cache for any given height is always written to disk all at once.
 
-The `BulkStoreCacher` also keeps track of the maximum height stored in the cache. The `max_height_stored` value (default `5`) is used when a new height event comes in to prune old entries in the cache stored on disk.
+The `BulkStoreCacher` also keeps track of the maximum height stored in the cache. The `max_height_stored` value (default `5`) is used when a new height event comes in to prune old entries in the cache stored on disk in a "circular buffer" like fashion.
 
 In the event of a node failure, or local changes not being propagated correctly. Any changes stored in the cache can be "replayed" by the node and broadcasted to the network for inclusion in the next block.
 
