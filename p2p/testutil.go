@@ -12,7 +12,7 @@ import (
 // with this module, instead of creating a new one on `#Start()`.
 // Primarily intended for testing.
 func WithHost(host libp2pHost.Host) modules.ModuleOption {
-	return func(m modules.InitializableModule) {
+	return func(m modules.InjectableModule) {
 		mod, ok := m.(*p2pModule)
 		if ok {
 			mod.host = host
@@ -26,7 +26,7 @@ func WithHost(host libp2pHost.Host) modules.ModuleOption {
 // and the rest of the network, plus as a redundancy to the staked actor
 // router when broadcasting.
 func WithUnstakedActorRouter(router typesP2P.Router) modules.ModuleOption {
-	return func(m modules.InitializableModule) {
+	return func(m modules.InjectableModule) {
 		mod, ok := m.(*p2pModule)
 		if ok {
 			mod.unstakedActorRouter = router
@@ -38,7 +38,7 @@ func WithUnstakedActorRouter(router typesP2P.Router) modules.ModuleOption {
 // WithStakedActorRouter assigns the given router to the P2P modules'
 // `#stakedActor` field, exclusively used to communicate between staked actors.
 func WithStakedActorRouter(router typesP2P.Router) modules.ModuleOption {
-	return func(m modules.InitializableModule) {
+	return func(m modules.InjectableModule) {
 		mod, ok := m.(*p2pModule)
 		if ok {
 			mod.stakedActorRouter = router

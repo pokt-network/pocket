@@ -88,7 +88,7 @@ type UnstakingActor interface {
 //	Conversely, use Local context from persistence module to track off-chain data that will eventually lead to a state transition,
 //		e.g. reward claim for a session that spans multiple blocks.
 type UtilityUnitOfWork interface {
-	IntegratableModule
+	IntegrableModule
 
 	// SetProposalBlock updates the utility unit of work with the proposed state transition.
 	// It does not apply, validate or commit the changes.

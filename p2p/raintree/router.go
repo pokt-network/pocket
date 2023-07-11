@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
-	"github.com/pokt-network/pocket/p2p/unicast"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/pokt-network/pocket/logger"
@@ -13,6 +12,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/p2p/unicast"
 	"github.com/pokt-network/pocket/p2p/utils"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -23,15 +23,15 @@ import (
 )
 
 var (
-	_ typesP2P.Router            = &rainTreeRouter{}
-	_ modules.IntegratableModule = &rainTreeRouter{}
-	_ rainTreeFactory            = &rainTreeRouter{}
+	_ typesP2P.Router          = &rainTreeRouter{}
+	_ modules.IntegrableModule = &rainTreeRouter{}
+	_ rainTreeFactory          = &rainTreeRouter{}
 )
 
 type rainTreeFactory = modules.FactoryWithConfig[typesP2P.Router, *config.RainTreeConfig]
 
 type rainTreeRouter struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	unicast.UnicastRouter
 
 	logger *modules.Logger

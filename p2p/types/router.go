@@ -10,7 +10,7 @@ import (
 // TECHDEBT(olshansky): When we delete `stdnetwork` and only go with `raintree`, this interface
 // can be simplified greatly.
 type Router interface {
-	modules.IntegratableModule
+	modules.IntegrableModule
 
 	Broadcast(data []byte) error
 	Send(data []byte, address cryptoPocket.Address) error

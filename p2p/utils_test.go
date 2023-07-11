@@ -212,11 +212,11 @@ func createMockBus(
 	ctrl := gomock.NewController(t)
 	mockBus := mockModules.NewMockBus(ctrl)
 	mockBus.EXPECT().GetRuntimeMgr().Return(runtimeMgr).AnyTimes()
-	mockBus.EXPECT().RegisterModule(gomock.Any()).DoAndReturn(func(m modules.Module) {
+	mockBus.EXPECT().RegisterModule(gomock.Any()).DoAndReturn(func(m modules.Submodule) {
 		m.SetBus(mockBus)
 	}).AnyTimes()
 	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
-	mockModulesRegistry.EXPECT().GetModule(peerstore_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(peerstore_provider.ModuleName)).AnyTimes()
+	mockModulesRegistry.EXPECT().GetModule(peerstore_provider.PeerstoreProviderSubmoduleName).Return(nil, runtime.ErrModuleNotRegistered(peerstore_provider.PeerstoreProviderSubmoduleName)).AnyTimes()
 	mockModulesRegistry.EXPECT().GetModule(current_height_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(current_height_provider.ModuleName)).AnyTimes()
 	mockBus.EXPECT().GetModulesRegistry().Return(mockModulesRegistry).AnyTimes()
 	mockBus.EXPECT().PublishEventToBus(gomock.AssignableToTypeOf(&messaging.PocketEnvelope{})).
