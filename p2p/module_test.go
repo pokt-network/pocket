@@ -208,12 +208,23 @@ func TestP2pModule_InvalidNonce(t *testing.T) {
 	err := mod.Start()
 	require.NoError(t, err)
 
+	// Use zero value nonce
 	poktEnvelope := &messaging.PocketEnvelope{
+		Content: &anypb.Any{},
+	}
+	poktEnvelopeBz, err := proto.Marshal(poktEnvelope)
+	require.NoError(t, err)
+
+	err = mod.handlePocketEnvelope(poktEnvelopeBz)
+	require.ErrorIs(t, err, typesP2P.ErrInvalidNonce)
+
+	// Explicitly set the nonce to 0
+	poktEnvelope = &messaging.PocketEnvelope{
 		Content: &anypb.Any{},
 		// 0 should be an invalid nonce value
 		Nonce: 0,
 	}
-	poktEnvelopeBz, err := proto.Marshal(poktEnvelope)
+	poktEnvelopeBz, err = proto.Marshal(poktEnvelope)
 	require.NoError(t, err)
 
 	err = mod.handlePocketEnvelope(poktEnvelopeBz)
