@@ -9,7 +9,6 @@ import (
 	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/protocol"
-	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/p2p/unicast"
@@ -46,7 +45,7 @@ type rainTreeRouter struct {
 	selfAddr              cryptoPocket.Address
 	peersManager          *rainTreePeersManager
 	pstoreProvider        peerstore_provider.PeerstoreProvider
-	currentHeightProvider providers.CurrentHeightProvider
+	currentHeightProvider modules.CurrentHeightProvider
 }
 
 func NewRainTreeRouter(bus modules.Bus, cfg *config.RainTreeConfig) (typesP2P.Router, error) {

@@ -123,6 +123,10 @@ func (m *bus) GetIBCModule() modules.IBCModule {
 	return getModuleFromRegistry[modules.IBCModule](m, modules.IBCModuleName)
 }
 
+func (m *bus) GetCurrentHeightProvider() modules.CurrentHeightProvider {
+	return getModuleFromRegistry[modules.CurrentHeightProvider](m, modules.CurrentHeightProviderSubmoduleName)
+}
+
 // getModuleFromRegistry is a helper function to get a module from the registry that handles errors and casting via generics
 func getModuleFromRegistry[T modules.Submodule](m *bus, moduleName string) T {
 	mod, err := m.modulesRegistry.GetModule(moduleName)

@@ -11,7 +11,6 @@ import (
 
 	"github.com/pokt-network/pocket/app/client/cli/helpers"
 	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -227,19 +226,15 @@ func fetchPeerstore(cmd *cobra.Command) (typesP2P.Peerstore, error) {
 	if !ok || bus == nil {
 		return nil, errors.New("retrieving bus from CLI context")
 	}
-	modulesRegistry := bus.GetModulesRegistry()
 	// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
 	// is retrievable as a proper submodule
-	pstoreProvider, err := modulesRegistry.GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
+	pstoreProvider, err := bus.GetModulesRegistry().GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
 	if err != nil {
 		return nil, errors.New("retrieving peerstore provider")
 	}
-	currentHeightProvider, err := modulesRegistry.GetModule(current_height_provider.ModuleName)
-	if err != nil {
-		return nil, errors.New("retrieving currentHeightProvider")
-	}
+	currentHeightProvider := bus.GetCurrentHeightProvider()
 
-	height := currentHeightProvider.(current_height_provider.CurrentHeightProvider).CurrentHeight()
+	height := currentHeightProvider.CurrentHeight()
 	pstore, err := pstoreProvider.(peerstore_provider.PeerstoreProvider).GetStakedPeerstoreAtHeight(height)
 	if err != nil {
 		return nil, fmt.Errorf("retrieving peerstore at height %d", height)

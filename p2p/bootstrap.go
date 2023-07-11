@@ -67,7 +67,14 @@ func (m *p2pModule) bootstrap() error {
 			return fmt.Errorf("creating RPC peerstore provider: %w", err)
 		}
 
-		currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(rpcCHP.WithCustomRPCURL(bootstrapNode))
+		currentHeightProvider, err := rpcCHP.Create(
+			m.GetBus(),
+			rpcCHP.WithCustomRPCURL(bootstrapNode),
+		)
+		if err != nil {
+			m.logger.Warn().Err(err).Str("endpoint", bootstrapNode).Msg("Error getting current height from bootstrap node")
+			continue
+		}
 
 		pstore, err = pstoreProvider.GetStakedPeerstoreAtHeight(currentHeightProvider.CurrentHeight())
 		if err != nil {

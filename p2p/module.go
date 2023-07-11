@@ -16,7 +16,6 @@ import (
 	"github.com/pokt-network/pocket/p2p/background"
 	"github.com/pokt-network/pocket/p2p/config"
 	"github.com/pokt-network/pocket/p2p/providers"
-	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	persPSP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/persistence"
 	"github.com/pokt-network/pocket/p2p/raintree"
@@ -51,7 +50,7 @@ type p2pModule struct {
 	// holding a reference in the module struct and passing via router config.
 	//
 	// Assigned during creation via `#setupDependencies()`.
-	currentHeightProvider providers.CurrentHeightProvider
+	currentHeightProvider modules.CurrentHeightProvider
 	pstoreProvider        providers.PeerstoreProvider
 	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 
@@ -312,6 +311,8 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 			return err
 		}
 
+		// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
+		// is retrievable as a proper submodule
 		m.pstoreProvider = pstoreProvider
 		return nil
 	}
@@ -329,32 +330,27 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 	return nil
 }
 
-// setupCurrentHeightProvider attempts to retrieve the current height provider
-// from the bus registry, falls back to the consensus module if none is registered.
+// setupCurrentHeightProvider gets the current height provider submodule from the
+// modules registry and assigns it to `#currentHeightProvider`.
+// TECHDEBT(#810): remove once p2pModule is using the bus instead of refs for providers.
 func (m *p2pModule) setupCurrentHeightProvider() error {
 	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
 	m.logger.Debug().Msg("setupCurrentHeightProvider")
-	currentHeightProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(current_height_provider.ModuleName)
+	currentHeightProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(modules.CurrentHeightProviderSubmoduleName)
 	if err != nil {
-		// TECHDEBT(#810): add a `consensusCurrentHeightProvider` submodule to wrap
-		// the consensus module usage (similar to how `persistencePeerstoreProvider`
-		// wraps persistence).
-		currentHeightProviderModule = m.GetBus().GetConsensusModule()
-	}
-
-	if currentHeightProviderModule == nil {
-		return errors.New("no current height provider or consensus module registered")
+		return err
 	}
 
 	m.logger.Debug().Msg("loaded current height provider")
 
-	currentHeightProvider, ok := currentHeightProviderModule.(providers.CurrentHeightProvider)
+	currentHeightProvider, ok := currentHeightProviderModule.(modules.CurrentHeightProvider)
 	if !ok {
 		return fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
 	}
 
-	// TECHDEBT(#810): register the provider to the module registry instead of
-	// holding a reference in the module struct and passing via router config.
+	// TECHDEBT(#810): provider should be registered to the module registry by its
+	// constructor. Avoid holding a reference in the module struct and passing via
+	// router config.
 	m.currentHeightProvider = currentHeightProvider
 
 	return nil
@@ -545,7 +541,7 @@ func (m *p2pModule) isNonceAlreadyObserved(nonce utils.Nonce) bool {
 }
 
 func (m *p2pModule) redundantNonceTelemetry(nonce utils.Nonce) {
-	blockHeight := m.currentHeightProvider.CurrentHeight()
+	blockHeight := m.GetBus().GetCurrentHeightProvider().CurrentHeight()
 	m.GetBus().
 		GetTelemetryModule().
 		GetEventMetricsAgent().

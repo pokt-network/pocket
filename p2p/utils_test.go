@@ -17,12 +17,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/internal/testutil"
-	"github.com/pokt-network/pocket/p2p/providers/current_height_provider"
 	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mock_types "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/p2p/utils"
-	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/configs/types"
 	"github.com/pokt-network/pocket/runtime/defaults"
@@ -215,9 +213,9 @@ func createMockBus(
 	mockBus.EXPECT().RegisterModule(gomock.Any()).DoAndReturn(func(m modules.Submodule) {
 		m.SetBus(mockBus)
 	}).AnyTimes()
+	// TECHDEBT: modules registry mock behavior should be defined separately.
 	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
 	mockModulesRegistry.EXPECT().GetModule(peerstore_provider.PeerstoreProviderSubmoduleName).Return(nil, runtime.ErrModuleNotRegistered(peerstore_provider.PeerstoreProviderSubmoduleName)).AnyTimes()
-	mockModulesRegistry.EXPECT().GetModule(current_height_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(current_height_provider.ModuleName)).AnyTimes()
 	mockBus.EXPECT().GetModulesRegistry().Return(mockModulesRegistry).AnyTimes()
 	mockBus.EXPECT().PublishEventToBus(gomock.AssignableToTypeOf(&messaging.PocketEnvelope{})).
 		Do(func(envelope *messaging.PocketEnvelope) {
@@ -277,6 +275,21 @@ func prepareConsensusMock(t *testing.T, busMock *mockModules.MockBus) *mockModul
 	busMock.RegisterModule(consensusMock)
 
 	return consensusMock
+}
+
+func prepareCurrentHeightProviderMock(t *testing.T, busMock *mockModules.MockBus) *mockModules.MockCurrentHeightProvider {
+	ctrl := gomock.NewController(t)
+	currentHeightProviderMock := mockModules.NewMockCurrentHeightProvider(ctrl)
+	currentHeightProviderMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
+
+	currentHeightProviderMock.EXPECT().GetBus().Return(busMock).AnyTimes()
+	currentHeightProviderMock.EXPECT().SetBus(busMock).AnyTimes()
+	currentHeightProviderMock.EXPECT().GetModuleName().
+		Return(modules.CurrentHeightProviderSubmoduleName).
+		AnyTimes()
+	busMock.RegisterModule(currentHeightProviderMock)
+
+	return currentHeightProviderMock
 }
 
 // Persistence mock - only needed for validatorMap access
