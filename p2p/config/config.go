@@ -81,6 +81,7 @@ func (cfg *baseConfig) IsValid() (err error) {
 	if cfg.Handler == nil {
 		err = multierr.Append(err, fmt.Errorf("handler not configured"))
 	}
+
 	return err
 }
 
