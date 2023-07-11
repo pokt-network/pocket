@@ -110,7 +110,9 @@ type treeStore struct {
 type worldState struct {
 	treeStoreDir string
 	rootTree     *stateTree
+	rootHash     []byte
 	merkleTrees  map[string]*stateTree
+	merkleRoots  map[string][]byte
 }
 
 // GetTree returns the root hash and nodeStore for the matching tree stored in the TreeStore.
@@ -325,8 +327,40 @@ func (t *treeStore) Rollback() error {
 	return ErrFailedRollback
 }
 
-// save commits any pending changes to the trees and creates a copy of the current worldState,
-// then saves that copy as a rollback point for later use if errors are encountered.
+// Load sets the TreeStore merkle and root trees to the values provided in the worldstate
+func (t *treeStore) Load(w *worldState) error {
+	t.merkleTrees = make(map[string]*stateTree)
+
+	// import root tree
+	nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, RootTreeName))
+	if err != nil {
+		return err
+	}
+	t.rootTree = &stateTree{
+		name:      RootTreeName,
+		tree:      smt.ImportSparseMerkleTree(nodeStore, smtTreeHasher, w.rootHash),
+		nodeStore: nodeStore,
+	}
+
+	// import merkle trees
+	for treeName, treeRootHash := range w.merkleRoots {
+		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", w.treeStoreDir, treeName))
+		if err != nil {
+			return err
+		}
+
+		t.merkleTrees[treeName] = &stateTree{
+			name:      treeName,
+			nodeStore: nodeStore,
+			tree:      smt.ImportSparseMerkleTree(nodeStore, smtTreeHasher, treeRootHash),
+		}
+	}
+
+	return nil
+}
+
+// save commits any pending changes to the trees and creates a copy of the current state of the
+// tree store then saves that copy as a rollback point for later use if errors are encountered.
 // OPTIMIZE: Consider saving only the root hash of each tree and the tree directory here and then
 // load the trees up in Rollback instead of setting them up here.
 func (t *treeStore) save() (*worldState, error) {

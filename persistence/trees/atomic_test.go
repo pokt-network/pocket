@@ -2,14 +2,16 @@ package trees
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/logger"
 	mock_types "github.com/pokt-network/pocket/persistence/types/mocks"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 
+	"github.com/golang/mock/gomock"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
@@ -81,6 +83,10 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 		require.NoError(t, ts.merkleTrees[treeName].tree.Update([]byte("fiz"), []byte("buz")))
 	}
 
+	for _, treeName := range stateTreeNames {
+		fmt.Printf("%s: %s\n", treeName, hex.EncodeToString(ts.merkleTrees[treeName].tree.Root()))
+	}
+
 	// rollback the changes made to the trees above BEFORE anything was committed
 	err := ts.Rollback()
 	require.NoError(t, err)
@@ -89,4 +95,55 @@ func TestTreeStore_AtomicUpdatesWithSuccessfulRollback(t *testing.T) {
 	hash3 := ts.getStateHash()
 	require.Equal(t, hash3, hash2)
 	require.Equal(t, hash3, h1)
+	ts.Rollback()
+
+	// confirm it's not in the tree
+	v, err := ts.merkleTrees[TransactionsTreeName].tree.Get([]byte("fiz"))
+	require.NoError(t, err)
+	require.Nil(t, v)
+}
+
+func TestTreeStore_SaveAndLoad(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	tmpDir := t.TempDir()
+
+	mockTxIndexer := mock_types.NewMockTxIndexer(ctrl)
+	mockBus := mockModules.NewMockBus(ctrl)
+	mockPersistenceMod := mockModules.NewMockPersistenceModule(ctrl)
+
+	mockBus.EXPECT().GetPersistenceModule().AnyTimes().Return(mockPersistenceMod)
+	mockPersistenceMod.EXPECT().GetTxIndexer().AnyTimes().Return(mockTxIndexer)
+
+	ts := &treeStore{
+		logger:       &zerolog.Logger{},
+		treeStoreDir: tmpDir,
+	}
+	ts.setupTrees()
+	require.NotEmpty(t, ts)
+
+	for _, treeName := range stateTreeNames {
+		err := ts.merkleTrees[treeName].tree.Update([]byte("foo"), []byte("bar"))
+		require.NoError(t, err)
+	}
+
+	err := ts.Commit()
+	require.NoError(t, err)
+
+	hash1 := ts.getStateHash()
+	require.NotEmpty(t, hash1)
+
+	require.NoError(t, ts.Savepoint())
+
+	// declare a second TreeStore with no trees then load the first worldstate into it
+	ts2 := &treeStore{
+		logger:       &zerolog.Logger{},
+		treeStoreDir: tmpDir,
+	}
+
+	// Load sets a tree store to the provided worldstate
+	err = ts2.Load(ts.prevState)
+	require.NoError(t, err)
+
+	hash2 := ts2.getStateHash()
+	require.Equal(t, hash1, hash2)
 }
