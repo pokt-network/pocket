@@ -7,10 +7,25 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TECHDEBT(olshansky): When we delete `stdnetwork` and only go with `raintree`, this interface
-// can be simplified greatly.
+// TECHDEBT(#880, #811): move these definitions to /shared/modules & /shared/modules/types packages.
+// `Peerstore` would have to be moved as well which may create an import cycle.
+
+// NOTE: this is the first case I'm aware of where we need multiple
+// instances of a submodule to be dependency-injectable.
+//
+// CONSIDERATION: this is inconsistent with existing submodule "name" naming
+// conventions as the "name" doesn't match the name of the interface. This is
+// implied by the fact above, as two distinct "names" are needed to disambiguate
+// in the module registry. These names are also distinct from the names of the
+// respective `Router` implementations; my thinking is that these names better
+// reflect the separation of concerns from the P2P module's perspective.
+const (
+	StakedActorRouterSubmoduleName   = "staked_actor_router"
+	UnstakedActorRouterSubmoduleName = "unstaked_actor_router"
+)
+
 type Router interface {
-	modules.IntegrableModule
+	modules.Submodule
 
 	Broadcast(data []byte) error
 	Send(data []byte, address cryptoPocket.Address) error
