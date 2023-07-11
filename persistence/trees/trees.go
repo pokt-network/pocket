@@ -79,7 +79,7 @@ var _ modules.TreeStoreModule = &treeStore{}
 // of the underlying trees by utilizing the lazy loading
 // functionality provided by the underlying smt library.
 type treeStore struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	logger       *modules.Logger
 	treeStoreDir string
@@ -124,6 +124,11 @@ func (t *treeStore) DebugClearAll() error {
 		stateTree.tree = smt.NewSparseMerkleTree(nodeStore, smtTreeHasher)
 	}
 	return nil
+}
+
+// GetModuleName implements the respective `TreeStoreModule` interface method.
+func (t *treeStore) GetModuleName() string {
+	return modules.TreeStoreModuleName
 }
 
 // updateMerkleTrees updates all of the merkle trees in order defined by `numMerkleTrees`

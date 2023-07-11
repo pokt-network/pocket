@@ -24,7 +24,7 @@ type Bus interface {
 
 	// Dependency Injection / Service Discovery
 	GetModulesRegistry() ModulesRegistry
-	RegisterModule(module Module)
+	RegisterModule(module Submodule)
 
 	// Pocket modules
 	GetPersistenceModule() PersistenceModule

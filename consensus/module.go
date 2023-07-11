@@ -25,7 +25,7 @@ import (
 var _ modules.ConsensusModule = &consensusModule{}
 
 type consensusModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	logger *modules.Logger
 
@@ -181,7 +181,7 @@ func (m *consensusModule) GetModuleName() string {
 }
 
 func (m *consensusModule) SetBus(pocketBus modules.Bus) {
-	m.IntegratableModule.SetBus(pocketBus)
+	m.IntegrableModule.SetBus(pocketBus)
 	if m.paceMaker != nil {
 		m.paceMaker.SetBus(pocketBus)
 	}

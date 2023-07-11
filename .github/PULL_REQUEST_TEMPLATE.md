@@ -32,7 +32,8 @@ Please mark the relevant option(s):
 ## List of changes
 
 <!-- REMOVE this comment block after following the instructions
- List out all the changes made
+ List out all the changes made.
+ A PR should, preferably, be about a single change and the corresponding tests
 -->
 
 - Change #1

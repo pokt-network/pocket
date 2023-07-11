@@ -14,7 +14,7 @@ import (
 var _ modules.StateMachineModule = &stateMachineModule{}
 
 type stateMachineModule struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	base_modules.InterruptableModule
 
 	*fsm.FSM
@@ -69,7 +69,7 @@ func (m *stateMachineModule) SendEvent(event coreTypes.StateMachineEvent, args .
 // options
 
 func WithCustomStateMachine(stateMachine *fsm.FSM) modules.ModuleOption {
-	return func(m modules.InitializableModule) {
+	return func(m modules.InjectableModule) {
 		if m, ok := m.(*stateMachineModule); ok {
 			m.FSM = stateMachine
 		}

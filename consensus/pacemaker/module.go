@@ -45,7 +45,7 @@ type Pacemaker interface {
 }
 
 type pacemaker struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 	base_modules.InterruptableModule
 
 	pacemakerCfg    *configs.PacemakerConfig

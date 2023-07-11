@@ -17,7 +17,7 @@ import (
 var _ modules.RuntimeMgr = &Manager{}
 
 type Manager struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	config       *configs.Config
 	genesisState *genesis.GenesisState

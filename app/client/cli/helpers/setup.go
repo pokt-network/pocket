@@ -27,24 +27,26 @@ func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 	bus := runtimeMgr.GetBus()
 	SetValueInCLIContext(cmd, BusCLICtxKey, bus)
 
-	setupPeerstoreProvider(*runtimeMgr, flags.RemoteCLIURL)
+	if err := setupPeerstoreProvider(*runtimeMgr, flags.RemoteCLIURL); err != nil {
+		return err
+	}
 	setupCurrentHeightProvider(*runtimeMgr, flags.RemoteCLIURL)
 	setupAndStartP2PModule(*runtimeMgr)
 
 	return nil
 }
 
-func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) {
-	bus := rm.GetBus()
-	modulesRegistry := bus.GetModulesRegistry()
-	pstoreProvider := rpcPSP.Create(
-		rpcPSP.WithP2PConfig(rm.GetConfig().P2P),
-		rpcPSP.WithCustomRPCURL(rpcURL),
-	)
-	modulesRegistry.RegisterModule(pstoreProvider)
+func setupPeerstoreProvider(rm runtime.Manager, rpcURL string) error {
+	// Ensure `PeerstoreProvider` exists in the modules registry.
+	if _, err := rpcPSP.Create(rm.GetBus(), rpcPSP.WithCustomRPCURL(rpcURL)); err != nil {
+		return err
+	}
+	return nil
 }
 
 func setupCurrentHeightProvider(rm runtime.Manager, rpcURL string) {
+	// TECHDEBT(#810): simplify after current height provider is refactored as
+	// a submodule.
 	bus := rm.GetBus()
 	modulesRegistry := bus.GetModulesRegistry()
 	currentHeightProvider := rpcCHP.NewRPCCurrentHeightProvider(

@@ -228,7 +228,9 @@ func fetchPeerstore(cmd *cobra.Command) (typesP2P.Peerstore, error) {
 		return nil, errors.New("retrieving bus from CLI context")
 	}
 	modulesRegistry := bus.GetModulesRegistry()
-	pstoreProvider, err := modulesRegistry.GetModule(peerstore_provider.ModuleName)
+	// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
+	// is retrievable as a proper submodule
+	pstoreProvider, err := modulesRegistry.GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
 	if err != nil {
 		return nil, errors.New("retrieving peerstore provider")
 	}
