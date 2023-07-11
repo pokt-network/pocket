@@ -75,7 +75,6 @@ func createNonMembershipProof(tree *smt.SMT, key []byte) (*ics23.CommitmentProof
 	if err != nil {
 		return nil, coreTypes.ErrIBCCreatingProof(err)
 	}
-
 	return convertSMPToExclusionProof(proof, key), nil
 }
 

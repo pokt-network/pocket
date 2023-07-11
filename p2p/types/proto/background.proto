@@ -1,0 +1,13 @@
+syntax = "proto3";
+package background;
+
+option go_package = "github.com/pokt-network/pocket/p2p/types";
+
+// BackgroundMessage is intended to be used with the background router for
+// communication with unstaked actors. For unstaked actors, this is the only
+// means of communication with the network. For staked actors, this functions
+// as a redundancy for broadcast propagation (in addition to the staked actor
+// router broadcast message - i.e. `RainTreeMessage`).
+message BackgroundMessage {
+  bytes data = 1;
+}

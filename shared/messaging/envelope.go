@@ -4,6 +4,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
 // PackMessage returns a *PocketEnvelope after having packed the message supplied as an argument
@@ -12,7 +14,10 @@ func PackMessage(message proto.Message) (*PocketEnvelope, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &PocketEnvelope{Content: anyMsg}, nil
+	return &PocketEnvelope{
+		Content: anyMsg,
+		Nonce:   cryptoPocket.GetNonce(),
+	}, nil
 }
 
 // UnpackMessage extracts the message inside the PocketEnvelope decorating it with typing information

@@ -17,7 +17,7 @@ func (p *PostgresContext) GetActor(actorType coreTypes.ActorType, address []byte
 	case types.FishermanActor.GetActorType():
 		schema = types.FishermanActor
 	case types.ValidatorActor.GetActorType():
-		schema = types.FishermanActor
+		schema = types.ValidatorActor
 	default:
 		return nil, fmt.Errorf("invalid actor type: %s", actorType)
 	}

@@ -17,7 +17,7 @@ const (
 var _ modules.UtilityUnitOfWork = &baseUtilityUnitOfWork{}
 
 type baseUtilityUnitOfWork struct {
-	base_modules.IntegratableModule
+	base_modules.IntegrableModule
 
 	logger *modules.Logger
 

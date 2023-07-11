@@ -16,6 +16,7 @@ import (
 var (
 	_ typesP2P.RouterConfig = &baseConfig{}
 	_ typesP2P.RouterConfig = &UnicastRouterConfig{}
+	_ typesP2P.RouterConfig = &BackgroundConfig{}
 	_ typesP2P.RouterConfig = &RainTreeConfig{}
 )
 
@@ -30,6 +31,7 @@ type baseConfig struct {
 	Addr                  crypto.Address
 	CurrentHeightProvider providers.CurrentHeightProvider
 	PeerstoreProvider     providers.PeerstoreProvider
+	Handler               func(data []byte) error
 }
 
 type UnicastRouterConfig struct {
@@ -75,7 +77,11 @@ func (cfg *baseConfig) IsValid() (err error) {
 	if cfg.PeerstoreProvider == nil {
 		err = multierr.Append(err, fmt.Errorf("peerstore provider not configured"))
 	}
-	return nil
+
+	if cfg.Handler == nil {
+		err = multierr.Append(err, fmt.Errorf("handler not configured"))
+	}
+	return err
 }
 
 // IsValid implements the respective member of the `RouterConfig` interface.
@@ -103,23 +109,25 @@ func (cfg *UnicastRouterConfig) IsValid() (err error) {
 }
 
 // IsValid implements the respective member of the `RouterConfig` interface.
-func (cfg *BackgroundConfig) IsValid() (err error) {
+func (cfg *BackgroundConfig) IsValid() error {
 	baseCfg := baseConfig{
 		Host:                  cfg.Host,
 		Addr:                  cfg.Addr,
 		CurrentHeightProvider: cfg.CurrentHeightProvider,
 		PeerstoreProvider:     cfg.PeerstoreProvider,
+		Handler:               cfg.Handler,
 	}
-	return multierr.Append(err, baseCfg.IsValid())
+	return baseCfg.IsValid()
 }
 
 // IsValid implements the respective member of the `RouterConfig` interface.
-func (cfg *RainTreeConfig) IsValid() (err error) {
+func (cfg *RainTreeConfig) IsValid() error {
 	baseCfg := baseConfig{
 		Host:                  cfg.Host,
 		Addr:                  cfg.Addr,
 		CurrentHeightProvider: cfg.CurrentHeightProvider,
 		PeerstoreProvider:     cfg.PeerstoreProvider,
+		Handler:               cfg.Handler,
 	}
-	return multierr.Append(err, baseCfg.IsValid())
+	return baseCfg.IsValid()
 }
