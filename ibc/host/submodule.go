@@ -24,7 +24,6 @@ type ibcHost struct {
 	// only a single bulk store cacher and event logger are allowed
 	bsc modules.BulkStoreCacher
 	em  modules.EventLogger
-
 }
 
 func Create(bus modules.Bus, config *configs.IBCHostConfig, options ...modules.IBCHostOption) (modules.IBCHostSubmodule, error) {
