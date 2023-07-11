@@ -88,7 +88,7 @@ func (m *ibcModule) HandleEvent(event *anypb.Any) error {
 		if !ok {
 			return fmt.Errorf("failed to cast event to ConsensusNewHeightEvent")
 		}
-		newHeight := consensusNewHeightEvent.GetHeight()
+		currHeight := consensusNewHeightEvent.GetHeight() - 1
 		// check if host was created exit if not
 		if m.host == nil {
 			break
@@ -99,10 +99,10 @@ func (m *ibcModule) HandleEvent(event *anypb.Any) error {
 			return err
 		}
 		// Prune old cache entries
-		if newHeight <= m.cfg.Host.BulkStoreCacher.MaxHeightStored {
+		if currHeight <= m.cfg.Host.BulkStoreCacher.MaxHeightStored {
 			break
 		}
-		pruneHeight := newHeight - m.cfg.Host.BulkStoreCacher.MaxHeightStored
+		pruneHeight := currHeight - m.cfg.Host.BulkStoreCacher.MaxHeightStored
 		if err := bsc.PruneCaches(pruneHeight); err != nil {
 			return err
 		}

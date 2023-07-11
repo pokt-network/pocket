@@ -110,22 +110,27 @@ func prepareEnvironment(
 	testPersistenceMod := newTestPersistenceModule(t, bus)
 	err = testPersistenceMod.Start()
 	require.NoError(t, err)
+	bus.RegisterModule(testPersistenceMod)
 
 	testConsensusMod := newTestConsensusModule(t, bus)
 	err = testConsensusMod.Start()
 	require.NoError(t, err)
+	bus.RegisterModule(testConsensusMod)
 
 	testP2PMock := newTestP2PModule(t, bus)
 	err = testP2PMock.Start()
 	require.NoError(t, err)
+	bus.RegisterModule(testP2PMock)
 
 	testUtilityMod := newTestUtilityModule(t, bus)
 	err = testUtilityMod.Start()
 	require.NoError(t, err)
+	bus.RegisterModule(testUtilityMod)
 
 	testIBCMod := newTestIBCModule(t, bus)
 	err = testIBCMod.Start()
 	require.NoError(t, err)
+	bus.RegisterModule(testIBCMod)
 
 	// Reset database to genesis before every test
 	err = testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
@@ -161,6 +166,11 @@ func newTestRuntimeConfig(
 	genesisOpts ...test_artifacts.GenesisOption,
 ) *runtime.Manager {
 	t.Helper()
+
+	// create the ibc temp cache directory
+	tmpDir, err := os.MkdirTemp("", "ibc")
+	require.NoError(t, err)
+
 	cfg, err := configs.CreateTempConfig(&configs.Config{
 		Consensus: &configs.ConsensusConfig{
 			PrivateKey: "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
@@ -184,9 +194,12 @@ func newTestRuntimeConfig(
 		Validator: &configs.ValidatorConfig{Enabled: true},
 		IBC: &configs.IBCConfig{
 			Enabled:   true,
-			StoresDir: ":memory:",
+			StoresDir: tmpDir, // use tmp dir for cache persistence within a test
 			Host: &configs.IBCHostConfig{
 				PrivateKey: "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
+				BulkStoreCacher: &configs.BulkStoreCacherConfig{
+					MaxHeightStored: 3,
+				},
 			},
 		},
 	})
@@ -201,5 +214,13 @@ func newTestRuntimeConfig(
 		genesisOpts...,
 	)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
+
+	t.Cleanup(func() {
+		_, err := os.Stat(tmpDir)
+		require.NoError(t, err)
+		err = os.RemoveAll(tmpDir)
+		require.NoError(t, err)
+	})
+
 	return runtimeCfg
 }
