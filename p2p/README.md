@@ -13,7 +13,7 @@ This document is meant to be a supplement to the living specification of [1.0 Po
   - [Message Propagation & Handling](#message-propagation--handling)
   - [Message Deduplication](#message-deduplication)
   - [Peer Discovery](#peer-discovery)
-  - [Code Organization](#code-organization)
+  - [Code Organization](#code-organization) 
 - [Testing](#testing)
   - [Running Unit Tests](#running-unit-tests)
   - [RainTree testing framework](#raintree-testing-framework)
@@ -81,7 +81,7 @@ The architecture design language expressed in this documentation is based on [UM
 Due to limitations in the current version of mermaid, class diagrams are much more adherant to the UML component specification.
 Component diagrams however are much more loosely inspired by their UML counterparts.
 
-Regardless, each architecture diagram should be accompanied by a legend which covers all the design language features used to provide disambiguation.
+Regardless, each architecture diagram should be accompanied by a legend which covers all the design language features used to provide disambiguation. 
 
 References:
 - [Class Diagrams](https://www.uml-diagrams.org/class-diagrams-overview.html)
@@ -251,7 +251,7 @@ classDiagram
     p2pModule --o "2" Router
     p2pModule ..* RainTreeRouter : (`stakedActorRouter`)
     p2pModule ..* BackgroundRouter : (`unstakedActorRouter`)
-
+    
     class Router {
         <<interface>>
         +Send([]byte, Address) error
@@ -280,7 +280,7 @@ flowchart
             subgraph lRTPS[Raintree Peerstore]
               lStakedPS([staked actors only])
             end
-
+            
             lrtu[UnicastRouter]
 
             lrtu -- "network address lookup" --> lRTPS
@@ -322,7 +322,6 @@ flowchart
         rp2ph -- "deduplicate msg mempool" --> rnd
     end
 
-
     rp2ph -. "(iff not duplicate msg)\npublish event" .-> rbus
 
     rrth --> rp2ph
@@ -339,21 +338,21 @@ flowchart
     lpb[[`Broadcast`]]
     lpb -. "(iff local & remote peer are staked)" ..-> lrtu
     lpb -- "(always)" --> lbggt
-
+    
     lbggt -- "msg published\n(gossipsub protocol)" ---> lhost
-
+    
     lhost[Libp2p Host]
 
     subgraph lrt[RainTree Router]
       subgraph lRTPS[Raintree Peerstore]
         lStakedPS([staked actors only])
       end
-
+      
       lrtu[UnicastRouter]
-
+      
       lrtu -- "network address lookup" --> lRTPS
     end
-
+    
     lrtu -- "opens a stream\nto target peer" ---> lhost
 
     subgraph lbg[Background Router]
@@ -361,7 +360,7 @@ flowchart
       subgraph lBGPS[Background Peerstore]
         lNetPS([all P2P participants])
       end
-
+      
       lbggt -- "network address lookup" --> lBGPS
     end
   end
@@ -424,7 +423,7 @@ classDiagram
         <<protobuf>>
         +Data []byte
     }
-
+    
     class PocketEnvelope {
         <<protobuf>>
         +Content *anypb.Any
@@ -433,8 +432,8 @@ classDiagram
 
     RainTreeMessage --* PocketEnvelope : serialized as `Data`
     BackgroundMessage --* PocketEnvelope : serialized as `Data`
-
-
+    
+    
     class p2pModule {
         -handlePocketEnvelope([]byte) error
     }
@@ -487,7 +486,7 @@ classDiagram
 
     p2pModule ..* RainTreeRouter
     RainTreeRouter --o RainTreeMessage
-
+    
     p2pModule ..* BackgroundRouter
     BackgroundRouter --o BackgroundMessage
 
@@ -514,7 +513,7 @@ In the raintree gossip overlay network (`raintreeRouter`), the libp2p peerstore 
 flowchart TD
   subgraph bus
   end
-
+  
   subgraph pers[Persistence Module]
   end
 
@@ -531,7 +530,7 @@ flowchart TD
     host -- "incoming\nbackground message" --> bgu
     host -- "incoming\ntopic message" --> bgr
     host -- "DHT peer discovery" --> rDHT
-
+  
     subgraph rt[RainTree Router]
       subgraph rPS[Raintree Peerstore]
         rStakedPS([staked actors only])
@@ -541,7 +540,7 @@ flowchart TD
       end
 
       rtu[UnicastRouter]
-
+      
       rPM -- "synchronize\n(add/remove)" --> rPS
       rtu -. "(no discovery)" .-x rPS
     end
@@ -560,7 +559,7 @@ flowchart TD
       bgu -- "add if new" --> rBGPS
       bgr -- "add if new" --> rBGPS
       rDHT -- "continuous import" --> rBGPS
-
+         
       bgu[UnicastRouter]
     end
 

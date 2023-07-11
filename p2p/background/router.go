@@ -390,6 +390,7 @@ func (rtr *backgroundRouter) readSubscription(ctx context.Context) {
 			return
 		}
 		msg, err := rtr.subscription.Next(ctx)
+
 		if err != nil {
 			rtr.logger.Error().Err(err).
 				Msg("error reading from background topic subscription")
