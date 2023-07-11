@@ -9,8 +9,21 @@ import (
 	"github.com/regen-network/gocuke"
 )
 
-// BaseIBCMock returns a mock IBC module without a Host
-func BaseIBCMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockIBCModule {
+// IBCMockWithHost returns an IBC module mock and IBC host mock
+func IBCMockWithHost(t gocuke.TestingT, bus modules.Bus) (
+	*mockModules.MockIBCModule,
+	*mockModules.MockIBCHostSubmodule,
+) {
+	t.Helper()
+
+	ibcMock := baseIBCMock(t, bus)
+	hostMock := baseIBCHostMock(t, bus)
+
+	return ibcMock, hostMock
+}
+
+// baseIBCMock returns a mock IBC module without a Host
+func baseIBCMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockIBCModule {
 	t.Helper()
 	ctrl := gomock.NewController(t)
 	ibcMock := mockModules.NewMockIBCModule(ctrl)
@@ -24,20 +37,8 @@ func BaseIBCMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockIBCModule 
 	return ibcMock
 }
 
-func IBCMockWithHost(t gocuke.TestingT, bus modules.Bus) (
-	*mockModules.MockIBCModule,
-	*mockModules.MockIBCHostSubmodule,
-) {
-	t.Helper()
-
-	ibcMock := BaseIBCMock(t, bus)
-	hostMock := BaseIBCHostMock(t, bus)
-
-	return ibcMock, hostMock
-}
-
-// BaseIBCHostMock returns a mock IBC Host submodule
-func BaseIBCHostMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockIBCHostSubmodule {
+// baseIBCHostMock returns a mock IBC Host submodule
+func baseIBCHostMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockIBCHostSubmodule {
 	t.Helper()
 	ctrl := gomock.NewController(t)
 	hostMock := mockModules.NewMockIBCHostSubmodule(ctrl)
@@ -53,15 +54,15 @@ func BaseIBCHostMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockIBCHos
 	prov := mockModules.NewMockProvableStore(ctrl)
 	hostMock.EXPECT().GetProvableStore(prov).AnyTimes()
 
-	bscMock := BaseBulkStoreCacherMock(t, bus)
+	bscMock := baseBulkStoreCacherMock(t, bus)
 	bus.RegisterModule(hostMock)
 	bus.RegisterModule(bscMock)
 
 	return hostMock
 }
 
-// BaseBulkStoreCacherMock returns a mock BulkStoreCacher submodule mock
-func BaseBulkStoreCacherMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockBulkStoreCacher {
+// baseBulkStoreCacherMock returns a mock BulkStoreCacher submodule mock
+func baseBulkStoreCacherMock(t gocuke.TestingT, bus modules.Bus) *mockModules.MockBulkStoreCacher {
 	t.Helper()
 	ctrl := gomock.NewController(t)
 	storeMock := mockModules.NewMockBulkStoreCacher(ctrl)

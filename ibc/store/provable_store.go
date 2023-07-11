@@ -41,10 +41,10 @@ func (c *cachedEntry) prepare() (key, value []byte) {
 // the creation of IBC messages that are broadcasted through the network and
 // included in the mempool/next block to change the state of the IBC tree
 type provableStore struct {
-	m          sync.Mutex
 	bus        modules.Bus                // used to interact with persistence (passed from IBCHost)
 	name       string                     // store name in storeManager
 	prefix     coreTypes.CommitmentPrefix // []byte(name)
+	m          sync.Mutex                 // mutex to prevent concurrent writes to the cache
 	cache      map[string]*cachedEntry    // in-memory cache of local changes to be written to disk
 	privateKey string
 }

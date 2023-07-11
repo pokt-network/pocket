@@ -12,15 +12,16 @@ message IBCConfig {
     // 2. The node is a servicer and thus when IBC enabled is they are enabled
     //    to relay IBC packets using an IBC relayer binary
     bool enabled = 1;
-    IBCHostConfig host = 2;
+    string stores_dir = 2;
+    IBCHostConfig host = 3;
 }
 
 message IBCHostConfig {
     string private_key = 1; // hex encoded
-    string stores_dir = 2;
-    BulkStoreCacherConfig bulk_store_cacher = 3;
+    BulkStoreCacherConfig bulk_store_cacher = 2;
 }
 
 message BulkStoreCacherConfig {
+    // INVESTIGATE: Should we cap the cache size by size (bytes) instead of heights which could, theoretically, grow unbounded
     uint64 max_height_stored = 1;      // maximum number of heights to be stored in the cache before pruning
 }

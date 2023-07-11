@@ -120,6 +120,7 @@ func (m *ibcModule) newHost() error {
 	hostMod, err := host.Create(m.GetBus(),
 		m.cfg.Host,
 		host.WithLogger(m.logger),
+		host.WithStoresDir(m.cfg.StoresDir),
 	)
 	if err != nil {
 		return err

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"testing"
 
 	ics23 "github.com/cosmos/ics23/go"
@@ -13,12 +14,10 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/smt"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestProvableStore_Get(t *testing.T) {
@@ -57,6 +56,7 @@ func TestProvableStore_Get(t *testing.T) {
 				return
 			}
 			require.Equal(t, value, tc.expectedValue)
+			require.NoError(t, err)
 		})
 	}
 }
@@ -133,6 +133,7 @@ func TestProvableStore_GetAndProve(t *testing.T) {
 				require.Equal(t, err, tc.expectedError)
 				return
 			}
+			require.NoError(t, err)
 			require.Equal(t, value, tc.expectedValue)
 			require.NotNil(t, proof)
 			if tc.expectedValue != nil {
@@ -181,7 +182,7 @@ func TestProvableStore_FlushEntries(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, keys, 3)
 	for i, key := range keys {
-		require.Equal(t, string(key), "test/1/test/"+string(kvs[i].key))
+		require.Equal(t, string(key), prepareTestCacheEntry(1, kvs[i].key))
 		if kvs[i].value == nil {
 			require.Equal(t, values[i], []byte{})
 		} else {
@@ -223,13 +224,13 @@ func TestProvableStore_PruneCache(t *testing.T) {
 	require.NoError(t, provableStore.FlushEntries(cache))
 	keys, _, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
-	require.Len(t, keys, 3)
-	err = cache.Set([]byte("test/2/test/testKey1"), []byte("testValue1"))
+	require.Len(t, keys, 3) // 3 entries in cache should be flushed to disk
+	err = cache.Set([]byte(prepareTestCacheEntry(2, []byte("testKey1"))), []byte("testValue1"))
 	require.NoError(t, err)
 	require.NoError(t, provableStore.PruneCache(cache, 1))
 	keys, values, err := cache.GetAll([]byte{}, false)
 	require.NoError(t, err)
-	require.Len(t, keys, 1)
+	require.Len(t, keys, 1) // 3 entries from height 1 should be pruned only single height 2 entry remains
 	require.Equal(t, string(keys[0]), "test/2/test/testKey1")
 	require.Equal(t, values[0], []byte("testValue1"))
 	require.NoError(t, cache.Stop())
@@ -304,6 +305,12 @@ func TestProvableStore_GetCommitmentPrefix(t *testing.T) {
 	provableStore := newTestProvableStore(t)
 	prefix := provableStore.GetCommitmentPrefix()
 	require.True(t, bytes.Equal([]byte("test"), prefix))
+}
+
+// Ref: provable_store.go:
+// func (c *cachedEntry) prepare() (key, value []byte)
+func prepareTestCacheEntry(height uint64, key []byte) string {
+	return fmt.Sprintf("test/%d/test/%s", height, string(key))
 }
 
 func newTestProvableStore(t *testing.T) modules.ProvableStore {
@@ -486,13 +493,11 @@ func newTestP2PModule(t *testing.T, bus modules.Bus) modules.P2PModule {
 	p2pMock.EXPECT().GetBus().Return(bus).AnyTimes()
 	p2pMock.EXPECT().
 		Broadcast(gomock.Any()).
-		Do(func(msg *anypb.Any) {
-		}).
+		Return(nil).
 		AnyTimes()
 	p2pMock.EXPECT().
 		Send(gomock.Any(), gomock.Any()).
-		Do(func(addr cryptoPocket.Address, msg *anypb.Any) {
-		}).
+		Return(nil).
 		AnyTimes()
 	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()
 	p2pMock.EXPECT().HandleEvent(gomock.Any()).Return(nil).AnyTimes()
@@ -500,6 +505,7 @@ func newTestP2PModule(t *testing.T, bus modules.Bus) modules.P2PModule {
 	return p2pMock
 }
 
+// TECHDEBT: centralise these helper functions in internal/testutils
 func newTestRuntimeConfig(t *testing.T) *runtime.Manager {
 	t.Helper()
 	cfg, err := configs.CreateTempConfig(&configs.Config{
@@ -524,10 +530,10 @@ func newTestRuntimeConfig(t *testing.T) *runtime.Manager {
 		},
 		Validator: &configs.ValidatorConfig{Enabled: true},
 		IBC: &configs.IBCConfig{
-			Enabled: true,
+			Enabled:   true,
+			StoresDir: ":memory:",
 			Host: &configs.IBCHostConfig{
 				PrivateKey: "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
-				StoresDir:  ":memory:",
 			},
 		},
 	})

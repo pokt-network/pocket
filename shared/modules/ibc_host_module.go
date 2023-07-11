@@ -16,7 +16,7 @@ type ibcHostFactory = FactoryWithConfigAndOptions[IBCHostSubmodule, *configs.IBC
 // the host is responsible for managing the IBC state and interacting with consensus in order for
 // any IBC packets to be sent to another host on a different chain (via an IBC relayer). The hosts
 // are also responsible for receiving any IBC packets from another chain and verifying them through
-// the light clients they manage
+// the IBC light clients they manage
 // https://github.com/cosmos/ibc/tree/main/spec/core/ics-024-host-requirements
 type IBCHostSubmodule interface {
 	Submodule

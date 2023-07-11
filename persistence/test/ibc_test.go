@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSetIBCStoreEntry(t *testing.T) {
+func TestIBC_SetIBCStoreEntry(t *testing.T) {
 	db := NewTestPostgresContext(t, 1)
 
 	testCases := []struct {
@@ -60,7 +60,7 @@ func TestSetIBCStoreEntry(t *testing.T) {
 	}
 }
 
-func TestGetIBCStoreEntry(t *testing.T) {
+func TestIBC_GetIBCStoreEntry(t *testing.T) {
 	db := NewTestPostgresContext(t, 1)
 	err := db.SetIBCStoreEntry([]byte("key"), []byte("value"))
 	require.NoError(t, err)

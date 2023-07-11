@@ -11,13 +11,11 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygen"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/utility"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var dbURL string
@@ -51,13 +49,11 @@ func newTestP2PModule(t *testing.T, bus modules.Bus) modules.P2PModule {
 	p2pMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	p2pMock.EXPECT().
 		Broadcast(gomock.Any()).
-		Do(func(msg *anypb.Any) {
-		}).
+		Return(nil).
 		AnyTimes()
 	p2pMock.EXPECT().
 		Send(gomock.Any(), gomock.Any()).
-		Do(func(addr cryptoPocket.Address, msg *anypb.Any) {
-		}).
+		Return(nil).
 		AnyTimes()
 	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()
 	p2pMock.EXPECT().HandleEvent(gomock.Any()).Return(nil).AnyTimes()
@@ -153,6 +149,8 @@ func prepareEnvironment(
 	return runtimeCfg, testConsensusMod, testUtilityMod, testPersistenceMod, testIBCMod
 }
 
+// TECHDEBT: centralise these helper functions in internal/testutils
+//
 //nolint:unparam // Test suite is not fully built out yet
 func newTestRuntimeConfig(
 	t *testing.T,
@@ -185,10 +183,10 @@ func newTestRuntimeConfig(
 		},
 		Validator: &configs.ValidatorConfig{Enabled: true},
 		IBC: &configs.IBCConfig{
-			Enabled: true,
+			Enabled:   true,
+			StoresDir: ":memory:",
 			Host: &configs.IBCHostConfig{
 				PrivateKey: "0ca1a40ddecdab4f5b04fa0bfed1d235beaa2b8082e7554425607516f0862075dfe357de55649e6d2ce889acf15eb77e94ab3c5756fe46d3c7538d37f27f115e",
-				StoresDir:  ":memory:",
 			},
 		},
 	})

@@ -17,19 +17,22 @@ var (
 	cacheDirs = func(storesDir string) string { return fmt.Sprintf("%s/caches", storesDir) }
 )
 
+type lockableStoreMap struct {
+	m      sync.Mutex
+	stores map[string]modules.ProvableStore
+}
+
 // bulkStoreCache holds an in-memory map of all the provable stores in use
 // RESEARCH: Look into parrelising the caching methods
 type bulkStoreCache struct {
 	base_modules.IntegrableModule
-
-	m sync.Mutex
 
 	cfg        *configs.BulkStoreCacherConfig
 	logger     *modules.Logger
 	storesDir  string
 	privateKey string
 
-	stores map[string]*provableStore
+	ls *lockableStoreMap
 }
 
 func Create(bus modules.Bus, config *configs.BulkStoreCacherConfig, options ...modules.BulkStoreCacherOption) (modules.BulkStoreCacher, error) {
@@ -72,8 +75,10 @@ func (*bulkStoreCache) Create(bus modules.Bus, config *configs.BulkStoreCacherCo
 	}
 	s.logger.Info().Msg("💾 Creating Bulk Store Cacher 💾")
 	bus.RegisterModule(s)
-	s.m = sync.Mutex{}
-	s.stores = make(map[string]*provableStore)
+	s.ls = &lockableStoreMap{
+		m:      sync.Mutex{},
+		stores: make(map[string]modules.ProvableStore),
+	}
 	return s, nil
 }
 
@@ -82,21 +87,21 @@ func (s *bulkStoreCache) GetModuleName() string { return modules.BulkStoreCacher
 // AddStore creates and adds a provableStore to the bulkStoreCache
 // if one of the same name does not already exist
 func (s *bulkStoreCache) AddStore(name string) error {
-	s.m.Lock()
-	defer s.m.Unlock()
-	if _, ok := s.stores[name]; ok {
+	s.ls.m.Lock()
+	defer s.ls.m.Unlock()
+	if _, ok := s.ls.stores[name]; ok {
 		return coreTypes.ErrIBCStoreAlreadyExists(name)
 	}
 	store := newProvableStore(s.GetBus(), coreTypes.CommitmentPrefix(name), s.privateKey)
-	s.stores[store.name] = store
+	s.ls.stores[store.name] = store
 	return nil
 }
 
 // GetStore returns the provableStore with the given name
 func (s *bulkStoreCache) GetStore(name string) (modules.ProvableStore, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-	store, ok := s.stores[name]
+	s.ls.m.Lock()
+	defer s.ls.m.Unlock()
+	store, ok := s.ls.stores[name]
 	if !ok {
 		return nil, coreTypes.ErrIBCStoreDoesNotExist(name)
 	}
@@ -105,37 +110,32 @@ func (s *bulkStoreCache) GetStore(name string) (modules.ProvableStore, error) {
 
 // RemoveStore removes the provableStore with the given name
 func (s *bulkStoreCache) RemoveStore(name string) error {
-	s.m.Lock()
-	defer s.m.Unlock()
-	if _, ok := s.stores[name]; !ok {
+	s.ls.m.Lock()
+	defer s.ls.m.Unlock()
+	if _, ok := s.ls.stores[name]; !ok {
 		return coreTypes.ErrIBCStoreDoesNotExist(name)
 	}
-	delete(s.stores, name)
+	delete(s.ls.stores, name)
 	return nil
 }
 
 // GetAllStores returns the map of stores to their store names
 func (s *bulkStoreCache) GetAllStores() map[string]modules.ProvableStore {
-	s.m.Lock()
-	defer s.m.Unlock()
-	stores := make(map[string]modules.ProvableStore, len(s.stores))
-	for name, store := range s.stores {
-		stores[name] = store
-	}
-	return stores
+	return s.ls.stores
 }
 
 // FlushAllEntries caches all the entries for all stores in the bulkStoreCache
 func (s *bulkStoreCache) FlushAllEntries() error {
-	s.m.Lock()
-	defer s.m.Unlock()
+	s.ls.m.Lock()
+	defer s.ls.m.Unlock()
 	s.logger.Info().Msg("🚽 Flushing All Cache Entries to Disk 🚽")
 	disk, err := newKVStore(s.storesDir)
 	if err != nil {
 		return err
 	}
-	for _, store := range s.stores {
+	for _, store := range s.ls.stores {
 		if err := store.FlushEntries(disk); err != nil {
+			s.logger.Error().Err(err).Str("store", string(store.GetCommitmentPrefix())).Msg("🚨 Error Flushing Cache 🚨")
 			return err
 		}
 	}
@@ -144,15 +144,16 @@ func (s *bulkStoreCache) FlushAllEntries() error {
 
 // PruneCaches prunes the caches for all stores in the bulkStoreCache at the given height
 func (s *bulkStoreCache) PruneCaches(height uint64) error {
-	s.m.Lock()
-	defer s.m.Unlock()
+	s.ls.m.Lock()
+	defer s.ls.m.Unlock()
 	s.logger.Info().Uint64("height", height).Msg("✂️  Pruning Cache Entries at Height ✂️ ")
 	disk, err := newKVStore(s.storesDir)
 	if err != nil {
 		return err
 	}
-	for _, store := range s.stores {
+	for _, store := range s.ls.stores {
 		if err := store.PruneCache(disk, height); err != nil {
+			s.logger.Error().Err(err).Str("store", string(store.GetCommitmentPrefix())).Msg("🚨 Error Pruning Cache 🚨")
 			return err
 		}
 	}
@@ -161,15 +162,16 @@ func (s *bulkStoreCache) PruneCaches(height uint64) error {
 
 // RestoreCaches restores the caches from disk for all stores in the bulkStoreCache
 func (s *bulkStoreCache) RestoreCaches(height uint64) error {
-	s.m.Lock()
-	defer s.m.Unlock()
+	s.ls.m.Lock()
+	defer s.ls.m.Unlock()
 	s.logger.Info().Msg("📥 Restoring Cache Entries from Disk 📥")
 	disk, err := newKVStore(s.storesDir)
 	if err != nil {
 		return err
 	}
-	for _, store := range s.stores {
+	for _, store := range s.ls.stores {
 		if err := store.RestoreCache(disk, height); err != nil {
+			s.logger.Error().Err(err).Str("store", string(store.GetCommitmentPrefix())).Msg("🚨 Error Restoring Cache 🚨")
 			return err
 		}
 	}
@@ -180,9 +182,5 @@ func newKVStore(dir string) (kvstore.KVStore, error) {
 	if dir == ":memory:" {
 		return kvstore.NewMemKVStore(), nil
 	}
-	store, err := kvstore.NewKVStore(cacheDirs(dir))
-	if err != nil {
-		return nil, err
-	}
-	return store, nil
+	return kvstore.NewKVStore(cacheDirs(dir))
 }
