@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ErrUnknownPeer = errors.New("unknown peer")
+	ErrUnknownPeer  = errors.New("unknown peer")
 	ErrInvalidNonce = errors.New("invalid nonce")
 )
 
