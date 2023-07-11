@@ -305,7 +305,7 @@ func (t *treeStore) getStateHash() string {
 ////////////////////////////////
 
 // Savepoint generates a new savepoint for the tree store and saves it internally.
-func (t *TreeStore) Savepoint() error {
+func (t *treeStore) Savepoint() error {
 	w, err := t.save()
 	if err != nil {
 		return err
@@ -314,22 +314,9 @@ func (t *TreeStore) Savepoint() error {
 	return nil
 }
 
-// Commit applies any changes that have been made to the underlying trees.
-func (t *TreeStore) Commit() error {
-	if err := t.rootTree.tree.Commit(); err != nil {
-		return err
-	}
-	for treeName, stateTree := range t.merkleTrees {
-		if err := stateTree.tree.Commit(); err != nil {
-			return fmt.Errorf("failed to commit %s: %w", treeName, err)
-		}
-	}
-	return nil
-}
-
 // Rollback intentionally can't return an error because at this point we're out of tricks
 // to recover from problems.
-func (t *TreeStore) Rollback() {
+func (t *treeStore) Rollback() {
 	if t.Prev != nil {
 		t.merkleTrees = t.Prev.MerkleTrees
 		t.rootTree = t.Prev.RootTree
@@ -340,13 +327,13 @@ func (t *TreeStore) Rollback() {
 
 // save commits any pending changes to the trees and serializes the treeStore to a WorldState object
 // with new readers and writers.
-func (t *TreeStore) save() (*Worldstate, error) {
+func (t *treeStore) save() (*Worldstate, error) {
 	if err := t.Commit(); err != nil {
 		return nil, err
 	}
 
 	w := &Worldstate{
-		TreeStoreDir: t.TreeStoreDir,
+		TreeStoreDir: t.treeStoreDir,
 		MerkleTrees:  map[string]*stateTree{},
 	}
 

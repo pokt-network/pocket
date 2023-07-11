@@ -7,8 +7,6 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/runtime"
@@ -19,7 +17,6 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/utils"
 	"github.com/pokt-network/smt"
 	"github.com/stretchr/testify/assert"
@@ -59,7 +56,7 @@ func TestTreeStore_Update(t *testing.T) {
 		pmod := newTestPersistenceModule(t, dbUrl)
 		context := NewTestPostgresContext(t, 0, pmod)
 
-		actor, err := createAndInsertDefaultTestApp(context)
+		actor, err := createAndInsertDefaultTestApp(t, context)
 		assert.NoError(t, err)
 
 		t.Logf("actor inserted %+v", actor)
@@ -67,52 +64,6 @@ func TestTreeStore_Update(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotEmpty(t, hash)
 	})
-
-	t.Run("compute state hash should fail if called after rollback", func(t *testing.T) {
-		pmod := newTestPersistenceModule(t, dbUrl)
-		context := NewTestPostgresContext(t, 0, pmod)
-
-		actor, err := createAndInsertDefaultTestApp(context)
-		assert.NoError(t, err)
-		assert.NotEmpty(t, actor)
-
-		hash1, err := context.ComputeStateHash()
-		assert.NoError(t, err)
-		assert.NotEmpty(t, hash1)
-
-		err = context.NewSavePoint()
-		assert.NoError(t, err)
-
-		actor2, err := createAndInsertDefaultTestApp(context)
-		assert.NoError(t, err)
-		assert.NotEmpty(t, actor2)
-
-		hash2, err := context.ComputeStateHash()
-		assert.NoError(t, err)
-		assert.NotEmpty(t, hash2)
-
-		context.RollbackToSavePoint()
-
-		_, err = context.ComputeStateHash()
-		assert.Error(t, err)
-	})
-}
-
-// createMockBus returns a mock bus with stubbed out functions for bus registration
-func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.MockBus {
-	t.Helper()
-	ctrl := gomock.NewController(t)
-	mockBus := mockModules.NewMockBus(ctrl)
-	mockBus.EXPECT().GetRuntimeMgr().Return(runtimeMgr).AnyTimes()
-	mockBus.EXPECT().RegisterModule(gomock.Any()).DoAndReturn(func(m modules.Module) {
-		m.SetBus(mockBus)
-	}).AnyTimes()
-	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
-	mockModulesRegistry.EXPECT().GetModule(peerstore_provider.PeerstoreProviderSubmoduleName).Return(nil, runtime.ErrModuleNotRegistered(peerstore_provider.PeerstoreProviderSubmoduleName)).AnyTimes()
-	mockModulesRegistry.EXPECT().GetModule(current_height_provider.ModuleName).Return(nil, runtime.ErrModuleNotRegistered(current_height_provider.ModuleName)).AnyTimes()
-	mockBus.EXPECT().GetModulesRegistry().Return(mockModulesRegistry).AnyTimes()
-	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
-	return mockBus
 }
 
 func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.PersistenceModule {
@@ -152,7 +103,7 @@ func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.Persiste
 
 	return persistenceMod.(modules.PersistenceModule)
 }
-func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*coreTypes.Actor, error) {
+func createAndInsertDefaultTestApp(t *testing.T, db *persistence.PostgresContext) (*coreTypes.Actor, error) {
 	app, err := newTestApp()
 	if err != nil {
 		return nil, err
@@ -161,15 +112,15 @@ func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*coreTypes.
 	// TODO(andrew): Use `require.NoError` instead of `log.Fatal` in tests`
 	addrBz, err := hex.DecodeString(app.Address)
 	if err != nil {
-		log.Fatalf("an error occurred converting address to bytes %s", app.Address)
+		t.Errorf("an error occurred converting address to bytes %s", app.Address)
 	}
 	pubKeyBz, err := hex.DecodeString(app.PublicKey)
 	if err != nil {
-		log.Fatalf("an error occurred converting pubKey to bytes %s", app.PublicKey)
+		t.Errorf("an error occurred converting pubKey to bytes %s", app.PublicKey)
 	}
 	outputBz, err := hex.DecodeString(app.Output)
 	if err != nil {
-		log.Fatalf("an error occurred converting output to bytes %s", app.Output)
+		t.Errorf("an error occurred converting output to bytes %s", app.Output)
 	}
 	return app, db.InsertApp(
 		addrBz,

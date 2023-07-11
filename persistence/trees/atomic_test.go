@@ -22,19 +22,18 @@ func TestTreeStore_AtomicUpdates(t *testing.T) {
 	mockBus.EXPECT().GetPersistenceModule().AnyTimes().Return(mockPersistenceMod)
 	mockPersistenceMod.EXPECT().GetTxIndexer().AnyTimes().Return(mockTxIndexer)
 
-	ts := &TreeStore{
+	ts := &treeStore{
 		logger:       &zerolog.Logger{},
-		Bus:          mockBus,
-		TXI:          mockBus.GetPersistenceModule().GetTxIndexer(),
-		TreeStoreDir: ":memory:",
+		treeStoreDir: ":memory:",
 	}
-	ts.setupTrees()
+	err := ts.setupTrees()
+	require.NoError(t, err)
 	require.NotEmpty(t, ts)
 
 	hash0 := ts.getStateHash()
 	require.NotEmpty(t, hash0)
 
-	err := ts.Savepoint()
+	err = ts.Savepoint()
 	require.NoError(t, err)
 
 	for _, treeName := range stateTreeNames {
