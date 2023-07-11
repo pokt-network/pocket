@@ -17,8 +17,6 @@ func (*treeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (m
 		option(m)
 	}
 
-	bus.RegisterModule(m)
-
 	if err := m.setupTrees(); err != nil {
 		return nil, err
 	}
