@@ -7,18 +7,16 @@ linters:
     - govet
     - ineffassign
     - staticcheck
-    - typecheck
     - unused
-
     # Additional linters
     - gosec
     - misspell
     - promlinter
     - unparam
     - goimports
-
     # Gocritic allows to use ruleguard; custom linting rules
     - gocritic
+
 linters-settings:
   # Gocritic settings; https://go-critic.com/overview
   gocritic:

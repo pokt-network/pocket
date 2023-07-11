@@ -14,6 +14,7 @@ type Router interface {
 
 	Broadcast(data []byte) error
 	Send(data []byte, address cryptoPocket.Address) error
+	Close() error
 
 	// GetPeerstore is used by the P2P module to update the staked actor router's
 	// (`RainTreeRouter`) peerstore.

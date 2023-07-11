@@ -119,7 +119,7 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
-			mockBus := createMockBus(t, mockRuntimeMgr)
+			mockBus := createMockBus(t, mockRuntimeMgr, nil)
 
 			genesisStateMock := createMockGenesisState(keys)
 			persistenceMock := preparePersistenceMock(t, mockBus, genesisStateMock)
@@ -145,7 +145,7 @@ func Test_Create_configureBootstrapNodes(t *testing.T) {
 			}
 
 			host := newMockNetHost(t, libp2pMockNet, privKey, peer)
-			p2pMod, err := Create(mockBus, WithHostOption(host))
+			p2pMod, err := Create(mockBus, WithHost(host))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("p2pModule.Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -170,7 +170,7 @@ func TestP2pModule_WithHostOption_Restart(t *testing.T) {
 	libp2pMockNet := mocknet.New()
 	host := newMockNetHost(t, libp2pMockNet, privKey, peer)
 
-	mod := newP2PModule(t, privKey, WithHostOption(host))
+	mod := newP2PModule(t, privKey, WithHost(host))
 
 	// start the module; should not create a new host
 	err := mod.Start()
@@ -203,7 +203,7 @@ func TestP2pModule_InvalidNonce(t *testing.T) {
 
 	mod := newP2PModule(
 		t, privKey,
-		WithHostOption(host),
+		WithHost(host),
 	)
 	err := mod.Start()
 	require.NoError(t, err)
@@ -227,7 +227,7 @@ func newP2PModule(t *testing.T, privKey cryptoPocket.PrivateKey, opts ...modules
 	ctrl := gomock.NewController(t)
 
 	mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
-	mockBus := createMockBus(t, mockRuntimeMgr)
+	mockBus := createMockBus(t, mockRuntimeMgr, nil)
 
 	genesisStateMock := createMockGenesisState(nil)
 	persistenceMock := preparePersistenceMock(t, mockBus, genesisStateMock)
