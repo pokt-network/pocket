@@ -104,6 +104,7 @@ func WithRandomPK() func(*Manager) {
 	return WithPK(privateKey.String())
 }
 
+// TECHDEBT(#750): separate conseneus and P2P keys.
 func WithPK(pk string) func(*Manager) {
 	return func(b *Manager) {
 		if b.config.Consensus == nil {

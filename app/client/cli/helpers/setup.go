@@ -14,6 +14,10 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
+// TODO_THIS_COMMIT: add godoc comment explaining what this **is** and **is not**
+// intended to be used for.
+const debugPrivKey = "09fc8ee114e678e665d09179acb9a30060f680df44ba06b51434ee47940a8613be19b2b886e743eb1ff7880968d6ce1a46350315e569243e747a227ee8faec3d"
+
 // P2PDependenciesPreRunE initializes peerstore & current height providers, and a
 // p2p module which consumes them. Everything is registered to the bus.
 func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
@@ -28,7 +32,7 @@ func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 	runtimeMgr := runtime.NewManagerFromFiles(
 		flags.ConfigPath, genesisPath,
 		runtime.WithClientDebugMode(),
-		runtime.WithRandomPK(),
+		runtime.WithPK(debugPrivKey),
 	)
 
 	bus := runtimeMgr.GetBus()
