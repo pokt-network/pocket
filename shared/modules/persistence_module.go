@@ -46,6 +46,13 @@ type PersistenceModule interface {
 	GetLocalContext() (PersistenceLocalContext, error)
 }
 
+// AtomicStore defines the interface for stores to implement to guarantee atomic commits to the persistence layer
+type AtomicStore interface {
+	Savepoint() error
+	Commit() error
+	Rollback()
+}
+
 // Interface defining the context within which the node can operate with the persistence layer.
 // Operations in the context of a PersistenceContext are isolated from other operations and
 // other persistence contexts until committed, enabling parallelizability along other operations.

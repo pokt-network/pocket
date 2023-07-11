@@ -1,7 +1,17 @@
 // package trees maintains a set of sparse merkle trees
-// each backed by the KVStore interface. It offers an atomic
+// each backed by the `KVStore` interface. It offers an atomic
 // commit and rollback mechanism for interacting with
 // that core resource map of merkle trees.
+// `Commit` must be called after any `Update` calls to persist changes.
+// `Savepoint` is first called to create a new anchor in time.
+// `Update` is called, which will fetch and apply the changes to their
+// respective trees. Finally, `Commit` is called, which persists the
+// currently applied mutations to disk. If `Rollback` is called at any
+// point before committing, it rolls the TreeStore state back to the
+// earlier savepoint. This means that the caller is responsible for
+// correctly managing atomic updates of the TreeStore. In most contexts
+// this is from the perspective of the `utility/unit_of_work` package.
+
 package trees
 
 import (
@@ -88,6 +98,17 @@ type treeStore struct {
 	treeStoreDir string
 	rootTree     *stateTree
 	merkleTrees  map[string]*stateTree
+
+	// Worldstate holds a previous view of the Worldstate
+	// for savepoints and rollbacks purposes.
+	Prev *Worldstate
+}
+
+// Worldstate holds a ser/deserializable view of the entire tree state.
+type Worldstate struct {
+	TreeStoreDir string
+	RootTree     *stateTree
+	MerkleTrees  map[string]*stateTree
 }
 
 // GetTree returns the root hash and nodeStore for the matching tree stored in the TreeStore.
@@ -279,6 +300,77 @@ func (t *treeStore) getStateHash() string {
 	return hexHash
 }
 
+////////////////////////////////
+// AtomicStore Implementation //
+////////////////////////////////
+
+// Savepoint generates a new savepoint for the tree store and saves it internally.
+func (t *TreeStore) Savepoint() error {
+	w, err := t.save()
+	if err != nil {
+		return err
+	}
+	t.Prev = w
+	return nil
+}
+
+// Commit applies any changes that have been made to the underlying trees.
+func (t *TreeStore) Commit() error {
+	if err := t.rootTree.tree.Commit(); err != nil {
+		return err
+	}
+	for treeName, stateTree := range t.merkleTrees {
+		if err := stateTree.tree.Commit(); err != nil {
+			return fmt.Errorf("failed to commit %s: %w", treeName, err)
+		}
+	}
+	return nil
+}
+
+// Rollback intentionally can't return an error because at this point we're out of tricks
+// to recover from problems.
+func (t *TreeStore) Rollback() {
+	if t.Prev != nil {
+		t.merkleTrees = t.Prev.MerkleTrees
+		t.rootTree = t.Prev.RootTree
+		return
+	}
+	t.logger.Fatal().Msgf("rollback called without valid savepoint - this is a bug - treeStore shutting down: %+v", t)
+}
+
+// save commits any pending changes to the trees and serializes the treeStore to a WorldState object
+// with new readers and writers.
+func (t *TreeStore) save() (*Worldstate, error) {
+	if err := t.Commit(); err != nil {
+		return nil, err
+	}
+
+	w := &Worldstate{
+		TreeStoreDir: t.TreeStoreDir,
+		MerkleTrees:  map[string]*stateTree{},
+	}
+
+	for treeName := range t.merkleTrees {
+		root, nodeStore := t.GetTree(treeName)
+		tree := smt.ImportSparseMerkleTree(nodeStore, smtTreeHasher, root)
+		w.MerkleTrees[treeName] = &stateTree{
+			name:      treeName,
+			tree:      tree,
+			nodeStore: nodeStore,
+		}
+	}
+
+	root, nodeStore := t.GetTree(RootTreeName)
+	tree := smt.ImportSparseMerkleTree(nodeStore, smtTreeHasher, root)
+	w.RootTree = &stateTree{
+		name:      RootTreeName,
+		tree:      tree,
+		nodeStore: nodeStore,
+	}
+
+	return w, nil
+}
+
 ////////////////////////
 // Actor Tree Helpers //
 ////////////////////////
@@ -304,7 +396,6 @@ func (t *treeStore) updateActorsTree(actorType coreTypes.ActorType, actors []*co
 			return err
 		}
 	}
-
 	return nil
 }
 

@@ -21,6 +21,8 @@ type TreeStoreModule interface {
 	Submodule
 	treeStoreFactory
 
+	AtomicStore
+
 	// Update returns the new state hash for a given height.
 	// * Height is passed through to the Update function and is used to query the TxIndexer for transactions
 	// to update into the merkle tree set
