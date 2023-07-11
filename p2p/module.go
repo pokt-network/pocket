@@ -50,7 +50,6 @@ type p2pModule struct {
 	// holding a reference in the module struct and passing via router config.
 	//
 	// Assigned during creation via `#setupDependencies()`.
-	currentHeightProvider modules.CurrentHeightProvider
 	pstoreProvider        providers.PeerstoreProvider
 	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
 
@@ -280,10 +279,6 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 
 // setupDependencies sets up the module's current height and peerstore providers.
 func (m *p2pModule) setupDependencies() error {
-	if err := m.setupCurrentHeightProvider(); err != nil {
-		return err
-	}
-
 	if err := m.setupPeerstoreProvider(); err != nil {
 		return err
 	}
@@ -326,32 +321,6 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 	// TECHDEBT(#810): register the provider to the module registry instead of
 	// holding a reference in the module struct and passing via router config.
 	m.pstoreProvider = pstoreProvider
-
-	return nil
-}
-
-// setupCurrentHeightProvider gets the current height provider submodule from the
-// modules registry and assigns it to `#currentHeightProvider`.
-// TECHDEBT(#810): remove once p2pModule is using the bus instead of refs for providers.
-func (m *p2pModule) setupCurrentHeightProvider() error {
-	// TECHDEBT(#810): simplify once submodules are more convenient to retrieve.
-	m.logger.Debug().Msg("setupCurrentHeightProvider")
-	currentHeightProviderModule, err := m.GetBus().GetModulesRegistry().GetModule(modules.CurrentHeightProviderSubmoduleName)
-	if err != nil {
-		return err
-	}
-
-	m.logger.Debug().Msg("loaded current height provider")
-
-	currentHeightProvider, ok := currentHeightProviderModule.(modules.CurrentHeightProvider)
-	if !ok {
-		return fmt.Errorf("unexpected current height provider type: %T", currentHeightProviderModule)
-	}
-
-	// TECHDEBT(#810): provider should be registered to the module registry by its
-	// constructor. Avoid holding a reference in the module struct and passing via
-	// router config.
-	m.currentHeightProvider = currentHeightProvider
 
 	return nil
 }

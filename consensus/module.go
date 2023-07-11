@@ -11,6 +11,7 @@ import (
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/logger"
+	"github.com/pokt-network/pocket/p2p/providers/current_height_provider/consensus"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -131,6 +132,12 @@ func (*consensusModule) Create(bus modules.Bus, options ...modules.ModuleOption)
 	}
 
 	bus.RegisterModule(m)
+
+	// Ensure `CurrentHeightProvider` submodule is registered.
+	_, err = consensus.Create(bus)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create current height provider: %w", err)
+	}
 
 	runtimeMgr := bus.GetRuntimeMgr()
 
