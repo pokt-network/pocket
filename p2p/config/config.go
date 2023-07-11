@@ -51,11 +51,9 @@ type BackgroundConfig struct {
 
 // RainTreeConfig implements `RouterConfig` for use with `RainTreeRouter`.
 type RainTreeConfig struct {
-	Host                  host.Host
-	Addr                  crypto.Address
-	CurrentHeightProvider providers.CurrentHeightProvider
-	PeerstoreProvider     providers.PeerstoreProvider
-	Handler               func(data []byte) error
+	Host    host.Host
+	Addr    crypto.Address
+	Handler func(data []byte) error
 }
 
 // IsValid implements the respective member of the `RouterConfig` interface.
@@ -119,11 +117,9 @@ func (cfg *BackgroundConfig) IsValid() error {
 // IsValid implements the respective member of the `RouterConfig` interface.
 func (cfg *RainTreeConfig) IsValid() error {
 	baseCfg := baseConfig{
-		Host:                  cfg.Host,
-		Addr:                  cfg.Addr,
-		CurrentHeightProvider: cfg.CurrentHeightProvider,
-		PeerstoreProvider:     cfg.PeerstoreProvider,
-		Handler:               cfg.Handler,
+		Host:    cfg.Host,
+		Addr:    cfg.Addr,
+		Handler: cfg.Handler,
 	}
 	return baseCfg.IsValid()
 }

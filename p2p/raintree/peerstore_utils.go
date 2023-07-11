@@ -1,8 +1,11 @@
 package raintree
 
 import (
+	"fmt"
 	"math"
 	"strconv"
+
+	"github.com/pokt-network/pocket/p2p/providers/peerstore_provider"
 )
 
 // Refer to the P2P specification for a formal description and proof of how the constants are selected
@@ -17,9 +20,17 @@ const (
 func (rtr *rainTreeRouter) getPeerstoreSize(level uint32, height uint64) int {
 	peersView, maxNumLevels := rtr.peersManager.getPeersViewWithLevels()
 
+	// TECHDEBT(#810, 811): use `bus.GetPeerstoreProvider()` instead once available.
+	pstoreProvider, err := rtr.getPeerstoreProvider()
+	if err != nil {
+		// Should never happen; enforced by a `rtr.getPeerstoreProvider()` call
+		// & error handling in `rtr.broadcastAtLevel()`.
+		panic(fmt.Sprintf("Error retrieving peerstore provider: %s", err.Error()))
+	}
+
 	// if we are propagating a message from a previous height, we need to instantiate an ephemeral rainTreePeersManager (without add/remove)
-	if height < rtr.currentHeightProvider.CurrentHeight() {
-		peersMgr, err := newPeersManagerWithPeerstoreProvider(rtr.selfAddr, rtr.pstoreProvider, height)
+	if height < rtr.GetBus().GetCurrentHeightProvider().CurrentHeight() {
+		peersMgr, err := newPeersManagerWithPeerstoreProvider(rtr.selfAddr, pstoreProvider, height)
 		if err != nil {
 			rtr.logger.Fatal().Err(err).Msg("Error initializing rainTreeRouter rainTreePeersManager")
 		}
@@ -30,9 +41,24 @@ func (rtr *rainTreeRouter) getPeerstoreSize(level uint32, height uint64) int {
 	return int(float64(len(peersView.GetAddrs())) * (shrinkageCoefficient))
 }
 
+// TECHDEBT(#810, 811): replace with `bus.GetPeerstoreProvider()` once available.
+func (rtr *rainTreeRouter) getPeerstoreProvider() (peerstore_provider.PeerstoreProvider, error) {
+	pstoreProviderModule, err := rtr.GetBus().GetModulesRegistry().
+		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
+	if err != nil {
+		return nil, err
+	}
+
+	pstoreProvider, ok := pstoreProviderModule.(peerstore_provider.PeerstoreProvider)
+	if !ok {
+		return nil, fmt.Errorf("unexpected peerstore provider module type: %T", pstoreProviderModule)
+	}
+	return pstoreProvider, nil
+}
+
 // getTargetsAtLevel returns the targets for a given level
 func (rtr *rainTreeRouter) getTargetsAtLevel(level uint32) []target {
-	height := rtr.currentHeightProvider.CurrentHeight()
+	height := rtr.GetBus().GetCurrentHeightProvider().CurrentHeight()
 	pstoreSizeAtHeight := rtr.getPeerstoreSize(level, height)
 	firstTarget := rtr.getTarget(firstMsgTargetPercentage, pstoreSizeAtHeight, level)
 	secondTarget := rtr.getTarget(secondMsgTargetPercentage, pstoreSizeAtHeight, level)
