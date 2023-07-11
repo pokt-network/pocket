@@ -395,11 +395,9 @@ func (m *p2pModule) setupUnstakedRouter() (err error) {
 	m.unstakedActorRouter, err = background.Create(
 		m.GetBus(),
 		&config.BackgroundConfig{
-			Addr:                  m.address,
-			CurrentHeightProvider: m.currentHeightProvider,
-			PeerstoreProvider:     m.pstoreProvider,
-			Host:                  m.host,
-			Handler:               m.handlePocketEnvelope,
+			Addr:    m.address,
+			Host:    m.host,
+			Handler: m.handlePocketEnvelope,
 		},
 	)
 	if err != nil {
