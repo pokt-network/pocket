@@ -103,21 +103,24 @@ func (*persistenceModule) Create(bus modules.Bus, options ...modules.ModuleOptio
 		return nil, err
 	}
 
-	treeModule, err := trees.Create(
+	_, err = trees.Create(
 		bus,
 		trees.WithTreeStoreDirectory(persistenceCfg.TreesStoreDir),
-		trees.WithLogger(m.logger))
+		trees.WithLogger(m.logger),
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create TreeStoreModule: %w", err)
 	}
 
 	m.config = persistenceCfg
 	m.genesisState = genesisState
 	m.networkId = runtimeMgr.GetConfig().NetworkId
 
+	// TECHDEBT: fetch blockstore from bus once it's a proper submodule
 	m.blockStore = blockStore
+	// TECHDEBT: fetch txIndexer from bus
 	m.txIndexer = txIndexer
-	m.stateTrees = treeModule
+	m.stateTrees = m.GetBus().GetTreeStore()
 
 	// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
 	// 		     this forces the genesis state to be reloaded on every node startup until state

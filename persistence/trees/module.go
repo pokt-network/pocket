@@ -3,19 +3,22 @@ package trees
 import (
 	"fmt"
 
+	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/smt"
 )
 
-func (*treeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
-	m := &treeStore{}
+var _ modules.Module = &TreeStore{}
+
+func (*TreeStore) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	m := &TreeStore{}
+
+	bus.RegisterModule(m)
 
 	for _, option := range options {
 		option(m)
 	}
-
-	bus.RegisterModule(m)
 
 	if err := m.setupTrees(); err != nil {
 		return nil, err
@@ -24,14 +27,14 @@ func (*treeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (m
 	return m, nil
 }
 
-func Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
-	return new(treeStore).Create(bus, options...)
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+	return new(TreeStore).Create(bus, options...)
 }
 
 // WithLogger assigns a logger for the tree store
-func WithLogger(logger *modules.Logger) modules.TreeStoreOption {
-	return func(m modules.TreeStoreModule) {
-		if mod, ok := m.(*treeStore); ok {
+func WithLogger(logger *modules.Logger) modules.ModuleOption {
+	return func(m modules.InjectableModule) {
+		if mod, ok := m.(*TreeStore); ok {
 			mod.logger = logger
 		}
 	}
@@ -39,20 +42,37 @@ func WithLogger(logger *modules.Logger) modules.TreeStoreOption {
 
 // WithTreeStoreDirectory assigns the path where the tree store
 // saves its data.
-func WithTreeStoreDirectory(path string) modules.TreeStoreOption {
-	return func(m modules.TreeStoreModule) {
-		if mod, ok := m.(*treeStore); ok {
-			mod.treeStoreDir = path
+func WithTreeStoreDirectory(path string) modules.ModuleOption {
+	return func(m modules.InjectableModule) {
+		mod, ok := m.(*TreeStore)
+		if ok {
+			mod.TreeStoreDir = path
 		}
 	}
 }
 
-func (t *treeStore) setupTrees() error {
-	if t.treeStoreDir == ":memory:" {
+// WithTxIndexer assigns a TxIndexer for use during operation.
+func WithTxIndexer(txi indexer.TxIndexer) modules.ModuleOption {
+	return func(m modules.InjectableModule) {
+		mod, ok := m.(*TreeStore)
+		if ok {
+			mod.TXI = txi
+		}
+	}
+}
+
+func (t *TreeStore) GetModuleName() string  { return modules.TreeStoreModuleName }
+func (t *TreeStore) Start() error           { return nil }
+func (t *TreeStore) Stop() error            { return nil }
+func (t *TreeStore) GetBus() modules.Bus    { return t.Bus }
+func (t *TreeStore) SetBus(bus modules.Bus) { t.Bus = bus }
+
+func (t *TreeStore) setupTrees() error {
+	if t.TreeStoreDir == ":memory:" {
 		return t.setupInMemory()
 	}
 
-	nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, RootTreeName))
+	nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.TreeStoreDir, RootTreeName))
 	if err != nil {
 		return err
 	}
@@ -64,7 +84,7 @@ func (t *treeStore) setupTrees() error {
 	t.merkleTrees = make(map[string]*stateTree, len(stateTreeNames))
 
 	for i := 0; i < len(stateTreeNames); i++ {
-		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.treeStoreDir, stateTreeNames[i]))
+		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", t.TreeStoreDir, stateTreeNames[i]))
 		if err != nil {
 			return err
 		}
@@ -78,7 +98,7 @@ func (t *treeStore) setupTrees() error {
 	return nil
 }
 
-func (t *treeStore) setupInMemory() error {
+func (t *TreeStore) setupInMemory() error {
 	nodeStore := kvstore.NewMemKVStore()
 	t.rootTree = &stateTree{
 		name:      RootTreeName,
