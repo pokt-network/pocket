@@ -99,10 +99,10 @@ func (m *ibcModule) HandleEvent(event *anypb.Any) error {
 			return err
 		}
 		// Prune old cache entries
-		if currHeight <= m.cfg.Host.BulkStoreCacher.MaxHeightStored {
+		if currHeight <= m.cfg.Host.BulkStoreCacher.MaxHeightCached {
 			break
 		}
-		pruneHeight := currHeight - m.cfg.Host.BulkStoreCacher.MaxHeightStored
+		pruneHeight := currHeight - m.cfg.Host.BulkStoreCacher.MaxHeightCached
 		if err := bsc.PruneCaches(pruneHeight); err != nil {
 			return err
 		}

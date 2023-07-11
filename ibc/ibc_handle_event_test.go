@@ -94,7 +94,7 @@ func TestHandleEvent_FlushCaches(t *testing.T) {
 	require.NoError(t, cache.Stop())
 }
 
-// using MaxStoredHeight = 3
+// using MaxHeightCached = 3
 func TestHandleEvent_PruneCaches(t *testing.T) {
 	mgr, _, _, _, ibcMod := prepareEnvironment(t, 1, 0, 0, 0)
 	tmpDir := mgr.GetConfig().IBC.StoresDir + "/caches"
