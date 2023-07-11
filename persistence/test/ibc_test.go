@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -12,39 +13,39 @@ func TestSetIBCStoreEntry(t *testing.T) {
 	db := NewTestPostgresContext(t, 1)
 
 	testCases := []struct {
-		name        string
-		height      int64
-		key         []byte
-		value       []byte
-		expectedErr string
+		name           string
+		height         int64
+		key            []byte
+		value          []byte
+		expectedErrStr *string
 	}{
 		{
-			name:        "Successfully set key at height 1",
-			height:      1,
-			key:         []byte("key"),
-			value:       []byte("value"),
-			expectedErr: "",
+			name:           "Successfully set key at height 1",
+			height:         1,
+			key:            []byte("key"),
+			value:          []byte("value"),
+			expectedErrStr: nil,
 		},
 		{
-			name:        "Successfully set key at height 2",
-			height:      2,
-			key:         []byte("key"),
-			value:       []byte("value2"),
-			expectedErr: "",
+			name:           "Successfully set key at height 2",
+			height:         2,
+			key:            []byte("key"),
+			value:          []byte("value2"),
+			expectedErrStr: nil,
 		},
 		{
-			name:        "Successfully set key to nil at height 3",
-			height:      3,
-			key:         []byte("key"),
-			value:       nil,
-			expectedErr: "",
+			name:           "Successfully set key to nil at height 3",
+			height:         3,
+			key:            []byte("key"),
+			value:          nil,
+			expectedErrStr: nil,
 		},
 		{
-			name:        "Fails to set an existing key at height 3",
-			height:      3,
-			key:         []byte("key"),
-			value:       []byte("new value"),
-			expectedErr: "ERROR: duplicate key value violates unique constraint \"ibc_entries_pkey\" (SQLSTATE 23505)",
+			name:           "Fails to set an existing key at height 3",
+			height:         3,
+			key:            []byte("key"),
+			value:          []byte("new value"),
+			expectedErrStr: duplicateError("ibc_entries"),
 		},
 	}
 
@@ -52,8 +53,8 @@ func TestSetIBCStoreEntry(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			db.Height = tc.height
 			err := db.SetIBCStoreEntry(tc.key, tc.value)
-			if tc.expectedErr != "" {
-				require.EqualError(t, err, tc.expectedErr)
+			if tc.expectedErrStr != nil {
+				require.EqualError(t, err, *tc.expectedErrStr)
 			} else {
 				require.NoError(t, err)
 			}
@@ -127,23 +128,30 @@ type attribute struct {
 	value []byte
 }
 
+var (
+	baseAttributeKey   = []byte("testKey")
+	baseAttributeValue = []byte("testValue")
+)
+
 func TestIBCSetEvent(t *testing.T) {
+	// Setup database
 	db := NewTestPostgresContext(t, 1)
+	// Add a single event at height 1
 	event := new(coreTypes.IBCEvent)
 	event.Topic = "test"
 	event.Height = 1
 	event.Attributes = append(event.Attributes, &coreTypes.Attribute{
-		Key:   []byte("testKey"),
-		Value: []byte("testValue"),
+		Key:   baseAttributeKey,
+		Value: baseAttributeValue,
 	})
 	require.NoError(t, db.SetIBCEvent(event))
 
 	testCases := []struct {
-		name        string
-		height      uint64
-		topic       string
-		attributes  []attribute
-		expectedErr string
+		name           string
+		height         uint64
+		topic          string
+		attributes     []attribute
+		expectedErrStr *string
 	}{
 		{
 			name:   "Successfully set new event at height 1",
@@ -159,7 +167,7 @@ func TestIBCSetEvent(t *testing.T) {
 					value: []byte("value2"),
 				},
 			},
-			expectedErr: "",
+			expectedErrStr: nil,
 		},
 		{
 			name:   "Successfully set new event at height 2",
@@ -175,7 +183,7 @@ func TestIBCSetEvent(t *testing.T) {
 					value: []byte("value2"),
 				},
 			},
-			expectedErr: "",
+			expectedErrStr: nil,
 		},
 		{
 			name:   "Successfully set a duplicate event new height",
@@ -187,7 +195,7 @@ func TestIBCSetEvent(t *testing.T) {
 					value: []byte("testValue"),
 				},
 			},
-			expectedErr: "",
+			expectedErrStr: nil,
 		},
 		{
 			name:   "Fails to set a duplicate event at height 1",
@@ -195,11 +203,11 @@ func TestIBCSetEvent(t *testing.T) {
 			topic:  "test",
 			attributes: []attribute{
 				{
-					key:   []byte("testKey"),
-					value: []byte("testValue"),
+					key:   baseAttributeKey,
+					value: baseAttributeValue,
 				},
 			},
-			expectedErr: "ERROR: duplicate key value violates unique constraint \"ibc_events_pkey\" (SQLSTATE 23505)",
+			expectedErrStr: duplicateError("ibc_events"),
 		},
 	}
 
@@ -216,8 +224,8 @@ func TestIBCSetEvent(t *testing.T) {
 				})
 			}
 			err := db.SetIBCEvent(event)
-			if tc.expectedErr != "" {
-				require.EqualError(t, err, tc.expectedErr)
+			if tc.expectedErrStr != nil {
+				require.EqualError(t, err, *tc.expectedErrStr)
 			} else {
 				require.NoError(t, err)
 			}
@@ -226,14 +234,17 @@ func TestIBCSetEvent(t *testing.T) {
 }
 
 func TestGetIBCEvent(t *testing.T) {
+	// Setup database
 	db := NewTestPostgresContext(t, 1)
+	// Add events "testKey0", "testKey1", "testKey2", "testKey3"
+	// at heights 1, 2, 3, 3 respectively
 	events := make([]*coreTypes.IBCEvent, 0, 4)
 	for i := 0; i < 4; i++ {
 		event := new(coreTypes.IBCEvent)
 		event.Topic = "test"
 		event.Height = uint64(i + 1)
 		if i == 3 {
-			event.Height = uint64(i)
+			event.Height = uint64(i) // add a second event at height 3
 		}
 		s := strconv.Itoa(i)
 		event.Attributes = append(event.Attributes, &coreTypes.Attribute{
@@ -297,4 +308,9 @@ func TestGetIBCEvent(t *testing.T) {
 			}
 		})
 	}
+}
+
+func duplicateError(tableName string) *string {
+	str := fmt.Sprintf("ERROR: duplicate key value violates unique constraint \"%s_pkey\" (SQLSTATE 23505)", tableName)
+	return &str
 }

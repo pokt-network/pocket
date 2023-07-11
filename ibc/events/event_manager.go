@@ -45,10 +45,7 @@ func (e *EventManager) GetModuleName() string { return modules.EventLoggerModule
 func (e *EventManager) EmitEvent(event *coreTypes.IBCEvent) error {
 	wCtx := e.GetBus().GetPersistenceModule().NewWriteContext()
 	defer wCtx.Release()
-	if err := wCtx.SetIBCEvent(event); err != nil {
-		return err
-	}
-	return nil
+	return wCtx.SetIBCEvent(event)
 }
 
 func (e *EventManager) QueryEvents(topic string, height uint64) ([]*coreTypes.IBCEvent, error) {
@@ -57,9 +54,5 @@ func (e *EventManager) QueryEvents(topic string, height uint64) ([]*coreTypes.IB
 		return nil, err
 	}
 	defer rCtx.Release()
-	events, err := rCtx.GetIBCEvents(height, topic)
-	if err != nil {
-		return nil, err
-	}
-	return events, nil
+	return rCtx.GetIBCEvents(height, topic)
 }

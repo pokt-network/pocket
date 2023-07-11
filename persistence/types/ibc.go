@@ -22,6 +22,7 @@ const (
 	)`
 )
 
+// InsertIBCStoreEntryQuery returns the query to insert a key/value pair into the ibc_entries table
 func InsertIBCStoreEntryQuery(height int64, key, value []byte) string {
 	return fmt.Sprintf(
 		`INSERT INTO %s(height, key, value) VALUES(%d, '%s', '%s')`,
@@ -32,6 +33,7 @@ func InsertIBCStoreEntryQuery(height int64, key, value []byte) string {
 	)
 }
 
+// InsertIBCEventQuery returns the query to insert an event into the ibc_events table
 func InsertIBCEventQuery(height int64, topic, eventHex string) string {
 	return fmt.Sprintf(
 		`INSERT INTO %s(height, topic, event) VALUES(%d, '%s', '%s')`,
@@ -62,10 +64,12 @@ func GetIBCEventQuery(height uint64, topic string) string {
 	)
 }
 
+// ClearAllIBCStoreQuery returns the query to clear all entries from the ibc_entries table
 func ClearAllIBCStoreQuery() string {
 	return fmt.Sprintf(`DELETE FROM %s`, IBCStoreTableName)
 }
 
+// ClearAllIBCEventsQuery returns the query to clear all entries from the ibc_events table
 func ClearAllIBCEventsQuery() string {
 	return fmt.Sprintf(`DELETE FROM %s`, IBCEventLogTableName)
 }
