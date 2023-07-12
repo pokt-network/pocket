@@ -87,6 +87,9 @@ func (m *ibcModule) GetModuleName() string {
 }
 
 // HandleMessage accepts a generic IBC message and routes it to the utility mempool
+// TECHDEBT(#868): This SHOULD NOT be this way and is actually just a temporary workaround.
+// The correct thing to do is sign transactions before broadcasting them and pass them
+// directly into the utility module. This function will be removed in #868
 func (m *ibcModule) HandleMessage(message *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()

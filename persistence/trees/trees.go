@@ -366,10 +366,10 @@ func (t *treeStore) updateIBCTree(keys, values [][]byte) error {
 			if err := t.merkleTrees[IBCTreeName].tree.Delete(key); err != nil {
 				return err
 			}
-		} else {
-			if err := t.merkleTrees[IBCTreeName].tree.Update(key, value); err != nil {
-				return err
-			}
+			continue
+		}
+		if err := t.merkleTrees[IBCTreeName].tree.Update(key, value); err != nil {
+			return err
 		}
 	}
 	return nil

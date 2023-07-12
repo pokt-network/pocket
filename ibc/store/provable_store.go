@@ -19,6 +19,8 @@ var _ modules.ProvableStore = &provableStore{}
 // cachedEntry represents a local change made to the IBC store prior to it being
 // committed to the state tree. These are written to disk in the to prevent a
 // loss of data and pruned when included in the state tree
+// The cache will be used in the event of a node failure or failure to propagate
+// an IBC message, in order for the changes to be "replayed" if needed
 type cachedEntry struct {
 	storeName   string
 	height      uint64
