@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/pokt-network/pocket/app/client/cli/flags"
 	"github.com/pokt-network/pocket/logger"
@@ -9,6 +10,7 @@ import (
 	rpcCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/rpc"
 	rpcPSP "github.com/pokt-network/pocket/p2p/providers/peerstore_provider/rpc"
 	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -17,6 +19,11 @@ import (
 func P2PDependenciesPreRunE(cmd *cobra.Command, _ []string) error {
 	// TECHDEBT: this is to keep backwards compatibility with localnet
 	flags.ConfigPath = runtime.GetEnv("CONFIG_PATH", "build/config/config.validator1.json")
+
+	// by this time, the config path should be set
+	configs.ParseConfig(flags.ConfigPath)
+	// set final `remote_cli_url` value; order of precedence: flag > env var > config > default
+	flags.RemoteCLIURL = viper.GetString("remote_cli_url")
 
 	runtimeMgr := runtime.NewManagerFromFiles(
 		flags.ConfigPath, genesisPath,

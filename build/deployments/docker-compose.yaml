@@ -166,6 +166,8 @@ services:
     security_opt:
       - "seccomp:unconfined"
     environment:
+      # BUG: The `SERVICER1_SERVICER_ENABLED` env var is not currnetly visible in the `command` above and needs to be investigate
+      - SERVICER1_SERVICER_ENABLED=true
       - POCKET_RPC_USE_CORS=true
       # Uncomment to enable DLV debugging
       # - DEBUG_PORT=7085

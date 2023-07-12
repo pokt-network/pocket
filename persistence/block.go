@@ -24,6 +24,7 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 		}
 		return false, err
 	}
+
 	return true, nil
 }
 

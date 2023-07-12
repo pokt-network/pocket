@@ -38,8 +38,6 @@ spec:
               memory: "512Mi"
               cpu: "4"
           env:
-            - name: POCKET_P2P_IS_CLIENT_ONLY
-              value: "true"
             - name: CONFIG_PATH
               value: "/var/pocket/config/config.json"
             - name: GENESIS_PATH
@@ -76,8 +74,7 @@ spec:
               # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
             - name: POCKET_REMOTE_CLI_URL
               value: http://full-node-001-pocket:50832
-              # TECHDEBT(#678): debug client requires hostname to participate
-              # in P2P networking.
+              # TECHDEBT(#678): debug client requires hostname to participate in P2P networking.
             - name: POCKET_P2P_HOSTNAME
               value: "127.0.0.1"
           volumeMounts:

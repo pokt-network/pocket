@@ -42,16 +42,20 @@ var (
 )
 
 func init() {
-	dbg := NewDebugCommand()
-	dbg.AddCommand(NewDebugSubCommands()...)
+	dbgUI := newDebugUICommand()
+	dbgUI.AddCommand(newDebugUISubCommands()...)
+	rootCmd.AddCommand(dbgUI)
+
+	dbg := newDebugCommand()
+	dbg.AddCommand(debugCommands()...)
 	rootCmd.AddCommand(dbg)
 }
 
-// NewDebugSubCommands builds out the list of debug subcommands by matching the
+// newDebugUISubCommands builds out the list of debug subcommands by matching the
 // handleSelect dispatch to the appropriate command.
 // * To add a debug subcommand, you must add it to the `items` array and then
 // write a function handler to match for it in `handleSelect`.
-func NewDebugSubCommands() []*cobra.Command {
+func newDebugUISubCommands() []*cobra.Command {
 	commands := make([]*cobra.Command, len(items))
 	for idx, promptItem := range items {
 		commands[idx] = &cobra.Command{
@@ -66,15 +70,63 @@ func NewDebugSubCommands() []*cobra.Command {
 	return commands
 }
 
-// NewDebugCommand returns the cobra CLI for the Debug command.
-func NewDebugCommand() *cobra.Command {
+// newDebugUICommand returns the cobra CLI for the Debug UI interface.
+func newDebugUICommand() *cobra.Command {
 	return &cobra.Command{
-		Use:               "debug",
-		Short:             "Debug utility for rapid development",
+		Use:               "debug_ui",
+		Short:             "Debug selection ui for rapid development",
 		Args:              cobra.MaximumNArgs(0),
 		PersistentPreRunE: helpers.P2PDependenciesPreRunE,
 		RunE:              runDebug,
 	}
+}
+
+// newDebugCommand returns the cobra CLI for the Debug command.
+func newDebugCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:               "debug",
+		Short:             "Debug utility for rapid development",
+		Args:              cobra.MaximumNArgs(1),
+		PersistentPreRunE: helpers.P2PDependenciesPreRunE,
+	}
+}
+
+func debugCommands() []*cobra.Command {
+	cmds := []*cobra.Command{
+		{
+			Use:     "TriggerView",
+			Short:   "Trigger the next view in consensus",
+			Long:    "Sends a message to all visible nodes on the network to start the next view (height/step/round) in consensus",
+			Aliases: []string{"triggerView"},
+			Args:    cobra.ExactArgs(0),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				m := &messaging.DebugMessage{
+					Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
+					Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
+					Message: nil,
+				}
+				broadcastDebugMessage(cmd, m)
+				return nil
+			},
+		},
+		{
+			Use:     "TogglePacemakerMode",
+			Short:   "Toggle the pacemaker",
+			Long:    "Toggle the consensus pacemaker either on or off so the chain progresses on its own or loses liveness",
+			Aliases: []string{"togglePaceMaker"},
+			Args:    cobra.ExactArgs(0),
+			RunE: func(cmd *cobra.Command, args []string) error {
+				m := &messaging.DebugMessage{
+					Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
+					Type:    messaging.DebugMessageRoutingType_DEBUG_MESSAGE_TYPE_BROADCAST,
+					Message: nil,
+				}
+				broadcastDebugMessage(cmd, m)
+				return nil
+			},
+		},
+	}
+	return cmds
 }
 
 func runDebug(cmd *cobra.Command, args []string) (err error) {

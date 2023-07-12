@@ -48,7 +48,6 @@ var rootCmd = &cobra.Command{
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// by this time, the config path should be set
 		cfg = configs.ParseConfig(flags.ConfigPath)
-
 		// set final `remote_cli_url` value; order of precedence: flag > env var > config > default
 		flags.RemoteCLIURL = viper.GetString("remote_cli_url")
 		return nil
