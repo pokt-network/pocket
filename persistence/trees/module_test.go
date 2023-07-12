@@ -109,7 +109,7 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) *mockModules.Moc
 	ctrl := gomock.NewController(t)
 	mockBus := mockModules.NewMockBus(ctrl)
 	mockBus.EXPECT().GetRuntimeMgr().Return(runtimeMgr).AnyTimes()
-	mockBus.EXPECT().RegisterModule(gomock.Any()).DoAndReturn(func(m modules.Module) {
+	mockBus.EXPECT().RegisterModule(gomock.Any()).DoAndReturn(func(m modules.Submodule) {
 		m.SetBus(mockBus)
 	}).AnyTimes()
 	mockModulesRegistry := mockModules.NewMockModulesRegistry(ctrl)
