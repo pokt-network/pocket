@@ -48,7 +48,6 @@ func TestTreeStore_Create(t *testing.T) {
 
 	treemod, err := trees.Create(mockBus, trees.WithTreeStoreDirectory(":memory:"))
 	assert.NoError(t, err)
-
 	got := treemod.GetBus()
 	assert.Equal(t, got, mockBus)
 
