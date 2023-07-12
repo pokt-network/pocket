@@ -127,12 +127,22 @@ _Note: If it is easier, features 1-4 can be captured in a single ticket_
 
 ### 1. Adding New Feature 🔴
 
+[#879](https://github.com/pokt-network/pocket/issues/879)
+
 ### 2. Enabling Feature 🔴
+
+[#879](https://github.com/pokt-network/pocket/issues/879)
 
 ### 3. Disabling Feature 🔴
 
+[#879](https://github.com/pokt-network/pocket/issues/879)
+
 ### 4. Modifying Feature Value 🔴
 
+[#879](https://github.com/pokt-network/pocket/issues/879)
+
 ### 5. Protocol Upgrades 🔴
+
+[#882](https://github.com/pokt-network/pocket/issues/882)
 
 ## G. E2E Governance 🔴
