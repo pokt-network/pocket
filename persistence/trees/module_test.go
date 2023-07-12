@@ -28,7 +28,6 @@ func TestTreeStore_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
 	mockBus := createMockBus(t, mockRuntimeMgr)
-
 	genesisStateMock := createMockGenesisState(nil)
 	persistenceMock := preparePersistenceMock(t, mockBus, genesisStateMock)
 
@@ -40,6 +39,7 @@ func TestTreeStore_Create(t *testing.T) {
 	treemod, err := trees.Create(mockBus,
 		trees.WithTreeStoreDirectory(":memory:"))
 	assert.NoError(t, err)
+	treemod.GetModuleName()
 	got := treemod.GetBus()
 	assert.Equal(t, got, mockBus)
 }
