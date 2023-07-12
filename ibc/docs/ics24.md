@@ -147,6 +147,38 @@ Upon making a local change to the IBC store the host will:
 4. Add the `Transaction` to the local mempool
 5. Broadcast the `Transaction` via the `P2P` module for the other nodes to include it in their mempools
 
+```mermaid
+graph TD
+  subgraph Update
+    A[Key]
+    B[Value]
+  end
+  subgraph UpdateIBCStore
+    C[Signer]
+    D[Key]
+    E[Value]
+  end
+  subgraph IBCMessage
+    F[Event]
+  end
+  subgraph Transaction
+    G[Msg]
+    H[Nonce]
+    I[Signature]
+  end
+  subgraph Mempool
+    J[Txs]
+  end
+  subgraph P2P
+    K[Broadcast]
+  end
+  Update -- "Update(Key, Value)" --> UpdateIBCStore
+  UpdateIBCStore -- UpdateIBCStore --> IBCMessage
+  IBCMessage -- Message --> Transaction
+  Transaction -- Tx --> Mempool
+  Transaction -- Tx --> P2P
+```
+
 See: [emitter.go](../store/emitter.go) for the specific implementation details.
 
 ### Mempool
