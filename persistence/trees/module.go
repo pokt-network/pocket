@@ -9,9 +9,9 @@ import (
 	"github.com/pokt-network/smt"
 )
 
-var _ modules.Module = &TreeStore{}
+var _ modules.Submodule = &TreeStore{}
 
-func (*TreeStore) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+func (*TreeStore) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.TreeStoreModule, error) {
 	m := &TreeStore{}
 
 	bus.RegisterModule(m)
@@ -27,7 +27,7 @@ func (*TreeStore) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	return m, nil
 }
 
-func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.Module, error) {
+func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.TreeStoreModule, error) {
 	return new(TreeStore).Create(bus, options...)
 }
 
@@ -61,11 +61,7 @@ func WithTxIndexer(txi indexer.TxIndexer) modules.ModuleOption {
 	}
 }
 
-func (t *TreeStore) GetModuleName() string  { return modules.TreeStoreModuleName }
-func (t *TreeStore) Start() error           { return nil }
-func (t *TreeStore) Stop() error            { return nil }
-func (t *TreeStore) GetBus() modules.Bus    { return t.Bus }
-func (t *TreeStore) SetBus(bus modules.Bus) { t.Bus = bus }
+func (t *TreeStore) GetModuleName() string { return modules.TreeStoreModuleName }
 
 func (t *TreeStore) setupTrees() error {
 	if t.TreeStoreDir == ":memory:" {
