@@ -3,7 +3,6 @@ package trees
 import (
 	"fmt"
 
-	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/smt"
@@ -47,16 +46,6 @@ func WithTreeStoreDirectory(path string) modules.TreeStoreOption {
 		mod, ok := m.(*TreeStore)
 		if ok {
 			mod.TreeStoreDir = path
-		}
-	}
-}
-
-// WithTxIndexer assigns a TxIndexer for use during operation.
-func WithTxIndexer(txi indexer.TxIndexer) modules.TreeStoreOption {
-	return func(m modules.TreeStoreModule) {
-		mod, ok := m.(*TreeStore)
-		if ok {
-			mod.TXI = txi
 		}
 	}
 }
