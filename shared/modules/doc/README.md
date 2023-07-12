@@ -6,32 +6,34 @@ This document outlines how we structured the code by splitting it into modules, 
 
 - [tl;dr Just show me an example](#tldr-just-show-me-an-example)
 - [Definitions](#definitions)
-  - [Requirement Level Keywords](#requirement-level-keywords)
-  - [Module](#module)
-  - [Module mock](#module-mock)
-  - [Shared module interfaces](#shared-module-interfaces)
-  - [Base module](#base-module)
-  - [Submodule](#submodule)
-  - [Shared submodule](#shared-submodule)
-  - [Class Diagram Legend](#class-diagram-legend)
-  - [Module, Submodule \& Shared Interfaces](#module-submodule--shared-interfaces)
-  - [Factory interfaces](#factory-interfaces)
+	- [Requirement Level Keywords](#requirement-level-keywords)
+	- [Module](#module)
+	- [Module mock](#module-mock)
+	- [Shared module interfaces](#shared-module-interfaces)
+	- [Base module](#base-module)
+	- [Submodule](#submodule)
+	- [Shared submodule](#shared-submodule)
+	- [Class Diagram Legend](#class-diagram-legend)
+	- [Module, Submodule \& Shared Interfaces](#module-submodule--shared-interfaces)
+	- [Factory interfaces](#factory-interfaces)
 - [Code Organization](#code-organization)
-- [(Sub)Modules in detail](#submodules-in-detail) - [Shared (sub)module interfaces](#shared-submodule-interfaces) - [Construction parameters \& non-(sub)module dependencies](#construction-parameters--non-submodule-dependencies)
-  - [Module creation](#module-creation)
-  - [Module configs \& options](#module-configs--options)
-  - [Submodule creation](#submodule-creation)
-  - [Submodule configs \& options](#submodule-configs--options)
-    - [Configs](#configs)
-    - [Options](#options)
-  - [Comprehensive Submodule Example:](#comprehensive-submodule-example)
-  - [Interacting \& Registering with the `bus`](#interacting--registering-with-the-bus)
-    - [Modules Registry](#modules-registry)
-      - [Modules Registry Example](#modules-registry-example)
-  - [Start the module](#start-the-module)
-  - [Add a logger to the module](#add-a-logger-to-the-module)
-  - [Get the module `bus`](#get-the-module-bus)
-  - [Stop the module](#stop-the-module)
+- [(Sub)Modules in detail](#submodules-in-detail)
+		- [Shared (sub)module interfaces](#shared-submodule-interfaces)
+		- [Construction parameters \& non-(sub)module dependencies](#construction-parameters--non-submodule-dependencies)
+	- [Module creation](#module-creation)
+	- [Module configs \& options](#module-configs--options)
+	- [Submodule creation](#submodule-creation)
+	- [Submodule configs \& options](#submodule-configs--options)
+		- [Configs](#configs)
+		- [Options](#options)
+	- [Comprehensive Submodule Example:](#comprehensive-submodule-example)
+	- [Interacting \& Registering with the `bus`](#interacting--registering-with-the-bus)
+		- [Modules Registry](#modules-registry)
+			- [Modules Registry Example](#modules-registry-example)
+	- [Start the module](#start-the-module)
+	- [Add a logger to the module](#add-a-logger-to-the-module)
+	- [Get the module `bus`](#get-the-module-bus)
+	- [Stop the module](#stop-the-module)
 
 ## tl;dr Just show me an example
 
@@ -420,8 +422,8 @@ What the `bus` does is setting its reference to the module instance and delegati
 
 ```golang
 func (m *bus) RegisterModule(module modules.Module) {
-	module.SetBus(m)
-	m.modulesRegistry.RegisterModule(module)
+    module.SetBus(m)
+    m.modulesRegistry.RegisterModule(module)
 }
 ```
 
@@ -432,7 +434,23 @@ This is quite **important** because it unlocks a powerful concept **Dependency I
 This enables the developer to define different implementations of a module and to register the one that is needed at runtime. This is because we can only have one module registered with a unique name and also because, by convention, we keep module names defined as constants.
 This is useful not only for prototyping but also for different use cases such as the `p1` CLI and the `pocket` binary where different implementations of the same module are necessary due to the fact that the `p1` CLI doesn't have a persistence module but still needs to know what's going on in the network.
 
-Submodules can be registered the same way full Modules can be, by passing the Submodule to the RegisterModule function. Submodules should typically be registered to the bus for dependency injection reasons.
+Submodules can be registered the same way full Modules can be, by passing the Submodule to the RegisterModule function. Submodules should typically be registered to the bus for dependency injection reasons. Modules and submodules are all responsible for registering themselves with the Bus. This pattern emerged organically during development and is now considered best practice. Additionally, modules should not maintain pointer references to modules and should instead call the Bus to get a new reference to a module whenever they need to call that module.
+
+Submodule interfaces are typically defined in the `shared/modules` package with the rest of the module interfaces in a file named `XXX_module.go`, where XXX denotes the name of the submodule. That same file should contain the factory function definition for a submodule which should be embedded by the Submodule interface type. Modules should follow the same pattern but embed the Module interface instead of the Submodule interface in the module's interface declaration.
+
+For example, in the TreeStore code below, you can see that the TreeStoreFactory is embedded in the TreeStoreModule, which also embeds the Submodule interface.
+
+```go
+type TreeStoreFactory = FactoryWithOptions[TreeStoreModule, TreeStoreOption]
+
+// TreeStoreModules defines the interface for atomic updates and rollbacks to the internal
+// merkle trees that compose the state hash of pocket.
+type TreeStoreModule interface {
+    Submodule
+    TreeStoreFactory
+    // ...
+}
+```
 
 ##### Modules Registry Example
 
