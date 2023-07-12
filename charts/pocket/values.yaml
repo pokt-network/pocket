@@ -42,7 +42,7 @@ externalPostgresql:
 
 persistence:
   # -- enable persistent volume claim
-  enabled: true
+  enabled: false
   # -- size of the persistent volume claim
   size: 8Gi
   # -- storage class of the persistent volume claim
