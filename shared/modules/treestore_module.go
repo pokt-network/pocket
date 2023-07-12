@@ -19,6 +19,7 @@ type TreeStoreFactory = FactoryWithOptions[TreeStoreModule, TreeStoreOption]
 // merkle trees that compose the state hash of pocket.
 type TreeStoreModule interface {
 	Submodule
+	TreeStoreFactory
 
 	// Update returns the new state hash for a given height.
 	// * Height is passed through to the Update function and is used to query the TxIndexer for transactions
