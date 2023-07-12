@@ -104,7 +104,7 @@ func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.Persiste
 	return persistenceMod.(modules.PersistenceModule)
 }
 func createAndInsertDefaultTestApp(t *testing.T, db *persistence.PostgresContext) (*coreTypes.Actor, error) {
-	app, err := newTestApp()
+	app, err := newTestApp(t)
 	if err != nil {
 		return nil, err
 	}
@@ -134,15 +134,15 @@ func createAndInsertDefaultTestApp(t *testing.T, db *persistence.PostgresContext
 		DefaultUnstakingHeight)
 }
 
-func newTestApp() (*coreTypes.Actor, error) {
+func newTestApp(t *testing.T) (*coreTypes.Actor, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
-		return nil, err
+		t.Errorf("failed to generate test app: %v", err)
 	}
 
 	outputAddr, err := crypto.GenerateAddress()
 	if err != nil {
-		return nil, err
+		t.Errorf("failed to generate test app: %v", err)
 	}
 
 	return &coreTypes.Actor{
