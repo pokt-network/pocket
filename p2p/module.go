@@ -46,12 +46,8 @@ type p2pModule struct {
 	identity       libp2p.Option
 	listenAddrs    libp2p.Option
 
-	// TECHDEBT(#810): register the providers to the module registry instead of
-	// holding a reference in the module struct and passing via router config.
-	//
 	// Assigned during creation via `#setupDependencies()`.
-	pstoreProvider        providers.PeerstoreProvider
-	nonceDeduper          *mempool.GenericFIFOSet[uint64, uint64]
+	nonceDeduper *mempool.GenericFIFOSet[uint64, uint64]
 
 	// TECHDEBT(#810): register the routers to the module registry instead of
 	// holding a reference in the module struct. This will improve testability.
@@ -300,28 +296,20 @@ func (m *p2pModule) setupPeerstoreProvider() error {
 		GetModulesRegistry().
 		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
 	if err != nil {
+		// TECHDEBT: compare against `runtime.ErrModuleNotRegistered(...)`.
 		m.logger.Debug().Msg("creating new persistence peerstore...")
-		pstoreProvider, err := persPSP.Create(m.GetBus())
+		// Ensure a peerstore provider exists by creating a `persistencePeerstoreProvider`.
+		_, err := persPSP.Create(m.GetBus())
 		if err != nil {
 			return err
 		}
-
-		// TECHDEBT(#810, #811): use `bus.GetPeerstoreProvider()` after peerstore provider
-		// is retrievable as a proper submodule
-		m.pstoreProvider = pstoreProvider
 		return nil
 	}
 
-	m.logger.Debug().Msg("loaded persistence peerstore...")
-	pstoreProvider, ok := pstoreProviderModule.(providers.PeerstoreProvider)
-	if !ok {
+	m.logger.Debug().Msg("loaded peerstore provider...")
+	if _, ok := pstoreProviderModule.(providers.PeerstoreProvider); !ok {
 		return fmt.Errorf("unknown peerstore provider type: %T", pstoreProviderModule)
 	}
-
-	// TECHDEBT(#810): register the provider to the module registry instead of
-	// holding a reference in the module struct and passing via router config.
-	m.pstoreProvider = pstoreProvider
-
 	return nil
 }
 
@@ -529,9 +517,29 @@ func (m *p2pModule) getMultiaddr() (multiaddr.Multiaddr, error) {
 }
 
 func (m *p2pModule) getStakedPeerstore() (typesP2P.Peerstore, error) {
-	return m.pstoreProvider.GetStakedPeerstoreAtHeight(
-		m.currentHeightProvider.CurrentHeight(),
+	pstoreProvider, err := m.getPeerstoreProvider()
+	if err != nil {
+		return nil, err
+	}
+
+	return pstoreProvider.GetStakedPeerstoreAtHeight(
+		m.GetBus().GetCurrentHeightProvider().CurrentHeight(),
 	)
+}
+
+// TECHDEBT(#810, #811): replace with `bus.GetPeerstoreProvider()` once available.
+func (m *p2pModule) getPeerstoreProvider() (peerstore_provider.PeerstoreProvider, error) {
+	pstoreProviderModule, err := m.GetBus().
+		GetModulesRegistry().
+		GetModule(peerstore_provider.PeerstoreProviderSubmoduleName)
+	if err != nil {
+		return nil, err
+	}
+	pstoreProvider, ok := pstoreProviderModule.(peerstore_provider.PeerstoreProvider)
+	if !ok {
+		return nil, fmt.Errorf("peerstore provider not available")
+	}
+	return pstoreProvider, nil
 }
 
 // isStakedActor returns whether the current node is a staked actor at the current height.
