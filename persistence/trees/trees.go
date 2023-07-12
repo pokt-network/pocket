@@ -83,8 +83,6 @@ type TreeStore struct {
 	base_modules.IntegrableModule
 
 	logger *modules.Logger
-	Bus    modules.Bus
-	TXI    indexer.TxIndexer
 
 	TreeStoreDir string
 	rootTree     *stateTree
@@ -108,7 +106,8 @@ func (t *TreeStore) GetTree(name string) ([]byte, kvstore.KVStore) {
 // It is atomic and handles its own savepoint and rollback creation.
 func (t *TreeStore) Update(pgtx pgx.Tx, height uint64) (string, error) {
 	t.logger.Info().Msgf("🌴 updating state trees at height %d", height)
-	stateHash, err := t.updateMerkleTrees(pgtx, t.TXI, height)
+	txi := t.GetBus().GetPersistenceModule().GetTxIndexer()
+	stateHash, err := t.updateMerkleTrees(pgtx, txi, height)
 	if err != nil {
 		return "", fmt.Errorf("failed to update merkle trees: %w", err)
 	}
