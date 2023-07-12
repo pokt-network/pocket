@@ -94,7 +94,7 @@ func TestHandleEvent_FlushCaches(t *testing.T) {
 	require.NoError(t, cache.Stop())
 }
 
-// using MaxHeightCached = 3
+// using MaxHeightCached = 3; set in `ibc/main_test.go` as a config variable
 func TestHandleEvent_PruneCaches(t *testing.T) {
 	mgr, _, _, _, ibcMod := prepareEnvironment(t, 1, 0, 0, 0)
 	tmpDir := mgr.GetConfig().IBC.StoresDir + "/caches"
@@ -128,37 +128,37 @@ func TestHandleEvent_PruneCaches(t *testing.T) {
 		name                  string
 		heightsStored         []uint64 // the different heights where entries are written to the cache
 		expectedHeightsCached []uint64 // the different heights expected in the cache after pruning
-		cacheLength           int      // the length of the cache after pruning
+		cacheSize             int      // the number of items in the cache after pruning
 	}{
 		{
 			name:                  "No pruning after single height increase",
 			heightsStored:         []uint64{1, 2},
 			expectedHeightsCached: []uint64{1},
-			cacheLength:           4,
+			cacheSize:             4,
 		},
 		{
 			name:                  "No pruning after two height increase",
 			heightsStored:         []uint64{1, 2, 3},
 			expectedHeightsCached: []uint64{1, 2},
-			cacheLength:           8,
+			cacheSize:             8,
 		},
 		{
 			name:                  "No pruning at max height stored = 3",
 			heightsStored:         []uint64{1, 2, 3, 4},
 			expectedHeightsCached: []uint64{1, 2, 3},
-			cacheLength:           12,
+			cacheSize:             12,
 		},
 		{
 			name:                  "Pruning after 4 height increase",
 			heightsStored:         []uint64{1, 2, 3, 4, 5},
 			expectedHeightsCached: []uint64{2, 3, 4},
-			cacheLength:           12,
+			cacheSize:             12,
 		},
 		{
 			name:                  "Pruning after 5 height increase",
 			heightsStored:         []uint64{1, 2, 3, 4, 5, 6},
 			expectedHeightsCached: []uint64{3, 4, 5},
-			cacheLength:           12,
+			cacheSize:             12,
 		},
 	}
 
@@ -186,8 +186,8 @@ func TestHandleEvent_PruneCaches(t *testing.T) {
 			require.NoError(t, err)
 			keys, values, err := cache.GetAll([]byte{}, false)
 			require.NoError(t, err)
-			require.Len(t, keys, tc.cacheLength)
-			require.Len(t, values, tc.cacheLength)
+			require.Len(t, keys, tc.cacheSize)
+			require.Len(t, values, tc.cacheSize)
 
 			// iterate over all the keys in batches of 4 (for each expected height) confirming the expected height
 			// is the same as the height stored in the cache for each batch
