@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"fmt"
+
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pokt-network/pocket/shared/codec"
