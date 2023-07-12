@@ -9,9 +9,9 @@ import (
 	"github.com/pokt-network/smt"
 )
 
-var _ modules.Submodule = &TreeStore{}
+var _ modules.TreeStoreModule = &TreeStore{}
 
-func (*TreeStore) Create(bus modules.Bus, options ...modules.ModuleOption) (modules.TreeStoreModule, error) {
+func (*TreeStore) Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
 	m := &TreeStore{}
 
 	bus.RegisterModule(m)
@@ -27,13 +27,13 @@ func (*TreeStore) Create(bus modules.Bus, options ...modules.ModuleOption) (modu
 	return m, nil
 }
 
-func Create(bus modules.Bus, options ...modules.ModuleOption) (modules.TreeStoreModule, error) {
+func Create(bus modules.Bus, options ...modules.TreeStoreOption) (modules.TreeStoreModule, error) {
 	return new(TreeStore).Create(bus, options...)
 }
 
 // WithLogger assigns a logger for the tree store
-func WithLogger(logger *modules.Logger) modules.ModuleOption {
-	return func(m modules.InjectableModule) {
+func WithLogger(logger *modules.Logger) modules.TreeStoreOption {
+	return func(m modules.TreeStoreModule) {
 		if mod, ok := m.(*TreeStore); ok {
 			mod.logger = logger
 		}
@@ -42,8 +42,8 @@ func WithLogger(logger *modules.Logger) modules.ModuleOption {
 
 // WithTreeStoreDirectory assigns the path where the tree store
 // saves its data.
-func WithTreeStoreDirectory(path string) modules.ModuleOption {
-	return func(m modules.InjectableModule) {
+func WithTreeStoreDirectory(path string) modules.TreeStoreOption {
+	return func(m modules.TreeStoreModule) {
 		mod, ok := m.(*TreeStore)
 		if ok {
 			mod.TreeStoreDir = path
@@ -52,8 +52,8 @@ func WithTreeStoreDirectory(path string) modules.ModuleOption {
 }
 
 // WithTxIndexer assigns a TxIndexer for use during operation.
-func WithTxIndexer(txi indexer.TxIndexer) modules.ModuleOption {
-	return func(m modules.InjectableModule) {
+func WithTxIndexer(txi indexer.TxIndexer) modules.TreeStoreOption {
+	return func(m modules.TreeStoreModule) {
 		mod, ok := m.(*TreeStore)
 		if ok {
 			mod.TXI = txi
