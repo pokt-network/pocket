@@ -34,6 +34,7 @@ var (
 )
 
 // TECHDEBT: Make these values configurable
+// TECHDEBT: Consider using an exponential backoff instead
 const (
 	connectMaxRetries   = 5
 	connectRetryTimeout = time.Second * 2
