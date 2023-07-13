@@ -72,8 +72,8 @@ func newDebugUISubCommands() []*cobra.Command {
 // newDebugUICommand returns the cobra CLI for the Debug UI interface.
 func newDebugUICommand() *cobra.Command {
 	return &cobra.Command{
-		Aliases:           []string{"dui", "d"},
-		Use:               "debugui",
+		Aliases:           []string{"dui"},
+		Use:               "DebugUI",
 		Short:             "Debug selection ui for rapid development",
 		Args:              cobra.MaximumNArgs(0),
 		PersistentPreRunE: helpers.P2PDependenciesPreRunE,
@@ -84,7 +84,8 @@ func newDebugUICommand() *cobra.Command {
 // newDebugCommand returns the cobra CLI for the Debug command.
 func newDebugCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:               "debug",
+		Use:               "Debug",
+		Aliases:           []string{"d"},
 		Short:             "Debug utility for rapid development",
 		Args:              cobra.MaximumNArgs(1),
 		PersistentPreRunE: helpers.P2PDependenciesPreRunE,
@@ -95,9 +96,9 @@ func debugCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
 			Use:     "TriggerView",
+			Aliases: []string{"next", "trigger", "view"},
 			Short:   "Trigger the next view in consensus",
 			Long:    "Sends a message to all visible nodes on the network to start the next view (height/step/round) in consensus",
-			Aliases: []string{"triggerView"},
 			Args:    cobra.ExactArgs(0),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				m := &messaging.DebugMessage{
