@@ -73,7 +73,9 @@ spec:
               value: validator1
               # Any host that is visible and connected to the cluster can be arbitrarily selected as the RPC host
             - name: POCKET_REMOTE_CLI_URL
-              value: http://full-node-001-pocket:50832
+              # CONSIDERATION: Should we use a validator or full node for this?
+              value: http://pocket-validators:50832
+              # value: http://full-node-001-pocket:50832
               # TECHDEBT(#678): debug client requires hostname to participate in P2P networking.
             - name: POCKET_P2P_HOSTNAME
               value: "127.0.0.1"
