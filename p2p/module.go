@@ -7,6 +7,7 @@ import (
 
 	"github.com/libp2p/go-libp2p"
 	libp2pHost "github.com/libp2p/go-libp2p/core/host"
+	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"github.com/multiformats/go-multiaddr"
 	"go.uber.org/multierr"
 	"google.golang.org/protobuf/proto"
@@ -272,6 +273,11 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 // TECHDEBT(#348): Define what the node identity is throughout the codebase
 func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
+}
+
+// GetConnections implements the respective `modules.P2PModule` interface method.
+func (m *p2pModule) GetConnections() []libp2pNetwork.Conn {
+	return m.host.Network().Conns()
 }
 
 // setupDependencies sets up the module's current height and peerstore providers.

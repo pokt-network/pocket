@@ -10,7 +10,8 @@ import (
 
 func (m *p2pModule) handleDebugMessage(msg *messaging.DebugMessage) error {
 	switch msg.Action {
-	case messaging.DebugMessageAction_DEBUG_P2P_PEER_LIST:
+	case messaging.DebugMessageAction_DEBUG_P2P_PEER_LIST,
+		messaging.DebugMessageAction_DEBUG_P2P_PEER_CONNECTIONS:
 		if !m.cfg.EnablePeerDiscoveryDebugRpc {
 			return typesP2P.ErrPeerDiscoveryDebugRPCDisabled
 		}
@@ -23,6 +24,9 @@ func (m *p2pModule) handleDebugMessage(msg *messaging.DebugMessage) error {
 	case messaging.DebugMessageAction_DEBUG_P2P_PEER_LIST:
 		routerType := debug.RouterType(msg.Message.Value)
 		return debug.PrintPeerList(m.GetBus(), routerType)
+	case messaging.DebugMessageAction_DEBUG_P2P_PEER_CONNECTIONS:
+		routerType := debug.RouterType(msg.Message.Value)
+		return debug.PrintPeerConnections(m.GetBus(), routerType)
 	default:
 		return fmt.Errorf("unsupported P2P debug message action: %s", msg.Action)
 	}

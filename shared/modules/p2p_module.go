@@ -3,8 +3,10 @@ package modules
 //go:generate mockgen -destination=./mocks/p2p_module_mock.go github.com/pokt-network/pocket/shared/modules P2PModule
 
 import (
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	libp2pNetwork "github.com/libp2p/go-libp2p/core/network"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
 const P2PModuleName = "p2p"
@@ -16,6 +18,10 @@ type P2PModule interface {
 	GetAddress() (cryptoPocket.Address, error)
 	// TECHDEBT(#811): uncomment after moving `typesP2P.Peerstore` interface to a shared package
 	// GetUnstakedPeerstore() (typesP2P.Peerstore, error)
+
+	// GetConnections returns a list of all connections between the local libp2p
+	// host and connected remote peers.
+	GetConnections() []libp2pNetwork.Conn
 
 	// A network broadcast to all staked actors on the network using RainTree
 	Broadcast(msg *anypb.Any) error
