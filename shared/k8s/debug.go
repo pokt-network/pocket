@@ -16,9 +16,14 @@ import (
 )
 
 //nolint:gosec // G101 Not a credential
-const privateKeysSecretResourceName = "validators-private-keys"
-const kubernetesServiceAccountNamespaceFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-const defaultNamespace = "default"
+const (
+	privateKeysSecretResourceNameValidators   = "validators-private-keys"
+	privateKeysSecretResourceNameServicers    = "servicers-private-keys"
+	privateKeysSecretResourceNameFisherman    = "fisherman-private-keys"
+	privateKeysSecretResourceNameApplications = "applications-private-keys"
+	kubernetesServiceAccountNamespaceFile     = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+	defaultNamespace                          = "default"
+)
 
 var CurrentNamespace = ""
 
@@ -34,9 +39,47 @@ func init() {
 }
 
 // FetchValidatorPrivateKeys returns a map corresponding to the data section of
-// the validator private keys k8s secret (yaml), located at `privateKeysSecretResourceName`.
+// the validator private keys Kubernetes secret.
 func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
-	validatorKeysMap := make(map[string]string)
+	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameValidators, "validators")
+}
+
+// FetchServicerPrivateKeys returns a map corresponding to the data section of
+// the servicer private keys Kubernetes secret.
+func FetchServicerPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
+	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameServicers, "servicers")
+}
+
+// FetchFishermanPrivateKeys returns a map corresponding to the data section of
+// the fisherman private keys Kubernetes secret.
+func FetchFishermanPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
+	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameFisherman, "fisherman")
+}
+
+// FetchApplicationPrivateKeys returns a map corresponding to the data section of
+// the application private keys Kubernetes secret.
+func FetchApplicationPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
+	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameApplications, "applications")
+}
+
+// fetchPrivateKeys returns a map corresponding to the data section of
+// the private keys Kubernetes secret for the specified resource name and actor.
+func fetchPrivateKeys(clientset *kubernetes.Clientset, resourceName string, actor string) (map[string]string, error) {
+	privateKeysMap := make(map[string]string)
+
+	privateKeysSecretResourceName := ""
+	switch actor {
+	case "validators":
+		privateKeysSecretResourceName = privateKeysSecretResourceNameValidators
+	case "servicers":
+		privateKeysSecretResourceName = privateKeysSecretResourceNameServicers
+	case "fisherman":
+		privateKeysSecretResourceName = privateKeysSecretResourceNameFisherman
+	case "applications":
+		privateKeysSecretResourceName = privateKeysSecretResourceNameApplications
+	default:
+		return nil, fmt.Errorf("unknown actor: %s", actor)
+	}
 
 	privateKeysSecret, err := clientset.CoreV1().Secrets(CurrentNamespace).Get(context.TODO(), privateKeysSecretResourceName, metav1.GetOptions{})
 	if err != nil {
@@ -44,10 +87,11 @@ func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]stri
 	}
 
 	for id, privHexString := range privateKeysSecret.Data {
-		// it's safe to cast []byte to string here
-		validatorKeysMap[id] = string(privHexString)
+		// It's safe to cast []byte to string here
+		privateKeysMap[id] = string(privHexString)
 	}
-	return validatorKeysMap, nil
+
+	return privateKeysMap, nil
 }
 
 func getNamespace() (string, error) {
