@@ -2,7 +2,6 @@ package ibc
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/pokt-network/pocket/ibc/host"
 	"github.com/pokt-network/pocket/logger"
@@ -19,8 +18,6 @@ var _ modules.IBCModule = &ibcModule{}
 
 type ibcModule struct {
 	base_modules.IntegrableModule
-
-	m sync.Mutex
 
 	cfg    *configs.IBCConfig
 	logger *modules.Logger
