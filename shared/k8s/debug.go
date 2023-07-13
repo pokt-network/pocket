@@ -41,56 +41,39 @@ func init() {
 // FetchValidatorPrivateKeys returns a map corresponding to the data section of
 // the validator private keys Kubernetes secret.
 func FetchValidatorPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
-	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameValidators, "validators")
+	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameValidators)
 }
 
 // FetchServicerPrivateKeys returns a map corresponding to the data section of
 // the servicer private keys Kubernetes secret.
 func FetchServicerPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
-	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameServicers, "servicers")
+	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameServicers)
 }
 
 // FetchFishermanPrivateKeys returns a map corresponding to the data section of
 // the fisherman private keys Kubernetes secret.
 func FetchFishermanPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
-	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameFisherman, "fisherman")
+	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameFisherman)
 }
 
 // FetchApplicationPrivateKeys returns a map corresponding to the data section of
 // the application private keys Kubernetes secret.
 func FetchApplicationPrivateKeys(clientset *kubernetes.Clientset) (map[string]string, error) {
-	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameApplications, "applications")
+	return fetchPrivateKeys(clientset, privateKeysSecretResourceNameApplications)
 }
 
 // fetchPrivateKeys returns a map corresponding to the data section of
 // the private keys Kubernetes secret for the specified resource name and actor.
-func fetchPrivateKeys(clientset *kubernetes.Clientset, resourceName, actor string) (map[string]string, error) {
+func fetchPrivateKeys(clientset *kubernetes.Clientset, resourceName string) (map[string]string, error) {
 	privateKeysMap := make(map[string]string)
-
-	privateKeysSecretResourceName := ""
-	switch actor {
-	case "validators":
-		privateKeysSecretResourceName = privateKeysSecretResourceNameValidators
-	case "servicers":
-		privateKeysSecretResourceName = privateKeysSecretResourceNameServicers
-	case "fisherman":
-		privateKeysSecretResourceName = privateKeysSecretResourceNameFisherman
-	case "applications":
-		privateKeysSecretResourceName = privateKeysSecretResourceNameApplications
-	default:
-		return nil, fmt.Errorf("unknown actor: %s", actor)
-	}
-
-	privateKeysSecret, err := clientset.CoreV1().Secrets(CurrentNamespace).Get(context.TODO(), privateKeysSecretResourceName, metav1.GetOptions{})
+	privateKeysSecret, err := clientset.CoreV1().Secrets(CurrentNamespace).Get(context.TODO(), resourceName, metav1.GetOptions{})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-
 	for id, privHexString := range privateKeysSecret.Data {
 		// It's safe to cast []byte to string here
 		privateKeysMap[id] = string(privHexString)
 	}
-
 	return privateKeysMap, nil
 }
 
