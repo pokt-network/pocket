@@ -13,7 +13,7 @@ import (
 
 func TestHandleEvent_FlushCaches(t *testing.T) {
 	mgr, _, _, _, ibcMod := prepareEnvironment(t, 1, 0, 0, 0)
-	tmpDir := filepath.Join(mgr.GetConfig().IBC.StoresDir, "/caches")
+	tmpDir := filepath.Join(mgr.GetConfig().IBC.StoresDir, "caches")
 	ibcHost := ibcMod.GetBus().GetIBCHost()
 	store, err := ibcHost.GetProvableStore("test")
 	require.NoError(t, err)
@@ -99,7 +99,7 @@ func TestHandleEvent_FlushCaches(t *testing.T) {
 // using MaxHeightCached = 3; set in `ibc/main_test.go` as a config variable
 func TestHandleEvent_PruneCaches(t *testing.T) {
 	mgr, _, _, _, ibcMod := prepareEnvironment(t, 1, 0, 0, 0)
-	tmpDir := filepath.Join(mgr.GetConfig().IBC.StoresDir, "/caches")
+	tmpDir := filepath.Join(mgr.GetConfig().IBC.StoresDir, "caches")
 	ibcHost := ibcMod.GetBus().GetIBCHost()
 	store, err := ibcHost.GetProvableStore("test")
 	require.NoError(t, err)
